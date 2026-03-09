@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background:#fff;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+
+/* Steps */
+.steps{display:flex;background:#f5f5f5;border-bottom:1px solid #e5e5e5;flex-shrink:0}
+.stab{flex:1;padding:9px 2px;text-align:center;font-size:9px;font-weight:500;color:#aaa;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:.15s}
+.stab.active{color:#333;border-bottom-color:#18a0fb}
+.stab.done{color:#1bc47d}
+.snum{display:inline-flex;width:16px;height:16px;border-radius:50%;background:#ddd;color:#fff;align-items:center;justify-content:center;font-size:8px;font-weight:700;margin-right:2px}
+.stab.active .snum{background:#18a0fb}
+.stab.done .snum{background:#1bc47d}
+
+/* Empty */
+#empty{display:flex;align-items:center;justify-content:center;flex:1;text-align:center;color:#999;padding:20px}
+
+/* Main */
+#main{display:none;flex:1;flex-direction:column;overflow:hidden}
+.step{display:none;flex-direction:column;flex:1;overflow:hidden}
+.step.active{display:flex}
+.comp-hdr{padding:7px 12px;background:#f5f5f5;border-bottom:1px solid #e5e5e5;font-weight:600;font-size:12px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Step body */
+.sbody{flex:1;overflow-y:auto;padding:14px}
+.stitle{font-weight:600;font-size:12px;margin-bottom:8px}
+.sdesc{font-size:10px;color:#999;margin-bottom:12px;line-height:1.5}
+
+/* Fields */
+.fg{margin-bottom:14px}
+.fl{font-weight:600;font-size:11px;margin-bottom:5px}
+.fsl{font-size:10px;color:#999;font-weight:400}
+.cg,.rg{display:flex;flex-direction:column;gap:4px}
+.ci,.ri{display:flex;align-items:center;gap:6px;cursor:pointer;padding:2px 0;font-size:11px}
+.ci input,.ri input{margin:0;accent-color:#18a0fb}
+.fsel{width:100%;padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:11px;background:#fff}
+.fsel:focus,.fin:focus{outline:none;border-color:#18a0fb}
+.fin{width:100%;padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:11px}
+
+/* Preview */
+.preview-wrap{position:relative;flex:0 0 auto;max-height:55%;overflow:auto;background:#f5f5f5}
+.preview-wrap img{display:block;transform-origin:0 0}
+.zoom-controls{position:sticky;top:4px;left:4px;z-index:9500;display:flex;gap:2px;padding:2px;background:rgba(255,255,255,.9);border-radius:4px;border:1px solid #ddd;width:fit-content;margin-bottom:-28px}
+.zoom-btn{width:24px;height:24px;border:none;background:none;cursor:pointer;font-size:14px;font-weight:700;color:#555;border-radius:3px;display:flex;align-items:center;justify-content:center}
+.zoom-btn:hover{background:#eee}
+.zoom-pct{font-size:9px;color:#999;display:flex;align-items:center;padding:0 3px}
+.breadcrumb{padding:4px 8px;background:#333;color:#fff;font-size:10px;display:flex;gap:4px;align-items:center;flex-wrap:wrap;flex-shrink:0}
+.breadcrumb a{color:#aef;cursor:pointer;text-decoration:underline}
+
+/* Layer zones */
+.lz{position:absolute;border:1px solid transparent;transition:.08s;cursor:pointer}
+.lz:hover{border-color:#18a0fb;background:rgba(24,160,251,.08)}
+.lz.sel{border-color:#18a0fb;background:rgba(24,160,251,.12)}
+.lz.ann{border-color:rgba(27,196,125,.5)}
+.lz.exp{border-style:dashed}
+.lz-tip{display:none;position:absolute;bottom:100%;left:0;background:#333;color:#fff;font-size:9px;padding:2px 6px;border-radius:3px;white-space:nowrap;pointer-events:none;z-index:9999}
+.lz:hover .lz-tip{display:block}
+
+/* Focus badges on preview - dark navy rounded square like the component */
+.focus-badge{position:absolute;width:32px;height:32px;border-radius:8px;background:#1b2a4a;color:#fff;font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:9000;box-shadow:0 2px 6px rgba(0,0,0,.35);border:2px solid #fff;line-height:1}
+.focus-badge .fb-icon{font-size:8px;opacity:.7;margin-top:1px}
+
+/* Drawing overlay - pink/rose like the touch area component */
+.draw-overlay{position:absolute;top:0;left:0;width:100%;height:100%;z-index:8000;cursor:crosshair}
+.draw-rect{position:absolute;border:2px solid #d4907a;background:rgba(212,144,122,.25);pointer-events:none}
+.draw-saved{position:absolute;background:rgba(212,144,122,.25);display:flex;align-items:center;justify-content:center;cursor:move;z-index:8001;border:2px solid transparent}
+.draw-saved:hover,.draw-saved.selected{border-color:#d4907a}
+.draw-saved .resize-handle{position:absolute;width:10px;height:10px;background:#d4907a;border:1px solid #fff;border-radius:2px;display:none;z-index:8002}
+.draw-saved.selected .resize-handle{display:block;cursor:nwse-resize}
+.resize-handle.tl{top:-5px;left:-5px;cursor:nw-resize}
+.resize-handle.tr{top:-5px;right:-5px;cursor:ne-resize}
+.resize-handle.bl{bottom:-5px;left:-5px;cursor:sw-resize}
+.resize-handle.br{bottom:-5px;right:-5px;cursor:se-resize}
+.draw-dim{font-size:10px;font-weight:700;color:#8b4a3a;background:rgba(255,255,255,.85);padding:1px 5px;border-radius:3px;white-space:nowrap;pointer-events:none}
+
+/* Panel below preview */
+.panel{flex:1 1 0;overflow-y:auto;padding:12px;border-top:1px solid #e5e5e5;min-height:0}
+.panel.empty{display:flex;align-items:center;justify-content:center;color:#999}
+.panel-title{font-weight:600;font-size:12px;margin-bottom:8px;color:#18a0fb}
+
+/* Focus list */
+.fi{display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid #e5e5e5;border-radius:5px;margin-bottom:4px;background:#fafafa}
+.fi-num{width:24px;height:24px;background:#1b2a4a;color:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;flex-shrink:0}
+.fi-name{flex:1;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fi-rm{width:20px;height:20px;border:none;background:none;cursor:pointer;color:#e74c3c;font-size:14px;flex-shrink:0}
+
+/* Draw button */
+.draw-btn{padding:8px 14px;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;background:#d4907a;color:#fff;transition:.15s}
+.draw-btn:hover{background:#c07a64}
+
+/* Touch size meter */
+.touch-meter{padding:8px 10px;border-radius:6px;margin-top:8px;font-size:11px;font-weight:600}
+.touch-meter.ok{background:#e6f9f0;color:#0d7a42}
+.touch-meter.warn{background:#fff3cd;color:#856404}
+.touch-meter.bad{background:#fde8e8;color:#c53030}
+
+/* Handoff */
+.hbtn{width:100%;padding:12px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;background:#18a0fb;color:#fff;transition:.15s;margin-bottom:8px}
+.hbtn:hover{background:#0d8ce0}
+.hstatus{padding:10px;border-radius:6px;font-size:11px;line-height:1.5;margin-top:8px}
+.hstatus.ok{background:#e6f9f0;color:#0d7a42}
+.hstatus.err{background:#fde8e8;color:#c53030}
+.hstatus.info{background:#e8f0fe;color:#1a56db}
+
+/* Nav */
+.snav{display:flex;gap:8px;padding:8px 14px;border-top:1px solid #e5e5e5;background:#f9f9f9;flex-shrink:0}
+.nb{flex:1;padding:7px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;text-align:center;border:1px solid #ddd;background:#fff;color:#333;transition:.15s}
+.nb:hover{background:#f0f0f0}
+.nb.pr{background:#18a0fb;color:#fff;border-color:#18a0fb}
+.nb.pr:hover{background:#0d8ce0}
+
+#status{padding:4px 12px;border-top:1px solid #e5e5e5;background:#f5f5f5;font-size:9px;color:#999;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div id="empty"><div>
+  <p style="font-size:13px;margin-bottom:8px">Selecione um componente,<br>component set ou instância</p>
+  <p style="color:#bbb">O plugin exibirá o preview interativo</p>
+</div></div>
+
+<div id="main" style="display:none">
+  <div class="steps">
+    <button class="stab active" data-s="1" onclick="go(1)"><span class="snum">1</span>Geral</button>
+    <button class="stab" data-s="2" onclick="go(2)"><span class="snum">2</span>Roles</button>
+    <button class="stab" data-s="3" onclick="go(3)"><span class="snum">3</span>Área Toque</button>
+    <button class="stab" data-s="4" onclick="go(4)"><span class="snum">4</span>Foco</button>
+    <button class="stab" data-s="5" onclick="go(5)"><span class="snum">5</span>Handoff</button>
+  </div>
+  <div class="comp-hdr" id="cname"></div>
+
+  <!-- STEP 1 -->
+  <div id="s1" class="step active">
+    <div class="sbody">
+      <div class="stitle">Propriedades do Componente</div>
+      <div class="sdesc">Plataformas e zoom que se aplicam ao componente como um todo.</div>
+      <div class="fg"><div class="fl">Plataforma</div><div class="cg" id="plats"></div></div>
+      <div class="fg"><div class="fl">Zoom</div>
+        <div class="cg">
+          <label class="ci"><input type="checkbox" name="zoom" value="resize-text" onchange="saveComp()"> Redimensionar Texto (até 200%)</label>
+          <label class="ci"><input type="checkbox" name="zoom" value="reflow" onchange="saveComp()"> Refluxo (até 400%)</label>
+        </div>
+      </div>
+    </div>
+    <div class="snav"><button class="nb pr" onclick="go(2)">Próximo →</button></div>
+  </div>
+
+  <!-- STEP 2: ROLES -->
+  <div id="s2" class="step">
+    <div id="bc2" class="breadcrumb"><span style="opacity:.6">Raiz</span><span style="opacity:.4"> — duplo-clique para expandir</span></div>
+    <div class="preview-wrap" id="pw2"><img id="pi2" alt="Preview"></div>
+    <div class="panel empty" id="rp"><span>Clique em um elemento no preview</span></div>
+    <div class="snav"><button class="nb" onclick="go(1)">← Voltar</button><button class="nb pr" onclick="go(3)">Próximo →</button></div>
+  </div>
+
+  <!-- STEP 3: TOUCH AREA -->
+  <div id="s3" class="step">
+    <div class="breadcrumb" id="bc3"><span style="opacity:.6">Arraste no preview para desenhar áreas de toque</span></div>
+    <div class="preview-wrap" id="pw3"><img id="pi3" alt="Preview"></div>
+    <div class="panel" id="tp">
+      <div class="stitle">Áreas de Toque</div>
+      <div class="sdesc">WCAG 2.5.5: ≥44×44px (Aprimorado) · WCAG 2.5.8: ≥24×24px (Mínimo)</div>
+      <div id="tlist"></div>
+      <button style="margin-top:8px;padding:6px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-size:10px" onclick="clearAllTouch()">Limpar todas</button>
+    </div>
+    <div class="snav"><button class="nb" onclick="go(2)">← Voltar</button><button class="nb pr" onclick="go(4)">Próximo →</button></div>
+  </div>
+
+  <!-- STEP 4: FOCUS ORDER -->
+  <div id="s4" class="step">
+    <div class="breadcrumb" id="bc4"><span style="opacity:.6">Clique nos elementos na ordem de foco desejada</span></div>
+    <div style="padding:8px 12px 0">
+      <label class="ci"><input type="checkbox" id="noTabCk" onchange="toggleNoTab()"> Este componente não tem tabulação</label>
+    </div>
+    <div id="s4body">
+      <div class="preview-wrap" id="pw4"><img id="pi4" alt="Preview"></div>
+      <div class="panel" id="fp">
+        <div class="stitle">Ordem de Foco</div>
+        <div id="flist"></div>
+        <button style="margin-top:8px;padding:6px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-size:10px" onclick="clearFocus()">Limpar ordem</button>
+      </div>
+    </div>
+    <div class="snav"><button class="nb" onclick="go(3)">← Voltar</button><button class="nb pr" onclick="go(5)">Próximo →</button></div>
+  </div>
+
+  <!-- STEP 5: HANDOFF -->
+  <div id="s5" class="step">
+    <div class="sbody">
+      <div class="stitle">Gerar Handoff</div>
+      <div class="sdesc">Cria a documentação visual no canvas com conectores e especificações completas.</div>
+      <button class="hbtn" onclick="doHandoff()">Gerar Handoff no Canvas</button>
+      <div id="hconn" class="hstatus info" style="display:none"></div>
+      <div id="hres" style="display:none"></div>
+    </div>
+    <div class="snav"><button class="nb" onclick="go(4)">← Voltar</button></div>
+  </div>
+
+  <div id="status">Pronto</div>
+</div>
+
+<script>
+// ═══════════════ STATE ═══════════════
+const S = {
+  step: 1, rootId: null, rootType: null,
+  comp: { platform: [], zoom: [], noTab: false },
+  preview: null, allLayers: [], rootZoneId: null, previewZoom: 1,
+  expanded: new Set(), selLayer: null,
+  // Touch drawing
+  drawing: false, drawStart: null,
+  touchAreas: [], // [{x,y,w,h}] in real Figma coords
+  selectedArea: -1, // index of selected area, -1 = none
+  // Focus
+  focusOrder: [], annotatedNodes: [],
+};
+
+const ROLES=['dont-read','alert','alertdialog','application','article','banner','button','cell','checkbox','columnheader','combobox','complementary','contentinfo','definition','dialog','directory','document','feed','figure','form','grid','gridcell','group','heading','img','link','list','listbox','listitem','log','main','marquee','math','menu','menubar','menuitem','menuitemcheckbox','menuitemradio','navigation','none','note','option','presentation','progressbar','radio','radiogroup','region','row','rowgroup','rowheader','scrollbar','search','searchbox','separator','slider','spinbutton','status','switch','tab','table','tablist','tabpanel','term','textbox','timer','toolbar','tooltip','tree','treegrid','treeitem'];
+const RLBL={'dont-read':'Não ler (ignorar)'};
+const CATS=[
+  {v:'funcao-valor',l:'Função e valor',c:'#f5c542'},
+  {v:'estrutural',l:'Elementos estruturais',c:'#8b8b8b'},
+  {v:'titulo',l:'Nível de título',c:'#7bc47f'},
+  {v:'nome-acessivel',l:'Nome acessível e texto alt.',c:'#4ecdc4'},
+  {v:'decorativo',l:'Decorativo',c:'#e74c3c'},
+  {v:'outros',l:'Outros',c:'#e67e22'},
+];
+const PLATS=[
+  {v:'mobile-crossplatform',l:'Mobile Cross-platform'},
+  {v:'mobile-android',l:'Mobile Android'},
+  {v:'mobile-ios',l:'Mobile iOS'},
+  {v:'web',l:'Web'},
+  {v:'desktop-nativo',l:'Desktop Nativo'},
+];
+
+// ═══════════════ MSG ═══════════════
+function post(m){parent.postMessage({pluginMessage:m},'*')}
+window.onmessage=e=>{const m=e.data.pluginMessage;if(!m)return;({
+  'selection-changed':onSel,
+  'preview-data':onPreview,
+  'layer-data':onLayerData,
+  'zones-updated':onZonesUpd,
+  'touch-areas-data':onTouchData,
+  'focus-order-data':onFocusData,
+  'connectors-discovered':onConn,
+  'handoff-progress':onProgress,
+  'handoff-result':onHandoff,
+}[m.type]||(_=>{}))(m)};
+
+// ═══════════════ SELECTION ═══════════════
+function onSel(m){
+  if(!m.valid){$('empty').style.display='flex';$('main').style.display='none';S.rootId=null;return}
+  $('empty').style.display='none';$('main').style.display='flex';
+  $('cname').textContent=m.rootName;S.rootId=m.rootId;S.rootType=m.rootType;
+  S.comp=m.componentData||{platform:[],zoom:[],noTab:false};
+  renderS1();applyNoTab();go(1);
+}
+
+// ═══════════════ NAV ═══════════════
+function go(s){
+  S.step=s;
+  document.querySelectorAll('.stab').forEach(t=>{const n=+t.dataset.s;t.classList.toggle('active',n===s);t.classList.toggle('done',n<s)});
+  document.querySelectorAll('.step').forEach(c=>c.classList.toggle('active',c.id==='s'+s));
+  if(s===2||s===3||s===4){post({type:'generate-preview'});st('Gerando preview...')}
+  if(s===3)post({type:'get-touch-areas'});
+  if(s===4)post({type:'get-focus-order'});
+  if(s===5)post({type:'discover-connectors'});
+}
+
+// ═══════════════ STEP 1 ═══════════════
+function renderS1(){
+  const g=$('plats');g.innerHTML='';
+  PLATS.forEach(p=>{const ck=S.comp.platform.includes(p.v)?'checked':'';
+    g.innerHTML+=`<label class="ci"><input type="checkbox" name="plat" value="${p.v}" ${ck} onchange="saveComp()"> ${p.l}</label>`});
+  document.querySelectorAll('input[name="zoom"]').forEach(c=>c.checked=S.comp.zoom.includes(c.value));
+}
+function saveComp(){
+  S.comp.platform=[...document.querySelectorAll('input[name="plat"]:checked')].map(c=>c.value);
+  S.comp.zoom=[...document.querySelectorAll('input[name="zoom"]:checked')].map(c=>c.value);
+  post({type:'set-component-data',data:S.comp});st('Salvo');
+}
+
+function toggleNoTab(){
+  S.comp.noTab=$('noTabCk').checked;
+  post({type:'set-component-data',data:S.comp});
+  applyNoTab();st('Salvo');
+}
+function applyNoTab(){
+  const ck=$('noTabCk');if(ck)ck.checked=!!S.comp.noTab;
+  const body=$('s4body');if(body)body.style.display=S.comp.noTab?'none':'';
+}
+
+// ═══════════════ PREVIEW ═══════════════
+function onPreview(m){
+  S.preview=m;S.allLayers=m.layers||[];S.rootZoneId=m.rootZoneId;
+  S.expanded=new Set([m.rootZoneId]);
+  // Set images for all steps
+  ['pi2','pi3','pi4'].forEach(id=>{$(id).src='data:image/png;base64,'+m.image});
+  setTimeout(()=>{renderZones(2);renderZones(3);renderZones(4)},100);
+  st('Preview pronto');
+}
+function onZonesUpd(m){S.allLayers=m.layers||[];renderZones(2);renderZones(3);renderZones(4)}
+
+function visibleLayers(){return S.allLayers.filter(l=>S.expanded.has(l.parentId))}
+
+function setPreviewZoom(delta){
+  S.previewZoom=Math.max(0.5,Math.min(4,S.previewZoom+delta));
+  renderZones(S.step);
+}
+function resetPreviewZoom(){S.previewZoom=1;renderZones(S.step)}
+
+function renderZones(step){
+  const pw=$('pw'+step);if(!pw)return;
+  const img=pw.querySelector('img');if(!img||!img.complete||!img.naturalWidth)return;
+  // Remove old
+  pw.querySelectorAll('.lz,.focus-badge,.draw-saved,.draw-overlay,.zoom-controls').forEach(e=>e.remove());
+  // Apply zoom
+  const z=S.previewZoom;
+  img.style.width=(z*100)+'%';
+  // Zoom controls
+  const zc=document.createElement('div');zc.className='zoom-controls';
+  zc.innerHTML='<button class="zoom-btn" onclick="event.stopPropagation();setPreviewZoom(-0.25)">−</button><span class="zoom-pct">'+Math.round(z*100)+'%</span><button class="zoom-btn" onclick="event.stopPropagation();setPreviewZoom(0.25)">+</button><button class="zoom-btn" onclick="event.stopPropagation();resetPreviewZoom()" title="Reset" style="font-size:10px">1:1</button>';
+  pw.insertBefore(zc,img);
+  const sc=img.clientWidth/S.preview.width;if(!sc||!isFinite(sc))return;
+  const vis=visibleLayers();
+  const sorted=[...vis].sort((a,b)=>(b.width*b.height)-(a.width*a.height));
+
+  sorted.forEach(l=>{
+    const z=document.createElement('div');
+    let cls='lz';
+    if(l.hasA11yData)cls+=' ann';
+    if(step===2&&S.selLayer===l.id)cls+=' sel';
+    if(l.hasChildren)cls+=' exp';
+    z.className=cls;
+    z.style.left=(l.x*sc)+'px';z.style.top=(l.y*sc)+'px';
+    z.style.width=Math.max(l.width*sc,6)+'px';z.style.height=Math.max(l.height*sc,6)+'px';
+    z.style.zIndex=String(l.depth*10);z.dataset.nid=l.id;
+    if(l.category){const cat=CATS.find(c=>c.v===l.category);if(cat)z.style.borderColor=cat.c}
+    const tip=document.createElement('span');tip.className='lz-tip';
+    tip.textContent=l.name+(l.hasChildren?' [duplo-clique: expandir]':'');
+    z.appendChild(tip);
+
+    if(step===2){
+      z.onclick=e=>{e.stopPropagation();S.selLayer=l.id;renderZones(2);post({type:'get-layer-data',nodeId:l.id});st('Carregando...')};
+      if(l.hasChildren)z.ondblclick=e=>{e.stopPropagation();S.expanded.add(l.id);renderZones(2);renderBC(2)};
+    }
+    if(step===3){
+      // No click handling for touch step - zones are visual reference only
+    }
+    if(step===4){
+      z.onclick=e=>{e.stopPropagation();toggleFocus(l.id,l.name)};
+    }
+    pw.appendChild(z);
+  });
+
+  // Step 3: show saved touch areas (selectable, movable, resizable) + draw overlay
+  if(step===3){
+    S.touchAreas.forEach((a,idx)=>{
+      const d=document.createElement('div');
+      d.className='draw-saved'+(S.selectedArea===idx?' selected':'');
+      d.style.left=(a.x*sc)+'px';d.style.top=(a.y*sc)+'px';
+      d.style.width=(a.w*sc)+'px';d.style.height=(a.h*sc)+'px';
+      const dim=document.createElement('span');dim.className='draw-dim';
+      dim.textContent=Math.round(a.w)+'×'+Math.round(a.h)+'px';
+      d.appendChild(dim);
+      // Resize handles
+      ['tl','tr','bl','br'].forEach(pos=>{
+        const h=document.createElement('div');h.className='resize-handle '+pos;h.dataset.pos=pos;h.dataset.idx=String(idx);
+        h.onmousedown=e=>{e.stopPropagation();startResize(e,idx,pos)};
+        d.appendChild(h);
+      });
+      // Click to select, drag to move
+      d.onmousedown=e=>{e.stopPropagation();S.selectedArea=idx;renderZones(3);renderTouchList();startMove(e,idx)};
+      pw.appendChild(d);
+    });
+    // Draw overlay — only active when no area is selected (or clicking on empty space)
+    const ov=document.createElement('div');ov.className='draw-overlay';
+    ov.style.zIndex=S.selectedArea>=0?'7998':'8000';
+    ov.onmousedown=e=>{
+      if(S.selectedArea>=0){S.selectedArea=-1;renderZones(3);renderTouchList();return}
+      startDraw(e);
+    };
+    pw.appendChild(ov);
+  }
+
+  // Step 4: show focus badges
+  if(step===4){
+    S.focusOrder.forEach((entry,i)=>{
+      const layer=S.allLayers.find(l=>l.id===entry.nodeId);
+      if(!layer)return;
+      const b=document.createElement('div');b.className='focus-badge';
+      b.innerHTML=String(i+1)+'<span class="fb-icon">→|</span>';
+      b.style.left=(layer.x*sc-6)+'px';b.style.top=(layer.y*sc-6)+'px';
+      pw.appendChild(b);
+    });
+  }
+
+  if(step===2)renderBC(2);
+}
+
+function renderBC(step){
+  const el=$('bc'+step);if(!el)return;
+  const arr=[...S.expanded];
+  if(arr.length<=1){el.innerHTML='<span style="opacity:.6">Raiz</span><span style="opacity:.4"> — duplo-clique para expandir</span>';return}
+  let h='<a onclick="colTo(\''+S.rootZoneId+'\','+step+')">Raiz</a>';
+  for(let i=1;i<arr.length;i++){
+    const l=S.allLayers.find(x=>x.id===arr[i]);
+    h+=' <span style="opacity:.4">›</span> <a onclick="colTo(\''+arr[i]+'\','+step+')">'+(l?esc(l.name):'...')+'</a>';
+  }
+  el.innerHTML=h;
+}
+function colTo(id,step){
+  const nw=new Set([S.rootZoneId]);
+  if(id!==S.rootZoneId){const path=pathTo(id);path.forEach(p=>nw.add(p))}
+  S.expanded=nw;renderZones(step);renderBC(step);
+}
+function pathTo(tid){
+  const path=[];let cur=tid;const pm=new Map();S.allLayers.forEach(l=>pm.set(l.id,l.parentId));
+  while(cur&&cur!==S.rootZoneId){path.unshift(cur);cur=pm.get(cur)}return path;
+}
+
+// ═══════════════ STEP 2: ROLES ═══════════════
+function onLayerData(m){
+  const p=$('rp');p.className='panel';
+  const d=m.data||{role:'dont-read',category:'',accessibleName:'',altText:'',headingLevel:0,explanation:''};
+  let h='<div class="panel-title">'+esc(m.name||'Layer')+'</div>';
+
+  h+='<div class="fg"><div class="fl">Categoria</div><select class="fsel" id="lcat" onchange="catChg();saveLyr()">';
+  h+='<option value="">— Selecionar —</option>';
+  CATS.forEach(c=>{h+='<option value="'+c.v+'"'+(d.category===c.v?' selected':'')+'>'+c.l+'</option>'});
+  h+='</select></div>';
+
+  h+='<div class="fg"><div class="fl">Função (Role)</div><select class="fsel" id="lrol" onchange="saveLyr()">';
+  ROLES.forEach(r=>{h+='<option value="'+r+'"'+(d.role===r?' selected':'')+'>'+(RLBL[r]||r)+'</option>'});
+  h+='</select></div>';
+
+  h+='<div id="cex">';h+=catFields(d.category,d);h+='</div>';
+  p.innerHTML=h;st('Pronto');
+}
+
+function catFields(cat,d){
+  let h='';
+  if(cat==='nome-acessivel'){
+    h+='<div class="fg"><div class="fl">Nome Acessível</div><input class="fin" id="lacc" value="'+ea(d.accessibleName||'')+'" onchange="saveLyr()" placeholder="Nome acessível"></div>';
+    h+='<div class="fg"><div class="fl">Texto Alternativo</div><input class="fin" id="lalt" value="'+ea(d.altText||'')+'" onchange="saveLyr()" placeholder="Texto alternativo"></div>';
+  }
+  if(cat==='titulo'){
+    h+='<div class="fg"><div class="fl">Nível do Título</div><select class="fsel" id="lhl" onchange="saveLyr()">';
+    for(let i=1;i<=6;i++){h+='<option value="'+i+'"'+(d.headingLevel===i?' selected':'')+'>h'+i+'</option>'}
+    h+='</select></div>';
+  }
+  // Explicação para todas as categorias exceto decorativo
+  if(cat&&cat!=='decorativo'){
+    h+='<div class="fg"><div class="fl">Explicação</div><input class="fin" id="lexp" value="'+ea(d.explanation||'')+'" onchange="saveLyr()" placeholder="Descrição para o handoff"></div>';
+  }
+  return h;
+}
+function catChg(){$('cex').innerHTML=catFields($('lcat')?.value||'',{})}
+
+function saveLyr(){
+  if(!S.selLayer)return;
+  const d={
+    role:$('lrol')?.value||'dont-read',
+    category:$('lcat')?.value||'',
+    accessibleName:$('lacc')?.value||'',
+    altText:$('lalt')?.value||'',
+    headingLevel:$('lhl')?parseInt($('lhl').value):0,
+    explanation:$('lexp')?.value||'',
+  };
+  post({type:'set-layer-data',nodeId:S.selLayer,data:d});st('Salvo');
+}
+
+// ═══════════════ STEP 3: TOUCH DRAW ═══════════════
+function onTouchData(m){
+  S.touchAreas=(m.areas||[]).map(a=>({x:a.x,y:a.y,w:a.width,h:a.height}));
+  renderTouchList();renderZones(3);
+}
+
+function renderTouchList(){
+  const c=$('tlist');if(!c)return;
+  if(S.touchAreas.length===0){c.innerHTML='<div style="color:#999;font-size:10px;text-align:center;padding:8px">Arraste no preview acima para desenhar</div>';return}
+  let h='';
+  S.touchAreas.forEach((a,i)=>{
+    const w=Math.round(a.w),ht=Math.round(a.h),mn=Math.min(w,ht);
+    let cls='ok',txt='Aprimorado (2.5.5)';
+    if(mn<24){cls='bad';txt='Insuficiente (<24px)'}
+    else if(mn<44){cls='warn';txt='Mínimo (2.5.8)'}
+    const sel=S.selectedArea===i?'border:2px solid #d4907a':'';
+    h+=`<div class="touch-meter ${cls}" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;cursor:pointer;${sel}" onclick="selectArea(${i})">
+      <span>${w} × ${ht}px — ${txt}</span>
+      <button style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:14px" onclick="event.stopPropagation();rmTouch(${i})" title="Remover">×</button>
+    </div>`;
+  });
+  c.innerHTML=h;
+}
+
+function selectArea(idx){
+  S.selectedArea=S.selectedArea===idx?-1:idx;
+  renderZones(3);renderTouchList();
+}
+
+function startDraw(e){
+  S.drawing=true;
+  const pw=$('pw3');const rect=pw.getBoundingClientRect();
+  S.drawStart={x:e.clientX-rect.left,y:e.clientY-rect.top};
+  const dv=document.createElement('div');dv.className='draw-rect';dv.id='drawrect';
+  dv.style.left=S.drawStart.x+'px';dv.style.top=S.drawStart.y+'px';
+  dv.style.width='0';dv.style.height='0';
+  pw.appendChild(dv);
+
+  const dimLabel=document.createElement('span');dimLabel.className='draw-dim';dimLabel.id='drawdim';
+  dv.appendChild(dimLabel);
+
+  const mmv=ev=>{
+    if(!S.drawing)return;
+    const cr=pw.getBoundingClientRect();
+    const cx=ev.clientX-cr.left,cy=ev.clientY-cr.top;
+    const x=Math.min(S.drawStart.x,cx),y=Math.min(S.drawStart.y,cy);
+    const w=Math.abs(cx-S.drawStart.x),h=Math.abs(cy-S.drawStart.y);
+    dv.style.left=x+'px';dv.style.top=y+'px';dv.style.width=w+'px';dv.style.height=h+'px';
+    const sc=pw.querySelector('img').clientWidth/S.preview.width;
+    const rw=Math.round(w/sc),rh=Math.round(h/sc);
+    dimLabel.textContent=rw+'×'+rh+'px';
+  };
+  const mup=ev=>{
+    S.drawing=false;
+    document.removeEventListener('mousemove',mmv);
+    document.removeEventListener('mouseup',mup);
+    const cr=pw.getBoundingClientRect();
+    const cx=ev.clientX-cr.left,cy=ev.clientY-cr.top;
+    const sc=pw.querySelector('img').clientWidth/S.preview.width;
+    const rx=Math.min(S.drawStart.x,cx)/sc,ry=Math.min(S.drawStart.y,cy)/sc;
+    const rw=Math.abs(cx-S.drawStart.x)/sc,rh=Math.abs(cy-S.drawStart.y)/sc;
+    if(rw>2&&rh>2){
+      S.touchAreas.push({x:rx,y:ry,w:rw,h:rh});
+      saveTouchAreas();
+      renderTouchList();
+    }
+    const dr=$('drawrect');if(dr)dr.remove();
+    renderZones(3);
+  };
+  document.addEventListener('mousemove',mmv);
+  document.addEventListener('mouseup',mup);
+}
+
+function rmTouch(idx){
+  S.touchAreas.splice(idx,1);
+  if(S.selectedArea===idx)S.selectedArea=-1;
+  else if(S.selectedArea>idx)S.selectedArea--;
+  saveTouchAreas();renderTouchList();renderZones(3);
+}
+
+function startMove(e,idx){
+  e.preventDefault();
+  const pw=$('pw3');const sc=pw.querySelector('img').clientWidth/S.preview.width;
+  const startX=e.clientX,startY=e.clientY;
+  const orig={...S.touchAreas[idx]};
+  const mmv=ev=>{
+    const dx=(ev.clientX-startX)/sc,dy=(ev.clientY-startY)/sc;
+    S.touchAreas[idx].x=orig.x+dx;S.touchAreas[idx].y=orig.y+dy;
+    renderZones(3);
+  };
+  const mup=()=>{
+    document.removeEventListener('mousemove',mmv);
+    document.removeEventListener('mouseup',mup);
+    saveTouchAreas();renderTouchList();
+  };
+  document.addEventListener('mousemove',mmv);
+  document.addEventListener('mouseup',mup);
+}
+
+function startResize(e,idx,corner){
+  e.preventDefault();
+  const pw=$('pw3');const sc=pw.querySelector('img').clientWidth/S.preview.width;
+  const startX=e.clientX,startY=e.clientY;
+  const orig={...S.touchAreas[idx]};
+  const mmv=ev=>{
+    const dx=(ev.clientX-startX)/sc,dy=(ev.clientY-startY)/sc;
+    const a=S.touchAreas[idx];
+    if(corner==='br'){a.w=Math.max(4,orig.w+dx);a.h=Math.max(4,orig.h+dy)}
+    else if(corner==='bl'){a.x=orig.x+dx;a.w=Math.max(4,orig.w-dx);a.h=Math.max(4,orig.h+dy)}
+    else if(corner==='tr'){a.w=Math.max(4,orig.w+dx);a.y=orig.y+dy;a.h=Math.max(4,orig.h-dy)}
+    else if(corner==='tl'){a.x=orig.x+dx;a.w=Math.max(4,orig.w-dx);a.y=orig.y+dy;a.h=Math.max(4,orig.h-dy)}
+    renderZones(3);
+  };
+  const mup=()=>{
+    document.removeEventListener('mousemove',mmv);
+    document.removeEventListener('mouseup',mup);
+    saveTouchAreas();renderTouchList();
+  };
+  document.addEventListener('mousemove',mmv);
+  document.addEventListener('mouseup',mup);
+}
+function clearAllTouch(){
+  S.touchAreas=[];
+  saveTouchAreas();renderTouchList();renderZones(3);
+}
+function saveTouchAreas(){
+  const areas=S.touchAreas.map(a=>({x:a.x,y:a.y,width:a.w,height:a.h}));
+  post({type:'save-touch-areas',areas});st('Áreas salvas');
+}
+
+// ═══════════════ STEP 4: FOCUS ═══════════════
+function onFocusData(m){
+  S.focusOrder=m.entries||[];S.annotatedNodes=m.annotatedNodes||[];
+  renderFocusList();renderZones(4);
+}
+
+function toggleFocus(nid,name){
+  const idx=S.focusOrder.findIndex(e=>e.nodeId===nid);
+  if(idx>=0){
+    S.focusOrder.splice(idx,1);
+    S.focusOrder.forEach((e,i)=>e.order=i+1);
+  } else {
+    const ann=S.annotatedNodes.find(n=>n.nodeId===nid);
+    S.focusOrder.push({nodeId:nid,order:S.focusOrder.length+1,category:ann?.category||'outros',name:name});
+  }
+  renderFocusList();renderZones(4);saveFocusOrder();
+}
+
+function renderFocusList(){
+  const c=$('flist');
+  if(S.focusOrder.length===0){c.innerHTML='<div style="color:#999;font-size:10px;text-align:center;padding:12px">Clique nos elementos no preview acima para definir a ordem</div>';return}
+  let h='';
+  S.focusOrder.forEach((e,i)=>{
+    const nm=e.name||S.allLayers.find(l=>l.id===e.nodeId)?.name||'?';
+    h+=`<div class="fi"><span class="fi-num">${i+1}</span><span class="fi-name">${esc(nm)}</span><button class="fi-rm" onclick="rmFocus(${i})" title="Remover">×</button></div>`;
+  });
+  c.innerHTML=h;
+}
+
+function rmFocus(idx){
+  S.focusOrder.splice(idx,1);S.focusOrder.forEach((e,i)=>e.order=i+1);
+  renderFocusList();renderZones(4);saveFocusOrder();
+}
+function clearFocus(){S.focusOrder=[];renderFocusList();renderZones(4);saveFocusOrder()}
+
+function saveFocusOrder(){
+  const entries=S.focusOrder.map(e=>({nodeId:e.nodeId,order:e.order,category:e.category}));
+  post({type:'set-focus-order',entries});st('Foco salvo');
+}
+
+// ═══════════════ STEP 5: HANDOFF ═══════════════
+function onConn(m){
+  const el=$('hconn');el.style.display='block';
+  el.className='hstatus '+(m.count>0?'ok':'info');
+  el.textContent=m.count>0?m.count+' conectores encontrados':'Nenhum conector [EXCLUSIVO DSC][a11y] encontrado. Handoff será gerado sem conectores visuais.';
+}
+function doHandoff(){
+  st('Gerando handoff...');
+  const el=$('hres');el.style.display='block';el.className='hstatus info';el.textContent='Gerando handoff, aguarde...';
+  post({type:'generate-handoff'});
+}
+function onProgress(m){st(m.text);const el=$('hres');if(el&&el.style.display==='block'){el.textContent=m.text}}
+function onHandoff(m){
+  const el=$('hres');el.style.display='block';
+  if(!m.success){el.className='hstatus err';el.textContent=m.error;st('Erro');return}
+  let t='Handoff gerado com sucesso!';
+  if(m.layersAnnotated>0)t+='\n'+m.layersAnnotated+' layer(s) documentada(s).';
+  if(m.touchAreas>0)t+='\n'+m.touchAreas+' área(s) de toque.';
+  if(m.connectorsPlaced>0)t+='\n'+m.connectorsPlaced+' conector(es) posicionado(s).';
+  if(m.zoomInstances>0)t+='\n'+m.zoomInstances+' instância(s) de zoom gerada(s).';
+  el.className='hstatus ok';el.textContent=t;el.style.whiteSpace='pre-line';st('Pronto!');
+}
+
+// ═══════════════ UTIL ═══════════════
+function $(id){return document.getElementById(id)}
+function st(t){$('status').textContent=t}
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
+function ea(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+</script>
+</body>
+</html>
