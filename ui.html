@@ -145,34 +145,40 @@ body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background
 /* Exception bar (per step) */
 .exc-bar{padding:8px 12px;background:#f9f9f9;border-bottom:1px solid #e5e5e5;flex-shrink:0}
 .exc-bar-top{margin-bottom:0}
-.exc-bar-mgr{margin-top:8px;padding-top:8px;border-top:1px solid #e5e5e5}
-.exc-bar-controls{display:flex;align-items:flex-end;gap:6px;margin-bottom:6px;flex-wrap:wrap}
-.exc-mgr-picker{display:flex;flex-wrap:wrap;gap:4px;flex:1}
-.exc-mgr-picker .vp-prop{display:flex;align-items:center;gap:2px}
-.exc-mgr-picker .vp-key{font-size:9px;color:#999;text-transform:capitalize}
-.exc-mgr-picker .vp-sel{padding:2px 6px;border:1px solid #ccc;border-radius:4px;font-size:10px;font-weight:600;background:#fff;cursor:pointer;appearance:none;-webkit-appearance:none;padding-right:16px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23999'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 4px center}
-.exc-mgr-picker .vp-sel:focus{outline:none;border-color:#18a0fb}
-.exc-mgr-add{padding:4px 10px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;background:#fff;color:#333;white-space:nowrap;flex-shrink:0}
-.exc-mgr-add:hover{background:#f0f0f0;border-color:#bbb}
-.exc-mgr-list{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
-.exc-mgr-item{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border:1px solid #e5e5e5;border-radius:4px;font-size:10px;background:#fff}
-.exc-mgr-item:hover{background:#f0f7ff;border-color:#d0e3f7}
-.exc-mgr-item.active{background:#e8f0fe;border-color:#18a0fb}
-.exc-mgr-item-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
-.exc-mgr-item-actions{display:flex;align-items:center;gap:2px;flex-shrink:0}
-.exc-mgr-item-edit{width:18px;height:18px;border:none;background:none;cursor:pointer;color:#18a0fb;font-size:11px;padding:0;line-height:1}
-.exc-mgr-item-edit:hover{color:#0d8ce0}
-.exc-mgr-item-rm{width:18px;height:18px;border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;flex-shrink:0;padding:0;line-height:1}
-.exc-mgr-item-rm:hover{color:#c0392b}
 
-/* Variant switcher inside exc-bar */
-.exc-bar-sw{display:flex;align-items:center;gap:8px;padding:6px 0 0}
-.exc-bar-sw label{font-size:10px;font-weight:600;color:#555;white-space:nowrap}
-.exc-bar-sw select{flex:1;padding:4px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-weight:600;background:#fff;cursor:pointer;appearance:none;-webkit-appearance:none;padding-right:20px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23999'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center}
-.exc-bar-sw select:focus{outline:none;border-color:#18a0fb}
-.var-sw-indicator{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600;white-space:nowrap}
-.var-sw-indicator.default{background:#e6f9f0;color:#0d7a42}
-.var-sw-indicator.exception{background:#fff3cd;color:#856404}
+/* Exception cards list (shown before preview) */
+.exc-cards{flex:1;overflow-y:auto;padding:14px}
+.exc-cards .stitle{margin-bottom:4px}
+.exc-cards .sdesc{margin-bottom:10px}
+.exc-card{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #e5e5e5;border-radius:6px;margin-bottom:6px;background:#fff;transition:.12s}
+.exc-card:hover{border-color:#ccc;background:#fafafa}
+.exc-card.editing{border-color:#18a0fb;background:#f0f7ff}
+.exc-card-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#fff}
+.exc-card-icon.default{background:#1bc47d}
+.exc-card-icon.exception{background:#18a0fb}
+.exc-card-info{flex:1;min-width:0}
+.exc-card-name{font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.exc-card-sub{font-size:9px;color:#999;margin-top:1px}
+.exc-card-actions{display:flex;gap:4px;flex-shrink:0}
+.exc-card-btn{padding:4px 10px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;background:#fff;color:#333;transition:.12s}
+.exc-card-btn:hover{background:#f0f0f0;border-color:#bbb}
+.exc-card-btn.pr{background:#18a0fb;color:#fff;border-color:#18a0fb}
+.exc-card-btn.pr:hover{background:#0d8ce0}
+.exc-card-btn.danger{color:#e74c3c;border-color:#f5c6cb}
+.exc-card-btn.danger:hover{background:#fde8e8;border-color:#e74c3c}
+
+/* Add exception row */
+.exc-add-row{display:flex;gap:6px;margin-top:4px}
+.exc-add-row input{flex:1;padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:11px}
+.exc-add-row input:focus{outline:none;border-color:#18a0fb}
+.exc-add-row button{padding:5px 12px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;background:#fff;color:#333;white-space:nowrap;flex-shrink:0}
+.exc-add-row button:hover{background:#f0f0f0;border-color:#bbb}
+
+/* Editing header (shown when editing inside preview) */
+.exc-editing-hdr{padding:6px 12px;background:#f0f7ff;border-bottom:1px solid #d0e3f7;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.exc-editing-hdr span{font-size:11px;font-weight:600;color:#333;flex:1}
+.exc-editing-back{padding:4px 10px;border:1px solid #ccc;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;background:#fff;color:#555;white-space:nowrap}
+.exc-editing-back:hover{background:#f0f0f0}
 </style>
 </head>
 <body>
@@ -211,29 +217,22 @@ body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background
   <!-- STEP 2: ROLES -->
   <div id="s2" class="step">
     <div id="exc-bar-2" class="exc-bar" style="display:none">
-      <div class="exc-bar-top">
-        <label class="ci"><input type="checkbox" id="hasExcCk-2" onchange="toggleHasExc(2)"> Alguma variante tem roles diferentes?</label>
-      </div>
-      <div id="exc-mgr-2" class="exc-bar-mgr" style="display:none">
-        <div class="exc-bar-controls">
-          <div id="exc-picker-2" class="exc-mgr-picker"></div>
-          <button class="exc-mgr-add" onclick="addExc(2)">+ Adicionar</button>
-        </div>
-        <div id="exc-list-2" class="exc-mgr-list"></div>
-        <div class="exc-bar-sw">
-          <label>Editando:</label>
-          <select id="var-sw-sel-2" onchange="onVarSwitch(2)"></select>
-          <span id="var-sw-ind-2" class="var-sw-indicator default">Padrão</span>
-        </div>
-      </div>
+      <label class="ci"><input type="checkbox" id="hasExcCk-2" onchange="toggleHasExc(2)"> Alguma variante tem roles diferentes?</label>
     </div>
-    <div id="bc2" class="breadcrumb"><span style="opacity:.6">Raiz</span><span style="opacity:.4"> — duplo-clique para expandir</span></div>
-    <div class="preview-wrap" id="pw2"><img id="pi2" alt="Preview"></div>
-    <div class="panel" id="rp">
-      <div id="rpEdit"><span style="color:#999">Clique em um elemento no preview</span></div>
-      <div id="rpList">
-        <div class="stitle" style="margin-top:12px">Layers Anotados</div>
-        <div id="rlist"></div>
+    <div id="exc-cards-2" class="exc-cards" style="display:none"></div>
+    <div id="exc-editing-hdr-2" class="exc-editing-hdr" style="display:none">
+      <span id="exc-editing-name-2"></span>
+      <button class="exc-editing-back" onclick="backToList(2)">← Voltar</button>
+    </div>
+    <div id="s2-content">
+      <div id="bc2" class="breadcrumb"><span style="opacity:.6">Raiz</span><span style="opacity:.4"> — duplo-clique para expandir</span></div>
+      <div class="preview-wrap" id="pw2"><img id="pi2" alt="Preview"></div>
+      <div class="panel" id="rp">
+        <div id="rpEdit"><span style="color:#999">Clique em um elemento no preview</span></div>
+        <div id="rpList">
+          <div class="stitle" style="margin-top:12px">Layers Anotados</div>
+          <div id="rlist"></div>
+        </div>
       </div>
     </div>
     <div class="snav"><button class="nb" onclick="go(1)">← Voltar</button><button class="nb pr" onclick="go(3)">Próximo →</button></div>
@@ -242,23 +241,15 @@ body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background
   <!-- STEP 3: TOUCH AREA -->
   <div id="s3" class="step">
     <div id="exc-bar-3" class="exc-bar" style="display:none">
-      <div class="exc-bar-top">
-        <label class="ci"><input type="checkbox" id="hasExcCk-3" onchange="toggleHasExc(3)"> Alguma variante tem áreas de toque diferentes?</label>
-      </div>
-      <div id="exc-mgr-3" class="exc-bar-mgr" style="display:none">
-        <div class="exc-bar-controls">
-          <div id="exc-picker-3" class="exc-mgr-picker"></div>
-          <button class="exc-mgr-add" onclick="addExc(3)">+ Adicionar</button>
-        </div>
-        <div id="exc-list-3" class="exc-mgr-list"></div>
-        <div class="exc-bar-sw">
-          <label>Editando:</label>
-          <select id="var-sw-sel-3" onchange="onVarSwitch(3)"></select>
-          <span id="var-sw-ind-3" class="var-sw-indicator default">Padrão</span>
-        </div>
-      </div>
+      <label class="ci"><input type="checkbox" id="hasExcCk-3" onchange="toggleHasExc(3)"> Alguma variante tem áreas de toque diferentes?</label>
     </div>
-    <div class="touch-size-bar">
+    <div id="exc-cards-3" class="exc-cards" style="display:none"></div>
+    <div id="exc-editing-hdr-3" class="exc-editing-hdr" style="display:none">
+      <span id="exc-editing-name-3"></span>
+      <button class="exc-editing-back" onclick="backToList(3)">← Voltar</button>
+    </div>
+    <div id="s3-content">
+      <div class="touch-size-bar">
       <div class="fl">Tamanho do alvo</div>
       <div class="touch-opts">
         <button class="touch-opt active" data-ts="44" onclick="setTouchSize('44')">Aprimorado (44dp)</button>
@@ -274,28 +265,21 @@ body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background
       <div id="tlist"></div>
       <button style="margin-top:8px;padding:6px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-size:10px" onclick="clearAllTouch()">Limpar todas</button>
     </div>
+    </div>
     <div class="snav"><button class="nb" onclick="go(2)">← Voltar</button><button class="nb pr" onclick="go(4)">Próximo →</button></div>
   </div>
 
   <!-- STEP 4: FOCUS ORDER -->
   <div id="s4" class="step">
     <div id="exc-bar-4" class="exc-bar" style="display:none">
-      <div class="exc-bar-top">
-        <label class="ci"><input type="checkbox" id="hasExcCk-4" onchange="toggleHasExc(4)"> Alguma variante tem ordem de foco diferente?</label>
-      </div>
-      <div id="exc-mgr-4" class="exc-bar-mgr" style="display:none">
-        <div class="exc-bar-controls">
-          <div id="exc-picker-4" class="exc-mgr-picker"></div>
-          <button class="exc-mgr-add" onclick="addExc(4)">+ Adicionar</button>
-        </div>
-        <div id="exc-list-4" class="exc-mgr-list"></div>
-        <div class="exc-bar-sw">
-          <label>Editando:</label>
-          <select id="var-sw-sel-4" onchange="onVarSwitch(4)"></select>
-          <span id="var-sw-ind-4" class="var-sw-indicator default">Padrão</span>
-        </div>
-      </div>
+      <label class="ci"><input type="checkbox" id="hasExcCk-4" onchange="toggleHasExc(4)"> Alguma variante tem ordem de foco diferente?</label>
     </div>
+    <div id="exc-cards-4" class="exc-cards" style="display:none"></div>
+    <div id="exc-editing-hdr-4" class="exc-editing-hdr" style="display:none">
+      <span id="exc-editing-name-4"></span>
+      <button class="exc-editing-back" onclick="backToList(4)">← Voltar</button>
+    </div>
+    <div id="s4-content">
     <div class="breadcrumb" id="bc4"><span style="opacity:.6">Clique nos elementos na ordem de foco desejada</span></div>
     <div style="padding:8px 12px 0">
       <label class="ci"><input type="checkbox" id="noTabCk" onchange="toggleNoTab()"> Este componente não tem tabulação</label>
@@ -307,6 +291,7 @@ body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background
         <div id="flist"></div>
         <button style="margin-top:8px;padding:6px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-size:10px" onclick="clearFocus()">Limpar ordem</button>
       </div>
+    </div>
     </div>
     <div class="snav"><button class="nb" onclick="go(3)">← Voltar</button><button class="nb pr" onclick="go(5)">Próximo →</button></div>
   </div>
@@ -414,10 +399,16 @@ function go(s){
   S.step=s;
   document.querySelectorAll('.stab').forEach(t=>{const n=+t.dataset.s;t.classList.toggle('active',n===s);t.classList.toggle('done',n<s)});
   document.querySelectorAll('.step').forEach(c=>c.classList.toggle('active',c.id==='s'+s));
-  if(s===2||s===3||s===4){post({type:'generate-preview'});st('Gerando preview...')}
-  if(s===2){post({type:'get-all-layer-annotations',variantName:currentVariantName(),excOnly:!!S.editingException});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcBar(2)}
-  if(s===3){post({type:'get-touch-areas',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcBar(3)}
-  if(s===4){post({type:'get-focus-order',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcBar(4)}
+  if(s===2||s===3||s===4){
+    // Always reset to default when navigating between steps
+    S.editingException=null;excEditing[s]=null;
+    if(getExcNamesForStep(s).length>0){excView[s]='list'}else{excView[s]='editing'}
+    switchToDefault();
+    st('Gerando preview...');
+  }
+  if(s===2){post({type:'get-all-layer-annotations',variantName:currentVariantName(),excOnly:false});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcUI(2)}
+  if(s===3){post({type:'get-touch-areas',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcUI(3)}
+  if(s===4){post({type:'get-focus-order',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcUI(4)}
   if(s===5){post({type:'discover-connectors'});renderVariantFilter()}
 }
 
@@ -830,55 +821,71 @@ function getVariantPropData(){
   return _variantPropCache;
 }
 
-// ═══════════════ EXCEPTION SYSTEM (PER-STEP) ═══════════════
+// ═══════════════ EXCEPTION SYSTEM (PER-STEP CARD LIST) ═══════════════
 
 function stepDataType(step){return step===2?'roles':step===3?'touch':'focus'}
+const STEP_LABELS={2:'roles',3:'áreas de toque',4:'ordem de foco'};
+
+// Track which view each step is in: 'list' or 'editing'
+const excView={2:'editing',3:'editing',4:'editing'}; // default = editing (shows preview for Default)
+// Track which item is being edited per step (null = default)
+const excEditing={2:null,3:null,4:null};
+// Exception custom names per step {dt: {variantName: customLabel}}
+const excNames={roles:{},touch:{},focus:{}};
 
 function onVariantOverrides(m){
   S.variantOverrides=m.overrides||{roles:[],touch:[],focus:[]};
-  [2,3,4].forEach(s=>renderExcBar(s));
+  [2,3,4].forEach(s=>renderExcUI(s));
 }
 
-// Get exception names for a specific step's data type
 function getExcNamesForStep(step){
   const dt=stepDataType(step);
   return S.variantOverrides[dt]||[];
 }
 
-// ── Per-step: checkbox, manager, switcher ──
+function getExcLabel(step,variantName){
+  const dt=stepDataType(step);
+  return excNames[dt][variantName]||variantName;
+}
+
+// ── Toggle checkbox ──
 
 function toggleHasExc(step){
   const checked=$('hasExcCk-'+step).checked;
-  $('exc-mgr-'+step).style.display=checked?'':'none';
-  if(!checked){
-    // Remove all exceptions for this step's data type
+  if(checked){
+    // Show card list view
+    excView[step]='list';
+    excEditing[step]=null;
+    renderExcUI(step);
+  } else {
+    // Remove all exceptions for this step
     const dt=stepDataType(step);
     const names=[...(S.variantOverrides[dt]||[])];
     names.forEach(vn=>{
       post({type:'remove-variant-override',variantName:vn,dataType:dt});
     });
-    // If we were editing an exception that no longer exists in any step, go back to default
-    if(S.editingException){
-      const stillExists=[2,3,4].some(s=>{
-        if(s===step)return false;
-        return getExcNamesForStep(s).includes(S.editingException);
-      });
-      if(!stillExists){
-        S.editingException=null;
-        if(S.variants.length>0){
-          S.selectedVariant=S.variants[0].id;
-          S.currentVariantName=S.variants[0].name;
-          post({type:'switch-variant',variantId:S.selectedVariant});
-        }
-      }
-    }
     S.variantOverrides[dt]=[];
-    renderExcBar(step);
+    excEditing[step]=null;
+    excView[step]='editing'; // go straight to default preview
+    // Reset to default variant
+    switchToDefault();
+    renderExcUI(step);
     reloadStepData(step);
   }
 }
 
-function renderExcBar(step){
+function switchToDefault(){
+  S.editingException=null;
+  if(S.variants.length>0){
+    S.selectedVariant=S.variants[0].id;
+    S.currentVariantName=S.variants[0].name;
+    post({type:'switch-variant',variantId:S.selectedVariant});
+  }
+}
+
+// ── Render everything for a step ──
+
+function renderExcUI(step){
   const bar=$('exc-bar-'+step);if(!bar)return;
   if(S.variants.length<=1){bar.style.display='none';return}
   bar.style.display='';
@@ -887,136 +894,78 @@ function renderExcBar(step){
   const exceptions=S.variantOverrides[dt]||[];
   const hasExc=exceptions.length>0;
 
-  // Checkbox
+  // Checkbox state
   const ck=$('hasExcCk-'+step);
-  if(ck)ck.checked=hasExc;
+  if(ck)ck.checked=hasExc||excView[step]==='list';
 
-  // Manager visibility
-  const mgr=$('exc-mgr-'+step);
-  if(mgr)mgr.style.display=hasExc?'':'none';
+  const cards=$('exc-cards-'+step);
+  const editHdr=$('exc-editing-hdr-'+step);
+  const content=$('s'+step+'-content');
 
-  // Picker
-  const picker=$('exc-picker-'+step);
-  if(picker){
-    const data=getVariantPropData();
-    let h='';
-    data.keyOrder.forEach(key=>{
-      const vals=data.propValues[key];
-      if(vals.length<=1)return;
-      h+='<div class="vp-prop"><span class="vp-key">'+esc(key)+'</span>';
-      h+='<select class="vp-sel" data-vpkey="'+ea(key)+'" id="exc-sel-'+step+'-'+ea(key)+'">';
-      vals.forEach(val=>{h+='<option value="'+ea(val)+'">'+esc(val)+'</option>'});
-      h+='</select></div>';
-    });
-    picker.innerHTML=h;
-  }
+  if(excView[step]==='list'&&(hasExc||ck.checked)){
+    // Show card list, hide preview
+    cards.style.display='';
+    editHdr.style.display='none';
+    content.style.display='none';
+    renderCardList(step);
+  } else {
+    // Show preview (editing mode)
+    cards.style.display='none';
+    content.style.display='';
 
-  // Exception list
-  const list=$('exc-list-'+step);
-  if(list){
-    let h='';
-    exceptions.forEach(vn=>{
-      const isActive=S.editingException===vn;
-      h+='<div class="exc-mgr-item'+(isActive?' active':'')+'">';
-      h+='<span class="exc-mgr-item-name" onclick="editExc(\''+ea(vn)+'\','+step+')" title="Clique para editar">'+esc(vn)+'</span>';
-      h+='<div class="exc-mgr-item-actions">';
-      h+='<button class="exc-mgr-item-rm" onclick="rmExc(\''+ea(vn)+'\','+step+')" title="Remover">×</button>';
-      h+='</div></div>';
-    });
-    if(exceptions.length===0)h='<div style="color:#999;font-size:10px;padding:4px 0">Nenhuma exceção adicionada</div>';
-    list.innerHTML=h;
-  }
-
-  // Switcher dropdown
-  const sel=$('var-sw-sel-'+step);
-  const ind=$('var-sw-ind-'+step);
-  if(sel&&ind){
-    if(!hasExc){
-      sel.parentElement.style.display='none';
+    if(excEditing[step]){
+      editHdr.style.display='flex';
+      $('exc-editing-name-'+step).textContent='Editando: '+getExcLabel(step,excEditing[step]);
     } else {
-      sel.parentElement.style.display='flex';
-      let h='<option value="">Padrão (todas as variantes)</option>';
-      exceptions.forEach(vn=>{
-        const selected=S.editingException===vn?' selected':'';
-        h+='<option value="'+ea(vn)+'"'+selected+'>'+esc(vn)+'</option>';
-      });
-      sel.innerHTML=h;
-      sel.value=S.editingException||'';
-
-      if(S.editingException&&exceptions.includes(S.editingException)){
-        ind.textContent='Exceção';
-        ind.className='var-sw-indicator exception';
-      } else {
-        ind.textContent='Padrão';
-        ind.className='var-sw-indicator default';
-      }
+      editHdr.style.display=hasExc?'flex':'none';
+      $('exc-editing-name-'+step).textContent='Editando: Default';
     }
   }
 }
 
-function addExc(step){
-  const picker=$('exc-picker-'+step);if(!picker)return;
-  const data=getVariantPropData();
+function renderCardList(step){
+  const cards=$('exc-cards-'+step);if(!cards)return;
   const dt=stepDataType(step);
-  const selections={};
-  picker.querySelectorAll('.vp-sel').forEach(sel=>{
-    selections[sel.dataset.vpkey]=sel.value;
+  const exceptions=S.variantOverrides[dt]||[];
+
+  let h='';
+  h+='<div class="stitle">Variantes de '+STEP_LABELS[step]+'</div>';
+  h+='<div class="sdesc">Edite o comportamento padrão ou adicione exceções para variantes específicas.</div>';
+
+  // Default card
+  h+='<div class="exc-card'+(excEditing[step]===null&&excView[step]==='editing'?' editing':'')+'">';
+  h+='<div class="exc-card-icon default">D</div>';
+  h+='<div class="exc-card-info"><div class="exc-card-name">Default</div><div class="exc-card-sub">Comportamento padrão para todas as variantes</div></div>';
+  h+='<div class="exc-card-actions"><button class="exc-card-btn pr" onclick="editCard(null,'+step+')">Editar</button></div>';
+  h+='</div>';
+
+  // Exception cards
+  exceptions.forEach((vn,i)=>{
+    const label=getExcLabel(step,vn);
+    h+='<div class="exc-card">';
+    h+='<div class="exc-card-icon exception">'+(i+1)+'</div>';
+    h+='<div class="exc-card-info"><div class="exc-card-name">'+esc(label)+'</div><div class="exc-card-sub">'+esc(vn)+'</div></div>';
+    h+='<div class="exc-card-actions">';
+    h+='<button class="exc-card-btn pr" onclick="editCard(\''+ea(vn)+'\','+step+')">Editar</button>';
+    h+='<button class="exc-card-btn danger" onclick="rmExc(\''+ea(vn)+'\','+step+')">Excluir</button>';
+    h+='</div></div>';
   });
-  let bestMatch=null;let bestScore=-1;
-  data.parsed.forEach(p=>{
-    let score=0;
-    for(const key in selections){if(p.props[key]===selections[key])score++}
-    if(score>bestScore){bestScore=score;bestMatch=p}
-  });
-  if(!bestMatch)return;
-  const existing=S.variantOverrides[dt]||[];
-  if(existing.includes(bestMatch.name)){st('Essa exceção já existe');return}
-  // Create override for this step's data type only
-  post({type:'create-variant-override',variantName:bestMatch.name,dataType:dt});
-  // Optimistically update local state
-  if(!S.variantOverrides[dt])S.variantOverrides[dt]=[];
-  S.variantOverrides[dt].push(bestMatch.name);
-  renderExcBar(step);
-  // Auto-switch to editing it
-  editExc(bestMatch.name,step);
-  st('Exceção adicionada: '+bestMatch.name);
+
+  // Add exception row
+  h+='<div class="exc-add-row">';
+  h+='<input type="text" id="exc-new-name-'+step+'" placeholder="Nome da exceção (ex: Estado hover)">';
+  h+='<button onclick="addExc('+step+')">+ Adicionar</button>';
+  h+='</div>';
+
+  cards.innerHTML=h;
 }
 
-function editExc(variantName,step){
-  S.editingException=variantName;
-  const v=S.variants.find(v=>v.name===variantName);
-  if(v){
-    S.selectedVariant=v.id;
-    S.currentVariantName=v.name;
-    post({type:'switch-variant',variantId:v.id});
-  }
-  renderExcBar(step);
-  reloadStepData(step);
-  st('Editando exceção: '+variantName);
-}
+// ── Actions ──
 
-function rmExc(variantName,step){
-  const dt=stepDataType(step);
-  post({type:'remove-variant-override',variantName,dataType:dt});
-  // Optimistically update local state
-  S.variantOverrides[dt]=(S.variantOverrides[dt]||[]).filter(vn=>vn!==variantName);
-  // If we were editing this exception, go back to default
-  if(S.editingException===variantName){
-    S.editingException=null;
-    if(S.variants.length>0){
-      S.selectedVariant=S.variants[0].id;
-      S.currentVariantName=S.variants[0].name;
-      post({type:'switch-variant',variantId:S.selectedVariant});
-    }
-    reloadStepData(step);
-  }
-  renderExcBar(step);
-  st('Exceção removida');
-}
+function editCard(variantName,step){
+  excEditing[step]=variantName;
+  excView[step]='editing';
 
-function onVarSwitch(step){
-  const sel=$('var-sw-sel-'+step);
-  const variantName=sel.value;
   if(variantName){
     S.editingException=variantName;
     const v=S.variants.find(v=>v.name===variantName);
@@ -1026,16 +975,66 @@ function onVarSwitch(step){
       post({type:'switch-variant',variantId:v.id});
     }
   } else {
-    S.editingException=null;
-    if(S.variants.length>0){
-      S.selectedVariant=S.variants[0].id;
-      S.currentVariantName=S.variants[0].name;
-      post({type:'switch-variant',variantId:S.selectedVariant});
-    }
+    switchToDefault();
   }
-  renderExcBar(step);
+
+  renderExcUI(step);
   reloadStepData(step);
-  st(variantName?'Editando exceção: '+variantName:'Editando padrão');
+  st(variantName?'Editando: '+getExcLabel(step,variantName):'Editando: Default');
+}
+
+function backToList(step){
+  excView[step]='list';
+  excEditing[step]=null;
+  S.editingException=null;
+  switchToDefault();
+  renderExcUI(step);
+  reloadStepData(step);
+}
+
+function addExc(step){
+  const input=$('exc-new-name-'+step);
+  const customName=(input?input.value:'').trim();
+  if(!customName){st('Digite um nome para a exceção');return}
+
+  // Need to pick a variant to associate. Use first variant not yet used.
+  const dt=stepDataType(step);
+  const data=getVariantPropData();
+  const existing=S.variantOverrides[dt]||[];
+  const available=data.parsed.filter(p=>!existing.includes(p.name));
+  if(available.length===0){st('Todas as variantes já têm exceção');return}
+
+  const chosen=available[0];
+  // Store custom name
+  excNames[dt][chosen.name]=customName;
+
+  post({type:'create-variant-override',variantName:chosen.name,dataType:dt});
+  if(!S.variantOverrides[dt])S.variantOverrides[dt]=[];
+  S.variantOverrides[dt].push(chosen.name);
+  renderExcUI(step);
+  st('Exceção adicionada: '+customName);
+}
+
+function rmExc(variantName,step){
+  const dt=stepDataType(step);
+  post({type:'remove-variant-override',variantName,dataType:dt});
+  S.variantOverrides[dt]=(S.variantOverrides[dt]||[]).filter(vn=>vn!==variantName);
+  delete excNames[dt][variantName];
+
+  if(excEditing[step]===variantName){
+    excEditing[step]=null;
+    switchToDefault();
+  }
+
+  // If no more exceptions, hide list
+  if((S.variantOverrides[dt]||[]).length===0){
+    excView[step]='editing';
+    $('hasExcCk-'+step).checked=false;
+  }
+
+  renderExcUI(step);
+  reloadStepData(step);
+  st('Exceção removida');
 }
 
 function reloadStepData(step){
