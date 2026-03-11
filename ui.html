@@ -415,7 +415,7 @@ function go(s){
   document.querySelectorAll('.stab').forEach(t=>{const n=+t.dataset.s;t.classList.toggle('active',n===s);t.classList.toggle('done',n<s)});
   document.querySelectorAll('.step').forEach(c=>c.classList.toggle('active',c.id==='s'+s));
   if(s===2||s===3||s===4){post({type:'generate-preview'});st('Gerando preview...')}
-  if(s===2){post({type:'get-all-layer-annotations',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcBar(2)}
+  if(s===2){post({type:'get-all-layer-annotations',variantName:currentVariantName(),excOnly:!!S.editingException});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcBar(2)}
   if(s===3){post({type:'get-touch-areas',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcBar(3)}
   if(s===4){post({type:'get-focus-order',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcBar(4)}
   if(s===5){post({type:'discover-connectors'});renderVariantFilter()}
@@ -1040,9 +1040,10 @@ function onVarSwitch(step){
 
 function reloadStepData(step){
   const vn=currentVariantName();
+  const isExc=!!S.editingException;
   post({type:'generate-preview'});
   if(step===2){
-    post({type:'get-all-layer-annotations',variantName:vn});
+    post({type:'get-all-layer-annotations',variantName:vn,excOnly:isExc});
     S.selLayer=null;
     $('rpEdit').innerHTML='<span style="color:#999">Clique em um elemento no preview</span>';
   }

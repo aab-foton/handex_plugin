@@ -538,11 +538,20 @@ async function setLayerData(nodeId: string, data: LayerA11yData, variantName?: s
   await sendAllLayerAnnotations(variantName);
 }
 
-async function sendAllLayerAnnotations(variantName?: string): Promise<void> {
-  const effectiveMap = await getEffectiveConsolidatedMap(variantName);
-  // Also track which entries are variant-specific
-  const variantMap = variantName ? await getConsolidatedMap(variantName) : {};
-  const annotations = Object.entries(effectiveMap).map(([namePath, data]) => ({
+async function sendAllLayerAnnotations(variantName?: string, excOnly?: boolean): Promise<void> {
+  let map: Record<string, LayerA11yData>;
+  let variantMap: Record<string, LayerA11yData> = {};
+
+  if (excOnly && variantName) {
+    // Exception-only mode: show only variant-specific annotations
+    map = await getConsolidatedMap(variantName);
+    variantMap = map;
+  } else {
+    map = await getEffectiveConsolidatedMap(variantName);
+    variantMap = variantName ? await getConsolidatedMap(variantName) : {};
+  }
+
+  const annotations = Object.entries(map).map(([namePath, data]) => ({
     namePath,
     name: namePath.split('/').pop() || namePath,
     data,
@@ -1623,7 +1632,7 @@ figma.ui.onmessage = async (msg: any) => {
     case 'switch-variant': if (msg.variantId) await switchVariant(msg.variantId); break;
     case 'get-layer-data': if (msg.nodeId) await getLayerData(msg.nodeId, msg.variantName); break;
     case 'set-layer-data': if (msg.nodeId && msg.data) await setLayerData(msg.nodeId, msg.data, msg.variantName, msg.applyToAll !== false); break;
-    case 'get-all-layer-annotations': await sendAllLayerAnnotations(msg.variantName); break;
+    case 'get-all-layer-annotations': await sendAllLayerAnnotations(msg.variantName, msg.excOnly); break;
     case 'remove-layer-annotation': if (msg.namePath) await removeLayerAnnotation(msg.namePath, msg.variantName); break;
     case 'save-touch-areas': if (msg.areas) await saveTouchAreas(msg.areas, msg.variantName || '', !!msg.applyToAll); break;
     case 'get-touch-areas': await getTouchAreas(msg.variantName || ''); break;
