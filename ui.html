@@ -69,8 +69,8 @@ body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background
 /* Drawing overlay */
 .draw-overlay{position:absolute;top:0;left:0;width:100%;height:100%;z-index:8000;cursor:crosshair}
 .draw-rect{position:absolute;border:2px solid #FFB19E;background:rgba(255,177,158,.48);pointer-events:none}
-.draw-saved{position:absolute;background:rgba(255,177,158,.48);display:flex;align-items:center;justify-content:center;cursor:move;z-index:8001;border:2px solid transparent}
-.draw-saved:hover,.draw-saved.selected{border-color:#FFB19E}
+.draw-saved{position:absolute;background:rgba(255,177,158,.12);display:flex;align-items:center;justify-content:center;cursor:move;z-index:8001;border:2px dashed rgba(255,177,158,.6)}
+.draw-saved.selected{border-color:#FFB19E;border-style:solid;background:rgba(255,177,158,.25)}
 .draw-saved .resize-handle{position:absolute;width:10px;height:10px;background:#FFB19E;border:1px solid #fff;border-radius:2px;display:none;z-index:8002}
 .draw-saved.selected .resize-handle{display:block;cursor:nwse-resize}
 .resize-handle.tl{top:-5px;left:-5px;cursor:nw-resize}
@@ -86,9 +86,6 @@ body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background
 .touch-opt{padding:5px 10px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;background:#fff;transition:.15s}
 .touch-opt:hover{border-color:#bbb}
 .touch-opt.active{background:#FFB19E;color:#fff;border-color:#FFB19E}
-/* Step 3 layer zones clickable for preset sizes */
-.lz.touch-clickable{cursor:pointer;border:1px dashed rgba(255,177,158,.5)}
-.lz.touch-clickable:hover{background:rgba(255,177,158,.15);border-color:#FFB19E}
 
 /* Panel below preview */
 .panel{flex:1 1 0;overflow-y:auto;padding:12px;border-top:1px solid #e5e5e5;min-height:0}
@@ -126,21 +123,18 @@ body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background
 .nb.pr{background:#18a0fb;color:#fff;border-color:#18a0fb}
 .nb.pr:hover{background:#0d8ce0}
 
-#rpEdit{padding-bottom:8px;border-bottom:1px solid #e5e5e5;margin-bottom:4px}
+#rpEdit{padding-top:8px;margin-top:4px}
+#rpEdit.has-form{border-top:1px solid #e5e5e5}
 #rpList{margin-top:4px}
+.add-role-btn{width:100%;padding:8px;border:none;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;background:#1bc47d;color:#fff;margin-top:8px;transition:.15s}
+.add-role-btn:hover{background:#17a56b}
+.add-role-btn:disabled{background:#ccc;cursor:default}
+.upd-role-btn{width:100%;padding:8px;border:none;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;background:#18a0fb;color:#fff;margin-top:8px;transition:.15s}
+.upd-role-btn:hover{background:#0d8ce0}
+.cancel-role-btn{width:100%;padding:6px;border:1px solid #ddd;border-radius:5px;font-size:10px;font-weight:600;cursor:pointer;background:#fff;color:#666;margin-top:4px;transition:.15s}
+.cancel-role-btn:hover{background:#f5f5f5}
 #status{padding:4px 12px;border-top:1px solid #e5e5e5;background:#f5f5f5;font-size:9px;color:#999;flex-shrink:0}
 
-/* Variant filter UI (Step 5) */
-.vf-group{margin-bottom:10px}
-.vf-label{font-weight:600;font-size:10px;color:#666;margin-bottom:4px;text-transform:capitalize}
-.vf-tags{display:flex;flex-wrap:wrap;gap:4px}
-.vf-tag{padding:3px 10px;border:1px solid #ddd;border-radius:12px;font-size:10px;cursor:pointer;background:#fff;transition:.12s;user-select:none}
-.vf-tag:hover{border-color:#aaa;background:#f5f5f5}
-.vf-tag.on{background:#18a0fb;color:#fff;border-color:#18a0fb}
-.vf-count{font-size:10px;color:#999;margin-top:8px}
-.vf-actions{display:flex;gap:6px;margin-bottom:10px}
-.vf-action{padding:4px 10px;border:1px solid #ddd;border-radius:4px;font-size:10px;cursor:pointer;background:#fff}
-.vf-action:hover{background:#f0f0f0}
 
 /* Exception bar (per step) */
 .exc-bar{padding:8px 12px;background:#f9f9f9;border-bottom:1px solid #e5e5e5;flex-shrink:0}
@@ -228,11 +222,11 @@ body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background
       <div id="bc2" class="breadcrumb"><span style="opacity:.6">Raiz</span><span style="opacity:.4"> — duplo-clique para expandir</span></div>
       <div class="preview-wrap" id="pw2"><img id="pi2" alt="Preview"></div>
       <div class="panel" id="rp">
-        <div id="rpEdit"><span style="color:#999">Clique em um elemento no preview</span></div>
         <div id="rpList">
-          <div class="stitle" style="margin-top:12px">Layers Anotados</div>
-          <div id="rlist"></div>
+          <div class="stitle">Roles Anotadas</div>
+          <div id="rlist"><div style="color:#999;font-size:10px;text-align:center;padding:8px">Nenhum layer anotado</div></div>
         </div>
+        <div id="rpEdit" style="display:none"><span style="color:#999">Clique em um elemento no preview</span></div>
       </div>
     </div>
     <div class="snav"><button class="nb" onclick="go(1)">← Voltar</button><button class="nb pr" onclick="go(3)">Próximo →</button></div>
@@ -249,21 +243,26 @@ body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background
       <button class="exc-editing-back" onclick="backToList(3)">← Voltar</button>
     </div>
     <div id="s3-content">
-      <div class="touch-size-bar">
-      <div class="fl">Tamanho do alvo</div>
-      <div class="touch-opts">
-        <button class="touch-opt active" data-ts="44" onclick="setTouchSize('44')">Aprimorado (44dp)</button>
-        <button class="touch-opt" data-ts="24" onclick="setTouchSize('24')">Mínimo (24dp)</button>
-        <button class="touch-opt" data-ts="custom" onclick="setTouchSize('custom')">Desenho livre</button>
-      </div>
-    </div>
-    <div class="breadcrumb" id="bc3"><span style="opacity:.6">Clique nos elementos para definir a área de toque</span></div>
+    <div class="breadcrumb" id="bc3"><span style="opacity:.6">Clique em "Adicionar nova área" para começar</span></div>
     <div class="preview-wrap" id="pw3"><img id="pi3" alt="Preview"></div>
     <div class="panel" id="tp">
       <div class="stitle">Áreas de Toque</div>
       <div class="sdesc">WCAG 2.5.5: ≥44×44px (Aprimorado) · WCAG 2.5.8: ≥24×24px (Mínimo)</div>
       <div id="tlist"></div>
-      <button style="margin-top:8px;padding:6px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-size:10px" onclick="clearAllTouch()">Limpar todas</button>
+      <div id="touch-add-form" style="display:none">
+        <div style="margin-top:8px;padding:10px;border:1px solid #e5e5e5;border-radius:6px;background:#fafafa">
+          <div class="fl" style="margin-bottom:4px">Tamanho do alvo</div>
+          <div class="touch-opts" style="margin-bottom:8px">
+            <button class="touch-opt active" data-ts="44" onclick="setTouchSize('44')">Aprimorado (44px)</button>
+            <button class="touch-opt" data-ts="24" onclick="setTouchSize('24')">Mínimo (24px)</button>
+            <button class="touch-opt" data-ts="custom" onclick="setTouchSize('custom')">Desenho livre</button>
+          </div>
+          <div style="font-size:10px;color:#999;margin-bottom:6px" id="touch-add-hint">Clique em um elemento no preview para definir a área</div>
+          <button class="cancel-role-btn" onclick="exitTouchAddMode()">Cancelar</button>
+        </div>
+      </div>
+      <button id="touch-add-btn" class="add-role-btn" style="margin-top:8px" onclick="enterTouchAddMode()">Adicionar nova área de toque</button>
+      <button id="touch-clear-btn" style="margin-top:4px;padding:6px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-size:10px;width:100%;display:none" onclick="clearAllTouch()">Limpar todas</button>
     </div>
     </div>
     <div class="snav"><button class="nb" onclick="go(2)">← Voltar</button><button class="nb pr" onclick="go(4)">Próximo →</button></div>
@@ -300,18 +299,8 @@ body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background
   <div id="s5" class="step">
     <div class="sbody">
       <div class="stitle">Gerar Handoff</div>
-      <div class="sdesc">Cria a documentação visual no canvas com conectores e especificações completas.</div>
-      <div id="varfilter-fg" style="display:none">
-        <div class="fl" style="margin-bottom:6px">Variantes para o Handoff</div>
-        <div class="vf-actions">
-          <button class="vf-action" onclick="vfSelectAll()">Selecionar tudo</button>
-          <button class="vf-action" onclick="vfDeselectAll()">Limpar seleção</button>
-        </div>
-        <div id="varfilter-groups"></div>
-        <div id="varfilter-count" class="vf-count"></div>
-      </div>
+      <div class="sdesc">Gera a documentação de acessibilidade no canvas com base no que foi preenchido nos passos anteriores.</div>
       <button class="hbtn" onclick="doHandoff()">Gerar Handoff no Canvas</button>
-      <div id="hconn" class="hstatus info" style="display:none"></div>
       <div id="hres" style="display:none"></div>
     </div>
     <div class="snav"><button class="nb" onclick="go(4)">← Voltar</button></div>
@@ -332,6 +321,7 @@ const S = {
   touchAreas: [], // [{x,y,w,h}] in real Figma coords
   selectedArea: -1, // index of selected area, -1 = none
   touchSize: '44', // '44', '24', or 'custom'
+  touchAddMode: false,
   // Variants (component set)
   variants: [], // [{id,name,width,height}]
   selectedVariant: null,
@@ -375,7 +365,6 @@ window.onmessage=e=>{const m=e.data.pluginMessage;if(!m)return;({
   'focus-order-data':onFocusData,
   'all-layer-annotations':onAnnotations,
   'variant-overrides':onVariantOverrides,
-  'connectors-discovered':onConn,
   'handoff-progress':onProgress,
   'handoff-result':onHandoff,
 }[m.type]||(_=>{}))(m)};
@@ -410,7 +399,7 @@ function go(s){
   if(s===2){post({type:'get-all-layer-annotations',variantName:currentVariantName(),excOnly:false});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcUI(2)}
   if(s===3){post({type:'get-touch-areas',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcUI(3)}
   if(s===4){post({type:'get-focus-order',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcUI(4)}
-  if(s===5){post({type:'discover-connectors'});renderVariantFilter()}
+  if(s===5){}
 }
 
 // ═══════════════ STEP 1 ═══════════════
@@ -433,95 +422,6 @@ function parseVariantProps(name){
   return props;
 }
 
-function renderVariantFilter(){
-  const fg=$('varfilter-fg'),gc=$('varfilter-groups');
-  if(!fg||!gc)return;
-  if(S.variants.length<=1){fg.style.display='none';return}
-  fg.style.display='';
-
-  // Parse all variant properties
-  const allProps=S.variants.map(v=>({id:v.id,...parseVariantProps(v.name)}));
-  // Discover property keys and unique values
-  const propKeys=new Set();
-  allProps.forEach(p=>{Object.keys(p).forEach(k=>{if(k!=='id')propKeys.add(k)})});
-
-  // Build active filters from selected variants
-  // A filter value is "on" if ALL variants with that value are selected
-  const propGroups={};
-  propKeys.forEach(key=>{
-    const values=new Map(); // value -> [variant ids]
-    allProps.forEach(p=>{
-      const val=p[key];
-      if(val){if(!values.has(val))values.set(val,[]);values.get(val).push(p.id)}
-    });
-    propGroups[key]=[...values.entries()].map(([val,ids])=>({val,ids}));
-  });
-
-  // Store for toggling
-  S._propGroups=propGroups;
-
-  let h='';
-  for(const key of propKeys){
-    h+='<div class="vf-group">';
-    h+='<div class="vf-label">'+esc(key)+'</div>';
-    h+='<div class="vf-tags">';
-    propGroups[key].forEach(g=>{
-      const allOn=g.ids.every(id=>S.selectedVariants.includes(id));
-      const someOn=g.ids.some(id=>S.selectedVariants.includes(id));
-      let cls='vf-tag';
-      if(allOn)cls+=' on';
-      else if(someOn)cls+=' on" style="opacity:.6';
-      h+='<span class="'+cls+'" onclick="vfToggle(\''+ea(key)+'\',\''+ea(g.val)+'\')">'+esc(g.val)+' <span style="opacity:.5;font-size:9px">('+g.ids.length+')</span></span>';
-    });
-    h+='</div></div>';
-  }
-  gc.innerHTML=h;
-
-  // Count
-  const cnt=$('varfilter-count');
-  if(cnt)cnt.textContent=S.selectedVariants.length+' de '+S.variants.length+' variantes selecionadas';
-}
-
-function vfToggle(key,val){
-  const group=S._propGroups[key].find(g=>g.val===val);
-  if(!group)return;
-  const allOn=group.ids.every(id=>S.selectedVariants.includes(id));
-  if(allOn){
-    // Deselect all with this value
-    S.selectedVariants=S.selectedVariants.filter(id=>!group.ids.includes(id));
-  } else {
-    // Select all with this value
-    const set=new Set(S.selectedVariants);
-    group.ids.forEach(id=>set.add(id));
-    S.selectedVariants=[...set];
-  }
-  // Must have at least one
-  if(S.selectedVariants.length===0)S.selectedVariants=S.variants.map(v=>v.id);
-  if(!S.selectedVariants.includes(S.selectedVariant))S.selectedVariant=S.selectedVariants[0];
-  saveSelectedVariants();
-  renderVariantFilter();
-}
-
-function vfSelectAll(){
-  S.selectedVariants=S.variants.map(v=>v.id);
-  saveSelectedVariants();
-  renderVariantFilter();
-}
-
-function vfDeselectAll(){
-  // Keep at least one
-  S.selectedVariants=[S.variants[0].id];
-  S.selectedVariant=S.variants[0].id;
-  saveSelectedVariants();
-  renderVariantFilter();
-}
-
-function saveSelectedVariants(){
-  if(!S.selectedVariants.includes(S.selectedVariant))S.selectedVariant=S.selectedVariants[0];
-  const v=S.variants.find(v=>v.id===S.selectedVariant);
-  S.currentVariantName=v?v.name:'';
-  post({type:'set-selected-variants',ids:S.selectedVariants});st('Variantes salvas');
-}
 function saveComp(){
   S.comp.platform=[...document.querySelectorAll('input[name="plat"]:checked')].map(c=>c.value);
   S.comp.zoom=[...document.querySelectorAll('input[name="zoom"]:checked')].map(c=>c.value);
@@ -542,7 +442,7 @@ function applyNoTab(){
 function onPreview(m){
   S.preview=m;S.allLayers=m.layers||[];S.rootZoneId=m.rootZoneId;
   if(m.variantName!==undefined)S.currentVariantName=m.variantName;
-  S.expanded=new Set([m.rootZoneId]);
+  S.expanded=new Set(['', m.rootZoneId]);
   // Set images for all steps
   ['pi2','pi3','pi4'].forEach(id=>{$(id).src='data:image/png;base64,'+m.image});
   setTimeout(()=>{renderZones(2);renderZones(3);renderZones(4)},100);
@@ -584,69 +484,95 @@ function renderZones(step){
   const vis=visibleLayers();
   const sorted=[...vis].sort((a,b)=>(b.width*b.height)-(a.width*a.height));
 
-  sorted.forEach(l=>{
-    const z=document.createElement('div');
-    let cls='lz';
-    if(l.hasA11yData)cls+=' ann';
-    if(step===2&&S.selLayer===l.id)cls+=' sel';
-    if(l.hasChildren)cls+=' exp';
-    z.className=cls;
-    z.style.left=(ox+l.x*sc)+'px';z.style.top=(oy+l.y*sc)+'px';
-    z.style.width=Math.max(l.width*sc,6)+'px';z.style.height=Math.max(l.height*sc,6)+'px';
-    z.style.zIndex=String(l.depth*10);z.dataset.nid=l.id;
-    if(l.category){const cat=CATS.find(c=>c.v===l.category);if(cat)z.style.borderColor=cat.c}
-    const tip=document.createElement('span');tip.className='lz-tip';
-    tip.textContent=l.name+(l.hasChildren?' [duplo-clique: expandir]':'');
-    z.appendChild(tip);
+  if(step!==3){
+    sorted.forEach(l=>{
+      const z=document.createElement('div');
+      let cls='lz';
+      if(step===2&&l.hasA11yData)cls+=' ann';
+      if(step===2&&S.selLayer===l.id)cls+=' sel';
+      if(step===2&&l.hasChildren)cls+=' exp';
+      z.className=cls;
+      z.style.left=(ox+l.x*sc)+'px';z.style.top=(oy+l.y*sc)+'px';
+      z.style.width=Math.max(l.width*sc,6)+'px';z.style.height=Math.max(l.height*sc,6)+'px';
+      z.style.zIndex=String(l.depth*10);z.dataset.nid=l.id;
+      if(step===2&&l.category){const cat=CATS.find(c=>c.v===l.category);if(cat)z.style.borderColor=cat.c}
+      const tip=document.createElement('span');tip.className='lz-tip';
+      tip.textContent=l.name+(l.hasChildren?' [duplo-clique: expandir]':'');
+      z.appendChild(tip);
 
-    if(step===2){
-      z.onclick=e=>{e.stopPropagation();S.selLayer=l.id;renderZones(2);post({type:'get-layer-data',nodeId:l.id,variantName:currentVariantName()});st('Carregando...')};
-      if(l.hasChildren)z.ondblclick=e=>{e.stopPropagation();S.expanded.add(l.id);renderZones(2);renderBC(2)};
-    }
-    if(step===3){
-      if(S.touchSize!=='custom'){
-        z.classList.add('touch-clickable');
-        z.onclick=e=>{e.stopPropagation();addTouchForLayer(l.id)};
+      if(step===2){
+        z.onclick=e=>{e.stopPropagation();S.selLayer=l.id;renderZones(2);post({type:'get-layer-data',nodeId:l.id,variantName:currentVariantName()});st('Carregando...')};
+        if(l.hasChildren)z.ondblclick=e=>{e.stopPropagation();S.expanded.add(l.id);renderZones(2);renderBC(2)};
       }
-    }
-    if(step===4){
-      z.onclick=e=>{e.stopPropagation();toggleFocus(l.id,l.name)};
-    }
-    pw.appendChild(z);
-  });
+      if(step===4){
+        z.onclick=e=>{e.stopPropagation();toggleFocus(l.id,l.name)};
+      }
+      pw.appendChild(z);
+    });
+  }
 
   // Step 3: show saved touch areas + draw overlay (custom mode only)
   if(step===3){
     S.touchAreas.forEach((a,idx)=>{
       const d=document.createElement('div');
-      d.className='draw-saved'+(S.selectedArea===idx?' selected':'');
+      const isSel=S.selectedArea===idx;
+      d.className='draw-saved'+(isSel?' selected':'');
       d.style.left=(ox+a.x*sc)+'px';d.style.top=(oy+a.y*sc)+'px';
       d.style.width=(a.w*sc)+'px';d.style.height=(a.h*sc)+'px';
-      const dim=document.createElement('span');dim.className='draw-dim';
-      dim.textContent=Math.round(a.w)+'×'+Math.round(a.h)+'px';
-      d.appendChild(dim);
-      if(S.touchSize==='custom'){
-        // Resize handles only in custom mode
+      // Number badge
+      const badge=document.createElement('span');
+      badge.style.cssText='position:absolute;top:-8px;left:-8px;width:18px;height:18px;border-radius:50%;background:#FFB19E;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:8003;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.3)';
+      badge.textContent=String(idx+1);
+      d.appendChild(badge);
+      // Dimensions label only when selected
+      if(isSel){
+        const dim=document.createElement('span');dim.className='draw-dim';
+        dim.textContent=Math.round(a.w)+'×'+Math.round(a.h)+'px';
+        d.appendChild(dim);
+      }
+      // Resize handles on selected area
+      if(isSel){
         ['tl','tr','bl','br'].forEach(pos=>{
           const h=document.createElement('div');h.className='resize-handle '+pos;h.dataset.pos=pos;h.dataset.idx=String(idx);
           h.onmousedown=e=>{e.stopPropagation();startResize(e,idx,pos)};
           d.appendChild(h);
         });
-        d.onmousedown=e=>{e.stopPropagation();S.selectedArea=idx;renderZones(3);renderTouchList();startMove(e,idx)};
-      } else {
-        d.style.pointerEvents='none'; // In preset mode, areas are display-only
       }
+      // Click to select, drag to move
+      d.style.cursor=isSel?'move':'pointer';
+      d.onmousedown=e=>{
+        e.stopPropagation();
+        if(S.selectedArea!==idx){S.selectedArea=idx;renderZones(3);renderTouchList();return}
+        startMove(e,idx);
+      };
       pw.appendChild(d);
     });
-    // Draw overlay — only in custom mode
-    if(S.touchSize==='custom'){
-      const ov=document.createElement('div');ov.className='draw-overlay';
-      ov.style.zIndex=S.selectedArea>=0?'7998':'8000';
-      ov.onmousedown=e=>{
-        if(S.selectedArea>=0){S.selectedArea=-1;renderZones(3);renderTouchList();return}
-        startDraw(e);
-      };
-      pw.appendChild(ov);
+    if(S.touchAddMode){
+      if(S.touchSize==='custom'){
+        // Draw overlay for custom mode
+        const ov=document.createElement('div');ov.className='draw-overlay';
+        ov.style.zIndex=S.selectedArea>=0?'7998':'8000';
+        ov.onmousedown=e=>{
+          if(S.selectedArea>=0){S.selectedArea=-1;renderZones(3);renderTouchList();return}
+          startDraw(e);
+        };
+        pw.appendChild(ov);
+      } else {
+        // Click overlay for preset mode — find nearest layer by click position
+        const ov=document.createElement('div');ov.className='draw-overlay';
+        ov.style.cursor='pointer';ov.style.zIndex='8000';
+        ov.onclick=e=>{
+          const cr=pw.getBoundingClientRect();
+          const cx=(e.clientX-cr.left-ox)/sc, cy=(e.clientY-cr.top-oy)/sc;
+          // Find deepest leaf layer containing click point
+          let best=null,bestDepth=-1;
+          S.allLayers.forEach(l=>{
+            if(cx>=l.x&&cx<=l.x+l.width&&cy>=l.y&&cy<=l.y+l.height&&l.depth>bestDepth){best=l;bestDepth=l.depth}
+          });
+          if(best)addTouchForLayer(best.id);
+        };
+        pw.appendChild(ov);
+      }
     }
   }
 
@@ -687,48 +613,78 @@ function pathTo(tid){
 }
 
 // ═══════════════ STEP 2: ROLES ═══════════════
+let editingExistingRole=false; // true when editing an already-annotated layer
+
 function onLayerData(m){
   const p=$('rpEdit');
   const d=m.data||{role:'dont-read',category:'',accessibleName:'',altText:'',headingLevel:0,explanation:''};
+  const hasData=!!(d.category);
+  editingExistingRole=hasData;
+
   let h='<div class="panel-title">'+esc(m.name||'Layer')+'</div>';
 
-  h+='<div class="fg"><div class="fl">Categoria</div><select class="fsel" id="lcat" onchange="catChg();saveLyr()">';
+  h+='<div class="fg"><div class="fl">Categoria</div><select class="fsel" id="lcat" onchange="catChg()">';
   h+='<option value="">— Selecionar —</option>';
   CATS.forEach(c=>{h+='<option value="'+c.v+'"'+(d.category===c.v?' selected':'')+'>'+c.l+'</option>'});
   h+='</select></div>';
 
-  h+='<div class="fg"><div class="fl">Função (Role)</div><select class="fsel" id="lrol" onchange="saveLyr()">';
+  h+='<div class="fg"><div class="fl">Função (Role)</div><select class="fsel" id="lrol">';
   ROLES.forEach(r=>{h+='<option value="'+r+'"'+(d.role===r?' selected':'')+'>'+(RLBL[r]||r)+'</option>'});
   h+='</select></div>';
 
   h+='<div id="cex">';h+=catFields(d.category,d);h+='</div>';
-  p.innerHTML=h;st('Pronto');
+
+  if(hasData){
+    h+='<button class="upd-role-btn" onclick="saveLyr()">Atualizar</button>';
+    h+='<button class="cancel-role-btn" onclick="cancelRoleEdit()">Cancelar</button>';
+  } else {
+    h+='<button class="add-role-btn" onclick="saveLyr()">Adicionar</button>';
+    h+='<button class="cancel-role-btn" onclick="cancelRoleEdit()">Cancelar</button>';
+  }
+
+  p.innerHTML=h;
+  p.style.display='';
+  p.classList.add('has-form');
+  // Hide role list while editing to save space
+  const rl=$('rpList');if(rl)rl.style.display='none';
+  st('Pronto');
 }
 
 function catFields(cat,d){
   let h='';
   if(cat==='nome-acessivel'){
-    h+='<div class="fg"><div class="fl">Nome Acessível</div><input class="fin" id="lacc" value="'+ea(d.accessibleName||'')+'" onchange="saveLyr()" placeholder="Nome acessível"></div>';
-    h+='<div class="fg"><div class="fl">Texto Alternativo</div><input class="fin" id="lalt" value="'+ea(d.altText||'')+'" onchange="saveLyr()" placeholder="Texto alternativo"></div>';
+    h+='<div class="fg"><div class="fl">Nome Acessível</div><input class="fin" id="lacc" value="'+ea(d.accessibleName||'')+'" placeholder="Nome acessível"></div>';
+    h+='<div class="fg"><div class="fl">Texto Alternativo</div><input class="fin" id="lalt" value="'+ea(d.altText||'')+'" placeholder="Texto alternativo"></div>';
   }
   if(cat==='titulo'){
-    h+='<div class="fg"><div class="fl">Nível do Título</div><select class="fsel" id="lhl" onchange="saveLyr()">';
+    h+='<div class="fg"><div class="fl">Nível do Título</div><select class="fsel" id="lhl">';
     for(let i=1;i<=6;i++){h+='<option value="'+i+'"'+(d.headingLevel===i?' selected':'')+'>h'+i+'</option>'}
     h+='</select></div>';
   }
-  // Explicação para todas as categorias exceto decorativo
   if(cat&&cat!=='decorativo'){
-    h+='<div class="fg"><div class="fl">Explicação</div><input class="fin" id="lexp" value="'+ea(d.explanation||'')+'" onchange="saveLyr()" placeholder="Descrição para o handoff"></div>';
+    h+='<div class="fg"><div class="fl">Explicação</div><input class="fin" id="lexp" value="'+ea(d.explanation||'')+'" placeholder="Descrição para o handoff"></div>';
   }
   return h;
 }
 function catChg(){$('cex').innerHTML=catFields($('lcat')?.value||'',{})}
 
+function cancelRoleEdit(){
+  const p=$('rpEdit');
+  p.innerHTML='<span style="color:#999">Clique em um elemento no preview</span>';
+  p.style.display='none';
+  p.classList.remove('has-form');
+  const rl=$('rpList');if(rl)rl.style.display='';
+  S.selLayer=null;
+  renderZones(2);
+}
+
 function saveLyr(){
   if(!S.selLayer)return;
+  const cat=$('lcat')?.value||'';
+  if(!cat){st('Selecione uma categoria');return}
   const d={
     role:$('lrol')?.value||'dont-read',
-    category:$('lcat')?.value||'',
+    category:cat,
     accessibleName:$('lacc')?.value||'',
     altText:$('lalt')?.value||'',
     headingLevel:$('lhl')?parseInt($('lhl').value):0,
@@ -737,12 +693,23 @@ function saveLyr(){
   const applyToAll=!S.editingException;
   post({type:'set-layer-data',nodeId:S.selLayer,data:d,variantName:currentVariantName(),applyToAll});
   if(S.variants.length>1)post({type:'get-variant-overrides'});
-  st('Salvo');
+  // Clear form after save, show list again
+  const p=$('rpEdit');
+  p.innerHTML='<span style="color:#999">Clique em um elemento no preview</span>';
+  p.style.display='none';
+  p.classList.remove('has-form');
+  const rl=$('rpList');if(rl)rl.style.display='';
+  S.selLayer=null;
+  renderZones(2);
+  st(editingExistingRole?'Atualizado':'Adicionado');
+  editingExistingRole=false;
 }
 
 function onAnnotations(m){
   S.annotations=m.annotations||[];
   renderRoleList();
+  // Keep form hidden if no layer selected (e.g. after save/add)
+  if(!S.selLayer){const p=$('rpEdit');if(p){p.style.display='none';p.classList.remove('has-form')}}
 }
 
 function renderRoleList(){
@@ -755,10 +722,10 @@ function renderRoleList(){
     const role=RLBL[a.data.role]||a.data.role||'—';
     const catLabel=cat?cat.l:'';
     const scopeTag=a.scope==='variant'?'<span style="font-size:8px;color:#18a0fb;background:#e8f0fe;padding:1px 4px;border-radius:2px;margin-left:4px;flex-shrink:0">variante</span>':'';
-    h+='<div class="fi" style="cursor:pointer" onclick="clickAnnotation(\''+ea(a.namePath)+'\')">';
+    h+='<div class="fi" style="cursor:pointer" onclick="clickAnnotation(\''+ea(a.namePath)+'\')" title="Clique para editar">';
     h+=dot;
-    h+='<span class="fi-name" title="'+ea(a.namePath)+'">'+esc(a.name)+' — <span style="color:#999">'+esc(role)+'</span></span>';
-    if(catLabel)h+='<span style="font-size:9px;color:#999;flex-shrink:0">'+esc(catLabel)+'</span>';
+    h+='<div style="flex:1;min-width:0"><div class="fi-name">'+esc(a.name)+'</div>';
+    h+='<div style="font-size:9px;color:#999;margin-top:1px">'+esc(role)+(catLabel?' · '+esc(catLabel):'')+'</div></div>';
     h+=scopeTag;
     h+='<button class="fi-rm" onclick="event.stopPropagation();rmAnnotation(\''+ea(a.namePath)+'\')" title="Remover">×</button>';
     h+='</div>';
@@ -782,6 +749,7 @@ function clickAnnotation(namePath){
 
 function rmAnnotation(namePath){
   post({type:'remove-layer-annotation',namePath:namePath,variantName:currentVariantName()});
+  cancelRoleEdit();
   st('Removendo...');
 }
 
@@ -794,9 +762,32 @@ function onTouchData(m){
 function setTouchSize(size){
   S.touchSize=size;S.selectedArea=-1;
   document.querySelectorAll('.touch-opt').forEach(b=>b.classList.toggle('active',b.dataset.ts===size));
-  const bc=$('bc3');
-  if(size==='custom')bc.innerHTML='<span style="opacity:.6">Arraste no preview para desenhar áreas de toque</span>';
-  else bc.innerHTML='<span style="opacity:.6">Clique nos elementos para definir a área de toque ('+size+'dp)</span>';
+  const hint=$('touch-add-hint');
+  if(hint){
+    if(size==='custom')hint.textContent='Arraste no preview para desenhar a área de toque';
+    else hint.textContent='Clique em um elemento no preview para definir a área ('+size+'px)';
+  }
+  updateTouchBC();
+  renderZones(3);
+}
+function updateTouchBC(){
+  const bc=$('bc3');if(!bc)return;
+  if(!S.touchAddMode){bc.innerHTML='<span style="opacity:.6">Clique em "Adicionar nova área" para começar</span>';return}
+  if(S.touchSize==='custom')bc.innerHTML='<span style="opacity:.6">Arraste no preview para desenhar a área de toque</span>';
+  else bc.innerHTML='<span style="opacity:.6">Clique em um elemento no preview ('+S.touchSize+'px)</span>';
+}
+function enterTouchAddMode(){
+  S.touchAddMode=true;
+  $('touch-add-form').style.display='';
+  $('touch-add-btn').style.display='none';
+  updateTouchBC();
+  renderZones(3);
+}
+function exitTouchAddMode(){
+  S.touchAddMode=false;
+  $('touch-add-form').style.display='none';
+  $('touch-add-btn').style.display='';
+  updateTouchBC();
   renderZones(3);
 }
 
@@ -1109,26 +1100,37 @@ function addTouchForLayer(layerId){
   const x=layer.x-(w-layer.width)/2;
   const y=layer.y-(h-layer.height)/2;
   S.touchAreas.push({x,y,w,h});
-  saveTouchAreas();renderTouchList();renderZones(3);
+  saveTouchAreas();renderTouchList();
+  exitTouchAddMode();
   st('Área de toque adicionada: '+Math.round(w)+'×'+Math.round(h)+'px');
 }
 
+function touchChip(w,ht){
+  const mn=Math.min(w,ht);
+  if(mn>=44)return '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:600;background:#e6f9f0;color:#0d7a42">Aprimorado (2.5.5)</span>';
+  if(mn>=24)return '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:600;background:#fff3cd;color:#856404">Mínimo (2.5.8)</span>';
+  return '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:600;background:#fde8e8;color:#c53030">Insuficiente</span>';
+}
 function renderTouchList(){
   const c=$('tlist');if(!c)return;
-  if(S.touchAreas.length===0){c.innerHTML='<div style="color:#999;font-size:10px;text-align:center;padding:8px">Nenhuma área de toque definida</div>';return}
+  const clr=$('touch-clear-btn');
+  if(S.touchAreas.length===0){
+    c.innerHTML='<div style="color:#999;font-size:10px;text-align:center;padding:8px">Nenhuma área de toque definida</div>';
+    if(clr)clr.style.display='none';
+    return;
+  }
   let h='';
   S.touchAreas.forEach((a,i)=>{
-    const w=Math.round(a.w),ht=Math.round(a.h),mn=Math.min(w,ht);
-    let cls='ok',txt='Aprimorado (2.5.5)';
-    if(mn<24){cls='bad';txt='Insuficiente (<24px)'}
-    else if(mn<44){cls='warn';txt='Mínimo (2.5.8)'}
-    const sel=S.selectedArea===i?'border:2px solid #FFB19E':'';
-    h+=`<div class="touch-meter ${cls}" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;cursor:pointer;${sel}" onclick="selectArea(${i})">
-      <span>${w} × ${ht}px — ${txt}</span>
-      <button style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:14px" onclick="event.stopPropagation();rmTouch(${i})" title="Remover">×</button>
+    const w=Math.round(a.w),ht=Math.round(a.h);
+    const sel=S.selectedArea===i?' border-color:#FFB19E':'';
+    h+=`<div class="fi" style="cursor:pointer;${sel}" onclick="selectArea(${i})">
+      <span class="fi-name"><strong>Área ${i+1}</strong> — ${w} × ${ht}px</span>
+      ${touchChip(w,ht)}
+      <button class="fi-rm" onclick="event.stopPropagation();rmTouch(${i})" title="Remover">×</button>
     </div>`;
   });
   c.innerHTML=h;
+  if(clr)clr.style.display='';
 }
 
 function selectArea(idx){
@@ -1174,6 +1176,8 @@ function startDraw(e){
       S.touchAreas.push({x:rx,y:ry,w:rw,h:rh});
       saveTouchAreas();
       renderTouchList();
+      exitTouchAddMode();
+      st('Área de toque adicionada: '+Math.round(rw)+'×'+Math.round(rh)+'px');
     }
     const dr=$('drawrect');if(dr)dr.remove();
     renderZones(3);
@@ -1286,15 +1290,10 @@ function saveFocusOrder(){
 }
 
 // ═══════════════ STEP 5: HANDOFF ═══════════════
-function onConn(m){
-  const el=$('hconn');el.style.display='block';
-  el.className='hstatus '+(m.count>0?'ok':'info');
-  el.textContent=m.count>0?m.count+' conectores encontrados':'Nenhum conector [EXCLUSIVO DSC][a11y] encontrado. Handoff será gerado sem conectores visuais.';
-}
 function doHandoff(){
   st('Gerando handoff...');
   const el=$('hres');el.style.display='block';el.className='hstatus info';el.textContent='Gerando handoff, aguarde...';
-  post({type:'generate-handoff',selectedVariantIds:S.selectedVariants});
+  post({type:'generate-handoff'});
 }
 function onProgress(m){st(m.text);const el=$('hres');if(el&&el.style.display==='block'){el.textContent=m.text}}
 function onHandoff(m){

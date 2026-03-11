@@ -101,13 +101,14 @@ function isValidSelection(node: SceneNode): boolean {
   return node.type === 'COMPONENT' || node.type === 'COMPONENT_SET' || node.type === 'INSTANCE';
 }
 
-function cleanupTempInstance(): void {
+async function cleanupTempInstance(): Promise<void> {
   if (tempInstanceId) {
     try {
-      const old = figma.getNodeById(tempInstanceId); // eslint-disable-line @figma/figma-plugins/ban-deprecated-sync-methods
+      const old = await figma.getNodeByIdAsync(tempInstanceId);
       if (old && 'remove' in old) (old as SceneNode).remove();
     } catch (_e) { /* ignore */ }
     tempInstanceId = null;
+    workingNodeId = null;
   }
 }
 
@@ -284,7 +285,19 @@ async function generatePreview(): Promise<void> {
     format: 'PNG', constraint: { type: 'WIDTH', value: 1040 },
   });
   const base64 = figma.base64Encode(bytes);
-  const layers = collectLayerZones(previewTarget, bounds, 1, previewTarget.id);
+  const childLayers = collectLayerZones(previewTarget, bounds, 1, previewTarget.id);
+
+  // Include the root component itself as a selectable layer
+  const rootRaw = previewTarget.getPluginData('a11y');
+  let rootCat = '';
+  if (rootRaw) { try { rootCat = JSON.parse(rootRaw).category || ''; } catch (_e) { /* ignore */ } }
+  const rootLayer: LayerZone = {
+    id: previewTarget.id, name: previewTarget.name, type: previewTarget.type,
+    x: 0, y: 0, width: bounds.width, height: bounds.height,
+    depth: 0, hasA11yData: !!rootRaw, category: rootCat,
+    parentId: '', hasChildren: true,
+  };
+  const layers = [rootLayer, ...childLayers];
 
   figma.ui.postMessage({
     type: 'preview-data',
@@ -303,7 +316,7 @@ async function switchVariant(variantId: string): Promise<void> {
   if (!rootNode || rootNode.type !== 'COMPONENT_SET') return;
 
   // Clean up old temp instance
-  cleanupTempInstance();
+  await cleanupTempInstance();
 
   // Find the variant component
   const cs = rootNode as ComponentSetNode;
@@ -454,6 +467,7 @@ async function removeVariantOverride(variantName: string, dataType: 'roles' | 't
 }
 
 function findNodeByNamePath(root: BaseNode, namePath: string): SceneNode | null {
+  if (!namePath) return root as SceneNode; // empty path = root itself
   const parts = namePath.split('/');
   let cur: BaseNode = root;
   for (const part of parts) {
@@ -1089,14 +1103,18 @@ async function cloneSource(root: SceneNode, workId: string | null): Promise<Scen
 
 async function mkPreviewFrame(
   root: SceneNode, workId: string | null,
-  badges: { relX: number; relY: number; content: string; color: RGB }[],
+  badges: { relX: number; relY: number; content: string; color: RGB; layerCenterY?: number }[],
   contentWidth: number,
 ): Promise<FrameNode | null> {
   const clone = await cloneSource(root, workId);
   if (!clone) return null;
 
+  const BADGE_SIZE = 22;
+  const LINE_GAP = 4;
+  const LINE_H = 24;
   const cW = clone.width; const cH = clone.height;
-  const padTop = 48; const padBot = 40;
+  const padTop = BADGE_SIZE + LINE_GAP + LINE_H + 24;
+  const padBot = BADGE_SIZE + LINE_GAP + LINE_H + 24;
   const cloneX = (contentWidth - cW) / 2;
   const cloneY = padTop;
 
@@ -1114,107 +1132,101 @@ async function mkPreviewFrame(
   // Clone
   clone.x = cloneX; clone.y = cloneY; pf.appendChild(clone);
 
-  // Badges
+  // Separate badges into top and bottom based on position relative to center
+  const centerY = cH / 2;
   for (const b of badges) {
-    const badge = mkBadge(b.content, b.color);
-    badge.x = cloneX + b.relX - badge.width / 2;
-    badge.y = cloneY + b.relY - badge.height - 4;
-    pf.appendChild(badge);
+    const isBottom = b.relY > centerY;
+    const anchorX = cloneX + b.relX;
+    const anchorY = isBottom
+      ? cloneY + (b.layerCenterY ?? b.relY) + (b.layerCenterY ? 0 : 0)
+      : cloneY + b.relY;
+
+    // Line
+    const line = figma.createFrame();
+    line.name = 'connector'; line.fills = [];
+    line.resize(2, LINE_H);
+    line.fills = [{ type: 'SOLID', color: b.color }];
+
+    if (isBottom) {
+      // Badge below: line goes from layer bottom to badge
+      const lineY = cloneY + (b.layerCenterY ?? b.relY);
+      line.x = anchorX - 1;
+      line.y = lineY;
+      const badge = mkBadge(b.content, b.color);
+      badge.x = anchorX - badge.width / 2;
+      badge.y = lineY + LINE_H + LINE_GAP;
+      pf.appendChild(line);
+      pf.appendChild(badge);
+    } else {
+      // Badge above: line goes from badge bottom to layer top
+      const badgeY = anchorY - LINE_H - LINE_GAP - BADGE_SIZE;
+      line.x = anchorX - 1;
+      line.y = anchorY - LINE_H;
+      const badge = mkBadge(b.content, b.color);
+      badge.x = anchorX - badge.width / 2;
+      badge.y = badgeY;
+      pf.appendChild(line);
+      pf.appendChild(badge);
+    }
   }
 
   return pf;
 }
 
-// ── Touch Area Preview (todas as variantes + retângulos rosa + badge com linha) ──
+// ── Touch Area Preview (retângulos rosa + badges numerados) ──
 async function mkTouchPreview(
   root: SceneNode, workId: string | null,
   touchAreas: TouchAreaRect[], contentWidth: number,
 ): Promise<FrameNode> {
-  const BADGE_SIZE = 28;
-  const LINE_H = 24;
   const INNER_PAD = 48;
-  const VARIANT_GAP = 32;
   const TOUCH_COLOR: SolidPaint = { type: 'SOLID', color: { r: 1.0, g: 0.694, b: 0.62 }, opacity: 0.48 };
 
-  // Clone the source for preview
-  const clones: SceneNode[] = [];
-  const c = await cloneSource(root, workId);
-  if (c) clones.push(c);
-
-  if (clones.length === 0) {
+  const clone = await cloneSource(root, workId);
+  if (!clone) {
     const empty = figma.createFrame(); empty.resize(contentWidth, 60); empty.fills = []; return empty;
   }
 
-  const totalClonesW = clones.reduce((s, c) => s + c.width, 0) + VARIANT_GAP * (clones.length - 1);
-  const maxCloneH = Math.max(...clones.map(c => c.height));
-  const innerH = maxCloneH + INNER_PAD * 2;
-  const dashedY = BADGE_SIZE + LINE_H;
-
-  // Outer frame (NONE layout) — contém badge, linha e frame tracejado
-  const outer = figma.createFrame();
-  outer.name = 'Touch Preview'; outer.layoutMode = 'NONE'; outer.fills = [];
-  outer.resize(contentWidth, dashedY + innerH);
+  const innerH = clone.height + INNER_PAD * 2;
 
   // Frame tracejado
-  const dashed = figma.createFrame();
-  dashed.name = 'Dashed Preview'; dashed.layoutMode = 'NONE';
-  dashed.resize(contentWidth, innerH);
-  dashed.x = 0; dashed.y = dashedY;
-  dashed.fills = [{ type: 'SOLID', color: C_WHITE }];
-  dashed.strokes = [{ type: 'SOLID', color: { r: 0.72, g: 0.72, b: 0.72 } }];
-  dashed.strokeWeight = 2; dashed.dashPattern = [10, 6]; dashed.cornerRadius = 12;
-  outer.appendChild(dashed);
+  const pf = figma.createFrame();
+  pf.name = 'Touch Preview'; pf.layoutMode = 'NONE';
+  pf.resize(contentWidth, innerH);
+  pf.fills = [{ type: 'SOLID', color: C_WHITE }];
+  pf.strokes = [{ type: 'SOLID', color: { r: 0.72, g: 0.72, b: 0.72 } }];
+  pf.strokeWeight = 2; pf.dashPattern = [10, 6]; pf.cornerRadius = 12;
 
   // Tag "Preview"
   const tag = mkPreviewTag();
-  tag.x = 14; tag.y = 14; dashed.appendChild(tag);
+  tag.x = 14; tag.y = 14; pf.appendChild(tag);
 
-  // Posicionar variantes lado a lado, centradas
-  let curX = (contentWidth - totalClonesW) / 2;
-  for (const clone of clones) {
-    const cloneY = INNER_PAD + (maxCloneH - clone.height) / 2;
+  // Clone (behind)
+  const cloneX = (contentWidth - clone.width) / 2;
+  const cloneY = INNER_PAD;
+  clone.x = cloneX; clone.y = cloneY;
+  pf.appendChild(clone);
 
-    // Retângulo rosa da área de toque atrás de cada variante
-    // Se há áreas de toque definidas, usa as dimensões; senão usa os bounds do componente
-    if (touchAreas.length > 0) {
-      for (const ta of touchAreas) {
-        // Escala proporcionalmente para cada variante
-        const scaleX = clone.width / (clones[0].width || 1);
-        const scaleY = clone.height / (clones[0].height || 1);
-        const rect = figma.createRectangle();
-        rect.resize(ta.width * scaleX, ta.height * scaleY);
-        rect.x = curX + ta.x * scaleX;
-        rect.y = cloneY + ta.y * scaleY;
-        rect.fills = [TOUCH_COLOR];
-        dashed.appendChild(rect);
-      }
-    } else {
-      // Sem áreas definidas: mostrar bounds completos como touch area
-      const rect = figma.createRectangle();
-      rect.resize(clone.width, clone.height);
-      rect.x = curX; rect.y = cloneY;
-      rect.fills = [TOUCH_COLOR];
-      dashed.appendChild(rect);
-    }
+  // Touch area rectangles ON TOP of component with numbered badges
+  for (let ti = 0; ti < touchAreas.length; ti++) {
+    const ta = touchAreas[ti];
+    const rect = figma.createRectangle();
+    rect.resize(ta.width, ta.height);
+    rect.x = cloneX + ta.x;
+    rect.y = cloneY + ta.y;
+    rect.fills = [TOUCH_COLOR];
+    rect.strokes = [{ type: 'SOLID', color: { r: 1.0, g: 0.694, b: 0.62 } }];
+    rect.strokeWeight = 1;
+    pf.appendChild(rect);
 
-    clone.x = curX; clone.y = cloneY;
-    dashed.appendChild(clone);
-    curX += clone.width + VARIANT_GAP;
+    // Number badge on each touch area
+    const areaBadge = mkBadge(String(ti + 1), C_BLUE, 20);
+    areaBadge.x = rect.x + rect.width / 2 - 10;
+    areaBadge.y = rect.y - 24;
+    if (areaBadge.y < 4) areaBadge.y = rect.y + rect.height + 4;
+    pf.appendChild(areaBadge);
   }
 
-  // Badge numerado + linha conectora (centrados acima do frame tracejado)
-  const centerX = contentWidth / 2;
-  const badge = mkBadge('1', C_BLUE, BADGE_SIZE);
-  badge.x = centerX - BADGE_SIZE / 2; badge.y = 0;
-  outer.appendChild(badge);
-
-  const line = figma.createRectangle();
-  line.name = 'connector'; line.resize(2, LINE_H);
-  line.fills = [{ type: 'SOLID', color: C_BLUE }];
-  line.x = centerX - 1; line.y = BADGE_SIZE;
-  outer.appendChild(line);
-
-  return outer;
+  return pf;
 }
 
 // ════════════════════════════════════════
@@ -1421,7 +1433,7 @@ async function generateHandoff(selectedVariantIds: string[] = []): Promise<void>
             let level = 'Insuficiente — não atende WCAG 2.5.8';
             if (minDim >= 44) level = 'Aprimorado — atende WCAG 2.5.5 (≥44px)';
             else if (minDim >= 24) level = 'Mínimo — atende WCAG 2.5.8 (≥24px)';
-            appendFill(varCol, mkAnnotationRow(mkBadge(String(i + 1), C_BLUE), `Área ${i + 1}: ${level}`, undefined));
+            appendFill(varCol, mkAnnotationRow(mkBadge(String(i + 1), C_BLUE), `Área ${i + 1} — ${w} × ${h}px`, level));
           }
           touchRow.appendChild(varCol);
         }
@@ -1438,7 +1450,7 @@ async function generateHandoff(selectedVariantIds: string[] = []): Promise<void>
           let level = 'Insuficiente — não atende WCAG 2.5.8';
           if (minDim >= 44) level = 'Aprimorado — atende WCAG 2.5.5 (≥44px)';
           else if (minDim >= 24) level = 'Mínimo — atende WCAG 2.5.8 (≥24px)';
-          appendFill(sec, mkAnnotationRow(mkBadge(String(i + 1), C_BLUE), `Área ${i + 1}: ${level}`, undefined));
+          appendFill(sec, mkAnnotationRow(mkBadge(String(i + 1), C_BLUE), `Área ${i + 1} — ${w} × ${h}px`, level));
         }
       }
     } else {
@@ -1466,11 +1478,15 @@ async function generateHandoff(selectedVariantIds: string[] = []): Promise<void>
     if (compData.noTab) {
       appendFill(sec, mkAnnotationRow(mkBadge('—', C_LGRAY), 'Este componente não tem tabulação.'));
     } else {
-      // Focus order — shared, single preview
-      const zones = collectLayerZones(root, rootBounds, 1, root.id);
+      // Focus order — shared, single preview (include root itself)
+      const zones: LayerZone[] = [{
+        id: root.id, name: root.name, type: root.type,
+        x: 0, y: 0, width: rootBounds.width, height: rootBounds.height,
+        depth: 0, hasA11yData: false, category: '', parentId: '', hasChildren: true,
+      }, ...collectLayerZones(root, rootBounds, 1, root.id)];
       const focusBadges = focusEntries.map((e, i) => {
         const zone = zones.find(z => z.id === e.nodeId);
-        return zone ? { relX: zone.x + zone.width / 2, relY: zone.y, content: String(i + 1), color: C_BLUE } : null;
+        return zone ? { relX: zone.x + zone.width / 2, relY: zone.y, content: String(i + 1), color: C_BLUE, layerCenterY: zone.y + zone.height } : null;
       }).filter((b): b is NonNullable<typeof b> => b !== null);
       const pf = await mkPreviewFrame(root, workingNodeId, focusBadges, INNER_W);
       if (pf) appendFill(sec, pf);
@@ -1498,12 +1514,18 @@ async function generateHandoff(selectedVariantIds: string[] = []): Promise<void>
     const sec = mkSec(16);
     appendFill(sec, mkT('Leitor de Tela', 16, 'Bold', C_BLACK));
 
-    // Screen reader — shared, single preview
-    const zones = collectLayerZones(root, rootBounds, 1, root.id);
-    const srBadges = annotated.map((a, i) => {
+    // Screen reader — shared, single preview (include root itself)
+    const zones: LayerZone[] = [{
+      id: root.id, name: root.name, type: root.type,
+      x: 0, y: 0, width: rootBounds.width, height: rootBounds.height,
+      depth: 0, hasA11yData: false, category: '', parentId: '', hasChildren: true,
+    }, ...collectLayerZones(root, rootBounds, 1, root.id)];
+    let srNumIdx = 1;
+    const srBadges = annotated.map((a) => {
       const zone = zones.find(z => z.id === a.node.id);
       const color = CAT_COLORS[a.data.category] || CAT_COLORS['outros'];
-      return zone ? { relX: zone.x + zone.width / 2, relY: zone.y, content: String(i + 1), color } : null;
+      const content = a.data.category === 'decorativo' ? '⊘' : String(srNumIdx++);
+      return zone ? { relX: zone.x + zone.width / 2, relY: zone.y, content, color, layerCenterY: zone.y + zone.height } : null;
     }).filter((b): b is NonNullable<typeof b> => b !== null);
     const pf = await mkPreviewFrame(root, workingNodeId, srBadges, INNER_W);
     if (pf) appendFill(sec, pf);
@@ -1520,23 +1542,30 @@ async function generateHandoff(selectedVariantIds: string[] = []): Promise<void>
       appendFill(sec, legend);
     }
 
-    // Annotations
+    // Annotations — use same labels as preview badges
     if (annotated.length === 0) {
       appendFill(sec, mkT('Nenhuma anotação definida.', 11, 'Regular', C_LGRAY));
     }
+    // Build label map: decorativo → ⊘, others → sequential number
+    let numIdx = 1;
+    const labels: string[] = annotated.map(a => {
+      if (a.data.category === 'decorativo') return '⊘';
+      return String(numIdx++);
+    });
     for (let i = 0; i < annotated.length; i++) {
       const { node: ln, data: d } = annotated[i];
       const color = CAT_COLORS[d.category] || CAT_COLORS['outros'];
+      const label = labels[i];
 
       if (d.category === 'decorativo') {
-        appendFill(sec, mkAnnotationRow(mkBadge('⊘', C_DECOR), 'Não deve ser enunciado pelo Leitor de Tela.'));
+        appendFill(sec, mkAnnotationRow(mkBadge('⊘', C_DECOR), 'Não deve ser anunciado pelo Leitor de Tela.'));
       } else {
         let roleDesc = '';
         if (d.role && d.role !== 'dont-read') roleDesc = `Identificar como ${d.role}`;
         if (d.accessibleName) roleDesc += (roleDesc ? ' — ' : '') + `Nome acessível: "${d.accessibleName}"`;
         if (d.altText) roleDesc += (roleDesc ? ' — ' : '') + `Texto alt.: "${d.altText}"`;
         if (d.headingLevel) roleDesc += (roleDesc ? ' — ' : '') + `Nível h${d.headingLevel}`;
-        appendFill(sec, mkAnnotationRow(mkBadge(String(i + 1), color), ln.name, roleDesc || undefined));
+        appendFill(sec, mkAnnotationRow(mkBadge(label, color), ln.name, roleDesc || undefined));
         if (d.explanation) appendFill(sec, mkInfoBox(d.explanation));
       }
     }
@@ -1611,6 +1640,7 @@ async function generateHandoff(selectedVariantIds: string[] = []): Promise<void>
   }
 
   sendProgress('Finalizando...');
+  await cleanupTempInstance();
   figma.viewport.scrollAndZoomIntoView([doc]);
   const totalTouchAreas = perVariantTouch.reduce((s, pv) => s + pv.touchAreas.length, 0);
   figma.ui.postMessage({
