@@ -400,9 +400,10 @@ function go(s){
   document.querySelectorAll('.stab').forEach(t=>{const n=+t.dataset.s;t.classList.toggle('active',n===s);t.classList.toggle('done',n<s)});
   document.querySelectorAll('.step').forEach(c=>c.classList.toggle('active',c.id==='s'+s));
   if(s===2||s===3||s===4){
-    // Always reset to default when navigating between steps
+    // Reset to default
     S.editingException=null;excEditing[s]=null;
-    if(getExcNamesForStep(s).length>0){excView[s]='list'}else{excView[s]='editing'}
+    // Card list only if there are exceptions, otherwise direct preview
+    excView[s]=(S.variants.length>1&&getExcNamesForStep(s).length>0)?'list':'editing';
     switchToDefault();
     st('Gerando preview...');
   }
@@ -835,7 +836,13 @@ const excNames={roles:{},touch:{},focus:{}};
 
 function onVariantOverrides(m){
   S.variantOverrides=m.overrides||{roles:[],touch:[],focus:[]};
-  [2,3,4].forEach(s=>renderExcUI(s));
+  [2,3,4].forEach(s=>{
+    // If step has exceptions and is not currently editing, show card list
+    if(getExcNamesForStep(s).length>0&&excView[s]==='editing'&&!excEditing[s]){
+      excView[s]='list';
+    }
+    renderExcUI(s);
+  });
 }
 
 function getExcNamesForStep(step){
@@ -853,12 +860,10 @@ function getExcLabel(step,variantName){
 function toggleHasExc(step){
   const checked=$('hasExcCk-'+step).checked;
   if(checked){
-    // Show card list view
+    // Show card list to add exceptions
     excView[step]='list';
-    excEditing[step]=null;
-    renderExcUI(step);
   } else {
-    // Remove all exceptions for this step
+    // Remove all exceptions and go to preview
     const dt=stepDataType(step);
     const names=[...(S.variantOverrides[dt]||[])];
     names.forEach(vn=>{
@@ -866,12 +871,11 @@ function toggleHasExc(step){
     });
     S.variantOverrides[dt]=[];
     excEditing[step]=null;
-    excView[step]='editing'; // go straight to default preview
-    // Reset to default variant
+    excView[step]='editing';
     switchToDefault();
-    renderExcUI(step);
     reloadStepData(step);
   }
+  renderExcUI(step);
 }
 
 function switchToDefault(){
@@ -887,22 +891,22 @@ function switchToDefault(){
 
 function renderExcUI(step){
   const bar=$('exc-bar-'+step);if(!bar)return;
-  if(S.variants.length<=1){bar.style.display='none';return}
-  bar.style.display='';
+  // Hide checkbox bar if single variant (no component set)
+  if(S.variants.length<=1){bar.style.display='none'}else{bar.style.display=''}
 
   const dt=stepDataType(step);
   const exceptions=S.variantOverrides[dt]||[];
   const hasExc=exceptions.length>0;
 
-  // Checkbox state
+  // Checkbox state: checked if has exceptions or if in list view (user just checked it)
   const ck=$('hasExcCk-'+step);
-  if(ck)ck.checked=hasExc||excView[step]==='list';
+  if(ck)ck.checked=hasExc||(excView[step]==='list'&&S.variants.length>1);
 
   const cards=$('exc-cards-'+step);
   const editHdr=$('exc-editing-hdr-'+step);
   const content=$('s'+step+'-content');
 
-  if(excView[step]==='list'&&(hasExc||ck.checked)){
+  if(excView[step]==='list'){
     // Show card list, hide preview
     cards.style.display='';
     editHdr.style.display='none';
@@ -913,12 +917,13 @@ function renderExcUI(step){
     cards.style.display='none';
     content.style.display='';
 
-    if(excEditing[step]){
+    // Only show editing header when there are exceptions (came from card list)
+    if(hasExc){
+      const label=excEditing[step]?getExcLabel(step,excEditing[step]):'Default';
       editHdr.style.display='flex';
-      $('exc-editing-name-'+step).textContent='Editando: '+getExcLabel(step,excEditing[step]);
+      $('exc-editing-name-'+step).textContent='Editando: '+label;
     } else {
-      editHdr.style.display=hasExc?'flex':'none';
-      $('exc-editing-name-'+step).textContent='Editando: Default';
+      editHdr.style.display='none';
     }
   }
 }
@@ -928,12 +933,11 @@ function renderCardList(step){
   const dt=stepDataType(step);
   const exceptions=S.variantOverrides[dt]||[];
 
-  let h='';
-  h+='<div class="stitle">Variantes de '+STEP_LABELS[step]+'</div>';
-  h+='<div class="sdesc">Edite o comportamento padrão ou adicione exceções para variantes específicas.</div>';
+  const hasExcChecked=$('hasExcCk-'+step)&&$('hasExcCk-'+step).checked;
 
-  // Default card
-  h+='<div class="exc-card'+(excEditing[step]===null&&excView[step]==='editing'?' editing':'')+'">';
+  let h='';
+  // Default card — always shown
+  h+='<div class="exc-card">';
   h+='<div class="exc-card-icon default">D</div>';
   h+='<div class="exc-card-info"><div class="exc-card-name">Default</div><div class="exc-card-sub">Comportamento padrão para todas as variantes</div></div>';
   h+='<div class="exc-card-actions"><button class="exc-card-btn pr" onclick="editCard(null,'+step+')">Editar</button></div>';
@@ -951,11 +955,30 @@ function renderCardList(step){
     h+='</div></div>';
   });
 
-  // Add exception row
-  h+='<div class="exc-add-row">';
-  h+='<input type="text" id="exc-new-name-'+step+'" placeholder="Nome da exceção (ex: Estado hover)">';
-  h+='<button onclick="addExc('+step+')">+ Adicionar</button>';
-  h+='</div>';
+  // Add exception form — only if checkbox is checked
+  if(hasExcChecked){
+    const data=getVariantPropData();
+    h+='<div style="margin-top:8px;padding:10px;background:#f5f5f5;border:1px solid #e5e5e5;border-radius:6px">';
+    h+='<div class="fl" style="margin-bottom:6px">Nova exceção</div>';
+    h+='<div class="exc-add-row" style="margin-bottom:6px">';
+    h+='<input type="text" id="exc-new-name-'+step+'" placeholder="Nome (ex: Estado hover)">';
+    h+='</div>';
+    // Variant property pickers
+    h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">';
+    data.keyOrder.forEach(key=>{
+      const vals=data.propValues[key];
+      if(vals.length<=1)return;
+      h+='<div style="display:flex;align-items:center;gap:3px">';
+      h+='<span style="font-size:9px;color:#999;text-transform:capitalize">'+esc(key)+'</span>';
+      h+='<select class="fsel" style="width:auto;padding:3px 6px;font-size:10px" id="exc-prop-'+step+'-'+ea(key)+'" data-vpkey="'+ea(key)+'">';
+      vals.forEach(val=>{h+='<option value="'+ea(val)+'">'+esc(val)+'</option>'});
+      h+='</select>';
+      h+='</div>';
+    });
+    h+='</div>';
+    h+='<button class="exc-card-btn pr" style="width:100%" onclick="addExc('+step+')">+ Adicionar exceção</button>';
+    h+='</div>';
+  }
 
   cards.innerHTML=h;
 }
@@ -997,20 +1020,39 @@ function addExc(step){
   const customName=(input?input.value:'').trim();
   if(!customName){st('Digite um nome para a exceção');return}
 
-  // Need to pick a variant to associate. Use first variant not yet used.
   const dt=stepDataType(step);
   const data=getVariantPropData();
   const existing=S.variantOverrides[dt]||[];
-  const available=data.parsed.filter(p=>!existing.includes(p.name));
-  if(available.length===0){st('Todas as variantes já têm exceção');return}
 
-  const chosen=available[0];
+  // Read selected properties from pickers
+  const selections={};
+  const cards=$('exc-cards-'+step);
+  if(cards){
+    cards.querySelectorAll('select[data-vpkey]').forEach(sel=>{
+      selections[sel.dataset.vpkey]=sel.value;
+    });
+  }
+
+  // Find best matching variant
+  let bestMatch=null;let bestScore=-1;
+  data.parsed.forEach(p=>{
+    if(existing.includes(p.name))return; // skip already used
+    let score=0;
+    for(const key in selections){if(p.props[key]===selections[key])score++}
+    if(score>bestScore){bestScore=score;bestMatch=p}
+  });
+
+  if(!bestMatch){st('Todas as variantes já têm exceção');return}
+
+  // Check if this exact variant is already used
+  if(existing.includes(bestMatch.name)){st('Essa combinação já tem exceção');return}
+
   // Store custom name
-  excNames[dt][chosen.name]=customName;
+  excNames[dt][bestMatch.name]=customName;
 
-  post({type:'create-variant-override',variantName:chosen.name,dataType:dt});
+  post({type:'create-variant-override',variantName:bestMatch.name,dataType:dt});
   if(!S.variantOverrides[dt])S.variantOverrides[dt]=[];
-  S.variantOverrides[dt].push(chosen.name);
+  S.variantOverrides[dt].push(bestMatch.name);
   renderExcUI(step);
   st('Exceção adicionada: '+customName);
 }
