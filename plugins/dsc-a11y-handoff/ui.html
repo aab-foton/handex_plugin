@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background:#fff;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+
+/* Steps */
+.steps{display:flex;background:#f5f5f5;border-bottom:1px solid #e5e5e5;flex-shrink:0}
+.stab{flex:1;padding:9px 2px;text-align:center;font-size:9px;font-weight:500;color:#aaa;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:.15s}
+.stab.active{color:#333;border-bottom-color:#18a0fb}
+.stab.done{color:#1bc47d}
+.snum{display:inline-flex;width:16px;height:16px;border-radius:50%;background:#ddd;color:#fff;align-items:center;justify-content:center;font-size:8px;font-weight:700;margin-right:2px}
+.stab.active .snum{background:#18a0fb}
+.stab.done .snum{background:#1bc47d}
+
+/* Empty */
+#empty{display:flex;align-items:center;justify-content:center;flex:1;text-align:center;color:#999;padding:20px}
+
+/* Main */
+#main{display:none;flex:1;flex-direction:column;overflow:hidden}
+.step{display:none;flex-direction:column;flex:1;overflow:hidden}
+.step.active{display:flex}
+.comp-hdr{padding:7px 12px;background:#f5f5f5;border-bottom:1px solid #e5e5e5;font-weight:600;font-size:12px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Step body */
+.sbody{flex:1;overflow-y:auto;padding:14px}
+.stitle{font-weight:600;font-size:12px;margin-bottom:8px}
+.sdesc{font-size:10px;color:#999;margin-bottom:12px;line-height:1.5}
+
+/* Fields */
+.fg{margin-bottom:14px}
+.fl{font-weight:600;font-size:11px;margin-bottom:5px}
+.fsl{font-size:10px;color:#999;font-weight:400}
+.cg,.rg{display:flex;flex-direction:column;gap:4px}
+.ci,.ri{display:flex;align-items:center;gap:6px;cursor:pointer;padding:2px 0;font-size:11px}
+.ci input,.ri input{margin:0;accent-color:#18a0fb}
+.fsel{width:100%;padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:11px;background:#fff}
+.fsel:focus,.fin:focus{outline:none;border-color:#18a0fb}
+.fin{width:100%;padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:11px}
+
+/* Preview */
+.preview-wrap{position:relative;flex:0 0 auto;max-height:55%;overflow:auto;background:#f5f5f5}
+.preview-wrap img{display:block;transform-origin:0 0}
+.preview-wrap.padded{background:#e8e8e8}
+.preview-wrap.padded img{margin:60px}
+.zoom-controls{position:sticky;top:4px;left:4px;z-index:9500;display:flex;gap:2px;padding:2px;background:rgba(255,255,255,.9);border-radius:4px;border:1px solid #ddd;width:fit-content;margin-bottom:-28px}
+.padded .zoom-controls{top:8px;left:8px}
+.zoom-btn{width:24px;height:24px;border:none;background:none;cursor:pointer;font-size:14px;font-weight:700;color:#555;border-radius:3px;display:flex;align-items:center;justify-content:center}
+.zoom-btn:hover{background:#eee}
+.zoom-pct{font-size:9px;color:#999;display:flex;align-items:center;padding:0 3px}
+.breadcrumb{padding:4px 8px;background:#333;color:#fff;font-size:10px;display:flex;gap:4px;align-items:center;flex-wrap:wrap;flex-shrink:0}
+.breadcrumb a{color:#aef;cursor:pointer;text-decoration:underline}
+
+/* Layer zones */
+.lz{position:absolute;border:1px solid transparent;transition:.08s;cursor:pointer}
+.lz:hover{border-color:#18a0fb;background:rgba(24,160,251,.08)}
+.lz.sel{border-color:#18a0fb;background:rgba(24,160,251,.12)}
+.lz.ann{border-color:rgba(27,196,125,.5)}
+.lz.exp{border-style:dashed}
+.lz-tip{display:none;position:absolute;bottom:100%;left:0;background:#333;color:#fff;font-size:9px;padding:2px 6px;border-radius:3px;white-space:nowrap;pointer-events:none;z-index:9999}
+.lz:hover .lz-tip{display:block}
+
+/* Focus badges on preview - dark navy rounded square like the component */
+.focus-badge{position:absolute;width:32px;height:32px;border-radius:8px;background:#1b2a4a;color:#fff;font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:9000;box-shadow:0 2px 6px rgba(0,0,0,.35);border:2px solid #fff;line-height:1}
+.focus-badge .fb-icon{font-size:8px;opacity:.7;margin-top:1px}
+
+/* Drawing overlay */
+.draw-overlay{position:absolute;top:0;left:0;width:100%;height:100%;z-index:8000;cursor:crosshair}
+.draw-rect{position:absolute;border:2px solid #FFB19E;background:rgba(255,177,158,.48);pointer-events:none}
+.draw-saved{position:absolute;background:rgba(255,177,158,.12);display:flex;align-items:center;justify-content:center;cursor:move;z-index:8001;border:2px dashed rgba(255,177,158,.6)}
+.draw-saved.selected{border-color:#FFB19E;border-style:solid;background:rgba(255,177,158,.25)}
+.draw-saved .resize-handle{position:absolute;width:10px;height:10px;background:#FFB19E;border:1px solid #fff;border-radius:2px;display:none;z-index:8002}
+.draw-saved.selected .resize-handle{display:block;cursor:nwse-resize}
+.resize-handle.tl{top:-5px;left:-5px;cursor:nw-resize}
+.resize-handle.tr{top:-5px;right:-5px;cursor:ne-resize}
+.resize-handle.bl{bottom:-5px;left:-5px;cursor:sw-resize}
+.resize-handle.br{bottom:-5px;right:-5px;cursor:se-resize}
+.draw-dim{font-size:10px;font-weight:700;color:#8b4a3a;background:rgba(255,255,255,.85);padding:1px 5px;border-radius:3px;white-space:nowrap;pointer-events:none}
+
+/* Touch size selector */
+.touch-size-bar{padding:8px 12px;border-bottom:1px solid #e5e5e5;flex-shrink:0;background:#fafafa}
+.touch-size-bar .fl{margin-bottom:4px}
+.touch-opts{display:flex;gap:4px;flex-wrap:wrap}
+.touch-opt{padding:5px 10px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;background:#fff;transition:.15s}
+.touch-opt:hover{border-color:#bbb}
+.touch-opt.active{background:#FFB19E;color:#fff;border-color:#FFB19E}
+
+/* Panel below preview */
+.panel{flex:1 1 0;overflow-y:auto;padding:12px;border-top:1px solid #e5e5e5;min-height:0}
+.panel.empty{display:flex;align-items:center;justify-content:center;color:#999}
+.panel-title{font-weight:600;font-size:12px;margin-bottom:8px;color:#18a0fb}
+
+/* Focus list */
+.fi{display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid #e5e5e5;border-radius:5px;margin-bottom:4px;background:#fafafa}
+.fi-num{width:24px;height:24px;background:#1b2a4a;color:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;flex-shrink:0}
+.fi-name{flex:1;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fi-rm{width:20px;height:20px;border:none;background:none;cursor:pointer;color:#e74c3c;font-size:14px;flex-shrink:0}
+
+/* Draw button */
+.draw-btn{padding:8px 14px;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;background:#d4907a;color:#fff;transition:.15s}
+.draw-btn:hover{background:#c07a64}
+
+/* Touch size meter */
+.touch-meter{padding:8px 10px;border-radius:6px;margin-top:8px;font-size:11px;font-weight:600}
+.touch-meter.ok{background:#e6f9f0;color:#0d7a42}
+.touch-meter.warn{background:#fff3cd;color:#856404}
+.touch-meter.bad{background:#fde8e8;color:#c53030}
+
+/* Handoff */
+.hbtn{width:100%;padding:12px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;background:#18a0fb;color:#fff;transition:.15s;margin-bottom:8px}
+.hbtn:hover{background:#0d8ce0}
+.hstatus{padding:10px;border-radius:6px;font-size:11px;line-height:1.5;margin-top:8px}
+.hstatus.ok{background:#e6f9f0;color:#0d7a42}
+.hstatus.err{background:#fde8e8;color:#c53030}
+.hstatus.info{background:#e8f0fe;color:#1a56db}
+
+/* Nav */
+.snav{display:flex;gap:8px;padding:8px 14px;border-top:1px solid #e5e5e5;background:#f9f9f9;flex-shrink:0}
+.nb{flex:1;padding:7px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;text-align:center;border:1px solid #ddd;background:#fff;color:#333;transition:.15s}
+.nb:hover{background:#f0f0f0}
+.nb.pr{background:#18a0fb;color:#fff;border-color:#18a0fb}
+.nb.pr:hover{background:#0d8ce0}
+
+#rpEdit{padding-top:8px;margin-top:4px}
+#rpEdit.has-form{border-top:1px solid #e5e5e5}
+#rpList{margin-top:4px}
+.add-role-btn{width:100%;padding:8px;border:none;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;background:#1bc47d;color:#fff;margin-top:8px;transition:.15s}
+.add-role-btn:hover{background:#17a56b}
+.add-role-btn:disabled{background:#ccc;cursor:default}
+.upd-role-btn{width:100%;padding:8px;border:none;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;background:#18a0fb;color:#fff;margin-top:8px;transition:.15s}
+.upd-role-btn:hover{background:#0d8ce0}
+.cancel-role-btn{width:100%;padding:6px;border:1px solid #ddd;border-radius:5px;font-size:10px;font-weight:600;cursor:pointer;background:#fff;color:#666;margin-top:4px;transition:.15s}
+.cancel-role-btn:hover{background:#f5f5f5}
+#status{padding:4px 12px;border-top:1px solid #e5e5e5;background:#f5f5f5;font-size:9px;color:#999;flex-shrink:0}
+
+
+/* Exception bar (per step) */
+.exc-bar{padding:8px 12px;background:#f9f9f9;border-bottom:1px solid #e5e5e5;flex-shrink:0}
+.exc-bar-top{margin-bottom:0}
+
+/* Exception cards list (shown before preview) */
+.exc-cards{flex:1;overflow-y:auto;padding:14px}
+.exc-cards .stitle{margin-bottom:4px}
+.exc-cards .sdesc{margin-bottom:10px}
+.exc-card{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #e5e5e5;border-radius:6px;margin-bottom:6px;background:#fff;transition:.12s}
+.exc-card:hover{border-color:#ccc;background:#fafafa}
+.exc-card.editing{border-color:#18a0fb;background:#f0f7ff}
+.exc-card-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#fff}
+.exc-card-icon.default{background:#1bc47d}
+.exc-card-icon.exception{background:#18a0fb}
+.exc-card-info{flex:1;min-width:0}
+.exc-card-name{font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.exc-card-sub{font-size:9px;color:#999;margin-top:1px}
+.exc-card-actions{display:flex;gap:4px;flex-shrink:0}
+.exc-card-btn{padding:4px 10px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;background:#fff;color:#333;transition:.12s}
+.exc-card-btn:hover{background:#f0f0f0;border-color:#bbb}
+.exc-card-btn.pr{background:#18a0fb;color:#fff;border-color:#18a0fb}
+.exc-card-btn.pr:hover{background:#0d8ce0}
+.exc-card-btn.danger{color:#e74c3c;border-color:#f5c6cb}
+.exc-card-btn.danger:hover{background:#fde8e8;border-color:#e74c3c}
+
+/* Add exception row */
+.exc-add-row{display:flex;gap:6px;margin-top:4px}
+.exc-add-row input{flex:1;padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:11px}
+.exc-add-row input:focus{outline:none;border-color:#18a0fb}
+.exc-add-row button{padding:5px 12px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;background:#fff;color:#333;white-space:nowrap;flex-shrink:0}
+.exc-add-row button:hover{background:#f0f0f0;border-color:#bbb}
+
+/* Editing header (shown when editing inside preview) */
+.exc-editing-hdr{padding:6px 12px;background:#f0f7ff;border-bottom:1px solid #d0e3f7;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.exc-editing-hdr span{font-size:11px;font-weight:600;color:#333;flex:1}
+.exc-editing-back{padding:4px 10px;border:1px solid #ccc;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;background:#fff;color:#555;white-space:nowrap}
+.exc-editing-back:hover{background:#f0f0f0}
+</style>
+</head>
+<body>
+
+<div id="empty"><div>
+  <p style="font-size:13px;margin-bottom:8px">Selecione um componente,<br>component set ou instância</p>
+  <p style="color:#bbb">O plugin exibirá o preview interativo</p>
+</div></div>
+
+<div id="main" style="display:none">
+  <div class="steps">
+    <button class="stab active" data-s="1" onclick="go(1)"><span class="snum">1</span>Geral</button>
+    <button class="stab" data-s="2" onclick="go(2)"><span class="snum">2</span>Roles</button>
+    <button class="stab" data-s="3" onclick="go(3)"><span class="snum">3</span>Área Toque</button>
+    <button class="stab" data-s="4" onclick="go(4)"><span class="snum">4</span>Foco</button>
+    <button class="stab" data-s="5" onclick="go(5)"><span class="snum">5</span>Handoff</button>
+  </div>
+  <div class="comp-hdr" id="cname"></div>
+
+  <!-- STEP 1 -->
+  <div id="s1" class="step active">
+    <div class="sbody">
+      <div class="stitle">Propriedades do Componente</div>
+      <div class="sdesc">Plataformas e zoom que se aplicam ao componente como um todo.</div>
+      <div class="fg"><div class="fl">Plataforma</div><div class="cg" id="plats"></div></div>
+      <div class="fg"><div class="fl">Zoom</div>
+        <div class="cg">
+          <label class="ci"><input type="checkbox" name="zoom" value="resize-text" onchange="saveComp()"> Redimensionar Texto (até 200%)</label>
+          <label class="ci"><input type="checkbox" name="zoom" value="reflow" onchange="saveComp()"> Refluxo (até 400%)</label>
+        </div>
+      </div>
+    </div>
+    <div class="snav"><button class="nb pr" onclick="go(2)">Próximo →</button></div>
+  </div>
+
+  <!-- STEP 2: ROLES -->
+  <div id="s2" class="step">
+    <div id="exc-bar-2" class="exc-bar" style="display:none">
+      <label class="ci"><input type="checkbox" id="hasExcCk-2" onchange="toggleHasExc(2)"> Alguma variante tem roles diferentes?</label>
+    </div>
+    <div id="exc-cards-2" class="exc-cards" style="display:none"></div>
+    <div id="exc-editing-hdr-2" class="exc-editing-hdr" style="display:none">
+      <span id="exc-editing-name-2"></span>
+      <button class="exc-editing-back" onclick="backToList(2)">← Voltar</button>
+    </div>
+    <div id="s2-content">
+      <div id="bc2" class="breadcrumb"><span style="opacity:.6">Raiz</span><span style="opacity:.4"> — duplo-clique para expandir</span></div>
+      <div class="preview-wrap" id="pw2"><img id="pi2" alt="Preview"></div>
+      <div class="panel" id="rp">
+        <div id="rpList">
+          <div class="stitle">Roles Anotadas</div>
+          <div id="rlist"><div style="color:#999;font-size:10px;text-align:center;padding:8px">Nenhum layer anotado</div></div>
+        </div>
+        <div id="rpEdit" style="display:none"><span style="color:#999">Clique em um elemento no preview</span></div>
+      </div>
+    </div>
+    <div class="snav"><button class="nb" onclick="go(1)">← Voltar</button><button class="nb pr" onclick="go(3)">Próximo →</button></div>
+  </div>
+
+  <!-- STEP 3: TOUCH AREA -->
+  <div id="s3" class="step">
+    <div id="exc-bar-3" class="exc-bar" style="display:none">
+      <label class="ci"><input type="checkbox" id="hasExcCk-3" onchange="toggleHasExc(3)"> Alguma variante tem áreas de toque diferentes?</label>
+    </div>
+    <div id="exc-cards-3" class="exc-cards" style="display:none"></div>
+    <div id="exc-editing-hdr-3" class="exc-editing-hdr" style="display:none">
+      <span id="exc-editing-name-3"></span>
+      <button class="exc-editing-back" onclick="backToList(3)">← Voltar</button>
+    </div>
+    <div id="s3-content">
+    <div class="breadcrumb" id="bc3"><span style="opacity:.6">Clique em "Adicionar nova área" para começar</span></div>
+    <div class="preview-wrap" id="pw3"><img id="pi3" alt="Preview"></div>
+    <div class="panel" id="tp">
+      <div class="stitle">Áreas de Toque</div>
+      <div class="sdesc">WCAG 2.5.5: ≥44×44px (Aprimorado) · WCAG 2.5.8: ≥24×24px (Mínimo)</div>
+      <div id="tlist"></div>
+      <div id="touch-add-form" style="display:none">
+        <div style="margin-top:8px;padding:10px;border:1px solid #e5e5e5;border-radius:6px;background:#fafafa">
+          <div class="fl" style="margin-bottom:4px">Tamanho do alvo</div>
+          <div class="touch-opts" style="margin-bottom:8px">
+            <button class="touch-opt active" data-ts="44" onclick="setTouchSize('44')">Aprimorado (44px)</button>
+            <button class="touch-opt" data-ts="24" onclick="setTouchSize('24')">Mínimo (24px)</button>
+            <button class="touch-opt" data-ts="custom" onclick="setTouchSize('custom')">Desenho livre</button>
+          </div>
+          <div style="font-size:10px;color:#999;margin-bottom:6px" id="touch-add-hint">Clique em um elemento no preview para definir a área</div>
+          <button class="cancel-role-btn" onclick="exitTouchAddMode()">Cancelar</button>
+        </div>
+      </div>
+      <button id="touch-add-btn" class="add-role-btn" style="margin-top:8px" onclick="enterTouchAddMode()">Adicionar nova área de toque</button>
+      <button id="touch-clear-btn" style="margin-top:4px;padding:6px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-size:10px;width:100%;display:none" onclick="clearAllTouch()">Limpar todas</button>
+    </div>
+    </div>
+    <div class="snav"><button class="nb" onclick="go(2)">← Voltar</button><button class="nb pr" onclick="go(4)">Próximo →</button></div>
+  </div>
+
+  <!-- STEP 4: FOCUS ORDER -->
+  <div id="s4" class="step">
+    <div id="exc-bar-4" class="exc-bar" style="display:none">
+      <label class="ci"><input type="checkbox" id="hasExcCk-4" onchange="toggleHasExc(4)"> Alguma variante tem ordem de foco diferente?</label>
+    </div>
+    <div id="exc-cards-4" class="exc-cards" style="display:none"></div>
+    <div id="exc-editing-hdr-4" class="exc-editing-hdr" style="display:none">
+      <span id="exc-editing-name-4"></span>
+      <button class="exc-editing-back" onclick="backToList(4)">← Voltar</button>
+    </div>
+    <div id="s4-content">
+    <div class="breadcrumb" id="bc4"><span style="opacity:.6">Clique nos elementos na ordem de foco desejada</span></div>
+    <div style="padding:8px 12px 0">
+      <label class="ci"><input type="checkbox" id="noTabCk" onchange="toggleNoTab()"> Este componente não tem tabulação</label>
+    </div>
+    <div id="s4body">
+      <div class="preview-wrap" id="pw4"><img id="pi4" alt="Preview"></div>
+      <div class="panel" id="fp">
+        <div class="stitle">Ordem de Foco</div>
+        <div id="flist"></div>
+        <button style="margin-top:8px;padding:6px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-size:10px" onclick="clearFocus()">Limpar ordem</button>
+      </div>
+    </div>
+    </div>
+    <div class="snav"><button class="nb" onclick="go(3)">← Voltar</button><button class="nb pr" onclick="go(5)">Próximo →</button></div>
+  </div>
+
+  <!-- STEP 5: HANDOFF -->
+  <div id="s5" class="step">
+    <div class="sbody">
+      <div class="stitle">Gerar Handoff</div>
+      <div class="sdesc">Gera a documentação de acessibilidade no canvas com base no que foi preenchido nos passos anteriores.</div>
+      <button class="hbtn" onclick="doHandoff()">Gerar Handoff no Canvas</button>
+      <div id="hres" style="display:none"></div>
+    </div>
+    <div class="snav"><button class="nb" onclick="go(4)">← Voltar</button></div>
+  </div>
+
+  <div id="status">Pronto</div>
+</div>
+
+<script>
+// ═══════════════ STATE ═══════════════
+const S = {
+  step: 1, rootId: null, rootType: null,
+  comp: { platform: [], zoom: [], noTab: false },
+  preview: null, allLayers: [], rootZoneId: null, previewZoom: 1,
+  expanded: new Set(), selLayer: null,
+  // Touch drawing
+  drawing: false, drawStart: null,
+  touchAreas: [], // [{x,y,w,h}] in real Figma coords
+  selectedArea: -1, // index of selected area, -1 = none
+  touchSize: '44', // '44', '24', or 'custom'
+  touchAddMode: false,
+  // Variants (component set)
+  variants: [], // [{id,name,width,height}]
+  selectedVariant: null,
+  selectedVariants: [], // IDs of variants selected for handoff
+  currentVariantName: '', // name of the currently previewed variant
+  // Focus
+  focusOrder: [], annotatedNodes: [],
+  // Annotations list
+  annotations: [],
+  // Exception mode
+  editingException: null, // null = shared mode, string = variant name
+  variantOverrides: { roles: [], touch: [], focus: [] },
+};
+
+const ROLES=['dont-read','alert','alertdialog','application','article','banner','button','cell','checkbox','columnheader','combobox','complementary','contentinfo','definition','dialog','directory','document','feed','figure','form','grid','gridcell','group','heading','img','link','list','listbox','listitem','log','main','marquee','math','menu','menubar','menuitem','menuitemcheckbox','menuitemradio','navigation','none','note','option','presentation','progressbar','radio','radiogroup','region','row','rowgroup','rowheader','scrollbar','search','searchbox','separator','slider','spinbutton','status','switch','tab','table','tablist','tabpanel','term','textbox','timer','toolbar','tooltip','tree','treegrid','treeitem'];
+const RLBL={'dont-read':'Não ler (ignorar)'};
+const CATS=[
+  {v:'funcao-valor',l:'Função e valor',c:'#f5c542'},
+  {v:'estrutural',l:'Elementos estruturais',c:'#8b8b8b'},
+  {v:'titulo',l:'Nível de título',c:'#7bc47f'},
+  {v:'nome-acessivel',l:'Nome acessível e texto alt.',c:'#4ecdc4'},
+  {v:'decorativo',l:'Decorativo',c:'#e74c3c'},
+  {v:'outros',l:'Outros',c:'#e67e22'},
+];
+const PLATS=[
+  {v:'mobile-crossplatform',l:'Mobile Cross-platform'},
+  {v:'mobile-android',l:'Mobile Android'},
+  {v:'mobile-ios',l:'Mobile iOS'},
+  {v:'web',l:'Web'},
+  {v:'desktop-nativo',l:'Desktop Nativo'},
+];
+
+// ═══════════════ MSG ═══════════════
+function post(m){parent.postMessage({pluginMessage:m},'*')}
+window.onmessage=e=>{const m=e.data.pluginMessage;if(!m)return;({
+  'selection-changed':onSel,
+  'preview-data':onPreview,
+  'layer-data':onLayerData,
+  'zones-updated':onZonesUpd,
+  'touch-areas-data':onTouchData,
+  'focus-order-data':onFocusData,
+  'all-layer-annotations':onAnnotations,
+  'variant-overrides':onVariantOverrides,
+  'handoff-progress':onProgress,
+  'handoff-result':onHandoff,
+}[m.type]||(_=>{}))(m)};
+
+// ═══════════════ SELECTION ═══════════════
+function onSel(m){
+  if(!m.valid){$('empty').style.display='flex';$('main').style.display='none';S.rootId=null;return}
+  $('empty').style.display='none';$('main').style.display='flex';
+  $('cname').textContent=m.rootName;S.rootId=m.rootId;S.rootType=m.rootType;_variantPropCache=null;
+  S.comp=m.componentData||{platform:[],zoom:[],noTab:false};
+  S.variants=m.variants||[];
+  S.selectedVariants=m.selectedVariantIds||S.variants.map(v=>v.id);
+  S.selectedVariant=S.selectedVariants.length>0?S.selectedVariants[0]:(S.variants.length>0?S.variants[0].id:null);
+  // Initialize variant name
+  if(S.selectedVariant){const v=S.variants.find(v=>v.id===S.selectedVariant);S.currentVariantName=v?v.name:'';}else{S.currentVariantName='';}
+  renderS1();applyNoTab();go(1);
+}
+
+// ═══════════════ NAV ═══════════════
+function go(s){
+  S.step=s;
+  document.querySelectorAll('.stab').forEach(t=>{const n=+t.dataset.s;t.classList.toggle('active',n===s);t.classList.toggle('done',n<s)});
+  document.querySelectorAll('.step').forEach(c=>c.classList.toggle('active',c.id==='s'+s));
+  if(s===2||s===3||s===4){
+    // Reset to default
+    S.editingException=null;excEditing[s]=null;
+    // Card list only if there are exceptions, otherwise direct preview
+    excView[s]=(S.variants.length>1&&getExcNamesForStep(s).length>0)?'list':'editing';
+    switchToDefault();
+    st('Gerando preview...');
+  }
+  if(s===2){post({type:'get-all-layer-annotations',variantName:currentVariantName(),excOnly:false});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcUI(2)}
+  if(s===3){post({type:'get-touch-areas',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcUI(3)}
+  if(s===4){post({type:'get-focus-order',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcUI(4)}
+  if(s===5){}
+}
+
+// ═══════════════ STEP 1 ═══════════════
+function renderS1(){
+  const g=$('plats');g.innerHTML='';
+  PLATS.forEach(p=>{const ck=S.comp.platform.includes(p.v)?'checked':'';
+    g.innerHTML+=`<label class="ci"><input type="checkbox" name="plat" value="${p.v}" ${ck} onchange="saveComp()"> ${p.l}</label>`});
+  document.querySelectorAll('input[name="zoom"]').forEach(c=>c.checked=S.comp.zoom.includes(c.value));
+}
+
+// ═══════════════ VARIANT FILTER (Step 5) ═══════════════
+
+// Parse "variant=highlight, size=standard, type=plain, state=default" into {variant:'highlight', size:'standard', ...}
+function parseVariantProps(name){
+  const props={};
+  name.split(',').forEach(p=>{
+    const parts=p.trim().split('=');
+    if(parts.length===2)props[parts[0].trim()]=parts[1].trim();
+  });
+  return props;
+}
+
+function saveComp(){
+  S.comp.platform=[...document.querySelectorAll('input[name="plat"]:checked')].map(c=>c.value);
+  S.comp.zoom=[...document.querySelectorAll('input[name="zoom"]:checked')].map(c=>c.value);
+  post({type:'set-component-data',data:S.comp});st('Salvo');
+}
+
+function toggleNoTab(){
+  S.comp.noTab=$('noTabCk').checked;
+  post({type:'set-component-data',data:S.comp});
+  applyNoTab();st('Salvo');
+}
+function applyNoTab(){
+  const ck=$('noTabCk');if(ck)ck.checked=!!S.comp.noTab;
+  const body=$('s4body');if(body)body.style.display=S.comp.noTab?'none':'';
+}
+
+// ═══════════════ PREVIEW ═══════════════
+function onPreview(m){
+  S.preview=m;S.allLayers=m.layers||[];S.rootZoneId=m.rootZoneId;
+  if(m.variantName!==undefined)S.currentVariantName=m.variantName;
+  S.expanded=new Set(['', m.rootZoneId]);
+  // Set images for all steps
+  ['pi2','pi3','pi4'].forEach(id=>{$(id).src='data:image/png;base64,'+m.image});
+  setTimeout(()=>{renderZones(2);renderZones(3);renderZones(4)},100);
+  st('Preview pronto');
+}
+function onZonesUpd(m){S.allLayers=m.layers||[];renderZones(2);renderZones(3);renderZones(4)}
+
+function visibleLayers(){return S.allLayers.filter(l=>S.expanded.has(l.parentId))}
+
+function setPreviewZoom(delta){
+  S.previewZoom=Math.max(0.5,Math.min(4,S.previewZoom+delta));
+  renderZones(S.step);
+}
+function resetPreviewZoom(){S.previewZoom=1;renderZones(S.step)}
+
+function renderZones(step){
+  const pw=$('pw'+step);if(!pw)return;
+  const img=pw.querySelector('img');if(!img||!img.complete||!img.naturalWidth)return;
+  // Remove old
+  pw.querySelectorAll('.lz,.focus-badge,.draw-saved,.draw-overlay,.zoom-controls').forEach(e=>e.remove());
+  // Padding for preview steps (breathing room around component)
+  const hasPad=step===2||step===3||step===4;
+  const pad=hasPad?60:0;
+  pw.classList.toggle('padded',hasPad);
+  // Apply zoom — account for padding in width calc
+  const z=S.previewZoom;
+  if(pad>0){
+    const containerW=pw.clientWidth-pad*2;
+    img.style.width=(z*containerW)+'px';
+  } else {
+    img.style.width=(z*100)+'%';
+  }
+  // Zoom controls
+  const zc=document.createElement('div');zc.className='zoom-controls';
+  zc.innerHTML='<button class="zoom-btn" onclick="event.stopPropagation();setPreviewZoom(-0.25)">−</button><span class="zoom-pct">'+Math.round(z*100)+'%</span><button class="zoom-btn" onclick="event.stopPropagation();setPreviewZoom(0.25)">+</button><button class="zoom-btn" onclick="event.stopPropagation();resetPreviewZoom()" title="Reset" style="font-size:10px">1:1</button>';
+  pw.insertBefore(zc,img);
+  const sc=img.clientWidth/S.preview.width;if(!sc||!isFinite(sc))return;
+  const ox=pad,oy=pad; // offset for positioned elements
+  const vis=visibleLayers();
+  const sorted=[...vis].sort((a,b)=>(b.width*b.height)-(a.width*a.height));
+
+  if(step!==3){
+    sorted.forEach(l=>{
+      const z=document.createElement('div');
+      let cls='lz';
+      if(step===2&&l.hasA11yData)cls+=' ann';
+      if(step===2&&S.selLayer===l.id)cls+=' sel';
+      if(step===2&&l.hasChildren)cls+=' exp';
+      z.className=cls;
+      z.style.left=(ox+l.x*sc)+'px';z.style.top=(oy+l.y*sc)+'px';
+      z.style.width=Math.max(l.width*sc,6)+'px';z.style.height=Math.max(l.height*sc,6)+'px';
+      z.style.zIndex=String(l.depth*10);z.dataset.nid=l.id;
+      if(step===2&&l.category){const cat=CATS.find(c=>c.v===l.category);if(cat)z.style.borderColor=cat.c}
+      const tip=document.createElement('span');tip.className='lz-tip';
+      tip.textContent=l.name+(l.hasChildren?' [duplo-clique: expandir]':'');
+      z.appendChild(tip);
+
+      if(step===2){
+        z.onclick=e=>{e.stopPropagation();S.selLayer=l.id;renderZones(2);post({type:'get-layer-data',nodeId:l.id,variantName:currentVariantName()});st('Carregando...')};
+        if(l.hasChildren)z.ondblclick=e=>{e.stopPropagation();S.expanded.add(l.id);renderZones(2);renderBC(2)};
+      }
+      if(step===4){
+        z.onclick=e=>{e.stopPropagation();toggleFocus(l.id,l.name)};
+      }
+      pw.appendChild(z);
+    });
+  }
+
+  // Step 3: show saved touch areas + draw overlay (custom mode only)
+  if(step===3){
+    S.touchAreas.forEach((a,idx)=>{
+      const d=document.createElement('div');
+      const isSel=S.selectedArea===idx;
+      d.className='draw-saved'+(isSel?' selected':'');
+      d.style.left=(ox+a.x*sc)+'px';d.style.top=(oy+a.y*sc)+'px';
+      d.style.width=(a.w*sc)+'px';d.style.height=(a.h*sc)+'px';
+      // Number badge
+      const badge=document.createElement('span');
+      badge.style.cssText='position:absolute;top:-8px;left:-8px;width:18px;height:18px;border-radius:50%;background:#FFB19E;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:8003;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.3)';
+      badge.textContent=String(idx+1);
+      d.appendChild(badge);
+      // Dimensions label only when selected
+      if(isSel){
+        const dim=document.createElement('span');dim.className='draw-dim';
+        dim.textContent=Math.round(a.w)+'×'+Math.round(a.h)+'px';
+        d.appendChild(dim);
+      }
+      // Resize handles on selected area
+      if(isSel){
+        ['tl','tr','bl','br'].forEach(pos=>{
+          const h=document.createElement('div');h.className='resize-handle '+pos;h.dataset.pos=pos;h.dataset.idx=String(idx);
+          h.onmousedown=e=>{e.stopPropagation();startResize(e,idx,pos)};
+          d.appendChild(h);
+        });
+      }
+      // Click to select, drag to move
+      d.style.cursor=isSel?'move':'pointer';
+      d.onmousedown=e=>{
+        e.stopPropagation();
+        if(S.selectedArea!==idx){S.selectedArea=idx;renderZones(3);renderTouchList();return}
+        startMove(e,idx);
+      };
+      pw.appendChild(d);
+    });
+    if(S.touchAddMode){
+      if(S.touchSize==='custom'){
+        // Draw overlay for custom mode
+        const ov=document.createElement('div');ov.className='draw-overlay';
+        ov.style.zIndex=S.selectedArea>=0?'7998':'8000';
+        ov.onmousedown=e=>{
+          if(S.selectedArea>=0){S.selectedArea=-1;renderZones(3);renderTouchList();return}
+          startDraw(e);
+        };
+        pw.appendChild(ov);
+      } else {
+        // Click overlay for preset mode — find nearest layer by click position
+        const ov=document.createElement('div');ov.className='draw-overlay';
+        ov.style.cursor='pointer';ov.style.zIndex='8000';
+        ov.onclick=e=>{
+          const cr=pw.getBoundingClientRect();
+          const cx=(e.clientX-cr.left-ox)/sc, cy=(e.clientY-cr.top-oy)/sc;
+          // Find deepest leaf layer containing click point
+          let best=null,bestDepth=-1;
+          S.allLayers.forEach(l=>{
+            if(cx>=l.x&&cx<=l.x+l.width&&cy>=l.y&&cy<=l.y+l.height&&l.depth>bestDepth){best=l;bestDepth=l.depth}
+          });
+          if(best)addTouchForLayer(best.id);
+        };
+        pw.appendChild(ov);
+      }
+    }
+  }
+
+  // Step 4: show focus badges
+  if(step===4){
+    S.focusOrder.forEach((entry,i)=>{
+      const layer=S.allLayers.find(l=>l.id===entry.nodeId);
+      if(!layer)return;
+      const b=document.createElement('div');b.className='focus-badge';
+      b.innerHTML=String(i+1)+'<span class="fb-icon">→|</span>';
+      b.style.left=(ox+layer.x*sc-6)+'px';b.style.top=(oy+layer.y*sc-6)+'px';
+      pw.appendChild(b);
+    });
+  }
+
+  if(step===2)renderBC(2);
+}
+
+function renderBC(step){
+  const el=$('bc'+step);if(!el)return;
+  const arr=[...S.expanded];
+  if(arr.length<=1){el.innerHTML='<span style="opacity:.6">Raiz</span><span style="opacity:.4"> — duplo-clique para expandir</span>';return}
+  let h='<a onclick="colTo(\''+S.rootZoneId+'\','+step+')">Raiz</a>';
+  for(let i=1;i<arr.length;i++){
+    const l=S.allLayers.find(x=>x.id===arr[i]);
+    h+=' <span style="opacity:.4">›</span> <a onclick="colTo(\''+arr[i]+'\','+step+')">'+(l?esc(l.name):'...')+'</a>';
+  }
+  el.innerHTML=h;
+}
+function colTo(id,step){
+  const nw=new Set([S.rootZoneId]);
+  if(id!==S.rootZoneId){const path=pathTo(id);path.forEach(p=>nw.add(p))}
+  S.expanded=nw;renderZones(step);renderBC(step);
+}
+function pathTo(tid){
+  const path=[];let cur=tid;const pm=new Map();S.allLayers.forEach(l=>pm.set(l.id,l.parentId));
+  while(cur&&cur!==S.rootZoneId){path.unshift(cur);cur=pm.get(cur)}return path;
+}
+
+// ═══════════════ STEP 2: ROLES ═══════════════
+let editingExistingRole=false; // true when editing an already-annotated layer
+
+function onLayerData(m){
+  const p=$('rpEdit');
+  const d=m.data||{role:'dont-read',category:'',accessibleName:'',altText:'',headingLevel:0,explanation:''};
+  const hasData=!!(d.category);
+  editingExistingRole=hasData;
+
+  let h='<div class="panel-title">'+esc(m.name||'Layer')+'</div>';
+
+  h+='<div class="fg"><div class="fl">Categoria</div><select class="fsel" id="lcat" onchange="catChg()">';
+  h+='<option value="">— Selecionar —</option>';
+  CATS.forEach(c=>{h+='<option value="'+c.v+'"'+(d.category===c.v?' selected':'')+'>'+c.l+'</option>'});
+  h+='</select></div>';
+
+  h+='<div class="fg"><div class="fl">Função (Role)</div><select class="fsel" id="lrol">';
+  ROLES.forEach(r=>{h+='<option value="'+r+'"'+(d.role===r?' selected':'')+'>'+(RLBL[r]||r)+'</option>'});
+  h+='</select></div>';
+
+  h+='<div id="cex">';h+=catFields(d.category,d);h+='</div>';
+
+  if(hasData){
+    h+='<button class="upd-role-btn" onclick="saveLyr()">Atualizar</button>';
+    h+='<button class="cancel-role-btn" onclick="cancelRoleEdit()">Cancelar</button>';
+  } else {
+    h+='<button class="add-role-btn" onclick="saveLyr()">Adicionar</button>';
+    h+='<button class="cancel-role-btn" onclick="cancelRoleEdit()">Cancelar</button>';
+  }
+
+  p.innerHTML=h;
+  p.style.display='';
+  p.classList.add('has-form');
+  // Hide role list while editing to save space
+  const rl=$('rpList');if(rl)rl.style.display='none';
+  st('Pronto');
+}
+
+function catFields(cat,d){
+  let h='';
+  if(cat==='nome-acessivel'){
+    h+='<div class="fg"><div class="fl">Nome Acessível</div><input class="fin" id="lacc" value="'+ea(d.accessibleName||'')+'" placeholder="Nome acessível"></div>';
+    h+='<div class="fg"><div class="fl">Texto Alternativo</div><input class="fin" id="lalt" value="'+ea(d.altText||'')+'" placeholder="Texto alternativo"></div>';
+  }
+  if(cat==='titulo'){
+    h+='<div class="fg"><div class="fl">Nível do Título</div><select class="fsel" id="lhl">';
+    for(let i=1;i<=6;i++){h+='<option value="'+i+'"'+(d.headingLevel===i?' selected':'')+'>h'+i+'</option>'}
+    h+='</select></div>';
+  }
+  if(cat&&cat!=='decorativo'){
+    h+='<div class="fg"><div class="fl">Explicação</div><input class="fin" id="lexp" value="'+ea(d.explanation||'')+'" placeholder="Descrição para o handoff"></div>';
+  }
+  return h;
+}
+function catChg(){$('cex').innerHTML=catFields($('lcat')?.value||'',{})}
+
+function cancelRoleEdit(){
+  const p=$('rpEdit');
+  p.innerHTML='<span style="color:#999">Clique em um elemento no preview</span>';
+  p.style.display='none';
+  p.classList.remove('has-form');
+  const rl=$('rpList');if(rl)rl.style.display='';
+  S.selLayer=null;
+  renderZones(2);
+}
+
+function saveLyr(){
+  if(!S.selLayer)return;
+  const cat=$('lcat')?.value||'';
+  if(!cat){st('Selecione uma categoria');return}
+  const d={
+    role:$('lrol')?.value||'dont-read',
+    category:cat,
+    accessibleName:$('lacc')?.value||'',
+    altText:$('lalt')?.value||'',
+    headingLevel:$('lhl')?parseInt($('lhl').value):0,
+    explanation:$('lexp')?.value||'',
+  };
+  const applyToAll=!S.editingException;
+  post({type:'set-layer-data',nodeId:S.selLayer,data:d,variantName:currentVariantName(),applyToAll});
+  if(S.variants.length>1)post({type:'get-variant-overrides'});
+  // Clear form after save, show list again
+  const p=$('rpEdit');
+  p.innerHTML='<span style="color:#999">Clique em um elemento no preview</span>';
+  p.style.display='none';
+  p.classList.remove('has-form');
+  const rl=$('rpList');if(rl)rl.style.display='';
+  S.selLayer=null;
+  renderZones(2);
+  st(editingExistingRole?'Atualizado':'Adicionado');
+  editingExistingRole=false;
+}
+
+function onAnnotations(m){
+  S.annotations=m.annotations||[];
+  renderRoleList();
+  // Keep form hidden if no layer selected (e.g. after save/add)
+  if(!S.selLayer){const p=$('rpEdit');if(p){p.style.display='none';p.classList.remove('has-form')}}
+}
+
+function renderRoleList(){
+  const c=$('rlist');if(!c)return;
+  if(S.annotations.length===0){c.innerHTML='<div style="color:#999;font-size:10px;text-align:center;padding:8px">Nenhum layer anotado</div>';return}
+  let h='';
+  S.annotations.forEach((a,i)=>{
+    const cat=CATS.find(c=>c.v===a.data.category);
+    const dot=cat?'<span style="color:'+cat.c+';font-size:14px;line-height:1">●</span>':'<span style="color:#ccc;font-size:14px;line-height:1">●</span>';
+    const role=RLBL[a.data.role]||a.data.role||'—';
+    const catLabel=cat?cat.l:'';
+    const scopeTag=a.scope==='variant'?'<span style="font-size:8px;color:#18a0fb;background:#e8f0fe;padding:1px 4px;border-radius:2px;margin-left:4px;flex-shrink:0">variante</span>':'';
+    h+='<div class="fi" style="cursor:pointer" onclick="clickAnnotation(\''+ea(a.namePath)+'\')" title="Clique para editar">';
+    h+=dot;
+    h+='<div style="flex:1;min-width:0"><div class="fi-name">'+esc(a.name)+'</div>';
+    h+='<div style="font-size:9px;color:#999;margin-top:1px">'+esc(role)+(catLabel?' · '+esc(catLabel):'')+'</div></div>';
+    h+=scopeTag;
+    h+='<button class="fi-rm" onclick="event.stopPropagation();rmAnnotation(\''+ea(a.namePath)+'\')" title="Remover">×</button>';
+    h+='</div>';
+  });
+  c.innerHTML=h;
+}
+
+function clickAnnotation(namePath){
+  // Find the layer in allLayers by matching name path segments
+  const parts=namePath.split('/');
+  const targetName=parts[parts.length-1];
+  // Try to find layer by name match (best effort)
+  const layer=S.allLayers.find(l=>l.name===targetName);
+  if(layer){
+    S.selLayer=layer.id;
+    renderZones(2);
+    post({type:'get-layer-data',nodeId:layer.id,variantName:currentVariantName()});
+    st('Carregando...');
+  }
+}
+
+function rmAnnotation(namePath){
+  post({type:'remove-layer-annotation',namePath:namePath,variantName:currentVariantName()});
+  cancelRoleEdit();
+  st('Removendo...');
+}
+
+// ═══════════════ STEP 3: TOUCH DRAW ═══════════════
+function onTouchData(m){
+  S.touchAreas=(m.areas||[]).map(a=>({x:a.x,y:a.y,w:a.width,h:a.height}));
+  renderTouchList();renderZones(3);
+}
+
+function setTouchSize(size){
+  S.touchSize=size;S.selectedArea=-1;
+  document.querySelectorAll('.touch-opt').forEach(b=>b.classList.toggle('active',b.dataset.ts===size));
+  const hint=$('touch-add-hint');
+  if(hint){
+    if(size==='custom')hint.textContent='Arraste no preview para desenhar a área de toque';
+    else hint.textContent='Clique em um elemento no preview para definir a área ('+size+'px)';
+  }
+  updateTouchBC();
+  renderZones(3);
+}
+function updateTouchBC(){
+  const bc=$('bc3');if(!bc)return;
+  if(!S.touchAddMode){bc.innerHTML='<span style="opacity:.6">Clique em "Adicionar nova área" para começar</span>';return}
+  if(S.touchSize==='custom')bc.innerHTML='<span style="opacity:.6">Arraste no preview para desenhar a área de toque</span>';
+  else bc.innerHTML='<span style="opacity:.6">Clique em um elemento no preview ('+S.touchSize+'px)</span>';
+}
+function enterTouchAddMode(){
+  S.touchAddMode=true;
+  $('touch-add-form').style.display='';
+  $('touch-add-btn').style.display='none';
+  updateTouchBC();
+  renderZones(3);
+}
+function exitTouchAddMode(){
+  S.touchAddMode=false;
+  $('touch-add-form').style.display='none';
+  $('touch-add-btn').style.display='';
+  updateTouchBC();
+  renderZones(3);
+}
+
+function currentVariantName(){
+  return S.editingException||'';
+}
+
+// ═══════════════ VARIANT PROPERTY DATA ═══════════════
+
+let _variantPropCache=null;
+function getVariantPropData(){
+  if(_variantPropCache&&_variantPropCache._key===S.rootId)return _variantPropCache;
+  const parsed=S.variants.map(v=>({id:v.id,name:v.name,width:v.width,height:v.height,props:parseVariantProps(v.name)}));
+  const keyOrder=[];const keySet=new Set();
+  parsed.forEach(p=>{Object.keys(p.props).forEach(k=>{if(!keySet.has(k)){keySet.add(k);keyOrder.push(k)}})});
+  const propValues={};
+  keyOrder.forEach(key=>{
+    const seen=new Set();const vals=[];
+    parsed.forEach(p=>{const v=p.props[key];if(v&&!seen.has(v)){seen.add(v);vals.push(v)}});
+    propValues[key]=vals;
+  });
+  _variantPropCache={_key:S.rootId,parsed,keyOrder,propValues};
+  return _variantPropCache;
+}
+
+// ═══════════════ EXCEPTION SYSTEM (PER-STEP CARD LIST) ═══════════════
+
+function stepDataType(step){return step===2?'roles':step===3?'touch':'focus'}
+const STEP_LABELS={2:'roles',3:'áreas de toque',4:'ordem de foco'};
+
+// Track which view each step is in: 'list' or 'editing'
+const excView={2:'editing',3:'editing',4:'editing'}; // default = editing (shows preview for Default)
+// Track which item is being edited per step (null = default)
+const excEditing={2:null,3:null,4:null};
+// Exception custom names per step {dt: {variantName: customLabel}}
+const excNames={roles:{},touch:{},focus:{}};
+
+function onVariantOverrides(m){
+  S.variantOverrides=m.overrides||{roles:[],touch:[],focus:[]};
+  [2,3,4].forEach(s=>{
+    // If step has exceptions and is not currently editing, show card list
+    if(getExcNamesForStep(s).length>0&&excView[s]==='editing'&&!excEditing[s]){
+      excView[s]='list';
+    }
+    renderExcUI(s);
+  });
+}
+
+function getExcNamesForStep(step){
+  const dt=stepDataType(step);
+  return S.variantOverrides[dt]||[];
+}
+
+function getExcLabel(step,variantName){
+  const dt=stepDataType(step);
+  return excNames[dt][variantName]||variantName;
+}
+
+// ── Toggle checkbox ──
+
+function toggleHasExc(step){
+  const checked=$('hasExcCk-'+step).checked;
+  if(checked){
+    // Show card list to add exceptions
+    excView[step]='list';
+  } else {
+    // Remove all exceptions and go to preview
+    const dt=stepDataType(step);
+    const names=[...(S.variantOverrides[dt]||[])];
+    names.forEach(vn=>{
+      post({type:'remove-variant-override',variantName:vn,dataType:dt});
+    });
+    S.variantOverrides[dt]=[];
+    excEditing[step]=null;
+    excView[step]='editing';
+    switchToDefault();
+    reloadStepData(step);
+  }
+  renderExcUI(step);
+}
+
+function switchToDefault(){
+  S.editingException=null;
+  if(S.variants.length>0){
+    S.selectedVariant=S.variants[0].id;
+    S.currentVariantName=S.variants[0].name;
+    post({type:'switch-variant',variantId:S.selectedVariant});
+  }
+}
+
+// ── Render everything for a step ──
+
+function renderExcUI(step){
+  const bar=$('exc-bar-'+step);if(!bar)return;
+  // Hide checkbox bar if single variant (no component set)
+  if(S.variants.length<=1){bar.style.display='none'}else{bar.style.display=''}
+
+  const dt=stepDataType(step);
+  const exceptions=S.variantOverrides[dt]||[];
+  const hasExc=exceptions.length>0;
+
+  // Checkbox state: checked if has exceptions or if in list view (user just checked it)
+  const ck=$('hasExcCk-'+step);
+  if(ck)ck.checked=hasExc||(excView[step]==='list'&&S.variants.length>1);
+
+  const cards=$('exc-cards-'+step);
+  const editHdr=$('exc-editing-hdr-'+step);
+  const content=$('s'+step+'-content');
+
+  if(excView[step]==='list'){
+    // Show card list, hide preview
+    cards.style.display='';
+    editHdr.style.display='none';
+    content.style.display='none';
+    renderCardList(step);
+  } else {
+    // Show preview (editing mode)
+    cards.style.display='none';
+    content.style.display='';
+
+    // Only show editing header when there are exceptions (came from card list)
+    if(hasExc){
+      const label=excEditing[step]?getExcLabel(step,excEditing[step]):'Default';
+      editHdr.style.display='flex';
+      $('exc-editing-name-'+step).textContent='Editando: '+label;
+    } else {
+      editHdr.style.display='none';
+    }
+  }
+}
+
+function renderCardList(step){
+  const cards=$('exc-cards-'+step);if(!cards)return;
+  const dt=stepDataType(step);
+  const exceptions=S.variantOverrides[dt]||[];
+
+  const hasExcChecked=$('hasExcCk-'+step)&&$('hasExcCk-'+step).checked;
+
+  let h='';
+  // Default card — always shown
+  h+='<div class="exc-card">';
+  h+='<div class="exc-card-icon default">D</div>';
+  h+='<div class="exc-card-info"><div class="exc-card-name">Default</div><div class="exc-card-sub">Comportamento padrão para todas as variantes</div></div>';
+  h+='<div class="exc-card-actions"><button class="exc-card-btn pr" onclick="editCard(null,'+step+')">Editar</button></div>';
+  h+='</div>';
+
+  // Exception cards
+  exceptions.forEach((vn,i)=>{
+    const label=getExcLabel(step,vn);
+    h+='<div class="exc-card">';
+    h+='<div class="exc-card-icon exception">'+(i+1)+'</div>';
+    h+='<div class="exc-card-info"><div class="exc-card-name">'+esc(label)+'</div><div class="exc-card-sub">'+esc(vn)+'</div></div>';
+    h+='<div class="exc-card-actions">';
+    h+='<button class="exc-card-btn pr" onclick="editCard(\''+ea(vn)+'\','+step+')">Editar</button>';
+    h+='<button class="exc-card-btn danger" onclick="rmExc(\''+ea(vn)+'\','+step+')">Excluir</button>';
+    h+='</div></div>';
+  });
+
+  // Add exception form — only if checkbox is checked
+  if(hasExcChecked){
+    const data=getVariantPropData();
+    h+='<div style="margin-top:8px;padding:10px;background:#f5f5f5;border:1px solid #e5e5e5;border-radius:6px">';
+    h+='<div class="fl" style="margin-bottom:6px">Nova exceção</div>';
+    h+='<div class="exc-add-row" style="margin-bottom:6px">';
+    h+='<input type="text" id="exc-new-name-'+step+'" placeholder="Nome (ex: Estado hover)">';
+    h+='</div>';
+    // Variant property pickers
+    h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">';
+    data.keyOrder.forEach(key=>{
+      const vals=data.propValues[key];
+      if(vals.length<=1)return;
+      h+='<div style="display:flex;align-items:center;gap:3px">';
+      h+='<span style="font-size:9px;color:#999;text-transform:capitalize">'+esc(key)+'</span>';
+      h+='<select class="fsel" style="width:auto;padding:3px 6px;font-size:10px" id="exc-prop-'+step+'-'+ea(key)+'" data-vpkey="'+ea(key)+'">';
+      vals.forEach(val=>{h+='<option value="'+ea(val)+'">'+esc(val)+'</option>'});
+      h+='</select>';
+      h+='</div>';
+    });
+    h+='</div>';
+    h+='<button class="exc-card-btn pr" style="width:100%" onclick="addExc('+step+')">+ Adicionar exceção</button>';
+    h+='</div>';
+  }
+
+  cards.innerHTML=h;
+}
+
+// ── Actions ──
+
+function editCard(variantName,step){
+  excEditing[step]=variantName;
+  excView[step]='editing';
+
+  if(variantName){
+    S.editingException=variantName;
+    const v=S.variants.find(v=>v.name===variantName);
+    if(v){
+      S.selectedVariant=v.id;
+      S.currentVariantName=v.name;
+      post({type:'switch-variant',variantId:v.id});
+    }
+  } else {
+    switchToDefault();
+  }
+
+  renderExcUI(step);
+  reloadStepData(step);
+  st(variantName?'Editando: '+getExcLabel(step,variantName):'Editando: Default');
+}
+
+function backToList(step){
+  excView[step]='list';
+  excEditing[step]=null;
+  S.editingException=null;
+  switchToDefault();
+  renderExcUI(step);
+  reloadStepData(step);
+}
+
+function addExc(step){
+  const input=$('exc-new-name-'+step);
+  const customName=(input?input.value:'').trim();
+  if(!customName){st('Digite um nome para a exceção');return}
+
+  const dt=stepDataType(step);
+  const data=getVariantPropData();
+  const existing=S.variantOverrides[dt]||[];
+
+  // Read selected properties from pickers
+  const selections={};
+  const cards=$('exc-cards-'+step);
+  if(cards){
+    cards.querySelectorAll('select[data-vpkey]').forEach(sel=>{
+      selections[sel.dataset.vpkey]=sel.value;
+    });
+  }
+
+  // Find best matching variant
+  let bestMatch=null;let bestScore=-1;
+  data.parsed.forEach(p=>{
+    if(existing.includes(p.name))return; // skip already used
+    let score=0;
+    for(const key in selections){if(p.props[key]===selections[key])score++}
+    if(score>bestScore){bestScore=score;bestMatch=p}
+  });
+
+  if(!bestMatch){st('Todas as variantes já têm exceção');return}
+
+  // Check if this exact variant is already used
+  if(existing.includes(bestMatch.name)){st('Essa combinação já tem exceção');return}
+
+  // Store custom name
+  excNames[dt][bestMatch.name]=customName;
+
+  post({type:'create-variant-override',variantName:bestMatch.name,dataType:dt});
+  if(!S.variantOverrides[dt])S.variantOverrides[dt]=[];
+  S.variantOverrides[dt].push(bestMatch.name);
+  renderExcUI(step);
+  st('Exceção adicionada: '+customName);
+}
+
+function rmExc(variantName,step){
+  const dt=stepDataType(step);
+  post({type:'remove-variant-override',variantName,dataType:dt});
+  S.variantOverrides[dt]=(S.variantOverrides[dt]||[]).filter(vn=>vn!==variantName);
+  delete excNames[dt][variantName];
+
+  if(excEditing[step]===variantName){
+    excEditing[step]=null;
+    switchToDefault();
+  }
+
+  // If no more exceptions, hide list
+  if((S.variantOverrides[dt]||[]).length===0){
+    excView[step]='editing';
+    $('hasExcCk-'+step).checked=false;
+  }
+
+  renderExcUI(step);
+  reloadStepData(step);
+  st('Exceção removida');
+}
+
+function reloadStepData(step){
+  const vn=currentVariantName();
+  const isExc=!!S.editingException;
+  post({type:'generate-preview'});
+  if(step===2){
+    post({type:'get-all-layer-annotations',variantName:vn,excOnly:isExc});
+    S.selLayer=null;
+    $('rpEdit').innerHTML='<span style="color:#999">Clique em um elemento no preview</span>';
+  }
+  if(step===3)post({type:'get-touch-areas',variantName:vn});
+  if(step===4)post({type:'get-focus-order',variantName:vn});
+}
+
+function addTouchForLayer(layerId){
+  const layer=S.allLayers.find(l=>l.id===layerId);
+  if(!layer)return;
+  // Check if this layer already has a touch area (avoid duplicates)
+  const exists=S.touchAreas.some(a=>{
+    const cx=a.x+a.w/2,cy=a.y+a.h/2;
+    const lx=layer.x+layer.width/2,ly=layer.y+layer.height/2;
+    return Math.abs(cx-lx)<2&&Math.abs(cy-ly)<2;
+  });
+  if(exists){st('Esse elemento já tem uma área de toque');return}
+  const targetH=parseInt(S.touchSize);
+  const targetW=Math.max(layer.width,targetH);
+  const h=Math.max(layer.height,targetH);
+  const w=targetW;
+  const x=layer.x-(w-layer.width)/2;
+  const y=layer.y-(h-layer.height)/2;
+  S.touchAreas.push({x,y,w,h});
+  saveTouchAreas();renderTouchList();
+  exitTouchAddMode();
+  st('Área de toque adicionada: '+Math.round(w)+'×'+Math.round(h)+'px');
+}
+
+function touchChip(w,ht){
+  const mn=Math.min(w,ht);
+  if(mn>=44)return '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:600;background:#e6f9f0;color:#0d7a42">Aprimorado (2.5.5)</span>';
+  if(mn>=24)return '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:600;background:#fff3cd;color:#856404">Mínimo (2.5.8)</span>';
+  return '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:600;background:#fde8e8;color:#c53030">Insuficiente</span>';
+}
+function renderTouchList(){
+  const c=$('tlist');if(!c)return;
+  const clr=$('touch-clear-btn');
+  if(S.touchAreas.length===0){
+    c.innerHTML='<div style="color:#999;font-size:10px;text-align:center;padding:8px">Nenhuma área de toque definida</div>';
+    if(clr)clr.style.display='none';
+    return;
+  }
+  let h='';
+  S.touchAreas.forEach((a,i)=>{
+    const w=Math.round(a.w),ht=Math.round(a.h);
+    const sel=S.selectedArea===i?' border-color:#FFB19E':'';
+    h+=`<div class="fi" style="cursor:pointer;${sel}" onclick="selectArea(${i})">
+      <span class="fi-name"><strong>Área ${i+1}</strong> — ${w} × ${ht}px</span>
+      ${touchChip(w,ht)}
+      <button class="fi-rm" onclick="event.stopPropagation();rmTouch(${i})" title="Remover">×</button>
+    </div>`;
+  });
+  c.innerHTML=h;
+  if(clr)clr.style.display='';
+}
+
+function selectArea(idx){
+  S.selectedArea=S.selectedArea===idx?-1:idx;
+  renderZones(3);renderTouchList();
+}
+
+function startDraw(e){
+  S.drawing=true;
+  const pw=$('pw3');const rect=pw.getBoundingClientRect();
+  const PAD=60; // must match CSS padding
+  S.drawStart={x:e.clientX-rect.left,y:e.clientY-rect.top};
+  const dv=document.createElement('div');dv.className='draw-rect';dv.id='drawrect';
+  dv.style.left=S.drawStart.x+'px';dv.style.top=S.drawStart.y+'px';
+  dv.style.width='0';dv.style.height='0';
+  pw.appendChild(dv);
+
+  const dimLabel=document.createElement('span');dimLabel.className='draw-dim';dimLabel.id='drawdim';
+  dv.appendChild(dimLabel);
+
+  const mmv=ev=>{
+    if(!S.drawing)return;
+    const cr=pw.getBoundingClientRect();
+    const cx=ev.clientX-cr.left,cy=ev.clientY-cr.top;
+    const x=Math.min(S.drawStart.x,cx),y=Math.min(S.drawStart.y,cy);
+    const w=Math.abs(cx-S.drawStart.x),h=Math.abs(cy-S.drawStart.y);
+    dv.style.left=x+'px';dv.style.top=y+'px';dv.style.width=w+'px';dv.style.height=h+'px';
+    const sc=pw.querySelector('img').clientWidth/S.preview.width;
+    const rw=Math.round(w/sc),rh=Math.round(h/sc);
+    dimLabel.textContent=rw+'×'+rh+'px';
+  };
+  const mup=ev=>{
+    S.drawing=false;
+    document.removeEventListener('mousemove',mmv);
+    document.removeEventListener('mouseup',mup);
+    const cr=pw.getBoundingClientRect();
+    const cx=ev.clientX-cr.left,cy=ev.clientY-cr.top;
+    const sc=pw.querySelector('img').clientWidth/S.preview.width;
+    // Subtract padding to get real Figma coords
+    const rx=(Math.min(S.drawStart.x,cx)-PAD)/sc,ry=(Math.min(S.drawStart.y,cy)-PAD)/sc;
+    const rw=Math.abs(cx-S.drawStart.x)/sc,rh=Math.abs(cy-S.drawStart.y)/sc;
+    if(rw>2&&rh>2){
+      S.touchAreas.push({x:rx,y:ry,w:rw,h:rh});
+      saveTouchAreas();
+      renderTouchList();
+      exitTouchAddMode();
+      st('Área de toque adicionada: '+Math.round(rw)+'×'+Math.round(rh)+'px');
+    }
+    const dr=$('drawrect');if(dr)dr.remove();
+    renderZones(3);
+  };
+  document.addEventListener('mousemove',mmv);
+  document.addEventListener('mouseup',mup);
+}
+
+function rmTouch(idx){
+  S.touchAreas.splice(idx,1);
+  if(S.selectedArea===idx)S.selectedArea=-1;
+  else if(S.selectedArea>idx)S.selectedArea--;
+  saveTouchAreas();renderTouchList();renderZones(3);
+}
+
+function startMove(e,idx){
+  e.preventDefault();
+  const pw=$('pw3');const sc=pw.querySelector('img').clientWidth/S.preview.width;
+  const startX=e.clientX,startY=e.clientY;
+  const orig={...S.touchAreas[idx]};
+  const mmv=ev=>{
+    const dx=(ev.clientX-startX)/sc,dy=(ev.clientY-startY)/sc;
+    S.touchAreas[idx]={...S.touchAreas[idx],x:orig.x+dx,y:orig.y+dy};
+    renderZones(3);
+  };
+  const mup=()=>{
+    document.removeEventListener('mousemove',mmv);
+    document.removeEventListener('mouseup',mup);
+    saveTouchAreas();renderTouchList();
+  };
+  document.addEventListener('mousemove',mmv);
+  document.addEventListener('mouseup',mup);
+}
+
+function startResize(e,idx,corner){
+  e.preventDefault();
+  const pw=$('pw3');const sc=pw.querySelector('img').clientWidth/S.preview.width;
+  const startX=e.clientX,startY=e.clientY;
+  const orig={...S.touchAreas[idx]};
+  const mmv=ev=>{
+    const dx=(ev.clientX-startX)/sc,dy=(ev.clientY-startY)/sc;
+    const a=S.touchAreas[idx];
+    if(corner==='br'){a.w=Math.max(4,orig.w+dx);a.h=Math.max(4,orig.h+dy)}
+    else if(corner==='bl'){a.x=orig.x+dx;a.w=Math.max(4,orig.w-dx);a.h=Math.max(4,orig.h+dy)}
+    else if(corner==='tr'){a.w=Math.max(4,orig.w+dx);a.y=orig.y+dy;a.h=Math.max(4,orig.h-dy)}
+    else if(corner==='tl'){a.x=orig.x+dx;a.w=Math.max(4,orig.w-dx);a.y=orig.y+dy;a.h=Math.max(4,orig.h-dy)}
+    renderZones(3);
+  };
+  const mup=()=>{
+    document.removeEventListener('mousemove',mmv);
+    document.removeEventListener('mouseup',mup);
+    saveTouchAreas();renderTouchList();
+  };
+  document.addEventListener('mousemove',mmv);
+  document.addEventListener('mouseup',mup);
+}
+function clearAllTouch(){
+  S.touchAreas=[];S.selectedArea=-1;
+  saveTouchAreas();renderTouchList();renderZones(3);
+}
+function saveTouchAreas(){
+  const areas=S.touchAreas.map(a=>({x:a.x,y:a.y,width:a.w,height:a.h}));
+  const applyToAll=!S.editingException;
+  post({type:'save-touch-areas',areas,variantName:currentVariantName(),applyToAll});
+  if(S.variants.length>1)post({type:'get-variant-overrides'});
+  st('Áreas salvas');
+}
+
+// ═══════════════ STEP 4: FOCUS ═══════════════
+function onFocusData(m){
+  S.focusOrder=m.entries||[];S.annotatedNodes=m.annotatedNodes||[];
+  renderFocusList();renderZones(4);
+}
+
+function toggleFocus(nid,name){
+  const idx=S.focusOrder.findIndex(e=>e.nodeId===nid);
+  if(idx>=0){
+    S.focusOrder.splice(idx,1);
+    S.focusOrder.forEach((e,i)=>e.order=i+1);
+  } else {
+    const ann=S.annotatedNodes.find(n=>n.nodeId===nid);
+    S.focusOrder.push({nodeId:nid,order:S.focusOrder.length+1,category:ann?.category||'outros',name:name});
+  }
+  renderFocusList();renderZones(4);saveFocusOrder();
+}
+
+function renderFocusList(){
+  const c=$('flist');
+  if(S.focusOrder.length===0){c.innerHTML='<div style="color:#999;font-size:10px;text-align:center;padding:12px">Clique nos elementos no preview acima para definir a ordem</div>';return}
+  let h='';
+  S.focusOrder.forEach((e,i)=>{
+    const nm=e.name||S.allLayers.find(l=>l.id===e.nodeId)?.name||'?';
+    h+=`<div class="fi"><span class="fi-num">${i+1}</span><span class="fi-name">${esc(nm)}</span><button class="fi-rm" onclick="rmFocus(${i})" title="Remover">×</button></div>`;
+  });
+  c.innerHTML=h;
+}
+
+function rmFocus(idx){
+  S.focusOrder.splice(idx,1);S.focusOrder.forEach((e,i)=>e.order=i+1);
+  renderFocusList();renderZones(4);saveFocusOrder();
+}
+function clearFocus(){S.focusOrder=[];renderFocusList();renderZones(4);saveFocusOrder()}
+
+function saveFocusOrder(){
+  const entries=S.focusOrder.map(e=>({nodeId:e.nodeId,order:e.order,category:e.category}));
+  const applyToAll=!S.editingException;
+  post({type:'set-focus-order',entries,variantName:currentVariantName(),applyToAll});
+  if(S.variants.length>1)post({type:'get-variant-overrides'});
+  st('Foco salvo');
+}
+
+// ═══════════════ STEP 5: HANDOFF ═══════════════
+function doHandoff(){
+  st('Gerando handoff...');
+  const el=$('hres');el.style.display='block';el.className='hstatus info';el.textContent='Gerando handoff, aguarde...';
+  post({type:'generate-handoff'});
+}
+function onProgress(m){st(m.text);const el=$('hres');if(el&&el.style.display==='block'){el.textContent=m.text}}
+function onHandoff(m){
+  const el=$('hres');el.style.display='block';
+  if(!m.success){el.className='hstatus err';el.textContent=m.error;st('Erro');return}
+  let t='Handoff gerado com sucesso!';
+  if(m.layersAnnotated>0)t+='\n'+m.layersAnnotated+' layer(s) documentada(s).';
+  if(m.touchAreas>0)t+='\n'+m.touchAreas+' área(s) de toque.';
+  if(m.connectorsPlaced>0)t+='\n'+m.connectorsPlaced+' conector(es) posicionado(s).';
+  if(m.zoomInstances>0)t+='\n'+m.zoomInstances+' instância(s) de zoom gerada(s).';
+  el.className='hstatus ok';el.textContent=t;el.style.whiteSpace='pre-line';st('Pronto!');
+}
+
+// ═══════════════ UTIL ═══════════════
+function $(id){return document.getElementById(id)}
+function st(t){$('status').textContent=t}
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
+function ea(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+</script>
+</body>
+</html>
