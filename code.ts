@@ -134,6 +134,32 @@ function handleSelectionChange(): void {
     try { compData = JSON.parse(compRaw); } catch (_e) { /* ignore */ }
   }
 
+  // Collect variants for COMPONENT_SET
+  let variants: { id: string; name: string; width: number; height: number }[] = [];
+  if (root.type === 'COMPONENT_SET') {
+    const cs = root as ComponentSetNode;
+    for (const child of cs.children) {
+      if (child.type === 'COMPONENT') {
+        variants.push({ id: child.id, name: child.name, width: Math.round(child.width), height: Math.round(child.height) });
+      }
+    }
+  }
+
+  // Read selected variant IDs (persisted)
+  let selectedVariantIds: string[] = variants.map(v => v.id);
+  if (root.type === 'COMPONENT_SET') {
+    const selRaw = (root as SceneNode).getPluginData('a11y-selected-variants');
+    if (selRaw) {
+      try {
+        const saved: string[] = JSON.parse(selRaw);
+        // Filter to only still-existing variant IDs
+        const validIds = new Set(variants.map(v => v.id));
+        const filtered = saved.filter(id => validIds.has(id));
+        if (filtered.length > 0) selectedVariantIds = filtered;
+      } catch (_e) { /* ignore */ }
+    }
+  }
+
   figma.ui.postMessage({
     type: 'selection-changed',
     valid: true,
@@ -141,6 +167,8 @@ function handleSelectionChange(): void {
     rootId: root.id,
     rootType: root.type,
     componentData: compData,
+    variants,
+    selectedVariantIds,
   });
 }
 
@@ -197,6 +225,8 @@ async function generatePreview(): Promise<void> {
   const root = rootNode as SceneNode;
   let previewTarget: SceneNode | null = null;
 
+  let currentVariantName = '';
+
   if (root.type === 'COMPONENT_SET') {
     // Reuse existing temp instance if still alive
     if (tempInstanceId) {
@@ -204,6 +234,11 @@ async function generatePreview(): Promise<void> {
       if (existing) {
         previewTarget = existing as SceneNode;
         workingNodeId = tempInstanceId;
+        // Resolve variant name from instance
+        if ('mainComponent' in existing) {
+          const mc = await (existing as InstanceNode).getMainComponentAsync();
+          if (mc) currentVariantName = mc.name;
+        }
       } else {
         tempInstanceId = null;
       }
@@ -211,6 +246,7 @@ async function generatePreview(): Promise<void> {
     if (!tempInstanceId) {
       const cs = root as ComponentSetNode;
       const defaultVariant = (cs.defaultVariant || cs.children[0]) as ComponentNode;
+      currentVariantName = defaultVariant.name;
       const tempInstance = defaultVariant.createInstance();
 
       const props = tempInstance.componentProperties;
@@ -225,6 +261,15 @@ async function generatePreview(): Promise<void> {
       tempInstanceId = tempInstance.id;
       workingNodeId = tempInstance.id;
       previewTarget = tempInstance;
+
+      // Restore annotations from effective map (shared + variant-specific)
+      const effectiveMap = await getEffectiveConsolidatedMap(currentVariantName);
+      for (const [namePath, data] of Object.entries(effectiveMap)) {
+        const node = findNodeByNamePath(tempInstance, namePath);
+        if (node && 'setPluginData' in node) {
+          node.setPluginData('a11y', JSON.stringify(data));
+        }
+      }
     }
   } else {
     workingNodeId = root.id;
@@ -248,31 +293,288 @@ async function generatePreview(): Promise<void> {
     height: bounds.height,
     rootZoneId: previewTarget.id,
     layers,
+    variantName: currentVariantName,
   });
+}
+
+async function switchVariant(variantId: string): Promise<void> {
+  if (!currentRootId) return;
+  const rootNode = await figma.getNodeByIdAsync(currentRootId);
+  if (!rootNode || rootNode.type !== 'COMPONENT_SET') return;
+
+  // Clean up old temp instance
+  cleanupTempInstance();
+
+  // Find the variant component
+  const cs = rootNode as ComponentSetNode;
+  const variant = cs.children.find(c => c.id === variantId) as ComponentNode | undefined;
+  if (!variant) return;
+
+  // Create new temp instance from selected variant
+  const tempInstance = variant.createInstance();
+  tempInstance.x = cs.x;
+  tempInstance.y = cs.y + cs.height + 500;
+  tempInstanceId = tempInstance.id;
+  workingNodeId = tempInstance.id;
+
+  // Restore annotations from effective map (shared + variant-specific)
+  const effectiveMap = await getEffectiveConsolidatedMap(variant.name);
+  for (const [namePath, data] of Object.entries(effectiveMap)) {
+    const node = findNodeByNamePath(tempInstance, namePath);
+    if (node && 'setPluginData' in node) {
+      node.setPluginData('a11y', JSON.stringify(data));
+    }
+  }
+
+  // Generate preview for this variant
+  await generatePreview();
 }
 
 // ════════════════════════════════════════
 // STEP 2: ROLES POR LAYER
 // ════════════════════════════════════════
 
-async function getLayerData(nodeId: string): Promise<void> {
+function buildNamePath(node: BaseNode, rootId: string): string {
+  const parts: string[] = [];
+  let cur: BaseNode | null = node;
+  while (cur && cur.id !== rootId) {
+    parts.unshift(cur.name);
+    cur = cur.parent;
+  }
+  return parts.join('/');
+}
+
+async function getConsolidatedMap(variantName?: string): Promise<Record<string, LayerA11yData>> {
+  if (!currentRootId) return {};
+  const rootNode = await figma.getNodeByIdAsync(currentRootId);
+  if (!rootNode || !('getPluginData' in rootNode)) return {};
+  const key = variantName ? 'a11y-layers::' + variantName : 'a11y-layers';
+  const raw = (rootNode as SceneNode).getPluginData(key);
+  if (!raw) return {};
+  try { return JSON.parse(raw); } catch (_e) { return {}; }
+}
+
+async function getEffectiveConsolidatedMap(variantName?: string): Promise<Record<string, LayerA11yData>> {
+  const shared = await getConsolidatedMap();
+  if (!variantName) return shared;
+  const specific = await getConsolidatedMap(variantName);
+  return { ...shared, ...specific };
+}
+
+async function saveConsolidatedMap(map: Record<string, LayerA11yData>, variantName?: string): Promise<void> {
+  if (!currentRootId) return;
+  const rootNode = await figma.getNodeByIdAsync(currentRootId);
+  if (!rootNode || !('setPluginData' in rootNode)) return;
+  const key = variantName ? 'a11y-layers::' + variantName : 'a11y-layers';
+  (rootNode as SceneNode).setPluginData(key, JSON.stringify(map));
+}
+
+async function getAllVariantNames(): Promise<string[]> {
+  if (!currentRootId) return [];
+  const rootNode = await figma.getNodeByIdAsync(currentRootId);
+  if (!rootNode || rootNode.type !== 'COMPONENT_SET') return [];
+  const cs = rootNode as ComponentSetNode;
+  return cs.children.filter(c => c.type === 'COMPONENT').map(c => c.name);
+}
+
+async function removeFromAllVariantMaps(namePath: string): Promise<void> {
+  const variantNames = await getAllVariantNames();
+  for (const vn of variantNames) {
+    const map = await getConsolidatedMap(vn);
+    if (map[namePath]) {
+      delete map[namePath];
+      await saveConsolidatedMap(map, vn);
+    }
+  }
+}
+
+async function getVariantOverrides(): Promise<{ roles: string[], touch: string[], focus: string[] }> {
+  const result = { roles: [] as string[], touch: [] as string[], focus: [] as string[] };
+  if (!currentRootId) return result;
+  const rootNode = await figma.getNodeByIdAsync(currentRootId);
+  if (!rootNode) return result;
+  const sn = rootNode as SceneNode;
+  const variantNames = await getAllVariantNames();
+
+  for (const vn of variantNames) {
+    // Check roles: variant-specific key exists (even empty placeholder)
+    const rolesKey = 'a11y-layers::' + vn;
+    const variantRoles = sn.getPluginData(rolesKey);
+    if (variantRoles) {
+      result.roles.push(vn);
+    }
+    // Check touch: variant-specific key exists
+    const touchKey = 'a11y-touch-areas::' + vn;
+    const variantTouch = sn.getPluginData(touchKey);
+    if (variantTouch) {
+      result.touch.push(vn);
+    }
+    // Check focus: variant-specific key exists
+    const focusKey = 'a11y-focus-order::' + vn;
+    const variantFocus = sn.getPluginData(focusKey);
+    if (variantFocus) {
+      result.focus.push(vn);
+    }
+  }
+  return result;
+}
+
+async function createVariantOverride(variantName: string, dataType: 'roles' | 'touch' | 'focus'): Promise<void> {
+  if (!currentRootId) return;
+  const rootNode = await figma.getNodeByIdAsync(currentRootId);
+  if (!rootNode) return;
+  const sn = rootNode as SceneNode;
+
+  if (dataType === 'roles') {
+    const key = 'a11y-layers::' + variantName;
+    if (!sn.getPluginData(key)) sn.setPluginData(key, '{}');
+  } else if (dataType === 'touch') {
+    const key = 'a11y-touch-areas::' + variantName;
+    if (!sn.getPluginData(key)) sn.setPluginData(key, '[]');
+  } else if (dataType === 'focus') {
+    const key = 'a11y-focus-order::' + variantName;
+    if (!sn.getPluginData(key)) sn.setPluginData(key, '[]');
+  }
+}
+
+async function removeVariantOverride(variantName: string, dataType: 'roles' | 'touch' | 'focus'): Promise<void> {
+  if (!currentRootId) return;
+  const rootNode = await figma.getNodeByIdAsync(currentRootId);
+  if (!rootNode) return;
+  const sn = rootNode as SceneNode;
+
+  if (dataType === 'roles') {
+    // Clear variant-specific consolidated map
+    sn.setPluginData('a11y-layers::' + variantName, '');
+  } else if (dataType === 'touch') {
+    sn.setPluginData('a11y-touch-areas::' + variantName, '');
+  } else if (dataType === 'focus') {
+    sn.setPluginData('a11y-focus-order::' + variantName, '');
+  }
+}
+
+function findNodeByNamePath(root: BaseNode, namePath: string): SceneNode | null {
+  const parts = namePath.split('/');
+  let cur: BaseNode = root;
+  for (const part of parts) {
+    if (!('children' in cur)) return null;
+    const parent = cur as ChildrenMixin;
+    const child = parent.children.find(c => c.name === part);
+    if (!child) return null;
+    cur = child;
+  }
+  return cur as SceneNode;
+}
+
+async function getLayerData(nodeId: string, variantName?: string): Promise<void> {
   const node = await figma.getNodeByIdAsync(nodeId);
   if (!node || !('getPluginData' in node)) {
-    figma.ui.postMessage({ type: 'layer-data', nodeId, data: null, name: '' });
+    figma.ui.postMessage({ type: 'layer-data', nodeId, data: null, name: '', scope: 'all' });
     return;
   }
   const sceneNode = node as SceneNode;
-  const raw = sceneNode.getPluginData('a11y');
   let data: LayerA11yData | null = null;
-  if (raw) { try { data = JSON.parse(raw); } catch (_e) { /* ignore */ } }
-  figma.ui.postMessage({ type: 'layer-data', nodeId, data, name: sceneNode.name });
+  let scope: 'all' | 'variant' = 'all';
+
+  const targetId = workingNodeId || currentRootId;
+  if (targetId) {
+    const namePath = buildNamePath(node, targetId);
+    // Check variant-specific map first
+    if (variantName) {
+      const variantMap = await getConsolidatedMap(variantName);
+      if (variantMap[namePath]) {
+        data = variantMap[namePath];
+        scope = 'variant';
+      }
+    }
+    // Fallback to shared map
+    if (!data) {
+      const sharedMap = await getConsolidatedMap();
+      if (sharedMap[namePath]) {
+        data = sharedMap[namePath];
+        scope = 'all';
+      }
+    }
+  }
+
+  // Fallback: try per-node pluginData
+  if (!data) {
+    const raw = sceneNode.getPluginData('a11y');
+    if (raw) { try { data = JSON.parse(raw); } catch (_e) { /* ignore */ } }
+  }
+
+  // Sync to per-node for preview compatibility
+  if (data) {
+    sceneNode.setPluginData('a11y', JSON.stringify(data));
+  }
+
+  figma.ui.postMessage({ type: 'layer-data', nodeId, data, name: sceneNode.name, scope });
 }
 
-async function setLayerData(nodeId: string, data: LayerA11yData): Promise<void> {
+async function setLayerData(nodeId: string, data: LayerA11yData, variantName?: string, applyToAll: boolean = true): Promise<void> {
   const node = await figma.getNodeByIdAsync(nodeId);
   if (!node || !('setPluginData' in node)) return;
   (node as SceneNode).setPluginData('a11y', JSON.stringify(data));
+
+  const targetId = workingNodeId || currentRootId;
+  if (targetId) {
+    const namePath = buildNamePath(node, targetId);
+    if (applyToAll || !variantName) {
+      // Save to shared map
+      const map = await getConsolidatedMap();
+      map[namePath] = data;
+      await saveConsolidatedMap(map);
+      // Remove from all variant-specific maps
+      await removeFromAllVariantMaps(namePath);
+    } else {
+      // Save to variant-specific map only
+      const map = await getConsolidatedMap(variantName);
+      map[namePath] = data;
+      await saveConsolidatedMap(map, variantName);
+    }
+  }
+
   await refreshZones();
+  await sendAllLayerAnnotations(variantName);
+}
+
+async function sendAllLayerAnnotations(variantName?: string): Promise<void> {
+  const effectiveMap = await getEffectiveConsolidatedMap(variantName);
+  // Also track which entries are variant-specific
+  const variantMap = variantName ? await getConsolidatedMap(variantName) : {};
+  const annotations = Object.entries(effectiveMap).map(([namePath, data]) => ({
+    namePath,
+    name: namePath.split('/').pop() || namePath,
+    data,
+    scope: (variantName && variantMap[namePath]) ? 'variant' as const : 'all' as const,
+  }));
+  annotations.sort((a, b) => a.name.localeCompare(b.name));
+  figma.ui.postMessage({ type: 'all-layer-annotations', annotations });
+}
+
+async function removeLayerAnnotation(namePath: string, variantName?: string): Promise<void> {
+  // Remove from shared map
+  const sharedMap = await getConsolidatedMap();
+  delete sharedMap[namePath];
+  await saveConsolidatedMap(sharedMap);
+
+  // Remove from all variant-specific maps
+  await removeFromAllVariantMaps(namePath);
+
+  // Also remove from per-node if found
+  const targetId = workingNodeId || currentRootId;
+  if (targetId) {
+    const targetNode = await figma.getNodeByIdAsync(targetId);
+    if (targetNode) {
+      const node = findNodeByNamePath(targetNode, namePath);
+      if (node && 'setPluginData' in node) {
+        node.setPluginData('a11y', '');
+      }
+    }
+  }
+
+  await refreshZones();
+  await sendAllLayerAnnotations(variantName);
 }
 
 async function refreshZones(): Promise<void> {
@@ -292,21 +594,45 @@ async function refreshZones(): Promise<void> {
 // Sempre salvas no currentRootId (nó original, não temp instance)
 // ════════════════════════════════════════
 
-async function saveTouchAreas(areas: TouchAreaRect[]): Promise<void> {
+async function saveTouchAreas(areas: TouchAreaRect[], variantName: string = '', applyToAll: boolean = false): Promise<void> {
   if (!currentRootId) return;
   const node = await figma.getNodeByIdAsync(currentRootId);
   if (!node || !('setPluginData' in node)) return;
-  (node as SceneNode).setPluginData('a11y-touch-areas', JSON.stringify(areas));
+  const sn = node as SceneNode;
+
+  if (applyToAll) {
+    // Save to shared key and clear all variant-specific keys
+    sn.setPluginData('a11y-touch-areas::', JSON.stringify(areas));
+    const variantNames = await getAllVariantNames();
+    for (const vn of variantNames) {
+      sn.setPluginData('a11y-touch-areas::' + vn, '');
+    }
+  } else {
+    sn.setPluginData('a11y-touch-areas::' + variantName, JSON.stringify(areas));
+  }
 }
 
-async function getTouchAreas(): Promise<void> {
-  if (!currentRootId) { figma.ui.postMessage({ type: 'touch-areas-data', areas: [] }); return; }
+async function getTouchAreas(variantName: string = ''): Promise<void> {
+  if (!currentRootId) { figma.ui.postMessage({ type: 'touch-areas-data', areas: [], scope: 'all' }); return; }
   const node = await figma.getNodeByIdAsync(currentRootId);
-  if (!node || !('getPluginData' in node)) { figma.ui.postMessage({ type: 'touch-areas-data', areas: [] }); return; }
-  const raw = (node as SceneNode).getPluginData('a11y-touch-areas');
+  if (!node || !('getPluginData' in node)) { figma.ui.postMessage({ type: 'touch-areas-data', areas: [], scope: 'all' }); return; }
+  let scope: 'all' | 'variant' = 'all';
+  const sn = node as SceneNode;
+  let raw = '';
+  // Check variant-specific first
+  if (variantName) {
+    raw = sn.getPluginData('a11y-touch-areas::' + variantName);
+    if (raw) scope = 'variant';
+  }
+  // Fallback to shared
+  if (!raw) {
+    raw = sn.getPluginData('a11y-touch-areas::');
+    if (!raw) raw = sn.getPluginData('a11y-touch-areas');
+    scope = 'all';
+  }
   let areas: TouchAreaRect[] = [];
   if (raw) { try { areas = JSON.parse(raw); } catch (_e) { /* ignore */ } }
-  figma.ui.postMessage({ type: 'touch-areas-data', areas });
+  figma.ui.postMessage({ type: 'touch-areas-data', areas, scope });
 }
 
 // ════════════════════════════════════════
@@ -334,24 +660,36 @@ function collectAnnotatedNodes(node: SceneNode): { nodeId: string; name: string;
   return result;
 }
 
-async function getFocusOrder(): Promise<void> {
+async function getFocusOrder(variantName?: string): Promise<void> {
   const targetId = workingNodeId || currentRootId;
   if (!targetId || !currentRootId) {
-    figma.ui.postMessage({ type: 'focus-order-data', entries: [], annotatedNodes: [] });
+    figma.ui.postMessage({ type: 'focus-order-data', entries: [], annotatedNodes: [], scope: 'all' });
     return;
   }
   const rootNode = await figma.getNodeByIdAsync(targetId);
   if (!rootNode || !('getPluginData' in rootNode)) {
-    figma.ui.postMessage({ type: 'focus-order-data', entries: [], annotatedNodes: [] });
+    figma.ui.postMessage({ type: 'focus-order-data', entries: [], annotatedNodes: [], scope: 'all' });
     return;
   }
 
   const root = rootNode as SceneNode;
   const annotated = collectAnnotatedNodes(root);
 
-  // Ler focus order do nó original (currentRootId), não do temp instance
   const origNode = await figma.getNodeByIdAsync(currentRootId);
-  const raw = origNode ? (origNode as SceneNode).getPluginData('a11y-focus-order') : '';
+  let raw = '';
+  let scope: 'all' | 'variant' = 'all';
+
+  // Check variant-specific focus order first
+  if (variantName && origNode) {
+    raw = (origNode as SceneNode).getPluginData('a11y-focus-order::' + variantName);
+    if (raw) scope = 'variant';
+  }
+  // Fallback to shared
+  if (!raw && origNode) {
+    raw = (origNode as SceneNode).getPluginData('a11y-focus-order');
+    scope = 'all';
+  }
+
   let storedEntries: FocusOrderEntry[] = [];
   if (raw) { try { storedEntries = JSON.parse(raw); } catch (_e) { /* ignore */ } }
 
@@ -365,34 +703,165 @@ async function getFocusOrder(): Promise<void> {
     name: nameMap.get(e.nodeId) || 'Layer desconhecido',
   }));
 
-  figma.ui.postMessage({ type: 'focus-order-data', entries, annotatedNodes: annotated });
+  figma.ui.postMessage({ type: 'focus-order-data', entries, annotatedNodes: annotated, scope });
 }
 
-async function setFocusOrder(entries: FocusOrderEntry[]): Promise<void> {
+async function setFocusOrder(entries: FocusOrderEntry[], variantName?: string, applyToAll: boolean = true): Promise<void> {
   if (!currentRootId) return;
   const rootNode = await figma.getNodeByIdAsync(currentRootId);
   if (!rootNode || !('setPluginData' in rootNode)) return;
-  (rootNode as SceneNode).setPluginData('a11y-focus-order', JSON.stringify(entries));
+  const sn = rootNode as SceneNode;
+  const data = JSON.stringify(entries);
+
+  if (applyToAll || !variantName) {
+    sn.setPluginData('a11y-focus-order', data);
+    // Remove from all variant-specific keys
+    const variantNames = await getAllVariantNames();
+    for (const vn of variantNames) {
+      sn.setPluginData('a11y-focus-order::' + vn, '');
+    }
+  } else {
+    sn.setPluginData('a11y-focus-order::' + variantName, data);
+  }
 }
 
 // ════════════════════════════════════════
 // STEP 5: HANDOFF
 // ════════════════════════════════════════
 
+// ── Cores ──
+const C_BLUE: RGB = { r: 0, g: 0.36, b: 0.71 };
+const C_BLACK: RGB = { r: 0.13, g: 0.13, b: 0.13 };
+const C_GRAY: RGB = { r: 0.33, g: 0.33, b: 0.33 };
+const C_LGRAY: RGB = { r: 0.6, g: 0.6, b: 0.6 };
+const C_WHITE: RGB = { r: 1, g: 1, b: 1 };
+const C_WARN_BG: RGB = { r: 1, g: 0.96, b: 0.88 };
+const C_WARN_BORDER: RGB = { r: 0.9, g: 0.78, b: 0.3 };
+const C_DECOR: RGB = { r: 0.91, g: 0.3, b: 0.24 };
+const C_FUNCAO: RGB = { r: 0.18, g: 0.55, b: 0.34 };
+
+const CAT_COLORS: Record<string, RGB> = {
+  'funcao-valor': C_FUNCAO,
+  'estrutural': { r: 0.55, g: 0.55, b: 0.55 },
+  'titulo': { r: 0.48, g: 0.77, b: 0.5 },
+  'nome-acessivel': { r: 0.31, g: 0.8, b: 0.77 },
+  'decorativo': C_DECOR,
+  'outros': { r: 0.9, g: 0.49, b: 0.13 },
+};
+
+// ── Mapeamento teclado/gestos por role ──
+const ROLE_KB: Record<string, { keys: string; action: string }[]> = {
+  'button': [
+    { keys: 'tab ou shift + tab', action: 'Navega entre os componentes' },
+    { keys: 'enter ou space', action: 'Ativa a ação do componente' },
+  ],
+  'link': [
+    { keys: 'tab ou shift + tab', action: 'Navega entre os links' },
+    { keys: 'enter', action: 'Ativa o link' },
+  ],
+  'checkbox': [
+    { keys: 'tab ou shift + tab', action: 'Navega entre os checkboxes' },
+    { keys: 'space', action: 'Marca ou desmarca o checkbox' },
+  ],
+  'radio': [
+    { keys: 'tab', action: 'Navega para o grupo de rádio' },
+    { keys: '↑ ↓ ← →', action: 'Seleciona uma opção do grupo' },
+  ],
+  'textbox': [
+    { keys: 'tab ou shift + tab', action: 'Navega para o campo de texto' },
+  ],
+  'searchbox': [
+    { keys: 'tab ou shift + tab', action: 'Navega para o campo de busca' },
+  ],
+  'switch': [
+    { keys: 'tab ou shift + tab', action: 'Navega entre os componentes' },
+    { keys: 'space', action: 'Alterna o estado do switch' },
+  ],
+  'slider': [
+    { keys: 'tab ou shift + tab', action: 'Navega para o slider' },
+    { keys: '↑ → / ↓ ←', action: 'Aumenta / diminui o valor' },
+  ],
+  'tab': [
+    { keys: 'tab', action: 'Navega para a lista de abas' },
+    { keys: '← →', action: 'Navega entre as abas' },
+    { keys: 'enter ou space', action: 'Ativa a aba selecionada' },
+  ],
+  'combobox': [
+    { keys: 'tab ou shift + tab', action: 'Navega para o combobox' },
+    { keys: '↑ ↓', action: 'Navega entre as opções' },
+    { keys: 'enter', action: 'Seleciona a opção' },
+    { keys: 'esc', action: 'Fecha a lista' },
+  ],
+  'listbox': [
+    { keys: 'tab ou shift + tab', action: 'Navega para a lista' },
+    { keys: '↑ ↓', action: 'Navega entre os itens' },
+  ],
+  'menu': [
+    { keys: 'enter ou space', action: 'Abre o menu' },
+    { keys: '↑ ↓', action: 'Navega entre os itens do menu' },
+    { keys: 'esc', action: 'Fecha o menu' },
+  ],
+  'menuitem': [
+    { keys: '↑ ↓', action: 'Navega entre os itens do menu' },
+    { keys: 'enter ou space', action: 'Ativa o item do menu' },
+  ],
+  'dialog': [
+    { keys: 'tab ou shift + tab', action: 'Navega entre os elementos do diálogo' },
+    { keys: 'esc', action: 'Fecha o diálogo' },
+  ],
+};
+
+const ROLE_GESTURE: Record<string, { gesture: string; action: string }[]> = {
+  'button': [
+    { gesture: 'Swipe', action: 'Avança e retorna pelos componentes' },
+    { gesture: 'Doubletap', action: 'Ativa a ação do componente' },
+  ],
+  'link': [
+    { gesture: 'Swipe', action: 'Avança e retorna pelos links' },
+    { gesture: 'Doubletap', action: 'Ativa o link' },
+  ],
+  'checkbox': [
+    { gesture: 'Swipe', action: 'Avança e retorna pelos checkboxes' },
+    { gesture: 'Doubletap', action: 'Marca ou desmarca o checkbox' },
+  ],
+  'switch': [
+    { gesture: 'Swipe', action: 'Avança e retorna pelos componentes' },
+    { gesture: 'Doubletap', action: 'Alterna o estado do switch' },
+  ],
+  'radio': [
+    { gesture: 'Swipe', action: 'Avança e retorna pelas opções' },
+    { gesture: 'Doubletap', action: 'Seleciona a opção' },
+  ],
+  'textbox': [
+    { gesture: 'Swipe', action: 'Avança e retorna pelos campos' },
+    { gesture: 'Doubletap', action: 'Ativa o campo para edição' },
+  ],
+  'slider': [
+    { gesture: 'Swipe up/down', action: 'Ajusta o valor do slider' },
+  ],
+  'tab': [
+    { gesture: 'Swipe', action: 'Avança e retorna pelas abas' },
+    { gesture: 'Doubletap', action: 'Ativa a aba' },
+  ],
+  'dialog': [
+    { gesture: 'Swipe', action: 'Navega entre os elementos do diálogo' },
+  ],
+};
+
+// ── Progress ──
 function sendProgress(text: string): void {
   figma.ui.postMessage({ type: 'handoff-progress', text });
 }
 
+// ── Connector discovery ──
 async function discoverConnectors(): Promise<void> {
   connectorMap = [];
   const searchScopes: readonly BaseNode[] = [figma.currentPage, figma.root];
-
   for (const scope of searchScopes) {
     if (connectorMap.length > 0) break;
     const instances = (scope as ChildrenMixin).findAll(n =>
       n.type === 'INSTANCE' && n.name.includes('[a11y]')
     ) as InstanceNode[];
-
     for (const inst of instances) {
       const comp = await inst.getMainComponentAsync();
       if (!comp) continue;
@@ -400,15 +869,10 @@ async function discoverConnectors(): Promise<void> {
       if (!parentSet || parentSet.type !== 'COMPONENT_SET') continue;
       const setName = parentSet.name.toLowerCase();
       if (setName.includes('conector') || setName.includes('combinad') || setName.includes('a11y')) {
-        connectorMap.push({
-          componentKey: comp.key,
-          componentName: comp.name,
-          category: guessCategory(comp.name, parentSet.name),
-        });
+        connectorMap.push({ componentKey: comp.key, componentName: comp.name, category: guessCategory(comp.name, parentSet.name) });
       }
     }
   }
-
   if (connectorMap.length === 0) {
     await figma.loadAllPagesAsync();
     const sets = figma.root.findAll(n =>
@@ -417,15 +881,10 @@ async function discoverConnectors(): Promise<void> {
     for (const cs of sets) {
       for (let i = 0; i < cs.children.length; i++) {
         const variant = cs.children[i] as ComponentNode;
-        connectorMap.push({
-          componentKey: variant.key,
-          componentName: variant.name,
-          category: guessCategory(variant.name, cs.name),
-        });
+        connectorMap.push({ componentKey: variant.key, componentName: variant.name, category: guessCategory(variant.name, cs.name) });
       }
     }
   }
-
   figma.ui.postMessage({ type: 'connectors-discovered', count: connectorMap.length });
 }
 
@@ -452,7 +911,308 @@ function collectAllAnnotatedLayers(node: SceneNode): { node: SceneNode; data: La
   return result;
 }
 
-async function generateHandoff(): Promise<void> {
+// ════════════════════════════════════════
+// HANDOFF HELPERS
+// ════════════════════════════════════════
+
+function appendFill(parent: FrameNode, child: SceneNode): void {
+  parent.appendChild(child);
+  if ('layoutSizingHorizontal' in child) (child as any).layoutSizingHorizontal = 'FILL';
+}
+
+function mkT(chars: string, size: number, style: 'Bold' | 'Regular' | 'Medium', color: RGB): TextNode {
+  const t = figma.createText();
+  t.fontName = { family: 'Inter', style }; t.fontSize = size;
+  t.characters = chars;
+  t.fills = [{ type: 'SOLID', color }];
+  t.textAutoResize = 'HEIGHT';
+  return t;
+}
+
+function mkSec(spacing: number = 16): FrameNode {
+  const f = figma.createFrame();
+  f.layoutMode = 'VERTICAL'; f.primaryAxisSizingMode = 'AUTO'; f.counterAxisSizingMode = 'AUTO';
+  f.itemSpacing = spacing; f.fills = [];
+  return f;
+}
+
+function mkDivider(): RectangleNode {
+  const d = figma.createRectangle(); d.name = 'divider';
+  d.resize(100, 1); d.fills = [{ type: 'SOLID', color: { r: 0.85, g: 0.85, b: 0.85 } }];
+  return d;
+}
+
+function mkKeyTag(text: string): FrameNode {
+  const f = figma.createFrame();
+  f.layoutMode = 'HORIZONTAL'; f.primaryAxisSizingMode = 'AUTO'; f.counterAxisSizingMode = 'AUTO';
+  f.paddingLeft = 8; f.paddingRight = 8; f.paddingTop = 4; f.paddingBottom = 4;
+  f.cornerRadius = 4;
+  f.fills = [{ type: 'SOLID', color: { r: 0.95, g: 0.95, b: 0.95 } }];
+  f.strokes = [{ type: 'SOLID', color: { r: 0.82, g: 0.82, b: 0.82 } }]; f.strokeWeight = 1;
+  f.appendChild(mkT(text, 11, 'Medium', C_BLACK));
+  return f;
+}
+
+function mkTableRow(cells: SceneNode[], colWidths: number[], isHeader: boolean): FrameNode {
+  const row = figma.createFrame();
+  row.layoutMode = 'HORIZONTAL'; row.primaryAxisSizingMode = 'AUTO'; row.counterAxisSizingMode = 'AUTO';
+  row.counterAxisAlignItems = 'CENTER';
+  row.fills = [{ type: 'SOLID', color: isHeader ? { r: 0.96, g: 0.96, b: 0.96 } : C_WHITE }];
+  for (let i = 0; i < cells.length; i++) {
+    const cell = figma.createFrame();
+    cell.layoutMode = 'HORIZONTAL'; cell.counterAxisAlignItems = 'CENTER';
+    cell.primaryAxisSizingMode = 'AUTO'; cell.counterAxisSizingMode = 'AUTO';
+    cell.paddingLeft = 12; cell.paddingRight = 12; cell.paddingTop = 10; cell.paddingBottom = 10;
+    cell.fills = [];
+    cell.appendChild(cells[i]);
+    row.appendChild(cell);
+    if (i < colWidths.length && colWidths[i] > 0) {
+      cell.resize(colWidths[i], cell.height);
+    } else {
+      cell.layoutSizingHorizontal = 'FILL';
+      if (cells[i].type === 'TEXT') (cells[i] as TextNode).layoutSizingHorizontal = 'FILL';
+    }
+  }
+  return row;
+}
+
+function mkTable(headers: string[], rows: { cells: (string | FrameNode)[] }[], col1W: number): FrameNode {
+  const table = figma.createFrame();
+  table.name = 'Table'; table.layoutMode = 'VERTICAL';
+  table.primaryAxisSizingMode = 'AUTO'; table.counterAxisSizingMode = 'AUTO';
+  table.itemSpacing = 0; table.fills = [];
+  table.strokes = [{ type: 'SOLID', color: { r: 0.88, g: 0.88, b: 0.88 } }]; table.strokeWeight = 1;
+  table.cornerRadius = 6; table.clipsContent = true;
+  // Header
+  const hCells = headers.map(h => mkT(h, 11, 'Bold', C_BLACK));
+  const hr = mkTableRow(hCells as SceneNode[], [col1W], true);
+  appendFill(table, hr);
+  // Rows
+  for (const r of rows) {
+    const sep = figma.createRectangle(); sep.resize(100, 1);
+    sep.fills = [{ type: 'SOLID', color: { r: 0.92, g: 0.92, b: 0.92 } }];
+    appendFill(table, sep);
+    const rCells: SceneNode[] = r.cells.map(c => typeof c === 'string' ? mkT(c, 11, 'Regular', C_GRAY) as SceneNode : c);
+    const dr = mkTableRow(rCells, [col1W], false);
+    appendFill(table, dr);
+  }
+  return table;
+}
+
+function mkInfoBox(text: string): FrameNode {
+  const box = figma.createFrame();
+  box.layoutMode = 'HORIZONTAL'; box.primaryAxisSizingMode = 'AUTO'; box.counterAxisSizingMode = 'AUTO';
+  box.paddingLeft = 16; box.paddingRight = 16; box.paddingTop = 14; box.paddingBottom = 14;
+  box.itemSpacing = 10; box.counterAxisAlignItems = 'MIN';
+  box.cornerRadius = 6;
+  box.fills = [{ type: 'SOLID', color: C_WARN_BG }];
+  box.strokes = [{ type: 'SOLID', color: C_WARN_BORDER }]; box.strokeWeight = 1;
+  // Icon
+  const icon = mkT('⚠', 14, 'Regular', { r: 0.8, g: 0.6, b: 0.1 });
+  box.appendChild(icon);
+  // Text
+  const txt = mkT(text, 11, 'Regular', { r: 0.4, g: 0.33, b: 0.1 });
+  txt.textAutoResize = 'HEIGHT';
+  appendFill(box, txt);
+  return box;
+}
+
+function mkBadge(content: string, color: RGB, size: number = 22): FrameNode {
+  const b = figma.createFrame();
+  b.resize(size, size); b.cornerRadius = size / 2;
+  b.fills = [{ type: 'SOLID', color }];
+  b.layoutMode = 'HORIZONTAL'; b.primaryAxisAlignItems = 'CENTER'; b.counterAxisAlignItems = 'CENTER';
+  b.primaryAxisSizingMode = 'FIXED'; b.counterAxisSizingMode = 'FIXED';
+  const t = mkT(content, size > 20 ? 11 : 9, 'Bold', C_WHITE);
+  t.textAlignHorizontal = 'CENTER';
+  b.appendChild(t);
+  return b;
+}
+
+function mkLegendItem(color: RGB, label: string): FrameNode {
+  const f = figma.createFrame();
+  f.layoutMode = 'HORIZONTAL'; f.primaryAxisSizingMode = 'AUTO'; f.counterAxisSizingMode = 'AUTO';
+  f.itemSpacing = 6; f.counterAxisAlignItems = 'CENTER'; f.fills = [];
+  const dot = figma.createEllipse(); dot.resize(10, 10);
+  dot.fills = [{ type: 'SOLID', color }];
+  f.appendChild(dot);
+  f.appendChild(mkT(label, 10, 'Regular', C_LGRAY));
+  return f;
+}
+
+function mkAnnotationRow(badge: FrameNode, text: string, subtext?: string): FrameNode {
+  const row = figma.createFrame();
+  row.layoutMode = 'HORIZONTAL'; row.primaryAxisSizingMode = 'AUTO'; row.counterAxisSizingMode = 'AUTO';
+  row.itemSpacing = 10; row.counterAxisAlignItems = 'MIN'; row.fills = [];
+  row.appendChild(badge);
+  if (subtext) {
+    const col = mkSec(2);
+    col.appendChild(mkT(text, 12, 'Bold', C_BLACK));
+    col.appendChild(mkT(subtext, 11, 'Regular', C_GRAY));
+    appendFill(row, col);
+  } else {
+    const t = mkT(text, 12, 'Regular', C_GRAY);
+    t.textAutoResize = 'HEIGHT';
+    appendFill(row, t);
+  }
+  return row;
+}
+
+function mkPreviewTag(): FrameNode {
+  const tag = figma.createFrame();
+  tag.layoutMode = 'HORIZONTAL'; tag.primaryAxisSizingMode = 'AUTO'; tag.counterAxisSizingMode = 'AUTO';
+  tag.paddingLeft = 10; tag.paddingRight = 10; tag.paddingTop = 5; tag.paddingBottom = 5;
+  tag.cornerRadius = 4;
+  tag.fills = [{ type: 'SOLID', color: { r: 0.2, g: 0.2, b: 0.2 } }];
+  tag.appendChild(mkT('Preview', 11, 'Bold', C_WHITE));
+  return tag;
+}
+
+async function cloneSource(root: SceneNode, workId: string | null): Promise<SceneNode | null> {
+  if (root.type === 'COMPONENT') return (root as ComponentNode).createInstance();
+  if (root.type === 'INSTANCE') return (root as InstanceNode).clone();
+  if (root.type === 'COMPONENT_SET' && workId) {
+    const w = await figma.getNodeByIdAsync(workId);
+    if (w && w.type === 'INSTANCE') return (w as InstanceNode).clone();
+  }
+  return null;
+}
+
+async function mkPreviewFrame(
+  root: SceneNode, workId: string | null,
+  badges: { relX: number; relY: number; content: string; color: RGB }[],
+  contentWidth: number,
+): Promise<FrameNode | null> {
+  const clone = await cloneSource(root, workId);
+  if (!clone) return null;
+
+  const cW = clone.width; const cH = clone.height;
+  const padTop = 48; const padBot = 40;
+  const cloneX = (contentWidth - cW) / 2;
+  const cloneY = padTop;
+
+  const pf = figma.createFrame();
+  pf.name = 'Preview'; pf.layoutMode = 'NONE';
+  pf.resize(contentWidth, cH + padTop + padBot);
+  pf.fills = [{ type: 'SOLID', color: C_WHITE }];
+  pf.strokes = [{ type: 'SOLID', color: { r: 0.78, g: 0.78, b: 0.78 } }];
+  pf.strokeWeight = 1; pf.dashPattern = [6, 4]; pf.cornerRadius = 8;
+
+  // "Preview" tag
+  const tag = mkPreviewTag();
+  tag.x = 12; tag.y = 12; pf.appendChild(tag);
+
+  // Clone
+  clone.x = cloneX; clone.y = cloneY; pf.appendChild(clone);
+
+  // Badges
+  for (const b of badges) {
+    const badge = mkBadge(b.content, b.color);
+    badge.x = cloneX + b.relX - badge.width / 2;
+    badge.y = cloneY + b.relY - badge.height - 4;
+    pf.appendChild(badge);
+  }
+
+  return pf;
+}
+
+// ── Touch Area Preview (todas as variantes + retângulos rosa + badge com linha) ──
+async function mkTouchPreview(
+  root: SceneNode, workId: string | null,
+  touchAreas: TouchAreaRect[], contentWidth: number,
+): Promise<FrameNode> {
+  const BADGE_SIZE = 28;
+  const LINE_H = 24;
+  const INNER_PAD = 48;
+  const VARIANT_GAP = 32;
+  const TOUCH_COLOR: SolidPaint = { type: 'SOLID', color: { r: 1.0, g: 0.694, b: 0.62 }, opacity: 0.48 };
+
+  // Clone the source for preview
+  const clones: SceneNode[] = [];
+  const c = await cloneSource(root, workId);
+  if (c) clones.push(c);
+
+  if (clones.length === 0) {
+    const empty = figma.createFrame(); empty.resize(contentWidth, 60); empty.fills = []; return empty;
+  }
+
+  const totalClonesW = clones.reduce((s, c) => s + c.width, 0) + VARIANT_GAP * (clones.length - 1);
+  const maxCloneH = Math.max(...clones.map(c => c.height));
+  const innerH = maxCloneH + INNER_PAD * 2;
+  const dashedY = BADGE_SIZE + LINE_H;
+
+  // Outer frame (NONE layout) — contém badge, linha e frame tracejado
+  const outer = figma.createFrame();
+  outer.name = 'Touch Preview'; outer.layoutMode = 'NONE'; outer.fills = [];
+  outer.resize(contentWidth, dashedY + innerH);
+
+  // Frame tracejado
+  const dashed = figma.createFrame();
+  dashed.name = 'Dashed Preview'; dashed.layoutMode = 'NONE';
+  dashed.resize(contentWidth, innerH);
+  dashed.x = 0; dashed.y = dashedY;
+  dashed.fills = [{ type: 'SOLID', color: C_WHITE }];
+  dashed.strokes = [{ type: 'SOLID', color: { r: 0.72, g: 0.72, b: 0.72 } }];
+  dashed.strokeWeight = 2; dashed.dashPattern = [10, 6]; dashed.cornerRadius = 12;
+  outer.appendChild(dashed);
+
+  // Tag "Preview"
+  const tag = mkPreviewTag();
+  tag.x = 14; tag.y = 14; dashed.appendChild(tag);
+
+  // Posicionar variantes lado a lado, centradas
+  let curX = (contentWidth - totalClonesW) / 2;
+  for (const clone of clones) {
+    const cloneY = INNER_PAD + (maxCloneH - clone.height) / 2;
+
+    // Retângulo rosa da área de toque atrás de cada variante
+    // Se há áreas de toque definidas, usa as dimensões; senão usa os bounds do componente
+    if (touchAreas.length > 0) {
+      for (const ta of touchAreas) {
+        // Escala proporcionalmente para cada variante
+        const scaleX = clone.width / (clones[0].width || 1);
+        const scaleY = clone.height / (clones[0].height || 1);
+        const rect = figma.createRectangle();
+        rect.resize(ta.width * scaleX, ta.height * scaleY);
+        rect.x = curX + ta.x * scaleX;
+        rect.y = cloneY + ta.y * scaleY;
+        rect.fills = [TOUCH_COLOR];
+        dashed.appendChild(rect);
+      }
+    } else {
+      // Sem áreas definidas: mostrar bounds completos como touch area
+      const rect = figma.createRectangle();
+      rect.resize(clone.width, clone.height);
+      rect.x = curX; rect.y = cloneY;
+      rect.fills = [TOUCH_COLOR];
+      dashed.appendChild(rect);
+    }
+
+    clone.x = curX; clone.y = cloneY;
+    dashed.appendChild(clone);
+    curX += clone.width + VARIANT_GAP;
+  }
+
+  // Badge numerado + linha conectora (centrados acima do frame tracejado)
+  const centerX = contentWidth / 2;
+  const badge = mkBadge('1', C_BLUE, BADGE_SIZE);
+  badge.x = centerX - BADGE_SIZE / 2; badge.y = 0;
+  outer.appendChild(badge);
+
+  const line = figma.createRectangle();
+  line.name = 'connector'; line.resize(2, LINE_H);
+  line.fills = [{ type: 'SOLID', color: C_BLUE }];
+  line.x = centerX - 1; line.y = BADGE_SIZE;
+  outer.appendChild(line);
+
+  return outer;
+}
+
+// ════════════════════════════════════════
+// HANDOFF GENERATION
+// ════════════════════════════════════════
+
+async function generateHandoff(selectedVariantIds: string[] = []): Promise<void> {
   const targetId = workingNodeId || currentRootId;
   if (!targetId || !currentRootId) {
     figma.ui.postMessage({ type: 'handoff-result', success: false, error: 'Nenhum componente selecionado.' });
@@ -466,157 +1226,325 @@ async function generateHandoff(): Promise<void> {
   if (!rootBounds) { figma.ui.postMessage({ type: 'handoff-result', success: false, error: 'Sem dimensões.' }); return; }
 
   sendProgress('Lendo dados do componente...');
-
-  // Dados do componente sempre do nó original
   const compSourceNode = (await figma.getNodeByIdAsync(currentRootId)) as SceneNode;
   const compRaw = compSourceNode.getPluginData('a11y-component');
   let compData: ComponentA11yData = { platform: [], zoom: [] };
   if (compRaw) { try { compData = JSON.parse(compRaw); } catch (_e) { /* ignore */ } }
 
-  // Anotações de layers do working node (temp instance ou componente)
   const annotated = collectAllAnnotatedLayers(root);
 
-  // Focus order e touch areas do nó original
-  const focusRaw = compSourceNode.getPluginData('a11y-focus-order');
+  // Determine variants to include in handoff
+  const isComponentSet = compSourceNode.type === 'COMPONENT_SET';
+  const cs = isComponentSet ? compSourceNode as ComponentSetNode : null;
+  interface VariantInfo { id: string; name: string; component: ComponentNode }
+  const variantsToRender: VariantInfo[] = [];
+  if (cs && selectedVariantIds.length > 0) {
+    for (const vid of selectedVariantIds) {
+      const child = cs.children.find(c => c.id === vid);
+      if (child && child.type === 'COMPONENT') {
+        variantsToRender.push({ id: child.id, name: child.name, component: child as ComponentNode });
+      }
+    }
+  }
+
+  // For per-variant handoff: restore variant-specific annotations to temp instances
+  // so collectAllAnnotatedLayers picks up the right data per variant
+  interface PerVariantAnnotations { variantName: string; annotated: { node: SceneNode; data: LayerA11yData }[] }
+  const perVariantAnnotations: PerVariantAnnotations[] = [];
+  if (variantsToRender.length > 0) {
+    for (const v of variantsToRender) {
+      const effectiveMap = await getEffectiveConsolidatedMap(v.name);
+      const inst = v.component.createInstance();
+      // Apply effective annotations to instance
+      for (const [namePath, data] of Object.entries(effectiveMap)) {
+        const node = findNodeByNamePath(inst, namePath);
+        if (node && 'setPluginData' in node) {
+          node.setPluginData('a11y', JSON.stringify(data));
+        }
+      }
+      const varAnnotated = collectAllAnnotatedLayers(inst);
+      perVariantAnnotations.push({ variantName: v.name, annotated: varAnnotated });
+      inst.remove();
+    }
+  }
+
+  // Collect per-variant touch areas
+  interface PerVariantTouchData { variantName: string; touchAreas: TouchAreaRect[] }
+  const perVariantTouch: PerVariantTouchData[] = [];
+  if (variantsToRender.length > 0) {
+    for (const v of variantsToRender) {
+      const touchKey = 'a11y-touch-areas::' + v.name;
+      let touchRaw = compSourceNode.getPluginData(touchKey);
+      if (!touchRaw) touchRaw = compSourceNode.getPluginData('a11y-touch-areas');
+      if (!touchRaw) touchRaw = compSourceNode.getPluginData('a11y-touch-areas::');
+      let ta: TouchAreaRect[] = [];
+      if (touchRaw) { try { ta = JSON.parse(touchRaw); } catch (_e) { /* ignore */ } }
+      perVariantTouch.push({ variantName: v.name, touchAreas: ta });
+    }
+  } else {
+    let touchRaw = compSourceNode.getPluginData('a11y-touch-areas::');
+    if (!touchRaw) touchRaw = compSourceNode.getPluginData('a11y-touch-areas');
+    let ta: TouchAreaRect[] = [];
+    if (touchRaw) { try { ta = JSON.parse(touchRaw); } catch (_e) { /* ignore */ } }
+    perVariantTouch.push({ variantName: '', touchAreas: ta });
+  }
+
+  // Focus order — check per-variant first, then shared
   let focusEntries: FocusOrderEntry[] = [];
+  // For multi-variant, we'll use per-variant if available
+  const focusRaw = compSourceNode.getPluginData('a11y-focus-order');
   if (focusRaw) { try { focusEntries = JSON.parse(focusRaw); } catch (_e) { /* ignore */ } }
 
-  const touchRaw = compSourceNode.getPluginData('a11y-touch-areas');
-  let touchAreas: TouchAreaRect[] = [];
-  if (touchRaw) { try { touchAreas = JSON.parse(touchRaw); } catch (_e) { /* ignore */ } }
+  // Collect per-variant focus orders
+  interface PerVariantFocusData { variantName: string; entries: FocusOrderEntry[] }
+  const perVariantFocus: PerVariantFocusData[] = [];
+  if (variantsToRender.length > 0) {
+    for (const v of variantsToRender) {
+      let vRaw = compSourceNode.getPluginData('a11y-focus-order::' + v.name);
+      let entries: FocusOrderEntry[] = [];
+      if (vRaw) { try { entries = JSON.parse(vRaw); } catch (_e) { /* ignore */ } }
+      // Fallback to shared
+      if (entries.length === 0 && focusEntries.length > 0) entries = focusEntries;
+      perVariantFocus.push({ variantName: v.name, entries });
+    }
+  }
+
+  // Roles únicos para tabelas de teclado/gestos
+  const roles = [...new Set(annotated.map(a => a.data.role).filter(r => r && r !== 'dont-read'))];
 
   sendProgress('Carregando fontes...');
-  await figma.loadFontAsync({ family: "Inter", style: "Bold" });
-  await figma.loadFontAsync({ family: "Inter", style: "Regular" });
-  await figma.loadFontAsync({ family: "Inter", style: "Medium" });
+  await figma.loadFontAsync({ family: 'Inter', style: 'Bold' });
+  await figma.loadFontAsync({ family: 'Inter', style: 'Regular' });
+  await figma.loadFontAsync({ family: 'Inter', style: 'Medium' });
 
-  sendProgress('Criando frame de handoff...');
+  sendProgress('Criando documento de handoff...');
 
-  // ── Frame container externo que agrupa tudo ──
-  const outerFrame = figma.createFrame();
-  outerFrame.name = `[A11Y Handoff] ${compSourceNode.name}`;
-  outerFrame.layoutMode = 'VERTICAL';
-  outerFrame.primaryAxisSizingMode = 'AUTO';
-  outerFrame.counterAxisSizingMode = 'FIXED';
-  const HF_WIDTH = 520;
-  outerFrame.resize(HF_WIDTH, 100);
-  outerFrame.itemSpacing = 0;
-  outerFrame.fills = [];
-  outerFrame.x = rootBounds.x + rootBounds.width + 100;
-  outerFrame.y = rootBounds.y;
+  const HF_WIDTH = 800;
+  const INNER_W = HF_WIDTH - 96; // 48px padding each side
 
-  // ── Frame principal de especificações ──
-  const hf = figma.createFrame();
-  hf.name = 'Especificações';
-  hf.layoutMode = 'VERTICAL';
-  hf.primaryAxisSizingMode = 'AUTO';
-  hf.counterAxisSizingMode = 'AUTO';
-  hf.paddingTop = 40; hf.paddingBottom = 40; hf.paddingLeft = 40; hf.paddingRight = 40;
-  hf.itemSpacing = 24;
-  hf.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
-  hf.cornerRadius = 8;
-  hf.strokes = [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.9 } }];
-  hf.strokeWeight = 1;
-  appendFill(outerFrame, hf);
+  // ── Frame principal ──
+  const doc = figma.createFrame();
+  doc.name = `[A11Y Handoff] ${compSourceNode.name}`;
+  doc.layoutMode = 'VERTICAL'; doc.primaryAxisSizingMode = 'AUTO'; doc.counterAxisSizingMode = 'FIXED';
+  doc.resize(HF_WIDTH, 100);
+  doc.paddingTop = 48; doc.paddingBottom = 48; doc.paddingLeft = 48; doc.paddingRight = 48;
+  doc.itemSpacing = 40; doc.fills = [{ type: 'SOLID', color: C_WHITE }];
+  doc.x = rootBounds.x + rootBounds.width + 120; doc.y = rootBounds.y;
 
-  // Título
-  const titleText = figma.createText();
-  titleText.fontName = { family: "Inter", style: "Bold" }; titleText.fontSize = 18;
-  titleText.characters = `Handoff A11Y — ${compSourceNode.name}`;
-  titleText.fills = [{ type: 'SOLID', color: { r: 0.13, g: 0.13, b: 0.13 } }];
-  titleText.textAutoResize = 'HEIGHT';
-  appendFill(hf, titleText);
+  // ── Título ──
+  appendFill(doc, mkT('Acessibilidade', 24, 'Bold', C_BLUE));
 
-  // ── Seção: Componente ──
-  const compSec = mkSection('Componente');
-  if (compData.platform.length > 0) appendFill(compSec, mkLine('Plataforma', compData.platform.map(p => PLATFORM_LABELS[p] || p).join(', ')));
-  else appendFill(compSec, mkLine('Plataforma', 'Nenhuma definida'));
-  if (compData.zoom.length > 0) appendFill(compSec, mkLine('Zoom', compData.zoom.map(z => ZOOM_LABELS[z] || z).join(', ')));
-  else appendFill(compSec, mkLine('Zoom', 'Nenhum definido'));
-  appendFill(hf, compSec);
-
-  // ── Seção: Anotações ──
-  sendProgress('Documentando anotações...');
+  // ════════════════ MAPEAMENTO DO TECLADO ════════════════
+  sendProgress('Mapeamento de teclado...');
   {
-    const ls = mkSection('Anotações');
-    if (annotated.length === 0) {
-      appendFill(ls, mkLine('', 'Nenhuma anotação de role/categoria definida.'));
+    const sec = mkSec(12);
+    appendFill(sec, mkT('Mapeamento do Teclado', 16, 'Bold', C_BLACK));
+    // Collect keyboard entries from roles
+    const kbEntries: { keys: string; action: string }[] = [];
+    const seen = new Set<string>();
+    for (const role of roles) {
+      for (const e of (ROLE_KB[role] || [])) {
+        const k = e.keys + '|' + e.action;
+        if (!seen.has(k)) { seen.add(k); kbEntries.push(e); }
+      }
     }
-    for (const { node: ln, data: d } of annotated) {
-      const lf = figma.createFrame();
-      lf.name = ln.name; lf.layoutMode = 'VERTICAL';
-      lf.primaryAxisSizingMode = 'AUTO'; lf.counterAxisSizingMode = 'AUTO';
-      lf.itemSpacing = 4; lf.paddingTop = 10; lf.paddingBottom = 10; lf.paddingLeft = 14; lf.paddingRight = 14;
-      lf.fills = [{ type: 'SOLID', color: { r: 0.96, g: 0.96, b: 0.96 } }]; lf.cornerRadius = 6;
-
-      const lt = figma.createText(); lt.fontName = { family: "Inter", style: "Medium" }; lt.fontSize = 13;
-      lt.characters = `▸ ${ln.name}`; lt.fills = [{ type: 'SOLID', color: { r: 0.13, g: 0.13, b: 0.13 } }];
-      lt.textAutoResize = 'HEIGHT';
-      appendFill(lf, lt);
-
-      if (d.category) appendFill(lf, mkLine('Categoria', CATEGORY_LABELS[d.category] || d.category));
-      if (d.role && d.role !== 'dont-read') appendFill(lf, mkLine('Role', d.role));
-      if (d.accessibleName) appendFill(lf, mkLine('Nome acessível', d.accessibleName));
-      if (d.altText) appendFill(lf, mkLine('Texto alt.', d.altText));
-      if (d.headingLevel) appendFill(lf, mkLine('Nível', `h${d.headingLevel}`));
-      if (d.explanation && d.category !== 'decorativo') appendFill(lf, mkLine('Explicação', d.explanation));
-      appendFill(ls, lf);
+    if (kbEntries.length === 0) {
+      kbEntries.push({ keys: 'tab ou shift + tab', action: 'Navega entre os elementos interativos' });
     }
-    appendFill(hf, ls);
+    const tableRows = kbEntries.map(e => ({ cells: [mkKeyTag(e.keys) as FrameNode | string, e.action] }));
+    appendFill(sec, mkTable(['Tecla(s)', 'Ação'], tableRows, 240));
+    appendFill(doc, sec);
   }
 
-  // ── Seção: Áreas de toque ──
-  sendProgress('Documentando áreas de toque...');
+  // ════════════════ GESTOS COM O LEITOR DE TELA ════════════════
+  sendProgress('Gestos do leitor de tela...');
   {
-    const ts = mkSection('Áreas de Toque');
-    appendFill(ts, mkLine('Referência WCAG', '2.5.5 Target Size Enhanced (≥44×44px) · 2.5.8 Target Size Minimum (≥24×24px)'));
-    if (touchAreas.length === 0) {
-      appendFill(ts, mkLine('', 'Nenhuma área de toque definida.'));
+    const sec = mkSec(12);
+    appendFill(sec, mkT('Gestos com o Leitor de Tela', 16, 'Bold', C_BLACK));
+    const gestEntries: { gesture: string; action: string }[] = [];
+    const seen = new Set<string>();
+    for (const role of roles) {
+      for (const e of (ROLE_GESTURE[role] || [])) {
+        const k = e.gesture + '|' + e.action;
+        if (!seen.has(k)) { seen.add(k); gestEntries.push(e); }
+      }
     }
-    for (let i = 0; i < touchAreas.length; i++) {
-      const a = touchAreas[i];
-      const w = Math.round(a.width), h = Math.round(a.height);
-      const minDim = Math.min(w, h);
-      let level = '❌ Insuficiente (<24px) — Não atende WCAG 2.5.8';
-      if (minDim >= 44) level = '✅ Aprimorado — Atende WCAG 2.5.5 (≥44px)';
-      else if (minDim >= 24) level = '⚠️ Mínimo — Atende WCAG 2.5.8 (≥24px), não atende 2.5.5';
-      appendFill(ts, mkLine(`Área ${i + 1}`, `${w} × ${h}px — ${level}`));
+    if (gestEntries.length === 0) {
+      gestEntries.push({ gesture: 'Swipe', action: 'Avança e retorna pelos elementos' });
+      gestEntries.push({ gesture: 'Doubletap', action: 'Ativa o elemento' });
     }
-    appendFill(hf, ts);
+    const tableRows = gestEntries.map(e => ({ cells: [e.gesture, e.action] }));
+    appendFill(sec, mkTable(['Gestos', 'Ação'], tableRows, 240));
+    appendFill(doc, sec);
   }
 
-  // ── Seção: Ordem de Foco ──
-  sendProgress('Documentando ordem de foco...');
+  appendFill(doc, mkDivider());
+
+  // ════════════════ TAMANHO DE ÁREA DE CLIQUE E TOQUE ════════════════
+  sendProgress('Áreas de toque...');
   {
-    const fs = mkSection('Ordem de Foco');
-    if (compData.noTab) {
-      appendFill(fs, mkLine('', 'Este componente não tem tabulação.'));
-    } else if (focusEntries.length > 0) {
-      const nameMap = new Map(collectAnnotatedNodes(root).map(n => [n.nodeId, n.name]));
-      for (const e of focusEntries) {
-        const nm = nameMap.get(e.nodeId) || '?';
-        let desc = `${e.order}. ${nm}`;
-        if (e.category) desc += ` — ${CATEGORY_LABELS[e.category] || e.category}`;
-        if (e.headingLevel) desc += ` (h${e.headingLevel})`;
-        appendFill(fs, mkLine('', desc));
+    const sec = mkSec(16);
+    appendFill(sec, mkT('Tamanho de Área de Clique e Toque', 16, 'Bold', C_BLACK));
+
+    const anyTouchAreas = perVariantTouch.some(pv => pv.touchAreas.length > 0);
+    if (anyTouchAreas) {
+      if (variantsToRender.length > 1) {
+        // Multi-variant: side-by-side touch previews
+        const touchRow = figma.createFrame();
+        touchRow.name = 'Touch Variants'; touchRow.layoutMode = 'HORIZONTAL';
+        touchRow.primaryAxisSizingMode = 'AUTO'; touchRow.counterAxisSizingMode = 'AUTO';
+        touchRow.itemSpacing = 40; touchRow.fills = [];
+        const perVarWidth = Math.floor((INNER_W - 40 * (variantsToRender.length - 1)) / variantsToRender.length);
+
+        for (let vi = 0; vi < variantsToRender.length; vi++) {
+          const v = variantsToRender[vi];
+          const pvData = perVariantTouch[vi];
+          const varCol = mkSec(8);
+          appendFill(varCol, mkT(v.name, 12, 'Bold', C_BLACK));
+          const inst = v.component.createInstance();
+          const touchPf = await mkTouchPreview(inst, inst.id, pvData.touchAreas, perVarWidth);
+          inst.remove();
+          appendFill(varCol, touchPf);
+          for (let i = 0; i < pvData.touchAreas.length; i++) {
+            const a = pvData.touchAreas[i];
+            const w = Math.round(a.width), h = Math.round(a.height);
+            const minDim = Math.min(w, h);
+            let level = 'Insuficiente — não atende WCAG 2.5.8';
+            if (minDim >= 44) level = 'Aprimorado — atende WCAG 2.5.5 (≥44px)';
+            else if (minDim >= 24) level = 'Mínimo — atende WCAG 2.5.8 (≥24px)';
+            appendFill(varCol, mkAnnotationRow(mkBadge(String(i + 1), C_BLUE), `Área ${i + 1}: ${level}`, undefined));
+          }
+          touchRow.appendChild(varCol);
+        }
+        appendFill(sec, touchRow);
+      } else {
+        // Single variant
+        const touchAreas = perVariantTouch[0].touchAreas;
+        const pf = await mkTouchPreview(root, workingNodeId, touchAreas, INNER_W);
+        appendFill(sec, pf);
+        for (let i = 0; i < touchAreas.length; i++) {
+          const a = touchAreas[i];
+          const w = Math.round(a.width), h = Math.round(a.height);
+          const minDim = Math.min(w, h);
+          let level = 'Insuficiente — não atende WCAG 2.5.8';
+          if (minDim >= 44) level = 'Aprimorado — atende WCAG 2.5.5 (≥44px)';
+          else if (minDim >= 24) level = 'Mínimo — atende WCAG 2.5.8 (≥24px)';
+          appendFill(sec, mkAnnotationRow(mkBadge(String(i + 1), C_BLUE), `Área ${i + 1}: ${level}`, undefined));
+        }
       }
     } else {
-      appendFill(fs, mkLine('', 'Nenhuma ordem de foco definida.'));
+      appendFill(sec, mkT('Nenhuma área de toque definida.', 11, 'Regular', C_LGRAY));
     }
-    appendFill(hf, fs);
+
+    appendFill(doc, sec);
   }
 
-  // ── Conectores no componente (ao lado dos layers anotados) ──
+  appendFill(doc, mkDivider());
+
+  // ════════════════ ORDEM DE FOCO POR TABULAÇÃO ════════════════
+  sendProgress('Ordem de foco...');
+  {
+    const sec = mkSec(16);
+    appendFill(sec, mkT('Ordem de Foco por Tabulação', 16, 'Bold', C_BLACK));
+
+    // Info box
+    appendFill(sec, mkInfoBox(
+      'Ordem de foco por tabulação é a ordem em que os elementos interativos de uma página recebem foco do teclado (ao pressionar a tecla Tab). ' +
+      'Ela deve ser lógica, intuitiva e deve preservar o significado e a operabilidade da interface. ' +
+      'Para idiomas ocidentais, a sequência padrão é da esquerda para a direita, do topo para a base.'
+    ));
+
+    if (compData.noTab) {
+      appendFill(sec, mkAnnotationRow(mkBadge('—', C_LGRAY), 'Este componente não tem tabulação.'));
+    } else {
+      // Focus order — shared, single preview
+      const zones = collectLayerZones(root, rootBounds, 1, root.id);
+      const focusBadges = focusEntries.map((e, i) => {
+        const zone = zones.find(z => z.id === e.nodeId);
+        return zone ? { relX: zone.x + zone.width / 2, relY: zone.y, content: String(i + 1), color: C_BLUE } : null;
+      }).filter((b): b is NonNullable<typeof b> => b !== null);
+      const pf = await mkPreviewFrame(root, workingNodeId, focusBadges, INNER_W);
+      if (pf) appendFill(sec, pf);
+
+      if (focusEntries.length > 0) {
+        const nameMap = new Map(collectAnnotatedNodes(root).map(n => [n.nodeId, n.name]));
+        for (const e of focusEntries) {
+          const nm = nameMap.get(e.nodeId) || '?';
+          const catLabel = e.category ? CATEGORY_LABELS[e.category] || e.category : '';
+          appendFill(sec, mkAnnotationRow(mkBadge(String(e.order), C_BLUE), nm, catLabel || undefined));
+        }
+      } else {
+        appendFill(sec, mkT('Nenhuma ordem de foco definida.', 11, 'Regular', C_LGRAY));
+      }
+    }
+
+    appendFill(doc, sec);
+  }
+
+  appendFill(doc, mkDivider());
+
+  // ════════════════ LEITOR DE TELA ════════════════
+  sendProgress('Leitor de tela...');
+  {
+    const sec = mkSec(16);
+    appendFill(sec, mkT('Leitor de Tela', 16, 'Bold', C_BLACK));
+
+    // Screen reader — shared, single preview
+    const zones = collectLayerZones(root, rootBounds, 1, root.id);
+    const srBadges = annotated.map((a, i) => {
+      const zone = zones.find(z => z.id === a.node.id);
+      const color = CAT_COLORS[a.data.category] || CAT_COLORS['outros'];
+      return zone ? { relX: zone.x + zone.width / 2, relY: zone.y, content: String(i + 1), color } : null;
+    }).filter((b): b is NonNullable<typeof b> => b !== null);
+    const pf = await mkPreviewFrame(root, workingNodeId, srBadges, INNER_W);
+    if (pf) appendFill(sec, pf);
+
+    // Legend
+    if (annotated.length > 0) {
+      const legend = figma.createFrame();
+      legend.layoutMode = 'HORIZONTAL'; legend.primaryAxisSizingMode = 'AUTO'; legend.counterAxisSizingMode = 'AUTO';
+      legend.itemSpacing = 16; legend.fills = [];
+      const usedCats = [...new Set(annotated.map(a => a.data.category).filter(Boolean))];
+      for (const cat of usedCats) {
+        legend.appendChild(mkLegendItem(CAT_COLORS[cat] || CAT_COLORS['outros'], CATEGORY_LABELS[cat] || cat));
+      }
+      appendFill(sec, legend);
+    }
+
+    // Annotations
+    if (annotated.length === 0) {
+      appendFill(sec, mkT('Nenhuma anotação definida.', 11, 'Regular', C_LGRAY));
+    }
+    for (let i = 0; i < annotated.length; i++) {
+      const { node: ln, data: d } = annotated[i];
+      const color = CAT_COLORS[d.category] || CAT_COLORS['outros'];
+
+      if (d.category === 'decorativo') {
+        appendFill(sec, mkAnnotationRow(mkBadge('⊘', C_DECOR), 'Não deve ser enunciado pelo Leitor de Tela.'));
+      } else {
+        let roleDesc = '';
+        if (d.role && d.role !== 'dont-read') roleDesc = `Identificar como ${d.role}`;
+        if (d.accessibleName) roleDesc += (roleDesc ? ' — ' : '') + `Nome acessível: "${d.accessibleName}"`;
+        if (d.altText) roleDesc += (roleDesc ? ' — ' : '') + `Texto alt.: "${d.altText}"`;
+        if (d.headingLevel) roleDesc += (roleDesc ? ' — ' : '') + `Nível h${d.headingLevel}`;
+        appendFill(sec, mkAnnotationRow(mkBadge(String(i + 1), color), ln.name, roleDesc || undefined));
+        if (d.explanation) appendFill(sec, mkInfoBox(d.explanation));
+      }
+    }
+
+    appendFill(doc, sec);
+  }
+
+  // ════════════════ CONECTORES ════════════════
   sendProgress('Posicionando conectores...');
   let connectorsPlaced = 0;
   if (connectorMap.length > 0 && annotated.length > 0) {
     for (const { node: ln, data: d } of annotated) {
       const lb = ln.absoluteBoundingBox;
       if (!lb) continue;
-      // Buscar conector pela categoria, ou usar 'outros' como fallback
       let conn = connectorMap.find(c => c.category === d.category);
       if (!conn) conn = connectorMap.find(c => c.category === 'outros');
-      if (!conn) conn = connectorMap[0]; // usar qualquer um disponível
+      if (!conn) conn = connectorMap[0];
       if (!conn) continue;
       try {
         const comp = await figma.importComponentByKeyAsync(conn.componentKey);
@@ -629,100 +1557,58 @@ async function generateHandoff(): Promise<void> {
     }
   }
 
-  // ── Instâncias de zoom (dentro do frame container) ──
+  // ════════════════ ZOOM ════════════════
   sendProgress('Gerando instâncias de zoom...');
   let zoomInstancesCreated = 0;
   const zoomConfigs: { key: string; scale: number; label: string }[] = [];
   if (compData.zoom.includes('resize-text')) zoomConfigs.push({ key: 'resize-text', scale: 2, label: 'Zoom 200% — Redimensionar Texto' });
   if (compData.zoom.includes('reflow')) zoomConfigs.push({ key: 'reflow', scale: 4, label: 'Zoom 400% — Refluxo' });
 
-  for (const zc of zoomConfigs) {
-    try {
-      let zoomInst: SceneNode | null = null;
-      if (root.type === 'COMPONENT') {
-        zoomInst = (root as ComponentNode).createInstance();
-      } else if (root.type === 'INSTANCE') {
-        zoomInst = (root as InstanceNode).clone();
-      } else if ('children' in root) {
-        const workNode = workingNodeId ? await figma.getNodeByIdAsync(workingNodeId) : null;
-        if (workNode && workNode.type === 'INSTANCE') {
-          zoomInst = (workNode as InstanceNode).clone();
-        }
-      }
-      if (!zoomInst) continue;
+  if (zoomConfigs.length > 0) {
+    appendFill(doc, mkDivider());
 
-      // Frame wrapper para a instância de zoom (dentro do outer frame)
-      const zoomWrap = figma.createFrame();
-      zoomWrap.name = zc.label;
-      zoomWrap.layoutMode = 'VERTICAL';
-      zoomWrap.primaryAxisSizingMode = 'AUTO';
-      zoomWrap.counterAxisSizingMode = 'AUTO';
-      zoomWrap.itemSpacing = 12;
-      zoomWrap.paddingTop = 24; zoomWrap.paddingBottom = 24; zoomWrap.paddingLeft = 24; zoomWrap.paddingRight = 24;
-      zoomWrap.fills = [{ type: 'SOLID', color: { r: 0.98, g: 0.98, b: 0.98 } }];
-      zoomWrap.strokes = [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.9 } }];
-      zoomWrap.strokeWeight = 1;
-      zoomWrap.cornerRadius = 8;
+    const zoomSec = mkSec(24);
+    appendFill(zoomSec, mkT('Instâncias de Zoom', 16, 'Bold', C_BLACK));
 
-      const zLabel = figma.createText();
-      zLabel.fontName = { family: "Inter", style: "Bold" }; zLabel.fontSize = 14;
-      zLabel.characters = zc.label;
-      zLabel.fills = [{ type: 'SOLID', color: { r: 0.33, g: 0.33, b: 0.33 } }];
-      zLabel.textAutoResize = 'HEIGHT';
-      appendFill(zoomWrap, zLabel);
+    const zoomRow = figma.createFrame();
+    zoomRow.layoutMode = 'HORIZONTAL'; zoomRow.primaryAxisSizingMode = 'AUTO'; zoomRow.counterAxisSizingMode = 'AUTO';
+    zoomRow.itemSpacing = 24; zoomRow.fills = [];
 
-      zoomInst.rescale(zc.scale);
-      zoomWrap.appendChild(zoomInst);
+    for (const zc of zoomConfigs) {
+      try {
+        const zoomInst = await cloneSource(root, workingNodeId);
+        if (!zoomInst) continue;
 
-      // Spacer entre a spec e cada zoom section
-      const spacer = figma.createFrame();
-      spacer.name = 'spacer';
-      spacer.resize(HF_WIDTH, 24);
-      spacer.fills = [];
-      appendFill(outerFrame, spacer);
+        const zoomCard = figma.createFrame();
+        zoomCard.name = zc.label; zoomCard.layoutMode = 'VERTICAL';
+        zoomCard.primaryAxisSizingMode = 'AUTO'; zoomCard.counterAxisSizingMode = 'AUTO';
+        zoomCard.counterAxisAlignItems = 'CENTER';
+        zoomCard.itemSpacing = 12;
+        zoomCard.paddingTop = 24; zoomCard.paddingBottom = 24; zoomCard.paddingLeft = 24; zoomCard.paddingRight = 24;
+        zoomCard.fills = [{ type: 'SOLID', color: { r: 0.98, g: 0.98, b: 0.98 } }];
+        zoomCard.strokes = [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.9 } }];
+        zoomCard.strokeWeight = 1; zoomCard.cornerRadius = 8;
 
-      appendFill(outerFrame, zoomWrap);
-      zoomInstancesCreated++;
-    } catch (_e) { /* ignore */ }
+        zoomCard.appendChild(mkT(zc.label, 12, 'Bold', C_GRAY));
+        if ('rescale' in zoomInst) (zoomInst as InstanceNode).rescale(zc.scale);
+        zoomCard.appendChild(zoomInst);
+        zoomRow.appendChild(zoomCard);
+        zoomInstancesCreated++;
+      } catch (_e) { /* ignore */ }
+    }
+
+    appendFill(zoomSec, zoomRow);
+    appendFill(doc, zoomSec);
   }
 
   sendProgress('Finalizando...');
-  figma.viewport.scrollAndZoomIntoView([outerFrame]);
+  figma.viewport.scrollAndZoomIntoView([doc]);
+  const totalTouchAreas = perVariantTouch.reduce((s, pv) => s + pv.touchAreas.length, 0);
   figma.ui.postMessage({
     type: 'handoff-result', success: true,
     connectorsPlaced, layersAnnotated: annotated.length,
-    zoomInstances: zoomInstancesCreated, touchAreas: touchAreas.length,
+    zoomInstances: zoomInstancesCreated, touchAreas: totalTouchAreas,
   });
-}
-
-function appendFill(parent: FrameNode, child: SceneNode): void {
-  parent.appendChild(child);
-  if ('layoutSizingHorizontal' in child) {
-    (child as any).layoutSizingHorizontal = 'FILL';
-  }
-}
-
-function mkSection(title: string): FrameNode {
-  const s = figma.createFrame(); s.name = title; s.layoutMode = 'VERTICAL';
-  s.primaryAxisSizingMode = 'AUTO'; s.counterAxisSizingMode = 'AUTO';
-  s.itemSpacing = 8; s.fills = [];
-  const t = figma.createText(); t.fontName = { family: "Inter", style: "Bold" }; t.fontSize = 14;
-  t.characters = title; t.fills = [{ type: 'SOLID', color: { r: 0.13, g: 0.13, b: 0.13 } }];
-  t.textAutoResize = 'HEIGHT';
-  appendFill(s, t);
-  const d = figma.createRectangle(); d.name = 'divider';
-  d.resize(100, 1);
-  d.fills = [{ type: 'SOLID', color: { r: 0.85, g: 0.85, b: 0.85 } }];
-  appendFill(s, d);
-  return s;
-}
-
-function mkLine(label: string, value: string): TextNode {
-  const t = figma.createText(); t.fontName = { family: "Inter", style: "Regular" }; t.fontSize = 12;
-  t.characters = label ? `${label}: ${value}` : value;
-  t.fills = [{ type: 'SOLID', color: { r: 0.33, g: 0.33, b: 0.33 } }];
-  t.textAutoResize = 'HEIGHT';
-  return t;
 }
 
 // ════════════════════════════════════════
@@ -734,13 +1620,44 @@ figma.ui.onmessage = async (msg: any) => {
   switch (msg.type) {
     case 'set-component-data': await setComponentData(msg.data); break;
     case 'generate-preview': await generatePreview(); break;
-    case 'get-layer-data': if (msg.nodeId) await getLayerData(msg.nodeId); break;
-    case 'set-layer-data': if (msg.nodeId && msg.data) await setLayerData(msg.nodeId, msg.data); break;
-    case 'save-touch-areas': if (msg.areas) await saveTouchAreas(msg.areas); break;
-    case 'get-touch-areas': await getTouchAreas(); break;
-    case 'get-focus-order': await getFocusOrder(); break;
-    case 'set-focus-order': if (msg.entries) await setFocusOrder(msg.entries); break;
+    case 'switch-variant': if (msg.variantId) await switchVariant(msg.variantId); break;
+    case 'get-layer-data': if (msg.nodeId) await getLayerData(msg.nodeId, msg.variantName); break;
+    case 'set-layer-data': if (msg.nodeId && msg.data) await setLayerData(msg.nodeId, msg.data, msg.variantName, msg.applyToAll !== false); break;
+    case 'get-all-layer-annotations': await sendAllLayerAnnotations(msg.variantName); break;
+    case 'remove-layer-annotation': if (msg.namePath) await removeLayerAnnotation(msg.namePath, msg.variantName); break;
+    case 'save-touch-areas': if (msg.areas) await saveTouchAreas(msg.areas, msg.variantName || '', !!msg.applyToAll); break;
+    case 'get-touch-areas': await getTouchAreas(msg.variantName || ''); break;
+    case 'get-focus-order': await getFocusOrder(msg.variantName); break;
+    case 'set-focus-order': if (msg.entries) await setFocusOrder(msg.entries, msg.variantName, msg.applyToAll !== false); break;
     case 'discover-connectors': await discoverConnectors(); break;
-    case 'generate-handoff': await generateHandoff(); break;
+    case 'generate-handoff': await generateHandoff(msg.selectedVariantIds || []); break;
+    case 'get-variant-overrides': {
+      const overrides = await getVariantOverrides();
+      figma.ui.postMessage({ type: 'variant-overrides', overrides });
+      break;
+    }
+    case 'create-variant-override': {
+      if (msg.variantName && msg.dataType) {
+        await createVariantOverride(msg.variantName, msg.dataType);
+      }
+      break;
+    }
+    case 'remove-variant-override': {
+      if (msg.variantName && msg.dataType) {
+        await removeVariantOverride(msg.variantName, msg.dataType);
+        const overrides = await getVariantOverrides();
+        figma.ui.postMessage({ type: 'variant-overrides', overrides });
+      }
+      break;
+    }
+    case 'set-selected-variants': {
+      if (currentRootId && msg.ids) {
+        const node = await figma.getNodeByIdAsync(currentRootId);
+        if (node && 'setPluginData' in node) {
+          (node as SceneNode).setPluginData('a11y-selected-variants', JSON.stringify(msg.ids));
+        }
+      }
+      break;
+    }
   }
 };

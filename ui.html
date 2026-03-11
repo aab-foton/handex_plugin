@@ -43,7 +43,10 @@ body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background
 /* Preview */
 .preview-wrap{position:relative;flex:0 0 auto;max-height:55%;overflow:auto;background:#f5f5f5}
 .preview-wrap img{display:block;transform-origin:0 0}
+.preview-wrap.padded{background:#e8e8e8}
+.preview-wrap.padded img{margin:60px}
 .zoom-controls{position:sticky;top:4px;left:4px;z-index:9500;display:flex;gap:2px;padding:2px;background:rgba(255,255,255,.9);border-radius:4px;border:1px solid #ddd;width:fit-content;margin-bottom:-28px}
+.padded .zoom-controls{top:8px;left:8px}
 .zoom-btn{width:24px;height:24px;border:none;background:none;cursor:pointer;font-size:14px;font-weight:700;color:#555;border-radius:3px;display:flex;align-items:center;justify-content:center}
 .zoom-btn:hover{background:#eee}
 .zoom-pct{font-size:9px;color:#999;display:flex;align-items:center;padding:0 3px}
@@ -63,18 +66,29 @@ body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background
 .focus-badge{position:absolute;width:32px;height:32px;border-radius:8px;background:#1b2a4a;color:#fff;font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:9000;box-shadow:0 2px 6px rgba(0,0,0,.35);border:2px solid #fff;line-height:1}
 .focus-badge .fb-icon{font-size:8px;opacity:.7;margin-top:1px}
 
-/* Drawing overlay - pink/rose like the touch area component */
+/* Drawing overlay */
 .draw-overlay{position:absolute;top:0;left:0;width:100%;height:100%;z-index:8000;cursor:crosshair}
-.draw-rect{position:absolute;border:2px solid #d4907a;background:rgba(212,144,122,.25);pointer-events:none}
-.draw-saved{position:absolute;background:rgba(212,144,122,.25);display:flex;align-items:center;justify-content:center;cursor:move;z-index:8001;border:2px solid transparent}
-.draw-saved:hover,.draw-saved.selected{border-color:#d4907a}
-.draw-saved .resize-handle{position:absolute;width:10px;height:10px;background:#d4907a;border:1px solid #fff;border-radius:2px;display:none;z-index:8002}
+.draw-rect{position:absolute;border:2px solid #FFB19E;background:rgba(255,177,158,.48);pointer-events:none}
+.draw-saved{position:absolute;background:rgba(255,177,158,.48);display:flex;align-items:center;justify-content:center;cursor:move;z-index:8001;border:2px solid transparent}
+.draw-saved:hover,.draw-saved.selected{border-color:#FFB19E}
+.draw-saved .resize-handle{position:absolute;width:10px;height:10px;background:#FFB19E;border:1px solid #fff;border-radius:2px;display:none;z-index:8002}
 .draw-saved.selected .resize-handle{display:block;cursor:nwse-resize}
 .resize-handle.tl{top:-5px;left:-5px;cursor:nw-resize}
 .resize-handle.tr{top:-5px;right:-5px;cursor:ne-resize}
 .resize-handle.bl{bottom:-5px;left:-5px;cursor:sw-resize}
 .resize-handle.br{bottom:-5px;right:-5px;cursor:se-resize}
 .draw-dim{font-size:10px;font-weight:700;color:#8b4a3a;background:rgba(255,255,255,.85);padding:1px 5px;border-radius:3px;white-space:nowrap;pointer-events:none}
+
+/* Touch size selector */
+.touch-size-bar{padding:8px 12px;border-bottom:1px solid #e5e5e5;flex-shrink:0;background:#fafafa}
+.touch-size-bar .fl{margin-bottom:4px}
+.touch-opts{display:flex;gap:4px;flex-wrap:wrap}
+.touch-opt{padding:5px 10px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;background:#fff;transition:.15s}
+.touch-opt:hover{border-color:#bbb}
+.touch-opt.active{background:#FFB19E;color:#fff;border-color:#FFB19E}
+/* Step 3 layer zones clickable for preset sizes */
+.lz.touch-clickable{cursor:pointer;border:1px dashed rgba(255,177,158,.5)}
+.lz.touch-clickable:hover{background:rgba(255,177,158,.15);border-color:#FFB19E}
 
 /* Panel below preview */
 .panel{flex:1 1 0;overflow-y:auto;padding:12px;border-top:1px solid #e5e5e5;min-height:0}
@@ -112,7 +126,53 @@ body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background
 .nb.pr{background:#18a0fb;color:#fff;border-color:#18a0fb}
 .nb.pr:hover{background:#0d8ce0}
 
+#rpEdit{padding-bottom:8px;border-bottom:1px solid #e5e5e5;margin-bottom:4px}
+#rpList{margin-top:4px}
 #status{padding:4px 12px;border-top:1px solid #e5e5e5;background:#f5f5f5;font-size:9px;color:#999;flex-shrink:0}
+
+/* Variant filter UI (Step 5) */
+.vf-group{margin-bottom:10px}
+.vf-label{font-weight:600;font-size:10px;color:#666;margin-bottom:4px;text-transform:capitalize}
+.vf-tags{display:flex;flex-wrap:wrap;gap:4px}
+.vf-tag{padding:3px 10px;border:1px solid #ddd;border-radius:12px;font-size:10px;cursor:pointer;background:#fff;transition:.12s;user-select:none}
+.vf-tag:hover{border-color:#aaa;background:#f5f5f5}
+.vf-tag.on{background:#18a0fb;color:#fff;border-color:#18a0fb}
+.vf-count{font-size:10px;color:#999;margin-top:8px}
+.vf-actions{display:flex;gap:6px;margin-bottom:10px}
+.vf-action{padding:4px 10px;border:1px solid #ddd;border-radius:4px;font-size:10px;cursor:pointer;background:#fff}
+.vf-action:hover{background:#f0f0f0}
+
+/* Exception bar (per step) */
+.exc-bar{padding:8px 12px;background:#f9f9f9;border-bottom:1px solid #e5e5e5;flex-shrink:0}
+.exc-bar-top{margin-bottom:0}
+.exc-bar-mgr{margin-top:8px;padding-top:8px;border-top:1px solid #e5e5e5}
+.exc-bar-controls{display:flex;align-items:flex-end;gap:6px;margin-bottom:6px;flex-wrap:wrap}
+.exc-mgr-picker{display:flex;flex-wrap:wrap;gap:4px;flex:1}
+.exc-mgr-picker .vp-prop{display:flex;align-items:center;gap:2px}
+.exc-mgr-picker .vp-key{font-size:9px;color:#999;text-transform:capitalize}
+.exc-mgr-picker .vp-sel{padding:2px 6px;border:1px solid #ccc;border-radius:4px;font-size:10px;font-weight:600;background:#fff;cursor:pointer;appearance:none;-webkit-appearance:none;padding-right:16px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23999'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 4px center}
+.exc-mgr-picker .vp-sel:focus{outline:none;border-color:#18a0fb}
+.exc-mgr-add{padding:4px 10px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;background:#fff;color:#333;white-space:nowrap;flex-shrink:0}
+.exc-mgr-add:hover{background:#f0f0f0;border-color:#bbb}
+.exc-mgr-list{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+.exc-mgr-item{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border:1px solid #e5e5e5;border-radius:4px;font-size:10px;background:#fff}
+.exc-mgr-item:hover{background:#f0f7ff;border-color:#d0e3f7}
+.exc-mgr-item.active{background:#e8f0fe;border-color:#18a0fb}
+.exc-mgr-item-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.exc-mgr-item-actions{display:flex;align-items:center;gap:2px;flex-shrink:0}
+.exc-mgr-item-edit{width:18px;height:18px;border:none;background:none;cursor:pointer;color:#18a0fb;font-size:11px;padding:0;line-height:1}
+.exc-mgr-item-edit:hover{color:#0d8ce0}
+.exc-mgr-item-rm{width:18px;height:18px;border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;flex-shrink:0;padding:0;line-height:1}
+.exc-mgr-item-rm:hover{color:#c0392b}
+
+/* Variant switcher inside exc-bar */
+.exc-bar-sw{display:flex;align-items:center;gap:8px;padding:6px 0 0}
+.exc-bar-sw label{font-size:10px;font-weight:600;color:#555;white-space:nowrap}
+.exc-bar-sw select{flex:1;padding:4px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-weight:600;background:#fff;cursor:pointer;appearance:none;-webkit-appearance:none;padding-right:20px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23999'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center}
+.exc-bar-sw select:focus{outline:none;border-color:#18a0fb}
+.var-sw-indicator{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600;white-space:nowrap}
+.var-sw-indicator.default{background:#e6f9f0;color:#0d7a42}
+.var-sw-indicator.exception{background:#fff3cd;color:#856404}
 </style>
 </head>
 <body>
@@ -150,15 +210,63 @@ body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background
 
   <!-- STEP 2: ROLES -->
   <div id="s2" class="step">
+    <div id="exc-bar-2" class="exc-bar" style="display:none">
+      <div class="exc-bar-top">
+        <label class="ci"><input type="checkbox" id="hasExcCk-2" onchange="toggleHasExc(2)"> Alguma variante tem roles diferentes?</label>
+      </div>
+      <div id="exc-mgr-2" class="exc-bar-mgr" style="display:none">
+        <div class="exc-bar-controls">
+          <div id="exc-picker-2" class="exc-mgr-picker"></div>
+          <button class="exc-mgr-add" onclick="addExc(2)">+ Adicionar</button>
+        </div>
+        <div id="exc-list-2" class="exc-mgr-list"></div>
+        <div class="exc-bar-sw">
+          <label>Editando:</label>
+          <select id="var-sw-sel-2" onchange="onVarSwitch(2)"></select>
+          <span id="var-sw-ind-2" class="var-sw-indicator default">Padrão</span>
+        </div>
+      </div>
+    </div>
     <div id="bc2" class="breadcrumb"><span style="opacity:.6">Raiz</span><span style="opacity:.4"> — duplo-clique para expandir</span></div>
     <div class="preview-wrap" id="pw2"><img id="pi2" alt="Preview"></div>
-    <div class="panel empty" id="rp"><span>Clique em um elemento no preview</span></div>
+    <div class="panel" id="rp">
+      <div id="rpEdit"><span style="color:#999">Clique em um elemento no preview</span></div>
+      <div id="rpList">
+        <div class="stitle" style="margin-top:12px">Layers Anotados</div>
+        <div id="rlist"></div>
+      </div>
+    </div>
     <div class="snav"><button class="nb" onclick="go(1)">← Voltar</button><button class="nb pr" onclick="go(3)">Próximo →</button></div>
   </div>
 
   <!-- STEP 3: TOUCH AREA -->
   <div id="s3" class="step">
-    <div class="breadcrumb" id="bc3"><span style="opacity:.6">Arraste no preview para desenhar áreas de toque</span></div>
+    <div id="exc-bar-3" class="exc-bar" style="display:none">
+      <div class="exc-bar-top">
+        <label class="ci"><input type="checkbox" id="hasExcCk-3" onchange="toggleHasExc(3)"> Alguma variante tem áreas de toque diferentes?</label>
+      </div>
+      <div id="exc-mgr-3" class="exc-bar-mgr" style="display:none">
+        <div class="exc-bar-controls">
+          <div id="exc-picker-3" class="exc-mgr-picker"></div>
+          <button class="exc-mgr-add" onclick="addExc(3)">+ Adicionar</button>
+        </div>
+        <div id="exc-list-3" class="exc-mgr-list"></div>
+        <div class="exc-bar-sw">
+          <label>Editando:</label>
+          <select id="var-sw-sel-3" onchange="onVarSwitch(3)"></select>
+          <span id="var-sw-ind-3" class="var-sw-indicator default">Padrão</span>
+        </div>
+      </div>
+    </div>
+    <div class="touch-size-bar">
+      <div class="fl">Tamanho do alvo</div>
+      <div class="touch-opts">
+        <button class="touch-opt active" data-ts="44" onclick="setTouchSize('44')">Aprimorado (44dp)</button>
+        <button class="touch-opt" data-ts="24" onclick="setTouchSize('24')">Mínimo (24dp)</button>
+        <button class="touch-opt" data-ts="custom" onclick="setTouchSize('custom')">Desenho livre</button>
+      </div>
+    </div>
+    <div class="breadcrumb" id="bc3"><span style="opacity:.6">Clique nos elementos para definir a área de toque</span></div>
     <div class="preview-wrap" id="pw3"><img id="pi3" alt="Preview"></div>
     <div class="panel" id="tp">
       <div class="stitle">Áreas de Toque</div>
@@ -171,6 +279,23 @@ body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background
 
   <!-- STEP 4: FOCUS ORDER -->
   <div id="s4" class="step">
+    <div id="exc-bar-4" class="exc-bar" style="display:none">
+      <div class="exc-bar-top">
+        <label class="ci"><input type="checkbox" id="hasExcCk-4" onchange="toggleHasExc(4)"> Alguma variante tem ordem de foco diferente?</label>
+      </div>
+      <div id="exc-mgr-4" class="exc-bar-mgr" style="display:none">
+        <div class="exc-bar-controls">
+          <div id="exc-picker-4" class="exc-mgr-picker"></div>
+          <button class="exc-mgr-add" onclick="addExc(4)">+ Adicionar</button>
+        </div>
+        <div id="exc-list-4" class="exc-mgr-list"></div>
+        <div class="exc-bar-sw">
+          <label>Editando:</label>
+          <select id="var-sw-sel-4" onchange="onVarSwitch(4)"></select>
+          <span id="var-sw-ind-4" class="var-sw-indicator default">Padrão</span>
+        </div>
+      </div>
+    </div>
     <div class="breadcrumb" id="bc4"><span style="opacity:.6">Clique nos elementos na ordem de foco desejada</span></div>
     <div style="padding:8px 12px 0">
       <label class="ci"><input type="checkbox" id="noTabCk" onchange="toggleNoTab()"> Este componente não tem tabulação</label>
@@ -191,6 +316,15 @@ body{font-family:Inter,system-ui,sans-serif;font-size:11px;color:#333;background
     <div class="sbody">
       <div class="stitle">Gerar Handoff</div>
       <div class="sdesc">Cria a documentação visual no canvas com conectores e especificações completas.</div>
+      <div id="varfilter-fg" style="display:none">
+        <div class="fl" style="margin-bottom:6px">Variantes para o Handoff</div>
+        <div class="vf-actions">
+          <button class="vf-action" onclick="vfSelectAll()">Selecionar tudo</button>
+          <button class="vf-action" onclick="vfDeselectAll()">Limpar seleção</button>
+        </div>
+        <div id="varfilter-groups"></div>
+        <div id="varfilter-count" class="vf-count"></div>
+      </div>
       <button class="hbtn" onclick="doHandoff()">Gerar Handoff no Canvas</button>
       <div id="hconn" class="hstatus info" style="display:none"></div>
       <div id="hres" style="display:none"></div>
@@ -212,8 +346,19 @@ const S = {
   drawing: false, drawStart: null,
   touchAreas: [], // [{x,y,w,h}] in real Figma coords
   selectedArea: -1, // index of selected area, -1 = none
+  touchSize: '44', // '44', '24', or 'custom'
+  // Variants (component set)
+  variants: [], // [{id,name,width,height}]
+  selectedVariant: null,
+  selectedVariants: [], // IDs of variants selected for handoff
+  currentVariantName: '', // name of the currently previewed variant
   // Focus
   focusOrder: [], annotatedNodes: [],
+  // Annotations list
+  annotations: [],
+  // Exception mode
+  editingException: null, // null = shared mode, string = variant name
+  variantOverrides: { roles: [], touch: [], focus: [] },
 };
 
 const ROLES=['dont-read','alert','alertdialog','application','article','banner','button','cell','checkbox','columnheader','combobox','complementary','contentinfo','definition','dialog','directory','document','feed','figure','form','grid','gridcell','group','heading','img','link','list','listbox','listitem','log','main','marquee','math','menu','menubar','menuitem','menuitemcheckbox','menuitemradio','navigation','none','note','option','presentation','progressbar','radio','radiogroup','region','row','rowgroup','rowheader','scrollbar','search','searchbox','separator','slider','spinbutton','status','switch','tab','table','tablist','tabpanel','term','textbox','timer','toolbar','tooltip','tree','treegrid','treeitem'];
@@ -243,6 +388,8 @@ window.onmessage=e=>{const m=e.data.pluginMessage;if(!m)return;({
   'zones-updated':onZonesUpd,
   'touch-areas-data':onTouchData,
   'focus-order-data':onFocusData,
+  'all-layer-annotations':onAnnotations,
+  'variant-overrides':onVariantOverrides,
   'connectors-discovered':onConn,
   'handoff-progress':onProgress,
   'handoff-result':onHandoff,
@@ -252,8 +399,13 @@ window.onmessage=e=>{const m=e.data.pluginMessage;if(!m)return;({
 function onSel(m){
   if(!m.valid){$('empty').style.display='flex';$('main').style.display='none';S.rootId=null;return}
   $('empty').style.display='none';$('main').style.display='flex';
-  $('cname').textContent=m.rootName;S.rootId=m.rootId;S.rootType=m.rootType;
+  $('cname').textContent=m.rootName;S.rootId=m.rootId;S.rootType=m.rootType;_variantPropCache=null;
   S.comp=m.componentData||{platform:[],zoom:[],noTab:false};
+  S.variants=m.variants||[];
+  S.selectedVariants=m.selectedVariantIds||S.variants.map(v=>v.id);
+  S.selectedVariant=S.selectedVariants.length>0?S.selectedVariants[0]:(S.variants.length>0?S.variants[0].id:null);
+  // Initialize variant name
+  if(S.selectedVariant){const v=S.variants.find(v=>v.id===S.selectedVariant);S.currentVariantName=v?v.name:'';}else{S.currentVariantName='';}
   renderS1();applyNoTab();go(1);
 }
 
@@ -263,9 +415,10 @@ function go(s){
   document.querySelectorAll('.stab').forEach(t=>{const n=+t.dataset.s;t.classList.toggle('active',n===s);t.classList.toggle('done',n<s)});
   document.querySelectorAll('.step').forEach(c=>c.classList.toggle('active',c.id==='s'+s));
   if(s===2||s===3||s===4){post({type:'generate-preview'});st('Gerando preview...')}
-  if(s===3)post({type:'get-touch-areas'});
-  if(s===4)post({type:'get-focus-order'});
-  if(s===5)post({type:'discover-connectors'});
+  if(s===2){post({type:'get-all-layer-annotations',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcBar(2)}
+  if(s===3){post({type:'get-touch-areas',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcBar(3)}
+  if(s===4){post({type:'get-focus-order',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcBar(4)}
+  if(s===5){post({type:'discover-connectors'});renderVariantFilter()}
 }
 
 // ═══════════════ STEP 1 ═══════════════
@@ -274,6 +427,108 @@ function renderS1(){
   PLATS.forEach(p=>{const ck=S.comp.platform.includes(p.v)?'checked':'';
     g.innerHTML+=`<label class="ci"><input type="checkbox" name="plat" value="${p.v}" ${ck} onchange="saveComp()"> ${p.l}</label>`});
   document.querySelectorAll('input[name="zoom"]').forEach(c=>c.checked=S.comp.zoom.includes(c.value));
+}
+
+// ═══════════════ VARIANT FILTER (Step 5) ═══════════════
+
+// Parse "variant=highlight, size=standard, type=plain, state=default" into {variant:'highlight', size:'standard', ...}
+function parseVariantProps(name){
+  const props={};
+  name.split(',').forEach(p=>{
+    const parts=p.trim().split('=');
+    if(parts.length===2)props[parts[0].trim()]=parts[1].trim();
+  });
+  return props;
+}
+
+function renderVariantFilter(){
+  const fg=$('varfilter-fg'),gc=$('varfilter-groups');
+  if(!fg||!gc)return;
+  if(S.variants.length<=1){fg.style.display='none';return}
+  fg.style.display='';
+
+  // Parse all variant properties
+  const allProps=S.variants.map(v=>({id:v.id,...parseVariantProps(v.name)}));
+  // Discover property keys and unique values
+  const propKeys=new Set();
+  allProps.forEach(p=>{Object.keys(p).forEach(k=>{if(k!=='id')propKeys.add(k)})});
+
+  // Build active filters from selected variants
+  // A filter value is "on" if ALL variants with that value are selected
+  const propGroups={};
+  propKeys.forEach(key=>{
+    const values=new Map(); // value -> [variant ids]
+    allProps.forEach(p=>{
+      const val=p[key];
+      if(val){if(!values.has(val))values.set(val,[]);values.get(val).push(p.id)}
+    });
+    propGroups[key]=[...values.entries()].map(([val,ids])=>({val,ids}));
+  });
+
+  // Store for toggling
+  S._propGroups=propGroups;
+
+  let h='';
+  for(const key of propKeys){
+    h+='<div class="vf-group">';
+    h+='<div class="vf-label">'+esc(key)+'</div>';
+    h+='<div class="vf-tags">';
+    propGroups[key].forEach(g=>{
+      const allOn=g.ids.every(id=>S.selectedVariants.includes(id));
+      const someOn=g.ids.some(id=>S.selectedVariants.includes(id));
+      let cls='vf-tag';
+      if(allOn)cls+=' on';
+      else if(someOn)cls+=' on" style="opacity:.6';
+      h+='<span class="'+cls+'" onclick="vfToggle(\''+ea(key)+'\',\''+ea(g.val)+'\')">'+esc(g.val)+' <span style="opacity:.5;font-size:9px">('+g.ids.length+')</span></span>';
+    });
+    h+='</div></div>';
+  }
+  gc.innerHTML=h;
+
+  // Count
+  const cnt=$('varfilter-count');
+  if(cnt)cnt.textContent=S.selectedVariants.length+' de '+S.variants.length+' variantes selecionadas';
+}
+
+function vfToggle(key,val){
+  const group=S._propGroups[key].find(g=>g.val===val);
+  if(!group)return;
+  const allOn=group.ids.every(id=>S.selectedVariants.includes(id));
+  if(allOn){
+    // Deselect all with this value
+    S.selectedVariants=S.selectedVariants.filter(id=>!group.ids.includes(id));
+  } else {
+    // Select all with this value
+    const set=new Set(S.selectedVariants);
+    group.ids.forEach(id=>set.add(id));
+    S.selectedVariants=[...set];
+  }
+  // Must have at least one
+  if(S.selectedVariants.length===0)S.selectedVariants=S.variants.map(v=>v.id);
+  if(!S.selectedVariants.includes(S.selectedVariant))S.selectedVariant=S.selectedVariants[0];
+  saveSelectedVariants();
+  renderVariantFilter();
+}
+
+function vfSelectAll(){
+  S.selectedVariants=S.variants.map(v=>v.id);
+  saveSelectedVariants();
+  renderVariantFilter();
+}
+
+function vfDeselectAll(){
+  // Keep at least one
+  S.selectedVariants=[S.variants[0].id];
+  S.selectedVariant=S.variants[0].id;
+  saveSelectedVariants();
+  renderVariantFilter();
+}
+
+function saveSelectedVariants(){
+  if(!S.selectedVariants.includes(S.selectedVariant))S.selectedVariant=S.selectedVariants[0];
+  const v=S.variants.find(v=>v.id===S.selectedVariant);
+  S.currentVariantName=v?v.name:'';
+  post({type:'set-selected-variants',ids:S.selectedVariants});st('Variantes salvas');
 }
 function saveComp(){
   S.comp.platform=[...document.querySelectorAll('input[name="plat"]:checked')].map(c=>c.value);
@@ -294,6 +549,7 @@ function applyNoTab(){
 // ═══════════════ PREVIEW ═══════════════
 function onPreview(m){
   S.preview=m;S.allLayers=m.layers||[];S.rootZoneId=m.rootZoneId;
+  if(m.variantName!==undefined)S.currentVariantName=m.variantName;
   S.expanded=new Set([m.rootZoneId]);
   // Set images for all steps
   ['pi2','pi3','pi4'].forEach(id=>{$(id).src='data:image/png;base64,'+m.image});
@@ -315,14 +571,24 @@ function renderZones(step){
   const img=pw.querySelector('img');if(!img||!img.complete||!img.naturalWidth)return;
   // Remove old
   pw.querySelectorAll('.lz,.focus-badge,.draw-saved,.draw-overlay,.zoom-controls').forEach(e=>e.remove());
-  // Apply zoom
+  // Padding for preview steps (breathing room around component)
+  const hasPad=step===2||step===3||step===4;
+  const pad=hasPad?60:0;
+  pw.classList.toggle('padded',hasPad);
+  // Apply zoom — account for padding in width calc
   const z=S.previewZoom;
-  img.style.width=(z*100)+'%';
+  if(pad>0){
+    const containerW=pw.clientWidth-pad*2;
+    img.style.width=(z*containerW)+'px';
+  } else {
+    img.style.width=(z*100)+'%';
+  }
   // Zoom controls
   const zc=document.createElement('div');zc.className='zoom-controls';
   zc.innerHTML='<button class="zoom-btn" onclick="event.stopPropagation();setPreviewZoom(-0.25)">−</button><span class="zoom-pct">'+Math.round(z*100)+'%</span><button class="zoom-btn" onclick="event.stopPropagation();setPreviewZoom(0.25)">+</button><button class="zoom-btn" onclick="event.stopPropagation();resetPreviewZoom()" title="Reset" style="font-size:10px">1:1</button>';
   pw.insertBefore(zc,img);
   const sc=img.clientWidth/S.preview.width;if(!sc||!isFinite(sc))return;
+  const ox=pad,oy=pad; // offset for positioned elements
   const vis=visibleLayers();
   const sorted=[...vis].sort((a,b)=>(b.width*b.height)-(a.width*a.height));
 
@@ -333,7 +599,7 @@ function renderZones(step){
     if(step===2&&S.selLayer===l.id)cls+=' sel';
     if(l.hasChildren)cls+=' exp';
     z.className=cls;
-    z.style.left=(l.x*sc)+'px';z.style.top=(l.y*sc)+'px';
+    z.style.left=(ox+l.x*sc)+'px';z.style.top=(oy+l.y*sc)+'px';
     z.style.width=Math.max(l.width*sc,6)+'px';z.style.height=Math.max(l.height*sc,6)+'px';
     z.style.zIndex=String(l.depth*10);z.dataset.nid=l.id;
     if(l.category){const cat=CATS.find(c=>c.v===l.category);if(cat)z.style.borderColor=cat.c}
@@ -342,11 +608,14 @@ function renderZones(step){
     z.appendChild(tip);
 
     if(step===2){
-      z.onclick=e=>{e.stopPropagation();S.selLayer=l.id;renderZones(2);post({type:'get-layer-data',nodeId:l.id});st('Carregando...')};
+      z.onclick=e=>{e.stopPropagation();S.selLayer=l.id;renderZones(2);post({type:'get-layer-data',nodeId:l.id,variantName:currentVariantName()});st('Carregando...')};
       if(l.hasChildren)z.ondblclick=e=>{e.stopPropagation();S.expanded.add(l.id);renderZones(2);renderBC(2)};
     }
     if(step===3){
-      // No click handling for touch step - zones are visual reference only
+      if(S.touchSize!=='custom'){
+        z.classList.add('touch-clickable');
+        z.onclick=e=>{e.stopPropagation();addTouchForLayer(l.id)};
+      }
     }
     if(step===4){
       z.onclick=e=>{e.stopPropagation();toggleFocus(l.id,l.name)};
@@ -354,34 +623,39 @@ function renderZones(step){
     pw.appendChild(z);
   });
 
-  // Step 3: show saved touch areas (selectable, movable, resizable) + draw overlay
+  // Step 3: show saved touch areas + draw overlay (custom mode only)
   if(step===3){
     S.touchAreas.forEach((a,idx)=>{
       const d=document.createElement('div');
       d.className='draw-saved'+(S.selectedArea===idx?' selected':'');
-      d.style.left=(a.x*sc)+'px';d.style.top=(a.y*sc)+'px';
+      d.style.left=(ox+a.x*sc)+'px';d.style.top=(oy+a.y*sc)+'px';
       d.style.width=(a.w*sc)+'px';d.style.height=(a.h*sc)+'px';
       const dim=document.createElement('span');dim.className='draw-dim';
       dim.textContent=Math.round(a.w)+'×'+Math.round(a.h)+'px';
       d.appendChild(dim);
-      // Resize handles
-      ['tl','tr','bl','br'].forEach(pos=>{
-        const h=document.createElement('div');h.className='resize-handle '+pos;h.dataset.pos=pos;h.dataset.idx=String(idx);
-        h.onmousedown=e=>{e.stopPropagation();startResize(e,idx,pos)};
-        d.appendChild(h);
-      });
-      // Click to select, drag to move
-      d.onmousedown=e=>{e.stopPropagation();S.selectedArea=idx;renderZones(3);renderTouchList();startMove(e,idx)};
+      if(S.touchSize==='custom'){
+        // Resize handles only in custom mode
+        ['tl','tr','bl','br'].forEach(pos=>{
+          const h=document.createElement('div');h.className='resize-handle '+pos;h.dataset.pos=pos;h.dataset.idx=String(idx);
+          h.onmousedown=e=>{e.stopPropagation();startResize(e,idx,pos)};
+          d.appendChild(h);
+        });
+        d.onmousedown=e=>{e.stopPropagation();S.selectedArea=idx;renderZones(3);renderTouchList();startMove(e,idx)};
+      } else {
+        d.style.pointerEvents='none'; // In preset mode, areas are display-only
+      }
       pw.appendChild(d);
     });
-    // Draw overlay — only active when no area is selected (or clicking on empty space)
-    const ov=document.createElement('div');ov.className='draw-overlay';
-    ov.style.zIndex=S.selectedArea>=0?'7998':'8000';
-    ov.onmousedown=e=>{
-      if(S.selectedArea>=0){S.selectedArea=-1;renderZones(3);renderTouchList();return}
-      startDraw(e);
-    };
-    pw.appendChild(ov);
+    // Draw overlay — only in custom mode
+    if(S.touchSize==='custom'){
+      const ov=document.createElement('div');ov.className='draw-overlay';
+      ov.style.zIndex=S.selectedArea>=0?'7998':'8000';
+      ov.onmousedown=e=>{
+        if(S.selectedArea>=0){S.selectedArea=-1;renderZones(3);renderTouchList();return}
+        startDraw(e);
+      };
+      pw.appendChild(ov);
+    }
   }
 
   // Step 4: show focus badges
@@ -391,7 +665,7 @@ function renderZones(step){
       if(!layer)return;
       const b=document.createElement('div');b.className='focus-badge';
       b.innerHTML=String(i+1)+'<span class="fb-icon">→|</span>';
-      b.style.left=(layer.x*sc-6)+'px';b.style.top=(layer.y*sc-6)+'px';
+      b.style.left=(ox+layer.x*sc-6)+'px';b.style.top=(oy+layer.y*sc-6)+'px';
       pw.appendChild(b);
     });
   }
@@ -422,7 +696,7 @@ function pathTo(tid){
 
 // ═══════════════ STEP 2: ROLES ═══════════════
 function onLayerData(m){
-  const p=$('rp');p.className='panel';
+  const p=$('rpEdit');
   const d=m.data||{role:'dont-read',category:'',accessibleName:'',altText:'',headingLevel:0,explanation:''};
   let h='<div class="panel-title">'+esc(m.name||'Layer')+'</div>';
 
@@ -468,7 +742,55 @@ function saveLyr(){
     headingLevel:$('lhl')?parseInt($('lhl').value):0,
     explanation:$('lexp')?.value||'',
   };
-  post({type:'set-layer-data',nodeId:S.selLayer,data:d});st('Salvo');
+  const applyToAll=!S.editingException;
+  post({type:'set-layer-data',nodeId:S.selLayer,data:d,variantName:currentVariantName(),applyToAll});
+  if(S.variants.length>1)post({type:'get-variant-overrides'});
+  st('Salvo');
+}
+
+function onAnnotations(m){
+  S.annotations=m.annotations||[];
+  renderRoleList();
+}
+
+function renderRoleList(){
+  const c=$('rlist');if(!c)return;
+  if(S.annotations.length===0){c.innerHTML='<div style="color:#999;font-size:10px;text-align:center;padding:8px">Nenhum layer anotado</div>';return}
+  let h='';
+  S.annotations.forEach((a,i)=>{
+    const cat=CATS.find(c=>c.v===a.data.category);
+    const dot=cat?'<span style="color:'+cat.c+';font-size:14px;line-height:1">●</span>':'<span style="color:#ccc;font-size:14px;line-height:1">●</span>';
+    const role=RLBL[a.data.role]||a.data.role||'—';
+    const catLabel=cat?cat.l:'';
+    const scopeTag=a.scope==='variant'?'<span style="font-size:8px;color:#18a0fb;background:#e8f0fe;padding:1px 4px;border-radius:2px;margin-left:4px;flex-shrink:0">variante</span>':'';
+    h+='<div class="fi" style="cursor:pointer" onclick="clickAnnotation(\''+ea(a.namePath)+'\')">';
+    h+=dot;
+    h+='<span class="fi-name" title="'+ea(a.namePath)+'">'+esc(a.name)+' — <span style="color:#999">'+esc(role)+'</span></span>';
+    if(catLabel)h+='<span style="font-size:9px;color:#999;flex-shrink:0">'+esc(catLabel)+'</span>';
+    h+=scopeTag;
+    h+='<button class="fi-rm" onclick="event.stopPropagation();rmAnnotation(\''+ea(a.namePath)+'\')" title="Remover">×</button>';
+    h+='</div>';
+  });
+  c.innerHTML=h;
+}
+
+function clickAnnotation(namePath){
+  // Find the layer in allLayers by matching name path segments
+  const parts=namePath.split('/');
+  const targetName=parts[parts.length-1];
+  // Try to find layer by name match (best effort)
+  const layer=S.allLayers.find(l=>l.name===targetName);
+  if(layer){
+    S.selLayer=layer.id;
+    renderZones(2);
+    post({type:'get-layer-data',nodeId:layer.id,variantName:currentVariantName()});
+    st('Carregando...');
+  }
+}
+
+function rmAnnotation(namePath){
+  post({type:'remove-layer-annotation',namePath:namePath,variantName:currentVariantName()});
+  st('Removendo...');
 }
 
 // ═══════════════ STEP 3: TOUCH DRAW ═══════════════
@@ -477,16 +799,288 @@ function onTouchData(m){
   renderTouchList();renderZones(3);
 }
 
+function setTouchSize(size){
+  S.touchSize=size;S.selectedArea=-1;
+  document.querySelectorAll('.touch-opt').forEach(b=>b.classList.toggle('active',b.dataset.ts===size));
+  const bc=$('bc3');
+  if(size==='custom')bc.innerHTML='<span style="opacity:.6">Arraste no preview para desenhar áreas de toque</span>';
+  else bc.innerHTML='<span style="opacity:.6">Clique nos elementos para definir a área de toque ('+size+'dp)</span>';
+  renderZones(3);
+}
+
+function currentVariantName(){
+  return S.editingException||'';
+}
+
+// ═══════════════ VARIANT PROPERTY DATA ═══════════════
+
+let _variantPropCache=null;
+function getVariantPropData(){
+  if(_variantPropCache&&_variantPropCache._key===S.rootId)return _variantPropCache;
+  const parsed=S.variants.map(v=>({id:v.id,name:v.name,width:v.width,height:v.height,props:parseVariantProps(v.name)}));
+  const keyOrder=[];const keySet=new Set();
+  parsed.forEach(p=>{Object.keys(p.props).forEach(k=>{if(!keySet.has(k)){keySet.add(k);keyOrder.push(k)}})});
+  const propValues={};
+  keyOrder.forEach(key=>{
+    const seen=new Set();const vals=[];
+    parsed.forEach(p=>{const v=p.props[key];if(v&&!seen.has(v)){seen.add(v);vals.push(v)}});
+    propValues[key]=vals;
+  });
+  _variantPropCache={_key:S.rootId,parsed,keyOrder,propValues};
+  return _variantPropCache;
+}
+
+// ═══════════════ EXCEPTION SYSTEM (PER-STEP) ═══════════════
+
+function stepDataType(step){return step===2?'roles':step===3?'touch':'focus'}
+
+function onVariantOverrides(m){
+  S.variantOverrides=m.overrides||{roles:[],touch:[],focus:[]};
+  [2,3,4].forEach(s=>renderExcBar(s));
+}
+
+// Get exception names for a specific step's data type
+function getExcNamesForStep(step){
+  const dt=stepDataType(step);
+  return S.variantOverrides[dt]||[];
+}
+
+// ── Per-step: checkbox, manager, switcher ──
+
+function toggleHasExc(step){
+  const checked=$('hasExcCk-'+step).checked;
+  $('exc-mgr-'+step).style.display=checked?'':'none';
+  if(!checked){
+    // Remove all exceptions for this step's data type
+    const dt=stepDataType(step);
+    const names=[...(S.variantOverrides[dt]||[])];
+    names.forEach(vn=>{
+      post({type:'remove-variant-override',variantName:vn,dataType:dt});
+    });
+    // If we were editing an exception that no longer exists in any step, go back to default
+    if(S.editingException){
+      const stillExists=[2,3,4].some(s=>{
+        if(s===step)return false;
+        return getExcNamesForStep(s).includes(S.editingException);
+      });
+      if(!stillExists){
+        S.editingException=null;
+        if(S.variants.length>0){
+          S.selectedVariant=S.variants[0].id;
+          S.currentVariantName=S.variants[0].name;
+          post({type:'switch-variant',variantId:S.selectedVariant});
+        }
+      }
+    }
+    S.variantOverrides[dt]=[];
+    renderExcBar(step);
+    reloadStepData(step);
+  }
+}
+
+function renderExcBar(step){
+  const bar=$('exc-bar-'+step);if(!bar)return;
+  if(S.variants.length<=1){bar.style.display='none';return}
+  bar.style.display='';
+
+  const dt=stepDataType(step);
+  const exceptions=S.variantOverrides[dt]||[];
+  const hasExc=exceptions.length>0;
+
+  // Checkbox
+  const ck=$('hasExcCk-'+step);
+  if(ck)ck.checked=hasExc;
+
+  // Manager visibility
+  const mgr=$('exc-mgr-'+step);
+  if(mgr)mgr.style.display=hasExc?'':'none';
+
+  // Picker
+  const picker=$('exc-picker-'+step);
+  if(picker){
+    const data=getVariantPropData();
+    let h='';
+    data.keyOrder.forEach(key=>{
+      const vals=data.propValues[key];
+      if(vals.length<=1)return;
+      h+='<div class="vp-prop"><span class="vp-key">'+esc(key)+'</span>';
+      h+='<select class="vp-sel" data-vpkey="'+ea(key)+'" id="exc-sel-'+step+'-'+ea(key)+'">';
+      vals.forEach(val=>{h+='<option value="'+ea(val)+'">'+esc(val)+'</option>'});
+      h+='</select></div>';
+    });
+    picker.innerHTML=h;
+  }
+
+  // Exception list
+  const list=$('exc-list-'+step);
+  if(list){
+    let h='';
+    exceptions.forEach(vn=>{
+      const isActive=S.editingException===vn;
+      h+='<div class="exc-mgr-item'+(isActive?' active':'')+'">';
+      h+='<span class="exc-mgr-item-name" onclick="editExc(\''+ea(vn)+'\','+step+')" title="Clique para editar">'+esc(vn)+'</span>';
+      h+='<div class="exc-mgr-item-actions">';
+      h+='<button class="exc-mgr-item-rm" onclick="rmExc(\''+ea(vn)+'\','+step+')" title="Remover">×</button>';
+      h+='</div></div>';
+    });
+    if(exceptions.length===0)h='<div style="color:#999;font-size:10px;padding:4px 0">Nenhuma exceção adicionada</div>';
+    list.innerHTML=h;
+  }
+
+  // Switcher dropdown
+  const sel=$('var-sw-sel-'+step);
+  const ind=$('var-sw-ind-'+step);
+  if(sel&&ind){
+    if(!hasExc){
+      sel.parentElement.style.display='none';
+    } else {
+      sel.parentElement.style.display='flex';
+      let h='<option value="">Padrão (todas as variantes)</option>';
+      exceptions.forEach(vn=>{
+        const selected=S.editingException===vn?' selected':'';
+        h+='<option value="'+ea(vn)+'"'+selected+'>'+esc(vn)+'</option>';
+      });
+      sel.innerHTML=h;
+      sel.value=S.editingException||'';
+
+      if(S.editingException&&exceptions.includes(S.editingException)){
+        ind.textContent='Exceção';
+        ind.className='var-sw-indicator exception';
+      } else {
+        ind.textContent='Padrão';
+        ind.className='var-sw-indicator default';
+      }
+    }
+  }
+}
+
+function addExc(step){
+  const picker=$('exc-picker-'+step);if(!picker)return;
+  const data=getVariantPropData();
+  const dt=stepDataType(step);
+  const selections={};
+  picker.querySelectorAll('.vp-sel').forEach(sel=>{
+    selections[sel.dataset.vpkey]=sel.value;
+  });
+  let bestMatch=null;let bestScore=-1;
+  data.parsed.forEach(p=>{
+    let score=0;
+    for(const key in selections){if(p.props[key]===selections[key])score++}
+    if(score>bestScore){bestScore=score;bestMatch=p}
+  });
+  if(!bestMatch)return;
+  const existing=S.variantOverrides[dt]||[];
+  if(existing.includes(bestMatch.name)){st('Essa exceção já existe');return}
+  // Create override for this step's data type only
+  post({type:'create-variant-override',variantName:bestMatch.name,dataType:dt});
+  // Optimistically update local state
+  if(!S.variantOverrides[dt])S.variantOverrides[dt]=[];
+  S.variantOverrides[dt].push(bestMatch.name);
+  renderExcBar(step);
+  // Auto-switch to editing it
+  editExc(bestMatch.name,step);
+  st('Exceção adicionada: '+bestMatch.name);
+}
+
+function editExc(variantName,step){
+  S.editingException=variantName;
+  const v=S.variants.find(v=>v.name===variantName);
+  if(v){
+    S.selectedVariant=v.id;
+    S.currentVariantName=v.name;
+    post({type:'switch-variant',variantId:v.id});
+  }
+  renderExcBar(step);
+  reloadStepData(step);
+  st('Editando exceção: '+variantName);
+}
+
+function rmExc(variantName,step){
+  const dt=stepDataType(step);
+  post({type:'remove-variant-override',variantName,dataType:dt});
+  // Optimistically update local state
+  S.variantOverrides[dt]=(S.variantOverrides[dt]||[]).filter(vn=>vn!==variantName);
+  // If we were editing this exception, go back to default
+  if(S.editingException===variantName){
+    S.editingException=null;
+    if(S.variants.length>0){
+      S.selectedVariant=S.variants[0].id;
+      S.currentVariantName=S.variants[0].name;
+      post({type:'switch-variant',variantId:S.selectedVariant});
+    }
+    reloadStepData(step);
+  }
+  renderExcBar(step);
+  st('Exceção removida');
+}
+
+function onVarSwitch(step){
+  const sel=$('var-sw-sel-'+step);
+  const variantName=sel.value;
+  if(variantName){
+    S.editingException=variantName;
+    const v=S.variants.find(v=>v.name===variantName);
+    if(v){
+      S.selectedVariant=v.id;
+      S.currentVariantName=v.name;
+      post({type:'switch-variant',variantId:v.id});
+    }
+  } else {
+    S.editingException=null;
+    if(S.variants.length>0){
+      S.selectedVariant=S.variants[0].id;
+      S.currentVariantName=S.variants[0].name;
+      post({type:'switch-variant',variantId:S.selectedVariant});
+    }
+  }
+  renderExcBar(step);
+  reloadStepData(step);
+  st(variantName?'Editando exceção: '+variantName:'Editando padrão');
+}
+
+function reloadStepData(step){
+  const vn=currentVariantName();
+  post({type:'generate-preview'});
+  if(step===2){
+    post({type:'get-all-layer-annotations',variantName:vn});
+    S.selLayer=null;
+    $('rpEdit').innerHTML='<span style="color:#999">Clique em um elemento no preview</span>';
+  }
+  if(step===3)post({type:'get-touch-areas',variantName:vn});
+  if(step===4)post({type:'get-focus-order',variantName:vn});
+}
+
+function addTouchForLayer(layerId){
+  const layer=S.allLayers.find(l=>l.id===layerId);
+  if(!layer)return;
+  // Check if this layer already has a touch area (avoid duplicates)
+  const exists=S.touchAreas.some(a=>{
+    const cx=a.x+a.w/2,cy=a.y+a.h/2;
+    const lx=layer.x+layer.width/2,ly=layer.y+layer.height/2;
+    return Math.abs(cx-lx)<2&&Math.abs(cy-ly)<2;
+  });
+  if(exists){st('Esse elemento já tem uma área de toque');return}
+  const targetH=parseInt(S.touchSize);
+  const targetW=Math.max(layer.width,targetH);
+  const h=Math.max(layer.height,targetH);
+  const w=targetW;
+  const x=layer.x-(w-layer.width)/2;
+  const y=layer.y-(h-layer.height)/2;
+  S.touchAreas.push({x,y,w,h});
+  saveTouchAreas();renderTouchList();renderZones(3);
+  st('Área de toque adicionada: '+Math.round(w)+'×'+Math.round(h)+'px');
+}
+
 function renderTouchList(){
   const c=$('tlist');if(!c)return;
-  if(S.touchAreas.length===0){c.innerHTML='<div style="color:#999;font-size:10px;text-align:center;padding:8px">Arraste no preview acima para desenhar</div>';return}
+  if(S.touchAreas.length===0){c.innerHTML='<div style="color:#999;font-size:10px;text-align:center;padding:8px">Nenhuma área de toque definida</div>';return}
   let h='';
   S.touchAreas.forEach((a,i)=>{
     const w=Math.round(a.w),ht=Math.round(a.h),mn=Math.min(w,ht);
     let cls='ok',txt='Aprimorado (2.5.5)';
     if(mn<24){cls='bad';txt='Insuficiente (<24px)'}
     else if(mn<44){cls='warn';txt='Mínimo (2.5.8)'}
-    const sel=S.selectedArea===i?'border:2px solid #d4907a':'';
+    const sel=S.selectedArea===i?'border:2px solid #FFB19E':'';
     h+=`<div class="touch-meter ${cls}" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;cursor:pointer;${sel}" onclick="selectArea(${i})">
       <span>${w} × ${ht}px — ${txt}</span>
       <button style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:14px" onclick="event.stopPropagation();rmTouch(${i})" title="Remover">×</button>
@@ -503,6 +1097,7 @@ function selectArea(idx){
 function startDraw(e){
   S.drawing=true;
   const pw=$('pw3');const rect=pw.getBoundingClientRect();
+  const PAD=60; // must match CSS padding
   S.drawStart={x:e.clientX-rect.left,y:e.clientY-rect.top};
   const dv=document.createElement('div');dv.className='draw-rect';dv.id='drawrect';
   dv.style.left=S.drawStart.x+'px';dv.style.top=S.drawStart.y+'px';
@@ -530,7 +1125,8 @@ function startDraw(e){
     const cr=pw.getBoundingClientRect();
     const cx=ev.clientX-cr.left,cy=ev.clientY-cr.top;
     const sc=pw.querySelector('img').clientWidth/S.preview.width;
-    const rx=Math.min(S.drawStart.x,cx)/sc,ry=Math.min(S.drawStart.y,cy)/sc;
+    // Subtract padding to get real Figma coords
+    const rx=(Math.min(S.drawStart.x,cx)-PAD)/sc,ry=(Math.min(S.drawStart.y,cy)-PAD)/sc;
     const rw=Math.abs(cx-S.drawStart.x)/sc,rh=Math.abs(cy-S.drawStart.y)/sc;
     if(rw>2&&rh>2){
       S.touchAreas.push({x:rx,y:ry,w:rw,h:rh});
@@ -558,7 +1154,7 @@ function startMove(e,idx){
   const orig={...S.touchAreas[idx]};
   const mmv=ev=>{
     const dx=(ev.clientX-startX)/sc,dy=(ev.clientY-startY)/sc;
-    S.touchAreas[idx].x=orig.x+dx;S.touchAreas[idx].y=orig.y+dy;
+    S.touchAreas[idx]={...S.touchAreas[idx],x:orig.x+dx,y:orig.y+dy};
     renderZones(3);
   };
   const mup=()=>{
@@ -593,12 +1189,15 @@ function startResize(e,idx,corner){
   document.addEventListener('mouseup',mup);
 }
 function clearAllTouch(){
-  S.touchAreas=[];
+  S.touchAreas=[];S.selectedArea=-1;
   saveTouchAreas();renderTouchList();renderZones(3);
 }
 function saveTouchAreas(){
   const areas=S.touchAreas.map(a=>({x:a.x,y:a.y,width:a.w,height:a.h}));
-  post({type:'save-touch-areas',areas});st('Áreas salvas');
+  const applyToAll=!S.editingException;
+  post({type:'save-touch-areas',areas,variantName:currentVariantName(),applyToAll});
+  if(S.variants.length>1)post({type:'get-variant-overrides'});
+  st('Áreas salvas');
 }
 
 // ═══════════════ STEP 4: FOCUS ═══════════════
@@ -638,7 +1237,10 @@ function clearFocus(){S.focusOrder=[];renderFocusList();renderZones(4);saveFocus
 
 function saveFocusOrder(){
   const entries=S.focusOrder.map(e=>({nodeId:e.nodeId,order:e.order,category:e.category}));
-  post({type:'set-focus-order',entries});st('Foco salvo');
+  const applyToAll=!S.editingException;
+  post({type:'set-focus-order',entries,variantName:currentVariantName(),applyToAll});
+  if(S.variants.length>1)post({type:'get-variant-overrides'});
+  st('Foco salvo');
 }
 
 // ═══════════════ STEP 5: HANDOFF ═══════════════
@@ -650,7 +1252,7 @@ function onConn(m){
 function doHandoff(){
   st('Gerando handoff...');
   const el=$('hres');el.style.display='block';el.className='hstatus info';el.textContent='Gerando handoff, aguarde...';
-  post({type:'generate-handoff'});
+  post({type:'generate-handoff',selectedVariantIds:S.selectedVariants});
 }
 function onProgress(m){st(m.text);const el=$('hres');if(el&&el.style.display==='block'){el.textContent=m.text}}
 function onHandoff(m){
