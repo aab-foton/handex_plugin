@@ -399,8 +399,6 @@ async function migrateToUnifiedAnnotations(): Promise<void> {
     return;
   }
 
-  console.log('[MIGRATION] Migrando para anotações unificadas...');
-
   const variantNames = root.type === 'COMPONENT_SET' 
     ? (root as ComponentSetNode).children.filter(c => c.type === 'COMPONENT').map(c => c.name) 
     : [];
@@ -472,12 +470,10 @@ async function migrateToUnifiedAnnotations(): Promise<void> {
       // Ordena por order (timestamp) para garantir consistência
       unified.sort((a, b) => a.order - b.order);
       saveUnifiedAnnotations(root as SceneNode, unified, scope);
-      console.log(`[MIGRATION] Escopo "${scope || 'shared'}": ${unified.length} entradas convertidas.`);
     }
   }
 
   root.setPluginData(KEY_DATA_VERSION, '2');
-  console.log('[MIGRATION] Migração concluída.');
 }
 
 /**
@@ -1053,8 +1049,6 @@ function isDataRow(frame: SceneNode): frame is FrameNode {
  * Retorna contagens {kb, gesture, roles}.
  */
 function parseCsvFromNode(pluginDataFrame: FrameNode | InstanceNode | ComponentNode): { kb: number; gesture: number; roles: number } {
-  console.log('[CSV Template] Frame "plugin data" encontrado. Filhos:', pluginDataFrame.children.map(c => `${c.type} "${c.name}"`).join(', '));
-
   // ── Mapeamento de Teclado e Gestos ──
   type ChildFrame = FrameNode | InstanceNode | ComponentNode;
   let kbGestureFrame: ChildFrame | null = null;
@@ -1075,8 +1069,6 @@ function parseCsvFromNode(pluginDataFrame: FrameNode | InstanceNode | ComponentN
     const kb: { keys: string; action: string }[] = [];
     const gesture: { gesture: string; action: string }[] = [];
     let isFirstDataRow = true;
-
-    console.log('[CSV Template] Tabela Teclado/Gestos encontrada. Filhos:', kbGestureFrame.children.map(c => `${c.type} "${c.name}"`).join(', '));
 
     for (const row of kbGestureFrame.children) {
       if (!isDataRow(row)) continue;
@@ -1107,9 +1099,7 @@ function parseCsvFromNode(pluginDataFrame: FrameNode | InstanceNode | ComponentN
 
     cachedKbData = kb;
     cachedGestureData = gesture;
-    console.log(`[CSV Template] Carregados: ${kb.length} teclado, ${gesture.length} gestos`);
   } else {
-    console.log('[CSV Template] Tabela de Teclado/Gestos não encontrada.');
     cachedKbData = [];
     cachedGestureData = [];
   }
@@ -1120,12 +1110,9 @@ function parseCsvFromNode(pluginDataFrame: FrameNode | InstanceNode | ComponentN
     let isFirstDataRow = true;
     let headerCols: string[] = [];
 
-    console.log('[CSV Template] Tabela Roles encontrada. Filhos:', rolesFrame.children.map(c => `${c.type} "${c.name}"`).join(', '));
-
     for (const row of rolesFrame.children) {
       if (!isDataRow(row)) continue;
       const cells = getTextChildren(row as FrameNode);
-      console.log(`[CSV Template] Roles row "${(row as FrameNode).name}": [${cells.map(c => `"${c}"`).join(', ')}]`);
       if (cells.length < 2) continue;
 
       // Detecta header
@@ -1133,7 +1120,6 @@ function parseCsvFromNode(pluginDataFrame: FrameNode | InstanceNode | ComponentN
         const first = cells[0].toLowerCase();
         if (first.includes('nome') || first.includes('role')) {
           headerCols = cells.map(c => c.toLowerCase());
-          console.log('[CSV Template] Header detectado:', headerCols);
           isFirstDataRow = false;
           continue;
         }
@@ -1163,9 +1149,7 @@ function parseCsvFromNode(pluginDataFrame: FrameNode | InstanceNode | ComponentN
     }
 
     cachedRolesData = entries;
-    console.log(`[CSV Template] Carregados: ${entries.length} roles`);
   } else {
-    console.log('[CSV Template] Tabela de Roles não encontrada.');
     cachedRolesData = [];
   }
 
@@ -1188,9 +1172,6 @@ function findPluginDataFrame(parent: FrameNode | InstanceNode | ComponentNode): 
   return (parent as unknown as ChildrenMixin).findOne(isPluginData) as (FrameNode | InstanceNode | ComponentNode) | null;
 }
 
-/**
- * Carrega dados CSV do template selecionado (instância local).
- */
 /**
  * Persiste a associação template→componente no plugin data do componente.
  * Chamada sempre que ambos templateNodeId e currentRootId estão definidos.
@@ -1233,11 +1214,7 @@ async function loadCsvFromTemplate(tplNodeId: string): Promise<void> {
   if (!tplNode || !('children' in tplNode)) return;
 
   const pluginDataFrame = findPluginDataFrame(tplNode as FrameNode);
-  if (!pluginDataFrame) {
-    console.log('[CSV Template] Frame "plugin data" não encontrado no template.');
-    console.log('[CSV Template] Filhos do template:', (tplNode as FrameNode).children.map(c => `${c.type} "${c.name}"`).join(', '));
-    return;
-  }
+  if (!pluginDataFrame) return;
 
   parseCsvFromNode(pluginDataFrame);
 }
@@ -3264,9 +3241,6 @@ async function generateHandoff(selectedVariantIds: string[] = []): Promise<void>
     perVariantTouch.push({ variantName: '', touchAreas: readTouchAreasRaw(compSourceNode as SceneNode) });
   }
 
-  // Roles únicos para tabelas de teclado/gestos
-  const roles = [...new Set(annotated.map(a => a.data.role).filter(r => r && r !== 'dont-read'))];
-
   sendProgress('Carregando fontes...');
   await Promise.all([
     figma.loadFontAsync({ family: 'Inter', style: 'Bold' }),
@@ -3499,7 +3473,6 @@ async function generateHandoff(selectedVariantIds: string[] = []): Promise<void>
     });
     for (let i = 0; i < annotated.length; i++) {
       const { node: ln, data: d } = annotated[i];
-      const color = CAT_COLORS[d.category] || CAT_COLORS['outros'];
       const label = labels[i];
 
       if (d.category === 'decorativo') {
@@ -5309,9 +5282,6 @@ async function updateHandoffFromTemplate(compNodeId: string, tplNodeId: string, 
       for (const child of [...(oldSection as FrameNode).children]) child.remove();
     }
 
-    // Extract texts from FRESH template (these are the defaults — not user-edited)
-    const textosTemplate = extrairTextosSecao(freshSection);
-
     // Replace: insert fresh at same position, remove empty old
     const idx = existing.children.indexOf(oldSection as SceneNode);
     existing.insertChild(idx, freshSection);
@@ -5378,8 +5348,6 @@ async function updateHandoffFromTemplate(compNodeId: string, tplNodeId: string, 
   }
 
   if (newSections.length > 0) {
-    console.log(`[HANDOFF-UPDATE] Novas seções detectadas no template: ${newSections.join(', ')}`);
-
     for (const newSecName of newSections) {
       sendProgress(`Adicionando nova seção: ${newSecName}...`);
       const freshSection = await getTemplateSectionFresh(tplKey, newSecName, tplNodeId);
