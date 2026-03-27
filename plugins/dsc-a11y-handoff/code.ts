@@ -1359,6 +1359,10 @@ async function handleSelectionChange(): Promise<void> {
             workingNodeId = sourceNode.id;
           }
         }
+      } else if (node.id !== templateNodeId) {
+        // Template puro diferente do atual → limpar root para não reutilizar dados antigos
+        currentRootId = null;
+        workingNodeId = null;
       }
 
       templateNodeId = node.id;
