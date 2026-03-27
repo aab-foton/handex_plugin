@@ -2577,22 +2577,6 @@ async function setFocusOrder(entries: FocusOrderEntry[], variantName?: string, a
         if (node) namePath = buildNamePath(node, targetId!);
       }
     }
-    // O namePath pode incluir o nome do próprio targetNode como primeiro segmento quando a instância
-    // mais externa no canvas não é reconhecida como o root (ex: instâncias de biblioteca).
-    // Nesse caso, tirar o prefixo antes de validar.
-    if (namePath && targetNode) {
-      const rootName = (targetNode as SceneNode).name;
-      if (namePath === rootName) {
-        namePath = '';
-      } else if (namePath.startsWith(rootName + '/')) {
-        namePath = namePath.slice(rootName.length + 1);
-      }
-    }
-    // Se o caminho reconstruído é claramente fora do componente (contém nome de página/frame externo),
-    // descarta a entrada — o node não pertence ao componente raiz.
-    const found = namePath && targetNode ? findNodeByNamePath(targetNode as SceneNode, namePath) : null;
-    const isOutsideComponent = namePath && namePath.includes('/') && targetNode && !found;
-    if (isOutsideComponent) continue;
     stableEntries.push({ ...e, namePath });
   }
   const data = JSON.stringify(stableEntries);
