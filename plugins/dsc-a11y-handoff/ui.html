@@ -1309,12 +1309,14 @@ function onComponentLoading(m){
 }
 function onSel(m){
   console.log('[UI] onSel valid=', m.valid, 'keepStep=', m.keepStep, 'rootId=', m.rootId?.slice(-6));
-  $('loading-component').style.display='none';
-  if(!m.valid){$('empty').style.display='flex';$('main').style.display='none';$('awaiting-component').style.display='none';S.rootId=null;S.templateNodeId=null;$('reloadCsvBtn').disabled=true;$('reloadCsvFeedback').style.display='none';return}
-  $('empty').style.display='none';$('awaiting-component').style.display='none';$('main').style.display='flex';
+  if(!m.valid){
+    $('loading-component').style.display='none';
+    $('empty').style.display='flex';$('main').style.display='none';$('awaiting-component').style.display='none';
+    S.rootId=null;S.templateNodeId=null;$('reloadCsvBtn').disabled=true;$('reloadCsvFeedback').style.display='none';
+    return;
+  }
+  // Atualizar estado imediatamente para outros handlers não ficarem com dados stale
   S.templateNodeId=m.templateNodeId||null;
-  $('reloadCsvBtn').disabled=!S.templateNodeId;
-  $('reloadCsvFeedback').style.display='none';
   S.rootId=m.rootId;S.rootType=m.rootType;_variantPropCache=null;
   const cd=m.componentData||{};
   S.componentData={platform:cd.platform||[],zoom:cd.zoom||[],noTab:cd.noTab||false,noScreenReader:cd.noScreenReader||false,noTouch:cd.noTouch||false,kbMapping:cd.kbMapping||[],gestureMapping:cd.gestureMapping||[]};
@@ -1323,28 +1325,30 @@ function onSel(m){
   S.propertyDefs=m.propertyDefs||{};
   _variantConfigFormOpen=null;
   S.selectedVariants=m.selectedVariantIds||S.variants.map(v=>v.id);
-  // If an instance was selected, start on its variant; otherwise use first selected
   const initVarId=m.initialVariantId;
-  if(initVarId&&S.variants.some(v=>v.id===initVarId)){
-    S.selectedVariant=initVarId;
-  } else {
-    S.selectedVariant=S.selectedVariants.length>0?S.selectedVariants[0]:(S.variants.length>0?S.variants[0].id:null);
-  }
-  // Initialize variant name
+  if(initVarId&&S.variants.some(v=>v.id===initVarId)){S.selectedVariant=initVarId;}
+  else{S.selectedVariant=S.selectedVariants.length>0?S.selectedVariants[0]:(S.variants.length>0?S.variants[0].id:null);}
   if(S.selectedVariant){const v=S.variants.find(v=>v.id===S.selectedVariant);S.currentVariantName=v?v.name:'';}else{S.currentVariantName='';}
-  // Restore persisted exc names
   if(m.exceptionCustomNames){exceptionCustomNames.roles=m.exceptionCustomNames.roles||{};exceptionCustomNames.touch=m.exceptionCustomNames.touch||{};exceptionCustomNames.focus=m.exceptionCustomNames.focus||{};}
   else{exceptionCustomNames.roles={};exceptionCustomNames.touch={};exceptionCustomNames.focus={};}
-  // Set handoff exists state immediately from selection data
   S.handoffExists=!!m.handoffExists;
-  const btn=$('btn-handoff');
-  if(btn)btn.textContent=S.handoffExists?'Atualizar Handoff':'Gerar Handoff';
-  const secPanel=$('update-sections-settings');
-  if(secPanel)secPanel.style.display=S.handoffExists?'':'none';
-  post({type:'get-roles-csv'});
-  renderS1();applyNoScreenReader();applyNoTouch();applyNoTab();
-  // Se keepStep=true, manter o step atual (atualização de root sem resetar a aba)
-  if(!m.keepStep){go(1);}
+  // Capturar keepStep antes do RAF (closure)
+  const keepStep=m.keepStep;
+  // Diferir a transição visual para garantir que o browser pinte o loading antes de mostrar main.
+  // onComponentLoading e onSel chegam no mesmo tick de JS — sem RAF o loading nunca é pintado.
+  requestAnimationFrame(()=>{
+    $('loading-component').style.display='none';
+    $('empty').style.display='none';$('awaiting-component').style.display='none';$('main').style.display='flex';
+    $('reloadCsvBtn').disabled=!S.templateNodeId;
+    $('reloadCsvFeedback').style.display='none';
+    const btn=$('btn-handoff');
+    if(btn)btn.textContent=S.handoffExists?'Atualizar Handoff':'Gerar Handoff';
+    const secPanel=$('update-sections-settings');
+    if(secPanel)secPanel.style.display=S.handoffExists?'':'none';
+    post({type:'get-roles-csv'});
+    renderS1();applyNoScreenReader();applyNoTouch();applyNoTab();
+    if(!keepStep){go(1);}
+  });
 }
 
 /**
