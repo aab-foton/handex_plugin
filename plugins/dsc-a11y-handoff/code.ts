@@ -2461,21 +2461,30 @@ function collectAllNodes(node: SceneNode): { nodeId: string; name: string; node:
  * @param variantName - Nome da variante (opcional)
  */
 async function getFocusOrder(variantName?: string): Promise<void> {
+  const t0 = Date.now();
   const targetId = workingNodeId || currentRootId;
   if (!targetId || !currentRootId) {
     figma.ui.postMessage({ type: 'focus-order-data', entries: [], annotatedNodes: [], scope: 'all' });
     return;
   }
+
   const rootNode = await figma.getNodeByIdAsync(targetId);
+  console.log(`[FOCUS-PERF] getNodeByIdAsync(target): ${Date.now() - t0}ms`);
   if (!rootNode || !('getPluginData' in rootNode)) {
     figma.ui.postMessage({ type: 'focus-order-data', entries: [], annotatedNodes: [], scope: 'all' });
     return;
   }
 
   const root = rootNode as SceneNode;
-  const annotated = collectAnnotatedNodes(root);
 
+  const t1 = Date.now();
+  const annotated = collectAnnotatedNodes(root);
+  console.log(`[FOCUS-PERF] collectAnnotatedNodes: ${Date.now() - t1}ms (${annotated.length} nodes)`);
+
+  const t2 = Date.now();
   const origNode = await figma.getNodeByIdAsync(currentRootId);
+  console.log(`[FOCUS-PERF] getNodeByIdAsync(orig): ${Date.now() - t2}ms`);
+
   let raw = '';
   let scope: 'all' | 'variant' = 'all';
 
@@ -2493,7 +2502,11 @@ async function getFocusOrder(variantName?: string): Promise<void> {
   const storedEntries = safeParseJson<(FocusOrderEntry & { namePath?: string })[]>(raw, []);
 
   // Build lookup using ALL visible nodes (not just annotated) so focus order entries are preserved
+  const t3 = Date.now();
   const allNodes = collectAllNodes(root);
+  console.log(`[FOCUS-PERF] collectAllNodes: ${Date.now() - t3}ms (${allNodes.length} nodes)`);
+
+  const t4 = Date.now();
   const allNodesByPath = new Map<string, { nodeId: string; name: string }>();
   const allNodeIds = new Set(allNodes.map(n => n.nodeId));
 
@@ -2527,6 +2540,8 @@ async function getFocusOrder(variantName?: string): Promise<void> {
       }
     }
   }
+  console.log(`[FOCUS-PERF] buildNamePath loop: ${Date.now() - t4}ms (${allNodesByPath.size} paths)`);
+
   const nameMap = new Map(allNodes.map(n => [n.nodeId, n.name]));
 
   // Resolve stored entries: prefer namePath (stable), fallback to nodeId (legacy)
@@ -2540,6 +2555,7 @@ async function getFocusOrder(variantName?: string): Promise<void> {
     }
   }
 
+  console.log(`[FOCUS-PERF] total getFocusOrder: ${Date.now() - t0}ms → ${entries.length} entries, scope=${scope}`);
   figma.ui.postMessage({ type: 'focus-order-data', entries, annotatedNodes: annotated, scope });
 }
 

@@ -1558,6 +1558,7 @@ function go(step){
       renderFocusList();renderZones(4);
     } else {
       showStepLoading(4);
+      console.log('[FOCUS-UI] enviando get-focus-order', performance.now().toFixed(0)+'ms');
       post({type:'get-focus-order',variantName:currentVariantName()});
     }
     if(S.variants.length>1)post({type:'get-variant-overrides'});
@@ -4378,12 +4379,18 @@ function saveTouchAreas(){
  * @param m - Mensagem com entries e annotatedNodes
  */
 function onFocusData(m){
+  console.log('[FOCUS-UI] recebeu focus-order-data', performance.now().toFixed(0)+'ms', m.entries?.length+'entries', m.annotatedNodes?.length+'annotated');
   hideStepLoading(4);
   // Ignorar resposta compartilhada chegando depois de já estar em modo variante
   if(m.scope==='all' && S.editingException) return;
   _focusDataLoaded=true;
   S.focusOrder=m.entries||[];S.annotatedNodes=m.annotatedNodes||[];
-  renderFocusList();renderZones(4);
+  const _tRender=performance.now();
+  renderFocusList();
+  console.log('[FOCUS-UI] renderFocusList:', (performance.now()-_tRender).toFixed(0)+'ms');
+  const _tZones=performance.now();
+  renderZones(4);
+  console.log('[FOCUS-UI] renderZones:', (performance.now()-_tZones).toFixed(0)+'ms');
   if(S.step===5)renderHandoffSummary();
 }
 
