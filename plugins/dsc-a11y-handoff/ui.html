@@ -1528,6 +1528,7 @@ function go(step){
   }
   if(step===3){post({type:'get-touch-areas',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcUI(3)}
   if(step===4){
+    _focusDataLoaded=false; // garantir que saveFocusOrder não salve dados vazios enquanto carrega
     if(exceptionViewMode[4]==='list'){
       // Em modo lista (há variantes/configs): limpar e não carregar dados compartilhados.
       // Os dados serão carregados apenas quando o usuário clicar em "Editar" numa variante.
@@ -3999,7 +4000,8 @@ function editCard(variantName,step){
 function backToList(step){
   exceptionViewMode[step]='list';
   exceptionEditingVariant[step]=null;
-  S.editingException=null;
+  // Não zerar S.editingException aqui — switchToDefault() limpa DEPOIS de exitAddModes(),
+  // garantindo que saveFocusOrder/saveTouchAreas usem applyToAll=false (contexto correto).
   switchToDefault();
   renderExcUI(step);
   reloadStepData(step);
@@ -4140,7 +4142,7 @@ function reloadStepData(step){
     $('rpEdit').innerHTML='<span class="touch-instruction">Selecione um layer no canvas do Figma</span>';
   }
   if(step===3)post({type:'get-touch-areas',variantName:vn});
-  if(step===4)post({type:'get-focus-order',variantName:vn});
+  if(step===4){_focusDataLoaded=false;post({type:'get-focus-order',variantName:vn});}
 }
 
 /**
@@ -4504,9 +4506,9 @@ function clearFocus(){S.focusOrder=[];renderFocusList();renderZones(4);saveFocus
 function saveFocusOrder(){
   const entries=S.focusOrder.map(e=>({nodeId:e.nodeId,order:e.order,category:e.category,namePath:e.namePath||''}));
   const applyToAll=!S.editingException;
-  // Não sobrescrever dados de variante com array vazio antes dos dados terem carregado
-  // (race condition: save disparado antes da resposta get-focus-order chegar)
-  if(!applyToAll && entries.length===0 && !_focusDataLoaded) return;
+  // Não sobrescrever dados (default ou variante) com array vazio antes dos dados terem carregado.
+  // Protege tanto o caso de variante (applyToAll=false) quanto o default (applyToAll=true).
+  if(entries.length===0 && !_focusDataLoaded) return;
   post({type:'set-focus-order',entries,variantName:currentVariantName(),applyToAll});
   if(S.variants.length>1)post({type:'get-variant-overrides'});
 }
