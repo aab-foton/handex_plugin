@@ -1517,16 +1517,17 @@ function go(step){
     const stepVcCount=(S.variantConfigs||[]).filter(c=>c.step===step).length;
     exceptionViewMode[step]=(S.variants.length>1||stepVcCount>0)?'list':'editing';
     // Não chamar switchToDefault() (que gera preview) — apenas carregar dados
-    // hideStepLoading imediato — sem preview para esperar
-    hideStepLoading(step);
+    // showStepLoading é chamado antes de cada request assíncrono abaixo;
+    // hideStepLoading é chamado pelos callbacks onUnifiedAnnotations/onTouchData/onFocusData.
   }
   if(step===1){post({type:'get-csv-data'});renderMappings()}
   if(step===2){
+    showStepLoading(2);
     post({type:'get-unified-annotations',variantName:currentVariantName(),excOnly:false});
     if(S.variants.length>1)post({type:'get-variant-overrides'});
     renderExcUI(2);
   }
-  if(step===3){post({type:'get-touch-areas',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcUI(3)}
+  if(step===3){showStepLoading(3);post({type:'get-touch-areas',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcUI(3)}
   if(step===4){
     _focusDataLoaded=false; // garantir que saveFocusOrder não salve dados vazios enquanto carrega
     if(exceptionViewMode[4]==='list'){
@@ -1535,6 +1536,7 @@ function go(step){
       S.focusOrder=[];S.annotatedNodes=[];
       renderFocusList();renderZones(4);
     } else {
+      showStepLoading(4);
       post({type:'get-focus-order',variantName:currentVariantName()});
     }
     if(S.variants.length>1)post({type:'get-variant-overrides'});
@@ -2564,9 +2566,10 @@ function clickAnnotation(namePath){
   if(layer) editAnnotationById(layer.id, namePath);
 }
 
-/** Seleciona um agrupamento para edição — abre o formulário unificado. */
+/** Seleciona um agrupamento para edição — expande o formulário inline na lista. */
 function selectAgrupamento(id){
-  openUnifiedEditForm(id);
+  S.selectedAgrupamento=id;
+  renderRoleList();
 }
 
 /** Salva edição do tipo de agrupamento. */
@@ -2639,26 +2642,6 @@ function onAgrupData(m){
 /** Renderiza a lista de agrupamentos no painel. */
 function renderAgrupList(){
   renderRoleList();
-}
-
-/** Salva edição do tipo de agrupamento. */
-function saveAgrupEdit(id){
-  const entry = S.srEntries.find(e => e.id === id);
-  if(!entry) return;
-  const newTipo = $('agrupEditTipo')?.value || '';
-  if(!newTipo) return;
-  entry.agrupTipo = newTipo;
-  const applyToAll = !S.editingException;
-  post({type:'set-unified-entry', entry, variantName:currentVariantName(), applyToAll});
-  S.selectedAgrupamento = -1;
-  renderRoleList();
-}
-
-/** Fecha o form de edição de agrupamento. */
-function cancelAgrupEdit(){
-  S.selectedAgrupamento=-1;
-  renderRoleList();
-  renderZones(2);
 }
 
 /** Renderiza o seletor de modo de adição (simples, combinado, agrupamento). */
@@ -4137,12 +4120,13 @@ function reloadStepData(step){
   const isExc=!!S.editingException;
   // Não gerar preview — modo canvas
   if(step===2){
+    showStepLoading(2);
     post({type:'get-unified-annotations',variantName:vn,excOnly:isExc});
     S.selectedLayerId=null;
     $('rpEdit').innerHTML='<span class="touch-instruction">Selecione um layer no canvas do Figma</span>';
   }
-  if(step===3)post({type:'get-touch-areas',variantName:vn});
-  if(step===4){_focusDataLoaded=false;post({type:'get-focus-order',variantName:vn});}
+  if(step===3){showStepLoading(3);post({type:'get-touch-areas',variantName:vn});}
+  if(step===4){showStepLoading(4);_focusDataLoaded=false;post({type:'get-focus-order',variantName:vn});}
 }
 
 /**
@@ -4453,7 +4437,9 @@ function commitPendingFocus(){
 /** Ativa o modo de adição de foco — mostra form e guarda snapshot. */
 function enterFocusAddMode(){
   _focusAddMode=true;
-  _pendingFocusItem=null;
+  // Se já há um layer selecionado no canvas, capturá-lo imediatamente
+  // (selectionchange não dispara para seleção já existente)
+  _pendingFocusItem=(_canvasSelectedNode&&_canvasSelectedNode.nodeId)?_canvasSelectedNode:null;
   _focusBeforeAdd=S.focusOrder.map(e=>({...e}));
   const btns=$('s4-footer-buttons');if(btns)btns.style.display='none';
   const form=$('s4-add-form');if(form)form.style.display='';
