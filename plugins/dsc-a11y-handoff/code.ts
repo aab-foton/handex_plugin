@@ -1366,15 +1366,20 @@ async function handleSelectionChange(): Promise<void> {
 
     // Caso A: Template selecionado → inicializar modo escuta
     if (isTemplateName(node) || isHandoffName(node)) {
-      // Se é handoff, resolver para source component
+      const previousRootId = currentRootId;
+
+      // Se é handoff, mostrar loading imediatamente (antes de qualquer await) e resolver source
       if (isHandoffName(node) && node.type === 'FRAME') {
+        // Enviar loading antes do primeiro await para garantir que a UI repinta antes de receber os dados
+        figma.ui.postMessage({ type: 'component-loading', name: node.name.replace(/^\[A11Y Handoff\]\s*/, '') });
+
         const sourceId = node.getPluginData('a11y-source-component-id');
         if (sourceId) {
           const sourceNode = await figma.getNodeByIdAsync(sourceId);
           if (sourceNode) {
             currentRootId = sourceNode.id;
             workingNodeId = sourceNode.id;
-            // Avisar a UI imediatamente — antes de loadCsvFromTemplate e sendComponentData
+            // Atualizar com o nome real do componente
             figma.ui.postMessage({ type: 'component-loading', name: (sourceNode as SceneNode).name });
           }
         }
@@ -1388,13 +1393,14 @@ async function handleSelectionChange(): Promise<void> {
       listeningMode = true;
       await loadCsvFromTemplate(templateNodeId);
 
-      // Se já temos um root (handoff selecionado ou sessão anterior), enviar dados completos
-      // keepStep=true: usuário está re-selecionando o template, não deve resetar a aba atual
+      // keepStep=true apenas quando o mesmo componente é re-selecionado (sem troca de root)
+      // Para componentes diferentes, keepStep=false força go(1) na UI e recarrega os dados do step
+      const isSameRoot = !!currentRootId && currentRootId === previousRootId;
       if (currentRootId) {
         await persistTemplateAssociation();
         const rootNode = await figma.getNodeByIdAsync(currentRootId);
         if (rootNode) {
-          await sendComponentData(rootNode as SceneNode, null, true);
+          await sendComponentData(rootNode as SceneNode, null, isSameRoot);
           return;
         }
       }
