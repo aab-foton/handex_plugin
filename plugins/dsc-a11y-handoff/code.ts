@@ -2442,9 +2442,9 @@ function collectAnnotatedNodes(node: SceneNode): { nodeId: string; name: string;
  * @param node - Nó raiz para busca
  * @returns Lista de nós com seus IDs e nomes
  */
-function collectAllNodes(node: SceneNode): { nodeId: string; name: string }[] {
-  const result: { nodeId: string; name: string }[] = [];
-  result.push({ nodeId: node.id, name: node.name });
+function collectAllNodes(node: SceneNode): { nodeId: string; name: string; node: SceneNode }[] {
+  const result: { nodeId: string; name: string; node: SceneNode }[] = [];
+  result.push({ nodeId: node.id, name: node.name, node });
   if ('children' in node) {
     const parent = node as ChildrenMixin & SceneNode;
     for (let i = 0; i < parent.children.length; i++) {
@@ -2509,23 +2509,20 @@ async function getFocusOrder(variantName?: string): Promise<void> {
   }
 
   for (const a of allNodes) {
-    const node = await figma.getNodeByIdAsync(a.nodeId);
-    if (node) {
-      // Full path relative to targetId
-      const np = buildNamePath(node, targetId!);
-      allNodesByPath.set(np, { nodeId: a.nodeId, name: a.name });
+    // buildNamePath only uses synchronous .name/.id/.parent — no async needed
+    const np = buildNamePath(a.node, targetId!);
+    allNodesByPath.set(np, { nodeId: a.nodeId, name: a.name });
 
-      // Also add "inner" path relative to each COMPONENT child (for COMPONENT_SET roots).
-      // handleCanvasLayerSelection stops at the instance boundary, so it emits paths
-      // like "Button/Text" instead of "state=default/Button/Text".
-      if (subRootIds.size > 0) {
-        let cur: BaseNode | null = node.parent;
-        while (cur && !subRootIds.has(cur.id)) cur = cur.parent;
-        if (cur && subRootIds.has(cur.id)) {
-          const innerPath = buildNamePath(node, cur.id);
-          if (innerPath && !allNodesByPath.has(innerPath)) {
-            allNodesByPath.set(innerPath, { nodeId: a.nodeId, name: a.name });
-          }
+    // Also add "inner" path relative to each COMPONENT child (for COMPONENT_SET roots).
+    // handleCanvasLayerSelection stops at the instance boundary, so it emits paths
+    // like "Button/Text" instead of "state=default/Button/Text".
+    if (subRootIds.size > 0) {
+      let cur: BaseNode | null = a.node.parent;
+      while (cur && !subRootIds.has(cur.id)) cur = cur.parent;
+      if (cur && subRootIds.has(cur.id)) {
+        const innerPath = buildNamePath(a.node, cur.id);
+        if (innerPath && !allNodesByPath.has(innerPath)) {
+          allNodesByPath.set(innerPath, { nodeId: a.nodeId, name: a.name });
         }
       }
     }
