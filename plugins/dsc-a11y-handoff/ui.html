@@ -1299,13 +1299,16 @@ window.onmessage=e=>{const m=e.data.pluginMessage;if(!m)return;({
  */
 /** Mostra tela de loading enquanto o backend lê dados do componente. */
 function onComponentLoading(m){
+  console.log('[UI] onComponentLoading name=', m.name, 'loading-component atual:', $('loading-component').style.display);
   $('empty').style.display='none';
   $('awaiting-component').style.display='none';
   $('main').style.display='none';
   $('loading-component').style.display='flex';
   const nameEl=$('lc-name');if(nameEl)nameEl.textContent=m.name||'Carregando...';
+  console.log('[UI] onComponentLoading → display agora:', $('loading-component').style.display);
 }
 function onSel(m){
+  console.log('[UI] onSel valid=', m.valid, 'keepStep=', m.keepStep, 'rootId=', m.rootId?.slice(-6));
   $('loading-component').style.display='none';
   if(!m.valid){$('empty').style.display='flex';$('main').style.display='none';$('awaiting-component').style.display='none';S.rootId=null;S.templateNodeId=null;$('reloadCsvBtn').disabled=true;$('reloadCsvFeedback').style.display='none';return}
   $('empty').style.display='none';$('awaiting-component').style.display='none';$('main').style.display='flex';

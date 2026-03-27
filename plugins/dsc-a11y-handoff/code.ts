@@ -1345,6 +1345,7 @@ async function reloadCsvFromLibrary(): Promise<{ kb: number; gesture: number; ro
  */
 async function handleSelectionChange(): Promise<void> {
   const selection = figma.currentPage.selection;
+  console.log(`[SEL] handleSelectionChange len=${selection.length}`, selection.map(n => `${n.name}(${n.type})`).join(', '));
 
   // Ignorar seleção da instância temporária (legado)
   if (selection.length === 1 && tempInstanceId && selection[0].id === tempInstanceId) return;
@@ -1367,10 +1368,13 @@ async function handleSelectionChange(): Promise<void> {
     // Caso A: Template selecionado → inicializar modo escuta
     if (isTemplateName(node) || isHandoffName(node)) {
       const previousRootId = currentRootId;
+      console.log(`[SEL] Caso A — isTemplate=${isTemplateName(node)} isHandoff=${isHandoffName(node)} node="${node.name}"`);
 
       // Mostrar loading IMEDIATAMENTE antes de qualquer await — garante que a UI repinta
       // antes de receber os dados finais (evita flash/blank entre seleção e tabs).
-      figma.ui.postMessage({ type: 'component-loading', name: node.name.replace(/^\[A11Y Handoff\]\s*|\[dsc-h\]\s*/gi, '').trim() || node.name });
+      const loadingName = node.name.replace(/^\[A11Y Handoff\]\s*|\[dsc-h\]\s*/gi, '').trim() || node.name;
+      console.log(`[SEL] postMessage component-loading name="${loadingName}"`);
+      figma.ui.postMessage({ type: 'component-loading', name: loadingName });
 
       if (isHandoffName(node) && node.type === 'FRAME') {
         const sourceId = node.getPluginData('a11y-source-component-id');
