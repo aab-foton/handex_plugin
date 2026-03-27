@@ -609,6 +609,17 @@ let listeningMode = false;
 let uiCurrentStep = 1;
 
 // ── Dados CSV carregados do template (camada "plugin data") ──
+// Cache for SR connector component sets — avoids repeated getMainComponentAsync (3+ sec per call)
+let _cachedConnectorCompSet: ComponentSetNode | null = null;
+let _cachedCombingadoCompSet: ComponentSetNode | null = null;
+let _cachedAgrupamentoCompSet: ComponentSetNode | null = null;
+/** Call this when the template changes so component set refs are re-resolved. */
+function invalidateSRComponentSetCache() {
+  _cachedConnectorCompSet = null;
+  _cachedCombingadoCompSet = null;
+  _cachedAgrupamentoCompSet = null;
+}
+
 let cachedKbData: { keys: string; action: string }[] = [];
 let cachedGestureData: { gesture: string; action: string }[] = [];
 let cachedRolesData: {
@@ -4131,8 +4142,13 @@ async function fillTouchAreaSection(targetAreaFrame: FrameNode, data: HandoffDat
     // Switch to absolute positioning
     imageFrame.layoutMode = 'NONE';
     const PAD_X = 64;
+    const PAD_Y = 32;
     const GAP_BETWEEN_VARIANTS = 120;
     const imgW = imageFrame.width;
+
+    // Respect the 'tag' (Preview label) — place component below it
+    const tagNodeTA = imageFrame.children.find(c => c.name === 'tag') as FrameNode | null;
+    const tagBottomTA = tagNodeTA ? tagNodeTA.y + tagNodeTA.height + PAD_Y : PAD_Y;
 
     // Measure component clones
     const cloneInfos: { clone: InstanceNode; pv: TplPerVariantTouch }[] = [];
@@ -4152,9 +4168,12 @@ async function fillTouchAreaSection(targetAreaFrame: FrameNode, data: HandoffDat
       }
     }
 
-    const contentH = Math.max(maxBadgeOverhang, 0) + 28 + maxCloneHeight;
-    const finalHeight = Math.max(contentH + 48, 240);
-    const contentTopOffset = (finalHeight - contentH) / 2 + Math.max(maxBadgeOverhang, 0) + 28;
+    const badgeSpace = Math.max(maxBadgeOverhang, 0) + 28;
+    const contentH = badgeSpace + maxCloneHeight;
+    // Ensure frame is tall enough to fit tag + badge space + component
+    const minFrameH = tagBottomTA + badgeSpace + maxCloneHeight + PAD_Y;
+    const finalHeight = Math.max(contentH + 48, minFrameH, 240);
+    const contentTopOffset = Math.max(tagBottomTA + badgeSpace, (finalHeight - contentH) / 2 + badgeSpace);
 
     // Move protos off-canvas for cloning, remove after use
     if (handoffAreasProto) { handoffAreasProto.x = -99999; handoffAreasProto.y = -99999; }
@@ -4314,8 +4333,13 @@ async function fillFocusOrderSection(focusOrderFrame: FrameNode, data: HandoffDa
 
     foImageFrame.layoutMode = 'NONE';
     const FO_PAD_X = 64;
+    const FO_PAD_Y = 32;
     const FO_GAP = 120;
     const foImgW = foImageFrame.width;
+
+    // Respect the 'tag' (Preview label) — place component below it
+    const tagNodeFO = foImageFrame.children.find(c => c.name === 'tag') as FrameNode | null;
+    const tagBottomFO = tagNodeFO ? tagNodeFO.y + tagNodeFO.height + FO_PAD_Y : FO_PAD_Y;
 
     const foCloneInfos: { clone: InstanceNode; pv: TplPerVariantFocus }[] = [];
     let foMaxCloneHeight = 0;
@@ -4332,8 +4356,10 @@ async function fillFocusOrderSection(focusOrderFrame: FrameNode, data: HandoffDa
     const foItemNumberHeight = (foItemNumberProto && foCloneInfos.length > 1) ? 48 : 0;
     const foContentH = foItemNumberHeight + 28 + foMaxCloneHeight;
     const FO_MIN_HEIGHT = 240;
-    const foFinalHeight = Math.max(foContentH + 48, FO_MIN_HEIGHT);
-    const foContentTopOffset = (foFinalHeight - foContentH) / 2 + foItemNumberHeight + 28;
+    // Ensure frame is tall enough to fit tag + content
+    const foMinFrameH = tagBottomFO + foContentH + FO_PAD_Y;
+    const foFinalHeight = Math.max(foContentH + 48, foMinFrameH, FO_MIN_HEIGHT);
+    const foContentTopOffset = Math.max(tagBottomFO + foItemNumberHeight + 28, (foFinalHeight - foContentH) / 2 + foItemNumberHeight + 28);
 
     let foCursorX = FO_PAD_X;
 
@@ -4522,8 +4548,12 @@ function connectorTypeToCategory(connType: string): string {
  */
 async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): Promise<void> {
   const { tplPerVariantUnified, compData, compSourceNode } = data;
-  
+  const _t0 = Date.now();
+  const _log = (msg: string) => console.log(`[SR] ${Date.now() - _t0}ms | ${msg}`);
+
   if (compData.noScreenReader || tplPerVariantUnified.length === 0) return;
+
+  _log(`início — ${tplPerVariantUnified.length} variante(s), ${tplPerVariantUnified.reduce((s, b) => s + b.entries.length, 0)} entries`);
 
   const imageFrame = srFrame.findOne(n => n.name === 'image') as FrameNode | null;
   let compClone: InstanceNode | null = null;
@@ -4534,42 +4564,52 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
     const PAD = 64;
     const CONN_MARGIN = 8;
 
-    // Extract connector/combinado/agrupamento component sets from template placeholders
-    let connectorCompSet: ComponentSetNode | null = null;
-    let combinadoCompSet: ComponentSetNode | null = null;
-    let agrupamentoCompSet: ComponentSetNode | null = null;
-    for (const child of imageFrame.children) {
-      if (child.type !== 'INSTANCE') continue;
-      const mc = await (child as InstanceNode).getMainComponentAsync();
-      if (!mc || mc.parent?.type !== 'COMPONENT_SET') continue;
-      const cs = mc.parent as ComponentSetNode;
-      const csName = cs.name.toLowerCase();
-      if (!combinadoCompSet && csName.includes('combinad')) { combinadoCompSet = cs; }
-      else if (!agrupamentoCompSet && csName.includes('agrupament')) { agrupamentoCompSet = cs; }
-      else if (!connectorCompSet && csName.includes('conect')) { connectorCompSet = cs; }
-    }
+    // Extract connector/combinado/agrupamento component sets — use module-level cache to avoid
+    // repeated getMainComponentAsync calls (each takes ~1s with external libraries)
+    let connectorCompSet: ComponentSetNode | null = _cachedConnectorCompSet;
+    let combinadoCompSet: ComponentSetNode | null = _cachedCombingadoCompSet;
+    let agrupamentoCompSet: ComponentSetNode | null = _cachedAgrupamentoCompSet;
 
-    // Fallback: scan current page for component sets not found in template placeholders
-    if (!connectorCompSet) {
-      const connInst = figma.currentPage.findOne((n: SceneNode) => n.type === 'INSTANCE' && n.name.toLowerCase().includes('[a11y] conect')) as InstanceNode | null;
-      if (connInst) {
-        const mc = await connInst.getMainComponentAsync();
-        if (mc?.parent?.type === 'COMPONENT_SET') connectorCompSet = mc.parent as ComponentSetNode;
+    const needsResolution = !connectorCompSet || connectorCompSet.removed ||
+                            !combinadoCompSet || combinadoCompSet.removed ||
+                            !agrupamentoCompSet || agrupamentoCompSet.removed;
+
+    if (needsResolution) {
+      _log('buscando component sets do template...');
+      const imageInstances = imageFrame.children.filter(c => c.type === 'INSTANCE') as InstanceNode[];
+      const mainComponents = await Promise.all(imageInstances.map(c => c.getMainComponentAsync()));
+      for (let i = 0; i < imageInstances.length; i++) {
+        const mc = mainComponents[i];
+        if (!mc || mc.parent?.type !== 'COMPONENT_SET') continue;
+        const cs = mc.parent as ComponentSetNode;
+        const csName = cs.name.toLowerCase();
+        if (!combinadoCompSet && csName.includes('combinad')) { combinadoCompSet = cs; }
+        else if (!agrupamentoCompSet && csName.includes('agrupament')) { agrupamentoCompSet = cs; }
+        else if (!connectorCompSet && csName.includes('conect')) { connectorCompSet = cs; }
       }
-    }
-    if (!agrupamentoCompSet) {
-      const agrupInst = figma.currentPage.findOne((n: SceneNode) => n.type === 'INSTANCE' && n.name.toLowerCase().includes('agrupament')) as InstanceNode | null;
-      if (agrupInst) {
-        const mc = await agrupInst.getMainComponentAsync();
-        if (mc?.parent?.type === 'COMPONENT_SET') agrupamentoCompSet = mc.parent as ComponentSetNode;
+
+      // Fallback: scan current page for component sets not found in template placeholders
+      const fallbacks: Promise<void>[] = [];
+      if (!connectorCompSet) {
+        const connInst = figma.currentPage.findOne((n: SceneNode) => n.type === 'INSTANCE' && n.name.toLowerCase().includes('[a11y] conect')) as InstanceNode | null;
+        if (connInst) fallbacks.push(connInst.getMainComponentAsync().then(mc => { if (mc?.parent?.type === 'COMPONENT_SET') connectorCompSet = mc.parent as ComponentSetNode; }));
       }
-    }
-    if (!combinadoCompSet) {
-      const combInst = figma.currentPage.findOne((n: SceneNode) => n.type === 'INSTANCE' && n.name.toLowerCase().includes('[a11y] combinad')) as InstanceNode | null;
-      if (combInst) {
-        const mc = await combInst.getMainComponentAsync();
-        if (mc?.parent?.type === 'COMPONENT_SET') combinadoCompSet = mc.parent as ComponentSetNode;
+      if (!agrupamentoCompSet) {
+        const agrupInst = figma.currentPage.findOne((n: SceneNode) => n.type === 'INSTANCE' && n.name.toLowerCase().includes('agrupament')) as InstanceNode | null;
+        if (agrupInst) fallbacks.push(agrupInst.getMainComponentAsync().then(mc => { if (mc?.parent?.type === 'COMPONENT_SET') agrupamentoCompSet = mc.parent as ComponentSetNode; }));
       }
+      if (!combinadoCompSet) {
+        const combInst = figma.currentPage.findOne((n: SceneNode) => n.type === 'INSTANCE' && n.name.toLowerCase().includes('[a11y] combinad')) as InstanceNode | null;
+        if (combInst) fallbacks.push(combInst.getMainComponentAsync().then(mc => { if (mc?.parent?.type === 'COMPONENT_SET') combinadoCompSet = mc.parent as ComponentSetNode; }));
+      }
+      if (fallbacks.length) await Promise.all(fallbacks);
+
+      // Persist to module cache for next call
+      _cachedConnectorCompSet = connectorCompSet;
+      _cachedCombingadoCompSet = combinadoCompSet;
+      _cachedAgrupamentoCompSet = agrupamentoCompSet;
+    } else {
+      _log('component sets restaurados do cache');
     }
 
     const itemNumberProto = imageFrame.findOne(n => n.type === 'INSTANCE' && (n as InstanceNode).name === '[dsc-h] Item Number') as InstanceNode | null;
@@ -4593,17 +4633,19 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
     const GAP_BETWEEN_VARIANTS = 120;
     const CONNECTOR_MARGIN = 120;
 
-    let totalComponentsWidth = 0;
-    for (const block of tplPerVariantUnified) {
-      if (block.component) {
-        const tempInst = block.component.createInstance();
-        if (block.variantProperties && Object.keys(block.variantProperties).length > 0) {
-          try { tempInst.setProperties(block.variantProperties); } catch (_e) { /* ignore */ }
-        }
-        totalComponentsWidth += tempInst.width;
-        tempInst.remove();
+    _log(`component sets: conector=${!!connectorCompSet} agrupamento=${!!agrupamentoCompSet} combinado=${!!combinadoCompSet}`);
+
+    // Create instances once and reuse them in the main loop (avoids create→remove→create cycle)
+    _log('criando instâncias dos blocos...');
+    const blockInstances: (InstanceNode | null)[] = tplPerVariantUnified.map(block => {
+      if (!block.component) return null;
+      const inst = block.component.createInstance();
+      if (block.variantProperties && Object.keys(block.variantProperties).length > 0) {
+        try { inst.setProperties(block.variantProperties); } catch (_e) { /* ignore */ }
       }
-    }
+      return inst;
+    });
+    let totalComponentsWidth = blockInstances.reduce((sum, inst) => sum + (inst?.width ?? 0), 0);
     totalComponentsWidth += (tplPerVariantUnified.length - 1) * GAP_BETWEEN_VARIANTS;
 
     const availableMargin = (imageFrame.width - totalComponentsWidth) / 2;
@@ -4614,13 +4656,29 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
     let globalLetterIdx = 0;
     const multiVariant = tplPerVariantUnified.length > 1;
 
-    for (const block of tplPerVariantUnified) {
-      if (!block.component) continue;
-      if (multiVariant) globalLetterIdx = 0;
-      compClone = block.component.createInstance();
-      if (block.variantProperties && Object.keys(block.variantProperties).length > 0) {
-        try { compClone.setProperties(block.variantProperties); } catch (_e) { /* ignore */ }
+    _log('pré-computando dimensões dos conectores...');
+    // Pre-compute connector dimensions per edge (avoids 4x setProperties per entry)
+    const connDimsPorEdge: Record<string, { w: number; h: number }> = {};
+    if (connectorCompSet) {
+      const probeVariant = (connectorCompSet.children[0] as ComponentNode | null);
+      if (probeVariant) {
+        const probeInst = probeVariant.createInstance();
+        imageFrame.appendChild(probeInst);
+        for (const [edge, dir] of Object.entries(edgeToDirMap)) {
+          try { probeInst.setProperties({ 'conector': dir }); } catch (_) {}
+          connDimsPorEdge[edge] = { w: probeInst.width, h: probeInst.height };
+        }
+        probeInst.remove();
       }
+    }
+
+    for (let blockIdx = 0; blockIdx < tplPerVariantUnified.length; blockIdx++) {
+      const block = tplPerVariantUnified[blockIdx];
+      if (!block.component) continue;
+      _log(`▶ bloco ${blockIdx + 1}/${tplPerVariantUnified.length} "${block.displayName || 'default'}" — ${block.entries.length} entries`);
+      const _tBlock = Date.now();
+      if (multiVariant) globalLetterIdx = 0;
+      compClone = blockInstances[blockIdx]!;
       compClone.x = cursorX; compClone.y = COMP_Y;
       imageFrame.appendChild(compClone);
 
@@ -4633,7 +4691,9 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
         ocupados.push({ x: marker.x, y: marker.y, w: marker.width, h: marker.height });
       }
 
+      let _entryIdx = 0;
       for (const entry of block.entries) {
+        const _tEntry = Date.now(); void _tEntry;
         if (entry.type === 'agrupamento' && entry.rect) {
           let agrupInst: InstanceNode | null = null;
           if (agrupamentoCompSet) {
@@ -4714,11 +4774,15 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
 
         if (instToPlace) {
           imageFrame.appendChild(instToPlace);
-          const dimsPorEdge: Record<string, { w: number; h: number }> = {};
-          for (const [edge, dir] of Object.entries(edgeToDirMap)) {
-            try { instToPlace.setProperties({ 'conector': dir }); } catch (_) {}
-            dimsPorEdge[edge] = { w: instToPlace.width, h: instToPlace.height };
-          }
+          // Use pre-computed connector dimensions; fall back to measuring only for combinado instances
+          const dimsPorEdge: Record<string, { w: number; h: number }> = isCombinado ? (() => {
+            const d2: Record<string, { w: number; h: number }> = {};
+            for (const [edge, dir] of Object.entries(edgeToDirMap)) {
+              try { instToPlace!.setProperties({ 'conector': dir }); } catch (_) {}
+              d2[edge] = { w: instToPlace!.width, h: instToPlace!.height };
+            }
+            return d2;
+          })() : connDimsPorEdge;
           const relElemX = nb.x - cb.x; const relElemY = nb.y - cb.y;
           const elemCX = compClone.x + relElemX + nb.width / 2;
           const elemCY = compClone.y + relElemY + nb.height / 2;
@@ -4770,11 +4834,16 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
             }
           }
         }
+        const _entryMs = Date.now() - _tEntry;
+        if (_entryMs > 50) _log(`  entry ${_entryIdx} tipo=${entry.type} path="${entry.namePath || ''}" — ${_entryMs}ms`);
+        _entryIdx++;
         if (!isDecorativo) globalLetterIdx++;
       }
+      _log(`◀ bloco ${blockIdx + 1} concluído em ${Date.now() - _tBlock}ms`);
       cursorX += compClone.width + GAP_BETWEEN_VARIANTS;
       variantIdx++;
     }
+    _log('seção image concluída');
     if (itemNumberProto) itemNumberProto.remove();
     let maxX = 0, maxY = 0;
     for (const child of imageFrame.children) {
@@ -4789,6 +4858,7 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
   }
 
   // ── Specs: fill annotation list ──
+  _log('iniciando seção specs...');
   const specsFrame = srFrame.findOne(n => n.name === 'specs') as FrameNode | null;
   if (!specsFrame) return;
   const contentFrame = specsFrame.findOne(n => n.name === 'content') as FrameNode | null;
@@ -4837,12 +4907,25 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
   }
 
   if (elementProto) {
+    // Pre-load all fonts used by the proto nodes once — eliminates N×4 serial loadFontAsync calls
+    _log('pré-carregando fontes dos protos...');
+    const protoFonts = new Set<string>();
+    const collectFonts = (node: BaseNode) => {
+      if (node.type === 'TEXT') protoFonts.add(JSON.stringify((node as TextNode).fontName));
+      if ('children' in node) (node as ChildrenMixin).children.forEach(collectFonts);
+    };
+    if (elementProto) collectFonts(elementProto);
+    if (boxProto) collectFonts(boxProto);
+    await Promise.all([...protoFonts].map(f => figma.loadFontAsync(JSON.parse(f) as FontName)));
+    _log(`${protoFonts.size} fontes carregadas`);
+
     if (elementProto) specsFrame.appendChild(elementProto);
     if (boxProto) specsFrame.appendChild(boxProto);
     if (contentFrame) contentFrame.remove();
 
     let variantCounter = 1;
     for (const block of tplPerVariantUnified) {
+      const _tSpecBlock = Date.now();
       const column = figma.createFrame();
       column.name = 'content'; column.layoutMode = 'VERTICAL'; column.primaryAxisSizingMode = 'AUTO'; column.counterAxisSizingMode = 'AUTO'; column.itemSpacing = 16; column.fills = [];
       specsFrame.appendChild(column);
@@ -4895,10 +4978,12 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
           if (!isDecorativo) letterIdx++;
         }
       }
+      _log(`  specs bloco "${block.displayName || 'default'}" — ${Date.now() - _tSpecBlock}ms`);
     }
     elementProto.remove();
     if (boxProto) boxProto.remove();
   }
+  _log(`✓ fillScreenReaderSection concluído em ${Date.now() - _t0}ms`);
 }
 
 /**
@@ -5037,10 +5122,11 @@ function calcularCaminhoNo(no: SceneNode, raiz: SceneNode): string {
  * @param no - Nó raiz da seção
  * @returns Lista de TextNodes encontrados
  */
-function coletarTextosSecao(no: SceneNode): TextNode[] {
+function coletarTextosSecao(no: SceneNode, skipNames?: Set<string>): TextNode[] {
   const textos: TextNode[] = [];
   /** Percorre recursivamente os filhos coletando TextNodes. */
   function percorrer(n: SceneNode) {
+    if (skipNames?.has(n.name)) return; // skip visual-only subtrees (e.g. component preview in 'image')
     if (n.type === 'TEXT') textos.push(n as TextNode);
     if ('children' in n) (n as any).children.forEach(percorrer);
   }
@@ -5053,9 +5139,13 @@ function coletarTextosSecao(no: SceneNode): TextNode[] {
  * @param secao - Nó raiz da seção
  * @returns Mapa de caminho hierárquico para conteúdo textual
  */
+// Frames named 'image' in sections are component preview clones — purely visual,
+// never manually edited. Skipping them avoids traversing thousands of nested nodes.
+const _SKIP_SECTION_FRAMES = new Set(['image']);
+
 function extrairTextosSecao(secao: SceneNode): Map<string, string> {
   const mapa = new Map<string, string>();
-  const textos = coletarTextosSecao(secao);
+  const textos = coletarTextosSecao(secao, _SKIP_SECTION_FRAMES);
   for (const t of textos) {
     const caminho = calcularCaminhoNo(t, secao);
     mapa.set(caminho, t.characters);
@@ -5070,7 +5160,7 @@ function extrairTextosSecao(secao: SceneNode): Map<string, string> {
  */
 async function reinjetarTextosSecao(secao: SceneNode, dados: Map<string, string>): Promise<void> {
   if (dados.size === 0) return;
-  const textos = coletarTextosSecao(secao);
+  const textos = coletarTextosSecao(secao, _SKIP_SECTION_FRAMES);
   for (const t of textos) {
     const caminho = calcularCaminhoNo(t, secao);
     if (dados.has(caminho)) {
@@ -5602,11 +5692,16 @@ async function generateHandoffFromTemplate(compNodeId: string, tplNodeId: string
     catch (e) { console.error('[HANDOFF] fillScreenReaderSection error:', e); }
   }
 
+  const _tPost = Date.now();
+  const _logPost = (msg: string) => console.log(`[HANDOFF] ${Date.now() - _tPost}ms | ${msg}`);
+
+  _logPost('fillZoomSection...');
   sendProgress('Preenchendo zoom...');
   const responsivinessFrame = findByName(detached, 'responsiviness') as FrameNode | null;
   if (responsivinessFrame) await fillZoomSection(responsivinessFrame, data);
 
   // ── Position and finalize ──
+  _logPost('finalizando posição...');
   sendProgress('Finalizando...');
   detached.name = `[A11Y Handoff] ${compSourceNode.name}`;
   if (overridePosition) {
@@ -5647,8 +5742,10 @@ async function generateHandoffFromTemplate(compNodeId: string, tplNodeId: string
   }
 
   // Save auto-generated text baselines for each section (used by update to detect manual edits)
+  _logPost('salvando baselines de texto...');
   const sectionNames = ['title', 'mapping', 'target area', 'focus order', 'screen reader', 'responsiviness'];
   for (const secName of sectionNames) {
+    const _tSec = Date.now();
     const secFrame = findByName(detached, secName) as FrameNode | null;
     if (secFrame) {
       const autoTexts = extrairTextosSecao(secFrame);
@@ -5656,11 +5753,16 @@ async function generateHandoffFromTemplate(compNodeId: string, tplNodeId: string
       autoTexts.forEach((v, k) => { obj[k] = v; });
       compSourceNode.setPluginData(`a11y-auto-texts::${secName}`, JSON.stringify(obj));
     }
+    _logPost(`  baseline "${secName}" — ${Date.now() - _tSec}ms`);
   }
 
+  _logPost('publishSharedA11yData...');
   await publishSharedA11yData();
+  _logPost('cleanupTempInstance...');
   await cleanupTempInstance();
+  _logPost('scrollAndZoom...');
   figma.viewport.scrollAndZoomIntoView([detached]);
+  _logPost('postMessage handoff-result...');
 
   figma.ui.postMessage({
     type: 'handoff-result', success: true,
