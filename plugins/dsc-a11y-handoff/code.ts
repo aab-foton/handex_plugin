@@ -2477,72 +2477,90 @@ async function getFocusOrder(variantName?: string): Promise<void> {
 
   const root = rootNode as SceneNode;
 
+  // For COMPONENT_SET roots, track direct COMPONENT children so we can also register
+  // "inner" paths relative to each variant boundary — matching handleCanvasLayerSelection.
+  const subRootIds = new Set<string>();
+  if (root.type === 'COMPONENT_SET') {
+    for (const child of (root as ComponentSetNode).children) {
+      if (child.type === 'COMPONENT') subRootIds.add(child.id);
+    }
+  }
+
+  // Single iterative DFS — builds path map AND collects annotated nodes in one pass.
+  // Previously this was three separate passes (collectAnnotatedNodes, collectAllNodes,
+  // then buildNamePath for every node), totalling 10+ seconds on complex components.
+  // Now: one traversal, path built top-down (no .parent walking), ~10× faster.
   const t1 = Date.now();
-  const annotated = collectAnnotatedNodes(root);
-  console.log(`[FOCUS-PERF] collectAnnotatedNodes: ${Date.now() - t1}ms (${annotated.length} nodes)`);
+  const annotated: { nodeId: string; name: string; category: string }[] = [];
+  const allNodesByPath = new Map<string, { nodeId: string; name: string }>();
+  const allNodeIds = new Set<string>();
+  const nameMap = new Map<string, string>();
+
+  // Stack entries: [node, pathFromRoot, innerPathFromNearestSubRoot | null]
+  // pathFromRoot = '' for the root itself (mirrors buildNamePath behaviour)
+  // innerPathFromNearestSubRoot = null until we descend into a COMPONENT child of COMPONENT_SET
+  const stack: [SceneNode, string, string | null][] = [[root, '', null]];
+  while (stack.length > 0) {
+    const [node, pathSoFar, innerPathSoFar] = stack.pop()!;
+
+    // Check for a11y annotation
+    const raw = node.getPluginData('a11y');
+    if (raw) {
+      try {
+        const data: LayerA11yData = JSON.parse(raw);
+        if (data.role !== 'dont-read' || data.category) {
+          annotated.push({ nodeId: node.id, name: node.name, category: data.category || '' });
+        }
+      } catch (_e) { /* ignore */ }
+    }
+
+    // Register full path (and inner path when inside a COMPONENT_SET variant)
+    allNodeIds.add(node.id);
+    nameMap.set(node.id, node.name);
+    allNodesByPath.set(pathSoFar, { nodeId: node.id, name: node.name });
+    if (innerPathSoFar) { // non-empty only — mirrors original `if (innerPath && ...)` guard
+      if (!allNodesByPath.has(innerPathSoFar)) {
+        allNodesByPath.set(innerPathSoFar, { nodeId: node.id, name: node.name });
+      }
+    }
+
+    // Queue visible children (reversed so stack pops preserve document order)
+    if ('children' in node) {
+      const isSubRoot = subRootIds.has(node.id);
+      const parent = node as ChildrenMixin & SceneNode;
+      for (let i = parent.children.length - 1; i >= 0; i--) {
+        const child = parent.children[i];
+        if (!child.visible) continue;
+        const childPath = pathSoFar ? pathSoFar + '/' + child.name : child.name;
+        // Inner path starts fresh when entering a COMPONENT sub-root
+        const childInnerPath = isSubRoot ? child.name
+          : innerPathSoFar !== null ? innerPathSoFar + '/' + child.name
+          : null;
+        stack.push([child, childPath, childInnerPath]);
+      }
+    }
+  }
+  console.log(`[FOCUS-PERF] single traversal: ${Date.now() - t1}ms (${allNodeIds.size} nodes, ${annotated.length} annotated, ${allNodesByPath.size} paths)`);
 
   const t2 = Date.now();
   const origNode = await figma.getNodeByIdAsync(currentRootId);
   console.log(`[FOCUS-PERF] getNodeByIdAsync(orig): ${Date.now() - t2}ms`);
 
-  let raw = '';
+  let rawFocus = '';
   let scope: 'all' | 'variant' = 'all';
 
   // Check variant-specific focus order first
   if (variantName && origNode) {
-    raw = (origNode as SceneNode).getPluginData('a11y-focus-order::' + variantName);
-    if (raw) scope = 'variant';
+    rawFocus = (origNode as SceneNode).getPluginData('a11y-focus-order::' + variantName);
+    if (rawFocus) scope = 'variant';
   }
   // Fallback to shared
-  if (!raw && origNode) {
-    raw = (origNode as SceneNode).getPluginData('a11y-focus-order');
+  if (!rawFocus && origNode) {
+    rawFocus = (origNode as SceneNode).getPluginData('a11y-focus-order');
     scope = 'all';
   }
 
-  const storedEntries = safeParseJson<(FocusOrderEntry & { namePath?: string })[]>(raw, []);
-
-  // Build lookup using ALL visible nodes (not just annotated) so focus order entries are preserved
-  const t3 = Date.now();
-  const allNodes = collectAllNodes(root);
-  console.log(`[FOCUS-PERF] collectAllNodes: ${Date.now() - t3}ms (${allNodes.length} nodes)`);
-
-  const t4 = Date.now();
-  const allNodesByPath = new Map<string, { nodeId: string; name: string }>();
-  const allNodeIds = new Set(allNodes.map(n => n.nodeId));
-
-  // For COMPONENT_SET roots, also collect sub-roots (direct COMPONENT children) so we can
-  // build "inner" paths that stop at the component boundary — matching what
-  // handleCanvasLayerSelection produces when the user selects a layer inside an instance.
-  const subRootIds = new Set<string>();
-  if (root.type === 'COMPONENT_SET') {
-    const cs = root as ComponentSetNode;
-    for (const child of cs.children) {
-      if (child.type === 'COMPONENT') subRootIds.add(child.id);
-    }
-  }
-
-  for (const a of allNodes) {
-    // buildNamePath only uses synchronous .name/.id/.parent — no async needed
-    const np = buildNamePath(a.node, targetId!);
-    allNodesByPath.set(np, { nodeId: a.nodeId, name: a.name });
-
-    // Also add "inner" path relative to each COMPONENT child (for COMPONENT_SET roots).
-    // handleCanvasLayerSelection stops at the instance boundary, so it emits paths
-    // like "Button/Text" instead of "state=default/Button/Text".
-    if (subRootIds.size > 0) {
-      let cur: BaseNode | null = a.node.parent;
-      while (cur && !subRootIds.has(cur.id)) cur = cur.parent;
-      if (cur && subRootIds.has(cur.id)) {
-        const innerPath = buildNamePath(a.node, cur.id);
-        if (innerPath && !allNodesByPath.has(innerPath)) {
-          allNodesByPath.set(innerPath, { nodeId: a.nodeId, name: a.name });
-        }
-      }
-    }
-  }
-  console.log(`[FOCUS-PERF] buildNamePath loop: ${Date.now() - t4}ms (${allNodesByPath.size} paths)`);
-
-  const nameMap = new Map(allNodes.map(n => [n.nodeId, n.name]));
+  const storedEntries = safeParseJson<(FocusOrderEntry & { namePath?: string })[]>(rawFocus, []);
 
   // Resolve stored entries: prefer namePath (stable), fallback to nodeId (legacy)
   const entries: (FocusOrderEntry & { name?: string })[] = [];
