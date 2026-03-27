@@ -3713,18 +3713,20 @@ async function getTemplateSectionFresh(tplKey: string, sectionName: string, tplN
 }
 
 /**
- * Clona o template UMA única vez e extrai TODAS as seções de uma só vez.
- * Substitui N chamadas a getTemplateSectionFresh por 1 único clone do template.
+ * Clona o template UMA única vez e mapeia TODAS as seções sem movê-las para o root da página.
+ * As seções permanecem dentro de `detached` até serem consumidas pelo caller via insertChild()
+ * (que move diretamente de detached → destino sem passar pelo root). O caller é responsável
+ * por chamar `detached.remove()` ao final para limpar quaisquer seções não consumidas.
  * @param tplKey - Chave do componente template
  * @param tplNodeId - ID do nó template (fallback local)
- * @returns Mapa nome→seção e lista ordenada de nomes de seções do template
+ * @returns Mapa nome→seção, lista ordenada de nomes e referência ao frame detachado
  */
 async function getTemplateSectionsAll(
   tplKey: string,
   tplNodeId?: string
-): Promise<{ sections: Map<string, SceneNode>; allNames: string[] }> {
+): Promise<{ sections: Map<string, SceneNode>; allNames: string[]; detached: FrameNode | null }> {
   const detached = await createDetachedTemplate(tplKey, tplNodeId);
-  if (!detached) return { sections: new Map(), allNames: [] };
+  if (!detached) return { sections: new Map(), allNames: [], detached: null };
 
   const allNames = (detached.children as SceneNode[])
     .filter(c => c.type === 'FRAME' || c.type === 'SECTION')
@@ -3733,11 +3735,11 @@ async function getTemplateSectionsAll(
   const result = new Map<string, SceneNode>();
   for (const child of [...detached.children] as SceneNode[]) {
     if (child.type !== 'FRAME' && child.type !== 'SECTION') continue;
-    figma.currentPage.appendChild(child); // move para a página antes de remover o parent
+    // Não mover para o root da página — manter dentro de `detached`.
+    // insertChild() do Figma move diretamente entre quaisquer dois parents.
     result.set(child.name, child);
   }
-  detached.remove();
-  return { sections: result, allNames };
+  return { sections: result, allNames, detached };
 }
 
 /**
@@ -5422,9 +5424,11 @@ async function updateHandoffFromTemplate(compNodeId: string, tplNodeId: string, 
   sendProgress('Lendo dados do componente...');
   const data = await readHandoffData(compSourceNode);
 
-  // Clone template UMA vez e extrai todas as seções de uma só vez (N clones → 1)
+  // Clone template UMA vez e mapeia todas as seções (N clones → 1).
+  // As seções ficam dentro de `tplDetached` — são movidas diretamente para `existing`
+  // via insertChild() sem passar pelo root da página (evita artefatos visuais).
   sendProgress('Carregando template...');
-  const { sections: tplSectionsMap, allNames: templateSectionNames } = await getTemplateSectionsAll(tplKey, tplNodeId);
+  const { sections: tplSectionsMap, allNames: templateSectionNames, detached: tplDetached } = await getTemplateSectionsAll(tplKey, tplNodeId);
 
   // Define sections and their fill functions
   const sections: { name: string; label: string; fill: (frame: FrameNode, data: HandoffData) => Promise<void> }[] = [
@@ -5440,7 +5444,7 @@ async function updateHandoffFromTemplate(compNodeId: string, tplNodeId: string, 
     // Skip sections not selected for update — sync visual style only (preserve content)
     if (sectionsToUpdate && !sectionsToUpdate.includes(sec.name)) {
       sendProgress(`Sincronizando estilo: ${sec.label}...`);
-      // Sync template visual style without destroying content (seção já extraída do clone único)
+      // Sync template visual style without destroying content (seção dentro de tplDetached)
       const freshForSync = tplSectionsMap.get(sec.name) ?? null;
       tplSectionsMap.delete(sec.name);
       if (freshForSync) {
@@ -5448,7 +5452,7 @@ async function updateHandoffFromTemplate(compNodeId: string, tplNodeId: string, 
         if (existingSec) {
           syncVisualsRecursive(freshForSync, existingSec);
         }
-        freshForSync.remove();
+        // Não remover freshForSync aqui — tplDetached.remove() no final limpa tudo
       }
       continue;
     }
@@ -5588,9 +5592,10 @@ async function updateHandoffFromTemplate(compNodeId: string, tplNodeId: string, 
     }
   }
 
-  // Remover seções do template que não foram consumidas (ex: seções extras não reconhecidas)
-  for (const [, sec] of tplSectionsMap) {
-    try { (sec as SceneNode).remove(); } catch (_e) { /* ignore */ }
+  // Remover o frame detachado do template — seções não consumidas (extras) são removidas junto.
+  // Seções consumidas já foram movidas para `existing` via insertChild() e não estão mais aqui.
+  if (tplDetached) {
+    try { tplDetached.remove(); } catch (_e) { /* ignore */ }
   }
 
   // Preserve name and update references
