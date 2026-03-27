@@ -102,6 +102,8 @@ body{font-family:Inter,system-ui,-apple-system,sans-serif;font-size:12px;color:v
 .map-card-key{font-weight:600;color:var(--gray-900)}
 .map-card-rm{width:20px;height:20px;border:none;background:none;cursor:pointer;color:var(--gray-400);font-size:14px;font-weight:700;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:.15s}
 .map-card-rm:hover{color:var(--red);background:var(--red-bg)}
+.map-card-edit{width:20px;height:20px;border:none;background:none;cursor:pointer;color:var(--blue);font-size:12px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:.15s;opacity:.6}
+.map-card-edit:hover{background:var(--blue-bg);opacity:1}
 .map-empty{font-size:11px;color:var(--gray-400);margin-top:6px;font-style:italic}
 .map-no-csv{font-size:11px;color:var(--gray-400);margin-top:6px;font-style:italic}
 
@@ -283,6 +285,8 @@ body{font-family:Inter,system-ui,-apple-system,sans-serif;font-size:12px;color:v
 .fi-name{flex:1;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fi-rm{width:22px;height:22px;border:none;background:none;cursor:pointer;color:var(--red);font-size:16px;flex-shrink:0;border-radius:4px;display:flex;align-items:center;justify-content:center;transition:.1s}
 .fi-rm:hover{background:var(--red-bg)}
+.fi-edit{width:22px;height:22px;border:none;background:none;cursor:pointer;color:var(--blue);font-size:13px;flex-shrink:0;border-radius:4px;display:flex;align-items:center;justify-content:center;transition:.1s;opacity:.6}
+.fi-edit:hover{background:var(--blue-bg);opacity:1}
 
 /* ── Draw button ── */
 .draw-btn{padding:8px 14px;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;background:#d4907a;color:#fff;transition:.15s}
@@ -480,22 +484,24 @@ body{font-family:Inter,system-ui,-apple-system,sans-serif;font-size:12px;color:v
       <div style="margin-bottom:14px">
         <p style="font-weight:700;font-size:13px;margin-bottom:6px;color:var(--gray-900)">Como come&#231;ar</p>
         <ol style="padding-left:18px;margin:0">
-          <li>Coloque uma inst&#226;ncia do template <strong>[dsc-h] Template Handoff</strong> (variante Acessibility) na p&#225;gina</li>
-          <li>Selecione o <strong>template + o componente</strong> &#8212; a ordem n&#227;o importa</li>
-          <li>O plugin ir&#225; detectar a sele&#231;&#227;o e mostrar as abas de edi&#231;&#227;o</li>
+          <li>Certifique-se de que h&#225; uma inst&#226;ncia do template <strong>[dsc-h] Template Handoff</strong> na p&#225;gina</li>
+          <li>Selecione o template no canvas &#8212; o plugin exibir&#225; <em>&#8220;Template carregado&#8221;</em></li>
+          <li>Selecione qualquer layer dentro do componente que deseja anotar &#8212; o plugin abre as abas de edi&#231;&#227;o</li>
         </ol>
-        <p style="margin-top:8px;margin-bottom:4px"><strong>Tipos de sele&#231;&#227;o aceitos:</strong></p>
+        <p style="margin-top:6px;color:var(--gray-500)">A partir da&#237; voc&#234; pode navegar livremente pelo canvas. O plugin acompanha a sele&#231;&#227;o ativa e atualiza os dados automaticamente.</p>
+
+        <p style="margin-top:8px;margin-bottom:4px"><strong>Tipos de sele&#231;&#227;o aceitos para o componente:</strong></p>
         <ul style="padding-left:18px;margin:0">
-          <li><strong>Component Set</strong> &#8212; acessa todas as variantes e dados compartilhados</li>
-          <li><strong>Inst&#226;ncia</strong> &#8212; resolve automaticamente para o component set original, iniciando na variante da inst&#226;ncia selecionada</li>
-          <li><strong>Componente (variante)</strong> &#8212; resolve para o component set pai</li>
+          <li><strong>Qualquer layer dentro do componente</strong> &#8212; o plugin resolve automaticamente para o component set pai</li>
+          <li><strong>Inst&#226;ncia</strong> &#8212; inicia na variante da inst&#226;ncia selecionada</li>
           <li><strong>Handoff gerado</strong> &#8212; resolve para o componente de origem (permite editar e atualizar)</li>
         </ul>
-        <p style="margin-top:6px;color:var(--gray-500)">Todos os dados preenchidos s&#227;o salvos no component set original, independente do tipo de sele&#231;&#227;o.</p>
-        <p style="margin-top:6px;color:var(--red);font-weight:600">Importante: n&#227;o renomeie a inst&#226;ncia do template nem o handoff gerado. O plugin identifica o template pelo nome <strong>[dsc-h] Template Handoff</strong> e o handoff pelo prefixo <strong>[A11Y Handoff]</strong>. Se os nomes forem alterados, o plugin n&#227;o conseguir&#225; detect&#225;-los.</p>
+        <p style="margin-top:6px;color:var(--gray-500)">Todos os dados s&#227;o salvos no component set original, independente do tipo de sele&#231;&#227;o.</p>
+
+        <p style="margin-top:8px;color:var(--red);font-weight:600">Importante: n&#227;o renomeie a inst&#226;ncia do template nem o handoff gerado. O plugin identifica o template pelo nome <strong>[dsc-h] Template Handoff</strong> e o handoff pelo prefixo <strong>[A11Y Handoff]</strong>.</p>
 
         <p style="margin-top:8px;margin-bottom:4px"><strong>Componentes de library (outro arquivo):</strong></p>
-        <p style="color:var(--gray-600)">Quando o component set est&#225; em um arquivo de library e voc&#234; seleciona uma inst&#226;ncia em outro arquivo, o plugin consegue <strong>ler</strong> os dados de acessibilidade j&#225; configurados, mas <strong>n&#227;o consegue salvar</strong> novos dados &#8212; componentes de library s&#227;o somente leitura a partir de outros arquivos. Para configurar ou editar os dados, abra o plugin diretamente no <strong>arquivo original da library</strong> onde o component set est&#225; localizado.</p>
+        <p style="color:var(--gray-600)">O plugin consegue <strong>ler</strong> dados de componentes de library, mas <strong>n&#227;o salvar</strong> &#8212; componentes de outro arquivo s&#227;o somente leitura. Para editar, abra o plugin diretamente no <strong>arquivo original da library</strong>.</p>
       </div>
 
       <div class="overlay-divider"></div>
@@ -506,7 +512,7 @@ body{font-family:Inter,system-ui,-apple-system,sans-serif;font-size:12px;color:v
         <ul style="padding-left:18px;margin:0">
           <li><strong>Plataformas:</strong> selecione as plataformas alvo (Web, Mobile, etc.)</li>
           <li><strong>Zoom:</strong> marque os tipos de zoom suportados (reflow, resize text)</li>
-          <li><strong>Mapeamento de teclado e gestos:</strong> selecione quais teclas e gestos o componente suporta. Os dados v&#234;m do CSV carregado nas Configura&#231;&#245;es</li>
+          <li><strong>Mapeamento de teclado e gestos:</strong> selecione quais teclas e gestos o componente suporta. Os dados v&#234;m do CSV carregado nas Configura&#231;&#245;es. Use o bot&#227;o <strong>✎</strong> em um item para remov&#234;-lo e abrir o campo de busca pr&#233;-preenchido para facilitar a troca</li>
         </ul>
       </div>
 
@@ -518,7 +524,7 @@ body{font-family:Inter,system-ui,-apple-system,sans-serif;font-size:12px;color:v
         <p style="margin-bottom:6px">Acesse pelo &#237;cone de <strong>engrenagem</strong> no topo do plugin.</p>
         <ul style="padding-left:18px;margin:0">
           <li><strong>CSV de Teclado e Gestos:</strong> colunas Mapeamento, Descri&#231;&#227;o, Utiliza&#231;&#227;o</li>
-          <li><strong>CSV de Roles:</strong> colunas Role, Specification, Description, Observation, Code Note, Accessible Name, Connector Type, Revision</li>
+          <li><strong>CSV de Roles:</strong> colunas Role, Specification, Description, Observation, <strong>Nota de C&#243;digo Web</strong>, <strong>Nota de C&#243;digo React Native</strong>, Accessible Name, Connector Type, Revision</li>
           <li>Ao carregar o CSV, os dados s&#227;o salvos automaticamente no arquivo Figma e no seu perfil local. Outros usu&#225;rios que abrirem o mesmo arquivo j&#225; ter&#227;o os dados dispon&#237;veis sem precisar carregar novamente</li>
           <li>Para atualizar, basta carregar o CSV novamente &#8212; a vers&#227;o mais recente (por timestamp) ser&#225; usada automaticamente</li>
           <li>Ao abrir outro arquivo que j&#225; tenha o CSV salvo, os dados s&#227;o sincronizados automaticamente para o seu perfil</li>
@@ -532,12 +538,22 @@ body{font-family:Inter,system-ui,-apple-system,sans-serif;font-size:12px;color:v
         <p style="font-weight:700;font-size:13px;margin-bottom:6px;color:var(--gray-900)">Aba &#193;rea de Toque</p>
         <ol style="padding-left:18px;margin:0">
           <li>Clique em <strong>&#8220;Adicionar nova &#225;rea de toque&#8221;</strong></li>
-          <li>Escolha o tamanho: <strong>Aprimorado</strong> (44px), <strong>M&#237;nimo</strong> (24px) ou <strong>Livre</strong> (desenhar)</li>
-          <li>Clique no elemento no preview para posicionar a &#225;rea, ou desenhe arrastando no modo livre</li>
-          <li>Ap&#243;s adicionar, voc&#234; pode <strong>arrastar</strong> para mover e <strong>redimensionar</strong> pelas bordas</li>
+          <li>Escolha o tamanho: <strong>Aprimorado</strong> (44px), <strong>M&#237;nimo</strong> (24px) ou <strong>Exato</strong> (usa as dimens&#245;es reais do layer)</li>
+          <li>Selecione o elemento <strong>diretamente no canvas do Figma</strong> &#8212; a &#225;rea &#233; posicionada automaticamente sobre o layer</li>
+          <li>Repita para adicionar mais &#225;reas na mesma sess&#227;o</li>
           <li>Clique em <strong>&#8220;Concluir&#8221;</strong> para salvar ou <strong>&#8220;Cancelar&#8221;</strong> para descartar</li>
         </ol>
-        <p style="margin-top:6px;color:var(--gray-500)">As &#225;reas s&#227;o validadas segundo WCAG 2.5.8 (m&#237;nimo 24x24px, aprimorado 44x44px). O preview s&#243; aceita cliques ap&#243;s clicar em &#8220;Adicionar&#8221;.</p>
+        <p style="margin-top:8px;margin-bottom:4px"><strong>Modos de tamanho:</strong></p>
+        <ul style="padding-left:18px;margin:0">
+          <li><strong>Aprimorado (44px)</strong> e <strong>M&#237;nimo (24px)</strong> centralizam a &#225;rea sobre o layer com o tamanho fixo escolhido. A forma pode ser <em>Largura total</em> (usa a largura do layer) ou <em>Quadrado</em></li>
+          <li><strong>Exato</strong> usa os bounds reais do layer &#8212; ideal quando o alvo de toque j&#225; tem o tamanho correto no Figma</li>
+        </ul>
+        <p style="margin-top:8px;margin-bottom:4px"><strong>Editar uma &#225;rea existente:</strong></p>
+        <ul style="padding-left:18px;margin:0">
+          <li>Clique no bot&#227;o <strong>✎</strong> ao lado da &#225;rea na lista para abrir os campos X, Y, Largura e Altura</li>
+          <li>Os valores s&#227;o aplicados em tempo real enquanto voc&#234; digita</li>
+        </ul>
+        <p style="margin-top:6px;color:var(--gray-500)">As &#225;reas s&#227;o validadas segundo WCAG 2.5.8 (m&#237;nimo 24&#215;24px, aprimorado 44&#215;44px).</p>
       </div>
 
       <div class="overlay-divider"></div>
@@ -547,12 +563,17 @@ body{font-family:Inter,system-ui,-apple-system,sans-serif;font-size:12px;color:v
         <p style="font-weight:700;font-size:13px;margin-bottom:6px;color:var(--gray-900)">Aba Tabula&#231;&#227;o</p>
         <ol style="padding-left:18px;margin:0">
           <li>Clique em <strong>&#8220;Adicionar ordem de foco&#8221;</strong></li>
-          <li>Clique nos elementos no preview <strong>na ordem desejada</strong> de tabula&#231;&#227;o</li>
-          <li>Os n&#250;meros ser&#227;o atribu&#237;dos sequencialmente (1, 2, 3...)</li>
-          <li>Clique em <strong>&#8220;Concluir&#8221;</strong> para salvar a ordem</li>
-          <li>Use o <strong>X</strong> ao lado de cada item para remover da lista</li>
+          <li>Selecione um elemento <strong>diretamente no canvas do Figma</strong> &#8212; ele aparece como item pendente no plugin</li>
+          <li>Clique em <strong>&#8220;Adicionar &#224; ordem&#8221;</strong> para confirm&#225;-lo com o pr&#243;ximo n&#250;mero sequencial</li>
+          <li>Repita para cada elemento na ordem de tabula&#231;&#227;o desejada</li>
+          <li>Clique em <strong>&#8220;Concluir&#8221;</strong> para salvar ou <strong>&#8220;Cancelar&#8221;</strong> para descartar</li>
         </ol>
-        <p style="margin-top:6px;color:var(--gray-500)">Marque &#8220;Este componente n&#227;o tem tabula&#231;&#227;o&#8221; se o componente n&#227;o participa da ordem de foco. O preview s&#243; aceita cliques ap&#243;s clicar em &#8220;Adicionar&#8221;.</p>
+        <p style="margin-top:8px;margin-bottom:4px"><strong>Reordenar itens:</strong></p>
+        <ul style="padding-left:18px;margin:0">
+          <li>Use os bot&#245;es <strong>↑</strong> e <strong>↓</strong> ao lado de cada item para ajustar a posi&#231;&#227;o sem precisar refazer</li>
+          <li>Use o <strong>×</strong> para remover um item individualmente</li>
+        </ul>
+        <p style="margin-top:6px;color:var(--gray-500)">Marque &#8220;Este componente n&#227;o tem tabula&#231;&#227;o&#8221; se o componente n&#227;o participa da ordem de foco.</p>
       </div>
 
       <div class="overlay-divider"></div>
@@ -560,32 +581,38 @@ body{font-family:Inter,system-ui,-apple-system,sans-serif;font-size:12px;color:v
       <!-- LEITOR DE TELA -->
       <div style="margin-bottom:14px">
         <p style="font-weight:700;font-size:13px;margin-bottom:6px;color:var(--gray-900)">Aba Leitor de Tela</p>
+        <p style="margin-bottom:6px">As anota&#231;&#245;es s&#227;o vinculadas a layers selecionados <strong>diretamente no canvas do Figma</strong>.</p>
+
+        <p style="margin-bottom:4px"><strong>Anota&#231;&#227;o Simples ou Combinada:</strong></p>
         <ol style="padding-left:18px;margin:0">
-          <li>Clique em <strong>&#8220;Adicionar anota&#231;&#227;o&#8221;</strong></li>
-          <li>Escolha o modo: <strong>Simples</strong>, <strong>Combinado</strong> ou <strong>Agrupamento</strong></li>
+          <li>Selecione o layer desejado no canvas do Figma &#8212; o nome aparece indicado no topo da aba</li>
+          <li>Clique em <strong>&#8220;Adicionar anota&#231;&#227;o&#8221;</strong> &#8212; o formul&#225;rio abre j&#225; vinculado ao layer</li>
+          <li>Escolha o modo <strong>Simples</strong> ou <strong>Combinado</strong> e preencha Tipo de Conector, Role e Especifica&#231;&#227;o</li>
+          <li>Descri&#231;&#227;o, Observa&#231;&#245;es, Nome Acess&#237;vel e Notas de C&#243;digo s&#227;o preenchidos automaticamente do CSV</li>
+          <li>Clique em <strong>&#8220;Salvar&#8221;</strong></li>
+        </ol>
+        <p style="margin-top:6px;color:var(--gray-500)">Tamb&#233;m &#233; poss&#237;vel abrir o formul&#225;rio primeiro e selecionar o layer depois &#8212; o campo de layer atualiza em tempo real.</p>
+
+        <p style="margin-top:10px;margin-bottom:4px"><strong>Agrupamento:</strong></p>
+        <ol style="padding-left:18px;margin:0">
+          <li>Selecione <strong>dois ou mais layers</strong> no canvas (Shift+clique) &#8212; o plugin detecta a multi-sele&#231;&#227;o</li>
+          <li>Clique em <strong>&#8220;Adicionar anota&#231;&#227;o&#8221;</strong> e escolha o modo <strong>Agrupamento</strong></li>
+          <li>Os bounds do ret&#226;ngulo s&#227;o preenchidos automaticamente a partir da sele&#231;&#227;o</li>
+          <li>Selecione Tipo de Agrupamento, Role e Especifica&#231;&#227;o e clique em <strong>&#8220;Salvar&#8221;</strong></li>
         </ol>
 
-        <p style="margin-top:8px;margin-bottom:4px"><strong>Anota&#231;&#227;o Simples:</strong></p>
+        <p style="margin-top:10px;margin-bottom:4px"><strong>Editar uma anota&#231;&#227;o existente:</strong></p>
         <ul style="padding-left:18px;margin:0">
-          <li>Clique no elemento no preview</li>
-          <li>Preencha: Tipo de Conector, Role e Especifica&#231;&#227;o</li>
-          <li>Os campos Descri&#231;&#227;o, Observa&#231;&#245;es, Nome Acess&#237;vel e Notas de C&#243;digo s&#227;o preenchidos automaticamente do CSV</li>
-          <li>Clique em <strong>&#8220;Salvar&#8221;</strong></li>
+          <li>Clique no item na lista ou use o bot&#227;o <strong>✎</strong> ao lado dele</li>
+          <li>O formul&#225;rio abre pr&#233;-preenchido &#8212; ajuste e clique em <strong>&#8220;Salvar&#8221;</strong></li>
         </ul>
 
-        <p style="margin-top:8px;margin-bottom:4px"><strong>Combinado:</strong></p>
+        <p style="margin-top:10px;margin-bottom:4px"><strong>Notas de c&#243;digo por plataforma:</strong></p>
         <ul style="padding-left:18px;margin:0">
-          <li>Clique no elemento no preview</li>
-          <li>Adicione de 2 a 5 conectores, cada um com seu Tipo, Role e Especifica&#231;&#227;o</li>
-          <li>Cada conector puxa dados do CSV individualmente</li>
-          <li>Clique em <strong>&#8220;Salvar&#8221;</strong></li>
-        </ul>
-
-        <p style="margin-top:8px;margin-bottom:4px"><strong>Agrupamento:</strong></p>
-        <ul style="padding-left:18px;margin:0">
-          <li>Desenhe um ret&#226;ngulo ao redor dos elementos que pertencem ao grupo</li>
-          <li>Selecione o Tipo de Agrupamento, Role e Especifica&#231;&#227;o</li>
-          <li>Clique em <strong>&#8220;Salvar agrupamento&#8221;</strong></li>
+          <li>O CSV de Roles possui colunas separadas para <strong>Web</strong> e <strong>React Native</strong></li>
+          <li>O handoff exibe automaticamente a nota da plataforma selecionada na aba Geral</li>
+          <li>Com <strong>Web + Mobile Cross-platform</strong> e notas diferentes, ambas s&#227;o exibidas com label</li>
+          <li>Plataformas <strong>Android</strong> e <strong>iOS</strong> nativos n&#227;o exibem nota de c&#243;digo por enquanto</li>
         </ul>
       </div>
 
@@ -976,7 +1003,7 @@ body{font-family:Inter,system-ui,-apple-system,sans-serif;font-size:12px;color:v
   </div>
 
 </div>
-<div class="plugin-footer">DSC A11Y Handoff v1.7.0</div>
+<div class="plugin-footer">DSC A11Y Handoff v1.9.0</div>
 
 <script>
 // ═══════════════ STATE ═══════════════
@@ -1669,7 +1696,7 @@ function renderMappings(){
     $('kbEmptyMsg').style.display='none';
     kbCards.innerHTML=kbItems.map(key=>{
       const parts=key.split('|');
-      return `<div class="map-card"><div class="map-card-text"><span class="map-card-key">${esc(parts[0])}</span> → ${esc(parts[1]||'')}</div><button class="map-card-rm" onclick="rmKbMapping('${ea(key)}')" title="Remover">×</button></div>`;
+      return `<div class="map-card"><div class="map-card-text"><span class="map-card-key">${esc(parts[0])}</span> → ${esc(parts[1]||'')}</div><button class="map-card-edit" onclick="editKbMapping('${ea(key)}')" title="Editar">✎</button><button class="map-card-rm" onclick="rmKbMapping('${ea(key)}')" title="Remover">×</button></div>`;
     }).join('');
   }
 
@@ -1690,7 +1717,7 @@ function renderMappings(){
     $('gestureEmptyMsg').style.display='none';
     gCards.innerHTML=gItems.map(key=>{
       const parts=key.split('|');
-      return `<div class="map-card"><div class="map-card-text"><span class="map-card-key">${esc(parts[0])}</span> → ${esc(parts[1]||'')}</div><button class="map-card-rm" onclick="rmGestureMapping('${ea(key)}')" title="Remover">×</button></div>`;
+      return `<div class="map-card"><div class="map-card-text"><span class="map-card-key">${esc(parts[0])}</span> → ${esc(parts[1]||'')}</div><button class="map-card-edit" onclick="editGestureMapping('${ea(key)}')" title="Editar">✎</button><button class="map-card-rm" onclick="rmGestureMapping('${ea(key)}')" title="Remover">×</button></div>`;
     }).join('');
   }
   updateSectionBadges();
@@ -1733,6 +1760,18 @@ function rmKbMapping(key){removeMapping('kbMapping',key)}
  * @param key - Chave do mapeamento
  */
 function rmGestureMapping(key){removeMapping('gestureMapping',key)}
+/** Remove um mapeamento de teclado e pré-preenche o input para reedição. */
+function editKbMapping(key){
+  rmKbMapping(key);
+  const inp=$('kbAcInput');
+  if(inp){inp.value=key.split('|')[0];inp.dispatchEvent(new Event('input'));inp.focus();}
+}
+/** Remove um mapeamento de gesto e pré-preenche o input para reedição. */
+function editGestureMapping(key){
+  rmGestureMapping(key);
+  const inp=$('gestureAcInput');
+  if(inp){inp.value=key.split('|')[0];inp.dispatchEvent(new Event('input'));inp.focus();}
+}
 
 // ═══════════════ VARIANT FILTER (Step 5) ═══════════════
 
@@ -2258,6 +2297,20 @@ function onSpecChange(){
   } else if(aw&&!data){aw.style.display='';}
 }
 
+/** Resolve a nota de código correta para o preview do formulário, baseado na plataforma selecionada. */
+function resolveSpecCodeNote(data){
+  const platform=S.componentData?.platform||[];
+  const webNote=data.codeNoteWeb||'';
+  const rnNote=data.codeNoteRN||'';
+  if(!webNote&&!rnNote)return data.codeNote||'';
+  const hasWeb=platform.some(p=>p==='web'||p==='desktop-nativo');
+  const hasMobile=platform.some(p=>p==='mobile-crossplatform');
+  if(hasWeb&&hasMobile&&webNote&&rnNote&&webNote!==rnNote)return'Web: '+webNote+'\nReact Native: '+rnNote;
+  if(hasWeb&&webNote)return webNote;
+  if(hasMobile&&rnNote)return rnNote;
+  return webNote||rnNote||data.codeNote||'';
+}
+
 /** Renderiza card informativo com dados do CSV para a spec selecionada. */
 function renderSpecInfo(data){
   const el=$('specInfo');if(!el)return;
@@ -2265,7 +2318,8 @@ function renderSpecInfo(data){
   let h='<div style="margin-top:10px;padding:10px;border-radius:var(--radius-sm);background:var(--blue-bg);border:1px solid #c9d3ec;font-size:11px;line-height:1.6">';
   if(data.description)h+='<div><strong>Descrição:</strong> '+esc(data.description)+'</div>';
   if(data.observation)h+='<div style="margin-top:4px"><strong>Observação:</strong> '+esc(data.observation)+'</div>';
-  if(data.codeNote&&data.codeNote!=='NA')h+='<div style="margin-top:4px"><strong>Nota de código:</strong> '+esc(data.codeNote)+'</div>';
+  const cn=resolveSpecCodeNote(data);
+  if(cn&&cn!=='NA')h+='<div style="margin-top:4px"><strong>Nota de código:</strong> '+esc(cn)+'</div>';
   if(data.accessibleName&&data.accessibleName!=='NA')h+='<div style="margin-top:4px"><strong>Nome acessível:</strong> '+esc(data.accessibleName)+'</div>';
   h+='</div>';
   el.innerHTML=h;
@@ -2473,11 +2527,12 @@ function renderRoleList(){
       const name = e.namePath ? (e.namePath.split('/').pop() || e.namePath) : 'Layer';
       const typeTag = isComb ? '<span class="ann-type-tag tag-combinado">combinado</span>' : '<span class="ann-type-tag tag-simple">simples</span>';
       
-      h+='<div class="fi" style="cursor:pointer" onclick="clickAnnotation(\''+ea(e.namePath)+'\')" title="Clique para editar">';
+      h+='<div class="fi" style="cursor:pointer" onclick="openUnifiedEditForm(\''+ea(e.id)+'\')" title="Clique para editar">';
       h+=letter || dot;
       h+='<div style="flex:1;min-width:0"><div class="fi-name">'+esc(name)+'</div>';
       h+='<div style="font-size:11px;color:var(--gray-400);margin-top:1px">'+esc(role)+'</div></div>';
       h+=typeTag+scopeTag;
+      h+='<button class="fi-edit" onclick="event.stopPropagation();openUnifiedEditForm(\''+ea(e.id)+'\')" title="Editar">✎</button>';
       h+='<button class="fi-rm" onclick="event.stopPropagation();rmAnnotation(\''+ea(e.namePath)+'\')" title="Remover">×</button>';
       h+='</div>';
     }
@@ -2487,20 +2542,25 @@ function renderRoleList(){
 }
 
 /**
- * Abre o formulário de edição ao clicar em uma anotação na lista.
- * @param namePath - Caminho do layer (ex: "parent/child")
+ * Abre o formulário de edição diretamente pelo nodeId da anotação.
+ * @param nodeId - ID do nó Figma
+ * @param namePath - Caminho do layer (para compatibilidade)
  */
+function editAnnotationById(nodeId, namePath){
+  if(!nodeId) return;
+  S.selectedLayerId=nodeId;
+  _pendingLayerData=true;
+  _layerClickTime=Date.now();
+  renderZones(2);
+  renderBC(2);
+  post({type:'get-layer-data',nodeId:nodeId,variantName:currentVariantName()});
+}
+/** @deprecated use editAnnotationById */
 function clickAnnotation(namePath){
   const parts=namePath.split('/');
   const targetName=parts[parts.length-1];
   const layer=S.allLayers.find(l=>l.name===targetName);
-  if(layer){
-    S.selectedLayerId=layer.id;
-    _pendingLayerData=true;
-    _layerClickTime=Date.now();
-    renderZones(2);
-    post({type:'get-layer-data',nodeId:layer.id,variantName:currentVariantName()});
-  }
+  if(layer) editAnnotationById(layer.id, namePath);
 }
 
 /** Seleciona um agrupamento para edição — abre o formulário unificado. */
@@ -2858,7 +2918,8 @@ function onUnifiedSpecChange(){
     if(csv.description)h+='<div><strong>Descrição:</strong> '+esc(csv.description)+'</div>';
     if(csv.observation)h+='<div style="margin-top:4px"><strong>Observação:</strong> '+esc(csv.observation)+'</div>';
     if(csv.accessibleName&&csv.accessibleName!=='NA')h+='<div style="margin-top:4px"><strong>Nome Acessível:</strong> '+esc(csv.accessibleName)+'</div>';
-    if(csv.codeNote&&csv.codeNote!=='NA')h+='<div style="margin-top:4px"><strong>Nota de Código:</strong> '+esc(csv.codeNote)+'</div>';
+    const cn=resolveSpecCodeNote(csv);
+    if(cn&&cn!=='NA')h+='<div style="margin-top:4px"><strong>Nota de Código:</strong> '+esc(cn)+'</div>';
     h+='</div>';
     info.innerHTML=h;
   } else {
@@ -3451,10 +3512,22 @@ function updateLastTouchArea(){
   S.touchAreas[idx]={x,y,w,h};
   renderTouchList();
 }
+let _editingTouchIdx=-1;
+/** Aplica edição manual dos campos x/y/w/h na área de toque. */
+function applyTouchEdit(idx){
+  const x=parseFloat($('te-x')?.value)||0;
+  const y=parseFloat($('te-y')?.value)||0;
+  const w=Math.max(1,parseFloat($('te-w')?.value)||1);
+  const h=Math.max(1,parseFloat($('te-h')?.value)||1);
+  S.touchAreas[idx]={x,y,w,h};
+  renderZones(3);
+  saveTouchAreas();
+}
 /** Ativa o modo de adição de nova área de toque. */
 let _touchBeforeAdd=[];
 let _pendingTouchIdx=null; // índice da área pendente adicionada via canvas na sessão atual
 function enterTouchAddMode(){
+  _editingTouchIdx=-1;
   _touchBeforeAdd=S.touchAreas.map(a=>({...a}));
   _pendingTouchIdx=null;
   S.touchAddMode=true;
@@ -4126,12 +4199,30 @@ function renderTouchList(highlightLast){
     const w=Math.round(a.w),ht=Math.round(a.h);
     const sel=S.selectedArea===i?' border-color:#FFB19E':'';
     const newCls=i===lastIdx?' touch-new':'';
-    h+=`<div class="fi${newCls}" style="cursor:pointer;${sel}" onclick="selectArea(${i})">
-      <span class="fi-num" style="background:var(--touch-color);font-size:9px">${i+1}</span>
-      <span class="fi-name"><strong>Área ${i+1}</strong> — ${w} × ${ht}px</span>
-      ${touchChip(w,ht)}
-      <button class="fi-rm" onclick="event.stopPropagation();rmTouch(${i})" title="Remover">×</button>
-    </div>`;
+    const isEditing=_editingTouchIdx===i;
+    if(isEditing){
+      h+=`<div class="fi${newCls}" style="border-color:var(--blue);background:var(--blue-bg);flex-direction:column;align-items:stretch;gap:6px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="fi-num" style="background:var(--touch-color);font-size:9px">${i+1}</span>
+          <span class="fi-name"><strong>Área ${i+1}</strong></span>
+          <button class="fi-rm" onclick="_editingTouchIdx=-1;renderTouchList();renderZones(3)" title="Fechar">×</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px">
+          <div><label class="fl" style="font-size:10px">X</label><input type="number" class="fsel" id="te-x" value="${Math.round(a.x)}" style="padding:4px 6px;font-size:11px" oninput="applyTouchEdit(${i})"></div>
+          <div><label class="fl" style="font-size:10px">Y</label><input type="number" class="fsel" id="te-y" value="${Math.round(a.y)}" style="padding:4px 6px;font-size:11px" oninput="applyTouchEdit(${i})"></div>
+          <div><label class="fl" style="font-size:10px">Larg.</label><input type="number" class="fsel" id="te-w" value="${w}" style="padding:4px 6px;font-size:11px" oninput="applyTouchEdit(${i})"></div>
+          <div><label class="fl" style="font-size:10px">Alt.</label><input type="number" class="fsel" id="te-h" value="${ht}" style="padding:4px 6px;font-size:11px" oninput="applyTouchEdit(${i})"></div>
+        </div>
+      </div>`;
+    } else {
+      h+=`<div class="fi${newCls}" style="${sel}">
+        <span class="fi-num" style="background:var(--touch-color);font-size:9px">${i+1}</span>
+        <span class="fi-name"><strong>Área ${i+1}</strong> — ${w} × ${ht}px</span>
+        ${touchChip(w,ht)}
+        <button class="fi-edit" onclick="event.stopPropagation();_editingTouchIdx=${i};renderTouchList();renderZones(3)" title="Editar">✎</button>
+        <button class="fi-rm" onclick="event.stopPropagation();rmTouch(${i})" title="Remover">×</button>
+      </div>`;
+    }
   });
   c.innerHTML=h;
   if(clr)clr.style.display='';
@@ -4318,9 +4409,12 @@ function renderFocusList(){
     return;
   }
   let h='';
+  const last=S.focusOrder.length-1;
   S.focusOrder.forEach((e,i)=>{
     const nm=e.name||S.allLayers.find(l=>l.id===e.nodeId)?.name||'?';
-    h+=`<div class="fi"><span class="fi-num">${i+1}</span><span class="fi-name">${esc(nm)}</span><button class="fi-rm" onclick="rmFocus(${i})" title="Remover">\u00d7</button></div>`;
+    const upDis=i===0?' style="opacity:.3;cursor:default"':'';
+    const dnDis=i===last?' style="opacity:.3;cursor:default"':'';
+    h+=`<div class="fi"><span class="fi-num">${i+1}</span><span class="fi-name">${esc(nm)}</span><button class="fi-edit" onclick="moveFocusUp(${i})" title="Mover para cima"${upDis}>↑</button><button class="fi-edit" onclick="moveFocusDown(${i})" title="Mover para baixo"${dnDis}>↓</button><button class="fi-rm" onclick="rmFocus(${i})" title="Remover">\u00d7</button></div>`;
   });
   c.innerHTML=h;
   const cb=$('s4-clear-btn');if(cb)cb.style.display='';
@@ -4390,6 +4484,18 @@ function cancelFocusAdd(){
 function rmFocus(idx){
   S.focusOrder.splice(idx,1);reindexFocusOrder();
   renderFocusList();renderZones(4);saveFocusOrder();
+}
+/** Move item de foco para cima. */
+function moveFocusUp(i){
+  if(i<=0)return;
+  [S.focusOrder[i-1],S.focusOrder[i]]=[S.focusOrder[i],S.focusOrder[i-1]];
+  reindexFocusOrder();renderFocusList();renderZones(4);saveFocusOrder();
+}
+/** Move item de foco para baixo. */
+function moveFocusDown(i){
+  if(i>=S.focusOrder.length-1)return;
+  [S.focusOrder[i],S.focusOrder[i+1]]=[S.focusOrder[i+1],S.focusOrder[i]];
+  reindexFocusOrder();renderFocusList();renderZones(4);saveFocusOrder();
 }
 /** Limpa toda a ordem de foco. */
 function clearFocus(){S.focusOrder=[];renderFocusList();renderZones(4);saveFocusOrder()}

@@ -611,7 +611,39 @@ let uiCurrentStep = 1;
 // ── Dados CSV carregados do template (camada "plugin data") ──
 let cachedKbData: { keys: string; action: string }[] = [];
 let cachedGestureData: { gesture: string; action: string }[] = [];
-let cachedRolesData: { role: string; specification: string; description: string; observation: string; codeNote: string; accessibleName: string; connectorType: string; revision: string }[] = [];
+let cachedRolesData: {
+  role: string; specification: string; description: string; observation: string;
+  codeNote: string;       // compat: preenchido com web || rn || ''
+  codeNoteWeb: string;
+  codeNoteRN: string;
+  accessibleName: string; connectorType: string; revision: string;
+}[] = [];
+
+function resolveCodeNote(
+  entry: { role?: string; specification?: string; codeNote?: string },
+  platform: string[]
+): string {
+  const cached = cachedRolesData.find(
+    r => r.role === (entry.role || '').toLowerCase() &&
+         r.specification === (entry.specification || '')
+  );
+  const webNote = cached?.codeNoteWeb || '';
+  const rnNote  = cached?.codeNoteRN  || '';
+
+  // Sem dados por plataforma → fallback ao armazenado
+  if (!webNote && !rnNote) return entry.codeNote || '';
+
+  const hasWeb    = platform.some(p => p === 'web' || p === 'desktop-nativo');
+  const hasMobile = platform.some(p => p === 'mobile-crossplatform');
+
+  if (hasWeb && hasMobile && webNote && rnNote && webNote !== rnNote) {
+    return `Web: ${webNote}\nReact Native: ${rnNote}`;
+  }
+  if (hasWeb && webNote)   return webNote;
+  if (hasMobile && rnNote) return rnNote;
+  // Fallback: retorna o que estiver disponível
+  return webNote || rnNote || entry.codeNote || '';
+}
 
 // ════════════════════════════════════════
 // SELEÇÃO
@@ -1139,13 +1171,15 @@ function parseCsvFromNode(pluginDataFrame: FrameNode | InstanceNode | ComponentN
       const specification = col(['especifica'], 1).trim();
       const description = col(['descri'], 2).trim();
       const observation = col(['observa'], 3).trim();
-      const codeNote = col(['nota de c', 'codigo', 'código'], 4).trim();
-      const accessibleName = col(['nome acess'], 5).trim();
-      const connectorType = col(['conector', 'connector'], 6).trim();
-      const revision = col(['revis'], 7).trim();
+      const codeNoteWeb = col(['nota de código web', 'nota web', 'web'], 4).trim();
+      const codeNoteRN  = col(['react native', 'react', 'nota de código react'], 5).trim();
+      const codeNote    = codeNoteWeb || codeNoteRN; // compat
+      const accessibleName = col(['nome acess'], 6).trim();
+      const connectorType  = col(['conector', 'connector'], 7).trim();
+      const revision       = col(['revis'], 8).trim();
 
       if (!role || !specification) continue;
-      entries.push({ role, specification, description, observation, codeNote, accessibleName, connectorType, revision });
+      entries.push({ role, specification, description, observation, codeNote, codeNoteWeb, codeNoteRN, accessibleName, connectorType, revision });
     }
 
     cachedRolesData = entries;
@@ -3487,7 +3521,11 @@ async function generateHandoff(selectedVariantIds: string[] = []): Promise<void>
         const badgeContent = d.category === 'titulo' && d.headingLevel ? `H${d.headingLevel}` : label;
         appendFill(sec, createAnnotationRow(createCategoryBadge(badgeContent, d.category || 'outros'), ln.name, roleDesc || undefined));
         if (d.explanation) appendFill(sec, createInfoBox(d.explanation));
-        if (d.codeNote && d.codeNote !== 'NA') appendFill(sec, createInfoBox('Nota de código: ' + d.codeNote));
+        const resolvedNote = resolveCodeNote(
+          { role: d.role, specification: d.specification, codeNote: d.codeNote },
+          compData.platform || []
+        );
+        if (resolvedNote && resolvedNote !== 'NA') appendFill(sec, createInfoBox('Nota de código: ' + resolvedNote));
         if (d.observation) appendFill(sec, createInfoBox('Observação: ' + d.observation));
       }
     }
@@ -4812,14 +4850,26 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
         if (entry.type === 'agrupamento') {
           const agrupCat = connectorTypeToCategory(entry.agrupTipo || '');
           const letter = String.fromCharCode(65 + (letterIdx % 26)) + (letterIdx >= 26 ? Math.floor(letterIdx / 26) + 1 : '');
-          if (boxProto) await createSpecBox(boxProto, column, letter, agrupCat, entry.explanation || entry.agrupTipo || '', entry.observation || '', entry.accessibleName || '', entry.codeNote || '');
+          if (boxProto) {
+            const resolvedNote = resolveCodeNote(
+              { role: entry.role, specification: entry.specification, codeNote: entry.codeNote },
+              data.compData.platform || []
+            );
+            await createSpecBox(boxProto, column, letter, agrupCat, entry.explanation || entry.agrupTipo || '', entry.observation || '', entry.accessibleName || '', resolvedNote);
+          }
           letterIdx++;
         } else if (entry.type === 'combinado') {
           const letter = String.fromCharCode(65 + (letterIdx % 26)) + (letterIdx >= 26 ? Math.floor(letterIdx / 26) + 1 : '');
           if (entry.conectores) {
             for (const con of entry.conectores) {
               const conCat = connectorTypeToCategory(con.tipo);
-              if (boxProto) await createSpecBox(boxProto, column, letter, conCat, con.explanation || con.specification || con.tipo, con.observation || '', con.accessibleName || '', con.codeNote || '');
+              if (boxProto) {
+                const resolvedNote = resolveCodeNote(
+                  { role: con.role, specification: con.specification, codeNote: con.codeNote },
+                  data.compData.platform || []
+                );
+                await createSpecBox(boxProto, column, letter, conCat, con.explanation || con.specification || con.tipo, con.observation || '', con.accessibleName || '', resolvedNote);
+              }
             }
           }
           letterIdx++;
@@ -4830,8 +4880,12 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
           const cat = d.connectorType ? connectorTypeToCategory(d.connectorType) : (d.category || 'outros');
           if (boxProto) {
             const description = d.explanation || (isDecorativo ? 'Não deve ser anunciado pelo Leitor de Tela.' : (d.specification || d.role || ''));
-            if (description || d.observation || d.accessibleName || d.codeNote) {
-              await createSpecBox(boxProto, column, letter, cat, description, d.observation || '', d.accessibleName || '', d.codeNote || '');
+            const resolvedNote = resolveCodeNote(
+              { role: d.role, specification: d.specification, codeNote: d.codeNote },
+              data.compData.platform || []
+            );
+            if (description || d.observation || d.accessibleName || resolvedNote) {
+              await createSpecBox(boxProto, column, letter, cat, description, d.observation || '', d.accessibleName || '', resolvedNote);
             }
           }
           if (!isDecorativo) letterIdx++;
