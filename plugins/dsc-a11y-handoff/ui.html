@@ -4378,7 +4378,6 @@ function saveTouchAreas(){
  * @param m - Mensagem com entries e annotatedNodes
  */
 function onFocusData(m){
-  console.log('[LOAD-FOCUS] scope=',m.scope,'entries=',m.entries?.length,'variantName in req=',currentVariantName(),'editingException=',S.editingException);
   hideStepLoading(4);
   // Ignorar resposta compartilhada chegando depois de já estar em modo variante
   if(m.scope==='all' && S.editingException) return;
@@ -4517,7 +4516,6 @@ function saveFocusOrder(){
   // Não sobrescrever dados (default ou variante) com array vazio antes dos dados terem carregado.
   // Protege tanto o caso de variante (applyToAll=false) quanto o default (applyToAll=true).
   if(entries.length===0 && !_focusDataLoaded) return;
-  console.log('[SAVE-FOCUS] entries=',entries.length,'variantName=',currentVariantName(),'applyToAll=',applyToAll,'editingException=',S.editingException,'focusDataLoaded=',_focusDataLoaded);
   post({type:'set-focus-order',entries,variantName:currentVariantName(),applyToAll});
   if(S.variants.length>1)post({type:'get-variant-overrides'});
 }

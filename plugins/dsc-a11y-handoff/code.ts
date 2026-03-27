@@ -2490,7 +2490,6 @@ async function getFocusOrder(variantName?: string): Promise<void> {
     scope = 'all';
   }
 
-  console.log('[GET-FOCUS] variantName=', variantName, 'scope=', scope, 'raw length=', raw.length);
   const storedEntries = safeParseJson<(FocusOrderEntry & { namePath?: string })[]>(raw, []);
 
   // Build lookup using ALL visible nodes (not just annotated) so focus order entries are preserved
@@ -2562,13 +2561,11 @@ async function setFocusOrder(entries: FocusOrderEntry[], variantName?: string, a
   // Convert nodeIds (transient instance IDs) to namePaths (stable) for storage
   const targetId = workingNodeId || currentRootId;
   const targetNode = targetId ? await figma.getNodeByIdAsync(targetId) : null;
-  console.log('[SET-FOCUS-DETAIL] targetId=', targetId, 'workingNodeId=', workingNodeId, 'currentRootId=', currentRootId, 'targetNode exists=', !!targetNode);
   const stableEntries = [];
   for (const e of entries) {
     // Use the namePath provided by the UI if available (handles instance child nodeIds correctly).
     // Only rebuild from nodeId if namePath was not provided.
     let namePath = (e as FocusOrderEntry & { namePath?: string }).namePath || '';
-    console.log('[SET-FOCUS-ENTRY] nodeId=', e.nodeId, 'namePath=', namePath);
     if (!namePath && targetNode) {
       // namePath vazio indica que o node selecionado é a própria raiz da instância/componente.
       // Só é válido se o nodeId for o próprio targetId (componente raiz) — caso contrário,
@@ -2580,17 +2577,26 @@ async function setFocusOrder(entries: FocusOrderEntry[], variantName?: string, a
         if (node) namePath = buildNamePath(node, targetId!);
       }
     }
+    // O namePath pode incluir o nome do próprio targetNode como primeiro segmento quando a instância
+    // mais externa no canvas não é reconhecida como o root (ex: instâncias de biblioteca).
+    // Nesse caso, tirar o prefixo antes de validar.
+    if (namePath && targetNode) {
+      const rootName = (targetNode as SceneNode).name;
+      if (namePath === rootName) {
+        namePath = '';
+      } else if (namePath.startsWith(rootName + '/')) {
+        namePath = namePath.slice(rootName.length + 1);
+      }
+    }
     // Se o caminho reconstruído é claramente fora do componente (contém nome de página/frame externo),
     // descarta a entrada — o node não pertence ao componente raiz.
     const found = namePath && targetNode ? findNodeByNamePath(targetNode as SceneNode, namePath) : null;
     const isOutsideComponent = namePath && namePath.includes('/') && targetNode && !found;
-    console.log('[SET-FOCUS-ENTRY] namePath after rebuild=', namePath, 'found=', !!found, 'isOutside=', isOutsideComponent);
     if (isOutsideComponent) continue;
     stableEntries.push({ ...e, namePath });
   }
   const data = JSON.stringify(stableEntries);
   const key = (applyToAll || !variantName) ? 'a11y-focus-order' : 'a11y-focus-order::' + variantName;
-  console.log('[SET-FOCUS] key=', key, 'entries=', stableEntries.length, 'applyToAll=', applyToAll, 'variantName=', variantName);
   sn.setPluginData(key, data);
 }
 
