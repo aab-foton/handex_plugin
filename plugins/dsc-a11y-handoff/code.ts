@@ -2461,8 +2461,10 @@ function collectAllNodes(node: SceneNode): { nodeId: string; name: string }[] {
  * @param variantName - Nome da variante (opcional)
  */
 async function getFocusOrder(variantName?: string): Promise<void> {
+  console.log('[getFocusOrder] variantName=', variantName, 'workingNodeId=', workingNodeId, 'currentRootId=', currentRootId);
   const targetId = workingNodeId || currentRootId;
   if (!targetId || !currentRootId) {
+    console.log('[getFocusOrder] sem targetId — enviando vazio');
     figma.ui.postMessage({ type: 'focus-order-data', entries: [], annotatedNodes: [], scope: 'all' });
     return;
   }
@@ -2543,6 +2545,7 @@ async function getFocusOrder(variantName?: string): Promise<void> {
     }
   }
 
+  console.log('[getFocusOrder] enviando focus-order-data entries=', entries.length, 'scope=', scope);
   figma.ui.postMessage({ type: 'focus-order-data', entries, annotatedNodes: annotated, scope });
 }
 
