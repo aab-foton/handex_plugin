@@ -601,6 +601,8 @@ figma.showUI(__html__, { width: 520, height: 760, themeColors: true });
 let currentRootId: string | null = null;
 let workingNodeId: string | null = null;
 let tempInstanceId: string | null = null;
+/** IDs de instâncias temporárias colocadas fora do canvas (x ≤ -99000) para remoção explícita. */
+const _orphanInstanceIds = new Set<string>();
 let connectorMap: ConnectorInfo[] = [];
 let templateNodeId: string | null = null; // picked template for handoff via template
 /** Modo de escuta ativo: plugin já tem template e aceita seleções no canvas */
@@ -1013,14 +1015,18 @@ async function cleanupTempInstance(): Promise<void> {
       const old = await figma.getNodeByIdAsync(tempInstanceId);
       if (old && 'remove' in old) (old as SceneNode).remove();
     } catch (_e) { /* ignore */ }
+    _orphanInstanceIds.delete(tempInstanceId);
     tempInstanceId = null;
     workingNodeId = null;
   }
-  // Remove orphaned instances at off-canvas position (-99999)
-  const orphans = figma.currentPage.children.filter(
-    c => c.type === 'INSTANCE' && c.x <= -99000
-  );
-  for (const o of orphans) o.remove();
+  // Remove explicitly tracked orphaned instances (avoids scanning all children of the page)
+  for (const id of [..._orphanInstanceIds]) {
+    try {
+      const node = await figma.getNodeByIdAsync(id);
+      if (node && 'remove' in node) (node as SceneNode).remove();
+    } catch (_e) { /* ignore */ }
+  }
+  _orphanInstanceIds.clear();
 }
 
 // ════════════════════════════════════════
@@ -1741,6 +1747,7 @@ async function generatePreview(): Promise<void> {
       // Posiciona fora da área visível para não poluir o canvas
       tempInstance.x = -99999;
       tempInstance.y = -99999;
+      _orphanInstanceIds.add(tempInstance.id); // registrar antes de salvar o ID
       tempInstanceId = tempInstance.id;
       workingNodeId = tempInstance.id;
       previewTarget = tempInstance;
@@ -1763,6 +1770,7 @@ async function generatePreview(): Promise<void> {
   const bounds = previewTarget.absoluteBoundingBox;
   if (!bounds) return;
 
+  figma.ui.postMessage({ type: 'preview-loading' }); // UI pode exibir spinner enquanto exporta
   const bytes = await (previewTarget as SceneNode & ExportMixin).exportAsync({
     format: 'PNG', constraint: { type: 'WIDTH', value: 1040 },
   });
@@ -3705,6 +3713,34 @@ async function getTemplateSectionFresh(tplKey: string, sectionName: string, tplN
 }
 
 /**
+ * Clona o template UMA única vez e extrai TODAS as seções de uma só vez.
+ * Substitui N chamadas a getTemplateSectionFresh por 1 único clone do template.
+ * @param tplKey - Chave do componente template
+ * @param tplNodeId - ID do nó template (fallback local)
+ * @returns Mapa nome→seção e lista ordenada de nomes de seções do template
+ */
+async function getTemplateSectionsAll(
+  tplKey: string,
+  tplNodeId?: string
+): Promise<{ sections: Map<string, SceneNode>; allNames: string[] }> {
+  const detached = await createDetachedTemplate(tplKey, tplNodeId);
+  if (!detached) return { sections: new Map(), allNames: [] };
+
+  const allNames = (detached.children as SceneNode[])
+    .filter(c => c.type === 'FRAME' || c.type === 'SECTION')
+    .map(c => c.name);
+
+  const result = new Map<string, SceneNode>();
+  for (const child of [...detached.children] as SceneNode[]) {
+    if (child.type !== 'FRAME' && child.type !== 'SECTION') continue;
+    figma.currentPage.appendChild(child); // move para a página antes de remover o parent
+    result.set(child.name, child);
+  }
+  detached.remove();
+  return { sections: result, allNames };
+}
+
+/**
  * Retorna os nomes dos filhos diretos (frames) do template,
  * na ordem em que aparecem. Usado para detectar seções novas no template.
  */
@@ -5161,15 +5197,26 @@ function extrairTextosSecao(secao: SceneNode): Map<string, string> {
 async function reinjetarTextosSecao(secao: SceneNode, dados: Map<string, string>): Promise<void> {
   if (dados.size === 0) return;
   const textos = coletarTextosSecao(secao, _SKIP_SECTION_FRAMES);
-  for (const t of textos) {
-    const caminho = calcularCaminhoNo(t, secao);
-    if (dados.has(caminho)) {
-      // Load font before changing text
-      if (typeof t.fontName !== 'symbol') {
-        try { await figma.loadFontAsync(t.fontName); } catch (_e) { /* ignore */ }
-      }
-      try { t.characters = dados.get(caminho)!; } catch (_e) { /* ignore */ }
-    }
+
+  // Filtrar apenas os textos que precisam ser reinjetados
+  const toReinject = textos
+    .map(t => ({ t, caminho: calcularCaminhoNo(t, secao) }))
+    .filter(({ caminho }) => dados.has(caminho));
+  if (toReinject.length === 0) return;
+
+  // Carregar todas as fontes únicas em paralelo (batch único em vez de serial por texto)
+  const uniqueFonts = new Set(
+    toReinject
+      .filter(({ t }) => typeof t.fontName !== 'symbol')
+      .map(({ t }) => JSON.stringify(t.fontName))
+  );
+  await Promise.all([...uniqueFonts].map(f =>
+    figma.loadFontAsync(JSON.parse(f) as FontName).catch(() => {})
+  ));
+
+  // Reinjetar textos (fontes já carregadas)
+  for (const { t, caminho } of toReinject) {
+    try { t.characters = dados.get(caminho)!; } catch (_e) { /* ignore */ }
   }
 }
 
@@ -5375,6 +5422,10 @@ async function updateHandoffFromTemplate(compNodeId: string, tplNodeId: string, 
   sendProgress('Lendo dados do componente...');
   const data = await readHandoffData(compSourceNode);
 
+  // Clone template UMA vez e extrai todas as seções de uma só vez (N clones → 1)
+  sendProgress('Carregando template...');
+  const { sections: tplSectionsMap, allNames: templateSectionNames } = await getTemplateSectionsAll(tplKey, tplNodeId);
+
   // Define sections and their fill functions
   const sections: { name: string; label: string; fill: (frame: FrameNode, data: HandoffData) => Promise<void> }[] = [
     { name: 'title', label: 'Título', fill: fillTitleSection },
@@ -5389,8 +5440,9 @@ async function updateHandoffFromTemplate(compNodeId: string, tplNodeId: string, 
     // Skip sections not selected for update — sync visual style only (preserve content)
     if (sectionsToUpdate && !sectionsToUpdate.includes(sec.name)) {
       sendProgress(`Sincronizando estilo: ${sec.label}...`);
-      // Sync template visual style without destroying content
-      const freshForSync = await getTemplateSectionFresh(tplKey, sec.name, tplNodeId);
+      // Sync template visual style without destroying content (seção já extraída do clone único)
+      const freshForSync = tplSectionsMap.get(sec.name) ?? null;
+      tplSectionsMap.delete(sec.name);
       if (freshForSync) {
         const existingSec = findByName(existing as ChildrenMixin & BaseNode, sec.name);
         if (existingSec) {
@@ -5412,8 +5464,9 @@ async function updateHandoffFromTemplate(compNodeId: string, tplNodeId: string, 
     const oldSection = allSameName[0] ?? findByName(existing, sec.name);
     if (!oldSection) continue;
 
-    // Get fresh section from template BEFORE destroying old content
-    const freshSection = await getTemplateSectionFresh(tplKey, sec.name, tplNodeId);
+    // Get fresh section from template (pre-extracted from the single clone above)
+    const freshSection = tplSectionsMap.get(sec.name) ?? null;
+    tplSectionsMap.delete(sec.name);
     if (!freshSection) {
       console.warn(`[HANDOFF-UPDATE] Fresh section "${sec.name}" not found in template — keeping existing content.`);
       continue;
@@ -5487,7 +5540,7 @@ async function updateHandoffFromTemplate(compNodeId: string, tplNodeId: string, 
   // Mapa de fill functions para seções conhecidas (para preencher novas seções se possível)
   const fillMap = new Map(sections.map(s => [s.name, s.fill]));
 
-  const templateSectionNames = await getTemplateSectionNames(tplKey, tplNodeId);
+  // templateSectionNames já disponível via getTemplateSectionsAll — nenhum clone extra necessário
   const newSections: string[] = [];
   for (const tplSecName of templateSectionNames) {
     if (!existingSectionNames.has(tplSecName)) {
@@ -5498,7 +5551,8 @@ async function updateHandoffFromTemplate(compNodeId: string, tplNodeId: string, 
   if (newSections.length > 0) {
     for (const newSecName of newSections) {
       sendProgress(`Adicionando nova seção: ${newSecName}...`);
-      const freshSection = await getTemplateSectionFresh(tplKey, newSecName, tplNodeId);
+      const freshSection = tplSectionsMap.get(newSecName) ?? null;
+      tplSectionsMap.delete(newSecName);
       if (!freshSection) continue;
 
       // Determinar posição de inserção baseada na ordem do template
@@ -5534,6 +5588,11 @@ async function updateHandoffFromTemplate(compNodeId: string, tplNodeId: string, 
     }
   }
 
+  // Remover seções do template que não foram consumidas (ex: seções extras não reconhecidas)
+  for (const [, sec] of tplSectionsMap) {
+    try { (sec as SceneNode).remove(); } catch (_e) { /* ignore */ }
+  }
+
   // Preserve name and update references
   existing.name = `[A11Y Handoff] ${compSourceNode.name}`;
   compSourceNode.setPluginData('a11y-handoff-id', existing.id);
@@ -5543,6 +5602,7 @@ async function updateHandoffFromTemplate(compNodeId: string, tplNodeId: string, 
     existing.setPluginData('a11y-handoff-tpl-key', tplKey);
   }
 
+  sendProgress('Publicando dados...');
   await publishSharedA11yData();
   await cleanupTempInstance();
   figma.viewport.scrollAndZoomIntoView([existing]);
@@ -5757,6 +5817,7 @@ async function generateHandoffFromTemplate(compNodeId: string, tplNodeId: string
   }
 
   _logPost('publishSharedA11yData...');
+  sendProgress('Publicando dados...');
   await publishSharedA11yData();
   _logPost('cleanupTempInstance...');
   await cleanupTempInstance();
@@ -5815,30 +5876,28 @@ figma.ui.onmessage = async (msg: any) => {
       }
       const varNames = rootNode.type === 'COMPONENT_SET' ? (rootNode as ComponentSetNode).children.filter(c => c.type === 'COMPONENT').map(c => c.name) : [];
       const variantRoleOverrides: string[] = [];
+
+      // Count focus/touch shared data
+      let focusTotal = 0;
+      const sharedFocus = sn.getPluginData('a11y-focus-order');
+      if (sharedFocus) { const arr = safeParseJson<any[]>(sharedFocus, []); focusTotal += arr.length; }
+      let touchTotal = 0;
+      const sharedTouch = sn.getPluginData('a11y-touch-areas::');
+      if (sharedTouch) { const arr = safeParseJson<any[]>(sharedTouch, []); touchTotal += arr.length; }
+
+      // Loop único sobre variantes: 3× menos iterações e getPluginData calls
       for (const vn of varNames) {
-        const vRaw = sn.getPluginData(KEY_SR_UNIFIED + vn);
+        const [vRaw, vf, vt] = [
+          sn.getPluginData(KEY_SR_UNIFIED + vn),
+          sn.getPluginData('a11y-focus-order::' + vn),
+          sn.getPluginData('a11y-touch-areas::' + vn),
+        ];
         if (vRaw) {
           const arr = safeParseJson<UnifiedAnnotationEntry[]>(vRaw, []);
           if (arr.length > 0) variantRoleOverrides.push(vn);
           arr.forEach(e => allUnifiedKeys.add(e.type === 'agrupamento' ? e.id : (e.namePath || e.id)));
         }
-      }
-
-      // Count focus: shared + all variant-specific
-      let focusTotal = 0;
-      const sharedFocus = sn.getPluginData('a11y-focus-order');
-      if (sharedFocus) { const arr = safeParseJson<any[]>(sharedFocus, []); focusTotal += arr.length; }
-      for (const vn of varNames) {
-        const vf = sn.getPluginData('a11y-focus-order::' + vn);
         if (vf) { const arr = safeParseJson<any[]>(vf, []); focusTotal += arr.length; }
-      }
-
-      // Count touch: shared + all variant-specific
-      let touchTotal = 0;
-      const sharedTouch = sn.getPluginData('a11y-touch-areas::');
-      if (sharedTouch) { const arr = safeParseJson<any[]>(sharedTouch, []); touchTotal += arr.length; }
-      for (const vn of varNames) {
-        const vt = sn.getPluginData('a11y-touch-areas::' + vn);
         if (vt) { const arr = safeParseJson<any[]>(vt, []); touchTotal += arr.length; }
       }
 
