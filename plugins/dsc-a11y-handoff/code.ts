@@ -1368,18 +1368,18 @@ async function handleSelectionChange(): Promise<void> {
     if (isTemplateName(node) || isHandoffName(node)) {
       const previousRootId = currentRootId;
 
-      // Se é handoff, mostrar loading imediatamente (antes de qualquer await) e resolver source
-      if (isHandoffName(node) && node.type === 'FRAME') {
-        // Enviar loading antes do primeiro await para garantir que a UI repinta antes de receber os dados
-        figma.ui.postMessage({ type: 'component-loading', name: node.name.replace(/^\[A11Y Handoff\]\s*/, '') });
+      // Mostrar loading IMEDIATAMENTE antes de qualquer await — garante que a UI repinta
+      // antes de receber os dados finais (evita flash/blank entre seleção e tabs).
+      figma.ui.postMessage({ type: 'component-loading', name: node.name.replace(/^\[A11Y Handoff\]\s*|\[dsc-h\]\s*/gi, '').trim() || node.name });
 
+      if (isHandoffName(node) && node.type === 'FRAME') {
         const sourceId = node.getPluginData('a11y-source-component-id');
         if (sourceId) {
           const sourceNode = await figma.getNodeByIdAsync(sourceId);
           if (sourceNode) {
             currentRootId = sourceNode.id;
             workingNodeId = sourceNode.id;
-            // Atualizar com o nome real do componente
+            // Atualizar com o nome real do componente quando disponível
             figma.ui.postMessage({ type: 'component-loading', name: (sourceNode as SceneNode).name });
           }
         }
