@@ -1514,12 +1514,12 @@ function updateCanvasSelectedIndicator(name){
  * Exibe o spinner de carregamento de um passo.
  * @param step - Número do passo (2, 3 ou 4)
  */
-function showStepLoading(step){console.log('[LOADING] showStepLoading',step);const el=$('loading-'+step);if(el)el.classList.add('show')}
+function showStepLoading(step){const el=$('loading-'+step);if(el)el.classList.add('show')}
 /**
  * Oculta o spinner de carregamento de um passo.
  * @param step - Número do passo (2, 3 ou 4)
  */
-function hideStepLoading(step){console.log('[LOADING] hideStepLoading',step);const el=$('loading-'+step);if(el)el.classList.remove('show')}
+function hideStepLoading(step){const el=$('loading-'+step);if(el)el.classList.remove('show')}
 
 /**
  * Navega para um passo específico, atualizando tabs e carregando dados necessários.
@@ -1550,15 +1550,14 @@ function go(step){
   if(step===3){showStepLoading(3);post({type:'get-touch-areas',variantName:currentVariantName()});if(S.variants.length>1)post({type:'get-variant-overrides'});renderExcUI(3)}
   if(step===4){
     _focusDataLoaded=false; // garantir que saveFocusOrder não salve dados vazios enquanto carrega
-    console.log('[TAB4] go(4) exceptionViewMode=',exceptionViewMode[4],'variants=',S.variants.length,'variantConfigs=',(S.variantConfigs||[]).length);
     if(exceptionViewMode[4]==='list'){
       // Em modo lista (há variantes/configs): limpar e não carregar dados compartilhados.
       // Os dados serão carregados apenas quando o usuário clicar em "Editar" numa variante.
       S.focusOrder=[];S.annotatedNodes=[];
+      hideStepLoading(4);
       renderFocusList();renderZones(4);
     } else {
       showStepLoading(4);
-      console.log('[TAB4] posting get-focus-order variantName=',currentVariantName());
       post({type:'get-focus-order',variantName:currentVariantName()});
     }
     if(S.variants.length>1)post({type:'get-variant-overrides'});
@@ -4379,7 +4378,7 @@ function saveTouchAreas(){
  * @param m - Mensagem com entries e annotatedNodes
  */
 function onFocusData(m){
-  console.log('[TAB4] onFocusData received scope=',m.scope,'entries=',m.entries?.length,'editingException=',S.editingException);
+  console.log('[LOAD-FOCUS] scope=',m.scope,'entries=',m.entries?.length,'variantName in req=',currentVariantName(),'editingException=',S.editingException);
   hideStepLoading(4);
   // Ignorar resposta compartilhada chegando depois de já estar em modo variante
   if(m.scope==='all' && S.editingException) return;
@@ -4518,6 +4517,7 @@ function saveFocusOrder(){
   // Não sobrescrever dados (default ou variante) com array vazio antes dos dados terem carregado.
   // Protege tanto o caso de variante (applyToAll=false) quanto o default (applyToAll=true).
   if(entries.length===0 && !_focusDataLoaded) return;
+  console.log('[SAVE-FOCUS] entries=',entries.length,'variantName=',currentVariantName(),'applyToAll=',applyToAll,'editingException=',S.editingException,'focusDataLoaded=',_focusDataLoaded);
   post({type:'set-focus-order',entries,variantName:currentVariantName(),applyToAll});
   if(S.variants.length>1)post({type:'get-variant-overrides'});
 }

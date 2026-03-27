@@ -2461,10 +2461,8 @@ function collectAllNodes(node: SceneNode): { nodeId: string; name: string }[] {
  * @param variantName - Nome da variante (opcional)
  */
 async function getFocusOrder(variantName?: string): Promise<void> {
-  console.log('[getFocusOrder] variantName=', variantName, 'workingNodeId=', workingNodeId, 'currentRootId=', currentRootId);
   const targetId = workingNodeId || currentRootId;
   if (!targetId || !currentRootId) {
-    console.log('[getFocusOrder] sem targetId — enviando vazio');
     figma.ui.postMessage({ type: 'focus-order-data', entries: [], annotatedNodes: [], scope: 'all' });
     return;
   }
@@ -2492,6 +2490,7 @@ async function getFocusOrder(variantName?: string): Promise<void> {
     scope = 'all';
   }
 
+  console.log('[GET-FOCUS] variantName=', variantName, 'scope=', scope, 'raw length=', raw.length);
   const storedEntries = safeParseJson<(FocusOrderEntry & { namePath?: string })[]>(raw, []);
 
   // Build lookup using ALL visible nodes (not just annotated) so focus order entries are preserved
@@ -2545,7 +2544,6 @@ async function getFocusOrder(variantName?: string): Promise<void> {
     }
   }
 
-  console.log('[getFocusOrder] enviando focus-order-data entries=', entries.length, 'scope=', scope);
   figma.ui.postMessage({ type: 'focus-order-data', entries, annotatedNodes: annotated, scope });
 }
 
@@ -2589,6 +2587,7 @@ async function setFocusOrder(entries: FocusOrderEntry[], variantName?: string, a
   }
   const data = JSON.stringify(stableEntries);
   const key = (applyToAll || !variantName) ? 'a11y-focus-order' : 'a11y-focus-order::' + variantName;
+  console.log('[SET-FOCUS] key=', key, 'entries=', stableEntries.length, 'applyToAll=', applyToAll, 'variantName=', variantName);
   sn.setPluginData(key, data);
 }
 
