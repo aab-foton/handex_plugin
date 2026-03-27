@@ -116,6 +116,10 @@ body{font-family:Inter,system-ui,-apple-system,sans-serif;font-size:12px;color:v
 /* ── Empty state ── */
 #empty{display:flex;align-items:center;justify-content:center;flex:1;text-align:center;color:var(--gray-500);padding:24px}
 #awaiting-component{display:none;align-items:center;justify-content:center;flex:1;text-align:center;color:var(--gray-500);padding:24px}
+#loading-component{display:flex;align-items:center;justify-content:center;flex:1;flex-direction:column;gap:12px;text-align:center;color:var(--gray-500);padding:24px}
+#loading-component .lc-spinner{width:28px;height:28px;border:3px solid var(--gray-200);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+#loading-component .lc-name{font-size:13px;font-weight:600;color:var(--gray-700);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#loading-component .lc-hint{font-size:11px;color:var(--gray-400)}
 .canvas-hint{display:flex;align-items:center;gap:6px;padding:8px 16px;margin:0;color:var(--gray-500);font-size:11px;font-weight:400}
 .canvas-selected-layer{display:flex;align-items:center;gap:6px;padding:8px 12px;margin:0;background:var(--green-bg);border-radius:var(--radius);font-size:12px;color:var(--green-text);font-weight:600}
 .canvas-selected-layer .layer-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -674,7 +678,7 @@ body{font-family:Inter,system-ui,-apple-system,sans-serif;font-size:12px;color:v
   </div>
 </div>
 
-<div id="empty"><div>
+<div id="empty" style="display:none"><div>
   <p style="font-size:14px;margin-bottom:10px;font-weight:600;color:var(--gray-900)">Selecione o template</p>
   <p style="color:var(--gray-400);font-size:12px">Selecione a instância do template de handoff para começar</p>
 </div></div>
@@ -683,6 +687,11 @@ body{font-family:Inter,system-ui,-apple-system,sans-serif;font-size:12px;color:v
   <p style="font-size:14px;margin-bottom:10px;font-weight:600;color:var(--green-text)">Template carregado</p>
   <p style="color:var(--gray-500);font-size:12px">Agora selecione qualquer layer dentro de um componente no canvas para começar a anotar</p>
 </div></div>
+<div id="loading-component">
+  <div class="lc-spinner"></div>
+  <div class="lc-name" id="lc-name">Carregando...</div>
+  <div class="lc-hint">Lendo dados do componente</div>
+</div>
 
 <div id="main" style="display:none">
   <div class="steps">
@@ -1259,6 +1268,7 @@ function onReloadCsvResult(m){
 function post(m){parent.postMessage({pluginMessage:m},'*')}
 /** Handler global de mensagens recebidas do plugin — despacha por tipo. */
 window.onmessage=e=>{const m=e.data.pluginMessage;if(!m)return;({
+  'component-loading':onComponentLoading,
   'selection-changed':onSel,
   'template-ready':onTemplateReady,
   'canvas-layer-selected':onCanvasLayerSelected,
@@ -1287,7 +1297,16 @@ window.onmessage=e=>{const m=e.data.pluginMessage;if(!m)return;({
  * Callback de mudança de seleção. Inicializa o estado quando template + componente são selecionados.
  * @param m - Dados da seleção (rootId, variants, componentData, etc.)
  */
+/** Mostra tela de loading enquanto o backend lê dados do componente. */
+function onComponentLoading(m){
+  $('empty').style.display='none';
+  $('awaiting-component').style.display='none';
+  $('main').style.display='none';
+  $('loading-component').style.display='flex';
+  const nameEl=$('lc-name');if(nameEl)nameEl.textContent=m.name||'Carregando...';
+}
 function onSel(m){
+  $('loading-component').style.display='none';
   if(!m.valid){$('empty').style.display='flex';$('main').style.display='none';$('awaiting-component').style.display='none';S.rootId=null;S.templateNodeId=null;$('reloadCsvBtn').disabled=true;$('reloadCsvFeedback').style.display='none';return}
   $('empty').style.display='none';$('awaiting-component').style.display='none';$('main').style.display='flex';
   S.templateNodeId=m.templateNodeId||null;
@@ -1331,6 +1350,7 @@ function onSel(m){
 function onTemplateReady(m){
   $('empty').style.display='none';
   $('main').style.display='none';
+  $('loading-component').style.display='none';
   $('awaiting-component').style.display='flex';
   S.templateNodeId=m.templateNodeId||null;
 }

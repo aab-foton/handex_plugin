@@ -1374,6 +1374,8 @@ async function handleSelectionChange(): Promise<void> {
           if (sourceNode) {
             currentRootId = sourceNode.id;
             workingNodeId = sourceNode.id;
+            // Avisar a UI imediatamente — antes de loadCsvFromTemplate e sendComponentData
+            figma.ui.postMessage({ type: 'component-loading', name: (sourceNode as SceneNode).name });
           }
         }
       } else if (node.id !== templateNodeId) {
@@ -1428,6 +1430,7 @@ async function handleSelectionChange(): Promise<void> {
         if (isNewRoot) {
           currentRootId = resolved.root.id;
           workingNodeId = resolved.root.id;
+          figma.ui.postMessage({ type: 'component-loading', name: resolved.root.name });
           await persistTemplateAssociation();
           await sendComponentData(resolved.root, null, hadRootBefore);
         }
@@ -1575,6 +1578,7 @@ async function handleSelectionChange(): Promise<void> {
     workingNodeId = compNode.id;
     listeningMode = true;
 
+    figma.ui.postMessage({ type: 'component-loading', name: compNode.name });
     await loadCsvFromTemplate(templateNodeId);
     await persistTemplateAssociation();
     // keepStep=true se o root não mudou (usuário re-selecionou o mesmo par template+componente)
