@@ -116,7 +116,7 @@ body{font-family:Inter,system-ui,-apple-system,sans-serif;font-size:12px;color:v
 /* ── Empty state ── */
 #empty{display:flex;align-items:center;justify-content:center;flex:1;text-align:center;color:var(--gray-500);padding:24px}
 #awaiting-component{display:none;align-items:center;justify-content:center;flex:1;text-align:center;color:var(--gray-500);padding:24px}
-#loading-component{display:flex;align-items:center;justify-content:center;flex:1;flex-direction:column;gap:12px;text-align:center;color:var(--gray-500);padding:24px}
+#loading-component{display:none;align-items:center;justify-content:center;flex:1;flex-direction:column;gap:12px;text-align:center;color:var(--gray-500);padding:24px}
 #loading-component .lc-spinner{width:28px;height:28px;border:3px solid var(--gray-200);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 #loading-component .lc-name{font-size:13px;font-weight:600;color:var(--gray-700);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #loading-component .lc-hint{font-size:11px;color:var(--gray-400)}
@@ -687,7 +687,7 @@ body{font-family:Inter,system-ui,-apple-system,sans-serif;font-size:12px;color:v
   <p style="font-size:14px;margin-bottom:10px;font-weight:600;color:var(--green-text)">Template carregado</p>
   <p style="color:var(--gray-500);font-size:12px">Agora selecione qualquer layer dentro de um componente no canvas para começar a anotar</p>
 </div></div>
-<div id="loading-component">
+<div id="loading-component" style="display:flex">
   <div class="lc-spinner"></div>
   <div class="lc-name" id="lc-name">Carregando...</div>
   <div class="lc-hint">Lendo dados do componente</div>
