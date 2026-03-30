@@ -3499,8 +3499,29 @@ async function generateHandoff(selectedVariantIds: string[] = []): Promise<void>
         x: 0, y: 0, width: rootBounds.width, height: rootBounds.height,
         depth: 0, hasA11yData: false, category: '', parentId: '', hasChildren: true,
       }, ...collectLayerZones(root, rootBounds, 1, root.id)];
-      const focusBadges = sharedFocusEntries.map((e, i) => {
-        const zone = zones.find(z => z.id === e.nodeId);
+      // Build namePath → nodeId map from root so stored namePaths resolve to current IDs
+      // (stored nodeIds may reference a different instance than root)
+      const focusNamePathMap = new Map<string, string>();
+      {
+        const stk: [SceneNode, string][] = [[root as SceneNode, '']];
+        while (stk.length > 0) {
+          const [n, p] = stk.pop()!;
+          focusNamePathMap.set(p, n.id);
+          if ('children' in n) {
+            const par = n as ChildrenMixin & SceneNode;
+            for (let i = par.children.length - 1; i >= 0; i--) {
+              const ch = par.children[i] as SceneNode;
+              stk.push([ch, p ? p + '/' + ch.name : ch.name]);
+            }
+          }
+        }
+      }
+      const focusBadges = (sharedFocusEntries as (FocusOrderEntry & { namePath?: string })[]).map((e, i) => {
+        let nodeId = e.nodeId;
+        if (e.namePath && focusNamePathMap.has(e.namePath)) {
+          nodeId = focusNamePathMap.get(e.namePath)!;
+        }
+        const zone = zones.find(z => z.id === nodeId);
         return zone ? { relX: zone.x + zone.width / 2, relY: zone.y, content: String(i + 1), color: C_BLUE, layerCenterY: zone.y + zone.height } : null;
       }).filter((b): b is NonNullable<typeof b> => b !== null);
       const pf = await createPreviewFrame(root, workingNodeId, focusBadges, HANDOFF_INNER_WIDTH);
@@ -4474,7 +4495,16 @@ async function fillFocusOrderSection(focusOrderFrame: FrameNode, data: HandoffDa
           const tabNum = i + 1;
 
           let targetNode: SceneNode | null = null;
-          if (entry.namePath) {
+          // Try nodeId suffix match FIRST — uniquely identifies exact node even among duplicates
+          if (entry.nodeId) {
+            const suffix = entry.nodeId.includes(';') ? entry.nodeId.split(';').pop()! : entry.nodeId;
+            targetNode = (compClone as unknown as ChildrenMixin).findOne((n: SceneNode) => {
+              const nSuffix = n.id.includes(';') ? n.id.split(';').pop()! : n.id;
+              return nSuffix === suffix;
+            }) as SceneNode | null;
+          }
+          // Fallback to namePath matching if suffix match failed
+          if (!targetNode && entry.namePath) {
             // Try direct path first
             targetNode = findNodeByNamePath(compClone, entry.namePath);
             // Try without first segment (might be variant name)
@@ -4482,7 +4512,7 @@ async function fillFocusOrderSection(focusOrderFrame: FrameNode, data: HandoffDa
               const withoutFirst = entry.namePath.split('/').slice(1).join('/');
               targetNode = findNodeByNamePath(compClone, withoutFirst);
             }
-            // Fallback: search by last name segment
+            // Last resort: search by leaf name segment
             if (!targetNode) {
               const leafName = entry.namePath.split('/').pop() || '';
               if (leafName) {
@@ -4491,13 +4521,6 @@ async function fillFocusOrderSection(focusOrderFrame: FrameNode, data: HandoffDa
                 ) as SceneNode | null;
               }
             }
-          }
-          if (!targetNode && entry.nodeId) {
-            const suffix = entry.nodeId.includes(';') ? entry.nodeId.split(';').pop()! : entry.nodeId;
-            targetNode = (compClone as unknown as ChildrenMixin).findOne((n: SceneNode) => {
-              const nSuffix = n.id.includes(';') ? n.id.split(';').pop()! : n.id;
-              return nSuffix === suffix;
-            }) as SceneNode | null;
           }
 
           if (targetNode) {
@@ -4731,21 +4754,19 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
     let variantIdx = 0;
     const ocupados: { x: number; y: number; w: number; h: number }[] = [];
     const COLL_PAD = 4;
-    let globalLetterIdx = 0;
+    const letterIdxPerType: Record<string, number> = {};
     const multiVariant = tplPerVariantUnified.length > 1;
 
     _log('pré-computando dimensões dos conectores...');
     // Pre-compute connector dimensions per edge (avoids 4x setProperties per entry)
-    const connDimsPorEdge: Record<string, { w: number; h: number }> = {};
+    let connBadgeW = 40, connBadgeH = 40;
     if (connectorCompSet) {
       const probeVariant = (connectorCompSet.children[0] as ComponentNode | null);
       if (probeVariant) {
         const probeInst = probeVariant.createInstance();
         imageFrame.appendChild(probeInst);
-        for (const [edge, dir] of Object.entries(edgeToDirMap)) {
-          try { probeInst.setProperties({ 'conector': dir }); } catch (_) {}
-          connDimsPorEdge[edge] = { w: probeInst.width, h: probeInst.height };
-        }
+        try { probeInst.setProperties({ 'conector': 'desativado' }); } catch (_) {}
+        connBadgeW = probeInst.width; connBadgeH = probeInst.height;
         probeInst.remove();
       }
     }
@@ -4755,10 +4776,13 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
       if (!block.component) continue;
       _log(`▶ bloco ${blockIdx + 1}/${tplPerVariantUnified.length} "${block.displayName || 'default'}" — ${block.entries.length} entries`);
       const _tBlock = Date.now();
-      if (multiVariant) globalLetterIdx = 0;
+      if (multiVariant) { for (const k in letterIdxPerType) letterIdxPerType[k] = 0; }
       compClone = blockInstances[blockIdx]!;
-      compClone.x = cursorX; compClone.y = COMP_Y;
       imageFrame.appendChild(compClone);
+      compClone.x = cursorX; compClone.y = COMP_Y;
+
+      // Resetar por variante: conectores do bloco anterior não devem interferir com este
+      ocupados.length = 0;
 
       if (itemNumberProto) {
         const marker = itemNumberProto.clone();
@@ -4774,8 +4798,8 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
         const _tEntry = Date.now(); void _tEntry;
         if (entry.type === 'agrupamento' && entry.rect) {
           let agrupInst: InstanceNode | null = null;
+          const agrupCat = connectorTypeToCategory(entry.agrupTipo || '');
           if (agrupamentoCompSet) {
-            const agrupCat = connectorTypeToCategory(entry.agrupTipo || '');
             const tipoVariantVal = categoryToTipo[agrupCat] || (entry.agrupTipo || '').toLowerCase();
             const variant = (agrupamentoCompSet.children.find(c => c.type === 'COMPONENT' && c.name.toLowerCase().includes(tipoVariantVal) && c.name.toLowerCase().includes('superior')) || 
                              agrupamentoCompSet.children.find(c => c.type === 'COMPONENT' && c.name.toLowerCase().includes('superior')) || 
@@ -4786,9 +4810,10 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
             agrupInst.x = compClone.x + entry.rect.x; agrupInst.y = compClone.y + entry.rect.y;
             try { agrupInst.resize(entry.rect.width, entry.rect.height); } catch (_) {}
             imageFrame.appendChild(agrupInst);
-            const agrupLetter = String.fromCharCode(65 + (globalLetterIdx % 26)) + (globalLetterIdx >= 26 ? Math.floor(globalLetterIdx / 26) + 1 : '');
+            const _ai = letterIdxPerType[agrupCat] || 0;
+            const agrupLetter = String.fromCharCode(65 + (_ai % 26)) + (_ai >= 26 ? Math.floor(_ai / 26) + 1 : '');
             try { agrupInst.setProperties({ 'letra#3925:32': agrupLetter }); } catch (_) {}
-            globalLetterIdx++;
+            letterIdxPerType[agrupCat] = _ai + 1;
           }
           continue;
         }
@@ -4796,7 +4821,9 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
         const d = entry.layerData || { role: 'dont-read', category: 'decorativo', accessibleName: '', altText: '', headingLevel: 0, explanation: '', specification: '', codeNote: '', observation: '', connectorType: '' };
         const isDecorativo = d.category === 'decorativo' || d.role === 'dont-read';
         const isCombinado = entry.type === 'combinado';
-        const letter = isDecorativo ? '' : (String.fromCharCode(65 + (globalLetterIdx % 26)) + (globalLetterIdx >= 26 ? Math.floor(globalLetterIdx / 26) + 1 : ''));
+        const entryCat = isDecorativo ? '' : (isCombinado && entry.conectores && entry.conectores.length > 0 ? connectorTypeToCategory(entry.conectores[0].tipo) : (d.connectorType ? connectorTypeToCategory(d.connectorType) : (d.category || 'outros')));
+        const _ei = entryCat ? (letterIdxPerType[entryCat] || 0) : 0;
+        const letter = isDecorativo ? '' : (String.fromCharCode(65 + (_ei % 26)) + (_ei >= 26 ? Math.floor(_ei / 26) + 1 : ''));
 
         let target: SceneNode | null = null;
         if (entry.namePath) {
@@ -4814,10 +4841,13 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
           target = compClone;
         }
 
-        if (!target) { if (!isDecorativo) globalLetterIdx++; continue; }
-        const nb = target.absoluteBoundingBox;
-        const cb = compClone.absoluteBoundingBox;
-        if (!nb || !cb) { if (!isDecorativo) globalLetterIdx++; continue; }
+        if (!target) { if (!isDecorativo && entryCat) letterIdxPerType[entryCat] = (letterIdxPerType[entryCat] || 0) + 1; continue; }
+        // Coordenadas locais em vez de absoluteBoundingBox — evita valores stale após
+        // setProperties (mudança de variante) nos blockInstances pré-criados
+        let _lx = 0, _ly = 0;
+        { let _c: BaseNode = target; while (_c.id !== compClone.id && _c.parent) { if ('x' in _c) { _lx += (_c as SceneNode).x; _ly += (_c as SceneNode).y; } _c = _c.parent!; } }
+        const _tw = ('width'  in target ? (target as SceneNode & { width:  number }).width  : 0) || compClone.width;
+        const _th = ('height' in target ? (target as SceneNode & { height: number }).height : 0) || compClone.height;
 
         let instToPlace: InstanceNode | null = null;
         if (isCombinado && combinadoCompSet) {
@@ -4852,70 +4882,148 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
 
         if (instToPlace) {
           imageFrame.appendChild(instToPlace);
-          // Use pre-computed connector dimensions; fall back to measuring only for combinado instances
-          const dimsPorEdge: Record<string, { w: number; h: number }> = isCombinado ? (() => {
-            const d2: Record<string, { w: number; h: number }> = {};
-            for (const [edge, dir] of Object.entries(edgeToDirMap)) {
-              try { instToPlace!.setProperties({ 'conector': dir }); } catch (_) {}
-              d2[edge] = { w: instToPlace!.width, h: instToPlace!.height };
-            }
-            return d2;
-          })() : connDimsPorEdge;
-          const relElemX = nb.x - cb.x; const relElemY = nb.y - cb.y;
-          const elemCX = compClone.x + relElemX + nb.width / 2;
-          const elemCY = compClone.y + relElemY + nb.height / 2;
-          const normX  = (relElemX + nb.width  / 2) / cb.width;
-          const normY  = (relElemY + nb.height / 2) / cb.height;
-          const cRight  = compClone.x + compClone.width;
-          let edges: string[];
-          if (normX >= 0.6) edges = ['right', 'top', 'bottom', 'left'];
-          else if (normX <= 0.4) edges = ['left', 'bottom', 'top', 'right'];
-          else if (normY <= 0.35) edges = ['top', 'right', 'left', 'bottom'];
-          else if (normY >= 0.65) edges = ['bottom', 'right', 'left', 'top'];
-          else edges = ['right', 'bottom', 'top', 'left'];
-          const elemLeft = compClone.x + relElemX;
-          const elemRight = compClone.x + relElemX + nb.width;
-          const elemTop = compClone.y + relElemY;
-          const elemBottom = compClone.y + relElemY + nb.height;
-          const calcPos = (edge: string, ring: number): { bx: number; by: number; bw: number; bh: number } => {
-            const dims = dimsPorEdge[edge] || { w: 40, h: 40 };
-            const dimPerp = (edge === 'left' || edge === 'right') ? dims.w : dims.h;
-            const gap = ring * (dimPerp + COLL_PAD);
-            let bx: number, by: number;
-            if (edge === 'right') { bx = elemRight + gap; by = elemCY - dims.h / 2; }
-            else if (edge === 'left') { bx = elemLeft - dims.w - gap; by = elemCY - dims.h / 2; }
-            else if (edge === 'top') { bx = elemCX - dims.w / 2; by = elemTop - dims.h - gap; }
-            else { bx = elemCX - dims.w / 2; by = elemBottom + gap; }
-            return { bx, by, bw: dims.w, bh: dims.h };
-          };
-          const sobrepoe = (x: number, y: number, w: number, h: number): boolean => ocupados.some(o => x < o.x + o.w + COLL_PAD && x + w + COLL_PAD > o.x && y < o.y + o.h + COLL_PAD && y + h + COLL_PAD > o.y);
-          let placed = false;
-          for (let ring = 0; ring <= 4 && !placed; ring++) {
-            for (const edge of edges) {
-              const pos = calcPos(edge, ring);
-              if (!sobrepoe(pos.bx, pos.by, pos.bw, pos.bh)) {
-                try { instToPlace.setProperties({ 'conector': edgeToDirMap[edge] }); } catch (_) {}
-                instToPlace.x = pos.bx; instToPlace.y = pos.by;
-                ocupados.push({ x: pos.bx, y: pos.by, w: pos.bw, h: pos.bh });
-                placed = true; break;
+          const relElemX = _lx; const relElemY = _ly;
+          const elemCX = compClone.x + relElemX + _tw / 2;
+          const elemCY = compClone.y + relElemY + _th / 2;
+          if (isDecorativo) {
+            // Decorativo: mede apenas o badge (sem linha), faz ring placement com badge,
+            // depois redimensiona a linha para conectar o badge ao elemento
+            try { instToPlace.setProperties({ 'conector': 'desativado' }); } catch (_) {}
+            const badgeW = instToPlace.width;
+            const badgeH = instToPlace.height;
+            const normX  = (relElemX + _tw / 2) / compClone.width;
+            const normY  = (relElemY + _th / 2) / compClone.height;
+            const cRight  = compClone.x + compClone.width;
+            let edges: string[];
+            if (normX >= 0.6) edges = ['right', 'top', 'bottom', 'left'];
+            else if (normX <= 0.4) edges = ['left', 'top', 'bottom', 'right'];
+            else if (normY <= 0.35) edges = ['top', 'right', 'left', 'bottom'];
+            else if (normY >= 0.65) edges = ['bottom', 'right', 'left', 'top'];
+            else edges = ['right', 'bottom', 'top', 'left'];
+            const elemLeft = compClone.x + relElemX;
+            const elemRight = compClone.x + relElemX + _tw;
+            const elemTop = compClone.y + relElemY;
+            const elemBottom = compClone.y + relElemY + _th;
+            const LINE_GAP = 8; // espaço mínimo entre borda do elemento e borda do badge
+            const calcBadgePos = (edge: string, ring: number): { bx: number; by: number } => {
+              if (edge === 'right') return { bx: elemRight + LINE_GAP + ring * (badgeW + COLL_PAD), by: elemCY - badgeH / 2 };
+              if (edge === 'left')  return { bx: elemLeft - badgeW - LINE_GAP - ring * (badgeW + COLL_PAD), by: elemCY - badgeH / 2 };
+              if (edge === 'top')   return { bx: elemCX - badgeW / 2, by: elemTop - badgeH - LINE_GAP - ring * (badgeH + COLL_PAD) };
+              /* bottom */           return { bx: elemCX - badgeW / 2, by: elemBottom + LINE_GAP + ring * (badgeH + COLL_PAD) };
+            };
+            const sobrepoe = (x: number, y: number, w: number, h: number): boolean => ocupados.some(o => x < o.x + o.w + COLL_PAD && x + w + COLL_PAD > o.x && y < o.y + o.h + COLL_PAD && y + h + COLL_PAD > o.y);
+            let placed = false;
+            for (let ring = 0; ring <= 4 && !placed; ring++) {
+              for (const edge of edges) {
+                const { bx, by } = calcBadgePos(edge, ring);
+                if (!sobrepoe(bx, by, badgeW, badgeH)) {
+                  try { instToPlace.setProperties({ 'conector': edgeToDirMap[edge] }); } catch (_) {}
+                  // Redimensiona a linha para conectar badge ao elemento
+                  if (edge === 'right') {
+                    try { instToPlace.resize(bx - elemRight + badgeW, instToPlace.height); } catch (_) {}
+                    instToPlace.x = elemRight; instToPlace.y = by;
+                  } else if (edge === 'left') {
+                    try { instToPlace.resize(elemLeft - bx, instToPlace.height); } catch (_) {}
+                    instToPlace.x = bx; instToPlace.y = by;
+                  } else if (edge === 'top') {
+                    try { instToPlace.resize(instToPlace.width, elemTop - by); } catch (_) {}
+                    instToPlace.x = bx; instToPlace.y = by;
+                  } else {
+                    try { instToPlace.resize(instToPlace.width, by + badgeH - elemBottom); } catch (_) {}
+                    instToPlace.x = bx; instToPlace.y = elemBottom;
+                  }
+                  ocupados.push({ x: bx, y: by, w: badgeW, h: badgeH });
+                  placed = true; break;
+                }
               }
             }
-          }
-          if (!placed) {
-            try { instToPlace.setProperties({ 'conector': 'direita' }); } catch (_) {}
-            instToPlace.x = cRight + CONN_MARGIN; instToPlace.y = elemCY - instToPlace.height / 2;
-          }
-          if (letter) {
-            try { instToPlace.setProperties({ 'letra#3925:6': letter }); } catch (_) {
-              const lt = (instToPlace as unknown as ChildrenMixin).findOne((n: SceneNode) => n.type === 'TEXT') as TextNode | null;
-              if (lt) { try { await figma.loadFontAsync(lt.fontName as FontName); lt.characters = letter; } catch (_2) {} }
+            if (!placed) {
+              try { instToPlace.setProperties({ 'conector': 'direita' }); } catch (_) {}
+              const fallbackBx = cRight + CONN_MARGIN;
+              try { instToPlace.resize(fallbackBx - elemRight + badgeW, instToPlace.height); } catch (_) {}
+              instToPlace.x = elemRight; instToPlace.y = elemCY - instToPlace.height / 2;
+            }
+          } else {
+            // Usa tamanho só do badge para posicionamento; linha será redimensionada depois
+            const normX  = (relElemX + _tw / 2) / compClone.width;
+            const normY  = (relElemY + _th / 2) / compClone.height;
+            const cRight  = compClone.x + compClone.width;
+            let edges: string[];
+            if (normX >= 0.6) edges = ['right', 'top', 'bottom', 'left'];
+            else if (normX <= 0.4) edges = ['left', 'top', 'bottom', 'right'];
+            else if (normY <= 0.35) edges = ['top', 'right', 'left', 'bottom'];
+            else if (normY >= 0.65) edges = ['bottom', 'right', 'left', 'top'];
+            else edges = ['right', 'bottom', 'top', 'left'];
+            const elemLeft = compClone.x + relElemX;
+            const elemRight = compClone.x + relElemX + _tw;
+            const elemTop = compClone.y + relElemY;
+            const elemBottom = compClone.y + relElemY + _th;
+            const LINE_GAP = 8;
+            // Para combinado, mede badge size direto no instToPlace; para normal usa connBadgeW/H
+            let bW = connBadgeW, bH = connBadgeH;
+            if (isCombinado) {
+              try { instToPlace!.setProperties({ 'conector': 'desativado' }); } catch (_) {}
+              bW = instToPlace!.width; bH = instToPlace!.height;
+            }
+            const calcPos = (edge: string, ring: number): { bx: number; by: number; bw: number; bh: number } => {
+              const gap = ring * ((edge === 'left' || edge === 'right' ? bW : bH) + COLL_PAD);
+              let bx: number, by: number;
+              if (edge === 'right') { bx = elemRight + LINE_GAP + gap; by = elemCY - bH / 2; }
+              else if (edge === 'left') { bx = elemLeft - bW - LINE_GAP - gap; by = elemCY - bH / 2; }
+              else if (edge === 'top') { bx = elemCX - bW / 2; by = elemTop - bH - LINE_GAP - gap; }
+              else { bx = elemCX - bW / 2; by = elemBottom + LINE_GAP + gap; }
+              return { bx, by, bw: bW, bh: bH };
+            };
+            const sobrepoe = (x: number, y: number, w: number, h: number): boolean => ocupados.some(o => x < o.x + o.w + COLL_PAD && x + w + COLL_PAD > o.x && y < o.y + o.h + COLL_PAD && y + h + COLL_PAD > o.y);
+            let placed = false;
+            for (let ring = 0; ring <= 4 && !placed; ring++) {
+              for (const edge of edges) {
+                const pos = calcPos(edge, ring);
+                if (!sobrepoe(pos.bx, pos.by, pos.bw, pos.bh)) {
+                  try { instToPlace.setProperties({ 'conector': edgeToDirMap[edge] }); } catch (_) {}
+                  if (!isCombinado) {
+                    if (edge === 'right') {
+                      try { instToPlace.resize(pos.bx - elemRight + bW, instToPlace.height); } catch (_) {}
+                      instToPlace.x = elemRight; instToPlace.y = pos.by;
+                    } else if (edge === 'left') {
+                      try { instToPlace.resize(elemLeft - pos.bx, instToPlace.height); } catch (_) {}
+                      instToPlace.x = pos.bx; instToPlace.y = pos.by;
+                    } else if (edge === 'top') {
+                      try { instToPlace.resize(instToPlace.width, elemTop - pos.by); } catch (_) {}
+                      instToPlace.x = pos.bx; instToPlace.y = pos.by;
+                    } else {
+                      try { instToPlace.resize(instToPlace.width, pos.by + bH - elemBottom); } catch (_) {}
+                      instToPlace.x = pos.bx; instToPlace.y = elemBottom;
+                    }
+                  } else {
+                    instToPlace.x = pos.bx; instToPlace.y = pos.by;
+                  }
+                  ocupados.push({ x: pos.bx, y: pos.by, w: pos.bw, h: pos.bh });
+                  placed = true; break;
+                }
+              }
+            }
+            if (!placed) {
+              try { instToPlace.setProperties({ 'conector': 'direita' }); } catch (_) {}
+              if (!isCombinado) {
+                try { instToPlace.resize(CONN_MARGIN + bW, instToPlace.height); } catch (_) {}
+                instToPlace.x = cRight; instToPlace.y = elemCY - instToPlace.height / 2;
+              } else {
+                instToPlace.x = cRight + CONN_MARGIN; instToPlace.y = elemCY - instToPlace.height / 2;
+              }
+            }
+            if (letter) {
+              try { instToPlace.setProperties({ 'letra#3925:6': letter }); } catch (_) {
+                const lt = (instToPlace as unknown as ChildrenMixin).findOne((n: SceneNode) => n.type === 'TEXT') as TextNode | null;
+                if (lt) { try { await figma.loadFontAsync(lt.fontName as FontName); lt.characters = letter; } catch (_2) {} }
+              }
             }
           }
         }
         const _entryMs = Date.now() - _tEntry;
         if (_entryMs > 50) _log(`  entry ${_entryIdx} tipo=${entry.type} path="${entry.namePath || ''}" — ${_entryMs}ms`);
         _entryIdx++;
-        if (!isDecorativo) globalLetterIdx++;
+        if (!isDecorativo && entryCat) letterIdxPerType[entryCat] = (letterIdxPerType[entryCat] || 0) + 1;
       }
       _log(`◀ bloco ${blockIdx + 1} concluído em ${Date.now() - _tBlock}ms`);
       cursorX += compClone.width + GAP_BETWEEN_VARIANTS;
@@ -5010,11 +5118,13 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
 
       await createSpecRow(elementProto, column, block.displayName || 'Default', '', String(variantCounter++));
 
-      let letterIdx = 0;
+      const letterIdxByType: Record<string, number> = {};
+      const getLetter = (cat: string): string => { const i = letterIdxByType[cat] || 0; return String.fromCharCode(65 + (i % 26)) + (i >= 26 ? Math.floor(i / 26) + 1 : ''); };
+      const incLetter = (cat: string) => { letterIdxByType[cat] = (letterIdxByType[cat] || 0) + 1; };
       for (const entry of block.entries) {
         if (entry.type === 'agrupamento') {
           const agrupCat = connectorTypeToCategory(entry.agrupTipo || '');
-          const letter = String.fromCharCode(65 + (letterIdx % 26)) + (letterIdx >= 26 ? Math.floor(letterIdx / 26) + 1 : '');
+          const letter = getLetter(agrupCat);
           if (boxProto) {
             const resolvedNote = resolveCodeNote(
               { role: entry.role, specification: entry.specification, codeNote: entry.codeNote },
@@ -5022,9 +5132,10 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
             );
             await createSpecBox(boxProto, column, letter, agrupCat, entry.explanation || entry.agrupTipo || '', entry.observation || '', entry.accessibleName || '', resolvedNote);
           }
-          letterIdx++;
+          incLetter(agrupCat);
         } else if (entry.type === 'combinado') {
-          const letter = String.fromCharCode(65 + (letterIdx % 26)) + (letterIdx >= 26 ? Math.floor(letterIdx / 26) + 1 : '');
+          const combCat = entry.conectores && entry.conectores.length > 0 ? connectorTypeToCategory(entry.conectores[0].tipo) : 'outros';
+          const letter = getLetter(combCat);
           if (entry.conectores) {
             for (const con of entry.conectores) {
               const conCat = connectorTypeToCategory(con.tipo);
@@ -5037,12 +5148,12 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
               }
             }
           }
-          letterIdx++;
+          incLetter(combCat);
         } else {
           const d = entry.layerData || { role: 'dont-read', category: 'decorativo', accessibleName: '', altText: '', headingLevel: 0, explanation: '', specification: '', codeNote: '', observation: '', connectorType: '' };
           const isDecorativo = d.category === 'decorativo' || d.role === 'dont-read';
-          const letter = isDecorativo ? '' : (String.fromCharCode(65 + (letterIdx % 26)) + (letterIdx >= 26 ? Math.floor(letterIdx / 26) + 1 : ''));
           const cat = d.connectorType ? connectorTypeToCategory(d.connectorType) : (d.category || 'outros');
+          const letter = isDecorativo ? '' : getLetter(cat);
           if (boxProto) {
             const description = d.explanation || (isDecorativo ? 'Não deve ser anunciado pelo Leitor de Tela.' : (d.specification || d.role || ''));
             const resolvedNote = resolveCodeNote(
@@ -5053,7 +5164,7 @@ async function fillScreenReaderSection(srFrame: FrameNode, data: HandoffData): P
               await createSpecBox(boxProto, column, letter, cat, description, d.observation || '', d.accessibleName || '', resolvedNote);
             }
           }
-          if (!isDecorativo) letterIdx++;
+          if (!isDecorativo) incLetter(cat);
         }
       }
       _log(`  specs bloco "${block.displayName || 'default'}" — ${Date.now() - _tSpecBlock}ms`);
@@ -5748,11 +5859,10 @@ async function generateHandoffFromTemplate(compNodeId: string, tplNodeId: string
   const tplLocalX = (tplNode as SceneNode).x;
   const tplLocalY = (tplNode as SceneNode).y;
   const tplOriginalParent = (tplNode as SceneNode).parent;
+  console.log(`[HANDOFF-POS] tplType=${tplNode.type} tplLocalX=${tplLocalX} tplLocalY=${tplLocalY} tplAbsBounds=${JSON.stringify(tplAbsBounds)} parentType=${tplOriginalParent?.type}`);
   let detached: FrameNode;
   if (tplNode.type === 'INSTANCE') {
-    const cloned = (tplNode as InstanceNode).clone();
-    detached = cloned.detachInstance();
-    tplNode.remove();
+    detached = (tplNode as InstanceNode).detachInstance();
   } else if (tplNode.type === 'COMPONENT') {
     const inst = (tplNode as ComponentNode).createInstance();
     detached = inst.detachInstance();
@@ -5769,6 +5879,7 @@ async function generateHandoffFromTemplate(compNodeId: string, tplNodeId: string
     figma.ui.postMessage({ type: 'handoff-result', success: false, error: 'Tipo de nó não suportado como template: ' + tplNode.type });
     return null;
   }
+  console.log(`[HANDOFF-POS] after detach: parentType=${detached.parent?.type} x=${detached.x} y=${detached.y}`);
   // Position the handoff where the template was, using local coordinates (same parent)
   detached.x = tplLocalX;
   detached.y = tplLocalY;
@@ -5814,29 +5925,35 @@ async function generateHandoffFromTemplate(compNodeId: string, tplNodeId: string
     detached.y = overridePosition.y;
   }
   // Garante que o frame está no parent correto.
-  // Para COMPONENT/COMPONENT_SET, a instância é criada dentro do componente — mover para o
-  // parent original do template (Section, Frame, ou a própria página) usando coordenadas absolutas.
   const detachedParentType = detached.parent?.type;
   if (detachedParentType === 'COMPONENT_SET' || detachedParentType === 'COMPONENT') {
-    // Instance criada dentro do componente — reposicionar no parent correto
+    // Instance criada dentro do componente — mover para o parent original do template
     const targetParent = tplOriginalParent && 'appendChild' in tplOriginalParent
       ? tplOriginalParent as (BaseNode & ChildrenMixin)
       : figma.currentPage;
     (targetParent as ChildrenMixin).appendChild(detached);
-    detached.x = tplLocalX;
-    detached.y = tplLocalY;
+    if (!overridePosition) { detached.x = tplLocalX; detached.y = tplLocalY; }
+  } else if (
+    detached.parent === figma.currentPage &&
+    tplOriginalParent && 'appendChild' in tplOriginalParent &&
+    tplOriginalParent !== figma.currentPage &&
+    tplOriginalParent.type !== 'COMPONENT' && tplOriginalParent.type !== 'COMPONENT_SET'
+  ) {
+    // clone()/detachInstance() moveu o frame para o root da página, mas o template estava
+    // dentro de uma Section ou Frame — mover de volta e usar coordenadas locais corretas
+    (tplOriginalParent as ChildrenMixin).appendChild(detached);
+    if (!overridePosition) { detached.x = tplLocalX; detached.y = tplLocalY; }
   } else if (detached.parent !== figma.currentPage) {
-    // Para INSTANCE/FRAME clonados: se o parent original era uma Section/Frame, manter lá
-    // (o clone já está no parent correto, não mover para a página)
-    // Só mover se o parent foi removido/inválido
+    // Parent inválido/removido — mover para a página com coordenadas absolutas
     if (!detached.parent || detached.parent.removed) {
       figma.currentPage.appendChild(detached);
-      if (tplAbsBounds) {
+      if (!overridePosition && tplAbsBounds) {
         detached.x = tplAbsBounds.x;
         detached.y = tplAbsBounds.y;
       }
     }
   }
+  console.log(`[HANDOFF-POS] after fixup: parentType=${detached.parent?.type} x=${detached.x} y=${detached.y} abs=${JSON.stringify(detached.absoluteBoundingBox)}`);
 
   // Save handoff ID and template key on the source component + reverse reference
   compSourceNode.setPluginData('a11y-handoff-id', detached.id);
@@ -5845,6 +5962,11 @@ async function generateHandoffFromTemplate(compNodeId: string, tplNodeId: string
     compSourceNode.setPluginData('a11y-handoff-tpl-key', tplComponentKey);
     detached.setPluginData('a11y-handoff-tpl-key', tplComponentKey);
   }
+
+  // Update templateNodeId to the new detached frame so subsequent "Gerar" clicks
+  // don't fail with "Template não encontrado" (original INSTANCE was removed above)
+  templateNodeId = detached.id;
+  await persistTemplateAssociation();
 
   // Save auto-generated text baselines for each section (used by update to detect manual edits)
   _logPost('salvando baselines de texto...');
@@ -5914,10 +6036,11 @@ figma.ui.onmessage = async (msg: any) => {
 
       // Count annotations: shared + all variant-specific (deduplicated by path/ID)
       const allUnifiedKeys = new Set<string>();
+      let agrupTotal = 0;
       const sharedUnifiedRaw = sn.getPluginData(KEY_SR_UNIFIED);
       if (sharedUnifiedRaw) {
         const arr = safeParseJson<UnifiedAnnotationEntry[]>(sharedUnifiedRaw, []);
-        arr.forEach(e => allUnifiedKeys.add(e.type === 'agrupamento' ? e.id : (e.namePath || e.id)));
+        arr.forEach(e => { allUnifiedKeys.add(e.type === 'agrupamento' ? e.id : (e.namePath || e.id)); if (e.type === 'agrupamento') agrupTotal++; });
       }
       const varNames = rootNode.type === 'COMPONENT_SET' ? (rootNode as ComponentSetNode).children.filter(c => c.type === 'COMPONENT').map(c => c.name) : [];
       const variantRoleOverrides: string[] = [];
@@ -5940,13 +6063,29 @@ figma.ui.onmessage = async (msg: any) => {
         if (vRaw) {
           const arr = safeParseJson<UnifiedAnnotationEntry[]>(vRaw, []);
           if (arr.length > 0) variantRoleOverrides.push(vn);
-          arr.forEach(e => allUnifiedKeys.add(e.type === 'agrupamento' ? e.id : (e.namePath || e.id)));
+          arr.forEach(e => { allUnifiedKeys.add(e.type === 'agrupamento' ? e.id : (e.namePath || e.id)); if (e.type === 'agrupamento') agrupTotal++; });
         }
         if (vf) { const arr = safeParseJson<any[]>(vf, []); focusTotal += arr.length; }
         if (vt) { const arr = safeParseJson<any[]>(vt, []); touchTotal += arr.length; }
       }
 
-      figma.ui.postMessage({ type: 'summary-counts', roles: allUnifiedKeys.size, focus: focusTotal, touch: touchTotal, agrupamentos: 0, variantOverrides: variantRoleOverrides });
+      // Também conta anotações das VariantConfigs (variantes parametrizadas, chaveadas por vc.id)
+      const variantConfigs = readVariantConfigs(sn);
+      for (const vc of variantConfigs) {
+        const [vcRaw, vcf, vct] = [
+          sn.getPluginData(KEY_SR_UNIFIED + vc.id),
+          sn.getPluginData('a11y-focus-order::' + vc.id),
+          sn.getPluginData('a11y-touch-areas::' + vc.id),
+        ];
+        if (vcRaw) {
+          const arr = safeParseJson<UnifiedAnnotationEntry[]>(vcRaw, []);
+          arr.forEach(e => { allUnifiedKeys.add(e.type === 'agrupamento' ? e.id : (e.namePath || e.id)); if (e.type === 'agrupamento') agrupTotal++; });
+        }
+        if (vcf) { const arr = safeParseJson<any[]>(vcf, []); focusTotal += arr.length; }
+        if (vct) { const arr = safeParseJson<any[]>(vct, []); touchTotal += arr.length; }
+      }
+
+      figma.ui.postMessage({ type: 'summary-counts', roles: allUnifiedKeys.size, focus: focusTotal, touch: touchTotal, agrupamentos: agrupTotal, variantOverrides: variantRoleOverrides });
       break;
     }
     // Remove anotação de um layer por namePath

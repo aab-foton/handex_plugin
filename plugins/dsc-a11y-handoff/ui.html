@@ -1012,7 +1012,7 @@ body{font-family:Inter,system-ui,-apple-system,sans-serif;font-size:12px;color:v
   </div>
 
 </div>
-<div class="plugin-footer">DSC A11Y Handoff v1.9.2</div>
+<div class="plugin-footer">DSC A11Y Handoff v1.9.3</div>
 
 <script>
 // ═══════════════ STATE ═══════════════
@@ -2523,33 +2523,14 @@ function renderRoleList(){
     const scopeTag = e.scope === 'variant' ? '<span style="font-size:8px;color:#18a0fb;background:#e8f0fe;padding:1px 4px;border-radius:2px;margin-left:4px;flex-shrink:0">variante</span>' : '';
     
     if(e.type === 'agrupamento'){
-      const isSel = S.selectedAgrupamento === e.id;
-      if(isSel){
-        const types=getConnectorTypes();
-        h+='<div style="padding:10px;border:1.5px solid var(--blue);border-radius:var(--radius-sm);background:var(--blue-bg);margin-bottom:5px">';
-        h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
-        h+='<span class="agrup-badge" style="position:relative;top:0;left:0;flex-shrink:0">'+esc(e.letra)+'</span>';
-        h+='<span style="font-weight:700;font-size:12px;flex:1">Agrupamento '+esc(e.letra)+'</span>';
-        h+='<button class="fi-rm" onclick="event.stopPropagation();rmAgrupamento(\''+e.id+'\')" title="Remover">×</button>';
-        h+='</div>';
-        h+='<div class="fl">Tipo de Agrupamento</div>';
-        h+='<select class="fsel" id="agrupEditTipo">';
-        h+='<option value="">— Selecionar —</option>';
-        types.forEach(t=>{h+='<option value="'+ea(t)+'"'+(e.agrupTipo===t?' selected':'')+'>'+esc(t)+'</option>'});
-        h+='</select>';
-        h+='<div style="display:flex;gap:6px;margin-top:8px">';
-        h+='<button class="btn btn-primary" style="flex:1" onclick="saveAgrupEdit(\''+e.id+'\')">Salvar</button>';
-        h+='<button class="btn btn-tertiary" style="flex:1" onclick="cancelAgrupEdit()">Fechar</button>';
-        h+='</div></div>';
-      } else {
-        h+='<div class="fi" style="cursor:pointer" onclick="selectAgrupamento(\''+e.id+'\')" title="Clique para editar">';
-        h+=letter;
-        h+='<div style="flex:1;min-width:0"><div class="fi-name">Agrupamento '+esc(e.letra)+'</div>';
-        h+='<div style="font-size:11px;color:var(--gray-400);margin-top:1px">'+esc(e.agrupTipo||'—')+'</div></div>';
-        h+='<span class="ann-type-tag tag-agrup">agrupamento</span>'+scopeTag;
-        h+='<button class="fi-rm" onclick="event.stopPropagation();rmAgrupamento(\''+e.id+'\')" title="Remover">×</button>';
-        h+='</div>';
-      }
+      h+='<div class="fi" style="cursor:pointer" onclick="openUnifiedEditForm(\''+ea(e.id)+'\')" title="Clique para editar">';
+      h+=letter;
+      h+='<div style="flex:1;min-width:0"><div class="fi-name">Agrupamento '+esc(e.letra)+'</div>';
+      h+='<div style="font-size:11px;color:var(--gray-400);margin-top:1px">'+esc(e.agrupTipo||'—')+'</div></div>';
+      h+='<span class="ann-type-tag tag-agrup">agrupamento</span>'+scopeTag;
+      h+='<button class="fi-edit" onclick="event.stopPropagation();openUnifiedEditForm(\''+ea(e.id)+'\')" title="Editar">✎</button>';
+      h+='<button class="fi-rm" onclick="event.stopPropagation();rmAgrupamento(\''+ea(e.id)+'\')" title="Remover">×</button>';
+      h+='</div>';
     } else {
       const d = e.layerData || {};
       const isComb = e.type === 'combinado';
@@ -2822,6 +2803,15 @@ function openUnifiedEditForm(id){
 
   onUnifiedTypeChange();
 
+  // Para agrupamento: re-aplicar rect da entry após onUnifiedTypeChange, que pode sobrescrever com _unifiedSelectedLayer.relativeBounds
+  if(entry.type==='agrupamento' && entry.rect){
+    _pendingAgrup={x:entry.rect.x,y:entry.rect.y,w:entry.rect.width,h:entry.rect.height};
+    const rx=$('agrup-rect-x');if(rx)rx.value=entry.rect.x;
+    const ry=$('agrup-rect-y');if(ry)ry.value=entry.rect.y;
+    const rw=$('agrup-rect-w');if(rw)rw.value=entry.rect.width;
+    const rh=$('agrup-rect-h');if(rh)rh.value=entry.rect.height;
+  }
+
   // Pré-selecionar tipo/role/spec na cascata após render
   if(entry.type!=='combinado'){
     const tipo = entry.type==='agrupamento' ? entry.agrupTipo : entry.layerData?.connectorType;
@@ -2829,7 +2819,10 @@ function openUnifiedEditForm(id){
     const spec  = entry.type==='agrupamento' ? entry.specification : entry.layerData?.specification;
     if(tipo){ const el=$('uCascConn');if(el){el.value=tipo;onUnifiedConnChange&&onUnifiedConnChange();} }
     if(role){ const el=$('uCascRole');if(el){el.value=role;onUnifiedRoleChange&&onUnifiedRoleChange();} }
-    if(spec){ const el=$('uCascSpec');if(el)el.value=spec; }
+    if(spec){ const el=$('uCascSpec');if(el){el.value=spec;onUnifiedSpecChange&&onUnifiedSpecChange();} }
+    // Restaurar nome acessível salvo (pode ser diferente do CSV)
+    const savedAcc = entry.type==='agrupamento' ? entry.accessibleName : entry.layerData?.accessibleName;
+    if(savedAcc){ const ae=$('uAcc');if(ae)ae.value=savedAcc; }
   }
 }
 
@@ -2886,6 +2879,7 @@ function renderUnifiedCascata(show){
   h+='<div class="fg" id="uCascSpecWrap" style="display:none;margin-top:6px"><div class="fl">Especificação</div><select class="fsel" id="uCascSpec" onchange="onUnifiedSpecChange()">';
   h+='<option value="">— Selecionar —</option>';
   h+='</select></div>';
+  h+='<div class="fg" id="uAccWrap" style="display:none;margin-top:6px"><div class="fl">Nome Acessível</div><input class="fin" id="uAcc" placeholder="Nome acessível"></div>';
   c.innerHTML=h;
 }
 
@@ -2893,7 +2887,7 @@ function onUnifiedConnChange(){
   const tipo=$('uCascConn')?.value||'';
   const rw=$('uCascRoleWrap');const rs=$('uCascRole');
   const sw=$('uCascSpecWrap');
-  if(!tipo){if(rw)rw.style.display='none';if(sw)sw.style.display='none';$('unifiedSpecInfo').innerHTML='';return}
+  if(!tipo){if(rw)rw.style.display='none';if(sw)sw.style.display='none';$('unifiedSpecInfo').innerHTML='';const aw=$('uAccWrap');if(aw)aw.style.display='none';const ae=$('uAcc');if(ae)ae.value='';return}
   const roles=getRolesByConnector(tipo);
   if(sw)sw.style.display='none';
   $('unifiedSpecInfo').innerHTML='';
@@ -2909,7 +2903,7 @@ function onUnifiedRoleChange(){
   const tipo=$('uCascConn')?.value||'';
   const role=$('uCascRole')?.value||'';
   const sw=$('uCascSpecWrap');const ss=$('uCascSpec');
-  if(!role){if(sw)sw.style.display='none';$('unifiedSpecInfo').innerHTML='';return}
+  if(!role){if(sw)sw.style.display='none';$('unifiedSpecInfo').innerHTML='';const aw=$('uAccWrap');if(aw)aw.style.display='none';const ae=$('uAcc');if(ae)ae.value='';return}
   const specs=getSpecsByRole(role,tipo);
   if(specs.length>0&&ss){
     let h='<option value="">— Selecionar —</option>';
@@ -2918,19 +2912,24 @@ function onUnifiedRoleChange(){
     if(specs.length===1){ss.value=specs[0].specification;onUnifiedSpecChange()}
   } else {if(sw)sw.style.display='none'}
   $('unifiedSpecInfo').innerHTML='';
+  const _aw=$('uAccWrap');if(_aw)_aw.style.display='none';const _ae=$('uAcc');if(_ae)_ae.value='';
 }
 
 function onUnifiedSpecChange(){
   const role=$('uCascRole')?.value||'';
   const spec=$('uCascSpec')?.value||'';
   const csv=spec?findSpec(role,spec):null;
+  const aw=$('uAccWrap');const accEl=$('uAcc');
+  if(aw&&accEl){
+    if(csv&&csv.accessibleName&&csv.accessibleName!=='NA'){aw.style.display='';if(!accEl.value)accEl.value=csv.accessibleName;}
+    else{aw.style.display='none';accEl.value='';}
+  }
   const info=$('unifiedSpecInfo');
   if(!info)return;
   if(csv){
     let h='<div class="spec-info" style="margin-top:8px;padding:8px;background:var(--gray-100);border-radius:var(--radius-sm);font-size:11px">';
     if(csv.description)h+='<div><strong>Descrição:</strong> '+esc(csv.description)+'</div>';
     if(csv.observation)h+='<div style="margin-top:4px"><strong>Observação:</strong> '+esc(csv.observation)+'</div>';
-    if(csv.accessibleName&&csv.accessibleName!=='NA')h+='<div style="margin-top:4px"><strong>Nome Acessível:</strong> '+esc(csv.accessibleName)+'</div>';
     const cn=resolveSpecCodeNote(csv);
     if(cn&&cn!=='NA')h+='<div style="margin-top:4px"><strong>Nota de Código:</strong> '+esc(cn)+'</div>';
     h+='</div>';
@@ -3003,7 +3002,7 @@ function saveUnifiedAnnotation(){
       specification:spec||undefined,
       explanation:csv?csv.description||'':'',
       observation:csv?csv.observation||'':'',
-      accessibleName:csv?(csv.accessibleName&&csv.accessibleName!=='NA'?csv.accessibleName:''):'',
+      accessibleName:$('uAcc')?.value||(csv?(csv.accessibleName&&csv.accessibleName!=='NA'?csv.accessibleName:''):''),
       codeNote:csv?(csv.codeNote&&csv.codeNote!=='NA'?csv.codeNote:''):'',
     };
     post({type:'set-unified-entry',entry,variantName:currentVariantName(),applyToAll:!S.editingException});
@@ -3651,6 +3650,8 @@ function onVariantConfigRemoved(m){
 function exitAddModes(){
   if(S.touchAddMode){S.touchAddMode=false;_pendingTouchIdx=null;const f=$('touch-add-form');if(f)f.style.display='none';const ef=$('touch-edit-fields');if(ef)ef.style.display='none';const b=$('s3-footer-buttons');if(b)b.style.display='';saveTouchAreas();}
   if(_focusAddMode){_pendingFocusItem=null;_focusAddMode=false;const b=$('s4-footer-buttons');if(b)b.style.display='';const f=$('s4-add-form');if(f)f.style.display='none';saveFocusOrder();}
+  const unifiedForm=$('unifiedAddForm');if(unifiedForm&&unifiedForm.style.display!=='none')cancelUnifiedAdd();
+  const rpEditEl=$('rpEdit');if(rpEditEl&&rpEditEl.style.display!=='none')cancelRoleEdit();
 }
 
 function editVariantConfig(configId, step){
@@ -3742,7 +3743,7 @@ function renderVariantConfigsSection(step){
     const defEntries=Object.entries(defs);
     if(defEntries.length>0){
       h+='<div class="fl" style="font-size:10px;margin-bottom:4px">Propriedades</div>';
-      h+='<div style="display:flex;flex-direction:column;gap:6px">';
+      h+='<div style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto;padding-right:2px">';
       defEntries.forEach(([key,def])=>{
         const d=def;
         // Ignorar INSTANCE_SWAP sem preferredValues — não há opções para mostrar
@@ -4561,14 +4562,18 @@ function renderHandoffSummary(){
   // ── Roles (tab 2) — use summary counts if available ──
   const sc=S._summaryCounts||{};
   const roleCount=sc.roles!=null?sc.roles:S.srEntries.length;
+  const agrupCount=sc.agrupamentos!=null?sc.agrupamentos:S.srEntries.filter(e=>e.type==='agrupamento').length;
   const roleFilled=S.componentData.noScreenReader||roleCount>0;
   let roleChips='';
-  if(S.componentData.noScreenReader)roleChips=chip('Sem anotações',false);
+  if(S.componentData.noScreenReader)roleChips=chip('Sem anotações',true);
   else if(roleCount>0){
-    roleChips=chip(roleCount+' role'+(roleCount>1?'s':''),true);
-    if(sc.variantOverrides&&sc.variantOverrides.length>0)roleChips+=chip(sc.variantOverrides.length+' variação(ões)',true);
+    const simpleCount=roleCount-agrupCount;
+    if(simpleCount>0)roleChips=chip(simpleCount+' anotaç'+(simpleCount>1?'ões':'ão'),true);
+    if(agrupCount>0)roleChips+=chip(agrupCount+' agrupamento'+(agrupCount>1?'s':''),true);
+    const _nv=(S.variantConfigs||[]).filter(c=>c.step===2).length+(sc.variantOverrides&&sc.variantOverrides.length||0);
+    if(_nv>0)roleChips+=chip(_nv+' variação(ões)',true);
   }
-  else roleChips=chip('Nenhuma role',false);
+  else roleChips=chip('Nenhuma anotação',false);
 
   // ── Áreas de Toque (tab 3) ──
   const touchCount=sc.touch!=null?sc.touch:(S.touchAreas?S.touchAreas.length:0);
