@@ -98,18 +98,16 @@
     }
     input[type="text"]:focus { border-color: #2D4496; }
     
-    .searchResults { 
-      display: none; 
-      position: absolute; 
-      left: 0; 
-      right: 0; 
-      background: #fff; 
-      border: 1px solid #D1D5DB; 
-      border-radius: 8px; 
-      z-index: 100000; 
-      max-height: 180px; 
-      overflow-y: auto; 
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15); 
+    .searchResults {
+      display: none;
+      position: fixed;
+      background: #fff;
+      border: 1px solid #D1D5DB;
+      border-radius: 8px;
+      z-index: 100000;
+      max-height: 180px;
+      overflow-y: auto;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
     }
     .search-item { padding: 12px; cursor: pointer; font-size: 12px; border-bottom: 1px solid #F3F4F6; color: #333; }
     .search-item:hover { background: #F9FAFB; color: #2D4496; }
@@ -147,6 +145,7 @@
     .remove-btn:hover { color: #E53935; }
 
     /* 8. RODAPÉ E BADGES */
+    .summary-pill { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; background: #E8F5E9; color: #2E7D32; }
     .footer-bar { padding: 16px 20px; background: #fff; border-top: 1px solid #E5E5E5; text-align: center; flex-shrink: 0; }
     .count-badge { background: #E8F5E9; color: #2E7D32; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
     .version-text { font-size: 10px; color: #AAA; }
@@ -155,6 +154,32 @@
       position: absolute; inset: 0; background: #FAFAFA; 
       display: flex; flex-direction: column; align-items: center; justify-content: center; 
       z-index: 10000; text-align: center; padding: 40px; 
+    }
+    
+    .status-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 8px;
+    }
+    .status-bar.loading {
+      display: flex;
+      background: #E3F2FD;
+      color: #0D47A1;
+    }
+    .status-bar.success {
+      display: flex;
+      background: #E8F5E9;
+      color: #2E7D32;
+    }
+    .status-bar.error {
+      display: flex;
+      background: #FFEBEE;
+      color: #C62828;
     }
   </style>
 </head>
@@ -189,6 +214,7 @@
               <label class="checkbox-field"><input type="checkbox" name="platform" value="Web"><span>Web</span></label>
               <label class="checkbox-field"><input type="checkbox" name="platform" value="Mobile iOS"><span>Mobile iOS</span></label>
               <label class="checkbox-field"><input type="checkbox" name="platform" value="Mobile Android"><span>Mobile Android</span></label>
+              <label class="checkbox-field"><input type="checkbox" name="platform" value="Mobile Cross-Platform"><span>Mobile Cross-Platform</span></label>
               <div style="height:1px; background:#EEE; margin:4px 0;"></div>
               <label class="checkbox-field"><input type="checkbox" name="zoom" value="Redimensionar Texto"><span>Redimensionar Texto (200%)</span></label>
               <label class="checkbox-field"><input type="checkbox" name="zoom" value="Refluxo"><span>Refluxo (400%)</span></label>
@@ -221,7 +247,24 @@
       </div>
 
       <div id="panel-handoff" class="tab-panel">
+        <div id='summaryCards' style='display:none; flex-direction:column; gap:0; margin-bottom:8px;'>
+          <div style='font-size:13px; font-weight:700; color:#1a1a1a; padding:4px 0 8px 0;'>Resumo</div>
+          <div style='height:2px; background:#2D4496; margin-bottom:12px; border-radius:1px;'></div>
+          <div class='card' style='margin-bottom:8px;'>
+            <div class='card-body'>
+              <div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;'>
+                <div style='display:flex; align-items:center; gap:8px;'>
+                  <span>⚙</span>
+                  <span style='font-size:14px; font-weight:600;'>Geral</span>
+                </div>
+                <span id='summaryEditGeral' style='font-size:12px; color:#999; cursor:pointer;'>Editar ›</span>
+              </div>
+              <div id='summaryPills' style='display:flex; flex-wrap:wrap; gap:6px;'></div>
+            </div>
+          </div>
+        </div>
         <div class="card"><div class="card-body"><button id="btnRun" style="background:#2D4496; color:white; border:none; padding:16px; border-radius:8px; font-weight:600; cursor:pointer; width:100%;">Gerar Handoff</button></div></div>
+        <div id="statusBar" class="status-bar"></div>
       </div>
     </div>
 
@@ -232,7 +275,7 @@
 
   <script>
     const el = (id) => document.getElementById(id);
-    let masterList = [], currentData = [];
+    let masterList = [], currentData = [], isGenerated = false;
 
     // NAVEGAÇÃO DE ABAS
     document.querySelectorAll('.tab').forEach(t => {
@@ -280,14 +323,16 @@
             };
           });
           
-          // Posicionamento inteligente (Cima/Baixo)
           const rect = input.getBoundingClientRect();
+          res.style.position = 'fixed';
+          res.style.left = rect.left + 'px';
+          res.style.width = rect.width + 'px';
           if (window.innerHeight - rect.bottom < 180) {
-            res.style.top = 'auto'; res.style.bottom = '100%'; 
-            res.style.marginBottom = '4px'; res.style.marginTop = '0';
+            res.style.top = 'auto';
+            res.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
           } else {
-            res.style.top = '100%'; res.style.bottom = 'auto'; 
-            res.style.marginTop = '4px'; res.style.marginBottom = '0';
+            res.style.top = (rect.bottom + 4) + 'px';
+            res.style.bottom = 'auto';
           }
         } else {
           res.style.display = 'none';
@@ -349,23 +394,94 @@
         }
       });
       el('tBadge').textContent = tc; el('gBadge').textContent = gc;
+      updateSummaryCards();
     }
 
     // Registra os listeners de busca UMA ÚNICA VEZ (fora do onmessage)
     setupSearch('tInput', 'tRes', 'teclado');
     setupSearch('gInput', 'gRes', 'gesto');
 
+
+
+    function updateSummaryCards() {
+      const platforms = Array.from(document.querySelectorAll('input[name=platform]:checked')).map(c => c.value);
+      const zooms = Array.from(document.querySelectorAll('input[name=zoom]:checked')).map(c => c.value);
+      const keyboards = currentData.filter(m => m.utilizacao.toLowerCase().includes('teclado')).length;
+      const gestures = currentData.filter(m => m.utilizacao.toLowerCase().includes('gesto')).length;
+
+      const pills = el('summaryPills');
+      pills.innerHTML = '';
+      [...platforms, ...zooms].forEach(label => {
+        pills.innerHTML += `<span class='summary-pill'>${label}</span>`;
+      });
+      if (keyboards > 0) pills.innerHTML += `<span class='summary-pill'>${keyboards} tecla${keyboards !== 1 ? 's' : ''}</span>`;
+      if (gestures > 0) pills.innerHTML += `<span class='summary-pill'>${gestures} gesto${gestures !== 1 ? 's' : ''}</span>`;
+
+      const hasSomething = platforms.length > 0 || zooms.length > 0 || keyboards > 0 || gestures > 0;
+  el('summaryCards').style.display = hasSomething ? 'flex' : 'none';
+    }
+
+    el('summaryEditGeral').onclick = () => {
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelector('.tab[data-target="panel-geral"]').classList.add('active');
+      el('panel-geral').classList.add('active');
+    };
+
     window.onmessage = (e) => {
       const msg = e.data.pluginMessage;
+      if (msg.type === 'start-loading') {
+        const sb = el('statusBar');
+        sb.classList.remove('success', 'error');
+        sb.classList.add('loading');
+        sb.textContent = '⏳ Carregando dados...';
+      }
       if (msg.type === 'setup-ui') {
+        el('statusBar').classList.remove('loading', 'success', 'error');
         el('emptyState').style.display = 'none';
         el('mainContainer').style.display = 'flex';
         el('compName').textContent = msg.componentName;
 
         masterList = msg.masterList || [];
         currentData = msg.componentData?.mapeamentos || [];
+        isGenerated = msg.isGenerated || false; // Atualiza o estado global
+
+        el('btnRun').textContent = isGenerated ? 'Atualizar Handoff' : 'Gerar Handoff';
+
+        // Restaura checkboxes de plataforma e zoom
+        document.querySelectorAll('input[name="platform"], input[name="zoom"]').forEach(cb => cb.checked = false);
+        (msg.componentData?.plataformas || []).forEach(v => {
+          const cb = document.querySelector(`input[name="platform"][value="${v}"]`);
+          if (cb) cb.checked = true;
+        });
+        (msg.componentData?.zoom || []).forEach(v => {
+          const cb = document.querySelector(`input[name="zoom"][value="${v}"]`);
+          if (cb) cb.checked = true;
+        });
+        updatePZCount();
 
         renderLists();
+        updateSummaryCards(); // CHAMADA DA NOVA FUNÇÃO
+      }
+      if (msg.type === 'feedback') {
+        const sb = el('statusBar');
+        sb.classList.remove('loading', 'success', 'error');
+        const isLoading = msg.message.includes('⏳');
+        const isSuccess = msg.message.includes('✅');
+        sb.classList.add(isLoading ? 'loading' : isSuccess ? 'success' : 'error');
+        if (isSuccess) {
+          isGenerated = true;
+          updateSummaryCards();
+          el('btnRun').textContent = 'Atualizar Handoff';
+          sb.textContent = '✅ Handoff salvo com sucesso!';
+          setTimeout(() => { sb.classList.remove('loading', 'success', 'error'); }, 5000);
+        } else if (isLoading) {
+          sb.textContent = msg.message;
+          // loading some automaticamente quando a próxima mensagem chegar
+        } else {
+          sb.textContent = msg.message;
+          setTimeout(() => { sb.classList.remove('loading', 'success', 'error'); }, 5000);
+        }
       }
       if (msg.type === 'waiting-selection') {
         el('emptyState').style.display = 'flex';
@@ -374,9 +490,16 @@
     };
 
     function updatePZCount() { el('pzCount').textContent = `${document.querySelectorAll('input[type="checkbox"]:checked').length} selecionados`; }
-    document.addEventListener('change', (e) => { if (e.target.type === 'checkbox') updatePZCount(); });
+    document.addEventListener('change', (e) => { if (e.target.type === 'checkbox') { updatePZCount(); updateSummaryCards(); } });
+
+    parent.postMessage({ pluginMessage: { type: 'load-initial-data' } }, '*');
 
     el('btnRun').onclick = () => {
+      const sb = el('statusBar');
+      sb.classList.remove('loading', 'success', 'error');
+      sb.classList.add('loading');
+      sb.textContent = 'Gerando handoff...';
+
       const p = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(c => c.value);
       const z = Array.from(document.querySelectorAll('input[name="zoom"]:checked')).map(c => c.value);
       parent.postMessage({ pluginMessage: { 

@@ -40,7 +40,7 @@ figma.ui.onmessage = async (msg) => {
 
   else if (msg.type === 'run-handoff' || msg.type === 'update-handoff') {
     if (!handoffAtivo) {
-      figma.notify("⚠️ Handoff não encontrado.");
+      figma.ui.postMessage({ type: 'feedback', message: '⚠️ Handoff não encontrado.' });
       return;
     }
 
@@ -51,7 +51,7 @@ figma.ui.onmessage = async (msg) => {
     if (handoffAtivo.type === "INSTANCE") {
       workingFrame = handoffAtivo.detachInstance();
       // Atualizamos o nome para indicar que foi gerado
-      workingFrame.name = `[dsc] A11Y Handoff: ${msg.componentName || componentePrincipalAtivo?.name || "Componente"}`;
+      workingFrame.name = `[A11Y Handoff] ${msg.componentName || componentePrincipalAtivo?.name || 'Componente'}`;
       // Atualizamos a referência global para o novo Frame
       handoffAtivo = workingFrame;
     } else {
@@ -69,48 +69,54 @@ figma.ui.onmessage = async (msg) => {
     const allTableContainers = workingFrame.findAll((n: SceneNode) => n.name === "keyboard maping") as FrameNode[];
 
     const fillTable = async (container: FrameNode, data: any[]) => {
-      // Procura a tabela dentro do container
       const tableWrapper = container.findOne((n: SceneNode) => n.name === "table") as FrameNode;
-      if (!tableWrapper || data.length === 0) return;
+      if (!tableWrapper) return;
 
-      // NOVO: Agora procura especificamente pela instância "Row" para usar como modelo
-      const rowModel = tableWrapper.findOne((n: SceneNode) => n.name === "Row") as InstanceNode;
+      // Busca o modelo "Row" diretamente nos filhos (pode estar oculto em updates)
+      const rowModel = Array.from(tableWrapper.children).find((n) => n.name === "Row") as InstanceNode | undefined;
       if (!rowModel) {
         console.error("Não encontrei a camada 'Row' dentro de 'table'");
         return;
       }
 
+      // Remove linhas de dados anteriores, preservando o modelo "Row"
+      Array.from(tableWrapper.children)
+        .filter(n => n !== rowModel)
+        .forEach(n => n.remove());
+
+      if (data.length === 0) return;
+
       for (const item of data) {
-        // Clona a linha modelo
         const newRow = rowModel.clone();
-        tableWrapper.appendChild(newRow); 
-        
-        // Pega todos os textos da nova linha
+        newRow.visible = true; // garante visibilidade caso o modelo esteja oculto
+        tableWrapper.appendChild(newRow);
+
         const textNodes = newRow.findAll((n: SceneNode) => n.type === "TEXT") as TextNode[];
-        
         if (textNodes.length >= 2) {
-          // Limpeza do texto (remove os sufixos indesejados)
           let textoLimpo = item.mapeamento
             .replace(/\s*\(unitário\)/gi, '')
             .replace(/\s*\(em sequência\)/gi, '');
-
-          // Atualiza os textos
           await updateText(textNodes[0], textoLimpo);
           await updateText(textNodes[1], item.descricao);
         }
       }
-      
-      // Deleta a linha "Row" original que serviu de modelo
-      rowModel.remove(); 
+
+      // Oculta o modelo em vez de deletar — permite updates futuros
+      rowModel.visible = false;
     };
 
+    figma.ui.postMessage({ type: 'feedback', message: '⏳ Preenchendo nome do componente...' });
     const keyboardItems = msg.mapeamentos.filter((m: any) => m.utilizacao.toLowerCase().includes("teclado"));
     const gestureItems = msg.mapeamentos.filter((m: any) => m.utilizacao.toLowerCase().includes("gesto"));
 
+    figma.ui.postMessage({ type: 'feedback', message: '⏳ Gerando tabela de teclado...' });
     if (allTableContainers.length >= 1) await fillTable(allTableContainers[0], keyboardItems);
+
+    figma.ui.postMessage({ type: 'feedback', message: '⏳ Gerando tabela de gestos...' });
     if (allTableContainers.length >= 2) await fillTable(allTableContainers[1], gestureItems);
 
     // --- PARTE B: LOGICA DE DADOS (SALVAR NO PLUGIN DATA) ---
+    figma.ui.postMessage({ type: 'feedback', message: '⏳ Salvando dados...' });
     const dbInstance = workingFrame.findOne((node: SceneNode) => node.name === "[dsc-h] Plugin Data A11y") as InstanceNode;
     if (dbInstance) {
       const dataToSave = JSON.stringify({
@@ -121,7 +127,14 @@ figma.ui.onmessage = async (msg) => {
       dbInstance.setPluginData("a11y-component-data", dataToSave);
     }
 
-    figma.notify("✅ Handoff preenchido e dados salvos!");
+    // Salva também no ComponentSet/Component para leitura futura
+    if (componentePrincipalAtivo &&
+        (componentePrincipalAtivo.type === 'COMPONENT_SET' || componentePrincipalAtivo.type === 'COMPONENT')) {
+      const dataToSave = JSON.stringify({ plataformas: msg.plataformas, zoom: msg.zoom, mapeamentos: msg.mapeamentos });
+      componentePrincipalAtivo.setPluginData('a11y-component-data', dataToSave);
+    }
+
+    figma.ui.postMessage({ type: 'feedback', message: '✅ Handoff preenchido e dados salvos!' });
   }
 };
 
@@ -137,17 +150,45 @@ figma.on('selectionchange', () => {
 });
 
 function tentarTravarContexto(selection: readonly SceneNode[]) {
-  const handoffs = selection.filter(n => n.name.includes("[dsc-h] Template Handoff") || n.name.startsWith('[dsc] A11Y Handoff:'));
-  const components = selection.filter(n => 
+  const handoffs = selection.filter(n =>
+    n.name.includes("[dsc-h] Template Handoff") ||
+    n.name.startsWith('[A11Y Handoff]')
+  );
+  const components = selection.filter(n =>
     (n.type === 'COMPONENT' || n.type === 'COMPONENT_SET' || n.type === 'INSTANCE' || n.type === 'FRAME') && !handoffs.includes(n)
   );
 
-  if (components.length === 1 && handoffs.length === 1) {
-    componentePrincipalAtivo = components[0];
-    handoffAtivo = handoffs[0];
-    contextoTravado = true;
-    carregarDadosEEnviarParaUI(handoffAtivo);
+  if (components.length !== 1 || handoffs.length === 0) return;
+
+  // Prioritize an already generated FRAME over an INSTANCE template if both are selected
+  let chosenHandoff: SceneNode;
+  const generatedHandoff = handoffs.find(n => n.name.startsWith('[A11Y Handoff]'));
+
+  if (generatedHandoff) {
+    chosenHandoff = generatedHandoff;
+  } else {
+    // If no generated handoff (FRAME) is found, take the first one (likely the template instance)
+    chosenHandoff = handoffs[0];
   }
+
+  const handoff = chosenHandoff;
+  const component = components[0];
+
+
+
+  // Handoff já gerado (FRAME): valida que o componente selecionado é o correto
+  if (handoff.type !== "INSTANCE" && handoff.name.startsWith('[A11Y Handoff]')) {
+    const expectedName = handoff.name.slice('[A11Y Handoff]'.length).trim();
+    if (component.name !== expectedName) {
+      figma.ui.postMessage({ type: 'feedback', message: `⚠️ Este handoff pertence ao componente "${expectedName}". Selecione o componente correto.` });
+      return;
+    }
+  }
+
+  componentePrincipalAtivo = component;
+  handoffAtivo = handoff;
+  contextoTravado = true;
+  carregarDadosEEnviarParaUI(handoffAtivo);
 }
 
 function parseMasterList(dbInstance: InstanceNode): { mapeamento: string; descricao: string; utilizacao: string }[] {
@@ -199,10 +240,18 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
     if (rawSaved) componentData = JSON.parse(rawSaved);
   }
 
+  // Fallback: lê do ComponentSet/Component se ainda não tiver dados
+  if (componentData.mapeamentos.length === 0 && componentePrincipalAtivo &&
+      (componentePrincipalAtivo.type === 'COMPONENT_SET' || componentePrincipalAtivo.type === 'COMPONENT')) {
+    const rawFromComponent = componentePrincipalAtivo.getPluginData('a11y-component-data');
+    if (rawFromComponent) componentData = JSON.parse(rawFromComponent);
+  }
+
   figma.ui.postMessage({
     type: 'setup-ui',
     masterList,
     componentData,
-    componentName: componentePrincipalAtivo?.name || "Componente"
+    componentName: componentePrincipalAtivo?.name || "Componente",
+    isGenerated: handoff.type !== "INSTANCE"
   });
 }
