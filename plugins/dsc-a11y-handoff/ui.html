@@ -1,190 +1,143 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
   <style>
-    /* 1. RESET E ESTRUTURA BASE */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { 
-      font-family: 'Inter', sans-serif; 
-      background: #FAFAFA; 
-      height: 100vh; 
-      display: flex; 
-      flex-direction: column; 
-      overflow: hidden; 
-    }
-    
-    /* 2. HEADER */
-    .top-bar { 
-      padding: 24px 20px 0 20px; 
-      background: #fff; 
-      border-bottom: 1px solid #E5E5E5; 
-      flex-shrink: 0; 
-      z-index: 1000; 
-    }
-    .header-content { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
-    .header-badge { 
-      background: #2D4496; color: white; font-size: 11px; font-weight: 800; 
-      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; 
-      border-radius: 8px; flex-shrink: 0;
-    }
-    h2 { font-size: 18px; font-weight: 700; color: #1a1a1a; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    
-    .tabs { display: flex; gap: 20px; }
-    .tab { 
-      padding-bottom: 12px; font-size: 12px; font-weight: 600; 
-      border: none; background: none; cursor: pointer; color: #999; 
-      border-bottom: 2px solid transparent; 
-    }
-    .tab.active { color: #2D4496; border-bottom-color: #2D4496; }
-
-    /* 3. CONTEÚDO SCROLLÁVEL */
-    .content-area { 
-      flex: 1; 
-      overflow-y: auto; 
-      padding: 20px; 
-      display: flex; 
-      flex-direction: column; 
-      gap: 16px; 
-      padding-bottom: 40px; 
-      position: relative;
-    }
-    .tab-panel { display: none; flex-direction: column; gap: 16px; }
-    .tab-panel.active { display: flex; }
-
-    /* 4. CARDS DE FORMULÁRIO */
-    .card { 
-      background: #fff; 
-      border: 1px solid #E5E5E5; 
-      border-radius: 12px; 
-      position: relative; 
-      z-index: 1; 
-    }
-    
-    /* SOLUÇÃO DEFINITIVA DO Z-INDEX: Controlado por JS, sem falhas de hover/focus */
+    body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background: #fff; color: #333; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .top-bar { padding: 16px 16px 0; background: #fff; border-bottom: 1px solid #E5E5E5; flex-shrink: 0; }
+    .header-content { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .header-badge { background: #2D4496; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.02em; }
+    h2 { font-size: 14px; font-weight: 700; margin: 0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #1a1a1a; }
+    .tabs { display: flex; gap: 24px; }
+    .tab { background: none; border: none; padding: 0 0 12px; font-size: 12px; font-weight: 600; color: #999; cursor: pointer; position: relative; }
+    .tab.active { color: #2D4496; }
+    .tab.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: #2D4496; border-radius: 2px; }
+    .content-area { flex: 1; overflow-y: auto; background: #FAFAFA; }
+    .tab-panel { display: none; padding: 16px; }
+    .tab-panel.active { display: block; }
+    .card { background: #fff; border: 1px solid #E5E5E5; border-radius: 12px; margin-bottom: 16px; position: relative; z-index: 1; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     .card.active-card { z-index: 9999 !important; }
-
-    .card-header { 
-      padding: 18px 20px; 
-      display: flex; 
-      align-items: center; 
-      justify-content: space-between; 
-      cursor: pointer; 
-    }
-    .card-title-group { display: flex; align-items: center; gap: 10px; color: #2D4496; font-weight: 700; font-size: 13px; }
-    .card-body { 
-      padding: 0 20px 20px 20px; 
-      display: flex; 
-      flex-direction: column; 
-      gap: 16px; 
-      border-top: 1px solid #F5F5F5; 
-      padding-top: 16px; 
-      overflow: visible !important; 
-    }
-
-    /* 5. CHECKBOXES */
-    .checkbox-group { display: flex; flex-direction: column; gap: 12px; }
-    .checkbox-field { display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; }
-    .checkbox-field input { accent-color: #2D4496; width: 16px; height: 16px; flex-shrink: 0; }
-
-    /* 6. DROPDOWN (O Menu Flutuante) */
-    .search-wrapper { position: relative; width: 100%; }
-    input[type="text"] { 
-      width: 100%; 
-      padding: 12px; 
-      border: 1px solid #D1D5DB; 
-      border-radius: 8px; 
-      font-size: 13px; 
-      outline: none; 
-    }
-    input[type="text"]:focus { border-color: #2D4496; }
-    
-    .searchResults {
-      display: none;
-      position: fixed;
-      background: #fff;
-      border: 1px solid #D1D5DB;
-      border-radius: 8px;
-      z-index: 100000;
-      max-height: 180px;
-      overflow-y: auto;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-    }
-    .search-item { padding: 12px; cursor: pointer; font-size: 12px; border-bottom: 1px solid #F3F4F6; color: #333; }
-    .search-item:hover { background: #F9FAFB; color: #2D4496; }
-
-    /* 7. LAYOUT DE ITENS SELECIONADOS (Linha Única Slim) */
-    .selected-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
-    .selected-item-card { 
-      display: flex; 
-      align-items: center; 
-      gap: 12px; 
-      background: #fff; 
-      border: 1px solid #E5E5E5; 
-      padding: 10px 12px; 
-      border-radius: 8px; 
-      font-size: 13px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-    }
-    .item-content { 
-      flex: 1; 
-      min-width: 0; 
-      white-space: nowrap; 
-      overflow: hidden; 
-      text-overflow: ellipsis; 
-    }
+    .card-header { padding: 12px 16px; background: #FDFDFD; border-bottom: 1px solid #F0F0F0; display: flex; align-items: center; justify-content: space-between; cursor: pointer; border-radius: 12px 12px 0 0; }
+    .card-title-group { font-size: 12px; font-weight: 700; color: #2D4496; display: flex; align-items: center; gap: 6px; }
+    .card-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow: visible; }
+    .selected-item-card { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #E5E5E5; padding: 10px 12px; border-radius: 8px; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+    .item-content { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .item-title { font-weight: 600; color: #1a1a1a; }
-    .item-desc { color: #666; margin-left: 4px; }
-    .remove-btn { 
-      color: #999; 
-      cursor: pointer; 
-      font-size: 18px; 
-      line-height: 1; 
-      padding: 4px;
-      transition: color 0.2s;
-    }
-    .remove-btn:hover { color: #E53935; }
+    .item-desc { color: #888; margin-left: 4px; font-size: 11px; }
+    .checkbox-group { display: flex; flex-direction: column; gap: 10px; }
+    .checkbox-field { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #444; cursor: pointer; }
+    .checkbox-field input { cursor: pointer; }
+    .count-badge { background: #EEF2FF; color: #2D4496; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+    .status-bar { padding: 10px 16px; font-size: 11px; text-align: center; border-radius: 6px; margin-top: 16px; display: none; }
+    .status-bar.loading { display: block; background: #F5F5F5; color: #666; }
+    .status-bar.success { display: block; background: #E8F5E9; color: #2E7D32; }
+    .status-bar.error { display: block; background: #FFEBEE; color: #C62828; }
+    .footer-bar { padding: 12px 16px; border-top: 1px solid #E5E5E5; background: #fff; display: flex; justify-content: center; flex-shrink: 0; }
+    .version-text { font-size: 10px; color: #BBB; font-weight: 500; }
+    .overlay-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #999; padding: 40px; }
+    .summary-pill { font-size: 11px; background: #f0f0f0; padding: 4px 10px; border-radius: 12px; color: #666; }
+    .search-container { position: relative; margin-bottom: 12px; }
+    .search-input { width: 100%; box-sizing: border-box; border: 1.5px solid #EEE; border-radius: 8px; padding: 10px 12px; font-size: 13px; outline: none; }
+    .search-input:focus { border-color: #2D4496; }
+    .search-results { display: none; position: fixed; z-index: 100000; max-height: 200px; overflow-y: auto; border: 1px solid #D1D5DB; border-radius: 8px; background: #fff; padding: 4px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+    .result-item { padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; color: #333; border-bottom: 1px solid #F3F4F6; }
+    .result-item:last-child { border-bottom: none; }
+    .result-item:hover { background: #F9FAFB; color: #2D4496; }
+    .remove-btn { background: none; border: none; cursor: pointer; color: #CCC; font-size: 16px; padding: 4px; }
+    .remove-btn:hover { color: #FF5252; }
+    #settingsOverlay { display: none; }
+    #settingsOverlay.open { display: flex; }
+    #panel-toque.tab-panel.active { display: flex; flex-direction: column; padding: 0; }
+    .tsize-btn.active  { border-color: #2D4496 !important; background: #EEF2FF !important; }
+    .tforma-btn.active { border-color: #2D4496 !important; background: #2D4496 !important; color: #fff !important; }
 
-    /* 8. RODAPÉ E BADGES */
-    .summary-pill { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; background: #E8F5E9; color: #2E7D32; }
-    .footer-bar { padding: 16px 20px; background: #fff; border-top: 1px solid #E5E5E5; text-align: center; flex-shrink: 0; }
-    .count-badge { background: #E8F5E9; color: #2E7D32; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-    .version-text { font-size: 10px; color: #AAA; }
-    
-    .overlay-state { 
-      position: absolute; inset: 0; background: #FAFAFA; 
-      display: flex; flex-direction: column; align-items: center; justify-content: center; 
-      z-index: 10000; text-align: center; padding: 40px; 
+    /* Novos estilos para layout simplificado */
+    .touch-form-container { display: flex; flex-direction: column; gap: 16px; padding: 16px; background: #fff; border-bottom: 1px solid #EEE; }
+    .touch-form-row { display: flex; flex-direction: column; gap: 6px; }
+    .touch-form-row label { font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.05em; }
+    .touch-form-input { width: 100%; box-sizing: border-box; border: 1.5px solid #E5E5E5; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #1a1a1a; outline: none; background: #FAFAFA; transition: border-color 0.2s; }
+    .touch-form-input:focus { border-color: #2D4496; background: #fff; }
+    .touch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .touch-preset-btn {
+      display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+      padding: 10px; border: 1.5px solid #EBEBEB; border-radius: 10px;
+      background: #FAFAFA; cursor: pointer; text-align: left; transition: all 0.2s;
     }
-    
-    .status-bar {
-      display: none;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 500;
-      margin-top: 8px;
+    .touch-preset-btn:hover { border-color: #CCC; background: #F5F5F5; }
+    .touch-preset-btn.active { border-color: #2D4496; background: #EEF2FF; }
+    .touch-preset-btn .dim { font-size: 12px; font-weight: 700; color: #1a1a1a; }
+    .touch-preset-btn .desc { font-size: 10px; color: #AAA; }
+    .touch-preset-btn .badge { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-top: 4px; }
+    .touch-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+    .touch-btn-primary { background: #2D4496; color: #fff; border: none; border-radius: 8px; padding: 12px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .touch-btn-primary:hover { background: #1f3070; }
+    .touch-btn-secondary { background: none; border: 1.5px solid #E5E5E5; color: #666; border-radius: 8px; padding: 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .touch-btn-secondary:hover { background: #F5F5F5; color: #333; }
+    .touch-list-container { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .touch-empty { text-align: center; padding: 32px 16px; color: #BBB; font-size: 12px; border: 2px dashed #EEE; border-radius: 12px; margin: 16px; }
+
+    /* === ÁREA DE TOQUE — redesign === */
+    .touch-section-label {
+      font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+      color: #AAA; margin: 12px 0 5px;
     }
-    .status-bar.loading {
-      display: flex;
-      background: #E3F2FD;
-      color: #0D47A1;
+    .touch-preset-card {
+      display: flex; align-items: center; gap: 10px;
+      border: 1.5px solid #EBEBEB; border-radius: 10px;
+      padding: 9px 11px; cursor: pointer; width: 100%; box-sizing: border-box;
+      background: #FAFAFA; text-align: left; transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
+      position: relative; overflow: hidden;
     }
-    .status-bar.success {
-      display: flex;
-      background: #E8F5E9;
-      color: #2E7D32;
+    .touch-preset-card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 0;
     }
-    .status-bar.error {
-      display: flex;
-      background: #FFEBEE;
-      color: #C62828;
+    .touch-preset-card.aaa::before { background: #2E7D32; }
+    .touch-preset-card.aa::before  { background: #E65100; }
+    .touch-preset-card.livre-card::before { background: #BDBDBD; }
+    .touch-preset-card:hover { border-color: #CCC; background: #F5F5F5; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .touch-preset-card.active.aaa  { border-color: #2E7D32; background: #F1F8F1; }
+    .touch-preset-card.active.aa   { border-color: #E65100; background: #FFF4EE; }
+    .touch-preset-card.active.livre-card { border-color: #9E9E9E; background: #F5F5F5; }
+    .preset-dim  { font-size: 12px; font-weight: 700; color: #1a1a1a; line-height: 1.2; }
+    .preset-desc { font-size: 10px; color: #AAA; margin-top: 1px; }
+    .touch-compliance-badge { font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 10px; white-space: nowrap; flex-shrink: 0; }
+    .badge-aaa { background: #E8F5E9; color: #2E7D32; }
+    .badge-aa  { background: #FFF3E0; color: #E65100; }
+    .positioning-state {
+      background: #EEF2FF; border-radius: 8px; padding: 14px 12px; text-align: center; margin-top: 10px;
     }
+    .touch-confirm-btn {
+      display: block; width: 100%; box-sizing: border-box;
+      padding: 9px; background: #2D4496; color: #fff;
+      border: none; border-radius: 8px; font-size: 12px; font-weight: 700;
+      cursor: pointer; margin-top: 10px; transition: background 0.12s;
+    }
+    .touch-confirm-btn:hover { background: #1f3070; }
+    .touch-cancel-link {
+      display: block; text-align: center; padding: 7px; font-size: 11px;
+      color: #BBB; cursor: pointer; background: none; border: none; width: 100%;
+      margin-top: 2px;
+    }
+    .touch-cancel-link:hover { color: #C62828; }
+    .add-touch-btn {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%; padding: 11px; border: 2px dashed #D5D5D5; border-radius: 10px;
+      background: none; color: #999; cursor: pointer; font-size: 12px; font-weight: 500;
+      transition: all 0.12s; box-sizing: border-box;
+    }
+    .add-touch-btn:hover { border-color: #2D4496; color: #2D4496; background: #F5F8FF; }
+    .touch-item-card {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      border: 1px solid #EBEBEB; border-radius: 10px; background: #fff;
+      position: relative; overflow: hidden;
+    }
+    .touch-item-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+    .touch-item-aaa::before   { background: #2E7D32; }
+    .touch-item-aa::before    { background: #E65100; }
+    .touch-item-livre::before { background: #BDBDBD; }
   </style>
 </head>
 <body>
-
   <div id="emptyState" class="overlay-state">
     <div style="font-size: 32px; margin-bottom: 16px;">🖱️</div>
     <div style="font-weight: 700;">Aguardando seleção</div>
@@ -193,10 +146,11 @@
 
   <div id="mainContainer" style="display:none; height: 100%; flex-direction: column;">
     <div class="top-bar">
-      <div class="header-content">
-        <div class="header-badge">A11Y</div>
-        <h2 id="compName">...</h2>
-      </div>
+  <div class='header-content'>
+    <div class='header-badge'>A11Y</div>
+    <h2 id='compName'>...</h2>
+    <button id='btnSettings' onclick='openSettings()' style='background:none;border:none;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#999;font-size:16px;flex-shrink:0;' title='Configurações'>⚙</button>
+  </div>
       <div class="tabs">
         <button class="tab active" data-target="panel-geral">Geral</button>
         <button class="tab" data-target="panel-toque">Área de Toque</button>
@@ -206,7 +160,7 @@
 
     <div class="content-area">
       <div id="panel-geral" class="tab-panel active">
-        
+
         <div class="card">
           <div class="card-header"><div class="card-title-group">▼ Plataforma e Zoom</div><span id="pzCount" class="count-badge">0 selecionados</span></div>
           <div class="card-body">
@@ -215,9 +169,10 @@
               <label class="checkbox-field"><input type="checkbox" name="platform" value="Mobile iOS"><span>Mobile iOS</span></label>
               <label class="checkbox-field"><input type="checkbox" name="platform" value="Mobile Android"><span>Mobile Android</span></label>
               <label class="checkbox-field"><input type="checkbox" name="platform" value="Mobile Cross-Platform"><span>Mobile Cross-Platform</span></label>
-              <div style="height:1px; background:#EEE; margin:4px 0;"></div>
-              <label class="checkbox-field"><input type="checkbox" name="zoom" value="Redimensionar Texto"><span>Redimensionar Texto (200%)</span></label>
-              <label class="checkbox-field"><input type="checkbox" name="zoom" value="Refluxo"><span>Refluxo (400%)</span></label>
+              <div style="height: 1px; background: #EEE; margin: 4px 0;"></div>
+              <label class="checkbox-field"><input type="checkbox" name="zoom" value="Zoom 200%"><span>Zoom 200%</span></label>
+              <label class="checkbox-field"><input type="checkbox" name="zoom" value="Zoom 300%"><span>Zoom 300%</span></label>
+              <label class="checkbox-field"><input type="checkbox" name="zoom" value="Zoom 400%"><span>Zoom 400%</span></label>
             </div>
           </div>
         </div>
@@ -225,31 +180,77 @@
         <div class="card">
           <div class="card-header"><div class="card-title-group">▼ Mapeamento de Teclado</div><span id="tBadge" class="count-badge">0</span></div>
           <div class="card-body">
-            <div class="search-wrapper">
-              <input type="text" id="tInput" placeholder="Buscar tecla ou ação..." autocomplete="off">
-              <div id="tRes" class="searchResults"></div>
+            <div class="search-container">
+              <input type="text" id="tInput" class="search-input" placeholder="Buscar tecla ou ação...">
+              <div id='tRes' class='search-results' style='display:none;'></div>
             </div>
-            <div id="tList" class="selected-list"></div>
+            <div id="tList"></div>
           </div>
         </div>
 
         <div class="card">
           <div class="card-header"><div class="card-title-group">▼ Mapeamento de Gestos</div><span id="gBadge" class="count-badge">0</span></div>
           <div class="card-body">
-            <div class="search-wrapper">
-              <input type="text" id="gInput" placeholder="Buscar gesto ou ação..." autocomplete="off">
-              <div id="gRes" class="searchResults"></div>
+            <div class="search-container">
+              <input type="text" id="gInput" class="search-input" placeholder="Buscar gesto ou ação...">
+              <div id='gRes' class='search-results' style='display:none;'></div>
             </div>
-            <div id="gList" class="selected-list"></div>
+            <div id="gList"></div>
           </div>
+        </div>
+
+      </div>
+
+      <div id='panel-toque' class='tab-panel'>
+
+        <!-- Lista de áreas (scrollável) -->
+        <div style='flex:1;overflow-y:auto;padding:16px 16px 0;'>
+          <div id='touchList' style='display:flex;flex-direction:column;gap:6px;'></div>
+        </div>
+
+        <!-- Form ancorado no bottom -->
+        <div style='flex-shrink:0;padding:14px 16px 16px;border-top:1px solid #F0F0F0;background:#fff;'>
+          <div style='font-size:11px;color:#AAA;text-align:center;margin-bottom:12px;'>Selecione um preset para adicionar a área de toque</div>
+
+          <!-- 3 botões de tamanho -->
+          <div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;'>
+            <button class='tsize-btn' data-size='aprimorado' style='border:2px solid #E0E0E0;border-radius:10px;padding:10px 4px;cursor:pointer;background:#fff;text-align:center;transition:all 0.12s;'>
+              <div style='font-size:10px;font-weight:700;color:#555;'>Aprimorado</div>
+              <div style='font-size:14px;font-weight:800;color:#2D4496;'>44px</div>
+            </button>
+            <button class='tsize-btn' data-size='minimo' style='border:2px solid #E0E0E0;border-radius:10px;padding:10px 4px;cursor:pointer;background:#fff;text-align:center;transition:all 0.12s;'>
+              <div style='font-size:10px;font-weight:700;color:#555;'>Mínimo</div>
+              <div style='font-size:14px;font-weight:800;color:#2D4496;'>24px</div>
+            </button>
+            <button class='tsize-btn' data-size='exato' style='border:2px solid #E0E0E0;border-radius:10px;padding:10px 4px;cursor:pointer;background:#fff;text-align:center;transition:all 0.12s;'>
+              <div style='font-size:10px;font-weight:700;color:#555;'>Exato</div>
+              <div style='font-size:14px;font-weight:800;color:#2D4496;'>Bounds</div>
+            </button>
+          </div>
+
+          <!-- Toggle Forma (oculto para Exato) -->
+          <div id='touchFormaRow' style='display:none;align-items:center;gap:8px;margin-bottom:12px;'>
+            <span style='font-size:11px;font-weight:700;color:#666;flex-shrink:0;'>Forma:</span>
+            <div style='display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1;'>
+              <button class='tforma-btn' data-forma='total' style='border:2px solid #E0E0E0;border-radius:8px;padding:8px 4px;cursor:pointer;background:#fff;font-size:11px;font-weight:700;color:#555;transition:all 0.12s;'>Largura total</button>
+              <button class='tforma-btn' data-forma='quadrado' style='border:2px solid #E0E0E0;border-radius:8px;padding:8px 4px;cursor:pointer;background:#fff;font-size:11px;font-weight:700;color:#555;transition:all 0.12s;'>Quadrado</button>
+            </div>
+          </div>
+
+          <!-- Estado de posicionamento -->
+          <div id='touchPositioning' style='display:none;background:#EEF2FF;border-radius:8px;padding:12px;text-align:center;margin-bottom:10px;'>
+            <div style='font-size:12px;font-weight:700;color:#2D4496;margin-bottom:4px;'>Posicione o frame no Figma</div>
+            <div id='touchPositioningHint' style='font-size:11px;color:#666;'>Mova e redimensione o frame rosa, depois clique Concluir.</div>
+          </div>
+
+          <button id='btnTouchAdd' style='display:none;width:100%;padding:12px;background:#2D4496;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:4px;box-sizing:border-box;'>Concluir</button>
+          <button id='btnTouchCancel' style='display:block;width:100%;padding:7px;background:none;border:none;font-size:12px;font-weight:700;color:#2D4496;cursor:pointer;'>Cancelar</button>
         </div>
 
       </div>
 
       <div id="panel-handoff" class="tab-panel">
         <div id='summaryCards' style='display:none; flex-direction:column; gap:0; margin-bottom:8px;'>
-          <div style='font-size:13px; font-weight:700; color:#1a1a1a; padding:4px 0 8px 0;'>Resumo</div>
-          <div style='height:2px; background:#2D4496; margin-bottom:12px; border-radius:1px;'></div>
           <div class='card' style='margin-bottom:8px;'>
             <div class='card-body'>
               <div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;'>
@@ -275,125 +276,101 @@
 
   <script>
     const el = (id) => document.getElementById(id);
-    let masterList = [], currentData = [], isGenerated = false;
+    let masterList = [];
+    let currentData = [];
+    let isGenerated = false;
 
-    // NAVEGAÇÃO DE ABAS
-    document.querySelectorAll('.tab').forEach(t => {
-      t.onclick = () => {
-        document.querySelectorAll('.tab, .tab-panel').forEach(x => x.classList.remove('active'));
-        t.classList.add('active'); el(t.dataset.target).classList.add('active');
+    // Navegação de Abas
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        el(btn.dataset.target).classList.add('active');
       };
     });
 
-    // SISTEMA DE BUSCA INFALÍVEL (Baseado apenas em Clique e Input)
-    function setupSearch(inputId, resId, type) {
+    function setupSearch(inputId, resId, filterType) {
       const input = el(inputId);
       const res = el(resId);
       const parentCard = input.closest('.card');
-      let currentFiltered = []; 
-      
+      document.body.appendChild(res); // portal: escapa qualquer overflow pai
+
       const openMenu = () => {
         if (!masterList || masterList.length === 0) return;
-        
-        // Ativa o card para ele furar o layout
         parentCard.classList.add('active-card');
-        
         const val = input.value.toLowerCase().trim();
-        currentFiltered = masterList.filter(i => {
-          const u = i.utilizacao ? i.utilizacao.toLowerCase() : "";
-          const m = i.mapeamento ? i.mapeamento.toLowerCase() : "";
-          return u.includes(type) && (val === "" || m.includes(val));
+        const filtered = masterList.filter(m => {
+          const u = (m.utilizacao || '').toLowerCase();
+          const map = (m.mapeamento || '').toLowerCase();
+          return u.includes(filterType) && (val === '' || map.includes(val));
+        }).slice(0, 10);
+        if (filtered.length === 0) { res.style.display = 'none'; return; }
+        res.innerHTML = filtered.map((m, idx) =>
+          `<div class="result-item" data-index="${idx}">${m.mapeamento} → ${m.descricao}</div>`
+        ).join('');
+        res.querySelectorAll('.result-item').forEach((item, idx) => {
+          item.onclick = (e) => { e.stopPropagation(); addItem(filtered[idx]); };
         });
-
-        if (currentFiltered.length > 0) {
-          res.innerHTML = currentFiltered.map((i, index) => `
-            <div class="search-item" data-index="${index}">
-              ${i.mapeamento} → ${i.descricao}
-            </div>
-          `).join('');
-          
-          res.style.display = 'block';
-
-          // Evento de clique seguro para cada item
-          res.querySelectorAll('.search-item').forEach(item => {
-            item.onclick = (e) => {
-              e.stopPropagation(); // Evita que o clique feche o menu acidentalmente
-              const idx = parseInt(item.getAttribute('data-index'));
-              addItem(currentFiltered[idx]);
-            };
-          });
-          
-          const rect = input.getBoundingClientRect();
-          res.style.position = 'fixed';
-          res.style.left = rect.left + 'px';
-          res.style.width = rect.width + 'px';
-          if (window.innerHeight - rect.bottom < 180) {
-            res.style.top = 'auto';
-            res.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
-          } else {
-            res.style.top = (rect.bottom + 4) + 'px';
-            res.style.bottom = 'auto';
-          }
+        const rect = input.getBoundingClientRect();
+        res.style.left = rect.left + 'px';
+        res.style.width = rect.width + 'px';
+        if (window.innerHeight - rect.bottom < 180) {
+          res.style.top = 'auto';
+          res.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
         } else {
-          res.style.display = 'none';
+          res.style.top = (rect.bottom + 4) + 'px';
+          res.style.bottom = 'auto';
         }
+        res.style.display = 'block';
       };
 
-      // EVENTOS CORE
-      input.addEventListener('click', openMenu); // Abre se clicar (mesmo já focado)
-      input.addEventListener('input', openMenu); // Filtra e abre ao digitar
-
-      // Fecha ao clicar fora
+      input.addEventListener('click', openMenu);
+      input.addEventListener('input', openMenu);
       document.addEventListener('click', (e) => {
-        // Se o clique NÃO for dentro do input E NÃO for dentro da caixa de resultados
         if (!input.contains(e.target) && !res.contains(e.target)) {
           res.style.display = 'none';
-          parentCard.classList.remove('active-card'); // Devolve o card pra camada normal
+          parentCard.classList.remove('active-card');
         }
       });
     }
 
-    window.addItem = (item) => {
+    function addItem(item) {
       if (!currentData.find(x => x.mapeamento === item.mapeamento)) {
         currentData.push(item);
         renderLists();
       }
-      el('tInput').value = ''; 
+      el('tInput').value = '';
       el('gInput').value = '';
-      
-      // Fecha todos os menus e remove elevações
-      document.querySelectorAll('.searchResults').forEach(r => r.style.display = 'none');
+      document.querySelectorAll('.search-results').forEach(r => r.style.display = 'none');
       document.querySelectorAll('.card').forEach(c => c.classList.remove('active-card'));
-    };
-
-    window.removeItem = (mapeamento) => {
-      currentData = currentData.filter(x => x.mapeamento !== mapeamento);
-      renderLists();
-    };
+    }
 
     function renderLists() {
-      const tl = el('tList'), gl = el('gList');
-      tl.innerHTML = ''; gl.innerHTML = '';
-      let tc = 0, gc = 0;
-      
-      currentData.forEach(i => {
-        const cardHTML = `
+      const tList = el('tList'), gList = el('gList');
+      if (!tList || !gList) return;
+      tList.innerHTML = ''; gList.innerHTML = '';
+      currentData.forEach((m, i) => {
+        const isTeclado = m.utilizacao.toLowerCase().includes('teclado');
+        const html = `
           <div class="selected-item-card">
-            <div class="item-content" title="${i.mapeamento} → ${i.descricao}">
-              <span class="item-title">${i.mapeamento}</span>
-              <span class="item-desc">→ ${i.descricao}</span>
+            <div class="item-content" title="${m.mapeamento} → ${m.descricao}">
+              <span class="item-title">${m.mapeamento}</span>
+              <span class="item-desc">→ ${m.descricao}</span>
             </div>
-            <div class="remove-btn" onclick="removeItem('${i.mapeamento}')">×</div>
-          </div>
-        `;
-
-        if (i.utilizacao.toLowerCase().includes('teclado')) { 
-          tl.innerHTML += cardHTML; tc++; 
-        } else { 
-          gl.innerHTML += cardHTML; gc++; 
-        }
+            <button class='remove-btn' onclick='removeItem(${i})'>×</button>
+          </div>`;
+        (isTeclado ? tList : gList).innerHTML += html;
       });
-      el('tBadge').textContent = tc; el('gBadge').textContent = gc;
+      const t = currentData.filter(m => m.utilizacao.toLowerCase().includes('teclado')).length;
+      const g = currentData.filter(m => m.utilizacao.toLowerCase().includes('gesto')).length;
+      el('tBadge').textContent = t;
+      el('gBadge').textContent = g;
+    }
+
+    function removeItem(i) {
+      currentData.splice(i, 1);
+      renderLists();
       updateSummaryCards();
     }
 
@@ -429,7 +406,8 @@
     };
 
     window.onmessage = (e) => {
-      const msg = e.data.pluginMessage;
+      const msg = e.data?.pluginMessage;
+      if (!msg) return;
       if (msg.type === 'start-loading') {
         const sb = el('statusBar');
         sb.classList.remove('success', 'error');
@@ -459,9 +437,16 @@
           if (cb) cb.checked = true;
         });
         updatePZCount();
+        touchData = msg.componentData?.areas_toque || [];
+        renderTouchList();
 
         renderLists();
         updateSummaryCards(); // CHAMADA DA NOVA FUNÇÃO
+      }
+      if (msg.type === 'touch-area-confirmed') {
+        touchData.push({ nome: msg.nome, preset: msg.preset, width: msg.width, height: msg.height, relX: msg.relX, relY: msg.relY });
+        renderTouchList();
+        resetTouchForm();
       }
       if (msg.type === 'feedback') {
         const sb = el('statusBar');
@@ -492,7 +477,121 @@
     function updatePZCount() { el('pzCount').textContent = `${document.querySelectorAll('input[type="checkbox"]:checked').length} selecionados`; }
     document.addEventListener('change', (e) => { if (e.target.type === 'checkbox') { updatePZCount(); updateSummaryCards(); } });
 
+      function openSettings() {
+    // Restaura setting salvo (aqui o elemento já existe no DOM)
+    el('settingSyncTemplate').checked = localStorage.getItem('a11y-setting-sync') !== '0';
+
+    const count = masterList.length;
+    el('settingsMasterCount').textContent = count > 0
+      ? '● ' + count + ' mapeamentos carregados'
+      : '● Nenhum dado no template';
+    el('settingsOverlay').classList.add('open');
+  }
+
+  function closeSettings() {
+    el('settingsOverlay').classList.remove('open');
+    localStorage.setItem('a11y-setting-sync', el('settingSyncTemplate').checked ? '1' : '0');
+  }
+
+  function reloadTemplateData() {
+    closeSettings();
     parent.postMessage({ pluginMessage: { type: 'load-initial-data' } }, '*');
+  }
+
+  // ===== ÁREA DE TOQUE =====
+  let touchData = [];
+  let touchSelectedSize = null;   // 'aprimorado' | 'minimo' | 'exato'
+  let touchSelectedForma = 'total'; // 'total' | 'quadrado'
+
+  function renderTouchList() {
+    const list = el('touchList');
+    list.innerHTML = '';
+    touchData.forEach((item, i) => {
+      const presetLabel = {
+        '44x100':'44px × 100%','44x44':'44 × 44px','24x100':'24px × 100%','24x24':'24 × 24px','livre':'Livre'
+      }[item.preset] || item.preset;
+      const isAAA = item.preset === '44x100' || item.preset === '44x44';
+      const isAA  = item.preset === '24x100' || item.preset === '24x24';
+      const itemClass = isAAA ? 'touch-item-aaa' : isAA ? 'touch-item-aa' : 'touch-item-livre';
+      const badge = isAAA ? "<span class='touch-compliance-badge badge-aaa'>AAA</span>"
+                  : isAA  ? "<span class='touch-compliance-badge badge-aa'>AA</span>" : '';
+      list.innerHTML += `<div class='touch-item-card ${itemClass}'><span style='background:#2D4496;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;'>${i+1}</span><div style='flex:1;min-width:0;'><div style='font-size:12px;font-weight:600;color:#1a1a1a;'>${item.nome}</div><div style='font-size:10px;color:#AAA;margin-top:1px;'>${presetLabel}</div></div>${badge}<button onclick='removeTouchArea(${i})' class='remove-btn'>×</button></div>`;
+    });
+  }
+
+  function removeTouchArea(i) {
+    touchData.splice(i, 1);
+    renderTouchList();
+  }
+
+  function getTouchPreset() {
+    if (touchSelectedSize === 'exato') return 'livre';
+    if (touchSelectedSize === 'aprimorado') return touchSelectedForma === 'quadrado' ? '44x44' : '44x100';
+    if (touchSelectedSize === 'minimo')     return touchSelectedForma === 'quadrado' ? '24x24' : '24x100';
+    return null;
+  }
+
+  function updateTouchButtons() {
+    document.querySelectorAll('.tsize-btn').forEach(b => b.classList.toggle('active', b.dataset.size === touchSelectedSize));
+    document.querySelectorAll('.tforma-btn').forEach(b => b.classList.toggle('active', b.dataset.forma === touchSelectedForma));
+    const formaRow = el('touchFormaRow');
+    if (formaRow) formaRow.style.display = (touchSelectedSize && touchSelectedSize !== 'exato') ? 'flex' : 'none';
+  }
+
+  function resetTouchForm() {
+    touchSelectedSize = null;
+    touchSelectedForma = 'total';
+    updateTouchButtons();
+    el('touchPositioning').style.display = 'none';
+    el('btnTouchAdd').style.display = 'none';
+  }
+
+  document.querySelectorAll('.tsize-btn').forEach(btn => {
+    btn.onclick = () => {
+      touchSelectedSize = btn.dataset.size;
+      updateTouchButtons();
+      el('touchPositioning').style.display = 'none';
+      el('btnTouchAdd').style.display = 'none';
+      const preset = getTouchPreset();
+      if (!preset) return;
+      const nome = 'Área de Toque ' + (touchData.length + 1);
+      if (preset !== 'livre') {
+        el('touchPositioningHint').textContent = 'Mova e redimensione o frame rosa, depois clique Concluir.';
+        parent.postMessage({ pluginMessage: { type: 'create-touch-overlay', nome, preset } }, '*');
+      } else {
+        el('touchPositioningHint').textContent = 'Desenhe um frame no Figma e clique Concluir.';
+      }
+      el('touchPositioning').style.display = 'block';
+      el('btnTouchAdd').style.display = 'block';
+    };
+  });
+
+  document.querySelectorAll('.tforma-btn').forEach(btn => {
+    btn.onclick = () => {
+      touchSelectedForma = btn.dataset.forma;
+      updateTouchButtons();
+      if (touchSelectedSize && touchSelectedSize !== 'exato') {
+        const preset = getTouchPreset();
+        const nome = 'Área de Toque ' + (touchData.length + 1);
+        if (preset) parent.postMessage({ pluginMessage: { type: 'create-touch-overlay', nome, preset } }, '*');
+      }
+    };
+  });
+
+  el('btnTouchAdd').onclick = () => {
+    const preset = getTouchPreset();
+    const nome = 'Área de Toque ' + (touchData.length + 1);
+    parent.postMessage({ pluginMessage: { type: 'confirm-touch-area', nome, preset } }, '*');
+  };
+
+  el('btnTouchCancel').onclick = () => {
+    parent.postMessage({ pluginMessage: { type: 'cancel-touch-area' } }, '*');
+    resetTouchForm();
+  };
+
+  resetTouchForm();
+
+  parent.postMessage({ pluginMessage: { type: 'load-initial-data' } }, '*');
 
     el('btnRun').onclick = () => {
       const sb = el('statusBar');
@@ -503,9 +602,50 @@
       const p = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(c => c.value);
       const z = Array.from(document.querySelectorAll('input[name="zoom"]:checked')).map(c => c.value);
       parent.postMessage({ pluginMessage: { 
-        type: 'run-handoff', plataformas: p, zoom: z, mapeamentos: currentData, componentName: el('compName').textContent 
+        type: 'run-handoff', plataformas: p, zoom: z, mapeamentos: currentData, 
+        areas_toque: touchData, componentName: el('compName').textContent 
       }}, '*');
     };
   </script>
+
+  <div id='settingsOverlay' style='position:fixed;inset:0;background:#FAFAFA;z-index:99999;flex-direction:column;overflow-y:auto;'>
+    <div style='padding:24px 20px 16px;display:flex;align-items:center;justify-content:space-between;background:#fff;border-bottom:1px solid #E5E5E5;flex-shrink:0;'>
+      <span style='font-size:18px;font-weight:700;color:#1a1a1a;'>Configurações</span>
+      <button onclick='closeSettings()' style='background:none;border:none;cursor:pointer;font-size:18px;color:#999;'>×</button>
+    </div>
+    <div style='padding:20px;display:flex;flex-direction:column;gap:20px;'>
+
+      <div style='font-size:11px;font-weight:700;color:#999;letter-spacing:0.08em;'>COMPORTAMENTO</div>
+
+      <div class='card'>
+        <div class='card-body'>
+          <div style='display:flex;align-items:center;gap:10px;margin-bottom:12px;'>
+            <span style='font-size:18px;'>↻</span>
+            <span style='font-size:14px;font-weight:600;'>Sincronização de template</span>
+          </div>
+          <label class='checkbox-field'>
+            <input type='checkbox' id='settingSyncTemplate' checked>
+            <span>Atualizar template ao gerar handoff</span>
+          </label>
+          <p style='font-size:11px;color:#999;margin-top:4px;margin-left:26px;'>Sincroniza a estrutura visual com o template original.</p>
+        </div>
+      </div>
+
+      <div style='font-size:11px;font-weight:700;color:#999;letter-spacing:0.08em;margin-top:4px;'>DADOS DO TEMPLATE</div>
+
+      <div class='card'>
+        <div class='card-body'>
+          <div style='display:flex;align-items:center;gap:10px;margin-bottom:8px;'>
+            <span style='font-size:18px;'>⌨</span>
+            <span style='font-size:14px;font-weight:600;'>Teclado e Gestos</span>
+          </div>
+          <p style='font-size:12px;color:#666;margin-bottom:8px;'>Dados carregados automaticamente da camada <strong>plugin data</strong> no template.</p>
+          <p id='settingsMasterCount' style='font-size:12px;color:#999;'>● Nenhum dado no template</p>
+        </div>
+      </div>
+
+      <button onclick='reloadTemplateData()' style='width:100%;padding:14px;border:1.5px solid #2D4496;border-radius:8px;background:none;color:#2D4496;font-size:13px;font-weight:600;cursor:pointer;'>↺ Recarregar dados do template</button>
+    </div>
+  </div>
 </body>
 </html>
