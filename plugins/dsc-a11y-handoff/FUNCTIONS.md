@@ -18,8 +18,18 @@
 
 | Handler | Mensagens tratadas |
 |---------|--------------------|
-| `figma.ui.onmessage` | `load-initial-data` — verifica seleção inicial  `run-handoff` / `update-handoff` — gera/atualiza handoff |
+| `figma.ui.onmessage` (async) | `load-initial-data`, `run-handoff`, `create-touch-overlay`, `confirm-touch-area`, `cancel-touch-area` |
 | `figma.on('selectionchange')` | Chama `tentarTravarContexto` enquanto contexto não está travado |
+
+### Handlers de área de toque (code.ts)
+
+| Mensagem | O que faz |
+|----------|-----------|
+| `create-touch-overlay` | Cria frame rosa sobre o componente com dimensões do preset; salva ID em `tempTouchOverlayId`; seleciona e foca o frame |
+| `confirm-touch-area` | Lê dimensões e posição relativa do frame via `getNodeByIdAsync`; remove o frame; envia `touch-area-confirmed` para a UI |
+| `cancel-touch-area` | Remove o frame temporário via `getNodeByIdAsync`; limpa `tempTouchOverlayId` |
+
+> **Nota API:** usar `figma.getNodeByIdAsync(id)` (async) — `getNodeById` falha no modo `dynamic-page`.
 
 ---
 
@@ -32,7 +42,14 @@
 | `addItem(item)` | Adiciona item a `currentData` (sem duplicatas), limpa inputs, fecha dropdowns, chama `renderLists` |
 | `removeItem(mapeamento)` | Remove item de `currentData` por `mapeamento`, chama `renderLists` |
 | `renderLists()` | Separa `currentData` em teclado / gesto; renderiza cards; atualiza badges `tBadge` e `gBadge` |
-| `updatePZCount()` | Conta checkboxes marcados e atualiza badge `pzCount` |
+| `updatePZCount()` | Conta checkboxes de `#panel-geral` marcados e atualiza badge `pzCount` |
+| `renderTouchList()` | Renderiza cards da lista de áreas de toque com badge de compliance (AAA/AA) |
+| `removeTouchArea(i)` | Remove área de toque pelo índice; chama `renderTouchList` |
+| `getTouchPreset()` | Deriva string de preset a partir de `touchSelectedSize` × `touchSelectedForma` |
+| `updateTouchButtons()` | Atualiza estado visual dos botões de tamanho/forma e visibilidade de `btnCriarFrame` |
+| `resetTouchForm()` | Reseta seleções de tamanho/forma e oculta elementos do form |
+| `openTouchForm()` | Abre o overlay de formulário (`touchFormView.classList.add('open')`) |
+| `closeTouchForm()` | Fecha o overlay e chama `resetTouchForm` |
 
 ### Variáveis globais (ui.html)
 
@@ -40,6 +57,9 @@
 |----------|-----------|
 | `masterList` | Todos os mapeamentos lidos do template via `setup-ui` |
 | `currentData` | Mapeamentos selecionados para o componente atual |
+| `touchData` | Array de `{ nome, preset, width, height, relX, relY }` — áreas de toque confirmadas |
+| `touchSelectedSize` | `'aprimorado' \| 'minimo' \| 'exato' \| null` |
+| `touchSelectedForma` | `'total' \| 'quadrado'` (default: `'total'`) |
 
 ---
 
@@ -58,7 +78,8 @@ A lista de teclas e gestos vem de uma **tabela Figma**, não de pluginData:
 
 - **Nó alvo**: `[dsc-h] Plugin Data A11y` dentro do handoff
 - **Chave**: `a11y-component-data`
-- **Estrutura**: `{ plataformas: string[], zoom: string[], mapeamentos: { mapeamento, descricao, utilizacao }[] }`
+- **Estrutura**: `{ plataformas: string[], zoom: string[], mapeamentos: MapeamentoItem[], areas_toque: TouchAreaItem[], sem_toque: boolean }`
+- `TouchAreaItem`: `{ nome: string, preset: string, width: number, height: number, relX: number, relY: number }`
 
 ---
 

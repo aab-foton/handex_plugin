@@ -12,7 +12,7 @@
     .tab { background: none; border: none; padding: 0 0 12px; font-size: 12px; font-weight: 600; color: #999; cursor: pointer; position: relative; }
     .tab.active { color: #2D4496; }
     .tab.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: #2D4496; border-radius: 2px; }
-    .content-area { flex: 1; overflow-y: auto; background: #FAFAFA; }
+    .content-area { flex: 1; overflow-y: auto; background: #FAFAFA; display: flex; flex-direction: column; }
     .tab-panel { display: none; padding: 16px; }
     .tab-panel.active { display: block; }
     .card { background: #fff; border: 1px solid #E5E5E5; border-radius: 12px; margin-bottom: 16px; position: relative; z-index: 1; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
@@ -36,18 +36,21 @@
     .version-text { font-size: 10px; color: #BBB; font-weight: 500; }
     .overlay-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #999; padding: 40px; }
     .summary-pill { font-size: 11px; background: #f0f0f0; padding: 4px 10px; border-radius: 12px; color: #666; }
-    .search-container { position: relative; margin-bottom: 12px; }
-    .search-input { width: 100%; box-sizing: border-box; border: 1.5px solid #EEE; border-radius: 8px; padding: 10px 12px; font-size: 13px; outline: none; }
-    .search-input:focus { border-color: #2D4496; }
-    .search-results { display: none; position: fixed; z-index: 100000; max-height: 200px; overflow-y: auto; border: 1px solid #D1D5DB; border-radius: 8px; background: #fff; padding: 4px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
-    .result-item { padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; color: #333; border-bottom: 1px solid #F3F4F6; }
-    .result-item:last-child { border-bottom: none; }
-    .result-item:hover { background: #F9FAFB; color: #2D4496; }
+    .search-wrapper { position: relative; width: 100%; margin-bottom: 12px; }
+    .search-wrapper input { width: 100%; box-sizing: border-box; border: 1.5px solid #EEE; border-radius: 8px; padding: 10px 12px; font-size: 13px; outline: none; }
+    .search-wrapper input:focus { border-color: #2D4496; }
+    .searchResults { display: none; position: absolute; left: 0; right: 0; background: #fff; border: 1px solid #D1D5DB; border-radius: 8px; z-index: 100000; max-height: 180px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+    .search-item { padding: 10px 12px; cursor: pointer; font-size: 12px; color: #333; border-bottom: 1px solid #F3F4F6; }
+    .search-item:last-child { border-bottom: none; }
+    .search-item:hover { background: #F9FAFB; color: #2D4496; }
     .remove-btn { background: none; border: none; cursor: pointer; color: #CCC; font-size: 16px; padding: 4px; }
     .remove-btn:hover { color: #FF5252; }
     #settingsOverlay { display: none; }
     #settingsOverlay.open { display: flex; }
-    #panel-toque.tab-panel.active { display: flex; flex-direction: column; padding: 0; }
+    #panel-toque.tab-panel.active { display: flex; flex: 1; flex-direction: column; padding: 0; overflow: hidden; }
+    #panel-toque { position: relative; overflow: hidden; }
+    #touchFormView { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #fff; flex-direction: column; z-index: 10; }
+    #touchFormView.open { display: flex; }
     .tsize-btn.active  { border-color: #2D4496 !important; background: #EEF2FF !important; }
     .tforma-btn.active { border-color: #2D4496 !important; background: #2D4496 !important; color: #fff !important; }
 
@@ -180,9 +183,9 @@
         <div class="card">
           <div class="card-header"><div class="card-title-group">▼ Mapeamento de Teclado</div><span id="tBadge" class="count-badge">0</span></div>
           <div class="card-body">
-            <div class="search-container">
-              <input type="text" id="tInput" class="search-input" placeholder="Buscar tecla ou ação...">
-              <div id='tRes' class='search-results' style='display:none;'></div>
+            <div class="search-wrapper">
+              <input type="text" id="tInput" placeholder="Buscar tecla ou ação..." autocomplete="off">
+              <div id="tRes" class="searchResults"></div>
             </div>
             <div id="tList"></div>
           </div>
@@ -191,9 +194,9 @@
         <div class="card">
           <div class="card-header"><div class="card-title-group">▼ Mapeamento de Gestos</div><span id="gBadge" class="count-badge">0</span></div>
           <div class="card-body">
-            <div class="search-container">
-              <input type="text" id="gInput" class="search-input" placeholder="Buscar gesto ou ação...">
-              <div id='gRes' class='search-results' style='display:none;'></div>
+            <div class="search-wrapper">
+              <input type="text" id="gInput" placeholder="Buscar gesto ou ação..." autocomplete="off">
+              <div id="gRes" class="searchResults"></div>
             </div>
             <div id="gList"></div>
           </div>
@@ -203,49 +206,83 @@
 
       <div id='panel-toque' class='tab-panel'>
 
-        <!-- Lista de áreas (scrollável) -->
-        <div style='flex:1;overflow-y:auto;padding:16px 16px 0;'>
-          <div id='touchList' style='display:flex;flex-direction:column;gap:6px;'></div>
-        </div>
+        <!-- VIEW PRINCIPAL -->
+        <div id='touchMainView' style='flex:1;display:flex;flex-direction:column;overflow:hidden;'>
 
-        <!-- Form ancorado no bottom -->
-        <div style='flex-shrink:0;padding:14px 16px 16px;border-top:1px solid #F0F0F0;background:#fff;'>
-          <div style='font-size:11px;color:#AAA;text-align:center;margin-bottom:12px;'>Selecione um preset para adicionar a área de toque</div>
-
-          <!-- 3 botões de tamanho -->
-          <div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;'>
-            <button class='tsize-btn' data-size='aprimorado' style='border:2px solid #E0E0E0;border-radius:10px;padding:10px 4px;cursor:pointer;background:#fff;text-align:center;transition:all 0.12s;'>
-              <div style='font-size:10px;font-weight:700;color:#555;'>Aprimorado</div>
-              <div style='font-size:14px;font-weight:800;color:#2D4496;'>44px</div>
-            </button>
-            <button class='tsize-btn' data-size='minimo' style='border:2px solid #E0E0E0;border-radius:10px;padding:10px 4px;cursor:pointer;background:#fff;text-align:center;transition:all 0.12s;'>
-              <div style='font-size:10px;font-weight:700;color:#555;'>Mínimo</div>
-              <div style='font-size:14px;font-weight:800;color:#2D4496;'>24px</div>
-            </button>
-            <button class='tsize-btn' data-size='exato' style='border:2px solid #E0E0E0;border-radius:10px;padding:10px 4px;cursor:pointer;background:#fff;text-align:center;transition:all 0.12s;'>
-              <div style='font-size:10px;font-weight:700;color:#555;'>Exato</div>
-              <div style='font-size:14px;font-weight:800;color:#2D4496;'>Bounds</div>
-            </button>
+          <!-- Opção: sem área de toque -->
+          <div style='padding:10px 16px;border-bottom:1px solid #F0F0F0;'>
+            <label style='display:flex;align-items:center;gap:8px;cursor:pointer;'>
+              <input type='checkbox' id='chkSemToque' style='accent-color:#2D4496;width:14px;height:14px;'>
+              <span style='font-size:12px;color:#666;font-weight:600;'>Sem área de toque</span>
+            </label>
           </div>
 
-          <!-- Toggle Forma (oculto para Exato) -->
-          <div id='touchFormaRow' style='display:none;align-items:center;gap:8px;margin-bottom:12px;'>
-            <span style='font-size:11px;font-weight:700;color:#666;flex-shrink:0;'>Forma:</span>
-            <div style='display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1;'>
-              <button class='tforma-btn' data-forma='total' style='border:2px solid #E0E0E0;border-radius:8px;padding:8px 4px;cursor:pointer;background:#fff;font-size:11px;font-weight:700;color:#555;transition:all 0.12s;'>Largura total</button>
-              <button class='tforma-btn' data-forma='quadrado' style='border:2px solid #E0E0E0;border-radius:8px;padding:8px 4px;cursor:pointer;background:#fff;font-size:11px;font-weight:700;color:#555;transition:all 0.12s;'>Quadrado</button>
+          <!-- Lista scrollável -->
+          <div style='flex:1;overflow-y:auto;padding:12px 16px;'>
+            <div id='touchList' style='display:flex;flex-direction:column;gap:6px;'></div>
+          </div>
+
+          <!-- Footer fixo -->
+          <div style='flex-shrink:0;padding:10px 16px 14px;border-top:1px solid #F0F0F0;background:#fff;'>
+            <button id='btnAddTouch' style='width:100%;padding:10px;background:none;border:1.5px dashed #BBBFC8;border-radius:10px;color:#2D4496;font-size:12px;font-weight:700;cursor:pointer;'>+ Adicionar área de toque</button>
+          </div>
+
+        </div><!-- fim touchMainView -->
+
+        <!-- VIEW FORMULÁRIO (overlay, abre como nova página) -->
+        <div id='touchFormView'>
+
+          <!-- Header -->
+          <div style='flex-shrink:0;padding:12px 16px;border-bottom:1px solid #F0F0F0;display:flex;align-items:center;'>
+            <span style='font-size:13px;font-weight:700;color:#1a1a1a;flex:1;'>Nova Área de Toque</span>
+            <button id='btnTouchCancel' style='background:none;border:none;font-size:12px;font-weight:700;color:#2D4496;cursor:pointer;padding:4px 0;'>Cancelar</button>
+          </div>
+
+          <!-- Conteúdo do form -->
+          <div style='flex:1;overflow-y:auto;padding:16px;'>
+
+            <!-- 3 botões de tamanho -->
+            <div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;'>
+              <button class='tsize-btn' data-size='aprimorado' style='border:2px solid #E0E0E0;border-radius:10px;padding:10px 4px;cursor:pointer;background:#fff;text-align:center;transition:all 0.12s;'>
+                <div style='font-size:10px;font-weight:700;color:#555;'>Aprimorado</div>
+                <div style='font-size:14px;font-weight:800;color:#2D4496;'>44px</div>
+              </button>
+              <button class='tsize-btn' data-size='minimo' style='border:2px solid #E0E0E0;border-radius:10px;padding:10px 4px;cursor:pointer;background:#fff;text-align:center;transition:all 0.12s;'>
+                <div style='font-size:10px;font-weight:700;color:#555;'>Mínimo</div>
+                <div style='font-size:14px;font-weight:800;color:#2D4496;'>24px</div>
+              </button>
+              <button class='tsize-btn' data-size='exato' style='border:2px solid #E0E0E0;border-radius:10px;padding:10px 4px;cursor:pointer;background:#fff;text-align:center;transition:all 0.12s;'>
+                <div style='font-size:10px;font-weight:700;color:#555;'>Exato</div>
+                <div style='font-size:14px;font-weight:800;color:#2D4496;'>Desenho livre</div>
+              </button>
             </div>
+
+            <!-- Toggle Forma (oculto para Exato) -->
+            <div id='touchFormaRow' style='display:none;align-items:center;gap:8px;margin-bottom:12px;'>
+              <span style='font-size:11px;font-weight:700;color:#666;flex-shrink:0;'>Forma:</span>
+              <div style='display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1;'>
+                <button class='tforma-btn' data-forma='total' style='border:2px solid #E0E0E0;border-radius:8px;padding:8px 4px;cursor:pointer;background:#fff;font-size:11px;font-weight:700;color:#555;transition:all 0.12s;'>Largura total</button>
+                <button class='tforma-btn' data-forma='quadrado' style='border:2px solid #E0E0E0;border-radius:8px;padding:8px 4px;cursor:pointer;background:#fff;font-size:11px;font-weight:700;color:#555;transition:all 0.12s;'>Quadrado</button>
+              </div>
+            </div>
+
+            <!-- Botão criar frame -->
+            <button id='btnCriarFrame' style='display:none;width:100%;padding:11px;background:#2D4496;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px;box-sizing:border-box;'>Criar no Figma</button>
+
+            <!-- Estado de posicionamento -->
+            <div id='touchPositioning' style='display:none;background:#EEF2FF;border-radius:8px;padding:12px;text-align:center;'>
+              <div style='font-size:12px;font-weight:700;color:#2D4496;margin-bottom:4px;'>Posicione o frame no Figma</div>
+              <div id='touchPositioningHint' style='font-size:11px;color:#666;'>Mova e redimensione o frame rosa, depois clique Concluir.</div>
+            </div>
+
+          </div><!-- fim conteúdo form -->
+
+          <!-- Footer Concluir -->
+          <div style='flex-shrink:0;padding:12px 16px 16px;border-top:1px solid #F0F0F0;background:#fff;'>
+            <button id='btnTouchAdd' style='display:none;width:100%;padding:12px;background:#2D4496;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;box-sizing:border-box;'>Concluir</button>
           </div>
 
-          <!-- Estado de posicionamento -->
-          <div id='touchPositioning' style='display:none;background:#EEF2FF;border-radius:8px;padding:12px;text-align:center;margin-bottom:10px;'>
-            <div style='font-size:12px;font-weight:700;color:#2D4496;margin-bottom:4px;'>Posicione o frame no Figma</div>
-            <div id='touchPositioningHint' style='font-size:11px;color:#666;'>Mova e redimensione o frame rosa, depois clique Concluir.</div>
-          </div>
-
-          <button id='btnTouchAdd' style='display:none;width:100%;padding:12px;background:#2D4496;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:4px;box-sizing:border-box;'>Concluir</button>
-          <button id='btnTouchCancel' style='display:block;width:100%;padding:7px;background:none;border:none;font-size:12px;font-weight:700;color:#2D4496;cursor:pointer;'>Cancelar</button>
-        </div>
+        </div><!-- fim touchFormView -->
 
       </div>
 
@@ -294,33 +331,31 @@
       const input = el(inputId);
       const res = el(resId);
       const parentCard = input.closest('.card');
-      document.body.appendChild(res); // portal: escapa qualquer overflow pai
+      let currentFiltered = [];
 
       const openMenu = () => {
         if (!masterList || masterList.length === 0) return;
         parentCard.classList.add('active-card');
         const val = input.value.toLowerCase().trim();
-        const filtered = masterList.filter(m => {
+        currentFiltered = masterList.filter(m => {
           const u = (m.utilizacao || '').toLowerCase();
           const map = (m.mapeamento || '').toLowerCase();
           return u.includes(filterType) && (val === '' || map.includes(val));
         }).slice(0, 10);
-        if (filtered.length === 0) { res.style.display = 'none'; return; }
-        res.innerHTML = filtered.map((m, idx) =>
-          `<div class="result-item" data-index="${idx}">${m.mapeamento} → ${m.descricao}</div>`
+        if (currentFiltered.length === 0) { res.style.display = 'none'; return; }
+        res.innerHTML = currentFiltered.map((m, idx) =>
+          `<div class="search-item" data-index="${idx}">${m.mapeamento} → ${m.descricao}</div>`
         ).join('');
-        res.querySelectorAll('.result-item').forEach((item, idx) => {
-          item.onclick = (e) => { e.stopPropagation(); addItem(filtered[idx]); };
+        res.querySelectorAll('.search-item').forEach((item, idx) => {
+          item.onclick = (e) => { e.stopPropagation(); addItem(currentFiltered[idx]); };
         });
         const rect = input.getBoundingClientRect();
-        res.style.left = rect.left + 'px';
-        res.style.width = rect.width + 'px';
         if (window.innerHeight - rect.bottom < 180) {
-          res.style.top = 'auto';
-          res.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+          res.style.top = 'auto'; res.style.bottom = '100%';
+          res.style.marginBottom = '4px'; res.style.marginTop = '0';
         } else {
-          res.style.top = (rect.bottom + 4) + 'px';
-          res.style.bottom = 'auto';
+          res.style.top = '100%'; res.style.bottom = 'auto';
+          res.style.marginTop = '4px'; res.style.marginBottom = '0';
         }
         res.style.display = 'block';
       };
@@ -342,7 +377,7 @@
       }
       el('tInput').value = '';
       el('gInput').value = '';
-      document.querySelectorAll('.search-results').forEach(r => r.style.display = 'none');
+      document.querySelectorAll('.searchResults').forEach(r => r.style.display = 'none');
       document.querySelectorAll('.card').forEach(c => c.classList.remove('active-card'));
     }
 
@@ -438,6 +473,9 @@
         });
         updatePZCount();
         touchData = msg.componentData?.areas_toque || [];
+const semToque = msg.componentData?.sem_toque || false;
+el('chkSemToque').checked = semToque;
+el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         renderTouchList();
 
         renderLists();
@@ -446,7 +484,7 @@
       if (msg.type === 'touch-area-confirmed') {
         touchData.push({ nome: msg.nome, preset: msg.preset, width: msg.width, height: msg.height, relX: msg.relX, relY: msg.relY });
         renderTouchList();
-        resetTouchForm();
+        closeTouchForm();
       }
       if (msg.type === 'feedback') {
         const sb = el('statusBar');
@@ -474,8 +512,8 @@
       }
     };
 
-    function updatePZCount() { el('pzCount').textContent = `${document.querySelectorAll('input[type="checkbox"]:checked').length} selecionados`; }
-    document.addEventListener('change', (e) => { if (e.target.type === 'checkbox') { updatePZCount(); updateSummaryCards(); } });
+    function updatePZCount() { el('pzCount').textContent = `${document.querySelectorAll('#panel-geral input[type="checkbox"]:checked').length} selecionados`; }
+    document.addEventListener('change', (e) => { if (e.target.type === 'checkbox' && e.target.id !== 'chkSemToque') { updatePZCount(); updateSummaryCards(); } });
 
       function openSettings() {
     // Restaura setting salvo (aqui o elemento já existe no DOM)
@@ -536,6 +574,8 @@
     document.querySelectorAll('.tforma-btn').forEach(b => b.classList.toggle('active', b.dataset.forma === touchSelectedForma));
     const formaRow = el('touchFormaRow');
     if (formaRow) formaRow.style.display = (touchSelectedSize && touchSelectedSize !== 'exato') ? 'flex' : 'none';
+    const btnCriar = el('btnCriarFrame');
+    if (btnCriar) btnCriar.style.display = touchSelectedSize ? 'block' : 'none';
   }
 
   function resetTouchForm() {
@@ -544,25 +584,23 @@
     updateTouchButtons();
     el('touchPositioning').style.display = 'none';
     el('btnTouchAdd').style.display = 'none';
+    el('btnCriarFrame').style.display = 'none';
   }
+
+function openTouchForm() {
+  el('touchFormView').classList.add('open');
+  resetTouchForm();
+}
+
+function closeTouchForm() {
+  el('touchFormView').classList.remove('open');
+  resetTouchForm();
+}
 
   document.querySelectorAll('.tsize-btn').forEach(btn => {
     btn.onclick = () => {
       touchSelectedSize = btn.dataset.size;
       updateTouchButtons();
-      el('touchPositioning').style.display = 'none';
-      el('btnTouchAdd').style.display = 'none';
-      const preset = getTouchPreset();
-      if (!preset) return;
-      const nome = 'Área de Toque ' + (touchData.length + 1);
-      if (preset !== 'livre') {
-        el('touchPositioningHint').textContent = 'Mova e redimensione o frame rosa, depois clique Concluir.';
-        parent.postMessage({ pluginMessage: { type: 'create-touch-overlay', nome, preset } }, '*');
-      } else {
-        el('touchPositioningHint').textContent = 'Desenhe um frame no Figma e clique Concluir.';
-      }
-      el('touchPositioning').style.display = 'block';
-      el('btnTouchAdd').style.display = 'block';
     };
   });
 
@@ -570,13 +608,10 @@
     btn.onclick = () => {
       touchSelectedForma = btn.dataset.forma;
       updateTouchButtons();
-      if (touchSelectedSize && touchSelectedSize !== 'exato') {
-        const preset = getTouchPreset();
-        const nome = 'Área de Toque ' + (touchData.length + 1);
-        if (preset) parent.postMessage({ pluginMessage: { type: 'create-touch-overlay', nome, preset } }, '*');
-      }
     };
   });
+
+el('btnAddTouch').onclick = () => { openTouchForm(); };
 
   el('btnTouchAdd').onclick = () => {
     const preset = getTouchPreset();
@@ -584,10 +619,35 @@
     parent.postMessage({ pluginMessage: { type: 'confirm-touch-area', nome, preset } }, '*');
   };
 
-  el('btnTouchCancel').onclick = () => {
-    parent.postMessage({ pluginMessage: { type: 'cancel-touch-area' } }, '*');
-    resetTouchForm();
-  };
+el('btnTouchCancel').onclick = () => {
+  parent.postMessage({ pluginMessage: { type: 'cancel-touch-area' } }, '*');
+  closeTouchForm();
+};
+
+el('btnCriarFrame').onclick = () => {
+  const preset = getTouchPreset();
+  if (!preset) return;
+  const nome = 'Área de Toque ' + (touchData.length + 1);
+  if (preset !== 'livre') {
+    el('touchPositioningHint').textContent = 'Mova e redimensione o frame rosa, depois clique Concluir.';
+    parent.postMessage({ pluginMessage: { type: 'create-touch-overlay', nome, preset } }, '*');
+  } else {
+    el('touchPositioningHint').textContent = 'Desenhe um frame no Figma e clique Concluir.';
+  }
+  el('btnCriarFrame').style.display = 'none';
+  el('touchPositioning').style.display = 'block';
+  el('btnTouchAdd').style.display = 'block';
+};
+
+el('chkSemToque').onchange = () => {
+  if (el('chkSemToque').checked) {
+    touchData = [];
+    renderTouchList();
+    el('btnAddTouch').style.display = 'none';
+  } else {
+    el('btnAddTouch').style.display = 'block';
+  }
+};
 
   resetTouchForm();
 

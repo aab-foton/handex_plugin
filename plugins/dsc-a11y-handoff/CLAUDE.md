@@ -7,8 +7,8 @@ Branch ativa: `new-a11y-plugin`. Reescrita completa iniciada em 2026-03-31.
 
 | Arquivo | Papel |
 |---------|-------|
-| `code.ts` | Lógica do plugin (sandbox Figma, ~180 linhas) |
-| `ui.html` | Interface (iframe sandboxado, ~390 linhas) |
+| `code.ts` | Lógica do plugin (sandbox Figma, ~414 linhas) |
+| `ui.html` | Interface (iframe sandboxado, ~710 linhas) |
 | `FUNCTIONS.md` | Mapa detalhado de todas as funções |
 | `Makefile` | `push-github` / `push-gitlab` / `push-all` |
 
@@ -40,7 +40,9 @@ Colunas em ordem: `mapeamento` → `descricao` → `utilizacao` (`"teclado"` ou 
 ## Persistência
 
 - Chave: `a11y-component-data` no pluginData do `[dsc-h] Plugin Data A11y`
-- Estrutura: `{ plataformas, zoom, mapeamentos }`
+- Estrutura: `{ plataformas, zoom, mapeamentos, areas_toque, sem_toque }`
+- `areas_toque`: `{ nome, preset, width, height, relX, relY }[]`
+- `sem_toque`: `boolean` — quando true, oculta o botão Adicionar e limpa a lista
 
 ## Convenções
 

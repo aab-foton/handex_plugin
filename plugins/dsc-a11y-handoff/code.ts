@@ -255,10 +255,10 @@ figma.ui.onmessage = async (msg) => {
   else if (msg.type === 'confirm-touch-area') {
     let width = 0, height = 0, relX = 0, relY = 0;
     if (tempTouchOverlayId) {
-      const frame = figma.currentPage.findOne((n: SceneNode) => n.id === tempTouchOverlayId);
+      const frame = await figma.getNodeByIdAsync(tempTouchOverlayId) as FrameNode | null;
       if (frame) {
-        width = Math.round((frame as FrameNode).width);
-        height = Math.round((frame as FrameNode).height);
+        width = Math.round(frame.width);
+        height = Math.round(frame.height);
         if (componentePrincipalAtivo) {
           relX = Math.round(frame.x - componentePrincipalAtivo.x);
           relY = Math.round(frame.y - componentePrincipalAtivo.y);
@@ -272,7 +272,7 @@ figma.ui.onmessage = async (msg) => {
 
   else if (msg.type === 'cancel-touch-area') {
     if (tempTouchOverlayId) {
-      const frame = figma.currentPage.findOne((n: SceneNode) => n.id === tempTouchOverlayId);
+      const frame = await figma.getNodeByIdAsync(tempTouchOverlayId) as FrameNode | null;
       if (frame) frame.remove();
       tempTouchOverlayId = null;
     }
