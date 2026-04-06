@@ -300,6 +300,18 @@
               <div id='summaryPills' style='display:flex; flex-wrap:wrap; gap:6px;'></div>
             </div>
           </div>
+          <div id='summaryTouchCard' class='card' style='display:none; margin-bottom:8px;'>
+            <div class='card-body'>
+              <div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;'>
+                <div style='display:flex; align-items:center; gap:8px;'>
+                  <span>👆</span>
+                  <span style='font-size:14px; font-weight:600;'>Área de Toque</span>
+                </div>
+                <span id='summaryEditToque' style='font-size:12px; color:#999; cursor:pointer;'>Editar ›</span>
+              </div>
+              <div id='summaryTouchPills' style='display:flex; flex-wrap:wrap; gap:6px;'></div>
+            </div>
+          </div>
         </div>
         <div class="card"><div class="card-body"><button id="btnRun" style="background:#2D4496; color:white; border:none; padding:16px; border-radius:8px; font-weight:600; cursor:pointer; width:100%;">Gerar Handoff</button></div></div>
         <div id="statusBar" class="status-bar"></div>
@@ -428,9 +440,19 @@
       });
       if (keyboards > 0) pills.innerHTML += `<span class='summary-pill'>${keyboards} tecla${keyboards !== 1 ? 's' : ''}</span>`;
       if (gestures > 0) pills.innerHTML += `<span class='summary-pill'>${gestures} gesto${gestures !== 1 ? 's' : ''}</span>`;
+      
+      const touchPills = el('summaryTouchPills');
+      if (touchPills) {
+        touchPills.innerHTML = '';
+        if (touchData.length > 0) {
+          touchPills.innerHTML = `<span class='summary-pill'>${touchData.length} área${touchData.length !== 1 ? 's' : ''} de toque</span>`;
+        }
+      }
+      const touchCard = el('summaryTouchCard');
+      if (touchCard) touchCard.style.display = touchData.length > 0 ? 'block' : 'none';
 
       const hasSomething = platforms.length > 0 || zooms.length > 0 || keyboards > 0 || gestures > 0;
-  el('summaryCards').style.display = hasSomething ? 'flex' : 'none';
+  el('summaryCards').style.display = hasSomething || touchData.length > 0 ? 'flex' : 'none';
     }
 
     el('summaryEditGeral').onclick = () => {
@@ -438,6 +460,13 @@
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.querySelector('.tab[data-target="panel-geral"]').classList.add('active');
       el('panel-geral').classList.add('active');
+    };
+
+    el('summaryEditToque').onclick = () => {
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelector('.tab[data-target="panel-toque"]').classList.add('active');
+      el('panel-toque').classList.add('active');
     };
 
     window.onmessage = (e) => {
@@ -483,7 +512,14 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
       }
       if (msg.type === 'touch-area-confirmed') {
         touchData.push({ nome: msg.nome, preset: msg.preset, width: msg.width, height: msg.height, relX: msg.relX, relY: msg.relY });
+        if (msg.preset === 'livre' && (msg.width < 44 || msg.height < 44)) {
+          const sb = el('statusBar');
+          sb.classList.remove('loading','success','error');
+          sb.classList.add('error');
+          sb.textContent = `⚠️ Área de toque (${msg.width}×${msg.height}px) abaixo do mínimo WCAG recomendado de 44×44px.`;
+        }
         renderTouchList();
+        updateSummaryCards();
         closeTouchForm();
       }
       if (msg.type === 'feedback') {
@@ -545,21 +581,30 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
     const list = el('touchList');
     list.innerHTML = '';
     touchData.forEach((item, i) => {
-      const presetLabel = {
-        '44x100':'44px × 100%','44x44':'44 × 44px','24x100':'24px × 100%','24x24':'24 × 24px','livre':'Livre'
-      }[item.preset] || item.preset;
-      const isAAA = item.preset === '44x100' || item.preset === '44x44';
-      const isAA  = item.preset === '24x100' || item.preset === '24x24';
+      const presetLabel = item.preset === 'livre'
+        ? `${item.width}×${item.height}px`
+        : ({ '44x100':'44px × 100%','44x44':'44 × 44px','24x100':'24px × 100%','24x24':'24 × 24px' }[item.preset] || item.preset);
+      const isAAA = item.preset === '44x100' || item.preset === '44x44'
+        || (item.preset === 'livre' && item.width >= 44 && item.height >= 44);
+      const isAA  = item.preset === '24x100' || item.preset === '24x24'
+        || (item.preset === 'livre' && !isAAA && item.width >= 24 && item.height >= 24);
       const itemClass = isAAA ? 'touch-item-aaa' : isAA ? 'touch-item-aa' : 'touch-item-livre';
       const badge = isAAA ? "<span class='touch-compliance-badge badge-aaa'>AAA</span>"
                   : isAA  ? "<span class='touch-compliance-badge badge-aa'>AA</span>" : '';
-      list.innerHTML += `<div class='touch-item-card ${itemClass}'><span style='background:#2D4496;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;'>${i+1}</span><div style='flex:1;min-width:0;'><div style='font-size:12px;font-weight:600;color:#1a1a1a;'>${item.nome}</div><div style='font-size:10px;color:#AAA;margin-top:1px;'>${presetLabel}</div></div>${badge}<button onclick='removeTouchArea(${i})' class='remove-btn'>×</button></div>`;
+      list.innerHTML += `<div class='touch-item-card ${itemClass}' onclick='highlightTouchArea("${item.nome}")' style='cursor:pointer;'><span style='background:#2D4496;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;'>${i+1}</span><div style='flex:1;min-width:0;'><div style='font-size:12px;font-weight:600;color:#1a1a1a;'>${item.nome}</div><div style='font-size:10px;color:#AAA;margin-top:1px;'>${presetLabel}</div></div>${badge}<button onclick='event.stopPropagation(); removeTouchArea(${i})' class='remove-btn'>×</button></div>`;
     });
   }
 
   function removeTouchArea(i) {
+    const nomeRemovido = touchData[i].nome;
+    parent.postMessage({ pluginMessage: { type: 'remove-touch-overlay', nome: nomeRemovido } }, '*');
     touchData.splice(i, 1);
     renderTouchList();
+    updateSummaryCards();
+  }
+
+  function highlightTouchArea(nome) {
+    parent.postMessage({ pluginMessage: { type: 'highlight-touch-area', nome: nome } }, '*');
   }
 
   function getTouchPreset() {
@@ -628,12 +673,8 @@ el('btnCriarFrame').onclick = () => {
   const preset = getTouchPreset();
   if (!preset) return;
   const nome = 'Área de Toque ' + (touchData.length + 1);
-  if (preset !== 'livre') {
-    el('touchPositioningHint').textContent = 'Mova e redimensione o frame rosa, depois clique Concluir.';
-    parent.postMessage({ pluginMessage: { type: 'create-touch-overlay', nome, preset } }, '*');
-  } else {
-    el('touchPositioningHint').textContent = 'Desenhe um frame no Figma e clique Concluir.';
-  }
+  el('touchPositioningHint').textContent = 'Mova e redimensione o frame rosa, depois clique Concluir.';
+  parent.postMessage({ pluginMessage: { type: 'create-touch-overlay', nome, preset } }, '*');
   el('btnCriarFrame').style.display = 'none';
   el('touchPositioning').style.display = 'block';
   el('btnTouchAdd').style.display = 'block';
@@ -643,9 +684,11 @@ el('chkSemToque').onchange = () => {
   if (el('chkSemToque').checked) {
     touchData = [];
     renderTouchList();
+    updateSummaryCards();
     el('btnAddTouch').style.display = 'none';
   } else {
     el('btnAddTouch').style.display = 'block';
+    updateSummaryCards();
   }
 };
 
@@ -661,9 +704,10 @@ el('chkSemToque').onchange = () => {
 
       const p = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(c => c.value);
       const z = Array.from(document.querySelectorAll('input[name="zoom"]:checked')).map(c => c.value);
-      parent.postMessage({ pluginMessage: { 
-        type: 'run-handoff', plataformas: p, zoom: z, mapeamentos: currentData, 
-        areas_toque: touchData, componentName: el('compName').textContent 
+      parent.postMessage({ pluginMessage: {
+        type: 'run-handoff', plataformas: p, zoom: z, mapeamentos: currentData,
+        areas_toque: touchData, sem_toque: el('chkSemToque').checked,
+        componentName: el('compName').textContent
       }}, '*');
     };
   </script>
