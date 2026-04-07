@@ -51,6 +51,11 @@
     #panel-toque { position: relative; overflow: hidden; }
     #touchFormView { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #fff; flex-direction: column; z-index: 10; }
     #touchFormView.open { display: flex; }
+    #touchVariationListView { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    #touchVariationListView.hidden { display: none !important; }
+    #touchMainView.hidden { display: none !important; }
+    #touchVariationFormView { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #fff; flex-direction: column; z-index: 20; }
+    #touchVariationFormView.open { display: flex; }
     .tsize-btn.active  { border-color: #2D4496 !important; background: #EEF2FF !important; }
     .tforma-btn.active { border-color: #2D4496 !important; background: #2D4496 !important; color: #fff !important; }
 
@@ -206,8 +211,29 @@
 
       <div id='panel-toque' class='tab-panel'>
 
+        <!-- VIEW 1: LISTA DE VARIAÇÕES -->
+        <div id='touchVariationListView'>
+
+          <!-- Lista scrollável -->
+          <div style='flex:1;overflow-y:auto;padding:12px 16px;'>
+            <div id='variationList' style='display:flex;flex-direction:column;gap:6px;'></div>
+          </div>
+
+          <!-- Footer fixo -->
+          <div style='flex-shrink:0;padding:10px 16px 14px;border-top:1px solid #F0F0F0;background:#fff;'>
+            <button id='btnAddVariation' style='width:100%;padding:10px;background:none;border:1.5px dashed #BBBFC8;border-radius:10px;color:#2D4496;font-size:12px;font-weight:700;cursor:pointer;'>+ Nova variante parametrizada</button>
+          </div>
+
+        </div><!-- fim touchVariationListView -->
+
         <!-- VIEW PRINCIPAL -->
         <div id='touchMainView' style='flex:1;display:flex;flex-direction:column;overflow:hidden;'>
+
+          <!-- Header da view de áreas de toque -->
+          <div id='touchMainViewHeader' style='flex-shrink:0;padding:10px 16px;border-bottom:1px solid #F0F0F0;display:flex;align-items:center;gap:8px;'>
+            <button id='btnBackToVariations' style='background:none;border:none;font-size:12px;font-weight:700;color:#2D4496;cursor:pointer;padding:4px 0;'>← Voltar</button>
+            <span id='touchMainViewLabel' style='font-size:13px;font-weight:700;color:#1a1a1a;flex:1;'>Default</span>
+          </div>
 
           <!-- Opção: sem área de toque -->
           <div style='padding:10px 16px;border-bottom:1px solid #F0F0F0;'>
@@ -283,6 +309,38 @@
           </div>
 
         </div><!-- fim touchFormView -->
+
+        <!-- VIEW 3: FORMULÁRIO DE NOVA VARIAÇÃO (overlay) -->
+        <div id='touchVariationFormView'>
+
+          <!-- Header -->
+          <div style='flex-shrink:0;padding:12px 16px;border-bottom:1px solid #F0F0F0;display:flex;align-items:center;'>
+            <span style='font-size:13px;font-weight:700;color:#1a1a1a;flex:1;'>Nova variante parametrizada</span>
+          </div>
+
+          <!-- Conteúdo -->
+          <div style='flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;'>
+
+            <!-- Nome -->
+            <div class='touch-form-row'>
+              <label>Nome</label>
+              <input type='text' id='varNomeInput' class='touch-form-input' placeholder='Ex: Mobile, Hover, Expandido…'>
+            </div>
+
+            <!-- Propriedades (gerado dinamicamente pelo JS) -->
+            <div id='varPropsContainer' style='display:flex;flex-direction:column;gap:10px;'>
+              <!-- Preenchido pelo renderVariationProps() -->
+            </div>
+
+          </div><!-- fim conteúdo -->
+
+          <!-- Footer -->
+          <div style='flex-shrink:0;padding:12px 16px 16px;border-top:1px solid #F0F0F0;background:#fff;display:flex;flex-direction:column;gap:8px;align-items:center;'>
+            <button id='btnVariationFormCreate' style='width:100%;padding:12px;background:#2D4496;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;box-sizing:border-box;'>Criar variante</button>
+            <button id='btnVariationFormCancel' style='background:none;border:none;font-size:12px;font-weight:700;color:#2D4496;cursor:pointer;padding:4px 0;'>Cancelar</button>
+          </div>
+
+        </div><!-- fim touchVariationFormView -->
 
       </div>
 
@@ -441,18 +499,27 @@
       if (keyboards > 0) pills.innerHTML += `<span class='summary-pill'>${keyboards} tecla${keyboards !== 1 ? 's' : ''}</span>`;
       if (gestures > 0) pills.innerHTML += `<span class='summary-pill'>${gestures} gesto${gestures !== 1 ? 's' : ''}</span>`;
       
+      const totalAreas = variationsData.reduce((sum, v) => {
+        const areas = v.id === currentVariationId ? touchData : (v.areas_toque || []);
+        return sum + areas.length;
+      }, 0);
+      const totalVars = variationsData.filter(v => v.id !== 'default').length;
+
       const touchPills = el('summaryTouchPills');
       if (touchPills) {
         touchPills.innerHTML = '';
-        if (touchData.length > 0) {
-          touchPills.innerHTML = `<span class='summary-pill'>${touchData.length} área${touchData.length !== 1 ? 's' : ''} de toque</span>`;
+        if (totalVars > 0) {
+          touchPills.innerHTML += `<span class='summary-pill'>${totalVars} variação${totalVars !== 1 ? 'ões' : ''}</span>`;
+        }
+        if (totalAreas > 0) {
+          touchPills.innerHTML += `<span class='summary-pill'>${totalAreas} área${totalAreas !== 1 ? 's' : ''} de toque</span>`;
         }
       }
       const touchCard = el('summaryTouchCard');
-      if (touchCard) touchCard.style.display = touchData.length > 0 ? 'block' : 'none';
+      if (touchCard) touchCard.style.display = totalAreas > 0 ? 'block' : 'none';
 
       const hasSomething = platforms.length > 0 || zooms.length > 0 || keyboards > 0 || gestures > 0;
-  el('summaryCards').style.display = hasSomething || touchData.length > 0 ? 'flex' : 'none';
+  el('summaryCards').style.display = hasSomething || totalAreas > 0 ? 'flex' : 'none';
     }
 
     el('summaryEditGeral').onclick = () => {
@@ -502,6 +569,12 @@
         });
         updatePZCount();
         touchData = msg.componentData?.areas_toque || [];
+        variationsData = msg.componentData?.variacoes || [];
+        // Garante que Default sempre existe
+        if (!variationsData.find(v => v.id === 'default')) {
+          variationsData.unshift({ id: 'default', nome: 'Default', propriedades: {}, areas_toque: msg.componentData?.areas_toque || [], sem_toque: msg.componentData?.sem_toque || false, frameNodeId: null, instanceNodeId: null });
+        }
+        renderVariationList();
 const semToque = msg.componentData?.sem_toque || false;
 el('chkSemToque').checked = semToque;
 el('btnAddTouch').style.display = semToque ? 'none' : 'block';
@@ -546,6 +619,32 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         el('emptyState').style.display = 'flex';
         el('mainContainer').style.display = 'none';
       }
+      if (msg.type === 'component-properties-ready') {
+        componentProps = msg.props || [];
+        renderVariationProps();
+      }
+      if (msg.type === 'variation-frame-created') {
+        // Atualiza a variação que aguardava o frame (pode ser nova criação OU recriação ao editar)
+        const targetVar = variationsData.find(v => v.id === currentVariationId && !v.frameNodeId)
+          || variationsData[variationsData.length - 1];
+        if (targetVar && !targetVar.frameNodeId) {
+          targetVar.frameNodeId = msg.frameNodeId;
+          targetVar.instanceNodeId = msg.instanceNodeId;
+        }
+        const btn = el('btnVariationFormCreate');
+        if (btn) { btn.textContent = 'Criar variante'; btn.disabled = false; }
+        // Se estava abrindo edição (currentVariationId definido e não veio do form), abrir main view
+        if (currentVariationId && currentVariationId !== 'default' && el('touchVariationFormView') && !el('touchVariationFormView').classList.contains('open')) {
+          const v = variationsData.find(v => v.id === currentVariationId);
+          if (v) {
+            parent.postMessage({ pluginMessage: { type: 'activate-variation', instanceNodeId: v.instanceNodeId } }, '*');
+            showView('main');
+          }
+        } else {
+          closeVariationForm();
+        }
+        renderVariationList();
+      }
     };
 
     function updatePZCount() { el('pzCount').textContent = `${document.querySelectorAll('#panel-geral input[type="checkbox"]:checked').length} selecionados`; }
@@ -576,6 +675,10 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
   let touchData = [];
   let touchSelectedSize = null;   // 'aprimorado' | 'minimo' | 'exato'
   let touchSelectedForma = 'total'; // 'total' | 'quadrado'
+
+  let variationsData = []; // array de variações: [{ id, nome, propriedades, areas_toque, sem_toque, frameNodeId, instanceNodeId }]
+  let currentVariationId = null; // 'default' | uuid string
+  let componentProps = []; // [{ name, type, options }] — carregado via get-component-properties
 
   function renderTouchList() {
     const list = el('touchList');
@@ -632,6 +735,166 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
     el('btnCriarFrame').style.display = 'none';
   }
 
+  // ===== VARIAÇÕES =====
+
+  function generateId() {
+    return Math.random().toString(36).slice(2, 10);
+  }
+
+  function showView(viewId) {
+    el('touchVariationListView').classList.toggle('hidden', viewId !== 'list');
+    el('touchMainView').classList.toggle('hidden', viewId !== 'main');
+    // touchVariationFormView é overlay absolute, não usa hidden
+  }
+
+  function renderVariationList() {
+    const container = el('variationList');
+    container.innerHTML = '';
+
+    // Card Default
+    const defData = variationsData.find(v => v.id === 'default') || { id: 'default', nome: 'Default', propriedades: {}, areas_toque: [], sem_toque: false };
+    container.innerHTML += `
+      <div style='border:1.5px solid #22C55E;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;background:#F0FDF4;'>
+        <span style='background:#22C55E;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;'>D</span>
+        <div style='flex:1;min-width:0;'>
+          <div style='font-size:12px;font-weight:700;color:#1a1a1a;'>Default</div>
+          <div style='font-size:10px;color:#888;margin-top:1px;'>Comportamento padrão</div>
+        </div>
+        <button onclick='editVariation("default")' style='background:none;border:1.5px solid #22C55E;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#22C55E;cursor:pointer;'>Editar</button>
+      </div>`;
+
+    const customs = variationsData.filter(v => v.id !== 'default');
+    if (customs.length > 0) {
+      container.innerHTML += `<div style='font-size:10px;font-weight:700;color:#999;letter-spacing:0.05em;padding:6px 0 2px;'>VARIANTES PARAMETRIZADAS</div>`;
+      customs.forEach((v, i) => {
+        const propsLabel = Object.entries(v.propriedades || {}).map(([k, val]) => `${k}=${val}`).join(', ') || '—';
+        container.innerHTML += `
+          <div style='border:1.5px solid #E0E0E0;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;background:#fff;'>
+            <span style='background:#2D4496;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;'>${i+1}</span>
+            <div style='flex:1;min-width:0;'>
+              <div style='font-size:12px;font-weight:700;color:#1a1a1a;'>${v.nome}</div>
+              <div style='font-size:10px;color:#888;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${propsLabel}</div>
+            </div>
+            <button onclick='editVariation("${v.id}")' style='background:none;border:1.5px solid #2D4496;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#2D4496;cursor:pointer;'>Editar</button>
+            <button onclick='deleteVariation("${v.id}")' style='background:none;border:1.5px solid #FF5252;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#FF5252;cursor:pointer;'>Excluir</button>
+          </div>`;
+      });
+    }
+  }
+
+  function editVariation(id) {
+    currentVariationId = id;
+    // Salva touchData atual de volta na variação que estava ativa (se houver)
+    // (na primeira entrada não há variação ativa ainda)
+
+    // Carrega dados da variação selecionada
+    let varData = variationsData.find(v => v.id === id);
+    if (!varData) {
+      varData = { id, nome: id === 'default' ? 'Default' : id, propriedades: {}, areas_toque: [], sem_toque: false };
+      variationsData.push(varData);
+    }
+    touchData = varData.areas_toque || [];
+    const semToque = varData.sem_toque || false;
+    el('chkSemToque').checked = semToque;
+    el('btnAddTouch').style.display = semToque ? 'none' : 'block';
+    renderTouchList();
+
+    // Atualiza label do header
+    el('touchMainViewLabel').textContent = id === 'default' ? 'Default' : varData.nome;
+
+    // Ativa variação no code.ts (para overlays de toque)
+    if (id === 'default') {
+      parent.postMessage({ pluginMessage: { type: 'deactivate-variation' } }, '*');
+      showView('main');
+    } else if (varData.instanceNodeId) {
+      // Frame já existe — ativar e abrir
+      parent.postMessage({ pluginMessage: { type: 'activate-variation', instanceNodeId: varData.instanceNodeId } }, '*');
+      showView('main');
+    } else {
+      // Frame foi apagado (após geração de handoff) — recriar antes de abrir
+      parent.postMessage({ pluginMessage: { type: 'create-variation-frame', nome: varData.nome, propriedades: varData.propriedades || {} } }, '*');
+      // showView('main') será chamado quando variation-frame-created chegar (ver window.onmessage)
+      const btn = el('btnVariationFormCreate');
+      // Não há botão para desabilitar aqui; aguardar mensagem de retorno
+    }
+  }
+
+  function backToVariationList() {
+    // Salva touchData na variação ativa
+    if (currentVariationId) {
+      let varData = variationsData.find(v => v.id === currentVariationId);
+      if (varData) {
+        varData.areas_toque = [...touchData];
+        varData.sem_toque = el('chkSemToque').checked;
+      }
+    }
+    // Desativa variação
+    parent.postMessage({ pluginMessage: { type: 'deactivate-variation' } }, '*');
+    currentVariationId = null;
+    renderVariationList();
+    showView('list');
+  }
+
+  function deleteVariation(id) {
+    const idx = variationsData.findIndex(v => v.id === id);
+    if (idx === -1) return;
+    const v = variationsData[idx];
+    if (v.frameNodeId) {
+      parent.postMessage({ pluginMessage: { type: 'delete-variation-frame', frameNodeId: v.frameNodeId } }, '*');
+    }
+    variationsData.splice(idx, 1);
+    renderVariationList();
+  }
+
+  function openVariationForm() {
+    el('varNomeInput').value = '';
+    renderVariationProps();
+    parent.postMessage({ pluginMessage: { type: 'get-component-properties' } }, '*');
+    el('touchVariationFormView').classList.add('open');
+  }
+
+  function closeVariationForm() {
+    el('touchVariationFormView').classList.remove('open');
+  }
+
+  function renderVariationProps() {
+    const container = el('varPropsContainer');
+    container.innerHTML = '';
+    if (componentProps.length === 0) {
+      container.innerHTML = '<div style="font-size:12px;color:#999;">Nenhuma propriedade VARIANT/BOOLEAN encontrada no componente.</div>';
+      return;
+    }
+    componentProps.forEach(prop => {
+      if (prop.type === 'VARIANT') {
+        const opts = (prop.options || []).map(o => `<option value="${o}">${o}</option>`).join('');
+        container.innerHTML += `
+          <div class='touch-form-row'>
+            <label>${prop.name}</label>
+            <select class='touch-form-input var-prop-select' data-prop='${prop.name}' style='cursor:pointer;'>
+              ${opts}
+            </select>
+          </div>`;
+      } else if (prop.type === 'BOOLEAN') {
+        container.innerHTML += `
+          <div class='touch-form-row' style='flex-direction:row;align-items:center;gap:8px;'>
+            <input type='checkbox' class='var-prop-check' data-prop='${prop.name}' style='accent-color:#2D4496;width:14px;height:14px;'>
+            <label style='font-size:12px;font-weight:600;color:#555;margin:0;'>${prop.name}</label>
+          </div>`;
+      }
+    });
+  }
+
+  function collectVariationProps() {
+    const props = {};
+    document.querySelectorAll('.var-prop-select').forEach(sel => {
+      props[sel.dataset.prop] = sel.value;
+    });
+    document.querySelectorAll('.var-prop-check').forEach(chk => {
+      props[chk.dataset.prop] = chk.checked;
+    });
+    return props;
+  }
+
 function openTouchForm() {
   el('touchFormView').classList.add('open');
   resetTouchForm();
@@ -657,6 +920,21 @@ function closeTouchForm() {
   });
 
 el('btnAddTouch').onclick = () => { openTouchForm(); };
+el('btnAddVariation').onclick = () => { openVariationForm(); };
+el('btnBackToVariations').onclick = () => { backToVariationList(); };
+el('btnVariationFormCancel').onclick = () => { closeVariationForm(); };
+
+el('btnVariationFormCreate').onclick = () => {
+  const nome = el('varNomeInput').value.trim();
+  if (!nome) { el('varNomeInput').focus(); return; }
+  const propriedades = collectVariationProps();
+  const id = generateId();
+  variationsData.push({ id, nome, propriedades, areas_toque: [], sem_toque: false, frameNodeId: null, instanceNodeId: null });
+  const btn = el('btnVariationFormCreate');
+  btn.textContent = '⏳ Criando…';
+  btn.disabled = true;
+  parent.postMessage({ pluginMessage: { type: 'create-variation-frame', nome, propriedades } }, '*');
+};
 
   el('btnTouchAdd').onclick = () => {
     const preset = getTouchPreset();
@@ -693,6 +971,7 @@ el('chkSemToque').onchange = () => {
 };
 
   resetTouchForm();
+  showView('list');
 
   parent.postMessage({ pluginMessage: { type: 'load-initial-data' } }, '*');
 
@@ -707,7 +986,8 @@ el('chkSemToque').onchange = () => {
       parent.postMessage({ pluginMessage: {
         type: 'run-handoff', plataformas: p, zoom: z, mapeamentos: currentData,
         areas_toque: touchData, sem_toque: el('chkSemToque').checked,
-        componentName: el('compName').textContent
+        componentName: el('compName').textContent,
+        variacoes: variationsData
       }}, '*');
     };
   </script>

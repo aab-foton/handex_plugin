@@ -7,6 +7,7 @@ let componentePrincipalAtivo: SceneNode | null = null;
 let handoffAtivo: SceneNode | null = null;
 let contextoTravado: boolean = false;
 let tempTouchOverlayId: string | null = null;
+let componenteVariacaoAtivo: SceneNode | null = null;
 
 // ==========================================
 // 2. FUNÇÕES AUXILIARES
@@ -151,7 +152,18 @@ figma.ui.onmessage = async (msg) => {
     figma.ui.postMessage({ type: 'feedback', message: '⏳ Salvando dados...' });
     
     // --- ÁREA DE TOQUE (NOVO) ---
-    if (msg.areas_toque && msg.areas_toque.length > 0) {
+    const todasAsAreas: any[] = [];
+    if (msg.variacoes && msg.variacoes.length > 0) {
+      for (const v of msg.variacoes) {
+        if (!v.sem_toque && v.areas_toque) {
+          for (const a of v.areas_toque) todasAsAreas.push(a);
+        }
+      }
+    } else if (msg.areas_toque) {
+      todasAsAreas.push(...msg.areas_toque);
+    }
+
+    if (todasAsAreas.length > 0) {
       const targetArea = workingFrame.findOne((n: SceneNode) => n.name === 'target area') as FrameNode;
       if (targetArea) {
         const specs = targetArea.findOne((n: SceneNode) => n.name === 'specs') as FrameNode;
@@ -159,8 +171,8 @@ figma.ui.onmessage = async (msg) => {
           const rowModel = Array.from(specs.children).find(n => n.name === 'element') as FrameNode | undefined;
           if (rowModel) {
             Array.from(specs.children).filter(n => n !== rowModel).forEach(n => n.remove());
-            for (let i = 0; i < msg.areas_toque.length; i++) {
-              const area = msg.areas_toque[i];
+            for (let i = 0; i < todasAsAreas.length; i++) {
+              const area = todasAsAreas[i];
               const row = rowModel.clone();
               row.visible = true;
               specs.appendChild(row);
@@ -197,8 +209,10 @@ figma.ui.onmessage = async (msg) => {
 
         // --- PREENCHER IMAGE (PREVIEW) ---
         const imageFrame = workingFrame.findOne((n: SceneNode) => n.name === 'image') as FrameNode | null;
-        if (imageFrame && msg.areas_toque && msg.areas_toque.length > 0 && componentePrincipalAtivo) {
-          // Modelos fixos — identificar por nome
+        const variacoes: any[] = msg.variacoes || [];
+        const variacoesComAreas = variacoes.filter((v: any) => !v.sem_toque && v.areas_toque && v.areas_toque.length > 0);
+
+        if (imageFrame && variacoesComAreas.length > 0 && componentePrincipalAtivo) {
           const modelHandoffAreas = Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Handoff areas') as InstanceNode | undefined;
           const modelItemNumber   = Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Item Number')   as InstanceNode | undefined;
 
@@ -209,18 +223,14 @@ figma.ui.onmessage = async (msg) => {
             .filter(n => !nodesToKeep.has(n))
             .forEach(n => n.remove());
 
-          const PAD_TOP  = 40;  // espaço abaixo da tag Preview
-          const PAD_SIDE = 24;  // padding direito e inferior
-          const PAD_LEFT = 160;  // espaço à esquerda para os marcadores numéricos
+          const PAD_TOP  = 40;
+          const PAD_SIDE = 24;
+          const PAD_LEFT = 160;
+          const GAP_H    = 140;  // gap horizontal entre variações
+          const GAP_V    = 60;  // gap vertical ao quebrar linha
+          const MAX_WIDTH = Math.max(imageFrame.width, 800); // limite antes de quebrar linha
 
-          // Redimensionar imageFrame para acomodar componente + espaço para marcadores
-          imageFrame.resize(
-            Math.max(imageFrame.width, componentePrincipalAtivo.width + PAD_LEFT + PAD_SIDE),
-            componentePrincipalAtivo.height + PAD_TOP + PAD_SIDE
-          );
-
-          // Ajustar cor de fundo do imageFrame: verificar contraste WCAG com o componente
-          // Se não houver contraste suficiente (< 3:1) ou fills não detectáveis, usar fundo navy
+          // Ajustar cor de fundo do imageFrame
           try {
             const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
             const relativeLuminance = (r: number, g: number, b: number) =>
@@ -238,7 +248,7 @@ figma.ui.onmessage = async (msg) => {
             const bgFill   = bgFills.find(f => f.type === 'SOLID') as SolidPaint | undefined;
             const compFill = compFills.find(f => f.type === 'SOLID') as SolidPaint | undefined;
 
-            let needsSwap = true; // padrão: trocar se não conseguir ler
+            let needsSwap = true;
             if (bgFill && compFill) {
               const bgL   = relativeLuminance(bgFill.color.r,   bgFill.color.g,   bgFill.color.b);
               const compL = relativeLuminance(compFill.color.r, compFill.color.g, compFill.color.b);
@@ -247,10 +257,8 @@ figma.ui.onmessage = async (msg) => {
 
             const figmaVars = (figma as any).variables;
             const allVars: any[] = figmaVars ? await figmaVars.getLocalVariablesAsync() : [];
-            console.log(`[preview bg] needsSwap=${needsSwap} bgFill=${!!bgFill} compFill=${!!compFill} vars=${allVars.length}`, allVars.slice(0,10).map((v:any)=>v.name));
             if (needsSwap) {
               const cardBg2Var = allVars.find((v: any) => v.name.toLowerCase().includes('card background 2'));
-              console.log('[preview bg] cardBg2Var=', cardBg2Var?.name ?? 'não encontrada');
               if (cardBg2Var && figmaVars) {
                 const boundFill = figmaVars.setBoundVariableForPaint(
                   { type: 'SOLID', color: { r: 0, g: 0, b: 0 } },
@@ -266,44 +274,92 @@ figma.ui.onmessage = async (msg) => {
             figma.ui.postMessage({ type: 'feedback', message: `❌ Erro no bloco de cor: ${e}` });
           }
 
-          // Clonar o componente e inserir no fundo da stack, deslocado para a direita
-          const compClone = componentePrincipalAtivo.clone();
-          compClone.x = PAD_LEFT;
-          compClone.y = PAD_TOP;
-          imageFrame.insertChild(0, compClone);
+          let currentX = PAD_LEFT;
+          let currentY = PAD_TOP;
+          let rowHeight = 0;
+          let globalCounter = 0;
+          let totalWidth = PAD_LEFT;
+          let totalHeight = PAD_TOP;
 
-          // Para cada área de toque: clonar Handoff areas + Item Number
-          if (modelHandoffAreas && modelItemNumber) {
-            for (let i = 0; i < msg.areas_toque.length; i++) {
-              const area = msg.areas_toque[i];
-
-              // Clone do Handoff areas — offset pelo PAD_LEFT
-              const areaClone = modelHandoffAreas.clone();
-              areaClone.visible = true;
-              areaClone.resize(area.width, area.height);
-              areaClone.x = area.relX + PAD_LEFT;
-              areaClone.y = area.relY + PAD_TOP;
-              imageFrame.appendChild(areaClone);
-
-              // Clone do Item Number — à esquerda, centrado verticalmente no overlay
-              const numClone = modelItemNumber.clone();
-              numClone.visible = true;
-              // Atualizar número
-              const numTexts = numClone.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
-              const numText = numTexts.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numTexts[0] || null;
-              if (numText) await updateText(numText as TextNode, String(i + 1));
-              // Conector aponta para a direita (em direção ao componente)
-              try { numClone.setProperties({ 'connector': 'left' }); } catch(e) {}
-              // Posicionar à esquerda, centrado na altura do overlay
-              numClone.x = area.relX + PAD_LEFT - numClone.width;
-              numClone.y = area.relY + PAD_TOP + area.height / 2 - numClone.height / 2;
-              imageFrame.appendChild(numClone);
+          for (const variacao of variacoesComAreas) {
+            // Obter clone do componente correto para esta variação
+            let compClone: SceneNode;
+            if (variacao.id === 'default') {
+              compClone = componentePrincipalAtivo.clone();
+            } else if (variacao.instanceNodeId) {
+              const srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null;
+              compClone = srcNode ? srcNode.clone() : componentePrincipalAtivo.clone();
+            } else {
+              // instanceNodeId zerado (após handoff) — clonar e aplicar propriedades salvas
+              compClone = componentePrincipalAtivo.clone();
+              if (compClone.type === 'INSTANCE' && variacao.propriedades && Object.keys(variacao.propriedades).length > 0) {
+                try { (compClone as InstanceNode).setProperties(variacao.propriedades); } catch(e) {}
+              }
             }
 
-            // Ocultar modelos
-            modelHandoffAreas.visible = false;
-            modelItemNumber.visible = false;
+            // Verificar se precisa quebrar linha
+            if (currentX > PAD_LEFT && currentX + compClone.width > MAX_WIDTH) {
+              currentX = PAD_LEFT;
+              currentY += rowHeight + GAP_V;
+              rowHeight = 0;
+            }
+
+            compClone.x = currentX;
+            compClone.y = currentY;
+            imageFrame.insertChild(0, compClone);
+
+            // Criar overlays e marcadores para cada área desta variação
+            if (modelHandoffAreas && modelItemNumber) {
+              for (const area of variacao.areas_toque) {
+                globalCounter++;
+
+                const areaClone = modelHandoffAreas.clone();
+                areaClone.visible = true;
+                areaClone.resize(area.width, area.height);
+                areaClone.x = area.relX + currentX;
+                areaClone.y = area.relY + currentY;
+                imageFrame.appendChild(areaClone);
+
+                const numClone = modelItemNumber.clone();
+                numClone.visible = true;
+                const numTexts = numClone.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+                const numText = numTexts.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numTexts[0] || null;
+                if (numText) await updateText(numText as TextNode, String(globalCounter));
+                try { numClone.setProperties({ 'connector': 'left' }); } catch(e) {}
+                numClone.x = area.relX + currentX - numClone.width;
+                numClone.y = area.relY + currentY + area.height / 2 - numClone.height / 2;
+                imageFrame.appendChild(numClone);
+              }
+            }
+
+            rowHeight = Math.max(rowHeight, compClone.height);
+            totalWidth = Math.max(totalWidth, currentX + compClone.width);
+            currentX += compClone.width + GAP_H;
           }
+
+          totalHeight = currentY + rowHeight;
+
+          // Redimensionar imageFrame para acomodar tudo
+          imageFrame.resize(
+            Math.max(imageFrame.width, totalWidth + PAD_SIDE),
+            totalHeight + PAD_SIDE
+          );
+
+          if (modelHandoffAreas) modelHandoffAreas.visible = false;
+          if (modelItemNumber)   modelItemNumber.visible   = false;
+        }
+      }
+    }
+
+    // Remove frames de variação do canvas após geração do preview
+    figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y Variação]')).forEach(n => n.remove());
+
+    // Zerar frameNodeId/instanceNodeId para que no próximo carregamento os frames sejam recriados
+    if (msg.variacoes) {
+      for (const v of msg.variacoes) {
+        if (v.id !== 'default') {
+          v.frameNodeId = null;
+          v.instanceNodeId = null;
         }
       }
     }
@@ -315,7 +371,8 @@ figma.ui.onmessage = async (msg) => {
         zoom: msg.zoom,
         mapeamentos: msg.mapeamentos,
         areas_toque: msg.areas_toque || [],
-        sem_toque: msg.sem_toque || false
+        sem_toque: msg.sem_toque || false,
+        variacoes: msg.variacoes || [],
       });
       dbInstance.setPluginData("a11y-component-data", dataToSave);
     }
@@ -329,7 +386,8 @@ figma.ui.onmessage = async (msg) => {
           zoom: msg.zoom,
           mapeamentos: msg.mapeamentos,
           areas_toque: msg.areas_toque || [],
-          sem_toque: msg.sem_toque || false
+          sem_toque: msg.sem_toque || false,
+          variacoes: msg.variacoes || [],
         });
         dataNode.setPluginData('a11y-component-data', dataToSave);
       }
@@ -341,7 +399,8 @@ figma.ui.onmessage = async (msg) => {
       zoom: msg.zoom,
       mapeamentos: msg.mapeamentos,
       areas_toque: msg.areas_toque || [],
-      sem_toque: msg.sem_toque || false
+      sem_toque: msg.sem_toque || false,
+      variacoes: msg.variacoes || [],
     });
     workingFrame.setPluginData("a11y-component-data", dataToSaveDirect);
 
@@ -353,7 +412,7 @@ figma.ui.onmessage = async (msg) => {
       figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo.' });
       return;
     }
-    const comp = componentePrincipalAtivo as FrameNode;
+    const comp = (componenteVariacaoAtivo ?? componentePrincipalAtivo) as FrameNode;
     if (!comp.parent) {
       figma.ui.postMessage({ type: 'feedback', message: '⚠️ Componente sem parent.' });
       return;
@@ -393,9 +452,10 @@ figma.ui.onmessage = async (msg) => {
       if (frame) {
         width = Math.round(frame.width);
         height = Math.round(frame.height);
-        if (componentePrincipalAtivo) {
-          relX = Math.round(frame.x - componentePrincipalAtivo.x);
-          relY = Math.round(frame.y - componentePrincipalAtivo.y);
+        const refNode = componenteVariacaoAtivo ?? componentePrincipalAtivo;
+        if (refNode) {
+          relX = Math.round(frame.x - refNode.x);
+          relY = Math.round(frame.y - refNode.y);
         }
       }
       tempTouchOverlayId = null;
@@ -422,6 +482,130 @@ figma.ui.onmessage = async (msg) => {
     if (node) {
       figma.currentPage.selection = [node];
       figma.viewport.scrollAndZoomIntoView([node]);
+    }
+  }
+
+  else if (msg.type === 'get-component-properties') {
+    if (!componentePrincipalAtivo) {
+      figma.ui.postMessage({ type: 'component-properties-ready', props: [] });
+      return;
+    }
+    try {
+      let defs: ComponentPropertyDefinitions | null = null;
+      const node = componentePrincipalAtivo;
+      if (node.type === 'COMPONENT_SET' || node.type === 'COMPONENT') {
+        defs = (node as ComponentSetNode | ComponentNode).componentPropertyDefinitions;
+      } else if (node.type === 'INSTANCE') {
+        const main = await (node as InstanceNode).getMainComponentAsync();
+        if (main) {
+          const source = main.parent?.type === 'COMPONENT_SET' ? main.parent : main;
+          defs = (source as ComponentSetNode | ComponentNode).componentPropertyDefinitions;
+        }
+      }
+      if (!defs) {
+        figma.ui.postMessage({ type: 'component-properties-ready', props: [] });
+        return;
+      }
+      const props = Object.entries(defs)
+        .filter(([_, def]) => def.type === 'VARIANT' || def.type === 'BOOLEAN')
+        .map(([name, def]) => ({
+          name,
+          type: def.type,
+          options: def.type === 'VARIANT' ? (def as any).variantOptions : [true, false]
+        }));
+      figma.ui.postMessage({ type: 'component-properties-ready', props });
+    } catch (e) {
+      console.error('[get-component-properties]', e);
+      figma.ui.postMessage({ type: 'component-properties-ready', props: [] });
+    }
+  }
+
+  else if (msg.type === 'create-variation-frame') {
+    if (!componentePrincipalAtivo) {
+      figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo.' });
+      return;
+    }
+    try {
+      const comp = componentePrincipalAtivo;
+      const parentNode = comp.parent as FrameNode | PageNode;
+      if (!parentNode) {
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Componente sem parent.' });
+        return;
+      }
+
+      // Remove frame anterior com mesmo nome se existir
+      const frameName = `[A11Y Variação] ${msg.nome}`;
+      const existing = figma.currentPage.findOne((n: SceneNode) => n.name === frameName);
+      if (existing) existing.remove();
+
+      // Clona o componente e aplica propriedades antes de criar o frame
+      // (setProperties pode alterar as dimensões da instância)
+      const instance = comp.clone() as InstanceNode;
+      instance.x = 0;
+      instance.y = 0;
+
+      if (instance.type === 'INSTANCE' && msg.propriedades && Object.keys(msg.propriedades).length > 0) {
+        try {
+          instance.setProperties(msg.propriedades);
+        } catch (e) {
+          console.warn('[create-variation-frame] setProperties failed:', e);
+        }
+      }
+
+      // Cria frame container sem auto layout — tamanho igual à instância
+      const varFrame = figma.createFrame();
+      varFrame.name = frameName;
+      varFrame.fills = [];
+      varFrame.clipsContent = false;
+      varFrame.resize(instance.width, instance.height);
+
+      // Posiciona o frame próximo ao componente original
+      varFrame.x = comp.x + comp.width + 80;
+      varFrame.y = comp.y;
+
+      // Insere no mesmo parent e move a instância para dentro
+      (parentNode as FrameNode).appendChild(varFrame);
+      varFrame.appendChild(instance);
+
+      figma.currentPage.selection = [varFrame];
+      figma.viewport.scrollAndZoomIntoView([varFrame]);
+
+      figma.ui.postMessage({
+        type: 'variation-frame-created',
+        frameNodeId: varFrame.id,
+        instanceNodeId: instance.id
+      });
+    } catch (e) {
+      console.error('[create-variation-frame]', e);
+      figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar frame de variação: ${e}` });
+    }
+  }
+
+  else if (msg.type === 'activate-variation') {
+    try {
+      if (msg.instanceNodeId) {
+        const node = await figma.getNodeByIdAsync(msg.instanceNodeId) as SceneNode | null;
+        componenteVariacaoAtivo = node;
+      } else {
+        componenteVariacaoAtivo = null;
+      }
+    } catch (e) {
+      componenteVariacaoAtivo = null;
+    }
+  }
+
+  else if (msg.type === 'deactivate-variation') {
+    componenteVariacaoAtivo = null;
+  }
+
+  else if (msg.type === 'delete-variation-frame') {
+    if (msg.frameNodeId) {
+      try {
+        const node = await figma.getNodeByIdAsync(msg.frameNodeId);
+        if (node) node.remove();
+      } catch (e) {
+        console.warn('[delete-variation-frame]', e);
+      }
     }
   }
 };
@@ -561,8 +745,8 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
     }
   }
 
-  figma.ui.postMessage({
-    type: 'setup-ui',
+
+    figma.ui.postMessage({ type: 'setup-ui',
     masterList,
     componentData,
     componentName: componentePrincipalAtivo?.name
