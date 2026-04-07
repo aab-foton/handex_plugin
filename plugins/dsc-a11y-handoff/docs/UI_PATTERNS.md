@@ -64,13 +64,19 @@ display: none; → .open { display: flex; }
 ```
 
 ### Footer do form (ações empilhadas verticalmente)
+
+Padrão visual: botão filled azul em cima + link de texto azul embaixo (sem borda, sem background).
+
 ```html
-<div class="touch-actions">
-  <button class="touch-btn-primary" id="btnConfirm">Ação principal</button>
-  <button class="touch-btn-secondary" onclick="closeForm()">Cancelar</button>
+<div class="touch-actions" style="padding:12px 16px; border-top:1px solid #EEE;">
+  <button class="touch-btn-primary" id="btnConfirm">Salvar</button>
+  <button onclick="closeForm()" style="background:none;border:none;font-size:12px;font-weight:700;color:#2D4496;cursor:pointer;padding:4px 0;">Cancelar</button>
 </div>
 ```
-Usar as classes `.touch-btn-primary` e `.touch-btn-secondary` já definidas no CSS global.
+
+`.touch-actions` tem `display:flex; flex-direction:column; gap:8px` — definido no CSS global.
+`.touch-btn-primary` — botão filled azul — definido no CSS global.
+Cancelar usa inline style (text link azul, sem borda).
 
 ### Seção com instrução
 ```html
