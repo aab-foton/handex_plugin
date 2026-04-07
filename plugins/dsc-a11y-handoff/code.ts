@@ -351,6 +351,37 @@ figma.ui.onmessage = async (msg) => {
       }
     }
 
+    // --- TAB ORDER: SPECS NO TEMPLATE (contexto independente de área de toque) ---
+    const tabOrder: any[] = msg.tab_order || [];
+    if (tabOrder.length > 0) {
+      const tabOrderContainer = workingFrame.findOne((n: SceneNode) => n.name === 'tab order') as FrameNode | null;
+      if (tabOrderContainer) {
+        const specs = tabOrderContainer.findOne((n: SceneNode) => n.name === 'specs') as FrameNode | null;
+        if (specs) {
+          const rowModel = Array.from(specs.children).find(n => n.name === 'element') as FrameNode | undefined;
+          if (rowModel) {
+            Array.from(specs.children).filter(n => n !== rowModel).forEach(n => n.remove());
+            for (let i = 0; i < tabOrder.length; i++) {
+              const item = tabOrder[i];
+              const row = rowModel.clone();
+              row.visible = true;
+              specs.appendChild(row);
+              const nameInst = row.findOne((n: SceneNode) => n.name === 'Element name') as InstanceNode | null;
+              if (nameInst) {
+                const allTexts = nameInst.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+                for (const t of allTexts) {
+                  if (t.characters === 'Elemento') await updateText(t, item.nome);
+                  else if (/^\d+$/.test(t.characters.trim())) await updateText(t, String(i + 1));
+                }
+              }
+            }
+            rowModel.visible = false;
+          }
+        }
+      }
+      // Se tabOrderContainer não existe, pula silenciosamente (template ainda não tem o nó)
+    }
+
     // Remove frames de variação do canvas após geração do preview
     figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y Variação]')).forEach(n => n.remove());
 
@@ -373,6 +404,8 @@ figma.ui.onmessage = async (msg) => {
         areas_toque: msg.areas_toque || [],
         sem_toque: msg.sem_toque || false,
         variacoes: msg.variacoes || [],
+        tab_order: msg.tab_order || [],
+    sem_tabulacao: msg.sem_tabulacao || false,
       });
       dbInstance.setPluginData("a11y-component-data", dataToSave);
     }
@@ -388,6 +421,8 @@ figma.ui.onmessage = async (msg) => {
           areas_toque: msg.areas_toque || [],
           sem_toque: msg.sem_toque || false,
           variacoes: msg.variacoes || [],
+          tab_order: msg.tab_order || [],
+    sem_tabulacao: msg.sem_tabulacao || false,
         });
         dataNode.setPluginData('a11y-component-data', dataToSave);
       }
@@ -401,6 +436,8 @@ figma.ui.onmessage = async (msg) => {
       areas_toque: msg.areas_toque || [],
       sem_toque: msg.sem_toque || false,
       variacoes: msg.variacoes || [],
+      tab_order: msg.tab_order || [],
+    sem_tabulacao: msg.sem_tabulacao || false,
     });
     workingFrame.setPluginData("a11y-component-data", dataToSaveDirect);
 
@@ -598,6 +635,53 @@ figma.ui.onmessage = async (msg) => {
     componenteVariacaoAtivo = null;
   }
 
+  else if (msg.type === 'get-tab-selection') {
+    if (!componentePrincipalAtivo) {
+      figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo.' });
+      return;
+    }
+    const selection = figma.currentPage.selection;
+    const comp = componentePrincipalAtivo;
+    const compX = comp.absoluteTransform[0][2];
+    const compY = comp.absoluteTransform[1][2];
+
+    const items = selection
+      .filter(n => n.id !== comp.id && n.id !== handoffAtivo?.id)
+      .map(n => ({
+        layerName: n.name,
+        nodeId: n.id,
+        relX: Math.round(n.absoluteTransform[0][2] - compX),
+        relY: Math.round(n.absoluteTransform[1][2] - compY),
+        width: Math.round((n as FrameNode).width  ?? 0),
+        height: Math.round((n as FrameNode).height ?? 0),
+      }));
+
+    if (items.length === 0) {
+      figma.ui.postMessage({ type: 'feedback', message: '⚠️ Selecione camadas no canvas e clique novamente.' });
+      return;
+    }
+    figma.ui.postMessage({ type: 'tab-items-ready', items });
+  }
+
+  else if (msg.type === 'get-component-as-tab') {
+    if (!componentePrincipalAtivo) {
+      figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo.' });
+      return;
+    }
+    const comp = componentePrincipalAtivo;
+    figma.ui.postMessage({
+      type: 'tab-items-ready',
+      items: [{
+        layerName: comp.name,
+        nodeId: comp.id,
+        relX: 0,
+        relY: 0,
+        width: Math.round((comp as FrameNode).width ?? 0),
+        height: Math.round((comp as FrameNode).height ?? 0),
+      }]
+    });
+  }
+
   else if (msg.type === 'delete-variation-frame') {
     if (msg.frameNodeId) {
       try {
@@ -716,7 +800,7 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
   const dbInstance = (handoff as any).findOne((n: SceneNode) => n.name === "[dsc-h] Plugin Data A11y") as InstanceNode;
 
   let masterList: { mapeamento: string; descricao: string; utilizacao: string }[] = [];
-  let componentData: any = { plataformas: [], zoom: [], mapeamentos: [], areas_toque: [], sem_toque: false };
+  let componentData: any = { plataformas: [], zoom: [], mapeamentos: [], areas_toque: [], sem_toque: false, tab_order: [], sem_tabulacao: false };
   let dataLoadedFromDb = false;
 
   // Tenta ler dados salvos diretamente no frame do handoff
