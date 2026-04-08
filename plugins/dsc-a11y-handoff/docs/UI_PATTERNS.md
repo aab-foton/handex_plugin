@@ -78,7 +78,24 @@ Padrão visual: botão filled azul em cima + link de texto azul embaixo (sem bor
 `.touch-btn-primary` — botão filled azul — definido no CSS global.
 Cancelar usa inline style (text link azul, sem borda).
 
-### Seção com instrução
+### Box de instrução contextual (fundo azul claro)
+
+Usado quando o plugin aguarda uma ação do usuário (posicionar frame, selecionar camadas, etc.).
+Estrutura sempre com título bold azul + texto hint cinza, fundo `#EEF2FF`, centralizado.
+
+```html
+<div style="background:#EEF2FF; border-radius:8px; padding:12px; text-align:center;">
+  <div style="font-size:12px; font-weight:700; color:#2D4496; margin-bottom:4px;">Título da ação</div>
+  <p style="font-size:11px; color:#666; margin:0;">Descrição do que o usuário deve fazer.</p>
+</div>
+```
+
+Exemplos em uso:
+- Área de Toque: "Posicione o frame no Figma" / "Mova e redimensione o frame rosa, depois clique Concluir."
+- Tabulação (seleção): "Selecione no canvas" / "Escolha as camadas e clique em Salvar."
+- Tabulação (componente): "Componente ativo" / "O componente será adicionado como foco único."
+
+### Seção com instrução simples
 ```html
 <p style="font-size:12px; color:#666; margin:0 0 12px;">Instrução para o usuário</p>
 ```

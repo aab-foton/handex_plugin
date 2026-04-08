@@ -114,7 +114,7 @@ figma.ui.onmessage = async (msg) => {
 
       // Remove linhas de dados anteriores, preservando o modelo "Row"
       Array.from(tableWrapper.children)
-        .filter(n => n !== rowModel)
+        .filter(n => n !== rowModel && n.name === 'Row')
         .forEach(n => n.remove());
 
       if (data.length === 0) return;
@@ -351,35 +351,104 @@ figma.ui.onmessage = async (msg) => {
       }
     }
 
-    // --- TAB ORDER: SPECS NO TEMPLATE (contexto independente de área de toque) ---
+    // --- FOCUS ORDER: VISUAL NO TEMPLATE ---
     const tabOrder: any[] = msg.tab_order || [];
-    if (tabOrder.length > 0) {
-      const tabOrderContainer = workingFrame.findOne((n: SceneNode) => n.name === 'tab order') as FrameNode | null;
-      if (tabOrderContainer) {
-        const specs = tabOrderContainer.findOne((n: SceneNode) => n.name === 'specs') as FrameNode | null;
-        if (specs) {
-          const rowModel = Array.from(specs.children).find(n => n.name === 'element') as FrameNode | undefined;
-          if (rowModel) {
-            Array.from(specs.children).filter(n => n !== rowModel).forEach(n => n.remove());
-            for (let i = 0; i < tabOrder.length; i++) {
-              const item = tabOrder[i];
-              const row = rowModel.clone();
-              row.visible = true;
-              specs.appendChild(row);
-              const nameInst = row.findOne((n: SceneNode) => n.name === 'Element name') as InstanceNode | null;
-              if (nameInst) {
-                const allTexts = nameInst.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
-                for (const t of allTexts) {
-                  if (t.characters === 'Elemento') await updateText(t, item.nome);
-                  else if (/^\d+$/.test(t.characters.trim())) await updateText(t, String(i + 1));
-                }
+    if (tabOrder.length > 0 && componentePrincipalAtivo) {
+      const focusOrderContainer = workingFrame.findOne((n: SceneNode) => n.name === 'focus order') as FrameNode | null;
+      if (focusOrderContainer) {
+        const tabImageFrame = focusOrderContainer.findOne((n: SceneNode) => n.name === 'image') as FrameNode | null;
+        if (tabImageFrame) {
+          const modelOrder      = Array.from(tabImageFrame.children).find(n => n.name === '[a11y] Order')        as InstanceNode | undefined;
+          const modelItemNumber = Array.from(tabImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
+
+          const tagNodeTab = Array.from(tabImageFrame.children).find(n => n.name === 'tag');
+          const keepTab = new Set<BaseNode>([tagNodeTab, modelOrder, modelItemNumber].filter(Boolean) as BaseNode[]);
+          Array.from(tabImageFrame.children).filter(n => !keepTab.has(n)).forEach(n => n.remove());
+
+          try {
+            const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+            const relativeLuminance = (r: number, g: number, b: number) =>
+              0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+            const wcagContrast = (l1: number, l2: number) => {
+              const lighter = Math.max(l1, l2);
+              const darker  = Math.min(l1, l2);
+              return (lighter + 0.05) / (darker + 0.05);
+            };
+            const bgFillsTab   = Array.isArray(tabImageFrame.fills) ? tabImageFrame.fills as Paint[] : [];
+            const compFillsTab = Array.isArray((componentePrincipalAtivo as FrameNode).fills)
+              ? (componentePrincipalAtivo as FrameNode).fills as Paint[]
+              : [];
+            const bgFillTab   = bgFillsTab.find(f => f.type === 'SOLID') as SolidPaint | undefined;
+            const compFillTab = compFillsTab.find(f => f.type === 'SOLID') as SolidPaint | undefined;
+            let needsSwapTab = true;
+            if (bgFillTab && compFillTab) {
+              const bgL   = relativeLuminance(bgFillTab.color.r,   bgFillTab.color.g,   bgFillTab.color.b);
+              const compL = relativeLuminance(compFillTab.color.r, compFillTab.color.g, compFillTab.color.b);
+              needsSwapTab = wcagContrast(bgL, compL) < 3;
+            }
+            const figmaVarsTab = (figma as any).variables;
+            const allVarsTab: any[] = figmaVarsTab ? await figmaVarsTab.getLocalVariablesAsync() : [];
+            if (needsSwapTab) {
+              const cardBg2VarTab = allVarsTab.find((v: any) => v.name.toLowerCase().includes('card background 2'));
+              if (cardBg2VarTab && figmaVarsTab) {
+                const boundFillTab = figmaVarsTab.setBoundVariableForPaint(
+                  { type: 'SOLID', color: { r: 0, g: 0, b: 0 } },
+                  'color',
+                  cardBg2VarTab
+                );
+                tabImageFrame.fills = [boundFillTab];
+              } else {
+                tabImageFrame.fills = [{ type: 'SOLID', color: { r: 0.16, g: 0.20, b: 0.29 } }];
               }
             }
-            rowModel.visible = false;
+          } catch(e) {
+            figma.ui.postMessage({ type: 'feedback', message: `❌ Erro no bloco de cor (focus order): ${e}` });
           }
+
+          const TAB_PAD_TOP  = 40;
+          const TAB_PAD_LEFT = 160; // espaço para [dsc-h] Item Number à esquerda do componente
+          const TAB_PAD_SIDE = 24;
+          const tabCompClone = componentePrincipalAtivo.clone();
+          tabCompClone.x = TAB_PAD_LEFT;
+          tabCompClone.y = TAB_PAD_TOP;
+          tabImageFrame.insertChild(0, tabCompClone);
+
+          // [dsc-h] Item Number: 1 por instância do componente (fora do loop)
+          if (modelItemNumber) {
+            const numInstanceClone = modelItemNumber.clone();
+            numInstanceClone.visible = true;
+            const numInstTexts = numInstanceClone.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+            const numInstText = numInstTexts.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numInstTexts[0] || null;
+            if (numInstText) await updateText(numInstText as TextNode, '1');
+            try { numInstanceClone.setProperties({ 'connector': 'off' }); } catch(e) {}
+            numInstanceClone.x = TAB_PAD_LEFT;
+            numInstanceClone.y = TAB_PAD_TOP - numInstanceClone.height - 4;
+            tabImageFrame.appendChild(numInstanceClone);
+          }
+
+          // [a11y] Order: 1 por item de tabulação, canto direito do elemento
+          for (let i = 0; i < tabOrder.length; i++) {
+            const item = tabOrder[i];
+            if (modelOrder) {
+              const orderClone = modelOrder.clone();
+              orderClone.visible = true;
+              const numText = orderClone.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
+              if (numText) await updateText(numText, String(i + 1));
+              orderClone.x = TAB_PAD_LEFT + item.relX + item.width - orderClone.width / 2;
+              orderClone.y = TAB_PAD_TOP  + item.relY + item.height / 2 - orderClone.height / 2;
+              tabImageFrame.appendChild(orderClone);
+            }
+          }
+
+          tabImageFrame.resize(
+            Math.max(tabImageFrame.width,  TAB_PAD_LEFT + tabCompClone.width + (modelOrder ? modelOrder.width / 2 : 0) + TAB_PAD_SIDE),
+            Math.max(tabImageFrame.height, TAB_PAD_TOP  + tabCompClone.height + TAB_PAD_SIDE)
+          );
+          if (modelOrder)      modelOrder.visible      = false;
+          if (modelItemNumber) modelItemNumber.visible = false;
         }
       }
-      // Se tabOrderContainer não existe, pula silenciosamente (template ainda não tem o nó)
+      // Se focusOrderContainer não existe, pula silenciosamente
     }
 
     // Remove frames de variação do canvas após geração do preview
