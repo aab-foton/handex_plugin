@@ -355,18 +355,12 @@ figma.ui.onmessage = async (msg) => {
     // --- FOCUS ORDER: VISUAL NO TEMPLATE (VARIAÇÕES DE TABULAÇÃO) ---
     const variacoesTab: any[] = msg.variacoes_tabulacao || [];
     const variacoesTabComItems = variacoesTab.filter((v: any) => !v.sem_tabulacao && v.tab_order && v.tab_order.length > 0);
-    console.log(`[tab] variacoesTab total: ${variacoesTab.length}, comItems: ${variacoesTabComItems.length} — ids: ${variacoesTabComItems.map((v:any)=>v.id).join(', ')}`);
-
     if (variacoesTabComItems.length > 0 && componentePrincipalAtivo) {
-      const allFocusContainers = workingFrame.findAll((n: SceneNode) => n.name === 'focus order');
-      console.log(`[tab] focus order containers no workingFrame: ${allFocusContainers.length}`);
-      allFocusContainers.forEach((fc, i) => console.log(`[tab] focus order[${i}] id=${fc.id} parent=${fc.parent?.name} parent.parent=${fc.parent?.parent?.name}`));
-      const allHandoffFrames = figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y Handoff]'));
-      console.log(`[tab] [A11Y Handoff] frames na página: ${allHandoffFrames.length} — ${allHandoffFrames.map(n => n.name).join(' | ')}`);
-      const focusOrderContainer = workingFrame.findOne((n: SceneNode) => n.name === 'focus order') as FrameNode | null;
-      console.log(`[tab] focusOrderContainer: ${focusOrderContainer?.name ?? 'null'}, workingFrame: ${workingFrame.name}`);
+      // Busca apenas filhos diretos do workingFrame para evitar pegar 'focus order' aninhado na legenda
+      const focusOrderContainer = Array.from(workingFrame.children).find(n => n.name === 'focus order') as FrameNode | null;
       if (focusOrderContainer) {
-        const tabImageFrame = focusOrderContainer.findOne((n: SceneNode) => n.name === 'image') as FrameNode | null;
+        // Busca apenas filhos diretos do focusOrderContainer para evitar 'image' aninhado em [a11y] Legenda
+        const tabImageFrame = Array.from(focusOrderContainer.children).find(n => n.name === 'image') as FrameNode | null;
         if (tabImageFrame) {
           const modelOrder      = Array.from(tabImageFrame.children).find(n => n.name === '[a11y] Order')        as InstanceNode | undefined;
           const modelItemNumber = Array.from(tabImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
@@ -412,7 +406,7 @@ figma.ui.onmessage = async (msg) => {
             figma.ui.postMessage({ type: 'feedback', message: `❌ Erro no bloco de cor (focus order): ${e}` });
           }
 
-          const TAB_PAD_TOP  = 40;
+          const TAB_PAD_TOP  = 64;
           const TAB_PAD_LEFT = 160;
           const TAB_PAD_SIDE = 24;
           const TAB_GAP_H    = 140;
@@ -427,27 +421,19 @@ figma.ui.onmessage = async (msg) => {
           let totalHeight = TAB_PAD_TOP;
 
           for (const variacao of variacoesTabComItems) {
-            console.log(`[tab] renderizando variação id=${variacao.id} nome=${variacao.nome} tab_order.length=${variacao.tab_order?.length} instanceNodeId=${variacao.instanceNodeId}`);
             // Obter clone do componente correto para esta variação
             let compClone: SceneNode;
             if (variacao.id === 'default') {
               compClone = componentePrincipalAtivo.clone();
             } else if (variacao.instanceNodeId) {
               const srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null;
-              console.log(`[tab] srcNode=${srcNode?.name ?? 'null'} type=${srcNode?.type ?? 'null'}`);
               compClone = srcNode ? srcNode.clone() : componentePrincipalAtivo.clone();
             } else {
               compClone = componentePrincipalAtivo.clone();
-              console.log(`[tab] fallback: propriedades=${JSON.stringify(variacao.propriedades)}, compClone.type=${compClone.type}`);
               if (compClone.type === 'INSTANCE' && variacao.propriedades && Object.keys(variacao.propriedades).length > 0) {
-                try {
-                  (compClone as InstanceNode).setProperties(variacao.propriedades);
-                  console.log(`[tab] setProperties ok, compClone.width=${compClone.width}`);
-                } catch (e) {
+                try { (compClone as InstanceNode).setProperties(variacao.propriedades); } catch (e) {
                   console.warn('[focus-order] setProperties failed:', e);
                 }
-              } else {
-                console.log(`[tab] propriedades vazias ou tipo errado — sem setProperties`);
               }
             }
 
