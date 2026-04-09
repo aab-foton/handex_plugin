@@ -7,6 +7,7 @@ let componentePrincipalAtivo: SceneNode | null = null;
 let handoffAtivo: SceneNode | null = null;
 let contextoTravado: boolean = false;
 let tempTouchOverlayId: string | null = null;
+let tempSROverlayId: string | null = null;
 let componenteVariacaoAtivo: SceneNode | null = null;
 let componenteTabVariacaoAtivo: SceneNode | null = null;
 
@@ -882,6 +883,102 @@ figma.ui.onmessage = async (msg) => {
       }
     }
   }
+
+  else if (msg.type === 'save-leitor-tela') {
+    if (!handoffAtivo) return;
+    const dbInstance = (handoffAtivo as any).findOne((n: SceneNode) => n.name === '[dsc-h] Plugin Data A11y') as InstanceNode | null;
+    if (!dbInstance) return;
+    const dados = JSON.parse(dbInstance.getPluginData('a11y-component-data') || '{}');
+    dados.conectores_leitor = msg.conectores_leitor ?? [];
+    dados.sem_leitor = msg.sem_leitor ?? false;
+    dbInstance.setPluginData('a11y-component-data', JSON.stringify(dados));
+    (handoffAtivo as any).setPluginData('a11y-component-data', JSON.stringify(dados));
+  }
+
+  else if (msg.type === 'get-sr-selection') {
+    const selection = figma.currentPage.selection;
+    if (selection.length === 0) {
+      figma.ui.postMessage({ type: 'sr-selection-result', error: 'Selecione um elemento no canvas.' });
+      return;
+    }
+    const comp = (componenteTabVariacaoAtivo ?? componentePrincipalAtivo) as SceneNode & { absoluteTransform: Transform };
+    if (!comp) {
+      figma.ui.postMessage({ type: 'sr-selection-result', error: 'Nenhum componente ativo.' });
+      return;
+    }
+    const compX = comp.absoluteTransform[0][2];
+    const compY = comp.absoluteTransform[1][2];
+    const node = selection[0] as SceneNode & { absoluteTransform: Transform; width: number; height: number };
+    const absX = (node as any).absoluteTransform[0][2];
+    const absY = (node as any).absoluteTransform[1][2];
+    figma.ui.postMessage({
+      type: 'sr-selection-result',
+      item: {
+        tipo: msg.tipo,
+        nodeId: node.id,
+        layerName: node.name,
+        relX: absX - compX,
+        relY: absY - compY,
+        width: (node as any).width,
+        height: (node as any).height,
+      }
+    });
+  }
+
+  else if (msg.type === 'create-sr-overlay') {
+    const comp = (componenteTabVariacaoAtivo ?? componentePrincipalAtivo) as SceneNode & { absoluteTransform: Transform };
+    if (!comp) return;
+    const t = ((msg.tipoConnector as string) || '').toLowerCase();
+    let cor: RGB;
+    if (t.includes('decorat'))                                        cor = { r: 0.898, g: 0.224, b: 0.208 }; // vermelho
+    else if (t.includes('marco') || t.includes('naveg'))              cor = { r: 0.984, g: 0.45,  b: 0.42  }; // salmão
+    else if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel'))
+                                                                      cor = { r: 0.263, g: 0.627, b: 0.278 }; // verde
+    else if (t.includes('infor') || t.includes('adicional'))          cor = { r: 0.984, g: 0.549, b: 0     }; // laranja
+    else                                                              cor = { r: 0.976, g: 0.659, b: 0.145 }; // amarelo (padrão)
+    const nome = (msg.roleNome as string) || 'conector';
+    const overlay = figma.createFrame();
+    overlay.name = `[A11Y Leitor] ${nome}`;
+    overlay.resize(100, 60);
+    overlay.x = comp.absoluteTransform[0][2];
+    overlay.y = comp.absoluteTransform[1][2];
+    overlay.fills = [{ type: 'SOLID', color: cor, opacity: 0.25 } as SolidPaint];
+    overlay.strokes = [{ type: 'SOLID', color: cor } as SolidPaint];
+    overlay.strokeWeight = 2;
+    figma.currentPage.appendChild(overlay);
+    figma.currentPage.selection = [overlay];
+    figma.viewport.scrollAndZoomIntoView([overlay]);
+    tempSROverlayId = overlay.id;
+    figma.ui.postMessage({ type: 'sr-overlay-created' });
+  }
+
+  else if (msg.type === 'confirm-sr-area') {
+    if (!tempSROverlayId) return;
+    const overlay = figma.getNodeById(tempSROverlayId) as FrameNode | null;
+    if (!overlay) return;
+    const comp = (componenteTabVariacaoAtivo ?? componentePrincipalAtivo) as SceneNode & { absoluteTransform: Transform };
+    if (!comp) return;
+    const compX = comp.absoluteTransform[0][2];
+    const compY = comp.absoluteTransform[1][2];
+    const item = {
+      tipo: 'agrupamento' as const,
+      relX: overlay.x - compX,
+      relY: overlay.y - compY,
+      width: overlay.width,
+      height: overlay.height,
+    };
+    overlay.remove();
+    tempSROverlayId = null;
+    figma.ui.postMessage({ type: 'sr-area-confirmed', item });
+  }
+
+  else if (msg.type === 'cancel-sr-area') {
+    if (tempSROverlayId) {
+      const node = figma.getNodeById(tempSROverlayId);
+      if (node) node.remove();
+      tempSROverlayId = null;
+    }
+  }
 };
 
 // ==========================================
@@ -985,11 +1082,47 @@ function parseMasterList(dbInstance: InstanceNode): { mapeamento: string; descri
   return resultado;
 }
 
+function parseRolesList(dbInstance: InstanceNode): { nome: string; especificacao: string; descricao: string; observacao: string; codigoWeb: string; codigoRN: string; nomeAcessivel: string; tipoConnector: string; revisao: string }[] {
+  const tabela = (dbInstance as any).findOne(
+    (n: SceneNode) => n.name === 'Roles Plugin'
+  ) as FrameNode | null;
+  if (!tabela) return [];
+
+  const rows = (tabela.children as SceneNode[]).filter(
+    (n) => n.type === 'FRAME' || n.type === 'INSTANCE' || n.type === 'COMPONENT'
+  );
+
+  const resultado: { nome: string; especificacao: string; descricao: string; observacao: string; codigoWeb: string; codigoRN: string; nomeAcessivel: string; tipoConnector: string; revisao: string }[] = [];
+
+  for (const row of rows) {
+    const textos = (row as FrameNode).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+    if (textos.length < 8) continue;
+
+    const nome = textos[0]?.characters.trim() ?? '';
+    if (nome.toLowerCase() === 'nome' || !nome) continue;
+
+    resultado.push({
+      nome,
+      especificacao: textos[1]?.characters.trim() ?? '',
+      descricao:     textos[2]?.characters.trim() ?? '',
+      observacao:    textos[3]?.characters.trim() ?? '',
+      codigoWeb:     textos[4]?.characters.trim() ?? '',
+      codigoRN:      textos[5]?.characters.trim() ?? '',
+      nomeAcessivel: textos[6]?.characters.trim() ?? '',
+      tipoConnector: textos[7]?.characters.trim() ?? '',
+      revisao:       textos[8]?.characters.trim() ?? '',
+    });
+  }
+
+  return resultado;
+}
+
 async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
   figma.ui.postMessage({ type: 'start-loading' });
   const dbInstance = (handoff as any).findOne((n: SceneNode) => n.name === "[dsc-h] Plugin Data A11y") as InstanceNode;
 
   let masterList: { mapeamento: string; descricao: string; utilizacao: string }[] = [];
+  let rolesList: ReturnType<typeof parseRolesList> = [];
   let componentData: any = { plataformas: [], zoom: [], mapeamentos: [], areas_toque: [], sem_toque: false, variacoes: [], variacoes_tabulacao: [] };
   let dataLoadedFromDb = false;
 
@@ -1002,6 +1135,7 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
 
   if (dbInstance) {
     masterList = parseMasterList(dbInstance);
+    rolesList = parseRolesList(dbInstance);
 
     const rawSaved = dbInstance.getPluginData("a11y-component-data");
     if (rawSaved) {
@@ -1022,6 +1156,7 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
 
     figma.ui.postMessage({ type: 'setup-ui',
     masterList,
+    rolesList,
     componentData,
     componentName: componentePrincipalAtivo?.name
       || (handoff.name.startsWith('[A11Y Handoff]') ? handoff.name.slice('[A11Y Handoff]'.length).trim() : null)

@@ -149,6 +149,21 @@
     .touch-item-aa::before    { background: #E65100; }
     .touch-item-livre::before { background: #BDBDBD; }
 
+    /* === LEITOR DE TELA === */
+    #panel-leitor.tab-panel.active { display: flex; flex: 1; flex-direction: column; padding: 0; overflow: hidden; }
+    #panel-leitor { position: relative; overflow: hidden; }
+    #leitorListWrapper { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    #srFormView { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #fff; flex-direction: column; z-index: 10; overflow: hidden; }
+    #srFormView.open { display: flex; }
+    #srFormBody { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .sr-field-row { display: flex; flex-direction: column; gap: 6px; }
+    .sr-field-row label { font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.05em; }
+    .sr-form-input { width: 100%; box-sizing: border-box; border: 1.5px solid #E5E5E5; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #1a1a1a; outline: none; background: #FAFAFA; transition: border-color 0.2s; }
+    .sr-form-input:focus { border-color: #2D4496; background: #fff; }
+    .sr-form-input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+
+
     /* === TABULAÇÃO === */
     #panel-tabulacao.tab-panel.active { display: flex; flex: 1; flex-direction: column; padding: 0; overflow: hidden; }
     #panel-tabulacao { position: relative; overflow: hidden; }
@@ -211,6 +226,7 @@
         <button class="tab active" data-target="panel-geral">Geral</button>
         <button class="tab" data-target="panel-toque">Área de Toque</button>
         <button class="tab" data-target="panel-tabulacao">Tabulação</button>
+        <button class="tab" data-target="panel-leitor">Leitor de Tela</button>
         <button class="tab" data-target="panel-handoff">Handoff</button>
       </div>
     </div>
@@ -475,6 +491,88 @@
           <div style='flex-shrink:0;padding:12px 16px 16px;border-top:1px solid #F0F0F0;background:#fff;display:flex;flex-direction:column;gap:8px;align-items:center;'>
             <button id='btnTabVariationFormCreate' style='width:100%;padding:12px;background:#2D4496;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;box-sizing:border-box;'>Criar variante</button>
             <button id='btnTabVariationFormCancel' style='background:none;border:none;font-size:12px;font-weight:700;color:#2D4496;cursor:pointer;padding:4px 0;'>Cancelar</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="panel-leitor" class="tab-panel">
+
+        <!-- LISTA -->
+        <div id="leitorListWrapper">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:4px;">
+            <input type="checkbox" id="chk-sem-leitor" onchange="onSemLeitorChange()">
+            Sem anotações de leitor de tela
+          </label>
+          <div id="leitor-list-container">
+            <ul id="leitor-list" style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;"></ul>
+          </div>
+        </div>
+        <div class="tab-footer" id="leitorFooter">
+          <button class="tab-add-btn" onclick="openSRForm()">+ Adicionar Conector</button>
+        </div>
+
+        <!-- FORM (overlay absoluto, igual tabFormView) -->
+        <div id="srFormView">
+          <div class="tab-form-header">
+            <span id="srFormTitle">Adicionar Conector</span>
+          </div>
+
+          <!-- Etapa 0: origem -->
+          <div id="srStepOrigem" style="padding:16px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+            <p style="font-size:12px;font-weight:700;color:#666;margin:0 0 4px;">Escolha a origem:</p>
+            <div class="tab-type-row">
+              <button class="tab-type-btn" id="srOrigemInterno" onclick="selectSROrigem('interno')">
+                <span class="tab-btn-label">Interno</span>
+                <span class="tab-btn-value">Elemento dentro do componente</span>
+              </button>
+              <button class="tab-type-btn" id="srOrigemCanvas" onclick="selectSROrigem('canvas')">
+                <span class="tab-btn-label">Componente</span>
+                <span class="tab-btn-value">Elemento no canvas</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- NOVO: Form único #srFormBody -->
+          <div id="srFormBody" style="display:none;">
+            <div class="sr-field-row">
+              <label>Tipo de Anotação</label>
+              <select id="srSelectTipoAnotacao" class="sr-form-input" onchange="populateSRTipoConector()">
+                <option value="">Selecione...</option>
+                <option value="simples">Simples — 1 conector</option>
+                <option value="combinado">Combinado — 2–5 conectores</option>
+                <option value="agrupamento">Agrupamento — área livre</option>
+              </select>
+            </div>
+
+            <div class="sr-field-row">
+              <label>Tipo de Conector</label>
+              <select id="srSelectTipoConector" class="sr-form-input" onchange="populateSRRole()" disabled>
+                <option value="">Aguardando anotação...</option>
+              </select>
+            </div>
+
+            <div class="sr-field-row">
+              <label>Role</label>
+              <select id="srSelectRole" class="sr-form-input" onchange="onSRRoleChange()" disabled>
+                <option value="">Aguardando conector...</option>
+              </select>
+            </div>
+
+            <div class="sr-field-row sr-field-espec" style="display:none">
+              <label>Especificação</label>
+              <select id="srSelectEspecificacao" class="sr-form-input">
+                <option value="">Padrão</option>
+              </select>
+            </div>
+
+            <div id="srInsertFields" style="display:none; flex-direction:column; gap:8px;"></div>
+            <div id="srRolePreview" style="display:none; flex-direction:column; gap:8px;"></div>
+          </div>
+
+          <div class="touch-actions" style="padding:12px 16px;border-top:1px solid #EEE;flex-shrink:0;">
+            <button class="touch-btn-primary" id="btnSRFormConfirm" onclick="onSRFormConfirm()" disabled>Confirmar</button>
+            <button onclick="closeSRForm()" style="background:none;border:none;font-size:12px;font-weight:700;color:#2D4496;cursor:pointer;padding:4px 0;">Cancelar</button>
           </div>
         </div>
 
@@ -768,6 +866,11 @@ el('chkSemToque').checked = semToque;
 el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         renderTouchList();
 
+        leitorState.rolesList = msg.rolesList || [];
+        leitorState.conectores = msg.componentData?.conectores_leitor || [];
+        leitorState.semLeitor = msg.componentData?.sem_leitor || false;
+        renderLeitorList();
+
         renderLists();
         updateSummaryCards(); // CHAMADA DA NOVA FUNÇÃO
       }
@@ -782,6 +885,18 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         renderTouchList();
         updateSummaryCards();
         closeTouchForm();
+      }
+      if (msg.type === 'sr-selection-result') {
+        if (msg.error) { alert(msg.error); return; }
+        pendingSRItem = msg.item;
+        // Agora aguarda clique no Confirmar para prosseguir
+      }
+      if (msg.type === 'sr-overlay-created') {
+        // overlay criado — usuário redimensiona no canvas, depois clica Confirmar
+      }
+      if (msg.type === 'sr-area-confirmed') {
+        pendingSRItem = msg.item;
+        el('btnSRFormConfirm').disabled = false;
       }
       if (msg.type === 'feedback') {
         const sb = el('statusBar');
@@ -951,6 +1066,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
 
   let variationsData = []; // array de variações: [{ id, nome, propriedades, areas_toque, sem_toque, frameNodeId, instanceNodeId }]
   let tabVariationsData = []; // array de variações de tabulação: [{ id, nome, propriedades, tab_order, sem_tabulacao, frameNodeId, instanceNodeId }]
+  const leitorState = { rolesList: [], conectores: [], semLeitor: false, pendingSROrigem: null };
   let tabOrderData = []; // tab_order da variação de tabulação ativa
     let tabFormTempItems = [];
     let tabFormType = null; // 'selection' | 'component'
@@ -1551,6 +1667,307 @@ el('chkSemToque').onchange = () => {
         variacoes_tabulacao: tabVariationsData,
       }}, '*');
     };
+
+    // ==========================================
+    // LEITOR DE TELA
+    // ==========================================
+
+    function computeLetras(conectores) {
+      const letras = [];
+      let lastTipo = null;
+      let counter = 0;
+      let decCounter = 0;
+      const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      for (const item of conectores) {
+        if (item.tipo === 'decorativo') {
+          letras.push('✦' + (decCounter > 0 ? (decCounter + 1) : ''));
+          decCounter++;
+        } else {
+          if (item.tipo !== lastTipo) { counter = 0; lastTipo = item.tipo; }
+          letras.push(ALPHA[counter % 26]);
+          counter++;
+        }
+      }
+      return letras;
+    }
+
+    function srConectorIcon(tipoConnector, letra) {
+      const t = (tipoConnector || '').toLowerCase();
+      const s = 'width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;color:#fff;';
+      if (t.includes('decorat'))
+        return `<span style="${s}background:#E53935;font-size:13px;">⊘</span>`;
+      if (t.includes('marco') || t.includes('naveg'))
+        return `<span style="${s}background:#EF5350;font-size:11px;">${letra}</span>`;
+      if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel'))
+        return `<span style="${s}background:#43A047;font-size:11px;">${letra}</span>`;
+      if (t.includes('infor') || t.includes('adicional'))
+        return `<span style="${s}background:#FB8C00;border-radius:6px;font-size:11px;">${letra}</span>`;
+      // padrão: função, valor, rótulos
+      return `<span style="${s}background:#F9A825;font-size:11px;">${letra}</span>`;
+    }
+
+    function renderLeitorList() {
+      const ul = el('leitor-list');
+      if (!ul) return;
+      ul.innerHTML = '';
+      const letras = computeLetras(leitorState.conectores);
+      leitorState.conectores.forEach((item, i) => {
+        const li = document.createElement('li');
+        li.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;background:#fff;border:1px solid #E5E5E5;border-radius:8px;';
+        const tipoLabel = (item.tipoConnector || item.tipo || '').toLowerCase();
+        li.innerHTML = `
+          ${srConectorIcon(item.tipoConnector || item.tipo, letras[i])}
+          <span style="font-size:11px;color:#999;flex-shrink:0;">${tipoLabel}</span>
+          <span style="flex:1;font-size:13px;font-weight:600;color:#1a1a1a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.roleNome}</span>
+          <button onclick="removeConector(${i})" style="background:none;border:none;cursor:pointer;color:#999;font-size:14px;padding:2px 4px;">✕</button>
+        `;
+        ul.appendChild(li);
+      });
+      el('chk-sem-leitor').checked = leitorState.semLeitor;
+      el('leitor-list-container').style.display = leitorState.semLeitor ? 'none' : '';
+      el('leitorFooter').style.display = leitorState.semLeitor ? 'none' : 'flex';
+    }
+
+    function onSemLeitorChange() {
+      leitorState.semLeitor = el('chk-sem-leitor').checked;
+      renderLeitorList();
+      saveLeitorTela();
+    }
+
+    function saveLeitorTela() {
+      parent.postMessage({ pluginMessage: {
+        type: 'save-leitor-tela',
+        conectores_leitor: leitorState.conectores,
+        sem_leitor: leitorState.semLeitor
+      }}, '*');
+    }
+
+    function removeConector(i) {
+      leitorState.conectores.splice(i, 1);
+      renderLeitorList();
+      saveLeitorTela();
+    }
+
+    let pendingSRTipo = null;
+    let pendingSRItem = null;
+
+    function openSRForm() {
+      leitorState.pendingSROrigem = null;
+      pendingSRTipo = null;
+      pendingSRItem = null;
+      el('srStepOrigem').style.display = 'flex';
+      el('srFormBody').style.display = 'none';
+      el('srOrigemInterno').classList.remove('active');
+      el('srOrigemCanvas').classList.remove('active');
+      el('srSelectTipoAnotacao').value = '';
+      el('srSelectTipoConector').innerHTML = '<option value="">Aguardando anotação...</option>';
+      el('srSelectTipoConector').disabled = true;
+      el('srSelectRole').innerHTML = '<option value="">Aguardando conector...</option>';
+      el('srSelectRole').disabled = true;
+      el('srSelectEspecificacao').innerHTML = '<option value="">Padrão</option>';
+      document.querySelector('.sr-field-espec').style.display = 'none';
+      el('srRolePreview').innerHTML = '';
+      el('srRolePreview').style.display = 'none';
+      el('srInsertFields').innerHTML = '';
+      el('srInsertFields').style.display = 'none';
+      el('btnSRFormConfirm').disabled = true;
+      el('srFormView').classList.add('open');
+    }
+
+    function selectSROrigem(origem) {
+      leitorState.pendingSROrigem = origem;
+      el('srOrigemInterno').classList.toggle('active', origem === 'interno');
+      el('srOrigemCanvas').classList.toggle('active', origem === 'canvas');
+      el('srStepOrigem').style.display = 'none';
+      el('srFormBody').style.display = 'flex';
+    }
+
+    function closeSRForm() {
+      el('srFormView').classList.remove('open');
+      pendingSRTipo = null;
+      pendingSRItem = null;
+      parent.postMessage({ pluginMessage: { type: 'cancel-sr-area' } }, '*');
+    }
+
+    function populateSRTipoConector() {
+      const anotacao = el('srSelectTipoAnotacao').value;
+      const select = el('srSelectTipoConector');
+      select.innerHTML = '<option value="">Selecione...</option>';
+      select.disabled = !anotacao;
+      el('srSelectRole').disabled = true;
+      el('btnSRFormConfirm').disabled = true;
+      if (!anotacao) return;
+
+      const types = new Set();
+      leitorState.rolesList.forEach(r => {
+        const t = (r.tipoConnector || '').trim();
+        if (!t) return;
+        if (anotacao === 'agrupamento') {
+          if (t.toLowerCase().includes('group') || t.toLowerCase().includes('agrup')) types.add(t);
+        } else {
+          types.add(t);
+        }
+      });
+      // Fallback para agrupamento se não achou nada específico
+      if (anotacao === 'agrupamento' && types.size === 0) {
+        leitorState.rolesList.forEach(r => {
+          const t = (r.tipoConnector || '').trim();
+          if (t) types.add(t);
+        });
+      }
+      Array.from(types).sort().forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t; opt.textContent = t;
+        select.appendChild(opt);
+      });
+    }
+
+    function populateSRRole() {
+      const conector = el('srSelectTipoConector').value;
+      const select = el('srSelectRole');
+      select.innerHTML = '<option value="">Selecione...</option>';
+      select.disabled = !conector;
+      el('btnSRFormConfirm').disabled = true;
+      if (!conector) return;
+
+      const roles = new Set();
+      leitorState.rolesList.filter(r => r.tipoConnector === conector).forEach(r => roles.add(r.nome));
+      Array.from(roles).sort().forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r; opt.textContent = r;
+        select.appendChild(opt);
+      });
+    }
+
+    function onSRRoleChange() {
+      const roleNome = el('srSelectRole').value;
+      const conector = el('srSelectTipoConector').value;
+      const specSelect = el('srSelectEspecificacao');
+      const specRow = document.querySelector('.sr-field-espec');
+      specSelect.innerHTML = '';
+      
+      const roles = leitorState.rolesList.filter(r => r.nome === roleNome && r.tipoConnector === conector);
+      if (roles.length > 1) {
+        roles.forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r.especificacao || 'Padrão';
+          opt.textContent = r.especificacao || 'Padrão';
+          specSelect.appendChild(opt);
+        });
+        specRow.style.display = 'flex';
+      } else {
+        specRow.style.display = 'none';
+      }
+      
+      // Detalhes e campos de substituição
+      const previewDiv = el('srRolePreview');
+      const insertDiv = el('srInsertFields');
+      previewDiv.innerHTML = '';
+      insertDiv.innerHTML = '';
+      previewDiv.style.display = 'none';
+      insertDiv.style.display = 'none';
+
+      if (roleNome && conector) {
+        const role = roles[0]; // Pega o primeiro como base para preview
+        if (role) {
+          let previewHtml = '';
+          let insertHtml = '';
+          const fields = [
+            { label: 'Descrição', key: 'descricao' },
+            { label: 'Nome Acessível', key: 'nomeAcessivel' },
+            { label: 'Código Web', key: 'codigoWeb' },
+            { label: 'Código React Native', key: 'codigoRN' }
+          ];
+
+          const checkPlaceholder = (text) => {
+            if (!text) return false;
+            const t = text.toLowerCase();
+            return t.includes('insira') || t.includes('digite') || (text.startsWith('[') && text.endsWith(']'));
+          };
+
+          fields.forEach(f => {
+            const val = role[f.key];
+            if (val && val !== 'NA' && val !== 'N/A') {
+              previewHtml += `
+                <div style="background:#F5F5F5;border-radius:6px;padding:8px 10px;">
+                  <div style="font-size:9px;font-weight:700;color:#999;text-transform:uppercase;margin-bottom:2px;">${f.label}</div>
+                  <div style="font-size:12px;color:#333;word-break:break-word;">${val}</div>
+                </div>`;
+            }
+            if (checkPlaceholder(val)) {
+              insertHtml += `
+                <div class="sr-field-row">
+                  <label>${f.label}</label>
+                  <input type="text" class="touch-form-input" placeholder="${val}" data-field="${f.key}">
+                </div>`;
+            }
+          });
+
+          if (previewHtml) {
+            previewDiv.innerHTML = previewHtml;
+            previewDiv.style.display = 'flex';
+          }
+          if (insertHtml) {
+            insertDiv.innerHTML = insertHtml;
+            insertDiv.style.display = 'flex';
+          }
+        }
+      }
+
+      el('btnSRFormConfirm').disabled = !roleNome;
+      
+      // Inicia captura no canvas se necessário
+      const anotacao = el('srSelectTipoAnotacao').value;
+      if (anotacao === 'simples' || anotacao === 'combinado') {
+        parent.postMessage({ pluginMessage: { type: 'get-sr-selection', tipo: anotacao } }, '*');
+      } else if (anotacao === 'agrupamento') {
+        parent.postMessage({ pluginMessage: { type: 'create-sr-overlay', tipoConnector: conector, roleNome: roleNome } }, '*');
+      }
+    }
+
+    function onSRFormConfirm() {
+      const roleNome = el('srSelectRole').value;
+      const espec = el('srSelectEspecificacao').value;
+      const conector = el('srSelectTipoConector').value;
+      const anotacao = el('srSelectTipoAnotacao').value;
+
+      if (!roleNome) { alert('Selecione um role.'); return; }
+      
+      // Se for agrupamento, precisa confirmar a área antes
+      if (anotacao === 'agrupamento' && !pendingSRItem) {
+        parent.postMessage({ pluginMessage: { type: 'confirm-sr-area' } }, '*');
+        return;
+      }
+
+      if (!pendingSRItem) { alert('Selecione um elemento no canvas.'); return; }
+
+      const finalConector = Object.assign({}, pendingSRItem, {
+        roleNome: roleNome,
+        especificacao: espec,
+        tipo: conector.toLowerCase(),
+        tipoAnotacao: anotacao,
+        origem: leitorState.pendingSROrigem
+      });
+
+      // Coleta substituições se houver
+      const subs = {};
+      const inputs = el('srInsertFields').querySelectorAll('input[data-field]');
+      inputs.forEach(inp => {
+        if (inp.value.trim()) {
+          subs[inp.getAttribute('data-field')] = inp.value.trim();
+        }
+      });
+      if (Object.keys(subs).length > 0) {
+        finalConector.substituicoes = subs;
+      }
+
+      leitorState.conectores.push(finalConector);
+      renderLeitorList();
+      saveLeitorTela();
+      closeSRForm();
+    }
+
+
   </script>
 
   <div id='settingsOverlay' style='position:fixed;inset:0;background:#FAFAFA;z-index:99999;flex-direction:column;overflow-y:auto;'>
