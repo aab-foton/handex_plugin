@@ -8,6 +8,7 @@ let handoffAtivo: SceneNode | null = null;
 let contextoTravado: boolean = false;
 let tempTouchOverlayId: string | null = null;
 let componenteVariacaoAtivo: SceneNode | null = null;
+let componenteTabVariacaoAtivo: SceneNode | null = null;
 
 // ==========================================
 // 2. FUNÇÕES AUXILIARES
@@ -351,10 +352,19 @@ figma.ui.onmessage = async (msg) => {
       }
     }
 
-    // --- FOCUS ORDER: VISUAL NO TEMPLATE ---
-    const tabOrder: any[] = msg.tab_order || [];
-    if (tabOrder.length > 0 && componentePrincipalAtivo) {
+    // --- FOCUS ORDER: VISUAL NO TEMPLATE (VARIAÇÕES DE TABULAÇÃO) ---
+    const variacoesTab: any[] = msg.variacoes_tabulacao || [];
+    const variacoesTabComItems = variacoesTab.filter((v: any) => !v.sem_tabulacao && v.tab_order && v.tab_order.length > 0);
+    console.log(`[tab] variacoesTab total: ${variacoesTab.length}, comItems: ${variacoesTabComItems.length} — ids: ${variacoesTabComItems.map((v:any)=>v.id).join(', ')}`);
+
+    if (variacoesTabComItems.length > 0 && componentePrincipalAtivo) {
+      const allFocusContainers = workingFrame.findAll((n: SceneNode) => n.name === 'focus order');
+      console.log(`[tab] focus order containers no workingFrame: ${allFocusContainers.length}`);
+      allFocusContainers.forEach((fc, i) => console.log(`[tab] focus order[${i}] id=${fc.id} parent=${fc.parent?.name} parent.parent=${fc.parent?.parent?.name}`));
+      const allHandoffFrames = figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y Handoff]'));
+      console.log(`[tab] [A11Y Handoff] frames na página: ${allHandoffFrames.length} — ${allHandoffFrames.map(n => n.name).join(' | ')}`);
       const focusOrderContainer = workingFrame.findOne((n: SceneNode) => n.name === 'focus order') as FrameNode | null;
+      console.log(`[tab] focusOrderContainer: ${focusOrderContainer?.name ?? 'null'}, workingFrame: ${workingFrame.name}`);
       if (focusOrderContainer) {
         const tabImageFrame = focusOrderContainer.findOne((n: SceneNode) => n.name === 'image') as FrameNode | null;
         if (tabImageFrame) {
@@ -365,6 +375,7 @@ figma.ui.onmessage = async (msg) => {
           const keepTab = new Set<BaseNode>([tagNodeTab, modelOrder, modelItemNumber].filter(Boolean) as BaseNode[]);
           Array.from(tabImageFrame.children).filter(n => !keepTab.has(n)).forEach(n => n.remove());
 
+          // Ajuste WCAG de contraste do fundo
           try {
             const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
             const relativeLuminance = (r: number, g: number, b: number) =>
@@ -376,8 +387,7 @@ figma.ui.onmessage = async (msg) => {
             };
             const bgFillsTab   = Array.isArray(tabImageFrame.fills) ? tabImageFrame.fills as Paint[] : [];
             const compFillsTab = Array.isArray((componentePrincipalAtivo as FrameNode).fills)
-              ? (componentePrincipalAtivo as FrameNode).fills as Paint[]
-              : [];
+              ? (componentePrincipalAtivo as FrameNode).fills as Paint[] : [];
             const bgFillTab   = bgFillsTab.find(f => f.type === 'SOLID') as SolidPaint | undefined;
             const compFillTab = compFillsTab.find(f => f.type === 'SOLID') as SolidPaint | undefined;
             let needsSwapTab = true;
@@ -391,70 +401,130 @@ figma.ui.onmessage = async (msg) => {
             if (needsSwapTab) {
               const cardBg2VarTab = allVarsTab.find((v: any) => v.name.toLowerCase().includes('card background 2'));
               if (cardBg2VarTab && figmaVarsTab) {
-                const boundFillTab = figmaVarsTab.setBoundVariableForPaint(
-                  { type: 'SOLID', color: { r: 0, g: 0, b: 0 } },
-                  'color',
-                  cardBg2VarTab
-                );
-                tabImageFrame.fills = [boundFillTab];
+                tabImageFrame.fills = [figmaVarsTab.setBoundVariableForPaint(
+                  { type: 'SOLID', color: { r: 0, g: 0, b: 0 } }, 'color', cardBg2VarTab
+                )];
               } else {
                 tabImageFrame.fills = [{ type: 'SOLID', color: { r: 0.16, g: 0.20, b: 0.29 } }];
               }
             }
-          } catch(e) {
+          } catch (e) {
             figma.ui.postMessage({ type: 'feedback', message: `❌ Erro no bloco de cor (focus order): ${e}` });
           }
 
           const TAB_PAD_TOP  = 40;
-          const TAB_PAD_LEFT = 160; // espaço para [dsc-h] Item Number à esquerda do componente
+          const TAB_PAD_LEFT = 160;
           const TAB_PAD_SIDE = 24;
-          const tabCompClone = componentePrincipalAtivo.clone();
-          tabCompClone.x = TAB_PAD_LEFT;
-          tabCompClone.y = TAB_PAD_TOP;
-          tabImageFrame.insertChild(0, tabCompClone);
+          const TAB_GAP_H    = 140;
+          const TAB_GAP_V    = 60;
+          const TAB_MAX_WIDTH = Math.max(tabImageFrame.width, 800);
 
-          // [dsc-h] Item Number: 1 por instância do componente (fora do loop)
-          if (modelItemNumber) {
-            const numInstanceClone = modelItemNumber.clone();
-            numInstanceClone.visible = true;
-            const numInstTexts = numInstanceClone.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
-            const numInstText = numInstTexts.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numInstTexts[0] || null;
-            if (numInstText) await updateText(numInstText as TextNode, '1');
-            try { numInstanceClone.setProperties({ 'connector': 'off' }); } catch(e) {}
-            numInstanceClone.x = TAB_PAD_LEFT;
-            numInstanceClone.y = TAB_PAD_TOP - numInstanceClone.height - 4;
-            tabImageFrame.appendChild(numInstanceClone);
-          }
+          let currentX = TAB_PAD_LEFT;
+          let currentY = TAB_PAD_TOP;
+          let rowHeight = 0;
+          let globalItemCounter = 0;
+          let totalWidth = TAB_PAD_LEFT;
+          let totalHeight = TAB_PAD_TOP;
 
-          // [a11y] Order: 1 por item de tabulação, canto direito do elemento
-          for (let i = 0; i < tabOrder.length; i++) {
-            const item = tabOrder[i];
-            if (modelOrder) {
-              const orderClone = modelOrder.clone();
-              orderClone.visible = true;
-              const numText = orderClone.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
-              if (numText) await updateText(numText, String(i + 1));
-              orderClone.x = TAB_PAD_LEFT + item.relX + item.width - orderClone.width / 2;
-              orderClone.y = TAB_PAD_TOP  + item.relY + item.height / 2 - orderClone.height / 2;
-              tabImageFrame.appendChild(orderClone);
+          for (const variacao of variacoesTabComItems) {
+            console.log(`[tab] renderizando variação id=${variacao.id} nome=${variacao.nome} tab_order.length=${variacao.tab_order?.length} instanceNodeId=${variacao.instanceNodeId}`);
+            // Obter clone do componente correto para esta variação
+            let compClone: SceneNode;
+            if (variacao.id === 'default') {
+              compClone = componentePrincipalAtivo.clone();
+            } else if (variacao.instanceNodeId) {
+              const srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null;
+              console.log(`[tab] srcNode=${srcNode?.name ?? 'null'} type=${srcNode?.type ?? 'null'}`);
+              compClone = srcNode ? srcNode.clone() : componentePrincipalAtivo.clone();
+            } else {
+              compClone = componentePrincipalAtivo.clone();
+              console.log(`[tab] fallback: propriedades=${JSON.stringify(variacao.propriedades)}, compClone.type=${compClone.type}`);
+              if (compClone.type === 'INSTANCE' && variacao.propriedades && Object.keys(variacao.propriedades).length > 0) {
+                try {
+                  (compClone as InstanceNode).setProperties(variacao.propriedades);
+                  console.log(`[tab] setProperties ok, compClone.width=${compClone.width}`);
+                } catch (e) {
+                  console.warn('[focus-order] setProperties failed:', e);
+                }
+              } else {
+                console.log(`[tab] propriedades vazias ou tipo errado — sem setProperties`);
+              }
             }
+
+            // Verificar se precisa quebrar linha
+            if (currentX > TAB_PAD_LEFT && currentX + compClone.width > TAB_MAX_WIDTH) {
+              currentX = TAB_PAD_LEFT;
+              currentY += rowHeight + TAB_GAP_V;
+              rowHeight = 0;
+            }
+
+            compClone.x = currentX;
+            compClone.y = currentY;
+            tabImageFrame.insertChild(0, compClone);
+
+            // [dsc-h] Item Number: 1 por instância do componente (global), connector 'off'
+            globalItemCounter++;
+            if (modelItemNumber) {
+              const numClone = modelItemNumber.clone();
+              numClone.visible = true;
+              const numTexts = numClone.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+              const numText = numTexts.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numTexts[0] || null;
+              if (numText) await updateText(numText as TextNode, String(globalItemCounter));
+              numClone.x = currentX;
+              numClone.y = currentY - numClone.height - 4;
+              tabImageFrame.appendChild(numClone);
+              if (numClone.type === 'INSTANCE') {
+                try { (numClone as InstanceNode).setProperties({ 'connector': 'Off' }); } catch (e) {}
+              }
+            }
+
+            // [a11y] Order: por item de tabulação, reinicia em 1 para cada variação
+            const tabItems: any[] = variacao.tab_order || [];
+            for (let i = 0; i < tabItems.length; i++) {
+              const item = tabItems[i];
+              if (modelOrder) {
+                const orderClone = modelOrder.clone();
+                orderClone.visible = true;
+                const numText = orderClone.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
+                if (numText) await updateText(numText, String(i + 1));
+                // Canto superior direito do item, clampado dentro do compClone
+                const rawOrderX = currentX + item.relX + item.width - orderClone.width;
+                const rawOrderY = currentY + item.relY + 4;
+                orderClone.x = Math.max(currentX, Math.min(rawOrderX, currentX + compClone.width - orderClone.width));
+                orderClone.y = Math.max(currentY, Math.min(rawOrderY, currentY + (compClone as FrameNode).height - orderClone.height));
+                tabImageFrame.appendChild(orderClone);
+              }
+            }
+
+            rowHeight = Math.max(rowHeight, compClone.height);
+            totalWidth = Math.max(totalWidth, currentX + compClone.width);
+            currentX += compClone.width + TAB_GAP_H;
           }
 
+          totalHeight = currentY + rowHeight;
           tabImageFrame.resize(
-            Math.max(tabImageFrame.width,  TAB_PAD_LEFT + tabCompClone.width + (modelOrder ? modelOrder.width / 2 : 0) + TAB_PAD_SIDE),
-            Math.max(tabImageFrame.height, TAB_PAD_TOP  + tabCompClone.height + TAB_PAD_SIDE)
+            Math.max(tabImageFrame.width, totalWidth + TAB_PAD_SIDE),
+            totalHeight + TAB_PAD_SIDE
           );
           if (modelOrder)      modelOrder.visible      = false;
           if (modelItemNumber) modelItemNumber.visible = false;
         }
       }
-      // Se focusOrderContainer não existe, pula silenciosamente
     }
 
     // Remove frames de variação do canvas após geração do preview
     figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y Variação]')).forEach(n => n.remove());
+    figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y Tab Variação]')).forEach(n => n.remove());
 
     // Zerar frameNodeId/instanceNodeId para que no próximo carregamento os frames sejam recriados
+    if (msg.variacoes_tabulacao) {
+      for (const v of msg.variacoes_tabulacao) {
+        if (v.id !== 'default') {
+          v.frameNodeId = null;
+          v.instanceNodeId = null;
+        }
+      }
+    }
     if (msg.variacoes) {
       for (const v of msg.variacoes) {
         if (v.id !== 'default') {
@@ -473,8 +543,7 @@ figma.ui.onmessage = async (msg) => {
         areas_toque: msg.areas_toque || [],
         sem_toque: msg.sem_toque || false,
         variacoes: msg.variacoes || [],
-        tab_order: msg.tab_order || [],
-    sem_tabulacao: msg.sem_tabulacao || false,
+        variacoes_tabulacao: msg.variacoes_tabulacao || [],
       });
       dbInstance.setPluginData("a11y-component-data", dataToSave);
     }
@@ -490,8 +559,7 @@ figma.ui.onmessage = async (msg) => {
           areas_toque: msg.areas_toque || [],
           sem_toque: msg.sem_toque || false,
           variacoes: msg.variacoes || [],
-          tab_order: msg.tab_order || [],
-    sem_tabulacao: msg.sem_tabulacao || false,
+          variacoes_tabulacao: msg.variacoes_tabulacao || [],
         });
         dataNode.setPluginData('a11y-component-data', dataToSave);
       }
@@ -505,8 +573,7 @@ figma.ui.onmessage = async (msg) => {
       areas_toque: msg.areas_toque || [],
       sem_toque: msg.sem_toque || false,
       variacoes: msg.variacoes || [],
-      tab_order: msg.tab_order || [],
-    sem_tabulacao: msg.sem_tabulacao || false,
+      variacoes_tabulacao: msg.variacoes_tabulacao || [],
     });
     workingFrame.setPluginData("a11y-component-data", dataToSaveDirect);
 
@@ -710,7 +777,7 @@ figma.ui.onmessage = async (msg) => {
       return;
     }
     const selection = figma.currentPage.selection;
-    const comp = componentePrincipalAtivo;
+    const comp = (componenteTabVariacaoAtivo ?? componentePrincipalAtivo) as FrameNode;
     const compX = comp.absoluteTransform[0][2];
     const compY = comp.absoluteTransform[1][2];
 
@@ -737,7 +804,7 @@ figma.ui.onmessage = async (msg) => {
       figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo.' });
       return;
     }
-    const comp = componentePrincipalAtivo;
+    const comp = (componenteTabVariacaoAtivo ?? componentePrincipalAtivo) as FrameNode;
     figma.ui.postMessage({
       type: 'tab-items-ready',
       items: [{
@@ -758,6 +825,74 @@ figma.ui.onmessage = async (msg) => {
         if (node) node.remove();
       } catch (e) {
         console.warn('[delete-variation-frame]', e);
+      }
+    }
+  }
+
+  else if (msg.type === 'create-tab-variation-frame') {
+    if (!componentePrincipalAtivo) {
+      figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo.' });
+      return;
+    }
+    try {
+      const comp = componentePrincipalAtivo;
+      const parentNode = comp.parent as FrameNode | PageNode;
+      if (!parentNode) {
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Componente sem parent.' });
+        return;
+      }
+      const frameName = `[A11Y Tab Variação] ${msg.nome}`;
+      const existing = figma.currentPage.findOne((n: SceneNode) => n.name === frameName);
+      if (existing) existing.remove();
+      const instance = comp.clone() as InstanceNode;
+      instance.x = 0;
+      instance.y = 0;
+      if (instance.type === 'INSTANCE' && msg.propriedades && Object.keys(msg.propriedades).length > 0) {
+        try { instance.setProperties(msg.propriedades); } catch (e) {
+          console.warn('[create-tab-variation-frame] setProperties failed:', e);
+        }
+      }
+      const varFrame = figma.createFrame();
+      varFrame.name = frameName;
+      varFrame.fills = [];
+      varFrame.clipsContent = false;
+      varFrame.resize(instance.width, instance.height);
+      varFrame.x = comp.x + comp.width + 80;
+      varFrame.y = comp.y;
+      (parentNode as FrameNode).appendChild(varFrame);
+      varFrame.appendChild(instance);
+      figma.currentPage.selection = [varFrame];
+      figma.viewport.scrollAndZoomIntoView([varFrame]);
+      figma.ui.postMessage({ type: 'tab-variation-frame-created', frameNodeId: varFrame.id, instanceNodeId: instance.id });
+    } catch (e) {
+      figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar frame de variação de tabulação: ${e}` });
+    }
+  }
+
+  else if (msg.type === 'activate-tab-variation') {
+    try {
+      if (msg.instanceNodeId) {
+        const node = await figma.getNodeByIdAsync(msg.instanceNodeId) as SceneNode | null;
+        componenteTabVariacaoAtivo = node;
+      } else {
+        componenteTabVariacaoAtivo = null;
+      }
+    } catch (e) {
+      componenteTabVariacaoAtivo = null;
+    }
+  }
+
+  else if (msg.type === 'deactivate-tab-variation') {
+    componenteTabVariacaoAtivo = null;
+  }
+
+  else if (msg.type === 'delete-tab-variation-frame') {
+    if (msg.frameNodeId) {
+      try {
+        const node = await figma.getNodeByIdAsync(msg.frameNodeId);
+        if (node) node.remove();
+      } catch (e) {
+        console.warn('[delete-tab-variation-frame]', e);
       }
     }
   }
@@ -869,7 +1004,7 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
   const dbInstance = (handoff as any).findOne((n: SceneNode) => n.name === "[dsc-h] Plugin Data A11y") as InstanceNode;
 
   let masterList: { mapeamento: string; descricao: string; utilizacao: string }[] = [];
-  let componentData: any = { plataformas: [], zoom: [], mapeamentos: [], areas_toque: [], sem_toque: false, tab_order: [], sem_tabulacao: false };
+  let componentData: any = { plataformas: [], zoom: [], mapeamentos: [], areas_toque: [], sem_toque: false, variacoes: [], variacoes_tabulacao: [] };
   let dataLoadedFromDb = false;
 
   // Tenta ler dados salvos diretamente no frame do handoff

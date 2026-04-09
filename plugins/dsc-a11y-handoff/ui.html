@@ -56,6 +56,11 @@
     #touchMainView.hidden { display: none !important; }
     #touchVariationFormView { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #fff; flex-direction: column; z-index: 20; }
     #touchVariationFormView.open { display: flex; }
+    #tabVariationListView { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    #tabVariationListView.hidden { display: none !important; }
+    #tabMainView.hidden { display: none !important; }
+    #tabVariationFormView { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #fff; flex-direction: column; z-index: 20; }
+    #tabVariationFormView.open { display: flex; }
     .tsize-btn.active  { border-color: #2D4496 !important; background: #EEF2FF !important; }
     .tforma-btn.active { border-color: #2D4496 !important; background: #2D4496 !important; color: #fff !important; }
 
@@ -392,19 +397,38 @@
       </div>
 
       <div id="panel-tabulacao" class="tab-panel">
-        <div class="tab-notab-bar">
-          <label class="checkbox-field">
-            <input type="checkbox" id="chkSemTabulacao" onchange="onSemTabulacaoChange()">
-            <span>Sem tabulação</span>
-          </label>
-        </div>
-        <div id="tabOrderListWrapper">
-          <div id="tabOrderList"></div>
-        </div>
-        <div class="tab-footer" id="tabFooter">
-          <button class="tab-add-btn" id="btnAddTab" onclick="openTabForm()">+ Adicionar foco de tabulação</button>
+
+        <!-- VIEW 1: LISTA DE VARIAÇÕES -->
+        <div id='tabVariationListView'>
+          <div style='flex:1;overflow-y:auto;padding:12px 16px;'>
+            <div id='tabVariationList' style='display:flex;flex-direction:column;gap:6px;'></div>
+          </div>
+          <div style='flex-shrink:0;padding:10px 16px 14px;border-top:1px solid #F0F0F0;background:#fff;'>
+            <button id='btnAddTabVariation' style='width:100%;padding:10px;background:none;border:1.5px dashed #BBBFC8;border-radius:10px;color:#2D4496;font-size:12px;font-weight:700;cursor:pointer;'>+ Nova variante parametrizada</button>
+          </div>
         </div>
 
+        <!-- VIEW PRINCIPAL -->
+        <div id='tabMainView' style='flex:1;display:flex;flex-direction:column;overflow:hidden;'>
+          <div id='tabMainViewHeader' style='flex-shrink:0;padding:10px 16px;border-bottom:1px solid #F0F0F0;display:flex;align-items:center;gap:8px;'>
+            <button id='btnBackToTabVariations' style='background:none;border:none;font-size:12px;font-weight:700;color:#2D4496;cursor:pointer;padding:4px 0;'>← Voltar</button>
+            <span id='tabMainViewLabel' style='font-size:13px;font-weight:700;color:#1a1a1a;flex:1;'>Default</span>
+          </div>
+          <div class="tab-notab-bar">
+            <label class="checkbox-field">
+              <input type="checkbox" id="chkSemTabulacao" onchange="onSemTabulacaoChange()">
+              <span>Sem tabulação</span>
+            </label>
+          </div>
+          <div id="tabOrderListWrapper">
+            <div id="tabOrderList"></div>
+          </div>
+          <div class="tab-footer" id="tabFooter">
+            <button class="tab-add-btn" id="btnAddTab" onclick="openTabForm()">+ Adicionar foco de tabulação</button>
+          </div>
+        </div>
+
+        <!-- FORM FOCO DE TABULAÇÃO (overlay absoluto) -->
         <div id="tabFormView">
           <div class="tab-form-header">
             <span>Adicionar Tabulação</span>
@@ -435,6 +459,25 @@
             <button onclick="closeTabForm()" style="background:none;border:none;font-size:12px;font-weight:700;color:#2D4496;cursor:pointer;padding:4px 0;">Cancelar</button>
           </div>
         </div>
+
+        <!-- FORM VARIAÇÃO DE TABULAÇÃO (overlay absoluto z-index:20) -->
+        <div id='tabVariationFormView'>
+          <div style='flex-shrink:0;padding:12px 16px;border-bottom:1px solid #F0F0F0;display:flex;align-items:center;'>
+            <span style='font-size:13px;font-weight:700;color:#1a1a1a;flex:1;'>Nova variante parametrizada</span>
+          </div>
+          <div style='flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;'>
+            <div class='touch-form-row'>
+              <label>Nome</label>
+              <input type='text' id='tabVarNomeInput' class='touch-form-input' placeholder='Ex: Mobile, Hover, Expandido…'>
+            </div>
+            <div id='tabVarPropsContainer' style='display:flex;flex-direction:column;gap:10px;'></div>
+          </div>
+          <div style='flex-shrink:0;padding:12px 16px 16px;border-top:1px solid #F0F0F0;background:#fff;display:flex;flex-direction:column;gap:8px;align-items:center;'>
+            <button id='btnTabVariationFormCreate' style='width:100%;padding:12px;background:#2D4496;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;box-sizing:border-box;'>Criar variante</button>
+            <button id='btnTabVariationFormCancel' style='background:none;border:none;font-size:12px;font-weight:700;color:#2D4496;cursor:pointer;padding:4px 0;'>Cancelar</button>
+          </div>
+        </div>
+
       </div>
 
       <div id="panel-handoff" class="tab-panel">
@@ -499,6 +542,7 @@
         // Cancelar forms abertos ao trocar de aba
         if (el('touchFormView').classList.contains('open')) el('btnTouchCancel').click();
         if (el('tabFormView').classList.contains('open')) closeTabForm();
+        if (el('tabVariationFormView') && el('tabVariationFormView').classList.contains('open')) closeTabVariationForm();
         document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         btn.classList.add('active');
@@ -627,18 +671,24 @@
       const touchCard = el('summaryTouchCard');
       if (touchCard) touchCard.style.display = totalAreas > 0 ? 'block' : 'none';
 
-      const tabPill = tabOrderData.length;
+      const totalTabItems = tabVariationsData.reduce((sum, v) => {
+        const items = v.id === currentTabVariationId ? tabOrderData : (v.tab_order || []);
+        return sum + (v.sem_tabulacao ? 0 : items.length);
+      }, 0);
+      const totalTabVars = tabVariationsData.filter(v => v.id !== 'default').length;
       const summaryTabCard = el('summaryTabCard');
       if (summaryTabCard) {
-        summaryTabCard.style.display = tabPill > 0 ? 'block' : 'none';
+        summaryTabCard.style.display = totalTabItems > 0 ? 'block' : 'none';
         const tabPills = el('summaryTabPills');
-        if (tabPills) tabPills.innerHTML = tabPill > 0
-          ? `<span class='summary-pill'>${tabPill} foco${tabPill !== 1 ? 's' : ''}</span>`
-          : '';
+        if (tabPills) {
+          tabPills.innerHTML = '';
+          if (totalTabVars > 0) tabPills.innerHTML += `<span class='summary-pill'>${totalTabVars} variação${totalTabVars !== 1 ? 'ões' : ''}</span>`;
+          if (totalTabItems > 0) tabPills.innerHTML += `<span class='summary-pill'>${totalTabItems} foco${totalTabItems !== 1 ? 's' : ''}</span>`;
+        }
       }
 
       const hasSomething = platforms.length > 0 || zooms.length > 0 || keyboards > 0 || gestures > 0;
-      el('summaryCards').style.display = hasSomething || totalAreas > 0 || tabPill > 0 ? 'flex' : 'none';
+      el('summaryCards').style.display = hasSomething || totalAreas > 0 || totalTabItems > 0 ? 'flex' : 'none';
     }
 
     el('summaryEditGeral').onclick = () => {
@@ -701,11 +751,18 @@
           variationsData.unshift({ id: 'default', nome: 'Default', propriedades: {}, areas_toque: msg.componentData?.areas_toque || [], sem_toque: msg.componentData?.sem_toque || false, frameNodeId: null, instanceNodeId: null });
         }
         renderVariationList();
-        tabOrderData = msg.componentData?.tab_order || [];
-        semTabulacao = msg.componentData?.sem_tabulacao || false;
+        tabVariationsData = msg.componentData?.variacoes_tabulacao || [];
+        // Migração: se não tem variações mas tem tab_order antigo, cria default com esses dados
+        if (!tabVariationsData.find(v => v.id === 'default')) {
+          tabVariationsData.unshift({ id: 'default', nome: 'Default', propriedades: {}, tab_order: msg.componentData?.tab_order || [], sem_tabulacao: msg.componentData?.sem_tabulacao || false, frameNodeId: null, instanceNodeId: null });
+        }
+        const defaultTabVar = tabVariationsData.find(v => v.id === 'default');
+        tabOrderData = defaultTabVar?.tab_order || [];
+        semTabulacao = defaultTabVar?.sem_tabulacao || false;
         el('chkSemTabulacao').checked = semTabulacao;
         el('tabFooter').style.display = semTabulacao ? 'none' : 'flex';
         renderTabOrderList();
+        renderTabVariationList();
 const semToque = msg.componentData?.sem_toque || false;
 el('chkSemToque').checked = semToque;
 el('btnAddTouch').style.display = semToque ? 'none' : 'block';
@@ -804,7 +861,8 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
 
       if (msg.type === 'component-properties-ready') {
         componentProps = msg.props || [];
-        renderVariationProps();
+        if (el('touchVariationFormView') && el('touchVariationFormView').classList.contains('open')) renderVariationProps();
+        if (el('tabVariationFormView') && el('tabVariationFormView').classList.contains('open')) renderTabVariationProps();
       }
       if (msg.type === 'variation-frame-created') {
         // Atualiza a variação que aguardava o frame (pode ser nova criação OU recriação ao editar)
@@ -827,6 +885,38 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           closeVariationForm();
         }
         renderVariationList();
+      }
+      if (msg.type === 'tab-variation-frame-created') {
+        const targetVar = tabVariationsData.find(v => v.id === currentTabVariationId)
+          || tabVariationsData[tabVariationsData.length - 1];
+        if (targetVar) {
+          targetVar.frameNodeId = msg.frameNodeId;
+          targetVar.instanceNodeId = msg.instanceNodeId;
+        }
+        const btnCreate = el('btnTabVariationFormCreate');
+        if (btnCreate) { btnCreate.textContent = 'Criar variante'; btnCreate.disabled = false; }
+        // Se abriu via editTabVariation (form fechado), ativa e abre main view
+        if (currentTabVariationId && currentTabVariationId !== 'default' && !el('tabVariationFormView').classList.contains('open')) {
+          const v = tabVariationsData.find(v => v.id === currentTabVariationId);
+          if (v) {
+            parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', instanceNodeId: v.instanceNodeId } }, '*');
+          }
+        } else {
+          closeTabVariationForm();
+        }
+
+        // Carrega dados da variação criada/ativada
+        if (targetVar) {
+          tabOrderData = targetVar.tab_order || [];
+          semTabulacao = targetVar.sem_tabulacao || false;
+          el('chkSemTabulacao').checked = semTabulacao;
+          el('tabFooter').style.display = semTabulacao ? 'none' : 'flex';
+          renderTabOrderList();
+          el('tabMainViewLabel').textContent = targetVar.id === 'default' ? 'Default' : targetVar.nome;
+        }
+
+        renderTabVariationList();
+        showTabView('main');
       }
     };
 
@@ -860,11 +950,14 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
   let touchSelectedForma = 'total'; // 'total' | 'quadrado'
 
   let variationsData = []; // array de variações: [{ id, nome, propriedades, areas_toque, sem_toque, frameNodeId, instanceNodeId }]
+  let tabVariationsData = []; // array de variações de tabulação: [{ id, nome, propriedades, tab_order, sem_tabulacao, frameNodeId, instanceNodeId }]
+  let tabOrderData = []; // tab_order da variação de tabulação ativa
     let tabFormTempItems = [];
     let tabFormType = null; // 'selection' | 'component'
     let tabFormPendingSave = false;
     let semTabulacao = false;
   let currentVariationId = null; // 'default' | uuid string
+  let currentTabVariationId = null; // 'default' | uuid string
   let componentProps = []; // [{ name, type, options }] — carregado via get-component-properties
 
   function renderTouchList() {
@@ -1006,6 +1099,14 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         tabOrderData = [];
         renderTabOrderList();
       }
+      // Persiste na variação ativa
+      if (currentTabVariationId) {
+        const varData = tabVariationsData.find(v => v.id === currentTabVariationId);
+        if (varData) {
+          varData.sem_tabulacao = semTabulacao;
+          if (semTabulacao) varData.tab_order = [];
+        }
+      }
       updateSummaryCards();
     }
 
@@ -1058,6 +1159,128 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         renderTabOrderList();
       }
     }
+
+  function showTabView(viewId) {
+    el('tabVariationListView').classList.toggle('hidden', viewId !== 'list');
+    el('tabMainView').classList.toggle('hidden', viewId !== 'main');
+  }
+
+  function renderTabVariationList() {
+    const container = el('tabVariationList');
+    if (!container) return;
+    container.innerHTML = '';
+    const defData = tabVariationsData.find(v => v.id === 'default') || { id: 'default', nome: 'Default', propriedades: {}, tab_order: [], sem_tabulacao: false };
+    container.innerHTML += `<div style='border:1.5px solid #22C55E;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;background:#F0FDF4;'>
+      <span style='background:#22C55E;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;'>D</span>
+      <div style='flex:1;min-width:0;'>
+        <div style='font-size:12px;font-weight:700;color:#1a1a1a;'>Default</div>
+        <div style='font-size:10px;color:#888;margin-top:1px;'>Comportamento padrão</div>
+      </div>
+      <button onclick='editTabVariation("default")' style='background:none;border:1.5px solid #22C55E;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#22C55E;cursor:pointer;'>Editar</button>
+    </div>`;
+    const customs = tabVariationsData.filter(v => v.id !== 'default');
+    if (customs.length > 0) {
+      container.innerHTML += `<div style='font-size:10px;font-weight:700;color:#999;letter-spacing:0.05em;padding:6px 0 2px;'>VARIANTES PARAMETRIZADAS</div>`;
+      customs.forEach((v, i) => {
+        const propsLabel = Object.entries(v.propriedades || {}).map(([k, val]) => `${k}=${val}`).join(', ') || '—';
+        container.innerHTML += `<div style='border:1.5px solid #E0E0E0;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;background:#fff;'>
+          <span style='background:#2D4496;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;'>${i+1}</span>
+          <div style='flex:1;min-width:0;'>
+            <div style='font-size:12px;font-weight:700;color:#1a1a1a;'>${v.nome}</div>
+            <div style='font-size:10px;color:#888;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${propsLabel}</div>
+          </div>
+          <button onclick='editTabVariation("${v.id}")' style='background:none;border:1.5px solid #2D4496;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#2D4496;cursor:pointer;'>Editar</button>
+          <button onclick='deleteTabVariation("${v.id}")' style='background:none;border:1.5px solid #FF5252;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#FF5252;cursor:pointer;'>Excluir</button>
+        </div>`;
+      });
+    }
+  }
+
+  function editTabVariation(id) {
+    currentTabVariationId = id;
+    let varData = tabVariationsData.find(v => v.id === id);
+    if (!varData) {
+      varData = { id, nome: id === 'default' ? 'Default' : id, propriedades: {}, tab_order: [], sem_tabulacao: false, frameNodeId: null, instanceNodeId: null };
+      tabVariationsData.push(varData);
+    }
+    tabOrderData = varData.tab_order || [];
+    semTabulacao = varData.sem_tabulacao || false;
+    el('chkSemTabulacao').checked = semTabulacao;
+    el('tabFooter').style.display = semTabulacao ? 'none' : 'flex';
+    renderTabOrderList();
+    el('tabMainViewLabel').textContent = id === 'default' ? 'Default' : varData.nome;
+    if (id === 'default') {
+      parent.postMessage({ pluginMessage: { type: 'deactivate-tab-variation' } }, '*');
+      showTabView('main');
+    } else if (varData.instanceNodeId) {
+      parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', instanceNodeId: varData.instanceNodeId } }, '*');
+      showTabView('main');
+    } else {
+      parent.postMessage({ pluginMessage: { type: 'create-tab-variation-frame', nome: varData.nome, propriedades: varData.propriedades || {} } }, '*');
+      // showTabView('main') called when tab-variation-frame-created arrives
+    }
+  }
+
+  function backToTabVariationList() {
+    if (currentTabVariationId) {
+      const varData = tabVariationsData.find(v => v.id === currentTabVariationId);
+      if (varData) {
+        varData.tab_order = [...tabOrderData];
+        varData.sem_tabulacao = el('chkSemTabulacao').checked;
+      }
+    }
+    parent.postMessage({ pluginMessage: { type: 'deactivate-tab-variation' } }, '*');
+    currentTabVariationId = null;
+    renderTabVariationList();
+    showTabView('list');
+  }
+
+  function deleteTabVariation(id) {
+    const idx = tabVariationsData.findIndex(v => v.id === id);
+    if (idx === -1) return;
+    const v = tabVariationsData[idx];
+    if (v.frameNodeId) {
+      parent.postMessage({ pluginMessage: { type: 'delete-tab-variation-frame', frameNodeId: v.frameNodeId } }, '*');
+    }
+    tabVariationsData.splice(idx, 1);
+    renderTabVariationList();
+  }
+
+  function openTabVariationForm() {
+    el('tabVarNomeInput').value = '';
+    renderTabVariationProps();
+    parent.postMessage({ pluginMessage: { type: 'get-component-properties' } }, '*');
+    el('tabVariationFormView').classList.add('open');
+  }
+
+  function closeTabVariationForm() {
+    el('tabVariationFormView').classList.remove('open');
+  }
+
+  function renderTabVariationProps() {
+    const container = el('tabVarPropsContainer');
+    if (!container) return;
+    container.innerHTML = '';
+    if (componentProps.length === 0) {
+      container.innerHTML = '<div style="font-size:12px;color:#999;">Nenhuma propriedade VARIANT/BOOLEAN encontrada no componente.</div>';
+      return;
+    }
+    componentProps.forEach(prop => {
+      if (prop.type === 'VARIANT') {
+        const opts = (prop.options || []).map(o => `<option value="${o}">${o}</option>`).join('');
+        container.innerHTML += `<div class='touch-form-row'><label>${prop.name}</label><select class='touch-form-input tab-var-prop-select' data-prop='${prop.name}' style='cursor:pointer;'>${opts}</select></div>`;
+      } else if (prop.type === 'BOOLEAN') {
+        container.innerHTML += `<div class='touch-form-row' style='flex-direction:row;align-items:center;gap:8px;'><input type='checkbox' class='tab-var-prop-check' data-prop='${prop.name}' style='accent-color:#2D4496;width:14px;height:14px;'><label style='font-size:12px;font-weight:600;color:#555;margin:0;'>${prop.name}</label></div>`;
+      }
+    });
+  }
+
+  function collectTabVariationProps() {
+    const props = {};
+    document.querySelectorAll('.tab-var-prop-select').forEach(sel => { props[sel.dataset.prop] = sel.value; });
+    document.querySelectorAll('.tab-var-prop-check').forEach(chk => { props[chk.dataset.prop] = chk.checked; });
+    return props;
+  }
 
   function renderVariationList() {
     const container = el('variationList');
@@ -1235,6 +1458,21 @@ el('btnAddTouch').onclick = () => { openTouchForm(); };
 el('btnAddVariation').onclick = () => { openVariationForm(); };
 el('btnBackToVariations').onclick = () => { backToVariationList(); };
 el('btnVariationFormCancel').onclick = () => { closeVariationForm(); };
+el('btnBackToTabVariations').onclick = () => { backToTabVariationList(); };
+el('btnAddTabVariation').onclick = () => { openTabVariationForm(); };
+el('btnTabVariationFormCancel').onclick = () => { closeTabVariationForm(); };
+el('btnTabVariationFormCreate').onclick = () => {
+  const nome = el('tabVarNomeInput').value.trim();
+  if (!nome) { el('tabVarNomeInput').focus(); return; }
+  const propriedades = collectTabVariationProps();
+  const id = generateId();
+  tabVariationsData.push({ id, nome, propriedades, tab_order: [], sem_tabulacao: false, frameNodeId: null, instanceNodeId: null });
+  currentTabVariationId = id;
+  const btn = el('btnTabVariationFormCreate');
+  btn.textContent = '⏳ Criando…';
+  btn.disabled = true;
+  parent.postMessage({ pluginMessage: { type: 'create-tab-variation-frame', nome, propriedades } }, '*');
+};
 
 el('btnVariationFormCreate').onclick = () => {
   const nome = el('varNomeInput').value.trim();
@@ -1284,6 +1522,7 @@ el('chkSemToque').onchange = () => {
 
   resetTouchForm();
   showView('list');
+  showTabView('list');
 
   parent.postMessage({ pluginMessage: { type: 'load-initial-data' } }, '*');
 
@@ -1293,6 +1532,15 @@ el('chkSemToque').onchange = () => {
       sb.classList.add('loading');
       sb.textContent = 'Gerando handoff...';
 
+      // Salva estado da variação de tabulação ativa antes de enviar
+      if (currentTabVariationId) {
+        const varData = tabVariationsData.find(v => v.id === currentTabVariationId);
+        if (varData) {
+          varData.tab_order = [...tabOrderData];
+          varData.sem_tabulacao = el('chkSemToque').checked ? false : el('chkSemTabulacao').checked;
+        }
+      }
+
       const p = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(c => c.value);
       const z = Array.from(document.querySelectorAll('input[name="zoom"]:checked')).map(c => c.value);
       parent.postMessage({ pluginMessage: {
@@ -1300,8 +1548,7 @@ el('chkSemToque').onchange = () => {
         areas_toque: touchData, sem_toque: el('chkSemToque').checked,
         componentName: el('compName').textContent,
         variacoes: variationsData,
-        tab_order: tabOrderData,
-        sem_tabulacao: semTabulacao
+        variacoes_tabulacao: tabVariationsData,
       }}, '*');
     };
   </script>
