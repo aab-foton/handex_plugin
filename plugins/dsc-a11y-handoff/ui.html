@@ -1646,7 +1646,7 @@ el('chkSemToque').onchange = () => {
       const sb = el('statusBar');
       sb.classList.remove('loading', 'success', 'error');
       sb.classList.add('loading');
-      sb.textContent = 'Gerando handoff...';
+      sb.textContent = isGenerated ? 'Atualizando handoff...' : 'Gerando handoff...';
 
       // Salva estado da variação de tabulação ativa antes de enviar
       if (currentTabVariationId) {
@@ -1662,6 +1662,8 @@ el('chkSemToque').onchange = () => {
       parent.postMessage({ pluginMessage: {
         type: 'run-handoff', plataformas: p, zoom: z, mapeamentos: currentData,
         areas_toque: touchData, sem_toque: el('chkSemToque').checked,
+        conectores_leitor: leitorState.conectores,
+        sem_leitor: leitorState.semLeitor,
         componentName: el('compName').textContent,
         variacoes: variationsData,
         variacoes_tabulacao: tabVariationsData,
@@ -1959,6 +1961,15 @@ el('chkSemToque').onchange = () => {
       });
       if (Object.keys(subs).length > 0) {
         finalConector.substituicoes = subs;
+      }
+
+      const roleData = leitorState.rolesList.find(r => r.nome === roleNome && r.tipoConnector === conector);
+      if (roleData) {
+        finalConector.descricao     = roleData.descricao     || '';
+        finalConector.observacao    = roleData.observacao    || '';
+        finalConector.nomeAcessivel = roleData.nomeAcessivel || '';
+        finalConector.codigoWeb     = roleData.codigoWeb     || '';
+        finalConector.codigoRN      = roleData.codigoRN      || '';
       }
 
       leitorState.conectores.push(finalConector);

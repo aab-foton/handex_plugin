@@ -58,6 +58,25 @@ async function updateText(node: TextNode, value: string) {
   }
 }
 
+function computeLetrasTS(conectores: any[]): string[] {
+  const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const letras: string[] = [];
+  let lastTipo: string | null = null;
+  let counter = 0;
+  let decCounter = 0;
+  for (const item of conectores) {
+    if ((item.tipoConnector || '').toLowerCase().includes('decorat')) {
+      letras.push('✦' + (decCounter > 0 ? String(decCounter + 1) : ''));
+      decCounter++;
+    } else {
+      if (item.tipo !== lastTipo) { counter = 0; lastTipo = item.tipo; }
+      letras.push(ALPHA[counter % 26]);
+      counter++;
+    }
+  }
+  return letras;
+}
+
 // ==========================================
 // 3. ROTEADOR DE MENSAGENS (UI -> FIGMA)
 // ==========================================
@@ -206,6 +225,66 @@ figma.ui.onmessage = async (msg) => {
               }
             }
             rowModel.visible = false;
+          }
+        }
+
+        // --- LEITOR DE TELA: SPECS ---
+        if (!msg.sem_leitor && Array.isArray(msg.conectores_leitor) && msg.conectores_leitor.length > 0) {
+          const srSection = workingFrame.findOne((n: SceneNode) => n.name === 'screen reader') as FrameNode | null;
+          if (srSection) {
+            const allBoxes = srSection.findOne((n: SceneNode) => n.name === 'all boxes') as FrameNode | null;
+            if (allBoxes) {
+              const model = Array.from(allBoxes.children).find(n => n.name === '[a11y] Box specs LT') as FrameNode | undefined;
+              if (model) {
+                Array.from(allBoxes.children).filter(n => n !== model).forEach(n => n.remove());
+
+                const isWeb    = (msg.plataformas as string[])?.includes('Web') ?? false;
+                const isMobile = (msg.plataformas as string[])?.some((p: string) => ['Mobile iOS','Mobile Android','Mobile Cross-Platform'].includes(p)) ?? false;
+                const letras   = computeLetrasTS(msg.conectores_leitor);
+
+                for (let i = 0; i < msg.conectores_leitor.length; i++) {
+                  const c      = msg.conectores_leitor[i];
+                  const letra  = letras[i];
+                  const subs   = c.substituicoes || {};
+
+                  const clone  = model.clone();
+                  clone.visible = true;
+                  allBoxes.appendChild(clone);
+
+                  // letra
+                  const conectorNode = clone.findOne((n: SceneNode) => n.name === '[a11y] Conectores') as FrameNode | null;
+                  if (conectorNode) {
+                    const numTxt = conectorNode.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
+                    if (numTxt) await updateText(numTxt, letra);
+                  }
+
+                  // helper para preencher subframe > Text
+                  const fillField = async (fieldName: string, value: string) => {
+                    if (!value || value.trim() === '' || value.trim().toUpperCase() === 'NA') return;
+                    const frame = clone.findOne((n: SceneNode) => n.name === fieldName) as FrameNode | null;
+                    if (!frame) return;
+                    const txt = frame.findOne((n: SceneNode) => n.name === 'Text' && n.type === 'TEXT') as TextNode | null;
+                    if (txt) await updateText(txt, value);
+                  };
+
+                  await fillField('Descrição',     subs.descricao     || c.descricao     || '');
+                  await fillField('Observacoes',   c.observacao || '');
+                  await fillField('Nome Acessivel', subs.nomeAcessivel || c.nomeAcessivel || '');
+
+                  // Notas de Código — regra de plataforma
+                  let notasValue = '';
+                  const web = c.codigoWeb || '';
+                  const rn  = c.codigoRN  || '';
+                  const webOk = web && web.toUpperCase() !== 'NA';
+                  const rnOk  = rn  && rn.toUpperCase()  !== 'NA';
+                  if (isWeb && isMobile)      notasValue = [webOk ? web : '', rnOk ? rn : ''].filter(Boolean).join('\n');
+                  else if (isWeb)             notasValue = webOk ? web : '';
+                  else if (isMobile)          notasValue = rnOk  ? rn  : '';
+                  await fillField('Notas', subs.codigoWeb || subs.codigoRN || notasValue);
+                }
+                model.visible = false;
+              }
+            }
           }
         }
 
