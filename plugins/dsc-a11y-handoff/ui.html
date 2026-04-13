@@ -540,7 +540,6 @@
               <select id="srSelectTipoAnotacao" class="sr-form-input" onchange="populateSRTipoConector()">
                 <option value="">Selecione...</option>
                 <option value="simples">Simples — 1 conector</option>
-                <option value="combinado">Combinado — 2–5 conectores</option>
                 <option value="agrupamento">Agrupamento — área livre</option>
               </select>
             </div>
@@ -568,6 +567,10 @@
 
             <div id="srInsertFields" style="display:none; flex-direction:column; gap:8px;"></div>
             <div id="srRolePreview" style="display:none; flex-direction:column; gap:8px;"></div>
+            <div id='srCanvasHint' style='display:none; background:#EEF0FA; border-radius:8px; padding:14px 16px; text-align:center; flex-direction:column; gap:4px;'>
+              <div id='srCanvasHintTitle' style='font-size:12px; font-weight:700; color:#2D4496;'>Selecione no canvas</div>
+              <div id='srCanvasHintBody' style='font-size:11px; color:#666;'>Escolha o elemento e clique em Confirmar.</div>
+            </div>
           </div>
 
           <div class="touch-actions" style="padding:12px 16px;border-top:1px solid #EEE;flex-shrink:0;">
@@ -615,6 +618,19 @@
                 <span id='summaryEditTab' style='font-size:12px; color:#999; cursor:pointer;'>Editar ›</span>
               </div>
               <div id='summaryTabPills' style='display:flex; flex-wrap:wrap; gap:6px;'></div>
+            </div>
+          </div>
+
+          <div id='summaryLeitorCard' class='card' style='display:none; margin-bottom:8px;'>
+            <div class='card-body'>
+              <div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;'>
+                <div style='display:flex; align-items:center; gap:8px;'>
+                  <span>🔊</span>
+                  <span style='font-size:14px; font-weight:600;'>Leitor de Tela</span>
+                </div>
+                <span id='summaryEditLeitor' style='font-size:12px; color:#999; cursor:pointer;'>Editar ›</span>
+              </div>
+              <div id='summaryLeitorPills' style='display:flex; flex-wrap:wrap; gap:6px;'></div>
             </div>
           </div>
         </div>
@@ -785,8 +801,19 @@
         }
       }
 
+      const totalLeitorItems = (leitorState.conectores || []).length;
+      const summaryLeitorCard = el('summaryLeitorCard');
+      if (summaryLeitorCard) {
+        summaryLeitorCard.style.display = totalLeitorItems > 0 ? 'block' : 'none';
+        const leitorPills = el('summaryLeitorPills');
+        if (leitorPills) {
+          leitorPills.innerHTML = '';
+          if (totalLeitorItems > 0) leitorPills.innerHTML += `<span class='summary-pill'>${totalLeitorItems} anotaç${totalLeitorItems !== 1 ? 'ões' : 'ão'}</span>`;
+        }
+      }
+
       const hasSomething = platforms.length > 0 || zooms.length > 0 || keyboards > 0 || gestures > 0;
-      el('summaryCards').style.display = hasSomething || totalAreas > 0 || totalTabItems > 0 ? 'flex' : 'none';
+      el('summaryCards').style.display = hasSomething || totalAreas > 0 || totalTabItems > 0 || totalLeitorItems > 0 ? 'flex' : 'none';
     }
 
     el('summaryEditGeral').onclick = () => {
@@ -808,6 +835,13 @@
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.querySelector('.tab[data-target="panel-tabulacao"]').classList.add('active');
       el('panel-tabulacao').classList.add('active');
+    };
+
+    el('summaryEditLeitor').onclick = () => {
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelector('.tab[data-target="panel-leitor"]').classList.add('active');
+      el('panel-leitor').classList.add('active');
     };
 
     window.onmessage = (e) => {
@@ -887,16 +921,19 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         closeTouchForm();
       }
       if (msg.type === 'sr-selection-result') {
-        if (msg.error) { alert(msg.error); return; }
+        if (msg.error) { pendingSRItem = null; srFormPendingConfirm = false; return; }
         pendingSRItem = msg.item;
-        // Agora aguarda clique no Confirmar para prosseguir
+        if (srFormPendingConfirm) { srFormPendingConfirm = false; onSRFormConfirm(); }
       }
       if (msg.type === 'sr-overlay-created') {
         // overlay criado — usuário redimensiona no canvas, depois clica Confirmar
       }
       if (msg.type === 'sr-area-confirmed') {
         pendingSRItem = msg.item;
-        el('btnSRFormConfirm').disabled = false;
+        onSRFormConfirm();
+      }
+      if (msg.type === 'sr-overlay-missing') {
+        srOverlayCreated = false;
       }
       if (msg.type === 'feedback') {
         const sb = el('statusBar');
@@ -1653,7 +1690,7 @@ el('chkSemToque').onchange = () => {
         const varData = tabVariationsData.find(v => v.id === currentTabVariationId);
         if (varData) {
           varData.tab_order = [...tabOrderData];
-          varData.sem_tabulacao = el('chkSemToque').checked ? false : el('chkSemTabulacao').checked;
+          varData.sem_tabulacao = el('chkSemToque').checked || el('chkSemTabulacao').checked;
         }
       }
 
@@ -1752,6 +1789,8 @@ el('chkSemToque').onchange = () => {
 
     let pendingSRTipo = null;
     let pendingSRItem = null;
+    let srFormPendingConfirm = false;
+    let srOverlayCreated = false;
 
     function openSRForm() {
       leitorState.pendingSROrigem = null;
@@ -1772,6 +1811,7 @@ el('chkSemToque').onchange = () => {
       el('srRolePreview').style.display = 'none';
       el('srInsertFields').innerHTML = '';
       el('srInsertFields').style.display = 'none';
+      el('srCanvasHint').style.display = 'none';
       el('btnSRFormConfirm').disabled = true;
       el('srFormView').classList.add('open');
     }
@@ -1788,12 +1828,13 @@ el('chkSemToque').onchange = () => {
       el('srFormView').classList.remove('open');
       pendingSRTipo = null;
       pendingSRItem = null;
+      srOverlayCreated = false;
       parent.postMessage({ pluginMessage: { type: 'cancel-sr-area' } }, '*');
     }
 
     function populateSRTipoConector() {
       const anotacao = el('srSelectTipoAnotacao').value;
-      const select = el('srSelectTipoConector');
+const select = el('srSelectTipoConector');
       select.innerHTML = '<option value="">Selecione...</option>';
       select.disabled = !anotacao;
       el('srSelectRole').disabled = true;
@@ -1874,12 +1915,16 @@ el('chkSemToque').onchange = () => {
         if (role) {
           let previewHtml = '';
           let insertHtml = '';
+          const selectedPlatforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(c => c.value);
+          const isWeb = selectedPlatforms.includes('Web');
+          const isMobile = selectedPlatforms.some(p => ['Mobile iOS','Mobile Android','Mobile Cross-Platform'].includes(p));
+
           const fields = [
             { label: 'Descrição', key: 'descricao' },
-            { label: 'Nome Acessível', key: 'nomeAcessivel' },
-            { label: 'Código Web', key: 'codigoWeb' },
-            { label: 'Código React Native', key: 'codigoRN' }
+            { label: 'Nome Acessível', key: 'nomeAcessivel' }
           ];
+          if (isWeb) fields.push({ label: 'Código Web', key: 'codigoWeb' });
+          if (isMobile) fields.push({ label: 'Código React Native', key: 'codigoRN' });
 
           const checkPlaceholder = (text) => {
             if (!text) return false;
@@ -1918,12 +1963,13 @@ el('chkSemToque').onchange = () => {
 
       el('btnSRFormConfirm').disabled = !roleNome;
       
-      // Inicia captura no canvas se necessário
       const anotacao = el('srSelectTipoAnotacao').value;
-      if (anotacao === 'simples' || anotacao === 'combinado') {
-        parent.postMessage({ pluginMessage: { type: 'get-sr-selection', tipo: anotacao } }, '*');
-      } else if (anotacao === 'agrupamento') {
-        parent.postMessage({ pluginMessage: { type: 'create-sr-overlay', tipoConnector: conector, roleNome: roleNome } }, '*');
+      if (!!roleNome && (anotacao === 'simples' || anotacao === 'agrupamento')) {
+        el('srCanvasHintTitle').textContent = 'Selecione no canvas';
+        el('srCanvasHintBody').textContent  = anotacao === 'agrupamento' ? 'Selecione os elementos que deseja agrupar e clique em Confirmar.' : 'Escolha o elemento e clique em Confirmar.';
+        el('srCanvasHint').style.display = 'flex';
+      } else {
+        el('srCanvasHint').style.display = 'none';
       }
     }
 
@@ -1935,13 +1981,26 @@ el('chkSemToque').onchange = () => {
 
       if (!roleNome) { alert('Selecione um role.'); return; }
       
-      // Se for agrupamento, precisa confirmar a área antes
-      if (anotacao === 'agrupamento' && !pendingSRItem) {
-        parent.postMessage({ pluginMessage: { type: 'confirm-sr-area' } }, '*');
-        return;
+      if (anotacao === 'agrupamento') {
+        if (!srOverlayCreated) {
+          srOverlayCreated = true;
+          el('srCanvasHintTitle').textContent = 'Ajuste o retângulo no canvas';
+          el('srCanvasHintBody').textContent = 'Redimensione a área e clique em Confirmar.';
+          el('srCanvasHint').style.display = 'flex';
+          parent.postMessage({ pluginMessage: { type: 'create-sr-overlay', tipoConnector: conector, roleNome: roleNome } }, '*');
+          return;
+        }
+        if (!pendingSRItem) {
+          parent.postMessage({ pluginMessage: { type: 'confirm-sr-area' } }, '*');
+          return;
+        }
       }
 
-      if (!pendingSRItem) { alert('Selecione um elemento no canvas.'); return; }
+      if (!pendingSRItem) {
+        srFormPendingConfirm = true;
+        parent.postMessage({ pluginMessage: { type: 'get-sr-selection', tipo: anotacao } }, '*');
+        return;
+      }
 
       const finalConector = Object.assign({}, pendingSRItem, {
         roleNome: roleNome,

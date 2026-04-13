@@ -65,7 +65,7 @@ function computeLetrasTS(conectores: any[]): string[] {
   let counter = 0;
   let decCounter = 0;
   for (const item of conectores) {
-    if ((item.tipoConnector || '').toLowerCase().includes('decorat')) {
+    if ((item.tipo || '').toLowerCase().includes('decorat')) {
       letras.push('✦' + (decCounter > 0 ? String(decCounter + 1) : ''));
       decCounter++;
     } else {
@@ -92,6 +92,16 @@ figma.ui.onmessage = async (msg) => {
     if (!handoffAtivo) {
       figma.ui.postMessage({ type: 'feedback', message: '⚠️ Handoff não encontrado.' });
       return;
+    }
+    const handoffNode = await figma.getNodeByIdAsync(handoffAtivo.id);
+    if (!handoffNode) {
+      handoffAtivo = null;
+      componentePrincipalAtivo = null;
+      tentarTravarContexto(figma.currentPage.selection);
+      if (!handoffAtivo) {
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Template não encontrado. Selecione o novo template e o componente no canvas.' });
+        return;
+      }
     }
 
     // Limpa todos os frames de overlay de área de toque da página
@@ -272,15 +282,21 @@ figma.ui.onmessage = async (msg) => {
                   await fillField('Nome Acessivel', subs.nomeAcessivel || c.nomeAcessivel || '');
 
                   // Notas de Código — regra de plataforma
-                  let notasValue = '';
+                  let notasFinal = '';
                   const web = c.codigoWeb || '';
                   const rn  = c.codigoRN  || '';
                   const webOk = web && web.toUpperCase() !== 'NA';
                   const rnOk  = rn  && rn.toUpperCase()  !== 'NA';
-                  if (isWeb && isMobile)      notasValue = [webOk ? web : '', rnOk ? rn : ''].filter(Boolean).join('\n');
-                  else if (isWeb)             notasValue = webOk ? web : '';
-                  else if (isMobile)          notasValue = rnOk  ? rn  : '';
-                  await fillField('Notas', subs.codigoWeb || subs.codigoRN || notasValue);
+                  if (isWeb && isMobile) {
+                    const webVal = subs.codigoWeb || (webOk ? web : '');
+                    const rnVal  = subs.codigoRN  || (rnOk  ? rn  : '');
+                    notasFinal = [webVal, rnVal].filter(Boolean).join('\n');
+                  } else if (isWeb) {
+                    notasFinal = subs.codigoWeb || (webOk ? web : '');
+                  } else if (isMobile) {
+                    notasFinal = subs.codigoRN || (rnOk ? rn : '');
+                  }
+                  await fillField('Notas', notasFinal);
                 }
                 model.visible = false;
               }
@@ -288,8 +304,191 @@ figma.ui.onmessage = async (msg) => {
           }
         }
 
+        // --- LEITOR DE TELA: PREVIEW ---
+        if (!msg.sem_leitor && Array.isArray(msg.conectores_leitor) && msg.conectores_leitor.length > 0 && componentePrincipalAtivo) {
+          const srSection = Array.from(workingFrame.children).find((n: SceneNode) => n.name === 'screen reader') as FrameNode | null;
+          if (srSection) {
+            const srImageFrame = Array.from(srSection.children).find((n: SceneNode) => n.name === 'image') as FrameNode | null;
+            if (srImageFrame) {
+              const modelConector    = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Conectores')   as InstanceNode | undefined;
+              const modelAgrupamento = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Agrupamento')  as InstanceNode | undefined;
+              const modelItemNumber  = Array.from(srImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
+              const tagSR            = Array.from(srImageFrame.children).find(n => n.name === 'tag');
+
+              const keepSR = new Set<BaseNode>([tagSR, modelConector, modelAgrupamento, modelItemNumber].filter(Boolean) as BaseNode[]);
+              Array.from(srImageFrame.children).filter(n => !keepSR.has(n)).forEach(n => n.remove());
+
+              // WCAG contrast check
+              try {
+                const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+                const relativeLuminance = (r: number, g: number, b: number) =>
+                  0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+                const wcagContrast = (l1: number, l2: number) => {
+                  const lighter = Math.max(l1, l2);
+                  const darker  = Math.min(l1, l2);
+                  return (lighter + 0.05) / (darker + 0.05);
+                };
+                const bgFillsSR   = Array.isArray(srImageFrame.fills) ? srImageFrame.fills as Paint[] : [];
+                const compFillsSR = Array.isArray((componentePrincipalAtivo as FrameNode).fills)
+                  ? (componentePrincipalAtivo as FrameNode).fills as Paint[] : [];
+                const bgFillSR   = bgFillsSR.find(f => f.type === 'SOLID') as SolidPaint | undefined;
+                const compFillSR = compFillsSR.find(f => f.type === 'SOLID') as SolidPaint | undefined;
+                let needsSwapSR = true;
+                if (bgFillSR && compFillSR) {
+                  const bgL   = relativeLuminance(bgFillSR.color.r,   bgFillSR.color.g,   bgFillSR.color.b);
+                  const compL = relativeLuminance(compFillSR.color.r, compFillSR.color.g, compFillSR.color.b);
+                  needsSwapSR = wcagContrast(bgL, compL) < 3;
+                }
+                const figmaVarsSR = (figma as any).variables;
+                const allVarsSR: any[] = figmaVarsSR ? await figmaVarsSR.getLocalVariablesAsync() : [];
+                if (needsSwapSR) {
+                  const cardBg2VarSR = allVarsSR.find((v: any) => v.name.toLowerCase().includes('card background 2'));
+                  if (cardBg2VarSR && figmaVarsSR) {
+                    srImageFrame.fills = [figmaVarsSR.setBoundVariableForPaint(
+                      { type: 'SOLID', color: { r: 0, g: 0, b: 0 } }, 'color', cardBg2VarSR
+                    )];
+                  } else {
+                    srImageFrame.fills = [{ type: 'SOLID', color: { r: 0.16, g: 0.20, b: 0.29 } }];
+                  }
+                }
+              } catch (e) {
+                figma.ui.postMessage({ type: 'feedback', message: `❌ Erro no bloco de cor (leitor preview): ${e}` });
+              }
+
+              const SR_PAD_TOP  = 40;
+              const SR_PAD_LEFT = 160;
+              const SR_PAD_SIDE = 24;
+              const srX = SR_PAD_LEFT;
+              const srY = SR_PAD_TOP;
+
+              const compCloneSR = componentePrincipalAtivo.clone();
+              compCloneSR.x = srX;
+              compCloneSR.y = srY;
+              srImageFrame.insertChild(0, compCloneSR);
+
+              // Item Number acima do componente
+              if (modelItemNumber) {
+                const numCloneSR = modelItemNumber.clone();
+                numCloneSR.visible = true;
+                const numTextsSR = numCloneSR.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+                const numTextSR = numTextsSR.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numTextsSR[0] || null;
+                if (numTextSR) await updateText(numTextSR as TextNode, '1');
+                if (numCloneSR.type === 'INSTANCE') {
+                  try { (numCloneSR as InstanceNode).setProperties({ 'connector': 'Off' }); } catch(e) {}
+                }
+                numCloneSR.x = srX;
+                numCloneSR.y = srY - numCloneSR.height - 4;
+                srImageFrame.appendChild(numCloneSR);
+              }
+
+              // Conectores e agrupamentos sobre o componente
+              const letrasLT = computeLetrasTS(msg.conectores_leitor);
+              const compW = (compCloneSR as FrameNode).width  || componentePrincipalAtivo.width;
+              const compH = (compCloneSR as FrameNode).height || componentePrincipalAtivo.height;
+
+              for (let i = 0; i < msg.conectores_leitor.length; i++) {
+                const c = msg.conectores_leitor[i];
+                const letra = letrasLT[i];
+
+                if (c.tipoAnotacao === 'agrupamento' && modelAgrupamento) {
+                  const agClone = modelAgrupamento.clone();
+                  agClone.visible = true;
+                  agClone.resize(c.width || 80, c.height || 40);
+                  agClone.x = srX + (c.relX || 0);
+                  agClone.y = srY + (c.relY || 0);
+                  // Orientação calculada por posição: lado com mais espaço disponível
+                  const spaceRight  = compW - ((c.relX || 0) + (c.width  || 80));
+                  const spaceLeft   = c.relX  || 0;
+                  const spaceBottom = compH - ((c.relY || 0) + (c.height || 40));
+                  const spaceTop    = c.relY  || 0;
+                  // Badge vai para o lado onde o box está mais próximo da borda do componente
+                  // (menor espaço = borda do box alinhada com borda do componente = badge fica fora)
+                  const minSpace = Math.min(spaceRight, spaceLeft, spaceBottom, spaceTop);
+                  const orientacao = minSpace === spaceRight  ? 'direita'
+                                   : minSpace === spaceLeft   ? 'esquerda'
+                                   : minSpace === spaceBottom ? 'inferior'
+                                   : 'superior';
+                  try { agClone.setProperties({ 'orientação': orientacao, 'letra': letra }); } catch(e) {}
+                  srImageFrame.appendChild(agClone);
+                } else if (modelConector) {
+                  const conClone = modelConector.clone();
+                  conClone.visible = true;
+                  srImageFrame.appendChild(conClone);
+                  const t = (c.tipo || '').toLowerCase();
+                  let tipoVariante = 'função valor rótulos';
+                  if (t.includes('decorat'))                                                          tipoVariante = 'elementos decorativos';
+                  else if (t.includes('marco') || t.includes('naveg'))                                tipoVariante = 'marcos de navegação';
+                  else if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel')) tipoVariante = 'nível de título';
+                  else if (t.includes('infor') || t.includes('adicional'))                            tipoVariante = 'informações adicionais';
+                  // Calcular lado mais próximo do componente
+                  const distLeft   = c.relX || 0;
+                  const distRight  = compW - ((c.relX || 0) + (c.width || 20));
+                  const distTop    = c.relY || 0;
+                  const distBottom = compH - ((c.relY || 0) + (c.height || 20));
+                  const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+                  const lado = minDist === distLeft   ? 'esquerda'
+                             : minDist === distRight  ? 'direita'
+                             : minDist === distTop    ? 'superior'
+                             : 'inferior';
+                  const conectorProp = lado;
+                  console.log('[LT preview] conector', i, 'c.tipo=', c.tipo, '| t=', t, '| tipoVariante=', tipoVariante, '| nodeType=', conClone.type, '| lado=', lado, '| conectorProp=', conectorProp);
+                  try {
+                    (conClone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': conectorProp });
+                    console.log('[LT preview] setProperties OK');
+                  } catch(e) {
+                    console.log('[LT preview] setProperties ERRO:', e);
+                  }
+                  // Redimensionar conector para que a linha alcance exatamente o elemento anotado
+                  const BADGE_SIZE = 32; // tamanho aproximado do badge circular
+                  const OUT_GAP    = 8;  // gap entre badge e borda do componente
+                  const relX = c.relX || 0;
+                  const relY = c.relY || 0;
+                  const elW  = c.width  || 0;
+                  const elH  = c.height || 0;
+                  let lineLength = 80; // fallback
+                  if (lado === 'esquerda') {
+                    lineLength = OUT_GAP + relX;
+                    try { conClone.resize(BADGE_SIZE + lineLength, conClone.height); } catch(e) {}
+                    conClone.x = srX - OUT_GAP - BADGE_SIZE;
+                    conClone.y = srY + relY + elH / 2 - conClone.height / 2;
+                  } else if (lado === 'direita') {
+                    lineLength = OUT_GAP + (compW - relX - elW);
+                    try { conClone.resize(BADGE_SIZE + lineLength, conClone.height); } catch(e) {}
+                    conClone.x = srX + relX + elW;
+                    conClone.y = srY + relY + elH / 2 - conClone.height / 2;
+                  } else if (lado === 'superior') {
+                    lineLength = OUT_GAP + relY;
+                    try { conClone.resize(conClone.width, BADGE_SIZE + lineLength); } catch(e) {}
+                    conClone.x = srX + relX + elW / 2 - conClone.width / 2;
+                    conClone.y = srY - OUT_GAP - BADGE_SIZE;
+                  } else { // inferior
+                    lineLength = OUT_GAP + (compH - relY - elH);
+                    try { conClone.resize(conClone.width, BADGE_SIZE + lineLength); } catch(e) {}
+                    conClone.x = srX + relX + elW / 2 - conClone.width / 2;
+                    conClone.y = srY + relY + elH;
+                  }
+                  console.log('[LT preview] lado=', lado, '| lineLength=', lineLength, '| x=', conClone.x, 'y=', conClone.y);
+                  const numNodeCon = conClone.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
+                  if (numNodeCon) await updateText(numNodeCon, letra);
+                }
+              }
+
+              // Resize para caber o componente
+              srImageFrame.resize(
+                Math.max(srImageFrame.width, srX + compW + SR_PAD_SIDE),
+                Math.max(srImageFrame.height, srY + compH + SR_PAD_SIDE)
+              );
+
+              // Deletar modelos
+              if (modelConector)    modelConector.remove();
+              if (modelAgrupamento) modelAgrupamento.remove();
+              if (modelItemNumber)  modelItemNumber.remove();
+            }
+          }
+        }
+
         // --- PREENCHER IMAGE (PREVIEW) ---
-        const imageFrame = workingFrame.findOne((n: SceneNode) => n.name === 'image') as FrameNode | null;
+        const imageFrame = workingFrame.findOne((n: SceneNode) => n.name === 'image' && n.parent?.name !== 'screen reader') as FrameNode | null;
         const variacoes: any[] = msg.variacoes || [];
         const variacoesComAreas = variacoes.filter((v: any) => !v.sem_toque && v.areas_toque && v.areas_toque.length > 0);
 
@@ -610,6 +809,8 @@ figma.ui.onmessage = async (msg) => {
         sem_toque: msg.sem_toque || false,
         variacoes: msg.variacoes || [],
         variacoes_tabulacao: msg.variacoes_tabulacao || [],
+        conectores_leitor: msg.conectores_leitor || [],
+        sem_leitor: msg.sem_leitor || false,
       });
       dbInstance.setPluginData("a11y-component-data", dataToSave);
     }
@@ -626,6 +827,8 @@ figma.ui.onmessage = async (msg) => {
           sem_toque: msg.sem_toque || false,
           variacoes: msg.variacoes || [],
           variacoes_tabulacao: msg.variacoes_tabulacao || [],
+          conectores_leitor: msg.conectores_leitor || [],
+          sem_leitor: msg.sem_leitor || false,
         });
         dataNode.setPluginData('a11y-component-data', dataToSave);
       }
@@ -640,6 +843,8 @@ figma.ui.onmessage = async (msg) => {
       sem_toque: msg.sem_toque || false,
       variacoes: msg.variacoes || [],
       variacoes_tabulacao: msg.variacoes_tabulacao || [],
+      conectores_leitor: msg.conectores_leitor || [],
+      sem_leitor: msg.sem_leitor || false,
     });
     workingFrame.setPluginData("a11y-component-data", dataToSaveDirect);
 
@@ -972,6 +1177,11 @@ figma.ui.onmessage = async (msg) => {
     dados.sem_leitor = msg.sem_leitor ?? false;
     dbInstance.setPluginData('a11y-component-data', JSON.stringify(dados));
     (handoffAtivo as any).setPluginData('a11y-component-data', JSON.stringify(dados));
+
+    if (componentePrincipalAtivo) {
+      const dataNode = await resolveDataNode(componentePrincipalAtivo);
+      if (dataNode) dataNode.setPluginData('a11y-component-data', JSON.stringify(dados));
+    }
   }
 
   else if (msg.type === 'get-sr-selection') {
@@ -1005,35 +1215,53 @@ figma.ui.onmessage = async (msg) => {
   }
 
   else if (msg.type === 'create-sr-overlay') {
+    console.log('[SR] create-sr-overlay recebido', { tipoConnector: msg.tipoConnector, roleNome: msg.roleNome });
+    console.log('[SR] componentePrincipalAtivo:', componentePrincipalAtivo?.name ?? 'NULL');
+    console.log('[SR] componenteTabVariacaoAtivo:', componenteTabVariacaoAtivo?.name ?? 'NULL');
     const comp = (componenteTabVariacaoAtivo ?? componentePrincipalAtivo) as SceneNode & { absoluteTransform: Transform };
-    if (!comp) return;
-    const t = ((msg.tipoConnector as string) || '').toLowerCase();
-    let cor: RGB;
-    if (t.includes('decorat'))                                        cor = { r: 0.898, g: 0.224, b: 0.208 }; // vermelho
-    else if (t.includes('marco') || t.includes('naveg'))              cor = { r: 0.984, g: 0.45,  b: 0.42  }; // salmão
-    else if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel'))
-                                                                      cor = { r: 0.263, g: 0.627, b: 0.278 }; // verde
-    else if (t.includes('infor') || t.includes('adicional'))          cor = { r: 0.984, g: 0.549, b: 0     }; // laranja
-    else                                                              cor = { r: 0.976, g: 0.659, b: 0.145 }; // amarelo (padrão)
-    const nome = (msg.roleNome as string) || 'conector';
-    const overlay = figma.createFrame();
-    overlay.name = `[A11Y Leitor] ${nome}`;
-    overlay.resize(100, 60);
-    overlay.x = comp.absoluteTransform[0][2];
-    overlay.y = comp.absoluteTransform[1][2];
-    overlay.fills = [{ type: 'SOLID', color: cor, opacity: 0.25 } as SolidPaint];
-    overlay.strokes = [{ type: 'SOLID', color: cor } as SolidPaint];
-    overlay.strokeWeight = 2;
-    figma.currentPage.appendChild(overlay);
-    figma.currentPage.selection = [overlay];
-    figma.viewport.scrollAndZoomIntoView([overlay]);
-    tempSROverlayId = overlay.id;
-    figma.ui.postMessage({ type: 'sr-overlay-created' });
+    if (!comp) {
+      console.log('[SR] FALHOU: comp é null');
+      figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo. Reabra o plugin com o componente selecionado.' });
+      return;
+    }
+    console.log('[SR] comp encontrado:', comp.name, 'absoluteTransform x:', comp.absoluteTransform[0][2], 'y:', comp.absoluteTransform[1][2]);
+    try {
+      const t = ((msg.tipoConnector as string) || '').toLowerCase();
+      let cor: RGB;
+      if (t.includes('decorat'))                                        cor = { r: 0.898, g: 0.224, b: 0.208 }; // vermelho
+      else if (t.includes('marco') || t.includes('naveg'))              cor = { r: 0.984, g: 0.45,  b: 0.42  }; // salmão
+      else if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel'))
+                                                                        cor = { r: 0.263, g: 0.627, b: 0.278 }; // verde
+      else if (t.includes('infor') || t.includes('adicional'))          cor = { r: 0.984, g: 0.549, b: 0     }; // laranja
+      else                                                              cor = { r: 0.976, g: 0.659, b: 0.145 }; // amarelo (padrão)
+      const nome = (msg.roleNome as string) || 'conector';
+      const overlay = figma.createFrame();
+      overlay.name = `[A11Y Leitor] ${nome}`;
+      overlay.resize(100, 60);
+      overlay.x = comp.absoluteTransform[0][2];
+      overlay.y = comp.absoluteTransform[1][2];
+      overlay.fills = [{ type: 'SOLID', color: cor, opacity: 0.25 } as SolidPaint];
+      overlay.strokes = [{ type: 'SOLID', color: cor } as SolidPaint];
+      overlay.strokeWeight = 2;
+      figma.currentPage.appendChild(overlay);
+      figma.currentPage.selection = [overlay];
+      figma.viewport.scrollAndZoomIntoView([overlay]);
+      tempSROverlayId = overlay.id;
+      console.log('[SR] overlay criado, id:', overlay.id, 'x:', overlay.x, 'y:', overlay.y);
+      figma.ui.postMessage({ type: 'sr-overlay-created' });
+    } catch (e) {
+      console.log('[SR] ERRO ao criar overlay:', e);
+      figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar frame de anotação: ${e}` });
+    }
   }
 
   else if (msg.type === 'confirm-sr-area') {
-    if (!tempSROverlayId) return;
-    const overlay = figma.getNodeById(tempSROverlayId) as FrameNode | null;
+    if (!tempSROverlayId) {
+      figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum frame de área encontrado. Clique em Confirmar para criar o frame primeiro.' });
+      figma.ui.postMessage({ type: 'sr-overlay-missing' });
+      return;
+    }
+    const overlay = await figma.getNodeByIdAsync(tempSROverlayId) as FrameNode | null;
     if (!overlay) return;
     const comp = (componenteTabVariacaoAtivo ?? componentePrincipalAtivo) as SceneNode & { absoluteTransform: Transform };
     if (!comp) return;
@@ -1053,7 +1281,7 @@ figma.ui.onmessage = async (msg) => {
 
   else if (msg.type === 'cancel-sr-area') {
     if (tempSROverlayId) {
-      const node = figma.getNodeById(tempSROverlayId);
+      const node = await figma.getNodeByIdAsync(tempSROverlayId);
       if (node) node.remove();
       tempSROverlayId = null;
     }
@@ -1202,7 +1430,7 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
 
   let masterList: { mapeamento: string; descricao: string; utilizacao: string }[] = [];
   let rolesList: ReturnType<typeof parseRolesList> = [];
-  let componentData: any = { plataformas: [], zoom: [], mapeamentos: [], areas_toque: [], sem_toque: false, variacoes: [], variacoes_tabulacao: [] };
+  let componentData: any = { plataformas: [], zoom: [], mapeamentos: [], areas_toque: [], sem_toque: false, variacoes: [], variacoes_tabulacao: [], conectores_leitor: [], sem_leitor: false };
   let dataLoadedFromDb = false;
 
   // Tenta ler dados salvos diretamente no frame do handoff
