@@ -211,9 +211,9 @@
 </head>
 <body>
   <div id="emptyState" class="overlay-state">
-    <div style="font-size: 32px; margin-bottom: 16px;">🖱️</div>
-    <div style="font-weight: 700;">Aguardando seleção</div>
-    <div style="font-size: 12px; color: #666; margin-top: 8px;">Selecione o Componente e o Template Handoff.</div>
+    <div id="emptyStateIcon" style="font-size: 32px; margin-bottom: 16px;">🖱️</div>
+    <div id="emptyStateTitle" style="font-weight: 700;">Aguardando seleção</div>
+    <div id="emptyStateBody" style="font-size: 12px; color: #666; margin-top: 8px;">Selecione o Componente e o Template Handoff.</div>
   </div>
 
   <div id="mainContainer" style="display:none; height: 100%; flex-direction: column;">
@@ -254,8 +254,9 @@
         <div class="card">
           <div class="card-header"><div class="card-title-group">▼ Mapeamento de Teclado</div><span id="tBadge" class="count-badge">0</span></div>
           <div class="card-body">
-            <div class="search-wrapper">
-              <input type="text" id="tInput" placeholder="Buscar tecla ou ação..." autocomplete="off">
+            <label class='checkbox-field'><input type='checkbox' id='chkSemTeclado' onchange='updateSummaryCards()'><span>Sem mapeamento de teclado</span></label>
+            <div class='search-wrapper'>
+              <input type='text' id='tInput' placeholder='Buscar tecla ou ação...' autocomplete='off'>
               <div id="tRes" class="searchResults"></div>
             </div>
             <div id="tList"></div>
@@ -265,6 +266,7 @@
         <div class="card">
           <div class="card-header"><div class="card-title-group">▼ Mapeamento de Gestos</div><span id="gBadge" class="count-badge">0</span></div>
           <div class="card-body">
+            <label class='checkbox-field'><input type='checkbox' id='chkSemGesto' onchange='updateSummaryCards()'><span>Sem mapeamento de gestos</span></label>
             <div class="search-wrapper">
               <input type="text" id="gInput" placeholder="Buscar gesto ou ação..." autocomplete="off">
               <div id="gRes" class="searchResults"></div>
@@ -567,11 +569,11 @@
             </div>
 
             <div id="srInsertFields" style="display:none; flex-direction:column; gap:8px;"></div>
-            <div id="srRolePreview" style="display:none; flex-direction:column; gap:8px;"></div>
             <div id='srCanvasHint' style='display:none; background:#EEF0FA; border-radius:8px; padding:14px 16px; text-align:center; flex-direction:column; gap:4px;'>
               <div id='srCanvasHintTitle' style='font-size:12px; font-weight:700; color:#2D4496;'>Selecione no canvas</div>
               <div id='srCanvasHintBody' style='font-size:11px; color:#666;'>Escolha o elemento e clique em Confirmar.</div>
             </div>
+            <div id="srRolePreview" style="display:none; flex-direction:column; gap:4px; background:#F5F5F5; border-radius:8px; padding:10px;"></div>
           </div>
 
           <div class="touch-actions" style="padding:12px 16px;border-top:1px solid #EEE;flex-shrink:0;">
@@ -854,6 +856,9 @@
         sb.classList.remove('success', 'error');
         sb.classList.add('loading');
         sb.textContent = '⏳ Carregando dados...';
+        const icon = el('emptyStateIcon'); if (icon) icon.textContent = '⏳';
+        const title = el('emptyStateTitle'); if (title) title.textContent = 'Carregando...';
+        const body = el('emptyStateBody'); if (body) body.textContent = 'Lendo dados do template.';
       }
       if (msg.type === 'setup-ui') {
         el('statusBar').classList.remove('loading', 'success', 'error');
@@ -923,7 +928,17 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         closeTouchForm();
       }
       if (msg.type === 'sr-selection-result') {
-        if (msg.error) { pendingSRItem = null; srFormPendingConfirm = false; return; }
+        if (msg.error) {
+          pendingSRItem = null; srFormPendingConfirm = false;
+          const hint = el('srCanvasHint');
+          if (hint) {
+            el('srCanvasHintTitle').textContent = '⚠ Nenhum elemento selecionado';
+            el('srCanvasHintBody').textContent = 'Selecione um elemento no canvas e clique em Confirmar.';
+            hint.style.display = 'flex';
+            hint.style.background = '#FFF3E0';
+          }
+          return;
+        }
         pendingSRItem = msg.item;
         if (srFormPendingConfirm) { srFormPendingConfirm = false; onSRFormConfirm(); }
       }
@@ -1707,6 +1722,8 @@ el('chkSemToque').onchange = () => {
         componentName: el('compName').textContent,
         variacoes: variationsData,
         variacoes_tabulacao: tabVariationsData,
+        sem_teclado: el('chkSemTeclado')?.checked || false,
+        sem_gesto: el('chkSemGesto')?.checked || false,
         runTitulo: el('settingRunTitulo').checked,
         runMapeamento: el('settingRunMapeamento').checked,
         runTouch: el('settingRunTouch').checked,
@@ -1714,26 +1731,25 @@ el('chkSemToque').onchange = () => {
         runLeitor: el('settingRunLeitor').checked,
         runZoom: el('settingRunZoom').checked,
       }}, '*');
-    };
-
+      };
     // ==========================================
     // LEITOR DE TELA
     // ==========================================
 
     function computeLetras(conectores) {
       const letras = [];
-      let lastTipo = null;
-      let counter = 0;
       let decCounter = 0;
       const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const typeCounters = {};
       for (const item of conectores) {
         if (item.tipo === 'decorativo') {
           letras.push('✦' + (decCounter > 0 ? (decCounter + 1) : ''));
           decCounter++;
         } else {
-          if (item.tipo !== lastTipo) { counter = 0; lastTipo = item.tipo; }
-          letras.push(ALPHA[counter % 26]);
-          counter++;
+          const tipo = item.tipo || '';
+          if (typeCounters[tipo] === undefined) typeCounters[tipo] = 0;
+          letras.push(ALPHA[typeCounters[tipo] % 26]);
+          typeCounters[tipo]++;
         }
       }
       return letras;
@@ -1774,6 +1790,7 @@ el('chkSemToque').onchange = () => {
       el('chk-sem-leitor').checked = leitorState.semLeitor;
       el('leitor-list-container').style.display = leitorState.semLeitor ? 'none' : '';
       el('leitorFooter').style.display = leitorState.semLeitor ? 'none' : 'flex';
+      updateSummaryCards();
     }
 
     function onSemLeitorChange() {
@@ -1891,6 +1908,30 @@ const select = el('srSelectTipoConector');
       });
     }
 
+    function onSRUpdatePreview(roles, specSelect) {
+      const previewDiv = el('srRolePreview');
+      const insertDiv = el('srInsertFields');
+      previewDiv.innerHTML = ''; insertDiv.innerHTML = '';
+      previewDiv.style.display = 'none'; insertDiv.style.display = 'none';
+      const role = roles.find(r => r.especificacao === specSelect.value) || roles[0];
+      if (!role) return;
+      const selectedPlatforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(c => c.value);
+      const isWeb = selectedPlatforms.includes('Web');
+      const isMobile = selectedPlatforms.some(p => ['Mobile iOS','Mobile Android','Mobile Cross-Platform'].includes(p));
+      const checkPlaceholder = (text) => { if (!text) return false; const t = text.toLowerCase(); return t.includes('insira') || t.includes('digite') || (text.startsWith('[') && text.endsWith(']')); };
+      const fields = [{ label: 'Descrição', key: 'descricao' }, { label: 'Nome Acessível', key: 'nomeAcessivel' }];
+      if (isWeb) fields.push({ label: 'Código Web', key: 'codigoWeb' });
+      if (isMobile) fields.push({ label: 'Código React Native', key: 'codigoRN' });
+      let previewHtml = ''; let insertHtml = '';
+      fields.forEach(f => {
+        const val = role[f.key];
+        if (val && val !== 'NA' && val !== 'N/A') previewHtml += `<div style="background:#F5F5F5;border-radius:6px;padding:8px 10px;"><div style="font-size:9px;font-weight:700;color:#999;text-transform:uppercase;margin-bottom:2px;">${f.label}</div><div style="font-size:12px;color:#333;word-break:break-word;">${val}</div></div>`;
+        if (checkPlaceholder(val)) insertHtml += `<div class="sr-field-row"><label>${f.label}</label><input type="text" class="touch-form-input" placeholder="${val}" data-field="${f.key}"></div>`;
+      });
+      if (previewHtml) { previewDiv.innerHTML = previewHtml; previewDiv.style.display = 'flex'; }
+      if (insertHtml) { insertDiv.innerHTML = insertHtml; insertDiv.style.display = 'flex'; }
+    }
+
     function onSRRoleChange() {
       const roleNome = el('srSelectRole').value;
       const conector = el('srSelectTipoConector').value;
@@ -1907,6 +1948,7 @@ const select = el('srSelectTipoConector');
           specSelect.appendChild(opt);
         });
         specRow.style.display = 'flex';
+        specSelect.onchange = () => onSRUpdatePreview(roles, specSelect);
       } else {
         specRow.style.display = 'none';
       }
@@ -1920,7 +1962,7 @@ const select = el('srSelectTipoConector');
       insertDiv.style.display = 'none';
 
       if (roleNome && conector) {
-        const role = roles[0]; // Pega o primeiro como base para preview
+        const role = roles.find(r => r.especificacao === specSelect.value) || roles[0]; // Pega o primeiro como base para preview
         if (role) {
           let previewHtml = '';
           let insertHtml = '';
@@ -2031,7 +2073,7 @@ const select = el('srSelectTipoConector');
         finalConector.substituicoes = subs;
       }
 
-      const roleData = leitorState.rolesList.find(r => r.nome === roleNome && r.tipoConnector === conector);
+      const roleData = leitorState.rolesList.find(r => r.nome === roleNome && r.tipoConnector === conector && r.especificacao === espec) || leitorState.rolesList.find(r => r.nome === roleNome && r.tipoConnector === conector);
       if (roleData) {
         finalConector.descricao     = roleData.descricao     || '';
         finalConector.observacao    = roleData.observacao    || '';
@@ -2118,6 +2160,9 @@ const select = el('srSelectTipoConector');
         </div>
       </div>
     </div>
+  </div>
+</body>
+</html> </div>
   </div>
 </body>
 </html>

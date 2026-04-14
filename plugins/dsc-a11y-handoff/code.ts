@@ -59,19 +59,19 @@ async function updateText(node: TextNode, value: string) {
 }
 
 function computeLetrasTS(conectores: any[]): string[] {
-  const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const letras: string[] = [];
-  let lastTipo: string | null = null;
-  let counter = 0;
   let decCounter = 0;
+  const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const typeCounters: Record<string, number> = {};
   for (const item of conectores) {
-    if ((item.tipo || '').toLowerCase().includes('decorat')) {
+    if (item.tipo === 'decorativo') {
       letras.push('✦' + (decCounter > 0 ? String(decCounter + 1) : ''));
       decCounter++;
     } else {
-      if (item.tipo !== lastTipo) { counter = 0; lastTipo = item.tipo; }
-      letras.push(ALPHA[counter % 26]);
-      counter++;
+      const tipo: string = item.tipo || '';
+      if (typeCounters[tipo] === undefined) typeCounters[tipo] = 0;
+      letras.push(ALPHA[typeCounters[tipo] % 26]);
+      typeCounters[tipo]++;
     }
   }
   return letras;
@@ -177,11 +177,18 @@ figma.ui.onmessage = async (msg) => {
       const gestureItems = msg.mapeamentos.filter((m: any) => m.utilizacao.toLowerCase().includes("gesto"));
 
       figma.ui.postMessage({ type: 'feedback', message: '⏳ Gerando tabela de teclado...' });
-      if (allTableContainers.length >= 1) await fillTable(allTableContainers[0], keyboardItems);
-
+      if (msg.sem_teclado) {
+        if (allTableContainers.length >= 1) allTableContainers[0].visible = false;
+      } else {
+        if (allTableContainers.length >= 1) await fillTable(allTableContainers[0], keyboardItems);
+      }
       figma.ui.postMessage({ type: 'feedback', message: '⏳ Gerando tabela de gestos...' });
-      if (allTableContainers.length >= 2) await fillTable(allTableContainers[1], gestureItems);
-    }
+      if (msg.sem_gesto) {
+        if (allTableContainers.length >= 2) allTableContainers[1].visible = false;
+      } else {
+        if (allTableContainers.length >= 2) await fillTable(allTableContainers[1], gestureItems);
+      }
+      }
 
     // --- PARTE B: LOGICA DE DADOS (SALVAR NO PLUGIN DATA) ---
     figma.ui.postMessage({ type: 'feedback', message: '⏳ Salvando dados...' });
@@ -260,6 +267,38 @@ figma.ui.onmessage = async (msg) => {
                 const isMobile = (msg.plataformas as string[])?.some((p: string) => ['Mobile iOS','Mobile Android','Mobile Cross-Platform'].includes(p)) ?? false;
                 const letras   = computeLetrasTS(msg.conectores_leitor);
 
+                const normalize = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+                const hideIfEmpty = (cloneNode: FrameNode, fieldName: string, value: string) => {
+                  const val = (value || '').trim().toUpperCase();
+                  if (val === '' || val === 'NA') {
+                    let frame = cloneNode.findOne((n: SceneNode) => n.name === fieldName) as FrameNode | null;
+                    if (!frame) {
+                      const normTarget = normalize(fieldName);
+                      frame = cloneNode.findOne((n: SceneNode) => normalize(n.name) === normTarget) as FrameNode | null;
+                    }
+                    if (frame) frame.visible = false;
+                  }
+                };
+                const fillField = async (cloneNode: FrameNode, fieldName: string, value: string) => {
+                  if (!value || value.trim() === '' || value.trim().toUpperCase() === 'NA') return;
+                  let frame = cloneNode.findOne((n: SceneNode) => n.name === fieldName) as FrameNode | null;
+                  if (!frame) {
+                    const normTarget = normalize(fieldName);
+                    frame = cloneNode.findOne((n: SceneNode) => normalize(n.name) === normTarget) as FrameNode | null;
+                  }
+                  if (!frame) {
+                    const layerNames = Array.from(cloneNode.findAll(() => true)).map(n => n.name).join(', ');
+                    console.warn(`[LT specs] fillField: campo "${fieldName}" não encontrado. Camadas: ${layerNames}`);
+                    return;
+                  }
+                  const txt = frame.findOne((n: SceneNode) => n.name === 'Text' && n.type === 'TEXT') as TextNode | null;
+                  if (!txt) {
+                    console.warn(`[LT specs] fillField: nó Text não encontrado dentro de "${frame.name}"`);
+                    return;
+                  }
+                  await updateText(txt, value);
+                };
+
                 for (let i = 0; i < msg.conectores_leitor.length; i++) {
                   const c      = msg.conectores_leitor[i];
                   const letra  = letras[i];
@@ -270,18 +309,27 @@ figma.ui.onmessage = async (msg) => {
                   allBoxes.appendChild(clone);
 
                   // FIX 1 — Preencher cabeçalho 'Element name'
-                  const elementName = clone.findOne((n: SceneNode) => n.name === 'Element name') as FrameNode | null;
+                  let elementName = clone.findOne((n: SceneNode) => n.name === 'Element name') as FrameNode | null;
+                  if (!elementName) {
+                    elementName = clone.findOne((n: SceneNode) => normalize(n.name) === 'element name') as FrameNode | null;
+                  }
                   if (elementName) {
-                    const numberFrame = elementName.findOne((n: SceneNode) => n.name === 'Number') as FrameNode | null;
+                    let numberFrame = elementName.findOne((n: SceneNode) => n.name === 'Number') as FrameNode | null;
+                    if (!numberFrame) numberFrame = elementName.findOne((n: SceneNode) => normalize(n.name) === 'number') as FrameNode | null;
                     if (numberFrame) {
-                      const numberText = numberFrame.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
+                      let numberText = numberFrame.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
+                      if (!numberText) numberText = numberFrame.findOne((n: SceneNode) => n.type === 'TEXT') as TextNode | null;
                       if (numberText) await updateText(numberText, letra);
                     }
-                    const titleText = elementName.findOne((n: SceneNode) => n.name === 'Title' && n.type === 'TEXT') as TextNode | null;
+                    let titleText = elementName.findOne((n: SceneNode) => n.name === 'Title' && n.type === 'TEXT') as TextNode | null;
+                    if (!titleText) titleText = elementName.findOne((n: SceneNode) => normalize(n.name) === 'title' && n.type === 'TEXT') as TextNode | null;
                     if (titleText) {
                       const titleVal = (c.variacao && c.variacao.trim() !== '') ? c.variacao : 'Default';
                       await updateText(titleText, titleVal);
                     }
+                  } else {
+                    const layerNames = Array.from(clone.children).map((n: SceneNode) => n.name).join(', ');
+                    console.warn('[LT specs] Element name nao encontrado. Filhos do clone:', layerNames);
                   }
 
                   // letra
@@ -291,53 +339,18 @@ figma.ui.onmessage = async (msg) => {
                     if (numTxt) await updateText(numTxt, letra);
                   }
 
-                  // helper para preencher subframe > Text
-                  const normalize = (s: string) => s.toLowerCase()
-                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 
-                  const hideIfEmpty = (fieldName: string, value: string) => {
-                    const val = (value || '').trim().toUpperCase();
-                    if (val === '' || val === 'NA') {
-                      let frame = clone.findOne((n: SceneNode) => n.name === fieldName) as FrameNode | null;
-                      if (!frame) {
-                        const normTarget = normalize(fieldName);
-                        frame = clone.findOne((n: SceneNode) => normalize(n.name) === normTarget) as FrameNode | null;
-                      }
-                      if (frame) frame.visible = false;
-                    }
-                  };
 
-                  const fillField = async (fieldName: string, value: string) => {
-                    if (!value || value.trim() === '' || value.trim().toUpperCase() === 'NA') return;
-                    // Tentativa 1: match exato
-                    let frame = clone.findOne((n: SceneNode) => n.name === fieldName) as FrameNode | null;
-                    // Tentativa 2: match normalizado (sem acento, lowercase)
-                    if (!frame) {
-                      const normTarget = normalize(fieldName);
-                      frame = clone.findOne((n: SceneNode) => normalize(n.name) === normTarget) as FrameNode | null;
-                    }
-                    if (!frame) {
-                      const layerNames = Array.from(clone.findAll(() => true)).map(n => n.name).join(', ');
-                      console.warn(`[LT specs] fillField: campo "${fieldName}" não encontrado. Camadas disponíveis: ${layerNames}`);
-                      return;
-                    }
-                    const txt = frame.findOne((n: SceneNode) => n.name === 'Text' && n.type === 'TEXT') as TextNode | null;
-                    if (!txt) {
-                      console.warn(`[LT specs] fillField: nó Text não encontrado dentro de "${frame.name}"`);
-                      return;
-                    }
-                    await updateText(txt, value);
-                  };
 
-                  await fillField('Descrição',     subs.descricao     || c.descricao     || '');
-                  
+                  await fillField(clone, 'Descrição',     subs.descricao     || c.descricao     || '');
+
                   const obsVal = c.observacao || '';
-                  hideIfEmpty('Observacoes', obsVal);
-                  await fillField('Observacoes', obsVal);
+                  hideIfEmpty(clone, 'Observacoes', obsVal);
+                  await fillField(clone, 'Observacoes', obsVal);
 
                   const nomeAccVal = subs.nomeAcessivel || c.nomeAcessivel || '';
-                  hideIfEmpty('Nome Acessivel', nomeAccVal);
-                  await fillField('Nome Acessivel', nomeAccVal);
+                  hideIfEmpty(clone, 'Nome Acessivel', nomeAccVal);
+                  await fillField(clone, 'Nome Acessivel', nomeAccVal);
 
                   // Notas de Código — regra de plataforma
                   let notasFinal = '';
@@ -354,8 +367,8 @@ figma.ui.onmessage = async (msg) => {
                   } else if (isMobile) {
                     notasFinal = subs.codigoRN || (rnOk ? rn : '');
                   }
-                  hideIfEmpty('Notas', notasFinal);
-                  await fillField('Notas', notasFinal);
+                  hideIfEmpty(clone, 'Notas', notasFinal);
+                  await fillField(clone, 'Notas', notasFinal);
 
                   // FIX 3 — Connector tipo no box de specs
                   if (conectorNode && conectorNode.type === 'INSTANCE') {
@@ -1454,7 +1467,7 @@ function parseMasterList(dbInstance: InstanceNode): { mapeamento: string; descri
     const descricao  = textos[1].characters.trim();
     const utilizacao = textos[2].characters.trim();
 
-    // Pula linha de cabeçalho (valores idênticos ao nome da coluna)
+    // Pula linha de cabeçalho (valores idênt1icos ao nome da coluna)
     if (
       mapeamento.toLowerCase() === "mapeamento" ||
       descricao.toLowerCase()  === "descrição"  ||
