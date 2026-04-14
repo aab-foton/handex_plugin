@@ -124,9 +124,11 @@ figma.ui.onmessage = async (msg) => {
 
     // --- PARTE A: LOGICA VISUAL (ESCREVER NAS TABELAS) ---
     // Procuramos o Nome do Componente dentro do workingFrame
-    const compNameNode = workingFrame.findOne((n: SceneNode) => n.name === "Component Name" && n.type === "TEXT") as TextNode;
-    if (compNameNode) {
-      await updateText(compNameNode, msg.componentName || componentePrincipalAtivo?.name || "Componente");
+    if (msg.runTitulo !== false) {
+      const compNameNode = workingFrame.findOne((n: SceneNode) => n.name === "Component Name" && n.type === "TEXT") as TextNode;
+      if (compNameNode) {
+        await updateText(compNameNode, msg.componentName || componentePrincipalAtivo?.name || "Componente");
+      }
     }
 
     // Localizamos os containers das tabelas
@@ -169,21 +171,24 @@ figma.ui.onmessage = async (msg) => {
       rowModel.visible = false;
     };
 
-    figma.ui.postMessage({ type: 'feedback', message: '⏳ Preenchendo nome do componente...' });
-    const keyboardItems = msg.mapeamentos.filter((m: any) => m.utilizacao.toLowerCase().includes("teclado"));
-    const gestureItems = msg.mapeamentos.filter((m: any) => m.utilizacao.toLowerCase().includes("gesto"));
+    if (msg.runMapeamento !== false) {
+      figma.ui.postMessage({ type: 'feedback', message: '⏳ Preenchendo nome do componente...' });
+      const keyboardItems = msg.mapeamentos.filter((m: any) => m.utilizacao.toLowerCase().includes("teclado"));
+      const gestureItems = msg.mapeamentos.filter((m: any) => m.utilizacao.toLowerCase().includes("gesto"));
 
-    figma.ui.postMessage({ type: 'feedback', message: '⏳ Gerando tabela de teclado...' });
-    if (allTableContainers.length >= 1) await fillTable(allTableContainers[0], keyboardItems);
+      figma.ui.postMessage({ type: 'feedback', message: '⏳ Gerando tabela de teclado...' });
+      if (allTableContainers.length >= 1) await fillTable(allTableContainers[0], keyboardItems);
 
-    figma.ui.postMessage({ type: 'feedback', message: '⏳ Gerando tabela de gestos...' });
-    if (allTableContainers.length >= 2) await fillTable(allTableContainers[1], gestureItems);
+      figma.ui.postMessage({ type: 'feedback', message: '⏳ Gerando tabela de gestos...' });
+      if (allTableContainers.length >= 2) await fillTable(allTableContainers[1], gestureItems);
+    }
 
     // --- PARTE B: LOGICA DE DADOS (SALVAR NO PLUGIN DATA) ---
     figma.ui.postMessage({ type: 'feedback', message: '⏳ Salvando dados...' });
     
     // --- ÁREA DE TOQUE (NOVO) ---
-    const todasAsAreas: any[] = [];
+    if (msg.runTouch !== false) {
+      const todasAsAreas: any[] = [];
     if (msg.variacoes && msg.variacoes.length > 0) {
       for (const v of msg.variacoes) {
         if (!v.sem_toque && v.areas_toque) {
@@ -237,9 +242,12 @@ figma.ui.onmessage = async (msg) => {
             rowModel.visible = false;
           }
         }
+      }
+    }
+    }
 
-        // --- LEITOR DE TELA: SPECS ---
-        if (!msg.sem_leitor && Array.isArray(msg.conectores_leitor) && msg.conectores_leitor.length > 0) {
+    // --- LEITOR DE TELA: SPECS ---
+    if (msg.runLeitor !== false && !msg.sem_leitor && Array.isArray(msg.conectores_leitor) && msg.conectores_leitor.length > 0) {
           const srSection = workingFrame.findOne((n: SceneNode) => n.name === 'screen reader') as FrameNode | null;
           if (srSection) {
             const allBoxes = srSection.findOne((n: SceneNode) => n.name === 'all boxes') as FrameNode | null;
@@ -261,25 +269,75 @@ figma.ui.onmessage = async (msg) => {
                   clone.visible = true;
                   allBoxes.appendChild(clone);
 
+                  // FIX 1 — Preencher cabeçalho 'Element name'
+                  const elementName = clone.findOne((n: SceneNode) => n.name === 'Element name') as FrameNode | null;
+                  if (elementName) {
+                    const numberFrame = elementName.findOne((n: SceneNode) => n.name === 'Number') as FrameNode | null;
+                    if (numberFrame) {
+                      const numberText = numberFrame.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
+                      if (numberText) await updateText(numberText, letra);
+                    }
+                    const titleText = elementName.findOne((n: SceneNode) => n.name === 'Title' && n.type === 'TEXT') as TextNode | null;
+                    if (titleText) {
+                      const titleVal = (c.variacao && c.variacao.trim() !== '') ? c.variacao : 'Default';
+                      await updateText(titleText, titleVal);
+                    }
+                  }
+
                   // letra
-                  const conectorNode = clone.findOne((n: SceneNode) => n.name === '[a11y] Conectores') as FrameNode | null;
-                  if (conectorNode) {
-                    const numTxt = conectorNode.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
+                  const conectorNode = clone.findOne((n: SceneNode) => n.name === '[a11y] Conectores') as SceneNode | null;
+                  if (conectorNode && 'findOne' in conectorNode) {
+                    const numTxt = (conectorNode as FrameNode).findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
                     if (numTxt) await updateText(numTxt, letra);
                   }
 
                   // helper para preencher subframe > Text
+                  const normalize = (s: string) => s.toLowerCase()
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+                  const hideIfEmpty = (fieldName: string, value: string) => {
+                    const val = (value || '').trim().toUpperCase();
+                    if (val === '' || val === 'NA') {
+                      let frame = clone.findOne((n: SceneNode) => n.name === fieldName) as FrameNode | null;
+                      if (!frame) {
+                        const normTarget = normalize(fieldName);
+                        frame = clone.findOne((n: SceneNode) => normalize(n.name) === normTarget) as FrameNode | null;
+                      }
+                      if (frame) frame.visible = false;
+                    }
+                  };
+
                   const fillField = async (fieldName: string, value: string) => {
                     if (!value || value.trim() === '' || value.trim().toUpperCase() === 'NA') return;
-                    const frame = clone.findOne((n: SceneNode) => n.name === fieldName) as FrameNode | null;
-                    if (!frame) return;
+                    // Tentativa 1: match exato
+                    let frame = clone.findOne((n: SceneNode) => n.name === fieldName) as FrameNode | null;
+                    // Tentativa 2: match normalizado (sem acento, lowercase)
+                    if (!frame) {
+                      const normTarget = normalize(fieldName);
+                      frame = clone.findOne((n: SceneNode) => normalize(n.name) === normTarget) as FrameNode | null;
+                    }
+                    if (!frame) {
+                      const layerNames = Array.from(clone.findAll(() => true)).map(n => n.name).join(', ');
+                      console.warn(`[LT specs] fillField: campo "${fieldName}" não encontrado. Camadas disponíveis: ${layerNames}`);
+                      return;
+                    }
                     const txt = frame.findOne((n: SceneNode) => n.name === 'Text' && n.type === 'TEXT') as TextNode | null;
-                    if (txt) await updateText(txt, value);
+                    if (!txt) {
+                      console.warn(`[LT specs] fillField: nó Text não encontrado dentro de "${frame.name}"`);
+                      return;
+                    }
+                    await updateText(txt, value);
                   };
 
                   await fillField('Descrição',     subs.descricao     || c.descricao     || '');
-                  await fillField('Observacoes',   c.observacao || '');
-                  await fillField('Nome Acessivel', subs.nomeAcessivel || c.nomeAcessivel || '');
+                  
+                  const obsVal = c.observacao || '';
+                  hideIfEmpty('Observacoes', obsVal);
+                  await fillField('Observacoes', obsVal);
+
+                  const nomeAccVal = subs.nomeAcessivel || c.nomeAcessivel || '';
+                  hideIfEmpty('Nome Acessivel', nomeAccVal);
+                  await fillField('Nome Acessivel', nomeAccVal);
 
                   // Notas de Código — regra de plataforma
                   let notasFinal = '';
@@ -296,8 +354,27 @@ figma.ui.onmessage = async (msg) => {
                   } else if (isMobile) {
                     notasFinal = subs.codigoRN || (rnOk ? rn : '');
                   }
+                  hideIfEmpty('Notas', notasFinal);
                   await fillField('Notas', notasFinal);
+
+                  // FIX 3 — Connector tipo no box de specs
+                  if (conectorNode && conectorNode.type === 'INSTANCE') {
+                    const t = (c.tipo || '').toLowerCase();
+                    let tipoVariante = 'função valor rótulos';
+                    if (t.includes('decorat'))                                                          tipoVariante = 'elementos decorativos';
+                    else if (t.includes('marco') || t.includes('naveg'))                                tipoVariante = 'marcos de navegação';
+                    else if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel')) tipoVariante = 'nível de título';
+                    else if (t.includes('infor') || t.includes('adicional'))                            tipoVariante = 'informações adicionais';
+                    
+                    try { (conectorNode as InstanceNode).setProperties({ 'tipo': tipoVariante }); } catch(e) {}
+                  }
                 }
+
+                // FIX 4 — Auto layout do allBoxes
+                allBoxes.layoutMode = 'VERTICAL';
+                allBoxes.primaryAxisSizingMode = 'AUTO';
+                allBoxes.itemSpacing = 16;
+
                 model.visible = false;
               }
             }
@@ -305,7 +382,7 @@ figma.ui.onmessage = async (msg) => {
         }
 
         // --- LEITOR DE TELA: PREVIEW ---
-        if (!msg.sem_leitor && Array.isArray(msg.conectores_leitor) && msg.conectores_leitor.length > 0 && componentePrincipalAtivo) {
+        if (msg.runLeitor !== false && !msg.sem_leitor && Array.isArray(msg.conectores_leitor) && msg.conectores_leitor.length > 0 && componentePrincipalAtivo) {
           const srSection = Array.from(workingFrame.children).find((n: SceneNode) => n.name === 'screen reader') as FrameNode | null;
           if (srSection) {
             const srImageFrame = Array.from(srSection.children).find((n: SceneNode) => n.name === 'image') as FrameNode | null;
@@ -340,7 +417,8 @@ figma.ui.onmessage = async (msg) => {
                   needsSwapSR = wcagContrast(bgL, compL) < 3;
                 }
                 const figmaVarsSR = (figma as any).variables;
-                const allVarsSR: any[] = figmaVarsSR ? await figmaVarsSR.getLocalVariablesAsync() : [];
+                let allVarsSR: any[] = [];
+                if (figmaVarsSR) { allVarsSR = await figmaVarsSR.getLocalVariablesAsync(); }
                 if (needsSwapSR) {
                   const cardBg2VarSR = allVarsSR.find((v: any) => v.name.toLowerCase().includes('card background 2'));
                   if (cardBg2VarSR && figmaVarsSR) {
@@ -488,7 +566,8 @@ figma.ui.onmessage = async (msg) => {
         }
 
         // --- PREENCHER IMAGE (PREVIEW) ---
-        const imageFrame = workingFrame.findOne((n: SceneNode) => n.name === 'image' && n.parent?.name !== 'screen reader') as FrameNode | null;
+        if (msg.runTouch !== false) {
+          const imageFrame = workingFrame.findOne((n: SceneNode) => n.name === 'image' && n.parent?.name !== 'screen reader') as FrameNode | null;
         const variacoes: any[] = msg.variacoes || [];
         const variacoesComAreas = variacoes.filter((v: any) => !v.sem_toque && v.areas_toque && v.areas_toque.length > 0);
 
@@ -536,7 +615,8 @@ figma.ui.onmessage = async (msg) => {
             }
 
             const figmaVars = (figma as any).variables;
-            const allVars: any[] = figmaVars ? await figmaVars.getLocalVariablesAsync() : [];
+            let allVars: any[] = [];
+            if (figmaVars) { allVars = await figmaVars.getLocalVariablesAsync(); }
             if (needsSwap) {
               const cardBg2Var = allVars.find((v: any) => v.name.toLowerCase().includes('card background 2'));
               if (cardBg2Var && figmaVars) {
@@ -629,12 +709,11 @@ figma.ui.onmessage = async (msg) => {
           if (modelItemNumber)   modelItemNumber.visible   = false;
         }
       }
-    }
 
     // --- FOCUS ORDER: VISUAL NO TEMPLATE (VARIAÇÕES DE TABULAÇÃO) ---
     const variacoesTab: any[] = msg.variacoes_tabulacao || [];
     const variacoesTabComItems = variacoesTab.filter((v: any) => !v.sem_tabulacao && v.tab_order && v.tab_order.length > 0);
-    if (variacoesTabComItems.length > 0 && componentePrincipalAtivo) {
+    if (msg.runTab !== false && variacoesTabComItems.length > 0 && componentePrincipalAtivo) {
       // Busca apenas filhos diretos do workingFrame para evitar pegar 'focus order' aninhado na legenda
       const focusOrderContainer = Array.from(workingFrame.children).find(n => n.name === 'focus order') as FrameNode | null;
       if (focusOrderContainer) {
@@ -670,7 +749,8 @@ figma.ui.onmessage = async (msg) => {
               needsSwapTab = wcagContrast(bgL, compL) < 3;
             }
             const figmaVarsTab = (figma as any).variables;
-            const allVarsTab: any[] = figmaVarsTab ? await figmaVarsTab.getLocalVariablesAsync() : [];
+            let allVarsTab: any[] = [];
+            if (figmaVarsTab) { allVarsTab = await figmaVarsTab.getLocalVariablesAsync(); }
             if (needsSwapTab) {
               const cardBg2VarTab = allVarsTab.find((v: any) => v.name.toLowerCase().includes('card background 2'));
               if (cardBg2VarTab && figmaVarsTab) {
@@ -1461,13 +1541,15 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
   }
 
 
+    const settingSync = await figma.clientStorage.getAsync('a11y-setting-sync') ?? true;
     figma.ui.postMessage({ type: 'setup-ui',
-    masterList,
-    rolesList,
-    componentData,
-    componentName: componentePrincipalAtivo?.name
-      || (handoff.name.startsWith('[A11Y Handoff]') ? handoff.name.slice('[A11Y Handoff]'.length).trim() : null)
-      || "Componente",
-    isGenerated: handoff.type !== "INSTANCE"
-  });
-}
+      masterList,
+      rolesList,
+      componentData,
+      componentName: componentePrincipalAtivo?.name
+        || (handoff.name.startsWith('[A11Y Handoff]') ? handoff.name.slice('[A11Y Handoff]'.length).trim() : null)
+        || "Componente",
+      isGenerated: handoff.type !== "INSTANCE",
+      settings: { syncTemplate: settingSync }
+    });
+    }

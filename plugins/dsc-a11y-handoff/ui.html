@@ -16,10 +16,11 @@
     .tab-panel { display: none; padding: 16px; }
     .tab-panel.active { display: block; }
     .card { background: #fff; border: 1px solid #E5E5E5; border-radius: 12px; margin-bottom: 16px; position: relative; z-index: 1; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    #settingsOverlay .card { margin-bottom: 0; }
     .card.active-card { z-index: 9999 !important; }
-    .card-header { padding: 12px 16px; background: #FDFDFD; border-bottom: 1px solid #F0F0F0; display: flex; align-items: center; justify-content: space-between; cursor: pointer; border-radius: 12px 12px 0 0; }
+    .card-header { padding: 8px 16px; background: #FDFDFD; border-bottom: 1px solid #F0F0F0; display: flex; align-items: center; justify-content: space-between; cursor: pointer; border-radius: 12px 12px 0 0; }
     .card-title-group { font-size: 12px; font-weight: 700; color: #2D4496; display: flex; align-items: center; gap: 6px; }
-    .card-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow: visible; }
+    .card-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow: visible; }
     .selected-item-card { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #E5E5E5; padding: 10px 12px; border-radius: 8px; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
     .item-content { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .item-title { font-weight: 600; color: #1a1a1a; }
@@ -647,6 +648,7 @@
   <script>
     const el = (id) => document.getElementById(id);
     let masterList = [];
+    let _settingSync = true;
     let currentData = [];
     let isGenerated = false;
 
@@ -1077,7 +1079,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
 
       function openSettings() {
     // Restaura setting salvo (aqui o elemento já existe no DOM)
-    el('settingSyncTemplate').checked = localStorage.getItem('a11y-setting-sync') !== '0';
+    el('settingSyncTemplate').checked = _settingSync;
 
     const count = masterList.length;
     el('settingsMasterCount').textContent = count > 0
@@ -1088,7 +1090,8 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
 
   function closeSettings() {
     el('settingsOverlay').classList.remove('open');
-    localStorage.setItem('a11y-setting-sync', el('settingSyncTemplate').checked ? '1' : '0');
+    _settingSync = el('settingSyncTemplate').checked;
+parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-sync', value: _settingSync } }, '*');
   }
 
   function reloadTemplateData() {
@@ -1704,6 +1707,12 @@ el('chkSemToque').onchange = () => {
         componentName: el('compName').textContent,
         variacoes: variationsData,
         variacoes_tabulacao: tabVariationsData,
+        runTitulo: el('settingRunTitulo').checked,
+        runMapeamento: el('settingRunMapeamento').checked,
+        runTouch: el('settingRunTouch').checked,
+        runTab: el('settingRunTab').checked,
+        runLeitor: el('settingRunLeitor').checked,
+        runZoom: el('settingRunZoom').checked,
       }}, '*');
     };
 
@@ -2045,7 +2054,7 @@ const select = el('srSelectTipoConector');
       <span style='font-size:18px;font-weight:700;color:#1a1a1a;'>Configurações</span>
       <button onclick='closeSettings()' style='background:none;border:none;cursor:pointer;font-size:18px;color:#999;'>×</button>
     </div>
-    <div style='padding:20px;display:flex;flex-direction:column;gap:20px;'>
+    <div style='padding:12px;display:flex;flex-direction:column;gap:8px;'>
 
       <div style='font-size:11px;font-weight:700;color:#999;letter-spacing:0.08em;'>COMPORTAMENTO</div>
 
@@ -2063,20 +2072,51 @@ const select = el('srSelectTipoConector');
         </div>
       </div>
 
+      <div class='card'>
+        <div class='card-body'>
+          <div style='display:flex;align-items:center;gap:10px;margin-bottom:12px;'>
+            <span style='font-size:18px;background:#EEF0F8;border-radius:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;'>🔗</span>
+            <span style='font-size:14px;font-weight:600;'>Preservação de edições</span>
+          </div>
+          <label class='checkbox-field'>
+            <input type='checkbox' id='settingPreserveEdits' checked>
+            <span>Manter alterações manuais</span>
+          </label>
+          <p style='font-size:11px;color:#999;margin-top:4px;margin-left:26px;'>Ao atualizar, preserva textos editados manualmente no handoff (descrições, observações, notas). Alterações de posicionamento, conectores e estrutura são sempre regeradas com os dados atuais do plugin.</p>
+        </div>
+      </div>
+
+      <div class='card'>
+        <div class='card-body'>
+          <div style='display:flex;align-items:center;gap:8px;margin-bottom:16px;'>
+            <span style='font-size:18px;background:#EEF0F8;border-radius:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;'>≡</span>
+            <span style='font-size:14px;font-weight:600;'>Seções para atualizar</span>
+          </div>
+          <p style='font-size:11px;color:#999;margin-bottom:12px;'>Seções desmarcadas serão preservadas com todas as edições manuais.</p>
+          <div style='display:flex;flex-direction:column;gap:8px;'>
+            <label class='checkbox-field'><input type='checkbox' id='settingRunTitulo' checked><span>Título</span></label>
+            <label class='checkbox-field'><input type='checkbox' id='settingRunMapeamento' checked><span>Mapeamento de Teclado e Gestos</span></label>
+            <label class='checkbox-field'><input type='checkbox' id='settingRunTouch' checked><span>Área de Toque</span></label>
+            <label class='checkbox-field'><input type='checkbox' id='settingRunTab' checked><span>Ordem de Tabulação</span></label>
+            <label class='checkbox-field'><input type='checkbox' id='settingRunLeitor' checked><span>Leitor de Tela</span></label>
+            <label class='checkbox-field'><input type='checkbox' id='settingRunZoom' checked><span>Responsividade / Zoom</span></label>
+          </div>
+        </div>
+      </div>
+
       <div style='font-size:11px;font-weight:700;color:#999;letter-spacing:0.08em;margin-top:4px;'>DADOS DO TEMPLATE</div>
 
       <div class='card'>
         <div class='card-body'>
-          <div style='display:flex;align-items:center;gap:10px;margin-bottom:8px;'>
+          <div style='display:flex;align-items:center;gap:8px;margin-bottom:16px;'>
             <span style='font-size:18px;'>⌨</span>
             <span style='font-size:14px;font-weight:600;'>Teclado e Gestos</span>
           </div>
           <p style='font-size:12px;color:#666;margin-bottom:8px;'>Dados carregados automaticamente da camada <strong>plugin data</strong> no template.</p>
           <p id='settingsMasterCount' style='font-size:12px;color:#999;'>● Nenhum dado no template</p>
+          <button onclick='reloadTemplateData()' style='width:100%;padding:10px;border:1.5px solid #2D4496;border-radius:8px;background:none;color:#2D4496;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;'>↺ Recarregar dados do template</button>
         </div>
       </div>
-
-      <button onclick='reloadTemplateData()' style='width:100%;padding:14px;border:1.5px solid #2D4496;border-radius:8px;background:none;color:#2D4496;font-size:13px;font-weight:600;cursor:pointer;'>↺ Recarregar dados do template</button>
     </div>
   </div>
 </body>
