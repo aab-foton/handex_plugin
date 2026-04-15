@@ -171,3 +171,30 @@ Comportamento: quando marcado → oculta botão de adicionar + limpa lista + sal
 | Texto secundário | `#666` |
 | Texto placeholder | `#AAA` / `#BBB` |
 | Fundo app | `#FAFAFA` |
+
+---
+
+## Painéis com variações — Padrão 3 Views
+
+Painéis que suportam variantes parametrizadas do componente usam 3 views dentro do mesmo painel:
+
+| View | ID (prefixo) | Visível quando |
+|------|-------------|----------------|
+| Lista de variações | `{x}VariationListView` | Painel abre / usuário clica Voltar |
+| Main (conteúdo da variação ativa) | `{x}MainView` | Usuário seleciona uma variação |
+| Form nova variação | `{x}VariationFormView` | Usuário clica "+ Nova variante" |
+
+**CSS base:**
+```css
+#{x}VariationListView { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+#{x}VariationListView.hidden { display: none !important; }
+#{x}MainView { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+#{x}MainView.hidden { display: none !important; }
+#{x}VariationFormView { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #fff; flex-direction: column; z-index: 20; }
+#{x}VariationFormView.open { display: flex; }
+```
+
+**Regra de reset:** ao trocar de aba, chamar `show{X}View('list')` para resetar o painel para a lista.
+
+**Implementado em:** Tabulação (`tab`), Leitor de Tela (`sr`).
+

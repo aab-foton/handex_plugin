@@ -10,6 +10,7 @@ let tempTouchOverlayId: string | null = null;
 let tempSROverlayId: string | null = null;
 let componenteVariacaoAtivo: SceneNode | null = null;
 let componenteTabVariacaoAtivo: SceneNode | null = null;
+let componenteSRVariacaoAtivo: SceneNode | null = null;
 
 // ==========================================
 // 2. FUNÇÕES AUXILIARES
@@ -84,8 +85,12 @@ figma.ui.onmessage = async (msg) => {
   
   if (msg.type === 'load-initial-data') {
     const selection = figma.currentPage.selection;
-    if (selection.length > 0) tentarTravarContexto(selection);
-    else figma.ui.postMessage({ type: 'waiting-selection' });
+    if (selection.length > 0) {
+      figma.ui.postMessage({ type: 'start-loading' });
+      tentarTravarContexto(selection);
+    } else {
+      figma.ui.postMessage({ type: 'waiting-selection' });
+    }
   }
 
   else if (msg.type === 'run-handoff' || msg.type === 'update-handoff') {
@@ -254,18 +259,18 @@ figma.ui.onmessage = async (msg) => {
     }
 
     // --- LEITOR DE TELA: SPECS ---
-    if (msg.runLeitor !== false && !msg.sem_leitor && Array.isArray(msg.conectores_leitor) && msg.conectores_leitor.length > 0) {
+    const variacoesLTSpecsAll: any[] = msg.variacoes_leitor || [];
+    const variacoesLTSpecsComItems = variacoesLTSpecsAll.filter((v: any) => !v.sem_leitor && Array.isArray(v.conectores_leitor) && v.conectores_leitor.length > 0);
+
+    if (msg.runLeitor !== false && variacoesLTSpecsComItems.length > 0) {
           const srSection = workingFrame.findOne((n: SceneNode) => n.name === 'screen reader') as FrameNode | null;
           if (srSection) {
             const allBoxes = srSection.findOne((n: SceneNode) => n.name === 'all boxes') as FrameNode | null;
             if (allBoxes) {
               const model = Array.from(allBoxes.children).find(n => n.name === '[a11y] Box specs LT') as FrameNode | undefined;
               if (model) {
-                Array.from(allBoxes.children).filter(n => n !== model).forEach(n => n.remove());
-
                 const isWeb    = (msg.plataformas as string[])?.includes('Web') ?? false;
                 const isMobile = (msg.plataformas as string[])?.some((p: string) => ['Mobile iOS','Mobile Android','Mobile Cross-Platform'].includes(p)) ?? false;
-                const letras   = computeLetrasTS(msg.conectores_leitor);
 
                 const normalize = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
                 const hideIfEmpty = (cloneNode: FrameNode, fieldName: string, value: string) => {
@@ -287,115 +292,134 @@ figma.ui.onmessage = async (msg) => {
                     frame = cloneNode.findOne((n: SceneNode) => normalize(n.name) === normTarget) as FrameNode | null;
                   }
                   if (!frame) {
-                    const layerNames = Array.from(cloneNode.findAll(() => true)).map(n => n.name).join(', ');
-                    console.warn(`[LT specs] fillField: campo "${fieldName}" não encontrado. Camadas: ${layerNames}`);
+
                     return;
                   }
                   const txt = frame.findOne((n: SceneNode) => n.name === 'Text' && n.type === 'TEXT') as TextNode | null;
-                  if (!txt) {
-                    console.warn(`[LT specs] fillField: nó Text não encontrado dentro de "${frame.name}"`);
-                    return;
-                  }
+                  if (!txt) return;
                   await updateText(txt, value);
                 };
 
-                for (let i = 0; i < msg.conectores_leitor.length; i++) {
-                  const c      = msg.conectores_leitor[i];
-                  const letra  = letras[i];
-                  const subs   = c.substituicoes || {};
+                const contentFrame = allBoxes.parent as FrameNode | null;
+                // specsFrame é o pai de contentFrame (frame chamado 'specs')
+                const specsFrame = contentFrame?.parent as FrameNode | null;
 
-                  const clone  = model.clone();
-                  clone.visible = true;
-                  allBoxes.appendChild(clone);
-
-                  // FIX 1 — Preencher cabeçalho 'Element name'
-                  let elementName = clone.findOne((n: SceneNode) => n.name === 'Element name') as FrameNode | null;
-                  if (!elementName) {
-                    elementName = clone.findOne((n: SceneNode) => normalize(n.name) === 'element name') as FrameNode | null;
-                  }
-                  if (elementName) {
-                    let numberFrame = elementName.findOne((n: SceneNode) => n.name === 'Number') as FrameNode | null;
-                    if (!numberFrame) numberFrame = elementName.findOne((n: SceneNode) => normalize(n.name) === 'number') as FrameNode | null;
-                    if (numberFrame) {
-                      let numberText = numberFrame.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
-                      if (!numberText) numberText = numberFrame.findOne((n: SceneNode) => n.type === 'TEXT') as TextNode | null;
-                      if (numberText) await updateText(numberText, letra);
-                    }
-                    let titleText = elementName.findOne((n: SceneNode) => n.name === 'Title' && n.type === 'TEXT') as TextNode | null;
-                    if (!titleText) titleText = elementName.findOne((n: SceneNode) => normalize(n.name) === 'title' && n.type === 'TEXT') as TextNode | null;
-                    if (titleText) {
-                      const titleVal = (c.variacao && c.variacao.trim() !== '') ? c.variacao : 'Default';
-                      await updateText(titleText, titleVal);
-                    }
-                  } else {
-                    const layerNames = Array.from(clone.children).map((n: SceneNode) => n.name).join(', ');
-                    console.warn('[LT specs] Element name nao encontrado. Filhos do clone:', layerNames);
-                  }
-
-                  // letra
-                  const conectorNode = clone.findOne((n: SceneNode) => n.name === '[a11y] Conectores') as SceneNode | null;
-                  if (conectorNode && 'findOne' in conectorNode) {
-                    const numTxt = (conectorNode as FrameNode).findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
-                    if (numTxt) await updateText(numTxt, letra);
-                  }
-
-
-
-
-                  await fillField(clone, 'Descrição',     subs.descricao     || c.descricao     || '');
-
-                  const obsVal = c.observacao || '';
-                  hideIfEmpty(clone, 'Observacoes', obsVal);
-                  await fillField(clone, 'Observacoes', obsVal);
-
-                  const nomeAccVal = subs.nomeAcessivel || c.nomeAcessivel || '';
-                  hideIfEmpty(clone, 'Nome Acessivel', nomeAccVal);
-                  await fillField(clone, 'Nome Acessivel', nomeAccVal);
-
-                  // Notas de Código — regra de plataforma
-                  let notasFinal = '';
-                  const web = c.codigoWeb || '';
-                  const rn  = c.codigoRN  || '';
-                  const webOk = web && web.toUpperCase() !== 'NA';
-                  const rnOk  = rn  && rn.toUpperCase()  !== 'NA';
-                  if (isWeb && isMobile) {
-                    const webVal = subs.codigoWeb || (webOk ? web : '');
-                    const rnVal  = subs.codigoRN  || (rnOk  ? rn  : '');
-                    notasFinal = [webVal, rnVal].filter(Boolean).join('\n');
-                  } else if (isWeb) {
-                    notasFinal = subs.codigoWeb || (webOk ? web : '');
-                  } else if (isMobile) {
-                    notasFinal = subs.codigoRN || (rnOk ? rn : '');
-                  }
-                  hideIfEmpty(clone, 'Notas', notasFinal);
-                  await fillField(clone, 'Notas', notasFinal);
-
-                  // FIX 3 — Connector tipo no box de specs
-                  if (conectorNode && conectorNode.type === 'INSTANCE') {
-                    const t = (c.tipo || '').toLowerCase();
-                    let tipoVariante = 'função valor rótulos';
-                    if (t.includes('decorat'))                                                          tipoVariante = 'elementos decorativos';
-                    else if (t.includes('marco') || t.includes('naveg'))                                tipoVariante = 'marcos de navegação';
-                    else if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel')) tipoVariante = 'nível de título';
-                    else if (t.includes('infor') || t.includes('adicional'))                            tipoVariante = 'informações adicionais';
-                    
-                    try { (conectorNode as InstanceNode).setProperties({ 'tipo': tipoVariante }); } catch(e) {}
-                  }
+                // Remove clones de content de execuções anteriores (mantém contentFrame original)
+                if (specsFrame && contentFrame) {
+                  Array.from(specsFrame.children)
+                    .filter(n => n !== contentFrame && n.name === contentFrame.name)
+                    .forEach(n => n.remove());
                 }
 
-                // FIX 4 — Auto layout do allBoxes
-                allBoxes.layoutMode = 'VERTICAL';
-                allBoxes.primaryAxisSizingMode = 'AUTO';
-                allBoxes.itemSpacing = 16;
+                for (let varIdx = 0; varIdx < variacoesLTSpecsComItems.length; varIdx++) {
+                  const variacao = variacoesLTSpecsComItems[varIdx];
 
-                model.visible = false;
+                  // varIdx=0: usa contentFrame/allBoxes/model originais
+                  // varIdx>0: clona contentFrame e appenda em specsFrame
+                  let curContentFrame: FrameNode | null = contentFrame;
+                  let curAllBoxes: FrameNode = allBoxes;
+                  let curModel: FrameNode | undefined = model;
+
+                  if (varIdx > 0 && contentFrame && specsFrame) {
+                    const contentClone = contentFrame.clone() as FrameNode;
+                    specsFrame.appendChild(contentClone);
+                    curContentFrame = contentClone;
+                    curAllBoxes = contentClone.findOne((n: SceneNode) => n.name === 'all boxes') as FrameNode || curAllBoxes;
+                    curModel = Array.from(curAllBoxes.children).find(n => n.name === '[a11y] Box specs LT') as FrameNode | undefined || curModel;
+                  }
+
+                  // Limpa boxes existentes (mantém modelo)
+                  Array.from(curAllBoxes.children).filter(n => n !== curModel).forEach(n => n.remove());
+
+                  const letras = computeLetrasTS(variacao.conectores_leitor);
+
+                  // Preencher Element name no curContentFrame
+                  const normalize2 = normalize; // alias para usar dentro da closure
+                  const elementNameInFrame = curContentFrame?.findOne((n: SceneNode) =>
+                    n.name === 'Element name' || normalize2(n.name) === 'element name'
+                  ) as FrameNode | null;
+                  if (elementNameInFrame && 'findOne' in elementNameInFrame) {
+                    const enNumTxt = elementNameInFrame.findOne((n: SceneNode) =>
+                      n.type === 'TEXT' && (n.name === 'Number' || normalize2(n.name) === 'number')
+                    ) as TextNode | null;
+                    if (enNumTxt) await updateText(enNumTxt, String(varIdx + 1));
+                    const enTitleTxt = elementNameInFrame.findOne((n: SceneNode) =>
+                      n.type === 'TEXT' && n.name !== 'Number' && normalize2(n.name) !== 'number'
+                    ) as TextNode | null;
+                    if (enTitleTxt) await updateText(enTitleTxt, variacao.nome || 'Default');
+                  }
+
+                  // Gerar boxes para conectores desta variação
+                  for (let i = 0; i < variacao.conectores_leitor.length; i++) {
+                    const c     = variacao.conectores_leitor[i];
+                    const letra = letras[i];
+                    const subs  = c.substituicoes || {};
+
+                    const clone = (curModel || model).clone();
+                    clone.visible = true;
+                    curAllBoxes.appendChild(clone);
+
+                    const cloneNumTxt = clone.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
+                    if (cloneNumTxt) await updateText(cloneNumTxt, letra);
+
+                    const conectorNode = clone.findOne((n: SceneNode) => n.name === '[a11y] Conectores') as SceneNode | null;
+                    if (conectorNode && 'findOne' in conectorNode) {
+                      const numTxt = (conectorNode as FrameNode).findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
+                      if (numTxt) await updateText(numTxt, letra);
+                    }
+
+                    await fillField(clone, 'Descrição', subs.descricao || c.descricao || '');
+
+                    const obsVal = c.observacao || '';
+                    hideIfEmpty(clone, 'Observacoes', obsVal);
+                    await fillField(clone, 'Observacoes', obsVal);
+
+                    const nomeAccVal = subs.nomeAcessivel || c.nomeAcessivel || '';
+                    hideIfEmpty(clone, 'Nome Acessivel', nomeAccVal);
+                    await fillField(clone, 'Nome Acessivel', nomeAccVal);
+
+                    let notasFinal = '';
+                    const web = c.codigoWeb || '';
+                    const rn  = c.codigoRN  || '';
+                    const webOk = web && web.toUpperCase() !== 'NA';
+                    const rnOk  = rn  && rn.toUpperCase()  !== 'NA';
+                    if (isWeb && isMobile) {
+                      notasFinal = [(subs.codigoWeb || (webOk ? web : '')), (subs.codigoRN || (rnOk ? rn : ''))].filter(Boolean).join('\n');
+                    } else if (isWeb) {
+                      notasFinal = subs.codigoWeb || (webOk ? web : '');
+                    } else if (isMobile) {
+                      notasFinal = subs.codigoRN || (rnOk ? rn : '');
+                    }
+                    hideIfEmpty(clone, 'Notas', notasFinal);
+                    await fillField(clone, 'Notas', notasFinal);
+
+                    if (conectorNode && conectorNode.type === 'INSTANCE') {
+                      const t = (c.tipo || '').toLowerCase();
+                      let tipoVariante = 'função valor rótulos';
+                      if (t.includes('decorat'))                                                          tipoVariante = 'elementos decorativos';
+                      else if (t.includes('marco') || t.includes('naveg'))                                tipoVariante = 'marcos de navegação';
+                      else if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel')) tipoVariante = 'nível de título';
+                      else if (t.includes('infor') || t.includes('adicional'))                            tipoVariante = 'informações adicionais';
+                      try { (conectorNode as InstanceNode).setProperties({ 'tipo': tipoVariante }); } catch(e) {}
+                    }
+                  }
+
+                  // FIX 4 — Auto layout do curAllBoxes (por variação)
+                  curAllBoxes.layoutMode = 'VERTICAL';
+                  curAllBoxes.primaryAxisSizingMode = 'AUTO';
+                  curAllBoxes.itemSpacing = 16;
+                  if (curModel) curModel.visible = false;
+                }
               }
             }
           }
         }
 
         // --- LEITOR DE TELA: PREVIEW ---
-        if (msg.runLeitor !== false && !msg.sem_leitor && Array.isArray(msg.conectores_leitor) && msg.conectores_leitor.length > 0 && componentePrincipalAtivo) {
+        const variacoesLT: any[] = msg.variacoes_leitor || [];
+        const variacoesLTComItems = variacoesLT.filter((v: any) => !v.sem_leitor && v.conectores_leitor && v.conectores_leitor.length > 0);
+        
+        if (msg.runLeitor !== false && variacoesLTComItems.length > 0 && componentePrincipalAtivo) {
           const srSection = Array.from(workingFrame.children).find((n: SceneNode) => n.name === 'screen reader') as FrameNode | null;
           if (srSection) {
             const srImageFrame = Array.from(srSection.children).find((n: SceneNode) => n.name === 'image') as FrameNode | null;
@@ -446,131 +470,161 @@ figma.ui.onmessage = async (msg) => {
                 figma.ui.postMessage({ type: 'feedback', message: `❌ Erro no bloco de cor (leitor preview): ${e}` });
               }
 
-              const SR_PAD_TOP  = 40;
+              const SR_PAD_TOP  = 64;
               const SR_PAD_LEFT = 160;
               const SR_PAD_SIDE = 24;
-              const srX = SR_PAD_LEFT;
-              const srY = SR_PAD_TOP;
+              const SR_GAP_H    = 140;
+              const SR_GAP_V    = 60;
+              const SR_MAX_WIDTH = Math.max(srImageFrame.width, 800);
 
-              const compCloneSR = componentePrincipalAtivo.clone();
-              compCloneSR.x = srX;
-              compCloneSR.y = srY;
-              srImageFrame.insertChild(0, compCloneSR);
+              let currentX = SR_PAD_LEFT;
+              let currentY = SR_PAD_TOP;
+              let rowHeight = 0;
+              let globalItemCounter = 0;
+              let totalWidth = SR_PAD_LEFT;
+              let totalHeight = SR_PAD_TOP;
 
-              // Item Number acima do componente
-              if (modelItemNumber) {
-                const numCloneSR = modelItemNumber.clone();
-                numCloneSR.visible = true;
-                const numTextsSR = numCloneSR.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
-                const numTextSR = numTextsSR.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numTextsSR[0] || null;
-                if (numTextSR) await updateText(numTextSR as TextNode, '1');
-                if (numCloneSR.type === 'INSTANCE') {
-                  try { (numCloneSR as InstanceNode).setProperties({ 'connector': 'Off' }); } catch(e) {}
+              for (const variacao of variacoesLTComItems) {
+                // Obter clone do componente correto para esta variação
+                let compClone: SceneNode;
+                if (variacao.id === 'default') {
+                  compClone = componentePrincipalAtivo.clone();
+                } else if (variacao.instanceNodeId) {
+                  const srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null;
+                  compClone = srcNode ? srcNode.clone() : componentePrincipalAtivo.clone();
+                } else {
+                  compClone = componentePrincipalAtivo.clone();
+                  if (compClone.type === 'INSTANCE' && variacao.propriedades && Object.keys(variacao.propriedades).length > 0) {
+                    try { (compClone as InstanceNode).setProperties(variacao.propriedades); } catch (e) {
+                    }
+                  }
                 }
-                numCloneSR.x = srX;
-                numCloneSR.y = srY - numCloneSR.height - 4;
-                srImageFrame.appendChild(numCloneSR);
+
+                // Verificar se precisa quebrar linha
+                if (currentX > SR_PAD_LEFT && currentX + compClone.width > SR_MAX_WIDTH) {
+                  currentX = SR_PAD_LEFT;
+                  currentY += rowHeight + SR_GAP_V;
+                  rowHeight = 0;
+                }
+
+                compClone.x = currentX;
+                compClone.y = currentY;
+                srImageFrame.insertChild(0, compClone);
+
+                // [dsc-h] Item Number: 1 por instância do componente (global), connector 'off'
+                globalItemCounter++;
+                if (modelItemNumber) {
+                  const numClone = modelItemNumber.clone();
+                  numClone.visible = true;
+                  const numTexts = numClone.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+                  const numText = numTexts.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numTexts[0] || null;
+                  if (numText) await updateText(numText as TextNode, String(globalItemCounter));
+                  numClone.x = currentX;
+                  numClone.y = currentY - numClone.height - 4;
+                  srImageFrame.appendChild(numClone);
+                  if (numClone.type === 'INSTANCE') {
+                    try { (numClone as InstanceNode).setProperties({ 'connector': 'Off' }); } catch (e) {}
+                  }
+                }
+
+                // Conectores e agrupamentos sobre o componente
+                const conectores = variacao.conectores_leitor || [];
+                const letrasLT = computeLetrasTS(conectores);
+                const compW = (compClone as FrameNode).width  || componentePrincipalAtivo.width;
+                const compH = (compClone as FrameNode).height || componentePrincipalAtivo.height;
+
+                for (let i = 0; i < conectores.length; i++) {
+                  const c = conectores[i];
+                  const letra = letrasLT[i];
+
+                  if (c.tipoAnotacao === 'agrupamento' && modelAgrupamento) {
+                    const agClone = modelAgrupamento.clone();
+                    agClone.visible = true;
+                    const agRelX = Math.max(0, Math.min(c.relX || 0, compW - 10));
+                    const agRelY = Math.max(0, Math.min(c.relY || 0, compH - 10));
+                    const agW = Math.max(10, Math.min(c.width || 80, compW - agRelX));
+                    const agH = Math.max(10, Math.min(c.height || 40, compH - agRelY));
+                    agClone.resize(agW, agH);
+                    agClone.x = currentX + agRelX;
+                    agClone.y = currentY + agRelY;
+                    const spaceRight  = compW - ((c.relX || 0) + (c.width  || 80));
+                    const spaceLeft   = c.relX  || 0;
+                    const spaceBottom = compH - ((c.relY || 0) + (c.height || 40));
+                    const spaceTop    = c.relY  || 0;
+                    const minSpace = Math.min(spaceRight, spaceLeft, spaceBottom, spaceTop);
+                    const orientacao = minSpace === spaceRight  ? 'direita'
+                                     : minSpace === spaceLeft   ? 'esquerda'
+                                     : minSpace === spaceBottom ? 'inferior'
+                                     : 'superior';
+                    try { agClone.setProperties({ 'orientação': orientacao, 'letra': letra }); } catch(e) {}
+                    srImageFrame.appendChild(agClone);
+                  } else if (modelConector) {
+                    const conClone = modelConector.clone();
+                    conClone.visible = true;
+                    srImageFrame.appendChild(conClone);
+                    const t = (c.tipo || '').toLowerCase();
+                    let tipoVariante = 'função valor rótulos';
+                    if (t.includes('decorat'))                                                          tipoVariante = 'elementos decorativos';
+                    else if (t.includes('marco') || t.includes('naveg'))                                tipoVariante = 'marcos de navegação';
+                    else if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel')) tipoVariante = 'nível de título';
+                    else if (t.includes('infor') || t.includes('adicional'))                            tipoVariante = 'informações adicionais';
+                    
+                    const distLeft   = c.relX || 0;
+                    const distRight  = compW - ((c.relX || 0) + (c.width || 20));
+                    const distTop    = c.relY || 0;
+                    const distBottom = compH - ((c.relY || 0) + (c.height || 20));
+                    const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+                    const lado = minDist === distLeft   ? 'esquerda'
+                               : minDist === distRight  ? 'direita'
+                               : minDist === distTop    ? 'superior'
+                               : 'inferior';
+                    
+                    try { (conClone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': lado }); } catch(e) {}
+                    
+                    const BADGE_SIZE = 32;
+                    const OUT_GAP    = 8;
+                    const relX = c.relX || 0;
+                    const relY = c.relY || 0;
+                    const elW  = c.width  || 0;
+                    const elH  = c.height || 0;
+                    let lineLength = 80;
+                    if (lado === 'esquerda') {
+                      lineLength = OUT_GAP + relX;
+                      try { conClone.resize(BADGE_SIZE + lineLength, conClone.height); } catch(e) {}
+                      conClone.x = currentX - OUT_GAP - BADGE_SIZE;
+                      conClone.y = currentY + relY + elH / 2 - conClone.height / 2;
+                    } else if (lado === 'direita') {
+                      lineLength = OUT_GAP + (compW - relX - elW);
+                      try { conClone.resize(BADGE_SIZE + lineLength, conClone.height); } catch(e) {}
+                      conClone.x = currentX + relX + elW;
+                      conClone.y = currentY + relY + elH / 2 - conClone.height / 2;
+                    } else if (lado === 'superior') {
+                      lineLength = OUT_GAP + relY;
+                      try { conClone.resize(conClone.width, BADGE_SIZE + lineLength); } catch(e) {}
+                      conClone.x = currentX + relX + elW / 2 - conClone.width / 2;
+                      conClone.y = currentY - OUT_GAP - BADGE_SIZE;
+                    } else {
+                      lineLength = OUT_GAP + (compH - relY - elH);
+                      try { conClone.resize(conClone.width, BADGE_SIZE + lineLength); } catch(e) {}
+                      conClone.x = currentX + relX + elW / 2 - conClone.width / 2;
+                      conClone.y = currentY + relY + elH;
+                    }
+                    const numNodeCon = conClone.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
+                    if (numNodeCon) await updateText(numNodeCon, letra);
+                  }
+                }
+
+                rowHeight = Math.max(rowHeight, compClone.height);
+                totalWidth = Math.max(totalWidth, currentX + compClone.width);
+                currentX += compClone.width + SR_GAP_H;
               }
 
-              // Conectores e agrupamentos sobre o componente
-              const letrasLT = computeLetrasTS(msg.conectores_leitor);
-              const compW = (compCloneSR as FrameNode).width  || componentePrincipalAtivo.width;
-              const compH = (compCloneSR as FrameNode).height || componentePrincipalAtivo.height;
-
-              for (let i = 0; i < msg.conectores_leitor.length; i++) {
-                const c = msg.conectores_leitor[i];
-                const letra = letrasLT[i];
-
-                if (c.tipoAnotacao === 'agrupamento' && modelAgrupamento) {
-                  const agClone = modelAgrupamento.clone();
-                  agClone.visible = true;
-                  agClone.resize(c.width || 80, c.height || 40);
-                  agClone.x = srX + (c.relX || 0);
-                  agClone.y = srY + (c.relY || 0);
-                  // Orientação calculada por posição: lado com mais espaço disponível
-                  const spaceRight  = compW - ((c.relX || 0) + (c.width  || 80));
-                  const spaceLeft   = c.relX  || 0;
-                  const spaceBottom = compH - ((c.relY || 0) + (c.height || 40));
-                  const spaceTop    = c.relY  || 0;
-                  // Badge vai para o lado onde o box está mais próximo da borda do componente
-                  // (menor espaço = borda do box alinhada com borda do componente = badge fica fora)
-                  const minSpace = Math.min(spaceRight, spaceLeft, spaceBottom, spaceTop);
-                  const orientacao = minSpace === spaceRight  ? 'direita'
-                                   : minSpace === spaceLeft   ? 'esquerda'
-                                   : minSpace === spaceBottom ? 'inferior'
-                                   : 'superior';
-                  try { agClone.setProperties({ 'orientação': orientacao, 'letra': letra }); } catch(e) {}
-                  srImageFrame.appendChild(agClone);
-                } else if (modelConector) {
-                  const conClone = modelConector.clone();
-                  conClone.visible = true;
-                  srImageFrame.appendChild(conClone);
-                  const t = (c.tipo || '').toLowerCase();
-                  let tipoVariante = 'função valor rótulos';
-                  if (t.includes('decorat'))                                                          tipoVariante = 'elementos decorativos';
-                  else if (t.includes('marco') || t.includes('naveg'))                                tipoVariante = 'marcos de navegação';
-                  else if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel')) tipoVariante = 'nível de título';
-                  else if (t.includes('infor') || t.includes('adicional'))                            tipoVariante = 'informações adicionais';
-                  // Calcular lado mais próximo do componente
-                  const distLeft   = c.relX || 0;
-                  const distRight  = compW - ((c.relX || 0) + (c.width || 20));
-                  const distTop    = c.relY || 0;
-                  const distBottom = compH - ((c.relY || 0) + (c.height || 20));
-                  const minDist = Math.min(distLeft, distRight, distTop, distBottom);
-                  const lado = minDist === distLeft   ? 'esquerda'
-                             : minDist === distRight  ? 'direita'
-                             : minDist === distTop    ? 'superior'
-                             : 'inferior';
-                  const conectorProp = lado;
-                  console.log('[LT preview] conector', i, 'c.tipo=', c.tipo, '| t=', t, '| tipoVariante=', tipoVariante, '| nodeType=', conClone.type, '| lado=', lado, '| conectorProp=', conectorProp);
-                  try {
-                    (conClone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': conectorProp });
-                    console.log('[LT preview] setProperties OK');
-                  } catch(e) {
-                    console.log('[LT preview] setProperties ERRO:', e);
-                  }
-                  // Redimensionar conector para que a linha alcance exatamente o elemento anotado
-                  const BADGE_SIZE = 32; // tamanho aproximado do badge circular
-                  const OUT_GAP    = 8;  // gap entre badge e borda do componente
-                  const relX = c.relX || 0;
-                  const relY = c.relY || 0;
-                  const elW  = c.width  || 0;
-                  const elH  = c.height || 0;
-                  let lineLength = 80; // fallback
-                  if (lado === 'esquerda') {
-                    lineLength = OUT_GAP + relX;
-                    try { conClone.resize(BADGE_SIZE + lineLength, conClone.height); } catch(e) {}
-                    conClone.x = srX - OUT_GAP - BADGE_SIZE;
-                    conClone.y = srY + relY + elH / 2 - conClone.height / 2;
-                  } else if (lado === 'direita') {
-                    lineLength = OUT_GAP + (compW - relX - elW);
-                    try { conClone.resize(BADGE_SIZE + lineLength, conClone.height); } catch(e) {}
-                    conClone.x = srX + relX + elW;
-                    conClone.y = srY + relY + elH / 2 - conClone.height / 2;
-                  } else if (lado === 'superior') {
-                    lineLength = OUT_GAP + relY;
-                    try { conClone.resize(conClone.width, BADGE_SIZE + lineLength); } catch(e) {}
-                    conClone.x = srX + relX + elW / 2 - conClone.width / 2;
-                    conClone.y = srY - OUT_GAP - BADGE_SIZE;
-                  } else { // inferior
-                    lineLength = OUT_GAP + (compH - relY - elH);
-                    try { conClone.resize(conClone.width, BADGE_SIZE + lineLength); } catch(e) {}
-                    conClone.x = srX + relX + elW / 2 - conClone.width / 2;
-                    conClone.y = srY + relY + elH;
-                  }
-                  console.log('[LT preview] lado=', lado, '| lineLength=', lineLength, '| x=', conClone.x, 'y=', conClone.y);
-                  const numNodeCon = conClone.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
-                  if (numNodeCon) await updateText(numNodeCon, letra);
-                }
-              }
-
-              // Resize para caber o componente
+              totalHeight = currentY + rowHeight;
               srImageFrame.resize(
-                Math.max(srImageFrame.width, srX + compW + SR_PAD_SIDE),
-                Math.max(srImageFrame.height, srY + compH + SR_PAD_SIDE)
+                Math.max(srImageFrame.width, totalWidth + SR_PAD_SIDE),
+                totalHeight + SR_PAD_SIDE
               );
 
-              // Deletar modelos
               if (modelConector)    modelConector.remove();
               if (modelAgrupamento) modelAgrupamento.remove();
               if (modelItemNumber)  modelItemNumber.remove();
@@ -804,7 +858,6 @@ figma.ui.onmessage = async (msg) => {
               compClone = componentePrincipalAtivo.clone();
               if (compClone.type === 'INSTANCE' && variacao.propriedades && Object.keys(variacao.propriedades).length > 0) {
                 try { (compClone as InstanceNode).setProperties(variacao.propriedades); } catch (e) {
-                  console.warn('[focus-order] setProperties failed:', e);
                 }
               }
             }
@@ -873,6 +926,7 @@ figma.ui.onmessage = async (msg) => {
     // Remove frames de variação do canvas após geração do preview
     figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y Variação]')).forEach(n => n.remove());
     figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y Tab Variação]')).forEach(n => n.remove());
+    figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y LT Variação]')).forEach(n => n.remove());
 
     // Zerar frameNodeId/instanceNodeId para que no próximo carregamento os frames sejam recriados
     if (msg.variacoes_tabulacao) {
@@ -891,6 +945,14 @@ figma.ui.onmessage = async (msg) => {
         }
       }
     }
+    if (msg.variacoes_leitor) {
+      for (const v of msg.variacoes_leitor) {
+        if (v.id !== 'default') {
+          v.frameNodeId = null;
+          v.instanceNodeId = null;
+        }
+      }
+    }
 
     const dbInstance = workingFrame.findOne((node: SceneNode) => node.name === "[dsc-h] Plugin Data A11y") as InstanceNode;
     if (dbInstance) {
@@ -902,6 +964,7 @@ figma.ui.onmessage = async (msg) => {
         sem_toque: msg.sem_toque || false,
         variacoes: msg.variacoes || [],
         variacoes_tabulacao: msg.variacoes_tabulacao || [],
+        variacoes_leitor: msg.variacoes_leitor || [],
         conectores_leitor: msg.conectores_leitor || [],
         sem_leitor: msg.sem_leitor || false,
       });
@@ -920,6 +983,7 @@ figma.ui.onmessage = async (msg) => {
           sem_toque: msg.sem_toque || false,
           variacoes: msg.variacoes || [],
           variacoes_tabulacao: msg.variacoes_tabulacao || [],
+          variacoes_leitor: msg.variacoes_leitor || [],
           conectores_leitor: msg.conectores_leitor || [],
           sem_leitor: msg.sem_leitor || false,
         });
@@ -936,6 +1000,7 @@ figma.ui.onmessage = async (msg) => {
       sem_toque: msg.sem_toque || false,
       variacoes: msg.variacoes || [],
       variacoes_tabulacao: msg.variacoes_tabulacao || [],
+      variacoes_leitor: msg.variacoes_leitor || [],
       conectores_leitor: msg.conectores_leitor || [],
       sem_leitor: msg.sem_leitor || false,
     });
@@ -1085,7 +1150,6 @@ figma.ui.onmessage = async (msg) => {
         try {
           instance.setProperties(msg.propriedades);
         } catch (e) {
-          console.warn('[create-variation-frame] setProperties failed:', e);
         }
       }
 
@@ -1188,8 +1252,45 @@ figma.ui.onmessage = async (msg) => {
         const node = await figma.getNodeByIdAsync(msg.frameNodeId);
         if (node) node.remove();
       } catch (e) {
-        console.warn('[delete-variation-frame]', e);
       }
+    }
+  }
+
+  else if (msg.type === 'create-sr-variation-frame') {
+    if (!componentePrincipalAtivo) {
+      figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo.' });
+      return;
+    }
+    try {
+      const comp = componentePrincipalAtivo;
+      const parentNode = comp.parent as FrameNode | PageNode;
+      if (!parentNode) {
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Componente sem parent.' });
+        return;
+      }
+      const frameName = `[A11Y LT Variação] ${msg.nome}`;
+      const existing = figma.currentPage.findOne((n: SceneNode) => n.name === frameName);
+      if (existing) existing.remove();
+      const instance = comp.clone() as InstanceNode;
+      instance.x = 0;
+      instance.y = 0;
+      if (instance.type === 'INSTANCE' && msg.propriedades && Object.keys(msg.propriedades).length > 0) {
+        try { instance.setProperties(msg.propriedades); } catch (e) {}
+      }
+      const varFrame = figma.createFrame();
+      varFrame.name = frameName;
+      varFrame.fills = [];
+      varFrame.clipsContent = false;
+      varFrame.resize(instance.width, instance.height);
+      varFrame.x = comp.x + comp.width + 80;
+      varFrame.y = comp.y;
+      (parentNode as FrameNode).appendChild(varFrame);
+      varFrame.appendChild(instance);
+      figma.currentPage.selection = [varFrame];
+      figma.viewport.scrollAndZoomIntoView([varFrame]);
+      figma.ui.postMessage({ type: 'sr-variation-frame-created', frameNodeId: varFrame.id, instanceNodeId: instance.id });
+    } catch (e) {
+      figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar frame de variação de leitor: ${e}` });
     }
   }
 
@@ -1213,7 +1314,6 @@ figma.ui.onmessage = async (msg) => {
       instance.y = 0;
       if (instance.type === 'INSTANCE' && msg.propriedades && Object.keys(msg.propriedades).length > 0) {
         try { instance.setProperties(msg.propriedades); } catch (e) {
-          console.warn('[create-tab-variation-frame] setProperties failed:', e);
         }
       }
       const varFrame = figma.createFrame();
@@ -1256,8 +1356,33 @@ figma.ui.onmessage = async (msg) => {
         const node = await figma.getNodeByIdAsync(msg.frameNodeId);
         if (node) node.remove();
       } catch (e) {
-        console.warn('[delete-tab-variation-frame]', e);
       }
+    }
+  }
+
+  else if (msg.type === 'activate-sr-variation') {
+    try {
+      if (msg.instanceNodeId) {
+        const node = await figma.getNodeByIdAsync(msg.instanceNodeId) as SceneNode | null;
+        componenteSRVariacaoAtivo = node;
+      } else {
+        componenteSRVariacaoAtivo = null;
+      }
+    } catch (e) {
+      componenteSRVariacaoAtivo = null;
+    }
+  }
+
+  else if (msg.type === 'deactivate-sr-variation') {
+    componenteSRVariacaoAtivo = null;
+  }
+
+  else if (msg.type === 'delete-sr-variation-frame') {
+    if (msg.frameNodeId) {
+      try {
+        const node = await figma.getNodeByIdAsync(msg.frameNodeId);
+        if (node) node.remove();
+      } catch (e) {}
     }
   }
 
@@ -1268,6 +1393,7 @@ figma.ui.onmessage = async (msg) => {
     const dados = JSON.parse(dbInstance.getPluginData('a11y-component-data') || '{}');
     dados.conectores_leitor = msg.conectores_leitor ?? [];
     dados.sem_leitor = msg.sem_leitor ?? false;
+    dados.variacoes_leitor = msg.variacoes_leitor ?? [];
     dbInstance.setPluginData('a11y-component-data', JSON.stringify(dados));
     (handoffAtivo as any).setPluginData('a11y-component-data', JSON.stringify(dados));
 
@@ -1283,7 +1409,7 @@ figma.ui.onmessage = async (msg) => {
       figma.ui.postMessage({ type: 'sr-selection-result', error: 'Selecione um elemento no canvas.' });
       return;
     }
-    const comp = (componenteTabVariacaoAtivo ?? componentePrincipalAtivo) as SceneNode & { absoluteTransform: Transform };
+    const comp = (componenteSRVariacaoAtivo ?? componenteTabVariacaoAtivo ?? componentePrincipalAtivo) as SceneNode & { absoluteTransform: Transform };
     if (!comp) {
       figma.ui.postMessage({ type: 'sr-selection-result', error: 'Nenhum componente ativo.' });
       return;
@@ -1308,16 +1434,12 @@ figma.ui.onmessage = async (msg) => {
   }
 
   else if (msg.type === 'create-sr-overlay') {
-    console.log('[SR] create-sr-overlay recebido', { tipoConnector: msg.tipoConnector, roleNome: msg.roleNome });
-    console.log('[SR] componentePrincipalAtivo:', componentePrincipalAtivo?.name ?? 'NULL');
-    console.log('[SR] componenteTabVariacaoAtivo:', componenteTabVariacaoAtivo?.name ?? 'NULL');
-    const comp = (componenteTabVariacaoAtivo ?? componentePrincipalAtivo) as SceneNode & { absoluteTransform: Transform };
+    const comp = (componenteSRVariacaoAtivo ?? componenteTabVariacaoAtivo ?? componentePrincipalAtivo) as SceneNode & { absoluteTransform: Transform };
     if (!comp) {
-      console.log('[SR] FALHOU: comp é null');
       figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo. Reabra o plugin com o componente selecionado.' });
       return;
     }
-    console.log('[SR] comp encontrado:', comp.name, 'absoluteTransform x:', comp.absoluteTransform[0][2], 'y:', comp.absoluteTransform[1][2]);
+    
     try {
       const t = ((msg.tipoConnector as string) || '').toLowerCase();
       let cor: RGB;
@@ -1340,10 +1462,8 @@ figma.ui.onmessage = async (msg) => {
       figma.currentPage.selection = [overlay];
       figma.viewport.scrollAndZoomIntoView([overlay]);
       tempSROverlayId = overlay.id;
-      console.log('[SR] overlay criado, id:', overlay.id, 'x:', overlay.x, 'y:', overlay.y);
       figma.ui.postMessage({ type: 'sr-overlay-created' });
     } catch (e) {
-      console.log('[SR] ERRO ao criar overlay:', e);
       figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar frame de anotação: ${e}` });
     }
   }
@@ -1387,8 +1507,12 @@ figma.ui.onmessage = async (msg) => {
 figma.on('selectionchange', () => {
   const selection = figma.currentPage.selection;
   if (!contextoTravado) {
-    if (selection.length > 0) tentarTravarContexto(selection);
-    else figma.ui.postMessage({ type: 'waiting-selection' });
+    if (selection.length > 0) {
+      figma.ui.postMessage({ type: 'start-loading' });
+      tentarTravarContexto(selection);
+    } else {
+      figma.ui.postMessage({ type: 'waiting-selection' });
+    }
   }
 });
 
@@ -1413,7 +1537,10 @@ function tentarTravarContexto(selection: readonly SceneNode[]) {
     }
   }
 
-  if (components.length !== 1 || handoffs.length === 0) return;
+  if (components.length !== 1 || handoffs.length === 0) {
+    figma.ui.postMessage({ type: 'waiting-selection' });
+    return;
+  }
 
   // Prioriza frame gerado sobre template instância, se ambos selecionados
   const generatedHandoff = handoffs.find(n => n.name.startsWith('[A11Y Handoff]'));
@@ -1518,12 +1645,11 @@ function parseRolesList(dbInstance: InstanceNode): { nome: string; especificacao
 }
 
 async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
-  figma.ui.postMessage({ type: 'start-loading' });
   const dbInstance = (handoff as any).findOne((n: SceneNode) => n.name === "[dsc-h] Plugin Data A11y") as InstanceNode;
 
   let masterList: { mapeamento: string; descricao: string; utilizacao: string }[] = [];
   let rolesList: ReturnType<typeof parseRolesList> = [];
-  let componentData: any = { plataformas: [], zoom: [], mapeamentos: [], areas_toque: [], sem_toque: false, variacoes: [], variacoes_tabulacao: [], conectores_leitor: [], sem_leitor: false };
+  let componentData: any = { plataformas: [], zoom: [], mapeamentos: [], areas_toque: [], sem_toque: false, variacoes: [], variacoes_tabulacao: [], variacoes_leitor: [], conectores_leitor: [], sem_leitor: false };
   let dataLoadedFromDb = false;
 
   // Tenta ler dados salvos diretamente no frame do handoff

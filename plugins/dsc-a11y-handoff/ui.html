@@ -154,6 +154,12 @@
     #panel-leitor.tab-panel.active { display: flex; flex: 1; flex-direction: column; padding: 0; overflow: hidden; }
     #panel-leitor { position: relative; overflow: hidden; }
     #leitorListWrapper { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    #srVariationListView { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    #srVariationListView.hidden { display: none !important; }
+    #srMainView { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    #srMainView.hidden { display: none !important; }
+    #srVariationFormView { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #fff; flex-direction: column; z-index: 20; }
+    #srVariationFormView.open { display: flex; }
     #srFormView { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #fff; flex-direction: column; z-index: 10; overflow: hidden; }
     #srFormView.open { display: flex; }
     #srFormBody { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
@@ -501,18 +507,53 @@
 
       <div id="panel-leitor" class="tab-panel">
 
-        <!-- LISTA -->
-        <div id="leitorListWrapper">
-          <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:4px;">
-            <input type="checkbox" id="chk-sem-leitor" onchange="onSemLeitorChange()">
-            Sem anotações de leitor de tela
-          </label>
-          <div id="leitor-list-container">
-            <ul id="leitor-list" style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;"></ul>
+        <!-- VIEW 1: LISTA DE VARIAÇÕES -->
+        <div id='srVariationListView'>
+          <div style='flex:1;overflow-y:auto;padding:12px 16px;'>
+            <div id='srVariationList' style='display:flex;flex-direction:column;gap:6px;'></div>
+          </div>
+          <div style='flex-shrink:0;padding:10px 16px 14px;border-top:1px solid #F0F0F0;background:#fff;'>
+            <button id='btnAddSRVariation' style='width:100%;padding:10px;background:none;border:1.5px dashed #BBBFC8;border-radius:10px;color:#2D4496;font-size:12px;font-weight:700;cursor:pointer;'>+ Nova variante parametrizada</button>
           </div>
         </div>
-        <div class="tab-footer" id="leitorFooter">
-          <button class="tab-add-btn" onclick="openSRForm()">+ Adicionar Conector</button>
+
+        <!-- VIEW 2: MAIN (conteúdo da variação ativa) -->
+        <div id='srMainView' class='hidden'>
+          <div id='srMainViewHeader' style='flex-shrink:0;padding:10px 16px;border-bottom:1px solid #F0F0F0;display:flex;align-items:center;gap:8px;'>
+            <button id='btnBackToSRVariations' style='background:none;border:none;font-size:12px;font-weight:700;color:#2D4496;cursor:pointer;padding:4px 0;'>← Voltar</button>
+            <span id='srMainViewLabel' style='font-size:13px;font-weight:700;color:#1a1a1a;flex:1;'>Default</span>
+          </div>
+          <!-- LISTA -->
+          <div id="leitorListWrapper">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:4px;">
+              <input type="checkbox" id="chk-sem-leitor" onchange="onSemLeitorChange()">
+              Sem anotações de leitor de tela
+            </label>
+            <div id="leitor-list-container">
+              <ul id="leitor-list" style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;"></ul>
+            </div>
+          </div>
+          <div class="tab-footer" id="leitorFooter">
+            <button class="tab-add-btn" onclick="openSRForm()">+ Adicionar Conector</button>
+          </div>
+        </div>
+
+        <!-- VIEW 3: FORM NOVA VARIAÇÃO (overlay absoluto z-index:20) -->
+        <div id='srVariationFormView'>
+          <div style='flex-shrink:0;padding:12px 16px;border-bottom:1px solid #F0F0F0;display:flex;align-items:center;'>
+            <span style='font-size:13px;font-weight:700;color:#1a1a1a;flex:1;'>Nova variante parametrizada</span>
+          </div>
+          <div style='flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;'>
+            <div class='touch-form-row'>
+              <label>Nome</label>
+              <input type='text' id='srVarNomeInput' class='touch-form-input' placeholder='Ex: Mobile, Expandido, Hover…'>
+            </div>
+            <div id='srVarPropsContainer' style='display:flex;flex-direction:column;gap:10px;'></div>
+          </div>
+          <div style='flex-shrink:0;padding:12px 16px 16px;border-top:1px solid #F0F0F0;background:#fff;display:flex;flex-direction:column;gap:8px;align-items:center;'>
+            <button id='btnSRVariationFormCreate' style='width:100%;padding:12px;background:#2D4496;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;box-sizing:border-box;'>Criar variante</button>
+            <button id='btnSRVariationFormCancel' style='background:none;border:none;font-size:12px;font-weight:700;color:#2D4496;cursor:pointer;padding:4px 0;'>Cancelar</button>
+          </div>
         </div>
 
         <!-- FORM (overlay absoluto, igual tabFormView) -->
@@ -661,6 +702,10 @@
         if (el('touchFormView').classList.contains('open')) el('btnTouchCancel').click();
         if (el('tabFormView').classList.contains('open')) closeTabForm();
         if (el('tabVariationFormView') && el('tabVariationFormView').classList.contains('open')) closeTabVariationForm();
+        if (el('srVariationFormView') && el('srVariationFormView').classList.contains('open')) closeSRVariationForm();
+        // Resetar views de variação para lista ao trocar de aba
+        showTabView('list');
+        showSRView('list');
         document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         btn.classList.add('active');
@@ -805,19 +850,24 @@
         }
       }
 
-      const totalLeitorItems = (leitorState.conectores || []).length;
+      const totalLeitorItems = srVariationsData.reduce((sum, v) => {
+        const items = v.id === currentSRVariationId ? leitorState.conectores : (v.conectores_leitor || []);
+        return sum + (v.sem_leitor ? 0 : items.length);
+      }, 0);
+      const totalLeitorVars = srVariationsData.filter(v => v.id !== 'default').length;
       const summaryLeitorCard = el('summaryLeitorCard');
       if (summaryLeitorCard) {
-        summaryLeitorCard.style.display = totalLeitorItems > 0 ? 'block' : 'none';
+        summaryLeitorCard.style.display = totalLeitorItems > 0 || totalLeitorVars > 0 ? 'block' : 'none';
         const leitorPills = el('summaryLeitorPills');
         if (leitorPills) {
           leitorPills.innerHTML = '';
+          if (totalLeitorVars > 0) leitorPills.innerHTML += `<span class='summary-pill'>${totalLeitorVars} variação${totalLeitorVars !== 1 ? 'ões' : ''}</span>`;
           if (totalLeitorItems > 0) leitorPills.innerHTML += `<span class='summary-pill'>${totalLeitorItems} anotaç${totalLeitorItems !== 1 ? 'ões' : 'ão'}</span>`;
         }
       }
 
       const hasSomething = platforms.length > 0 || zooms.length > 0 || keyboards > 0 || gestures > 0;
-      el('summaryCards').style.display = hasSomething || totalAreas > 0 || totalTabItems > 0 || totalLeitorItems > 0 ? 'flex' : 'none';
+      el('summaryCards').style.display = hasSomething || totalAreas > 0 || totalTabItems > 0 || totalLeitorItems > 0 || totalLeitorVars > 0 ? 'flex' : 'none';
     }
 
     el('summaryEditGeral').onclick = () => {
@@ -908,8 +958,16 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         renderTouchList();
 
         leitorState.rolesList = msg.rolesList || [];
-        leitorState.conectores = msg.componentData?.conectores_leitor || [];
-        leitorState.semLeitor = msg.componentData?.sem_leitor || false;
+        srVariationsData = msg.componentData?.variacoes_leitor || [];
+        if (!srVariationsData.find(v => v.id === 'default')) {
+          srVariationsData.unshift({ id: 'default', nome: 'Default', propriedades: {}, conectores_leitor: msg.componentData?.conectores_leitor || [], sem_leitor: msg.componentData?.sem_leitor || false, frameNodeId: null, instanceNodeId: null });
+        }
+        currentSRVariationId = 'default';
+        const defaultSRVar = srVariationsData.find(v => v.id === 'default');
+        leitorState.conectores = defaultSRVar?.conectores_leitor || [];
+        leitorState.semLeitor = defaultSRVar?.sem_leitor || false;
+        renderSRVariationList();
+        showSRView('list');
         renderLeitorList();
 
         renderLists();
@@ -1032,6 +1090,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         componentProps = msg.props || [];
         if (el('touchVariationFormView') && el('touchVariationFormView').classList.contains('open')) renderVariationProps();
         if (el('tabVariationFormView') && el('tabVariationFormView').classList.contains('open')) renderTabVariationProps();
+        if (el('srVariationFormView') && el('srVariationFormView').classList.contains('open')) renderSRVariationProps();
       }
       if (msg.type === 'variation-frame-created') {
         // Atualiza a variação que aguardava o frame (pode ser nova criação OU recriação ao editar)
@@ -1054,6 +1113,36 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           closeVariationForm();
         }
         renderVariationList();
+      }
+      if (msg.type === 'sr-variation-frame-created') {
+        const targetVar = srVariationsData.find(v => v.id === currentSRVariationId)
+          || srVariationsData[srVariationsData.length - 1];
+        if (targetVar) {
+          targetVar.frameNodeId = msg.frameNodeId;
+          targetVar.instanceNodeId = msg.instanceNodeId;
+        }
+        if (el('srVariationFormView') && el('srVariationFormView').classList.contains('open')) {
+          const btnCreate = el('btnSRVariationFormCreate');
+          if (btnCreate) { btnCreate.textContent = 'Criar variante'; btnCreate.disabled = false; }
+          closeSRVariationForm();
+        }
+        if (currentSRVariationId && currentSRVariationId !== 'default') {
+          const v = srVariationsData.find(v => v.id === currentSRVariationId);
+          if (v && v.instanceNodeId) {
+            parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', instanceNodeId: v.instanceNodeId } }, '*');
+          }
+        }
+        // Atualiza leitorState e label com dados da nova variação
+        const activeVar = srVariationsData.find(v => v.id === currentSRVariationId);
+        if (activeVar) {
+          leitorState.conectores = activeVar.conectores_leitor || [];
+          leitorState.semLeitor = activeVar.sem_leitor || false;
+          const label = el('srMainViewLabel');
+          if (label) label.textContent = activeVar.nome || 'Default';
+        }
+        renderLeitorList();
+        renderSRVariationList();
+        showSRView('main');
       }
       if (msg.type === 'tab-variation-frame-created') {
         const targetVar = tabVariationsData.find(v => v.id === currentTabVariationId)
@@ -1121,6 +1210,8 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
 
   let variationsData = []; // array de variações: [{ id, nome, propriedades, areas_toque, sem_toque, frameNodeId, instanceNodeId }]
   let tabVariationsData = []; // array de variações de tabulação: [{ id, nome, propriedades, tab_order, sem_tabulacao, frameNodeId, instanceNodeId }]
+  let srVariationsData = []; // array de variações de leitor: [{ id, nome, propriedades, conectores_leitor, sem_leitor, frameNodeId, instanceNodeId }]
+  let currentSRVariationId = 'default';
   const leitorState = { rolesList: [], conectores: [], semLeitor: false, pendingSROrigem: null };
   let tabOrderData = []; // tab_order da variação de tabulação ativa
     let tabFormTempItems = [];
@@ -1330,6 +1421,129 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
         renderTabOrderList();
       }
     }
+
+  function showSRView(viewId) {
+    const listView = el('srVariationListView');
+    const mainView = el('srMainView');
+    if (listView) listView.classList.toggle('hidden', viewId !== 'list');
+    if (mainView) mainView.classList.toggle('hidden', viewId !== 'main');
+  }
+
+  function renderSRVariationList() {
+    const container = el('srVariationList');
+    if (!container) return;
+    container.innerHTML = '';
+    const defData = srVariationsData.find(v => v.id === 'default') || { id: 'default', nome: 'Default', propriedades: {}, conectores_leitor: [], sem_leitor: false };
+    container.innerHTML += `<div style='border:1.5px solid #22C55E;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;background:#F0FDF4;'>
+      <span style='background:#22C55E;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;'>D</span>
+      <div style='flex:1;min-width:0;'>
+        <div style='font-size:12px;font-weight:700;color:#1a1a1a;'>Default</div>
+        <div style='font-size:10px;color:#888;margin-top:1px;'>Comportamento padrão</div>
+      </div>
+      <button onclick='selectSRVariation("default")' style='background:none;border:1.5px solid #22C55E;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#22C55E;cursor:pointer;'>Editar</button>
+    </div>`;
+    const customs = srVariationsData.filter(v => v.id !== 'default');
+    if (customs.length > 0) {
+      container.innerHTML += `<div style='font-size:10px;font-weight:700;color:#999;letter-spacing:0.05em;padding:6px 0 2px;'>VARIANTES PARAMETRIZADAS</div>`;
+      customs.forEach((v, i) => {
+        const propsLabel = Object.entries(v.propriedades || {}).map(([k, val]) => `${k}=${val}`).join(', ') || '—';
+        container.innerHTML += `<div style='border:1.5px solid #E0E0E0;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;background:#fff;'>
+          <span style='background:#2D4496;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;'>${i+1}</span>
+          <div style='flex:1;min-width:0;'>
+            <div style='font-size:12px;font-weight:700;color:#1a1a1a;'>${v.nome}</div>
+            <div style='font-size:10px;color:#888;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${propsLabel}</div>
+          </div>
+          <button onclick='selectSRVariation("${v.id}")' style='background:none;border:1.5px solid #2D4496;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#2D4496;cursor:pointer;'>Editar</button>
+          <button onclick='deleteSRVariation("${v.id}")' style='background:none;border:1.5px solid #FF5252;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#FF5252;cursor:pointer;'>Excluir</button>
+        </div>`;
+      });
+    }
+  }
+
+  function selectSRVariation(id) {
+    let varData = srVariationsData.find(v => v.id === id);
+    if (!varData) {
+      varData = { id, nome: id, propriedades: {}, conectores_leitor: [], sem_leitor: false, frameNodeId: null, instanceNodeId: null };
+      srVariationsData.push(varData);
+    }
+    currentSRVariationId = id;
+    leitorState.conectores = varData.conectores_leitor || [];
+    leitorState.semLeitor = varData.sem_leitor || false;
+    const label = el('srMainViewLabel');
+    if (label) label.textContent = varData.nome || 'Default';
+    if (id !== 'default' && !varData.frameNodeId) {
+      parent.postMessage({ pluginMessage: { type: 'deactivate-sr-variation' } }, '*');
+      parent.postMessage({ pluginMessage: { type: 'create-sr-variation-frame', nome: varData.nome, propriedades: varData.propriedades || {} } }, '*');
+    } else if (id !== 'default' && varData.instanceNodeId) {
+      parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', instanceNodeId: varData.instanceNodeId } }, '*');
+      showSRView('main');
+    } else {
+      parent.postMessage({ pluginMessage: { type: 'deactivate-sr-variation' } }, '*');
+      showSRView('main');
+    }
+    renderLeitorList();
+  }
+
+  function deleteSRVariation(id) {
+    const v = srVariationsData.find(v => v.id === id);
+    if (v && v.frameNodeId) {
+      parent.postMessage({ pluginMessage: { type: 'delete-sr-variation-frame', frameNodeId: v.frameNodeId } }, '*');
+    }
+    srVariationsData = srVariationsData.filter(v => v.id !== id);
+    if (currentSRVariationId === id) {
+      currentSRVariationId = 'default';
+      const def = srVariationsData.find(v => v.id === 'default');
+      if (def) { leitorState.conectores = def.conectores_leitor || []; leitorState.semLeitor = def.sem_leitor || false; }
+      parent.postMessage({ pluginMessage: { type: 'deactivate-sr-variation' } }, '*');
+    }
+    renderSRVariationList();
+  }
+
+  function openSRVariationForm() {
+    const input = el('srVarNomeInput');
+    if (input) input.value = '';
+    renderSRVariationProps();
+    parent.postMessage({ pluginMessage: { type: 'get-component-properties' } }, '*');
+    el('srVariationFormView').classList.add('open');
+  }
+
+  function closeSRVariationForm() {
+    el('srVariationFormView').classList.remove('open');
+  }
+
+  function renderSRVariationProps() {
+    const container = el('srVarPropsContainer');
+    if (!container) return;
+    container.innerHTML = '';
+    if (componentProps.length === 0) {
+      container.innerHTML = '<div style="font-size:12px;color:#999;">Nenhuma propriedade VARIANT/BOOLEAN encontrada no componente.</div>';
+      return;
+    }
+    componentProps.forEach(prop => {
+      if (prop.type === 'VARIANT') {
+        const opts = (prop.options || []).map(o => `<option value="${o}">${o}</option>`).join('');
+        container.innerHTML += `<div class='touch-form-row'><label>${prop.name}</label><select class='touch-form-input sr-var-prop-select' data-prop='${prop.name}' style='cursor:pointer;'>${opts}</select></div>`;
+      } else if (prop.type === 'BOOLEAN') {
+        container.innerHTML += `<div class='touch-form-row' style='flex-direction:row;align-items:center;gap:8px;'><input type='checkbox' class='sr-var-prop-check' data-prop='${prop.name}' style='accent-color:#2D4496;width:14px;height:14px;'><label style='font-size:12px;font-weight:600;color:#555;margin:0;'>${prop.name}</label></div>`;
+      }
+    });
+  }
+
+  function saveSRVariationForm() {
+    const nome = el('srVarNomeInput').value.trim();
+    if (!nome) return;
+    const propriedades = {};
+    document.querySelectorAll('.sr-var-prop-select').forEach(sel => {
+      if (sel.value) propriedades[sel.dataset.prop] = sel.value;
+    });
+    document.querySelectorAll('.sr-var-prop-check').forEach(chk => {
+      propriedades[chk.dataset.prop] = chk.checked;
+    });
+    const id = 'sr_' + Date.now();
+    srVariationsData.push({ id, nome, propriedades, conectores_leitor: [], sem_leitor: false, frameNodeId: null, instanceNodeId: null });
+    closeSRVariationForm();
+    selectSRVariation(id);
+  }
 
   function showTabView(viewId) {
     el('tabVariationListView').classList.toggle('hidden', viewId !== 'list');
@@ -1631,6 +1845,31 @@ el('btnBackToVariations').onclick = () => { backToVariationList(); };
 el('btnVariationFormCancel').onclick = () => { closeVariationForm(); };
 el('btnBackToTabVariations').onclick = () => { backToTabVariationList(); };
 el('btnAddTabVariation').onclick = () => { openTabVariationForm(); };
+el('btnAddSRVariation').onclick = () => openSRVariationForm();
+el('btnBackToSRVariations').onclick = () => {
+  parent.postMessage({ pluginMessage: { type: 'deactivate-sr-variation' } }, '*');
+  showSRView('list');
+  renderSRVariationList();
+};
+el('btnSRVariationFormCreate').onclick = () => {
+  const nome = el('srVarNomeInput').value.trim();
+  if (!nome) { el('srVarNomeInput').focus(); return; }
+  const propriedades = {};
+  el('srVarPropsContainer').querySelectorAll('.sr-var-prop-select').forEach(sel => {
+    if (sel.value) propriedades[sel.dataset.prop] = sel.value;
+  });
+  el('srVarPropsContainer').querySelectorAll('.sr-var-prop-check').forEach(chk => {
+    propriedades[chk.dataset.prop] = chk.checked;
+  });
+  const id = 'sr_' + Date.now();
+  srVariationsData.push({ id, nome, propriedades, conectores_leitor: [], sem_leitor: false, frameNodeId: null, instanceNodeId: null });
+  currentSRVariationId = id;
+  const btn = el('btnSRVariationFormCreate');
+  btn.textContent = '⏳ Criando…';
+  btn.disabled = true;
+  parent.postMessage({ pluginMessage: { type: 'create-sr-variation-frame', nome, propriedades } }, '*');
+};
+el('btnSRVariationFormCancel').onclick = () => closeSRVariationForm();
 el('btnTabVariationFormCancel').onclick = () => { closeTabVariationForm(); };
 el('btnTabVariationFormCreate').onclick = () => {
   const nome = el('tabVarNomeInput').value.trim();
@@ -1719,6 +1958,7 @@ el('chkSemToque').onchange = () => {
         areas_toque: touchData, sem_toque: el('chkSemToque').checked,
         conectores_leitor: leitorState.conectores,
         sem_leitor: leitorState.semLeitor,
+        variacoes_leitor: srVariationsData,
         componentName: el('compName').textContent,
         variacoes: variationsData,
         variacoes_tabulacao: tabVariationsData,
@@ -1790,11 +2030,19 @@ el('chkSemToque').onchange = () => {
       el('chk-sem-leitor').checked = leitorState.semLeitor;
       el('leitor-list-container').style.display = leitorState.semLeitor ? 'none' : '';
       el('leitorFooter').style.display = leitorState.semLeitor ? 'none' : 'flex';
+      // Sincroniza de volta com srVariationsData
+      const activeSRVar = srVariationsData.find(v => v.id === currentSRVariationId);
+      if (activeSRVar) {
+        activeSRVar.conectores_leitor = leitorState.conectores;
+        activeSRVar.sem_leitor = leitorState.semLeitor;
+      }
       updateSummaryCards();
     }
 
     function onSemLeitorChange() {
       leitorState.semLeitor = el('chk-sem-leitor').checked;
+      const activeSRVar2 = srVariationsData.find(v => v.id === currentSRVariationId);
+      if (activeSRVar2) activeSRVar2.sem_leitor = leitorState.semLeitor;
       renderLeitorList();
       saveLeitorTela();
     }
@@ -1803,7 +2051,8 @@ el('chkSemToque').onchange = () => {
       parent.postMessage({ pluginMessage: {
         type: 'save-leitor-tela',
         conectores_leitor: leitorState.conectores,
-        sem_leitor: leitorState.semLeitor
+        sem_leitor: leitorState.semLeitor,
+        variacoes_leitor: srVariationsData
       }}, '*');
     }
 
@@ -2160,9 +2409,6 @@ const select = el('srSelectTipoConector');
         </div>
       </div>
     </div>
-  </div>
-</body>
-</html> </div>
   </div>
 </body>
 </html>
