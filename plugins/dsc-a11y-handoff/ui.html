@@ -1108,15 +1108,25 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         }
         const btn = el('btnVariationFormCreate');
         if (btn) { btn.textContent = 'Criar variante'; btn.disabled = false; }
-        // Se estava abrindo edição (currentVariationId definido e não veio do form), abrir main view
-        if (currentVariationId && currentVariationId !== 'default' && el('touchVariationFormView') && !el('touchVariationFormView').classList.contains('open')) {
+        if (window._pendingOpenTouchForm) {
+          window._pendingOpenTouchForm = false;
+          closeVariationForm();
           const v = variationsData.find(v => v.id === currentVariationId);
           if (v) {
             parent.postMessage({ pluginMessage: { type: 'activate-variation', instanceNodeId: v.instanceNodeId } }, '*');
             showView('main');
+            el('btnAddTouch').disabled = false;
+            el('btnAddTouch').textContent = '+ Adicionar área de toque';
+            openTouchForm();
           }
-        } else {
-          closeVariationForm();
+        } else if (currentVariationId && currentVariationId !== 'default' && el('touchVariationFormView') && !el('touchVariationFormView').classList.contains('open')) {
+          const v = variationsData.find(v => v.id === currentVariationId);
+          if (v) {
+            parent.postMessage({ pluginMessage: { type: 'activate-variation', instanceNodeId: v.instanceNodeId } }, '*');
+            showView('main');
+          } else {
+            closeVariationForm();
+          }
         }
         renderVariationList();
       }
@@ -1881,7 +1891,21 @@ function closeTouchForm() {
     };
   });
 
-el('btnAddTouch').onclick = () => { openTouchForm(); };
+  el('btnAddTouch').onclick = () => {
+    if (currentVariationId && currentVariationId !== 'default') {
+      const varData = variationsData.find(v => v.id === currentVariationId);
+      if (varData && !varData.frameNodeId) {
+        // Criar frame primeiro, depois abrir form quando chegar variation-frame-created
+        parent.postMessage({ pluginMessage: { type: 'create-variation-frame', nome: varData.nome, propriedades: varData.propriedades || {} } }, '*');
+        el('btnAddTouch').disabled = true;
+        el('btnAddTouch').textContent = '⏳ Preparando...';
+        // openTouchForm() será chamado pelo handler variation-frame-created (ver abaixo)
+        window._pendingOpenTouchForm = true;
+        return;
+      }
+    }
+    openTouchForm();
+  };
 el('btnAddVariation').onclick = () => { openVariationForm(); };
 el('btnBackToVariations').onclick = () => { backToVariationList(); };
 el('btnVariationFormCancel').onclick = () => { closeVariationForm(); };
@@ -1932,6 +1956,8 @@ el('btnVariationFormCreate').onclick = () => {
   const propriedades = collectVariationProps();
   const id = generateId();
   variationsData.push({ id, nome, propriedades, areas_toque: [], sem_toque: false, frameNodeId: null, instanceNodeId: null });
+  currentVariationId = id;
+  window._pendingOpenTouchForm = true;
   const btn = el('btnVariationFormCreate');
   btn.textContent = '⏳ Criando…';
   btn.disabled = true;

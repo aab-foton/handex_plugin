@@ -5,13 +5,17 @@ figma.showUI(__html__, { width: 560, height: 760, themeColors: true });
 
 figma.on('close', () => {
   try {
-    const container = figma.currentPage.findOne((n: SceneNode) => n.name === '[A11Y Variações]');
+    const container = variacoesContainerId
+      ? figma.getNodeById(variacoesContainerId)
+      : figma.currentPage.findOne((n: SceneNode) => n.name === '[A11Y Variações]');
     if (container) container.remove();
+    variacoesContainerId = null;
   } catch (e) {}
 });
 
 let componentePrincipalAtivo: SceneNode | null = null;
 let handoffAtivo: SceneNode | null = null;
+let variacoesContainerId: string | null = null;
 let contextoTravado: boolean = false;
 let tempTouchOverlayId: string | null = null;
 let tempSROverlayId: string | null = null;
@@ -61,7 +65,7 @@ async function updateText(node: TextNode, value: string) {
       await figma.loadFontAsync(node.fontName as FontName);
     }
     node.characters = value;
-  } catch (e) {
+  } catch(e) {
     console.error("Erro ao carregar fonte:", e);
   }
 }
@@ -117,13 +121,28 @@ function computeLetrasTS(conectores: any[]): string[] {
   return letras;
 }
 
+function createComponentInstance(comp: SceneNode): SceneNode {
+  if (comp.type === 'INSTANCE') return (comp as InstanceNode).clone();
+  if (comp.type === 'COMPONENT') return (comp as ComponentNode).createInstance();
+  if (comp.type === 'COMPONENT_SET') {
+    const first = (comp as ComponentSetNode).children.find(c => c.type === 'COMPONENT') as ComponentNode | undefined;
+    if (first) return first.createInstance();
+  }
+  return comp.clone();
+}
+
 function getOrCreateVariacoesContainer(comp: SceneNode, handoff: SceneNode | null, parentNode: FrameNode | PageNode): FrameNode {
   const CONTAINER_NAME = '[A11Y Variações]';
   const GAP = 80;
 
-  // Reutiliza container existente
+  // Reutiliza container existente (cache por ID para evitar findOne O(n))
+  if (variacoesContainerId) {
+    const cached = figma.getNodeById(variacoesContainerId) as FrameNode | null;
+    if (cached) return cached;
+    variacoesContainerId = null;
+  }
   const existing = figma.currentPage.findOne((n: SceneNode) => n.name === CONTAINER_NAME) as FrameNode | null;
-  if (existing) return existing;
+  if (existing) { variacoesContainerId = existing.id; return existing; }
 
   // Cria novo container com auto layout horizontal + wrap
   const container = figma.createFrame();
@@ -173,6 +192,7 @@ function getOrCreateVariacoesContainer(comp: SceneNode, handoff: SceneNode | nul
   } else {
     (parentNode as FrameNode).appendChild(container);
   }
+  variacoesContainerId = container.id;
 
   return container;
 }
@@ -543,7 +563,7 @@ figma.ui.onmessage = async (msg) => {
                 figma.ui.postMessage({ type: 'feedback', message: `❌ Erro no bloco de cor (leitor preview): ${e}` });
               }
 
-              const SR_PAD_TOP  = 64;
+              const SR_PAD_TOP  = 120;
               const SR_PAD_LEFT = 160;
               const SR_PAD_SIDE = 24;
               const SR_GAP_H    = 140;
@@ -561,15 +581,16 @@ figma.ui.onmessage = async (msg) => {
                 // Obter clone do componente correto para esta variação
                 let compClone: SceneNode;
                 if (variacao.id === 'default') {
-                  compClone = componentePrincipalAtivo.clone();
+                  compClone = createComponentInstance(componentePrincipalAtivo);
                 } else if (variacao.instanceNodeId) {
                   let srcNode: SceneNode | null = null;
                   try { srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null; } catch (_e) { srcNode = null; }
-                  compClone = srcNode ? srcNode.clone() : componentePrincipalAtivo.clone();
+  compClone = srcNode ? srcNode.clone() : createComponentInstance(componentePrincipalAtivo);
                 } else {
-                  compClone = componentePrincipalAtivo.clone();
+                  compClone = createComponentInstance(componentePrincipalAtivo);
                   if (compClone.type === 'INSTANCE' && variacao.propriedades && Object.keys(variacao.propriedades).length > 0) {
                     try { (compClone as InstanceNode).setProperties(variacao.propriedades); } catch (e) {
+                      figma.ui.postMessage({ type: 'feedback', message: '⚠️ Variante SR não aplicada: ' + String(e) });
                     }
                   }
                 }
@@ -614,23 +635,23 @@ figma.ui.onmessage = async (msg) => {
                   if (c.tipoAnotacao === 'agrupamento' && modelAgrupamento) {
                     const agClone = modelAgrupamento.clone();
                     agClone.visible = true;
-                    const agRelX = Math.max(0, Math.min(c.relX || 0, compW - 10));
-                    const agRelY = Math.max(0, Math.min(c.relY || 0, compH - 10));
-                    const agW = Math.max(10, Math.min(c.width || 80, compW - agRelX));
-                    const agH = Math.max(10, Math.min(c.height || 40, compH - agRelY));
+                    const agRelX = c.relX || 0;
+                    const agRelY = c.relY || 0;
+                    const agW = c.width || 80;
+                    const agH = c.height || 40;
                     agClone.resize(agW, agH);
                     agClone.x = currentX + agRelX;
                     agClone.y = currentY + agRelY;
                     const spaceRight  = compW - ((c.relX || 0) + (c.width  || 80));
                     const spaceLeft   = c.relX  || 0;
                     const spaceBottom = compH - ((c.relY || 0) + (c.height || 40));
-                    const spaceTop    = c.relY  || 0;
-                    const minSpace = Math.min(spaceRight, spaceLeft, spaceBottom, spaceTop);
-                    const orientacao = minSpace === spaceRight  ? 'direita'
-                                     : minSpace === spaceLeft   ? 'esquerda'
-                                     : minSpace === spaceBottom ? 'inferior'
-                                     : 'superior';
-                    try { agClone.setProperties({ 'orientação': orientacao, 'letra': letra }); } catch(e) {}
+                    const maxSpace = Math.max(spaceRight, spaceLeft, spaceBottom);
+                    const orientacao = maxSpace === spaceRight  ? 'direita'
+                                     : maxSpace === spaceLeft   ? 'esquerda'
+                                     : 'inferior';
+                    try { agClone.setProperties({ 'orientação': orientacao, 'letra': letra }); } catch(e) {
+                      figma.ui.postMessage({ type: 'feedback', message: '⚠️ Agrupamento props não aplicadas: ' + String(e) });
+                    }
                     srImageFrame.appendChild(agClone);
                   } else if (modelConector) {
                     const conClone = modelConector.clone();
@@ -673,7 +694,7 @@ figma.ui.onmessage = async (msg) => {
                       conClone.x = currentX + relX + elW;
                       conClone.y = currentY + relY + elH / 2 - conClone.height / 2;
                     } else if (lado === 'superior') {
-                      lineLength = Math.max(OUT_GAP, OUT_GAP + relY);
+                      lineLength = Math.max(OUT_GAP, OUT_GAP + relY + itemNumH + 4);
                       try { conClone.resize(conClone.width, BADGE_SIZE + lineLength); } catch(e) {}
                       conClone.x = currentX + relX + elW / 2 - conClone.width / 2;
                       conClone.y = currentY - OUT_GAP - BADGE_SIZE - itemNumH - 4;
@@ -747,16 +768,16 @@ figma.ui.onmessage = async (msg) => {
             // Obter clone do componente correto para esta variação
             let compClone: SceneNode;
             if (variacao.id === 'default') {
-              compClone = componentePrincipalAtivo.clone();
+              compClone = createComponentInstance(componentePrincipalAtivo);
             } else if (variacao.instanceNodeId) {
               let srcNode: SceneNode | null = null;
               try { srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null; } catch (_e) { srcNode = null; }
-              compClone = srcNode ? srcNode.clone() : componentePrincipalAtivo.clone();
+              compClone = srcNode ? srcNode.clone() : createComponentInstance(componentePrincipalAtivo);
             } else {
               // instanceNodeId zerado (após handoff) — clonar e aplicar propriedades salvas
-              compClone = componentePrincipalAtivo.clone();
+              compClone = createComponentInstance(componentePrincipalAtivo);
               if (compClone.type === 'INSTANCE' && variacao.propriedades && Object.keys(variacao.propriedades).length > 0) {
-                try { (compClone as InstanceNode).setProperties(variacao.propriedades); } catch(e) {}
+                try { (compClone as InstanceNode).setProperties(variacao.propriedades); } catch(e) { figma.ui.postMessage({ type: 'feedback', message: '⚠️ Variante toque não aplicada: ' + String(e) }); }
               }
             }
 
@@ -854,15 +875,16 @@ figma.ui.onmessage = async (msg) => {
             // Obter clone do componente correto para esta variação
             let compClone: SceneNode;
             if (variacao.id === 'default') {
-              compClone = componentePrincipalAtivo.clone();
+              compClone = createComponentInstance(componentePrincipalAtivo);
             } else if (variacao.instanceNodeId) {
               let srcNode: SceneNode | null = null;
               try { srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null; } catch (_e) { srcNode = null; }
-              compClone = srcNode ? srcNode.clone() : componentePrincipalAtivo.clone();
+              compClone = srcNode ? srcNode.clone() : createComponentInstance(componentePrincipalAtivo);
             } else {
-              compClone = componentePrincipalAtivo.clone();
+              compClone = createComponentInstance(componentePrincipalAtivo);
               if (compClone.type === 'INSTANCE' && variacao.propriedades && Object.keys(variacao.propriedades).length > 0) {
                 try { (compClone as InstanceNode).setProperties(variacao.propriedades); } catch (e) {
+                  figma.ui.postMessage({ type: 'feedback', message: '⚠️ Variante tabulação não aplicada: ' + String(e) });
                 }
               }
             }
@@ -933,6 +955,7 @@ figma.ui.onmessage = async (msg) => {
     figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y Tab Variação]')).forEach(n => n.remove());
     figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y LT Variação]')).forEach(n => n.remove());
     figma.currentPage.findAll((n: SceneNode) => n.name === '[A11Y Variações]').forEach(n => n.remove());
+    variacoesContainerId = null;
 
     // Zerar frameNodeId/instanceNodeId para que no próximo carregamento os frames sejam recriados
     if (msg.variacoes_tabulacao) {
@@ -1123,7 +1146,7 @@ figma.ui.onmessage = async (msg) => {
           options: def.type === 'VARIANT' ? (def as any).variantOptions : [true, false]
         }));
       figma.ui.postMessage({ type: 'component-properties-ready', props });
-    } catch (e) {
+    } catch(e) {
       console.error('[get-component-properties]', e);
       figma.ui.postMessage({ type: 'component-properties-ready', props: [] });
     }
@@ -1159,17 +1182,15 @@ figma.ui.onmessage = async (msg) => {
         }
       }
       // Continua a criação normal se não encontrou um frame existente com instância
-      // Clona o componente e aplica propriedades antes de criar o frame
-      // (setProperties pode alterar as dimensões da instância)
-      const instance = comp.clone() as InstanceNode;
+      // Cria instância do componente (suporta INSTANCE, COMPONENT, COMPONENT_SET)
+      const instance = createComponentInstance(comp);
       instance.x = 0;
       instance.y = 0;
 
       if (instance.type === 'INSTANCE' && msg.propriedades && Object.keys(msg.propriedades).length > 0) {
         try {
           instance.setProperties(msg.propriedades);
-        } catch (e) {
-        }
+        } catch(e) { figma.ui.postMessage({ type: "feedback", message: "⚠️ Propriedade não aplicada: " + String(e) }); }
       }
 
       // Cria frame container sem auto layout — tamanho igual à instância
@@ -1191,7 +1212,7 @@ figma.ui.onmessage = async (msg) => {
         frameNodeId: varFrame.id,
         instanceNodeId: instance.id
       });
-    } catch (e) {
+    } catch(e) {
       console.error('[create-variation-frame]', e);
       figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar frame de variação: ${e}` });
     }
@@ -1205,7 +1226,7 @@ figma.ui.onmessage = async (msg) => {
       } else {
         componenteVariacaoAtivo = null;
       }
-    } catch (e) {
+    } catch(e) {
       componenteVariacaoAtivo = null;
     }
   }
@@ -1266,8 +1287,7 @@ figma.ui.onmessage = async (msg) => {
       try {
         const node = await figma.getNodeByIdAsync(msg.frameNodeId);
         if (node) node.remove();
-      } catch (e) {
-      }
+      } catch(e) {}
     }
   }
 
@@ -1287,11 +1307,11 @@ figma.ui.onmessage = async (msg) => {
       const frameName = `[A11Y LT Variação] ${msg.nome}`;
       const existing = figma.currentPage.findOne((n: SceneNode) => n.name === frameName);
       if (existing) existing.remove();
-      const instance = comp.clone() as InstanceNode;
+      const instance = createComponentInstance(comp);
       instance.x = 0;
       instance.y = 0;
       if (instance.type === 'INSTANCE' && msg.propriedades && Object.keys(msg.propriedades).length > 0) {
-        try { instance.setProperties(msg.propriedades); } catch (e) {}
+        try { instance.setProperties(msg.propriedades); } catch (e) { figma.ui.postMessage({ type: "feedback", message: "⚠️ Propriedade não aplicada: " + String(e) }); }
       }
       const varFrame = figma.createFrame();
       varFrame.name = frameName;
@@ -1304,7 +1324,7 @@ figma.ui.onmessage = async (msg) => {
       figma.currentPage.selection = [varFrame];
       figma.viewport.scrollAndZoomIntoView([varFrame]);
       figma.ui.postMessage({ type: 'sr-variation-frame-created', frameNodeId: varFrame.id, instanceNodeId: instance.id });
-    } catch (e) {
+    } catch(e) {
       figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar frame de variação de leitor: ${e}` });
     }
   }
@@ -1325,11 +1345,12 @@ figma.ui.onmessage = async (msg) => {
       const frameName = `[A11Y Tab Variação] ${msg.nome}`;
       const existing = figma.currentPage.findOne((n: SceneNode) => n.name === frameName);
       if (existing) existing.remove();
-      const instance = comp.clone() as InstanceNode;
+      const instance = createComponentInstance(comp);
       instance.x = 0;
       instance.y = 0;
       if (instance.type === 'INSTANCE' && msg.propriedades && Object.keys(msg.propriedades).length > 0) {
         try { instance.setProperties(msg.propriedades); } catch (e) {
+          figma.ui.postMessage({ type: 'feedback', message: '⚠️ Variante tabulação não aplicada: ' + String(e) });
         }
       }
       const varFrame = figma.createFrame();
@@ -1343,7 +1364,7 @@ figma.ui.onmessage = async (msg) => {
       figma.currentPage.selection = [varFrame];
       figma.viewport.scrollAndZoomIntoView([varFrame]);
       figma.ui.postMessage({ type: 'tab-variation-frame-created', frameNodeId: varFrame.id, instanceNodeId: instance.id });
-    } catch (e) {
+    } catch(e) {
       figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar frame de variação de tabulação: ${e}` });
     }
   }
@@ -1356,7 +1377,7 @@ figma.ui.onmessage = async (msg) => {
       } else {
         componenteTabVariacaoAtivo = null;
       }
-    } catch (e) {
+    } catch(e) {
       componenteTabVariacaoAtivo = null;
     }
   }
@@ -1370,8 +1391,7 @@ figma.ui.onmessage = async (msg) => {
       try {
         const node = await figma.getNodeByIdAsync(msg.frameNodeId);
         if (node) node.remove();
-      } catch (e) {
-      }
+      } catch(e) {}
     }
   }
 
@@ -1383,7 +1403,7 @@ figma.ui.onmessage = async (msg) => {
       } else {
         componenteSRVariacaoAtivo = null;
       }
-    } catch (e) {
+    } catch(e) {
       componenteSRVariacaoAtivo = null;
     }
   }
@@ -1397,8 +1417,7 @@ figma.ui.onmessage = async (msg) => {
       try {
         const node = await figma.getNodeByIdAsync(msg.frameNodeId);
         if (node) node.remove();
-      } catch (e) {}
-    }
+      } catch (e) { figma.ui.postMessage({ type: "feedback", message: "⚠️ Propriedade não aplicada: " + String(e) }); }    }
   }
 
   else if (msg.type === 'save-leitor-tela') {
@@ -1493,7 +1512,7 @@ figma.ui.onmessage = async (msg) => {
       figma.viewport.scrollAndZoomIntoView([overlay]);
       tempSROverlayId = overlay.id;
       figma.ui.postMessage({ type: 'sr-overlay-created' });
-    } catch (e) {
+    } catch(e) {
       figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar frame de anotação: ${e}` });
     }
   }
