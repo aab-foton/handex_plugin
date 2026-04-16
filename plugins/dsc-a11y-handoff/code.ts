@@ -3,6 +3,13 @@
 // ==========================================
 figma.showUI(__html__, { width: 560, height: 760, themeColors: true });
 
+figma.on('close', () => {
+  try {
+    const container = figma.currentPage.findOne((n: SceneNode) => n.name === '[A11Y Variações]');
+    if (container) container.remove();
+  } catch (e) {}
+});
+
 let componentePrincipalAtivo: SceneNode | null = null;
 let handoffAtivo: SceneNode | null = null;
 let contextoTravado: boolean = false;
@@ -59,6 +66,38 @@ async function updateText(node: TextNode, value: string) {
   }
 }
 
+async function applyWcagBackground(imageFrame: FrameNode, componentNode: SceneNode, allVars: any[]): Promise<void> {
+  const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  const relativeLuminance = (r: number, g: number, b: number) =>
+    0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+  const wcagContrast = (l1: number, l2: number) => {
+    const lighter = Math.max(l1, l2);
+    const darker  = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  };
+  const bgFills   = Array.isArray(imageFrame.fills)   ? imageFrame.fills   as Paint[] : [];
+  const compFills = Array.isArray((componentNode as FrameNode).fills) ? (componentNode as FrameNode).fills as Paint[] : [];
+  const bgFill   = bgFills.find(f   => f.type === 'SOLID') as SolidPaint | undefined;
+  const compFill = compFills.find(f => f.type === 'SOLID') as SolidPaint | undefined;
+  let needsSwap = true;
+  if (bgFill && compFill) {
+    const bgL   = relativeLuminance(bgFill.color.r,   bgFill.color.g,   bgFill.color.b);
+    const compL = relativeLuminance(compFill.color.r, compFill.color.g, compFill.color.b);
+    needsSwap = wcagContrast(bgL, compL) < 3;
+  }
+  if (needsSwap) {
+    const figmaVars = (figma as any).variables;
+    const cardBg2Var = allVars.find((v: any) => v.name.toLowerCase().includes('card background 2'));
+    if (cardBg2Var && figmaVars) {
+      imageFrame.fills = [figmaVars.setBoundVariableForPaint(
+        { type: 'SOLID', color: { r: 0, g: 0, b: 0 } }, 'color', cardBg2Var
+      )];
+    } else {
+      imageFrame.fills = [{ type: 'SOLID', color: { r: 0.16, g: 0.20, b: 0.29 } }];
+    }
+  }
+}
+
 function computeLetrasTS(conectores: any[]): string[] {
   const letras: string[] = [];
   let decCounter = 0;
@@ -76,6 +115,66 @@ function computeLetrasTS(conectores: any[]): string[] {
     }
   }
   return letras;
+}
+
+function getOrCreateVariacoesContainer(comp: SceneNode, handoff: SceneNode | null, parentNode: FrameNode | PageNode): FrameNode {
+  const CONTAINER_NAME = '[A11Y Variações]';
+  const GAP = 80;
+
+  // Reutiliza container existente
+  const existing = figma.currentPage.findOne((n: SceneNode) => n.name === CONTAINER_NAME) as FrameNode | null;
+  if (existing) return existing;
+
+  // Cria novo container com auto layout horizontal + wrap
+  const container = figma.createFrame();
+  container.name = CONTAINER_NAME;
+  container.fills = [];
+  container.clipsContent = false;
+  container.layoutMode = 'HORIZONTAL';
+  container.layoutWrap = 'WRAP';
+  container.itemSpacing = 24;
+  container.counterAxisSpacing = 24;
+  container.paddingTop = 0;
+  container.paddingBottom = 0;
+  container.paddingLeft = 0;
+  container.paddingRight = 0;
+  container.primaryAxisSizingMode = 'AUTO';
+  container.counterAxisSizingMode = 'AUTO';
+
+  // Posiciona: à direita do handoff se espaço livre, senão abaixo do comp
+  if (handoff) {
+    const rightX = handoff.x + handoff.width + GAP;
+    const rightY = handoff.y;
+    // Verifica se algum sibling ocupa a área à direita do handoff
+    const siblings = parentNode.type === 'PAGE'
+      ? (figma.currentPage.children as SceneNode[])
+      : (parentNode as FrameNode).children as SceneNode[];
+    const overlap = siblings.some(n => {
+      if (n === comp || n === handoff) return false;
+      return n.x < rightX + 400 && (n.x + n.width) > rightX && n.y < rightY + handoff.height && (n.y + n.height) > rightY;
+    });
+    if (!overlap) {
+      container.x = rightX;
+      container.y = rightY;
+    } else {
+      // Abaixo do elemento mais baixo à esquerda do handoff
+      const leftSiblings = siblings.filter(n => n !== comp && n !== handoff && n.x < handoff.x);
+      const maxBottom = leftSiblings.reduce((acc, n) => Math.max(acc, n.y + n.height), comp.y + comp.height);
+      container.x = comp.x;
+      container.y = maxBottom + GAP;
+    }
+  } else {
+    container.x = comp.x + comp.width + GAP;
+    container.y = comp.y;
+  }
+
+  if (parentNode.type === 'PAGE') {
+    figma.currentPage.appendChild(container);
+  } else {
+    (parentNode as FrameNode).appendChild(container);
+  }
+
+  return container;
 }
 
 // ==========================================
@@ -113,8 +212,13 @@ figma.ui.onmessage = async (msg) => {
     figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y Toque]')).forEach(n => n.remove());
     tempTouchOverlayId = null;
 
+    // Cache de variáveis Figma (usado 3x para WCAG contrast)
+    const figmaVarsGlobal = (figma as any).variables;
+    const allVarsGlobal: any[] = figmaVarsGlobal ? await figmaVarsGlobal.getLocalVariablesAsync() : [];
+
     // --- NOVO: LÓGICA DE DETACH ---
     // Se for uma instância, precisamos dar o detach para conseguir usar appendChild nas tabelas
+    const isUpdate = handoffAtivo.type !== 'INSTANCE';
     let workingFrame: FrameNode;
     
     if (handoffAtivo.type === "INSTANCE") {
@@ -177,17 +281,17 @@ figma.ui.onmessage = async (msg) => {
     };
 
     if (msg.runMapeamento !== false) {
-      figma.ui.postMessage({ type: 'feedback', message: '⏳ Preenchendo nome do componente...' });
+      figma.ui.postMessage({ type: 'feedback', message: `⏳ ${isUpdate ? 'Atualizando' : 'Gerando'} tabelas...` });
       const keyboardItems = msg.mapeamentos.filter((m: any) => m.utilizacao.toLowerCase().includes("teclado"));
       const gestureItems = msg.mapeamentos.filter((m: any) => m.utilizacao.toLowerCase().includes("gesto"));
 
-      figma.ui.postMessage({ type: 'feedback', message: '⏳ Gerando tabela de teclado...' });
+      figma.ui.postMessage({ type: 'feedback', message: `⏳ ${isUpdate ? 'Atualizando' : 'Gerando'} tabela de teclado...` });
       if (msg.sem_teclado) {
         if (allTableContainers.length >= 1) allTableContainers[0].visible = false;
       } else {
         if (allTableContainers.length >= 1) await fillTable(allTableContainers[0], keyboardItems);
       }
-      figma.ui.postMessage({ type: 'feedback', message: '⏳ Gerando tabela de gestos...' });
+      figma.ui.postMessage({ type: 'feedback', message: `⏳ ${isUpdate ? 'Atualizando' : 'Gerando'} tabela de gestos...` });
       if (msg.sem_gesto) {
         if (allTableContainers.length >= 2) allTableContainers[1].visible = false;
       } else {
@@ -196,7 +300,6 @@ figma.ui.onmessage = async (msg) => {
       }
 
     // --- PARTE B: LOGICA DE DADOS (SALVAR NO PLUGIN DATA) ---
-    figma.ui.postMessage({ type: 'feedback', message: '⏳ Salvando dados...' });
     
     // --- ÁREA DE TOQUE (NOVO) ---
     if (msg.runTouch !== false) {
@@ -258,6 +361,7 @@ figma.ui.onmessage = async (msg) => {
     }
     }
 
+    figma.ui.postMessage({ type: 'feedback', message: `⏳ ${isUpdate ? 'Atualizando' : 'Gerando'} specs de leitor de tela...` });
     // --- LEITOR DE TELA: SPECS ---
     const variacoesLTSpecsAll: any[] = msg.variacoes_leitor || [];
     const variacoesLTSpecsComItems = variacoesLTSpecsAll.filter((v: any) => !v.sem_leitor && Array.isArray(v.conectores_leitor) && v.conectores_leitor.length > 0);
@@ -415,6 +519,7 @@ figma.ui.onmessage = async (msg) => {
           }
         }
 
+        figma.ui.postMessage({ type: 'feedback', message: `⏳ ${isUpdate ? 'Atualizando' : 'Gerando'} preview de leitor de tela...` });
         // --- LEITOR DE TELA: PREVIEW ---
         const variacoesLT: any[] = msg.variacoes_leitor || [];
         const variacoesLTComItems = variacoesLT.filter((v: any) => !v.sem_leitor && v.conectores_leitor && v.conectores_leitor.length > 0);
@@ -431,42 +536,10 @@ figma.ui.onmessage = async (msg) => {
 
               const keepSR = new Set<BaseNode>([tagSR, modelConector, modelAgrupamento, modelItemNumber].filter(Boolean) as BaseNode[]);
               Array.from(srImageFrame.children).filter(n => !keepSR.has(n)).forEach(n => n.remove());
+              const itemNumH = modelItemNumber ? modelItemNumber.height : 36;
 
               // WCAG contrast check
-              try {
-                const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-                const relativeLuminance = (r: number, g: number, b: number) =>
-                  0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
-                const wcagContrast = (l1: number, l2: number) => {
-                  const lighter = Math.max(l1, l2);
-                  const darker  = Math.min(l1, l2);
-                  return (lighter + 0.05) / (darker + 0.05);
-                };
-                const bgFillsSR   = Array.isArray(srImageFrame.fills) ? srImageFrame.fills as Paint[] : [];
-                const compFillsSR = Array.isArray((componentePrincipalAtivo as FrameNode).fills)
-                  ? (componentePrincipalAtivo as FrameNode).fills as Paint[] : [];
-                const bgFillSR   = bgFillsSR.find(f => f.type === 'SOLID') as SolidPaint | undefined;
-                const compFillSR = compFillsSR.find(f => f.type === 'SOLID') as SolidPaint | undefined;
-                let needsSwapSR = true;
-                if (bgFillSR && compFillSR) {
-                  const bgL   = relativeLuminance(bgFillSR.color.r,   bgFillSR.color.g,   bgFillSR.color.b);
-                  const compL = relativeLuminance(compFillSR.color.r, compFillSR.color.g, compFillSR.color.b);
-                  needsSwapSR = wcagContrast(bgL, compL) < 3;
-                }
-                const figmaVarsSR = (figma as any).variables;
-                let allVarsSR: any[] = [];
-                if (figmaVarsSR) { allVarsSR = await figmaVarsSR.getLocalVariablesAsync(); }
-                if (needsSwapSR) {
-                  const cardBg2VarSR = allVarsSR.find((v: any) => v.name.toLowerCase().includes('card background 2'));
-                  if (cardBg2VarSR && figmaVarsSR) {
-                    srImageFrame.fills = [figmaVarsSR.setBoundVariableForPaint(
-                      { type: 'SOLID', color: { r: 0, g: 0, b: 0 } }, 'color', cardBg2VarSR
-                    )];
-                  } else {
-                    srImageFrame.fills = [{ type: 'SOLID', color: { r: 0.16, g: 0.20, b: 0.29 } }];
-                  }
-                }
-              } catch (e) {
+              try { await applyWcagBackground(srImageFrame, componentePrincipalAtivo, allVarsGlobal); } catch (e) {
                 figma.ui.postMessage({ type: 'feedback', message: `❌ Erro no bloco de cor (leitor preview): ${e}` });
               }
 
@@ -490,7 +563,8 @@ figma.ui.onmessage = async (msg) => {
                 if (variacao.id === 'default') {
                   compClone = componentePrincipalAtivo.clone();
                 } else if (variacao.instanceNodeId) {
-                  const srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null;
+                  let srcNode: SceneNode | null = null;
+                  try { srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null; } catch (_e) { srcNode = null; }
                   compClone = srcNode ? srcNode.clone() : componentePrincipalAtivo.clone();
                 } else {
                   compClone = componentePrincipalAtivo.clone();
@@ -589,22 +663,22 @@ figma.ui.onmessage = async (msg) => {
                     const elH  = c.height || 0;
                     let lineLength = 80;
                     if (lado === 'esquerda') {
-                      lineLength = OUT_GAP + relX;
+                      lineLength = Math.max(OUT_GAP, OUT_GAP + relX);
                       try { conClone.resize(BADGE_SIZE + lineLength, conClone.height); } catch(e) {}
                       conClone.x = currentX - OUT_GAP - BADGE_SIZE;
                       conClone.y = currentY + relY + elH / 2 - conClone.height / 2;
                     } else if (lado === 'direita') {
-                      lineLength = OUT_GAP + (compW - relX - elW);
+                      lineLength = Math.max(OUT_GAP, OUT_GAP + (compW - relX - elW));
                       try { conClone.resize(BADGE_SIZE + lineLength, conClone.height); } catch(e) {}
                       conClone.x = currentX + relX + elW;
                       conClone.y = currentY + relY + elH / 2 - conClone.height / 2;
                     } else if (lado === 'superior') {
-                      lineLength = OUT_GAP + relY;
+                      lineLength = Math.max(OUT_GAP, OUT_GAP + relY);
                       try { conClone.resize(conClone.width, BADGE_SIZE + lineLength); } catch(e) {}
                       conClone.x = currentX + relX + elW / 2 - conClone.width / 2;
-                      conClone.y = currentY - OUT_GAP - BADGE_SIZE;
+                      conClone.y = currentY - OUT_GAP - BADGE_SIZE - itemNumH - 4;
                     } else {
-                      lineLength = OUT_GAP + (compH - relY - elH);
+                      lineLength = Math.max(OUT_GAP, OUT_GAP + (compH - relY - elH));
                       try { conClone.resize(conClone.width, BADGE_SIZE + lineLength); } catch(e) {}
                       conClone.x = currentX + relX + elW / 2 - conClone.width / 2;
                       conClone.y = currentY + relY + elH;
@@ -632,6 +706,7 @@ figma.ui.onmessage = async (msg) => {
           }
         }
 
+        figma.ui.postMessage({ type: 'feedback', message: `⏳ ${isUpdate ? 'Atualizando' : 'Gerando'} preview de área de toque...` });
         // --- PREENCHER IMAGE (PREVIEW) ---
         if (msg.runTouch !== false) {
           const imageFrame = workingFrame.findOne((n: SceneNode) => n.name === 'image' && n.parent?.name !== 'screen reader') as FrameNode | null;
@@ -657,47 +732,7 @@ figma.ui.onmessage = async (msg) => {
           const MAX_WIDTH = Math.max(imageFrame.width, 800); // limite antes de quebrar linha
 
           // Ajustar cor de fundo do imageFrame
-          try {
-            const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-            const relativeLuminance = (r: number, g: number, b: number) =>
-              0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
-            const wcagContrast = (l1: number, l2: number) => {
-              const lighter = Math.max(l1, l2);
-              const darker  = Math.min(l1, l2);
-              return (lighter + 0.05) / (darker + 0.05);
-            };
-
-            const bgFills   = Array.isArray(imageFrame.fills) ? imageFrame.fills as Paint[] : [];
-            const compFills = Array.isArray((componentePrincipalAtivo as FrameNode).fills)
-              ? (componentePrincipalAtivo as FrameNode).fills as Paint[]
-              : [];
-            const bgFill   = bgFills.find(f => f.type === 'SOLID') as SolidPaint | undefined;
-            const compFill = compFills.find(f => f.type === 'SOLID') as SolidPaint | undefined;
-
-            let needsSwap = true;
-            if (bgFill && compFill) {
-              const bgL   = relativeLuminance(bgFill.color.r,   bgFill.color.g,   bgFill.color.b);
-              const compL = relativeLuminance(compFill.color.r, compFill.color.g, compFill.color.b);
-              needsSwap = wcagContrast(bgL, compL) < 3;
-            }
-
-            const figmaVars = (figma as any).variables;
-            let allVars: any[] = [];
-            if (figmaVars) { allVars = await figmaVars.getLocalVariablesAsync(); }
-            if (needsSwap) {
-              const cardBg2Var = allVars.find((v: any) => v.name.toLowerCase().includes('card background 2'));
-              if (cardBg2Var && figmaVars) {
-                const boundFill = figmaVars.setBoundVariableForPaint(
-                  { type: 'SOLID', color: { r: 0, g: 0, b: 0 } },
-                  'color',
-                  cardBg2Var
-                );
-                imageFrame.fills = [boundFill];
-              } else {
-                imageFrame.fills = [{ type: 'SOLID', color: { r: 0.16, g: 0.20, b: 0.29 } }];
-              }
-            }
-          } catch(e) {
+          try { await applyWcagBackground(imageFrame, componentePrincipalAtivo, allVarsGlobal); } catch (e) {
             figma.ui.postMessage({ type: 'feedback', message: `❌ Erro no bloco de cor: ${e}` });
           }
 
@@ -714,7 +749,8 @@ figma.ui.onmessage = async (msg) => {
             if (variacao.id === 'default') {
               compClone = componentePrincipalAtivo.clone();
             } else if (variacao.instanceNodeId) {
-              const srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null;
+              let srcNode: SceneNode | null = null;
+              try { srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null; } catch (_e) { srcNode = null; }
               compClone = srcNode ? srcNode.clone() : componentePrincipalAtivo.clone();
             } else {
               // instanceNodeId zerado (após handoff) — clonar e aplicar propriedades salvas
@@ -777,6 +813,7 @@ figma.ui.onmessage = async (msg) => {
         }
       }
 
+    figma.ui.postMessage({ type: 'feedback', message: `⏳ ${isUpdate ? 'Atualizando' : 'Gerando'} preview de tabulação...` });
     // --- FOCUS ORDER: VISUAL NO TEMPLATE (VARIAÇÕES DE TABULAÇÃO) ---
     const variacoesTab: any[] = msg.variacoes_tabulacao || [];
     const variacoesTabComItems = variacoesTab.filter((v: any) => !v.sem_tabulacao && v.tab_order && v.tab_order.length > 0);
@@ -795,40 +832,7 @@ figma.ui.onmessage = async (msg) => {
           Array.from(tabImageFrame.children).filter(n => !keepTab.has(n)).forEach(n => n.remove());
 
           // Ajuste WCAG de contraste do fundo
-          try {
-            const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-            const relativeLuminance = (r: number, g: number, b: number) =>
-              0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
-            const wcagContrast = (l1: number, l2: number) => {
-              const lighter = Math.max(l1, l2);
-              const darker  = Math.min(l1, l2);
-              return (lighter + 0.05) / (darker + 0.05);
-            };
-            const bgFillsTab   = Array.isArray(tabImageFrame.fills) ? tabImageFrame.fills as Paint[] : [];
-            const compFillsTab = Array.isArray((componentePrincipalAtivo as FrameNode).fills)
-              ? (componentePrincipalAtivo as FrameNode).fills as Paint[] : [];
-            const bgFillTab   = bgFillsTab.find(f => f.type === 'SOLID') as SolidPaint | undefined;
-            const compFillTab = compFillsTab.find(f => f.type === 'SOLID') as SolidPaint | undefined;
-            let needsSwapTab = true;
-            if (bgFillTab && compFillTab) {
-              const bgL   = relativeLuminance(bgFillTab.color.r,   bgFillTab.color.g,   bgFillTab.color.b);
-              const compL = relativeLuminance(compFillTab.color.r, compFillTab.color.g, compFillTab.color.b);
-              needsSwapTab = wcagContrast(bgL, compL) < 3;
-            }
-            const figmaVarsTab = (figma as any).variables;
-            let allVarsTab: any[] = [];
-            if (figmaVarsTab) { allVarsTab = await figmaVarsTab.getLocalVariablesAsync(); }
-            if (needsSwapTab) {
-              const cardBg2VarTab = allVarsTab.find((v: any) => v.name.toLowerCase().includes('card background 2'));
-              if (cardBg2VarTab && figmaVarsTab) {
-                tabImageFrame.fills = [figmaVarsTab.setBoundVariableForPaint(
-                  { type: 'SOLID', color: { r: 0, g: 0, b: 0 } }, 'color', cardBg2VarTab
-                )];
-              } else {
-                tabImageFrame.fills = [{ type: 'SOLID', color: { r: 0.16, g: 0.20, b: 0.29 } }];
-              }
-            }
-          } catch (e) {
+          try { await applyWcagBackground(tabImageFrame, componentePrincipalAtivo, allVarsGlobal); } catch (e) {
             figma.ui.postMessage({ type: 'feedback', message: `❌ Erro no bloco de cor (focus order): ${e}` });
           }
 
@@ -852,7 +856,8 @@ figma.ui.onmessage = async (msg) => {
             if (variacao.id === 'default') {
               compClone = componentePrincipalAtivo.clone();
             } else if (variacao.instanceNodeId) {
-              const srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null;
+              let srcNode: SceneNode | null = null;
+              try { srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null; } catch (_e) { srcNode = null; }
               compClone = srcNode ? srcNode.clone() : componentePrincipalAtivo.clone();
             } else {
               compClone = componentePrincipalAtivo.clone();
@@ -927,6 +932,7 @@ figma.ui.onmessage = async (msg) => {
     figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y Variação]')).forEach(n => n.remove());
     figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y Tab Variação]')).forEach(n => n.remove());
     figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y LT Variação]')).forEach(n => n.remove());
+    figma.currentPage.findAll((n: SceneNode) => n.name === '[A11Y Variações]').forEach(n => n.remove());
 
     // Zerar frameNodeId/instanceNodeId para que no próximo carregamento os frames sejam recriados
     if (msg.variacoes_tabulacao) {
@@ -954,6 +960,7 @@ figma.ui.onmessage = async (msg) => {
       }
     }
 
+    figma.ui.postMessage({ type: 'feedback', message: '⏳ Salvando dados...' });
     const dbInstance = workingFrame.findOne((node: SceneNode) => node.name === "[dsc-h] Plugin Data A11y") as InstanceNode;
     if (dbInstance) {
       const dataToSave = JSON.stringify({
@@ -1006,7 +1013,7 @@ figma.ui.onmessage = async (msg) => {
     });
     workingFrame.setPluginData("a11y-component-data", dataToSaveDirect);
 
-    figma.ui.postMessage({ type: 'feedback', message: '✅ Handoff preenchido e dados salvos!' });
+    figma.ui.postMessage({ type: 'feedback', message: `✅ Handoff ${isUpdate ? 'atualizado' : 'gerado'} e dados salvos!` });
   }
 
   else if (msg.type === 'create-touch-overlay') {
@@ -1135,11 +1142,23 @@ figma.ui.onmessage = async (msg) => {
         return;
       }
 
-      // Remove frame anterior com mesmo nome se existir
+      // Remove frame anterior com mesmo nome se existir, se não encontrar, cria novo
       const frameName = `[A11Y Variação] ${msg.nome}`;
-      const existing = figma.currentPage.findOne((n: SceneNode) => n.name === frameName);
-      if (existing) existing.remove();
-
+      const existing = figma.currentPage.findOne((n: SceneNode) => n.name === frameName) as FrameNode | null;
+      if (existing) {
+        const existingInstance = Array.from(existing.children).find(c => c.type === 'INSTANCE' || c.type === 'COMPONENT') as SceneNode | null;
+        if (existingInstance) {
+          figma.currentPage.selection = [existing];
+          figma.viewport.scrollAndZoomIntoView([existing]);
+          figma.ui.postMessage({
+            type: 'variation-frame-created', // Mensagem de sucesso para o UI
+            frameNodeId: existing.id,
+            instanceNodeId: existingInstance.id
+          });
+          return; // Termina a execução se encontrou e reusou o frame
+        }
+      }
+      // Continua a criação normal se não encontrou um frame existente com instância
       // Clona o componente e aplica propriedades antes de criar o frame
       // (setProperties pode alterar as dimensões da instância)
       const instance = comp.clone() as InstanceNode;
@@ -1160,12 +1179,8 @@ figma.ui.onmessage = async (msg) => {
       varFrame.clipsContent = false;
       varFrame.resize(instance.width, instance.height);
 
-      // Posiciona o frame próximo ao componente original
-      varFrame.x = comp.x + comp.width + 80;
-      varFrame.y = comp.y;
-
-      // Insere no mesmo parent e move a instância para dentro
-      (parentNode as FrameNode).appendChild(varFrame);
+      const container = getOrCreateVariacoesContainer(comp, handoffAtivo, parentNode);
+      container.appendChild(varFrame);
       varFrame.appendChild(instance);
 
       figma.currentPage.selection = [varFrame];
@@ -1257,6 +1272,7 @@ figma.ui.onmessage = async (msg) => {
   }
 
   else if (msg.type === 'create-sr-variation-frame') {
+    figma.ui.postMessage({ type: 'feedback', message: '⏳ Criando frame de variação...' });
     if (!componentePrincipalAtivo) {
       figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo.' });
       return;
@@ -1282,9 +1298,8 @@ figma.ui.onmessage = async (msg) => {
       varFrame.fills = [];
       varFrame.clipsContent = false;
       varFrame.resize(instance.width, instance.height);
-      varFrame.x = comp.x + comp.width + 80;
-      varFrame.y = comp.y;
-      (parentNode as FrameNode).appendChild(varFrame);
+      const container = getOrCreateVariacoesContainer(comp, handoffAtivo, parentNode);
+      container.appendChild(varFrame);
       varFrame.appendChild(instance);
       figma.currentPage.selection = [varFrame];
       figma.viewport.scrollAndZoomIntoView([varFrame]);
@@ -1295,6 +1310,7 @@ figma.ui.onmessage = async (msg) => {
   }
 
   else if (msg.type === 'create-tab-variation-frame') {
+    figma.ui.postMessage({ type: 'feedback', message: '⏳ Criando frame de variação de tabulação...' });
     if (!componentePrincipalAtivo) {
       figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo.' });
       return;
@@ -1321,9 +1337,8 @@ figma.ui.onmessage = async (msg) => {
       varFrame.fills = [];
       varFrame.clipsContent = false;
       varFrame.resize(instance.width, instance.height);
-      varFrame.x = comp.x + comp.width + 80;
-      varFrame.y = comp.y;
-      (parentNode as FrameNode).appendChild(varFrame);
+      const container = getOrCreateVariacoesContainer(comp, handoffAtivo, parentNode);
+      container.appendChild(varFrame);
       varFrame.appendChild(instance);
       figma.currentPage.selection = [varFrame];
       figma.viewport.scrollAndZoomIntoView([varFrame]);
@@ -1400,6 +1415,21 @@ figma.ui.onmessage = async (msg) => {
     if (componentePrincipalAtivo) {
       const dataNode = await resolveDataNode(componentePrincipalAtivo);
       if (dataNode) dataNode.setPluginData('a11y-component-data', JSON.stringify(dados));
+    }
+  }
+
+  else if (msg.type === 'save-partial-data') {
+    if (!handoffAtivo) return;
+    const dbInstance = (handoffAtivo as any).findOne((n: SceneNode) => n.name === '[dsc-h] Plugin Data A11y') as InstanceNode | null;
+    if (!dbInstance) return;
+    const dados = JSON.parse(dbInstance.getPluginData('a11y-component-data') || '{}');
+    dados[msg.key] = msg.value;
+    const saved = JSON.stringify(dados);
+    dbInstance.setPluginData('a11y-component-data', saved);
+    (handoffAtivo as any).setPluginData('a11y-component-data', saved);
+    if (componentePrincipalAtivo) {
+      const dataNode = await resolveDataNode(componentePrincipalAtivo);
+      if (dataNode) dataNode.setPluginData('a11y-component-data', saved);
     }
   }
 
@@ -1650,33 +1680,31 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
   let masterList: { mapeamento: string; descricao: string; utilizacao: string }[] = [];
   let rolesList: ReturnType<typeof parseRolesList> = [];
   let componentData: any = { plataformas: [], zoom: [], mapeamentos: [], areas_toque: [], sem_toque: false, variacoes: [], variacoes_tabulacao: [], variacoes_leitor: [], conectores_leitor: [], sem_leitor: false };
-  let dataLoadedFromDb = false;
-
-  // Tenta ler dados salvos diretamente no frame do handoff
-  const rawDirect = (handoff as any).getPluginData("a11y-component-data");
-  if (rawDirect) {
-    componentData = JSON.parse(rawDirect);
-    dataLoadedFromDb = true;
-  }
-
-  if (dbInstance) {
-    masterList = parseMasterList(dbInstance);
-    rolesList = parseRolesList(dbInstance);
-
-    const rawSaved = dbInstance.getPluginData("a11y-component-data");
-    if (rawSaved) {
-      componentData = JSON.parse(rawSaved);
-      dataLoadedFromDb = true;
-    }
-  }
-
-  // Fallback: lê do ComponentSet/Component APENAS se dbInstance não tinha dados salvos
-  if (!dataLoadedFromDb && componentePrincipalAtivo) {
+  // 1. COMPONENT_SET como baseline (sempre tenta, independente de outras fontes)
+  if (componentePrincipalAtivo) {
     const dataNode = await resolveDataNode(componentePrincipalAtivo);
     if (dataNode) {
       const rawFromComponent = dataNode.getPluginData('a11y-component-data');
-      if (rawFromComponent) componentData = JSON.parse(rawFromComponent);
+      if (rawFromComponent) {
+        try { componentData = JSON.parse(rawFromComponent); } catch(e) {}
+      }
     }
+  }
+
+  // 2. dbInstance dentro do handoff (override se tem dados — mais específico)
+  if (dbInstance) {
+    masterList = parseMasterList(dbInstance);
+    rolesList = parseRolesList(dbInstance);
+    const rawSaved = dbInstance.getPluginData('a11y-component-data');
+    if (rawSaved) {
+      try { componentData = JSON.parse(rawSaved); } catch(e) {}
+    }
+  }
+
+  // 3. Dados diretos no frame do handoff (override final — mais recente)
+  const rawDirect = (handoff as any).getPluginData('a11y-component-data');
+  if (rawDirect) {
+    try { componentData = JSON.parse(rawDirect); } catch(e) {}
   }
 
 

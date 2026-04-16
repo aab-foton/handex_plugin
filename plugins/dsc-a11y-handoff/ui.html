@@ -699,11 +699,14 @@
     document.querySelectorAll('.tab').forEach(btn => {
       btn.onclick = () => {
         // Cancelar forms abertos ao trocar de aba
-        if (el('touchFormView').classList.contains('open')) el('btnTouchCancel').click();
-        if (el('tabFormView').classList.contains('open')) closeTabForm();
+        if (el('touchFormView') && el('touchFormView').classList.contains('open')) el('btnTouchCancel').click();
+        if (el('tabFormView') && el('tabFormView').classList.contains('open')) closeTabForm();
         if (el('tabVariationFormView') && el('tabVariationFormView').classList.contains('open')) closeTabVariationForm();
         if (el('srVariationFormView') && el('srVariationFormView').classList.contains('open')) closeSRVariationForm();
+        if (el('srFormView') && el('srFormView').classList.contains('open')) el('srFormView').classList.remove('open');
         // Resetar views de variação para lista ao trocar de aba
+        showView('list');
+        parent.postMessage({ pluginMessage: { type: 'deactivate-variation' } }, '*');
         showTabView('list');
         showSRView('list');
         document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
@@ -759,6 +762,7 @@
     function addItem(item) {
       if (!currentData.find(x => x.mapeamento === item.mapeamento)) {
         currentData.push(item);
+        saveGeralData();
         renderLists();
       }
       el('tInput').value = '';
@@ -791,6 +795,7 @@
 
     function removeItem(i) {
       currentData.splice(i, 1);
+      saveGeralData();
       renderLists();
       updateSummaryCards();
     }
@@ -1099,6 +1104,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         if (targetVar && !targetVar.frameNodeId) {
           targetVar.frameNodeId = msg.frameNodeId;
           targetVar.instanceNodeId = msg.instanceNodeId;
+          saveTouchTabData();
         }
         const btn = el('btnVariationFormCreate');
         if (btn) { btn.textContent = 'Criar variante'; btn.disabled = false; }
@@ -1150,6 +1156,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         if (targetVar) {
           targetVar.frameNodeId = msg.frameNodeId;
           targetVar.instanceNodeId = msg.instanceNodeId;
+          saveTouchTabData();
         }
         const btnCreate = el('btnTabVariationFormCreate');
         if (btnCreate) { btnCreate.textContent = 'Criar variante'; btnCreate.disabled = false; }
@@ -1179,7 +1186,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
     };
 
     function updatePZCount() { el('pzCount').textContent = `${document.querySelectorAll('#panel-geral input[type="checkbox"]:checked').length} selecionados`; }
-    document.addEventListener('change', (e) => { if (e.target.type === 'checkbox' && e.target.id !== 'chkSemToque') { updatePZCount(); updateSummaryCards(); } });
+    document.addEventListener('change', (e) => { if (e.target.type === 'checkbox' && e.target.id !== 'chkSemToque') { updatePZCount(); updateSummaryCards(); saveGeralData(true); } });
 
       function openSettings() {
     // Restaura setting salvo (aqui o elemento já existe no DOM)
@@ -1189,6 +1196,20 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
     el('settingsMasterCount').textContent = count > 0
       ? '● ' + count + ' mapeamentos carregados'
       : '● Nenhum dado no template';
+
+    // Calculate new counts
+    const srVariationsCount = srVariationsData.length;
+    const touchVariationsCount = variationsData.length;
+    const tabVariationsCount = tabVariationsData.length;
+
+    // Update elements for counts (assuming these IDs exist in settingsOverlay)
+    const srCountEl = el('srVariationsCount');
+    if (srCountEl) srCountEl.textContent = `Leitor de Tela: ${srVariationsCount}`;
+    const touchCountEl = el('touchVariationsCount');
+    if (touchCountEl) touchCountEl.textContent = `Área de Toque: ${touchVariationsCount}`;
+    const tabCountEl = el('tabVariationsCount');
+    if (tabCountEl) tabCountEl.textContent = `Tabulação: ${tabVariationsCount}`;
+
     el('settingsOverlay').classList.add('open');
   }
 
@@ -1473,7 +1494,7 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
     if (label) label.textContent = varData.nome || 'Default';
     if (id !== 'default' && !varData.frameNodeId) {
       parent.postMessage({ pluginMessage: { type: 'deactivate-sr-variation' } }, '*');
-      parent.postMessage({ pluginMessage: { type: 'create-sr-variation-frame', nome: varData.nome, propriedades: varData.propriedades || {} } }, '*');
+      showSRView('main');
     } else if (id !== 'default' && varData.instanceNodeId) {
       parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', instanceNodeId: varData.instanceNodeId } }, '*');
       showSRView('main');
@@ -1601,8 +1622,8 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', instanceNodeId: varData.instanceNodeId } }, '*');
       showTabView('main');
     } else {
-      parent.postMessage({ pluginMessage: { type: 'create-tab-variation-frame', nome: varData.nome, propriedades: varData.propriedades || {} } }, '*');
-      // showTabView('main') called when tab-variation-frame-created arrives
+      parent.postMessage({ pluginMessage: { type: 'deactivate-tab-variation' } }, '*');
+      showTabView('main');
     }
   }
 
@@ -1612,6 +1633,7 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       if (varData) {
         varData.tab_order = [...tabOrderData];
         varData.sem_tabulacao = el('chkSemTabulacao').checked;
+        saveTouchTabData();
       }
     }
     parent.postMessage({ pluginMessage: { type: 'deactivate-tab-variation' } }, '*');
@@ -1628,6 +1650,7 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       parent.postMessage({ pluginMessage: { type: 'delete-tab-variation-frame', frameNodeId: v.frameNodeId } }, '*');
     }
     tabVariationsData.splice(idx, 1);
+    saveTouchTabData();
     renderTabVariationList();
   }
 
@@ -1728,14 +1751,12 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       showView('main');
     } else if (varData.instanceNodeId) {
       // Frame já existe — ativar e abrir
-      parent.postMessage({ pluginMessage: { type: 'activate-variation', instanceNodeId: v.instanceNodeId } }, '*');
+      parent.postMessage({ pluginMessage: { type: 'activate-variation', instanceNodeId: varData.instanceNodeId } }, '*');
       showView('main');
     } else {
-      // Frame foi apagado (após geração de handoff) — recriar antes de abrir
-      parent.postMessage({ pluginMessage: { type: 'create-variation-frame', nome: varData.nome, propriedades: varData.propriedades || {} } }, '*');
-      // showView('main') será chamado quando variation-frame-created chegar (ver window.onmessage)
-      const btn = el('btnVariationFormCreate');
-      // Não há botão para desabilitar aqui; aguardar mensagem de retorno
+      // Sem frame — abrir sem ativar (não cria frame desnecessário)
+      parent.postMessage({ pluginMessage: { type: 'deactivate-variation' } }, '*');
+      showView('main');
     }
   }
 
@@ -1746,6 +1767,7 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       if (varData) {
         varData.areas_toque = [...touchData];
         varData.sem_toque = el('chkSemToque').checked;
+        saveTouchTabData();
       }
     }
     // Desativa variação
@@ -1753,6 +1775,25 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
     currentVariationId = null;
     renderVariationList();
     showView('list');
+  }
+
+  function saveTouchTabData() {
+    parent.postMessage({ pluginMessage: { type: 'save-partial-data', key: 'variacoes', value: variationsData } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'save-partial-data', key: 'variacoes_tabulacao', value: tabVariationsData } }, '*');
+  }
+
+  let _saveGeralTimer = null;
+  function saveGeralData(debounce) {
+    if (debounce) {
+      clearTimeout(_saveGeralTimer);
+      _saveGeralTimer = setTimeout(() => saveGeralData(false), 600);
+      return;
+    }
+    const p = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(c => c.value);
+    const z = Array.from(document.querySelectorAll('input[name="zoom"]:checked')).map(c => c.value);
+    parent.postMessage({ pluginMessage: { type: 'save-partial-data', key: 'plataformas', value: p } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'save-partial-data', key: 'zoom', value: z } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'save-partial-data', key: 'mapeamentos', value: currentData } }, '*');
   }
 
   function deleteVariation(id) {
@@ -1763,6 +1804,7 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       parent.postMessage({ pluginMessage: { type: 'delete-variation-frame', frameNodeId: v.frameNodeId } }, '*');
     }
     variationsData.splice(idx, 1);
+    saveTouchTabData();
     renderVariationList();
   }
 
@@ -2406,6 +2448,20 @@ const select = el('srSelectTipoConector');
           <p style='font-size:12px;color:#666;margin-bottom:8px;'>Dados carregados automaticamente da camada <strong>plugin data</strong> no template.</p>
           <p id='settingsMasterCount' style='font-size:12px;color:#999;'>● Nenhum dado no template</p>
           <button onclick='reloadTemplateData()' style='width:100%;padding:10px;border:1.5px solid #2D4496;border-radius:8px;background:none;color:#2D4496;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;'>↺ Recarregar dados do template</button>
+        </div>
+      </div>
+
+      <div class='card'>
+        <div class='card-body'>
+          <div style='display:flex;align-items:center;gap:8px;margin-bottom:12px;'>
+            <span style='font-size:18px;'>📊</span>
+            <span style='font-size:14px;font-weight:600;'>Dados salvos (variações)</span>
+          </div>
+          <div style='display:flex;flex-direction:column;gap:4px;'>
+            <p id='srVariationsCount' style='font-size:12px;color:#999;'>● Leitor de Tela: —</p>
+            <p id='touchVariationsCount' style='font-size:12px;color:#999;'>● Área de Toque: —</p>
+            <p id='tabVariationsCount' style='font-size:12px;color:#999;'>● Tabulação: —</p>
+          </div>
         </div>
       </div>
     </div>
