@@ -1113,7 +1113,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           closeVariationForm();
           const v = variationsData.find(v => v.id === currentVariationId);
           if (v) {
-            parent.postMessage({ pluginMessage: { type: 'activate-variation', instanceNodeId: v.instanceNodeId } }, '*');
+            parent.postMessage({ pluginMessage: { type: 'activate-variation', instanceNodeId: v.instanceNodeId, areas_toque: v.areas_toque } }, '*');
             showView('main');
             el('btnAddTouch').disabled = false;
             el('btnAddTouch').textContent = '+ Adicionar área de toque';
@@ -1122,7 +1122,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         } else if (currentVariationId && currentVariationId !== 'default' && el('touchVariationFormView') && !el('touchVariationFormView').classList.contains('open')) {
           const v = variationsData.find(v => v.id === currentVariationId);
           if (v) {
-            parent.postMessage({ pluginMessage: { type: 'activate-variation', instanceNodeId: v.instanceNodeId } }, '*');
+            parent.postMessage({ pluginMessage: { type: 'activate-variation', instanceNodeId: v.instanceNodeId, areas_toque: v.areas_toque } }, '*');
             showView('main');
           } else {
             closeVariationForm();
@@ -1142,10 +1142,18 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           if (btnCreate) { btnCreate.textContent = 'Criar variante'; btnCreate.disabled = false; }
           closeSRVariationForm();
         }
-        if (currentSRVariationId && currentSRVariationId !== 'default') {
+
+        if (window._pendingSRFormOpen === true) {
+          window._pendingSRFormOpen = false;
           const v = srVariationsData.find(v => v.id === currentSRVariationId);
           if (v && v.instanceNodeId) {
-            parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', instanceNodeId: v.instanceNodeId } }, '*');
+            parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', instanceNodeId: v.instanceNodeId, conectores_leitor: v.conectores_leitor || [] } }, '*');
+          }
+          showSRView('main');
+        } else if (currentSRVariationId && currentSRVariationId !== 'default') {
+          const v = srVariationsData.find(v => v.id === currentSRVariationId);
+          if (v && v.instanceNodeId) {
+            parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', instanceNodeId: v.instanceNodeId, conectores_leitor: v.conectores_leitor || [] } }, '*');
           }
         }
         // Atualiza leitorState e label com dados da nova variação
@@ -1158,7 +1166,9 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         }
         renderLeitorList();
         renderSRVariationList();
-        showSRView('main');
+        if (el('srMainView').classList.contains('hidden') && !window._pendingSRFormOpen) {
+          showSRView('main');
+        }
       }
       if (msg.type === 'tab-variation-frame-created') {
         const targetVar = tabVariationsData.find(v => v.id === currentTabVariationId)
@@ -1174,7 +1184,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         if (currentTabVariationId && currentTabVariationId !== 'default' && !el('tabVariationFormView').classList.contains('open')) {
           const v = tabVariationsData.find(v => v.id === currentTabVariationId);
           if (v) {
-            parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', instanceNodeId: v.instanceNodeId } }, '*');
+            parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', instanceNodeId: v.instanceNodeId, tab_order: v.tab_order } }, '*');
           }
         } else {
           closeTabVariationForm();
@@ -1207,6 +1217,12 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
       ? '● ' + count + ' mapeamentos carregados'
       : '● Nenhum dado no template';
 
+    const rolesCount = (leitorState.rolesList || []).length;
+    const srSpecsCountEl = el('settingsSRSpecsCount');
+    if (srSpecsCountEl) srSpecsCountEl.textContent = rolesCount > 0
+      ? '● ' + rolesCount + ' especificações de leitor de tela'
+      : '● Nenhuma especificação no template';
+
     // Calculate new counts
     const srVariationsCount = srVariationsData.length;
     const touchVariationsCount = variationsData.length;
@@ -1215,6 +1231,10 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
     // Update elements for counts (assuming these IDs exist in settingsOverlay)
     const srCountEl = el('srVariationsCount');
     if (srCountEl) srCountEl.textContent = `Leitor de Tela: ${srVariationsCount}`;
+    const srSpecsEl = el('srSpecsCount');
+    if (srSpecsEl) {
+      srSpecsEl.textContent = `↳ especificações: ${srVariationsData.reduce((acc, v) => acc + (v.conectores_leitor || []).length, 0)}`;
+    }
     const touchCountEl = el('touchVariationsCount');
     if (touchCountEl) touchCountEl.textContent = `Área de Toque: ${touchVariationsCount}`;
     const tabCountEl = el('tabVariationsCount');
@@ -1502,15 +1522,20 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
     leitorState.semLeitor = varData.sem_leitor || false;
     const label = el('srMainViewLabel');
     if (label) label.textContent = varData.nome || 'Default';
-    if (id !== 'default' && !varData.frameNodeId) {
+
+    if (id === 'default') {
       parent.postMessage({ pluginMessage: { type: 'deactivate-sr-variation' } }, '*');
       showSRView('main');
-    } else if (id !== 'default' && varData.instanceNodeId) {
-      parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', instanceNodeId: varData.instanceNodeId } }, '*');
+    } else if (varData.instanceNodeId) {
+      parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', instanceNodeId: varData.instanceNodeId, conectores_leitor: varData.conectores_leitor || [] } }, '*');
       showSRView('main');
     } else {
-      parent.postMessage({ pluginMessage: { type: 'deactivate-sr-variation' } }, '*');
-      showSRView('main');
+      // BUG 1: Sem frame, cria no figma
+      parent.postMessage({ pluginMessage: { type: 'create-sr-variation-frame', nome: varData.nome, propriedades: varData.propriedades || {} } }, '*');
+      window._pendingSRFormOpen = true;
+      const btn = event?.currentTarget;
+      if (btn) { btn.textContent = '⏳ ...'; btn.disabled = true; }
+      return; // não mostra view ainda
     }
     renderLeitorList();
   }
@@ -1629,7 +1654,7 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       parent.postMessage({ pluginMessage: { type: 'deactivate-tab-variation' } }, '*');
       showTabView('main');
     } else if (varData.instanceNodeId) {
-      parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', instanceNodeId: varData.instanceNodeId } }, '*');
+      parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', instanceNodeId: varData.instanceNodeId, tab_order: varData.tab_order } }, '*');
       showTabView('main');
     } else {
       parent.postMessage({ pluginMessage: { type: 'deactivate-tab-variation' } }, '*');
@@ -1761,7 +1786,7 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       showView('main');
     } else if (varData.instanceNodeId) {
       // Frame já existe — ativar e abrir
-      parent.postMessage({ pluginMessage: { type: 'activate-variation', instanceNodeId: varData.instanceNodeId } }, '*');
+      parent.postMessage({ pluginMessage: { type: 'activate-variation', instanceNodeId: varData.instanceNodeId, areas_toque: varData.areas_toque } }, '*');
       showView('main');
     } else {
       // Sem frame — abrir sem ativar (não cria frame desnecessário)
@@ -2473,23 +2498,11 @@ const select = el('srSelectTipoConector');
           </div>
           <p style='font-size:12px;color:#666;margin-bottom:8px;'>Dados carregados automaticamente da camada <strong>plugin data</strong> no template.</p>
           <p id='settingsMasterCount' style='font-size:12px;color:#999;'>● Nenhum dado no template</p>
+          <p id='settingsSRSpecsCount' style='font-size:12px;color:#999;margin-top:2px;'>● — especificações de leitor de tela</p>
           <button onclick='reloadTemplateData()' style='width:100%;padding:10px;border:1.5px solid #2D4496;border-radius:8px;background:none;color:#2D4496;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;'>↺ Recarregar dados do template</button>
         </div>
       </div>
 
-      <div class='card'>
-        <div class='card-body'>
-          <div style='display:flex;align-items:center;gap:8px;margin-bottom:12px;'>
-            <span style='font-size:18px;'>📊</span>
-            <span style='font-size:14px;font-weight:600;'>Dados salvos (variações)</span>
-          </div>
-          <div style='display:flex;flex-direction:column;gap:4px;'>
-            <p id='srVariationsCount' style='font-size:12px;color:#999;'>● Leitor de Tela: —</p>
-            <p id='touchVariationsCount' style='font-size:12px;color:#999;'>● Área de Toque: —</p>
-            <p id='tabVariationsCount' style='font-size:12px;color:#999;'>● Tabulação: —</p>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </body>

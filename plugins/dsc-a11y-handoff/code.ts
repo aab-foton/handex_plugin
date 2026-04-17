@@ -131,6 +131,72 @@ function createComponentInstance(comp: SceneNode): SceneNode {
   return comp.clone();
 }
 
+/**
+ * Remove todos os marcadores visuais de uma variação
+ */
+function clearVariationMarkers(varFrame: FrameNode) {
+  const markers = varFrame.findAll(n => n.name === '[a11y-marker]');
+  markers.forEach(m => m.remove());
+}
+
+/**
+ * Desenha marcadores visuais sobre o frame da variação para indicar o que já foi mapeado
+ */
+async function drawVariationMarkers(varFrame: FrameNode, markers: any[], color: RGB, type: 'touch' | 'tab' | 'sr') {
+  if (!markers || markers.length === 0) return;
+
+  for (let i = 0; i < markers.length; i++) {
+    const m = markers[i];
+    const markerFrame = figma.createFrame();
+    markerFrame.name = '[a11y-marker]';
+    markerFrame.x = m.relX;
+    markerFrame.y = m.relY;
+    markerFrame.resize(Math.max(m.width || 20, 1), Math.max(m.height || 20, 1));
+    markerFrame.fills = [];
+    markerFrame.strokes = [{ type: 'SOLID', color }];
+    markerFrame.strokeWeight = 2;
+    markerFrame.dashPattern = [4, 4];
+    markerFrame.clipsContent = false;
+    
+    // Bloqueia o marcador para não atrapalhar a seleção de outros elementos
+    markerFrame.locked = true;
+
+    if (type === 'tab') {
+      try {
+        const text = figma.createText();
+        await figma.loadFontAsync({ family: "Inter", style: "Medium" });
+        text.characters = String(i + 1);
+        text.fontSize = 10;
+        text.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+        
+        const badge = figma.createFrame();
+        badge.name = 'badge';
+        badge.layoutMode = 'HORIZONTAL';
+        badge.primaryAxisSizingMode = 'AUTO';
+        badge.counterAxisSizingMode = 'AUTO';
+        badge.paddingTop = 2; badge.paddingBottom = 2; badge.paddingLeft = 4; badge.paddingRight = 4;
+        badge.fills = [{ type: 'SOLID', color }];
+        badge.cornerRadius = 4;
+        badge.appendChild(text);
+        
+        markerFrame.appendChild(badge);
+        // Posiciona o badge no canto superior direito do item
+        badge.x = Math.max(0, (m.width || 20) - badge.width);
+        badge.y = 0;
+      } catch (e) {
+        console.error("Erro ao criar badge de tabulação:", e);
+      }
+    }
+
+    if (type === 'sr' && m.tipoAnotacao === 'agrupamento') {
+      markerFrame.dashPattern = []; // Linha contínua para agrupamentos
+      markerFrame.strokeWeight = 3;
+    }
+
+    varFrame.appendChild(markerFrame);
+  }
+}
+
 function getOrCreateVariacoesContainer(comp: SceneNode, handoff: SceneNode | null, parentNode: FrameNode | PageNode): FrameNode {
   const CONTAINER_NAME = '[A11Y Variações]';
   const GAP = 80;
@@ -585,7 +651,11 @@ figma.ui.onmessage = async (msg) => {
                 } else if (variacao.instanceNodeId) {
                   let srcNode: SceneNode | null = null;
                   try { srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null; } catch (_e) { srcNode = null; }
-  compClone = srcNode ? srcNode.clone() : createComponentInstance(componentePrincipalAtivo);
+                  
+                  if (srcNode && srcNode.parent && srcNode.parent.type === 'FRAME' && srcNode.parent.name.includes('Variação')) {
+                    clearVariationMarkers(srcNode.parent as FrameNode);
+                  }
+                  compClone = srcNode ? srcNode.clone() : createComponentInstance(componentePrincipalAtivo);
                 } else {
                   compClone = createComponentInstance(componentePrincipalAtivo);
                   if (compClone.type === 'INSTANCE' && variacao.propriedades && Object.keys(variacao.propriedades).length > 0) {
@@ -772,6 +842,10 @@ figma.ui.onmessage = async (msg) => {
             } else if (variacao.instanceNodeId) {
               let srcNode: SceneNode | null = null;
               try { srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null; } catch (_e) { srcNode = null; }
+              
+              if (srcNode && srcNode.parent && srcNode.parent.type === 'FRAME' && srcNode.parent.name.includes('Variação')) {
+                clearVariationMarkers(srcNode.parent as FrameNode);
+              }
               compClone = srcNode ? srcNode.clone() : createComponentInstance(componentePrincipalAtivo);
             } else {
               // instanceNodeId zerado (após handoff) — clonar e aplicar propriedades salvas
@@ -879,6 +953,10 @@ figma.ui.onmessage = async (msg) => {
             } else if (variacao.instanceNodeId) {
               let srcNode: SceneNode | null = null;
               try { srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null; } catch (_e) { srcNode = null; }
+              
+              if (srcNode && srcNode.parent && srcNode.parent.type === 'FRAME' && srcNode.parent.name.includes('Variação')) {
+                clearVariationMarkers(srcNode.parent as FrameNode);
+              }
               compClone = srcNode ? srcNode.clone() : createComponentInstance(componentePrincipalAtivo);
             } else {
               compClone = createComponentInstance(componentePrincipalAtivo);
@@ -1223,6 +1301,13 @@ figma.ui.onmessage = async (msg) => {
       if (msg.instanceNodeId) {
         const node = await figma.getNodeByIdAsync(msg.instanceNodeId) as SceneNode | null;
         componenteVariacaoAtivo = node;
+        
+        // Desenha marcadores no varFrame (parent da instância)
+        if (node && node.parent && node.parent.type === 'FRAME' && node.parent.name.startsWith('[A11Y Variação]')) {
+          const varFrame = node.parent as FrameNode;
+          clearVariationMarkers(varFrame);
+          await drawVariationMarkers(varFrame, msg.areas_toque || [], { r: 1, g: 0.6, b: 0 }, 'touch');
+        }
       } else {
         componenteVariacaoAtivo = null;
       }
@@ -1232,6 +1317,9 @@ figma.ui.onmessage = async (msg) => {
   }
 
   else if (msg.type === 'deactivate-variation') {
+    if (componenteVariacaoAtivo && componenteVariacaoAtivo.parent && componenteVariacaoAtivo.parent.type === 'FRAME') {
+      clearVariationMarkers(componenteVariacaoAtivo.parent as FrameNode);
+    }
     componenteVariacaoAtivo = null;
   }
 
@@ -1246,7 +1334,7 @@ figma.ui.onmessage = async (msg) => {
     const compY = comp.absoluteTransform[1][2];
 
     const items = selection
-      .filter(n => n.id !== comp.id && n.id !== handoffAtivo?.id)
+      .filter(n => n.id !== comp.id && n.id !== handoffAtivo?.id && n.name !== '[a11y-marker]')
       .map(n => ({
         layerName: n.name,
         nodeId: n.id,
@@ -1374,6 +1462,12 @@ figma.ui.onmessage = async (msg) => {
       if (msg.instanceNodeId) {
         const node = await figma.getNodeByIdAsync(msg.instanceNodeId) as SceneNode | null;
         componenteTabVariacaoAtivo = node;
+
+        if (node && node.parent && node.parent.type === 'FRAME' && node.parent.name.startsWith('[A11Y Tab Variação]')) {
+          const varFrame = node.parent as FrameNode;
+          clearVariationMarkers(varFrame);
+          await drawVariationMarkers(varFrame, msg.tab_order || [], { r: 0.2, g: 0.4, b: 0.9 }, 'tab');
+        }
       } else {
         componenteTabVariacaoAtivo = null;
       }
@@ -1383,6 +1477,9 @@ figma.ui.onmessage = async (msg) => {
   }
 
   else if (msg.type === 'deactivate-tab-variation') {
+    if (componenteTabVariacaoAtivo && componenteTabVariacaoAtivo.parent && componenteTabVariacaoAtivo.parent.type === 'FRAME') {
+      clearVariationMarkers(componenteTabVariacaoAtivo.parent as FrameNode);
+    }
     componenteTabVariacaoAtivo = null;
   }
 
@@ -1400,6 +1497,12 @@ figma.ui.onmessage = async (msg) => {
       if (msg.instanceNodeId) {
         const node = await figma.getNodeByIdAsync(msg.instanceNodeId) as SceneNode | null;
         componenteSRVariacaoAtivo = node;
+
+        if (node && node.parent && node.parent.type === 'FRAME' && node.parent.name.startsWith('[A11Y LT Variação]')) {
+          const varFrame = node.parent as FrameNode;
+          clearVariationMarkers(varFrame);
+          await drawVariationMarkers(varFrame, msg.conectores_leitor || [], { r: 0.6, g: 0.2, b: 0.9 }, 'sr');
+        }
       } else {
         componenteSRVariacaoAtivo = null;
       }
@@ -1409,6 +1512,9 @@ figma.ui.onmessage = async (msg) => {
   }
 
   else if (msg.type === 'deactivate-sr-variation') {
+    if (componenteSRVariacaoAtivo && componenteSRVariacaoAtivo.parent && componenteSRVariacaoAtivo.parent.type === 'FRAME') {
+      clearVariationMarkers(componenteSRVariacaoAtivo.parent as FrameNode);
+    }
     componenteSRVariacaoAtivo = null;
   }
 
@@ -1453,7 +1559,7 @@ figma.ui.onmessage = async (msg) => {
   }
 
   else if (msg.type === 'get-sr-selection') {
-    const selection = figma.currentPage.selection;
+    const selection = figma.currentPage.selection.filter(n => n.name !== '[a11y-marker]');
     if (selection.length === 0) {
       figma.ui.postMessage({ type: 'sr-selection-result', error: 'Selecione um elemento no canvas.' });
       return;
