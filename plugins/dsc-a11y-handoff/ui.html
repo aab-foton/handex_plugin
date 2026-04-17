@@ -449,7 +449,7 @@
             <div id="tabOrderList"></div>
           </div>
           <div class="tab-footer" id="tabFooter">
-            <button class="tab-add-btn" id="btnAddTab" onclick="openTabForm()">+ Adicionar foco de tabulação</button>
+            <button class="tab-add-btn" id="btnAddTab" onclick="onAddTabClick()">+ Adicionar foco de tabulação</button>
           </div>
         </div>
 
@@ -534,7 +534,7 @@
             </div>
           </div>
           <div class="tab-footer" id="leitorFooter">
-            <button class="tab-add-btn" onclick="openSRForm()">+ Adicionar Conector</button>
+            <button class="tab-add-btn" onclick="onAddSRClick()">+ Adicionar Conector</button>
           </div>
         </div>
 
@@ -1143,7 +1143,16 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           closeSRVariationForm();
         }
 
-        if (window._pendingSRFormOpen === true) {
+        if (window._pendingAddSR) {
+          window._pendingAddSR = false;
+          const btn2 = document.querySelector('[onclick="onAddSRClick()"]');
+          if (btn2) { btn2.disabled = false; btn2.textContent = '+ Adicionar Conector'; }
+          const vSR = srVariationsData.find(v => v.id === currentSRVariationId);
+          if (vSR && vSR.instanceNodeId) parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', instanceNodeId: vSR.instanceNodeId, conectores_leitor: vSR.conectores_leitor || [] } }, '*');
+          showSRView('main');
+          renderLeitorList();
+          openSRForm();
+        } else if (window._pendingSRFormOpen === true) {
           window._pendingSRFormOpen = false;
           const v = srVariationsData.find(v => v.id === currentSRVariationId);
           if (v && v.instanceNodeId) {
@@ -1180,6 +1189,14 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         }
         const btnCreate = el('btnTabVariationFormCreate');
         if (btnCreate) { btnCreate.textContent = 'Criar variante'; btnCreate.disabled = false; }
+        if (window._pendingAddTab) {
+          window._pendingAddTab = false;
+          el('btnAddTab').disabled = false;
+          el('btnAddTab').textContent = '+ Adicionar foco de tabulação';
+          const vTab = tabVariationsData.find(v => v.id === currentTabVariationId);
+          if (vTab) parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', instanceNodeId: vTab.instanceNodeId, tab_order: vTab.tab_order } }, '*');
+          openTabForm();
+        }
         // Se abriu via editTabVariation (form fechado), ativa e abre main view
         if (currentTabVariationId && currentTabVariationId !== 'default' && !el('tabVariationFormView').classList.contains('open')) {
           const v = tabVariationsData.find(v => v.id === currentTabVariationId);
@@ -1530,12 +1547,9 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', instanceNodeId: varData.instanceNodeId, conectores_leitor: varData.conectores_leitor || [] } }, '*');
       showSRView('main');
     } else {
-      // BUG 1: Sem frame, cria no figma
-      parent.postMessage({ pluginMessage: { type: 'create-sr-variation-frame', nome: varData.nome, propriedades: varData.propriedades || {} } }, '*');
-      window._pendingSRFormOpen = true;
-      const btn = event?.currentTarget;
-      if (btn) { btn.textContent = '⏳ ...'; btn.disabled = true; }
-      return; // não mostra view ainda
+      // Sem frame — abre main view direto, frame criado apenas ao Adicionar
+      parent.postMessage({ pluginMessage: { type: 'deactivate-sr-variation' } }, '*');
+      showSRView('main');
     }
     renderLeitorList();
   }
@@ -1931,7 +1945,35 @@ function closeTouchForm() {
     }
     openTouchForm();
   };
-el('btnAddVariation').onclick = () => { openVariationForm(); };
+el("btnAddVariation").onclick = () => { openVariationForm(); };
+
+  function onAddTabClick() {
+    if (currentTabVariationId && currentTabVariationId !== 'default') {
+      const varData = tabVariationsData.find(v => v.id === currentTabVariationId);
+      if (varData && !varData.frameNodeId) {
+        parent.postMessage({ pluginMessage: { type: 'create-tab-variation-frame', nome: varData.nome, propriedades: varData.propriedades || {} } }, '*');
+        el('btnAddTab').disabled = true;
+        el('btnAddTab').textContent = '⏳ Preparando...';
+        window._pendingAddTab = true;
+        return;
+      }
+    }
+    openTabForm();
+  }
+
+  function onAddSRClick() {
+    if (currentSRVariationId && currentSRVariationId !== 'default') {
+      const varData = srVariationsData.find(v => v.id === currentSRVariationId);
+      if (varData && !varData.frameNodeId) {
+        parent.postMessage({ pluginMessage: { type: 'create-sr-variation-frame', nome: varData.nome, propriedades: varData.propriedades || {} } }, '*');
+        const btn = document.querySelector('[onclick="onAddSRClick()"]');
+        if (btn) { btn.disabled = true; btn.textContent = '⏳ Preparando...'; }
+        window._pendingAddSR = true;
+        return;
+      }
+    }
+    openSRForm();
+  }
 el('btnBackToVariations').onclick = () => { backToVariationList(); };
 el('btnVariationFormCancel').onclick = () => { closeVariationForm(); };
 el('btnBackToTabVariations').onclick = () => { backToTabVariationList(); };
