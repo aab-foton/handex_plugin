@@ -1227,7 +1227,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
     };
 
     function updatePZCount() { el('pzCount').textContent = `${document.querySelectorAll('#panel-geral input[type="checkbox"]:checked').length} selecionados`; }
-    document.addEventListener('change', (e) => { if (e.target.type === 'checkbox' && e.target.id !== 'chkSemToque') { updatePZCount(); updateSummaryCards(); saveGeralData(true); } });
+    document.addEventListener('change', (e) => { if (e.target.type === 'checkbox' && e.target.id !== 'chkSemToque' && !e.target.id.startsWith('setting')) { updatePZCount(); updateSummaryCards(); saveGeralData(true); } });
 
       function openSettings() {
     // Restaura setting salvo (aqui o elemento já existe no DOM)

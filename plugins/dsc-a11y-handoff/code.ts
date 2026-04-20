@@ -687,7 +687,7 @@ figma.ui.onmessage = async (msg) => {
             totalHeight + TAB_PAD_SIDE
           );
           if (modelOrder)      modelOrder.visible      = false;
-          if (modelItemNumber) modelItemNumber.visible = false;
+          
         }
       }
     }
@@ -1066,8 +1066,9 @@ figma.ui.onmessage = async (msg) => {
       if (zoomContainer) {
         const zoomImageFrame = Array.from(zoomContainer.children).find(n => n.name === 'image') as FrameNode | null;
         if (zoomImageFrame) {
-          const modelItemNumber = Array.from(zoomImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
+          
           const zoomTag = Array.from(zoomImageFrame.children).find(n => n.name === 'tag');
+          const modelItemNumber = Array.from(zoomImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
 
           const keepZoom = new Set<BaseNode>([zoomTag, modelItemNumber].filter(Boolean) as BaseNode[]);
           Array.from(zoomImageFrame.children).filter(n => !keepZoom.has(n)).forEach(n => n.remove());
@@ -1076,13 +1077,15 @@ figma.ui.onmessage = async (msg) => {
             figma.ui.postMessage({ type: 'feedback', message: `❌ Erro no bloco de cor (zoom): ${e}` });
           }
 
-          const ZOOM_PAD_TOP  = 120;
+          const ZOOM_NUM_Y    = 80;  // y fixo do item number
+          const ZOOM_GAP_NUM  = 8;   // gap entre item number e componente
           const ZOOM_PAD_LEFT = 40;
           const ZOOM_PAD_SIDE = 24;
           const ZOOM_GAP_H    = 80;
           let zoomCurrentX = ZOOM_PAD_LEFT;
           let zoomTotalWidth = 0;
           let zoomMaxHeight = 0;
+          let zoomCompY = ZOOM_NUM_Y; // calculado por iteração; último valor usado no resize
 
           const scaleMap: Record<string, number> = {
             '200% Texto (reflow)':      1,
@@ -1093,6 +1096,25 @@ figma.ui.onmessage = async (msg) => {
           for (let zi = 0; zi < zoomTypes.length; zi++) {
             const zType  = zoomTypes[zi];
             const scale  = scaleMap[zType] ?? 1;
+
+            // Cria item number antes do componente para calcular compY dinamicamente
+            let compY = ZOOM_NUM_Y;
+            if (modelItemNumber) {
+              const numClone = modelItemNumber.clone();
+              numClone.visible = true;
+              const numTexts = numClone.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+              const numText = numTexts.find(n => /^\d+$/.test(n.characters.trim())) || numTexts[0] || null;
+              if (numText) await updateText(numText, String(zi + 1));
+              numClone.x = zoomCurrentX;
+              numClone.y = ZOOM_NUM_Y;
+              zoomImageFrame.appendChild(numClone);
+              if (numClone.type === 'INSTANCE') {
+                try { (numClone as InstanceNode).setProperties({ 'connector': 'Off' }); } catch (e) {}
+              }
+              compY = ZOOM_NUM_Y + numClone.height + ZOOM_GAP_NUM;
+            }
+            zoomCompY = compY;
+
             const compClone = createComponentInstance(componentePrincipalAtivo) as FrameNode & SceneNode;
             if (zType === '200% Texto (reflow)') {
               // Escala apenas os nós de texto 2x
@@ -1115,19 +1137,8 @@ figma.ui.onmessage = async (msg) => {
               (compClone as any).rescale(scale);
             }
             compClone.x = zoomCurrentX;
-            compClone.y = ZOOM_PAD_TOP;
+            compClone.y = compY;
             zoomImageFrame.insertChild(0, compClone);
-
-            if (modelItemNumber) {
-              const numClone = modelItemNumber.clone();
-              numClone.visible = true;
-              const numTexts = numClone.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
-              const numText = numTexts.find(n => /^\d+$/.test(n.characters.trim())) || numTexts[0] || null;
-              if (numText) await updateText(numText, String(zi + 1));
-              numClone.x = zoomCurrentX;
-              numClone.y = ZOOM_PAD_TOP - numClone.height - 4;
-              zoomImageFrame.appendChild(numClone);
-            }
 
             zoomMaxHeight  = Math.max(zoomMaxHeight, compClone.height);
             zoomTotalWidth = zoomCurrentX + compClone.width;
@@ -1136,10 +1147,10 @@ figma.ui.onmessage = async (msg) => {
 
           zoomImageFrame.resize(
             Math.max(zoomImageFrame.width, zoomTotalWidth + ZOOM_PAD_SIDE),
-            ZOOM_PAD_TOP + zoomMaxHeight + ZOOM_PAD_SIDE + 40
+            zoomCompY + zoomMaxHeight + ZOOM_PAD_SIDE + 40
           );
 
-          if (modelItemNumber) modelItemNumber.visible = false;
+          
         }
       }
     }
