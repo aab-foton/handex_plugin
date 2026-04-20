@@ -250,9 +250,9 @@
               <label class="checkbox-field"><input type="checkbox" name="platform" value="Mobile Android"><span>Mobile Android</span></label>
               <label class="checkbox-field"><input type="checkbox" name="platform" value="Mobile Cross-Platform"><span>Mobile Cross-Platform</span></label>
               <div style="height: 1px; background: #EEE; margin: 4px 0;"></div>
-              <label class="checkbox-field"><input type="checkbox" name="zoom" value="Zoom 200%"><span>Zoom 200%</span></label>
-              <label class="checkbox-field"><input type="checkbox" name="zoom" value="Zoom 300%"><span>Zoom 300%</span></label>
-              <label class="checkbox-field"><input type="checkbox" name="zoom" value="Zoom 400%"><span>Zoom 400%</span></label>
+              <label class="checkbox-field"><input type="checkbox" name="zoom" value="200% Texto (reflow)"><span>200% Texto (reflow)</span></label>
+              <label class="checkbox-field"><input type="checkbox" name="zoom" value="200% Componente (scaling)"><span>200% Componente (scaling)</span></label>
+              <label class="checkbox-field"><input type="checkbox" name="zoom" value="400% Componente (scaling)"><span>400% Componente (scaling)</span></label>
             </div>
           </div>
         </div>
@@ -906,6 +906,7 @@
     window.onmessage = (e) => {
       const msg = e.data?.pluginMessage;
       if (!msg) return;
+
       if (msg.type === 'start-loading') {
         const sb = el('statusBar');
         sb.classList.remove('success', 'error');
@@ -1037,6 +1038,9 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         }
       }
       if (msg.type === 'waiting-selection') {
+        const icon = el('emptyStateIcon'); if (icon) icon.textContent = '🖱️';
+        const title = el('emptyStateTitle'); if (title) title.textContent = 'Aguardando seleção';
+        const body = el('emptyStateBody'); if (body) body.textContent = 'Selecione o Componente e o Template Handoff.';
         el('emptyState').style.display = 'flex';
         el('mainContainer').style.display = 'none';
       }
