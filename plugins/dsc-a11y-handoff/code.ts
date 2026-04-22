@@ -393,14 +393,18 @@ function transformLegacyData(raw: Record<string, string>): Record<string, any> {
       const items = JSON.parse(raw[key] || '[]');
       srMap[varId] = items.map((item: any) => {
         const isAgrup = item.type === 'agrupamento';
-        // simple: campos em item.layerData; agrupamento: campos na raiz do item
-        const ld = isAgrup ? item : (item.layerData || {});
-        const tipo = isAgrup ? (item.agrupTipo || item.connectorType || '') : (ld.connectorType || '');
+        // Mescla root + layerData: layerData tem precedência (simples); agrupamento/combinado armazenam na raiz
+        const merged: Record<string, any> = { ...item, ...(item.layerData || {}) };
+        const tipo = isAgrup ? (item.agrupTipo || item.connectorType || merged.connectorType || '') : (merged.connectorType || '');
         const base: Record<string, any> = {
           tipoAnotacao: isAgrup ? 'agrupamento' : 'simples',
-          tipo, roleNome: ld.role || '', especificacao: ld.specification || '',
-          descricao: ld.explanation || '', observacao: ld.observation || '',
-          nomeAcessivel: ld.accessibleName || '', codigoWeb: ld.codeNote || ''
+          tipo,
+          roleNome: merged.role || '',
+          especificacao: merged.specification || '',
+          descricao: merged.explanation || '',
+          observacao: merged.observation || '',
+          nomeAcessivel: merged.accessibleName || '',
+          codigoWeb: merged.codeNote || ''
         };
         if (isAgrup) { const r = item.rect || {}; base.x = r.x || 0; base.y = r.y || 0; base.width = r.width || 0; base.height = r.height || 0; base.origem = 'interno'; }
         else { base.nodeId = item.nodeId || ''; base.origem = 'canvas'; }
@@ -410,25 +414,31 @@ function transformLegacyData(raw: Record<string, string>): Record<string, any> {
   });
 
   // Montar arrays de variações no formato esperado pela UI
+  function vcProps(id: string): Record<string, string> {
+    if (id === 'default') return {};
+    return variantConfigs[id]?.properties || {};
+  }
+  function vcInstanceId(id: string): string | null {
+    if (id === 'default') return null;
+    return variantConfigs[id]?.instanceNodeId || null;
+  }
+
   const allVarIds = Array.from(new Set(['default', ...Object.keys(touchMap)]));
   const variacoes = allVarIds.map(id => ({
-    id, nome: varNome(id), propriedades: {}, frameNodeId: null, instanceNodeId: null,
-    areas_toque: touchMap[id] || [],
-    sem_toque: id === 'default' ? semToque : false
+    id, nome: varNome(id), propriedades: vcProps(id), frameNodeId: null, instanceNodeId: vcInstanceId(id),
+    areas_toque: touchMap[id] || [], sem_toque: id === 'default' ? semToque : false
   }));
 
   const allTabIds = Array.from(new Set(['default', ...Object.keys(tabMap)]));
   const variacoes_tabulacao = allTabIds.map(id => ({
-    id, nome: varNome(id), propriedades: {}, frameNodeId: null, instanceNodeId: null,
-    tab_order: tabMap[id] || [],
-    sem_tabulacao: id === 'default' ? semTabulacao : false
+    id, nome: varNome(id), propriedades: vcProps(id), frameNodeId: null, instanceNodeId: vcInstanceId(id),
+    tab_order: tabMap[id] || [], sem_tabulacao: id === 'default' ? semTabulacao : false
   }));
 
   const allSRIds = Array.from(new Set(['default', ...Object.keys(srMap)]));
   const variacoes_leitor = allSRIds.map(id => ({
-    id, nome: varNome(id), propriedades: {}, frameNodeId: null, instanceNodeId: null,
-    conectores_leitor: srMap[id] || [],
-    sem_leitor: id === 'default' ? semLeitor : false
+    id, nome: varNome(id), propriedades: vcProps(id), frameNodeId: null, instanceNodeId: vcInstanceId(id),
+    conectores_leitor: srMap[id] || [], sem_leitor: id === 'default' ? semLeitor : false
   }));
 
   return { plataformas, zoom, mapeamentos, variacoes, variacoes_tabulacao, variacoes_leitor };
@@ -2124,16 +2134,22 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
   let rolesList: ReturnType<typeof parseRolesList> = [];
   let componentData: any = { plataformas: [], zoom: [], mapeamentos: [], areas_toque: [], sem_toque: false, variacoes: [], variacoes_tabulacao: [], variacoes_leitor: [], conectores_leitor: [], sem_leitor: false };
   let variantLabels: Record<string, string> = {};
+  let vcFullMap: Record<string, any> = {};
 
   // 1. COMPONENT_SET como baseline (sempre tenta, independente de outras fontes)
   if (componentePrincipalAtivo) {
     const dataNode = await resolveDataNode(componentePrincipalAtivo);
     if (dataNode) {
-      // Lê variant configs para enriquecer nomes na normalização
+      // Lê variant configs para enriquecer nomes e propriedades na normalização
       try {
         const vcRaw = JSON.parse(dataNode.getPluginData('a11y-variant-configs') || '[]');
         const vcArr = Array.isArray(vcRaw) ? vcRaw : Object.values(vcRaw);
-        vcArr.forEach((v: any) => { if (v.id) variantLabels[v.id] = v.label || v.name || v.id; });
+        vcArr.forEach((v: any) => {
+          if (v.id) {
+            variantLabels[v.id] = v.label || v.name || v.id;
+            vcFullMap[v.id] = v;
+          }
+        });
       } catch(e) {}
       const rawFromComponent = dataNode.getPluginData('a11y-component-data');
       if (rawFromComponent) {
@@ -2169,6 +2185,20 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
   const rawDirect = (handoff as any).getPluginData('a11y-component-data');
   if (rawDirect) {
     try { componentData = normalizeComponentData(JSON.parse(rawDirect), variantLabels); } catch(e) {}
+  }
+
+  // Backfill de propriedades e instanceNodeId nas variações que foram salvas com {} vazio
+  if (Object.keys(vcFullMap).length > 0) {
+    const fill = (arr: any[]) => arr.forEach((v: any) => {
+      if (v.id !== 'default' && vcFullMap[v.id]) {
+        if (!v.propriedades || Object.keys(v.propriedades).length === 0) v.propriedades = vcFullMap[v.id].properties || {};
+        if (!v.instanceNodeId) v.instanceNodeId = vcFullMap[v.id].instanceNodeId || null;
+        if (v.nome === v.id) v.nome = vcFullMap[v.id].label || vcFullMap[v.id].name || v.id;
+      }
+    });
+    fill(componentData.variacoes || []);
+    fill(componentData.variacoes_tabulacao || []);
+    fill(componentData.variacoes_leitor || []);
   }
 
   // Detecção de dados legados
