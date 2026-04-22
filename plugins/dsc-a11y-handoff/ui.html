@@ -236,8 +236,8 @@
     <div class='header-badge'>A11Y</div>
     <h2 id='compName'>...</h2>
     <div style='display:flex;gap:6px;align-items:center;flex-shrink:0;'>
-      <button id='btnInfo' onclick='openInfo()' style='background:none;border:1.5px solid #ddd;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#999;font-size:16px;font-style:normal;font-weight:400;' title='Informações'>ℹ</button>
       <button id='btnSettings' onclick='openSettings()' style='background:none;border:1.5px solid #ddd;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#999;font-size:16px;' title='Configurações'>⚙</button>
+      <button id='btnInfo' onclick='openInfo()' style='background:none;border:1.5px solid #ddd;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#999;font-size:16px;font-style:normal;font-weight:400;' title='Informações'>ℹ</button>
     </div>
   </div>
       <div class="tabs">
@@ -2646,52 +2646,47 @@ const select = el('srSelectTipoConector');
           </div>
           <p style='font-size:12px;color:#666;margin-bottom:8px;'>Lê as chaves de pluginData do componente selecionado e exibe no console.</p>
           <button onclick='parent.postMessage({pluginMessage:{type:"debug-plugindata"}},"*")' style='width:100%;padding:10px;border:1.5px solid #999;border-radius:8px;background:none;color:#444;font-size:13px;font-weight:600;cursor:pointer;'>🔍 Ler pluginData do componente</button>
-        <div id='infoPanel' style='display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:#fff;z-index:100;overflow-y:auto;flex-direction:column;'>
-          <div style='padding:16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:8px;'>
-            <button onclick='closeInfo()' style='background:none;border:none;cursor:pointer;color:#666;font-size:18px;padding:0;'>←</button>
-            <span style='font-weight:700;font-size:14px;'>Informações</span>
-          </div>
-          <div style='padding:16px;display:flex;flex-direction:column;gap:20px;'>
-
-            <div>
-              <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Como usar o plugin</div>
-              <div style='font-size:12px;color:#444;line-height:1.6;'>Selecione no canvas <b>um componente</b> e <b>um template de handoff</b> ao mesmo tempo. O plugin carrega automaticamente os dados já documentados para aquele componente.</div>
-            </div>
-
-            <div>
-              <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Abas</div>
-              <div style='font-size:12px;color:#444;line-height:1.6;display:flex;flex-direction:column;gap:6px;'>
-                <div><b>Geral</b> — Plataformas, zoom e mapeamentos de teclado/gestos.</div>
-                <div><b>Área de Toque</b> — Tamanho mínimo das áreas tocáveis. Suporta variações parametrizadas.</div>
-                <div><b>Tabulação</b> — Ordem de foco por teclado. Suporta variações parametrizadas.</div>
-                <div><b>Leitor de Tela</b> — Conectores de anotação para screen readers. Suporta variações parametrizadas.</div>
-                <div><b>Handoff</b> — Gera o template preenchido com todas as informações documentadas.</div>
-              </div>
-            </div>
-
-            <div>
-              <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Variações parametrizadas</div>
-              <div style='font-size:12px;color:#444;line-height:1.6;'>Use variações quando diferentes estados do componente (ex: com submenu, sem submenu) têm documentação de acessibilidade diferente. Crie uma variação por estado e documente cada uma separadamente.</div>
-            </div>
-
-            <div>
-              <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Badges vermelhos nas abas</div>
-              <div style='font-size:12px;color:#444;line-height:1.6;'>Indicam que há variações com problemas — sem dados documentados, conectores incompletos ou tipo não suportado (combinado). Clique na aba para ver qual variação está com problema.</div>
-            </div>
-
-            <div>
-              <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Importando dados do plugin anterior</div>
-              <div style='font-size:12px;color:#444;line-height:1.6;'>Se o componente foi documentado com a versão anterior do plugin, ao abri-lo será exibida uma tela de migração. Clique em <b>Migrar dados</b> para importar automaticamente as informações existentes para o novo formato. Clique em <b>Começar do zero</b> para ignorar os dados antigos.</div>
-            </div>
-
-            <div>
-              <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Gerar Handoff</div>
-              <div style='font-size:12px;color:#444;line-height:1.6;'>Clique em <b>Gerar Handoff</b> na aba Handoff para preencher o template selecionado. O template é desvinculado do componente original e preenchido com os dados documentados. Clique em <b>Atualizar Handoff</b> para regenerar após mudanças.</div>
-            </div>
-
-          </div>
         </div>
-          </div>
+      </div>
+  </div>
+
+  <div id='infoPanel' style='display:none;position:fixed;inset:0;background:#fff;z-index:999999;overflow-y:auto;flex-direction:column;'>
+    <div style='padding:16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:8px;'>
+      <button onclick='closeInfo()' style='background:none;border:none;cursor:pointer;color:#666;font-size:18px;padding:0;'>←</button>
+      <span style='font-weight:700;font-size:14px;'>Informações</span>
+    </div>
+    <div style='padding:16px;display:flex;flex-direction:column;gap:20px;'>
+      <div>
+        <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Como usar o plugin</div>
+        <div style='font-size:12px;color:#444;line-height:1.6;'>Selecione no canvas <b>um componente</b> e <b>um template de handoff</b> ao mesmo tempo. O plugin carrega automaticamente os dados já documentados para aquele componente.</div>
+      </div>
+      <div>
+        <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Abas</div>
+        <div style='font-size:12px;color:#444;line-height:1.6;display:flex;flex-direction:column;gap:6px;'>
+          <div><b>Geral</b> — Plataformas, zoom e mapeamentos de teclado/gestos.</div>
+          <div><b>Área de Toque</b> — Tamanho mínimo das áreas tocáveis. Suporta variações parametrizadas.</div>
+          <div><b>Tabulação</b> — Ordem de foco por teclado. Suporta variações parametrizadas.</div>
+          <div><b>Leitor de Tela</b> — Conectores de anotação para screen readers. Suporta variações parametrizadas.</div>
+          <div><b>Handoff</b> — Gera o template preenchido com todas as informações documentadas.</div>
         </div>
+      </div>
+      <div>
+        <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Variações parametrizadas</div>
+        <div style='font-size:12px;color:#444;line-height:1.6;'>Use variações quando diferentes estados do componente (ex: com submenu, sem submenu) têm documentação de acessibilidade diferente. Crie uma variação por estado e documente cada uma separadamente.</div>
+      </div>
+      <div>
+        <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Badges vermelhos nas abas</div>
+        <div style='font-size:12px;color:#444;line-height:1.6;'>Indicam que há variações com problemas — sem dados documentados, conectores incompletos ou tipo não suportado (combinado). Clique na aba para ver qual variação está com problema.</div>
+      </div>
+      <div>
+        <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Importando dados do plugin anterior</div>
+        <div style='font-size:12px;color:#444;line-height:1.6;'>Se o componente foi documentado com a versão anterior do plugin, ao abri-lo será exibida uma tela de migração. Clique em <b>Migrar dados</b> para importar automaticamente as informações existentes para o novo formato. Clique em <b>Começar do zero</b> para ignorar os dados antigos.</div>
+      </div>
+      <div>
+        <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Gerar Handoff</div>
+        <div style='font-size:12px;color:#444;line-height:1.6;'>Clique em <b>Gerar Handoff</b> na aba Handoff para preencher o template selecionado. O template é desvinculado do componente original e preenchido com os dados documentados. Clique em <b>Atualizar Handoff</b> para regenerar após mudanças.</div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
