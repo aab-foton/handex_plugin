@@ -222,6 +222,14 @@
     <div id="emptyStateBody" style="font-size: 12px; color: #666; margin-top: 8px;">Selecione o Componente e o Template Handoff.</div>
   </div>
 
+  <div id="migracaoState" class="overlay-state" style="display:none;">
+    <div style="font-size: 32px; margin-bottom: 16px;">📦</div>
+    <div style="font-weight: 700; margin-bottom: 8px;">Dados do plugin anterior encontrados</div>
+    <div id="migracaoSummary" style="font-size: 12px; color: #666; margin-bottom: 20px;"></div>
+    <button id="btnAplicarMigracao" onclick="aplicarMigracao()" style="width:100%; padding: 10px; background: #0d99ff; color: #fff; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; margin-bottom: 8px;">↓ Migrar dados</button>
+    <button onclick="pularMigracao()" style="width:100%; padding: 8px; background: transparent; color: #666; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-size: 12px;">Começar do zero</button>
+  </div>
+
   <div id="mainContainer" style="display:none; height: 100%; flex-direction: column;">
     <div class="top-bar">
   <div class='header-content'>
@@ -873,6 +881,24 @@
 
       const hasSomething = platforms.length > 0 || zooms.length > 0 || keyboards > 0 || gestures > 0;
       el('summaryCards').style.display = hasSomething || totalAreas > 0 || totalTabItems > 0 || totalLeitorItems > 0 || totalLeitorVars > 0 ? 'flex' : 'none';
+
+      // Badge de erro para conectores combinado
+      const temCombinado = srVariationsData.some(v => {
+        const items = v.id === currentSRVariationId ? leitorState.conectores : (v.conectores_leitor || []);
+        return items.some(c => c.tipoAnotacao === 'combinado');
+      });
+      const tabLeitor = document.querySelector('.tab[data-target="panel-leitor"]');
+      if (tabLeitor) {
+        let badge = tabLeitor.querySelector('.tab-error-badge');
+        if (temCombinado && !badge) {
+          badge = document.createElement('span');
+          badge.className = 'tab-error-badge';
+          badge.style.cssText = 'display:inline-block;width:7px;height:7px;background:#e53935;border-radius:50%;margin-left:4px;vertical-align:middle;flex-shrink:0;';
+          tabLeitor.appendChild(badge);
+        } else if (!temCombinado && badge) {
+          badge.remove();
+        }
+      }
     }
 
     el('summaryEditGeral').onclick = () => {
@@ -903,6 +929,19 @@
       el('panel-leitor').classList.add('active');
     };
 
+    window._dadosLegados = null;
+
+    function aplicarMigracao() {
+      const btn = el('btnAplicarMigracao');
+      if (btn) { btn.disabled = true; btn.textContent = 'Migrando...'; }
+      parent.postMessage({ pluginMessage: { type: 'aplicar-legado', raw: window._dadosLegados } }, '*');
+    }
+
+    function pularMigracao() {
+      el('migracaoState').style.display = 'none';
+      parent.postMessage({ pluginMessage: { type: 'pular-legado' } }, '*');
+    }
+
     window.onmessage = (e) => {
       const msg = e.data?.pluginMessage;
       if (!msg) return;
@@ -919,6 +958,7 @@
       if (msg.type === 'setup-ui') {
         el('statusBar').classList.remove('loading', 'success', 'error');
         el('emptyState').style.display = 'none';
+        el('migracaoState').style.display = 'none';
         el('mainContainer').style.display = 'flex';
         el('compName').textContent = msg.componentName;
 
@@ -1042,7 +1082,23 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         const title = el('emptyStateTitle'); if (title) title.textContent = 'Aguardando seleção';
         const body = el('emptyStateBody'); if (body) body.textContent = 'Selecione o Componente e o Template Handoff.';
         el('emptyState').style.display = 'flex';
+        el('migracaoState').style.display = 'none';
         el('mainContainer').style.display = 'none';
+      }
+      if (msg.type === 'legacy-data-detected') {
+        window._dadosLegados = msg.raw;
+        el('emptyState').style.display = 'none';
+        el('mainContainer').style.display = 'none';
+        const s = msg.summary || {};
+        const partes = [];
+        if (s.nVariants > 0) partes.push(s.nVariants + ' variações');
+        if (s.temToque) partes.push('Áreas de toque');
+        if (s.temSR) partes.push('Leitor de tela');
+        if (s.temTab) partes.push('Tabulação');
+        el('migracaoSummary').textContent = partes.length ? partes.join(' · ') : 'Dados encontrados';
+        el('migracaoState').style.display = 'flex';
+        const btn = el('btnAplicarMigracao');
+        if (btn) { btn.disabled = false; btn.textContent = '↓ Migrar dados'; }
       }
       if (msg.type === 'tab-items-ready') {
         if (tabFormPendingSave) { // Check for pending save
@@ -2156,12 +2212,14 @@ el('chkSemToque').onchange = () => {
       const letras = computeLetras(leitorState.conectores);
       leitorState.conectores.forEach((item, i) => {
         const li = document.createElement('li');
-        li.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;background:#fff;border:1px solid #E5E5E5;border-radius:8px;';
+        const isCombinado = item.tipoAnotacao === 'combinado';
+        li.style.cssText = `display:flex;align-items:center;gap:8px;padding:8px;background:#fff;border:1.5px solid ${isCombinado ? '#e53935' : '#E5E5E5'};border-radius:8px;`;
         const tipoLabel = (item.tipoConnector || item.tipo || '').toLowerCase();
         li.innerHTML = `
           ${srConectorIcon(item.tipoConnector || item.tipo, letras[i])}
           <span style="font-size:11px;color:#999;flex-shrink:0;">${tipoLabel}</span>
           <span style="flex:1;font-size:13px;font-weight:600;color:#1a1a1a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.roleNome}</span>
+          ${isCombinado ? '<span style="font-size:10px;background:#ffebee;color:#e53935;padding:2px 5px;border-radius:4px;font-weight:700;white-space:nowrap;">combinado</span>' : ''}
           <button onclick="removeConector(${i})" style="background:none;border:none;cursor:pointer;color:#999;font-size:14px;padding:2px 4px;">✕</button>
         `;
         ul.appendChild(li);
@@ -2546,6 +2604,14 @@ const select = el('srSelectTipoConector');
           <p id='settingsMasterCount' style='font-size:12px;color:#999;'>● Nenhum dado no template</p>
           <p id='settingsSRSpecsCount' style='font-size:12px;color:#999;margin-top:2px;'>● — especificações de leitor de tela</p>
           <button onclick='reloadTemplateData()' style='width:100%;padding:10px;border:1.5px solid #2D4496;border-radius:8px;background:none;color:#2D4496;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;'>↺ Recarregar dados do template</button>
+        </div>
+        <div style='background:#f5f5f5;border-radius:8px;padding:12px;margin-top:8px;'>
+          <div style='display:flex;align-items:center;gap:8px;margin-bottom:8px;'>
+            <span style='font-size:18px;'>🔍</span>
+            <span style='font-size:14px;font-weight:600;'>Debug Plugin Data</span>
+          </div>
+          <p style='font-size:12px;color:#666;margin-bottom:8px;'>Lê as chaves de pluginData do componente selecionado e exibe no console.</p>
+          <button onclick='parent.postMessage({pluginMessage:{type:"debug-plugindata"}},"*")' style='width:100%;padding:10px;border:1.5px solid #999;border-radius:8px;background:none;color:#444;font-size:13px;font-weight:600;cursor:pointer;'>🔍 Ler pluginData do componente</button>
         </div>
       </div>
 
