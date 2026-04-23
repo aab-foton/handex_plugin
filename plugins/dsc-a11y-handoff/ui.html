@@ -260,7 +260,7 @@
         <div class="card">
           <div class="card-header"><div class="card-title-group">▼ Mapeamento de Teclado</div><span id="tBadge" class="count-badge">0</span></div>
           <div class="card-body">
-            <label class='checkbox-field'><input type='checkbox' id='chkSemTeclado' onchange='updateSummaryCards()'><span>Sem mapeamento de teclado</span></label>
+            <label class='checkbox-field'><input type='checkbox' id='chkSemTeclado' onchange='onSemTecladoChange()'><span>Sem mapeamento de teclado</span></label>
             <div class='search-wrapper'>
               <input type='text' id='tInput' placeholder='Buscar tecla ou ação...' autocomplete='off'>
               <div id="tRes" class="searchResults"></div>
@@ -272,7 +272,7 @@
         <div class="card">
           <div class="card-header"><div class="card-title-group">▼ Mapeamento de Gestos</div><span id="gBadge" class="count-badge">0</span></div>
           <div class="card-body">
-            <label class='checkbox-field'><input type='checkbox' id='chkSemGesto' onchange='updateSummaryCards()'><span>Sem mapeamento de gestos</span></label>
+            <label class='checkbox-field'><input type='checkbox' id='chkSemGesto' onchange='onSemGestoChange()'><span>Sem mapeamento de gestos</span></label>
             <div class="search-wrapper">
               <input type="text" id="gInput" placeholder="Buscar gesto ou ação..." autocomplete="off">
               <div id="gRes" class="searchResults"></div>
@@ -939,6 +939,8 @@
           if (cb) cb.checked = true;
         });
         updatePZCount();
+        el('chkSemTeclado').checked = msg.componentData?.sem_teclado || false;
+        el('chkSemGesto').checked = msg.componentData?.sem_gesto || false;
         touchData = msg.componentData?.areas_toque || [];
         variationsData = msg.componentData?.variacoes || [];
         // Garante que Default sempre existe
@@ -979,8 +981,20 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         renderLists();
         updateSummaryCards(); // CHAMADA DA NOVA FUNÇÃO
       }
+      if (msg.type === 'handoff-complete') {
+        // Frames de variação foram removidos do canvas — zera IDs stale para evitar lookups falhos
+        variationsData.forEach(v => { if (v.id !== 'default') { v.frameNodeId = null; v.instanceNodeId = null; } });
+        tabVariationsData.forEach(v => { if (v.id !== 'default') { v.frameNodeId = null; v.instanceNodeId = null; } });
+        srVariationsData.forEach(v => { if (v.id !== 'default') { v.frameNodeId = null; v.instanceNodeId = null; } });
+        currentVariationId = null;
+      }
       if (msg.type === 'touch-area-confirmed') {
         touchData.push({ nome: msg.nome, preset: msg.preset, width: msg.width, height: msg.height, relX: msg.relX, relY: msg.relY });
+        // Persiste na variação ativa imediatamente
+        if (currentVariationId) {
+          const varData = variationsData.find(v => v.id === currentVariationId);
+          if (varData) { varData.areas_toque = [...touchData]; saveTouchTabData(); }
+        }
         if (msg.preset === 'livre' && (msg.width < 44 || msg.height < 44)) {
           const sb = el('statusBar');
           sb.classList.remove('loading','success','error');
@@ -1030,7 +1044,9 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           setTimeout(() => { sb.classList.remove('loading', 'success', 'error'); }, 5000);
         } else if (isLoading) {
           sb.textContent = msg.message;
-          // loading some automaticamente quando a próxima mensagem chegar
+          // fallback: limpa loading após 15s caso nenhuma mensagem chegue
+          clearTimeout(sb._loadingTimer);
+          sb._loadingTimer = setTimeout(() => { sb.classList.remove('loading'); sb.textContent = ''; }, 15000);
         } else {
           if (tabFormPendingSave) tabFormPendingSave = false; // reset se canvas vazio
           sb.textContent = msg.message;
@@ -1102,6 +1118,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         if (el('srVariationFormView') && el('srVariationFormView').classList.contains('open')) renderSRVariationProps();
       }
       if (msg.type === 'variation-frame-created') {
+        el('statusBar').classList.remove('loading', 'success', 'error'); el('statusBar').textContent = '';
         // Atualiza a variação que aguardava o frame (pode ser nova criação OU recriação ao editar)
         const targetVar = variationsData.find(v => v.id === currentVariationId && !v.frameNodeId)
           || variationsData[variationsData.length - 1];
@@ -1117,6 +1134,10 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           closeVariationForm();
           const v = variationsData.find(v => v.id === currentVariationId);
           if (v) {
+            el('touchMainViewLabel').textContent = v.id === 'default' ? 'Default' : v.nome;
+            touchData = v.areas_toque || [];
+            el('chkSemToque').checked = v.sem_toque || false;
+            el('btnAddTouch').style.display = v.sem_toque ? 'none' : 'block';
             parent.postMessage({ pluginMessage: { type: 'activate-variation', instanceNodeId: v.instanceNodeId, areas_toque: v.areas_toque } }, '*');
             showView('main');
             el('btnAddTouch').disabled = false;
@@ -1126,6 +1147,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         } else if (currentVariationId && currentVariationId !== 'default' && el('touchVariationFormView') && !el('touchVariationFormView').classList.contains('open')) {
           const v = variationsData.find(v => v.id === currentVariationId);
           if (v) {
+            el('touchMainViewLabel').textContent = v.nome;
             parent.postMessage({ pluginMessage: { type: 'activate-variation', instanceNodeId: v.instanceNodeId, areas_toque: v.areas_toque } }, '*');
             showView('main');
           } else {
@@ -1135,6 +1157,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         renderVariationList();
       }
       if (msg.type === 'sr-variation-frame-created') {
+        el('statusBar').classList.remove('loading', 'success', 'error'); el('statusBar').textContent = '';
         const targetVar = srVariationsData.find(v => v.id === currentSRVariationId)
           || srVariationsData[srVariationsData.length - 1];
         if (targetVar) {
@@ -1184,45 +1207,47 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         }
       }
       if (msg.type === 'tab-variation-frame-created') {
-        const targetVar = tabVariationsData.find(v => v.id === currentTabVariationId)
-          || tabVariationsData[tabVariationsData.length - 1];
-        if (targetVar) {
-          targetVar.frameNodeId = msg.frameNodeId;
-          targetVar.instanceNodeId = msg.instanceNodeId;
-          saveTouchTabData();
-        }
+        el('statusBar').classList.remove('loading', 'success', 'error'); el('statusBar').textContent = '';
         const btnCreate = el('btnTabVariationFormCreate');
-        if (btnCreate) { btnCreate.textContent = 'Criar variante'; btnCreate.disabled = false; }
-        if (window._pendingAddTab) {
-          window._pendingAddTab = false;
-          el('btnAddTab').disabled = false;
-          el('btnAddTab').textContent = '+ Adicionar foco de tabulação';
-          const vTab = tabVariationsData.find(v => v.id === currentTabVariationId);
-          if (vTab) parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', instanceNodeId: vTab.instanceNodeId, tab_order: vTab.tab_order } }, '*');
-          openTabForm();
-        }
-        // Se abriu via editTabVariation (form fechado), ativa e abre main view
-        if (currentTabVariationId && currentTabVariationId !== 'default' && !el('tabVariationFormView').classList.contains('open')) {
-          const v = tabVariationsData.find(v => v.id === currentTabVariationId);
-          if (v) {
-            parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', instanceNodeId: v.instanceNodeId, tab_order: v.tab_order } }, '*');
+        try {
+          const targetVar = tabVariationsData.find(v => v.id === currentTabVariationId)
+            || tabVariationsData[tabVariationsData.length - 1];
+          if (targetVar) {
+            targetVar.frameNodeId = msg.frameNodeId;
+            targetVar.instanceNodeId = msg.instanceNodeId;
+            saveTouchTabData();
           }
-        } else {
-          closeTabVariationForm();
+          if (window._pendingAddTab) {
+            window._pendingAddTab = false;
+            el('btnAddTab').disabled = false;
+            el('btnAddTab').textContent = '+ Adicionar foco de tabulação';
+            const vTab = tabVariationsData.find(v => v.id === currentTabVariationId);
+            if (vTab) parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', instanceNodeId: vTab.instanceNodeId, tab_order: vTab.tab_order } }, '*');
+            openTabForm();
+          } else {
+            // Criação via form ou editTabVariation — sempre ativa a variação
+            closeTabVariationForm();
+            const v = tabVariationsData.find(v => v.id === currentTabVariationId);
+            if (v && v.instanceNodeId) {
+              parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', instanceNodeId: v.instanceNodeId, tab_order: v.tab_order } }, '*');
+            }
+          }
+          // Carrega dados da variação criada/ativada
+          if (targetVar) {
+            tabOrderData = targetVar.tab_order || [];
+            semTabulacao = targetVar.sem_tabulacao || false;
+            el('chkSemTabulacao').checked = semTabulacao;
+            el('tabFooter').style.display = semTabulacao ? 'none' : 'flex';
+            renderTabOrderList();
+            el('tabMainViewLabel').textContent = targetVar.id === 'default' ? 'Default' : targetVar.nome;
+          }
+          renderTabVariationList();
+          showTabView('main');
+        } catch(e) {
+          console.error('[tab-variation-frame-created]', e);
+        } finally {
+          if (btnCreate) { btnCreate.textContent = 'Criar variante'; btnCreate.disabled = false; }
         }
-
-        // Carrega dados da variação criada/ativada
-        if (targetVar) {
-          tabOrderData = targetVar.tab_order || [];
-          semTabulacao = targetVar.sem_tabulacao || false;
-          el('chkSemTabulacao').checked = semTabulacao;
-          el('tabFooter').style.display = semTabulacao ? 'none' : 'flex';
-          renderTabOrderList();
-          el('tabMainViewLabel').textContent = targetVar.id === 'default' ? 'Default' : targetVar.nome;
-        }
-
-        renderTabVariationList();
-        showTabView('main');
       }
     };
 
@@ -1596,13 +1621,19 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       return;
     }
     const sorted = [...componentProps].sort((a, b) => (a.type === 'BOOLEAN' ? 1 : 0) - (b.type === 'BOOLEAN' ? 1 : 0));
+    let boolHeaderAdded = false;
     sorted.forEach(prop => {
       const label = cleanPropName(prop.name);
       if (prop.type === 'VARIANT') {
-        const opts = (prop.options || []).map(o => `<option value="${o}">${o}</option>`).join('');
+        const opts = (prop.options || []).map(o => `<option value="${o}"${o === prop.currentValue ? ' selected' : ''}>${o}</option>`).join('');
         container.innerHTML += `<div class='touch-form-row'><label>${label}</label><select class='touch-form-input sr-var-prop-select' data-prop='${prop.name}' style='cursor:pointer;'>${opts}</select></div>`;
       } else if (prop.type === 'BOOLEAN') {
-        container.innerHTML += `<div class='touch-form-row' style='flex-direction:row;align-items:center;gap:8px;'><input type='checkbox' class='sr-var-prop-check' data-prop='${prop.name}' style='accent-color:#2D4496;width:14px;height:14px;'><label style='font-size:12px;font-weight:600;color:#555;margin:0;'>${label}</label></div>`;
+        if (!boolHeaderAdded) {
+          container.innerHTML += `<div style="font-size:9px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.5px;padding:8px 0 4px;">Visibilidade de elementos</div>`;
+          boolHeaderAdded = true;
+        }
+        const checked = prop.currentValue === true ? 'checked' : '';
+        container.innerHTML += `<div class='touch-form-row' style='flex-direction:row;align-items:center;gap:8px;'><input type='checkbox' class='sr-var-prop-check' data-prop='${prop.name}' ${checked} style='accent-color:#2D4496;width:14px;height:14px;'><label style='font-size:12px;font-weight:600;color:#555;margin:0;'>${label}</label></div>`;
       }
     });
   }
@@ -1731,13 +1762,19 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       return;
     }
     const sorted = [...componentProps].sort((a, b) => (a.type === 'BOOLEAN' ? 1 : 0) - (b.type === 'BOOLEAN' ? 1 : 0));
+    let boolHeaderAdded = false;
     sorted.forEach(prop => {
       const label = cleanPropName(prop.name);
       if (prop.type === 'VARIANT') {
-        const opts = (prop.options || []).map(o => `<option value="${o}">${o}</option>`).join('');
+        const opts = (prop.options || []).map(o => `<option value="${o}"${o === prop.currentValue ? ' selected' : ''}>${o}</option>`).join('');
         container.innerHTML += `<div class='touch-form-row'><label>${label}</label><select class='touch-form-input tab-var-prop-select' data-prop='${prop.name}' style='cursor:pointer;'>${opts}</select></div>`;
       } else if (prop.type === 'BOOLEAN') {
-        container.innerHTML += `<div class='touch-form-row' style='flex-direction:row;align-items:center;gap:8px;'><input type='checkbox' class='tab-var-prop-check' data-prop='${prop.name}' style='accent-color:#2D4496;width:14px;height:14px;'><label style='font-size:12px;font-weight:600;color:#555;margin:0;'>${label}</label></div>`;
+        if (!boolHeaderAdded) {
+          container.innerHTML += `<div style="font-size:9px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.5px;padding:8px 0 4px;">Visibilidade de elementos</div>`;
+          boolHeaderAdded = true;
+        }
+        const checked = prop.currentValue === true ? 'checked' : '';
+        container.innerHTML += `<div class='touch-form-row' style='flex-direction:row;align-items:center;gap:8px;'><input type='checkbox' class='tab-var-prop-check' data-prop='${prop.name}' ${checked} style='accent-color:#2D4496;width:14px;height:14px;'><label style='font-size:12px;font-weight:600;color:#555;margin:0;'>${label}</label></div>`;
       }
     });
   }
@@ -1886,10 +1923,11 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       return;
     }
     const sorted = [...componentProps].sort((a, b) => (a.type === 'BOOLEAN' ? 1 : 0) - (b.type === 'BOOLEAN' ? 1 : 0));
+    let boolHeaderAdded = false;
     sorted.forEach(prop => {
       const label = cleanPropName(prop.name);
       if (prop.type === 'VARIANT') {
-        const opts = (prop.options || []).map(o => `<option value="${o}">${o}</option>`).join('');
+        const opts = (prop.options || []).map(o => `<option value="${o}"${o === prop.currentValue ? ' selected' : ''}>${o}</option>`).join('');
         container.innerHTML += `
           <div class='touch-form-row'>
             <label>${label}</label>
@@ -1898,9 +1936,14 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
             </select>
           </div>`;
       } else if (prop.type === 'BOOLEAN') {
+        if (!boolHeaderAdded) {
+          container.innerHTML += `<div style="font-size:9px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.5px;padding:8px 0 4px;">Visibilidade de elementos</div>`;
+          boolHeaderAdded = true;
+        }
+        const checked = prop.currentValue === true ? 'checked' : '';
         container.innerHTML += `
           <div class='touch-form-row' style='flex-direction:row;align-items:center;gap:8px;'>
-            <input type='checkbox' class='var-prop-check' data-prop='${prop.name}' style='accent-color:#2D4496;width:14px;height:14px;'>
+            <input type='checkbox' class='var-prop-check' data-prop='${prop.name}' ${checked} style='accent-color:#2D4496;width:14px;height:14px;'>
             <label style='font-size:12px;font-weight:600;color:#555;margin:0;'>${label}</label>
           </div>`;
       }
@@ -2076,6 +2119,28 @@ el('chkSemToque').onchange = () => {
     updateSummaryCards();
   }
 };
+
+function onSemTecladoChange() {
+  const checked = el('chkSemTeclado').checked;
+  if (checked) {
+    currentData = currentData.filter(m => !m.utilizacao.toLowerCase().includes('teclado'));
+    renderLists();
+  }
+  parent.postMessage({ pluginMessage: { type: 'save-partial-data', key: 'sem_teclado', value: checked } }, '*');
+  saveGeralData();
+  updateSummaryCards();
+}
+
+function onSemGestoChange() {
+  const checked = el('chkSemGesto').checked;
+  if (checked) {
+    currentData = currentData.filter(m => !m.utilizacao.toLowerCase().includes('gesto'));
+    renderLists();
+  }
+  parent.postMessage({ pluginMessage: { type: 'save-partial-data', key: 'sem_gesto', value: checked } }, '*');
+  saveGeralData();
+  updateSummaryCards();
+}
 
   resetTouchForm();
   showView('list');
@@ -2322,7 +2387,7 @@ const select = el('srSelectTipoConector');
       fields.forEach(f => {
         const val = role[f.key];
         if (val && val !== 'NA' && val !== 'N/A') previewHtml += `<div style="background:#F5F5F5;border-radius:6px;padding:8px 10px;"><div style="font-size:9px;font-weight:700;color:#999;text-transform:uppercase;margin-bottom:2px;">${f.label}</div><div style="font-size:12px;color:#333;word-break:break-word;">${val}</div></div>`;
-        if (checkPlaceholder(val)) insertHtml += `<div class="sr-field-row"><label>${f.label}</label><input type="text" class="touch-form-input" placeholder="${val}" data-field="${f.key}"></div>`;
+        if (checkPlaceholder(val) || (f.key === 'nomeAcessivel' && val && val !== 'NA' && val !== 'N/A')) insertHtml += `<div class="sr-field-row"><label>${f.label}</label><input type="text" class="touch-form-input" placeholder="${f.key === 'nomeAcessivel' ? 'Insira aqui o nome acessível' : val}" data-field="${f.key}"></div>`;
       });
       if (previewHtml) { previewDiv.innerHTML = previewHtml; previewDiv.style.display = 'flex'; }
       if (insertHtml) { insertDiv.innerHTML = insertHtml; insertDiv.style.display = 'flex'; }
@@ -2388,11 +2453,11 @@ const select = el('srSelectTipoConector');
                   <div style="font-size:12px;color:#333;word-break:break-word;">${val}</div>
                 </div>`;
             }
-            if (checkPlaceholder(val)) {
+            if (checkPlaceholder(val) || (f.key === 'nomeAcessivel' && val && val !== 'NA' && val !== 'N/A')) {
               insertHtml += `
                 <div class="sr-field-row">
                   <label>${f.label}</label>
-                  <input type="text" class="touch-form-input" placeholder="${val}" data-field="${f.key}">
+                  <input type="text" class="touch-form-input" placeholder="${f.key === 'nomeAcessivel' ? 'Insira aqui o nome acessível' : val}" data-field="${f.key}">
                 </div>`;
             }
           });

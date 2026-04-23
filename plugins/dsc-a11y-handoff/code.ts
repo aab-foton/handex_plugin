@@ -97,7 +97,7 @@ async function applyWcagBackground(imageFrame: FrameNode, componentNode: SceneNo
   const compFills = Array.isArray((componentNode as FrameNode).fills) ? (componentNode as FrameNode).fills as Paint[] : [];
   const bgFill   = bgFills.find(f   => f.type === 'SOLID') as SolidPaint | undefined;
   const compFill = compFills.find(f => f.type === 'SOLID') as SolidPaint | undefined;
-  let needsSwap = true;
+  let needsSwap = false; // só troca se confirmarmos contraste insuficiente
   if (bgFill && compFill) {
     const bgL   = relativeLuminance(bgFill.color.r,   bgFill.color.g,   bgFill.color.b);
     const compL = relativeLuminance(compFill.color.r, compFill.color.g, compFill.color.b);
@@ -211,13 +211,13 @@ async function drawVariationMarkers(varFrame: FrameNode, markers: any[], color: 
   }
 }
 
-function getOrCreateVariacoesContainer(comp: SceneNode, handoff: SceneNode | null, parentNode: FrameNode | PageNode): FrameNode {
+async function getOrCreateVariacoesContainer(comp: SceneNode, handoff: SceneNode | null, parentNode: FrameNode | PageNode): Promise<FrameNode> {
   const CONTAINER_NAME = '[A11Y Variações]';
   const GAP = 80;
 
   // Reutiliza container existente (cache por ID para evitar findOne O(n))
   if (variacoesContainerId) {
-    const cached = figma.getNodeById(variacoesContainerId) as FrameNode | null;
+    const cached = await figma.getNodeByIdAsync(variacoesContainerId) as FrameNode | null;
     if (cached) return cached;
     variacoesContainerId = null;
   }
@@ -548,7 +548,8 @@ figma.ui.onmessage = async (msg) => {
                 const numText = numTexts.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numTexts[0] || null;
                 if (numText) await updateText(numText as TextNode, String(globalCounter));
                 try { numClone.setProperties({ 'connector': 'left' }); } catch(e) {}
-                numClone.x = area.relX + currentX - numClone.width;
+                // Badge sempre à esquerda do componente, independente de area.relX
+                numClone.x = currentX - numClone.width;
                 numClone.y = area.relY + currentY + area.height / 2 - numClone.height / 2;
                 imageFrame.appendChild(numClone);
               }
@@ -687,7 +688,8 @@ figma.ui.onmessage = async (msg) => {
             totalHeight + TAB_PAD_SIDE
           );
           if (modelOrder)      modelOrder.visible      = false;
-          
+          if (modelItemNumber) modelItemNumber.visible = false;
+
         }
       }
     }
@@ -723,6 +725,8 @@ figma.ui.onmessage = async (msg) => {
               Array.from(srImageFrame.children).filter(n => !keepSR.has(n)).forEach(n => n.remove());
               const itemNumH = modelItemNumber ? modelItemNumber.height : 36;
 
+              srImageFrame.clipsContent = false;
+
               // WCAG contrast check
               try { await applyWcagBackground(srImageFrame, componentePrincipalAtivo, allVarsGlobal); } catch (e) {
                 figma.ui.postMessage({ type: 'feedback', message: `❌ Erro no bloco de cor (leitor preview): ${e}` });
@@ -730,7 +734,7 @@ figma.ui.onmessage = async (msg) => {
 
               const SR_PAD_TOP  = 120;
               const SR_PAD_LEFT = 160;
-              const SR_PAD_SIDE = 24;
+              const SR_PAD_SIDE = 60; // aumentado para badges que extrapolam altura do componente
               const SR_GAP_H    = 140;
               const SR_GAP_V    = 60;
               const SR_MAX_WIDTH = Math.max(srImageFrame.width, 800);
@@ -1083,7 +1087,7 @@ figma.ui.onmessage = async (msg) => {
           const ZOOM_PAD_SIDE = 24;
           const ZOOM_GAP_H    = 80;
           let zoomCurrentX = ZOOM_PAD_LEFT;
-          let zoomTotalWidth = 0;
+          let zoomTotalWidth = 0; // mantido para tracking interno, largura do frame não é alterada
           let zoomMaxHeight = 0;
           let zoomCompY = ZOOM_NUM_Y; // calculado por iteração; último valor usado no resize
 
@@ -1145,12 +1149,14 @@ figma.ui.onmessage = async (msg) => {
             zoomCurrentX  += compClone.width + ZOOM_GAP_H;
           }
 
+          // Mantém largura original do template — conteúdo que não caber fica clipado
+          zoomImageFrame.clipsContent = true;
           zoomImageFrame.resize(
-            Math.max(zoomImageFrame.width, zoomTotalWidth + ZOOM_PAD_SIDE),
+            zoomImageFrame.width,
             zoomCompY + zoomMaxHeight + ZOOM_PAD_SIDE + 40
           );
+          if (modelItemNumber) modelItemNumber.visible = false;
 
-          
         }
       }
     }
@@ -1243,6 +1249,7 @@ figma.ui.onmessage = async (msg) => {
     workingFrame.setPluginData("a11y-component-data", dataToSaveDirect);
 
     figma.ui.postMessage({ type: 'feedback', message: `✅ Handoff ${isUpdate ? 'atualizado' : 'gerado'} e dados salvos!` });
+    figma.ui.postMessage({ type: 'handoff-complete' });
   }
 
   else if (msg.type === 'create-touch-overlay') {
@@ -1345,12 +1352,19 @@ figma.ui.onmessage = async (msg) => {
         figma.ui.postMessage({ type: 'component-properties-ready', props: [] });
         return;
       }
+      // Captura valores atuais da instância (se for INSTANCE)
+      let instanceValues: Record<string, any> = {};
+      if (node.type === 'INSTANCE') {
+        const compProps = (node as InstanceNode).componentProperties;
+        Object.entries(compProps).forEach(([k, v]) => { instanceValues[k] = v.value; });
+      }
       const props = Object.entries(defs)
         .filter(([_, def]) => def.type === 'VARIANT' || def.type === 'BOOLEAN')
         .map(([name, def]) => ({
           name,
           type: def.type,
-          options: def.type === 'VARIANT' ? (def as any).variantOptions : [true, false]
+          options: def.type === 'VARIANT' ? (def as any).variantOptions : [true, false],
+          currentValue: instanceValues[name] ?? (def as any).defaultValue
         }));
       figma.ui.postMessage({ type: 'component-properties-ready', props });
     } catch(e) {
@@ -1407,7 +1421,7 @@ figma.ui.onmessage = async (msg) => {
       varFrame.clipsContent = false;
       varFrame.resize(instance.width, instance.height);
 
-      const container = getOrCreateVariacoesContainer(comp, handoffAtivo, parentNode);
+      const container = await getOrCreateVariacoesContainer(comp, handoffAtivo, parentNode);
       container.appendChild(varFrame);
       varFrame.appendChild(instance);
 
@@ -1535,7 +1549,7 @@ figma.ui.onmessage = async (msg) => {
       varFrame.fills = [];
       varFrame.clipsContent = false;
       varFrame.resize(instance.width, instance.height);
-      const container = getOrCreateVariacoesContainer(comp, handoffAtivo, parentNode);
+      const container = await getOrCreateVariacoesContainer(comp, handoffAtivo, parentNode);
       container.appendChild(varFrame);
       varFrame.appendChild(instance);
       figma.currentPage.selection = [varFrame];
@@ -1575,7 +1589,7 @@ figma.ui.onmessage = async (msg) => {
       varFrame.fills = [];
       varFrame.clipsContent = false;
       varFrame.resize(instance.width, instance.height);
-      const container = getOrCreateVariacoesContainer(comp, handoffAtivo, parentNode);
+      const container = await getOrCreateVariacoesContainer(comp, handoffAtivo, parentNode);
       container.appendChild(varFrame);
       varFrame.appendChild(instance);
       figma.currentPage.selection = [varFrame];
@@ -1906,7 +1920,8 @@ function parseRolesList(dbInstance: InstanceNode): { nome: string; especificacao
   const resultado: { nome: string; especificacao: string; descricao: string; observacao: string; codigoWeb: string; codigoRN: string; nomeAcessivel: string; tipoConnector: string; revisao: string }[] = [];
 
   for (const row of rows) {
-    const textos = (row as FrameNode).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+    const textos = ((row as FrameNode).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[])
+      .sort((a, b) => a.x - b.x);
     if (textos.length < 8) continue;
 
     const nome = textos[0]?.characters.trim() ?? '';
