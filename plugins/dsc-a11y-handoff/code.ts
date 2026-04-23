@@ -24,9 +24,6 @@ let tempSROverlayId: string | null = null;
 let componenteVariacaoAtivo: SceneNode | null = null;
 let componenteTabVariacaoAtivo: SceneNode | null = null;
 let componenteSRVariacaoAtivo: SceneNode | null = null;
-let _cachedMasterList: any[] = [];
-let _cachedRolesList: any[] = [];
-let _cachedComponentName: string = 'Componente';
 
 // ==========================================
 // 2. FUNÇÕES AUXILIARES
@@ -281,171 +278,7 @@ function getOrCreateVariacoesContainer(comp: SceneNode, handoff: SceneNode | nul
 }
 
 // ==========================================
-// 3. TRANSFORMAÇÃO DE DADOS LEGADOS
-// ==========================================
-// Normaliza componentData salvo por versões antigas (variacoes/tabulacao/leitor como objeto → array)
-function normalizeComponentData(data: any, variantLabels?: Record<string, string>): any {
-  function varNome(id: string): string {
-    if (id === 'default') return 'Default';
-    return (variantLabels && variantLabels[id]) || id;
-  }
-  function objToArray(obj: any, defaults: Record<string, any>): any[] {
-    if (Array.isArray(obj)) return obj;
-    if (!obj || typeof obj !== 'object') return [];
-    return Object.entries(obj).map(([id, val]: [string, any]) => ({
-      id, nome: varNome(id),
-      propriedades: {}, frameNodeId: null, instanceNodeId: null,
-      ...defaults,
-      ...(typeof val === 'object' ? val : {})
-    }));
-  }
-  if (data.variacoes && !Array.isArray(data.variacoes)) {
-    data.variacoes = objToArray(data.variacoes, { areas_toque: [], sem_toque: false });
-  }
-  if (data.variacoes_tabulacao && !Array.isArray(data.variacoes_tabulacao)) {
-    data.variacoes_tabulacao = objToArray(data.variacoes_tabulacao, { tab_order: [], sem_tabulacao: false });
-  }
-  if (data.variacoes_leitor && !Array.isArray(data.variacoes_leitor)) {
-    data.variacoes_leitor = objToArray(data.variacoes_leitor, { conectores_leitor: [], sem_leitor: false });
-  }
-  return data;
-}
-
-function transformLegacyData(raw: Record<string, string>): Record<string, any> {
-  // Dados globais
-  let plataformas: string[] = [];
-  let zoom: string[] = [];
-  let mapeamentos: any[] = [];
-  let semToque = false;
-  let semLeitor = false;
-  let semTabulacao = false;
-
-  // Variant configs — nomes das variações (pode ser array ou objeto)
-  const variantConfigs: Record<string, any> = {};
-  try {
-    const vcRaw = JSON.parse(raw['a11y-variant-configs'] || '[]');
-    if (Array.isArray(vcRaw)) { vcRaw.forEach((v: any) => { if (v.id) variantConfigs[v.id] = v; }); }
-    else { Object.assign(variantConfigs, vcRaw); }
-  } catch (e) {}
-
-  function varNome(id: string): string {
-    if (id === 'default') return 'Default';
-    const vc = variantConfigs[id];
-    if (vc && vc.name) return vc.name;
-    if (vc && vc.label) return vc.label;
-    return id;
-  }
-
-  // Plataformas, zoom, mapeamentos, flags
-  try {
-    const comp = JSON.parse(raw['a11y-component'] || '{}');
-    const platformMap: Record<string, string> = { 'web': 'Web', 'Web': 'Web', 'android': 'Android', 'Android': 'Android', 'ios': 'iOS', 'iOS': 'iOS' };
-    if (Array.isArray(comp.platform)) {
-      plataformas = comp.platform.map((p: string) => platformMap[p] || p).filter(Boolean);
-    }
-    const zoomMap: Record<string, string> = { 'resize-text': '200% Texto (reflow)', 'reflow': '400% Componente (scaling)' };
-    if (Array.isArray(comp.zoom)) {
-      zoom = comp.zoom.map((z: string) => zoomMap[z] || z).filter(Boolean);
-    }
-    function splitMap(entry: any) {
-      if (typeof entry === 'object' && entry !== null) return { mapeamento: entry.mapeamento || '', descricao: entry.descricao || '' };
-      const parts = String(entry).split('|');
-      return { mapeamento: (parts[0] || '').trim(), descricao: (parts[1] || '').trim() };
-    }
-    if (Array.isArray(comp.kbMapping)) {
-      comp.kbMapping.forEach((m: any) => { const { mapeamento, descricao } = splitMap(m); mapeamentos.push({ mapeamento, descricao, utilizacao: 'teclado' }); });
-    }
-    if (Array.isArray(comp.gestureMapping)) {
-      comp.gestureMapping.forEach((m: any) => { const { mapeamento, descricao } = splitMap(m); mapeamentos.push({ mapeamento, descricao, utilizacao: 'gesto' }); });
-    }
-    semToque = !!comp.noTouch;
-    semLeitor = !!comp.noScreenReader;
-    semTabulacao = !!comp.noTab;
-  } catch (e) {}
-
-  // Coletar dados por variação em mapas temporários
-  const touchMap: Record<string, any[]> = {};
-  const tabMap: Record<string, any[]> = {};
-  const srMap: Record<string, any[]> = {};
-
-  Object.keys(raw).filter(k => k.startsWith('a11y-touch-areas')).forEach(key => {
-    const varId = (key === 'a11y-touch-areas::' || key === 'a11y-touch-areas') ? 'default' : key.replace('a11y-touch-areas::', '');
-    try {
-      const areas = JSON.parse(raw[key] || '[]');
-      touchMap[varId] = areas.map((a: any, i: number) => ({ nome: `Área ${i + 1}`, preset: 'exato', width: a.width || 0, height: a.height || 0, relX: a.x || 0, relY: a.y || 0 }));
-    } catch (e) {}
-  });
-
-  Object.keys(raw).filter(k => k.startsWith('a11y-focus-order')).forEach(key => {
-    const varId = (key === 'a11y-focus-order' || key === 'a11y-focus-order::') ? 'default' : key.replace('a11y-focus-order::', '');
-    try {
-      const items = JSON.parse(raw[key] || '[]');
-      tabMap[varId] = items.map((item: any, i: number) => {
-        const segments = (item.namePath || '').split('/');
-        return { nome: `Tab ${i + 1}`, layerName: (segments[segments.length - 1] || `Tab ${i + 1}`).trim(), nodeId: item.nodeId || '', relX: 0, relY: 0, width: 0, height: 0 };
-      });
-    } catch (e) {}
-  });
-
-  Object.keys(raw).filter(k => k.startsWith('a11y-sr-unified')).forEach(key => {
-    const varId = (key === 'a11y-sr-unified::' || key === 'a11y-sr-unified') ? 'default' : key.replace('a11y-sr-unified::', '');
-    try {
-      const items = JSON.parse(raw[key] || '[]');
-      srMap[varId] = items.map((item: any) => {
-        const isAgrup = item.type === 'agrupamento';
-        // Mescla root + layerData: layerData tem precedência (simples); agrupamento/combinado armazenam na raiz
-        const merged: Record<string, any> = { ...item, ...(item.layerData || {}) };
-        const tipo = isAgrup ? (item.agrupTipo || item.connectorType || merged.connectorType || '') : (merged.connectorType || '');
-        const base: Record<string, any> = {
-          tipoAnotacao: isAgrup ? 'agrupamento' : 'simples',
-          tipo,
-          roleNome: merged.role || '',
-          especificacao: merged.specification || '',
-          descricao: merged.explanation || '',
-          observacao: merged.observation || '',
-          nomeAcessivel: merged.accessibleName || '',
-          codigoWeb: merged.codeNote || ''
-        };
-        if (isAgrup) { const r = item.rect || {}; base.x = r.x || 0; base.y = r.y || 0; base.width = r.width || 0; base.height = r.height || 0; base.origem = 'interno'; }
-        else { base.nodeId = item.nodeId || ''; base.origem = 'canvas'; }
-        return base;
-      });
-    } catch (e) {}
-  });
-
-  // Montar arrays de variações no formato esperado pela UI
-  function vcProps(id: string): Record<string, string> {
-    if (id === 'default') return {};
-    return variantConfigs[id]?.properties || {};
-  }
-  function vcInstanceId(id: string): string | null {
-    if (id === 'default') return null;
-    return variantConfigs[id]?.instanceNodeId || null;
-  }
-
-  const allVarIds = Array.from(new Set(['default', ...Object.keys(touchMap)]));
-  const variacoes = allVarIds.map(id => ({
-    id, nome: varNome(id), propriedades: vcProps(id), frameNodeId: null, instanceNodeId: vcInstanceId(id),
-    areas_toque: touchMap[id] || [], sem_toque: id === 'default' ? semToque : false
-  }));
-
-  const allTabIds = Array.from(new Set(['default', ...Object.keys(tabMap)]));
-  const variacoes_tabulacao = allTabIds.map(id => ({
-    id, nome: varNome(id), propriedades: vcProps(id), frameNodeId: null, instanceNodeId: vcInstanceId(id),
-    tab_order: tabMap[id] || [], sem_tabulacao: id === 'default' ? semTabulacao : false
-  }));
-
-  const allSRIds = Array.from(new Set(['default', ...Object.keys(srMap)]));
-  const variacoes_leitor = allSRIds.map(id => ({
-    id, nome: varNome(id), propriedades: vcProps(id), frameNodeId: null, instanceNodeId: vcInstanceId(id),
-    conectores_leitor: srMap[id] || [], sem_leitor: id === 'default' ? semLeitor : false
-  }));
-
-  return { plataformas, zoom, mapeamentos, variacoes, variacoes_tabulacao, variacoes_leitor };
-}
-
-// ==========================================
-// 4. ROTEADOR DE MENSAGENS (UI -> FIGMA)
+// 3. ROTEADOR DE MENSAGENS (UI -> FIGMA)
 // ==========================================
 figma.ui.onmessage = async (msg) => {
   
@@ -1462,6 +1295,7 @@ figma.ui.onmessage = async (msg) => {
           relX = Math.round(frame.x - refNode.x);
           relY = Math.round(frame.y - refNode.y);
         }
+        frame.remove();
       }
       tempTouchOverlayId = null;
     }
@@ -1949,39 +1783,6 @@ figma.ui.onmessage = async (msg) => {
       tempSROverlayId = null;
     }
   }
-  else if (msg.type === 'debug-plugindata') {
-    if (componentePrincipalAtivo) {
-      const dataNode = await resolveDataNode(componentePrincipalAtivo);
-      const chaves = dataNode ? dataNode.getPluginDataKeys() : [];
-      const resultado: Record<string, any> = {};
-      chaves.forEach(k => {
-        try { resultado[k] = JSON.parse(dataNode!.getPluginData(k)); }
-        catch (e) { resultado[k] = dataNode!.getPluginData(k); }
-      });
-      console.log('[debug-plugindata] chaves:', chaves);
-      console.log('[debug-plugindata] dados:', JSON.stringify(resultado, null, 2));
-      figma.notify(`${chaves.length} chaves encontradas. Veja o console.`);
-    } else {
-      figma.notify('Nenhum componente ativo.', { error: true });
-    }
-  }
-  else if (msg.type === 'pular-legado') {
-    const componentDataVazio: any = { plataformas: [], zoom: [], mapeamentos: [], areas_toque: [], sem_toque: false, variacoes: {}, variacoes_tabulacao: {}, variacoes_leitor: [], conectores_leitor: [], sem_leitor: false };
-    const syncAfterLegado = await figma.clientStorage.getAsync('a11y-setting-sync') ?? true;
-    figma.ui.postMessage({ type: 'setup-ui', masterList: _cachedMasterList, rolesList: _cachedRolesList, componentData: componentDataVazio, componentName: _cachedComponentName, isGenerated: false, settings: { syncTemplate: syncAfterLegado } });
-  }
-  else if (msg.type === 'aplicar-legado') {
-    const transformado = transformLegacyData(msg.raw as Record<string, string>);
-    if (handoffAtivo && componentePrincipalAtivo) {
-      const dbInst = (handoffAtivo as any).findOne((n: SceneNode) => n.name === '[dsc-h] Plugin Data A11y') as InstanceNode;
-      if (dbInst) dbInst.setPluginData('a11y-component-data', JSON.stringify(transformado));
-      (handoffAtivo as any).setPluginData('a11y-component-data', JSON.stringify(transformado));
-      const dataNodeSave = await resolveDataNode(componentePrincipalAtivo);
-      if (dataNodeSave) dataNodeSave.setPluginData('a11y-component-data', JSON.stringify(transformado));
-    }
-    const syncAfterAplicar = await figma.clientStorage.getAsync('a11y-setting-sync') ?? true;
-    figma.ui.postMessage({ type: 'setup-ui', masterList: _cachedMasterList, rolesList: _cachedRolesList, componentData: transformado, componentName: _cachedComponentName, isGenerated: false, settings: { syncTemplate: syncAfterAplicar } });
-  }
 };
 
 // ==========================================
@@ -2133,40 +1934,13 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
   let masterList: { mapeamento: string; descricao: string; utilizacao: string }[] = [];
   let rolesList: ReturnType<typeof parseRolesList> = [];
   let componentData: any = { plataformas: [], zoom: [], mapeamentos: [], areas_toque: [], sem_toque: false, variacoes: [], variacoes_tabulacao: [], variacoes_leitor: [], conectores_leitor: [], sem_leitor: false };
-  let variantLabels: Record<string, string> = {};
-  let vcFullMap: Record<string, any> = {};
-
   // 1. COMPONENT_SET como baseline (sempre tenta, independente de outras fontes)
   if (componentePrincipalAtivo) {
     const dataNode = await resolveDataNode(componentePrincipalAtivo);
     if (dataNode) {
-      // Lê variant configs para enriquecer nomes e propriedades na normalização
-      try {
-        const vcRaw = JSON.parse(dataNode.getPluginData('a11y-variant-configs') || '[]');
-        const vcArr = Array.isArray(vcRaw) ? vcRaw : Object.values(vcRaw);
-        vcArr.forEach((v: any) => {
-          if (v.id) {
-            variantLabels[v.id] = v.label || v.name || v.id;
-            vcFullMap[v.id] = v;
-          }
-        });
-      } catch(e) {}
       const rawFromComponent = dataNode.getPluginData('a11y-component-data');
       if (rawFromComponent) {
-        try {
-          const parsed = JSON.parse(rawFromComponent);
-          componentData = normalizeComponentData(parsed, variantLabels);
-          // Recupera SR do formato original se variacoes_leitor era objeto (versão antiga com agrupamentos vazios)
-          if (parsed.variacoes_leitor && !Array.isArray(parsed.variacoes_leitor)) {
-            const srKeys = dataNode.getPluginDataKeys().filter((k: string) => k.startsWith('a11y-sr-unified'));
-            if (srKeys.length > 0) {
-              const rawSR: Record<string, string> = {};
-              srKeys.forEach((k: string) => { rawSR[k] = dataNode.getPluginData(k); });
-              const recovered = transformLegacyData(rawSR);
-              componentData.variacoes_leitor = recovered.variacoes_leitor;
-            }
-          }
-        } catch(e) {}
+        try { componentData = JSON.parse(rawFromComponent); } catch(e) {}
       }
     }
   }
@@ -2177,53 +1951,16 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
     rolesList = parseRolesList(dbInstance);
     const rawSaved = dbInstance.getPluginData('a11y-component-data');
     if (rawSaved) {
-      try { componentData = normalizeComponentData(JSON.parse(rawSaved), variantLabels); } catch(e) {}
+      try { componentData = JSON.parse(rawSaved); } catch(e) {}
     }
   }
 
   // 3. Dados diretos no frame do handoff (override final — mais recente)
   const rawDirect = (handoff as any).getPluginData('a11y-component-data');
   if (rawDirect) {
-    try { componentData = normalizeComponentData(JSON.parse(rawDirect), variantLabels); } catch(e) {}
+    try { componentData = JSON.parse(rawDirect); } catch(e) {}
   }
 
-  // Backfill de propriedades e instanceNodeId nas variações que foram salvas com {} vazio
-  if (Object.keys(vcFullMap).length > 0) {
-    const fill = (arr: any[]) => arr.forEach((v: any) => {
-      if (v.id !== 'default' && vcFullMap[v.id]) {
-        if (!v.propriedades || Object.keys(v.propriedades).length === 0) v.propriedades = vcFullMap[v.id].properties || {};
-        if (!v.instanceNodeId) v.instanceNodeId = vcFullMap[v.id].instanceNodeId || null;
-        if (v.nome === v.id) v.nome = vcFullMap[v.id].label || vcFullMap[v.id].name || v.id;
-      }
-    });
-    fill(componentData.variacoes || []);
-    fill(componentData.variacoes_tabulacao || []);
-    fill(componentData.variacoes_leitor || []);
-  }
-
-  // Detecção de dados legados
-  const temDadosNovos = componentData.plataformas && componentData.plataformas.length > 0;
-  if (!temDadosNovos && componentePrincipalAtivo) {
-    const dataNodeLegado = await resolveDataNode(componentePrincipalAtivo);
-    if (dataNodeLegado) {
-      const chaves = dataNodeLegado.getPluginDataKeys();
-      if (chaves.includes('a11y-component')) {
-        const rawLegado: Record<string, string> = {};
-        chaves.forEach(k => { rawLegado[k] = dataNodeLegado.getPluginData(k); });
-        // Cachear para uso posterior nos handlers pular-legado e aplicar-legado
-        _cachedMasterList = masterList;
-        _cachedRolesList = rolesList;
-        _cachedComponentName = componentePrincipalAtivo?.name || 'Componente';
-        const temToque = chaves.some(k => k.startsWith('a11y-touch-areas'));
-        const temSR = chaves.some(k => k.startsWith('a11y-sr-unified'));
-        const temTab = chaves.some(k => k.startsWith('a11y-focus-order'));
-        let nVariants = 0;
-        try { nVariants = Object.keys(JSON.parse(dataNodeLegado.getPluginData('a11y-variant-configs') || '{}')).length; } catch(e) {}
-        figma.ui.postMessage({ type: 'legacy-data-detected', summary: { nVariants, temToque, temSR, temTab }, raw: rawLegado });
-        return;
-      }
-    }
-  }
 
     const settingSync = await figma.clientStorage.getAsync('a11y-setting-sync') ?? true;
     figma.ui.postMessage({ type: 'setup-ui',

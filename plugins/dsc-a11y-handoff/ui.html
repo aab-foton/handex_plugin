@@ -48,8 +48,6 @@
     .remove-btn:hover { color: #FF5252; }
     #settingsOverlay { display: none; }
     #settingsOverlay.open { display: flex; }
-    #infoPanel { display: none; }
-    #infoPanel.open { display: flex; }
     #panel-toque.tab-panel.active { display: flex; flex: 1; flex-direction: column; padding: 0; overflow: hidden; }
     #panel-toque { position: relative; overflow: hidden; }
     #touchFormView { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #fff; flex-direction: column; z-index: 10; }
@@ -224,23 +222,12 @@
     <div id="emptyStateBody" style="font-size: 12px; color: #666; margin-top: 8px;">Selecione o Componente e o Template Handoff.</div>
   </div>
 
-  <div id="migracaoState" class="overlay-state" style="display:none;">
-    <div style="font-size: 32px; margin-bottom: 16px;">📦</div>
-    <div style="font-weight: 700; margin-bottom: 8px;">Dados do plugin anterior encontrados</div>
-    <div id="migracaoSummary" style="font-size: 12px; color: #666; margin-bottom: 20px;"></div>
-    <button id="btnAplicarMigracao" onclick="aplicarMigracao()" style="width:100%; padding: 10px; background: #0d99ff; color: #fff; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; margin-bottom: 8px;">↓ Migrar dados</button>
-    <button onclick="pularMigracao()" style="width:100%; padding: 8px; background: transparent; color: #666; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-size: 12px;">Começar do zero</button>
-  </div>
-
   <div id="mainContainer" style="display:none; height: 100%; flex-direction: column;">
     <div class="top-bar">
   <div class='header-content'>
     <div class='header-badge'>A11Y</div>
     <h2 id='compName'>...</h2>
-    <div style='display:flex;gap:6px;align-items:center;flex-shrink:0;'>
-      <button id='btnSettings' onclick='openSettings()' style='background:none;border:1.5px solid #ddd;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#999;font-size:16px;' title='Configurações'>⚙</button>
-      <button id='btnInfo' onclick='openInfo()' style='background:none;border:1.5px solid #ddd;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#999;font-size:16px;font-style:normal;font-weight:400;' title='Informações'>ℹ</button>
-    </div>
+    <button id='btnSettings' onclick='openSettings()' style='background:none;border:none;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#999;font-size:16px;flex-shrink:0;' title='Configurações'>⚙</button>
   </div>
       <div class="tabs">
         <button class="tab active" data-target="panel-geral">Geral</button>
@@ -886,34 +873,6 @@
 
       const hasSomething = platforms.length > 0 || zooms.length > 0 || keyboards > 0 || gestures > 0;
       el('summaryCards').style.display = hasSomething || totalAreas > 0 || totalTabItems > 0 || totalLeitorItems > 0 || totalLeitorVars > 0 ? 'flex' : 'none';
-
-      // Badges de erro nas tabs
-      function syncTabBadge(selector, temErro) {
-        const tab = document.querySelector(selector);
-        if (!tab) return;
-        let badge = tab.querySelector('.tab-error-badge');
-        if (temErro && !badge) {
-          badge = document.createElement('span');
-          badge.className = 'tab-error-badge';
-          badge.style.cssText = 'display:inline-block;width:7px;height:7px;background:#e53935;border-radius:50%;margin-left:4px;vertical-align:middle;flex-shrink:0;';
-          tab.appendChild(badge);
-        } else if (!temErro && badge) {
-          badge.remove();
-        }
-      }
-
-      const temErroToque = variationsData.some(v => v.id !== 'default' && (v.areas_toque || []).length === 0 && !v.sem_toque);
-      const temErroTab = tabVariationsData.some(v => v.id !== 'default' && (v.tab_order || []).length === 0 && !v.sem_tabulacao);
-      const temErroLeitor = srVariationsData.some(v => {
-        const items = v.id === currentSRVariationId ? leitorState.conectores : (v.conectores_leitor || []);
-        const vazioCustom = v.id !== 'default' && items.length === 0 && !v.sem_leitor;
-        const temConectorErro = items.some(c => c.tipoAnotacao === 'combinado' || (!c.tipo && !c.roleNome && !c.especificacao));
-        return vazioCustom || temConectorErro;
-      });
-
-      syncTabBadge('.tab[data-target="panel-toque"]', temErroToque);
-      syncTabBadge('.tab[data-target="panel-tabulacao"]', temErroTab);
-      syncTabBadge('.tab[data-target="panel-leitor"]', temErroLeitor);
     }
 
     el('summaryEditGeral').onclick = () => {
@@ -944,19 +903,6 @@
       el('panel-leitor').classList.add('active');
     };
 
-    window._dadosLegados = null;
-
-    function aplicarMigracao() {
-      const btn = el('btnAplicarMigracao');
-      if (btn) { btn.disabled = true; btn.textContent = 'Migrando...'; }
-      parent.postMessage({ pluginMessage: { type: 'aplicar-legado', raw: window._dadosLegados } }, '*');
-    }
-
-    function pularMigracao() {
-      el('migracaoState').style.display = 'none';
-      parent.postMessage({ pluginMessage: { type: 'pular-legado' } }, '*');
-    }
-
     window.onmessage = (e) => {
       const msg = e.data?.pluginMessage;
       if (!msg) return;
@@ -973,7 +919,6 @@
       if (msg.type === 'setup-ui') {
         el('statusBar').classList.remove('loading', 'success', 'error');
         el('emptyState').style.display = 'none';
-        el('migracaoState').style.display = 'none';
         el('mainContainer').style.display = 'flex';
         el('compName').textContent = msg.componentName;
 
@@ -1097,23 +1042,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         const title = el('emptyStateTitle'); if (title) title.textContent = 'Aguardando seleção';
         const body = el('emptyStateBody'); if (body) body.textContent = 'Selecione o Componente e o Template Handoff.';
         el('emptyState').style.display = 'flex';
-        el('migracaoState').style.display = 'none';
         el('mainContainer').style.display = 'none';
-      }
-      if (msg.type === 'legacy-data-detected') {
-        window._dadosLegados = msg.raw;
-        el('emptyState').style.display = 'none';
-        el('mainContainer').style.display = 'none';
-        const s = msg.summary || {};
-        const partes = [];
-        if (s.nVariants > 0) partes.push(s.nVariants + ' variações');
-        if (s.temToque) partes.push('Áreas de toque');
-        if (s.temSR) partes.push('Leitor de tela');
-        if (s.temTab) partes.push('Tabulação');
-        el('migracaoSummary').textContent = partes.length ? partes.join(' · ') : 'Dados encontrados';
-        el('migracaoState').style.display = 'flex';
-        const btn = el('btnAplicarMigracao');
-        if (btn) { btn.disabled = false; btn.textContent = '↓ Migrar dados'; }
       }
       if (msg.type === 'tab-items-ready') {
         if (tabFormPendingSave) { // Check for pending save
@@ -1299,9 +1228,6 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
 
     function updatePZCount() { el('pzCount').textContent = `${document.querySelectorAll('#panel-geral input[type="checkbox"]:checked').length} selecionados`; }
     document.addEventListener('change', (e) => { if (e.target.type === 'checkbox' && e.target.id !== 'chkSemToque' && !e.target.id.startsWith('setting')) { updatePZCount(); updateSummaryCards(); saveGeralData(true); } });
-
-    function openInfo() { el('infoPanel').classList.add('open'); }
-    function closeInfo() { el('infoPanel').classList.remove('open'); }
 
       function openSettings() {
     // Restaura setting salvo (aqui o elemento já existe no DOM)
@@ -1593,17 +1519,12 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       container.innerHTML += `<div style='font-size:10px;font-weight:700;color:#999;letter-spacing:0.05em;padding:6px 0 2px;'>VARIANTES PARAMETRIZADAS</div>`;
       customs.forEach((v, i) => {
         const propsLabel = Object.entries(v.propriedades || {}).map(([k, val]) => `${k}=${val}`).join(', ') || '—';
-        const conectores = v.id === currentSRVariationId ? leitorState.conectores : (v.conectores_leitor || []);
-        const temConectorErro = conectores.some(c => c.tipoAnotacao === 'combinado' || (!c.tipo && !c.roleNome && !c.especificacao));
-        const isVazio = conectores.length === 0 && !v.sem_leitor;
-        const isErro = isVazio || temConectorErro;
-        container.innerHTML += `<div style='border:1.5px solid ${isErro ? '#e53935' : '#E0E0E0'};border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;background:#fff;'>
+        container.innerHTML += `<div style='border:1.5px solid #E0E0E0;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;background:#fff;'>
           <span style='background:#2D4496;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;'>${i+1}</span>
           <div style='flex:1;min-width:0;'>
             <div style='font-size:12px;font-weight:700;color:#1a1a1a;'>${v.nome}</div>
             <div style='font-size:10px;color:#888;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${propsLabel}</div>
           </div>
-          ${isVazio ? '<span style="font-size:10px;background:#ffebee;color:#e53935;padding:2px 5px;border-radius:4px;font-weight:700;white-space:nowrap;">sem dados</span>' : ''}
           <button onclick='selectSRVariation("${v.id}")' style='background:none;border:1.5px solid #2D4496;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#2D4496;cursor:pointer;'>Editar</button>
           <button onclick='deleteSRVariation("${v.id}")' style='background:none;border:1.5px solid #FF5252;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#FF5252;cursor:pointer;'>Excluir</button>
         </div>`;
@@ -1664,6 +1585,8 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
     el('srVariationFormView').classList.remove('open');
   }
 
+  function cleanPropName(name) { return name.replace(/#\d+:\d+$/, '').trim(); }
+
   function renderSRVariationProps() {
     const container = el('srVarPropsContainer');
     if (!container) return;
@@ -1672,12 +1595,14 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       container.innerHTML = '<div style="font-size:12px;color:#999;">Nenhuma propriedade VARIANT/BOOLEAN encontrada no componente.</div>';
       return;
     }
-    componentProps.forEach(prop => {
+    const sorted = [...componentProps].sort((a, b) => (a.type === 'BOOLEAN' ? 1 : 0) - (b.type === 'BOOLEAN' ? 1 : 0));
+    sorted.forEach(prop => {
+      const label = cleanPropName(prop.name);
       if (prop.type === 'VARIANT') {
         const opts = (prop.options || []).map(o => `<option value="${o}">${o}</option>`).join('');
-        container.innerHTML += `<div class='touch-form-row'><label>${prop.name}</label><select class='touch-form-input sr-var-prop-select' data-prop='${prop.name}' style='cursor:pointer;'>${opts}</select></div>`;
+        container.innerHTML += `<div class='touch-form-row'><label>${label}</label><select class='touch-form-input sr-var-prop-select' data-prop='${prop.name}' style='cursor:pointer;'>${opts}</select></div>`;
       } else if (prop.type === 'BOOLEAN') {
-        container.innerHTML += `<div class='touch-form-row' style='flex-direction:row;align-items:center;gap:8px;'><input type='checkbox' class='sr-var-prop-check' data-prop='${prop.name}' style='accent-color:#2D4496;width:14px;height:14px;'><label style='font-size:12px;font-weight:600;color:#555;margin:0;'>${prop.name}</label></div>`;
+        container.innerHTML += `<div class='touch-form-row' style='flex-direction:row;align-items:center;gap:8px;'><input type='checkbox' class='sr-var-prop-check' data-prop='${prop.name}' style='accent-color:#2D4496;width:14px;height:14px;'><label style='font-size:12px;font-weight:600;color:#555;margin:0;'>${label}</label></div>`;
       }
     });
   }
@@ -1721,14 +1646,12 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       container.innerHTML += `<div style='font-size:10px;font-weight:700;color:#999;letter-spacing:0.05em;padding:6px 0 2px;'>VARIANTES PARAMETRIZADAS</div>`;
       customs.forEach((v, i) => {
         const propsLabel = Object.entries(v.propriedades || {}).map(([k, val]) => `${k}=${val}`).join(', ') || '—';
-        const isVazio = (v.tab_order || []).length === 0 && !v.sem_tabulacao;
-        container.innerHTML += `<div style='border:1.5px solid ${isVazio ? '#e53935' : '#E0E0E0'};border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;background:#fff;'>
+        container.innerHTML += `<div style='border:1.5px solid #E0E0E0;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;background:#fff;'>
           <span style='background:#2D4496;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;'>${i+1}</span>
           <div style='flex:1;min-width:0;'>
             <div style='font-size:12px;font-weight:700;color:#1a1a1a;'>${v.nome}</div>
             <div style='font-size:10px;color:#888;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${propsLabel}</div>
           </div>
-          ${isVazio ? '<span style="font-size:10px;background:#ffebee;color:#e53935;padding:2px 5px;border-radius:4px;font-weight:700;white-space:nowrap;">sem dados</span>' : ''}
           <button onclick='editTabVariation("${v.id}")' style='background:none;border:1.5px solid #2D4496;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#2D4496;cursor:pointer;'>Editar</button>
           <button onclick='deleteTabVariation("${v.id}")' style='background:none;border:1.5px solid #FF5252;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#FF5252;cursor:pointer;'>Excluir</button>
         </div>`;
@@ -1807,12 +1730,14 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       container.innerHTML = '<div style="font-size:12px;color:#999;">Nenhuma propriedade VARIANT/BOOLEAN encontrada no componente.</div>';
       return;
     }
-    componentProps.forEach(prop => {
+    const sorted = [...componentProps].sort((a, b) => (a.type === 'BOOLEAN' ? 1 : 0) - (b.type === 'BOOLEAN' ? 1 : 0));
+    sorted.forEach(prop => {
+      const label = cleanPropName(prop.name);
       if (prop.type === 'VARIANT') {
         const opts = (prop.options || []).map(o => `<option value="${o}">${o}</option>`).join('');
-        container.innerHTML += `<div class='touch-form-row'><label>${prop.name}</label><select class='touch-form-input tab-var-prop-select' data-prop='${prop.name}' style='cursor:pointer;'>${opts}</select></div>`;
+        container.innerHTML += `<div class='touch-form-row'><label>${label}</label><select class='touch-form-input tab-var-prop-select' data-prop='${prop.name}' style='cursor:pointer;'>${opts}</select></div>`;
       } else if (prop.type === 'BOOLEAN') {
-        container.innerHTML += `<div class='touch-form-row' style='flex-direction:row;align-items:center;gap:8px;'><input type='checkbox' class='tab-var-prop-check' data-prop='${prop.name}' style='accent-color:#2D4496;width:14px;height:14px;'><label style='font-size:12px;font-weight:600;color:#555;margin:0;'>${prop.name}</label></div>`;
+        container.innerHTML += `<div class='touch-form-row' style='flex-direction:row;align-items:center;gap:8px;'><input type='checkbox' class='tab-var-prop-check' data-prop='${prop.name}' style='accent-color:#2D4496;width:14px;height:14px;'><label style='font-size:12px;font-weight:600;color:#555;margin:0;'>${label}</label></div>`;
       }
     });
   }
@@ -1845,15 +1770,13 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       container.innerHTML += `<div style='font-size:10px;font-weight:700;color:#999;letter-spacing:0.05em;padding:6px 0 2px;'>VARIANTES PARAMETRIZADAS</div>`;
       customs.forEach((v, i) => {
         const propsLabel = Object.entries(v.propriedades || {}).map(([k, val]) => `${k}=${val}`).join(', ') || '—';
-        const isVazio = (v.areas_toque || []).length === 0 && !v.sem_toque;
         container.innerHTML += `
-          <div style='border:1.5px solid ${isVazio ? '#e53935' : '#E0E0E0'};border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;background:#fff;'>
+          <div style='border:1.5px solid #E0E0E0;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;background:#fff;'>
             <span style='background:#2D4496;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;'>${i+1}</span>
             <div style='flex:1;min-width:0;'>
               <div style='font-size:12px;font-weight:700;color:#1a1a1a;'>${v.nome}</div>
               <div style='font-size:10px;color:#888;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${propsLabel}</div>
             </div>
-            ${isVazio ? '<span style="font-size:10px;background:#ffebee;color:#e53935;padding:2px 5px;border-radius:4px;font-weight:700;white-space:nowrap;">sem dados</span>' : ''}
             <button onclick='editVariation("${v.id}")' style='background:none;border:1.5px solid #2D4496;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#2D4496;cursor:pointer;'>Editar</button>
             <button onclick='deleteVariation("${v.id}")' style='background:none;border:1.5px solid #FF5252;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#FF5252;cursor:pointer;'>Excluir</button>
           </div>`;
@@ -1962,12 +1885,14 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       container.innerHTML = '<div style="font-size:12px;color:#999;">Nenhuma propriedade VARIANT/BOOLEAN encontrada no componente.</div>';
       return;
     }
-    componentProps.forEach(prop => {
+    const sorted = [...componentProps].sort((a, b) => (a.type === 'BOOLEAN' ? 1 : 0) - (b.type === 'BOOLEAN' ? 1 : 0));
+    sorted.forEach(prop => {
+      const label = cleanPropName(prop.name);
       if (prop.type === 'VARIANT') {
         const opts = (prop.options || []).map(o => `<option value="${o}">${o}</option>`).join('');
         container.innerHTML += `
           <div class='touch-form-row'>
-            <label>${prop.name}</label>
+            <label>${label}</label>
             <select class='touch-form-input var-prop-select' data-prop='${prop.name}' style='cursor:pointer;'>
               ${opts}
             </select>
@@ -1976,7 +1901,7 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
         container.innerHTML += `
           <div class='touch-form-row' style='flex-direction:row;align-items:center;gap:8px;'>
             <input type='checkbox' class='var-prop-check' data-prop='${prop.name}' style='accent-color:#2D4496;width:14px;height:14px;'>
-            <label style='font-size:12px;font-weight:600;color:#555;margin:0;'>${prop.name}</label>
+            <label style='font-size:12px;font-weight:600;color:#555;margin:0;'>${label}</label>
           </div>`;
       }
     });
@@ -2239,17 +2164,12 @@ el('chkSemToque').onchange = () => {
       const letras = computeLetras(leitorState.conectores);
       leitorState.conectores.forEach((item, i) => {
         const li = document.createElement('li');
-        const isCombinado = item.tipoAnotacao === 'combinado';
-        const isIncompleto = !isCombinado && !item.tipo && !item.roleNome && !item.especificacao;
-        const isErro = isCombinado || isIncompleto;
-        li.style.cssText = `display:flex;align-items:center;gap:8px;padding:8px;background:#fff;border:1.5px solid ${isErro ? '#e53935' : '#E5E5E5'};border-radius:8px;`;
+        li.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;background:#fff;border:1px solid #E5E5E5;border-radius:8px;';
         const tipoLabel = (item.tipoConnector || item.tipo || '').toLowerCase();
         li.innerHTML = `
           ${srConectorIcon(item.tipoConnector || item.tipo, letras[i])}
           <span style="font-size:11px;color:#999;flex-shrink:0;">${tipoLabel}</span>
           <span style="flex:1;font-size:13px;font-weight:600;color:#1a1a1a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.roleNome}</span>
-          ${isCombinado ? '<span style="font-size:10px;background:#ffebee;color:#e53935;padding:2px 5px;border-radius:4px;font-weight:700;white-space:nowrap;">combinado</span>' : ''}
-          ${isIncompleto ? '<span style="font-size:10px;background:#ffebee;color:#e53935;padding:2px 5px;border-radius:4px;font-weight:700;white-space:nowrap;">incompleto</span>' : ''}
           <button onclick="removeConector(${i})" style="background:none;border:none;cursor:pointer;color:#999;font-size:14px;padding:2px 4px;">✕</button>
         `;
         ul.appendChild(li);
@@ -2635,53 +2555,8 @@ const select = el('srSelectTipoConector');
           <p id='settingsSRSpecsCount' style='font-size:12px;color:#999;margin-top:2px;'>● — especificações de leitor de tela</p>
           <button onclick='reloadTemplateData()' style='width:100%;padding:10px;border:1.5px solid #2D4496;border-radius:8px;background:none;color:#2D4496;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;'>↺ Recarregar dados do template</button>
         </div>
-        <div style='background:#f5f5f5;border-radius:8px;padding:12px;margin-top:8px;'>
-          <div style='display:flex;align-items:center;gap:8px;margin-bottom:8px;'>
-            <span style='font-size:18px;'>🔍</span>
-            <span style='font-size:14px;font-weight:600;'>Debug Plugin Data</span>
-          </div>
-          <p style='font-size:12px;color:#666;margin-bottom:8px;'>Lê as chaves de pluginData do componente selecionado e exibe no console.</p>
-          <button onclick='parent.postMessage({pluginMessage:{type:"debug-plugindata"}},"*")' style='width:100%;padding:10px;border:1.5px solid #999;border-radius:8px;background:none;color:#444;font-size:13px;font-weight:600;cursor:pointer;'>🔍 Ler pluginData do componente</button>
-        </div>
       </div>
-  </div>
 
-  <div id='infoPanel' style='position:fixed;inset:0;background:#fff;z-index:999999;overflow-y:auto;flex-direction:column;'>
-    <div style='padding:16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:8px;'>
-      <button onclick='closeInfo()' style='background:none;border:none;cursor:pointer;color:#666;font-size:18px;padding:0;'>←</button>
-      <span style='font-weight:700;font-size:14px;'>Informações</span>
-    </div>
-    <div style='padding:16px;display:flex;flex-direction:column;gap:20px;'>
-      <div>
-        <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Como usar o plugin</div>
-        <div style='font-size:12px;color:#444;line-height:1.6;'>Selecione no canvas <b>um componente</b> e <b>um template de handoff</b> ao mesmo tempo. O plugin carrega automaticamente os dados já documentados para aquele componente.</div>
-      </div>
-      <div>
-        <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Abas</div>
-        <div style='font-size:12px;color:#444;line-height:1.6;display:flex;flex-direction:column;gap:6px;'>
-          <div><b>Geral</b> — Plataformas, zoom e mapeamentos de teclado/gestos.</div>
-          <div><b>Área de Toque</b> — Tamanho mínimo das áreas tocáveis. Suporta variações parametrizadas.</div>
-          <div><b>Tabulação</b> — Ordem de foco por teclado. Suporta variações parametrizadas.</div>
-          <div><b>Leitor de Tela</b> — Conectores de anotação para screen readers. Suporta variações parametrizadas.</div>
-          <div><b>Handoff</b> — Gera o template preenchido com todas as informações documentadas.</div>
-        </div>
-      </div>
-      <div>
-        <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Variações parametrizadas</div>
-        <div style='font-size:12px;color:#444;line-height:1.6;'>Use variações quando diferentes estados do componente (ex: com submenu, sem submenu) têm documentação de acessibilidade diferente. Crie uma variação por estado e documente cada uma separadamente.</div>
-      </div>
-      <div>
-        <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Badges vermelhos nas abas</div>
-        <div style='font-size:12px;color:#444;line-height:1.6;'>Indicam que há variações com problemas — sem dados documentados, conectores incompletos ou tipo não suportado (combinado). Clique na aba para ver qual variação está com problema.</div>
-      </div>
-      <div>
-        <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Importando dados do plugin anterior</div>
-        <div style='font-size:12px;color:#444;line-height:1.6;'>Se o componente foi documentado com a versão anterior do plugin, ao abri-lo será exibida uma tela de migração. Clique em <b>Migrar dados</b> para importar automaticamente as informações existentes para o novo formato. Clique em <b>Começar do zero</b> para ignorar os dados antigos.</div>
-      </div>
-      <div>
-        <div style='font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px;'>Gerar Handoff</div>
-        <div style='font-size:12px;color:#444;line-height:1.6;'>Clique em <b>Gerar Handoff</b> na aba Handoff para preencher o template selecionado. O template é desvinculado do componente original e preenchido com os dados documentados. Clique em <b>Atualizar Handoff</b> para regenerar após mudanças.</div>
-      </div>
     </div>
   </div>
 </body>
