@@ -1686,6 +1686,22 @@ figma.ui.onmessage = async (msg) => {
     }
   }
 
+  else if (msg.type === 'import-old-section') {
+    if (!handoffAtivo) {
+      figma.ui.postMessage({ type: 'old-section-data', section: msg.section, found: false, data: {} });
+      return;
+    }
+    try {
+      if (msg.section === 'geral') {
+        const result = await parseOldGeralData(handoffAtivo, componentePrincipalAtivo);
+        const found = result.visualKeys.length > 0 || result.pluginDataMapeamentos.length > 0 || result.pluginDataPlataformas.length > 0;
+        figma.ui.postMessage({ type: 'old-section-data', section: 'geral', found, data: result });
+      }
+    } catch (e) {
+      figma.ui.postMessage({ type: 'old-section-data', section: msg.section, found: false, data: {}, error: String(e) });
+    }
+  }
+
   else if (msg.type === 'save-partial-data') {
     if (!handoffAtivo) return;
     const dbInstance = await getCachedPluginDataNode();
@@ -1943,49 +1959,181 @@ function parseRolesList(dbInstance: InstanceNode): { nome: string; especificacao
   return resultado;
 }
 
+async function parseOldGeralData(
+  handoff: SceneNode,
+  comp: SceneNode | null
+): Promise<{
+  visualKeys: string[];
+  pluginDataKeys: string[];
+  pluginDataMapeamentos: { mapeamento: string; utilizacao: string }[];
+  pluginDataPlataformas: string[];
+  pluginDataZoom: string[];
+}> {
+  const visualKeys: string[] = [];
+
+  // FONTE 1: nós visuais do handoff antigo
+  const kbContainer = (handoff as any).findOne((n: SceneNode) =>
+    n.name === 'keyboard maping' || n.name === 'keyboard mapping'
+  ) as FrameNode | null;
+  if (kbContainer) {
+    const rows = (kbContainer.children as SceneNode[]).filter(
+      (n) => n.type === 'FRAME' || n.type === 'INSTANCE'
+    );
+    for (const row of rows) {
+      const textos = (row as FrameNode).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+      if (textos.length >= 1) {
+        const t = textos[0].characters.trim();
+        const skip = ['teclado', 'ação', 'mapeamento', 'gesto', 'descrição', ''];
+        if (!skip.includes(t.toLowerCase())) visualKeys.push(t);
+      }
+    }
+  }
+  const gestureContainer = (handoff as any).findOne((n: SceneNode) =>
+    n.name === 'gesto maping' || n.name === 'gesture maping' || n.name === 'gesture mapping' || n.name === 'gestures'
+  ) as FrameNode | null;
+  if (gestureContainer) {
+    const rows = (gestureContainer.children as SceneNode[]).filter(
+      (n) => n.type === 'FRAME' || n.type === 'INSTANCE'
+    );
+    for (const row of rows) {
+      const textos = (row as FrameNode).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+      if (textos.length >= 1) {
+        const t = textos[0].characters.trim();
+        const skip = ['gesto', 'ação', 'descrição', ''];
+        if (!skip.includes(t.toLowerCase())) visualKeys.push(t);
+      }
+    }
+  }
+
+  // FONTE 1b: zoom visual — busca por textos únicos das labels de zoom do plugin antigo
+  const visualZoom: string[] = [];
+  const allTexts = (handoff as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+  const hasRedimensionamento = allTexts.some(n => n.characters.toLowerCase().includes('redimensionamento'));
+  const hasRefluxo = allTexts.some(n => n.characters.toLowerCase().includes('refluxo'));
+  if (hasRedimensionamento) visualZoom.push('200% Texto (reflow)');
+  if (hasRefluxo) visualZoom.push('400% Componente (scaling)');
+  console.log('[parseOldGeralData] visualZoom:', visualZoom);
+
+  // FONTE 2: pluginData — mesma lógica do auto-load (component → dbInstance → handoff frame)
+  const pluginDataKeys: string[] = [];
+  const pluginDataMapeamentos: { mapeamento: string; utilizacao: string }[] = [];
+  const pluginDataPlataformas: string[] = [];
+  const pluginDataZoom: string[] = [];
+
+  // Mesma ordem de override do carregarDadosEEnviarParaUI:
+  // componente → dbInstance → frame do handoff (cada um sobrescreve o anterior)
+  let savedData: any = null;
+
+  console.log('[parseOldGeralData] comp:', comp ? comp.name : 'null');
+
+  if (comp) {
+    const dataNode = await resolveDataNode(comp);
+    console.log('[parseOldGeralData] dataNode:', dataNode ? dataNode.name : 'null');
+    if (dataNode) {
+      try {
+        const keys = dataNode.getPluginDataKeys();
+        pluginDataKeys.push(...keys);
+        console.log('[parseOldGeralData] pluginDataKeys:', keys);
+        const raw = dataNode.getPluginData('a11y-component-data');
+        console.log('[parseOldGeralData] comp raw:', raw ? raw.substring(0, 200) : 'null');
+        if (raw) savedData = JSON.parse(raw);
+      } catch(_e) { console.log('[parseOldGeralData] comp error:', _e); }
+    }
+  }
+  const dbScan = (handoff as any).findOne((n: SceneNode) => n.name === '[dsc-h] Plugin Data A11y') as InstanceNode | null;
+  console.log('[parseOldGeralData] dbScan:', dbScan ? dbScan.name : 'null');
+  if (dbScan) {
+    try {
+      const raw = dbScan.getPluginData('a11y-component-data');
+      console.log('[parseOldGeralData] dbScan raw:', raw ? raw.substring(0, 200) : 'null');
+      if (raw) savedData = JSON.parse(raw); // override
+    } catch(_e) { console.log('[parseOldGeralData] dbScan error:', _e); }
+  }
+  try {
+    const raw = (handoff as any).getPluginData('a11y-component-data');
+    console.log('[parseOldGeralData] handoff frame raw:', raw ? raw.substring(0, 200) : 'null');
+    if (raw) savedData = JSON.parse(raw); // override final
+  } catch(_e) { console.log('[parseOldGeralData] handoff frame error:', _e); }
+
+  console.log('[parseOldGeralData] savedData keys:', savedData ? Object.keys(savedData) : 'null');
+  console.log('[parseOldGeralData] savedData.zoom:', savedData ? savedData.zoom : 'n/a');
+
+  if (savedData) {
+    if (savedData.mapeamentos && Array.isArray(savedData.mapeamentos)) {
+      for (const m of savedData.mapeamentos) {
+        if (m.mapeamento) pluginDataMapeamentos.push({ mapeamento: m.mapeamento, utilizacao: m.utilizacao || '' });
+      }
+    }
+    if (savedData.plataformas && Array.isArray(savedData.plataformas)) {
+      pluginDataPlataformas.push(...savedData.plataformas);
+    }
+    if (savedData.zoom && Array.isArray(savedData.zoom)) {
+      pluginDataZoom.push(...savedData.zoom);
+    }
+  }
+
+  // Mescla visualZoom + pluginDataZoom (sem duplicatas)
+  const zoomFinal = [...new Set([...visualZoom, ...pluginDataZoom])];
+
+  console.log('[parseOldGeralData] result — zoom:', zoomFinal, '| mapeamentos:', pluginDataMapeamentos.length, '| plataformas:', pluginDataPlataformas);
+
+  return { visualKeys, pluginDataKeys, pluginDataMapeamentos, pluginDataPlataformas, pluginDataZoom: zoomFinal };
+}
+
 async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
   const dbInstance = (handoff as any).findOne((n: SceneNode) => n.name === "[dsc-h] Plugin Data A11y") as InstanceNode;
 
   let masterList: { mapeamento: string; descricao: string; utilizacao: string }[] = [];
   let rolesList: ReturnType<typeof parseRolesList> = [];
+  // Detecta handoff antigo antes de carregar dados
+  const isOldFormat = !!(handoff as any).findOne(
+    (n: SceneNode) => n.name === 'keyboard maping' || n.name === 'keyboard mapping'
+  );
+
   let componentData: any = { plataformas: [], zoom: [], mapeamentos: [], areas_toque: [], sem_toque: false, variacoes: [], variacoes_tabulacao: [], variacoes_leitor: [], conectores_leitor: [], sem_leitor: false };
-  // 1. COMPONENT_SET como baseline (sempre tenta, independente de outras fontes)
-  if (componentePrincipalAtivo) {
-    const dataNode = await resolveDataNode(componentePrincipalAtivo);
-    if (dataNode) {
-      const rawFromComponent = dataNode.getPluginData('a11y-component-data');
-      if (rawFromComponent) {
-        try { componentData = JSON.parse(rawFromComponent); } catch(e) {}
+
+  if (!isOldFormat) {
+    // 1. COMPONENT_SET como baseline (apenas para handoffs novos)
+    if (componentePrincipalAtivo) {
+      const dataNode = await resolveDataNode(componentePrincipalAtivo);
+      if (dataNode) {
+        const rawFromComponent = dataNode.getPluginData('a11y-component-data');
+        if (rawFromComponent) {
+          try { componentData = JSON.parse(rawFromComponent); } catch(e) {}
+        }
       }
+    }
+
+    // 2. dbInstance dentro do handoff (override se tem dados — mais específico)
+    if (dbInstance) {
+      const rawSaved = dbInstance.getPluginData('a11y-component-data');
+      if (rawSaved) {
+        try { componentData = JSON.parse(rawSaved); } catch(e) {}
+      }
+    }
+
+    // 3. Dados diretos no frame do handoff (override final — mais recente)
+    const rawDirect = (handoff as any).getPluginData('a11y-component-data');
+    if (rawDirect) {
+      try { componentData = JSON.parse(rawDirect); } catch(e) {}
     }
   }
 
-  // 2. dbInstance dentro do handoff (override se tem dados — mais específico)
+  // parseMasterList e parseRolesList: sempre executam se dbInstance existe
   if (dbInstance) {
     masterList = parseMasterList(dbInstance);
     rolesList = parseRolesList(dbInstance);
-    const rawSaved = dbInstance.getPluginData('a11y-component-data');
-    if (rawSaved) {
-      try { componentData = JSON.parse(rawSaved); } catch(e) {}
-    }
   }
 
-  // 3. Dados diretos no frame do handoff (override final — mais recente)
-  const rawDirect = (handoff as any).getPluginData('a11y-component-data');
-  if (rawDirect) {
-    try { componentData = JSON.parse(rawDirect); } catch(e) {}
-  }
-
-
-    const settingSync = await figma.clientStorage.getAsync('a11y-setting-sync') ?? true;
-    figma.ui.postMessage({ type: 'setup-ui',
-      masterList,
-      rolesList,
-      componentData,
-      componentName: componentePrincipalAtivo?.name
-        || (handoff.name.startsWith('[A11Y Handoff]') ? handoff.name.slice('[A11Y Handoff]'.length).trim() : null)
-        || "Componente",
-      isGenerated: handoff.type !== "INSTANCE",
-      settings: { syncTemplate: settingSync }
-    });
-    }
+  const settingSync = await figma.clientStorage.getAsync('a11y-setting-sync') ?? true;
+  figma.ui.postMessage({ type: 'setup-ui', isOldFormat,
+    masterList,
+    rolesList,
+    componentData,
+    componentName: componentePrincipalAtivo?.name
+      || (handoff.name.startsWith('[A11Y Handoff]') ? handoff.name.slice('[A11Y Handoff]'.length).trim() : null)
+      || "Componente",
+    isGenerated: handoff.type !== "INSTANCE",
+    settings: { syncTemplate: settingSync }
+  });
+}

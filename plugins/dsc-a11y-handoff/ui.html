@@ -240,6 +240,14 @@
 
     <div class="content-area">
       <div id="panel-geral" class="tab-panel active">
+        <div id="import-banner-geral" style="display:none; background: #EEF2FF; border: 1.5px solid #2D4496; border-radius: 12px; padding: 12px; margin-bottom: 16px; align-items: center; gap: 12px;">
+          <div style="font-size: 20px;">ℹ️</div>
+          <div style="flex:1;">
+            <div style="font-size: 12px; font-weight: 700; color: #2D4496;">Handoff Antigo Detectado</div>
+            <div style="font-size: 11px; color: #555;">Deseja importar os dados de Plataformas e Mapeamentos deste handoff?</div>
+          </div>
+          <button onclick="importOldSection('geral')" style="background: #2D4496; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer;">Importar Dados</button>
+        </div>
 
         <div class="card">
           <div class="card-header"><div class="card-title-group">▼ Plataforma e Zoom</div><span id="pzCount" class="count-badge">0 selecionados</span></div>
@@ -925,6 +933,8 @@
         masterList = msg.masterList || [];
         currentData = msg.componentData?.mapeamentos || [];
         isGenerated = msg.isGenerated || false; // Atualiza o estado global
+        isOldFormat = msg.isOldFormat || false;
+        if (isOldFormat) renderImportBanners();
 
         el('btnRun').textContent = isGenerated ? 'Atualizar Handoff' : 'Gerar Handoff';
 
@@ -981,6 +991,75 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         renderLists();
         updateSummaryCards(); // CHAMADA DA NOVA FUNÇÃO
       }
+      if (msg.type === 'old-section-data') {
+        if (!msg.found) {
+          const sb = el('statusBar');
+          sb.classList.remove('loading', 'error'); sb.classList.add('error');
+          sb.textContent = '⚠️ Nenhum dado encontrado no handoff antigo.';
+          return;
+        }
+        if (msg.section === 'geral') {
+          const data = msg.data || {};
+          const visualKeys = data.visualKeys || [];
+          const pluginItems = data.pluginDataMapeamentos || [];
+          const pluginPlataformas = data.pluginDataPlataformas || [];
+          const pluginZoom = data.pluginDataZoom || [];
+
+          // Plataformas: aplica somente se nenhuma estiver marcada
+          let plataformasAdded = 0;
+          const currentPlatforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(c => c.value);
+          if (pluginPlataformas.length > 0 && currentPlatforms.length === 0) {
+            pluginPlataformas.forEach(p => {
+              const chk = document.querySelector('input[name="platform"][value="' + p + '"]');
+              if (chk) { chk.checked = true; plataformasAdded++; }
+            });
+          }
+
+          // Zoom: aplica somente se nenhum estiver marcado
+          let zoomAdded = 0;
+          const currentZoom = Array.from(document.querySelectorAll('input[name="zoom"]:checked')).map(c => c.value);
+          if (pluginZoom.length > 0 && currentZoom.length === 0) {
+            pluginZoom.forEach(z => {
+              const chk = document.querySelector('input[name="zoom"][value="' + z + '"]');
+              if (chk) { chk.checked = true; zoomAdded++; }
+            });
+          }
+
+          // Mapeamentos: filtra contra masterList, adiciona os matches sem duplicar
+          let mapeamentosAdded = 0;
+          pluginItems.forEach(pm => {
+            const inMaster = masterList.find(m => m.mapeamento === pm.mapeamento);
+            if (inMaster && !currentData.find(c => c.mapeamento === pm.mapeamento)) {
+              currentData.push(inMaster);
+              mapeamentosAdded++;
+            }
+          });
+          visualKeys.forEach(key => {
+            const inMaster = masterList.find(m => m.mapeamento === key);
+            if (inMaster && !currentData.find(c => c.mapeamento === key)) {
+              currentData.push(inMaster);
+              mapeamentosAdded++;
+            }
+          });
+
+          renderLists();
+          saveGeralData(false);
+          updateSummaryCards();
+
+          const parts = [];
+          updatePZCount();
+          if (mapeamentosAdded) parts.push(mapeamentosAdded + ' mapeamento(s)');
+          if (plataformasAdded) parts.push(plataformasAdded + ' plataforma(s)');
+          if (zoomAdded) parts.push(zoomAdded + ' zoom(s)');
+          const keysInfo = data.pluginDataKeys && data.pluginDataKeys.length
+            ? ' | chaves: ' + data.pluginDataKeys.join(', ')
+            : '';
+          const sb2 = el('statusBar');
+          sb2.classList.remove('loading', 'error'); sb2.classList.add('success');
+          sb2.textContent = '✓ Importado: ' + (parts.join(', ') || 'nenhum item novo') + '.' + keysInfo;
+        }
+      }
+
       if (msg.type === 'handoff-complete') {
         // Frames de variação foram removidos do canvas — zera IDs stale para evitar lookups falhos
         variationsData.forEach(v => { if (v.id !== 'default') { v.frameNodeId = null; v.instanceNodeId = null; } });
@@ -1307,6 +1386,7 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
 
   let variationsData = []; // array de variações: [{ id, nome, propriedades, areas_toque, sem_toque, frameNodeId, instanceNodeId }]
   let tabVariationsData = []; // array de variações de tabulação: [{ id, nome, propriedades, tab_order, sem_tabulacao, frameNodeId, instanceNodeId }]
+  let isOldFormat = false;
   let srVariationsData = []; // array de variações de leitor: [{ id, nome, propriedades, conectores_leitor, sem_leitor, frameNodeId, instanceNodeId }]
   let currentSRVariationId = 'default';
   const leitorState = { rolesList: [], conectores: [], semLeitor: false, pendingSROrigem: null };
@@ -1876,6 +1956,19 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
   function saveTouchTabData() {
     parent.postMessage({ pluginMessage: { type: 'save-partial-data', key: 'variacoes', value: variationsData } }, '*');
     parent.postMessage({ pluginMessage: { type: 'save-partial-data', key: 'variacoes_tabulacao', value: tabVariationsData } }, '*');
+  }
+
+  function renderImportBanners() {
+    el('import-banner-geral').style.display = isOldFormat ? 'flex' : 'none';
+  }
+
+  function importOldSection(section) {
+    const btn = event.currentTarget;
+    const originalText = btn.textContent;
+    btn.textContent = 'Importando...';
+    btn.disabled = true;
+    parent.postMessage({ pluginMessage: { type: 'import-old-section', section } }, '*');
+    setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2000);
   }
 
   let _saveGeralTimer = null;
