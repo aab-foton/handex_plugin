@@ -559,7 +559,7 @@
           <div class="settings-group-title">Geral</div>
           <label class="checkbox-field">
             <input type="checkbox" id="settingIncluirComponente">
-            <span>Incluir componente dentro da documentação</span>
+            <span>Formatar Component Set na página</span>
           </label>
           <label class="checkbox-field">
             <input type="checkbox" id="settingPreencherDescricao" checked>
@@ -582,6 +582,28 @@
           <label class="checkbox-field">
             <input type="checkbox" id="settingManterEdicoes" checked>
             <span>Manter alterações manuais</span>
+          </label>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <div class="settings-group">
+          <div class="settings-group-title">Seções a atualizar</div>
+          <label class="checkbox-field">
+            <input type="checkbox" id="settingSecaoAnatomia" checked>
+            <span>Anatomia</span>
+          </label>
+          <label class="checkbox-field">
+            <input type="checkbox" id="settingSecaoTabela" checked>
+            <span>Tabela de propriedades</span>
+          </label>
+          <label class="checkbox-field">
+            <input type="checkbox" id="settingSecaoVariacoes" checked>
+            <span>Variações</span>
+          </label>
+          <label class="checkbox-field">
+            <input type="checkbox" id="settingSecaoEstados" checked>
+            <span>Matriz de estados</span>
           </label>
         </div>
       </div>
@@ -607,7 +629,8 @@
         </li>
         <li><span>A <strong>tabela de propriedades</strong> segue a mesma ordem exibida no painel do Figma. Reorganize as propriedades no componente para controlar a ordem no handoff.</span></li>
         <li><span>A maioria das descrições de propriedades já está mapeada. Quando não houver uma descrição, o plugin sinalizará com um <strong>alerta para preenchimento manual</strong>.</span></li>
-        <li><span>Ao atualizar, as seções geradas serão <strong>sobrescritas</strong>. Edições manuais nessas seções precisarão ser refeitas.</span></li>
+        <li><span>O <strong>dark mode</strong> nas variações só é gerado quando o componente <strong>não possui</strong> propriedade <strong>State</strong>. Se o componente tiver State, o dark mode aparece na <strong>matriz de estados</strong>.</span></li>
+        <li><span>Ao atualizar com <strong>"Manter alterações manuais"</strong> ativado, textos editados e <strong>posições de badges na anatomia</strong> são preservados. Se o número de elementos do componente mudar, as posições são recalculadas automaticamente.</span></li>
         <li><span>O plugin pode cometer erros. <strong>Revise sempre</strong> o conteúdo gerado antes de publicar.</span></li>
       </ol>
     </div>
@@ -645,7 +668,7 @@
     <div id="status" class="status-bar"></div>
   </div>
 
-  <div class="footer" id="mainFooter" style="display:none;">DSC Handoff v1.5.0</div>
+  <div class="footer" id="mainFooter" style="display:none;">DSC Handoff v1.9.0</div>
 
   <script>
     const introScreen = document.getElementById('introScreen');
@@ -690,6 +713,10 @@
     const preencherDescricaoCheckbox = document.getElementById('settingPreencherDescricao');
     const manterEdicoesCheckbox = document.getElementById('settingManterEdicoes');
     const truePrimeiroCheckbox = document.getElementById('settingTruePrimeiro');
+    const secaoTabelaCheckbox = document.getElementById('settingSecaoTabela');
+    const secaoAnatomiaCheckbox = document.getElementById('settingSecaoAnatomia');
+    const secaoVariacoesCheckbox = document.getElementById('settingSecaoVariacoes');
+    const secaoEstadosCheckbox = document.getElementById('settingSecaoEstados');
     const btnRun = document.getElementById('action-run');
     const btnUpdate = document.getElementById('action-update');
     const statusBar = document.getElementById('status');
@@ -705,6 +732,8 @@
       });
     });
 
+    const secaoCheckboxes = [secaoTabelaCheckbox, secaoAnatomiaCheckbox, secaoVariacoesCheckbox, secaoEstadosCheckbox];
+
     function setLoading(message) {
       btnRun.disabled = true;
       btnUpdate.disabled = true;
@@ -714,6 +743,7 @@
       preencherDescricaoCheckbox.disabled = true;
       manterEdicoesCheckbox.disabled = true;
       truePrimeiroCheckbox.disabled = true;
+      secaoCheckboxes.forEach(c => c.disabled = true);
       statusBar.className = 'status-bar loading';
       statusBar.innerHTML = '<div class="spinner"></div>' + message;
     }
@@ -727,6 +757,7 @@
       preencherDescricaoCheckbox.disabled = false;
       manterEdicoesCheckbox.disabled = false;
       truePrimeiroCheckbox.disabled = false;
+      secaoCheckboxes.forEach(c => c.disabled = false);
       statusBar.className = 'status-bar ' + type;
       statusBar.textContent = message;
       if (type === 'success') {
@@ -750,6 +781,13 @@
     }
 
     btnUpdate.onclick = () => {
+      const mapaSecoes = [
+        [secaoTabelaCheckbox, 'table'],
+        [secaoAnatomiaCheckbox, 'anatomy'],
+        [secaoVariacoesCheckbox, 'variants'],
+        [secaoEstadosCheckbox, 'states'],
+      ];
+      const secoesAtualizar = mapaSecoes.filter(([cb]) => cb.checked).map(([, nome]) => nome);
       setLoading('Atualizando handoff...');
       parent.postMessage({ pluginMessage: {
         type: 'update-handoff',
@@ -758,7 +796,8 @@
         incluirComponente: incluirComponenteCheckbox.checked,
         preencherDescricao: preencherDescricaoCheckbox.checked,
         manterEdicoes: manterEdicoesCheckbox.checked,
-        truePrimeiro: truePrimeiroCheckbox.checked
+        truePrimeiro: truePrimeiroCheckbox.checked,
+        secoesAtualizar,
       } }, '*');
     }
 
