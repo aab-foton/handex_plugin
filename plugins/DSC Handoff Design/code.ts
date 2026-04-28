@@ -108,11 +108,51 @@ type MapaDNA = Map<string, string[]>;
 
 figma.showUI(__html__, { width: UI_LARGURA, height: UI_ALTURA, title: "DSC Handoff" });
 
-// Verificar se é a primeira vez que o usuário abre o plugin
-(async () => {
-  const jaViuIntro = await figma.clientStorage.getAsync('dsc-handoff-intro-visto');
-  figma.ui.postMessage({ type: 'intro-status', visto: !!jaViuIntro });
-})();
+let _desbloqueado = false;
+
+// Avaliar seleção inicial e registrar listener de mudança
+avaliarSelecao();
+figma.on('selectionchange', () => { avaliarSelecao(); });
+
+async function avaliarSelecao(): Promise<void> {
+  const selecao = figma.currentPage.selection;
+  if (selecao.length === 0) {
+    if (!_desbloqueado) figma.ui.postMessage({ type: 'waiting-selection' });
+    return;
+  }
+  const noComponente = selecao.find(n =>
+    !(n.type === 'INSTANCE' && n.name.toLowerCase().includes('[dsc-h] template handoff'))
+  );
+  if (!noComponente) {
+    if (!_desbloqueado) figma.ui.postMessage({ type: 'waiting-selection' });
+    return;
+  }
+  const componentSet = await resolverComponentSet(noComponente);
+  if (!componentSet) {
+    if (!_desbloqueado) figma.ui.postMessage({ type: 'waiting-selection' });
+    return;
+  }
+  const temTemplateOuHandoff = selecao.some(n =>
+    (n.type === 'INSTANCE' && n.name.toLowerCase().includes('[dsc-h] template handoff')) ||
+    (n.type === 'FRAME' && n.name.toLowerCase().startsWith('[dsc] handoff:'))
+  );
+  if (!temTemplateOuHandoff) {
+    if (!_desbloqueado) figma.ui.postMessage({ type: 'waiting-selection' });
+    return;
+  }
+  _desbloqueado = true;
+  const nomeBase = componentSet.name.replace(/^\[.*?\]/, '').trim();
+  const nomeFormatado = capitalizar(nomeBase);
+  const nomeHandoff = `[dsc] Handoff: ${nomeFormatado}`;
+  const isUpdate = figma.currentPage.children.some(
+    n => n.type === 'FRAME' && (n.name === nomeHandoff || n.getPluginData('componentSetId') === componentSet.id)
+  );
+  figma.ui.postMessage({
+    type: 'selection-ready',
+    componentName: nomeFormatado,
+    isUpdate,
+  });
+}
 
 // === UTILITÁRIOS GERAIS ===
 
@@ -3896,15 +3936,20 @@ async function formatarComponenteSet(componentSet: ComponenteDocumentavel): Prom
   figma.currentPage.appendChild(docFrame);
 }
 
+// === EXTRAS ===
+
+function buscarSectionsRecursivo(nos: readonly SceneNode[]): SectionNode[] {
+  const resultado: SectionNode[] = [];
+  for (const no of nos) {
+    if (no.type === 'SECTION') resultado.push(no as SectionNode);
+    if ('children' in no) resultado.push(...buscarSectionsRecursivo((no as ChildrenMixin).children));
+  }
+  return resultado;
+}
+
 // === HANDLER DE MENSAGENS DA UI ===
 
 figma.ui.onmessage = async (msg) => {
-  /** Handler para marcar intro como vista */
-  if (msg.type === 'intro-visto') {
-    await figma.clientStorage.setAsync('dsc-handoff-intro-visto', true);
-    return;
-  }
-
   /** Handler para gerar um novo handoff */
   if (msg.type === 'run-handoff') {
     try {
@@ -4118,6 +4163,65 @@ figma.ui.onmessage = async (msg) => {
       const mensagem = err instanceof Error ? err.message : String(err);
       figma.ui.postMessage({ type: 'status', status: 'error', message: 'Erro: ' + mensagem });
     }
+  }
+
+  if (msg.type === 'toggle-nomes-sections') {
+    const escopo: 'pagina' | 'selecao' = msg.escopo;
+    const sections = escopo === 'pagina'
+      ? (figma.currentPage.findAll(n => n.type === 'SECTION') as SectionNode[])
+      : buscarSectionsRecursivo(figma.currentPage.selection);
+
+    const estaOculto = sections.some(s => s.getPluginData('dschNomeOriginal') !== '');
+    let contador = 0;
+
+    // DEBUG TEMPORÁRIO — descobrir props da SectionNode
+    if (sections.length > 0) {
+      const proto = Object.getPrototypeOf(sections[0]);
+      const props: string[] = [];
+      let cur = proto;
+      while (cur && cur !== Object.prototype) {
+        Object.getOwnPropertyNames(cur).forEach(n => {
+          const d = Object.getOwnPropertyDescriptor(cur, n);
+          if (d && d.set) props.push(n);
+        });
+        cur = Object.getPrototypeOf(cur);
+      }
+      console.log('SectionNode setters:', props.join(', '));
+    }
+
+    if (!estaOculto) {
+      for (const secao of sections) {
+        if (secao.name.trim() !== '') {
+          secao.setPluginData('dschNomeOriginal', secao.name);
+          secao.name = '';
+          contador++;
+        }
+      }
+      figma.notify(contador > 0 ? `${contador} nome(s) ocultado(s)` : 'Nenhuma section com nome encontrada');
+    } else {
+      for (const secao of sections) {
+        const nomeOriginal = secao.getPluginData('dschNomeOriginal');
+        if (nomeOriginal) {
+          secao.name = nomeOriginal;
+          secao.setPluginData('dschNomeOriginal', '');
+          contador++;
+        }
+      }
+      figma.notify(contador > 0 ? `${contador} nome(s) restaurado(s)` : 'Nenhum nome para restaurar');
+    }
+
+    const novoEstado = !estaOculto && contador > 0;
+    figma.ui.postMessage({ type: 'estado-sections', escopo, oculto: novoEstado });
+  }
+
+  if (msg.type === 'checar-estado-sections') {
+    const sectionsPagina = figma.currentPage.findAll(n => n.type === 'SECTION') as SectionNode[];
+    const sectionsSelecao = buscarSectionsRecursivo(figma.currentPage.selection);
+    figma.ui.postMessage({
+      type: 'estado-sections-inicial',
+      pagina: sectionsPagina.some(s => s.getPluginData('dschNomeOriginal') !== ''),
+      selecao: sectionsSelecao.some(s => s.getPluginData('dschNomeOriginal') !== ''),
+    });
   }
 };
 
