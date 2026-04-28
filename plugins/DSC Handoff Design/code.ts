@@ -904,35 +904,31 @@ function contrasteComFundoEscuro(r: number, g: number, b: number): number {
 
 /**
  * Verifica recursivamente se algum conteúdo tem baixo contraste com fundo escuro.
- * Usado para decidir se o card dark mode precisa de fundo claro.
+ * Checa TEXT fills, strokes e fills de shapes (ícones, vetores).
  */
 function temConteudoBaixoContrasteComEscuro(no: SceneNode): boolean {
   const resultados: boolean[] = [];
 
   function coletarCores(n: SceneNode): void {
     try {
-      if (n.type === 'TEXT') {
-        const fills = (n as TextNode).fills;
-        if (fills && typeof fills !== 'symbol') {
-          for (const fill of fills as ReadonlyArray<Paint>) {
-            if (fill.type === 'SOLID' && fill.visible !== false) {
-              resultados.push(contrasteComFundoEscuro(fill.color.r, fill.color.g, fill.color.b) < LIMIAR_CONTRASTE_WCAG);
-            }
-          }
+      const checarFills = (fills: ReadonlyArray<Paint> | typeof figma.mixed) => {
+        if (!fills || typeof fills === 'symbol') return;
+        for (const fill of fills as ReadonlyArray<Paint>) {
+          if (ehSolidVisivel(fill)) resultados.push(contrasteComFundoEscuro(fill.color.r, fill.color.g, fill.color.b) < LIMIAR_CONTRASTE_WCAG);
         }
-      }
+      };
+
+      if (n.type === 'TEXT') checarFills((n as TextNode).fills);
+      if (TIPOS_FORMA_FOREGROUND.has(n.type)) checarFills((n as any).fills);
+
       const strokes = (n as any).strokes;
-      if (strokes && typeof strokes !== 'symbol' && (n as any).strokeWeight > 0) {
-        for (const stroke of strokes as ReadonlyArray<Paint>) {
-          if (stroke.type === 'SOLID' && stroke.visible !== false) {
-            resultados.push(contrasteComFundoEscuro(stroke.color.r, stroke.color.g, stroke.color.b) < LIMIAR_CONTRASTE_WCAG);
-          }
-        }
+      const strokeWeight = (n as any).strokeWeight;
+      if (strokes && typeof strokes !== 'symbol' && typeof strokeWeight === 'number' && strokeWeight > 0) {
+        checarFills(strokes);
       }
+
       if ('children' in n) {
-        for (const filho of (n as any).children) {
-          coletarCores(filho as SceneNode);
-        }
+        for (const filho of (n as any).children) coletarCores(filho as SceneNode);
       }
     } catch {}
   }
@@ -945,70 +941,74 @@ function temConteudoBaixoContrasteComEscuro(no: SceneNode): boolean {
 
 /**
  * Determina se um componente no dark mode precisa de fundo claro no card.
- * Recíproca de precisaFundoEscuro: verifica se o componente escuro some no fundo escuro.
+ * Verifica fills do nó raiz E dos filhos diretos.
  */
 function precisaFundoClaro(no: SceneNode): boolean {
   try {
     const fills = (no as any).fills;
     if (typeof fills === 'symbol') return false;
-    // Verificar se o componente tem fundo escuro próprio (ou sem fundo)
-    const semFundoOuEscuro = !fills || fills.length === 0
-      || fills.every((f: any) => f.visible === false || f.opacity === 0
-        || (f.type === 'SOLID' && f.color.r < 0.25 && f.color.g < 0.25 && f.color.b < 0.25));
-    if (!semFundoOuEscuro) return false;
+
+    const ehFundoEscuroOuVazio = (fs: any) =>
+      !fs || typeof fs === 'symbol' || fs.length === 0
+      || fs.every((f: any) =>
+        f.visible === false || (f.opacity ?? 1) === 0
+        || (f.type === 'SOLID' && f.color.r < 0.25 && f.color.g < 0.25 && f.color.b < 0.25)
+      );
+
+    if (!ehFundoEscuroOuVazio(fills)) return false;
+
+    if ('children' in no) {
+      for (const filho of (no as any).children as SceneNode[]) {
+        if (!ehFundoEscuroOuVazio((filho as any).fills)) return false;
+      }
+    }
+
     return temConteudoBaixoContrasteComEscuro(no);
   } catch {
     return false;
   }
 }
 
+const TIPOS_FORMA_FOREGROUND = new Set(['VECTOR', 'RECTANGLE', 'ELLIPSE', 'STAR', 'POLYGON', 'LINE', 'BOOLEAN_OPERATION']);
+
+function ehSolidVisivel(fill: Paint): fill is SolidPaint {
+  return fill.type === 'SOLID' && fill.visible !== false && ((fill as SolidPaint).opacity ?? 1) > 0;
+}
+
 /**
  * Verifica recursivamente se algum conteúdo tem baixo contraste com branco.
- * Usado para decidir se o card precisa de fundo escuro.
+ * Checa TEXT fills, strokes e fills de shapes (ícones, vetores).
+ * Containers (FRAME, GROUP, INSTANCE) são ignorados — apenas seus filhos importam.
  */
 function temConteudoBaixoContraste(no: SceneNode): boolean {
-  // Coletar todas as cores relevantes (textos e strokes) e verificar se a maioria tem baixo contraste
-  const resultados: boolean[] = []; // true = baixo contraste, false = bom contraste
+  const resultados: boolean[] = [];
 
   function coletarCores(n: SceneNode): void {
     try {
-      // TEXT: fills são o conteúdo principal — sempre verificar
-      if (n.type === 'TEXT') {
-        const fills = (n as TextNode).fills;
-        if (fills && typeof fills !== 'symbol') {
-          for (const fill of fills as ReadonlyArray<Paint>) {
-            if (fill.type === 'SOLID' && fill.visible !== false) {
-              resultados.push(contrasteComBranco(fill.color.r, fill.color.g, fill.color.b) < LIMIAR_CONTRASTE_WCAG);
-            }
-          }
+      const checarFills = (fills: ReadonlyArray<Paint> | typeof figma.mixed) => {
+        if (!fills || typeof fills === 'symbol') return;
+        for (const fill of fills as ReadonlyArray<Paint>) {
+          if (ehSolidVisivel(fill)) resultados.push(contrasteComBranco(fill.color.r, fill.color.g, fill.color.b) < LIMIAR_CONTRASTE_WCAG);
         }
-      }
+      };
 
-      // Strokes: bordas visíveis são conteúdo relevante em qualquer nó
+      if (n.type === 'TEXT') checarFills((n as TextNode).fills);
+      if (TIPOS_FORMA_FOREGROUND.has(n.type)) checarFills((n as any).fills);
+
       const strokes = (n as any).strokes;
-      if (strokes && typeof strokes !== 'symbol' && (n as any).strokeWeight > 0) {
-        for (const stroke of strokes as ReadonlyArray<Paint>) {
-          if (stroke.type === 'SOLID' && stroke.visible !== false) {
-            resultados.push(contrasteComBranco(stroke.color.r, stroke.color.g, stroke.color.b) < LIMIAR_CONTRASTE_WCAG);
-          }
-        }
+      const strokeWeight = (n as any).strokeWeight;
+      if (strokes && typeof strokes !== 'symbol' && typeof strokeWeight === 'number' && strokeWeight > 0) {
+        checarFills(strokes);
       }
 
-      // Recursão nos filhos
       if ('children' in n) {
-        for (const filho of (n as any).children) {
-          coletarCores(filho as SceneNode);
-        }
+        for (const filho of (n as any).children) coletarCores(filho as SceneNode);
       }
     } catch {}
   }
 
   coletarCores(no);
-
-  // Se não encontrou nenhuma cor relevante, não precisa trocar fundo
   if (resultados.length === 0) return false;
-
-  // Só trocar fundo se a MAIORIA dos elementos relevantes tem baixo contraste
   const baixoContraste = resultados.filter(r => r).length;
   return baixoContraste > resultados.length / 2;
 }
@@ -1019,31 +1019,36 @@ function temTextoBaixoContraste(no: SceneNode): boolean {
 }
 
 /**
+ * Retorna true se os fills indicam fundo transparente ou branco (sem background próprio visível).
+ */
+function ehFundoBrancoOuVazio(fills: any): boolean {
+  if (!fills || typeof fills === 'symbol' || fills.length === 0) return true;
+  return fills.every((f: any) =>
+    f.visible === false || (f.opacity ?? 1) === 0
+    || (f.type === 'SOLID' && f.color.r > 0.95 && f.color.g > 0.95 && f.color.b > 0.95)
+  );
+}
+
+/**
  * Determina se um componente instanciado precisa de fundo escuro no card.
- * Condições: (1) sem fundo visível ou fundo branco E (2) textos com baixo contraste.
+ * Verifica fills do nó raiz E dos filhos diretos (onde o background real costuma estar).
  */
 function precisaFundoEscuro(no: SceneNode): boolean {
   try {
     const fills = (no as any).fills;
-    if (typeof fills === 'symbol') {
-      console.log(`[contraste] "${no.name}": fills=mixed → false`);
-      return false;
+    if (typeof fills === 'symbol') return false;
+    if (!ehFundoBrancoOuVazio(fills)) return false;
+
+    // Checar filhos diretos — em instâncias, o background real está um nível abaixo
+    if ('children' in no) {
+      for (const filho of (no as any).children as SceneNode[]) {
+        const filhoFills = (filho as any).fills;
+        if (!ehFundoBrancoOuVazio(filhoFills)) return false;
+      }
     }
-    const semFundo = !fills || fills.length === 0
-      || fills.every((f: any) => f.visible === false || f.opacity === 0
-        || (f.type === 'SOLID' && f.color.r > 0.95 && f.color.g > 0.95 && f.color.b > 0.95));
-    if (!semFundo) {
-      const corFundo = fills && fills.length > 0 && fills[0].type === 'SOLID'
-        ? `rgb(${(fills[0].color.r * 255).toFixed(0)},${(fills[0].color.g * 255).toFixed(0)},${(fills[0].color.b * 255).toFixed(0)})`
-        : 'não-sólido';
-      console.log(`[contraste] "${no.name}": tem fundo próprio (${corFundo}) → false`);
-      return false;
-    }
-    const baixoContraste = temConteudoBaixoContraste(no);
-    console.log(`[contraste] "${no.name}": semFundo=true, conteudoBaixoContraste=${baixoContraste} → ${baixoContraste}`);
-    return baixoContraste;
-  } catch (e) {
-    console.log(`[contraste] "${no.name}": erro → false`, e);
+
+    return temConteudoBaixoContraste(no);
+  } catch {
     return false;
   }
 }
@@ -4168,26 +4173,11 @@ figma.ui.onmessage = async (msg) => {
   if (msg.type === 'toggle-nomes-sections') {
     const escopo: 'pagina' | 'selecao' = msg.escopo;
     const sections = escopo === 'pagina'
-      ? (figma.currentPage.findAll(n => n.type === 'SECTION') as SectionNode[])
+      ? (figma.currentPage.findAllWithCriteria({ types: ['SECTION'] }) as SectionNode[])
       : buscarSectionsRecursivo(figma.currentPage.selection);
 
     const estaOculto = sections.some(s => s.getPluginData('dschNomeOriginal') !== '');
     let contador = 0;
-
-    // DEBUG TEMPORÁRIO — descobrir props da SectionNode
-    if (sections.length > 0) {
-      const proto = Object.getPrototypeOf(sections[0]);
-      const props: string[] = [];
-      let cur = proto;
-      while (cur && cur !== Object.prototype) {
-        Object.getOwnPropertyNames(cur).forEach(n => {
-          const d = Object.getOwnPropertyDescriptor(cur, n);
-          if (d && d.set) props.push(n);
-        });
-        cur = Object.getPrototypeOf(cur);
-      }
-      console.log('SectionNode setters:', props.join(', '));
-    }
 
     if (!estaOculto) {
       for (const secao of sections) {
@@ -4215,7 +4205,7 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === 'checar-estado-sections') {
-    const sectionsPagina = figma.currentPage.findAll(n => n.type === 'SECTION') as SectionNode[];
+    const sectionsPagina = figma.currentPage.findAllWithCriteria({ types: ['SECTION'] }) as SectionNode[];
     const sectionsSelecao = buscarSectionsRecursivo(figma.currentPage.selection);
     figma.ui.postMessage({
       type: 'estado-sections-inicial',
