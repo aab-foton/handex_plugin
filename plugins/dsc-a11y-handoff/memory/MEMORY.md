@@ -1,0 +1,1 @@
+- [reference_template_structure.md](reference_template_structure.md) — Complete layer structure and component properties of [dsc-h] Template Handoff
