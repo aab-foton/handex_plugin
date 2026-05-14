@@ -30,7 +30,14 @@ HANDEX é um plugin para Figma desenvolvido para facilitar o handoff de designs 
 - **Exportar especificações** em múltiplos formatos
 - **Criar fichas técnicas** automáticas (BPMN)
 
-O plugin possui uma **interface React moderna** e responsiva, permitindo visualizar tanto a interface quanto o código do plugin em tempo real.
+O plugin possui uma **interface moderna, modular e totalmente responsiva**, permitindo uma transição suave entre diferentes fluxos de trabalho e visualização de código em tempo real.
+
+### 🎨 Experiência do Usuário (UX)
+- **Interface Responsiva de 3 Colunas**: Layout otimizado para produtividade.
+- **Auto-Redimensionamento Dinâmico**: A janela do plugin se ajusta automaticamente ao conteúdo.
+- **Zoom Proporcional da UI**: Escalonamento inteligente para diferentes tamanhos de tela.
+- **Modo Escuro/Claro**: Suporte nativo a temas com alternância manual e automática.
+- **Acessibilidade (WCAG)**: Interface amigável para tecnologias assistivas com labels ARIA e navegação semântica.
 
 ## ✨ Funcionalidades
 
@@ -41,10 +48,10 @@ O plugin possui uma **interface React moderna** e responsiva, permitindo visuali
 - Sugestões de melhorias de acessibilidade e performance
 
 ### 📋 Handoff de Design
-- Documentação estruturada de componentes
-- Exportação em múltiplos formatos (ZIP com especificações)
-- Geração de briefings técnicos
-- Versionamento de exportações
+- **Ficha Técnica Padronizada**: Documentação estruturada seguindo padrões BPMN.
+- **Design Specs Inteligentes**: Especificações com restrições de layout (Fill/Hug) automáticas.
+- **Exportação em múltiplos formatos**: Geração de pacotes ZIP completos com especificações técnicos.
+- **Versionamento de exportações**: Histórico de alterações e controle de revisões.
 
 ### 📏 Medições e Especificações
 - Medições automáticas de componentes
