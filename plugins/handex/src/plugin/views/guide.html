@@ -1,0 +1,40 @@
+<!-- VIEW: GUIDE -->
+    <main id="view-guide" class="view flex flex-col h-full overflow-hidden">
+      <div class="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-dark-line flex flex-col shrink-0">
+        <div class="flex items-center gap-3">
+          <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial"
+            class="p-2 bg-gray-100 dark:bg-slate-800 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">
+            <i data-lucide="arrow-left" class="w-4 h-4 text-gray-600 dark:text-gray-300" aria-hidden="true"></i>
+          </button>
+          <h2 class="text-[#1E293B] dark:text-white font-bold text-[18px]">Guia e Ajuda</h2>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 pb-24" onscroll="handleScroll(this)">
+        <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-sm p-5 max-w-[440px] mx-auto">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-1 h-5 bg-[#0070af] rounded-full"></div>
+            <h3 class="font-bold text-[#1E293B] dark:text-white text-[14px]">Documentação de Apoio</h3>
+          </div>
+
+          <p class="text-[12px] text-slate-500 dark:text-dark-muted mb-6 leading-relaxed">
+            Acesse os materiais de apoio para entender como utilizar o Handex ou consultar diretrizes técnicas.
+          </p>
+
+          <div class="space-y-3 mb-8">
+            <button onclick="window.open('https://designsystem.caixa.gov.br', '_blank')" class="w-full py-3.5 bg-white dark:bg-dark-bg border border-[#0070af] text-[#0070af] font-bold rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all flex items-center justify-center gap-2 shadow-sm">
+              <i data-lucide="layers" class="w-4 h-4"></i> Toolkit DSC
+            </button>
+
+            <button onclick="window.open('https://designsystem.caixa.gov.br/passo-a-passo', '_blank')" class="w-full py-3.5 bg-white dark:bg-dark-bg border border-[#0070af] text-[#0070af] font-bold rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all flex items-center justify-center gap-2 shadow-sm">
+              <i data-lucide="map" class="w-4 h-4"></i> Passo a Passo
+            </button>
+            
+            <button onclick="window.open('https://designsystem.caixa.gov.br/tutoriais', '_blank')" class="w-full py-3.5 bg-white dark:bg-dark-bg border border-[#0070af] text-[#0070af] font-bold rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all flex items-center justify-center gap-2 shadow-sm">
+              <i data-lucide="video" class="w-4 h-4"></i> Tutoriais
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </main>
