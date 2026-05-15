@@ -143,10 +143,7 @@ async function avaliarSelecao(): Promise<void> {
   _desbloqueado = true;
   const nomeBase = componentSet.name.replace(/^\[.*?\]/, '').trim();
   const nomeFormatado = capitalizar(nomeBase);
-  const nomeHandoff = `[dsc] Handoff: ${nomeFormatado}`;
-  const isUpdate = figma.currentPage.children.some(
-    n => n.type === 'FRAME' && (n.name === nomeHandoff || n.getPluginData('componentSetId') === componentSet.id)
-  );
+  const isUpdate = !!buscarHandoffExistente(componentSet);
   figma.ui.postMessage({
     type: 'selection-ready',
     componentName: nomeFormatado,
