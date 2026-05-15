@@ -1,3 +1,5 @@
+import { isDS, registerToFrameJson, frameJsonTemplate } from './audit.js';
+
 figma.showUI(__html__, { width: 480, height: 750 });
 
 let activeHighlightNode = null;
@@ -104,7 +106,7 @@ figma.ui.onmessage = async (msg) => {
         
         f.primaryAxisSizingMode = "AUTO";
         f.counterAxisSizingMode = "AUTO";
-        f.layoutAlign = "INHERIT";
+        f.layoutAlign = "MIN";
 
         if (fill) {
           f.fills = [{ type: "SOLID", color: fill }];
@@ -116,6 +118,16 @@ figma.ui.onmessage = async (msg) => {
 
       function setFillAndHug(node) {
         if (!node) return;
+        
+        try {
+          if ('layoutSizingHorizontal' in node) {
+            node.layoutSizingHorizontal = "FILL";
+          }
+          if ('layoutSizingVertical' in node) {
+            node.layoutSizingVertical = "HUG";
+          }
+        } catch(e) {}
+
         const parent = node.parent;
         const pMode = (parent && 'layoutMode' in parent) ? parent.layoutMode : "VERTICAL";
 
@@ -129,7 +141,7 @@ figma.ui.onmessage = async (msg) => {
           }
         } else if (pMode === "HORIZONTAL") {
           node.layoutGrow = 1; // Fill width
-          node.layoutAlign = "INHERIT"; // Hug height (don't stretch)
+          node.layoutAlign = "MIN"; // Hug height (don't stretch)
           if (node.type === "FRAME") {
             if (node.layoutMode === "HORIZONTAL") node.counterAxisSizingMode = "AUTO"; // Hug height
             else node.primaryAxisSizingMode = "AUTO"; // Hug height
@@ -456,7 +468,7 @@ figma.ui.onmessage = async (msg) => {
         uiBoard.resize(800, 100);
         uiBoard.counterAxisSizingMode = "FIXED"; // Base width 800
         uiBoard.primaryAxisSizingMode = "AUTO";  // Hug height
-        uiBoard.layoutAlign = "INHERIT"; // Don't stretch height in horizontal parent
+        uiBoard.layoutAlign = "MIN"; // Don't stretch height in horizontal parent
 
         const uiTitle = createText("User Interface", 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
         uiBoard.appendChild(uiTitle);
@@ -599,7 +611,7 @@ figma.ui.onmessage = async (msg) => {
           specsBoard.resize(800, 100);
           specsBoard.counterAxisSizingMode = "FIXED"; // Base width 800
           specsBoard.primaryAxisSizingMode = "AUTO";  // Hug height
-          specsBoard.layoutAlign = "INHERIT";         // Don't stretch height in horizontal parent
+          specsBoard.layoutAlign = "MIN";         // Don't stretch height in horizontal parent
 
           const specsTitle = createText("Design Specs: " + node.name, 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
           specsBoard.appendChild(specsTitle);
@@ -937,46 +949,10 @@ figma.ui.onmessage = async (msg) => {
         map.get(key).layers.add(data.layerName);
       }
     }
+    const frameJson = frameJsonTemplate();
 
     const referenceTokens = msg.referenceTokens || null;
     const isAudit = msg.isAudit || false;
-
-    function isDS(name, value, type) {
-      if (!name) return false;
-      const lowerName = name.toLowerCase();
-      // Manual bypass via naming convention
-      if (lowerName.includes("[dsc]") || lowerName.includes("[ dsc]")) return true;
-      
-      // Audit Reference Check
-      if (isAudit && referenceTokens) {
-        // Try specific category first
-        const refList = referenceTokens[type] || referenceTokens[type.replace('s', '')]; // Handle 'colors' vs 'color'
-        
-        const checkMatch = (list) => {
-          if (!list || !Array.isArray(list)) return false;
-          return list.some(ref => {
-            const rName = (typeof ref === 'string' ? ref : (ref.name || ref.label || "")).toLowerCase();
-            const rValue = (typeof ref === 'string' ? "" : (ref.value || ref.hex || ref.token || "")).toLowerCase();
-            const targetValue = String(value || "").toLowerCase();
-
-            // Match by name
-            if (rName && (rName === lowerName || lowerName.includes(rName) || rName.includes(lowerName))) return true;
-            // Match by value
-            if (rValue && targetValue && (rValue === targetValue || targetValue.includes(rValue))) return true;
-            
-            return false;
-          });
-        };
-
-        if (checkMatch(refList)) return true;
-
-        // Fallback: Check if it exists in ANY category (global match)
-        for (const cat in referenceTokens) {
-          if (checkMatch(referenceTokens[cat])) return true;
-        }
-      }
-      return false;
-    }
 
     function rgbToHex(r, g, b) {
       const toHex = (c) => {
@@ -991,17 +967,25 @@ figma.ui.onmessage = async (msg) => {
         // Colors (Fills)
         if ('fills' in n && Array.isArray(n.fills)) {
           let styleName = null;
+          let styleKey = null;
           if ('fillStyleId' in n && typeof n.fillStyleId === "string" && n.fillStyleId) {
             const style = figma.getStyleById(n.fillStyleId);
-            if (style) styleName = style.name;
+            if (style) {
+              styleName = style.name;
+              styleKey = style.key;
+            }
           }
 
           let tokenName = null;
+          let tokenKey = null;
           if (n.boundVariables && n.boundVariables.fills) {
             const varId = Array.isArray(n.boundVariables.fills) ? (n.boundVariables.fills[0] && n.boundVariables.fills[0].id) : n.boundVariables.fills.id;
             if (varId) {
               const v = figma.variables.getVariableById(varId);
-              if (v) tokenName = v.name;
+              if (v) {
+                tokenName = v.name;
+                tokenKey = v.key;
+              }
             }
           }
 
@@ -1009,7 +993,10 @@ figma.ui.onmessage = async (msg) => {
             if (fill.type === "SOLID" && fill.color) {
               const hex = rgbToHex(fill.color.r, fill.color.g, fill.color.b).toUpperCase();
               const name = tokenName || styleName || hex;
-              const ds = isDS(name, hex, "colors");
+              const ds = isDS(name, hex, "colors", tokenKey || styleKey, referenceTokens, isAudit, frameJson, n.name);
+              
+              registerToFrameJson(frameJson, "colors", name, hex, tokenKey, styleKey, n.name, ds);
+
               addSpec(specs.colors, name, {
                 name: name,
                 hex: hex,
@@ -1023,9 +1010,13 @@ figma.ui.onmessage = async (msg) => {
         // Typography
         if (n.type === "TEXT") {
           let styleName = null;
+          let styleKey = null;
           if ('textStyleId' in n && typeof n.textStyleId === "string" && n.textStyleId !== figma.mixed && n.textStyleId) {
             const style = figma.getStyleById(n.textStyleId);
-            if (style) styleName = style.name;
+            if (style) {
+              styleName = style.name;
+              styleKey = style.key;
+            }
           }
 
           const family = (n.fontName && n.fontName !== figma.mixed) ? n.fontName.family : "Mixed";
@@ -1038,17 +1029,21 @@ figma.ui.onmessage = async (msg) => {
           ) {
             const iconName = (typeof n.characters === "string") ? n.characters.trim() : "";
             if (iconName.length > 0 && iconName.length < 30) {
+              const dsIcons = isDS(styleName || family, iconName, "icons", styleKey, referenceTokens, isAudit, frameJson, n.name);
+              registerToFrameJson(frameJson, "icons", iconName, iconName, null, styleKey, n.name, dsIcons);
               addSpec(specs.icons, iconName, {
                 name: iconName,
-                isDS: isDS(styleName || family, iconName, "icons"),
+                isDS: isDS(styleName || family, iconName, "icons", styleKey, referenceTokens, isAudit, frameJson, n.name),
                 layerName: n.name,
               }, n.id);
             }
           } else {
             const name = styleName || `${family} ${fontStyle} (${size}px)`;
+            const ds = isDS(name, name, "typography", styleKey, referenceTokens, isAudit, frameJson, n.name);
+            registerToFrameJson(frameJson, "typography", name, name, null, styleKey, n.name, ds);
             addSpec(specs.typography, name, {
               name: name,
-              isDS: isDS(name, name, "typography"),
+              isDS: ds,
               layerName: n.name,
             }, n.id);
           }
@@ -1064,15 +1059,19 @@ figma.ui.onmessage = async (msg) => {
             (n.width <= 32 && n.height <= 32 && !name.toLowerCase().includes("button"));
 
           if (isIcon) {
+            const dsCompIcons = isDS(name, name, "icons", null, referenceTokens, isAudit, frameJson, n.name);
+            registerToFrameJson(frameJson, "icons", name, name, null, null, n.name, dsCompIcons);
             addSpec(specs.icons, name, {
               name: name,
-              isDS: isDS(name, name, "icons"),
+              isDS: isDS(name, name, "icons", null, referenceTokens, isAudit, frameJson, n.name),
               layerName: n.name,
             }, n.id);
           } else {
+            const dsComp = isDS(name, name, "components", null, referenceTokens, isAudit, frameJson, n.name);
+            registerToFrameJson(frameJson, "components", name, name, null, null, n.name, dsComp);
             addSpec(specs.components, name, {
               name: name,
-              isDS: isDS(name, name, "components"),
+              isDS: isDS(name, name, "components", null, referenceTokens, isAudit, frameJson, n.name),
               layerName: n.name,
             }, n.id);
           }
@@ -1087,39 +1086,53 @@ figma.ui.onmessage = async (msg) => {
             const id = Array.isArray(v) ? (v[0] && v[0].id) : v.id;
             if (!id) return null;
             const variable = figma.variables.getVariableById(id);
-            return variable ? variable.name : null;
+            return variable ? { name: variable.name, key: variable.key } : null;
           };
 
           if (n.layoutMode !== "NONE") {
             // Gap
             if (n.itemSpacing !== figma.mixed && n.itemSpacing > 0) {
-              const tokenName = getVar("itemSpacing");
+              const vInfo = getVar("itemSpacing");
+              const tokenName = vInfo ? vInfo.name : null;
+              const tokenKey = vInfo ? vInfo.key : null;
               const val = `${n.itemSpacing}px`;
               const name = tokenName || `Gap: ${val}`;
-              addSpec(specs.spacing, name, { name: name, value: val, isDS: isDS(name, val, "spacing"), layerName: n.name }, n.id);
+              const ds = isDS(name, val, "spacing", tokenKey, referenceTokens, isAudit, frameJson, n.name);
+              registerToFrameJson(frameJson, "spacing", name, val, tokenKey, null, n.name, isDS(name, val, "spacing", tokenKey, referenceTokens, isAudit, frameJson, n.name));
+              addSpec(specs.spacing, name, { name: name, value: val, isDS: isDS(name, val, "spacing", tokenKey, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
             }
             // Padding
             const pt = n.paddingTop || 0, pr = n.paddingRight || 0, pb = n.paddingBottom || 0, pl = n.paddingLeft || 0;
             if (pt > 0) {
-              const t = getVar("paddingTop"); const name = t || `Padding Top: ${pt}px`;
-              addSpec(specs.spacing, name, { name: name, value: `${pt}px`, isDS: isDS(name, `${pt}px`, "spacing"), layerName: n.name }, n.id);
+              const vInfo = getVar("paddingTop"); const name = (vInfo && vInfo.name) || `Padding Top: ${pt}px`;
+              const ds = isDS(name, `${pt}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
+              registerToFrameJson(frameJson, "spacing", name, `${pt}px`, vInfo ? vInfo.key : null, null, n.name, isDS(name, `${pt}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name));
+              addSpec(specs.spacing, name, { name: name, value: `${pt}px`, isDS: isDS(name, `${pt}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
             }
             if (pr > 0) {
-              const t = getVar("paddingRight"); const name = t || `Padding Right: ${pr}px`;
-              addSpec(specs.spacing, name, { name: name, value: `${pr}px`, isDS: isDS(name, `${pr}px`, "spacing"), layerName: n.name }, n.id);
+              const vInfo = getVar("paddingRight"); const name = (vInfo && vInfo.name) || `Padding Right: ${pr}px`;
+              const ds = isDS(name, `${pr}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
+              registerToFrameJson(frameJson, "spacing", name, `${pr}px`, vInfo ? vInfo.key : null, null, n.name, isDS(name, `${pr}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name));
+              addSpec(specs.spacing, name, { name: name, value: `${pr}px`, isDS: isDS(name, `${pr}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
             }
             if (pb > 0) {
-              const t = getVar("paddingBottom"); const name = t || `Padding Bottom: ${pb}px`;
-              addSpec(specs.spacing, name, { name: name, value: `${pb}px`, isDS: isDS(name, `${pb}px`, "spacing"), layerName: n.name }, n.id);
+              const vInfo = getVar("paddingBottom"); const name = (vInfo && vInfo.name) || `Padding Bottom: ${pb}px`;
+              const ds = isDS(name, `${pb}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
+              registerToFrameJson(frameJson, "spacing", name, `${pb}px`, vInfo ? vInfo.key : null, null, n.name, isDS(name, `${pb}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name));
+              addSpec(specs.spacing, name, { name: name, value: `${pb}px`, isDS: isDS(name, `${pb}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
             }
             if (pl > 0) {
-              const t = getVar("paddingLeft"); const name = t || `Padding Left: ${pl}px`;
-              addSpec(specs.spacing, name, { name: name, value: `${pl}px`, isDS: isDS(name, `${pl}px`, "spacing"), layerName: n.name }, n.id);
+              const vInfo = getVar("paddingLeft"); const name = (vInfo && vInfo.name) || `Padding Left: ${pl}px`;
+              const ds = isDS(name, `${pl}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
+              registerToFrameJson(frameJson, "spacing", name, `${pl}px`, vInfo ? vInfo.key : null, null, n.name, isDS(name, `${pl}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name));
+              addSpec(specs.spacing, name, { name: name, value: `${pl}px`, isDS: isDS(name, `${pl}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
             }
 
             // Alignment
             const align = `${n.primaryAxisAlignItems} / ${n.counterAxisAlignItems}`;
-            addSpec(specs.alignment, align, { name: `Alinhamento: ${align}`, value: align, isDS: isDS(align, align, "alignment"), layerName: n.name }, n.id);
+            const ds = isDS(align, align, "alignment", null, referenceTokens, isAudit, frameJson, n.name);
+            registerToFrameJson(frameJson, "alignment", `Alinhamento: ${align}`, align, null, null, n.name, isDS(align, align, "alignment", null, referenceTokens, isAudit, frameJson, n.name));
+            addSpec(specs.alignment, align, { name: `Alinhamento: ${align}`, value: align, isDS: isDS(align, align, "alignment", null, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
           }
         }
 
@@ -1127,30 +1140,53 @@ figma.ui.onmessage = async (msg) => {
         if ('cornerRadius' in n && n.cornerRadius !== figma.mixed && n.cornerRadius > 0) {
           const id = (n.boundVariables && n.boundVariables.cornerRadius) ? (Array.isArray(n.boundVariables.cornerRadius) ? n.boundVariables.cornerRadius[0].id : n.boundVariables.cornerRadius.id) : null;
           let tokenName = null;
+          let tokenKey = null;
           if (id) {
             const v = figma.variables.getVariableById(id);
-            if (v) tokenName = v.name;
+            if (v) { tokenName = v.name; tokenKey = v.key; }
           }
           const name = tokenName || `Raio: ${n.cornerRadius}px`;
-          addSpec(specs.borders, name, { name: name, value: `${n.cornerRadius}px`, isDS: isDS(name, `${n.cornerRadius}px`, "borders"), layerName: n.name }, n.id);
+          registerToFrameJson(frameJson, "borders", name, `${n.cornerRadius}px`, tokenKey, null, n.name);
+          addSpec(specs.borders, name, { name: name, value: `${n.cornerRadius}px`, isDS: isDS(name, `${n.cornerRadius}px`, "borders", tokenKey, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
         }
 
         if ('strokeWeight' in n && n.strokeWeight !== figma.mixed && n.strokeWeight > 0) {
           const id = (n.boundVariables && n.boundVariables.strokeWeight) ? (Array.isArray(n.boundVariables.strokeWeight) ? n.boundVariables.strokeWeight[0].id : n.boundVariables.strokeWeight.id) : null;
           let tokenName = null;
+          let tokenKey = null;
           if (id) {
             const v = figma.variables.getVariableById(id);
-            if (v) tokenName = v.name;
+            if (v) { tokenName = v.name; tokenKey = v.key; }
           }
           const name = tokenName || `Borda: ${n.strokeWeight}px`;
-          addSpec(specs.borders, name, { name: name, value: `${n.strokeWeight}px`, isDS: isDS(name, `${n.strokeWeight}px`, "borders"), layerName: n.name }, n.id);
+          registerToFrameJson(frameJson, "borders", name, `${n.strokeWeight}px`, tokenKey, null, n.name);
+          addSpec(specs.borders, name, { name: name, value: `${n.strokeWeight}px`, isDS: isDS(name, `${n.strokeWeight}px`, "borders", tokenKey, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
           
           if ('strokes' in n && Array.isArray(n.strokes) && n.strokes.length > 0) {
              const stroke = n.strokes[0];
              if (stroke.type === "SOLID") {
                 const hex = rgbToHex(stroke.color.r, stroke.color.g, stroke.color.b).toUpperCase();
-                const strokeName = `Cor Borda: ${hex}`;
-                addSpec(specs.borders, strokeName, { name: strokeName, value: hex, isDS: isDS(strokeName, hex, "colors"), layerName: n.name }, n.id);
+                
+                let strokeVarName = null;
+                let strokeVarKey = null;
+                if (n.boundVariables && n.boundVariables.strokes) {
+                   const sid = Array.isArray(n.boundVariables.strokes) ? (n.boundVariables.strokes[0] && n.boundVariables.strokes[0].id) : n.boundVariables.strokes.id;
+                   if (sid) {
+                     const sv = figma.variables.getVariableById(sid);
+                     if (sv) { strokeVarName = sv.name; strokeVarKey = sv.key; }
+                   }
+                }
+                
+                let styleStrokeName = null;
+                let styleStrokeKey = null;
+                if ('strokeStyleId' in n && n.strokeStyleId) {
+                   const st = figma.getStyleById(n.strokeStyleId);
+                   if (st) { styleStrokeName = st.name; styleStrokeKey = st.key; }
+                }
+
+                const strokeNameFinal = strokeVarName || styleStrokeName || `Cor Borda: ${hex}`;
+                registerToFrameJson(frameJson, "borders", strokeNameFinal, hex, strokeVarKey, styleStrokeKey, n.name, isDS(strokeNameFinal, hex, "colors", strokeVarKey || styleStrokeKey, referenceTokens, isAudit, frameJson, n.name));
+                addSpec(specs.borders, strokeNameFinal, { name: strokeNameFinal, value: hex, isDS: isDS(strokeNameFinal, hex, "colors", strokeVarKey || styleStrokeKey, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
              }
           }
         }
@@ -1158,14 +1194,17 @@ figma.ui.onmessage = async (msg) => {
         // Effects (Shadows, Blurs)
         if ('effects' in n && Array.isArray(n.effects)) {
           let styleName = null;
+          let styleKey = null;
           if ('effectStyleId' in n && n.effectStyleId) {
             const style = figma.getStyleById(n.effectStyleId);
-            if (style) styleName = style.name;
+            if (style) { styleName = style.name; styleKey = style.key; }
           }
           for (const effect of n.effects) {
             if (effect.visible) {
                const name = styleName || `${effect.type} (${effect.type.includes('SHADOW') ? 'Sombra' : 'Blur'})`;
-               addSpec(specs.effects, name, { name: name, value: effect.type, isDS: isDS(name, effect.type, "effects"), layerName: n.name }, n.id);
+               const ds = isDS(name, effect.type, "effects", styleKey, referenceTokens, isAudit, frameJson, n.name);
+               registerToFrameJson(frameJson, "effects", name, effect.type, null, styleKey, n.name, isDS(name, effect.type, "effects", styleKey, referenceTokens, isAudit, frameJson, n.name));
+               addSpec(specs.effects, name, { name: name, value: effect.type, isDS: isDS(name, effect.type, "effects", styleKey, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
             }
           }
         }
@@ -1173,15 +1212,18 @@ figma.ui.onmessage = async (msg) => {
         // Grids
         if ('layoutGrids' in n && Array.isArray(n.layoutGrids)) {
           let styleName = null;
+          let styleKey = null;
           if ('gridStyleId' in n && n.gridStyleId) {
             const style = figma.getStyleById(n.gridStyleId);
-            if (style) styleName = style.name;
+            if (style) { styleName = style.name; styleKey = style.key; }
           }
           for (const grid of n.layoutGrids) {
             if (grid.visible) {
                let typeStr = grid.pattern === "COLUMNS" ? `Colunas: ${grid.count}` : (grid.pattern === "ROWS" ? `Linhas: ${grid.count}` : "Grid");
                const name = styleName || typeStr;
-               addSpec(specs.grids, name, { name: name, value: typeStr, isDS: isDS(name, typeStr, "grids"), layerName: n.name }, n.id);
+               const ds = isDS(name, typeStr, "grids", styleKey, referenceTokens, isAudit, frameJson, n.name);
+               registerToFrameJson(frameJson, "grids", name, typeStr, null, styleKey, n.name, isDS(name, typeStr, "grids", styleKey, referenceTokens, isAudit, frameJson, n.name));
+               addSpec(specs.grids, name, { name: name, value: typeStr, isDS: isDS(name, typeStr, "grids", styleKey, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
             }
           }
         }
@@ -1250,6 +1292,7 @@ figma.ui.onmessage = async (msg) => {
         effects: formatMap(specs.effects),
         grids: formatMap(specs.grids),
         alignment: formatMap(specs.alignment),
+        frameJson: frameJson
       },
     });
   }
@@ -1503,7 +1546,7 @@ figma.ui.onmessage = async (msg) => {
         propsFrame.fills = [];
         propsFrame.primaryAxisSizingMode = "AUTO";
         propsFrame.counterAxisSizingMode = "AUTO";
-        propsFrame.layoutAlign = "INHERIT";
+        propsFrame.layoutAlign = "MIN";
 
         opts.properties.forEach(p => {
           const row = figma.createFrame();
@@ -1512,7 +1555,7 @@ figma.ui.onmessage = async (msg) => {
           row.fills = [];
           row.primaryAxisSizingMode = "AUTO";
           row.counterAxisSizingMode = "AUTO";
-          row.layoutAlign = "INHERIT";
+          row.layoutAlign = "MIN";
           row.counterAxisAlignItems = "CENTER";
 
           const pLabel = figma.createText();
@@ -1679,7 +1722,7 @@ figma.ui.onmessage = async (msg) => {
       // Always create group at the Page level to avoid nesting in selected components
       const specGroup = figma.group(groupNodes, figma.currentPage);
       specGroup.name = `Spec Group - ${opts.letter}`;
-      specGroup.locked = true; // Bloquear para não atrapalhar a seleção
+      specGroup.locked = true; 
 
 
       figma.ui.postMessage({

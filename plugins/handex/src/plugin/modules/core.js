@@ -355,14 +355,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const fabSpec = document.getElementById('fab-spec');
       const fabFlow = document.getElementById('fab-flow');
       const fabBriefing = document.getElementById('fab-handoff-briefing');
-      const fabItem = document.getElementById('fab-handoff-item');
 
       const hideAll = () => {
         if (fabMeasure) fabMeasure.classList.add('hidden');
         if (fabSpec) fabSpec.classList.add('hidden');
         if (fabFlow) fabFlow.classList.add('hidden');
         if (fabBriefing) fabBriefing.classList.add('hidden');
-        if (fabItem) fabItem.classList.add('hidden');
       };
 
       if (forceHide) {
@@ -384,9 +382,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // Handoff FABs
       if (fabBriefing) {
         fabBriefing.classList.toggle('hidden', !isHandoff || currentStep !== 1 || !isBriefingOn);
-      }
-      if (fabItem) {
-        fabItem.classList.toggle('hidden', !isHandoff || currentStep !== 3);
       }
 
       if (window.lucide) lucide.createIcons();
@@ -970,13 +965,11 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Controlar FABs do Handoff baseados no Step
       const fabBriefing = document.getElementById('fab-handoff-briefing');
-      const fabItem = document.getElementById('fab-handoff-item');
       const activeView = document.querySelector('.view.active');
       const isHandoff = activeView && activeView.id === 'view-handoff';
       const isBriefingOn2 = document.getElementById('toggle-briefing')?.checked;
 
       if (fabBriefing) fabBriefing.classList.toggle('hidden', !isHandoff || currentStep !== 1 || !isBriefingOn2);
-      if (fabItem) fabItem.classList.toggle('hidden', !isHandoff || currentStep !== 3);
       
       lucide.createIcons();
     }
@@ -1428,7 +1421,7 @@ document.addEventListener('DOMContentLoaded', () => {
       div.className = "mb-3 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-xl overflow-hidden shadow-sm";
 
       const count = section.items.length;
-      const nonDS = section.items.filter(i => !i.isDS).length;
+      const nonDS = section.items.filter(i => i.isDS !== true).length;
       const badge = (handoffData.step2.isAuditEnabled && nonDS > 0) ? `<span class="px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-900/30 text-red-500 text-[10px] font-bold">${nonDS} fora do DSC</span>` : "";
 
       div.innerHTML = `
@@ -1472,9 +1465,11 @@ document.addEventListener('DOMContentLoaded', () => {
         preview = `<div class="w-8 h-8 flex items-center justify-center bg-gray-50 dark:bg-dark-bg rounded text-gray-300"><i data-lucide="box" class="w-4 h-4"></i></div>`;
       }
 
-      const dsStatus = handoffData.step2.isAuditEnabled ? (item.isDS ?
+      const dsStatus = handoffData.step2.isAuditEnabled ? (item.isDS === true ?
         `<span class="flex items-center gap-1 text-[#10b981]"><i data-lucide="check-circle" class="w-2.5 h-2.5"></i>DSC</span>` :
-        `<span class="flex items-center gap-1 text-red-400 font-bold"><i data-lucide="alert-circle" class="w-2.5 h-2.5"></i>FORA</span>`) : "";
+        (item.isDS === "warning" ? 
+        `<span class="flex items-center gap-1 text-amber-500 font-bold"><i data-lucide="alert-triangle" class="w-2.5 h-2.5"></i>ATENÇÃO</span>` : 
+        `<span class="flex items-center gap-1 text-red-400 font-bold"><i data-lucide="alert-circle" class="w-2.5 h-2.5"></i>FORA</span>`)) : "";
 
       return `
         <div class="p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#0070af] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" title="Clicar para localizar no board">
@@ -1501,7 +1496,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (Array.isArray(data[cat])) {
           data[cat].forEach(item => {
             total++;
-            if (item.isDS) dsCount++;
+            if (item.isDS === true) dsCount++;
             else issues.push({ cat: cat.toUpperCase(), name: item.name });
           });
         }
