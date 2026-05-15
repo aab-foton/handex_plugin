@@ -9,7 +9,8 @@ const rgbToHex = (color: any) => {
 const buildTokenTree = (tokens: any[]) => {
   const tree: any = {};
   tokens.forEach((token: any) => {
-    const parts = token.name.split('/');
+    const cleanName = token.name.startsWith('[REMOTE] ') ? token.name.replace('[REMOTE] ', '') : token.name;
+    const parts = cleanName.split('/');
     let current = tree;
     parts.forEach((part: string, index: number) => {
       if (index === parts.length - 1) {
@@ -18,7 +19,12 @@ const buildTokenTree = (tokens: any[]) => {
           $type: token.type,
           $description: token.description,
           $modes: token.valuesByMode,
-          $isRemote: token.isRemote || false
+          $isRemote: token.isRemote || false,
+          $key: token.key,
+          $collectionName: token.collectionName,
+          $collectionKey: token.collectionKey,
+          $scopes: token.scopes,
+          $codeSyntax: token.codeSyntax,
         };
       } else {
         if (!current[part]) current[part] = {};
@@ -37,14 +43,16 @@ const getVariableNameById = (id: string, allVariables: any[]) => {
 
 const formatVariableValue = (value: any, type: string, allVariables: any[] = []) => {
   if (value && typeof value === 'object' && value.type === 'VARIABLE_ALIAS') {
-    const aliasName = getVariableNameById(value.id, allVariables);
+    const aliasVar = allVariables.find(v => v.id === value.id);
+    const aliasName = aliasVar ? aliasVar.name : value.id;
     return { 
       type: 'ALIAS', 
       id: value.id, 
+      key: aliasVar ? aliasVar.key : undefined,
       name: aliasName,
       // We don't resolve the final value here because it depends on the mode
       // and could lead to circular dependencies if not careful.
-      // The UI/Consumer should resolve it using the provided ID/Name.
+      // The UI/Consumer should resolve it using the provided ID/Name/Key.
       value: `alias(${aliasName})` 
     };
   }
@@ -207,6 +215,8 @@ export const scanProject = async (selectedPageIds: string[]) => {
     const libsSet = new Set<string>();
     const remoteComponentKeys = new Set<string>();
     const usedVariableIds = new Set<string>();
+    const modeMap: { [id: string]: string } = {};
+    const collectionMap: { [id: string]: any } = {};
 
     const selectedPages = figma.root.children.filter(node => 
       node && node.type === 'PAGE' && selectedPageIds.includes(node.id)
@@ -222,8 +232,8 @@ export const scanProject = async (selectedPageIds: string[]) => {
       const collections = await figma.variables.getLocalVariableCollectionsAsync();
       console.log("Variables found:", localVariables.length);
       
-      const modeMap: { [id: string]: string } = {};
       collections.forEach(col => {
+        collectionMap[col.id] = { name: col.name, key: col.key, remote: col.remote };
         col.modes.forEach(m => {
           modeMap[m.modeId] = m.name;
         });
@@ -245,12 +255,20 @@ export const scanProject = async (selectedPageIds: string[]) => {
           value: formatVariableValue(rawValue, variable.resolvedType, localVariables),
         }));
 
+        const collection = collectionMap[variable.variableCollectionId] || {};
+
         const entry: any = {
           id: variable.id,
+          key: variable.key,
           name: variable.name,
           type: variable.resolvedType,
           description: variable.description || '',
           valuesByMode,
+          isRemote: variable.remote || false,
+          collectionName: collection.name,
+          collectionKey: collection.key,
+          scopes: variable.scopes,
+          codeSyntax: variable.codeSyntax,
         };
 
         const firstValue = valuesByMode.length ? valuesByMode[0].value : undefined;
@@ -312,6 +330,9 @@ export const scanProject = async (selectedPageIds: string[]) => {
 
       localPaintStyles.forEach((style: any) => {
         data.styleTokens.paint.push({
+          id: style.id,
+          key: style.key,
+          isRemote: style.remote,
           name: style.name,
           type: style.type,
           description: style.description || '',
@@ -320,15 +341,30 @@ export const scanProject = async (selectedPageIds: string[]) => {
       });
 
       localTextStyles.forEach((style: any) => {
-        data.styleTokens.text.push(serializeTextStyle(style));
+        data.styleTokens.text.push({
+          id: style.id,
+          key: style.key,
+          isRemote: style.remote,
+          ...serializeTextStyle(style)
+        });
       });
 
       localEffectStyles.forEach((style: any) => {
-        data.styleTokens.effects.push(serializeEffectStyle(style));
+        data.styleTokens.effects.push({
+          id: style.id,
+          key: style.key,
+          isRemote: style.remote,
+          ...serializeEffectStyle(style)
+        });
       });
 
       localGridStyles.forEach((style: any) => {
-        data.styleTokens.grids.push(serializeGridStyle(style));
+        data.styleTokens.grids.push({
+          id: style.id,
+          key: style.key,
+          isRemote: style.remote,
+          ...serializeGridStyle(style)
+        });
       });
     } catch (e) {
       console.error("Erro ao buscar estilos locais", e);
@@ -560,17 +596,37 @@ export const scanProject = async (selectedPageIds: string[]) => {
         try {
           const variable = await figma.variables.getVariableByIdAsync(id);
           if (variable) {
+            let collectionName = 'Unknown Collection';
+            let collectionKey = undefined;
+            try {
+              const col = await figma.variables.getVariableCollectionByIdAsync(variable.variableCollectionId);
+              if (col) {
+                collectionName = col.name;
+                collectionKey = col.key;
+                col.modes.forEach(m => {
+                  modeMap[m.modeId] = m.name;
+                });
+              }
+            } catch(e){}
+
             const valuesByMode = Object.entries(variable.valuesByMode || {}).map(([mode, rawValue]) => ({
               mode,
+              modeName: modeMap[mode] || mode,
               value: formatVariableValue(rawValue, variable.resolvedType, localVars),
             }));
 
             const entry: any = {
+              id: variable.id,
+              key: variable.key,
               name: `[REMOTE] ${variable.name}`,
               type: variable.resolvedType,
               description: variable.description || '',
               valuesByMode,
-              isRemote: true
+              isRemote: true,
+              collectionName,
+              collectionKey,
+              scopes: variable.scopes,
+              codeSyntax: variable.codeSyntax,
             };
             
             data.designTokens.variables.push(entry);
