@@ -89,10 +89,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 });
 
-    // ÔöÇÔöÇ Plugin Collapse / Expand ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    // ── Plugin Collapse / Expand ──────────────────────────────────────────
     let isCollapsed = false;
     const FULL_W = 480, FULL_H = 750;
-    // 44px = altura do header (py-2 top + py-2 bottom + conteúdo Ôëê 44px)
+    // 44px = altura do header (py-2 top + py-2 bottom + conteúdo ≈ 44px)
     const MINI_H = 44;
 
     function toggleCollapse() {
@@ -1215,15 +1215,11 @@ document.addEventListener('DOMContentLoaded', () => {
       container.innerHTML = "";
 
       const sections = [
-        { title: "Cores", items: data.colors, type: "colors", icon: "palette" },
-        { title: "Tipografia", items: data.typography, type: "typography", icon: "type" },
-        { title: "Espaçamentos", items: data.spacing, type: "spacing", icon: "maximize" },
-        { title: "Bordas e Raios", items: data.borders, type: "borders", icon: "square" },
-        { title: "Efeitos (Sombra/Blur)", items: data.effects, type: "effects", icon: "layers" },
-        { title: "Grids de Layout", items: data.grids, type: "grids", icon: "grid" },
-        { title: "Alinhamentos", items: data.alignment, type: "alignment", icon: "align-center" },
         { title: "Componentes", items: data.components, type: "components", icon: "box" },
-        { title: "Ícones", items: data.icons, type: "icons", icon: "image" }
+        { title: "Ícones", items: data.icons, type: "icons", icon: "image" },
+        { title: "Tipografia", items: data.typography, type: "typography", icon: "type" },
+        { title: "Frames e Layouts", items: data.frames, type: "frames", icon: "layout" },
+        { title: "Vetores", items: data.vectors, type: "vectors", icon: "pen-tool" }
       ];
 
       sections.forEach(section => {
@@ -1421,8 +1417,79 @@ document.addEventListener('DOMContentLoaded', () => {
       div.className = "mb-3 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-xl overflow-hidden shadow-sm";
 
       const count = section.items.length;
-      const nonDS = section.items.filter(i => i.isDS !== true).length;
-      const badge = (handoffData.step2.isAuditEnabled && nonDS > 0) ? `<span class="px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-900/30 text-red-500 text-[10px] font-bold">${nonDS} fora do DSC</span>` : "";
+      
+      let issuesCount = 0;
+      let adjustmentsCount = 0;
+
+      if (handoffData.step2.isAuditEnabled) {
+        section.items.forEach(item => {
+           if (item.properties && item.properties.length > 0) {
+             const totalProps = item.properties.length;
+             const irregulars = item.properties.filter(p => p.isDS === false).length;
+             
+             if (irregulars === 0) {
+               item.componentStatus = "ok";
+             } else {
+               // Refined User Rule:
+               // 1. If total < 3 properties, any error makes it "Fora do Padrão" (Red)
+               // 2. If total >= 3 properties:
+               //    - If irregulars is a minority (e.g. 1 in 3, 1 in 4, 2 in 5 -> roughly < 50%), it's an "Ajuste" (Yellow)
+               //    - Otherwise it's "Fora do Padrão" (Red)
+               
+               if (totalProps < 3) {
+                 issuesCount++;
+                 item.componentStatus = "error";
+               } else {
+                 // Threshold for "Ajuste": less than half the properties are wrong
+                 if (irregulars < (totalProps / 2)) {
+                   adjustmentsCount++;
+                   item.componentStatus = "warning";
+                 } else {
+                   issuesCount++;
+                   item.componentStatus = "error";
+                 }
+               }
+             }
+           } else {
+             // For items without specific audit properties (like some icons or frames)
+             if (item.isDS === false) {
+               issuesCount++;
+               item.componentStatus = "error";
+             } else if (item.isDS === "warning") {
+               adjustmentsCount++;
+               item.componentStatus = "warning";
+             } else {
+               item.componentStatus = "ok";
+             }
+           }
+        });
+      }
+
+      const issuesBadge = issuesCount > 0 ? `<span class="px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-900/30 text-red-500 text-[10px] font-bold">${issuesCount} Irregulares</span>` : "";
+      const adjustmentsBadge = adjustmentsCount > 0 ? `<span class="px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-500 text-[10px] font-bold">${adjustmentsCount} Ajustes</span>` : "";
+      const badges = (issuesBadge || adjustmentsBadge) ? `<div class="flex gap-1.5">${issuesBadge}${adjustmentsBadge}</div>` : "";
+
+      const SEARCH_THRESHOLD = 10;
+      const showSearch = count > SEARCH_THRESHOLD;
+      const uid = `${section.type}-${Math.random().toString(36).slice(2, 8)}`;
+      const searchId = `search-${uid}`;
+      const gridId = `grid-${uid}`;
+      const emptyId = `empty-${uid}`;
+
+      const searchHtml = showSearch ? `
+        <div class="px-3 pb-2 pt-3 border-b border-gray-50 dark:border-dark-line">
+          <div class="relative">
+            <i data-lucide="search" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300 pointer-events-none"></i>
+            <input
+              id="${searchId}"
+              type="text"
+              placeholder="Buscar em ${section.title}..."
+              class="w-full pl-8 pr-3 py-1.5 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0070af]/30 focus:border-[#0070af] transition-all"
+              oninput="filterSpecItems('${gridId}', '${emptyId}', this.value)"
+            />
+          </div>
+        </div>
+      ` : "";
 
       div.innerHTML = `
         <button onclick="toggleAccordion(this)" title="Expandir/Recolher" aria-label="Expandir seção" class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors">
@@ -1433,46 +1500,105 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="text-left">
               <div class="flex items-center gap-2">
                 <p class="text-[13px] font-bold text-slate-800 dark:text-white">${section.title}</p>
-                ${badge}
+                ${badges}
               </div>
-              <p class="text-[10px] text-gray-400">${count} itens encontrados</p>
+              <p class="text-[10px] text-gray-400">${count} elementos encontrados</p>
             </div>
           </div>
           <i data-lucide="chevron-down" class="w-4 h-4 text-gray-300 transition-transform"></i>
         </button>
         <div data-accordion-content class="accordion-content hidden border-t border-gray-50 dark:border-dark-line">
-          <div class="p-2 grid grid-cols-2 gap-2">
-            ${section.items.map(item => createSpecItem(item, section.type)).join("")}
+          ${searchHtml}
+          <div id="${gridId}" class="p-2 grid grid-cols-2 gap-2">
+            ${section.items.map(item => `<div class="spec-item-wrapper col-span-2" data-name="${(item.name || '').toLowerCase().replace(/"/g, '&quot;')}">${createSpecItem(item, section.type)}</div>`).join("")}
+          </div>
+          <div id="${emptyId}" class="hidden py-6 text-center text-[11px] text-gray-400 dark:text-gray-500">
+            <i data-lucide="search-x" class="w-6 h-6 mx-auto mb-2 text-gray-300 dark:text-gray-600"></i>
+            Nenhum item encontrado para esta busca.
           </div>
         </div>
       `;
       return div;
     }
 
+    function filterSpecItems(gridId, emptyId, query) {
+      const grid = document.getElementById(gridId);
+      const emptyMsg = document.getElementById(emptyId);
+      if (!grid) return;
+
+      const term = (query || '').toLowerCase().trim();
+      const wrappers = grid.querySelectorAll('.spec-item-wrapper');
+      let visible = 0;
+
+      wrappers.forEach(wrapper => {
+        const name = wrapper.getAttribute('data-name') || '';
+        const match = !term || name.includes(term);
+        wrapper.style.display = match ? '' : 'none';
+        if (match) visible++;
+      });
+
+      if (emptyMsg) {
+        emptyMsg.classList.toggle('hidden', visible > 0 || !term);
+      }
+    }
+    window.filterSpecItems = filterSpecItems;
+
 
     function createSpecItem(item, type) {
       let preview = "";
-      if (type === "colors") {
-        preview = `<div class="w-6 h-6 rounded border border-gray-100" style="background-color: ${item.hex}"></div>`;
-      } else if (["spacing", "borders", "grids", "alignment"].includes(type)) {
-        preview = `<div class="w-8 h-8 flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 rounded text-[#0070af]"><span class="text-[8px] font-bold text-center leading-tight break-all px-1">${item.value || ""}</span></div>`;
-      } else if (type === "effects") {
-        preview = `<div class="w-8 h-8 flex items-center justify-center bg-gray-50 dark:bg-dark-bg rounded text-gray-300 shadow-md border border-gray-200"><i data-lucide="layers" class="w-4 h-4"></i></div>`;
-      } else if (item.preview) {
+      if (item.preview) {
         const base64 = bytesToBase64(item.preview);
         preview = `<img src="data:image/png;base64,${base64}" class="w-8 h-8 object-contain bg-gray-50 dark:bg-dark-bg rounded p-1" />`;
       } else {
-        preview = `<div class="w-8 h-8 flex items-center justify-center bg-gray-50 dark:bg-dark-bg rounded text-gray-300"><i data-lucide="box" class="w-4 h-4"></i></div>`;
+        const iconName = type === "components" ? "box" : type === "icons" ? "image" : type === "typography" ? "type" : type === "frames" ? "layout" : "pen-tool";
+        preview = `<div class="w-8 h-8 flex items-center justify-center bg-gray-50 dark:bg-dark-bg rounded text-gray-300"><i data-lucide="${iconName}" class="w-4 h-4"></i></div>`;
       }
 
-      const dsStatus = handoffData.step2.isAuditEnabled ? (item.isDS === true ?
+      // Use the calculated componentStatus
+      const status = item.componentStatus || (item.isDS === true ? "ok" : (item.isDS === "warning" ? "warning" : "error"));
+
+      const dsStatus = handoffData.step2.isAuditEnabled ? (status === "ok" ?
         `<span class="flex items-center gap-1 text-[#10b981]"><i data-lucide="check-circle" class="w-2.5 h-2.5"></i>DSC</span>` :
-        (item.isDS === "warning" ? 
-        `<span class="flex items-center gap-1 text-amber-500 font-bold"><i data-lucide="alert-triangle" class="w-2.5 h-2.5"></i>ATENÇÃO</span>` : 
-        `<span class="flex items-center gap-1 text-red-400 font-bold"><i data-lucide="alert-circle" class="w-2.5 h-2.5"></i>FORA</span>`)) : "";
+        (status === "warning" ? 
+          `<span class="flex items-center gap-1 text-amber-500 font-bold"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>AJUSTES</span>` :
+          `<span class="flex items-center gap-1 text-red-400 font-bold"><i data-lucide="alert-circle" class="w-2.5 h-2.5"></i>FORA DO PADRÃO</span>`)) : "";
+
+      let propsHtml = "";
+      if (item.properties && item.properties.length > 0) {
+        propsHtml = `<div class="mt-2 space-y-1 border-t border-gray-100 dark:border-dark-line pt-2">`;
+        item.properties.forEach(p => {
+           const pStatus = handoffData.step2.isAuditEnabled ? 
+             (p.isDS === true ? `<span class="text-[#10b981]"><i data-lucide="check" class="w-3 h-3"></i></span>` : 
+              (p.isDS === "warning" ? `<span class="text-amber-500"><i data-lucide="alert-triangle" class="w-3 h-3"></i></span>` : 
+               `<span class="text-red-400"><i data-lucide="x" class="w-3 h-3"></i></span>`)) : "";
+           
+           let icon = "circle";
+           if (p.type === "spacing") icon = "move-horizontal";
+           else if (p.type === "typography") icon = "type";
+           else if (p.type === "strokeWeight") icon = "maximize";
+           else if (p.type === "radius") icon = "corner-up-left";
+           else if (p.type === "layout") icon = "box";
+           else if (p.type === "variant") icon = "layers";
+           else if (p.type === "effect") icon = "sparkles";
+           else if (p.type === "color" || p.type === "stroke") icon = "palette";
+
+           const colorPrev = (p.type === "color" || p.type === "stroke") ? 
+             `<div class="w-3 h-3 rounded-full border border-gray-200 inline-block align-middle" style="background-color: ${p.value}"></div>` : 
+             `<i data-lucide="${icon}" class="w-3 h-3 text-gray-300"></i>`;
+
+           propsHtml += `<div class="flex items-center justify-between text-[9px] text-gray-500 dark:text-gray-400">
+             <div class="flex items-center gap-1.5 truncate" title="${p.name}">
+               <div class="w-3 h-3 flex items-center justify-center">${colorPrev}</div>
+               <span class="truncate">${p.label || p.type}: <span class="font-bold text-slate-600 dark:text-gray-300">${p.value}</span></span>
+             </div>
+             ${pStatus}
+           </div>`;
+        });
+        propsHtml += `</div>`;
+      }
 
       return `
-        <div class="p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#0070af] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" title="Clicar para localizar no board">
+        <div class="col-span-2 p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#0070af] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" title="Clicar para localizar no board">
           <div class="flex items-center gap-2 mb-1 pointer-events-none">
             ${preview}
             <div class="flex-1 min-w-0">
@@ -1482,6 +1608,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
           </div>
+          ${propsHtml}
         </div>
       `;
     }
@@ -1491,13 +1618,37 @@ document.addEventListener('DOMContentLoaded', () => {
       let total = 0;
       let dsCount = 0;
       const issues = [];
+      const adjustments = [];
 
       Object.keys(data).forEach(cat => {
+        if (cat === "frameJson") return;
         if (Array.isArray(data[cat])) {
-          data[cat].forEach(item => {
-            total++;
-            if (item.isDS === true) dsCount++;
-            else issues.push({ cat: cat.toUpperCase(), name: item.name });
+          data[cat].forEach(element => {
+            if (element.properties && element.properties.length > 0) {
+              const totalProps = element.properties.length;
+              const irregulars = element.properties.filter(p => p.isDS === false).length;
+
+              // Consistency Rule:
+              // - If total < 3: any error is an issue (Red)
+              // - If total >= 3: errors < 50% is adjustment (Yellow), else issue (Red)
+              const isAdjustmentGroup = (totalProps >= 3 && irregulars > 0 && irregulars < (totalProps / 2));
+
+              element.properties.forEach(p => {
+                total++;
+                if (p.isDS === true) {
+                  dsCount++;
+                } else if (isAdjustmentGroup || p.isDS === "warning") {
+                  adjustments.push({ cat: cat.toUpperCase(), name: `${element.name} -> ${p.name}` });
+                } else {
+                  issues.push({ cat: cat.toUpperCase(), name: `${element.name} -> ${p.name}` });
+                }
+              });
+            } else if (cat === "components" || cat === "icons") {
+              total++;
+              if (element.isDS === true) dsCount++;
+              else if (element.isDS === "warning") adjustments.push({ cat: cat.toUpperCase(), name: element.name });
+              else issues.push({ cat: cat.toUpperCase(), name: element.name });
+            }
           });
         }
       });
@@ -1506,7 +1657,8 @@ document.addEventListener('DOMContentLoaded', () => {
         total,
         dsCount,
         adoption: total > 0 ? Math.round((dsCount / total) * 100) : 0,
-        issues
+        issues,
+        adjustments
       };
     }
 
@@ -1519,8 +1671,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const adoption = summary.adoption;
       const issues = summary.issues;
+      const adjustments = summary.adjustments;
       const total = summary.total;
-      const dsCount = summary.dsCount;
+      
       const statusColor = adoption > 90 ? "text-[#10b981]" : (adoption > 70 ? "text-amber-500" : "text-red-500");
       const statusBg = adoption > 90 ? "bg-green-50 dark:bg-green-900/20" : (adoption > 70 ? "bg-amber-50 dark:bg-amber-900/20" : "bg-red-50 dark:bg-red-900/20");
 
@@ -1538,29 +1691,39 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
         
-        <div class="grid grid-cols-2 gap-2 mb-3">
+        <div class="grid grid-cols-3 gap-2 mb-3">
           <div class="bg-white/50 dark:bg-black/20 p-2 rounded-xl">
-            <p class="text-[10px] text-slate-500 dark:text-slate-400">Total Analisado</p>
-            <p class="text-[14px] font-bold text-slate-800 dark:text-white">${total}</p>
+            <p class="text-[9px] text-slate-500 dark:text-slate-400">Analisado</p>
+            <p class="text-[13px] font-bold text-slate-800 dark:text-white">${total}</p>
           </div>
           <div class="bg-white/50 dark:bg-black/20 p-2 rounded-xl">
-            <p class="text-[10px] text-slate-500 dark:text-slate-400">Pendências</p>
-            <p class="text-[14px] font-bold text-red-500">${issues.length}</p>
+            <p class="text-[9px] text-slate-500 dark:text-slate-400">Irregulares</p>
+            <p class="text-[13px] font-bold text-red-500">${issues.length}</p>
+          </div>
+          <div class="bg-white/50 dark:bg-black/20 p-2 rounded-xl">
+            <p class="text-[9px] text-slate-500 dark:text-slate-400">Ajustes</p>
+            <p class="text-[13px] font-bold text-amber-500">${adjustments.length}</p>
           </div>
         </div>
 
         ${issues.length > 0 ? `
           <div class="flex items-center gap-2 text-red-500 text-[11px] font-bold py-2">
             <i data-lucide="alert-circle" class="w-4 h-4"></i>
-            Atenção: Foram encontrados itens fora do padrão DSC.
+            <span>Itens Fora do Padrão detectados</span>
+          </div>
+        ` : (adjustments.length > 0 ? `
+           <div class="flex items-center gap-2 text-amber-500 text-[11px] font-bold py-2">
+            <i data-lucide="help-circle" class="w-4 h-4"></i>
+            <span>Existem ajustes leves pendentes</span>
           </div>
         ` : `
           <div class="flex items-center gap-2 text-[#10b981] text-[11px] font-bold py-2">
             <i data-lucide="check-circle" class="w-4 h-4"></i>
-            Parabéns! Todos os itens estão 100% integrados ao DSC.
+            <span>Parabéns! Design 100% aderente ao padrão.</span>
           </div>
-        `}
+        `)}
       `;
+      
       container.prepend(auditCard);
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
@@ -1980,7 +2143,7 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
     }
 
 
-    // ÔöÇÔöÇ Category Management ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    // ── Category Management ──────────────────────────────────────────────
     const DEFAULT_CATEGORIES = [
       { label: "Cenário de exceção", value: "cenario" },
       { label: "Informação extra", value: "info" },

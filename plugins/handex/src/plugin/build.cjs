@@ -45,6 +45,7 @@ const html = `<!doctype html>
 <html lang="pt-BR">
 
 <head>
+  <meta charset="UTF-8">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -122,7 +123,7 @@ ${css}
         <h1 class="font-bold text-[#1E293B] dark:text-white text-[12px] tracking-[0.15em] uppercase">
           HANDEX
         </h1>
-        <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v2.0.0</span>
+        <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v3.0.0</span>
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <div id="autosave-status" role="status" aria-live="polite" class="flex items-center gap-1.5 opacity-40 hover:opacity-100 transition-opacity cursor-help" title="Seu progresso é salvo automaticamente localmente">

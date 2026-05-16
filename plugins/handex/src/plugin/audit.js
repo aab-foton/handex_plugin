@@ -1,43 +1,31 @@
 export const frameJsonTemplate = () => ({
-  designTokens: { variables: [] },
-  styleTokens: { paint: [], text: [], effect: [], grid: [] },
-  detached: []
-});
-
-export function registerToFrameJson(frameJson, category, name, value, tokenKey, styleKey, layerName, isMatchedByValue) {
-  if (tokenKey) {
-    if (!frameJson.designTokens.variables.some(v => v.key === tokenKey)) {
-      frameJson.designTokens.variables.push({ key: tokenKey, name: name, value: value, type: category, layerName: layerName });
-    }
-  } else if (styleKey || isMatchedByValue === true) {
-    let styleType = category === "colors" ? "paint" : category === "typography" ? "text" : category === "effects" ? "effect" : category === "grids" ? "grid" : category;
-    frameJson.styleTokens[styleType] = frameJson.styleTokens[styleType] || [];
-    const searchKey = styleKey || name;
-    if (!frameJson.styleTokens[styleType].some(v => v.key === searchKey || v.name === name)) {
-      frameJson.styleTokens[styleType].push({ key: searchKey, name: name, value: value, layerName: layerName, softMatch: !styleKey });
-    }
-  } else {
-    frameJson.detached.push({ category: category, name: name, value: value, layerName: layerName });
+  elements: {
+    components: [],
+    icons: [],
+    typography: [],
+    frames: [],
+    vectors: []
   }
-}
+});
 
 export function isDS(name, value, type, figmaKey, referenceTokens, isAudit, frameJson, nodeName) {
   if (!name) return false;
   const lowerName = name.toLowerCase();
   
-  // Manual bypass via naming convention
-  if (lowerName.includes("[dsc]") || lowerName.includes("[ dsc]")) return true;
+  // 1. Check if it's an official [dsc] component/element
+  const isOfficial = lowerName.includes("[dsc]") || lowerName.includes("[ dsc]");
   
   // Audit Reference Check
   if (isAudit && referenceTokens) {
+    // 2. Check for official Variable/Style link (High precision)
     if (figmaKey) {
-       // 1. Check variables
+       // Variables
        if (referenceTokens.designTokens && referenceTokens.designTokens.variables) {
          const foundVar = referenceTokens.designTokens.variables.find(t => t.key === figmaKey || t.$key === figmaKey);
          if (foundVar) return true;
        }
        
-       // 2. Check styles
+       // Styles
        if (referenceTokens.styleTokens) {
          for (const styleType in referenceTokens.styleTokens) {
             const stylesArray = referenceTokens.styleTokens[styleType];
@@ -49,10 +37,10 @@ export function isDS(name, value, type, figmaKey, referenceTokens, isAudit, fram
        }
     }
 
-    // Try specific category first
+    // 3. Try to match by Value or Name (Soft match -> Warning)
     const refList = referenceTokens[type] || referenceTokens[type.replace('s', '')];
     
-    const checkMatch = (list) => {
+    const checkSoftMatch = (list) => {
       if (!list || !Array.isArray(list)) return false;
       return list.some(ref => {
         const rName = (typeof ref === 'string' ? ref : (ref.name || ref.label || "")).toLowerCase();
@@ -64,37 +52,33 @@ export function isDS(name, value, type, figmaKey, referenceTokens, isAudit, fram
         // Match by value
         if (rValue && targetValue && (rValue === targetValue || targetValue.includes(rValue))) return true;
         
-        // Special heuristic for typography: if font family and size match a known preset
+        // Typography heuristic
         if (type === "typography" && targetValue.includes("px") && rValue) {
-          // targetValue usually looks like "caixa std regular (14px)"
-          // rValue might have "14px" or "14"
           const sizeMatch = targetValue.match(/\((\d+(\.\d+)?)px\)/);
           if (sizeMatch && (rValue.includes(sizeMatch[1] + "px") || rName.includes(sizeMatch[1]))) {
             if (targetValue.includes("caixa std")) return true;
           }
         }
-        
         return false;
       });
     };
 
-    if (checkMatch(refList)) return true;
+    if (checkSoftMatch(refList)) return "warning";
 
-    // Fallback: Check if it exists in ANY category (global match)
+    // Global soft match
     for (const cat in referenceTokens) {
-      if (checkMatch(referenceTokens[cat])) return true;
+      if (checkSoftMatch(referenceTokens[cat])) return "warning";
     }
     
-    // Fallback for typography: Official font but wrong size/weight
-    if (type === "typography") {
-      const targetValue = String(value || "").toLowerCase();
-      if (targetValue.includes("caixa std")) return "warning";
-    }
-
-    // Fallback for other categories: if it has DS naming conventions but didn't match perfectly
+    // Naming conventions / heuristic warnings
+    if (type === "typography" && lowerName.includes("caixa std")) return "warning";
     if (lowerName.includes("/") || lowerName.includes("shadow") || lowerName.includes("[") || lowerName.includes("]")) {
       return "warning";
     }
   }
+
+  // If it's an official element but property is not linked, it's a warning by default
+  if (isOfficial) return "warning";
+
   return false;
 }

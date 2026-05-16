@@ -1,30 +1,18 @@
 (() => {
   // src/plugin/audit.js
   var frameJsonTemplate = () => ({
-    designTokens: { variables: [] },
-    styleTokens: { paint: [], text: [], effect: [], grid: [] },
-    detached: []
-  });
-  function registerToFrameJson(frameJson, category, name, value, tokenKey, styleKey, layerName, isMatchedByValue) {
-    if (tokenKey) {
-      if (!frameJson.designTokens.variables.some((v) => v.key === tokenKey)) {
-        frameJson.designTokens.variables.push({ key: tokenKey, name, value, type: category, layerName });
-      }
-    } else if (styleKey || isMatchedByValue === true) {
-      let styleType = category === "colors" ? "paint" : category === "typography" ? "text" : category === "effects" ? "effect" : category === "grids" ? "grid" : category;
-      frameJson.styleTokens[styleType] = frameJson.styleTokens[styleType] || [];
-      const searchKey = styleKey || name;
-      if (!frameJson.styleTokens[styleType].some((v) => v.key === searchKey || v.name === name)) {
-        frameJson.styleTokens[styleType].push({ key: searchKey, name, value, layerName, softMatch: !styleKey });
-      }
-    } else {
-      frameJson.detached.push({ category, name, value, layerName });
+    elements: {
+      components: [],
+      icons: [],
+      typography: [],
+      frames: [],
+      vectors: []
     }
-  }
+  });
   function isDS(name, value, type, figmaKey, referenceTokens, isAudit, frameJson, nodeName) {
     if (!name) return false;
     const lowerName = name.toLowerCase();
-    if (lowerName.includes("[dsc]") || lowerName.includes("[ dsc]")) return true;
+    const isOfficial = lowerName.includes("[dsc]") || lowerName.includes("[ dsc]");
     if (isAudit && referenceTokens) {
       if (figmaKey) {
         if (referenceTokens.designTokens && referenceTokens.designTokens.variables) {
@@ -42,7 +30,7 @@
         }
       }
       const refList = referenceTokens[type] || referenceTokens[type.replace("s", "")];
-      const checkMatch = (list) => {
+      const checkSoftMatch = (list) => {
         if (!list || !Array.isArray(list)) return false;
         return list.some((ref) => {
           const rName = (typeof ref === "string" ? ref : ref.name || ref.label || "").toLowerCase();
@@ -59,18 +47,16 @@
           return false;
         });
       };
-      if (checkMatch(refList)) return true;
+      if (checkSoftMatch(refList)) return "warning";
       for (const cat in referenceTokens) {
-        if (checkMatch(referenceTokens[cat])) return true;
+        if (checkSoftMatch(referenceTokens[cat])) return "warning";
       }
-      if (type === "typography") {
-        const targetValue = String(value || "").toLowerCase();
-        if (targetValue.includes("caixa std")) return "warning";
-      }
+      if (type === "typography" && lowerName.includes("caixa std")) return "warning";
       if (lowerName.includes("/") || lowerName.includes("shadow") || lowerName.includes("[") || lowerName.includes("]")) {
         return "warning";
       }
     }
+    if (isOfficial) return "warning";
     return false;
   }
 
@@ -188,6 +174,18 @@
               node.textAutoResize = "HEIGHT";
             }
           }
+        }, getIconSvg = function(type) {
+          const icons = {
+            color: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a9 9 0 1 1 0-18c4.97 0 9 3.582 9 8 0 1.035-.84 1.875-1.875 1.875H16.5c-1.035 0-1.875.84-1.875 1.875v.375c0 1.035.84 1.875 1.875 1.875H18a3 3 0 0 0 3-3"/></svg>',
+            typography: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
+            spacing: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M10 12h12"/><path d="m19 15 3-3-3-3"/></svg>',
+            radius: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 18-4-4 4-4"/><path d="M20 14c-4.4 0-8-3.6-8-8"/></svg>',
+            layout: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>',
+            variant: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>',
+            effect: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>',
+            stroke: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/></svg>'
+          };
+          return icons[type] || icons["layout"];
         }, createSection = function(parent, titleText) {
           const section = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
           section.name = "Section: " + titleText;
@@ -452,62 +450,91 @@
             const sec = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
             sec.name = "Column: " + title;
             sec.cornerRadius = 16;
-            sec.resize(252, 100);
+            sec.resize(280, 100);
             sec.primaryAxisSizingMode = "AUTO";
             sec.counterAxisSizingMode = "FIXED";
-            const titleNode = createText(title, 16, "Bold", { r: 0, g: 0.35, b: 0.79 });
+            const titleNode = createText(title, 18, "Bold", { r: 0, g: 0.35, b: 0.79 });
             sec.appendChild(titleNode);
             setFillAndHug(titleNode);
-            const listContainer = createFrame("VERTICAL", 0, 8);
+            const listContainer = createFrame("VERTICAL", 0, 12);
             sec.appendChild(listContainer);
             setFillAndHug(listContainer);
             items.forEach((item) => {
-              const row = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
-              row.name = "Item: " + item.name;
-              row.cornerRadius = 8;
-              row.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
-              row.strokeWeight = 1;
-              row.counterAxisAlignItems = "CENTER";
-              listContainer.appendChild(row);
-              setFillAndHug(row);
-              if (type === "color") {
-                const swatch = figma.createRectangle();
-                swatch.resize(24, 24);
-                swatch.cornerRadius = 6;
-                swatch.fills = [{ type: "SOLID", color: hexToRgb(item.hex) }];
-                row.appendChild(swatch);
-              } else if (["spacing", "borders", "grids", "alignment", "effects"].includes(type)) {
-                const placeholder = createFrame("VERTICAL", 0, 0, { r: 0.94, g: 0.96, b: 0.98 });
-                placeholder.resize(24, 24);
-                placeholder.cornerRadius = 6;
-                placeholder.primaryAxisAlignItems = "CENTER";
-                placeholder.counterAxisAlignItems = "CENTER";
-                const innerText = createText((item.value || "").substring(0, 3), 8, "Bold", { r: 0, g: 0.35, b: 0.79 });
-                placeholder.appendChild(innerText);
-                row.appendChild(placeholder);
-              } else {
-                const placeholder = createFrame("VERTICAL", 4, 0, { r: 0.94, g: 0.96, b: 0.98 });
-                placeholder.resize(24, 24);
-                placeholder.cornerRadius = 6;
-                row.appendChild(placeholder);
+              const elCard = createFrame("VERTICAL", 16, 12, { r: 0.98, g: 0.99, b: 1 });
+              elCard.name = "Element: " + item.name;
+              elCard.cornerRadius = 12;
+              elCard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.96 } }];
+              elCard.strokeWeight = 1;
+              listContainer.appendChild(elCard);
+              setFillAndHug(elCard);
+              const headerRow = createFrame("HORIZONTAL", 0, 12);
+              headerRow.counterAxisAlignItems = "CENTER";
+              elCard.appendChild(headerRow);
+              setFillAndHug(headerRow);
+              if (item.preview) {
+                try {
+                  const rect = figma.createRectangle();
+                  rect.resize(32, 32);
+                  rect.fills = [{ type: "IMAGE", imageHash: figma.createImage(item.preview).hash, scaleMode: "FIT" }];
+                  rect.cornerRadius = 4;
+                  headerRow.appendChild(rect);
+                } catch (e) {
+                }
               }
-              const info = createFrame("VERTICAL", 0, 2);
-              row.appendChild(info);
-              setFillAndHug(info);
-              const iName = createText(item.name, 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-              info.appendChild(iName);
-              setFillAndHug(iName);
-              if (item.value) {
-                const iVal = createText(item.value, 10, "Regular", { r: 0.47, g: 0.52, b: 0.58 });
-                info.appendChild(iVal);
-                setFillAndHug(iVal);
+              const iName = createText(item.name, 13, "Bold", { r: 0.1, g: 0.15, b: 0.25 });
+              iName.layoutGrow = 1;
+              headerRow.appendChild(iName);
+              const status = item.componentStatus || (item.isDS === true ? "ok" : item.isDS === "warning" ? "warning" : "error");
+              if (data.isAudit) {
+                const statusColors = {
+                  ok: { bg: { r: 0.9, g: 0.98, b: 0.94 }, text: { r: 0.05, g: 0.5, b: 0.3 }, label: "DSC" },
+                  warning: { bg: { r: 1, g: 0.97, b: 0.9 }, text: { r: 0.7, g: 0.4, b: 0 }, label: "AJUSTE" },
+                  error: { bg: { r: 1, g: 0.93, b: 0.93 }, text: { r: 0.8, g: 0.2, b: 0.2 }, label: "FORA" }
+                };
+                const config = statusColors[status] || statusColors.error;
+                const badge = createFrame("HORIZONTAL", 8, 4, config.bg);
+                badge.cornerRadius = 6;
+                badge.appendChild(createText(config.label, 9, "Bold", config.text));
+                headerRow.appendChild(badge);
               }
-              const badge = createFrame("HORIZONTAL", 6, 2, { r: 1, g: 1, b: 1 });
-              badge.cornerRadius = 4;
-              badge.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.2, b: 0.2 }, opacity: 0.2 }];
-              const badgeText = createText("Token", 8, "Bold", { r: 0.9, g: 0.2, b: 0.2 });
-              badge.appendChild(badgeText);
-              row.appendChild(badge);
+              if (item.properties && item.properties.length > 0) {
+                const propsContainer = createFrame("VERTICAL", 0, 6);
+                elCard.appendChild(propsContainer);
+                setFillAndHug(propsContainer);
+                item.properties.forEach((prop) => {
+                  const pRow = createFrame("HORIZONTAL", 0, 8);
+                  pRow.counterAxisAlignItems = "CENTER";
+                  propsContainer.appendChild(pRow);
+                  setFillAndHug(pRow);
+                  try {
+                    let setSvgColor = function(node, color) {
+                      if ("fills" in node) node.fills = [{ type: "SOLID", color }];
+                      if ("strokes" in node) node.strokes = [{ type: "SOLID", color }];
+                      if ("children" in node) node.children.forEach((c) => setSvgColor(c, color));
+                    };
+                    const iconSvg = getIconSvg(prop.type);
+                    const iconNode = figma.createNodeFromSvg(iconSvg);
+                    iconNode.resize(12, 12);
+                    const iconColor = prop.isDS === true ? { r: 0.1, g: 0.6, b: 0.3 } : prop.isDS === "warning" ? { r: 0.8, g: 0.5, b: 0 } : { r: 0.9, g: 0.3, b: 0.3 };
+                    setSvgColor(iconNode, iconColor);
+                    pRow.appendChild(iconNode);
+                  } catch (e) {
+                    const dot = figma.createEllipse();
+                    dot.resize(6, 6);
+                    dot.fills = [{ type: "SOLID", color: prop.isDS === true ? { r: 0.2, g: 0.8, b: 0.4 } : { r: 0.9, g: 0.3, b: 0.3 } }];
+                    pRow.appendChild(dot);
+                  }
+                  const pLabel = createText(`${prop.label || prop.type}:`, 10, "Medium", { r: 0.4, g: 0.45, b: 0.5 });
+                  pRow.appendChild(pLabel);
+                  const pVal = createText(prop.value, 10, "Bold", { r: 0.2, g: 0.25, b: 0.3 });
+                  pVal.layoutGrow = 1;
+                  pRow.appendChild(pVal);
+                  if (prop.isDS === true && prop.token) {
+                    const tBadge = createText(prop.token, 8, "Regular", { r: 0, g: 0.44, b: 0.69 });
+                    pRow.appendChild(tBadge);
+                  }
+                });
+              }
             });
             return sec;
           };
@@ -538,17 +565,13 @@
               }
             });
           }
-          const specsData = data.step2.specs || { colors: [], typography: [], components: [], icons: [], spacing: [], borders: [], effects: [], grids: [], alignment: [] };
+          const specsData = data.step2.specs || { components: [], icons: [], typography: [], frames: [], vectors: [] };
           const categories = [
-            { title: "Cores", items: specsData.colors, type: "color" },
+            { title: "Componentes", items: specsData.components, type: "components" },
+            { title: "\xCDcones", items: specsData.icons, type: "icons" },
             { title: "Tipografia", items: specsData.typography, type: "typography" },
-            { title: "Espa\xE7amentos", items: specsData.spacing, type: "spacing" },
-            { title: "Bordas e Corner Radius", items: specsData.borders, type: "borders" },
-            { title: "Efeitos (Shadow/Blur)", items: specsData.effects, type: "effects" },
-            { title: "Grids de Layout", items: specsData.grids, type: "grids" },
-            { title: "Alinhamentos", items: specsData.alignment, type: "alignment" },
-            { title: "Componentes", items: specsData.components, type: "component" },
-            { title: "\xCDcones", items: specsData.icons, type: "icon" }
+            { title: "Frames e Layouts", items: specsData.frames, type: "frames" },
+            { title: "Vetores", items: specsData.vectors, type: "vectors" }
           ];
           categories.forEach((cat) => {
             const sec = createSpecList(cat.title, cat.items, cat.type);
@@ -636,10 +659,21 @@
           const summaryText = createText(`Ader\xEAncia ao Design System: ${data.auditSummary.adoption}%`, 18, "Bold", data.auditSummary.adoption > 90 ? { r: 0, g: 0.5, b: 0 } : { r: 0.8, g: 0, b: 0 });
           auditBoard.appendChild(summaryText);
           setFillAndHug(summaryText);
+          const statsText = createText(`Resumo: ${data.auditSummary.issues.length} Fora do Padr\xE3o | ${data.auditSummary.adjustments.length} Ajustes`, 14, "Medium", { r: 0.4, g: 0.45, b: 0.5 });
+          auditBoard.appendChild(statsText);
+          setFillAndHug(statsText);
+          if (data.auditSummary.adjustments && data.auditSummary.adjustments.length > 0) {
+            const adjSection = createSection(auditBoard, "Ajustes Recomendados (Minorias)");
+            data.auditSummary.adjustments.slice(0, 10).forEach((adj) => {
+              const aRow = createText(`- [${adj.cat}] ${adj.name}`, 12, "Regular", { r: 0.7, g: 0.4, b: 0 });
+              adjSection.appendChild(aRow);
+              setFillAndHug(aRow);
+            });
+          }
           if (data.auditSummary.issues && data.auditSummary.issues.length > 0) {
-            const issueList = createSection(auditBoard, "Pend\xEAncias Encontradas");
+            const issueList = createSection(auditBoard, "Pend\xEAncias Cr\xEDticas (Fora do Padr\xE3o)");
             data.auditSummary.issues.slice(0, 20).forEach((issue) => {
-              const iRow = createText(`- [${issue.cat}] ${issue.name}`, 12);
+              const iRow = createText(`- [${issue.cat}] ${issue.name}`, 12, "Regular", { r: 0.8, g: 0.2, b: 0.2 });
               issueList.appendChild(iRow);
               setFillAndHug(iRow);
             });
@@ -868,269 +902,214 @@
       })();
     }
     if (msg.type === "scan-frame") {
-      let addSpec = function(map, key, data, nodeId) {
-        if (!map.has(key)) {
-          const newData = Object.assign({}, data, { layers: /* @__PURE__ */ new Set([data.layerName]), nodeId });
-          map.set(key, newData);
-        } else {
-          map.get(key).layers.add(data.layerName);
-        }
-      }, rgbToHex2 = function(r, g, b) {
+      let rgbToHex2 = function(r, g, b) {
         const toHex = (c) => {
           const hex = Math.round(c * 255).toString(16);
           return hex.length === 1 ? "0" + hex : hex;
         };
         return "#" + toHex(r) + toHex(g) + toHex(b);
+      }, getVar = function(n, p) {
+        if (!n.boundVariables) return null;
+        const v = n.boundVariables[p];
+        if (!v) return null;
+        const id = Array.isArray(v) ? v[0] && v[0].id : v.id;
+        if (!id) return null;
+        const variable = figma.variables.getVariableById(id);
+        return variable ? { name: variable.name, key: variable.key } : null;
+      }, extractNodeProperties = function(n) {
+        const props = [];
+        if ("fills" in n && Array.isArray(n.fills)) {
+          let styleName = null;
+          let styleKey = null;
+          if ("fillStyleId" in n && typeof n.fillStyleId === "string" && n.fillStyleId) {
+            const style = figma.getStyleById(n.fillStyleId);
+            if (style) {
+              styleName = style.name;
+              styleKey = style.key;
+            }
+          }
+          for (const fill of n.fills) {
+            if (fill.visible === false) continue;
+            if (fill.type === "SOLID" && fill.color) {
+              const hex = rgbToHex2(fill.color.r, fill.color.g, fill.color.b).toUpperCase();
+              const vInfo = getVar(n, "fills");
+              const name = vInfo && vInfo.name || styleName || hex;
+              const key = vInfo && vInfo.key || styleKey;
+              const ds = isDS(name, hex, "colors", key, referenceTokens, isAudit, frameJson, n.name);
+              props.push({ type: "color", name, value: hex, isDS: ds, key, variableKey: vInfo ? vInfo.key : null, styleKey, label: "Cor (Fill)" });
+            }
+          }
+        }
+        if (n.type === "TEXT") {
+          let styleName = null;
+          let styleKey = null;
+          if ("textStyleId" in n && typeof n.textStyleId === "string" && n.textStyleId !== figma.mixed && n.textStyleId) {
+            const style = figma.getStyleById(n.textStyleId);
+            if (style) {
+              styleName = style.name;
+              styleKey = style.key;
+            }
+          }
+          const family = n.fontName && n.fontName !== figma.mixed ? n.fontName.family : "Mixed";
+          const fontStyle = n.fontName && n.fontName !== figma.mixed ? n.fontName.style : "Mixed";
+          const size = n.fontSize && n.fontSize !== figma.mixed ? n.fontSize : "Mixed";
+          const name = styleName || `${family} ${fontStyle} (${size}px)`;
+          const ds = isDS(name, name, "typography", styleKey, referenceTokens, isAudit, frameJson, n.name);
+          props.push({ type: "typography", name, value: name, isDS: ds, key: styleKey, styleKey, label: "Tipografia" });
+        }
+        if ("layoutMode" in n && n.layoutMode !== "NONE") {
+          if (n.itemSpacing !== figma.mixed && n.itemSpacing > 0) {
+            const vInfo = getVar(n, "itemSpacing");
+            const val = `${n.itemSpacing}px`;
+            const name = vInfo && vInfo.name || val;
+            const ds = isDS(name, val, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
+            props.push({ type: "spacing", name, value: val, isDS: ds, key: vInfo ? vInfo.key : null, variableKey: vInfo ? vInfo.key : null, label: "Gap" });
+          }
+          const paddings = [
+            { prop: "paddingTop", label: "Top" },
+            { prop: "paddingRight", label: "Right" },
+            { prop: "paddingBottom", label: "Bottom" },
+            { prop: "paddingLeft", label: "Left" }
+          ];
+          paddings.forEach((p) => {
+            if (n[p.prop] > 0) {
+              const vInfo = getVar(n, p.prop);
+              const val = `${n[p.prop]}px`;
+              const name = vInfo && vInfo.name || val;
+              const ds = isDS(name, val, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
+              props.push({ type: "spacing", name, value: val, isDS: ds, key: vInfo ? vInfo.key : null, variableKey: vInfo ? vInfo.key : null, label: `Padding ${p.label}` });
+            }
+          });
+        }
+        if ("strokes" in n && Array.isArray(n.strokes) && n.strokes.length > 0) {
+          const visibleStroke = n.strokes.find((s) => s.visible !== false && (s.opacity === void 0 || s.opacity > 0));
+          if (visibleStroke && "strokeWeight" in n && n.strokeWeight !== figma.mixed && n.strokeWeight > 0) {
+            const vInfo = getVar(n, "strokeWeight");
+            const val = `${n.strokeWeight}px`;
+            const name = vInfo && vInfo.name || val;
+            const ds = val === "1px" || val === "0px" ? true : isDS(name, val, "borders", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
+            props.push({ type: "strokeWeight", name, value: val, isDS: ds, key: vInfo ? vInfo.key : null, variableKey: vInfo ? vInfo.key : null, label: "Border Width" });
+            if (visibleStroke.type === "SOLID") {
+              const hex = rgbToHex2(visibleStroke.color.r, visibleStroke.color.g, visibleStroke.color.b).toUpperCase();
+              let styleName = null;
+              let styleKey = null;
+              if ("strokeStyleId" in n && n.strokeStyleId) {
+                const st = figma.getStyleById(n.strokeStyleId);
+                if (st) {
+                  styleName = st.name;
+                  styleKey = st.key;
+                }
+              }
+              const sVar = getVar(n, "strokes");
+              const strokeName = sVar && sVar.name || styleName || hex;
+              const sDs = isDS(strokeName, hex, "colors", sVar && sVar.key || styleKey, referenceTokens, isAudit, frameJson, n.name);
+              props.push({ type: "stroke", name: strokeName, value: hex, isDS: sDs, key: sVar && sVar.key || styleKey, variableKey: sVar ? sVar.key : null, styleKey, label: "Border Color" });
+            }
+          }
+        }
+        if ("cornerRadius" in n && n.cornerRadius !== figma.mixed && n.cornerRadius > 0) {
+          const vInfo = getVar(n, "cornerRadius");
+          const val = `${n.cornerRadius}px`;
+          const name = vInfo && vInfo.name || val;
+          const ds = isDS(name, val, "borders", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
+          props.push({ type: "radius", name, value: val, isDS: ds, key: vInfo ? vInfo.key : null, variableKey: vInfo ? vInfo.key : null, label: "Radius" });
+        }
+        if ("effects" in n && Array.isArray(n.effects)) {
+          let styleName = null;
+          let styleKey = null;
+          if ("effectStyleId" in n && n.effectStyleId) {
+            const style = figma.getStyleById(n.effectStyleId);
+            if (style) {
+              styleName = style.name;
+              styleKey = style.key;
+            }
+          }
+          for (const effect of n.effects) {
+            if (effect.visible) {
+              const name = styleName || `${effect.type} (${effect.type.includes("SHADOW") ? "Sombra" : "Blur"})`;
+              const ds = isDS(name, effect.type, "effects", styleKey, referenceTokens, isAudit, frameJson, n.name);
+              props.push({ type: "effect", name, value: effect.type, isDS: ds, key: styleKey, styleKey, label: "Effect" });
+            }
+          }
+        }
+        if (n.type !== "PAGE" && n.parent && n.parent.type !== "PAGE") {
+          const parent = n.parent;
+          let wMode = "Fixed";
+          let hMode = "Fixed";
+          if (parent.layoutMode === "HORIZONTAL" && n.layoutGrow === 1) wMode = "Fill Container";
+          else if (parent.layoutMode === "VERTICAL" && n.layoutAlign === "STRETCH") wMode = "Fill Container";
+          else if (n.layoutMode && (n.layoutMode === "HORIZONTAL" && n.primaryAxisSizingMode === "AUTO" || n.layoutMode === "VERTICAL" && n.counterAxisSizingMode === "AUTO")) wMode = "Hug Contents";
+          if (parent.layoutMode === "VERTICAL" && n.layoutGrow === 1) hMode = "Fill Container";
+          else if (parent.layoutMode === "HORIZONTAL" && n.layoutAlign === "STRETCH") hMode = "Fill Container";
+          else if (n.layoutMode && (n.layoutMode === "VERTICAL" && n.primaryAxisSizingMode === "AUTO" || n.layoutMode === "HORIZONTAL" && n.counterAxisSizingMode === "AUTO")) hMode = "Hug Contents";
+          props.push({ type: "layout", name: wMode, value: wMode, isDS: true, label: "W Sizing" });
+          props.push({ type: "layout", name: hMode, value: hMode, isDS: true, label: "H Sizing" });
+        }
+        if (n.type === "INSTANCE" && n.componentProperties) {
+          Object.entries(n.componentProperties).forEach(([propName, propObj]) => {
+            const cleanName = propName.split("#")[0];
+            const val = String(propObj.value);
+            props.push({ type: "variant", name: cleanName, value: val, isDS: true, label: `Prop: ${cleanName}` });
+          });
+        }
+        return props;
+      }, addElement = function(category, node, props) {
+        if (props.length === 0 && (category === "frames" || category === "vectors")) return;
+        const name = node.name;
+        let dsElement = false;
+        if (category === "components" || category === "icons") {
+          dsElement = isDS(name, name, category, null, referenceTokens, isAudit, frameJson, name);
+        }
+        let componentKey = null;
+        if (node.type === "INSTANCE" && node.mainComponent) {
+          componentKey = node.mainComponent.key;
+        } else if (node.type === "COMPONENT" || node.type === "COMPONENT_SET") {
+          componentKey = node.key;
+        }
+        const map = specs[category];
+        if (!map.has(name)) {
+          const itemObj = {
+            name,
+            type: category,
+            nodeType: node.type,
+            componentKey,
+            layerName: name,
+            isDS: dsElement,
+            nodeId: node.id,
+            layers: /* @__PURE__ */ new Set([name]),
+            properties: props
+          };
+          map.set(name, itemObj);
+          frameJson.elements[category].push({
+            name,
+            type: category,
+            nodeType: node.type,
+            componentKey,
+            layerName: name,
+            isDS: dsElement,
+            properties: props
+          });
+        } else {
+          const item = map.get(name);
+          item.layers.add(name);
+        }
       }, extractSpecs = function(n) {
+        if (n.visible === false) return;
         try {
-          if ("fills" in n && Array.isArray(n.fills)) {
-            let styleName = null;
-            let styleKey = null;
-            if ("fillStyleId" in n && typeof n.fillStyleId === "string" && n.fillStyleId) {
-              const style = figma.getStyleById(n.fillStyleId);
-              if (style) {
-                styleName = style.name;
-                styleKey = style.key;
-              }
-            }
-            let tokenName = null;
-            let tokenKey = null;
-            if (n.boundVariables && n.boundVariables.fills) {
-              const varId = Array.isArray(n.boundVariables.fills) ? n.boundVariables.fills[0] && n.boundVariables.fills[0].id : n.boundVariables.fills.id;
-              if (varId) {
-                const v = figma.variables.getVariableById(varId);
-                if (v) {
-                  tokenName = v.name;
-                  tokenKey = v.key;
-                }
-              }
-            }
-            for (const fill of n.fills) {
-              if (fill.type === "SOLID" && fill.color) {
-                const hex = rgbToHex2(fill.color.r, fill.color.g, fill.color.b).toUpperCase();
-                const name = tokenName || styleName || hex;
-                const ds = isDS(name, hex, "colors", tokenKey || styleKey, referenceTokens, isAudit, frameJson, n.name);
-                registerToFrameJson(frameJson, "colors", name, hex, tokenKey, styleKey, n.name, ds);
-                addSpec(specs.colors, name, {
-                  name,
-                  hex,
-                  isDS: ds,
-                  layerName: n.name
-                }, n.id);
-              }
-            }
-          }
+          const props = extractNodeProperties(n);
+          let category = "frames";
+          const nameLower = n.name.toLowerCase();
+          const isIcon = nameLower.includes("icon") || nameLower.includes("ic-") || n.type === "INSTANCE" && n.width <= 32 && n.height <= 32 && !nameLower.includes("button");
           if (n.type === "TEXT") {
-            let styleName = null;
-            let styleKey = null;
-            if ("textStyleId" in n && typeof n.textStyleId === "string" && n.textStyleId !== figma.mixed && n.textStyleId) {
-              const style = figma.getStyleById(n.textStyleId);
-              if (style) {
-                styleName = style.name;
-                styleKey = style.key;
-              }
-            }
-            const family = n.fontName && n.fontName !== figma.mixed ? n.fontName.family : "Mixed";
-            const fontStyle = n.fontName && n.fontName !== figma.mixed ? n.fontName.style : "Mixed";
-            const size = n.fontSize && n.fontSize !== figma.mixed ? n.fontSize : "Mixed";
-            if (typeof family === "string" && (family.toLowerCase().includes("icon") || family.toLowerCase().includes("material"))) {
-              const iconName = typeof n.characters === "string" ? n.characters.trim() : "";
-              if (iconName.length > 0 && iconName.length < 30) {
-                const dsIcons = isDS(styleName || family, iconName, "icons", styleKey, referenceTokens, isAudit, frameJson, n.name);
-                registerToFrameJson(frameJson, "icons", iconName, iconName, null, styleKey, n.name, dsIcons);
-                addSpec(specs.icons, iconName, {
-                  name: iconName,
-                  isDS: isDS(styleName || family, iconName, "icons", styleKey, referenceTokens, isAudit, frameJson, n.name),
-                  layerName: n.name
-                }, n.id);
-              }
-            } else {
-              const name = styleName || `${family} ${fontStyle} (${size}px)`;
-              const ds = isDS(name, name, "typography", styleKey, referenceTokens, isAudit, frameJson, n.name);
-              registerToFrameJson(frameJson, "typography", name, name, null, styleKey, n.name, ds);
-              addSpec(specs.typography, name, {
-                name,
-                isDS: ds,
-                layerName: n.name
-              }, n.id);
-            }
+            category = isIcon ? "icons" : "typography";
+          } else if (n.type === "INSTANCE" || n.type === "COMPONENT") {
+            category = isIcon ? "icons" : "components";
+          } else if (n.type === "VECTOR" || n.type === "BOOLEAN_OPERATION" || n.type === "ELLIPSE" || n.type === "RECTANGLE") {
+            category = isIcon ? "icons" : "vectors";
+          } else if (n.type === "FRAME" || n.type === "GROUP" || n.type === "SECTION") {
+            category = "frames";
           }
-          if (n.type === "INSTANCE" || n.type === "COMPONENT") {
-            const name = n.name;
-            const isIcon = name.toLowerCase().includes("icon") || name.toLowerCase().includes("ic-") || n.width <= 32 && n.height <= 32 && !name.toLowerCase().includes("button");
-            if (isIcon) {
-              const dsCompIcons = isDS(name, name, "icons", null, referenceTokens, isAudit, frameJson, n.name);
-              registerToFrameJson(frameJson, "icons", name, name, null, null, n.name, dsCompIcons);
-              addSpec(specs.icons, name, {
-                name,
-                isDS: isDS(name, name, "icons", null, referenceTokens, isAudit, frameJson, n.name),
-                layerName: n.name
-              }, n.id);
-            } else {
-              const dsComp = isDS(name, name, "components", null, referenceTokens, isAudit, frameJson, n.name);
-              registerToFrameJson(frameJson, "components", name, name, null, null, n.name, dsComp);
-              addSpec(specs.components, name, {
-                name,
-                isDS: isDS(name, name, "components", null, referenceTokens, isAudit, frameJson, n.name),
-                layerName: n.name
-              }, n.id);
-            }
-          }
-          if ("layoutMode" in n) {
-            const getVar = (p) => {
-              if (!n.boundVariables) return null;
-              const v = n.boundVariables[p];
-              if (!v) return null;
-              const id = Array.isArray(v) ? v[0] && v[0].id : v.id;
-              if (!id) return null;
-              const variable = figma.variables.getVariableById(id);
-              return variable ? { name: variable.name, key: variable.key } : null;
-            };
-            if (n.layoutMode !== "NONE") {
-              if (n.itemSpacing !== figma.mixed && n.itemSpacing > 0) {
-                const vInfo = getVar("itemSpacing");
-                const tokenName = vInfo ? vInfo.name : null;
-                const tokenKey = vInfo ? vInfo.key : null;
-                const val = `${n.itemSpacing}px`;
-                const name = tokenName || `Gap: ${val}`;
-                const ds2 = isDS(name, val, "spacing", tokenKey, referenceTokens, isAudit, frameJson, n.name);
-                registerToFrameJson(frameJson, "spacing", name, val, tokenKey, null, n.name, isDS(name, val, "spacing", tokenKey, referenceTokens, isAudit, frameJson, n.name));
-                addSpec(specs.spacing, name, { name, value: val, isDS: isDS(name, val, "spacing", tokenKey, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
-              }
-              const pt = n.paddingTop || 0, pr = n.paddingRight || 0, pb = n.paddingBottom || 0, pl = n.paddingLeft || 0;
-              if (pt > 0) {
-                const vInfo = getVar("paddingTop");
-                const name = vInfo && vInfo.name || `Padding Top: ${pt}px`;
-                const ds2 = isDS(name, `${pt}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
-                registerToFrameJson(frameJson, "spacing", name, `${pt}px`, vInfo ? vInfo.key : null, null, n.name, isDS(name, `${pt}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name));
-                addSpec(specs.spacing, name, { name, value: `${pt}px`, isDS: isDS(name, `${pt}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
-              }
-              if (pr > 0) {
-                const vInfo = getVar("paddingRight");
-                const name = vInfo && vInfo.name || `Padding Right: ${pr}px`;
-                const ds2 = isDS(name, `${pr}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
-                registerToFrameJson(frameJson, "spacing", name, `${pr}px`, vInfo ? vInfo.key : null, null, n.name, isDS(name, `${pr}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name));
-                addSpec(specs.spacing, name, { name, value: `${pr}px`, isDS: isDS(name, `${pr}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
-              }
-              if (pb > 0) {
-                const vInfo = getVar("paddingBottom");
-                const name = vInfo && vInfo.name || `Padding Bottom: ${pb}px`;
-                const ds2 = isDS(name, `${pb}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
-                registerToFrameJson(frameJson, "spacing", name, `${pb}px`, vInfo ? vInfo.key : null, null, n.name, isDS(name, `${pb}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name));
-                addSpec(specs.spacing, name, { name, value: `${pb}px`, isDS: isDS(name, `${pb}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
-              }
-              if (pl > 0) {
-                const vInfo = getVar("paddingLeft");
-                const name = vInfo && vInfo.name || `Padding Left: ${pl}px`;
-                const ds2 = isDS(name, `${pl}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
-                registerToFrameJson(frameJson, "spacing", name, `${pl}px`, vInfo ? vInfo.key : null, null, n.name, isDS(name, `${pl}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name));
-                addSpec(specs.spacing, name, { name, value: `${pl}px`, isDS: isDS(name, `${pl}px`, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
-              }
-              const align = `${n.primaryAxisAlignItems} / ${n.counterAxisAlignItems}`;
-              const ds = isDS(align, align, "alignment", null, referenceTokens, isAudit, frameJson, n.name);
-              registerToFrameJson(frameJson, "alignment", `Alinhamento: ${align}`, align, null, null, n.name, isDS(align, align, "alignment", null, referenceTokens, isAudit, frameJson, n.name));
-              addSpec(specs.alignment, align, { name: `Alinhamento: ${align}`, value: align, isDS: isDS(align, align, "alignment", null, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
-            }
-          }
-          if ("cornerRadius" in n && n.cornerRadius !== figma.mixed && n.cornerRadius > 0) {
-            const id = n.boundVariables && n.boundVariables.cornerRadius ? Array.isArray(n.boundVariables.cornerRadius) ? n.boundVariables.cornerRadius[0].id : n.boundVariables.cornerRadius.id : null;
-            let tokenName = null;
-            let tokenKey = null;
-            if (id) {
-              const v = figma.variables.getVariableById(id);
-              if (v) {
-                tokenName = v.name;
-                tokenKey = v.key;
-              }
-            }
-            const name = tokenName || `Raio: ${n.cornerRadius}px`;
-            registerToFrameJson(frameJson, "borders", name, `${n.cornerRadius}px`, tokenKey, null, n.name);
-            addSpec(specs.borders, name, { name, value: `${n.cornerRadius}px`, isDS: isDS(name, `${n.cornerRadius}px`, "borders", tokenKey, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
-          }
-          if ("strokeWeight" in n && n.strokeWeight !== figma.mixed && n.strokeWeight > 0) {
-            const id = n.boundVariables && n.boundVariables.strokeWeight ? Array.isArray(n.boundVariables.strokeWeight) ? n.boundVariables.strokeWeight[0].id : n.boundVariables.strokeWeight.id : null;
-            let tokenName = null;
-            let tokenKey = null;
-            if (id) {
-              const v = figma.variables.getVariableById(id);
-              if (v) {
-                tokenName = v.name;
-                tokenKey = v.key;
-              }
-            }
-            const name = tokenName || `Borda: ${n.strokeWeight}px`;
-            registerToFrameJson(frameJson, "borders", name, `${n.strokeWeight}px`, tokenKey, null, n.name);
-            addSpec(specs.borders, name, { name, value: `${n.strokeWeight}px`, isDS: isDS(name, `${n.strokeWeight}px`, "borders", tokenKey, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
-            if ("strokes" in n && Array.isArray(n.strokes) && n.strokes.length > 0) {
-              const stroke = n.strokes[0];
-              if (stroke.type === "SOLID") {
-                const hex = rgbToHex2(stroke.color.r, stroke.color.g, stroke.color.b).toUpperCase();
-                let strokeVarName = null;
-                let strokeVarKey = null;
-                if (n.boundVariables && n.boundVariables.strokes) {
-                  const sid = Array.isArray(n.boundVariables.strokes) ? n.boundVariables.strokes[0] && n.boundVariables.strokes[0].id : n.boundVariables.strokes.id;
-                  if (sid) {
-                    const sv = figma.variables.getVariableById(sid);
-                    if (sv) {
-                      strokeVarName = sv.name;
-                      strokeVarKey = sv.key;
-                    }
-                  }
-                }
-                let styleStrokeName = null;
-                let styleStrokeKey = null;
-                if ("strokeStyleId" in n && n.strokeStyleId) {
-                  const st = figma.getStyleById(n.strokeStyleId);
-                  if (st) {
-                    styleStrokeName = st.name;
-                    styleStrokeKey = st.key;
-                  }
-                }
-                const strokeNameFinal = strokeVarName || styleStrokeName || `Cor Borda: ${hex}`;
-                registerToFrameJson(frameJson, "borders", strokeNameFinal, hex, strokeVarKey, styleStrokeKey, n.name, isDS(strokeNameFinal, hex, "colors", strokeVarKey || styleStrokeKey, referenceTokens, isAudit, frameJson, n.name));
-                addSpec(specs.borders, strokeNameFinal, { name: strokeNameFinal, value: hex, isDS: isDS(strokeNameFinal, hex, "colors", strokeVarKey || styleStrokeKey, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
-              }
-            }
-          }
-          if ("effects" in n && Array.isArray(n.effects)) {
-            let styleName = null;
-            let styleKey = null;
-            if ("effectStyleId" in n && n.effectStyleId) {
-              const style = figma.getStyleById(n.effectStyleId);
-              if (style) {
-                styleName = style.name;
-                styleKey = style.key;
-              }
-            }
-            for (const effect of n.effects) {
-              if (effect.visible) {
-                const name = styleName || `${effect.type} (${effect.type.includes("SHADOW") ? "Sombra" : "Blur"})`;
-                const ds = isDS(name, effect.type, "effects", styleKey, referenceTokens, isAudit, frameJson, n.name);
-                registerToFrameJson(frameJson, "effects", name, effect.type, null, styleKey, n.name, isDS(name, effect.type, "effects", styleKey, referenceTokens, isAudit, frameJson, n.name));
-                addSpec(specs.effects, name, { name, value: effect.type, isDS: isDS(name, effect.type, "effects", styleKey, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
-              }
-            }
-          }
-          if ("layoutGrids" in n && Array.isArray(n.layoutGrids)) {
-            let styleName = null;
-            let styleKey = null;
-            if ("gridStyleId" in n && n.gridStyleId) {
-              const style = figma.getStyleById(n.gridStyleId);
-              if (style) {
-                styleName = style.name;
-                styleKey = style.key;
-              }
-            }
-            for (const grid of n.layoutGrids) {
-              if (grid.visible) {
-                let typeStr = grid.pattern === "COLUMNS" ? `Colunas: ${grid.count}` : grid.pattern === "ROWS" ? `Linhas: ${grid.count}` : "Grid";
-                const name = styleName || typeStr;
-                const ds = isDS(name, typeStr, "grids", styleKey, referenceTokens, isAudit, frameJson, n.name);
-                registerToFrameJson(frameJson, "grids", name, typeStr, null, styleKey, n.name, isDS(name, typeStr, "grids", styleKey, referenceTokens, isAudit, frameJson, n.name));
-                addSpec(specs.grids, name, { name, value: typeStr, isDS: isDS(name, typeStr, "grids", styleKey, referenceTokens, isAudit, frameJson, n.name), layerName: n.name }, n.id);
-              }
-            }
-          }
+          addElement(category, n, props);
           if ("children" in n && n.children) {
             for (const child of n.children) {
               extractSpecs(child);
@@ -1149,15 +1128,11 @@
         return;
       }
       const specs = {
-        colors: /* @__PURE__ */ new Map(),
         components: /* @__PURE__ */ new Map(),
         icons: /* @__PURE__ */ new Map(),
         typography: /* @__PURE__ */ new Map(),
-        spacing: /* @__PURE__ */ new Map(),
-        borders: /* @__PURE__ */ new Map(),
-        effects: /* @__PURE__ */ new Map(),
-        grids: /* @__PURE__ */ new Map(),
-        alignment: /* @__PURE__ */ new Map()
+        frames: /* @__PURE__ */ new Map(),
+        vectors: /* @__PURE__ */ new Map()
       };
       const frameJson = frameJsonTemplate();
       const referenceTokens = msg.referenceTokens || null;
@@ -1200,15 +1175,11 @@
       figma.ui.postMessage({
         type: "scan-result",
         data: {
-          colors: formatMap(specs.colors),
           components: formatMap(specs.components),
           icons: formatMap(specs.icons),
           typography: formatMap(specs.typography),
-          spacing: formatMap(specs.spacing),
-          borders: formatMap(specs.borders),
-          effects: formatMap(specs.effects),
-          grids: formatMap(specs.grids),
-          alignment: formatMap(specs.alignment),
+          frames: formatMap(specs.frames),
+          vectors: formatMap(specs.vectors),
           frameJson
         }
       });
