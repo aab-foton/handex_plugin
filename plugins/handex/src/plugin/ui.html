@@ -3261,6 +3261,9 @@ document.addEventListener('DOMContentLoaded', () => {
       data.forEach((item, index) => {
         const section = document.createElement("div");
         section.className = "border border-gray-200 dark:border-dark-line rounded-xl overflow-hidden bg-white dark:bg-dark-surface shadow-sm";
+        if (item.nodeId) {
+          section.setAttribute('data-node-id', item.nodeId);
+        }
 
         const isExpanded = index === 0;
         const header = document.createElement("div");
@@ -3286,19 +3289,33 @@ document.addEventListener('DOMContentLoaded', () => {
         visBtn.type = "button";
         visBtn.title = "Exibir/Ocultar no canvas";
         visBtn.ariaLabel = "Ocultar medida";
-        visBtn.className = "px-3 py-3 text-[#005ca9] hover:bg-blue-100 dark:hover:bg-slate-600 transition-colors shrink-0 border-l border-gray-100 dark:border-dark-line";
-        visBtn.innerHTML = `<i data-lucide="eye" class="w-4 h-4"></i>`;
-        let isVisible = true;
+        visBtn.className = "px-3 py-3 hover:bg-blue-100 dark:hover:bg-slate-600 transition-colors shrink-0 border-l border-gray-100 dark:border-dark-line";
+        visBtn.setAttribute('data-vis-btn', '');
+
+        if (item.visible === undefined) {
+          item.visible = true;
+        }
+
+        const isVisible = item.visible !== false;
+        visBtn.innerHTML = isVisible ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
+        visBtn.classList.toggle("text-[#005ca9]", isVisible);
+        visBtn.classList.toggle("text-gray-300", !isVisible);
+
         visBtn.onclick = (e) => {
           e.stopPropagation();
-          isVisible = !isVisible;
-          visBtn.innerHTML = isVisible ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
-          visBtn.classList.toggle("text-[#005ca9]", isVisible);
-          visBtn.classList.toggle("text-gray-300", !isVisible);
+          const nowVisible = !(item.visible !== false);
+          item.visible = nowVisible;
+          
+          visBtn.innerHTML = nowVisible ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
+          visBtn.classList.toggle("text-[#005ca9]", nowVisible);
+          visBtn.classList.toggle("text-gray-300", !nowVisible);
+          
           if (item.nodeId) {
-            parent.postMessage({ pluginMessage: { type: 'hide-node', id: item.nodeId } }, '*');
+            parent.postMessage({ pluginMessage: { type: 'hide-node', id: item.nodeId, forceState: nowVisible } }, '*');
           }
-          lucide.createIcons();
+          saveToStorage();
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+          updateHideAllMeasuresButtonState();
         };
 
         const delBtn = document.createElement("button");
@@ -3352,51 +3369,141 @@ document.addEventListener('DOMContentLoaded', () => {
         autoScrollToNewItem('measures-scroll-container');
       }
       lastMeasurements = data;
+      updateHideAllMeasuresButtonState();
     }
 
 
     // ── Ocultar Tudo helpers ───────────────────────────────────────
     let _measuresHidden = false;
+    function updateHideAllMeasuresButtonState() {
+      const btn = document.getElementById('btn-hide-all-measures');
+      if (!btn) return;
+      
+      const measurements = handoffData.measurements || [];
+      if (measurements.length === 0) return;
+      
+      const allHidden = measurements.every(m => m.visible === false);
+      _measuresHidden = allHidden;
+      
+      btn.innerHTML = allHidden
+        ? '<i data-lucide="eye" class="w-3.5 h-3.5"></i> Mostrar tudo'
+        : '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
     function toggleAllMeasuresVisibility() {
-      _measuresHidden = !_measuresHidden;
-      const container = document.getElementById('measurements-results');
-      if (!container) return;
-      const items = container.querySelectorAll('.border.rounded-xl.overflow-hidden');
-      items.forEach(item => {
-        // toggle visibility annotation on Figma canvas
-        const nodeIdMatch = item.querySelector('[data-node-id]');
-        if (nodeIdMatch) {
-          parent.postMessage({ pluginMessage: { type: _measuresHidden ? 'hide-node' : 'show-node', id: nodeIdMatch.dataset.nodeId } }, '*');
+      const measurements = handoffData.measurements || [];
+      if (measurements.length === 0) return;
+      
+      const anyVisible = measurements.some(m => m.visible !== false);
+      const targetState = !anyVisible;
+      
+      measurements.forEach(m => {
+        m.visible = targetState;
+        if (m.nodeId) {
+          parent.postMessage({ pluginMessage: { type: 'hide-node', id: m.nodeId, forceState: targetState } }, '*');
         }
       });
+      
+      _measuresHidden = !targetState;
+      saveToStorage();
+      
+      const container = document.getElementById('measurements-results');
+      if (container) {
+        const sections = container.querySelectorAll('[data-node-id]');
+        sections.forEach(section => {
+          const visBtn = section.querySelector('[data-vis-btn]');
+          if (visBtn) {
+            visBtn.innerHTML = targetState ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
+            visBtn.classList.toggle("text-[#005ca9]", targetState);
+            visBtn.classList.toggle("text-gray-300", !targetState);
+          }
+        });
+      }
+      
       const btn = document.getElementById('btn-hide-all-measures');
       if (btn) {
         btn.innerHTML = _measuresHidden
           ? '<i data-lucide="eye" class="w-3.5 h-3.5"></i> Mostrar tudo'
           : '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo';
-        if (typeof lucide !== 'undefined') lucide.createIcons();
       }
+      
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
     let _specsHidden = false;
+    function updateHideAllSpecsButtonState() {
+      const btn = document.getElementById('btn-hide-all-specs');
+      if (!btn) return;
+      
+      const specs = createdSpecs || [];
+      if (specs.length === 0) return;
+      
+      const allHidden = specs.every(s => s.visible === false);
+      _specsHidden = allHidden;
+      
+      btn.innerHTML = allHidden
+        ? '<i data-lucide="eye" class="w-3.5 h-3.5"></i> Mostrar tudo'
+        : '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function updateGroupVisButtonState(letter, groupWrapper) {
+      const groupVisBtn = groupWrapper.querySelector('[data-group-vis-btn]');
+      if (!groupVisBtn) return;
+      
+      const specs = createdSpecs.filter(s => (s.letter || 'Sem Tag') === letter);
+      const isGroupVisible = specs.some(s => s.visible !== false);
+      
+      groupVisBtn.innerHTML = isGroupVisible ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
+      groupVisBtn.classList.toggle('text-[#005ca9]', isGroupVisible);
+      groupVisBtn.classList.toggle('text-gray-400', !isGroupVisible);
+      
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
     function toggleAllSpecsVisibility() {
-      _specsHidden = !_specsHidden;
-      const container = document.getElementById('specs-results');
-      if (!container) return;
-      const cards = container.querySelectorAll('[data-spec-id]');
-      cards.forEach(card => {
-        const nodeId = card.dataset.nodeId;
-        if (nodeId) {
-          parent.postMessage({ pluginMessage: { type: _specsHidden ? 'hide-node' : 'show-node', id: nodeId } }, '*');
+      const specs = createdSpecs || [];
+      if (specs.length === 0) return;
+      
+      const anyVisible = specs.some(s => s.visible !== false);
+      const targetState = !anyVisible;
+      
+      specs.forEach(s => {
+        s.visible = targetState;
+        if (s.id) {
+          parent.postMessage({ pluginMessage: { type: 'hide-node', id: s.id, forceState: targetState } }, '*');
         }
       });
+      
+      _specsHidden = !targetState;
+      saveSpecsToStorage();
+      
+      const container = document.getElementById('specs-results');
+      if (container) {
+        const groupBtns = container.querySelectorAll('[data-group-vis-btn]');
+        groupBtns.forEach(gBtn => {
+          gBtn.innerHTML = targetState ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
+          gBtn.classList.toggle('text-[#005ca9]', targetState);
+          gBtn.classList.toggle('text-gray-400', !targetState);
+        });
+        
+        const specBtns = container.querySelectorAll('[data-spec-vis-btn]');
+        specBtns.forEach(sBtn => {
+          sBtn.innerHTML = targetState ? `<i data-lucide="eye" class="w-3.5 h-3.5"></i>` : `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>`;
+          sBtn.classList.toggle("text-[#005ca9]", targetState);
+          sBtn.classList.toggle("text-gray-300", !targetState);
+        });
+      }
+      
       const btn = document.getElementById('btn-hide-all-specs');
       if (btn) {
         btn.innerHTML = _specsHidden
           ? '<i data-lucide="eye" class="w-3.5 h-3.5"></i> Mostrar tudo'
           : '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo';
-        if (typeof lucide !== 'undefined') lucide.createIcons();
       }
+      
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
     function createAccordionSection(section) {
@@ -4485,22 +4592,42 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
         groupVisBtn.type = 'button';
         groupVisBtn.title = "Ocultar/Exibir Grupo";
         groupVisBtn.ariaLabel = "Ocultar grupo";
-        groupVisBtn.className = "p-2 text-[#005ca9] hover:bg-white/50 dark:hover:bg-slate-700 rounded-lg transition-colors";
-        let groupVisible = true;
-        groupVisBtn.innerHTML = `<i data-lucide="eye" class="w-4 h-4"></i>`;
+        groupVisBtn.className = "p-2 hover:bg-white/50 dark:hover:bg-slate-700 rounded-lg transition-colors shrink-0";
+        groupVisBtn.setAttribute('data-group-vis-btn', letter);
+
+        const isGroupVisible = specs.some(s => s.visible !== false);
+        groupVisBtn.innerHTML = isGroupVisible ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
+        groupVisBtn.classList.toggle('text-[#005ca9]', isGroupVisible);
+        groupVisBtn.classList.toggle('text-gray-400', !isGroupVisible);
+
         groupVisBtn.onclick = (e) => {
           e.stopPropagation();
-          groupVisible = !groupVisible;
-          groupVisBtn.innerHTML = groupVisible ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
-          groupVisBtn.classList.toggle('text-gray-400', !groupVisible);
+          const targetState = !specs.some(s => s.visible !== false);
           
-          // Ocultar/Exibir todos os itens do grupo
           specs.forEach(s => {
+            if (createdSpecs[s.originalIndex]) {
+              createdSpecs[s.originalIndex].visible = targetState;
+            }
             if (s.id) {
-              parent.postMessage({ pluginMessage: { type: 'hide-node', id: s.id, forceState: groupVisible } }, '*');
+              parent.postMessage({ pluginMessage: { type: 'hide-node', id: s.id, forceState: targetState } }, '*');
             }
           });
-          lucide.createIcons();
+          
+          saveSpecsToStorage();
+          
+          groupVisBtn.innerHTML = targetState ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
+          groupVisBtn.classList.toggle('text-[#005ca9]', targetState);
+          groupVisBtn.classList.toggle('text-gray-400', !targetState);
+          
+          const childBtns = groupWrapper.querySelectorAll('[data-spec-vis-btn]');
+          childBtns.forEach(btnEl => {
+            btnEl.innerHTML = targetState ? `<i data-lucide="eye" class="w-3.5 h-3.5"></i>` : `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>`;
+            btnEl.classList.toggle("text-[#005ca9]", targetState);
+            btnEl.classList.toggle("text-gray-300", !targetState);
+          });
+          
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+          updateHideAllSpecsButtonState();
         };
 
         const groupChevron = document.createElement('i');
@@ -4515,6 +4642,9 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
         specs.forEach((spec) => {
           const section = document.createElement('div');
           section.className = 'bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg shadow-sm overflow-hidden';
+          if (spec.id) {
+            section.setAttribute('data-spec-id', spec.id);
+          }
 
           const header = document.createElement("div");
           header.className = "flex items-center justify-between bg-white dark:bg-slate-800";
@@ -4543,17 +4673,36 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
           visBtn.type = "button";
           visBtn.title = "Ocultar/Exibir no canvas";
           visBtn.ariaLabel = "Ocultar";
-          visBtn.className = "p-2.5 text-[#005ca9] hover:bg-blue-50 dark:hover:bg-slate-600 transition-colors";
-          let isVisible = true;
-          visBtn.innerHTML = `<i data-lucide="eye" class="w-3.5 h-3.5"></i>`;
+          visBtn.className = "p-2.5 hover:bg-blue-50 dark:hover:bg-slate-600 transition-colors shrink-0";
+          visBtn.setAttribute('data-spec-vis-btn', '');
+
+          if (spec.visible === undefined) {
+            spec.visible = true;
+          }
+          const isVisible = spec.visible !== false;
+          visBtn.innerHTML = isVisible ? `<i data-lucide="eye" class="w-3.5 h-3.5"></i>` : `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>`;
+          visBtn.classList.toggle("text-[#005ca9]", isVisible);
+          visBtn.classList.toggle("text-gray-300", !isVisible);
+
           visBtn.onclick = (e) => {
             e.stopPropagation();
-            isVisible = !isVisible;
-            visBtn.innerHTML = isVisible ? `<i data-lucide="eye" class="w-3.5 h-3.5"></i>` : `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>`;
-            visBtn.classList.toggle("text-[#005ca9]", isVisible);
-            visBtn.classList.toggle("text-gray-300", !isVisible);
-            parent.postMessage({ pluginMessage: { type: 'hide-node', id: spec.id, forceState: isVisible } }, '*');
-            lucide.createIcons();
+            const nowVisible = !(spec.visible !== false);
+            if (createdSpecs[spec.originalIndex]) {
+              createdSpecs[spec.originalIndex].visible = nowVisible;
+            }
+            
+            visBtn.innerHTML = nowVisible ? `<i data-lucide="eye" class="w-3.5 h-3.5"></i>` : `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>`;
+            visBtn.classList.toggle("text-[#005ca9]", nowVisible);
+            visBtn.classList.toggle("text-gray-300", !nowVisible);
+            
+            if (spec.id) {
+              parent.postMessage({ pluginMessage: { type: 'hide-node', id: spec.id, forceState: nowVisible } }, '*');
+            }
+            saveSpecsToStorage();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            
+            updateGroupVisButtonState(letter, groupWrapper);
+            updateHideAllSpecsButtonState();
           };
 
           const delBtn = document.createElement("button");
@@ -4611,6 +4760,7 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
         autoScrollToNewItem('specs-scroll-container');
       }
       lastSpecsCount = currentCount;
+      updateHideAllSpecsButtonState();
     }
     let lastSpecsCount = 0;
 
