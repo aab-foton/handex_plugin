@@ -469,6 +469,7 @@ body {
       padding: 8px 12px !important;
       font-size: 12px !important;
       color: #334155 !important;
+      font-weight: 500 !important; /* Keep input text at medium/regular weight */
       transition: all 0.2s ease !important;
     }
 
@@ -499,6 +500,36 @@ body {
     /* Target only the token search field placeholder/input padding */
     input.token-search-input {
       padding-left: 32px !important;
+    }
+
+    /* Reset font-weight and color for placeholders to make them look distinct and lighter than labels */
+    input::placeholder,
+    textarea::placeholder,
+    select::placeholder,
+    .token-search-input::placeholder {
+      font-weight: 400 !important;
+      color: #94a3b8 !important; /* Slate-400 */
+      opacity: 0.85 !important;
+    }
+    
+    .dark input::placeholder,
+    .dark textarea::placeholder,
+    .dark select::placeholder,
+    .dark .token-search-input::placeholder {
+      font-weight: 400 !important;
+      color: #64748b !important; /* Slate-500 */
+      opacity: 0.85 !important;
+    }
+
+    /* Ensure helper padding classes are not overridden by the global padding: 8px 12px !important */
+    input.pl-7, .pl-7 {
+      padding-left: 28px !important;
+    }
+    input.pl-8, .pl-8 {
+      padding-left: 32px !important;
+    }
+    input.pl-9, .pl-9 {
+      padding-left: 36px !important;
     }
 
   </style>
