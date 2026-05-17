@@ -298,163 +298,180 @@
         fichaTecnica.appendChild(content);
         setFillAndHug(content);
         if (!data.setup || data.setup.ficha !== false) {
-          const infoSection = createSection(content, "Informa\xE7\xF5es B\xE1sicas");
-          createRow(infoSection, "T\xEDtulo do Projeto", data.step1.fluxo);
-          createRow(infoSection, "Objetivo da Entrega", data.step1.objetivo);
-          const subGrid = createFrame("HORIZONTAL", 0, 16);
-          infoSection.appendChild(subGrid);
-          setFillAndHug(subGrid);
-          createRow(subGrid, "Status", data.step1.status);
-          createRow(subGrid, "Vers\xE3o", data.step1.versao);
-        }
-        if (data.step1.excecoes && data.step1.excecoes.length > 0) {
-          const excSection = createSection(content, "Cen\xE1rios de Exce\xE7\xE3o");
-          data.step1.excecoes.forEach((exc, idx) => {
-            createRow(excSection, `Cen\xE1rio ${idx + 1}`, exc.scenario);
-          });
-        }
-        if (data.step1.regras && data.step1.regras.length > 0) {
-          const bizSection = createSection(content, "Regras de Neg\xF3cio e HU");
-          data.step1.regras.forEach((regra) => {
-            createRow(bizSection, regra.title, regra.link ? "Link de Refer\xEAncia" : "-", !!regra.link, regra.link);
-          });
-        }
-        if (data.step1.equipe && data.step1.equipe.length > 0) {
-          const teamSection = createSection(content, "Equipe");
-          data.step1.equipe.forEach((member) => {
-            createRow(teamSection, member.role, member.name);
-          });
-        }
-        if (data.setup && data.setup.incluirDocs && data.step1.docs && data.step1.docs.length > 0) {
-          const docsSection = createSection(null, "Docs e Anexos");
-          let hasDocs = false;
-          data.step1.docs.forEach((doc) => {
-            if (doc.url) {
-              createRow(docsSection, doc.name || "Documento", doc.url, true, doc.url);
-              hasDocs = true;
+          const infoSection = createSection(content, "Informa\xE7\xF5es e Briefing Estrat\xE9gico");
+          let hasBasicInfo = false;
+          if (data.step1) {
+            if (data.step1.fluxo) {
+              createRow(infoSection, "T\xEDtulo do Projeto", data.step1.fluxo);
+              hasBasicInfo = true;
             }
-          });
-          if (hasDocs) {
-            content.appendChild(docsSection);
-            setFillAndHug(docsSection);
+            if (data.step1.objetivo) {
+              createRow(infoSection, "Objetivo da Entrega", data.step1.objetivo);
+              hasBasicInfo = true;
+            }
+            if (data.step1.status || data.step1.versao) {
+              const subGrid = createFrame("HORIZONTAL", 0, 16);
+              infoSection.appendChild(subGrid);
+              setFillAndHug(subGrid);
+              if (data.step1.status) createRow(subGrid, "Status", data.step1.status);
+              if (data.step1.versao) createRow(subGrid, "Vers\xE3o", data.step1.versao);
+              hasBasicInfo = true;
+            }
+          }
+          if (data.setup && data.setup.incluirBriefing !== false && data.briefing && data.briefing.questions && data.briefing.questions.length > 0) {
+            const hasAnsweredQuestions = data.briefing.questions.some((q) => q.answer);
+            if (hasAnsweredQuestions) {
+              if (hasBasicInfo) {
+                const dividerSpace = createFrame("VERTICAL", 0, 8);
+                infoSection.appendChild(dividerSpace);
+                setFillAndHug(dividerSpace);
+              }
+              data.briefing.questions.forEach((q, idx) => {
+                if (q.answer) {
+                  const qRow = createFrame("VERTICAL", 0, 4);
+                  infoSection.appendChild(qRow);
+                  setFillAndHug(qRow);
+                  const qText = createText(`${idx + 1}. ${q.question}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+                  qRow.appendChild(qText);
+                  setFillAndHug(qText);
+                  const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+                  qRow.appendChild(aText);
+                  setFillAndHug(aText);
+                }
+              });
+            }
           }
         }
-        if (data.setup && data.setup.incluirBriefing && data.briefing && data.briefing.questions && data.briefing.questions.length > 0) {
-          const briefingSection = createSection(content, "Briefing Estrat\xE9gico");
-          data.briefing.questions.forEach((q, idx) => {
-            if (q.answer) {
-              const qRow = createFrame("VERTICAL", 0, 4);
-              briefingSection.appendChild(qRow);
-              setFillAndHug(qRow);
-              const qText = createText(`${idx + 1}. ${q.question}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
-              qRow.appendChild(qText);
-              setFillAndHug(qText);
-              const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
-              qRow.appendChild(aText);
-              setFillAndHug(aText);
-            }
-          });
-          content.appendChild(briefingSection);
+        const hasTeam = data.step3 && data.step3.team && data.step3.team.length > 0 || data.step1 && data.step1.equipe && data.step1.equipe.length > 0;
+        if (hasTeam) {
+          const teamSection = createSection(content, "Equipe Respons\xE1vel");
+          if (data.step3 && data.step3.team && data.step3.team.length > 0) {
+            data.step3.team.forEach((m) => {
+              const mRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
+              teamSection.appendChild(mRow);
+              setFillAndHug(mRow);
+              mRow.counterAxisAlignItems = "CENTER";
+              mRow.cornerRadius = 8;
+              mRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+              const roleTag = createFrame("HORIZONTAL", 8, 4, { r: 0, g: 0.35, b: 0.79 });
+              roleTag.cornerRadius = 4;
+              roleTag.appendChild(createText(m.role, 10, "Bold", { r: 1, g: 1, b: 1 }));
+              mRow.appendChild(roleTag);
+              const nameText = createText(m.name, 12, "Medium");
+              mRow.appendChild(nameText);
+              setFillAndHug(nameText);
+              if (m.email) {
+                const contactLink = createText("Contato", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
+                contactLink.textDecoration = "UNDERLINE";
+                contactLink.hyperlink = { type: "URL", value: m.email.includes("@") ? "mailto:" + m.email : m.email };
+                mRow.appendChild(contactLink);
+              }
+            });
+          }
+          if (data.step1 && data.step1.equipe && data.step1.equipe.length > 0) {
+            data.step1.equipe.forEach((member) => {
+              createRow(teamSection, member.role, member.name);
+            });
+          }
         }
-        if (data.step3 && data.step3.team && data.step3.team.length > 0) {
-          const teamSection = createSection(content, "Equipe e Respons\xE1veis");
-          data.step3.team.forEach((m) => {
-            const mRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
-            teamSection.appendChild(mRow);
-            setFillAndHug(mRow);
-            mRow.counterAxisAlignItems = "CENTER";
-            mRow.cornerRadius = 8;
-            mRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
-            const roleTag = createFrame("HORIZONTAL", 8, 4, { r: 0, g: 0.35, b: 0.79 });
-            roleTag.cornerRadius = 4;
-            roleTag.appendChild(createText(m.role, 10, "Bold", { r: 1, g: 1, b: 1 }));
-            mRow.appendChild(roleTag);
-            const nameText = createText(m.name, 12, "Medium");
-            mRow.appendChild(nameText);
-            setFillAndHug(nameText);
-            if (m.email) {
-              const contactLink = createText("Contato", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
-              contactLink.textDecoration = "UNDERLINE";
-              contactLink.hyperlink = { type: "URL", value: m.email.includes("@") ? "mailto:" + m.email : m.email };
-              mRow.appendChild(contactLink);
-            }
-            teamSection.appendChild(mRow);
-          });
-        }
-        if (data.excecoes && data.excecoes.length > 0) {
+        const hasExceptions = data.excecoes && data.excecoes.length > 0 || data.step1 && data.step1.excecoes && data.step1.excecoes.length > 0;
+        if (hasExceptions) {
           const excSection = createSection(content, "Cen\xE1rios de Exce\xE7\xE3o");
-          data.excecoes.forEach((e) => {
-            const eRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
-            excSection.appendChild(eRow);
-            setFillAndHug(eRow);
-            eRow.counterAxisAlignItems = "CENTER";
-            eRow.cornerRadius = 8;
-            eRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
-            const typeTag = createFrame("HORIZONTAL", 8, 4, { r: 0.9, g: 0.2, b: 0.2 });
-            typeTag.cornerRadius = 4;
-            typeTag.appendChild(createText(e.type, 10, "Bold", { r: 1, g: 1, b: 1 }));
-            eRow.appendChild(typeTag);
-            const titleText = createText(e.title, 12, "Medium");
-            eRow.appendChild(titleText);
-            setFillAndHug(titleText);
-            if (e.link && e.link !== "#") {
-              titleText.textDecoration = "UNDERLINE";
-              titleText.hyperlink = { type: "URL", value: e.link };
-            }
-          });
+          if (data.excecoes && data.excecoes.length > 0) {
+            data.excecoes.forEach((e) => {
+              const eRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
+              excSection.appendChild(eRow);
+              setFillAndHug(eRow);
+              eRow.counterAxisAlignItems = "CENTER";
+              eRow.cornerRadius = 8;
+              eRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+              const typeTag = createFrame("HORIZONTAL", 8, 4, { r: 0.9, g: 0.2, b: 0.2 });
+              typeTag.cornerRadius = 4;
+              typeTag.appendChild(createText(e.type, 10, "Bold", { r: 1, g: 1, b: 1 }));
+              eRow.appendChild(typeTag);
+              const titleText = createText(e.title, 12, "Medium");
+              eRow.appendChild(titleText);
+              setFillAndHug(titleText);
+              if (e.link && e.link !== "#") {
+                titleText.textDecoration = "UNDERLINE";
+                titleText.hyperlink = { type: "URL", value: e.link };
+              }
+            });
+          }
+          if (data.step1 && data.step1.excecoes && data.step1.excecoes.length > 0) {
+            data.step1.excecoes.forEach((exc, idx) => {
+              createRow(excSection, `Cen\xE1rio ${idx + 1}`, exc.scenario);
+            });
+          }
         }
-        if (data.regras && data.regras.length > 0) {
+        const hasRules = data.regras && data.regras.length > 0 || data.step1 && data.step1.regras && data.step1.regras.length > 0;
+        if (hasRules) {
           const rulesSection = createSection(content, "Regras de Neg\xF3cio e HUs");
-          data.regras.forEach((r) => {
-            const rRow = createFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.98, b: 0.99 });
-            rulesSection.appendChild(rRow);
-            setFillAndHug(rRow);
-            rRow.cornerRadius = 8;
-            rRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
-            if (r.link && r.link !== "#") {
-              const lText = createText("Acesse o link da HU", 12, "Bold", { r: 0, g: 0.35, b: 0.79 });
-              lText.textDecoration = "UNDERLINE";
-              lText.hyperlink = { type: "URL", value: r.link };
-              rRow.appendChild(lText);
-              setFillAndHug(lText);
-            }
-            if (r.notes) {
-              const nText = createText(r.notes, 12, "Regular", { r: 0.4, g: 0.4, b: 0.4 });
-              rRow.appendChild(nText);
-              setFillAndHug(nText);
-            }
-          });
+          if (data.regras && data.regras.length > 0) {
+            data.regras.forEach((r) => {
+              const rRow = createFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.98, b: 0.99 });
+              rulesSection.appendChild(rRow);
+              setFillAndHug(rRow);
+              rRow.cornerRadius = 8;
+              rRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+              if (r.link && r.link !== "#") {
+                const lText = createText("Acesse o link da HU", 12, "Bold", { r: 0, g: 0.35, b: 0.79 });
+                lText.textDecoration = "UNDERLINE";
+                lText.hyperlink = { type: "URL", value: r.link };
+                rRow.appendChild(lText);
+                setFillAndHug(lText);
+              }
+              if (r.notes) {
+                const nText = createText(r.notes, 12, "Regular", { r: 0.4, g: 0.4, b: 0.4 });
+                rRow.appendChild(nText);
+                setFillAndHug(nText);
+              }
+            });
+          }
+          if (data.step1 && data.step1.regras && data.step1.regras.length > 0) {
+            data.step1.regras.forEach((regra) => {
+              createRow(rulesSection, regra.title, regra.link ? "Link de Refer\xEAncia" : "-", !!regra.link, regra.link);
+            });
+          }
         }
-        if (data.docs) {
-          const docsSection = createSection(null, "Docs e Anexos");
-          const docItems = [
-            { key: "proto", label: "Prot\xF3tipo Naveg\xE1vel" },
-            { key: "a11y", label: "Handoff Acessibilidade" },
-            { key: "research", label: "Pesquisa de UX" }
-          ];
-          let hasDocs = false;
-          docItems.forEach((item) => {
-            const docData = data.docs[item.key];
-            if (docData && docData.checked && docData.link) {
-              hasDocs = true;
-              const dRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
-              dRow.layoutAlign = "STRETCH";
-              dRow.counterAxisAlignItems = "CENTER";
-              dRow.cornerRadius = 8;
-              dRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
-              const dLabel = createText(item.label, 12, "Bold");
-              dLabel.layoutGrow = 1;
-              dRow.appendChild(dLabel);
-              const dLink = createText("Acesse o link", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
-              dLink.textDecoration = "UNDERLINE";
-              dLink.hyperlink = { type: "URL", value: docData.link };
-              dRow.appendChild(dLink);
-              docsSection.appendChild(dRow);
-            }
-          });
-          if (hasDocs) {
-            content.appendChild(docsSection);
-            setFillAndHug(docsSection);
+        const docItems = [
+          { key: "proto", label: "Prot\xF3tipo Naveg\xE1vel" },
+          { key: "a11y", label: "Handoff Acessibilidade" },
+          { key: "research", label: "Pesquisa de UX" }
+        ];
+        const hasNewDocs = data.docs && docItems.some((item) => {
+          const docData = data.docs[item.key];
+          return docData && docData.checked && docData.link;
+        });
+        const hasOldDocs = data.setup && data.setup.incluirDocs && data.step1.docs && data.step1.docs.some((doc) => doc.url);
+        if (hasNewDocs || hasOldDocs) {
+          const docsSection = createSection(content, "Docs e Anexos");
+          if (hasNewDocs) {
+            docItems.forEach((item) => {
+              const docData = data.docs[item.key];
+              if (docData && docData.checked && docData.link) {
+                const dRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
+                docsSection.appendChild(dRow);
+                setFillAndHug(dRow);
+                dRow.counterAxisAlignItems = "CENTER";
+                dRow.cornerRadius = 8;
+                dRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+                const dLabel = createText(item.label, 12, "Bold");
+                dLabel.layoutGrow = 1;
+                dRow.appendChild(dLabel);
+                const dLink = createText("Acesse o link", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
+                dLink.textDecoration = "UNDERLINE";
+                dLink.hyperlink = { type: "URL", value: docData.link };
+                dRow.appendChild(dLink);
+              }
+            });
+          }
+          if (hasOldDocs) {
+            data.step1.docs.forEach((doc) => {
+              if (doc.url) {
+                createRow(docsSection, doc.name || "Documento", doc.url, true, doc.url);
+              }
+            });
           }
         }
         fichaTecnica.appendChild(content);
@@ -563,23 +580,12 @@
           uiBoard.layoutAlign = "MIN";
           const uiTitle = createText("User Interface", 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
           uiBoard.appendChild(uiTitle);
-          if (data.setup && data.setup.incluirBriefing && data.briefing && data.briefing.questions && data.briefing.questions.length > 0) {
-            const briefingSection = createSection(fichaTecnica, "Briefing Estrat\xE9gico");
-            data.briefing.questions.forEach((q, idx) => {
-              if (q.answer) {
-                const qRow = createFrame("VERTICAL", 0, 4);
-                qRow.name = "Question " + (idx + 1);
-                briefingSection.appendChild(qRow);
-                setFillAndHug(qRow);
-                const qText = createText(`${idx + 1}. ${q.question}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
-                qRow.appendChild(qText);
-                setFillAndHug(qText);
-                const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
-                qRow.appendChild(aText);
-                setFillAndHug(aText);
-              }
-            });
-          }
+          setFillAndHug(uiTitle);
+          const columnsContainer = createFrame("HORIZONTAL", 0, 16);
+          columnsContainer.name = "Columns";
+          uiBoard.appendChild(columnsContainer);
+          setFillAndHug(columnsContainer);
+          columnsContainer.layoutWrap = "WRAP";
           const specsData = data.step2.specs || { components: [], icons: [], typography: [], frames: [], vectors: [] };
           const categories = [
             { title: "Componentes", items: specsData.components, type: "components" },
@@ -588,12 +594,20 @@
             { title: "Frames e Layouts", items: specsData.frames, type: "frames" },
             { title: "Vetores", items: specsData.vectors, type: "vectors" }
           ];
+          let hasSpecs = false;
           categories.forEach((cat) => {
             const sec = createSpecList(cat.title, cat.items, cat.type);
             if (sec) {
-              mainContainer.appendChild(sec);
+              columnsContainer.appendChild(sec);
+              setFillAndHug(sec);
+              hasSpecs = true;
             }
           });
+          if (hasSpecs) {
+            mainContainer.appendChild(uiBoard);
+          } else {
+            uiBoard.remove();
+          }
         }
         const selection = figma.currentPage.selection;
         if (selection.length > 0 && data.setup && (data.setup.espacamentos || data.setup.anatomia || data.setup.instancias)) {
