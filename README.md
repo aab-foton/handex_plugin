@@ -1,93 +1,396 @@
-# Design Fóton
+# HANDEX v2.0.0 - Advanced Figma Plugin
 
+[![GitHub Stars](https://img.shields.io/github/stars/aab-foton/handex?style=flat-square)](https://github.com/aab-foton/handex)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
+> 🎨 Um plugin poderoso para Figma que potencializa seus fluxos de design com IA, handoff inteligente, medições automáticas e anotações colaborativas.
 
-## Getting started
+## 📋 Sumário
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- [Visão Geral](#visão-geral)
+- [Funcionalidades](#funcionalidades)
+- [Arquitetura](#arquitetura)
+- [Requisitos](#requisitos)
+- [Instalação e Uso](#instalação-e-uso)
+- [Desenvolvimento](#desenvolvimento)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Configuração](#configuração)
+- [Scripts Disponíveis](#scripts-disponíveis)
+- [Tecnologias](#tecnologias)
+- [Contribuindo](#contribuindo)
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## 🎯 Visão Geral
 
-## Add your files
+HANDEX é um plugin para Figma desenvolvido para facilitar o handoff de designs e colaboração entre designers e desenvolvedores. Com integração de IA (Gemini), o plugin consegue:
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+- **Analisar designs** automaticamente
+- **Gerar documentação técnica** de forma inteligente
+- **Medir componentes** com precisão
+- **Anotar designs** colaborativamente
+- **Exportar especificações** em múltiplos formatos
+- **Criar fichas técnicas** automáticas (BPMN)
+
+O plugin possui uma **interface moderna, modular e totalmente responsiva**, permitindo uma transição suave entre diferentes fluxos de trabalho e visualização de código em tempo real.
+
+### 🎨 Experiência do Usuário (UX)
+- **Interface Responsiva de 3 Colunas**: Layout otimizado para produtividade.
+- **Auto-Redimensionamento Dinâmico**: A janela do plugin se ajusta automaticamente ao conteúdo.
+- **Zoom Proporcional da UI**: Escalonamento inteligente para diferentes tamanhos de tela.
+- **Modo Escuro/Claro**: Suporte nativo a temas com alternância manual e automática.
+- **Acessibilidade (WCAG)**: Interface amigável para tecnologias assistivas com labels ARIA e navegação semântica.
+
+## ✨ Funcionalidades
+
+### 🤖 IA Integrada (Gemini)
+- Análise inteligente de componentes de design
+- Geração automática de documentação técnica
+- Extração de dados de design com IA
+- Sugestões de melhorias de acessibilidade e performance
+
+### 📋 Handoff de Design
+- **Ficha Técnica Padronizada**: Documentação estruturada seguindo padrões BPMN.
+- **Design Specs Inteligentes**: Especificações com restrições de layout (Fill/Hug) automáticas.
+- **Exportação em múltiplos formatos**: Geração de pacotes ZIP completos com especificações técnicos.
+- **Versionamento de exportações**: Histórico de alterações e controle de revisões.
+
+### 📏 Medições e Especificações
+- Medições automáticas de componentes
+- Cálculo de espaçamentos (padding, margins, gaps)
+- Extração de propriedades visuais (cores, tipografia, tamanhos)
+- Geração de grid de especificações
+
+### 📝 Anotações e Comentários
+- Adicionar anotações às camadas
+- Sistema de categorização de anotações
+- Visualização integrada de comentários
+- Exportação de anotações em documentos
+
+### 🎯 Guias e Recursos
+- Guias contextualizados no plugin
+- Recursos de ajuda integrados
+- Documentação de workflows
+- Best practices de handoff
+
+### 📊 Métricas e Visibilidade
+- Dashboard de projeto
+- Rastreamento de componentes
+- Estatísticas de design
+- Relatórios exportáveis
+
+## 🏗️ Arquitetura
+
+### Estrutura de Camadas
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.foton.la/caixa-design/design-foton.git
-git branch -M main
-git push -uf origin main
+┌─────────────────────────────┐
+│   UI React (SPA)            │  ← src/App.tsx, components/
+│   (Tailwind + Lucide)       │
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│   Plugin Code (JavaScript)   │  ← src/plugin/code.js
+│   (Figma Plugin API)        │
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│   Figma Document API        │
+│   (Native Plugin Runtime)   │
+└─────────────────────────────┘
 ```
 
-## Integrate with your tools
+### Módulos Principais
 
-- [ ] [Set up project integrations](https://gitlab.foton.la/caixa-design/design-foton/-/settings/integrations)
+#### Frontend (`src/`)
+- **App.tsx**: Aplicação principal com alternância entre preview e visualização de código
+- **components/**: Componentes React reutilizáveis
+  - `PluginPreview.tsx`: Renderização interativa do plugin
+  - `CodeViewer.tsx`: Visualizador de código-fonte
+- **hooks/**: Hooks customizados
+  - `useVersions.ts`: Gerenciamento de versões de arquivo
+- **utils/**: Utilitários
+  - `downloadPlugin.ts`: Lógica de download do plugin
 
-## Collaborate with your team
+#### Plugin (`src/plugin/`)
+- **code.js**: Script principal que executa no context Figma
+  - Gerenciamento de comunicação UI ↔ Plugin
+  - Operações no documento (criar frames, textos, etc.)
+  - Tratamento de seleções e eventos
+- **ui.html**: Interface HTML do plugin (gerada dinamicamente)
+- **modules/**: Módulos especializados
+  - `core.js`: Funcionalidades centrais
+  - `design-data.js`: Extração de dados de design
+  - `handoff.js`: Lógica de handoff
+  - `measurement.js`: Sistema de medições
+  - `messages.js`: Protocolo de mensagens
+  - `specifications.js`: Geração de especificações
+- **views/**: Templates HTML das diferentes seções
+  - `home.html`: Tela inicial
+  - `handoff.html`: Interface de handoff
+  - `measurement.html`: Interface de medições
+  - `specifications.html`: Visualizador de especificações
+  - `guide.html`: Guia de uso
+  - `modals.html`: Modais compartilhados
+- **styles/**: Estilos do plugin
+  - `plugin.css`: Folha de estilos principal
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+#### Configuração
+- **manifest.json**: Configuração do plugin Figma
+- **build.cjs**: Script de build que empacota a UI React em HTML
+- **vite.config.ts**: Configuração do Vite para dev/build
+- **tsconfig.json**: Configuração do TypeScript
 
-## Test and Deploy
+## 🔧 Requisitos
 
-Use the built-in continuous integration in GitLab.
+- **Node.js** >= 18.0.0
+- **npm** >= 9.0.0
+- Conta Figma com plugin instalado
+- **Chave de API Gemini** (para funcionalidades de IA)
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+## 🚀 Instalação e Uso
 
-***
+### 1. Setup Inicial
 
-# Editing this README
+```bash
+# Clone o repositório
+git clone https://github.com/aab-foton/handex.git
+cd handex
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+# Instale as dependências
+npm install
 
-## Suggestions for a good README
+# Configure a chave de API
+cp .env.example .env.local
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+# Adicione sua Gemini API Key em .env.local
+GEMINI_API_KEY=sua_chave_aqui
+```
 
-## Name
-Choose a self-explaining name for your project.
+### 2. Desenvolvimento Local
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+```bash
+# Inicie o servidor dev em http://localhost:3000
+npm run dev
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+# Em outro terminal, compile a UI do plugin
+npm run bundle:ui
+```
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+O servidor dev servirá:
+- Interface de visualização do plugin (React)
+- Endpoint para download do plugin compilado
+- Hot-reload durante desenvolvimento
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### 3. Instalação no Figma
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+1. Abra Figma
+2. Vá para: **Menu → Plugins → Development → Import plugin from manifest...**
+3. Selecione o arquivo `src/plugin/manifest.json`
+4. O plugin estará disponível em: **Right Panel → Plugins → HANDEX**
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### 4. Build para Produção
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+```bash
+# Build da aplicação React e plugin
+npm run build
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+# Resultado em ./dist/
+```
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+## 💻 Desenvolvimento
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+### Scripts Disponíveis
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+```bash
+npm run dev          # Inicia servidor de dev com Vite
+npm run build        # Build de produção (SPA + plugin)
+npm run preview      # Pré-visualiza build de produção
+npm run lint         # Verifica tipos TypeScript
+npm run clean        # Remove diretório dist/
+npm run bundle:ui    # Compila a UI React em HTML estático
+```
 
-## License
-For open source projects, say how it is licensed.
+### Fluxo de Desenvolvimento
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+1. **Alterações na UI React**:
+   - Edite arquivos em `src/` (exceto `src/plugin/`)
+   - Hot-reload automático no `npm run dev`
+   - Tipos TypeScript verificados continuamente
+
+2. **Alterações no Plugin (code.js, modules/)**:
+   - Edite `src/plugin/code.js` ou módulos em `src/plugin/modules/`
+   - Execute `npm run bundle:ui` para recompilar a UI
+   - Recarregue o plugin no Figma (Cmd+R ou Ctrl+R)
+
+3. **Alterações de Estilos**:
+   - Tailwind CSS é processado automaticamente (src/index.css)
+   - Plugin CSS em `src/plugin/styles/plugin.css` é compilado manualmente
+
+### Debugging
+
+#### No Navegador (React App)
+- Abra DevTools (F12)
+- Console, Network, Elements tabs
+- Local Storage para estado persistido em `handex-view-mode`
+
+#### No Plugin (Figma)
+1. Figma → Right Panel → Plugin → Menu (⋯) → View Code
+2. Ou: **Ctrl+Shift+P** → "Run last plugin" → Inspect
+
+## 📁 Estrutura do Projeto
+
+```
+handex/
+├── src/
+│   ├── App.tsx                    # Componente principal React
+│   ├── main.tsx                   # Entry point React
+│   ├── index.css                  # Estilos globais (Tailwind)
+│   ├── components/
+│   │   ├── CodeViewer.tsx         # Visualizador de código
+│   │   └── PluginPreview.tsx      # Pré-visualização do plugin
+│   ├── hooks/
+│   │   └── useVersions.ts         # Hook para versionamento
+│   ├── utils/
+│   │   └── downloadPlugin.ts      # Download do plugin
+│   └── plugin/
+│       ├── manifest.json          # Configuração do plugin Figma
+│       ├── code.js                # Script principal do plugin
+│       ├── ui.html                # UI gerada (build output)
+│       ├── build.cjs              # Script de build
+│       ├── modules/               # Módulos especializados
+│       │   ├── core.js
+│       │   ├── design-data.js
+│       │   ├── handoff.js
+│       │   ├── measurement.js
+│       │   ├── messages.js
+│       │   └── specifications.js
+│       ├── views/                 # Templates HTML
+│       │   ├── home.html
+│       │   ├── handoff.html
+│       │   ├── measurement.html
+│       │   ├── specifications.html
+│       │   ├── guide.html
+│       │   └── modals.html
+│       └── styles/
+│           └── plugin.css         # Estilos do plugin
+├── backup/                        # Versão anterior do plugin
+├── dist/                          # Build output (prod)
+├── node_modules/
+├── package.json
+├── tsconfig.json
+├── vite.config.ts                 # Configuração do bundler
+├── index.html                     # HTML raiz da SPA
+├── .env.example                   # Template de variáveis
+├── .env.local                     # Variáveis locais (não commitado)
+├── .gitignore
+└── README.md
+```
+
+## ⚙️ Configuração
+
+### Variáveis de Ambiente
+
+Crie um arquivo `.env.local` na raiz do projeto:
+
+```env
+# API Gemini para funcionalidades de IA
+GEMINI_API_KEY=sua_chave_aqui
+
+# (Opcional) Configurações de ambiente
+VITE_API_URL=http://localhost:3000
+VITE_ENV=development
+```
+
+**Obtenha sua Gemini API Key**:
+1. Acesse [Google AI Studio](https://aistudio.google.com/)
+2. Clique em "Get API Key"
+3. Crie uma chave nova e copie para `.env.local`
+
+### Configuração do Plugin (manifest.json)
+
+```json
+{
+  "name": "HANDEX v2.0.0",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"]
+}
+```
+
+- **name**: Nome e versão do plugin
+- **main**: Script de entrada (code.js)
+- **ui**: Interface HTML
+- **editorType**: Figma é o único editor suportado
+
+## 📦 Tecnologias
+
+### Frontend
+- **React 19**: Framework UI
+- **TypeScript 5.8**: Tipagem estática
+- **Vite 6.2**: Bundler e dev server ultrarrápido
+- **Tailwind CSS 4.1**: Utilitários de styling
+- **Lucide React**: Biblioteca de ícones
+- **Motion**: Animações suaves
+
+### Backend / Plugin
+- **Figma Plugin API 1.0**: Acesso ao documento Figma
+- **Express 4.21**: Servidor de dev
+- **JSZip 3.10**: Geração de arquivos ZIP
+
+### Desenvolvimento
+- **tsx**: Executor de TypeScript
+- **Autoprefixer**: Prefixos CSS automáticos
+
+## 🤝 Contribuindo
+
+Para contribuir ao projeto:
+
+1. **Crie uma feature branch**:
+   ```bash
+   git checkout -b feat/sua-funcionalidade
+   ```
+
+2. **Faça suas alterações**:
+   - Mantenha o código limpo e bem tipado
+   - Adicione comentários para lógica complexa
+   - Teste mudanças localmente
+
+3. **Commit com mensagens descritivas**:
+   ```bash
+   git commit -m "feat: descrição da funcionalidade"
+   git commit -m "fix: descrição do bug corrigido"
+   git commit -m "docs: atualização de documentação"
+   ```
+
+4. **Push e abra um Pull Request**:
+   ```bash
+   git push origin feat/sua-funcionalidade
+   ```
+
+### Guidelines
+
+- Respeite o código existente
+- Use TypeScript e tipos explícitos
+- Siga a convenção de nomes do projeto
+- Teste suas mudanças
+- Documente APIs públicas
+
+## 📄 Licença
+
+Este projeto está licenciado sob a **Apache License 2.0** - veja o arquivo [LICENSE](LICENSE) para detalhes.
+
+## 📞 Suporte
+
+- 📧 **Issues**: [GitHub Issues](https://github.com/aab-foton/handex/issues)
+- 💬 **Discussões**: [GitHub Discussions](https://github.com/aab-foton/handex/discussions)
+- 🐦 **Contato**: [@aab-foton](https://github.com/aab-foton)
+
+---
+
+<div align="center">
+
+**Feito com ❤️ pela equipe AAB**
+
+[⬆ Voltar ao topo](#handex-v200---advanced-figma-plugin)
+
+</div>
