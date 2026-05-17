@@ -477,3 +477,12 @@ body {
     input.pl-9, .pl-9 {
       padding-left: 36px !important;
     }
+
+    /* Reset header borders and top border radius to keep it flat and aligned with the plugin window edge */
+    header {
+      border-top-left-radius: 0px !important;
+      border-top-right-radius: 0px !important;
+      border-top: none !important;
+      border-left: none !important;
+      border-right: none !important;
+    }
