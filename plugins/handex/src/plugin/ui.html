@@ -406,6 +406,101 @@ body {
       min-height: 0;
     }
 
+    /* ── DESIGN SYSTEM UNIFORMITY RULES ── */
+
+    /* 1. Uniform Cards & Containers */
+    .bg-white.dark\:bg-dark-surface,
+    .bg-white.dark\:bg-dark-bg,
+    .bg-white.dark\:bg-dark-surface\/30,
+    .bg-white.dark\:bg-dark-bg\/30,
+    [id$="-card"],
+    .view > section > div {
+      border-radius: 16px !important; /* Premium 16px corner roundness */
+      border: 1px solid #f1f5f9 !important;
+      background-color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    .dark .bg-white.dark\:bg-dark-surface,
+    .dark .bg-white.dark\:bg-dark-bg,
+    .dark .bg-white.dark\:bg-dark-surface\/30,
+    .dark .bg-white.dark\:bg-dark-bg\/30,
+    .dark [id$="-card"],
+    .dark .view > section > div {
+      border-color: #1e293b !important;
+      background-color: #0f172a !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    /* Card Hover Effect */
+    .bg-white.dark\:bg-dark-surface:hover,
+    .bg-white.dark\:bg-dark-bg:hover,
+    [id$="-card"]:hover {
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
+      border-color: #e2e8f0 !important;
+    }
+
+    .dark .bg-white.dark\:bg-dark-surface:hover,
+    .dark .bg-white.dark\:bg-dark-bg:hover,
+    .dark [id$="-card"]:hover {
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.25) !important;
+      border-color: #334155 !important;
+    }
+
+    /* 2. Uniform Typography & Hierarchy */
+    h1, h2, h3, .text-\[\#0070af\], .text-slate-800 {
+      font-family: 'Inter', sans-serif !important;
+      letter-spacing: -0.01em !important;
+    }
+
+    /* Labels & Pills */
+    label, .text-\[10px\], .text-\[11px\], .checklist-pill {
+      font-family: 'Inter', sans-serif !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.03em !important;
+    }
+
+    /* 3. Uniform Inputs and Textareas */
+    input[type="text"], input[type="search"], select, textarea {
+      border-radius: 8px !important;
+      border: 1px solid #e2e8f0 !important;
+      background-color: #f8fafc !important;
+      padding: 8px 12px !important;
+      font-size: 12px !important;
+      color: #334155 !important;
+      transition: all 0.2s ease !important;
+    }
+
+    .dark input[type="text"], .dark input[type="search"], .dark select, .dark textarea {
+      border-color: #1e293b !important;
+      background-color: #0f172a !important;
+      color: #f8fafc !important;
+    }
+
+    input[type="text"]:focus, input[type="search"]:focus, select:focus, textarea:focus {
+      border-color: #005ca9 !important;
+      background-color: #ffffff !important;
+      box-shadow: 0 0 0 3px rgba(0, 92, 169, 0.15) !important;
+      outline: none !important;
+    }
+
+    .dark input[type="text"]:focus, .dark input[type="search"]:focus, .dark select:focus, .dark textarea:focus {
+      border-color: #38a9f8 !important;
+      background-color: #0f172a !important;
+      box-shadow: 0 0 0 3px rgba(56, 169, 248, 0.15) !important;
+    }
+
+    /* Textarea Resizing */
+    textarea {
+      min-height: 80px;
+    }
+
+    /* Target only the token search field placeholder/input padding */
+    input.token-search-input {
+      padding-left: 32px !important;
+    }
+
   </style>
 </head>
 
@@ -783,17 +878,22 @@ body {
 <main id="view-handoff" class="view flex p-0 flex-col h-full overflow-hidden">
   <!-- Sub-Header Handoff -->
   <div class="px-6 pt-6 pb-2 border-b border-gray-100 dark:border-dark-line flex flex-col shrink-0">
-    <div class="flex items-center justify-between mb-4">
-      <div class="flex items-center gap-3">
-        <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial"
-          class="p-2 bg-gray-100 dark:bg-slate-800 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">
-          <i data-lucide="arrow-left" class="w-4 h-4 text-gray-600 dark:text-gray-300" aria-hidden="true"></i>
-        </button>
-        <div class="flex flex-col">
-          <h2 class="text-[#1E293B] dark:text-white font-bold text-[18px] leading-tight">Handoff</h2>
-        </div>
+    <div class="flex items-center gap-2 mb-0">
+      <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial"
+        class="p-2 bg-gray-100 dark:bg-slate-800 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors shrink-0">
+        <i data-lucide="arrow-left" class="w-4 h-4 text-gray-600 dark:text-gray-300" aria-hidden="true"></i>
+      </button>
+      <h2 class="text-[#1E293B] dark:text-white font-bold text-[16px] leading-tight shrink-0">Handoff</h2>
+      <div class="flex-1 min-w-0">
+        <select id="nav-select" onchange="scrollToStep(this.value)"
+          class="w-full bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg px-3 py-1.5 text-[12px] font-bold text-[#1E293B] dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-[#0070af]/20 transition-all">
+          <option value="step-1">1. Informações & Briefing</option>
+          <option value="step-2">2. Specs UI</option>
+          <option value="step-3">3. Detalhamento</option>
+          <option value="step-4">4. Revisão Final</option>
+        </select>
       </div>
-      <div id="step-indicator" class="flex gap-1.5">
+      <div id="step-indicator" class="flex gap-1.5 shrink-0">
         <div class="w-1.5 h-1.5 rounded-full bg-[#0070af] transition-all duration-300" id="dot-1"></div>
         <div class="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-dark-surface transition-all duration-300" id="dot-2">
         </div>
@@ -802,16 +902,6 @@ body {
         <div class="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-dark-surface transition-all duration-300" id="dot-4">
         </div>
       </div>
-    </div>
-
-    <div class="mb-4">
-      <select id="nav-select" onchange="scrollToStep(this.value)"
-        class="w-full bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg px-3 py-1.5 text-[12px] font-bold text-[#1E293B] dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-[#0070af]/20 transition-all">
-        <option value="step-1">1. Informações & Briefing</option>
-        <option value="step-2">2. Specs UI</option>
-        <option value="step-3">3. Detalhamento</option>
-        <option value="step-4">4. Revisão Final</option>
-      </select>
     </div>
   </div>
 
@@ -928,9 +1018,9 @@ body {
       <div class="space-y-4 w-full mx-auto">
         <div
           class="bg-white dark:bg-dark-surface p-5 rounded-xl border border-gray-100 dark:border-dark-line shadow-sm">
-          <button id="btn-scan" onclick="scanFrame()"
+          <button id="btn-scan" onclick="openScanCategoriesModal()"
             class="w-full bg-[#0070af] text-white font-bold py-2.5 rounded-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2 mb-2 text-[13px]">
-            <i data-lucide="search" class="w-4 h-4"></i> Escanear Frame
+            <i data-lucide="scan-search" class="w-4 h-4"></i> Escanear Frame
           </button>
           <p class="text-[11px] text-gray-400 text-center">Selecione um frame ou elemento para listar especificações
           </p>
@@ -961,24 +1051,16 @@ body {
           <div id="audit-card-content"
             class="hidden mt-4 pt-4 border-t border-gray-100 dark:border-dark-line space-y-3">
             
-            <div id="audit-file-display" class="hidden mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/30 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1">
-              <div class="flex items-center gap-2 overflow-hidden">
-                <i data-lucide="file-json" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
-                <span id="audit-filename" class="text-[11px] font-bold text-blue-800 dark:text-blue-300 truncate"></span>
-              </div>
-              <button onclick="removeAuditReference()" class="p-1 hover:bg-blue-100 dark:hover:bg-blue-800/50 rounded-md text-blue-600 dark:text-blue-400 transition-colors" title="Remover arquivo">
-                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-              </button>
-            </div>
+            <!-- Lista de arquivos importados -->
+            <div id="audit-files-container" class="space-y-2 mb-3"></div>
 
-            <input type="file" id="audit-ref-upload" accept=".json" class="hidden"
+            <input type="file" id="audit-ref-upload" accept=".json" class="hidden" multiple
               onchange="handleAuditRefUpload(event)">
             <button onclick="document.getElementById('audit-ref-upload').click()"
               class="w-full bg-slate-100 dark:bg-dark-bg text-slate-700 dark:text-white font-bold py-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2 text-[12px] border border-gray-200 dark:border-dark-line">
               <i data-lucide="upload" class="w-4 h-4"></i> Importar Referências
             </button>
-            <p class="text-[9px] text-gray-400 text-center mt-0 mb-2">Importe o arquivo JSON com as informações da
-              biblioteca de tokens (DSC).</p>
+            <p class="text-[9px] text-gray-400 text-center mt-0 mb-2">Importe um ou mais JSONs com tokens do Design System. Cada arquivo representa uma biblioteca.</p>
 
             <button id="btn-perform-audit" onclick="performAudit()"
               class="w-full bg-orange-500 text-white font-bold py-2.5 rounded-lg hover:bg-orange-600 transition-all flex items-center justify-center gap-2 text-[13px] opacity-50 cursor-not-allowed"
@@ -1757,6 +1839,102 @@ body {
       </div>
     </div>
   </div>
+  <!-- MODAL: SCAN CATEGORIES -->
+  <div id="scan-categories-modal" role="dialog" aria-modal="true" aria-labelledby="scan-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('scan-categories-modal')" aria-hidden="true"></div>
+    <div class="relative w-full max-w-[400px] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-dark-line">
+        <h3 id="scan-modal-title" class="text-[#1E293B] dark:text-white font-extrabold text-[15px] tracking-tight">Selecionar Categorias</h3>
+        <button onclick="closeModal('scan-categories-modal')" aria-label="Fechar modal" class="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto max-h-[70vh]" onscroll="handleScroll(this)">
+        <div class="mb-5 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-3">
+          <i data-lucide="info" class="w-5 h-5 text-[#0070af] shrink-0"></i>
+          <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-relaxed">
+            <strong>Dica de desempenho:</strong> Selecione apenas as categorias necessárias para um escaneamento mais rápido.
+          </p>
+        </div>
+
+        <div class="flex items-center justify-between mb-4 px-1">
+          <button onclick="toggleAllScanCategories(true)" class="text-[11px] font-bold text-[#0070af] hover:underline uppercase tracking-wider">Marcar todos</button>
+          <button onclick="toggleAllScanCategories(false)" class="text-[11px] font-bold text-slate-400 hover:text-slate-600 uppercase tracking-wider">Desmarcar todos</button>
+        </div>
+
+        <div id="scan-categories-list" class="space-y-2">
+          <!-- Category Option -->
+          <label class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:bg-white dark:hover:bg-slate-800 transition-all group">
+            <input type="checkbox" name="scan-cat" value="components" checked class="w-4 h-4 rounded border-gray-300 text-[#0070af] focus:ring-[#0070af]" />
+            <div class="flex flex-col">
+              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#0070af]">Componentes</span>
+              <span class="text-[10px] text-gray-400">Botões, Inputs, Cards e Áreas clicáveis</span>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:bg-white dark:hover:bg-slate-800 transition-all group">
+            <input type="checkbox" name="scan-cat" value="icons" checked class="w-4 h-4 rounded border-gray-300 text-[#0070af] focus:ring-[#0070af]" />
+            <div class="flex flex-col">
+              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#0070af]">Ícones</span>
+              <span class="text-[10px] text-gray-400">Vetores e elementos de iconografia</span>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:bg-white dark:hover:bg-slate-800 transition-all group">
+            <input type="checkbox" name="scan-cat" value="typography" checked class="w-4 h-4 rounded border-gray-300 text-[#0070af] focus:ring-[#0070af]" />
+            <div class="flex flex-col">
+              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#0070af]">Tipografia</span>
+              <span class="text-[10px] text-gray-400">Textos, Títulos e Parágrafos</span>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:bg-white dark:hover:bg-slate-800 transition-all group">
+            <input type="checkbox" name="scan-cat" value="containers" checked class="w-4 h-4 rounded border-gray-300 text-[#0070af] focus:ring-[#0070af]" />
+            <div class="flex flex-col">
+              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#0070af]">Frames e Layouts</span>
+              <span class="text-[10px] text-gray-400">Containers, Seções e Grids</span>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:bg-white dark:hover:bg-slate-800 transition-all group">
+            <input type="checkbox" name="scan-cat" value="shapes" checked class="w-4 h-4 rounded border-gray-300 text-[#0070af] focus:ring-[#0070af]" />
+            <div class="flex flex-col">
+              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#0070af]">Vetores</span>
+              <span class="text-[10px] text-gray-400">Formas, Ilustrações e paths complexos</span>
+            </div>
+          </label>
+        </div>
+      </div>
+      <div class="p-5 border-t border-gray-100 dark:border-dark-line flex gap-3">
+        <button onclick="closeModal('scan-categories-modal')" class="flex-1 py-3 text-[13px] font-bold text-gray-500 bg-gray-50 hover:bg-gray-100 dark:bg-dark-bg dark:hover:bg-slate-800 rounded-xl transition-colors">Cancelar</button>
+        <button onclick="executeScanFrameWithCategories()" class="flex-1 py-3 text-[13px] font-bold text-white bg-[#0070af] hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95">Escanear Agora</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openScanCategoriesModal() {
+      document.getElementById('scan-categories-modal').classList.remove('hidden');
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function toggleAllScanCategories(checked) {
+      const checkboxes = document.querySelectorAll('input[name="scan-cat"]');
+      checkboxes.forEach(cb => cb.checked = checked);
+    }
+
+    function executeScanFrameWithCategories() {
+      const selected = Array.from(document.querySelectorAll('input[name="scan-cat"]:checked')).map(cb => cb.value);
+      
+      if (selected.length === 0) {
+        showToast("Selecione pelo menos uma categoria", "error");
+        return;
+      }
+
+      closeModal('scan-categories-modal');
+      
+      // Chamar a função original de scan passando as categorias
+      if (typeof scanFrame === 'function') {
+        scanFrame(selected);
+      }
+    }
+  </script>
 
   </div>
 
@@ -1800,7 +1978,7 @@ let lastAuditResults = null;
 let handoffData = {
   briefing: { questions: [] },
   step1: { files: [], versao: "v2.0.0" },
-  step2: { specs: null, isAuditEnabled: false, auditReferenceTokens: null },
+  step2: { specs: null, isAuditEnabled: false, auditReferenceTokens: null, auditReferences: [] },
   step3: {
     team: [],
     erro_checked: true,
@@ -2170,7 +2348,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fabFlow.classList.toggle('hidden', viewId !== 'view-specifications' || currentSpecTab !== 'specs-flow');
       }
 
-      // Handoff FABs
+      // Handoff FABs — requer Step 1 E briefing ativado
       if (fabBriefing) {
         fabBriefing.classList.toggle('hidden', !isHandoff || currentStep !== 1 || !isBriefingOn);
       }
@@ -2834,31 +3012,6 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.closest("div").remove();
     }
 
-    // Step 1: Dynamic Items
-    function addDynamicItem() {
-      const container = document.getElementById("dynamic-items-container");
-      const id = Date.now();
-      const div = document.createElement("div");
-      div.className = "p-4 bg-gray-50/50 dark:bg-dark-surface/30 rounded-xl border border-gray-100 dark:border-dark-line relative group animate-in slide-in-from-top-2 duration-300";
-      div.innerHTML = `
-        <button onclick="this.parentElement.remove()" title="Remover item" aria-label="Remover item" class="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors">
-          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-        </button>
-        <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1">
-            <label class="text-[10px] font-bold text-gray-400 uppercase">Título</label>
-            <input type="text" placeholder="Ex: API" class="w-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg px-3 py-1.5 text-[12px]" onchange="updateData('step1', 'extra_${id}_title', this.value)">
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-[10px] font-bold text-gray-400 uppercase">Valor</label>
-            <input type="text" placeholder="Link ou texto" class="w-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg px-3 py-1.5 text-[12px]" onchange="updateData('step1', 'extra_${id}_value', this.value)">
-          </div>
-        </div>
-      `;
-      container.appendChild(div);
-      lucide.createIcons();
-      autoScrollToNewItem('handoff-scroll-container');
-    }
 
     // Step 2: Scanning & Specs
     function toggleAuditSection(checked) {
@@ -2869,45 +3022,82 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleAuditRefUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
+      const files = event.target.files;
+      if (!files || files.length === 0) return;
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const json = JSON.parse(e.target.result);
-          if (handoffData && handoffData.step2) {
-            handoffData.step2.auditReferenceTokens = json;
-            handoffData.step2.auditFilename = file.name;
+      let loadedCount = 0;
+      const targetCount = files.length;
+      let hasError = false;
+
+      if (!handoffData.step2.auditReferences) handoffData.step2.auditReferences = [];
+
+      for (let i = 0; i < targetCount; i++) {
+        const file = files[i];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const json = JSON.parse(e.target.result);
+            handoffData.step2.auditReferences.push({
+              name: file.name,
+              tokens: json
+            });
+          } catch (err) {
+            hasError = true;
+          }
+          loadedCount++;
+          if (loadedCount === targetCount) {
             saveToStorage();
+            renderAuditFilesList();
             
-            // UI Feedback
-            const fileDisplay = document.getElementById('audit-file-display');
-            const filenameSpan = document.getElementById('audit-filename');
             const btnPerform = document.getElementById('btn-perform-audit');
-            
-            if (fileDisplay && filenameSpan) {
-              filenameSpan.innerText = file.name;
-              fileDisplay.classList.remove('hidden');
-            }
-            if (btnPerform) {
+            if (btnPerform && handoffData.step2.auditReferences.length > 0) {
               btnPerform.disabled = false;
               btnPerform.classList.remove('opacity-50', 'cursor-not-allowed');
             }
             
-            showToast('Referências de auditoria importadas!');
+            if (hasError) {
+              showToast('Alguns arquivos falharam ao ler', 'error');
+            } else {
+              showToast('Referências de auditoria importadas!');
+            }
+            // Reset input so same file can be uploaded again if needed
+            event.target.value = '';
           }
-        } catch (err) {
-          showToast('Erro ao ler arquivo JSON', 'error');
-        }
-      };
-      reader.readAsText(file);
+        };
+        reader.readAsText(file);
+      }
+    }
+
+    function renderAuditFilesList() {
+      const container = document.getElementById('audit-files-container');
+      if (!container) return;
+      container.innerHTML = '';
+      
+      const refs = handoffData.step2.auditReferences || [];
+      if (refs.length === 0) return;
+      
+      refs.forEach((ref, idx) => {
+        const item = document.createElement('div');
+        item.className = "p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/30 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1";
+        item.innerHTML = `
+          <div class="flex items-center gap-2 overflow-hidden">
+            <i data-lucide="file-json" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
+            <span class="text-[11px] font-bold text-blue-800 dark:text-blue-300 truncate">${ref.name}</span>
+          </div>
+          <button onclick="removeAuditReference(${idx})" class="p-1 hover:bg-blue-100 dark:hover:bg-blue-800/50 rounded-md text-blue-600 dark:text-blue-400 transition-colors" title="Remover arquivo">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+        `;
+        container.appendChild(item);
+      });
+      
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
     function performAudit() {
-      if (!handoffData.step2.auditReferenceTokens) {
-        showToast("Carregue o arquivo JSON de referência antes de realizar a auditoria.", "error");
-        // Open the section if it was closed
+      const refs = handoffData.step2.auditReferences || [];
+      if (refs.length === 0) {
+        showToast("Carregue ao menos um arquivo JSON de referência antes de realizar a auditoria.", "error");
         const content = document.getElementById('audit-card-content');
         if (content && content.classList.contains('hidden')) content.classList.remove('hidden');
         return;
@@ -2917,8 +3107,8 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.disabled = true;
         btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Auditando...';
       }
-      lucide.createIcons();
-      parent.postMessage({ pluginMessage: { type: "scan-frame", isAudit: true, referenceTokens: handoffData.step2.auditReferenceTokens } }, "*");
+      if (window.lucide) lucide.createIcons();
+      parent.postMessage({ pluginMessage: { type: "scan-frame", isAudit: true, referenceTokens: refs } }, "*");
     }
 
     function exportAuditReport() {
@@ -2932,19 +3122,14 @@ document.addEventListener('DOMContentLoaded', () => {
       link.click();
     }
 
-    function removeAuditReference() {
-      if (handoffData && handoffData.step2) {
-        handoffData.step2.auditReferenceTokens = null;
-        handoffData.step2.auditFilename = null;
+    function removeAuditReference(idx) {
+      if (handoffData && handoffData.step2 && handoffData.step2.auditReferences) {
+        handoffData.step2.auditReferences.splice(idx, 1);
         saveToStorage();
+        renderAuditFilesList();
         
-        const fileDisplay = document.getElementById('audit-file-display');
-        const filenameSpan = document.getElementById('audit-filename');
         const btnPerform = document.getElementById('btn-perform-audit');
-        
-        if (fileDisplay) fileDisplay.classList.add('hidden');
-        if (filenameSpan) filenameSpan.innerText = '';
-        if (btnPerform) {
+        if ((!handoffData.step2.auditReferences || handoffData.step2.auditReferences.length === 0) && btnPerform) {
           btnPerform.disabled = true;
           btnPerform.classList.add('opacity-50', 'cursor-not-allowed');
         }
@@ -2984,19 +3169,30 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    function scanFrame() {
-      if (handoffData.step2.isAuditEnabled && !handoffData.step2.auditReferenceTokens) {
-        showToast("Carregue o arquivo JSON de referência antes de escanear com auditoria.", "error");
+    function scanFrame(categories = null) {
+      const refs = handoffData.step2.auditReferences || [];
+      if (handoffData.step2.isAuditEnabled && refs.length === 0) {
+        showToast("Carregue ao menos um arquivo JSON de referência antes de escanear com auditoria.", "error");
         const content = document.getElementById('audit-card-content');
         if (content && content.classList.contains('hidden')) content.classList.remove('hidden');
         return;
       }
 
       const btn = document.getElementById("btn-scan");
-      btn.disabled = true;
-      btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Escaneando...';
-      lucide.createIcons();
-      parent.postMessage({ pluginMessage: { type: "scan-frame", isAudit: handoffData.step2.isAuditEnabled, referenceTokens: handoffData.step2.auditReferenceTokens } }, "*");
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Escaneando...';
+      }
+      if (window.lucide) lucide.createIcons();
+      
+      parent.postMessage({ 
+        pluginMessage: { 
+          type: "scan-frame", 
+          isAudit: handoffData.step2.isAuditEnabled, 
+          referenceTokens: refs.length > 0 ? refs : null,
+          categories: categories
+        } 
+      }, "*");
     }
 
 
@@ -3275,7 +3471,7 @@ document.addEventListener('DOMContentLoaded', () => {
               id="${searchId}"
               type="text"
               placeholder="Buscar em ${section.title}..."
-              class="w-full pl-8 pr-3 py-1.5 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0070af]/30 focus:border-[#0070af] transition-all"
+              class="token-search-input w-full pl-8 pr-3 py-1.5 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0070af]/30 focus:border-[#0070af] transition-all"
               oninput="filterSpecItems('${gridId}', '${emptyId}', this.value)"
             />
           </div>
@@ -4914,7 +5110,9 @@ function toggleLinkInput(show) {
         chkAudit.checked = !!handoffData.step2.isAuditEnabled;
         toggleAuditSection(chkAudit.checked);
         
-        if (handoffData.step2.auditReferenceTokens) {
+        const refs = handoffData.step2.auditReferences || [];
+        if (refs.length > 0) {
+          renderAuditFilesList();
           const btn = document.getElementById('btn-perform-audit');
           if (btn) {
             btn.disabled = false;
@@ -4930,22 +5128,6 @@ function toggleLinkInput(show) {
       if (protoField) protoField.classList.toggle("hidden", !handoffData.docs.proto.checked);
       const a11yField = document.getElementById("a11y-field");
       if (a11yField) a11yField.classList.toggle("hidden", !handoffData.docs.a11y.checked);
-
-      // 8. Audit File Display
-      if (handoffData.step2.auditFilename) {
-        const fileDisplay = document.getElementById('audit-file-display');
-        const filenameSpan = document.getElementById('audit-filename');
-        const btnPerform = document.getElementById('btn-perform-audit');
-        
-        if (fileDisplay && filenameSpan) {
-          filenameSpan.innerText = handoffData.step2.auditFilename;
-          fileDisplay.classList.remove('hidden');
-        }
-        if (btnPerform) {
-          btnPerform.disabled = false;
-          btnPerform.classList.remove('opacity-50', 'cursor-not-allowed');
-        }
-      }
 
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
@@ -5093,19 +5275,11 @@ function toggleLinkInput(show) {
     <span>Criar fluxo</span>
   </button>
 
-  <!-- Handoff FABs moved to global scope -->
   <button onclick="addBriefingQuestion()" title="Adicionar Pergunta" aria-label="Adicionar Pergunta"
     class="hidden fixed bottom-14 right-6 bg-[#005ca9]/30 hover:bg-[#005ca9] text-white rounded-full shadow-lg z-[100] border border-white/20 backdrop-blur-sm fab-main group"
     id="fab-handoff-briefing">
     <i data-lucide="plus" class="w-5 h-5 shrink-0"></i>
     <span>Adicionar pergunta</span>
-  </button>
-
-  <button onclick="addChecklistItem('excecao', 'Erro', 'alert-circle', 'red')" title="Adicionar Item" aria-label="Adicionar Item"
-    class="hidden fixed bottom-14 right-6 bg-[#005ca9]/30 hover:bg-[#005ca9] text-white rounded-full shadow-lg z-[100] border border-white/20 backdrop-blur-sm fab-main group"
-    id="fab-handoff-item">
-    <i data-lucide="plus" class="w-5 h-5 shrink-0"></i>
-    <span>Adicionar item</span>
   </button>
 
   <button id="btn-top" onclick="scrollToTop()" title="Voltar ao topo" aria-label="Voltar ao topo"

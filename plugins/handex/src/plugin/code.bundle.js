@@ -9,54 +9,69 @@
       vectors: []
     }
   });
-  function isDS(name, value, type, figmaKey, referenceTokens, isAudit, frameJson, nodeName) {
+  function isDS(name, value, type, figmaKey, referenceTokensInput, isAudit, frameJson, nodeName) {
     if (!name) return false;
     const lowerName = name.toLowerCase();
-    const isOfficial = lowerName.includes("[dsc]") || lowerName.includes("[ dsc]");
-    if (isAudit && referenceTokens) {
-      if (figmaKey) {
-        if (referenceTokens.designTokens && referenceTokens.designTokens.variables) {
-          const foundVar = referenceTokens.designTokens.variables.find((t) => t.key === figmaKey || t.$key === figmaKey);
-          if (foundVar) return true;
-        }
-        if (referenceTokens.styleTokens) {
-          for (const styleType in referenceTokens.styleTokens) {
-            const stylesArray = referenceTokens.styleTokens[styleType];
-            if (Array.isArray(stylesArray)) {
-              const foundStyle = stylesArray.find((s) => s.key === figmaKey);
-              if (foundStyle) return true;
+    const isOfficial = false;
+    if (isAudit && referenceTokensInput) {
+      const referenceList = Array.isArray(referenceTokensInput) ? referenceTokensInput : [referenceTokensInput];
+      let hasWarning = false;
+      for (const referenceTokens of referenceList) {
+        if (figmaKey) {
+          if (referenceTokens.designTokens && referenceTokens.designTokens.variables) {
+            const foundVar = referenceTokens.designTokens.variables.find((t) => t.key === figmaKey || t.$key === figmaKey);
+            if (foundVar) return true;
+          }
+          if (referenceTokens.styleTokens) {
+            for (const styleType in referenceTokens.styleTokens) {
+              const stylesArray = referenceTokens.styleTokens[styleType];
+              if (Array.isArray(stylesArray)) {
+                const foundStyle = stylesArray.find((s) => s.key === figmaKey);
+                if (foundStyle) return true;
+              }
             }
           }
         }
-      }
-      const refList = referenceTokens[type] || referenceTokens[type.replace("s", "")];
-      const checkSoftMatch = (list) => {
-        if (!list || !Array.isArray(list)) return false;
-        return list.some((ref) => {
-          const rName = (typeof ref === "string" ? ref : ref.name || ref.label || "").toLowerCase();
-          const rValue = (typeof ref === "string" ? "" : ref.value || ref.hex || ref.token || "").toLowerCase();
-          const targetValue = String(value || "").toLowerCase();
-          if (rName && (rName === lowerName || lowerName.includes(rName) || rName.includes(lowerName))) return true;
-          if (rValue && targetValue && (rValue === targetValue || targetValue.includes(rValue))) return true;
-          if (type === "typography" && targetValue.includes("px") && rValue) {
-            const sizeMatch = targetValue.match(/\((\d+(\.\d+)?)px\)/);
-            if (sizeMatch && (rValue.includes(sizeMatch[1] + "px") || rName.includes(sizeMatch[1]))) {
-              if (targetValue.includes("caixa std")) return true;
+        const refList = referenceTokens[type] || referenceTokens[type.replace("s", "")];
+        const checkSoftMatch = (list) => {
+          if (!list || !Array.isArray(list)) return false;
+          return list.some((ref) => {
+            const rName = (typeof ref === "string" ? ref : ref.name || ref.label || "").toLowerCase();
+            const rValue = (typeof ref === "string" ? "" : ref.value || ref.hex || ref.token || "").toLowerCase();
+            const targetValue = String(value || "").toLowerCase();
+            if (rName && (rName === lowerName || lowerName.includes(rName) || rName.includes(lowerName))) return true;
+            if (rValue && targetValue && (rValue === targetValue || targetValue.includes(rValue))) return true;
+            if (type === "typography" && targetValue.includes("px") && rValue) {
+              const sizeMatch = targetValue.match(/\((\d+(\.\d+)?)px\)/);
+              if (sizeMatch && (rValue.includes(sizeMatch[1] + "px") || rName.includes(sizeMatch[1]))) {
+                if (targetValue.includes("caixa std")) return true;
+              }
             }
+            return false;
+          });
+        };
+        if (checkSoftMatch(refList)) {
+          hasWarning = true;
+          continue;
+        }
+        let globalSoftFound = false;
+        for (const cat in referenceTokens) {
+          if (checkSoftMatch(referenceTokens[cat])) {
+            globalSoftFound = true;
+            break;
           }
-          return false;
-        });
-      };
-      if (checkSoftMatch(refList)) return "warning";
-      for (const cat in referenceTokens) {
-        if (checkSoftMatch(referenceTokens[cat])) return "warning";
+        }
+        if (globalSoftFound) {
+          hasWarning = true;
+          continue;
+        }
       }
+      if (hasWarning) return "warning";
       if (type === "typography" && lowerName.includes("caixa std")) return "warning";
       if (lowerName.includes("/") || lowerName.includes("shadow") || lowerName.includes("[") || lowerName.includes("]")) {
         return "warning";
       }
     }
-    if (isOfficial) return "warning";
     return false;
   }
 
@@ -1054,6 +1069,13 @@
         }
         return props;
       }, addElement = function(category, node, props) {
+        if (!isAudit && allowedCategories && allowedCategories.length > 0) {
+          let isAllowed = false;
+          if (category === "frames" && allowedCategories.includes("containers")) isAllowed = true;
+          else if (category === "vectors" && allowedCategories.includes("shapes")) isAllowed = true;
+          else if (allowedCategories.includes(category)) isAllowed = true;
+          if (!isAllowed) return;
+        }
         if (props.length === 0 && (category === "frames" || category === "vectors")) return;
         const name = node.name;
         let dsElement = false;
@@ -1137,6 +1159,7 @@
       const frameJson = frameJsonTemplate();
       const referenceTokens = msg.referenceTokens || null;
       const isAudit = msg.isAudit || false;
+      const allowedCategories = msg.categories || null;
       for (const node of selection) {
         extractSpecs(node);
       }

@@ -9,7 +9,7 @@ let lastAuditResults = null;
 let handoffData = {
   briefing: { questions: [] },
   step1: { files: [], versao: "v2.0.0" },
-  step2: { specs: null, isAuditEnabled: false, auditReferenceTokens: null },
+  step2: { specs: null, isAuditEnabled: false, auditReferenceTokens: null, auditReferences: [] },
   step3: {
     team: [],
     erro_checked: true,
@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fabFlow.classList.toggle('hidden', viewId !== 'view-specifications' || currentSpecTab !== 'specs-flow');
       }
 
-      // Handoff FABs
+      // Handoff FABs — requer Step 1 E briefing ativado
       if (fabBriefing) {
         fabBriefing.classList.toggle('hidden', !isHandoff || currentStep !== 1 || !isBriefingOn);
       }
@@ -1043,31 +1043,6 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.closest("div").remove();
     }
 
-    // Step 1: Dynamic Items
-    function addDynamicItem() {
-      const container = document.getElementById("dynamic-items-container");
-      const id = Date.now();
-      const div = document.createElement("div");
-      div.className = "p-4 bg-gray-50/50 dark:bg-dark-surface/30 rounded-xl border border-gray-100 dark:border-dark-line relative group animate-in slide-in-from-top-2 duration-300";
-      div.innerHTML = `
-        <button onclick="this.parentElement.remove()" title="Remover item" aria-label="Remover item" class="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors">
-          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-        </button>
-        <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1">
-            <label class="text-[10px] font-bold text-gray-400 uppercase">Título</label>
-            <input type="text" placeholder="Ex: API" class="w-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg px-3 py-1.5 text-[12px]" onchange="updateData('step1', 'extra_${id}_title', this.value)">
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-[10px] font-bold text-gray-400 uppercase">Valor</label>
-            <input type="text" placeholder="Link ou texto" class="w-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg px-3 py-1.5 text-[12px]" onchange="updateData('step1', 'extra_${id}_value', this.value)">
-          </div>
-        </div>
-      `;
-      container.appendChild(div);
-      lucide.createIcons();
-      autoScrollToNewItem('handoff-scroll-container');
-    }
 
     // Step 2: Scanning & Specs
     function toggleAuditSection(checked) {
@@ -1078,45 +1053,82 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleAuditRefUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
+      const files = event.target.files;
+      if (!files || files.length === 0) return;
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const json = JSON.parse(e.target.result);
-          if (handoffData && handoffData.step2) {
-            handoffData.step2.auditReferenceTokens = json;
-            handoffData.step2.auditFilename = file.name;
+      let loadedCount = 0;
+      const targetCount = files.length;
+      let hasError = false;
+
+      if (!handoffData.step2.auditReferences) handoffData.step2.auditReferences = [];
+
+      for (let i = 0; i < targetCount; i++) {
+        const file = files[i];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const json = JSON.parse(e.target.result);
+            handoffData.step2.auditReferences.push({
+              name: file.name,
+              tokens: json
+            });
+          } catch (err) {
+            hasError = true;
+          }
+          loadedCount++;
+          if (loadedCount === targetCount) {
             saveToStorage();
+            renderAuditFilesList();
             
-            // UI Feedback
-            const fileDisplay = document.getElementById('audit-file-display');
-            const filenameSpan = document.getElementById('audit-filename');
             const btnPerform = document.getElementById('btn-perform-audit');
-            
-            if (fileDisplay && filenameSpan) {
-              filenameSpan.innerText = file.name;
-              fileDisplay.classList.remove('hidden');
-            }
-            if (btnPerform) {
+            if (btnPerform && handoffData.step2.auditReferences.length > 0) {
               btnPerform.disabled = false;
               btnPerform.classList.remove('opacity-50', 'cursor-not-allowed');
             }
             
-            showToast('Referências de auditoria importadas!');
+            if (hasError) {
+              showToast('Alguns arquivos falharam ao ler', 'error');
+            } else {
+              showToast('Referências de auditoria importadas!');
+            }
+            // Reset input so same file can be uploaded again if needed
+            event.target.value = '';
           }
-        } catch (err) {
-          showToast('Erro ao ler arquivo JSON', 'error');
-        }
-      };
-      reader.readAsText(file);
+        };
+        reader.readAsText(file);
+      }
+    }
+
+    function renderAuditFilesList() {
+      const container = document.getElementById('audit-files-container');
+      if (!container) return;
+      container.innerHTML = '';
+      
+      const refs = handoffData.step2.auditReferences || [];
+      if (refs.length === 0) return;
+      
+      refs.forEach((ref, idx) => {
+        const item = document.createElement('div');
+        item.className = "p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/30 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1";
+        item.innerHTML = `
+          <div class="flex items-center gap-2 overflow-hidden">
+            <i data-lucide="file-json" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
+            <span class="text-[11px] font-bold text-blue-800 dark:text-blue-300 truncate">${ref.name}</span>
+          </div>
+          <button onclick="removeAuditReference(${idx})" class="p-1 hover:bg-blue-100 dark:hover:bg-blue-800/50 rounded-md text-blue-600 dark:text-blue-400 transition-colors" title="Remover arquivo">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+        `;
+        container.appendChild(item);
+      });
+      
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
     function performAudit() {
-      if (!handoffData.step2.auditReferenceTokens) {
-        showToast("Carregue o arquivo JSON de referência antes de realizar a auditoria.", "error");
-        // Open the section if it was closed
+      const refs = handoffData.step2.auditReferences || [];
+      if (refs.length === 0) {
+        showToast("Carregue ao menos um arquivo JSON de referência antes de realizar a auditoria.", "error");
         const content = document.getElementById('audit-card-content');
         if (content && content.classList.contains('hidden')) content.classList.remove('hidden');
         return;
@@ -1126,8 +1138,8 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.disabled = true;
         btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Auditando...';
       }
-      lucide.createIcons();
-      parent.postMessage({ pluginMessage: { type: "scan-frame", isAudit: true, referenceTokens: handoffData.step2.auditReferenceTokens } }, "*");
+      if (window.lucide) lucide.createIcons();
+      parent.postMessage({ pluginMessage: { type: "scan-frame", isAudit: true, referenceTokens: refs } }, "*");
     }
 
     function exportAuditReport() {
@@ -1141,19 +1153,14 @@ document.addEventListener('DOMContentLoaded', () => {
       link.click();
     }
 
-    function removeAuditReference() {
-      if (handoffData && handoffData.step2) {
-        handoffData.step2.auditReferenceTokens = null;
-        handoffData.step2.auditFilename = null;
+    function removeAuditReference(idx) {
+      if (handoffData && handoffData.step2 && handoffData.step2.auditReferences) {
+        handoffData.step2.auditReferences.splice(idx, 1);
         saveToStorage();
+        renderAuditFilesList();
         
-        const fileDisplay = document.getElementById('audit-file-display');
-        const filenameSpan = document.getElementById('audit-filename');
         const btnPerform = document.getElementById('btn-perform-audit');
-        
-        if (fileDisplay) fileDisplay.classList.add('hidden');
-        if (filenameSpan) filenameSpan.innerText = '';
-        if (btnPerform) {
+        if ((!handoffData.step2.auditReferences || handoffData.step2.auditReferences.length === 0) && btnPerform) {
           btnPerform.disabled = true;
           btnPerform.classList.add('opacity-50', 'cursor-not-allowed');
         }
@@ -1193,19 +1200,30 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    function scanFrame() {
-      if (handoffData.step2.isAuditEnabled && !handoffData.step2.auditReferenceTokens) {
-        showToast("Carregue o arquivo JSON de referência antes de escanear com auditoria.", "error");
+    function scanFrame(categories = null) {
+      const refs = handoffData.step2.auditReferences || [];
+      if (handoffData.step2.isAuditEnabled && refs.length === 0) {
+        showToast("Carregue ao menos um arquivo JSON de referência antes de escanear com auditoria.", "error");
         const content = document.getElementById('audit-card-content');
         if (content && content.classList.contains('hidden')) content.classList.remove('hidden');
         return;
       }
 
       const btn = document.getElementById("btn-scan");
-      btn.disabled = true;
-      btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Escaneando...';
-      lucide.createIcons();
-      parent.postMessage({ pluginMessage: { type: "scan-frame", isAudit: handoffData.step2.isAuditEnabled, referenceTokens: handoffData.step2.auditReferenceTokens } }, "*");
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Escaneando...';
+      }
+      if (window.lucide) lucide.createIcons();
+      
+      parent.postMessage({ 
+        pluginMessage: { 
+          type: "scan-frame", 
+          isAudit: handoffData.step2.isAuditEnabled, 
+          referenceTokens: refs.length > 0 ? refs : null,
+          categories: categories
+        } 
+      }, "*");
     }
 
 
@@ -1484,7 +1502,7 @@ document.addEventListener('DOMContentLoaded', () => {
               id="${searchId}"
               type="text"
               placeholder="Buscar em ${section.title}..."
-              class="w-full pl-8 pr-3 py-1.5 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0070af]/30 focus:border-[#0070af] transition-all"
+              class="token-search-input w-full pl-8 pr-3 py-1.5 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0070af]/30 focus:border-[#0070af] transition-all"
               oninput="filterSpecItems('${gridId}', '${emptyId}', this.value)"
             />
           </div>
@@ -3123,7 +3141,9 @@ function toggleLinkInput(show) {
         chkAudit.checked = !!handoffData.step2.isAuditEnabled;
         toggleAuditSection(chkAudit.checked);
         
-        if (handoffData.step2.auditReferenceTokens) {
+        const refs = handoffData.step2.auditReferences || [];
+        if (refs.length > 0) {
+          renderAuditFilesList();
           const btn = document.getElementById('btn-perform-audit');
           if (btn) {
             btn.disabled = false;
@@ -3139,22 +3159,6 @@ function toggleLinkInput(show) {
       if (protoField) protoField.classList.toggle("hidden", !handoffData.docs.proto.checked);
       const a11yField = document.getElementById("a11y-field");
       if (a11yField) a11yField.classList.toggle("hidden", !handoffData.docs.a11y.checked);
-
-      // 8. Audit File Display
-      if (handoffData.step2.auditFilename) {
-        const fileDisplay = document.getElementById('audit-file-display');
-        const filenameSpan = document.getElementById('audit-filename');
-        const btnPerform = document.getElementById('btn-perform-audit');
-        
-        if (fileDisplay && filenameSpan) {
-          filenameSpan.innerText = handoffData.step2.auditFilename;
-          fileDisplay.classList.remove('hidden');
-        }
-        if (btnPerform) {
-          btnPerform.disabled = false;
-          btnPerform.classList.remove('opacity-50', 'cursor-not-allowed');
-        }
-      }
 
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
