@@ -1,4 +1,4 @@
-import { isDS, frameJsonTemplate } from './audit.js';
+import { auditProperty, AUDIT_SCORE, frameJsonTemplate } from './audit.js';
 
 figma.showUI(__html__, { width: 480, height: 750 });
 
@@ -266,224 +266,207 @@ figma.ui.onmessage = async (msg) => {
       fichaTecnica.appendChild(content);
       setFillAndHug(content);
       
-      // 1.1 INFORMAÇÕES E BRIEFING ESTRATÉGICO
+      // 1.1 INFORMAÇÕES BÁSICAS
       if (!data.setup || data.setup.ficha !== false) {
-        const infoSection = createSection(content, "Informações e Briefing Estratégico");
+        const infoSection = createSection(content, "Informações Básicas");
+        createRow(infoSection, "Título do Projeto", data.step1.fluxo);
+        createRow(infoSection, "Objetivo da Entrega", data.step1.objetivo);
         
-        let hasBasicInfo = false;
-        if (data.step1) {
-          if (data.step1.fluxo) {
-            createRow(infoSection, "Título do Projeto", data.step1.fluxo);
-            hasBasicInfo = true;
-          }
-          if (data.step1.objetivo) {
-            createRow(infoSection, "Objetivo da Entrega", data.step1.objetivo);
-            hasBasicInfo = true;
-          }
-          
-          if (data.step1.status || data.step1.versao) {
-            const subGrid = createFrame("HORIZONTAL", 0, 16);
-            infoSection.appendChild(subGrid);
-            setFillAndHug(subGrid);
-            
-            if (data.step1.status) createRow(subGrid, "Status", data.step1.status);
-            if (data.step1.versao) createRow(subGrid, "Versão", data.step1.versao);
-            hasBasicInfo = true;
-          }
-        }
-
-        // Briefing estratégico questions
-        if (data.setup && data.setup.incluirBriefing !== false && data.briefing && data.briefing.questions && data.briefing.questions.length > 0) {
-          const hasAnsweredQuestions = data.briefing.questions.some(q => q.answer);
-          if (hasAnsweredQuestions) {
-            if (hasBasicInfo) {
-              const dividerSpace = createFrame("VERTICAL", 0, 8);
-              infoSection.appendChild(dividerSpace);
-              setFillAndHug(dividerSpace);
-            }
-
-            data.briefing.questions.forEach((q, idx) => {
-              if (q.answer) {
-                const qRow = createFrame("VERTICAL", 0, 4);
-                infoSection.appendChild(qRow);
-                setFillAndHug(qRow);
-                
-                const qText = createText(`${idx + 1}. ${q.question}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
-                qRow.appendChild(qText);
-                setFillAndHug(qText);
-                
-                const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
-                qRow.appendChild(aText);
-                setFillAndHug(aText);
-              }
-            });
-          }
-        }
+        const subGrid = createFrame("HORIZONTAL", 0, 16);
+        infoSection.appendChild(subGrid);
+        setFillAndHug(subGrid);
+        
+        createRow(subGrid, "Status", data.step1.status);
+        createRow(subGrid, "Versão", data.step1.versao);
       }
 
-      // 1.2 EQUIPE RESPONSÁVEL
-      const hasTeam = (data.step3 && data.step3.team && data.step3.team.length > 0) || 
-                      (data.step1 && data.step1.equipe && data.step1.equipe.length > 0);
-      if (hasTeam) {
-        const teamSection = createSection(content, "Equipe Responsável");
-        
-        if (data.step3 && data.step3.team && data.step3.team.length > 0) {
-          data.step3.team.forEach(m => {
-            const mRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
-            teamSection.appendChild(mRow);
-            setFillAndHug(mRow);
-            
-            mRow.counterAxisAlignItems = "CENTER";
-            mRow.cornerRadius = 8;
-            mRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
-
-            const roleTag = createFrame("HORIZONTAL", 8, 4, { r: 0, g: 0.35, b: 0.79 });
-            roleTag.cornerRadius = 4;
-            roleTag.appendChild(createText(m.role, 10, "Bold", { r: 1, g: 1, b: 1 }));
-            mRow.appendChild(roleTag);
-
-            const nameText = createText(m.name, 12, "Medium");
-            mRow.appendChild(nameText);
-            setFillAndHug(nameText);
-
-            if (m.email) {
-              const contactLink = createText("Contato", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
-              contactLink.textDecoration = "UNDERLINE";
-              contactLink.hyperlink = { type: "URL", value: m.email.includes("@") ? "mailto:" + m.email : m.email };
-              mRow.appendChild(contactLink);
-            }
-          });
-        }
-        
-        if (data.step1 && data.step1.equipe && data.step1.equipe.length > 0) {
-          data.step1.equipe.forEach(member => {
-            createRow(teamSection, member.role, member.name);
-          });
-        }
-      }
-
-      // 1.3 CENÁRIOS DE EXCEÇÃO
-      const hasExceptions = (data.excecoes && data.excecoes.length > 0) ||
-                            (data.step1 && data.step1.excecoes && data.step1.excecoes.length > 0);
-      if (hasExceptions) {
+      // 1.2 EXCEÇÕES
+      if (data.step1.excecoes && data.step1.excecoes.length > 0) {
         const excSection = createSection(content, "Cenários de Exceção");
-        
-        if (data.excecoes && data.excecoes.length > 0) {
-          data.excecoes.forEach(e => {
-            const eRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
-            excSection.appendChild(eRow);
-            setFillAndHug(eRow);
-            
-            eRow.counterAxisAlignItems = "CENTER";
-            eRow.cornerRadius = 8;
-            eRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+        data.step1.excecoes.forEach((exc, idx) => {
+          createRow(excSection, `Cenário ${idx + 1}`, exc.scenario);
+        });
+      }
 
-            const typeTag = createFrame("HORIZONTAL", 8, 4, { r: 0.9, g: 0.2, b: 0.2 });
-            typeTag.cornerRadius = 4;
-            typeTag.appendChild(createText(e.type, 10, "Bold", { r: 1, g: 1, b: 1 }));
-            eRow.appendChild(typeTag);
+      // 1.3 REGRAS DE NEGÓCIO
+      if (data.step1.regras && data.step1.regras.length > 0) {
+        const bizSection = createSection(content, "Regras de Negócio e HU");
+        data.step1.regras.forEach((regra) => {
+          createRow(bizSection, regra.title, regra.link ? "Link de Referência" : "-", !!regra.link, regra.link);
+        });
+      }
 
-            const titleText = createText(e.title, 12, "Medium");
-            eRow.appendChild(titleText);
-            setFillAndHug(titleText);
-            
-            if (e.link && e.link !== "#") {
-              titleText.textDecoration = "UNDERLINE";
-              titleText.hyperlink = { type: "URL", value: e.link };
-            }
-          });
-        }
-        
-        if (data.step1 && data.step1.excecoes && data.step1.excecoes.length > 0) {
-          data.step1.excecoes.forEach((exc, idx) => {
-            createRow(excSection, `Cenário ${idx + 1}`, exc.scenario);
-          });
+      // 1.4 EQUIPE
+      if (data.step1.equipe && data.step1.equipe.length > 0) {
+        const teamSection = createSection(content, "Equipe");
+        data.step1.equipe.forEach(member => {
+          createRow(teamSection, member.role, member.name);
+        });
+      }
+
+      // 1.5 DOCS E ANEXOS
+      if (data.setup && data.setup.incluirDocs && data.step1.docs && data.step1.docs.length > 0) {
+        const docsSection = createSection(null, "Docs e Anexos");
+        let hasDocs = false;
+        data.step1.docs.forEach(doc => {
+          if (doc.url) {
+            createRow(docsSection, doc.name || "Documento", doc.url, true, doc.url);
+            hasDocs = true;
+          }
+        });
+        if (hasDocs) {
+          content.appendChild(docsSection);
+          setFillAndHug(docsSection);
         }
       }
 
-      // 1.4 REGRAS E HUS
-      const hasRules = (data.regras && data.regras.length > 0) ||
-                       (data.step1 && data.step1.regras && data.step1.regras.length > 0);
-      if (hasRules) {
+      // 1.6 BRIEFING ESTRATÉGICO
+      if (data.setup && data.setup.incluirBriefing && data.briefing && data.briefing.questions && data.briefing.questions.length > 0) {
+        const briefingSection = createSection(content, "Briefing Estratégico");
+        data.briefing.questions.forEach((q, idx) => {
+          if (q.answer) {
+            const qRow = createFrame("VERTICAL", 0, 4);
+            briefingSection.appendChild(qRow);
+            setFillAndHug(qRow);
+            
+            const qText = createText(`${idx + 1}. ${q.question}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+            qRow.appendChild(qText);
+            setFillAndHug(qText);
+            
+            const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+            qRow.appendChild(aText);
+            setFillAndHug(aText);
+          }
+        });
+        content.appendChild(briefingSection);
+      }
+
+      // 1.3 EQUIPE E RESPONSÁVEIS
+      if (data.step3 && data.step3.team && data.step3.team.length > 0) {
+        const teamSection = createSection(content, "Equipe e Responsáveis");
+        data.step3.team.forEach(m => {
+          const mRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
+          teamSection.appendChild(mRow);
+          setFillAndHug(mRow);
+          
+          mRow.counterAxisAlignItems = "CENTER";
+          mRow.cornerRadius = 8;
+          mRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+
+          const roleTag = createFrame("HORIZONTAL", 8, 4, { r: 0, g: 0.35, b: 0.79 });
+          roleTag.cornerRadius = 4;
+          roleTag.appendChild(createText(m.role, 10, "Bold", { r: 1, g: 1, b: 1 }));
+          mRow.appendChild(roleTag);
+          // Tags usually hug width, but if the user insists ALL items... 
+          // However, tags in mRow (HORIZONTAL) with layoutGrow=1 would be weird.
+          // I'll keep tags as Hug-Hug unless they look wrong.
+          // Wait, roleTag is a child of mRow (HORIZONTAL). setFillAndHug(roleTag) would make it fill width.
+          // I'll only setFillAndHug on the nameText to push other items.
+
+          const nameText = createText(m.name, 12, "Medium");
+          mRow.appendChild(nameText);
+          setFillAndHug(nameText);
+
+          if (m.email) {
+            const contactLink = createText("Contato", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
+            contactLink.textDecoration = "UNDERLINE";
+            contactLink.hyperlink = { type: "URL", value: m.email.includes("@") ? "mailto:" + m.email : m.email };
+            mRow.appendChild(contactLink);
+            // Don't fill contactLink, just let it hug.
+          }
+          teamSection.appendChild(mRow);
+        });
+      }
+
+      // 1.4 CENÁRIOS DE EXCEÇÃO
+      if (data.excecoes && data.excecoes.length > 0) {
+        const excSection = createSection(content, "Cenários de Exceção");
+        data.excecoes.forEach(e => {
+          const eRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
+          excSection.appendChild(eRow);
+          setFillAndHug(eRow);
+          
+          eRow.counterAxisAlignItems = "CENTER";
+          eRow.cornerRadius = 8;
+          eRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+
+          const typeTag = createFrame("HORIZONTAL", 8, 4, { r: 0.9, g: 0.2, b: 0.2 });
+          typeTag.cornerRadius = 4;
+          typeTag.appendChild(createText(e.type, 10, "Bold", { r: 1, g: 1, b: 1 }));
+          eRow.appendChild(typeTag);
+
+          const titleText = createText(e.title, 12, "Medium");
+          eRow.appendChild(titleText);
+          setFillAndHug(titleText);
+          
+          if (e.link && e.link !== "#") {
+            titleText.textDecoration = "UNDERLINE";
+            titleText.hyperlink = { type: "URL", value: e.link };
+          }
+        });
+      }
+
+      // 1.5 REGRAS DE NEGÓCIO E HUS
+      if (data.regras && data.regras.length > 0) {
         const rulesSection = createSection(content, "Regras de Negócio e HUs");
-        
-        if (data.regras && data.regras.length > 0) {
-          data.regras.forEach(r => {
-            const rRow = createFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.98, b: 0.99 });
-            rulesSection.appendChild(rRow);
-            setFillAndHug(rRow);
-            
-            rRow.cornerRadius = 8;
-            rRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+        data.regras.forEach(r => {
+          const rRow = createFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.98, b: 0.99 });
+          rulesSection.appendChild(rRow);
+          setFillAndHug(rRow);
+          
+          rRow.cornerRadius = 8;
+          rRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
 
-            if (r.link && r.link !== "#") {
-              const lText = createText("Acesse o link da HU", 12, "Bold", { r: 0, g: 0.35, b: 0.79 });
-              lText.textDecoration = "UNDERLINE";
-              lText.hyperlink = { type: "URL", value: r.link };
-              rRow.appendChild(lText);
-              setFillAndHug(lText);
-            }
-            if (r.notes) {
-              const nText = createText(r.notes, 12, "Regular", { r: 0.4, g: 0.4, b: 0.4 });
-              rRow.appendChild(nText);
-              setFillAndHug(nText);
-            }
-          });
-        }
-        
-        if (data.step1 && data.step1.regras && data.step1.regras.length > 0) {
-          data.step1.regras.forEach((regra) => {
-            createRow(rulesSection, regra.title, regra.link ? "Link de Referência" : "-", !!regra.link, regra.link);
-          });
-        }
+          if (r.link && r.link !== "#") {
+            const lText = createText("Acesse o link da HU", 12, "Bold", { r: 0, g: 0.35, b: 0.79 });
+            lText.textDecoration = "UNDERLINE";
+            lText.hyperlink = { type: "URL", value: r.link };
+            rRow.appendChild(lText);
+            setFillAndHug(lText);
+          }
+          if (r.notes) {
+            const nText = createText(r.notes, 12, "Regular", { r: 0.4, g: 0.4, b: 0.4 });
+            rRow.appendChild(nText);
+            setFillAndHug(nText);
+          }
+        });
       }
 
-      // 1.5 DOCS E ANEXOS (Último item da Ficha de Projeto)
-      const docItems = [
-        { key: "proto", label: "Protótipo Navegável" },
-        { key: "a11y", label: "Handoff Acessibilidade" },
-        { key: "research", label: "Pesquisa de UX" }
-      ];
-      
-      const hasNewDocs = data.docs && docItems.some(item => {
-        const docData = data.docs[item.key];
-        return docData && docData.checked && docData.link;
-      });
-      const hasOldDocs = data.setup && data.setup.incluirDocs && data.step1.docs && data.step1.docs.some(doc => doc.url);
-
-      if (hasNewDocs || hasOldDocs) {
-        const docsSection = createSection(content, "Docs e Anexos");
+      // 1.6 DOCS E ANEXOS
+      if (data.docs) {
+        const docsSection = createSection(null, "Docs e Anexos");
+        const docItems = [
+          { key: "proto", label: "Protótipo Navegável" },
+          { key: "a11y", label: "Handoff Acessibilidade" },
+          { key: "research", label: "Pesquisa de UX" }
+        ];
         
-        if (hasNewDocs) {
-          docItems.forEach(item => {
-            const docData = data.docs[item.key];
-            if (docData && docData.checked && docData.link) {
-              const dRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
-              docsSection.appendChild(dRow);
-              setFillAndHug(dRow);
-              
-              dRow.counterAxisAlignItems = "CENTER";
-              dRow.cornerRadius = 8;
-              dRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+        let hasDocs = false;
+        docItems.forEach(item => {
+          const docData = data.docs[item.key];
+          if (docData && docData.checked && docData.link) {
+            hasDocs = true;
+            const dRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
+            dRow.layoutAlign = "STRETCH";
+            dRow.counterAxisAlignItems = "CENTER";
+            dRow.cornerRadius = 8;
+            dRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
 
-              const dLabel = createText(item.label, 12, "Bold");
-              dLabel.layoutGrow = 1;
-              dRow.appendChild(dLabel);
+            const dLabel = createText(item.label, 12, "Bold");
+            dLabel.layoutGrow = 1;
+            dRow.appendChild(dLabel);
 
-              const dLink = createText("Acesse o link", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
-              dLink.textDecoration = "UNDERLINE";
-              dLink.hyperlink = { type: "URL", value: docData.link };
-              dRow.appendChild(dLink);
-            }
-          });
-        }
-        
-        if (hasOldDocs) {
-          data.step1.docs.forEach(doc => {
-            if (doc.url) {
-              createRow(docsSection, doc.name || "Documento", doc.url, true, doc.url);
-            }
-          });
+            const dLink = createText("Acesse o link", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
+            dLink.textDecoration = "UNDERLINE";
+            dLink.hyperlink = { type: "URL", value: docData.link };
+            dRow.appendChild(dLink);
+            
+            docsSection.appendChild(dRow);
+          }
+        });
+        if (hasDocs) {
+          content.appendChild(docsSection);
+          setFillAndHug(docsSection);
         }
       }
 
@@ -503,13 +486,6 @@ figma.ui.onmessage = async (msg) => {
 
         const uiTitle = createText("User Interface", 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
         uiBoard.appendChild(uiTitle);
-        setFillAndHug(uiTitle);
-
-        const columnsContainer = createFrame("HORIZONTAL", 0, 16);
-        columnsContainer.name = "Columns";
-        uiBoard.appendChild(columnsContainer);
-        setFillAndHug(columnsContainer);
-        columnsContainer.layoutWrap = "WRAP";
 
         // Helper para specs list (Colunas Verticais)
         function createSpecList(title, items, type) {
@@ -627,6 +603,26 @@ figma.ui.onmessage = async (msg) => {
           return sec;
         }
 
+        // Briefing Estratégico Section
+        if (data.setup && data.setup.incluirBriefing && data.briefing && data.briefing.questions && data.briefing.questions.length > 0) {
+           const briefingSection = createSection(fichaTecnica, "Briefing Estratégico");
+           data.briefing.questions.forEach((q, idx) => {
+              if (q.answer) {
+                 const qRow = createFrame("VERTICAL", 0, 4);
+                 qRow.name = "Question " + (idx + 1);
+                 briefingSection.appendChild(qRow);
+                 setFillAndHug(qRow);
+
+                 const qText = createText(`${idx + 1}. ${q.question}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+                 qRow.appendChild(qText);
+                 setFillAndHug(qText);
+
+                 const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+                 qRow.appendChild(aText);
+                 setFillAndHug(aText);
+              }
+           });
+        }
 
         const specsData = data.step2.specs || { components: [], icons: [], typography: [], frames: [], vectors: [] };
         
@@ -638,21 +634,12 @@ figma.ui.onmessage = async (msg) => {
           { title: "Vetores", items: specsData.vectors, type: "vectors" }
         ];
 
-        let hasSpecs = false;
         categories.forEach(cat => {
           const sec = createSpecList(cat.title, cat.items, cat.type);
           if (sec) {
-             columnsContainer.appendChild(sec);
-             setFillAndHug(sec);
-             hasSpecs = true;
+             mainContainer.appendChild(sec);
           }
         });
-
-        if (hasSpecs) {
-          mainContainer.appendChild(uiBoard);
-        } else {
-          uiBoard.remove();
-        }
       }
 
       // 3. ANATOMIA / MEDIDAS
@@ -1010,6 +997,23 @@ figma.ui.onmessage = async (msg) => {
 
     const referenceTokens = msg.referenceTokens || null;
     const isAudit = msg.isAudit || false;
+    const allowedCategories = msg.categories || null; // Array of strings or null
+
+    // Wraps auditProperty + derives the legacy isDS flag (true | "warning" | false).
+    // Returns an object that can be spread into the prop, e.g.:
+    //   props.push({ ..., ...audit("colors", hex, key) });
+    function audit(propType, propValue, propKey, propName) {
+      const result = auditProperty(propName, propValue, propType, propKey, referenceTokens, isAudit);
+      const isDS = result.score >= AUDIT_SCORE.EXACT ? true
+                 : result.score >= AUDIT_SCORE.SOFT ? "warning"
+                 : false;
+      return {
+        isDS,
+        score: isAudit ? result.score : null,
+        matchedBy: result.matchedBy,
+        matchedIn: result.matchedIn
+      };
+    }
 
     function rgbToHex(r, g, b) {
       const toHex = (c) => {
@@ -1049,8 +1053,7 @@ figma.ui.onmessage = async (msg) => {
             const vInfo = getVar(n, "fills");
             const name = (vInfo && vInfo.name) || styleName || hex;
             const key = (vInfo && vInfo.key) || styleKey;
-            const ds = isDS(name, hex, "colors", key, referenceTokens, isAudit, frameJson, n.name);
-            props.push({ type: "color", name, value: hex, isDS: ds, key, variableKey: vInfo ? vInfo.key : null, styleKey, label: "Cor (Fill)" });
+            props.push({ type: "color", name, value: hex, rawValue: hex, key, variableKey: vInfo ? vInfo.key : null, styleKey, label: "Cor (Fill)", ...audit("colors", hex, key, name) });
           }
         }
       }
@@ -1067,8 +1070,8 @@ figma.ui.onmessage = async (msg) => {
         const fontStyle = (n.fontName && n.fontName !== figma.mixed) ? n.fontName.style : "Mixed";
         const size = (n.fontSize && n.fontSize !== figma.mixed) ? n.fontSize : "Mixed";
         const name = styleName || `${family} ${fontStyle} (${size}px)`;
-        const ds = isDS(name, name, "typography", styleKey, referenceTokens, isAudit, frameJson, n.name);
-        props.push({ type: "typography", name, value: name, isDS: ds, key: styleKey, styleKey, label: "Tipografia" });
+        const rawSize = typeof size === "number" ? size : null;
+        props.push({ type: "typography", name, value: name, rawValue: rawSize, key: styleKey, styleKey, label: "Tipografia", ...audit("typography", name, styleKey, name) });
       }
 
       // Spacing, Alignment
@@ -1077,8 +1080,8 @@ figma.ui.onmessage = async (msg) => {
           const vInfo = getVar(n, "itemSpacing");
           const val = `${n.itemSpacing}px`;
           const name = (vInfo && vInfo.name) || val;
-          const ds = isDS(name, val, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
-          props.push({ type: "spacing", name, value: val, isDS: ds, key: vInfo ? vInfo.key : null, variableKey: vInfo ? vInfo.key : null, label: "Gap" });
+          const propKey = vInfo ? vInfo.key : null;
+          props.push({ type: "spacing", name, value: val, rawValue: n.itemSpacing, key: propKey, variableKey: propKey, label: "Gap", ...audit("spacing", val, propKey, name) });
         }
         const paddings = [
           { prop: 'paddingTop', label: 'Top' }, { prop: 'paddingRight', label: 'Right' },
@@ -1089,8 +1092,8 @@ figma.ui.onmessage = async (msg) => {
             const vInfo = getVar(n, p.prop);
             const val = `${n[p.prop]}px`;
             const name = (vInfo && vInfo.name) || val;
-            const ds = isDS(name, val, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
-            props.push({ type: "spacing", name, value: val, isDS: ds, key: vInfo ? vInfo.key : null, variableKey: vInfo ? vInfo.key : null, label: `Padding ${p.label}` });
+            const propKey = vInfo ? vInfo.key : null;
+            props.push({ type: "spacing", name, value: val, rawValue: n[p.prop], key: propKey, variableKey: propKey, label: `Padding ${p.label}`, ...audit("spacing", val, propKey, name) });
           }
         });
       }
@@ -1104,11 +1107,15 @@ figma.ui.onmessage = async (msg) => {
           const vInfo = getVar(n, "strokeWeight");
           const val = `${n.strokeWeight}px`;
           const name = (vInfo && vInfo.name) || val;
-          
-          // Whitelist 1px and 0px border width as requested
-          const ds = (val === "1px" || val === "0px") ? true : isDS(name, val, "borders", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
-          
-          props.push({ type: "strokeWeight", name, value: val, isDS: ds, key: vInfo ? vInfo.key : null, variableKey: vInfo ? vInfo.key : null, label: "Border Width" });
+          const propKey = vInfo ? vInfo.key : null;
+
+          // Whitelist 1px and 0px border width: treat as exact match.
+          const whitelisted = (val === "1px" || val === "0px");
+          const auditFields = whitelisted
+            ? { isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "value", matchedIn: null }
+            : audit("borders", val, propKey, name);
+
+          props.push({ type: "strokeWeight", name, value: val, rawValue: n.strokeWeight, key: propKey, variableKey: propKey, label: "Border Width", ...auditFields });
 
           if (visibleStroke.type === "SOLID") {
             const hex = rgbToHex(visibleStroke.color.r, visibleStroke.color.g, visibleStroke.color.b).toUpperCase();
@@ -1118,9 +1125,9 @@ figma.ui.onmessage = async (msg) => {
               if (st) { styleName = st.name; styleKey = st.key; }
             }
             const sVar = getVar(n, "strokes");
+            const strokeKey = (sVar && sVar.key) || styleKey;
             const strokeName = (sVar && sVar.name) || styleName || hex;
-            const sDs = isDS(strokeName, hex, "colors", (sVar && sVar.key) || styleKey, referenceTokens, isAudit, frameJson, n.name);
-            props.push({ type: "stroke", name: strokeName, value: hex, isDS: sDs, key: (sVar && sVar.key) || styleKey, variableKey: sVar ? sVar.key : null, styleKey, label: "Border Color" });
+            props.push({ type: "stroke", name: strokeName, value: hex, rawValue: hex, key: strokeKey, variableKey: sVar ? sVar.key : null, styleKey, label: "Border Color", ...audit("colors", hex, strokeKey, strokeName) });
           }
         }
       }
@@ -1129,8 +1136,8 @@ figma.ui.onmessage = async (msg) => {
         const vInfo = getVar(n, "cornerRadius");
         const val = `${n.cornerRadius}px`;
         const name = (vInfo && vInfo.name) || val;
-        const ds = isDS(name, val, "borders", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
-        props.push({ type: "radius", name, value: val, isDS: ds, key: vInfo ? vInfo.key : null, variableKey: vInfo ? vInfo.key : null, label: "Radius" });
+        const propKey = vInfo ? vInfo.key : null;
+        props.push({ type: "radius", name, value: val, rawValue: n.cornerRadius, key: propKey, variableKey: propKey, label: "Radius", ...audit("borders", val, propKey, name) });
       }
 
       // Effects
@@ -1143,8 +1150,7 @@ figma.ui.onmessage = async (msg) => {
         for (const effect of n.effects) {
           if (effect.visible) {
              const name = styleName || `${effect.type} (${effect.type.includes('SHADOW') ? 'Sombra' : 'Blur'})`;
-             const ds = isDS(name, effect.type, "effects", styleKey, referenceTokens, isAudit, frameJson, n.name);
-             props.push({ type: "effect", name, value: effect.type, isDS: ds, key: styleKey, styleKey, label: "Effect" });
+             props.push({ type: "effect", name, value: effect.type, key: styleKey, styleKey, label: "Effect", ...audit("effects", effect.type, styleKey, name) });
           }
         }
       }
@@ -1165,8 +1171,8 @@ figma.ui.onmessage = async (msg) => {
         else if (parent.layoutMode === "HORIZONTAL" && n.layoutAlign === "STRETCH") hMode = "Fill Container";
         else if (n.layoutMode && ((n.layoutMode === "VERTICAL" && n.primaryAxisSizingMode === "AUTO") || (n.layoutMode === "HORIZONTAL" && n.counterAxisSizingMode === "AUTO"))) hMode = "Hug Contents";
 
-        props.push({ type: "layout", name: wMode, value: wMode, isDS: true, label: "W Sizing" });
-        props.push({ type: "layout", name: hMode, value: hMode, isDS: true, label: "H Sizing" });
+        props.push({ type: "layout", name: wMode, value: wMode, isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "intrinsic", matchedIn: null, label: "W Sizing" });
+        props.push({ type: "layout", name: hMode, value: hMode, isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "intrinsic", matchedIn: null, label: "H Sizing" });
       }
 
       // VARIANTS (For Instances)
@@ -1176,7 +1182,7 @@ figma.ui.onmessage = async (msg) => {
           const cleanName = propName.split("#")[0];
           const val = String(propObj.value);
           // Variants are usually part of DS by definition if the component is [dsc]
-          props.push({ type: "variant", name: cleanName, value: val, isDS: true, label: `Prop: ${cleanName}` });
+          props.push({ type: "variant", name: cleanName, value: val, isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "intrinsic", matchedIn: null, label: `Prop: ${cleanName}` });
         });
       }
 
@@ -1184,20 +1190,38 @@ figma.ui.onmessage = async (msg) => {
     }
 
     function addElement(category, node, props) {
+      // FILTRAGEM POR CATEGORIA (apenas se não for auditoria)
+      if (!isAudit && allowedCategories && allowedCategories.length > 0) {
+        let isAllowed = false;
+        if (category === "frames" && allowedCategories.includes("containers")) isAllowed = true;
+        else if (category === "vectors" && allowedCategories.includes("shapes")) isAllowed = true;
+        else if (allowedCategories.includes(category)) isAllowed = true;
+        
+        if (!isAllowed) return;
+      }
+
       // If props is empty, and it's not a component/icon/text, skip to reduce noise
       if (props.length === 0 && (category === "frames" || category === "vectors")) return;
 
       const name = node.name;
-      let dsElement = false;
-      if (category === "components" || category === "icons") {
-        dsElement = isDS(name, name, category, null, referenceTokens, isAudit, frameJson, name);
-      }
 
       let componentKey = null;
       if (node.type === "INSTANCE" && node.mainComponent) {
         componentKey = node.mainComponent.key;
       } else if (node.type === "COMPONENT" || node.type === "COMPONENT_SET") {
         componentKey = node.key;
+      }
+
+      let dsElement = false;
+      let elementScore = null;
+      let elementMatchedBy = null;
+      let elementMatchedIn = null;
+      if (category === "components" || category === "icons") {
+        const a = audit(category, name, componentKey, name);
+        dsElement = a.isDS;
+        elementScore = a.score;
+        elementMatchedBy = a.matchedBy;
+        elementMatchedIn = a.matchedIn;
       }
 
       const map = specs[category];
@@ -1209,6 +1233,9 @@ figma.ui.onmessage = async (msg) => {
           componentKey: componentKey,
           layerName: name,
           isDS: dsElement,
+          score: elementScore,
+          matchedBy: elementMatchedBy,
+          matchedIn: elementMatchedIn,
           nodeId: node.id,
           layers: new Set([name]),
           properties: props
@@ -1221,6 +1248,9 @@ figma.ui.onmessage = async (msg) => {
           componentKey: componentKey,
           layerName: name,
           isDS: dsElement,
+          score: elementScore,
+          matchedBy: elementMatchedBy,
+          matchedIn: elementMatchedIn,
           properties: props
         });
       } else {
@@ -1259,7 +1289,9 @@ figma.ui.onmessage = async (msg) => {
           }
         }
       } catch (err) {
-        console.error("Erro ao extrair specs do node:", n.name, err);
+        const msg = err && err.message ? err.message : String(err);
+        const stack = err && err.stack ? err.stack : "";
+        console.error("Erro ao extrair specs do node:", n.name, "(type=" + n.type + ", id=" + n.id + ")", msg, stack);
       }
     }
 

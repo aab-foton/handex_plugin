@@ -351,3 +351,138 @@ body {
     .flex-1.overflow-y-auto {
       min-height: 0;
     }
+
+    /* ── DESIGN SYSTEM UNIFORMITY RULES ── */
+
+    /* 1. Uniform Cards & Containers */
+    .bg-white.dark\:bg-dark-surface,
+    .bg-white.dark\:bg-dark-bg,
+    .bg-white.dark\:bg-dark-surface\/30,
+    .bg-white.dark\:bg-dark-bg\/30,
+    [id$="-card"],
+    .view > section > div {
+      border-radius: 16px !important; /* Premium 16px corner roundness */
+      border: 1px solid #f1f5f9 !important;
+      background-color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    .dark .bg-white.dark\:bg-dark-surface,
+    .dark .bg-white.dark\:bg-dark-bg,
+    .dark .bg-white.dark\:bg-dark-surface\/30,
+    .dark .bg-white.dark\:bg-dark-bg\/30,
+    .dark [id$="-card"],
+    .dark .view > section > div {
+      border-color: #1e293b !important;
+      background-color: #0f172a !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    /* Card Hover Effect */
+    .bg-white.dark\:bg-dark-surface:hover,
+    .bg-white.dark\:bg-dark-bg:hover,
+    [id$="-card"]:hover {
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
+      border-color: #e2e8f0 !important;
+    }
+
+    .dark .bg-white.dark\:bg-dark-surface:hover,
+    .dark .bg-white.dark\:bg-dark-bg:hover,
+    .dark [id$="-card"]:hover {
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.25) !important;
+      border-color: #334155 !important;
+    }
+
+    /* 2. Uniform Typography & Hierarchy */
+    h1, h2, h3, .text-\[\#0070af\], .text-slate-800 {
+      font-family: 'Inter', sans-serif !important;
+      letter-spacing: -0.01em !important;
+    }
+
+    /* Labels & Pills */
+    label, .text-\[10px\], .text-\[11px\], .checklist-pill {
+      font-family: 'Inter', sans-serif !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.03em !important;
+    }
+
+    /* 3. Uniform Inputs and Textareas */
+    input[type="text"], input[type="search"], select, textarea {
+      border-radius: 8px !important;
+      border: 1px solid #e2e8f0 !important;
+      background-color: #f8fafc !important;
+      padding: 8px 12px !important;
+      font-size: 12px !important;
+      color: #334155 !important;
+      font-weight: 500 !important; /* Keep input text at medium/regular weight */
+      transition: all 0.2s ease !important;
+    }
+
+    .dark input[type="text"], .dark input[type="search"], .dark select, .dark textarea {
+      border-color: #1e293b !important;
+      background-color: #0f172a !important;
+      color: #f8fafc !important;
+    }
+
+    input[type="text"]:focus, input[type="search"]:focus, select:focus, textarea:focus {
+      border-color: #005ca9 !important;
+      background-color: #ffffff !important;
+      box-shadow: 0 0 0 3px rgba(0, 92, 169, 0.15) !important;
+      outline: none !important;
+    }
+
+    .dark input[type="text"]:focus, .dark input[type="search"]:focus, .dark select:focus, .dark textarea:focus {
+      border-color: #38a9f8 !important;
+      background-color: #0f172a !important;
+      box-shadow: 0 0 0 3px rgba(56, 169, 248, 0.15) !important;
+    }
+
+    /* Textarea Resizing */
+    textarea {
+      min-height: 80px;
+    }
+
+    /* Target only the token search field placeholder/input padding */
+    input.token-search-input {
+      padding-left: 32px !important;
+    }
+
+    /* Reset font-weight and color for placeholders to make them look distinct and lighter than labels */
+    input::placeholder,
+    textarea::placeholder,
+    select::placeholder,
+    .token-search-input::placeholder {
+      font-weight: 400 !important;
+      color: #94a3b8 !important; /* Slate-400 */
+      opacity: 0.85 !important;
+    }
+    
+    .dark input::placeholder,
+    .dark textarea::placeholder,
+    .dark select::placeholder,
+    .dark .token-search-input::placeholder {
+      font-weight: 400 !important;
+      color: #64748b !important; /* Slate-500 */
+      opacity: 0.85 !important;
+    }
+
+    /* Ensure helper padding classes are not overridden by the global padding: 8px 12px !important */
+    input.pl-7, .pl-7 {
+      padding-left: 28px !important;
+    }
+    input.pl-8, .pl-8 {
+      padding-left: 32px !important;
+    }
+    input.pl-9, .pl-9 {
+      padding-left: 36px !important;
+    }
+
+    /* Reset header borders and top border radius to keep it flat and aligned with the plugin window edge */
+    header {
+      border-top-left-radius: 0px !important;
+      border-top-right-radius: 0px !important;
+      border-top: none !important;
+      border-left: none !important;
+      border-right: none !important;
+    }

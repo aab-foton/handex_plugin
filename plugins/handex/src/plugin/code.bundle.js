@@ -1,4 +1,21 @@
 (() => {
+  var __defProp = Object.defineProperty;
+  var __getOwnPropSymbols = Object.getOwnPropertySymbols;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __propIsEnum = Object.prototype.propertyIsEnumerable;
+  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+  var __spreadValues = (a, b) => {
+    for (var prop in b || (b = {}))
+      if (__hasOwnProp.call(b, prop))
+        __defNormalProp(a, prop, b[prop]);
+    if (__getOwnPropSymbols)
+      for (var prop of __getOwnPropSymbols(b)) {
+        if (__propIsEnum.call(b, prop))
+          __defNormalProp(a, prop, b[prop]);
+      }
+    return a;
+  };
+
   // src/plugin/audit.js
   var frameJsonTemplate = () => ({
     elements: {
@@ -9,55 +26,98 @@
       vectors: []
     }
   });
-  function isDS(name, value, type, figmaKey, referenceTokens, isAudit, frameJson, nodeName) {
-    if (!name) return false;
-    const lowerName = name.toLowerCase();
-    const isOfficial = lowerName.includes("[dsc]") || lowerName.includes("[ dsc]");
-    if (isAudit && referenceTokens) {
+  var AUDIT_SCORE = {
+    EXACT: 1,
+    SOFT: 0.5,
+    NONE: 0
+  };
+  function emptyResult() {
+    return { score: AUDIT_SCORE.NONE, matchedBy: null, matchedIn: null };
+  }
+  function auditProperty(name, value, type, figmaKey, referenceTokensInput, isAudit) {
+    if (!isAudit || !referenceTokensInput) return emptyResult();
+    if (!name) return emptyResult();
+    const lowerName = String(name).toLowerCase();
+    const targetValue = String(value || "").toLowerCase();
+    const referenceList = Array.isArray(referenceTokensInput) ? referenceTokensInput : [referenceTokensInput];
+    let best = emptyResult();
+    const considerSofterMatch = (libName) => {
+      if (best.score < AUDIT_SCORE.SOFT) {
+        best = { score: AUDIT_SCORE.SOFT, matchedBy: null, matchedIn: libName };
+      }
+    };
+    for (const referenceTokens of referenceList) {
+      if (!referenceTokens) continue;
+      const libName = referenceTokens.meta && referenceTokens.meta.libraryName || referenceTokens.libraryName || null;
       if (figmaKey) {
-        if (referenceTokens.designTokens && referenceTokens.designTokens.variables) {
-          const foundVar = referenceTokens.designTokens.variables.find((t) => t.key === figmaKey || t.$key === figmaKey);
-          if (foundVar) return true;
+        if (referenceTokens.designTokens && Array.isArray(referenceTokens.designTokens.variables)) {
+          if (referenceTokens.designTokens.variables.some((t) => t.key === figmaKey || t.$key === figmaKey)) {
+            return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: libName };
+          }
         }
         if (referenceTokens.styleTokens) {
           for (const styleType in referenceTokens.styleTokens) {
             const stylesArray = referenceTokens.styleTokens[styleType];
-            if (Array.isArray(stylesArray)) {
-              const foundStyle = stylesArray.find((s) => s.key === figmaKey);
-              if (foundStyle) return true;
+            if (Array.isArray(stylesArray) && stylesArray.some((s) => s.key === figmaKey)) {
+              return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: libName };
             }
           }
         }
+        if (Array.isArray(referenceTokens.components) && referenceTokens.components.some((c) => c.key === figmaKey)) {
+          return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: libName };
+        }
       }
-      const refList = referenceTokens[type] || referenceTokens[type.replace("s", "")];
-      const checkSoftMatch = (list) => {
-        if (!list || !Array.isArray(list)) return false;
-        return list.some((ref) => {
+      const categoryList = referenceTokens[type] || referenceTokens[type.replace(/s$/, "")] || null;
+      const softMatchList = (list) => {
+        if (!Array.isArray(list)) return null;
+        for (const ref of list) {
           const rName = (typeof ref === "string" ? ref : ref.name || ref.label || "").toLowerCase();
           const rValue = (typeof ref === "string" ? "" : ref.value || ref.hex || ref.token || "").toLowerCase();
-          const targetValue = String(value || "").toLowerCase();
-          if (rName && (rName === lowerName || lowerName.includes(rName) || rName.includes(lowerName))) return true;
-          if (rValue && targetValue && (rValue === targetValue || targetValue.includes(rValue))) return true;
+          const rRaw = typeof ref === "object" && ref && ref.rawValue !== void 0 ? String(ref.rawValue).toLowerCase() : "";
+          if (rValue && targetValue && (rValue === targetValue || targetValue === rValue || targetValue.includes(rValue) || rValue.includes(targetValue))) {
+            return "value";
+          }
+          if (rRaw && targetValue && targetValue.replace(/px$/, "") === rRaw) {
+            return "value";
+          }
+          if (rName && (rName === lowerName || lowerName.includes(rName) || rName.includes(lowerName))) {
+            return "name";
+          }
           if (type === "typography" && targetValue.includes("px") && rValue) {
             const sizeMatch = targetValue.match(/\((\d+(\.\d+)?)px\)/);
             if (sizeMatch && (rValue.includes(sizeMatch[1] + "px") || rName.includes(sizeMatch[1]))) {
-              if (targetValue.includes("caixa std")) return true;
+              if (targetValue.includes("caixa std")) return "name";
             }
           }
-          return false;
-        });
+        }
+        return null;
       };
-      if (checkSoftMatch(refList)) return "warning";
-      for (const cat in referenceTokens) {
-        if (checkSoftMatch(referenceTokens[cat])) return "warning";
+      const direct = softMatchList(categoryList);
+      if (direct) {
+        if (best.score < AUDIT_SCORE.SOFT) best = { score: AUDIT_SCORE.SOFT, matchedBy: direct, matchedIn: libName };
+        continue;
       }
-      if (type === "typography" && lowerName.includes("caixa std")) return "warning";
+      let globalHit = null;
+      for (const cat in referenceTokens) {
+        const hit = softMatchList(referenceTokens[cat]);
+        if (hit) {
+          globalHit = hit;
+          break;
+        }
+      }
+      if (globalHit) {
+        if (best.score < AUDIT_SCORE.SOFT) best = { score: AUDIT_SCORE.SOFT, matchedBy: globalHit, matchedIn: libName };
+        continue;
+      }
+      if (type === "typography" && lowerName.includes("caixa std")) {
+        considerSofterMatch(libName);
+        continue;
+      }
       if (lowerName.includes("/") || lowerName.includes("shadow") || lowerName.includes("[") || lowerName.includes("]")) {
-        return "warning";
+        considerSofterMatch(libName);
       }
     }
-    if (isOfficial) return "warning";
-    return false;
+    return best;
   }
 
   // src/plugin/code.js
@@ -283,180 +343,163 @@
         fichaTecnica.appendChild(content);
         setFillAndHug(content);
         if (!data.setup || data.setup.ficha !== false) {
-          const infoSection = createSection(content, "Informa\xE7\xF5es e Briefing Estrat\xE9gico");
-          let hasBasicInfo = false;
-          if (data.step1) {
-            if (data.step1.fluxo) {
-              createRow(infoSection, "T\xEDtulo do Projeto", data.step1.fluxo);
-              hasBasicInfo = true;
-            }
-            if (data.step1.objetivo) {
-              createRow(infoSection, "Objetivo da Entrega", data.step1.objetivo);
-              hasBasicInfo = true;
-            }
-            if (data.step1.status || data.step1.versao) {
-              const subGrid = createFrame("HORIZONTAL", 0, 16);
-              infoSection.appendChild(subGrid);
-              setFillAndHug(subGrid);
-              if (data.step1.status) createRow(subGrid, "Status", data.step1.status);
-              if (data.step1.versao) createRow(subGrid, "Vers\xE3o", data.step1.versao);
-              hasBasicInfo = true;
-            }
-          }
-          if (data.setup && data.setup.incluirBriefing !== false && data.briefing && data.briefing.questions && data.briefing.questions.length > 0) {
-            const hasAnsweredQuestions = data.briefing.questions.some((q) => q.answer);
-            if (hasAnsweredQuestions) {
-              if (hasBasicInfo) {
-                const dividerSpace = createFrame("VERTICAL", 0, 8);
-                infoSection.appendChild(dividerSpace);
-                setFillAndHug(dividerSpace);
-              }
-              data.briefing.questions.forEach((q, idx) => {
-                if (q.answer) {
-                  const qRow = createFrame("VERTICAL", 0, 4);
-                  infoSection.appendChild(qRow);
-                  setFillAndHug(qRow);
-                  const qText = createText(`${idx + 1}. ${q.question}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
-                  qRow.appendChild(qText);
-                  setFillAndHug(qText);
-                  const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
-                  qRow.appendChild(aText);
-                  setFillAndHug(aText);
-                }
-              });
-            }
-          }
+          const infoSection = createSection(content, "Informa\xE7\xF5es B\xE1sicas");
+          createRow(infoSection, "T\xEDtulo do Projeto", data.step1.fluxo);
+          createRow(infoSection, "Objetivo da Entrega", data.step1.objetivo);
+          const subGrid = createFrame("HORIZONTAL", 0, 16);
+          infoSection.appendChild(subGrid);
+          setFillAndHug(subGrid);
+          createRow(subGrid, "Status", data.step1.status);
+          createRow(subGrid, "Vers\xE3o", data.step1.versao);
         }
-        const hasTeam = data.step3 && data.step3.team && data.step3.team.length > 0 || data.step1 && data.step1.equipe && data.step1.equipe.length > 0;
-        if (hasTeam) {
-          const teamSection = createSection(content, "Equipe Respons\xE1vel");
-          if (data.step3 && data.step3.team && data.step3.team.length > 0) {
-            data.step3.team.forEach((m) => {
-              const mRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
-              teamSection.appendChild(mRow);
-              setFillAndHug(mRow);
-              mRow.counterAxisAlignItems = "CENTER";
-              mRow.cornerRadius = 8;
-              mRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
-              const roleTag = createFrame("HORIZONTAL", 8, 4, { r: 0, g: 0.35, b: 0.79 });
-              roleTag.cornerRadius = 4;
-              roleTag.appendChild(createText(m.role, 10, "Bold", { r: 1, g: 1, b: 1 }));
-              mRow.appendChild(roleTag);
-              const nameText = createText(m.name, 12, "Medium");
-              mRow.appendChild(nameText);
-              setFillAndHug(nameText);
-              if (m.email) {
-                const contactLink = createText("Contato", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
-                contactLink.textDecoration = "UNDERLINE";
-                contactLink.hyperlink = { type: "URL", value: m.email.includes("@") ? "mailto:" + m.email : m.email };
-                mRow.appendChild(contactLink);
-              }
-            });
-          }
-          if (data.step1 && data.step1.equipe && data.step1.equipe.length > 0) {
-            data.step1.equipe.forEach((member) => {
-              createRow(teamSection, member.role, member.name);
-            });
-          }
-        }
-        const hasExceptions = data.excecoes && data.excecoes.length > 0 || data.step1 && data.step1.excecoes && data.step1.excecoes.length > 0;
-        if (hasExceptions) {
+        if (data.step1.excecoes && data.step1.excecoes.length > 0) {
           const excSection = createSection(content, "Cen\xE1rios de Exce\xE7\xE3o");
-          if (data.excecoes && data.excecoes.length > 0) {
-            data.excecoes.forEach((e) => {
-              const eRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
-              excSection.appendChild(eRow);
-              setFillAndHug(eRow);
-              eRow.counterAxisAlignItems = "CENTER";
-              eRow.cornerRadius = 8;
-              eRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
-              const typeTag = createFrame("HORIZONTAL", 8, 4, { r: 0.9, g: 0.2, b: 0.2 });
-              typeTag.cornerRadius = 4;
-              typeTag.appendChild(createText(e.type, 10, "Bold", { r: 1, g: 1, b: 1 }));
-              eRow.appendChild(typeTag);
-              const titleText = createText(e.title, 12, "Medium");
-              eRow.appendChild(titleText);
-              setFillAndHug(titleText);
-              if (e.link && e.link !== "#") {
-                titleText.textDecoration = "UNDERLINE";
-                titleText.hyperlink = { type: "URL", value: e.link };
-              }
-            });
-          }
-          if (data.step1 && data.step1.excecoes && data.step1.excecoes.length > 0) {
-            data.step1.excecoes.forEach((exc, idx) => {
-              createRow(excSection, `Cen\xE1rio ${idx + 1}`, exc.scenario);
-            });
+          data.step1.excecoes.forEach((exc, idx) => {
+            createRow(excSection, `Cen\xE1rio ${idx + 1}`, exc.scenario);
+          });
+        }
+        if (data.step1.regras && data.step1.regras.length > 0) {
+          const bizSection = createSection(content, "Regras de Neg\xF3cio e HU");
+          data.step1.regras.forEach((regra) => {
+            createRow(bizSection, regra.title, regra.link ? "Link de Refer\xEAncia" : "-", !!regra.link, regra.link);
+          });
+        }
+        if (data.step1.equipe && data.step1.equipe.length > 0) {
+          const teamSection = createSection(content, "Equipe");
+          data.step1.equipe.forEach((member) => {
+            createRow(teamSection, member.role, member.name);
+          });
+        }
+        if (data.setup && data.setup.incluirDocs && data.step1.docs && data.step1.docs.length > 0) {
+          const docsSection = createSection(null, "Docs e Anexos");
+          let hasDocs = false;
+          data.step1.docs.forEach((doc) => {
+            if (doc.url) {
+              createRow(docsSection, doc.name || "Documento", doc.url, true, doc.url);
+              hasDocs = true;
+            }
+          });
+          if (hasDocs) {
+            content.appendChild(docsSection);
+            setFillAndHug(docsSection);
           }
         }
-        const hasRules = data.regras && data.regras.length > 0 || data.step1 && data.step1.regras && data.step1.regras.length > 0;
-        if (hasRules) {
+        if (data.setup && data.setup.incluirBriefing && data.briefing && data.briefing.questions && data.briefing.questions.length > 0) {
+          const briefingSection = createSection(content, "Briefing Estrat\xE9gico");
+          data.briefing.questions.forEach((q, idx) => {
+            if (q.answer) {
+              const qRow = createFrame("VERTICAL", 0, 4);
+              briefingSection.appendChild(qRow);
+              setFillAndHug(qRow);
+              const qText = createText(`${idx + 1}. ${q.question}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+              qRow.appendChild(qText);
+              setFillAndHug(qText);
+              const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+              qRow.appendChild(aText);
+              setFillAndHug(aText);
+            }
+          });
+          content.appendChild(briefingSection);
+        }
+        if (data.step3 && data.step3.team && data.step3.team.length > 0) {
+          const teamSection = createSection(content, "Equipe e Respons\xE1veis");
+          data.step3.team.forEach((m) => {
+            const mRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
+            teamSection.appendChild(mRow);
+            setFillAndHug(mRow);
+            mRow.counterAxisAlignItems = "CENTER";
+            mRow.cornerRadius = 8;
+            mRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+            const roleTag = createFrame("HORIZONTAL", 8, 4, { r: 0, g: 0.35, b: 0.79 });
+            roleTag.cornerRadius = 4;
+            roleTag.appendChild(createText(m.role, 10, "Bold", { r: 1, g: 1, b: 1 }));
+            mRow.appendChild(roleTag);
+            const nameText = createText(m.name, 12, "Medium");
+            mRow.appendChild(nameText);
+            setFillAndHug(nameText);
+            if (m.email) {
+              const contactLink = createText("Contato", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
+              contactLink.textDecoration = "UNDERLINE";
+              contactLink.hyperlink = { type: "URL", value: m.email.includes("@") ? "mailto:" + m.email : m.email };
+              mRow.appendChild(contactLink);
+            }
+            teamSection.appendChild(mRow);
+          });
+        }
+        if (data.excecoes && data.excecoes.length > 0) {
+          const excSection = createSection(content, "Cen\xE1rios de Exce\xE7\xE3o");
+          data.excecoes.forEach((e) => {
+            const eRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
+            excSection.appendChild(eRow);
+            setFillAndHug(eRow);
+            eRow.counterAxisAlignItems = "CENTER";
+            eRow.cornerRadius = 8;
+            eRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+            const typeTag = createFrame("HORIZONTAL", 8, 4, { r: 0.9, g: 0.2, b: 0.2 });
+            typeTag.cornerRadius = 4;
+            typeTag.appendChild(createText(e.type, 10, "Bold", { r: 1, g: 1, b: 1 }));
+            eRow.appendChild(typeTag);
+            const titleText = createText(e.title, 12, "Medium");
+            eRow.appendChild(titleText);
+            setFillAndHug(titleText);
+            if (e.link && e.link !== "#") {
+              titleText.textDecoration = "UNDERLINE";
+              titleText.hyperlink = { type: "URL", value: e.link };
+            }
+          });
+        }
+        if (data.regras && data.regras.length > 0) {
           const rulesSection = createSection(content, "Regras de Neg\xF3cio e HUs");
-          if (data.regras && data.regras.length > 0) {
-            data.regras.forEach((r) => {
-              const rRow = createFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.98, b: 0.99 });
-              rulesSection.appendChild(rRow);
-              setFillAndHug(rRow);
-              rRow.cornerRadius = 8;
-              rRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
-              if (r.link && r.link !== "#") {
-                const lText = createText("Acesse o link da HU", 12, "Bold", { r: 0, g: 0.35, b: 0.79 });
-                lText.textDecoration = "UNDERLINE";
-                lText.hyperlink = { type: "URL", value: r.link };
-                rRow.appendChild(lText);
-                setFillAndHug(lText);
-              }
-              if (r.notes) {
-                const nText = createText(r.notes, 12, "Regular", { r: 0.4, g: 0.4, b: 0.4 });
-                rRow.appendChild(nText);
-                setFillAndHug(nText);
-              }
-            });
-          }
-          if (data.step1 && data.step1.regras && data.step1.regras.length > 0) {
-            data.step1.regras.forEach((regra) => {
-              createRow(rulesSection, regra.title, regra.link ? "Link de Refer\xEAncia" : "-", !!regra.link, regra.link);
-            });
-          }
+          data.regras.forEach((r) => {
+            const rRow = createFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.98, b: 0.99 });
+            rulesSection.appendChild(rRow);
+            setFillAndHug(rRow);
+            rRow.cornerRadius = 8;
+            rRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+            if (r.link && r.link !== "#") {
+              const lText = createText("Acesse o link da HU", 12, "Bold", { r: 0, g: 0.35, b: 0.79 });
+              lText.textDecoration = "UNDERLINE";
+              lText.hyperlink = { type: "URL", value: r.link };
+              rRow.appendChild(lText);
+              setFillAndHug(lText);
+            }
+            if (r.notes) {
+              const nText = createText(r.notes, 12, "Regular", { r: 0.4, g: 0.4, b: 0.4 });
+              rRow.appendChild(nText);
+              setFillAndHug(nText);
+            }
+          });
         }
-        const docItems = [
-          { key: "proto", label: "Prot\xF3tipo Naveg\xE1vel" },
-          { key: "a11y", label: "Handoff Acessibilidade" },
-          { key: "research", label: "Pesquisa de UX" }
-        ];
-        const hasNewDocs = data.docs && docItems.some((item) => {
-          const docData = data.docs[item.key];
-          return docData && docData.checked && docData.link;
-        });
-        const hasOldDocs = data.setup && data.setup.incluirDocs && data.step1.docs && data.step1.docs.some((doc) => doc.url);
-        if (hasNewDocs || hasOldDocs) {
-          const docsSection = createSection(content, "Docs e Anexos");
-          if (hasNewDocs) {
-            docItems.forEach((item) => {
-              const docData = data.docs[item.key];
-              if (docData && docData.checked && docData.link) {
-                const dRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
-                docsSection.appendChild(dRow);
-                setFillAndHug(dRow);
-                dRow.counterAxisAlignItems = "CENTER";
-                dRow.cornerRadius = 8;
-                dRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
-                const dLabel = createText(item.label, 12, "Bold");
-                dLabel.layoutGrow = 1;
-                dRow.appendChild(dLabel);
-                const dLink = createText("Acesse o link", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
-                dLink.textDecoration = "UNDERLINE";
-                dLink.hyperlink = { type: "URL", value: docData.link };
-                dRow.appendChild(dLink);
-              }
-            });
-          }
-          if (hasOldDocs) {
-            data.step1.docs.forEach((doc) => {
-              if (doc.url) {
-                createRow(docsSection, doc.name || "Documento", doc.url, true, doc.url);
-              }
-            });
+        if (data.docs) {
+          const docsSection = createSection(null, "Docs e Anexos");
+          const docItems = [
+            { key: "proto", label: "Prot\xF3tipo Naveg\xE1vel" },
+            { key: "a11y", label: "Handoff Acessibilidade" },
+            { key: "research", label: "Pesquisa de UX" }
+          ];
+          let hasDocs = false;
+          docItems.forEach((item) => {
+            const docData = data.docs[item.key];
+            if (docData && docData.checked && docData.link) {
+              hasDocs = true;
+              const dRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
+              dRow.layoutAlign = "STRETCH";
+              dRow.counterAxisAlignItems = "CENTER";
+              dRow.cornerRadius = 8;
+              dRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+              const dLabel = createText(item.label, 12, "Bold");
+              dLabel.layoutGrow = 1;
+              dRow.appendChild(dLabel);
+              const dLink = createText("Acesse o link", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
+              dLink.textDecoration = "UNDERLINE";
+              dLink.hyperlink = { type: "URL", value: docData.link };
+              dRow.appendChild(dLink);
+              docsSection.appendChild(dRow);
+            }
+          });
+          if (hasDocs) {
+            content.appendChild(docsSection);
+            setFillAndHug(docsSection);
           }
         }
         fichaTecnica.appendChild(content);
@@ -565,12 +608,23 @@
           uiBoard.layoutAlign = "MIN";
           const uiTitle = createText("User Interface", 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
           uiBoard.appendChild(uiTitle);
-          setFillAndHug(uiTitle);
-          const columnsContainer = createFrame("HORIZONTAL", 0, 16);
-          columnsContainer.name = "Columns";
-          uiBoard.appendChild(columnsContainer);
-          setFillAndHug(columnsContainer);
-          columnsContainer.layoutWrap = "WRAP";
+          if (data.setup && data.setup.incluirBriefing && data.briefing && data.briefing.questions && data.briefing.questions.length > 0) {
+            const briefingSection = createSection(fichaTecnica, "Briefing Estrat\xE9gico");
+            data.briefing.questions.forEach((q, idx) => {
+              if (q.answer) {
+                const qRow = createFrame("VERTICAL", 0, 4);
+                qRow.name = "Question " + (idx + 1);
+                briefingSection.appendChild(qRow);
+                setFillAndHug(qRow);
+                const qText = createText(`${idx + 1}. ${q.question}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+                qRow.appendChild(qText);
+                setFillAndHug(qText);
+                const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+                qRow.appendChild(aText);
+                setFillAndHug(aText);
+              }
+            });
+          }
           const specsData = data.step2.specs || { components: [], icons: [], typography: [], frames: [], vectors: [] };
           const categories = [
             { title: "Componentes", items: specsData.components, type: "components" },
@@ -579,20 +633,12 @@
             { title: "Frames e Layouts", items: specsData.frames, type: "frames" },
             { title: "Vetores", items: specsData.vectors, type: "vectors" }
           ];
-          let hasSpecs = false;
           categories.forEach((cat) => {
             const sec = createSpecList(cat.title, cat.items, cat.type);
             if (sec) {
-              columnsContainer.appendChild(sec);
-              setFillAndHug(sec);
-              hasSpecs = true;
+              mainContainer.appendChild(sec);
             }
           });
-          if (hasSpecs) {
-            mainContainer.appendChild(uiBoard);
-          } else {
-            uiBoard.remove();
-          }
         }
         const selection = figma.currentPage.selection;
         if (selection.length > 0 && data.setup && (data.setup.espacamentos || data.setup.anatomia || data.setup.instancias)) {
@@ -916,7 +962,16 @@
       })();
     }
     if (msg.type === "scan-frame") {
-      let rgbToHex2 = function(r, g, b) {
+      let audit = function(propType, propValue, propKey, propName) {
+        const result = auditProperty(propName, propValue, propType, propKey, referenceTokens, isAudit);
+        const isDS = result.score >= AUDIT_SCORE.EXACT ? true : result.score >= AUDIT_SCORE.SOFT ? "warning" : false;
+        return {
+          isDS,
+          score: isAudit ? result.score : null,
+          matchedBy: result.matchedBy,
+          matchedIn: result.matchedIn
+        };
+      }, rgbToHex2 = function(r, g, b) {
         const toHex = (c) => {
           const hex = Math.round(c * 255).toString(16);
           return hex.length === 1 ? "0" + hex : hex;
@@ -949,8 +1004,7 @@
               const vInfo = getVar(n, "fills");
               const name = vInfo && vInfo.name || styleName || hex;
               const key = vInfo && vInfo.key || styleKey;
-              const ds = isDS(name, hex, "colors", key, referenceTokens, isAudit, frameJson, n.name);
-              props.push({ type: "color", name, value: hex, isDS: ds, key, variableKey: vInfo ? vInfo.key : null, styleKey, label: "Cor (Fill)" });
+              props.push(__spreadValues({ type: "color", name, value: hex, rawValue: hex, key, variableKey: vInfo ? vInfo.key : null, styleKey, label: "Cor (Fill)" }, audit("colors", hex, key, name)));
             }
           }
         }
@@ -968,16 +1022,16 @@
           const fontStyle = n.fontName && n.fontName !== figma.mixed ? n.fontName.style : "Mixed";
           const size = n.fontSize && n.fontSize !== figma.mixed ? n.fontSize : "Mixed";
           const name = styleName || `${family} ${fontStyle} (${size}px)`;
-          const ds = isDS(name, name, "typography", styleKey, referenceTokens, isAudit, frameJson, n.name);
-          props.push({ type: "typography", name, value: name, isDS: ds, key: styleKey, styleKey, label: "Tipografia" });
+          const rawSize = typeof size === "number" ? size : null;
+          props.push(__spreadValues({ type: "typography", name, value: name, rawValue: rawSize, key: styleKey, styleKey, label: "Tipografia" }, audit("typography", name, styleKey, name)));
         }
         if ("layoutMode" in n && n.layoutMode !== "NONE") {
           if (n.itemSpacing !== figma.mixed && n.itemSpacing > 0) {
             const vInfo = getVar(n, "itemSpacing");
             const val = `${n.itemSpacing}px`;
             const name = vInfo && vInfo.name || val;
-            const ds = isDS(name, val, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
-            props.push({ type: "spacing", name, value: val, isDS: ds, key: vInfo ? vInfo.key : null, variableKey: vInfo ? vInfo.key : null, label: "Gap" });
+            const propKey = vInfo ? vInfo.key : null;
+            props.push(__spreadValues({ type: "spacing", name, value: val, rawValue: n.itemSpacing, key: propKey, variableKey: propKey, label: "Gap" }, audit("spacing", val, propKey, name)));
           }
           const paddings = [
             { prop: "paddingTop", label: "Top" },
@@ -990,8 +1044,8 @@
               const vInfo = getVar(n, p.prop);
               const val = `${n[p.prop]}px`;
               const name = vInfo && vInfo.name || val;
-              const ds = isDS(name, val, "spacing", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
-              props.push({ type: "spacing", name, value: val, isDS: ds, key: vInfo ? vInfo.key : null, variableKey: vInfo ? vInfo.key : null, label: `Padding ${p.label}` });
+              const propKey = vInfo ? vInfo.key : null;
+              props.push(__spreadValues({ type: "spacing", name, value: val, rawValue: n[p.prop], key: propKey, variableKey: propKey, label: `Padding ${p.label}` }, audit("spacing", val, propKey, name)));
             }
           });
         }
@@ -1001,8 +1055,10 @@
             const vInfo = getVar(n, "strokeWeight");
             const val = `${n.strokeWeight}px`;
             const name = vInfo && vInfo.name || val;
-            const ds = val === "1px" || val === "0px" ? true : isDS(name, val, "borders", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
-            props.push({ type: "strokeWeight", name, value: val, isDS: ds, key: vInfo ? vInfo.key : null, variableKey: vInfo ? vInfo.key : null, label: "Border Width" });
+            const propKey = vInfo ? vInfo.key : null;
+            const whitelisted = val === "1px" || val === "0px";
+            const auditFields = whitelisted ? { isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "value", matchedIn: null } : audit("borders", val, propKey, name);
+            props.push(__spreadValues({ type: "strokeWeight", name, value: val, rawValue: n.strokeWeight, key: propKey, variableKey: propKey, label: "Border Width" }, auditFields));
             if (visibleStroke.type === "SOLID") {
               const hex = rgbToHex2(visibleStroke.color.r, visibleStroke.color.g, visibleStroke.color.b).toUpperCase();
               let styleName = null;
@@ -1015,9 +1071,9 @@
                 }
               }
               const sVar = getVar(n, "strokes");
+              const strokeKey = sVar && sVar.key || styleKey;
               const strokeName = sVar && sVar.name || styleName || hex;
-              const sDs = isDS(strokeName, hex, "colors", sVar && sVar.key || styleKey, referenceTokens, isAudit, frameJson, n.name);
-              props.push({ type: "stroke", name: strokeName, value: hex, isDS: sDs, key: sVar && sVar.key || styleKey, variableKey: sVar ? sVar.key : null, styleKey, label: "Border Color" });
+              props.push(__spreadValues({ type: "stroke", name: strokeName, value: hex, rawValue: hex, key: strokeKey, variableKey: sVar ? sVar.key : null, styleKey, label: "Border Color" }, audit("colors", hex, strokeKey, strokeName)));
             }
           }
         }
@@ -1025,8 +1081,8 @@
           const vInfo = getVar(n, "cornerRadius");
           const val = `${n.cornerRadius}px`;
           const name = vInfo && vInfo.name || val;
-          const ds = isDS(name, val, "borders", vInfo ? vInfo.key : null, referenceTokens, isAudit, frameJson, n.name);
-          props.push({ type: "radius", name, value: val, isDS: ds, key: vInfo ? vInfo.key : null, variableKey: vInfo ? vInfo.key : null, label: "Radius" });
+          const propKey = vInfo ? vInfo.key : null;
+          props.push(__spreadValues({ type: "radius", name, value: val, rawValue: n.cornerRadius, key: propKey, variableKey: propKey, label: "Radius" }, audit("borders", val, propKey, name)));
         }
         if ("effects" in n && Array.isArray(n.effects)) {
           let styleName = null;
@@ -1041,8 +1097,7 @@
           for (const effect of n.effects) {
             if (effect.visible) {
               const name = styleName || `${effect.type} (${effect.type.includes("SHADOW") ? "Sombra" : "Blur"})`;
-              const ds = isDS(name, effect.type, "effects", styleKey, referenceTokens, isAudit, frameJson, n.name);
-              props.push({ type: "effect", name, value: effect.type, isDS: ds, key: styleKey, styleKey, label: "Effect" });
+              props.push(__spreadValues({ type: "effect", name, value: effect.type, key: styleKey, styleKey, label: "Effect" }, audit("effects", effect.type, styleKey, name)));
             }
           }
         }
@@ -1056,29 +1111,43 @@
           if (parent.layoutMode === "VERTICAL" && n.layoutGrow === 1) hMode = "Fill Container";
           else if (parent.layoutMode === "HORIZONTAL" && n.layoutAlign === "STRETCH") hMode = "Fill Container";
           else if (n.layoutMode && (n.layoutMode === "VERTICAL" && n.primaryAxisSizingMode === "AUTO" || n.layoutMode === "HORIZONTAL" && n.counterAxisSizingMode === "AUTO")) hMode = "Hug Contents";
-          props.push({ type: "layout", name: wMode, value: wMode, isDS: true, label: "W Sizing" });
-          props.push({ type: "layout", name: hMode, value: hMode, isDS: true, label: "H Sizing" });
+          props.push({ type: "layout", name: wMode, value: wMode, isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "intrinsic", matchedIn: null, label: "W Sizing" });
+          props.push({ type: "layout", name: hMode, value: hMode, isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "intrinsic", matchedIn: null, label: "H Sizing" });
         }
         if (n.type === "INSTANCE" && n.componentProperties) {
           Object.entries(n.componentProperties).forEach(([propName, propObj]) => {
             const cleanName = propName.split("#")[0];
             const val = String(propObj.value);
-            props.push({ type: "variant", name: cleanName, value: val, isDS: true, label: `Prop: ${cleanName}` });
+            props.push({ type: "variant", name: cleanName, value: val, isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "intrinsic", matchedIn: null, label: `Prop: ${cleanName}` });
           });
         }
         return props;
       }, addElement = function(category, node, props) {
+        if (!isAudit && allowedCategories && allowedCategories.length > 0) {
+          let isAllowed = false;
+          if (category === "frames" && allowedCategories.includes("containers")) isAllowed = true;
+          else if (category === "vectors" && allowedCategories.includes("shapes")) isAllowed = true;
+          else if (allowedCategories.includes(category)) isAllowed = true;
+          if (!isAllowed) return;
+        }
         if (props.length === 0 && (category === "frames" || category === "vectors")) return;
         const name = node.name;
-        let dsElement = false;
-        if (category === "components" || category === "icons") {
-          dsElement = isDS(name, name, category, null, referenceTokens, isAudit, frameJson, name);
-        }
         let componentKey = null;
         if (node.type === "INSTANCE" && node.mainComponent) {
           componentKey = node.mainComponent.key;
         } else if (node.type === "COMPONENT" || node.type === "COMPONENT_SET") {
           componentKey = node.key;
+        }
+        let dsElement = false;
+        let elementScore = null;
+        let elementMatchedBy = null;
+        let elementMatchedIn = null;
+        if (category === "components" || category === "icons") {
+          const a = audit(category, name, componentKey, name);
+          dsElement = a.isDS;
+          elementScore = a.score;
+          elementMatchedBy = a.matchedBy;
+          elementMatchedIn = a.matchedIn;
         }
         const map = specs[category];
         if (!map.has(name)) {
@@ -1089,6 +1158,9 @@
             componentKey,
             layerName: name,
             isDS: dsElement,
+            score: elementScore,
+            matchedBy: elementMatchedBy,
+            matchedIn: elementMatchedIn,
             nodeId: node.id,
             layers: /* @__PURE__ */ new Set([name]),
             properties: props
@@ -1101,6 +1173,9 @@
             componentKey,
             layerName: name,
             isDS: dsElement,
+            score: elementScore,
+            matchedBy: elementMatchedBy,
+            matchedIn: elementMatchedIn,
             properties: props
           });
         } else {
@@ -1130,7 +1205,9 @@
             }
           }
         } catch (err) {
-          console.error("Erro ao extrair specs do node:", n.name, err);
+          const msg2 = err && err.message ? err.message : String(err);
+          const stack = err && err.stack ? err.stack : "";
+          console.error("Erro ao extrair specs do node:", n.name, "(type=" + n.type + ", id=" + n.id + ")", msg2, stack);
         }
       };
       const selection = figma.currentPage.selection;
@@ -1151,6 +1228,7 @@
       const frameJson = frameJsonTemplate();
       const referenceTokens = msg.referenceTokens || null;
       const isAudit = msg.isAudit || false;
+      const allowedCategories = msg.categories || null;
       for (const node of selection) {
         extractSpecs(node);
       }

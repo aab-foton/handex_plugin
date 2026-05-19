@@ -48,6 +48,15 @@ const html = `<!doctype html>
   <meta charset="UTF-8">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    // Defensive shim: if the lucide CDN script failed to load (slow network, CSP
+    // edge case, etc.), provide a no-op so the many lucide.createIcons() calls
+    // throughout the codebase don't throw ReferenceError. When lucide loads
+    // successfully, window.lucide is already defined and this block is a no-op.
+    if (typeof window.lucide === 'undefined') {
+      window.lucide = { createIcons: function () {} };
+    }
+  </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
@@ -232,19 +241,11 @@ ${modMsgs}
     <span>Criar fluxo</span>
   </button>
 
-  <!-- Handoff FABs moved to global scope -->
   <button onclick="addBriefingQuestion()" title="Adicionar Pergunta" aria-label="Adicionar Pergunta"
     class="hidden fixed bottom-14 right-6 bg-[#005ca9]/30 hover:bg-[#005ca9] text-white rounded-full shadow-lg z-[100] border border-white/20 backdrop-blur-sm fab-main group"
     id="fab-handoff-briefing">
     <i data-lucide="plus" class="w-5 h-5 shrink-0"></i>
     <span>Adicionar pergunta</span>
-  </button>
-
-  <button onclick="addChecklistItem('excecao', 'Erro', 'alert-circle', 'red')" title="Adicionar Item" aria-label="Adicionar Item"
-    class="hidden fixed bottom-14 right-6 bg-[#005ca9]/30 hover:bg-[#005ca9] text-white rounded-full shadow-lg z-[100] border border-white/20 backdrop-blur-sm fab-main group"
-    id="fab-handoff-item">
-    <i data-lucide="plus" class="w-5 h-5 shrink-0"></i>
-    <span>Adicionar item</span>
   </button>
 
   <button id="btn-top" onclick="scrollToTop()" title="Voltar ao topo" aria-label="Voltar ao topo"
