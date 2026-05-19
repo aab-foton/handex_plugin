@@ -1010,7 +1010,6 @@ figma.ui.onmessage = async (msg) => {
 
     const referenceTokens = msg.referenceTokens || null;
     const isAudit = msg.isAudit || false;
-    const allowedCategories = msg.categories || null; // Array of strings or null
 
     function rgbToHex(r, g, b) {
       const toHex = (c) => {
@@ -1185,16 +1184,6 @@ figma.ui.onmessage = async (msg) => {
     }
 
     function addElement(category, node, props) {
-      // FILTRAGEM POR CATEGORIA (apenas se não for auditoria)
-      if (!isAudit && allowedCategories && allowedCategories.length > 0) {
-        let isAllowed = false;
-        if (category === "frames" && allowedCategories.includes("containers")) isAllowed = true;
-        else if (category === "vectors" && allowedCategories.includes("shapes")) isAllowed = true;
-        else if (allowedCategories.includes(category)) isAllowed = true;
-        
-        if (!isAllowed) return;
-      }
-
       // If props is empty, and it's not a component/icon/text, skip to reduce noise
       if (props.length === 0 && (category === "frames" || category === "vectors")) return;
 
