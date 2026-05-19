@@ -1,0 +1,18 @@
+{
+  "name": "UX Brain - Caixa",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "capabilities": [],
+  "permissions": ["currentuser"],
+  "enableProposedApi": false,
+  "editorType": [
+    "figma"
+  ],
+  "ui": "dist/src/ui/index.html",
+  "networkAccess": {
+    "allowedDomains": [
+      "*"
+    ],
+    "reasoning": "O plugin precisa enviar os dados extraídos e anexos para o repositório na nuvem configurado pelo usuário."
+  }
+}

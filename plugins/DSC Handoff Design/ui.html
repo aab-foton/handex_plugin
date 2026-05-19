@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      padding: 24px;
+      background: #fff;
+      color: #333;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-icon {
+      width: 28px;
+      height: 28px;
+      background: #0D47A1;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    h2 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a1a1a;
+      flex: 1;
+    }
+    .btn-info {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1.5px solid #bbb;
+      background: none;
+      font-size: 12px;
+      font-weight: 700;
+      color: #888;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color 0.15s, color 0.15s;
+      font-family: 'Inter', sans-serif;
+      padding: 0;
+      line-height: 1;
+    }
+    .btn-info:hover {
+      border-color: #0D47A1;
+      color: #0D47A1;
+    }
+
+    /* Info panel */
+    .info-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+    .info-overlay.open {
+      display: block;
+    }
+    .info-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background: #fff;
+      z-index: 11;
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 24px;
+    }
+    .info-panel.open {
+      display: flex;
+    }
+    .info-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .info-header h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+    .btn-close {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: none;
+      font-size: 18px;
+      color: #888;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      padding: 0;
+    }
+    .btn-close:hover {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    /* Settings panel */
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background: #fff;
+      z-index: 11;
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 24px;
+    }
+    .settings-panel.open {
+      display: flex;
+    }
+    .settings-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .settings-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .settings-divider {
+      height: 1px;
+      background: #e8e8e8;
+      margin: 6px 0;
+    }
+    .btn-settings {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1.5px solid #bbb;
+      background: none;
+      font-size: 13px;
+      color: #888;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color 0.15s, color 0.15s;
+      padding: 0;
+      line-height: 1;
+    }
+    .btn-settings:hover {
+      border-color: #0D47A1;
+      color: #0D47A1;
+    }
+
+    .info-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #555;
+    }
+    .info-list > li {
+      display: grid;
+      grid-template-columns: 16px 1fr;
+      gap: 8px;
+      align-items: start;
+      counter-increment: info;
+    }
+    .info-list > li::before {
+      content: counter(info);
+      background: #0D47A1;
+      color: white;
+      font-size: 9px;
+      font-weight: 700;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+    .info-list {
+      counter-reset: info;
+    }
+    .info-list strong {
+      color: #333;
+    }
+    .info-sublist {
+      list-style: none;
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-left: 4px;
+    }
+    .info-sublist li {
+      display: flex;
+      gap: 6px;
+      align-items: start;
+    }
+    .info-sublist li::before {
+      content: "·";
+      color: #0D47A1;
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 1.2;
+      flex-shrink: 0;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #e0e0e0;
+      gap: 0;
+    }
+    .tab {
+      flex: 1;
+      padding: 8px 0;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: #888;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab:hover:not(.active):not(:disabled) {
+      color: #555;
+    }
+    .tab.active {
+      color: #0D47A1;
+      border-bottom-color: #0D47A1;
+    }
+    .tab:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Tab panels */
+    .tab-panel {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .tab-panel.active {
+      display: flex;
+    }
+    .tab-steps {
+      font-size: 12px;
+      line-height: 1.5;
+      color: #555;
+      list-style: none;
+      counter-reset: step;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .tab-steps li {
+      counter-increment: step;
+      display: grid;
+      grid-template-columns: 16px 1fr;
+      gap: 8px;
+      align-items: start;
+    }
+    .tab-steps li::before {
+      content: counter(step);
+      background: #0D47A1;
+      color: white;
+      font-size: 9px;
+      font-weight: 700;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+    .tab-steps strong {
+      color: #333;
+    }
+
+    .alert {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: #FFF8E1;
+      border: 1px solid #FFE082;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #6D5600;
+    }
+    .alert-icon {
+      flex-shrink: 0;
+      font-size: 13px;
+      line-height: 1;
+      margin-top: 1px;
+    }
+
+    .divider {
+      height: 1px;
+      background: #e8e8e8;
+    }
+
+    /* Form controls */
+    .field-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 6px;
+    }
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d0d0d0;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      color: #333;
+      background: #fff;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M3 5l3 3 3-3'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
+    select:focus {
+      outline: none;
+      border-color: #0D47A1;
+    }
+    select:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .checkbox-field {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+      align-items: center;
+      cursor: pointer;
+      font-size: 12px;
+      color: #333;
+    }
+    .checkbox-field input[type="checkbox"] {
+      accent-color: #0D47A1;
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+
+    /* Action button */
+    .btn-action {
+      background: #0D47A1;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      width: 100%;
+    }
+    .btn-action:hover:not(:disabled) { background: #0a3a85; }
+    .btn-action:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Status bar */
+    .status-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .status-bar.loading {
+      display: flex;
+      background: #E3F2FD;
+      color: #0D47A1;
+    }
+    .status-bar.success {
+      display: flex;
+      background: #E8F5E9;
+      color: #2E7D32;
+    }
+    .status-bar.error {
+      display: flex;
+      background: #FFEBEE;
+      color: #C62828;
+    }
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #0D47A1;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .footer {
+      font-size: 10px;
+      color: #aaa;
+      text-align: center;
+      margin-top: auto;
+      padding-top: 12px;
+    }
+
+    /* Novos elementos da tab Geral */
+    .section-label {
+      font-size: 11px; font-weight: 700; color: #888;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+    .component-card {
+      background: #F0F4FF; border: 1px solid #C7D2F0;
+      border-radius: 8px; padding: 10px 12px;
+      font-size: 13px; font-weight: 700; color: #0D47A1;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .component-card-icon { font-size: 16px; flex-shrink: 0; }
+    .geral-group { display: flex; flex-direction: column; gap: 10px; }
+    /* Tab Extras */
+    .extras-card {
+      border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; overflow: hidden;
+    }
+    .extras-card-title {
+      font-size: 12px; font-weight: 600; color: #555;
+      padding: 10px 12px 8px; border-bottom: 1px solid #f0f0f0;
+    }
+    .extras-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; gap: 8px;
+    }
+    .extras-row + .extras-row { border-top: 1px solid #f5f5f5; }
+    .extras-row-label { font-size: 12px; color: #555; flex: 1; }
+    .extras-btn-group { display: flex; gap: 4px; }
+    .btn-extra {
+      font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px;
+      border: 1.5px solid #0D47A1; color: #0D47A1; background: none; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: background 0.15s, color 0.15s;
+    }
+    .btn-extra:hover { background: #0D47A1; color: #fff; }
+    .btn-extra.ghost { border-color: #bbb; color: #888; }
+    .btn-extra.ghost:hover { border-color: #555; color: #555; background: none; }
+
+    /* Waiting state */
+    .waiting-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 12px;
+      flex: 1;
+      padding: 40px 24px;
+    }
+    .waiting-state.active { display: flex; }
+.waiting-title { font-size: 14px; font-weight: 700; color: #aaa; }
+    .waiting-subtitle { font-size: 12px; color: #bbb; margin-top: -4px; }
+  </style>
+</head>
+<body>
+  <div class="waiting-state active" id="waitingState">
+    <div style="font-size: 32px; margin-bottom: 8px;">🖱️</div>
+    <div class="waiting-title">Aguardando seleção</div>
+    <div class="waiting-subtitle">Selecione o Componente e o Template Handoff.</div>
+  </div>
+
+  <div class="container" id="mainContainer" style="display:none;">
+    <div class="header">
+      <div class="header-icon">H</div>
+      <h2>DSC Handoff</h2>
+      <button class="btn-settings" id="btnSettings" title="Configurações">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6.5 1L6.9 2.7C6.3 2.9 5.8 3.2 5.3 3.6L3.7 3L2.7 4.7L4 5.8C3.9 6.2 3.8 6.6 3.8 7C3.8 7.4 3.9 7.8 4 8.2L2.7 9.3L3.7 11L5.3 10.4C5.8 10.8 6.3 11.1 6.9 11.3L7.3 13H9.3L9.7 11.3C10.3 11.1 10.8 10.8 11.3 10.4L12.9 11L13.9 9.3L12.6 8.2C12.7 7.8 12.8 7.4 12.8 7C12.8 6.6 12.7 6.2 12.6 5.8L13.9 4.7L12.9 3L11.3 3.6C10.8 3.2 10.3 2.9 9.7 2.7L9.3 1H6.5ZM8.3 5C9.4 5 10.3 5.9 10.3 7C10.3 8.1 9.4 9 8.3 9C7.2 9 6.3 8.1 6.3 7C6.3 5.9 7.2 5 8.3 5Z" fill="currentColor"/>
+        </svg>
+      </button>
+      <button class="btn-info" id="btnInfo" title="Instruções de uso">i</button>
+    </div>
+
+    <!-- Settings panel -->
+    <div class="settings-panel" id="settingsPanel">
+      <div class="info-header">
+        <h3>Configurações</h3>
+        <button class="btn-close" id="btnCloseSettings">&times;</button>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div class="settings-group">
+          <div class="settings-group-title">Geral</div>
+          <label class="checkbox-field">
+            <input type="checkbox" id="settingPreencherDescricao" checked>
+            <span>Preencher descrição do componente (se vazia)</span>
+          </label>
+          <label class="checkbox-field">
+            <input type="checkbox" id="settingTruePrimeiro">
+            <span>True sempre na frente nas variações booleanas</span>
+          </label>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <div class="settings-group">
+          <div class="settings-group-title">Atualização</div>
+          <label class="checkbox-field">
+            <input type="checkbox" id="settingSyncTemplate" checked>
+            <span>Atualizar template do documento de Handoff</span>
+          </label>
+          <label class="checkbox-field">
+            <input type="checkbox" id="settingManterEdicoes" checked>
+            <span>Manter alterações manuais</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-panel" id="infoPanel">
+      <div class="info-header">
+        <h3>Instruções de uso</h3>
+        <button class="btn-close" id="btnCloseInfo">&times;</button>
+      </div>
+      <ol class="info-list">
+        <li><span>O plugin aceita <strong>Component Set</strong> (com variantes) ou <strong>Component</strong> avulso. Também é possível selecionar uma instância ou variante — o plugin resolve automaticamente.</span></li>
+        <li><span>Não renomeie o handoff gerado. O nome segue o padrão <strong>[dsc] Handoff: [Nome do componente]</strong> e é usado pelo plugin para localizar e atualizar o documento.</span></li>
+        <li>
+          <span>Siga o padrão de nomenclatura nas propriedades do componente:
+            <ul class="info-sublist">
+              <li><span>Visibilidade: prefixe com <strong>show</strong> (ex: show Icon)</span></li>
+              <li><span>Texto: use <strong>label</strong> ou <strong>text</strong> (ex: label Button)</span></li>
+              <li><span>Variações visuais: use <strong>Variant</strong> (ex: cor, estilo, tamanho)</span></li>
+              <li><span>Estados: use <strong>State</strong> (ex: default, hover, focused)</span></li>
+            </ul>
+          </span>
+        </li>
+        <li><span>A <strong>tabela de propriedades</strong> segue a mesma ordem exibida no painel do Figma. Reorganize as propriedades no componente para controlar a ordem no handoff.</span></li>
+        <li><span>A maioria das descrições de propriedades já está mapeada. Quando não houver uma descrição, o plugin sinalizará com um <strong>alerta para preenchimento manual</strong>.</span></li>
+        <li><span>O <strong>dark mode</strong> nas variações só é gerado quando o componente <strong>não possui</strong> propriedade <strong>State</strong>. Se o componente tiver State, o dark mode aparece na <strong>matriz de estados</strong>.</span></li>
+        <li><span>Ao atualizar com <strong>"Manter alterações manuais"</strong> ativado, textos editados e <strong>posições de badges na anatomia</strong> são preservados. Se o número de elementos do componente mudar, as posições são recalculadas automaticamente.</span></li>
+        <li><span>O plugin pode cometer erros. <strong>Revise sempre</strong> o conteúdo gerado antes de publicar.</span></li>
+      </ol>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="geral">Geral</button>
+      <button class="tab" data-tab="extras">Extras</button>
+    </div>
+
+    <div id="panel-geral" class="tab-panel active">
+      <div class="component-card" id="componentCard">
+        <span class="component-card-icon">⬡</span>
+        <span id="componentNameLabel">Componente</span>
+      </div>
+
+      <div class="geral-group">
+        <label class="checkbox-field">
+          <input type="checkbox" id="settingIncluirComponente">
+          <span>Formatar Component Set na página</span>
+        </label>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="geral-group">
+        <div class="section-label">Seções a atualizar</div>
+        <label class="checkbox-field">
+          <input type="checkbox" id="settingSecaoAnatomia" checked>
+          <span>Anatomia</span>
+        </label>
+        <label class="checkbox-field">
+          <input type="checkbox" id="settingSecaoTabela" checked>
+          <span>Tabela de propriedades</span>
+        </label>
+        <label class="checkbox-field">
+          <input type="checkbox" id="settingSecaoVariacoes" checked>
+          <span>Variações</span>
+        </label>
+        <label class="checkbox-field">
+          <input type="checkbox" id="settingSecaoEstados" checked>
+          <span>Matriz de estados</span>
+        </label>
+      </div>
+
+      <div class="divider"></div>
+
+      <button id="action-btn" class="btn-action">Gerar Handoff</button>
+
+      <div id="status" class="status-bar"></div>
+    </div>
+
+    <div id="panel-extras" class="tab-panel">
+      <div class="extras-card">
+        <div class="extras-card-title">Nomes de section</div>
+        <div class="extras-row">
+          <span class="extras-row-label">Página inteira</span>
+          <button class="btn-extra" id="btnTogglePagina">Ocultar</button>
+        </div>
+        <div class="extras-row">
+          <span class="extras-row-label">Na seleção</span>
+          <button class="btn-extra" id="btnToggleSelecao">Ocultar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer" id="mainFooter" style="display:none;">DSC Handoff v2.0.1</div>
+
+  <script>
+    const waitingState = document.getElementById('waitingState');
+    const mainContainer = document.getElementById('mainContainer');
+    const mainFooter = document.getElementById('mainFooter');
+
+    function mostrarWaiting() {
+      waitingState.classList.add('active');
+      mainContainer.style.display = 'none';
+      mainFooter.style.display = 'none';
+    }
+
+    function mostrarApp() {
+      waitingState.classList.remove('active');
+      mainContainer.style.display = '';
+      mainFooter.style.display = '';
+    }
+
+    const btnInfo = document.getElementById('btnInfo');
+    const infoPanel = document.getElementById('infoPanel');
+    const btnCloseInfo = document.getElementById('btnCloseInfo');
+    const btnSettings = document.getElementById('btnSettings');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const btnCloseSettings = document.getElementById('btnCloseSettings');
+
+    btnInfo.onclick = () => infoPanel.classList.add('open');
+    btnCloseInfo.onclick = () => infoPanel.classList.remove('open');
+    btnSettings.onclick = () => settingsPanel.classList.add('open');
+    btnCloseSettings.onclick = () => settingsPanel.classList.remove('open');
+
+    // Navegação de tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+        if (tab.dataset.tab === 'extras') {
+          parent.postMessage({ pluginMessage: { type: 'checar-estado-sections' } }, '*');
+        }
+      });
+    });
+
+    const actionBtn = document.getElementById('action-btn');
+    const statusBar = document.getElementById('status');
+    let _isUpdate = false;
+
+    function setLoading(message) {
+      actionBtn.disabled = true;
+      statusBar.className = 'status-bar loading';
+      statusBar.innerHTML = '<div class="spinner"></div>' + message;
+    }
+
+    function setResult(type, message) {
+      actionBtn.disabled = false;
+      statusBar.className = 'status-bar ' + type;
+      statusBar.textContent = message;
+      if (type === 'success') {
+        setTimeout(function() {
+          statusBar.className = 'status-bar';
+          statusBar.textContent = '';
+        }, 4000);
+      }
+    }
+
+    actionBtn.onclick = () => {
+      const incluirComponente = document.getElementById('settingIncluirComponente').checked;
+      const secoesAtualizar = [
+        [document.getElementById('settingSecaoTabela'), 'table'],
+        [document.getElementById('settingSecaoAnatomia'), 'anatomy'],
+        [document.getElementById('settingSecaoVariacoes'), 'variants'],
+        [document.getElementById('settingSecaoEstados'), 'states'],
+      ].filter(([cb]) => cb.checked).map(([, nome]) => nome);
+
+      if (_isUpdate) {
+        setLoading('Atualizando handoff...');
+        parent.postMessage({ pluginMessage: {
+          type: 'update-handoff',
+          mode: 'design',
+          syncTemplate: document.getElementById('settingSyncTemplate').checked,
+          manterEdicoes: document.getElementById('settingManterEdicoes').checked,
+          incluirComponente,
+          secoesAtualizar,
+        } }, '*');
+      } else {
+        setLoading('Gerando handoff...');
+        parent.postMessage({ pluginMessage: {
+          type: 'run-handoff',
+          mode: 'design',
+          syncTemplate: true,
+          incluirComponente,
+          preencherDescricao: document.getElementById('settingPreencherDescricao').checked,
+          truePrimeiro: document.getElementById('settingTruePrimeiro').checked,
+        } }, '*');
+      }
+    };
+
+    const btnTogglePagina = document.getElementById('btnTogglePagina');
+    const btnToggleSelecao = document.getElementById('btnToggleSelecao');
+
+    function atualizarBtnExtra(btn, oculto) {
+      if (oculto) {
+        btn.textContent = 'Restaurar';
+        btn.classList.add('ghost');
+      } else {
+        btn.textContent = 'Ocultar';
+        btn.classList.remove('ghost');
+      }
+    }
+
+    btnTogglePagina.onclick = () =>
+      parent.postMessage({ pluginMessage: { type: 'toggle-nomes-sections', escopo: 'pagina' } }, '*');
+    btnToggleSelecao.onclick = () =>
+      parent.postMessage({ pluginMessage: { type: 'toggle-nomes-sections', escopo: 'selecao' } }, '*');
+
+
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      if (!msg) return;
+      if (msg.type === 'waiting-selection') {
+        mostrarWaiting();
+        return;
+      }
+      if (msg.type === 'selection-ready') {
+        mostrarApp();
+        document.getElementById('componentNameLabel').textContent = msg.componentName || 'Componente';
+        document.getElementById('action-btn').textContent = msg.isUpdate ? 'Atualizar Handoff' : 'Gerar Handoff';
+        _isUpdate = msg.isUpdate || false;
+        return;
+      }
+      if (msg.type === 'estado-sections') {
+        const btn = msg.escopo === 'pagina' ? btnTogglePagina : btnToggleSelecao;
+        atualizarBtnExtra(btn, msg.oculto);
+        return;
+      }
+      if (msg.type === 'estado-sections-inicial') {
+        atualizarBtnExtra(btnTogglePagina, msg.pagina);
+        atualizarBtnExtra(btnToggleSelecao, msg.selecao);
+        return;
+      }
+      if (msg.type === 'progress') {
+        statusBar.innerHTML = '<div class="spinner"></div>' + msg.message;
+      } else if (msg.type === 'status') {
+        if (msg.status === 'success') {
+          setResult('success', msg.message);
+        } else if (msg.status === 'error') {
+          setResult('error', msg.message);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
