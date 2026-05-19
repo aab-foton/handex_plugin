@@ -232,11 +232,19 @@ ${modMsgs}
     <span>Criar fluxo</span>
   </button>
 
+  <!-- Handoff FABs moved to global scope -->
   <button onclick="addBriefingQuestion()" title="Adicionar Pergunta" aria-label="Adicionar Pergunta"
     class="hidden fixed bottom-14 right-6 bg-[#005ca9]/30 hover:bg-[#005ca9] text-white rounded-full shadow-lg z-[100] border border-white/20 backdrop-blur-sm fab-main group"
     id="fab-handoff-briefing">
     <i data-lucide="plus" class="w-5 h-5 shrink-0"></i>
     <span>Adicionar pergunta</span>
+  </button>
+
+  <button onclick="addChecklistItem('excecao', 'Erro', 'alert-circle', 'red')" title="Adicionar Item" aria-label="Adicionar Item"
+    class="hidden fixed bottom-14 right-6 bg-[#005ca9]/30 hover:bg-[#005ca9] text-white rounded-full shadow-lg z-[100] border border-white/20 backdrop-blur-sm fab-main group"
+    id="fab-handoff-item">
+    <i data-lucide="plus" class="w-5 h-5 shrink-0"></i>
+    <span>Adicionar item</span>
   </button>
 
   <button id="btn-top" onclick="scrollToTop()" title="Voltar ao topo" aria-label="Voltar ao topo"
