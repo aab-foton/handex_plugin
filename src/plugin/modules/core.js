@@ -9,7 +9,7 @@ let lastAuditResults = null;
 let handoffData = {
   briefing: { questions: [] },
   step1: { files: [], versao: "v2.0.0" },
-  step2: { specs: null, isAuditEnabled: false, auditReferenceTokens: null },
+  step2: { specs: null, isAuditEnabled: false, auditReferenceTokens: null, auditReferences: [] },
   step3: {
     team: [],
     erro_checked: true,
@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fabFlow.classList.toggle('hidden', viewId !== 'view-specifications' || currentSpecTab !== 'specs-flow');
       }
 
-      // Handoff FABs
+      // Handoff FABs — requer Step 1 E briefing ativado
       if (fabBriefing) {
         fabBriefing.classList.toggle('hidden', !isHandoff || currentStep !== 1 || !isBriefingOn);
       }
@@ -1043,31 +1043,6 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.closest("div").remove();
     }
 
-    // Step 1: Dynamic Items
-    function addDynamicItem() {
-      const container = document.getElementById("dynamic-items-container");
-      const id = Date.now();
-      const div = document.createElement("div");
-      div.className = "p-4 bg-gray-50/50 dark:bg-dark-surface/30 rounded-xl border border-gray-100 dark:border-dark-line relative group animate-in slide-in-from-top-2 duration-300";
-      div.innerHTML = `
-        <button onclick="this.parentElement.remove()" title="Remover item" aria-label="Remover item" class="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors">
-          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-        </button>
-        <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1">
-            <label class="text-[10px] font-bold text-gray-400 uppercase">Título</label>
-            <input type="text" placeholder="Ex: API" class="w-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg px-3 py-1.5 text-[12px]" onchange="updateData('step1', 'extra_${id}_title', this.value)">
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-[10px] font-bold text-gray-400 uppercase">Valor</label>
-            <input type="text" placeholder="Link ou texto" class="w-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg px-3 py-1.5 text-[12px]" onchange="updateData('step1', 'extra_${id}_value', this.value)">
-          </div>
-        </div>
-      `;
-      container.appendChild(div);
-      lucide.createIcons();
-      autoScrollToNewItem('handoff-scroll-container');
-    }
 
     // Step 2: Scanning & Specs
     function toggleAuditSection(checked) {
@@ -1078,45 +1053,82 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleAuditRefUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
+      const files = event.target.files;
+      if (!files || files.length === 0) return;
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const json = JSON.parse(e.target.result);
-          if (handoffData && handoffData.step2) {
-            handoffData.step2.auditReferenceTokens = json;
-            handoffData.step2.auditFilename = file.name;
+      let loadedCount = 0;
+      const targetCount = files.length;
+      let hasError = false;
+
+      if (!handoffData.step2.auditReferences) handoffData.step2.auditReferences = [];
+
+      for (let i = 0; i < targetCount; i++) {
+        const file = files[i];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const json = JSON.parse(e.target.result);
+            handoffData.step2.auditReferences.push({
+              name: file.name,
+              tokens: json
+            });
+          } catch (err) {
+            hasError = true;
+          }
+          loadedCount++;
+          if (loadedCount === targetCount) {
             saveToStorage();
+            renderAuditFilesList();
             
-            // UI Feedback
-            const fileDisplay = document.getElementById('audit-file-display');
-            const filenameSpan = document.getElementById('audit-filename');
             const btnPerform = document.getElementById('btn-perform-audit');
-            
-            if (fileDisplay && filenameSpan) {
-              filenameSpan.innerText = file.name;
-              fileDisplay.classList.remove('hidden');
-            }
-            if (btnPerform) {
+            if (btnPerform && handoffData.step2.auditReferences.length > 0) {
               btnPerform.disabled = false;
               btnPerform.classList.remove('opacity-50', 'cursor-not-allowed');
             }
             
-            showToast('Referências de auditoria importadas!');
+            if (hasError) {
+              showToast('Alguns arquivos falharam ao ler', 'error');
+            } else {
+              showToast('Referências de auditoria importadas!');
+            }
+            // Reset input so same file can be uploaded again if needed
+            event.target.value = '';
           }
-        } catch (err) {
-          showToast('Erro ao ler arquivo JSON', 'error');
-        }
-      };
-      reader.readAsText(file);
+        };
+        reader.readAsText(file);
+      }
+    }
+
+    function renderAuditFilesList() {
+      const container = document.getElementById('audit-files-container');
+      if (!container) return;
+      container.innerHTML = '';
+      
+      const refs = handoffData.step2.auditReferences || [];
+      if (refs.length === 0) return;
+      
+      refs.forEach((ref, idx) => {
+        const item = document.createElement('div');
+        item.className = "p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/30 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1";
+        item.innerHTML = `
+          <div class="flex items-center gap-2 overflow-hidden">
+            <i data-lucide="file-json" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
+            <span class="text-[11px] font-bold text-blue-800 dark:text-blue-300 truncate">${ref.name}</span>
+          </div>
+          <button onclick="removeAuditReference(${idx})" class="p-1 hover:bg-blue-100 dark:hover:bg-blue-800/50 rounded-md text-blue-600 dark:text-blue-400 transition-colors" title="Remover arquivo">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+        `;
+        container.appendChild(item);
+      });
+      
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
     function performAudit() {
-      if (!handoffData.step2.auditReferenceTokens) {
-        showToast("Carregue o arquivo JSON de referência antes de realizar a auditoria.", "error");
-        // Open the section if it was closed
+      const refs = handoffData.step2.auditReferences || [];
+      if (refs.length === 0) {
+        showToast("Carregue ao menos um arquivo JSON de referência antes de realizar a auditoria.", "error");
         const content = document.getElementById('audit-card-content');
         if (content && content.classList.contains('hidden')) content.classList.remove('hidden');
         return;
@@ -1126,8 +1138,8 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.disabled = true;
         btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Auditando...';
       }
-      lucide.createIcons();
-      parent.postMessage({ pluginMessage: { type: "scan-frame", isAudit: true, referenceTokens: handoffData.step2.auditReferenceTokens } }, "*");
+      if (window.lucide) lucide.createIcons();
+      parent.postMessage({ pluginMessage: { type: "scan-frame", isAudit: true, referenceTokens: refs } }, "*");
     }
 
     function exportAuditReport() {
@@ -1141,19 +1153,14 @@ document.addEventListener('DOMContentLoaded', () => {
       link.click();
     }
 
-    function removeAuditReference() {
-      if (handoffData && handoffData.step2) {
-        handoffData.step2.auditReferenceTokens = null;
-        handoffData.step2.auditFilename = null;
+    function removeAuditReference(idx) {
+      if (handoffData && handoffData.step2 && handoffData.step2.auditReferences) {
+        handoffData.step2.auditReferences.splice(idx, 1);
         saveToStorage();
+        renderAuditFilesList();
         
-        const fileDisplay = document.getElementById('audit-file-display');
-        const filenameSpan = document.getElementById('audit-filename');
         const btnPerform = document.getElementById('btn-perform-audit');
-        
-        if (fileDisplay) fileDisplay.classList.add('hidden');
-        if (filenameSpan) filenameSpan.innerText = '';
-        if (btnPerform) {
+        if ((!handoffData.step2.auditReferences || handoffData.step2.auditReferences.length === 0) && btnPerform) {
           btnPerform.disabled = true;
           btnPerform.classList.add('opacity-50', 'cursor-not-allowed');
         }
@@ -1193,19 +1200,30 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    function scanFrame() {
-      if (handoffData.step2.isAuditEnabled && !handoffData.step2.auditReferenceTokens) {
-        showToast("Carregue o arquivo JSON de referência antes de escanear com auditoria.", "error");
+    function scanFrame(categories = null) {
+      const refs = handoffData.step2.auditReferences || [];
+      if (handoffData.step2.isAuditEnabled && refs.length === 0) {
+        showToast("Carregue ao menos um arquivo JSON de referência antes de escanear com auditoria.", "error");
         const content = document.getElementById('audit-card-content');
         if (content && content.classList.contains('hidden')) content.classList.remove('hidden');
         return;
       }
 
       const btn = document.getElementById("btn-scan");
-      btn.disabled = true;
-      btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Escaneando...';
-      lucide.createIcons();
-      parent.postMessage({ pluginMessage: { type: "scan-frame", isAudit: handoffData.step2.isAuditEnabled, referenceTokens: handoffData.step2.auditReferenceTokens } }, "*");
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Escaneando...';
+      }
+      if (window.lucide) lucide.createIcons();
+      
+      parent.postMessage({ 
+        pluginMessage: { 
+          type: "scan-frame", 
+          isAudit: handoffData.step2.isAuditEnabled, 
+          referenceTokens: refs.length > 0 ? refs : null,
+          categories: categories
+        } 
+      }, "*");
     }
 
 
@@ -1519,62 +1537,73 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
+    // Audit thresholds mirror src/plugin/audit.js (AUDIT_THRESHOLDS).
+    // Element status is derived from the average score of its properties:
+    //   >= 0.98  →  "ok"      "Em conformidade"
+    //   >= 0.11  →  "warning" "Necessita revisão"
+    //   <  0.11  →  "error"   "Fora do padrão"
+    const AUDIT_OURO = 0.98;
+    const AUDIT_AJUSTE = 0.11;
+
+    function classifyAuditRate(rate) {
+      if (rate >= AUDIT_OURO) return "ok";
+      if (rate >= AUDIT_AJUSTE) return "warning";
+      return "error";
+    }
+
+    function computeItemAuditStatus(item) {
+      if (!handoffData.step2.isAuditEnabled) return null;
+
+      if (item.properties && item.properties.length > 0) {
+        // Prefer numeric scores (new score-based pipeline)
+        const numericScores = item.properties
+          .map(p => (typeof p.score === "number" ? p.score : null))
+          .filter(s => s !== null);
+
+        if (numericScores.length === item.properties.length) {
+          const sum = numericScores.reduce((a, b) => a + b, 0);
+          return classifyAuditRate(sum / numericScores.length);
+        }
+        // Fallback for legacy isDS-only data: true=1, "warning"=0.5, false=0
+        const total = item.properties.length;
+        const sum = item.properties.reduce((acc, p) => {
+          if (p.isDS === true) return acc + 1;
+          if (p.isDS === "warning") return acc + 0.5;
+          return acc;
+        }, 0);
+        return classifyAuditRate(sum / total);
+      }
+
+      // No properties (components/icons): use element-level score, falling back to isDS.
+      if (typeof item.score === "number") return classifyAuditRate(item.score);
+      if (item.isDS === true) return "ok";
+      if (item.isDS === "warning") return "warning";
+      return "error";
+    }
+
+    const AUDIT_LABEL = {
+      ok: "Em conformidade",
+      warning: "Necessita revisão",
+      error: "Fora do padrão"
+    };
+
     function createAccordionSection(section) {
       const div = document.createElement("div");
       div.className = "mb-3 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-xl overflow-hidden shadow-sm";
 
       const count = section.items.length;
-      
+
       let issuesCount = 0;
       let adjustmentsCount = 0;
 
       if (handoffData.step2.isAuditEnabled) {
         section.items.forEach(item => {
-           if (item.properties && item.properties.length > 0) {
-             const totalProps = item.properties.length;
-             const irregulars = item.properties.filter(p => p.isDS === false).length;
-             
-             if (irregulars === 0) {
-               item.componentStatus = "ok";
-             } else {
-               // Refined User Rule:
-               // 1. If total < 3 properties, any error makes it "Fora do Padrão" (Red)
-               // 2. If total >= 3 properties:
-               //    - If irregulars is a minority (e.g. 1 in 3, 1 in 4, 2 in 5 -> roughly < 50%), it's an "Ajuste" (Yellow)
-               //    - Otherwise it's "Fora do Padrão" (Red)
-               
-               if (totalProps < 3) {
-                 issuesCount++;
-                 item.componentStatus = "error";
-               } else {
-                 // Threshold for "Ajuste": less than half the properties are wrong
-                 if (irregulars < (totalProps / 2)) {
-                   adjustmentsCount++;
-                   item.componentStatus = "warning";
-                 } else {
-                   issuesCount++;
-                   item.componentStatus = "error";
-                 }
-               }
-             }
-           } else {
-             // For items without specific audit properties (like some icons or frames)
-             if (item.isDS === false) {
-               issuesCount++;
-               item.componentStatus = "error";
-             } else if (item.isDS === "warning") {
-               adjustmentsCount++;
-               item.componentStatus = "warning";
-             } else {
-               item.componentStatus = "ok";
-             }
-           }
+          const status = computeItemAuditStatus(item);
+          item.componentStatus = status;
+          if (status === "error") issuesCount++;
+          else if (status === "warning") adjustmentsCount++;
         });
       }
-
-      const issuesBadge = issuesCount > 0 ? `<span class="px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-900/30 text-red-500 text-[10px] font-bold">${issuesCount} Irregulares</span>` : "";
-      const adjustmentsBadge = adjustmentsCount > 0 ? `<span class="px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-500 text-[10px] font-bold">${adjustmentsCount} Ajustes</span>` : "";
-      const badges = (issuesBadge || adjustmentsBadge) ? `<div class="flex gap-1.5">${issuesBadge}${adjustmentsBadge}</div>` : "";
 
       const SEARCH_THRESHOLD = 10;
       const showSearch = count > SEARCH_THRESHOLD;
@@ -1582,6 +1611,29 @@ document.addEventListener('DOMContentLoaded', () => {
       const searchId = `search-${uid}`;
       const gridId = `grid-${uid}`;
       const emptyId = `empty-${uid}`;
+
+      // Chip button: clicking toggles the status filter on this accordion. When active,
+      // it shows an inline X and a highlighted background. Click again (or click the X
+      // area, since the whole chip is the button) to clear.
+      const chipButton = (status, n, palette) => `
+        <button type="button"
+                data-chip-status="${status}"
+                onclick="event.stopPropagation(); toggleStatusFilter('${gridId}', '${emptyId}', '${searchId}', '${status}', this)"
+                title="Filtrar por ${AUDIT_LABEL[status]}"
+                aria-pressed="false"
+                class="status-chip px-2 py-0.5 rounded-full ${palette} text-[10px] font-bold flex items-center gap-1 cursor-pointer hover:brightness-95 transition-all">
+          <span class="chip-count">${n}</span>
+          <span class="chip-label">${AUDIT_LABEL[status]}</span>
+          <i data-lucide="x" class="chip-x w-3 h-3 hidden"></i>
+        </button>`;
+
+      const issuesBadge = issuesCount > 0
+        ? chipButton("error", issuesCount, "bg-red-50 dark:bg-red-900/30 text-red-500")
+        : "";
+      const adjustmentsBadge = adjustmentsCount > 0
+        ? chipButton("warning", adjustmentsCount, "bg-amber-50 dark:bg-amber-900/30 text-amber-500")
+        : "";
+      const badges = (issuesBadge || adjustmentsBadge) ? `<div class="flex gap-1.5 flex-wrap">${issuesBadge}${adjustmentsBadge}</div>` : "";
 
       const searchHtml = showSearch ? `
         <div class="px-3 pb-2 pt-3 border-b border-gray-50 dark:border-dark-line">
@@ -1591,7 +1643,7 @@ document.addEventListener('DOMContentLoaded', () => {
               id="${searchId}"
               type="text"
               placeholder="Buscar em ${section.title}..."
-              class="w-full pl-8 pr-3 py-1.5 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0070af]/30 focus:border-[#0070af] transition-all"
+              class="token-search-input w-full pl-8 pr-3 py-1.5 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0070af]/30 focus:border-[#0070af] transition-all"
               oninput="filterSpecItems('${gridId}', '${emptyId}', this.value)"
             />
           </div>
@@ -1599,25 +1651,29 @@ document.addEventListener('DOMContentLoaded', () => {
       ` : "";
 
       div.innerHTML = `
-        <button onclick="toggleAccordion(this)" title="Expandir/Recolher" aria-label="Expandir seção" class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors">
+        <div role="button" tabindex="0" aria-expanded="false" title="Expandir/Recolher" aria-label="Expandir seção"
+             onclick="toggleAccordion(this)"
+             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAccordion(this);}"
+             class="w-full px-4 py-3 hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors cursor-pointer select-none">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-[#0070af] dark:text-blue-400">
+            <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-[#0070af] dark:text-blue-400 shrink-0">
               <i data-lucide="${section.icon}" class="w-4 h-4"></i>
             </div>
-            <div class="text-left">
-              <div class="flex items-center gap-2">
-                <p class="text-[13px] font-bold text-slate-800 dark:text-white">${section.title}</p>
-                ${badges}
-              </div>
-              <p class="text-[10px] text-gray-400">${count} elementos encontrados</p>
+            <div class="flex-1 min-w-0 flex items-center gap-2">
+              <p class="text-[13px] font-bold text-slate-800 dark:text-white truncate">${section.title}</p>
+              <p class="text-[10px] text-gray-400 whitespace-nowrap">${count} elementos</p>
             </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-300 transition-transform shrink-0"></i>
           </div>
-          <i data-lucide="chevron-down" class="w-4 h-4 text-gray-300 transition-transform"></i>
-        </button>
+          ${badges ? `<div class="mt-2 pl-11">${badges}</div>` : ""}
+        </div>
         <div data-accordion-content class="accordion-content hidden border-t border-gray-50 dark:border-dark-line">
           ${searchHtml}
-          <div id="${gridId}" class="p-2 grid grid-cols-2 gap-2">
-            ${section.items.map(item => `<div class="spec-item-wrapper col-span-2" data-name="${(item.name || '').toLowerCase().replace(/"/g, '&quot;')}">${createSpecItem(item, section.type)}</div>`).join("")}
+          <div id="${gridId}" class="p-2 grid grid-cols-2 gap-2" data-status-filter="">
+            ${section.items.map(item => {
+              const itemStatus = item.componentStatus || "";
+              return `<div class="spec-item-wrapper col-span-2" data-name="${(item.name || '').toLowerCase().replace(/"/g, '&quot;')}" data-status="${itemStatus}">${createSpecItem(item, section.type)}</div>`;
+            }).join("")}
           </div>
           <div id="${emptyId}" class="hidden py-6 text-center text-[11px] text-gray-400 dark:text-gray-500">
             <i data-lucide="search-x" class="w-6 h-6 mx-auto mb-2 text-gray-300 dark:text-gray-600"></i>
@@ -1633,22 +1689,73 @@ document.addEventListener('DOMContentLoaded', () => {
       const emptyMsg = document.getElementById(emptyId);
       if (!grid) return;
 
-      const term = (query || '').toLowerCase().trim();
+      const term = (typeof query === "string" ? query : "").toLowerCase().trim();
+      const statusFilter = grid.getAttribute('data-status-filter') || "";
       const wrappers = grid.querySelectorAll('.spec-item-wrapper');
       let visible = 0;
 
       wrappers.forEach(wrapper => {
         const name = wrapper.getAttribute('data-name') || '';
-        const match = !term || name.includes(term);
-        wrapper.style.display = match ? '' : 'none';
-        if (match) visible++;
+        const status = wrapper.getAttribute('data-status') || '';
+        const matchName = !term || name.includes(term);
+        const matchStatus = !statusFilter || status === statusFilter;
+        const show = matchName && matchStatus;
+        wrapper.style.display = show ? '' : 'none';
+        if (show) visible++;
       });
 
       if (emptyMsg) {
-        emptyMsg.classList.toggle('hidden', visible > 0 || !term);
+        const hasAnyFilter = term || statusFilter;
+        emptyMsg.classList.toggle('hidden', visible > 0 || !hasAnyFilter);
       }
     }
     window.filterSpecItems = filterSpecItems;
+
+    // Toggle a status filter for the chip clicked. If clicking the active chip,
+    // clears the filter. Auto-opens the accordion when activating a filter so
+    // the user can see the filtered items immediately.
+    function toggleStatusFilter(gridId, emptyId, searchId, status, chipEl) {
+      const grid = document.getElementById(gridId);
+      if (!grid) return;
+
+      const currentFilter = grid.getAttribute('data-status-filter') || "";
+      const newFilter = currentFilter === status ? "" : status;
+      grid.setAttribute('data-status-filter', newFilter);
+
+      // Update chip states across this accordion's header
+      const accordionRoot = chipEl.closest('.mb-3');
+      if (accordionRoot) {
+        accordionRoot.querySelectorAll('.status-chip').forEach(chip => {
+          const chipStatus = chip.getAttribute('data-chip-status');
+          const isActive = newFilter && chipStatus === newFilter;
+          chip.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+          chip.classList.toggle('chip-active', isActive);
+          chip.classList.toggle('ring-2', isActive);
+          chip.classList.toggle('ring-offset-1', isActive);
+          chip.classList.toggle('dark:ring-offset-dark-surface', isActive);
+          if (chipStatus === "error") chip.classList.toggle('ring-red-400', isActive);
+          if (chipStatus === "warning") chip.classList.toggle('ring-amber-400', isActive);
+          const xIcon = chip.querySelector('.chip-x');
+          if (xIcon) xIcon.classList.toggle('hidden', !isActive);
+        });
+      }
+
+      // Auto-open accordion if collapsed
+      if (newFilter && accordionRoot) {
+        const content = accordionRoot.querySelector('[data-accordion-content]');
+        const toggleBtn = accordionRoot.querySelector('button[onclick*="toggleAccordion"]');
+        if (content && content.classList.contains('hidden') && toggleBtn) {
+          toggleAccordion(toggleBtn);
+        }
+      }
+
+      // Reapply filter, preserving the search term
+      const searchInput = searchId ? document.getElementById(searchId) : null;
+      filterSpecItems(gridId, emptyId, searchInput ? searchInput.value : "");
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+    window.toggleStatusFilter = toggleStatusFilter;
 
 
     function createSpecItem(item, type) {
@@ -1661,13 +1768,13 @@ document.addEventListener('DOMContentLoaded', () => {
         preview = `<div class="w-8 h-8 flex items-center justify-center bg-gray-50 dark:bg-dark-bg rounded text-gray-300"><i data-lucide="${iconName}" class="w-4 h-4"></i></div>`;
       }
 
-      // Use the calculated componentStatus
+      // Use the calculated componentStatus (now derived from match-rate thresholds)
       const status = item.componentStatus || (item.isDS === true ? "ok" : (item.isDS === "warning" ? "warning" : "error"));
 
       const dsStatus = handoffData.step2.isAuditEnabled ? (status === "ok" ?
-        `<span class="flex items-center gap-1 text-[#10b981]"><i data-lucide="check-circle" class="w-2.5 h-2.5"></i>DSC</span>` :
-        (status === "warning" ? 
-          `<span class="flex items-center gap-1 text-amber-500 font-bold"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>AJUSTES</span>` :
+        `<span class="flex items-center gap-1 text-[#10b981]"><i data-lucide="check-circle" class="w-2.5 h-2.5"></i>EM CONFORMIDADE</span>` :
+        (status === "warning" ?
+          `<span class="flex items-center gap-1 text-amber-500 font-bold"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>NECESSITA REVISÃO</span>` :
           `<span class="flex items-center gap-1 text-red-400 font-bold"><i data-lucide="alert-circle" class="w-2.5 h-2.5"></i>FORA DO PADRÃO</span>`)) : "";
 
       let propsHtml = "";
@@ -1726,38 +1833,41 @@ document.addEventListener('DOMContentLoaded', () => {
       let dsCount = 0;
       const issues = [];
       const adjustments = [];
+      let elementsOk = 0;
+      let elementsWarning = 0;
+      let elementsError = 0;
 
       Object.keys(data).forEach(cat => {
         if (cat === "frameJson") return;
-        if (Array.isArray(data[cat])) {
-          data[cat].forEach(element => {
-            if (element.properties && element.properties.length > 0) {
-              const totalProps = element.properties.length;
-              const irregulars = element.properties.filter(p => p.isDS === false).length;
+        if (!Array.isArray(data[cat])) return;
 
-              // Consistency Rule:
-              // - If total < 3: any error is an issue (Red)
-              // - If total >= 3: errors < 50% is adjustment (Yellow), else issue (Red)
-              const isAdjustmentGroup = (totalProps >= 3 && irregulars > 0 && irregulars < (totalProps / 2));
+        data[cat].forEach(element => {
+          // Track the element-level status using the same rule as the accordion.
+          const elementStatus = computeItemAuditStatus(element);
+          if (elementStatus === "ok") elementsOk++;
+          else if (elementStatus === "warning") elementsWarning++;
+          else if (elementStatus === "error") elementsError++;
 
-              element.properties.forEach(p => {
-                total++;
-                if (p.isDS === true) {
-                  dsCount++;
-                } else if (isAdjustmentGroup || p.isDS === "warning") {
-                  adjustments.push({ cat: cat.toUpperCase(), name: `${element.name} -> ${p.name}` });
-                } else {
-                  issues.push({ cat: cat.toUpperCase(), name: `${element.name} -> ${p.name}` });
-                }
-              });
-            } else if (cat === "components" || cat === "icons") {
+          if (element.properties && element.properties.length > 0) {
+            element.properties.forEach(p => {
               total++;
-              if (element.isDS === true) dsCount++;
-              else if (element.isDS === "warning") adjustments.push({ cat: cat.toUpperCase(), name: element.name });
-              else issues.push({ cat: cat.toUpperCase(), name: element.name });
-            }
-          });
-        }
+              const isOk = (typeof p.score === "number") ? (p.score >= AUDIT_OURO) : (p.isDS === true);
+              const isWarning = (typeof p.score === "number") ? (p.score >= AUDIT_AJUSTE && p.score < AUDIT_OURO) : (p.isDS === "warning");
+              if (isOk) {
+                dsCount++;
+              } else if (isWarning) {
+                adjustments.push({ cat: cat.toUpperCase(), name: `${element.name} -> ${p.name}` });
+              } else {
+                issues.push({ cat: cat.toUpperCase(), name: `${element.name} -> ${p.name}` });
+              }
+            });
+          } else if (cat === "components" || cat === "icons") {
+            total++;
+            if (elementStatus === "ok") dsCount++;
+            else if (elementStatus === "warning") adjustments.push({ cat: cat.toUpperCase(), name: element.name });
+            else issues.push({ cat: cat.toUpperCase(), name: element.name });
+          }
+        });
       });
 
       return {
@@ -1765,7 +1875,10 @@ document.addEventListener('DOMContentLoaded', () => {
         dsCount,
         adoption: total > 0 ? Math.round((dsCount / total) * 100) : 0,
         issues,
-        adjustments
+        adjustments,
+        elementsOk,
+        elementsWarning,
+        elementsError
       };
     }
 
@@ -1797,20 +1910,39 @@ document.addEventListener('DOMContentLoaded', () => {
             <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400">Aderência</p>
           </div>
         </div>
-        
+
         <div class="grid grid-cols-3 gap-2 mb-3">
           <div class="bg-white/50 dark:bg-black/20 p-2 rounded-xl">
             <p class="text-[9px] text-slate-500 dark:text-slate-400">Analisado</p>
             <p class="text-[13px] font-bold text-slate-800 dark:text-white">${total}</p>
           </div>
           <div class="bg-white/50 dark:bg-black/20 p-2 rounded-xl">
-            <p class="text-[9px] text-slate-500 dark:text-slate-400">Irregulares</p>
+            <p class="text-[9px] text-slate-500 dark:text-slate-400">Fora do padrão</p>
             <p class="text-[13px] font-bold text-red-500">${issues.length}</p>
           </div>
           <div class="bg-white/50 dark:bg-black/20 p-2 rounded-xl">
-            <p class="text-[9px] text-slate-500 dark:text-slate-400">Ajustes</p>
+            <p class="text-[9px] text-slate-500 dark:text-slate-400">Necessita revisão</p>
             <p class="text-[13px] font-bold text-amber-500">${adjustments.length}</p>
           </div>
+        </div>
+
+        <div class="bg-white/50 dark:bg-black/20 p-2.5 rounded-xl mb-3">
+          <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Legenda</p>
+          <div class="space-y-1">
+            <div class="flex items-start gap-2 text-[10px]">
+              <span class="shrink-0 mt-0.5 px-1.5 py-0.5 rounded-full bg-green-50 dark:bg-green-900/30 text-[#10b981] font-bold text-[9px] uppercase tracking-wide">Em conformidade</span>
+              <span class="text-slate-500 dark:text-slate-400 leading-snug">≥ 98% das características vinculadas a tokens oficiais da biblioteca.</span>
+            </div>
+            <div class="flex items-start gap-2 text-[10px]">
+              <span class="shrink-0 mt-0.5 px-1.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-500 font-bold text-[9px] uppercase tracking-wide">Necessita revisão</span>
+              <span class="text-slate-500 dark:text-slate-400 leading-snug">Entre 11% e 98% das características casam com a biblioteca — precisa de ajustes.</span>
+            </div>
+            <div class="flex items-start gap-2 text-[10px]">
+              <span class="shrink-0 mt-0.5 px-1.5 py-0.5 rounded-full bg-red-50 dark:bg-red-900/30 text-red-500 font-bold text-[9px] uppercase tracking-wide">Fora do padrão</span>
+              <span class="text-slate-500 dark:text-slate-400 leading-snug">Até 10% de aderência — o elemento não referencia tokens oficiais.</span>
+            </div>
+          </div>
+          <p class="text-[9px] text-slate-400 mt-2 italic">Dica: clique em um chip dentro de cada seção para filtrar apenas os itens daquele status.</p>
         </div>
 
         ${issues.length > 0 ? `
@@ -1821,12 +1953,12 @@ document.addEventListener('DOMContentLoaded', () => {
         ` : (adjustments.length > 0 ? `
            <div class="flex items-center gap-2 text-amber-500 text-[11px] font-bold py-2">
             <i data-lucide="help-circle" class="w-4 h-4"></i>
-            <span>Existem ajustes leves pendentes</span>
+            <span>Existem itens que necessitam revisão.</span>
           </div>
         ` : `
           <div class="flex items-center gap-2 text-[#10b981] text-[11px] font-bold py-2">
             <i data-lucide="check-circle" class="w-4 h-4"></i>
-            <span>Parabéns! Design 100% aderente ao padrão.</span>
+            <span>Parabéns! Design 100% em conformidade com o padrão.</span>
           </div>
         `)}
       `;
@@ -3273,7 +3405,9 @@ function toggleLinkInput(show) {
         chkAudit.checked = !!handoffData.step2.isAuditEnabled;
         toggleAuditSection(chkAudit.checked);
         
-        if (handoffData.step2.auditReferenceTokens) {
+        const refs = handoffData.step2.auditReferences || [];
+        if (refs.length > 0) {
+          renderAuditFilesList();
           const btn = document.getElementById('btn-perform-audit');
           if (btn) {
             btn.disabled = false;
@@ -3289,22 +3423,6 @@ function toggleLinkInput(show) {
       if (protoField) protoField.classList.toggle("hidden", !handoffData.docs.proto.checked);
       const a11yField = document.getElementById("a11y-field");
       if (a11yField) a11yField.classList.toggle("hidden", !handoffData.docs.a11y.checked);
-
-      // 8. Audit File Display
-      if (handoffData.step2.auditFilename) {
-        const fileDisplay = document.getElementById('audit-file-display');
-        const filenameSpan = document.getElementById('audit-filename');
-        const btnPerform = document.getElementById('btn-perform-audit');
-        
-        if (fileDisplay && filenameSpan) {
-          filenameSpan.innerText = handoffData.step2.auditFilename;
-          fileDisplay.classList.remove('hidden');
-        }
-        if (btnPerform) {
-          btnPerform.disabled = false;
-          btnPerform.classList.remove('opacity-50', 'cursor-not-allowed');
-        }
-      }
 
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }

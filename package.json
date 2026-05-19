@@ -10,7 +10,7 @@
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
     "bundle:ui": "node src/plugin/build.cjs",
-    "bundle:code": "npx esbuild src/plugin/code.js --bundle --outfile=src/plugin/code.bundle.js"
+    "bundle:code": "npx esbuild src/plugin/code.js --bundle --target=es2017 --outfile=src/plugin/code.bundle.js"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
