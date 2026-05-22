@@ -312,6 +312,29 @@ figma.ui.onmessage = async (msg) => {
     figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y Toque]')).forEach(n => n.remove());
     tempTouchOverlayId = null;
 
+    // --- SWAP: substitui handoff antigo pelo novo template ---
+    const isOldHandoff = !!(handoffAtivo as any).findOne(
+      (n: SceneNode) => n.name === 'keyboard maping' || n.name === 'keyboard mapping'
+    );
+    if (isOldHandoff) {
+      figma.ui.postMessage({ type: 'feedback', message: '⏳ Substituindo template antigo...' });
+      try {
+        const novoComp = await figma.importComponentByKeyAsync('4ebd8a017a86b29ca60427416ed4b76af05e4a67');
+        const novaInstancia = novoComp.createInstance();
+        novaInstancia.x = handoffAtivo.x;
+        novaInstancia.y = handoffAtivo.y;
+        const pai = handoffAtivo.parent;
+        if (pai && 'appendChild' in pai) (pai as any).appendChild(novaInstancia);
+        const dadosSalvos = (handoffAtivo as any).getPluginData('a11y-component-data');
+        if (dadosSalvos) novaInstancia.setPluginData('a11y-component-data', dadosSalvos);
+        handoffAtivo.remove();
+        handoffAtivo = novaInstancia;
+      } catch (e) {
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Não foi possível importar o novo template. Verifique se a biblioteca DSC está conectada ao arquivo.' });
+        return;
+      }
+    }
+
     // Cache de variáveis Figma (usado 3x para WCAG contrast)
     const figmaVarsGlobal = (figma as any).variables;
     const allVarsGlobal: any[] = figmaVarsGlobal ? await figmaVarsGlobal.getLocalVariablesAsync() : [];
@@ -347,16 +370,34 @@ figma.ui.onmessage = async (msg) => {
       const tableWrapper = container.findOne((n: SceneNode) => n.name === "table") as FrameNode;
       if (!tableWrapper) return;
 
-      // Busca o modelo "Row" diretamente nos filhos (pode estar oculto em updates)
-      const rowModel = Array.from(tableWrapper.children).find((n) => n.name === "Row") as InstanceNode | undefined;
+      const isDataRow = (n: SceneNode) =>
+        (n as any).children &&
+        Array.from((n as any).children as SceneNode[]).some((c: SceneNode) => c.name.includes('Table Cell'));
+
+      // 1. Nome "Row" (template fresco)
+      // 2. [dsc doc] Doc Table com Table Cell (template novo via swap)
+      // 3. Qualquer instance/frame com 2+ TextNodes exceto cabeçalho (handoff antigo)
+      const rowModel = (
+        Array.from(tableWrapper.children).find((n) => n.name === "Row")
+        ?? Array.from(tableWrapper.children).find((n) => n.type === 'INSTANCE' && isDataRow(n))
+        ?? Array.from(tableWrapper.children).find((n) =>
+          (n.type === 'INSTANCE' || n.type === 'FRAME') &&
+          ((n as any).findAll?.((c: SceneNode) => c.type === 'TEXT') as TextNode[] ?? []).length >= 2
+        )
+      ) as InstanceNode | undefined;
       if (!rowModel) {
         console.error("Não encontrei a camada 'Row' dentro de 'table'");
         return;
       }
 
-      // Remove linhas de dados anteriores, preservando o modelo "Row"
+      // Remove linhas de dados anteriores, preservando o modelo e o cabeçalho
       Array.from(tableWrapper.children)
-        .filter(n => n !== rowModel && n.name === 'Row')
+        .filter(n => {
+          if (n === rowModel) return false;
+          if (n.name !== rowModel.name) return false;
+          if (rowModel.name !== 'Row') return isDataRow(n);
+          return true;
+        })
         .forEach(n => n.remove());
 
       if (data.length === 0) return;
@@ -406,11 +447,11 @@ figma.ui.onmessage = async (msg) => {
       const todasAsAreas: any[] = [];
     if (msg.variacoes && msg.variacoes.length > 0) {
       for (const v of msg.variacoes) {
-        if (!v.sem_toque && v.areas_toque) {
+        if (!v.sem_toque && Array.isArray(v.areas_toque)) {
           for (const a of v.areas_toque) todasAsAreas.push(a);
         }
       }
-    } else if (msg.areas_toque) {
+    } else if (Array.isArray(msg.areas_toque)) {
       todasAsAreas.push(...msg.areas_toque);
     }
 
@@ -464,7 +505,11 @@ figma.ui.onmessage = async (msg) => {
         figma.ui.postMessage({ type: 'feedback', message: `⏳ ${isUpdate ? 'Atualizando' : 'Gerando'} preview de área de toque...` });
         // --- PREENCHER IMAGE (PREVIEW) ---
         if (msg.runTouch !== false) {
-          const imageFrame = workingFrame.findOne((n: SceneNode) => n.name === 'image' && n.parent?.name !== 'screen reader') as FrameNode | null;
+          const imageFrame = workingFrame.findOne((n: SceneNode) =>
+            n.name === 'image' &&
+            n.parent?.name !== 'screen reader' &&
+            (n.type === 'FRAME' || n.type === 'GROUP' || n.type === 'COMPONENT' || n.type === 'INSTANCE')
+          ) as FrameNode | null;
         const variacoes: any[] = msg.variacoes || [];
         const variacoesComAreas = variacoes.filter((v: any) => !v.sem_toque && v.areas_toque && v.areas_toque.length > 0);
 
@@ -531,7 +576,7 @@ figma.ui.onmessage = async (msg) => {
             imageFrame.insertChild(0, compClone);
 
             // Criar overlays e marcadores para cada área desta variação
-            if (modelHandoffAreas && modelItemNumber) {
+            if (modelHandoffAreas && modelItemNumber && Array.isArray(variacao.areas_toque)) {
               for (const area of variacao.areas_toque) {
                 globalCounter++;
 
@@ -1698,10 +1743,10 @@ figma.ui.onmessage = async (msg) => {
         figma.ui.postMessage({ type: 'old-section-data', section: 'geral', found, data: result });
       } else if (msg.section === 'toque') {
         const result = await parseOldTouchAreas(handoffAtivo);
-        figma.ui.postMessage({ type: 'old-section-data', section: 'toque', found: result.areas.length > 0, data: result });
+        figma.ui.postMessage({ type: 'old-section-data', section: 'toque', found: result.variacoes.some(v => v.areas.length > 0), data: result });
       } else if (msg.section === 'tabulacao') {
         const result = await parseOldTabOrder(handoffAtivo);
-        figma.ui.postMessage({ type: 'old-section-data', section: 'tabulacao', found: result.items.length > 0, data: result });
+        figma.ui.postMessage({ type: 'old-section-data', section: 'tabulacao', found: result.variacoes.some(v => v.items.length > 0), data: result });
       } else if (msg.section === 'leitor') {
         const result = await parseOldSRData(handoffAtivo);
         figma.ui.postMessage({ type: 'old-section-data', section: 'leitor', found: result.variacoes.length > 0, data: result });
@@ -2071,72 +2116,192 @@ async function parseOldSRData(handoff: SceneNode): Promise<{
 // PARSER DE MIGRAÇÃO — TABULAÇÃO (Fase 3)
 // ==========================================
 
-async function parseOldTabOrder(handoff: SceneNode): Promise<{
-  items: { nome: string; layerName: string; nodeId: string; relX: number; relY: number; width: number; height: number }[];
-}> {
-  const items: { nome: string; layerName: string; nodeId: string; relX: number; relY: number; width: number; height: number }[] = [];
+type TabItem = { nome: string; layerName: string; nodeId: string; relX: number; relY: number; width: number; height: number };
+type TabVariacao = { nome: string; propriedades: Record<string, string>; items: TabItem[] };
+
+async function parseOldTabOrder(handoff: SceneNode): Promise<{ variacoes: TabVariacao[] }> {
+  const variacoes: TabVariacao[] = [];
 
   const focusOrderFrame = (handoff as any).findOne(
     (n: SceneNode) => n.name === 'focus order'
   ) as FrameNode | null;
-  if (!focusOrderFrame) return { items };
+  if (!focusOrderFrame) return { variacoes };
 
-  const imageFrame = Array.from(focusOrderFrame.children).find(
+  const imageFrame = Array.from(focusOrderFrame.children as SceneNode[]).find(
     (n: SceneNode) => n.name === 'image'
   ) as FrameNode | undefined;
-  if (!imageFrame) return { items };
+  if (!imageFrame) return { variacoes };
 
-  // Componente dentro do imageFrame: o único filho que não é [a11y] Order nem "tag"
-  const comp = Array.from(imageFrame.children).find(
-    (n: SceneNode) => !n.name.startsWith('[a11y]') && n.name !== 'tag'
-  ) as SceneNode | undefined;
-  const compX = comp ? (comp as any).absoluteTransform?.[0]?.[2] ?? 0 : 0;
-  const compY = comp ? (comp as any).absoluteTransform?.[1]?.[2] ?? 0 : 0;
+  // Componentes no imageFrame ordenados por X (um por variação)
+  const instances = Array.from(imageFrame.children as SceneNode[])
+    .filter((n: SceneNode) => n.type === 'INSTANCE' && !n.name.startsWith('[a11y]') && !n.name.startsWith('[dsc-h]') && n.name !== 'tag')
+    .sort((a: SceneNode, b: SceneNode) => ((a as any).absoluteTransform?.[0]?.[2] ?? 0) - ((b as any).absoluteTransform?.[0]?.[2] ?? 0)) as InstanceNode[];
 
-  // Coleta os [a11y] Order e extrai número + posição
-  const orders = Array.from(imageFrame.children).filter(
+  // Todos os [a11y] Order badges no imageFrame
+  const orders = Array.from(imageFrame.children as SceneNode[]).filter(
     (n: SceneNode) => n.name === '[a11y] Order'
   ) as SceneNode[];
 
-  const parsed: { num: number; item: typeof items[0] }[] = [];
+  if (instances.length === 0) return { variacoes };
+
+  // Agrupa badges por componente usando sobreposição de X absoluto
+  const instBounds = instances.map(inst => ({
+    inst,
+    left:  (inst as any).absoluteTransform?.[0]?.[2] ?? 0,
+    right: ((inst as any).absoluteTransform?.[0]?.[2] ?? 0) + ((inst as any).width ?? 0),
+    top:   (inst as any).absoluteTransform?.[1]?.[2] ?? 0,
+  }));
+
+  const groups = new Map<InstanceNode, SceneNode[]>();
+  instances.forEach(inst => groups.set(inst, []));
 
   for (const order of orders) {
-    const allTexts = (order as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
-    const numberNode = allTexts.find((n: TextNode) => n.name === 'Number' || /^\d+$/.test(n.characters.trim()));
-    const num = numberNode ? parseInt(numberNode.characters.trim()) : NaN;
-    if (isNaN(num)) continue;
-
-    const absX = (order as any).absoluteTransform?.[0]?.[2] ?? 0;
-    const absY = (order as any).absoluteTransform?.[1]?.[2] ?? 0;
-
-    parsed.push({
-      num,
-      item: {
-        nome: `Tab ${num}`,
-        layerName: '',
-        nodeId: '',
-        relX: Math.round(absX - compX),
-        relY: Math.round(absY - compY),
-        width: Math.round((order as any).width ?? 0),
-        height: Math.round((order as any).height ?? 0),
-      }
-    });
+    const cx = ((order as any).absoluteTransform?.[0]?.[2] ?? 0) + ((order as any).width ?? 0) / 2;
+    const match = instBounds.find(b => cx >= b.left && cx <= b.right) ?? instBounds[0];
+    groups.get(match.inst)?.push(order);
   }
 
-  parsed.sort((a, b) => a.num - b.num);
-  items.push(...parsed.map(p => p.item));
+  for (let idx = 0; idx < instances.length; idx++) {
+    const inst = instances[idx];
+    const instBound = instBounds[idx];
+    const badges = groups.get(inst) ?? [];
+    if (badges.length === 0) continue;
 
-  return { items };
+    // componentProperties desta variação
+    const rawProps = (inst as InstanceNode).componentProperties ?? {};
+    const propriedades: Record<string, string> = {};
+    for (const [key, val] of Object.entries(rawProps)) {
+      propriedades[key.replace(/#[\w:]+$/, '').trim()] = String((val as any).value ?? '');
+    }
+
+    // Extrai número e posição de cada badge
+    const parsed: { num: number; item: TabItem }[] = [];
+    for (const order of badges) {
+      const allTexts = (order as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+      const numberNode = allTexts.find((n: TextNode) => n.name === 'Number' || /^\d+$/.test(n.characters.trim()));
+      const num = numberNode ? parseInt(numberNode.characters.trim()) : NaN;
+      if (isNaN(num)) continue;
+
+      const absX = (order as any).absoluteTransform?.[0]?.[2] ?? 0;
+      const absY = (order as any).absoluteTransform?.[1]?.[2] ?? 0;
+
+      parsed.push({
+        num,
+        item: {
+          nome: `Tab ${num}`,
+          layerName: '',
+          nodeId: '',
+          relX: Math.round(absX - instBound.left),
+          relY: Math.round(absY - instBound.top),
+          width:  Math.round((order as any).width  ?? 0),
+          height: Math.round((order as any).height ?? 0),
+        }
+      });
+    }
+
+    parsed.sort((a, b) => a.num - b.num);
+    const nomeVar = idx === 0 ? 'Default' : (inst.name || `Variação ${idx + 1}`);
+    variacoes.push({ nome: nomeVar, propriedades, items: parsed.map(p => p.item) });
+  }
+
+  return { variacoes };
 }
 
 // ==========================================
 // PARSER DE MIGRAÇÃO — ÁREA DE TOQUE (Fase 2)
 // ==========================================
 
-async function parseOldTouchAreas(handoff: SceneNode): Promise<{
-  areas: { nome: string; width: number; height: number; preset: string; relX: number; relY: number }[];
-}> {
-  const areas: { nome: string; width: number; height: number; preset: string; relX: number; relY: number }[] = [];
+type TouchArea = { nome: string; width: number; height: number; preset: string; relX: number; relY: number };
+type TouchVariacao = { nome: string; propriedades: Record<string, string>; areas: TouchArea[] };
+
+function toTouchPreset(h: number, w: number): string {
+  if (h === 44 && w === 44) return '44x44';
+  if (h === 44) return '44x100';
+  if (h === 24 && w === 24) return '24x24';
+  if (h === 24) return '24x100';
+  return 'livre';
+}
+
+async function parseOldTouchAreas(handoff: SceneNode): Promise<{ variacoes: TouchVariacao[] }> {
+  const variacoes: TouchVariacao[] = [];
+
+  // Abordagem estruturada: target area → specs → element[] + image → instances[]
+  const targetAreaFrame = (handoff as any).findOne(
+    (n: SceneNode) => n.name === 'target area'
+  ) as FrameNode | null;
+
+  if (targetAreaFrame) {
+    const specsFrame = Array.from(targetAreaFrame.children as SceneNode[]).find(
+      (n: SceneNode) => n.name === 'specs'
+    ) as FrameNode | undefined;
+    const imageFrame = Array.from(targetAreaFrame.children as SceneNode[]).find(
+      (n: SceneNode) => n.name === 'image'
+    ) as FrameNode | undefined;
+
+    const instances: InstanceNode[] = imageFrame
+      ? (Array.from(imageFrame.children as SceneNode[])
+          .filter((n: SceneNode) => n.type === 'INSTANCE' && !n.name.startsWith('[dsc-h]') && n.name !== 'tag')
+          .sort((a: SceneNode, b: SceneNode) => (a as any).x - (b as any).x) as InstanceNode[])
+      : [];
+
+    const elements: FrameNode[] = specsFrame
+      ? (Array.from(specsFrame.children as SceneNode[]).filter(
+          (n: SceneNode) => n.name === 'element' && (n as any).visible !== false
+        ) as FrameNode[])
+      : [];
+
+    for (let idx = 0; idx < elements.length; idx++) {
+      const elem = elements[idx];
+
+      // Nome da área via Element name
+      const nameInst = Array.from(elem.children as SceneNode[]).find(
+        (n: SceneNode) => n.name === 'Element name'
+      );
+      const nameTexts = nameInst
+        ? ((nameInst as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[])
+        : [];
+      const nameText = nameTexts.find((t: TextNode) =>
+        !/^\d+$/.test(t.characters.trim()) && t.characters.trim().length > 1 && t.characters.trim().length < 60
+      );
+      const nome = nameText?.characters.trim().replace(/^\d+\s+/, '') || `Área ${idx + 1}`;
+
+      // Height e width via code[0]/code[1] → value → Text
+      const codes = Array.from(elem.children as SceneNode[]).filter(
+        (n: SceneNode) => n.name === 'code'
+      ) as FrameNode[];
+      const getCodeText = (code: FrameNode): string => {
+        const valueInst = (code as any).findOne((n: SceneNode) => n.name === 'value') as FrameNode | null;
+        const t = valueInst ? (valueInst as any).findOne((n: SceneNode) => n.type === 'TEXT') as TextNode | null : null;
+        return t?.characters.trim() || '';
+      };
+      const hStr = codes[0] ? getCodeText(codes[0]) : '';
+      const wStr = codes[1] ? getCodeText(codes[1]) : '';
+      const h = parseInt(hStr);
+      const w = /^\d+/.test(wStr) ? parseInt(wStr) : 0;
+      if (isNaN(h) || h === 0) continue;
+
+      // componentProperties do componente correspondente (por índice)
+      const inst = instances[idx];
+      const propriedades: Record<string, string> = {};
+      if (inst) {
+        for (const [key, val] of Object.entries((inst as InstanceNode).componentProperties ?? {})) {
+          propriedades[key.replace(/#[\w:]+$/, '').trim()] = String((val as any).value ?? '');
+        }
+      }
+
+      const nomeVar = idx === 0 ? 'Default' : (inst?.name || `Variação ${idx + 1}`);
+      variacoes.push({
+        nome: nomeVar,
+        propriedades,
+        areas: [{ nome, width: w, height: h, preset: toTouchPreset(h, w), relX: 0, relY: 0 }]
+      });
+    }
+
+    if (variacoes.length > 0) return { variacoes };
+  }
+
+  // Fallback: varredura por labels "height:" (handoffs sem target area nomeado)
+  const areas: TouchArea[] = [];
 
   // Template antigo: label "height:" e valor "44px" são TextNodes separados
   const allTextNodes = (handoff as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
@@ -2207,20 +2372,15 @@ async function parseOldTouchAreas(handoff: SceneNode): Promise<{
     const rawName = nameNode?.characters.trim() || `Área ${areas.length + 1}`;
     const nome = rawName.replace(/^\d+\s+/, '').trim() || rawName;
 
-    // Preset: w===0 indica full-width (texto descritivo no template antigo)
-    let preset = 'livre';
-    if (h === 44 && w === 44) preset = '44x44';
-    else if (h === 44) preset = '44x100';
-    else if (h === 24 && w === 24) preset = '24x24';
-    else if (h === 24) preset = '24x100';
-
-    if (!areas.find((a: typeof areas[0]) => a.nome === nome && a.width === w && a.height === h)) {
-      areas.push({ nome, width: w, height: h, preset, relX: 0, relY: 0 });
+    if (!areas.find((a: TouchArea) => a.nome === nome && a.width === w && a.height === h)) {
+      areas.push({ nome, width: w, height: h, preset: toTouchPreset(h, w), relX: 0, relY: 0 });
     }
   }
 
-  console.log('[parseOldTouchAreas] areas encontradas:', areas.length, areas.map((a: typeof areas[0]) => `${a.nome} ${a.width}x${a.height}`));
-  return { areas };
+  if (areas.length > 0) {
+    variacoes.push({ nome: 'Default', propriedades: {}, areas });
+  }
+  return { variacoes };
 }
 
 async function parseOldGeralData(

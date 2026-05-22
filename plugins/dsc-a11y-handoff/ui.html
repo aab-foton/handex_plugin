@@ -1060,49 +1060,67 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         }
 
         if (msg.section === 'toque') {
-          const areas = (msg.data && msg.data.areas) || [];
-          const defaultVar = variationsData.find(v => v.id === 'default');
-          if (defaultVar) {
-            if (!defaultVar.areas_toque) defaultVar.areas_toque = [];
-            let added = 0;
-            areas.forEach(a => {
-              if (!defaultVar.areas_toque.find(x => x.nome === a.nome)) {
-                defaultVar.areas_toque.push(a);
-                added++;
+          const variacoes = (msg.data && msg.data.variacoes) || [];
+          let totalAdded = 0;
+          variacoes.forEach((varOld, idx) => {
+            const isDefault = idx === 0;
+            let touchVar = isDefault
+              ? variationsData.find(v => v.id === 'default')
+              : variationsData.find(v => v.nome === varOld.nome);
+            if (!touchVar) {
+              const newId = 'migr-' + Date.now() + '-t' + idx;
+              touchVar = { id: newId, nome: varOld.nome, propriedades: varOld.propriedades || {}, areas_toque: [], sem_toque: false, frameNodeId: null, instanceNodeId: null };
+              variationsData.push(touchVar);
+            } else if (isDefault && varOld.propriedades && Object.keys(varOld.propriedades).length > 0) {
+              touchVar.propriedades = varOld.propriedades;
+            }
+            if (!touchVar.areas_toque) touchVar.areas_toque = [];
+            (varOld.areas || []).forEach(a => {
+              if (!touchVar.areas_toque.find(x => x.nome === a.nome)) {
+                touchVar.areas_toque.push(a);
+                totalAdded++;
               }
             });
-            if (!currentVariationId || currentVariationId === 'default') {
-              touchData = defaultVar.areas_toque;
-            }
-            parent.postMessage({ pluginMessage: { type: 'save-partial-data', key: 'variacoes', value: variationsData } }, '*');
-            renderTouchList();
-            renderVariationList();
-            updateSummaryCards();
-            _importResults.areas = added;
-          }
+          });
+          const activeVar = variationsData.find(v => v.id === (currentVariationId || 'default'));
+          if (activeVar) touchData = activeVar.areas_toque || [];
+          parent.postMessage({ pluginMessage: { type: 'save-partial-data', key: 'variacoes', value: variationsData } }, '*');
+          renderTouchList();
+          renderVariationList();
+          updateSummaryCards();
+          _importResults.areas = totalAdded;
         }
 
         if (msg.section === 'tabulacao') {
-          const newItems = (msg.data && msg.data.items) || [];
-          const defaultTabVar = tabVariationsData.find(v => v.id === 'default');
-          if (defaultTabVar) {
-            if (!defaultTabVar.tab_order) defaultTabVar.tab_order = [];
-            let added = 0;
-            newItems.forEach(item => {
-              if (!defaultTabVar.tab_order.find(x => x.nome === item.nome)) {
-                defaultTabVar.tab_order.push(item);
-                added++;
+          const variacoes = (msg.data && msg.data.variacoes) || [];
+          let totalAdded = 0;
+          variacoes.forEach((varOld, idx) => {
+            const isDefault = idx === 0;
+            let tabVar = isDefault
+              ? tabVariationsData.find(v => v.id === 'default')
+              : tabVariationsData.find(v => v.nome === varOld.nome);
+            if (!tabVar) {
+              const newId = 'migr-' + Date.now() + '-tb' + idx;
+              tabVar = { id: newId, nome: varOld.nome, propriedades: varOld.propriedades || {}, tab_order: [], sem_tabulacao: false, frameNodeId: null, instanceNodeId: null };
+              tabVariationsData.push(tabVar);
+            } else if (isDefault && varOld.propriedades && Object.keys(varOld.propriedades).length > 0) {
+              tabVar.propriedades = varOld.propriedades;
+            }
+            if (!tabVar.tab_order) tabVar.tab_order = [];
+            (varOld.items || []).forEach(item => {
+              if (!tabVar.tab_order.find(x => x.nome === item.nome)) {
+                tabVar.tab_order.push(item);
+                totalAdded++;
               }
             });
-            if (!currentTabVariationId || currentTabVariationId === 'default') {
-              tabOrderData = defaultTabVar.tab_order;
-            }
-            parent.postMessage({ pluginMessage: { type: 'save-partial-data', key: 'variacoes_tabulacao', value: tabVariationsData } }, '*');
-            if (typeof renderTabOrderList === 'function') renderTabOrderList();
-            if (typeof renderTabVariationList === 'function') renderTabVariationList();
-            updateSummaryCards();
-            _importResults.tabs = added;
-          }
+          });
+          const activeTabVar = tabVariationsData.find(v => v.id === (currentTabVariationId || 'default'));
+          if (activeTabVar) tabOrderData = activeTabVar.tab_order || [];
+          parent.postMessage({ pluginMessage: { type: 'save-partial-data', key: 'variacoes_tabulacao', value: tabVariationsData } }, '*');
+          if (typeof renderTabOrderList === 'function') renderTabOrderList();
+          if (typeof renderTabVariationList === 'function') renderTabVariationList();
+          updateSummaryCards();
+          _importResults.tabs = totalAdded;
         }
 
         if (msg.section === 'leitor') {
@@ -1533,6 +1551,7 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
   function renderTouchList() {
     const list = el('touchList');
     list.innerHTML = '';
+    if (!Array.isArray(touchData)) touchData = [];
     touchData.forEach((item, i) => {
       const presetLabel = item.preset === 'livre'
         ? `${item.width}×${item.height}px`
