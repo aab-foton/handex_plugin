@@ -1,4 +1,4 @@
-import { auditProperty, AUDIT_SCORE, frameJsonTemplate } from './audit.js';
+import { auditProperty, AUDIT_SCORE, AUDIT_THRESHOLDS, frameJsonTemplate, suggestClosestMatch } from './audit.js';
 
 figma.showUI(__html__, { width: 480, height: 750 });
 
@@ -24,6 +24,133 @@ function rgbToHex(r, g, b) {
   return "#" + toHex(r) + toHex(g) + toHex(b);
 }
 
+// ============================================================
+// Design refs extraction (token-free)
+// Walks the bundled skeleton and resolves real values via Plugin
+// API. Posts progress events to the UI as it goes.
+// ============================================================
+async function extractDesignRefs(skeleton) {
+  if (!skeleton || !Array.isArray(skeleton.libraries) || skeleton.libraries.length === 0) {
+    figma.ui.postMessage({ type: "extract-done", error: "Skeleton de referência indisponível." });
+    return;
+  }
+
+  const totalStyleKeys = skeleton.libraries.reduce((acc, lib) => {
+    const s = lib.styleTokens || {};
+    return acc
+      + (Array.isArray(s.colors) ? s.colors.length : 0)
+      + (Array.isArray(s.typography) ? s.typography.length : 0)
+      + (Array.isArray(s.effects) ? s.effects.length : 0);
+  }, 0);
+
+  const bundle = {
+    generatedAt: new Date().toISOString(),
+    libraries: []
+  };
+
+  let processed = 0;
+  const postProgress = (libSlug, libName) => {
+    figma.ui.postMessage({
+      type: "extract-progress",
+      processed,
+      total: totalStyleKeys,
+      libSlug,
+      libName
+    });
+  };
+
+  for (let i = 0; i < skeleton.libraries.length; i++) {
+    const lib = skeleton.libraries[i];
+    const libResult = {
+      slug: lib.slug,
+      meta: { libraryName: lib.name, figmaFileKey: lib.fileKey },
+      designTokens: { variables: [] },
+      styleTokens: { colors: [], typography: [], effects: [] },
+      components: Array.isArray(lib.componentKeys) ? lib.componentKeys.map(k => ({ key: k })) : [],
+      _stats: { resolved: 0, failed: 0, libNotAvailable: false }
+    };
+
+    let firstStyleSucceeded = false;
+    for (const styleType of ["colors", "typography", "effects"]) {
+      const list = (lib.styleTokens && lib.styleTokens[styleType]) || [];
+      for (const item of list) {
+        try {
+          const node = await figma.importStyleByKeyAsync(item.key);
+          if (node) {
+            firstStyleSucceeded = true;
+            libResult.styleTokens[styleType].push(buildStyleEntry(styleType, item, node));
+            libResult._stats.resolved++;
+          } else {
+            libResult._stats.failed++;
+          }
+        } catch (e) {
+          libResult._stats.failed++;
+        }
+        processed++;
+        if (processed % 8 === 0 || processed === totalStyleKeys) {
+          postProgress(lib.slug, lib.name);
+        }
+      }
+    }
+
+    // If nothing resolved AND the lib had styles to resolve, the lib is
+    // probably not subscribed in this file — flag it for the UI.
+    const hadStyles = (lib.styleTokens && (
+      lib.styleTokens.colors.length + lib.styleTokens.typography.length + lib.styleTokens.effects.length
+    )) > 0;
+    if (hadStyles && !firstStyleSucceeded) {
+      libResult._stats.libNotAvailable = true;
+    }
+
+    // Variables — discovered at runtime (REST API doesn't list them).
+    try {
+      if (figma.teamLibrary && typeof figma.teamLibrary.getAvailableLibraryVariableCollectionsAsync === "function") {
+        const allCollections = await figma.teamLibrary.getAvailableLibraryVariableCollectionsAsync();
+        const matching = allCollections.filter(c => c.libraryName === lib.name);
+        for (const coll of matching) {
+          try {
+            const vars = await figma.teamLibrary.getVariablesInLibraryCollectionAsync(coll.key);
+            for (const v of vars) {
+              libResult.designTokens.variables.push({ key: v.key, name: v.name, resolvedType: v.resolvedType });
+            }
+          } catch (e) { /* skip individual collection failures */ }
+        }
+      }
+    } catch (e) {
+      // teamLibrary API may not be available (Starter/Pro plans); skip.
+    }
+
+    bundle.libraries.push(libResult);
+    postProgress(lib.slug, lib.name);
+  }
+
+  figma.ui.postMessage({ type: "extract-done", bundle });
+}
+
+function buildStyleEntry(styleType, skeletonItem, styleNode) {
+  const entry = { key: skeletonItem.key, name: styleNode.name || skeletonItem.name };
+
+  if (styleType === "colors" && Array.isArray(styleNode.paints) && styleNode.paints.length > 0) {
+    entry.paints = styleNode.paints;
+    const fill = styleNode.paints[0];
+    if (fill && fill.type === "SOLID" && fill.color) {
+      entry.value = rgbToHex(fill.color.r, fill.color.g, fill.color.b);
+    }
+  } else if (styleType === "typography") {
+    if (styleNode.fontName) entry.fontName = styleNode.fontName;
+    if (styleNode.fontSize !== undefined) entry.fontSize = styleNode.fontSize;
+    if (styleNode.lineHeight !== undefined) entry.lineHeight = styleNode.lineHeight;
+    if (styleNode.letterSpacing !== undefined) entry.letterSpacing = styleNode.letterSpacing;
+    const family = styleNode.fontName ? styleNode.fontName.family : "";
+    const style = styleNode.fontName ? styleNode.fontName.style : "";
+    entry.value = `${family} ${style} ${styleNode.fontSize || ""}px`.trim();
+  } else if (styleType === "effects" && Array.isArray(styleNode.effects)) {
+    entry.effects = styleNode.effects;
+  }
+
+  return entry;
+}
+
 figma.ui.onmessage = async (msg) => {
   if (msg.type === 'ui-ready') {
     try {
@@ -34,7 +161,12 @@ figma.ui.onmessage = async (msg) => {
         savedState: savedState || null
       });
     } catch (err) {
-      console.error("Initialization error:", err);
+      console.error("Initialization error (continuing without saved state):", err);
+      figma.ui.postMessage({
+        type: 'init-plugin',
+        version: '2.0.0',
+        savedState: null
+      });
     }
     return;
   }
@@ -62,6 +194,63 @@ figma.ui.onmessage = async (msg) => {
   }
   if (msg.type === "resize") {
     figma.ui.resize(msg.width, msg.height);
+    return;
+  }
+
+  if (msg.type === "extract-design-refs") {
+    await extractDesignRefs(msg.skeleton);
+    return;
+  }
+
+  if (msg.type === "audit-cache-save") {
+    try {
+      await figma.clientStorage.setAsync('handex-audit-refs-v1', msg.bundle);
+    } catch (e) {
+      console.error("audit-cache-save failed:", e);
+    }
+    return;
+  }
+
+  if (msg.type === "audit-cache-load") {
+    try {
+      const cached = await figma.clientStorage.getAsync('handex-audit-refs-v1');
+      figma.ui.postMessage({ type: "audit-cache-loaded", bundle: cached || null });
+    } catch (e) {
+      figma.ui.postMessage({ type: "audit-cache-loaded", bundle: null });
+    }
+    return;
+  }
+
+  if (msg.type === "audit-cache-clear") {
+    try {
+      await figma.clientStorage.setAsync('handex-audit-refs-v1', null);
+    } catch (e) {}
+    return;
+  }
+
+  // ─── Handoff snapshots / history (for diff between versions) ────────
+  if (msg.type === "snapshot-load") {
+    try {
+      const fileKey = (figma.root && figma.root.id) ? figma.root.id : "default";
+      const key = "handex-history-" + fileKey;
+      const history = await figma.clientStorage.getAsync(key);
+      figma.ui.postMessage({ type: "snapshot-history", history: Array.isArray(history) ? history : [] });
+    } catch (e) {
+      figma.ui.postMessage({ type: "snapshot-history", history: [] });
+    }
+    return;
+  }
+
+  if (msg.type === "snapshot-save") {
+    try {
+      const fileKey = (figma.root && figma.root.id) ? figma.root.id : "default";
+      const key = "handex-history-" + fileKey;
+      const existing = (await figma.clientStorage.getAsync(key)) || [];
+      const next = [msg.snapshot].concat(Array.isArray(existing) ? existing : []).slice(0, 5);
+      await figma.clientStorage.setAsync(key, next);
+    } catch (e) {
+      console.error("snapshot-save failed:", e);
+    }
     return;
   }
 
@@ -1007,11 +1196,19 @@ figma.ui.onmessage = async (msg) => {
       const isDS = result.score >= AUDIT_SCORE.EXACT ? true
                  : result.score >= AUDIT_SCORE.SOFT ? "warning"
                  : false;
+      // When the prop is below the AJUSTE threshold (fora do padrão), compute a
+      // closest-match suggestion so the dev sees what to use instead.
+      let closestMatch = null;
+      if (isAudit && result.score < AUDIT_THRESHOLDS.AJUSTE) {
+        closestMatch = suggestClosestMatch(propType, propValue, referenceTokens);
+      }
       return {
         isDS,
         score: isAudit ? result.score : null,
         matchedBy: result.matchedBy,
-        matchedIn: result.matchedIn
+        matchedIn: result.matchedIn,
+        matchedTokenName: result.matchedTokenName,
+        closestMatch
       };
     }
 
@@ -1216,13 +1413,21 @@ figma.ui.onmessage = async (msg) => {
       let elementScore = null;
       let elementMatchedBy = null;
       let elementMatchedIn = null;
+      let elementMatchedTokenName = null;
       if (category === "components" || category === "icons") {
         const a = audit(category, name, componentKey, name);
         dsElement = a.isDS;
         elementScore = a.score;
         elementMatchedBy = a.matchedBy;
         elementMatchedIn = a.matchedIn;
+        elementMatchedTokenName = a.matchedTokenName;
       }
+
+      // Pluck variant props from props[] into a separate flat list so the UI
+      // can render them as pills in the card header (most relevant info for dev).
+      const variants = props
+        .filter(p => p.type === "variant")
+        .map(p => ({ name: p.name, value: p.value }));
 
       const map = specs[category];
       if (!map.has(name)) {
@@ -1236,6 +1441,8 @@ figma.ui.onmessage = async (msg) => {
           score: elementScore,
           matchedBy: elementMatchedBy,
           matchedIn: elementMatchedIn,
+          matchedTokenName: elementMatchedTokenName,
+          variants: variants,
           nodeId: node.id,
           layers: new Set([name]),
           properties: props
@@ -1251,6 +1458,8 @@ figma.ui.onmessage = async (msg) => {
           score: elementScore,
           matchedBy: elementMatchedBy,
           matchedIn: elementMatchedIn,
+          matchedTokenName: elementMatchedTokenName,
+          variants: variants,
           properties: props
         });
       } else {
@@ -1299,6 +1508,15 @@ figma.ui.onmessage = async (msg) => {
       extractSpecs(node);
     }
 
+    let framePreview = null;
+    if (selection.length > 0 && 'exportAsync' in selection[0]) {
+      try {
+        framePreview = await selection[0].exportAsync({ format: 'PNG', constraint: { type: 'SCALE', value: 2 } });
+      } catch (err) {
+        console.error("Erro ao exportar preview do frame principal:", err);
+      }
+    }
+
     const previewPromises = [];
     const prepareListWithPreviews = async (map) => {
       const items = Array.from(map.values());
@@ -1316,8 +1534,11 @@ figma.ui.onmessage = async (msg) => {
       }
     };
 
-    await prepareListWithPreviews(specs.icons);
     await prepareListWithPreviews(specs.components);
+    await prepareListWithPreviews(specs.icons);
+    await prepareListWithPreviews(specs.typography);
+    await prepareListWithPreviews(specs.frames);
+    await prepareListWithPreviews(specs.vectors);
     await Promise.all(previewPromises);
 
     const formatMap = (map) => {
@@ -1342,7 +1563,9 @@ figma.ui.onmessage = async (msg) => {
         typography: formatMap(specs.typography),
         frames: formatMap(specs.frames),
         vectors: formatMap(specs.vectors),
-        frameJson: frameJson
+        frameJson: frameJson,
+        fileKey: figma.fileKey,
+        framePreview: framePreview
       },
     });
   }
@@ -1864,7 +2087,9 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === 'save-storage') {
-    figma.clientStorage.setAsync('handoffData', msg.data);
+    figma.clientStorage.setAsync('handoffData', msg.data).catch(err => {
+      console.warn("Storage save failed (possibly missing plugin ID in manifest):", err);
+    });
   }
 
   if (msg.type === 'focus-node') {

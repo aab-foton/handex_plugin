@@ -9,7 +9,10 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "bundle:ui": "node src/plugin/build.cjs",
+    "refs:fetch": "node src/plugin/refs/fetch-design-refs.cjs",
+    "refs:rebuild": "npm run refs:fetch && node src/plugin/refs/build-skeleton.cjs",
+    "bundle:refs": "node src/plugin/refs/build-skeleton.cjs",
+    "bundle:ui": "npm run bundle:refs && node src/plugin/build.cjs",
     "bundle:code": "npx esbuild src/plugin/code.js --bundle --target=es2017 --outfile=src/plugin/code.bundle.js"
   },
   "dependencies": {
