@@ -1036,9 +1036,14 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
               mapeamentosAdded++;
             }
           });
-          visualKeys.forEach(key => {
-            const inMaster = masterList.find(m => m.mapeamento === key);
-            if (inMaster && !currentData.find(c => c.mapeamento === key)) {
+          const visualPairs = data.visualPairs || [];
+          const stripSuffix = s => s.replace(/\s*\(.*?\)\s*$/, '').trim();
+          visualPairs.forEach(pair => {
+            const pairBase = stripSuffix(pair.mapeamento);
+            const inMaster = masterList.find(m => m.descricao === pair.descricao)
+              || masterList.find(m => m.mapeamento === pair.mapeamento)
+              || masterList.find(m => stripSuffix(m.mapeamento) === pairBase);
+            if (inMaster && !currentData.find(c => c.mapeamento === inMaster.mapeamento)) {
               currentData.push(inMaster);
               mapeamentosAdded++;
             }
@@ -1077,6 +1082,98 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           }
         }
 
+        if (msg.section === 'tabulacao') {
+          const newItems = (msg.data && msg.data.items) || [];
+          const defaultTabVar = tabVariationsData.find(v => v.id === 'default');
+          if (defaultTabVar) {
+            if (!defaultTabVar.tab_order) defaultTabVar.tab_order = [];
+            let added = 0;
+            newItems.forEach(item => {
+              if (!defaultTabVar.tab_order.find(x => x.nome === item.nome)) {
+                defaultTabVar.tab_order.push(item);
+                added++;
+              }
+            });
+            if (!currentTabVariationId || currentTabVariationId === 'default') {
+              tabOrderData = defaultTabVar.tab_order;
+            }
+            parent.postMessage({ pluginMessage: { type: 'save-partial-data', key: 'variacoes_tabulacao', value: tabVariationsData } }, '*');
+            if (typeof renderTabOrderList === 'function') renderTabOrderList();
+            if (typeof renderTabVariationList === 'function') renderTabVariationList();
+            updateSummaryCards();
+            _importResults.tabs = added;
+          }
+        }
+
+        if (msg.section === 'leitor') {
+          const variacoes = (msg.data && msg.data.variacoes) || [];
+          let totalAdded = 0;
+
+          variacoes.forEach((varOld, idx) => {
+            const isDefault = idx === 0;
+            let srVar = isDefault
+              ? srVariationsData.find(v => v.id === 'default')
+              : srVariationsData.find(v => v.nome === varOld.nome);
+
+            // Cria variação se não existir (não-default)
+            if (!srVar) {
+              const newId = 'migr-' + Date.now() + '-' + idx;
+              srVar = { id: newId, nome: varOld.nome, propriedades: varOld.propriedades || {}, conectores_leitor: [], sem_leitor: false, frameNodeId: null, instanceNodeId: null };
+              srVariationsData.push(srVar);
+            } else if (isDefault && varOld.propriedades && Object.keys(varOld.propriedades).length > 0) {
+              srVar.propriedades = varOld.propriedades;
+            }
+
+            if (!srVar.conectores_leitor) srVar.conectores_leitor = [];
+
+            varOld.rawConnectors.forEach(raw => {
+              const matched = leitorState.rolesList.find(r => r.descricao === raw.descricao);
+              if (!matched) {
+                // Descrição não encontrada na rolesList — cria stub para revisão manual
+                srVar.conectores_leitor.push({
+                  roleNome:      raw.descricao.length > 60 ? raw.descricao.substring(0, 57) + '...' : raw.descricao,
+                  especificacao: '',
+                  tipo:          'função, valor, rótulos',
+                  tipoConnector: 'função, valor, rótulos',
+                  tipoAnotacao:  '',
+                  origem:        'migração-sem-match',
+                  descricao:     raw.descricao,
+                  observacao:    '',
+                  nomeAcessivel: '',
+                  codigoWeb:     '',
+                  codigoRN:      '',
+                });
+                totalAdded++;
+                return;
+              }
+              srVar.conectores_leitor.push({
+                roleNome:      matched.nome,
+                especificacao: matched.especificacao || '',
+                tipo:          matched.tipoConnector || '',
+                tipoConnector: matched.tipoConnector || '',
+                tipoAnotacao:  '',
+                origem:        'migração',
+                descricao:     matched.descricao,
+                observacao:    matched.observacao    || '',
+                nomeAcessivel: matched.nomeAcessivel || '',
+                codigoWeb:     matched.codigoWeb     || '',
+                codigoRN:      matched.codigoRN      || '',
+              });
+              totalAdded++;
+            });
+          });
+
+          // Sincroniza leitorState com a variação ativa
+          const activeSR = srVariationsData.find(v => v.id === currentSRVariationId);
+          if (activeSR) leitorState.conectores = activeSR.conectores_leitor || [];
+
+          saveLeitorTela();
+          if (typeof renderLeitorList === 'function') renderLeitorList();
+          if (typeof renderSRVariationList === 'function') renderSRVariationList();
+          updateSummaryCards();
+          _importResults.leitor = totalAdded;
+        }
+
         _importPendingCount = Math.max(0, _importPendingCount - 1);
         if (_importPendingCount === 0) {
           isOldFormat = false;
@@ -1086,6 +1183,8 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           if (_importResults.plataformas) parts.push(_importResults.plataformas + ' plataforma(s)');
           if (_importResults.zoom) parts.push(_importResults.zoom + ' zoom(s)');
           if (_importResults.areas) parts.push(_importResults.areas + ' área(s) de toque');
+          if (_importResults.tabs) parts.push(_importResults.tabs + ' item(ns) de tabulação');
+          if (_importResults.leitor) parts.push(_importResults.leitor + ' conector(es) de leitor de tela');
           const sb = el('statusBar');
           sb.classList.remove('loading', 'error'); sb.classList.add('success');
           sb.textContent = '✓ Importado: ' + (parts.join(', ') || 'nenhum item novo') + '.';
@@ -2001,10 +2100,12 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
     const btn = evt.currentTarget;
     btn.textContent = 'Importando...';
     btn.disabled = true;
-    _importPendingCount = 2;
+    _importPendingCount = 4;
     _importResults = {};
     parent.postMessage({ pluginMessage: { type: 'import-old-section', section: 'geral' } }, '*');
     parent.postMessage({ pluginMessage: { type: 'import-old-section', section: 'toque' } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'import-old-section', section: 'tabulacao' } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'import-old-section', section: 'leitor' } }, '*');
   }
 
   let _saveGeralTimer = null;

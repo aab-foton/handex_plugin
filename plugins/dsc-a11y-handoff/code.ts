@@ -1694,11 +1694,17 @@ figma.ui.onmessage = async (msg) => {
     try {
       if (msg.section === 'geral') {
         const result = await parseOldGeralData(handoffAtivo, componentePrincipalAtivo);
-        const found = result.visualKeys.length > 0 || result.pluginDataMapeamentos.length > 0 || result.pluginDataPlataformas.length > 0;
+        const found = result.visualPairs.length > 0 || result.pluginDataMapeamentos.length > 0 || result.pluginDataPlataformas.length > 0;
         figma.ui.postMessage({ type: 'old-section-data', section: 'geral', found, data: result });
       } else if (msg.section === 'toque') {
         const result = await parseOldTouchAreas(handoffAtivo);
         figma.ui.postMessage({ type: 'old-section-data', section: 'toque', found: result.areas.length > 0, data: result });
+      } else if (msg.section === 'tabulacao') {
+        const result = await parseOldTabOrder(handoffAtivo);
+        figma.ui.postMessage({ type: 'old-section-data', section: 'tabulacao', found: result.items.length > 0, data: result });
+      } else if (msg.section === 'leitor') {
+        const result = await parseOldSRData(handoffAtivo);
+        figma.ui.postMessage({ type: 'old-section-data', section: 'leitor', found: result.variacoes.length > 0, data: result });
       }
     } catch (e) {
       figma.ui.postMessage({ type: 'old-section-data', section: msg.section, found: false, data: {}, error: String(e) });
@@ -1963,6 +1969,167 @@ function parseRolesList(dbInstance: InstanceNode): { nome: string; especificacao
 }
 
 // ==========================================
+// PARSER DE MIGRAÇÃO — LEITOR DE TELA (Fase 4)
+// ==========================================
+
+async function parseOldSRData(handoff: SceneNode): Promise<{
+  variacoes: { nome: string; propriedades: Record<string, string>; rawConnectors: { descricao: string }[] }[];
+}> {
+  const variacoes: { nome: string; propriedades: Record<string, string>; rawConnectors: { descricao: string }[] }[] = [];
+
+  const srFrame = (handoff as any).findOne(
+    (n: SceneNode) => n.name === 'screen reader'
+  ) as FrameNode | null;
+  if (!srFrame) return { variacoes };
+
+  // Lê instâncias de componente no image frame, ordenadas por X (esquerda → direita = ordem das variações)
+  const imageFrame = Array.from(srFrame.children as SceneNode[]).find(
+    (n: SceneNode) => n.name === 'image'
+  ) as FrameNode | undefined;
+
+  const componentInstances: { props: Record<string, string>; x: number }[] = [];
+  if (imageFrame) {
+    const instances = Array.from(imageFrame.children as SceneNode[]).filter(
+      (n: SceneNode) => n.type === 'INSTANCE' &&
+        !n.name.startsWith('[a11y]') &&
+        !n.name.startsWith('[dsc-h]') &&
+        n.name !== 'tag'
+    ) as InstanceNode[];
+
+    instances.sort((a, b) => a.x - b.x);
+
+    for (const inst of instances) {
+      const raw = (inst as InstanceNode).componentProperties || {};
+      const props: Record<string, string> = {};
+      for (const [key, val] of Object.entries(raw)) {
+        // Remove sufixo "#XXXX:XX" do nome da propriedade
+        const cleanKey = key.replace(/#[\w:]+$/, '').trim();
+        props[cleanKey] = String((val as any).value ?? '');
+      }
+      componentInstances.push({ props, x: inst.x });
+    }
+  }
+
+  const specsFrame = Array.from(srFrame.children as SceneNode[]).find(
+    (n: SceneNode) => n.name === 'specs'
+  ) as FrameNode | undefined;
+  if (!specsFrame) return { variacoes };
+
+  const contentBlocks = Array.from(specsFrame.children as SceneNode[]).filter(
+    (n: SceneNode) => n.name === 'content'
+  ) as FrameNode[];
+
+  for (let idx = 0; idx < contentBlocks.length; idx++) {
+    const block = contentBlocks[idx];
+
+    // Nome: Element name → Title
+    const elementName = Array.from(block.children as SceneNode[]).find(
+      (n: SceneNode) => n.name === 'Element name'
+    ) as FrameNode | undefined;
+    const titleNode = elementName
+      ? (elementName as any).findOne((n: SceneNode) => n.type === 'TEXT' && n.name === 'Title') as TextNode | null
+      : null;
+    const nomeVariacao = titleNode?.characters.trim() || `Variação ${idx + 1}`;
+
+    // Propriedades do componente correspondente (por ordem)
+    const propriedades = componentInstances[idx]?.props ?? {};
+
+    const boxes = Array.from(block.children as SceneNode[]).filter(
+      (n: SceneNode) => n.name === '[a11y] Box specs LT'
+    ) as FrameNode[];
+
+    const rawConnectors: { descricao: string }[] = [];
+
+    for (const box of boxes) {
+      const contentFrame = Array.from(box.children as SceneNode[]).find(
+        (n: SceneNode) => n.name === 'Content'
+      ) as FrameNode | undefined;
+      if (!contentFrame) continue;
+
+      const descricaoFrame = Array.from(contentFrame.children as SceneNode[]).find(
+        (n: SceneNode) => n.name === 'Descrição'
+      ) as FrameNode | undefined;
+      if (!descricaoFrame) continue;
+
+      const textNode = (descricaoFrame as any).findOne(
+        (n: SceneNode) => n.type === 'TEXT' && n.name === 'Text'
+      ) as TextNode | null;
+      if (!textNode || !textNode.characters.trim()) continue;
+
+      rawConnectors.push({ descricao: textNode.characters.trim() });
+    }
+
+    if (rawConnectors.length > 0) {
+      variacoes.push({ nome: nomeVariacao, propriedades, rawConnectors });
+    }
+  }
+
+  return { variacoes };
+}
+
+// ==========================================
+// PARSER DE MIGRAÇÃO — TABULAÇÃO (Fase 3)
+// ==========================================
+
+async function parseOldTabOrder(handoff: SceneNode): Promise<{
+  items: { nome: string; layerName: string; nodeId: string; relX: number; relY: number; width: number; height: number }[];
+}> {
+  const items: { nome: string; layerName: string; nodeId: string; relX: number; relY: number; width: number; height: number }[] = [];
+
+  const focusOrderFrame = (handoff as any).findOne(
+    (n: SceneNode) => n.name === 'focus order'
+  ) as FrameNode | null;
+  if (!focusOrderFrame) return { items };
+
+  const imageFrame = Array.from(focusOrderFrame.children).find(
+    (n: SceneNode) => n.name === 'image'
+  ) as FrameNode | undefined;
+  if (!imageFrame) return { items };
+
+  // Componente dentro do imageFrame: o único filho que não é [a11y] Order nem "tag"
+  const comp = Array.from(imageFrame.children).find(
+    (n: SceneNode) => !n.name.startsWith('[a11y]') && n.name !== 'tag'
+  ) as SceneNode | undefined;
+  const compX = comp ? (comp as any).absoluteTransform?.[0]?.[2] ?? 0 : 0;
+  const compY = comp ? (comp as any).absoluteTransform?.[1]?.[2] ?? 0 : 0;
+
+  // Coleta os [a11y] Order e extrai número + posição
+  const orders = Array.from(imageFrame.children).filter(
+    (n: SceneNode) => n.name === '[a11y] Order'
+  ) as SceneNode[];
+
+  const parsed: { num: number; item: typeof items[0] }[] = [];
+
+  for (const order of orders) {
+    const allTexts = (order as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+    const numberNode = allTexts.find((n: TextNode) => n.name === 'Number' || /^\d+$/.test(n.characters.trim()));
+    const num = numberNode ? parseInt(numberNode.characters.trim()) : NaN;
+    if (isNaN(num)) continue;
+
+    const absX = (order as any).absoluteTransform?.[0]?.[2] ?? 0;
+    const absY = (order as any).absoluteTransform?.[1]?.[2] ?? 0;
+
+    parsed.push({
+      num,
+      item: {
+        nome: `Tab ${num}`,
+        layerName: '',
+        nodeId: '',
+        relX: Math.round(absX - compX),
+        relY: Math.round(absY - compY),
+        width: Math.round((order as any).width ?? 0),
+        height: Math.round((order as any).height ?? 0),
+      }
+    });
+  }
+
+  parsed.sort((a, b) => a.num - b.num);
+  items.push(...parsed.map(p => p.item));
+
+  return { items };
+}
+
+// ==========================================
 // PARSER DE MIGRAÇÃO — ÁREA DE TOQUE (Fase 2)
 // ==========================================
 
@@ -2060,47 +2227,45 @@ async function parseOldGeralData(
   handoff: SceneNode,
   comp: SceneNode | null
 ): Promise<{
-  visualKeys: string[];
+  visualPairs: { mapeamento: string; descricao: string }[];
   pluginDataKeys: string[];
   pluginDataMapeamentos: { mapeamento: string; utilizacao: string }[];
   pluginDataPlataformas: string[];
   pluginDataZoom: string[];
 }> {
-  const visualKeys: string[] = [];
+  const visualPairs: { mapeamento: string; descricao: string }[] = [];
+
+  const skipMapeamento = ['teclado', 'ação', 'mapeamento', 'gesto', 'descrição', ''];
 
   // FONTE 1: nós visuais do handoff antigo
   const kbContainer = (handoff as any).findOne((n: SceneNode) =>
     n.name === 'keyboard maping' || n.name === 'keyboard mapping'
   ) as FrameNode | null;
-  if (kbContainer) {
-    const rows = (kbContainer.children as SceneNode[]).filter(
-      (n) => n.type === 'FRAME' || n.type === 'INSTANCE'
-    );
+  const extractPairsFromContainer = (container: FrameNode) => {
+    // As linhas podem estar em um filho "table" (um nível mais fundo)
+    const tableChild = (container.children as SceneNode[]).find(n => n.name === 'table') as FrameNode | undefined;
+    const source = tableChild ?? container;
+    const rows = (source.children as SceneNode[]).filter(n => n.type !== 'TEXT');
     for (const row of rows) {
-      const textos = (row as FrameNode).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+      const textos = (row as any).findAll
+        ? ((row as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[])
+        : [];
       if (textos.length >= 1) {
-        const t = textos[0].characters.trim();
-        const skip = ['teclado', 'ação', 'mapeamento', 'gesto', 'descrição', ''];
-        if (!skip.includes(t.toLowerCase())) visualKeys.push(t);
+        const mapeamento = textos[0].characters.trim();
+        const descricao  = textos[1]?.characters.trim() ?? '';
+        if (!skipMapeamento.includes(mapeamento.toLowerCase())) {
+          visualPairs.push({ mapeamento, descricao });
+        }
       }
     }
-  }
+  };
+
+  if (kbContainer) extractPairsFromContainer(kbContainer);
+
   const gestureContainer = (handoff as any).findOne((n: SceneNode) =>
     n.name === 'gesto maping' || n.name === 'gesture maping' || n.name === 'gesture mapping' || n.name === 'gestures'
   ) as FrameNode | null;
-  if (gestureContainer) {
-    const rows = (gestureContainer.children as SceneNode[]).filter(
-      (n) => n.type === 'FRAME' || n.type === 'INSTANCE'
-    );
-    for (const row of rows) {
-      const textos = (row as FrameNode).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
-      if (textos.length >= 1) {
-        const t = textos[0].characters.trim();
-        const skip = ['gesto', 'ação', 'descrição', ''];
-        if (!skip.includes(t.toLowerCase())) visualKeys.push(t);
-      }
-    }
-  }
+  if (gestureContainer) extractPairsFromContainer(gestureContainer);
 
   // FONTE 1b: zoom visual — busca por textos únicos das labels de zoom do plugin antigo
   const visualZoom: string[] = [];
@@ -2159,7 +2324,7 @@ async function parseOldGeralData(
   // Mescla visualZoom + pluginDataZoom (sem duplicatas)
   const zoomFinal = [...new Set([...visualZoom, ...pluginDataZoom])];
 
-  return { visualKeys, pluginDataKeys, pluginDataMapeamentos, pluginDataPlataformas, pluginDataZoom: zoomFinal };
+  return { visualPairs, pluginDataKeys, pluginDataMapeamentos, pluginDataPlataformas, pluginDataZoom: zoomFinal };
 }
 
 async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
