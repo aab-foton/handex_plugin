@@ -244,9 +244,9 @@
           <div style="font-size: 20px;">ℹ️</div>
           <div style="flex:1;">
             <div style="font-size: 12px; font-weight: 700; color: #2D4496;">Handoff Antigo Detectado</div>
-            <div style="font-size: 11px; color: #555;">Deseja importar os dados de Plataformas e Mapeamentos deste handoff?</div>
+            <div style="font-size: 11px; color: #555;">Importe os dados do handoff antigo para o novo formato.</div>
           </div>
-          <button onclick="importOldSection('geral')" style="background: #2D4496; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer;">Importar Dados</button>
+          <button onclick="importAllSections(event)" style="background: #2D4496; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer;">Importar Tudo</button>
         </div>
 
         <div class="card">
@@ -993,9 +993,11 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
       }
       if (msg.type === 'old-section-data') {
         if (!msg.found) {
-          const sb = el('statusBar');
-          sb.classList.remove('loading', 'error'); sb.classList.add('error');
-          sb.textContent = '⚠️ Nenhum dado encontrado no handoff antigo.';
+          _importPendingCount = Math.max(0, _importPendingCount - 1);
+          if (_importPendingCount === 0) {
+            isOldFormat = false;
+            renderImportBanners();
+          }
           return;
         }
         if (msg.section === 'geral') {
@@ -1045,18 +1047,48 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           renderLists();
           saveGeralData(false);
           updateSummaryCards();
-
-          const parts = [];
           updatePZCount();
-          if (mapeamentosAdded) parts.push(mapeamentosAdded + ' mapeamento(s)');
-          if (plataformasAdded) parts.push(plataformasAdded + ' plataforma(s)');
-          if (zoomAdded) parts.push(zoomAdded + ' zoom(s)');
-          const keysInfo = data.pluginDataKeys && data.pluginDataKeys.length
-            ? ' | chaves: ' + data.pluginDataKeys.join(', ')
-            : '';
-          const sb2 = el('statusBar');
-          sb2.classList.remove('loading', 'error'); sb2.classList.add('success');
-          sb2.textContent = '✓ Importado: ' + (parts.join(', ') || 'nenhum item novo') + '.' + keysInfo;
+
+          _importResults.mapeamentos = mapeamentosAdded;
+          _importResults.plataformas = plataformasAdded;
+          _importResults.zoom = zoomAdded;
+        }
+
+        if (msg.section === 'toque') {
+          const areas = (msg.data && msg.data.areas) || [];
+          const defaultVar = variationsData.find(v => v.id === 'default');
+          if (defaultVar) {
+            if (!defaultVar.areas_toque) defaultVar.areas_toque = [];
+            let added = 0;
+            areas.forEach(a => {
+              if (!defaultVar.areas_toque.find(x => x.nome === a.nome)) {
+                defaultVar.areas_toque.push(a);
+                added++;
+              }
+            });
+            if (!currentVariationId || currentVariationId === 'default') {
+              touchData = defaultVar.areas_toque;
+            }
+            parent.postMessage({ pluginMessage: { type: 'save-partial-data', key: 'variacoes', value: variationsData } }, '*');
+            renderTouchList();
+            renderVariationList();
+            updateSummaryCards();
+            _importResults.areas = added;
+          }
+        }
+
+        _importPendingCount = Math.max(0, _importPendingCount - 1);
+        if (_importPendingCount === 0) {
+          isOldFormat = false;
+          renderImportBanners();
+          const parts = [];
+          if (_importResults.mapeamentos) parts.push(_importResults.mapeamentos + ' mapeamento(s)');
+          if (_importResults.plataformas) parts.push(_importResults.plataformas + ' plataforma(s)');
+          if (_importResults.zoom) parts.push(_importResults.zoom + ' zoom(s)');
+          if (_importResults.areas) parts.push(_importResults.areas + ' área(s) de toque');
+          const sb = el('statusBar');
+          sb.classList.remove('loading', 'error'); sb.classList.add('success');
+          sb.textContent = '✓ Importado: ' + (parts.join(', ') || 'nenhum item novo') + '.';
         }
       }
 
@@ -1962,13 +1994,17 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
     el('import-banner-geral').style.display = isOldFormat ? 'flex' : 'none';
   }
 
-  function importOldSection(section) {
-    const btn = event.currentTarget;
-    const originalText = btn.textContent;
+  let _importPendingCount = 0;
+  let _importResults = {};
+
+  function importAllSections(evt) {
+    const btn = evt.currentTarget;
     btn.textContent = 'Importando...';
     btn.disabled = true;
-    parent.postMessage({ pluginMessage: { type: 'import-old-section', section } }, '*');
-    setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2000);
+    _importPendingCount = 2;
+    _importResults = {};
+    parent.postMessage({ pluginMessage: { type: 'import-old-section', section: 'geral' } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'import-old-section', section: 'toque' } }, '*');
   }
 
   let _saveGeralTimer = null;
