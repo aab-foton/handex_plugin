@@ -1998,40 +1998,49 @@ async function parseOldTouchAreas(handoff: SceneNode): Promise<{
     if (!containerTexts.length) continue;
 
     const widthLabel = containerTexts.find((n: TextNode) => /^width\s*:?\s*$/i.test(n.characters.trim()));
-    const pxValues   = containerTexts.filter((n: TextNode) => /^\d+\s*px$/i.test(n.characters.trim()));
+    if (!widthLabel) continue;
 
-    if (!widthLabel || pxValues.length < 2) continue;
+    const pxValues = containerTexts.filter((n: TextNode) => /^\d+\s*px$/i.test(n.characters.trim()));
+    if (pxValues.length < 1) continue;
 
-    // Associa px values aos labels pelo mais próximo em Y (posição absoluta)
     const hAbsY = (hlabel as any).absoluteTransform?.[1]?.[2] ?? hlabel.y;
-    const wAbsY = (widthLabel as any).absoluteTransform?.[1]?.[2] ?? widthLabel.y;
 
+    // height: px value mais próximo do label "height:"
     const hValue = pxValues.reduce((best: TextNode, node: TextNode) => {
       const nodeY = (node as any).absoluteTransform?.[1]?.[2] ?? node.y;
       const bestY = (best as any).absoluteTransform?.[1]?.[2] ?? best.y;
       return Math.abs(nodeY - hAbsY) < Math.abs(bestY - hAbsY) ? node : best;
     });
-    const wValue = pxValues.filter((n: TextNode) => n !== hValue).reduce((best: TextNode, node: TextNode) => {
-      const nodeY = (node as any).absoluteTransform?.[1]?.[2] ?? node.y;
-      const bestY = (best as any).absoluteTransform?.[1]?.[2] ?? best.y;
-      return Math.abs(nodeY - wAbsY) < Math.abs(bestY - wAbsY) ? node : best;
-    });
-
     const h = parseInt(hValue.characters);
-    const w = parseInt(wValue.characters);
-    if (isNaN(h) || isNaN(w)) continue;
+    if (isNaN(h)) continue;
 
-    // Nome: TextNode que não seja label, px value, nem badge numérico puro
-    const nameNode = containerTexts.find((n: TextNode) =>
-      !/^(height|width)\s*:?\s*$/i.test(n.characters.trim()) &&
-      !/^\d+\s*px$/i.test(n.characters.trim()) &&
-      !/^\d+$/.test(n.characters.trim()) &&
-      n.characters.trim().length > 1
-    );
+    // width: px value diferente do height, ou 0 se for texto descritivo (ex: "100% de acordo com a aplicação")
+    const wAbsY = (widthLabel as any).absoluteTransform?.[1]?.[2] ?? widthLabel.y;
+    const remainingPx = pxValues.filter((n: TextNode) => n !== hValue);
+    let w = 0;
+    if (remainingPx.length > 0) {
+      const wValue = remainingPx.reduce((best: TextNode, node: TextNode) => {
+        const nodeY = (node as any).absoluteTransform?.[1]?.[2] ?? node.y;
+        const bestY = (best as any).absoluteTransform?.[1]?.[2] ?? best.y;
+        return Math.abs(nodeY - wAbsY) < Math.abs(bestY - wAbsY) ? node : best;
+      });
+      w = parseInt(wValue.characters) || 0;
+    }
+    // w === 0 → width descritivo (full-width) → preset baseado só no height
+
+    // Nome: TextNode que não seja label, px value, badge numérico, nem texto descritivo longo
+    const nameNode = containerTexts.find((n: TextNode) => {
+      const t = n.characters.trim();
+      return !/^(height|width)\s*:?\s*$/i.test(t) &&
+        !/^\d+\s*px$/i.test(t) &&
+        !/^\d+$/.test(t) &&
+        t.length > 1 &&
+        t.length < 50;
+    });
     const rawName = nameNode?.characters.trim() || `Área ${areas.length + 1}`;
     const nome = rawName.replace(/^\d+\s+/, '').trim() || rawName;
 
-    // Preset por dimensões
+    // Preset: w===0 indica full-width (texto descritivo no template antigo)
     let preset = 'livre';
     if (h === 44 && w === 44) preset = '44x44';
     else if (h === 44) preset = '44x100';
