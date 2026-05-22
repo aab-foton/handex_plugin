@@ -242,28 +242,47 @@ ${modalsShared}
     </p>
   </footer>
 
+  <!--
+    Plugin runtime — concatenado em um único <script> para que todos os
+    módulos compartilhem o mesmo escopo. A separação em arquivos-fonte é
+    puramente organizacional; o resultado em runtime é idêntico ao monolito
+    anterior.
+  -->
   <script>
+// ============================================================
+// MODULE: core.js
+// ============================================================
 ${modCore}
-  </script>
 
-  <script>
-${modHandoff}
-  </script>
-
-  <script>
-${modMeasure}
-  </script>
-
-  <script>
-${modSpecs}
-  </script>
-
-  <script>
-${modData}
-  </script>
-
-  <script>
+// ============================================================
+// MODULE: messages.js
+// ============================================================
 ${modMsgs}
+
+// ============================================================
+// MODULE: audit.js
+// ============================================================
+${read('modules/audit.js')}
+
+// ============================================================
+// MODULE: measurement.js
+// ============================================================
+${modMeasure}
+
+// ============================================================
+// MODULE: specifications.js
+// ============================================================
+${modSpecs}
+
+// ============================================================
+// MODULE: design-data.js
+// ============================================================
+${modData}
+
+// ============================================================
+// MODULE: handoff.js
+// ============================================================
+${modHandoff}
   </script>
 
   <!-- SHARED GLOBAL FABs -->
