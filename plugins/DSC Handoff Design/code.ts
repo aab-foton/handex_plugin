@@ -3762,9 +3762,9 @@ async function formatarComponenteSet(componentSet: ComponenteDocumentavel): Prom
   const setWidth  = colOffsets[colOffsets.length - 1];
   const setHeight = rowOffsets[rowOffsets.length - 1];
 
-  // Se o componente está dentro de outro frame, extraí-lo e apagar o docFrame raiz antigo
+  // Se o componente está dentro de outro frame, extraí-lo.
+  // Só apaga o frame raiz se ele foi gerado por uma execução anterior desta função (marcado via pluginData).
   if (target.parent && target.parent.type !== 'PAGE') {
-    // Subir até encontrar o filho direto da página
     let frameRaiz = target.parent as SceneNode;
     while (frameRaiz.parent && frameRaiz.parent.type !== 'PAGE') {
       frameRaiz = frameRaiz.parent as SceneNode;
@@ -3774,7 +3774,9 @@ async function formatarComponenteSet(componentSet: ComponenteDocumentavel): Prom
     figma.currentPage.appendChild(target);
     target.x = absX;
     target.y = absY;
-    if (!frameRaiz.removed) frameRaiz.remove();
+    if (!frameRaiz.removed && (frameRaiz as FrameNode).getPluginData?.("csfDocFrame") === "true") {
+      frameRaiz.remove();
+    }
   }
 
   const originalX = target.x;
@@ -3807,6 +3809,7 @@ async function formatarComponenteSet(componentSet: ComponenteDocumentavel): Prom
 
   const docFrame = figma.createFrame();
   docFrame.name = target.name;
+  docFrame.setPluginData("csfDocFrame", "true");
   docFrame.layoutMode = 'VERTICAL';
   docFrame.itemSpacing = 80;
   docFrame.paddingTop = 80;
