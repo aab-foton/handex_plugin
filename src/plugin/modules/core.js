@@ -8,7 +8,7 @@ let currentSpecTab = 'specs-form';
 let lastAuditResults = null;
 let handoffData = {
   briefing: { questions: [] },
-  step1: { files: [], versao: "v2.0.0" },
+  step1: { files: [], versao: "v1.0", gerente: "", gerenteEmail: "" },
   step2: { specs: null, isAuditEnabled: false, auditReferenceTokens: null, auditReferences: [] },
   step3: {
     team: [],
@@ -52,6 +52,8 @@ Object.assign(window, {
   scrollToStep,
   scanFrame,
   toggleAuditSection,
+  _activateAuditSection,
+  resetAuditCache,
   refreshAuditRefs,
   handleAuditRefUpload,
   performAudit,
@@ -79,6 +81,7 @@ Object.assign(window, {
   validateUrl,
   validateEmail,
   exportHandoff,
+  createHandoffOnCanvas,
   openModal,
   closeModal,
   openHelp,
@@ -92,8 +95,17 @@ Object.assign(window, {
   executeMeasurement,
   selectFlowType,
   confirmFlowConnection,
-  toggleUiScale
+  toggleUiScale,
+  clearPluginCache
 });
+
+function clearPluginCache() {
+  const confirmed = window.confirm(
+    'Limpar todo o cache do plugin?\n\nIsso removerá: formulário, scan, auditoria, medidas, fluxos e histórico de versões.\n\nEssa ação não pode ser desfeita.'
+  );
+  if (!confirmed) return;
+  parent.postMessage({ pluginMessage: { type: 'clear-cache' } }, '*');
+}
 
 function saveSpecsToStorage() {
   handoffData.specs = createdSpecs;
@@ -481,20 +493,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- IMPORT / EXPORT LOGIC ---
     
     function incrementVersion(v) {
-      if (!v) return 'v1.0.1';
-      // Basic semantic versioning: vX.Y.Z
-      const match = v.match(/v?(\d+)\.(\d+)\.(\d+)/);
-      if (!match) {
-        // Fallback for non-standard versions
-        return v + '.1';
-      }
-      
-      let major = parseInt(match[1]);
-      let minor = parseInt(match[2]);
-      let patch = parseInt(match[3]);
-      
-      patch++; 
-      return `v${major}.${minor}.${patch}`;
+      if (!v) return 'v1.1';
+      // Two-segment versioning: vX.Y
+      const match = v.match(/v?(\d+)\.(\d+)/);
+      if (!match) return v + '.1';
+      const major = parseInt(match[1]);
+      const minor = parseInt(match[2]);
+      return `v${major}.${minor + 1}`;
     }
 
 
@@ -1132,6 +1137,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (s1Objetivo) s1Objetivo.value = handoffData.step1.objetivo || "";
       const s1Gerente = document.getElementById("s1-gerente");
       if (s1Gerente) s1Gerente.value = handoffData.step1.gerente || "";
+      const s1GerenteEmail = document.getElementById("s1-gerente-email");
+      if (s1GerenteEmail) s1GerenteEmail.value = handoffData.step1.gerenteEmail || "";
 
       // 2. Briefing Questions
       const briefingContainer = document.getElementById('briefing-questions-container-v2');

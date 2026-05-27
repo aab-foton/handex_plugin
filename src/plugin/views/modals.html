@@ -498,7 +498,6 @@
         </div>
 
         <div id="scan-categories-list" class="space-y-2">
-          <!-- Category Option -->
           <label class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:bg-white dark:hover:bg-slate-800 transition-all group">
             <input type="checkbox" name="scan-cat" value="components" checked class="w-4 h-4 rounded border-gray-300 text-[#0070af] focus:ring-[#0070af]" />
             <div class="flex flex-col">
@@ -535,10 +534,46 @@
             </div>
           </label>
         </div>
+
       </div>
       <div class="p-5 border-t border-gray-100 dark:border-dark-line flex gap-3">
         <button onclick="closeModal('scan-categories-modal')" class="flex-1 py-3 text-[13px] font-bold text-gray-500 bg-gray-50 hover:bg-gray-100 dark:bg-dark-bg dark:hover:bg-slate-800 rounded-xl transition-colors">Cancelar</button>
         <button onclick="executeScanFrameWithCategories()" class="flex-1 py-3 text-[13px] font-bold text-white bg-[#0070af] hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95">Escanear Agora</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Seleção de Bibliotecas de Auditoria -->
+  <div id="audit-libs-modal" role="dialog" aria-modal="true" aria-labelledby="audit-libs-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div class="absolute inset-0" onclick="cancelAuditLibsModal()" aria-hidden="true"></div>
+    <div class="relative w-full max-w-[400px] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-dark-line">
+        <div class="flex items-center gap-2">
+          <i data-lucide="library" class="w-5 h-5 text-[#0070af]"></i>
+          <h3 id="audit-libs-modal-title" class="text-[#1E293B] dark:text-white font-extrabold text-[15px] tracking-tight">Bibliotecas de Auditoria</h3>
+        </div>
+        <button onclick="cancelAuditLibsModal()" aria-label="Fechar modal" class="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto max-h-[70vh]">
+        <div class="mb-5 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-3">
+          <i data-lucide="info" class="w-5 h-5 text-[#0070af] shrink-0 mt-px"></i>
+          <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-relaxed">
+            Selecione quais bibliotecas DSC serão usadas para validar os tokens aplicados no escaneamento.
+          </p>
+        </div>
+        <div class="flex items-center justify-between mb-4 px-1">
+          <button onclick="toggleAllAuditLibs(true)" class="text-[11px] font-bold text-[#0070af] hover:underline uppercase tracking-wider">Todas</button>
+          <button onclick="toggleAllAuditLibs(false)" class="text-[11px] font-bold text-slate-400 hover:text-slate-600 uppercase tracking-wider">Nenhuma</button>
+        </div>
+        <div id="audit-libs-list" class="space-y-2">
+          <p class="text-[11px] text-gray-400 text-center py-2">Carregando bibliotecas…</p>
+        </div>
+      </div>
+      <div class="p-5 border-t border-gray-100 dark:border-dark-line flex gap-3">
+        <button onclick="cancelAuditLibsModal()" class="flex-1 py-3 text-[13px] font-bold text-gray-500 bg-gray-50 hover:bg-gray-100 dark:bg-dark-bg dark:hover:bg-slate-800 rounded-xl transition-colors">Cancelar</button>
+        <button onclick="confirmAuditLibsModal()" class="flex-1 py-3 text-[13px] font-bold text-white bg-[#0070af] hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95">Confirmar</button>
       </div>
     </div>
   </div>
@@ -550,23 +585,87 @@
     }
 
     function toggleAllScanCategories(checked) {
-      const checkboxes = document.querySelectorAll('input[name="scan-cat"]');
-      checkboxes.forEach(cb => cb.checked = checked);
+      document.querySelectorAll('input[name="scan-cat"]').forEach(cb => cb.checked = checked);
     }
 
     function executeScanFrameWithCategories() {
-      const selected = Array.from(document.querySelectorAll('input[name="scan-cat"]:checked')).map(cb => cb.value);
-      
-      if (selected.length === 0) {
+      const selectedCats = Array.from(document.querySelectorAll('input[name="scan-cat"]:checked')).map(cb => cb.value);
+
+      if (selectedCats.length === 0) {
         showToast("Selecione pelo menos uma categoria", "error");
         return;
       }
 
       closeModal('scan-categories-modal');
-      
-      // Chamar a função original de scan passando as categorias
+
+      const selectedLibs = (typeof handoffData !== 'undefined' && handoffData.step2 && handoffData.step2.selectedLibSlugs)
+        ? handoffData.step2.selectedLibSlugs
+        : null;
+
       if (typeof scanFrame === 'function') {
-        scanFrame(selected);
+        scanFrame(selectedCats, selectedLibs);
       }
+    }
+
+    function openAuditLibsModal() {
+      const libsList = document.getElementById('audit-libs-list');
+      if (libsList) {
+        const skeleton = (typeof window !== 'undefined') ? window.__HANDEX_REF_SKELETON__ : null;
+        const libs = (skeleton && Array.isArray(skeleton.libraries)) ? skeleton.libraries : [];
+        const savedSlugs = (typeof handoffData !== 'undefined' && handoffData.step2 && handoffData.step2.selectedLibSlugs)
+          ? handoffData.step2.selectedLibSlugs
+          : null;
+
+        if (libs.length === 0) {
+          libsList.innerHTML = '<p class="text-[11px] text-gray-400 text-center py-2">Nenhuma biblioteca disponível no bundle.</p>';
+        } else {
+          libsList.innerHTML = libs.map(lib => {
+            const isChecked = !savedSlugs || savedSlugs.includes(lib.slug);
+            const total = (lib.counts && lib.counts.components) ? lib.counts.components.toLocaleString('pt-BR') : '—';
+            return `<label class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:bg-white dark:hover:bg-slate-800 transition-all group">
+              <input type="checkbox" name="audit-lib" value="${lib.slug}" ${isChecked ? 'checked' : ''} class="w-4 h-4 rounded border-gray-300 text-[#0070af] focus:ring-[#0070af]" />
+              <div class="flex-1 min-w-0">
+                <span class="block text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#0070af] truncate">${lib.name}</span>
+                <span class="text-[10px] text-gray-400">${total} componentes</span>
+              </div>
+            </label>`;
+          }).join('');
+        }
+      }
+      document.getElementById('audit-libs-modal').classList.remove('hidden');
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function toggleAllAuditLibs(checked) {
+      document.querySelectorAll('input[name="audit-lib"]').forEach(cb => cb.checked = checked);
+    }
+
+    function confirmAuditLibsModal() {
+      const selected = Array.from(document.querySelectorAll('input[name="audit-lib"]:checked')).map(cb => cb.value);
+      if (selected.length === 0) {
+        showToast("Selecione ao menos uma biblioteca", "error");
+        return;
+      }
+      if (typeof handoffData !== 'undefined' && handoffData.step2) {
+        const prev = handoffData.step2.selectedLibSlugs;
+        const changed = !prev || prev.length !== selected.length || selected.some(s => !prev.includes(s));
+        handoffData.step2.selectedLibSlugs = selected;
+        // Invalida bundle cacheado se a seleção mudou para forçar nova extração
+        if (changed && typeof resetAuditCache === 'function') resetAuditCache();
+      }
+      closeModal('audit-libs-modal');
+      if (typeof _activateAuditSection === 'function') _activateAuditSection(true);
+    }
+
+    function cancelAuditLibsModal() {
+      // Reverte o toggle se ainda não havia seleção anterior
+      const toggle = document.getElementById('toggle-audit');
+      if (toggle) toggle.checked = false;
+      if (typeof handoffData !== 'undefined' && handoffData.step2) {
+        handoffData.step2.isAuditEnabled = false;
+      }
+      const content = document.getElementById('audit-card-content');
+      if (content) content.classList.add('hidden');
+      closeModal('audit-libs-modal');
     }
   </script>

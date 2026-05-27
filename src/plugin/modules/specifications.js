@@ -17,14 +17,14 @@
 // saveToStorage, focusNode, openModal/closeModal, showToast
 // ============================================================
 
-    function scanFrame(categories = null) {
+    function scanFrame(categories = null, selectedLibSlugs = null) {
       const refs = handoffData.step2.auditReferences || [];
-      if (handoffData.step2.isAuditEnabled && refs.length === 0) {
-        showToast("Carregue ao menos um arquivo JSON de referência antes de escanear com auditoria.", "error");
-        const content = document.getElementById('audit-card-content');
-        if (content && content.classList.contains('hidden')) content.classList.remove('hidden');
-        return;
+
+      // Persiste libs selecionadas para uso no bundle filtering
+      if (selectedLibSlugs !== null) {
+        handoffData.step2.selectedLibSlugs = selectedLibSlugs;
       }
+      const libSlugs = handoffData.step2.selectedLibSlugs || null;
 
       const btn = document.getElementById("btn-scan");
       if (btn) {
@@ -32,14 +32,15 @@
         btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Escaneando...';
       }
       if (window.lucide) lucide.createIcons();
-      
-      parent.postMessage({ 
-        pluginMessage: { 
-          type: "scan-frame", 
-          isAudit: handoffData.step2.isAuditEnabled, 
+
+      parent.postMessage({
+        pluginMessage: {
+          type: "scan-frame",
+          isAudit: handoffData.step2.isAuditEnabled,
           referenceTokens: refs.length > 0 ? refs : null,
+          selectedLibSlugs: libSlugs,
           categories: categories
-        } 
+        }
       }, "*");
     }
 
@@ -325,48 +326,125 @@
         preview = `<div class="w-8 h-8 flex items-center justify-center bg-gray-50 dark:bg-dark-bg rounded text-gray-300"><i data-lucide="${iconName}" class="w-4 h-4"></i></div>`;
       }
 
-      // Use the calculated componentStatus (now derived from match-rate thresholds)
       const status = item.componentStatus || (item.isDS === true ? "ok" : (item.isDS === "warning" ? "warning" : "error"));
-
       const dsStatus = handoffData.step2.isAuditEnabled ? (status === "ok" ?
         `<span class="flex items-center gap-1 text-[#10b981]"><i data-lucide="check-circle" class="w-2.5 h-2.5"></i>EM CONFORMIDADE</span>` :
         (status === "warning" ?
           `<span class="flex items-center gap-1 text-amber-500 font-bold"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>NECESSITA REVISÃO</span>` :
           `<span class="flex items-center gap-1 text-red-400 font-bold"><i data-lucide="alert-circle" class="w-2.5 h-2.5"></i>FORA DO PADRÃO</span>`)) : "";
 
-      let propsHtml = "";
-      if (item.properties && item.properties.length > 0) {
-        propsHtml = `<div class="mt-2 space-y-1 border-t border-gray-100 dark:border-dark-line pt-2">`;
-        item.properties.forEach(p => {
-           const pStatus = handoffData.step2.isAuditEnabled ? 
-             (p.isDS === true ? `<span class="text-[#10b981]"><i data-lucide="check" class="w-3 h-3"></i></span>` : 
-              (p.isDS === "warning" ? `<span class="text-amber-500"><i data-lucide="alert-triangle" class="w-3 h-3"></i></span>` : 
-               `<span class="text-red-400"><i data-lucide="x" class="w-3 h-3"></i></span>`)) : "";
-           
-           let icon = "circle";
-           if (p.type === "spacing") icon = "move-horizontal";
-           else if (p.type === "typography") icon = "type";
-           else if (p.type === "strokeWeight") icon = "maximize";
-           else if (p.type === "radius") icon = "corner-up-left";
-           else if (p.type === "layout") icon = "box";
-           else if (p.type === "variant") icon = "layers";
-           else if (p.type === "effect") icon = "sparkles";
-           else if (p.type === "color" || p.type === "stroke") icon = "palette";
+      // ── Prop split: "applied" (active) vs "inactive" (false/none variants) ──
+      // Variant props with boolean-false or "none" values mean the feature is OFF
+      // and are not relevant to the dev. Non-variant props are already filtered
+      // at extraction time (value > 0, visible, etc.) so they're always applied.
+      const INACTIVE_VALUES = new Set(['false', 'none', 'off', 'no', 'nenhum', 'sem', '']);
+      const allProps = item.properties || [];
+      const appliedProps = allProps.filter(p => {
+        if (p.type === 'variant') return !INACTIVE_VALUES.has(String(p.value).toLowerCase().trim());
+        return true;
+      });
+      const inactiveProps = allProps.filter(p =>
+        p.type === 'variant' && INACTIVE_VALUES.has(String(p.value).toLowerCase().trim())
+      );
+      const inactiveCount = inactiveProps.length;
+      const uid = `sp-${String(item.nodeId || Math.random()).replace(/[^a-z0-9]/gi, '').slice(0, 12)}`;
 
-           const colorPrev = (p.type === "color" || p.type === "stroke") ? 
-             `<div class="w-3 h-3 rounded-full border border-gray-200 inline-block align-middle" style="background-color: ${p.value}"></div>` : 
-             `<i data-lucide="${icon}" class="w-3 h-3 text-gray-300"></i>`;
+      function renderActivePropsList(props) {
+        if (!props || props.length === 0) return '';
+        let html = `<div class="mt-2 space-y-1 border-t border-gray-100 dark:border-dark-line pt-2">`;
+        props.forEach(p => {
+          const pStatus = handoffData.step2.isAuditEnabled ?
+            (p.isDS === true ? `<span class="text-[#10b981] shrink-0"><i data-lucide="check" class="w-3 h-3"></i></span>` :
+             (p.isDS === "warning" ? `<span class="text-amber-500 shrink-0"><i data-lucide="alert-triangle" class="w-3 h-3"></i></span>` :
+              `<span class="text-red-400 shrink-0"><i data-lucide="x" class="w-3 h-3"></i></span>`)) : "";
 
-           propsHtml += `<div class="flex items-center justify-between text-[9px] text-gray-500 dark:text-gray-400">
-             <div class="flex items-center gap-1.5 truncate" title="${p.name}">
-               <div class="w-3 h-3 flex items-center justify-center">${colorPrev}</div>
-               <span class="truncate">${p.label || p.type}: <span class="font-bold text-slate-600 dark:text-gray-300">${p.value}</span></span>
-             </div>
-             ${pStatus}
-           </div>`;
+          let icon = "circle";
+          if (p.type === "spacing") icon = "move-horizontal";
+          else if (p.type === "typography") icon = "type";
+          else if (p.type === "strokeWeight") icon = "maximize";
+          else if (p.type === "radius") icon = "corner-up-left";
+          else if (p.type === "layout") icon = "box";
+          else if (p.type === "variant") icon = "layers";
+          else if (p.type === "effect") icon = "sparkles";
+          else if (p.type === "color" || p.type === "stroke") icon = "palette";
+
+          const colorPrev = (p.type === "color" || p.type === "stroke") ?
+            `<div class="w-3 h-3 rounded-full border border-gray-300 dark:border-gray-600 shrink-0 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]" style="background-color: ${p.value}"></div>` :
+            `<i data-lucide="${icon}" class="w-3 h-3 text-gray-400 dark:text-gray-500 shrink-0"></i>`;
+
+          const hasToken = p.name && p.name !== p.value && p.name.includes('/');
+          const chainSegments = hasToken ? p.name.split('/').map(s => s.trim()).filter(Boolean) : [];
+          const chainHtml = hasToken
+            ? chainSegments.map((seg, i) => {
+                const isLast = i === chainSegments.length - 1;
+                return isLast
+                  ? `<span class="font-bold text-[#0070af] dark:text-blue-400">${seg}</span>`
+                  : `<span class="text-gray-500 dark:text-gray-400">${seg}</span><span class="text-gray-400 dark:text-gray-500 mx-0.5">›</span>`;
+              }).join('')
+            : '';
+
+          const tooltipText = hasToken
+            ? `Valor bruto: ${p.value}\nToken: ${p.name}`
+            : p.value;
+
+          const valueDisplay = hasToken
+            ? `<span class="flex items-center gap-0.5 flex-wrap leading-tight">${chainHtml}</span>`
+            : `<span class="font-bold text-slate-700 dark:text-gray-200">${p.value}</span>`;
+
+          html += `<div class="flex items-center justify-between gap-1 text-[9px] text-gray-600 dark:text-gray-400" title="${tooltipText}">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <div class="w-3 h-3 flex items-center justify-center shrink-0">${colorPrev}</div>
+              <span class="flex items-center gap-1 flex-wrap min-w-0">
+                <span class="text-gray-500 dark:text-gray-400 shrink-0">${p.label || p.type}:</span>
+                ${valueDisplay}
+              </span>
+            </div>
+            ${pStatus}
+          </div>`;
         });
-        propsHtml += `</div>`;
+        html += `</div>`;
+        return html;
       }
+
+      function renderInactivePropsList(props) {
+        if (!props || props.length === 0) return '';
+        // Inactive props get a distinct visual treatment: dashed border, muted
+        // background, slash icon and strikethrough value — clearly "off" at a glance.
+        let html = `<div class="mt-1 space-y-0.5 pt-1 border-t border-dashed border-gray-200 dark:border-dark-line">
+          <p class="text-[8px] font-bold uppercase tracking-wider text-gray-300 dark:text-gray-600 mb-1">Não aplicadas</p>`;
+        props.forEach(p => {
+          html += `<div class="flex items-center gap-1.5 text-[9px] text-gray-300 dark:text-gray-600 bg-gray-50 dark:bg-dark-bg/20 rounded px-1.5 py-0.5">
+            <i data-lucide="minus-circle" class="w-2.5 h-2.5 shrink-0"></i>
+            <span class="truncate line-through">${p.label || p.type}: ${p.value}</span>
+          </div>`;
+        });
+        html += `</div>`;
+        return html;
+      }
+
+      const appliedHtml = renderActivePropsList(appliedProps);
+
+      // Expanded section shows ONLY the inactive props (applied ones stay visible above)
+      const inactiveHtml = inactiveCount > 0
+        ? `<div id="${uid}-inactive" class="hidden">${renderInactivePropsList(inactiveProps)}</div>`
+        : '';
+
+      const toggleLabel = `${inactiveCount} prop${inactiveCount > 1 ? 's' : ''} inativa${inactiveCount > 1 ? 's' : ''}`;
+      const toggleHtml = inactiveCount > 0
+        ? `<button id="${uid}-btn"
+            onclick="event.stopPropagation();
+              var d=document.getElementById('${uid}-inactive');
+              var isHidden=d.classList.contains('hidden');
+              d.classList.toggle('hidden');
+              this.innerHTML = isHidden
+                ? '<i data-lucide=\\'chevron-up\\' class=\\'w-2.5 h-2.5\\'></i> Ocultar inativas'
+                : '<i data-lucide=\\'eye-off\\' class=\\'w-2.5 h-2.5\\'></i> ${toggleLabel}';
+              if(window.lucide) lucide.createIcons();"
+            class="mt-1.5 flex items-center gap-1 text-[9px] text-gray-400 dark:text-gray-500 hover:text-[#0070af] dark:hover:text-blue-400 transition-colors font-medium">
+            <i data-lucide="eye-off" class="w-2.5 h-2.5"></i>
+            ${toggleLabel}
+          </button>`
+        : '';
 
       return `
         <div class="col-span-2 p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#0070af] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" title="Clicar para localizar no board">
@@ -379,7 +457,9 @@
               </div>
             </div>
           </div>
-          ${propsHtml}
+          ${appliedHtml}
+          ${inactiveHtml}
+          ${toggleHtml}
         </div>
       `;
     }

@@ -17,6 +17,18 @@
     let auditCacheRequested = false;
 
     function toggleAuditSection(checked) {
+      if (checked) {
+        // Abre modal de seleção de libs antes de habilitar a seção
+        if (typeof openAuditLibsModal === 'function') {
+          openAuditLibsModal();
+          // A modal chama _activateAuditSection() ao confirmar
+          return;
+        }
+      }
+      _activateAuditSection(checked);
+    }
+
+    function _activateAuditSection(checked) {
       const content = document.getElementById('audit-card-content');
       if (content) content.classList.toggle('hidden', !checked);
       handoffData.step2.isAuditEnabled = checked;
@@ -34,6 +46,12 @@
       startAuditExtraction();
     }
 
+    function resetAuditCache() {
+      auditCacheRequested = false;
+      auditExtractInProgress = false;
+      if (handoffData && handoffData.step2) handoffData.step2.auditAutoBundle = null;
+    }
+
     function startAuditExtraction() {
       if (auditExtractInProgress) return;
       const skeleton = (typeof window !== 'undefined') ? window.__HANDEX_REF_SKELETON__ : null;
@@ -42,12 +60,20 @@
         return;
       }
       auditExtractInProgress = true;
-      const totalStyles = skeleton.libraries.reduce((acc, lib) => {
+
+      const selectedSlugs = handoffData.step2 && handoffData.step2.selectedLibSlugs;
+      const filteredLibraries = (selectedSlugs && selectedSlugs.length > 0)
+        ? skeleton.libraries.filter(lib => selectedSlugs.includes(lib.slug))
+        : skeleton.libraries;
+
+      const filteredSkeleton = { ...skeleton, libraries: filteredLibraries };
+
+      const totalStyles = filteredLibraries.reduce((acc, lib) => {
         const s = lib.styleTokens || {};
         return acc + ((s.colors && s.colors.length) || 0) + ((s.typography && s.typography.length) || 0) + ((s.effects && s.effects.length) || 0);
       }, 0);
-      renderAuditStatus('extracting', { processed: 0, total: totalStyles, libName: '', libCount: skeleton.libraries.length });
-      parent.postMessage({ pluginMessage: { type: 'extract-design-refs', skeleton } }, '*');
+      renderAuditStatus('extracting', { processed: 0, total: totalStyles, libName: '', libCount: filteredLibraries.length });
+      parent.postMessage({ pluginMessage: { type: 'extract-design-refs', skeleton: filteredSkeleton } }, '*');
     }
 
     function renderAuditRefsReady(bundle) {
