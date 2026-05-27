@@ -31,8 +31,10 @@
       handoffData.step1.objetivo = s1Objetivo ? s1Objetivo.value : "";
       const s1Gerente = document.getElementById("s1-gerente");
       handoffData.step1.gerente = s1Gerente ? s1Gerente.value : "";
+      const s1GerenteEmail = document.getElementById("s1-gerente-email");
+      handoffData.step1.gerenteEmail = s1GerenteEmail ? s1GerenteEmail.value.trim() : "";
       const s1Versao = document.getElementById("s1-versao");
-      handoffData.step1.versao = s1Versao ? s1Versao.value : "v2.0.0";
+      handoffData.step1.versao = s1Versao ? s1Versao.value : "v1.0";
 
       handoffData.setup = {
         ficha: document.getElementById('chk-ficha') ? document.getElementById('chk-ficha').checked : true,
@@ -162,6 +164,11 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
 - **UX Research:** ${handoffData.step3.research_link || "N/A"}
 `;
       handoffData.mdContent = mdContent;
+    }
+
+    function createHandoffOnCanvas() {
+      collectHandoffData();
+      parent.postMessage({ pluginMessage: { type: 'create-handoff', data: handoffData } }, '*');
     }
 
     function exportHandoff() {

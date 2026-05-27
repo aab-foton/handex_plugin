@@ -331,20 +331,27 @@
     }
     return entry;
   }
+  var PLUGIN_VERSION = true ? "3.0.0" : "dev";
   figma.ui.onmessage = async (msg) => {
     if (msg.type === "ui-ready") {
+      const currentUser = figma.currentUser ? { id: figma.currentUser.id, name: figma.currentUser.name, photoUrl: figma.currentUser.photoUrl } : null;
+      const theme = figma.ui.theme || "light";
       try {
         const savedState = await figma.clientStorage.getAsync("handoffData");
         figma.ui.postMessage({
           type: "init-plugin",
-          version: "2.0.0",
+          version: PLUGIN_VERSION,
+          currentUser,
+          theme,
           savedState: savedState || null
         });
       } catch (err) {
         console.error("Initialization error (continuing without saved state):", err);
         figma.ui.postMessage({
           type: "init-plugin",
-          version: "2.0.0",
+          version: PLUGIN_VERSION,
+          currentUser,
+          theme,
           savedState: null
         });
       }
@@ -399,6 +406,38 @@
       try {
         await figma.clientStorage.setAsync("handex-audit-refs-v1", null);
       } catch (e) {
+      }
+      return;
+    }
+    if (msg.type === "clear-cache") {
+      const fileKey = figma.root && figma.root.id ? figma.root.id : "default";
+      const keys = [
+        "handoffData",
+        "handex-audit-refs-v1",
+        "handex-scan-cache-v1",
+        "handex-history-" + fileKey
+      ];
+      try {
+        await Promise.all(keys.map((k) => figma.clientStorage.setAsync(k, null)));
+        figma.ui.postMessage({ type: "cache-cleared" });
+      } catch (e) {
+        console.error("clear-cache failed:", e);
+        figma.notify("Erro ao limpar cache", { error: true });
+      }
+      return;
+    }
+    if (msg.type === "scan-cache-save") {
+      figma.clientStorage.setAsync("handex-scan-cache-v1", msg.data).catch(
+        (e) => console.warn("scan-cache-save failed:", e)
+      );
+      return;
+    }
+    if (msg.type === "scan-cache-load") {
+      try {
+        const cached = await figma.clientStorage.getAsync("handex-scan-cache-v1");
+        figma.ui.postMessage({ type: "scan-cache-loaded", data: cached || null });
+      } catch (e) {
+        figma.ui.postMessage({ type: "scan-cache-loaded", data: null });
       }
       return;
     }
@@ -881,12 +920,29 @@
             { title: "Frames e Layouts", items: specsData.frames, type: "frames" },
             { title: "Vetores", items: specsData.vectors, type: "vectors" }
           ];
+          const specsRow = figma.createFrame();
+          specsRow.layoutMode = "HORIZONTAL";
+          specsRow.layoutWrap = "WRAP";
+          specsRow.itemSpacing = 16;
+          specsRow.counterAxisSpacing = 16;
+          specsRow.paddingLeft = 0;
+          specsRow.paddingRight = 0;
+          specsRow.paddingTop = 0;
+          specsRow.paddingBottom = 0;
+          specsRow.fills = [];
+          specsRow.primaryAxisSizingMode = "AUTO";
+          specsRow.counterAxisSizingMode = "AUTO";
           categories.forEach((cat) => {
             const sec = createSpecList(cat.title, cat.items, cat.type);
-            if (sec) {
-              mainContainer.appendChild(sec);
-            }
+            if (sec) specsRow.appendChild(sec);
           });
+          if (specsRow.children.length > 0) {
+            uiBoard.appendChild(specsRow);
+            setFillAndHug(specsRow);
+          } else {
+            specsRow.remove();
+          }
+          mainContainer.appendChild(uiBoard);
         }
         const selection = figma.currentPage.selection;
         if (selection.length > 0 && data.setup && (data.setup.espacamentos || data.setup.anatomia || data.setup.instancias)) {
@@ -1487,7 +1543,14 @@
         vectors: /* @__PURE__ */ new Map()
       };
       const frameJson = frameJsonTemplate();
-      const referenceTokens = msg.referenceTokens || null;
+      const selectedLibSlugs = Array.isArray(msg.selectedLibSlugs) && msg.selectedLibSlugs.length > 0 ? msg.selectedLibSlugs : null;
+      const rawReferenceTokens = msg.referenceTokens || null;
+      const referenceTokens = (() => {
+        if (!rawReferenceTokens || !selectedLibSlugs) return rawReferenceTokens;
+        const list = Array.isArray(rawReferenceTokens) ? rawReferenceTokens : [rawReferenceTokens];
+        const filtered = list.filter((lib) => lib && lib.slug && selectedLibSlugs.includes(lib.slug));
+        return filtered.length > 0 ? filtered : rawReferenceTokens;
+      })();
       const isAudit = msg.isAudit || false;
       const allowedCategories = msg.categories || null;
       for (const node of selection) {

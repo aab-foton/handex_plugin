@@ -190,7 +190,7 @@ ${css}
           class="tooltip-left p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
           <i data-lucide="zoom-in" class="w-5 h-5" aria-hidden="true"></i>
         </button>
-        <button onclick="toggleTheme()" title="Alternar Tema" aria-label="Alternar tema claro/escuro"
+        <button onclick="toggleTheme()" title="Alternar tema" aria-label="Alternar tema claro/escuro"
           class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
           <i data-lucide="sun" class="sun-icon w-5 h-5" aria-hidden="true"></i>
           <i data-lucide="moon" class="moon-icon w-5 h-5 hidden" aria-hidden="true"></i>

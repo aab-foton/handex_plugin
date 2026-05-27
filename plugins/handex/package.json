@@ -13,7 +13,10 @@
     "refs:rebuild": "npm run refs:fetch && node src/plugin/refs/build-skeleton.cjs",
     "bundle:refs": "node src/plugin/refs/build-skeleton.cjs",
     "bundle:ui": "npm run bundle:refs && node src/plugin/build.cjs",
-    "bundle:code": "npx esbuild src/plugin/code.js --bundle --target=es2017 --outfile=src/plugin/code.bundle.js"
+    "bundle:code": "node scripts/bundle-code.cjs",
+    "version:patch": "npm version patch --no-git-tag-version",
+    "version:minor": "npm version minor --no-git-tag-version",
+    "version:major": "npm version major --no-git-tag-version"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

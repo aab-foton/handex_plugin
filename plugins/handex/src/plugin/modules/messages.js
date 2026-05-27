@@ -6,34 +6,78 @@
 // As funções chamadas vivem em core.js / audit.js / measurement.js / etc.
 // ============================================================
 
+    function applyFigmaTheme(theme) {
+      // Preferência manual do usuário tem prioridade sobre o tema do Figma
+      const override = localStorage.getItem('theme');
+      const resolved = override || theme || 'light';
+      const isDark = resolved === 'dark';
+      document.documentElement.classList.toggle('dark', isDark);
+      document.querySelectorAll('.sun-icon').forEach(el => el.classList.toggle('hidden', isDark));
+      document.querySelectorAll('.moon-icon').forEach(el => el.classList.toggle('hidden', !isDark));
+    }
+
     // --- MESSAGE HANDLING CONSOLIDATION ---
     window.onmessage = (event) => {
       const msg = event.data.pluginMessage;
       if (!msg) return;
       
       if (msg.type === 'init-plugin') {
+        applyFigmaTheme(msg.theme);
         const badge = document.getElementById('version-badge');
         if (badge) badge.textContent = 'v' + msg.version;
-        
+
+        // Armazena o usuário Figma identificado automaticamente (sem login)
+        if (msg.currentUser) {
+          handoffData.currentUser = msg.currentUser;
+
+          // Preenche o campo "Designer responsável" somente se ainda estiver vazio
+          const gerenteEl = document.getElementById('s1-gerente');
+          if (gerenteEl && !gerenteEl.value && msg.currentUser.name) {
+            gerenteEl.value = msg.currentUser.name;
+            handoffData.step1.gerente = msg.currentUser.name;
+          }
+
+          // Exibe avatar e nome do usuário no header
+          const userSlot = document.getElementById('header-user-slot');
+          if (userSlot) {
+            const u = msg.currentUser;
+            const avatarHtml = u.photoUrl
+              ? `<img src="${u.photoUrl}" alt="${u.name}" class="w-5 h-5 rounded-full object-cover border border-slate-200 dark:border-dark-line" />`
+              : `<span class="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] font-bold">${u.name.charAt(0).toUpperCase()}</span>`;
+            userSlot.innerHTML = `
+              <div class="flex items-center gap-1.5" title="${u.name}">
+                ${avatarHtml}
+                <span class="text-[10px] font-medium text-slate-500 dark:text-dark-muted max-w-[80px] truncate">${u.name.split(' ')[0]}</span>
+              </div>`;
+          }
+        }
+
         if (msg.savedState) {
-          // Restore handoffData safely
+          // Restore handoffData safely, preservando currentUser do Figma
+          const mergedStep1 = { ...handoffData.step1, ...(msg.savedState.step1 || {}) };
+          // Se o savedState não tinha gerente preenchido, usa o nome do usuário Figma
+          if (!mergedStep1.gerente && handoffData.currentUser) {
+            mergedStep1.gerente = handoffData.currentUser.name;
+          }
           const mergedState = {
             ...handoffData,
             ...msg.savedState,
             briefing: { ...handoffData.briefing, ...(msg.savedState.briefing || {}) },
-            step1: { ...handoffData.step1, ...(msg.savedState.step1 || {}) },
+            step1: mergedStep1,
             step2: { ...handoffData.step2, ...(msg.savedState.step2 || {}) },
             step3: { ...handoffData.step3, ...(msg.savedState.step3 || {}) },
             docs: { ...handoffData.docs, ...(msg.savedState.docs || {}) }
           };
+          // Preserva o currentUser que acabou de ser recebido do Figma
+          mergedState.currentUser = handoffData.currentUser;
           handoffData = mergedState;
           createdSpecs = handoffData.specs || [];
           restoreUIFromState();
           renderFlowsList();
         }
-        // Request handoff history so the next exported HTML can show a diff
-        // with the previous version.
+        // Request handoff history e scan cache ao inicializar
         parent.postMessage({ pluginMessage: { type: 'snapshot-load' } }, '*');
+        parent.postMessage({ pluginMessage: { type: 'scan-cache-load' } }, '*');
         return;
       }
 
@@ -84,6 +128,33 @@
       if (msg.type === 'snapshot-history') {
         handoffData._history = Array.isArray(msg.history) ? msg.history : [];
         handoffData.previousSnapshot = handoffData._history[0] || null;
+        return;
+      }
+
+      if (msg.type === 'cache-cleared') {
+        // Reset state e UI completos após limpar cache
+        handoffData = {
+          briefing: { questions: [] },
+          step1: { files: [], versao: 'v0.0.0', gerente: '', gerenteEmail: '' },
+          step2: { specs: null, isAuditEnabled: false, auditReferenceTokens: null, auditReferences: [] },
+          step3: { team: [], erro_checked: true },
+          measurements: [], nextMeasurementNumber: 1,
+          tagNames: {}, createdFlows: [], nextFlowNumber: 1,
+          currentUser: handoffData.currentUser
+        };
+        createdSpecs = [];
+        restoreUIFromState();
+        const scanResults = document.getElementById('scan-results');
+        if (scanResults) scanResults.innerHTML = '';
+        showToast('Cache limpo. Plugin reiniciado.');
+        return;
+      }
+
+      if (msg.type === 'scan-cache-loaded') {
+        if (msg.data && msg.data.specs) {
+          handoffData.step2.specs = msg.data.specs;
+          renderSpecs(msg.data.specs, true);
+        }
         return;
       }
 
