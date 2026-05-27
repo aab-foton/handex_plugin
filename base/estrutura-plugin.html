@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Handex — Estrutura do Plugin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand: #0070af;
+      --brand-dark: #005ca9;
+      --orange: #f6822a;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-secondary: #64748b;
+      --text-muted: #94a3b8;
+      --green: #10b981;
+      --amber: #f59e0b;
+      --purple: #8b5cf6;
+      --pink: #ec4899;
+      --teal: #14b8a6;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, #026173 0%, #0070af 60%, #005ca9 100%);
+      color: white;
+      padding: 48px 40px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    header::after {
+      content: '';
+      position: absolute;
+      right: -60px; top: -60px;
+      width: 300px; height: 300px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+    }
+    .header-inner { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .header-logo svg { height: 28px; width: auto; }
+    .header-divider {
+      width: 1px; height: 28px;
+      background: rgba(255,255,255,0.3);
+    }
+    .header-title-tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+    header h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    header p {
+      font-size: 15px;
+      opacity: 0.8;
+      max-width: 560px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 16px;
+      padding: 5px 12px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .badge-dot { width: 6px; height: 6px; background: #4ade80; border-radius: 50%; }
+
+    /* LAYOUT */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* SECTION HEADER */
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 40px 0 16px;
+    }
+    .section-label-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .section-label h2 {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-secondary);
+    }
+    .section-label .section-path {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      background: var(--border);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    /* FILE TABLE */
+    .file-table {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .file-table table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .file-table thead tr {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .file-table thead th {
+      padding: 10px 16px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-align: left;
+    }
+    .file-table thead th:first-child { width: 32%; }
+    .file-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+    .file-table tbody tr:last-child { border-bottom: none; }
+    .file-table tbody tr:hover { background: #f8fafc; }
+    .file-table td {
+      padding: 12px 16px;
+      font-size: 13px;
+      vertical-align: top;
+    }
+    .file-name {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .file-icon { font-size: 14px; margin-top: 1px; flex-shrink: 0; }
+    .file-name code {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 12px;
+      color: var(--brand);
+      font-weight: 600;
+      word-break: break-all;
+    }
+    .file-desc { color: var(--text-secondary); line-height: 1.55; }
+    .file-desc strong { color: var(--text); font-weight: 600; }
+    .tag {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .tag-build  { background: #dbeafe; color: #1d4ed8; }
+    .tag-runtime{ background: #d1fae5; color: #065f46; }
+    .tag-source { background: #ede9fe; color: #5b21b6; }
+    .tag-data   { background: #fef3c7; color: #92400e; }
+    .tag-never  { background: #fee2e2; color: #991b1b; }
+    .tag-react  { background: #fce7f3; color: #9d174d; }
+
+    /* BUILD FLOW */
+    .build-flow {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-top: 40px;
+    }
+    .build-flow h3 {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+    .flow-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .flow-step {
+      display: flex;
+      align-items: stretch;
+      gap: 16px;
+    }
+    .flow-line {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+      width: 28px;
+    }
+    .flow-dot {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+    .flow-connector {
+      width: 2px;
+      flex: 1;
+      min-height: 16px;
+      background: var(--border);
+      margin: 2px 0;
+    }
+    .flow-step:last-child .flow-connector { display: none; }
+    .flow-content {
+      padding: 4px 0 20px;
+      flex: 1;
+    }
+    .flow-content:last-child { padding-bottom: 0; }
+    .flow-cmd {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--brand);
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      padding: 2px 8px;
+      border-radius: 5px;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+    .flow-arrow {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin: 0 4px;
+    }
+    .flow-file {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .flow-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* LEGEND */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 24px 0 0;
+      padding: 16px;
+      background: var(--bg);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 32px;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+    footer strong { color: var(--text-secondary); }
+
+    @media (max-width: 640px) {
+      header { padding: 32px 20px; }
+      header h1 { font-size: 24px; }
+      .file-table thead th:first-child { width: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 205.51265 46.553631">
+        <g transform="translate(-284.78446,-475.51214)">
+          <g transform="matrix(1.25,0,0,-1.25,15.493106,1024.9702)">
+            <g transform="scale(0.24,0.24)">
+              <path d="m 1107.19,1780.04 -17.74,-44.21 24.55,0 -6.73,44.39 -0.08,-0.18 z m -93.98,-101.49 72.77,149.83 55.02,0 30.68,-149.83 -48.3,0 -3.56,19.97 -46.86,0 -10.78,-19.97 -48.97,0 z m 181.34,0 21.08,149.83 48.67,0 -21.07,-149.83 -48.68,0 z m 323.71,101.67 -17.81,-44.39 24.54,0 -6.73,44.39 z m -94.06,-101.67 72.78,149.83 55.01,0 30.69,-149.83 -48.31,0 -3.55,19.97 -46.87,0 -10.78,-19.97 -48.97,0" style="fill:#ffffff;fill-rule:evenodd;stroke:none"/>
+              <path d="m 1316.6,1748.61 60.99,0 41.79,-69.21 -61,0 -41.78,69.21" style="fill:#ffffff;fill-rule:evenodd;stroke:none"/>
+              <path d="m 1322.94,1759.24 63.04,0 54.75,68.92 -63.04,0 -54.75,-68.92" style="fill:#f6822a;fill-rule:evenodd;stroke:none"/>
+              <path d="m 1259.91,1678.98 63.03,0 54.75,69.76 -63.04,0 -54.74,-69.76" style="fill:#f6822a;fill-rule:evenodd;stroke:none"/>
+              <path d="m 1282.64,1829 58.83,0 40.31,-69.76 -58.84,0 -40.3,69.76" style="fill:#ffffff;fill-rule:evenodd;stroke:none"/>
+              <path d="m 1014.65,1823.02 -4.68,-44.07 c -17.939,24.75 -59.517,7.67 -62.782,-23.16 -4.149,-39.13 35.867,-48.25 57.642,-25.21 l -4.69,-44.17 c -6.499,-3.19 -12.855,-5.67 -19.128,-7.34 -6.239,-1.68 -12.492,-2.57 -18.696,-2.7 -7.8,-0.17 -14.867,0.65 -21.234,2.44 -6.367,1.76 -12.129,4.56 -17.227,8.34 -9.832,7.19 -16.941,16.33 -21.32,27.45 -4.379,11.16 -5.82,23.75 -4.328,37.82 1.203,11.31 4.051,21.62 8.59,30.97 4.5,9.34 10.734,17.84 18.672,25.54 7.504,7.34 15.676,12.88 24.519,16.64 8.809,3.73 18.422,5.72 28.813,5.94 6.207,0.13 12.297,-0.49 18.207,-1.92 5.942,-1.42 11.802,-3.64 17.642,-6.57" style="fill:#ffffff;fill-rule:evenodd;stroke:none"/>
+            </g>
+          </g>
+        </g>
+      </svg>
+      <div class="header-divider"></div>
+      <span class="header-title-tag">HANDEX</span>
+    </div>
+    <h1>Estrutura do Plugin</h1>
+    <p>Documentação detalhada de cada arquivo e pasta que compõe o Handex — Handoff Express.</p>
+    <div class="badge">
+      <span class="badge-dot"></span>
+      v3.0.0 · Figma Plugin
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- RAIZ -->
+  <div class="section-label">
+    <div class="section-label-icon" style="background:#eff6ff;">📁</div>
+    <h2>Raiz do projeto</h2>
+    <span class="section-path">plugins/handex/</span>
+  </div>
+  <div class="file-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Arquivo</th>
+          <th>Função</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">📦</span><code>package.json</code></div></td>
+          <td class="file-desc"><span class="tag tag-source">config</span>Manifesto Node.js. Define nome, versão <strong>(3.0.0)</strong>, scripts de build e dependências. Scripts principais: <strong>bundle:ui</strong>, <strong>bundle:code</strong>, <strong>refs:fetch</strong>, <strong>refs:rebuild</strong>, <strong>version:patch/minor/major</strong>.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🔒</span><code>package-lock.json</code></div></td>
+          <td class="file-desc">Lock de dependências gerado automaticamente pelo npm. <strong>Não editar manualmente.</strong></td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">⚙️</span><code>tsconfig.json</code></div></td>
+          <td class="file-desc">Configuração do TypeScript para o app React de preview. Não afeta o plugin Figma diretamente.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">⚡</span><code>vite.config.ts</code></div></td>
+          <td class="file-desc">Configuração do Vite para o app React de preview e distribuição.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🌐</span><code>index.html</code></div></td>
+          <td class="file-desc"><span class="tag tag-react">react</span>Entry point do app React de preview. <strong>Não confundir com o ui.html do plugin.</strong></td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">📋</span><code>metadata.json</code></div></td>
+          <td class="file-desc">Metadados do plugin para distribuição e publicação.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">📄</span><code>README.md</code></div></td>
+          <td class="file-desc">Documentação geral do projeto.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🔑</span><code>.env.example</code></div></td>
+          <td class="file-desc">Modelo de variáveis de ambiente. Copiar para <code>.env</code> e preencher com o <strong>FIGMA_TOKEN</strong> para buscar as referências DSC.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🚫</span><code>.gitignore</code></div></td>
+          <td class="file-desc">Arquivos ignorados pelo Git: node_modules, dist, .env real, etc.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SCRIPTS -->
+  <div class="section-label">
+    <div class="section-label-icon" style="background:#f0fdf4;">🛠️</div>
+    <h2>Scripts de build</h2>
+    <span class="section-path">scripts/</span>
+  </div>
+  <div class="file-table">
+    <table>
+      <thead><tr><th>Arquivo</th><th>Função</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">⚙️</span><code>bundle-code.cjs</code></div></td>
+          <td class="file-desc"><span class="tag tag-build">build</span>Script de build do <strong>code.js</strong>. Usa esbuild para gerar <strong>code.bundle.js</strong>, injetando a variável <code>__HANDEX_VERSION__</code> com o número de versão do <code>package.json</code>. Executado via <code>npm run bundle:code</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- BASE -->
+  <div class="section-label">
+    <div class="section-label-icon" style="background:#fdf4ff;">📂</div>
+    <h2>Base</h2>
+    <span class="section-path">base/</span>
+  </div>
+  <div class="file-table">
+    <table>
+      <thead><tr><th>Arquivo</th><th>Função</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">📕</span><code>Como_usar_o_repositório.pdf</code></div></td>
+          <td class="file-desc">Guia interno de onboarding do repositório para novos membros da equipe.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- APP REACT -->
+  <div class="section-label">
+    <div class="section-label-icon" style="background:#fce7f3;">⚛️</div>
+    <h2>App React de Preview</h2>
+    <span class="section-path">src/ &amp; src/components/ &amp; src/hooks/ &amp; src/utils/</span>
+  </div>
+  <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;padding: 10px 14px;background:#fdf4ff;border:1px solid #e9d5ff;border-radius:8px;">
+    ⚛️ Estes arquivos formam um app React <strong>separado do plugin</strong>, usado para visualizar e distribuir o Handex fora do Figma. Não interferem no funcionamento interno do plugin.
+  </p>
+  <div class="file-table">
+    <table>
+      <thead><tr><th>Arquivo</th><th>Função</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">⚛️</span><code>src/main.tsx</code></div></td>
+          <td class="file-desc"><span class="tag tag-react">react</span>Entry point React — monta o componente raiz <code>&lt;App /&gt;</code> no DOM.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">⚛️</span><code>src/App.tsx</code></div></td>
+          <td class="file-desc"><span class="tag tag-react">react</span>Componente raiz do app de preview.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🎨</span><code>src/index.css</code></div></td>
+          <td class="file-desc"><span class="tag tag-react">react</span>Estilos globais do app de preview.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">⚛️</span><code>src/components/CodeViewer.tsx</code></div></td>
+          <td class="file-desc"><span class="tag tag-react">react</span>Componente que exibe o código-fonte do plugin com syntax highlighting.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">⚛️</span><code>src/components/PluginPreview.tsx</code></div></td>
+          <td class="file-desc"><span class="tag tag-react">react</span>Componente que renderiza um preview visual do plugin em iframe.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🪝</span><code>src/hooks/useVersions.ts</code></div></td>
+          <td class="file-desc"><span class="tag tag-react">react</span>Hook que gerencia as versões disponíveis do plugin para o seletor de versão no preview.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🔧</span><code>src/utils/downloadPlugin.ts</code></div></td>
+          <td class="file-desc"><span class="tag tag-react">react</span>Utilitário para gerar o download do pacote do plugin (.zip) a partir do preview.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PLUGIN RAIZ -->
+  <div class="section-label">
+    <div class="section-label-icon" style="background:#eff6ff;">🔌</div>
+    <h2>Plugin Figma — Arquivos principais</h2>
+    <span class="section-path">src/plugin/</span>
+  </div>
+  <div class="file-table">
+    <table>
+      <thead><tr><th>Arquivo</th><th>Função</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">📋</span><code>manifest.json</code></div></td>
+          <td class="file-desc"><span class="tag tag-source">config</span>Manifesto obrigatório do Figma. Define nome do plugin, versão da API, arquivo principal (<code>code.bundle.js</code>), UI (<code>ui.html</code>), editores suportados (<strong>figma</strong>, <strong>dev</strong>) e permissões — incluindo <code>currentuser</code> para identificar o designer logado.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🧠</span><code>code.js</code></div></td>
+          <td class="file-desc"><span class="tag tag-source">fonte</span><strong>Backend do plugin.</strong> Roda no contexto privilegiado do Figma com acesso total ao canvas, nós, variáveis, clientStorage e API do Figma. Recebe mensagens da UI via <code>figma.ui.postMessage</code>, executa operações no arquivo e retorna resultados. É o arquivo editado pelos devs — <strong>não é distribuído diretamente.</strong></td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">📦</span><code>code.bundle.js</code></div></td>
+          <td class="file-desc"><span class="tag tag-build">gerado</span><span class="tag tag-never">não editar</span>Backend compilado — gerado por <code>npm run bundle:code</code>. Contém <code>code.js</code> + <code>audit.js</code> em bundle único com a versão injetada. É este arquivo que o Figma executa.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🖥️</span><code>ui.html</code></div></td>
+          <td class="file-desc"><span class="tag tag-build">gerado</span><span class="tag tag-never">não editar</span>Frontend completo do plugin — arquivo HTML único entregue ao Figma. Gerado por <code>npm run bundle:ui</code>: agrega todos os módulos JS, views HTML, estilos CSS, Tailwind, Lucide e o skeleton de referência DSC embarcado (~1.3 MB).</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">⚙️</span><code>build.cjs</code></div></td>
+          <td class="file-desc"><span class="tag tag-build">build</span>Script assembler do <code>ui.html</code>. Lê todos os módulos JS, views HTML, CSS e dados de referência e os concatena em um único arquivo HTML. Define cores, cabeçalho, rodapé e estrutura do documento. Executado via <code>npm run bundle:ui</code>.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🔍</span><code>audit.js</code></div></td>
+          <td class="file-desc"><span class="tag tag-source">fonte</span>Módulo compartilhado de auditoria. Define <strong>auditProperty()</strong> (matching de tokens com score), <strong>suggestClosestMatch()</strong>, constantes <code>AUDIT_SCORE</code> e <code>AUDIT_THRESHOLDS</code>, e o template de frame JSON. Importado tanto pelo <code>code.js</code> (bundle) quanto pelos módulos da UI.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- MÓDULOS -->
+  <div class="section-label">
+    <div class="section-label-icon" style="background:#ede9fe;">🧩</div>
+    <h2>Módulos do Frontend</h2>
+    <span class="section-path">src/plugin/modules/</span>
+  </div>
+  <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;padding:10px 14px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;">
+    🧩 Cada arquivo é um fragmento JavaScript que, no build, é concatenado no <code>&lt;script&gt;</code> único do <strong>ui.html</strong>. Todos compartilham o mesmo escopo global em runtime — não há imports entre eles.
+  </p>
+  <div class="file-table">
+    <table>
+      <thead><tr><th>Arquivo</th><th>Função</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🏛️</span><code>core.js</code></div></td>
+          <td class="file-desc"><span class="tag tag-source">fonte</span><strong>Módulo central da UI.</strong> Inicializa o <code>handoffData</code> (estado global do plugin), expõe todas as funções públicas ao <code>window</code>, gerencia navegação entre views e steps do Handoff, persistência no <code>clientStorage</code>, tema (dark/light), versão, toast de notificações, accordion, scroll e utilitários gerais.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">📡</span><code>messages.js</code></div></td>
+          <td class="file-desc"><span class="tag tag-source">fonte</span><strong>Dispatcher de mensagens.</strong> Implementa o único <code>window.onmessage</code> do plugin. Recebe todas as mensagens vindas do <code>code.js</code> e roteia para as funções corretas: <strong>init-plugin</strong>, <strong>scan-result</strong>, <strong>extract-done</strong>, <strong>cache-cleared</strong>, <strong>audit-cache-loaded</strong>, entre outras. Também aplica o tema do Figma na inicialização.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">📤</span><code>handoff.js</code></div></td>
+          <td class="file-desc"><span class="tag tag-source">fonte</span>Lógica do fluxo de Handoff. Coleta dados dos formulários (<strong>collectHandoffData</strong>), controla a navegação entre os 4 steps, exportação de dados e a função <strong>createHandoffOnCanvas()</strong> que dispara a criação da ficha técnica no canvas do Figma.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🔬</span><code>specifications.js</code></div></td>
+          <td class="file-desc"><span class="tag tag-source">fonte</span>Lógica de escaneamento e exibição de specs UI. Contém <strong>scanFrame()</strong> (dispara o scan no code.js), <strong>renderSpecs()</strong>, <strong>createSpecItem()</strong>, <strong>renderActivePropsList()</strong> (com cadeia de token em breadcrumb), <strong>renderInactivePropsList()</strong> (props com valor inativo em visual diferenciado) e o sistema de toggle de props inativas.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🛡️</span><code>audit.js</code></div></td>
+          <td class="file-desc"><span class="tag tag-source">fonte</span>Módulo de auditoria da UI. Gerencia o toggle de auditoria (com modal de seleção de bibliotecas), extração de tokens via Figma Plugin API (<strong>startAuditExtraction</strong>), exibição de status de progresso, cache do bundle extraído, upload de referências manuais e o relatório final de aderência ao DSC.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">📐</span><code>measurement.js</code></div></td>
+          <td class="file-desc"><span class="tag tag-source">fonte</span>Módulo de medidas e anotações. Lógica da UI para configurar e aplicar medidas visuais no canvas do Figma: gaps, paddings, larguras, alturas e dimensões de componentes selecionados.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🎨</span><code>design-data.js</code></div></td>
+          <td class="file-desc"><span class="tag tag-source">fonte</span>Módulo de dados de design. Gerencia a exibição e manipulação de dados de design system no contexto de especificações — incluindo Code Connect (mapeamento DSC → código).</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- VIEWS -->
+  <div class="section-label">
+    <div class="section-label-icon" style="background:#ecfdf5;">🖼️</div>
+    <h2>Views da Interface</h2>
+    <span class="section-path">src/plugin/views/</span>
+  </div>
+  <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;">
+    🖼️ Fragmentos HTML inseridos no <code>ui.html</code> durante o build. Cada arquivo corresponde a uma tela ou conjunto de componentes da interface do plugin.
+  </p>
+  <div class="file-table">
+    <table>
+      <thead><tr><th>Arquivo</th><th>Função</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🏠</span><code>home.html</code></div></td>
+          <td class="file-desc">Tela inicial do plugin. Exibe as 4 ferramentas principais — <strong>Handoff</strong>, <strong>Dimensões/Medidas</strong>, <strong>Guia</strong> e <strong>Especificações</strong> — além dos botões de Exportar e Importar JSON para salvar/restaurar estado.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">📝</span><code>handoff.html</code></div></td>
+          <td class="file-desc">Tela principal do fluxo de Handoff com 4 steps: <strong>(1)</strong> Informações &amp; Briefing — título, status, versão, designer; <strong>(2)</strong> Specs UI — escaneamento com auditoria DSC; <strong>(3)</strong> Detalhamento — regras de negócio, docs, anexos; <strong>(4)</strong> Revisão Final — checklist de inclusão e botão <em>Gerar Ficha no Canvas</em>.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🔬</span><code>specifications.html</code></div></td>
+          <td class="file-desc">Tela de Especificações. Lista os elementos escaneados em accordions por categoria: Componentes, Ícones, Tipografia, Frames e Layouts, Vetores. Cada item mostra propriedades com cadeia de token e indicadores de auditoria DSC.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">📐</span><code>measurement.html</code></div></td>
+          <td class="file-desc">Tela de Dimensões/Medidas. Interface para configurar tipos de medida (gap, padding, width, height) e aplicá-las como anotações visuais no canvas do Figma sobre os elementos selecionados.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">📖</span><code>guide.html</code></div></td>
+          <td class="file-desc">Tela de Guia. Documentação de uso do plugin com instruções, fluxos e referências para os designers.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🪟</span><code>modals.html</code></div></td>
+          <td class="file-desc">Todas as modais compartilhadas do plugin: <strong>scan-categories-modal</strong> (seleção de categorias de escaneamento), <strong>audit-libs-modal</strong> (seleção de bibliotecas DSC ao ativar auditoria), formulários de especificação e fluxo, e demais overlays.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- STYLES -->
+  <div class="section-label">
+    <div class="section-label-icon" style="background:#fff7ed;">🎨</div>
+    <h2>Estilos</h2>
+    <span class="section-path">src/plugin/styles/</span>
+  </div>
+  <div class="file-table">
+    <table>
+      <thead><tr><th>Arquivo</th><th>Função</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🎨</span><code>plugin.css</code></div></td>
+          <td class="file-desc"><span class="tag tag-source">fonte</span>Estilos customizados do plugin que complementam o Tailwind CSS. Inclui: classes <code>.fab-main</code> (botão flutuante), <code>.checklist-pill</code>, <code>.accordion-content</code>, <code>.tooltip-left</code>, animações de entrada, scrollbar customizada, estilos de resize e quaisquer padrões visuais não cobertos pelas utilities do Tailwind.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- REFS -->
+  <div class="section-label">
+    <div class="section-label-icon" style="background:#fefce8;">📚</div>
+    <h2>Referências DSC</h2>
+    <span class="section-path">src/plugin/refs/</span>
+  </div>
+  <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;padding:10px 14px;background:#fefce8;border:1px solid #fde68a;border-radius:8px;">
+    ⚠️ <strong>Nenhum arquivo aqui contém valores resolvidos</strong> (hex, fontSize, etc.) — apenas chaves e metadados. Os valores são resolvidos em runtime pelo Figma Plugin API. Esse design mantém o pipeline livre de tokens no cliente.
+  </p>
+  <div class="file-table">
+    <table>
+      <thead><tr><th>Arquivo</th><th>Função</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🗂️</span><code>_manifest.json</code></div></td>
+          <td class="file-desc"><span class="tag tag-data">curado</span>Lista curada das bibliotecas DSC: <code>slug</code>, <code>name</code>, <code>fileKey</code> e contagens de componentes/estilos. <strong>Fonte de verdade</strong> para saber quais libs existem e como identificá-las no Figma.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🦴</span><code>_skeleton.json</code></div></td>
+          <td class="file-desc"><span class="tag tag-build">gerado</span>Bundle agregado gerado por <code>build-skeleton.cjs</code>. Contém metadados + style keys + component keys de todas as libs (~900 KB). É embarcado em <code>ui.html</code> como <code>window.__HANDEX_REF_SKELETON__</code> — base para a extração de tokens em runtime.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🎨</span><code>fundamentos-visuais.json</code></div></td>
+          <td class="file-desc"><span class="tag tag-build">gerado</span>Referências da lib <strong>Fundamentos Visuais</strong> DSC: keys de estilos de cor, tipografia, efeitos e keys de componentes.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🌐</span><code>web-angular-react.json</code></div></td>
+          <td class="file-desc"><span class="tag tag-build">gerado</span>Referências da lib <strong>Web Angular &amp; React</strong> DSC.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🖥️</span><code>super-gerenciador.json</code></div></td>
+          <td class="file-desc"><span class="tag tag-build">gerado</span>Referências da lib <strong>Super Gerenciador</strong> DSC.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">📱</span><code>super-app.json</code></div></td>
+          <td class="file-desc"><span class="tag tag-build">gerado</span>Referências da lib <strong>Super App</strong> DSC.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">♿</span><code>design-acessivel.json</code></div></td>
+          <td class="file-desc"><span class="tag tag-build">gerado</span>Referências da lib <strong>Design Acessível</strong> DSC.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">🔗</span><code>code-mappings.json</code></div></td>
+          <td class="file-desc"><span class="tag tag-data">curado</span>Mapeamento curado: nome da lib DSC → caminho de import no monorepo de código. Usado para sugestões de Code Connect — mostra ao dev qual pacote importar para cada componente identificado.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">⚙️</span><code>build-skeleton.cjs</code></div></td>
+          <td class="file-desc"><span class="tag tag-build">build</span>Script que agrega todos os <code>{slug}.json</code> em um único <code>_skeleton.json</code>. Executado via <code>npm run bundle:refs</code>. Sempre roda antes do <code>build.cjs</code>.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">📡</span><code>fetch-design-refs.cjs</code></div></td>
+          <td class="file-desc"><span class="tag tag-build">build</span>Script que busca styles e component keys via <strong>REST API do Figma</strong>. Requer <code>FIGMA_TOKEN</code> como variável de ambiente. Gera os arquivos <code>{slug}.json</code> para cada lib listada no <code>_manifest.json</code>. Executado via <code>npm run refs:fetch</code>.</td>
+        </tr>
+        <tr>
+          <td><div class="file-name"><span class="file-icon">📄</span><code>README.md</code></div></td>
+          <td class="file-desc">Documentação do pipeline de referências: comandos disponíveis, estrutura de arquivos, setup do CI/CD no GitLab, gestão segura do FIGMA_TOKEN e instruções de rotação de credenciais.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- BUILD FLOW -->
+  <div class="build-flow">
+    <h3>⚡ Fluxo de build completo</h3>
+    <div class="flow-steps">
+
+      <div class="flow-step">
+        <div class="flow-line">
+          <div class="flow-dot" style="background:#0070af;">1</div>
+          <div class="flow-connector"></div>
+        </div>
+        <div class="flow-content">
+          <div><span class="flow-cmd">npm run refs:fetch</span> <span class="flow-arrow">→</span> <span class="flow-file">src/plugin/refs/{slug}.json</span></div>
+          <div class="flow-desc">Busca styles e component keys nas libs DSC via REST API do Figma. Requer FIGMA_TOKEN. Rodado apenas quando o DSC é atualizado.</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-line">
+          <div class="flow-dot" style="background:#0070af;">2</div>
+          <div class="flow-connector"></div>
+        </div>
+        <div class="flow-content">
+          <div><span class="flow-cmd">npm run bundle:refs</span> <span class="flow-arrow">→</span> <span class="flow-file">src/plugin/refs/_skeleton.json</span></div>
+          <div class="flow-desc">Agrega todos os {slug}.json em um único skeleton compacto que será embarcado na UI.</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-line">
+          <div class="flow-dot" style="background:#8b5cf6;">3</div>
+          <div class="flow-connector"></div>
+        </div>
+        <div class="flow-content">
+          <div><span class="flow-cmd">npm run bundle:ui</span> <span class="flow-arrow">→</span> <span class="flow-file">src/plugin/ui.html</span></div>
+          <div class="flow-desc">Roda bundle:refs + build.cjs. Monta o HTML completo do frontend: views, módulos JS, CSS, Tailwind, Lucide e skeleton embarcado.</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-line">
+          <div class="flow-dot" style="background:#10b981;">4</div>
+        </div>
+        <div class="flow-content">
+          <div><span class="flow-cmd">npm run bundle:code</span> <span class="flow-arrow">→</span> <span class="flow-file">src/plugin/code.bundle.js</span></div>
+          <div class="flow-desc">Compila code.js + audit.js com esbuild, injetando __HANDEX_VERSION__. Gera o backend final que o Figma executa.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="margin-top:20px;padding:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:13px;color:#166534;">
+      <strong>Artefatos finais entregues ao Figma:</strong> <code>ui.html</code> (frontend) + <code>code.bundle.js</code> (backend) — ambos gerados, nunca editados diretamente.
+    </div>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="legend-item"><span class="tag tag-source">fonte</span> Arquivo editado pelos devs</div>
+    <div class="legend-item"><span class="tag tag-build">gerado / build</span> Gerado automaticamente por script</div>
+    <div class="legend-item"><span class="tag tag-never">não editar</span> Não editar manualmente</div>
+    <div class="legend-item"><span class="tag tag-data">curado</span> Mantido manualmente pela equipe</div>
+    <div class="legend-item"><span class="tag tag-react">react</span> Exclusivo do app de preview (não é o plugin)</div>
+    <div class="legend-item"><span class="tag tag-runtime">runtime</span> Executado dentro do Figma</div>
+  </div>
+
+</main>
+
+<footer>
+  <strong>Handex — Handoff Express</strong> · v3.0.0 · Desenvolvido por Fóton para CAIXA Design
+</footer>
+
+</body>
+</html>
