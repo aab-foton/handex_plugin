@@ -1,396 +1,233 @@
-# HANDEX v2.0.0 - Advanced Figma Plugin
+# Handex — Handoff Express · v3.0.0
 
-[![GitHub Stars](https://img.shields.io/github/stars/aab-foton/handex?style=flat-square)](https://github.com/aab-foton/handex)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-
-> 🎨 Um plugin poderoso para Figma que potencializa seus fluxos de design com IA, handoff inteligente, medições automáticas e anotações colaborativas.
-
-## 📋 Sumário
-
-- [Visão Geral](#visão-geral)
-- [Funcionalidades](#funcionalidades)
-- [Arquitetura](#arquitetura)
-- [Requisitos](#requisitos)
-- [Instalação e Uso](#instalação-e-uso)
-- [Desenvolvimento](#desenvolvimento)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-- [Configuração](#configuração)
-- [Scripts Disponíveis](#scripts-disponíveis)
-- [Tecnologias](#tecnologias)
-- [Contribuindo](#contribuindo)
-
-## 🎯 Visão Geral
-
-HANDEX é um plugin para Figma desenvolvido para facilitar o handoff de designs e colaboração entre designers e desenvolvedores. Com integração de IA (Gemini), o plugin consegue:
-
-- **Analisar designs** automaticamente
-- **Gerar documentação técnica** de forma inteligente
-- **Medir componentes** com precisão
-- **Anotar designs** colaborativamente
-- **Exportar especificações** em múltiplos formatos
-- **Criar fichas técnicas** automáticas (BPMN)
-
-O plugin possui uma **interface moderna, modular e totalmente responsiva**, permitindo uma transição suave entre diferentes fluxos de trabalho e visualização de código em tempo real.
-
-### 🎨 Experiência do Usuário (UX)
-- **Interface Responsiva de 3 Colunas**: Layout otimizado para produtividade.
-- **Auto-Redimensionamento Dinâmico**: A janela do plugin se ajusta automaticamente ao conteúdo.
-- **Zoom Proporcional da UI**: Escalonamento inteligente para diferentes tamanhos de tela.
-- **Modo Escuro/Claro**: Suporte nativo a temas com alternância manual e automática.
-- **Acessibilidade (WCAG)**: Interface amigável para tecnologias assistivas com labels ARIA e navegação semântica.
-
-## ✨ Funcionalidades
-
-### 🤖 IA Integrada (Gemini)
-- Análise inteligente de componentes de design
-- Geração automática de documentação técnica
-- Extração de dados de design com IA
-- Sugestões de melhorias de acessibilidade e performance
-
-### 📋 Handoff de Design
-- **Ficha Técnica Padronizada**: Documentação estruturada seguindo padrões BPMN.
-- **Design Specs Inteligentes**: Especificações com restrições de layout (Fill/Hug) automáticas.
-- **Exportação em múltiplos formatos**: Geração de pacotes ZIP completos com especificações técnicos.
-- **Versionamento de exportações**: Histórico de alterações e controle de revisões.
-
-### 📏 Medições e Especificações
-- Medições automáticas de componentes
-- Cálculo de espaçamentos (padding, margins, gaps)
-- Extração de propriedades visuais (cores, tipografia, tamanhos)
-- Geração de grid de especificações
-
-### 📝 Anotações e Comentários
-- Adicionar anotações às camadas
-- Sistema de categorização de anotações
-- Visualização integrada de comentários
-- Exportação de anotações em documentos
-
-### 🎯 Guias e Recursos
-- Guias contextualizados no plugin
-- Recursos de ajuda integrados
-- Documentação de workflows
-- Best practices de handoff
-
-### 📊 Métricas e Visibilidade
-- Dashboard de projeto
-- Rastreamento de componentes
-- Estatísticas de design
-- Relatórios exportáveis
-
-## 🏗️ Arquitetura
-
-### Estrutura de Camadas
-
-```
-┌─────────────────────────────┐
-│   UI React (SPA)            │  ← src/App.tsx, components/
-│   (Tailwind + Lucide)       │
-└──────────────┬──────────────┘
-               │
-┌──────────────▼──────────────┐
-│   Plugin Code (JavaScript)   │  ← src/plugin/code.js
-│   (Figma Plugin API)        │
-└──────────────┬──────────────┘
-               │
-┌──────────────▼──────────────┐
-│   Figma Document API        │
-│   (Native Plugin Runtime)   │
-└─────────────────────────────┘
-```
-
-### Módulos Principais
-
-#### Frontend (`src/`)
-- **App.tsx**: Aplicação principal com alternância entre preview e visualização de código
-- **components/**: Componentes React reutilizáveis
-  - `PluginPreview.tsx`: Renderização interativa do plugin
-  - `CodeViewer.tsx`: Visualizador de código-fonte
-- **hooks/**: Hooks customizados
-  - `useVersions.ts`: Gerenciamento de versões de arquivo
-- **utils/**: Utilitários
-  - `downloadPlugin.ts`: Lógica de download do plugin
-
-#### Plugin (`src/plugin/`)
-- **code.js**: Script principal que executa no context Figma
-  - Gerenciamento de comunicação UI ↔ Plugin
-  - Operações no documento (criar frames, textos, etc.)
-  - Tratamento de seleções e eventos
-- **ui.html**: Interface HTML do plugin (gerada dinamicamente)
-- **modules/**: Módulos especializados
-  - `core.js`: Funcionalidades centrais
-  - `design-data.js`: Extração de dados de design
-  - `handoff.js`: Lógica de handoff
-  - `measurement.js`: Sistema de medições
-  - `messages.js`: Protocolo de mensagens
-  - `specifications.js`: Geração de especificações
-- **views/**: Templates HTML das diferentes seções
-  - `home.html`: Tela inicial
-  - `handoff.html`: Interface de handoff
-  - `measurement.html`: Interface de medições
-  - `specifications.html`: Visualizador de especificações
-  - `guide.html`: Guia de uso
-  - `modals.html`: Modais compartilhados
-- **styles/**: Estilos do plugin
-  - `plugin.css`: Folha de estilos principal
-
-#### Configuração
-- **manifest.json**: Configuração do plugin Figma
-- **build.cjs**: Script de build que empacota a UI React em HTML
-- **vite.config.ts**: Configuração do Vite para dev/build
-- **tsconfig.json**: Configuração do TypeScript
-
-## 🔧 Requisitos
-
-- **Node.js** >= 18.0.0
-- **npm** >= 9.0.0
-- Conta Figma com plugin instalado
-- **Chave de API Gemini** (para funcionalidades de IA)
-
-## 🚀 Instalação e Uso
-
-### 1. Setup Inicial
-
-```bash
-# Clone o repositório
-git clone https://github.com/aab-foton/handex.git
-cd handex
-
-# Instale as dependências
-npm install
-
-# Configure a chave de API
-cp .env.example .env.local
-
-# Adicione sua Gemini API Key em .env.local
-GEMINI_API_KEY=sua_chave_aqui
-```
-
-### 2. Desenvolvimento Local
-
-```bash
-# Inicie o servidor dev em http://localhost:3000
-npm run dev
-
-# Em outro terminal, compile a UI do plugin
-npm run bundle:ui
-```
-
-O servidor dev servirá:
-- Interface de visualização do plugin (React)
-- Endpoint para download do plugin compilado
-- Hot-reload durante desenvolvimento
-
-### 3. Instalação no Figma
-
-1. Abra Figma
-2. Vá para: **Menu → Plugins → Development → Import plugin from manifest...**
-3. Selecione o arquivo `src/plugin/manifest.json`
-4. O plugin estará disponível em: **Right Panel → Plugins → HANDEX**
-
-### 4. Build para Produção
-
-```bash
-# Build da aplicação React e plugin
-npm run build
-
-# Resultado em ./dist/
-```
-
-## 💻 Desenvolvimento
-
-### Scripts Disponíveis
-
-```bash
-npm run dev          # Inicia servidor de dev com Vite
-npm run build        # Build de produção (SPA + plugin)
-npm run preview      # Pré-visualiza build de produção
-npm run lint         # Verifica tipos TypeScript
-npm run clean        # Remove diretório dist/
-npm run bundle:ui    # Compila a UI React em HTML estático
-```
-
-### Fluxo de Desenvolvimento
-
-1. **Alterações na UI React**:
-   - Edite arquivos em `src/` (exceto `src/plugin/`)
-   - Hot-reload automático no `npm run dev`
-   - Tipos TypeScript verificados continuamente
-
-2. **Alterações no Plugin (code.js, modules/)**:
-   - Edite `src/plugin/code.js` ou módulos em `src/plugin/modules/`
-   - Execute `npm run bundle:ui` para recompilar a UI
-   - Recarregue o plugin no Figma (Cmd+R ou Ctrl+R)
-
-3. **Alterações de Estilos**:
-   - Tailwind CSS é processado automaticamente (src/index.css)
-   - Plugin CSS em `src/plugin/styles/plugin.css` é compilado manualmente
-
-### Debugging
-
-#### No Navegador (React App)
-- Abra DevTools (F12)
-- Console, Network, Elements tabs
-- Local Storage para estado persistido em `handex-view-mode`
-
-#### No Plugin (Figma)
-1. Figma → Right Panel → Plugin → Menu (⋯) → View Code
-2. Ou: **Ctrl+Shift+P** → "Run last plugin" → Inspect
-
-## 📁 Estrutura do Projeto
-
-```
-handex/
-├── src/
-│   ├── App.tsx                    # Componente principal React
-│   ├── main.tsx                   # Entry point React
-│   ├── index.css                  # Estilos globais (Tailwind)
-│   ├── components/
-│   │   ├── CodeViewer.tsx         # Visualizador de código
-│   │   └── PluginPreview.tsx      # Pré-visualização do plugin
-│   ├── hooks/
-│   │   └── useVersions.ts         # Hook para versionamento
-│   ├── utils/
-│   │   └── downloadPlugin.ts      # Download do plugin
-│   └── plugin/
-│       ├── manifest.json          # Configuração do plugin Figma
-│       ├── code.js                # Script principal do plugin
-│       ├── ui.html                # UI gerada (build output)
-│       ├── build.cjs              # Script de build
-│       ├── modules/               # Módulos especializados
-│       │   ├── core.js
-│       │   ├── design-data.js
-│       │   ├── handoff.js
-│       │   ├── measurement.js
-│       │   ├── messages.js
-│       │   └── specifications.js
-│       ├── views/                 # Templates HTML
-│       │   ├── home.html
-│       │   ├── handoff.html
-│       │   ├── measurement.html
-│       │   ├── specifications.html
-│       │   ├── guide.html
-│       │   └── modals.html
-│       └── styles/
-│           └── plugin.css         # Estilos do plugin
-├── backup/                        # Versão anterior do plugin
-├── dist/                          # Build output (prod)
-├── node_modules/
-├── package.json
-├── tsconfig.json
-├── vite.config.ts                 # Configuração do bundler
-├── index.html                     # HTML raiz da SPA
-├── .env.example                   # Template de variáveis
-├── .env.local                     # Variáveis locais (não commitado)
-├── .gitignore
-└── README.md
-```
-
-## ⚙️ Configuração
-
-### Variáveis de Ambiente
-
-Crie um arquivo `.env.local` na raiz do projeto:
-
-```env
-# API Gemini para funcionalidades de IA
-GEMINI_API_KEY=sua_chave_aqui
-
-# (Opcional) Configurações de ambiente
-VITE_API_URL=http://localhost:3000
-VITE_ENV=development
-```
-
-**Obtenha sua Gemini API Key**:
-1. Acesse [Google AI Studio](https://aistudio.google.com/)
-2. Clique em "Get API Key"
-3. Crie uma chave nova e copie para `.env.local`
-
-### Configuração do Plugin (manifest.json)
-
-```json
-{
-  "name": "HANDEX v2.0.0",
-  "api": "1.0.0",
-  "main": "code.js",
-  "ui": "ui.html",
-  "editorType": ["figma"]
-}
-```
-
-- **name**: Nome e versão do plugin
-- **main**: Script de entrada (code.js)
-- **ui**: Interface HTML
-- **editorType**: Figma é o único editor suportado
-
-## 📦 Tecnologias
-
-### Frontend
-- **React 19**: Framework UI
-- **TypeScript 5.8**: Tipagem estática
-- **Vite 6.2**: Bundler e dev server ultrarrápido
-- **Tailwind CSS 4.1**: Utilitários de styling
-- **Lucide React**: Biblioteca de ícones
-- **Motion**: Animações suaves
-
-### Backend / Plugin
-- **Figma Plugin API 1.0**: Acesso ao documento Figma
-- **Express 4.21**: Servidor de dev
-- **JSZip 3.10**: Geração de arquivos ZIP
-
-### Desenvolvimento
-- **tsx**: Executor de TypeScript
-- **Autoprefixer**: Prefixos CSS automáticos
-
-## 🤝 Contribuindo
-
-Para contribuir ao projeto:
-
-1. **Crie uma feature branch**:
-   ```bash
-   git checkout -b feat/sua-funcionalidade
-   ```
-
-2. **Faça suas alterações**:
-   - Mantenha o código limpo e bem tipado
-   - Adicione comentários para lógica complexa
-   - Teste mudanças localmente
-
-3. **Commit com mensagens descritivas**:
-   ```bash
-   git commit -m "feat: descrição da funcionalidade"
-   git commit -m "fix: descrição do bug corrigido"
-   git commit -m "docs: atualização de documentação"
-   ```
-
-4. **Push e abra um Pull Request**:
-   ```bash
-   git push origin feat/sua-funcionalidade
-   ```
-
-### Guidelines
-
-- Respeite o código existente
-- Use TypeScript e tipos explícitos
-- Siga a convenção de nomes do projeto
-- Teste suas mudanças
-- Documente APIs públicas
-
-## 📄 Licença
-
-Este projeto está licenciado sob a **Apache License 2.0** - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
-## 📞 Suporte
-
-- 📧 **Issues**: [GitHub Issues](https://github.com/aab-foton/handex/issues)
-- 💬 **Discussões**: [GitHub Discussions](https://github.com/aab-foton/handex/discussions)
-- 🐦 **Contato**: [@aab-foton](https://github.com/aab-foton)
+Plugin Figma desenvolvido pela equipe de Design da CAIXA em parceria com a Fóton. Automatiza o processo de handoff de design, gerando fichas técnicas no canvas, escaneando specs de UI e auditando aderência ao Design System Corporativo (DSC).
 
 ---
 
-<div align="center">
+## Sumário
 
-**Feito com ❤️ pela equipe AAB**
+- [O que o plugin faz](#o-que-o-plugin-faz)
+- [Instalação no Figma](#instalação-no-figma)
+- [Configuração de ambiente](#configuração-de-ambiente)
+- [Scripts disponíveis](#scripts-disponíveis)
+- [Fluxo de build](#fluxo-de-build)
+- [Estrutura do projeto](#estrutura-do-projeto)
+- [Arquitetura da UI](#arquitetura-da-ui)
+- [Guia por arquivo](#guia-por-arquivo)
 
-[⬆ Voltar ao topo](#handex-v200---advanced-figma-plugin)
+---
 
-</div>
+## O que o plugin faz
+
+| Funcionalidade | Descrição |
+|---|---|
+| **Handoff** | Formulário em 4 steps (informações, specs, detalhamento, revisão) que culmina em uma ficha técnica gerada diretamente no canvas do Figma |
+| **Especificações** | Escaneia o frame selecionado e extrai propriedades por categoria: Componentes, Ícones, Tipografia, Frames, Vetores |
+| **Auditoria DSC** | Compara as propriedades escaneadas contra os tokens das bibliotecas do Design System, exibindo % de aderência |
+| **Medidas** | Anota dimensões (gap, padding, width, height) sobre os elementos selecionados no canvas |
+| **Guia** | Documentação de uso inline para designers |
+
+---
+
+## Instalação no Figma
+
+1. Abra o Figma
+2. Menu → Plugins → Development → **Import plugin from manifest...**
+3. Selecione `src/plugin/manifest.json`
+4. O plugin fica disponível em: Plugins → Handex — Handoff Express
+
+---
+
+## Configuração de ambiente
+
+```bash
+# 1. Instale as dependências
+npm install
+
+# 2. Crie o .env com o token para buscar referências do DSC via API Figma
+cp .env.example .env
+# Preencha FIGMA_TOKEN no .env
+```
+
+---
+
+## Scripts disponíveis
+
+```bash
+npm run bundle:ui      # Monta o ui.html completo (frontend do plugin)
+npm run bundle:code    # Compila o code.bundle.js (backend do plugin)
+npm run refs:fetch     # Busca style/component keys das libs DSC via API Figma
+npm run bundle:refs    # Agrega os {slug}.json em _skeleton.json
+npm run refs:rebuild   # refs:fetch + bundle:refs em sequência
+npm run version:patch  # Incrementa versão patch (3.0.x)
+npm run version:minor  # Incrementa versão minor (3.x.0)
+npm run version:major  # Incrementa versão major (x.0.0)
+```
+
+> Após qualquer alteração em `src/plugin/`, rode `bundle:ui` e `bundle:code` antes de testar no Figma.
+
+---
+
+## Fluxo de build
+
+```
+1. npm run refs:fetch
+   └─ Busca styles e component keys nas libs DSC via REST API do Figma
+   └─ Requer FIGMA_TOKEN no .env
+   └─ Gera: src/plugin/refs/{slug}.json para cada lib
+
+2. npm run bundle:refs
+   └─ Agrega todos os {slug}.json em um único skeleton compacto
+   └─ Gera: src/plugin/refs/_skeleton.json (~900 KB)
+
+3. npm run bundle:ui
+   └─ Roda bundle:refs internamente
+   └─ build.cjs agrega views HTML + módulos JS + CSS + Tailwind + Lucide + skeleton
+   └─ Gera: src/plugin/ui.html (~1.3 MB — frontend completo do plugin)
+
+4. npm run bundle:code
+   └─ esbuild compila code.js + audit.js em bundle único
+   └─ Injeta __HANDEX_VERSION__ com o valor de package.json
+   └─ Gera: src/plugin/code.bundle.js (backend executado pelo Figma)
+```
+
+**Os dois artefatos entregues ao Figma são `ui.html` e `code.bundle.js` — ambos gerados, nunca editados diretamente.**
+
+---
+
+## Estrutura do projeto
+
+```
+plugins/handex/
+├── package.json               # Versão, scripts de build, dependências
+├── README.md                  # Este arquivo
+├── .env.example               # Modelo de variáveis de ambiente
+│
+├── scripts/
+│   └── bundle-code.cjs        # Script esbuild para gerar code.bundle.js
+│
+├── base/
+│   ├── estrutura-plugin.html  # Documentação visual da estrutura (HTML)
+│   └── Como_usar_o_repositório.pdf
+│
+├── src/
+│   ├── main.tsx               # Entry point do app React de preview (não é o plugin)
+│   ├── App.tsx
+│   ├── index.css
+│   ├── components/
+│   │   ├── CodeViewer.tsx
+│   │   └── PluginPreview.tsx
+│   ├── hooks/
+│   │   └── useVersions.ts
+│   ├── utils/
+│   │   └── downloadPlugin.ts
+│   │
+│   └── plugin/                # ← PLUGIN FIGMA (tudo que importa aqui)
+│       ├── manifest.json      # Configuração do plugin para o Figma
+│       ├── code.js            # Backend (FONTE — editar aqui)
+│       ├── code.bundle.js     # Backend compilado (GERADO — não editar)
+│       ├── ui.html            # Frontend completo (GERADO — não editar)
+│       ├── audit.js           # Módulo compartilhado de auditoria (FONTE)
+│       ├── build.cjs          # Assembler do ui.html
+│       │
+│       ├── modules/           # Fragmentos JS do frontend (concatenados no build)
+│       │   ├── core.js        # Estado global, navegação, persistência, tema
+│       │   ├── messages.js    # Dispatcher único de window.onmessage
+│       │   ├── handoff.js     # Fluxo de handoff e criação da ficha no canvas
+│       │   ├── specifications.js  # Scan, renderização de specs e props
+│       │   ├── audit.js       # Auditoria DSC na UI
+│       │   ├── measurement.js # Medidas e anotações no canvas
+│       │   └── design-data.js # Dados de design e Code Connect
+│       │
+│       ├── views/             # Fragmentos HTML do frontend (inseridos no build)
+│       │   ├── home.html      # Tela inicial com as 4 ferramentas
+│       │   ├── handoff.html   # Fluxo de handoff (4 steps)
+│       │   ├── specifications.html  # Tela de especificações
+│       │   ├── measurement.html     # Tela de medidas
+│       │   ├── guide.html           # Guia de uso
+│       │   └── modals.html          # Todas as modais compartilhadas
+│       │
+│       ├── styles/
+│       │   └── plugin.css     # Estilos customizados (complementa Tailwind)
+│       │
+│       └── refs/              # Referências do Design System Corporativo
+│           ├── _manifest.json         # Lista curada das libs DSC (FONTE DE VERDADE)
+│           ├── _skeleton.json         # Bundle agregado de todas as libs (GERADO)
+│           ├── fundamentos-visuais.json
+│           ├── web-angular-react.json
+│           ├── super-gerenciador.json
+│           ├── super-app.json
+│           ├── design-acessivel.json
+│           ├── code-mappings.json     # DSC slug → caminho de import no código
+│           ├── build-skeleton.cjs     # Script que agrega os {slug}.json
+│           ├── fetch-design-refs.cjs  # Script que busca via REST API do Figma
+│           └── README.md              # Docs do pipeline de referências
+```
+
+---
+
+## Arquitetura da UI
+
+O frontend do plugin **não usa módulos ES nem imports**. Todos os arquivos em `modules/` são fragmentos JavaScript que o `build.cjs` concatena em um único `<script>` dentro do `ui.html`. Eles compartilham o mesmo escopo global em runtime.
+
+```
+build.cjs (assembler)
+  ├── lê views/*.html          → insere como HTML
+  ├── lê modules/*.js          → concatena em <script>
+  ├── lê styles/plugin.css     → inline em <style>
+  ├── baixa Tailwind CDN       → inline em <style>
+  ├── baixa Lucide CDN         → inline em <script>
+  └── lê refs/_skeleton.json   → embarca como window.__HANDEX_REF_SKELETON__
+      └── gera: ui.html
+```
+
+A comunicação entre backend (`code.js`) e frontend (`ui.html`) é feita exclusivamente via:
+- `parent.postMessage({ pluginMessage: {...} }, '*')` — UI → backend
+- `figma.ui.postMessage({...})` — backend → UI
+- `window.onmessage` em `messages.js` — roteador de todas as mensagens recebidas
+
+---
+
+## Guia por arquivo
+
+### `src/plugin/manifest.json`
+Configuração obrigatória do Figma. Define `main` (backend), `ui` (frontend), `editorType` e `permissions`. Atualmente inclui `"currentuser"` para identificar o designer logado automaticamente.
+
+### `src/plugin/code.js`
+Backend do plugin. Roda no contexto privilegiado do Figma com acesso total ao canvas. Principais handlers: `ui-ready`, `scan-frame`, `create-handoff`, `audit-cache-load`, `extract-tokens`, `apply-measurements`. **Não é distribuído diretamente — gera `code.bundle.js`.**
+
+### `src/plugin/audit.js`
+Módulo compartilhado importado tanto pelo `code.js` quanto usado como referência nos módulos da UI. Define `auditProperty()` (matching de token com score fuzzy), `AUDIT_SCORE` e `AUDIT_THRESHOLDS`.
+
+### `src/plugin/build.cjs`
+Assembler do `ui.html`. Lê todos os fragmentos, faz o download de Tailwind e Lucide, embarca o skeleton e gera o HTML único. Configurar cores do tema Tailwind aqui (seção `dark: {}`).
+
+### `src/plugin/modules/core.js`
+Módulo central. Inicializa `handoffData` (estado global), expõe todas as funções públicas ao `window`, gerencia navegação, persistência (`clientStorage`), dark/light mode, toasts e accordions.
+
+### `src/plugin/modules/messages.js`
+Único `window.onmessage` do plugin. Todo roteamento de mensagens do backend passa por aqui. Aplica o tema do Figma na inicialização via `applyFigmaTheme()`.
+
+### `src/plugin/modules/handoff.js`
+Fluxo de handoff: coleta dados dos formulários (`collectHandoffData`), controla navegação entre steps e dispara `createHandoffOnCanvas()` para gerar a ficha técnica no canvas.
+
+### `src/plugin/modules/specifications.js`
+Escaneamento e exibição de specs. `scanFrame()` envia a seleção ao backend. `renderSpecs()` exibe resultados por categoria. `createSpecItem()` monta cada prop com cadeia de token em breadcrumb.
+
+### `src/plugin/modules/audit.js` *(UI)*
+Gerencia o toggle de auditoria (abre `audit-libs-modal` para seleção de bibliotecas), extração de tokens via Plugin API (`startAuditExtraction`), cache do bundle extraído e relatório de aderência.
+
+### `src/plugin/refs/_manifest.json`
+**Fonte de verdade das bibliotecas DSC.** Lista cada lib com `slug`, `name`, `fileKey` e contagens. Toda adição ou remoção de biblioteca começa aqui.
+
+### `src/plugin/refs/_skeleton.json`
+Bundle agregado gerado por `build-skeleton.cjs`. Contém metadados + style keys + component keys de todas as libs. Embarcado em `ui.html` como `window.__HANDEX_REF_SKELETON__` — base para extração de tokens em runtime. **Os valores reais (hex, fontSize, etc.) são resolvidos em runtime pela Plugin API do Figma.**
+
+---
+
+> Para dúvidas sobre o pipeline de referências DSC, veja `src/plugin/refs/README.md`.
+> Para documentação visual da estrutura, abra `base/estrutura-plugin.html` no navegador.
+
+---
+
+Handex — Handoff Express · Desenvolvido por Fóton para CAIXA Design
