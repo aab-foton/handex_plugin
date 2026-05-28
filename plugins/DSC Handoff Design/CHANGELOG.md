@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.0.3 — 2026-05-28
+
+### Correções
+
+- **Formatar Component Set detachava sub-instâncias dos variants** — ao mover o component set para um container ainda "órfão" (fora da página), o Figma convertia internamente as instâncias dentro dos variants em frames. Corrigido ancorando o docFrame na página antes de mover o component set para o setWrapper.
+- **Checkboxes de seção ignoradas no update** — ao desmarcar todas (ou parte das) seções antes de "Atualizar Handoff", a lógica de filtro tratava um array vazio `[]` como "sem filtro" e atualizava tudo. Corrigido para tratar `[]` como "não atualizar nenhuma seção".
+
+---
+
 ## v2.0.2 — 2026-05-26
 
 ### Correções

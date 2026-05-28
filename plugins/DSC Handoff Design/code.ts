@@ -3931,14 +3931,18 @@ async function formatarComponenteSet(componentSet: ComponenteDocumentavel): Prom
   setWrapper.name = "Wrapper";
   setWrapper.fills = [];
   setWrapper.resize(setWidth, setHeight);
-  setWrapper.appendChild(target);
-  target.x = isComponentSet ? 0 : (colWidths[0] - target.width) / 2;
-  target.y = isComponentSet ? 0 : (rowHeights[0] - target.height) / 2;
   mainContent.appendChild(setWrapper);
 
+  // Ancorar o docFrame na página ANTES de mover o component set para dentro do setWrapper.
+  // Mover um ComponentSetNode para um container órfão (fora da página) faz o Figma
+  // converter as sub-instâncias dos variants em frames.
   docFrame.x = originalX;
   docFrame.y = originalY;
   figma.currentPage.appendChild(docFrame);
+
+  setWrapper.appendChild(target);
+  target.x = isComponentSet ? 0 : (colWidths[0] - target.width) / 2;
+  target.y = isComponentSet ? 0 : (rowHeights[0] - target.height) / 2;
 }
 
 // === EXTRAS ===
@@ -4126,7 +4130,7 @@ figma.ui.onmessage = async (msg) => {
       const secoesAtualizar: string[] | undefined = msg.secoesAtualizar;
       const secoesDoModo = secoesNoTemplate.filter(s => {
         if (secoesInseridas.has(s)) return false;
-        if (secoesAtualizar && secoesAtualizar.length > 0) return secoesAtualizar.includes(s);
+        if (Array.isArray(secoesAtualizar)) return secoesAtualizar.includes(s);
         const dominio = DOMINIO_SECOES[s] || "design";
         return modo === 'complete' || dominio === modo;
       });
