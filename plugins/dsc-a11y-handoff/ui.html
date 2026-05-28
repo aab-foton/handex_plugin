@@ -2834,12 +2834,24 @@ const select = el('srSelectTipoConector');
 
       <div class='card'>
         <div class='card-body'>
-          <div style='display:flex;align-items:center;gap:10px;margin-bottom:12px;'>
+          <div style='display:flex;align-items:center;gap:10px;margin-bottom:14px;'>
             <span style='font-size:18px;background:#EEF0F8;border-radius:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;'>⬡</span>
             <span style='font-size:14px;font-weight:600;'>Seleção no canvas</span>
           </div>
-          <p style='font-size:12px;color:#555;line-height:1.5;'>Selecione simultaneamente <strong>o componente</strong> e <strong>o template de handoff</strong> no canvas. O plugin trava o contexto automaticamente e carrega os dados salvos.</p>
-          <p style='font-size:11px;color:#999;margin-top:8px;'>Tipos aceitos: COMPONENT, COMPONENT_SET, INSTANCE ou FRAME.</p>
+          <div style='display:flex;flex-direction:column;gap:10px;'>
+            <div style='display:flex;align-items:flex-start;gap:10px;'>
+              <span style='min-width:22px;height:22px;border-radius:50%;background:#2D4496;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;'>1</span>
+              <p style='font-size:12px;color:#555;line-height:1.5;margin:0;'>Clique no <strong>componente</strong> no canvas (COMPONENT, COMPONENT_SET, INSTANCE ou FRAME).</p>
+            </div>
+            <div style='display:flex;align-items:flex-start;gap:10px;'>
+              <span style='min-width:22px;height:22px;border-radius:50%;background:#2D4496;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;'>2</span>
+              <p style='font-size:12px;color:#555;line-height:1.5;margin:0;'>Segure <strong>Shift</strong> e clique no <strong>template de handoff</strong> para selecioná-los juntos.</p>
+            </div>
+            <div style='display:flex;align-items:flex-start;gap:10px;'>
+              <span style='min-width:22px;height:22px;border-radius:50%;background:#2D4496;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;'>3</span>
+              <p style='font-size:12px;color:#555;line-height:1.5;margin:0;'>O plugin trava o contexto automaticamente e carrega os dados salvos anteriormente.</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -2895,7 +2907,30 @@ const select = el('srSelectTipoConector');
             <span style='font-size:14px;font-weight:600;'>Handoff</span>
           </div>
           <p style='font-size:12px;color:#555;line-height:1.5;'>Revise o resumo de todas as seções preenchidas e clique <strong>"Gerar Handoff"</strong> (primeira vez) ou <strong>"Atualizar Handoff"</strong> (atualizações).</p>
-          <p style='font-size:11px;color:#999;margin-top:8px;'>Em ⚙ Configurações você pode escolher quais seções atualizar e preservar edições manuais no template.</p>
+        </div>
+      </div>
+
+      <div class='card'>
+        <div class='card-body'>
+          <div style='display:flex;align-items:center;gap:10px;margin-bottom:12px;'>
+            <span style='font-size:18px;background:#EEF0F8;border-radius:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;'>⚙</span>
+            <span style='font-size:14px;font-weight:600;'>Configurações</span>
+          </div>
+          <p style='font-size:12px;color:#555;line-height:1.5;margin-bottom:10px;'>Acesse o ⚙ no topo para ajustar o comportamento do plugin ao atualizar o handoff.</p>
+          <div style='display:flex;flex-direction:column;gap:8px;'>
+            <div style='background:#F5F5F5;border-radius:8px;padding:10px 12px;'>
+              <p style='font-size:12px;font-weight:600;color:#1a1a1a;margin-bottom:4px;'>Seções para atualizar</p>
+              <p style='font-size:11px;color:#666;line-height:1.5;margin:0;'>Desmarque as seções que não devem ser regeradas. O conteúdo existente nelas será preservado com todas as edições manuais.</p>
+            </div>
+            <div style='background:#F5F5F5;border-radius:8px;padding:10px 12px;'>
+              <p style='font-size:12px;font-weight:600;color:#1a1a1a;margin-bottom:4px;'>Preservação de edições</p>
+              <p style='font-size:11px;color:#666;line-height:1.5;margin:0;'>Mantém textos editados manualmente no handoff (descrições, observações, notas). Posicionamento e estrutura são sempre regerados.</p>
+            </div>
+            <div style='background:#F5F5F5;border-radius:8px;padding:10px 12px;'>
+              <p style='font-size:12px;font-weight:600;color:#1a1a1a;margin-bottom:4px;'>Sincronização de template</p>
+              <p style='font-size:11px;color:#666;line-height:1.5;margin:0;'>Sincroniza a estrutura visual com o template original da biblioteca DSC ao gerar o handoff.</p>
+            </div>
+          </div>
         </div>
       </div>
 
