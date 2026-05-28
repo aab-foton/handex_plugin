@@ -675,12 +675,23 @@ figma.ui.onmessage = async (msg) => {
           if (imageFrame.type === 'INSTANCE') {
             imageFrame = imageFrame.detachInstance();
           }
-          const modelHandoffAreas = Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Handoff areas') as InstanceNode | undefined;
-          const modelItemNumber   = Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Item Number')   as InstanceNode | undefined;
+          const modelHandoffAreas = (Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Handoff areas')
+            ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-h] Handoff areas')) as InstanceNode | undefined;
+          const modelItemNumber   = (Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Item Number')
+            ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-h] Item Number'))   as InstanceNode | undefined;
 
           // Remover todos os filhos que não são modelos fixos (limpeza de execução anterior)
           const tagNode = Array.from(imageFrame.children).find(n => n.name === 'tag');
-          const nodesToKeep = new Set<BaseNode>([tagNode, modelHandoffAreas, modelItemNumber].filter(Boolean) as BaseNode[]);
+          // Se os modelos estão aninhados, preserva o ancestral direto do imageFrame
+          const getDirectChildOf = (frame: FrameNode | InstanceNode, node: BaseNode | undefined): BaseNode | undefined => {
+            if (!node) return undefined;
+            let cur: BaseNode = node;
+            while (cur.parent && cur.parent !== frame) cur = cur.parent;
+            return cur.parent === frame ? cur : undefined;
+          };
+          const handoffAreasAncestor = getDirectChildOf(imageFrame, modelHandoffAreas);
+          const itemNumberAncestor   = getDirectChildOf(imageFrame, modelItemNumber);
+          const nodesToKeep = new Set<BaseNode>([tagNode, handoffAreasAncestor ?? modelHandoffAreas, itemNumberAncestor ?? modelItemNumber].filter(Boolean) as BaseNode[]);
           Array.from(imageFrame.children)
             .filter(n => !nodesToKeep.has(n))
             .forEach(n => n.remove());
@@ -744,7 +755,12 @@ figma.ui.onmessage = async (msg) => {
                 const areaClone = modelHandoffAreas.clone();
                 areaClone.visible = true;
                 const isFullWidthPreset = area.preset === '44x100' || area.preset === '24x100';
-                areaClone.resize(isFullWidthPreset ? compClone.width : (area.width > 0 ? area.width : compClone.width), area.height);
+                // Fallback de altura: usa o preset quando area.height foi salvo como 0
+                const presetH = (area.preset === '44x100' || area.preset === '44x44') ? 44
+                              : (area.preset === '24x100' || area.preset === '24x24') ? 24 : 0;
+                const areaH = area.height > 0 ? area.height : (presetH > 0 ? presetH : (compClone as any).height);
+                const areaW = isFullWidthPreset ? (compClone as any).width : (area.width > 0 ? area.width : (compClone as any).width);
+                areaClone.resize(areaW, areaH);
                 areaClone.x = area.relX + currentX;
                 areaClone.y = area.relY + currentY;
                 imageFrame.appendChild(areaClone);
@@ -757,7 +773,7 @@ figma.ui.onmessage = async (msg) => {
                 try { numClone.setProperties({ 'connector': 'left' }); } catch(e) {}
                 // Badge sempre à esquerda do componente, independente de area.relX
                 numClone.x = currentX - numClone.width;
-                numClone.y = area.relY + currentY + area.height / 2 - numClone.height / 2;
+                numClone.y = area.relY + currentY + areaH / 2 - numClone.height / 2;
                 imageFrame.appendChild(numClone);
               }
             }
@@ -1536,18 +1552,15 @@ figma.ui.onmessage = async (msg) => {
       return;
     }
     const comp = (componenteVariacaoAtivo ?? componentePrincipalAtivo) as FrameNode;
-    if (!comp.parent) {
-      figma.ui.postMessage({ type: 'feedback', message: '⚠️ Componente sem parent.' });
-      return;
-    }
-    const parentNode = comp.parent as FrameNode | PageNode;
     const overlayName = `[A11Y Toque] ${msg.nome}`;
 
     // Remove overlay anterior com mesmo nome
-    const existing = parentNode.children.find((n: SceneNode) => n.name === overlayName);
-    if (existing) existing.remove();
+    figma.currentPage.findAll((n: SceneNode) => n.name === overlayName).forEach(n => n.remove());
 
-    const cw = comp.width, ch = comp.height;
+    const cw = (comp as any).width  ?? 100;
+    const ch = (comp as any).height ?? 100;
+    const absX = comp.absoluteTransform[0][2];
+    const absY = comp.absoluteTransform[1][2];
     let w: number, h: number, dx: number, dy: number;
     if      (msg.preset === '44x100') { w = cw; h = 44;  dx = 0;              dy = (ch - 44) / 2; }
     else if (msg.preset === '44x44')  { w = 44; h = 44;  dx = (cw - 44) / 2; dy = (ch - 44) / 2; }
@@ -1556,13 +1569,13 @@ figma.ui.onmessage = async (msg) => {
 
     const overlay = figma.createFrame();
     overlay.name = overlayName;
-    overlay.resize(w, h);
-    overlay.x = comp.x + dx;
-    overlay.y = comp.y + dy;
     overlay.fills = [{ type: 'SOLID', color: { r: 1, g: 0.75, b: 0.75 }, opacity: 0.5 }];
     overlay.strokes = [];
     overlay.clipsContent = false;
-    (parentNode as FrameNode).appendChild(overlay);
+    figma.currentPage.appendChild(overlay); // append primeiro para garantir posicionamento correto
+    overlay.resize(w, h);
+    overlay.x = absX + dx;
+    overlay.y = absY + dy;
     tempTouchOverlayId = overlay.id;
     figma.currentPage.selection = [overlay];
     figma.viewport.scrollAndZoomIntoView([overlay]);
@@ -1577,8 +1590,9 @@ figma.ui.onmessage = async (msg) => {
         height = Math.round(frame.height);
         const refNode = componenteVariacaoAtivo ?? componentePrincipalAtivo;
         if (refNode) {
-          relX = Math.round(frame.x - refNode.x);
-          relY = Math.round(frame.y - refNode.y);
+          // frame está na página (absoluteTransform = x/y diretos); refNode pode estar aninhado
+          relX = Math.round(frame.x - (refNode as any).absoluteTransform[0][2]);
+          relY = Math.round(frame.y - (refNode as any).absoluteTransform[1][2]);
         }
         frame.remove();
       }
