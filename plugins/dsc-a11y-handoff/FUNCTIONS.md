@@ -119,9 +119,14 @@ Guia de navegação rápida. Números de linha referem-se ao estado atual do arq
 | 1592 | `removeTouchArea(i)` | Remove área de toque pelo índice |
 | 1604 | `getTouchPreset()` | Deriva preset string de `touchSelectedSize × touchSelectedForma` |
 | 1635 | `showView(viewId)` | Alterna entre views de variação e main view (toque) |
+| 1641 | `openTabForm()` | Abre form de adição de foco de tabulação (overlay) |
+| 1652 | `closeTabForm()` | Fecha form de tabulação |
 | 1724 | `renderTabOrderList()` | Renderiza lista de tab order da variação ativa |
 | 1774 | `showSRView(viewId)` | Alterna entre views de variação e main view (leitor de tela) |
 | 1781 | `renderSRVariationList()` | Renderiza lista de variações de leitor de tela |
+| 1953 | `editTabVariation(id)` | Carrega variação de tabulação; guarda defensiva garante `panel-tabulacao` ativo ao final |
+| 2076 | `editVariation(id)` | Carrega variação de toque; guarda defensiva garante `panel-toque` ativo ao final |
+| 1820 | `selectSRVariation(id)` | Carrega variação de leitor de tela; guarda defensiva garante `panel-leitor` ativo ao final |
 | 2133 | `renderImportBanners()` | Exibe banner de migração; chamado apenas quando `isOldFormat && componentData vazio` |
 | 2140 | `importAllSections(evt)` | Dispara `import-old-section` para cada seção; acumula resultados |
 | 2153 | `saveGeralData(debounce)` | Envia `save-partial-data` para plataformas, zoom e mapeamentos |

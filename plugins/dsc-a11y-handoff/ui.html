@@ -695,7 +695,7 @@
     </div>
 
     <div class="footer-bar">
-      <span class="version-text">DSC A11Y Handoff v2.1.0</span>
+      <span class="version-text">DSC A11Y Handoff v2.1.1</span>
     </div>
   </div>
 
@@ -894,6 +894,10 @@
     };
 
     el('summaryEditToque').onclick = () => {
+      showView('list');
+      parent.postMessage({ pluginMessage: { type: 'deactivate-variation' } }, '*');
+      showTabView('list');
+      showSRView('list');
       document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.querySelector('.tab[data-target="panel-toque"]').classList.add('active');
@@ -901,6 +905,10 @@
     };
 
     el('summaryEditTab').onclick = () => {
+      showView('list');
+      parent.postMessage({ pluginMessage: { type: 'deactivate-variation' } }, '*');
+      showTabView('list');
+      showSRView('list');
       document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.querySelector('.tab[data-target="panel-tabulacao"]').classList.add('active');
@@ -908,6 +916,10 @@
     };
 
     el('summaryEditLeitor').onclick = () => {
+      showView('list');
+      parent.postMessage({ pluginMessage: { type: 'deactivate-variation' } }, '*');
+      showTabView('list');
+      showSRView('list');
       document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.querySelector('.tab[data-target="panel-leitor"]').classList.add('active');
@@ -1833,6 +1845,13 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       showSRView('main');
     }
     renderLeitorList();
+    // Garante que o painel de leitor de tela permanece ativo
+    if (!el('panel-leitor').classList.contains('active')) {
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelector('.tab[data-target="panel-leitor"]').classList.add('active');
+      el('panel-leitor').classList.add('active');
+    }
   }
 
   function deleteSRVariation(id) {
@@ -1964,6 +1983,13 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
     } else {
       parent.postMessage({ pluginMessage: { type: 'deactivate-tab-variation' } }, '*');
       showTabView('main');
+    }
+    // Garante que o painel de tabulação permanece ativo
+    if (!el('panel-tabulacao').classList.contains('active')) {
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelector('.tab[data-target="panel-tabulacao"]').classList.add('active');
+      el('panel-tabulacao').classList.add('active');
     }
   }
 
@@ -2105,6 +2131,13 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       // Sem frame — abrir sem ativar (não cria frame desnecessário)
       parent.postMessage({ pluginMessage: { type: 'deactivate-variation' } }, '*');
       showView('main');
+    }
+    // Garante que o painel de área de toque permanece ativo
+    if (!el('panel-toque').classList.contains('active')) {
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelector('.tab[data-target="panel-toque"]').classList.add('active');
+      el('panel-toque').classList.add('active');
     }
   }
 
