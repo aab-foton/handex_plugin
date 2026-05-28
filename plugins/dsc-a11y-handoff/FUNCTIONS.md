@@ -4,7 +4,7 @@ Guia de navegação rápida. Números de linha referem-se ao estado atual do arq
 
 ---
 
-## code.ts (~2880 linhas)
+## code.ts (~2895 linhas)
 
 ### Variáveis globais (17–28)
 
@@ -47,49 +47,50 @@ Guia de navegação rápida. Números de linha referem-se ao estado atual do arq
 | 515 | *(Título)* | Preenche `Component Name` se `runTitulo !== false` |
 | 525 | `fillTable` *(inline)* | Clona Row/`[dsc doc] Doc Table` com `Table Cell` para cada mapeamento; suporta 3 estruturas de template |
 | 601 | *(Área de Toque — specs)* | Preenche frame `specs` de `target area` com todas as áreas achatadas de `msg.variacoes` |
-| 662 | *(Área de Toque — visual)* | Preenche frame `image`, cria overlays e marcadores por variação |
-| 783 | *(Focus Order — visual)* | Preenche frame `focus order` com tab order por variação |
+| 662 | *(Área de Toque — visual)* | Preenche frame `image`, cria overlays e marcadores por variação; badge em cima do componente sem conector |
+| 783 | *(Focus Order — visual)* | Preenche frame `focus order` com tab order por variação; badge em cima sem conector |
 | 912 | *(Leitor de Tela — preview)* | Monta conectores/agrupamentos no frame `screen reader` por variação; reutiliza nós do handoff antigo para variações de migração |
 | 1183 | *(Leitor de Tela — specs)* | Preenche tabela de specs do leitor de tela por variação |
 | 1341 | *(Zoom WCAG)* | Aplica zoom e contraste WCAG no frame `zoom` |
-| 1533 | `create-touch-overlay` | Cria frame rosa sobre o componente; salva ID em `tempTouchOverlayId` |
-| 1571 | `confirm-touch-area` | Lê dimensões/posição do frame via `getNodeByIdAsync`; envia `touch-area-confirmed` |
-| 1590 | `cancel-touch-area` | Remove frame temporário; limpa `tempTouchOverlayId` |
-| 1612 | `get-component-properties` | Retorna propriedades do componente ativo para uso no form de variações |
-| 1654 | `create-variation-frame` | Cria frame de variação de toque no canvas |
-| 1713 | `activate-variation` | Foca a variação de toque no canvas |
-| 1740 | `get-tab-selection` | Retorna nó selecionado para adicionar ao tab order |
-| 1796 | `create-sr-variation-frame` | Cria frame de variação de leitor de tela |
-| 1840 | `create-tab-variation-frame` | Cria frame de variação de tabulação |
-| 1955 | `save-leitor-tela` | Salva conectores/variações de leitor de tela; usa `handoffAtivo` como fallback se `dbInstance` for null (handoff antigo) |
-| 1975 | `import-old-section` | Chama o parser correto (`geral/toque/tabulacao/leitor`) e responde com `old-section-data` |
-| 2000 | `save-partial-data` | Salva chave específica no `a11y-component-data`; usa `handoffAtivo` como fallback se `dbInstance` for null |
-| 2017 | `get-sr-selection` | Retorna nó selecionado para leitor de tela |
-| 2047 | `create-sr-overlay` | Cria overlay de área de leitor de tela; armazena `tempSROverlayRefX/Y` para cálculo correto de relX/relY |
-| 2084 | `confirm-sr-area` | Confirma área de leitor de tela usando `tempSROverlayRefX/Y` como referência |
+| 1457 | *(limpeza pós-geração)* | Remove todos os frames `[A11Y Variação*]` e `[A11Y Variações]` do canvas em **varredura única** |
+| 1550 | `create-touch-overlay` | Cria frame rosa sobre o componente; salva ID em `tempTouchOverlayId` |
+| 1585 | `confirm-touch-area` | Lê dimensões/posição do frame via `getNodeByIdAsync`; envia `touch-area-confirmed` |
+| 1605 | `cancel-touch-area` | Remove frame temporário via ID cacheado; limpa `tempTouchOverlayId` |
+| 1627 | `get-component-properties` | Retorna propriedades do componente ativo para uso no form de variações |
+| 1669 | `create-variation-frame` | Cria frame de variação de toque no canvas |
+| 1728 | `activate-variation` | Foca a variação de toque no canvas |
+| 1755 | `get-tab-selection` | Retorna nó selecionado para adicionar ao tab order |
+| 1811 | `create-sr-variation-frame` | Cria frame de variação de leitor de tela |
+| 1855 | `create-tab-variation-frame` | Cria frame de variação de tabulação |
+| 1970 | `save-leitor-tela` | Salva conectores/variações de leitor de tela; usa `handoffAtivo` como fallback se `dbInstance` for null (handoff antigo) |
+| 1990 | `import-old-section` | Chama o parser correto (`geral/toque/tabulacao/leitor`) e responde com `old-section-data` |
+| 2015 | `save-partial-data` | Salva chave específica no `a11y-component-data`; usa `handoffAtivo` como fallback se `dbInstance` for null |
+| 2032 | `get-sr-selection` | Retorna nó selecionado para leitor de tela |
+| 2062 | `create-sr-overlay` | Cria overlay de área de leitor de tela; armazena `tempSROverlayRefX/Y` para cálculo correto de relX/relY |
+| 2099 | `confirm-sr-area` | Confirma área de leitor de tela usando `tempSROverlayRefX/Y` como referência |
 
-### Funções de suporte (2128–2260)
-
-| Linha | Função | Resumo |
-|-------|--------|--------|
-| 2128 | `tentarTravarContexto(selection)` | Valida seleção (1 componente + 1 handoff); trava contexto; chama `carregarDadosEEnviarParaUI` |
-| 2186 | `parseMasterList(dbInstance)` | Lê tabela `"Mapeamento de Teclado e Gestos do Plugin"` do nó data; retorna `{ mapeamento, descricao, utilizacao }[]` |
-| 2221 | `parseRolesList(dbInstance)` | Lê tabela de roles/especificações ARIA do nó data |
-
-### Parsers de migração (2261–2880)
+### Funções de suporte (2143–2275)
 
 | Linha | Função | Resumo |
 |-------|--------|--------|
-| 2261 | `parseOldSRData(handoff)` | Extrai dados de leitor de tela do handoff antigo → `{ variacoes[] }` |
-| 2437 | `parseOldTabOrder(handoff)` | Extrai tab order do frame `focus order` → `{ variacoes: TabVariacao[] }` |
-| 2532 | `toTouchPreset(h, w)` | Converte dimensões numéricas para string de preset de toque |
-| 2540 | `parseOldTouchAreas(handoff)` | Extrai áreas de toque do frame `target area` → `{ variacoes: TouchVariacao[] }` |
-| 2723 | `parseOldGeralData(handoff)` | Extrai plataformas, zoom e mapeamentos de teclado/gesto do handoff antigo |
-| 2827 | `carregarDadosEEnviarParaUI(handoff)` | Detecta `isOldFormat`, carrega pluginData (para ambos os formatos), envia `setup-ui` para a UI |
+| 2143 | `tentarTravarContexto(selection)` | Valida seleção (1 componente + 1 handoff); trava contexto; chama `carregarDadosEEnviarParaUI` |
+| 2201 | `parseMasterList(dbInstance)` | Lê tabela `"Mapeamento de Teclado e Gestos do Plugin"` do nó data; retorna `{ mapeamento, descricao, utilizacao }[]` |
+| 2236 | `parseRolesList(dbInstance)` | Lê tabela de roles/especificações ARIA do nó data |
+
+### Parsers de migração (2276–2895)
+
+| Linha | Função | Resumo |
+|-------|--------|--------|
+| 2276 | `parseOldSRData(handoff)` | Extrai dados de leitor de tela do handoff antigo → `{ variacoes[] }` |
+| 2452 | `parseOldTabOrder(handoff)` | Extrai tab order do frame `focus order` → `{ variacoes: TabVariacao[] }` |
+| 2547 | `toTouchPreset(h, w)` | Converte dimensões numéricas para string de preset de toque |
+| 2555 | `parseOldTouchAreas(handoff)` | Extrai áreas de toque do frame `target area` → `{ variacoes: TouchVariacao[] }` |
+| 2738 | `parseOldGeralData(handoff)` | Extrai plataformas, zoom e mapeamentos de teclado/gesto do handoff antigo |
+| 2842 | `carregarDadosEEnviarParaUI(handoff)` | Detecta `isOldFormat`, carrega pluginData (para ambos os formatos), envia `setup-ui` para a UI |
 
 ---
 
-## ui.html — Script (~2888 linhas)
+## ui.html — Script (~3039 linhas)
 
 ### Variáveis globais principais
 
@@ -107,23 +108,24 @@ Guia de navegação rápida. Números de linha referem-se ao estado atual do arq
 
 | Linha | Função | Resumo |
 |-------|--------|--------|
-| 727 | `setupSearch(inputId, resId, filterType)` | Registra listeners de busca; chamado **1× por tipo** fora do `onmessage` |
-| 770 | `addItem(item)` | Adiciona mapeamento a `currentData`; sem duplicatas |
-| 782 | `renderLists()` | Renderiza cards de teclado/gesto; atualiza badges |
-| 817 | `updateSummaryCards()` | Atualiza contadores nos cards de resumo de todas as abas |
-| 1482 | `updatePZCount()` | Atualiza badge de plataformas/zoom selecionados |
-| 1526 | `reloadTemplateData()` | Força recarga do masterList do template (usado em sync) |
-| 1551 | `renderTouchList()` | Renderiza lista de áreas de toque da variação ativa |
-| 1570 | `removeTouchArea(i)` | Remove área de toque pelo índice |
-| 1582 | `getTouchPreset()` | Deriva preset string de `touchSelectedSize × touchSelectedForma` |
-| 1613 | `showView(viewId)` | Alterna entre views de variação e main view (toque) |
-| 1702 | `renderTabOrderList()` | Renderiza lista de tab order da variação ativa |
-| 1752 | `showSRView(viewId)` | Alterna entre views de variação e main view (leitor de tela) |
-| 1759 | `renderSRVariationList()` | Renderiza lista de variações de leitor de tela |
-| 2118 | `renderImportBanners()` | Exibe banner de migração; chamado apenas quando `isOldFormat && componentData vazio` |
-| 2125 | `importAllSections(evt)` | Dispara `import-old-section` para cada seção; acumula resultados |
-| 2138 | `saveGeralData(debounce)` | Envia `save-partial-data` para plataformas, zoom e mapeamentos |
-| 2518 | `saveLeitorTela()` | Envia `save-leitor-tela` com conectores e variações de SR |
+| 730 | `setupSearch(inputId, resId, filterType)` | Registra listeners de busca; chamado **1× por tipo** fora do `onmessage` |
+| 773 | `addItem(item)` | Adiciona mapeamento a `currentData`; sem duplicatas |
+| 785 | `renderLists()` | Renderiza cards de teclado/gesto; atualiza badges |
+| 820 | `updateSummaryCards()` | Atualiza contadores nos cards de resumo de todas as abas |
+| 1497 | `updatePZCount()` | Atualiza badge de plataformas/zoom selecionados |
+| 1541 | `openInfo() / closeInfo()` | Abre/fecha painel "Como usar" (infoOverlay) |
+| 1548 | `reloadTemplateData()` | Força recarga do masterList do template (usado em sync) |
+| 1573 | `renderTouchList()` | Renderiza lista de áreas de toque da variação ativa |
+| 1592 | `removeTouchArea(i)` | Remove área de toque pelo índice |
+| 1604 | `getTouchPreset()` | Deriva preset string de `touchSelectedSize × touchSelectedForma` |
+| 1635 | `showView(viewId)` | Alterna entre views de variação e main view (toque) |
+| 1724 | `renderTabOrderList()` | Renderiza lista de tab order da variação ativa |
+| 1774 | `showSRView(viewId)` | Alterna entre views de variação e main view (leitor de tela) |
+| 1781 | `renderSRVariationList()` | Renderiza lista de variações de leitor de tela |
+| 2133 | `renderImportBanners()` | Exibe banner de migração; chamado apenas quando `isOldFormat && componentData vazio` |
+| 2140 | `importAllSections(evt)` | Dispara `import-old-section` para cada seção; acumula resultados |
+| 2153 | `saveGeralData(debounce)` | Envia `save-partial-data` para plataformas, zoom e mapeamentos |
+| 2533 | `saveLeitorTela()` | Envia `save-leitor-tela` com conectores e variações de SR |
 
 ### Handlers de mensagem recebida (`window.onmessage`)
 

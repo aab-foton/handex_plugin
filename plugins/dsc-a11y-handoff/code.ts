@@ -696,7 +696,7 @@ figma.ui.onmessage = async (msg) => {
             .filter(n => !nodesToKeep.has(n))
             .forEach(n => n.remove());
 
-          const PAD_TOP  = 40;
+          const PAD_TOP  = 80;
           const PAD_SIDE = 24;
           const PAD_LEFT = 160;
           const GAP_H    = 140;  // gap horizontal entre variações
@@ -770,10 +770,9 @@ figma.ui.onmessage = async (msg) => {
                 const numTexts = numClone.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
                 const numText = numTexts.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numTexts[0] || null;
                 if (numText) await updateText(numText as TextNode, String(globalCounter));
-                try { numClone.setProperties({ 'connector': 'left' }); } catch(e) {}
-                // Badge sempre à esquerda do componente, independente de area.relX
-                numClone.x = currentX - numClone.width;
-                numClone.y = area.relY + currentY + areaH / 2 - numClone.height / 2;
+                try { numClone.setProperties({ 'connector': 'Off' }); } catch(e) {}
+                numClone.x = currentX;
+                numClone.y = currentY - numClone.height - 4;
                 imageFrame.appendChild(numClone);
               }
             }
@@ -1455,11 +1454,13 @@ figma.ui.onmessage = async (msg) => {
       }
     }
 
-    // Remove frames de variação do canvas após geração do preview
-    figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y Variação]')).forEach(n => n.remove());
-    figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y Tab Variação]')).forEach(n => n.remove());
-    figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y LT Variação]')).forEach(n => n.remove());
-    figma.currentPage.findAll((n: SceneNode) => n.name === '[A11Y Variações]').forEach(n => n.remove());
+    // Remove frames de variação do canvas após geração do preview (varredura única)
+    figma.currentPage.findAll((n: SceneNode) =>
+      n.name.startsWith('[A11Y Variação]') ||
+      n.name.startsWith('[A11Y Tab Variação]') ||
+      n.name.startsWith('[A11Y LT Variação]') ||
+      n.name === '[A11Y Variações]'
+    ).forEach(n => n.remove());
     variacoesContainerId = null;
     pluginDataNodeId = null;
 

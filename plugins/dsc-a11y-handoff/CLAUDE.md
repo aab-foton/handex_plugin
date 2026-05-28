@@ -7,8 +7,8 @@ Branch atual: `migration-from-old-handoff`.
 
 | Arquivo | Papel |
 |---------|-------|
-| `code.ts` | Lógica do plugin (sandbox Figma, ~2880 linhas) |
-| `ui.html` | Interface (iframe sandboxado, ~2888 linhas) |
+| `code.ts` | Lógica do plugin (sandbox Figma, ~2895 linhas) |
+| `ui.html` | Interface (iframe sandboxado, ~3039 linhas) |
 | `FUNCTIONS.md` | Mapa de funções e handlers com números de linha |
 | `Makefile` | `push-github` / `push-gitlab` / `push-all` |
 
@@ -107,3 +107,6 @@ No template fresco (colocado manualmente pelo designer), `table` pode ter `Heade
 - Template antigo detectado por: filho com nome `'keyboard maping'` ou `'keyboard mapping'`
 - `tempSROverlayRefX/Y` — armazena posição do componente no momento de `create-sr-overlay` para calcular `relX`/`relY` correto no `confirm-sr-area`
 - Agrupamentos de leitor de tela: `relX`/`relY` são relativos ao componente ativo; `width`/`height` são as dimensões do frame de agrupamento
+- Badge de número no preview de toque e tabulação: `connector: 'Off'`, posicionado acima do componente (`currentY - numClone.height - 4`), sem linha de conector
+- Limpeza pós-geração: os frames `[A11Y Variação*]` e `[A11Y Variações]` são removidos em **varredura única** do `currentPage.findAll` (não 4 passagens separadas)
+- Painel "Como usar": botão `i` no header abre `infoOverlay` com passo a passo de seleção, descrição das abas e card de configurações
