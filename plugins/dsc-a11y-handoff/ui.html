@@ -934,7 +934,12 @@
         currentData = msg.componentData?.mapeamentos || [];
         isGenerated = msg.isGenerated || false; // Atualiza o estado global
         isOldFormat = msg.isOldFormat || false;
-        if (isOldFormat) renderImportBanners();
+        if (isOldFormat) {
+          const _cd = msg.componentData || {};
+          const _hasData = (_cd.mapeamentos?.length > 0) || (_cd.variacoes?.length > 0) ||
+            (_cd.variacoes_tabulacao?.length > 0) || (_cd.variacoes_leitor?.length > 0);
+          if (!_hasData) renderImportBanners();
+        }
 
         el('btnRun').textContent = isGenerated ? 'Atualizar Handoff' : 'Gerar Handoff';
 
@@ -1146,6 +1151,9 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
 
             varOld.rawConnectors.forEach(raw => {
               const matched = leitorState.rolesList.find(r => r.descricao === raw.descricao);
+              const posData = raw.relX != null ? { relX: raw.relX, relY: raw.relY ?? 0, width: raw.width ?? 20, height: raw.height ?? 20 } : {};
+              const tipoAnotacao = raw.tipoAnotacao ?? '';
+              const migrBadgeIdx = raw.migrBadgeIdx ?? -1;
               if (!matched) {
                 // Descrição não encontrada na rolesList — cria stub para revisão manual
                 srVar.conectores_leitor.push({
@@ -1153,13 +1161,15 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
                   especificacao: '',
                   tipo:          'função, valor, rótulos',
                   tipoConnector: 'função, valor, rótulos',
-                  tipoAnotacao:  '',
+                  tipoAnotacao,
+                  migrBadgeIdx,
                   origem:        'migração-sem-match',
                   descricao:     raw.descricao,
                   observacao:    '',
                   nomeAcessivel: '',
                   codigoWeb:     '',
                   codigoRN:      '',
+                  ...posData,
                 });
                 totalAdded++;
                 return;
@@ -1169,13 +1179,15 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
                 especificacao: matched.especificacao || '',
                 tipo:          matched.tipoConnector || '',
                 tipoConnector: matched.tipoConnector || '',
-                tipoAnotacao:  '',
+                tipoAnotacao,
+                migrBadgeIdx,
                 origem:        'migração',
                 descricao:     matched.descricao,
                 observacao:    matched.observacao    || '',
                 nomeAcessivel: matched.nomeAcessivel || '',
                 codigoWeb:     matched.codigoWeb     || '',
                 codigoRN:      matched.codigoRN      || '',
+                ...posData,
               });
               totalAdded++;
             });

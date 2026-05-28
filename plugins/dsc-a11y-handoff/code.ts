@@ -21,6 +21,8 @@ let pluginDataNodeId: string | null = null;
 let contextoTravado: boolean = false;
 let tempTouchOverlayId: string | null = null;
 let tempSROverlayId: string | null = null;
+let tempSROverlayRefX: number = 0;
+let tempSROverlayRefY: number = 0;
 let componenteVariacaoAtivo: SceneNode | null = null;
 let componenteTabVariacaoAtivo: SceneNode | null = null;
 let componenteSRVariacaoAtivo: SceneNode | null = null;
@@ -93,14 +95,40 @@ async function applyWcagBackground(imageFrame: FrameNode, componentNode: SceneNo
     const darker  = Math.min(l1, l2);
     return (lighter + 0.05) / (darker + 0.05);
   };
-  const bgFills   = Array.isArray(imageFrame.fills)   ? imageFrame.fills   as Paint[] : [];
-  const compFills = Array.isArray((componentNode as FrameNode).fills) ? (componentNode as FrameNode).fills as Paint[] : [];
-  const bgFill   = bgFills.find(f   => f.type === 'SOLID') as SolidPaint | undefined;
-  const compFill = compFills.find(f => f.type === 'SOLID') as SolidPaint | undefined;
-  let needsSwap = false; // só troca se confirmarmos contraste insuficiente
-  if (bgFill && compFill) {
+  const bgFills = Array.isArray(imageFrame.fills) ? imageFrame.fills as Paint[] : [];
+  const bgFill  = bgFills.find(f => f.type === 'SOLID') as SolidPaint | undefined;
+
+  // COMPONENT_SET não tem fills — usa o primeiro filho COMPONENT
+  let fillSource: SceneNode = componentNode;
+  if (componentNode.type === 'COMPONENT_SET') {
+    const firstChild = (componentNode as ComponentSetNode).children.find(c => c.type === 'COMPONENT') as ComponentNode | undefined;
+    if (firstChild) fillSource = firstChild;
+  }
+  const rootFills = Array.isArray((fillSource as FrameNode).fills) ? (fillSource as FrameNode).fills as Paint[] : [];
+  const rootFill  = rootFills.find(f => f.type === 'SOLID') as SolidPaint | undefined;
+
+  // Se o componente não tem fill de fundo, procura a cor de conteúdo (texto ou ícone)
+  // para garantir que textos/ícones brancos sobre fundo branco não passem despercebidos
+  let effectiveCompColor: RGB;
+  if (rootFill) {
+    effectiveCompColor = rootFill.color;
+  } else {
+    const CONTENT_TYPES = new Set(['TEXT', 'VECTOR', 'ELLIPSE', 'RECTANGLE', 'POLYGON', 'STAR', 'BOOLEAN_OPERATION']);
+    const contentNodes = (fillSource as any).findAll((n: SceneNode) => CONTENT_TYPES.has(n.type)) as SceneNode[];
+    let contentColor: RGB | null = null;
+    for (const n of contentNodes) {
+      const nFills = Array.isArray((n as any).fills) ? (n as any).fills as Paint[] : [];
+      const solid  = nFills.find((f: Paint) => f.type === 'SOLID' && (f as SolidPaint).opacity !== 0) as SolidPaint | undefined;
+      if (solid) { contentColor = solid.color; break; }
+    }
+    // Último fallback: branco (componente totalmente transparente sem conteúdo visível detectado)
+    effectiveCompColor = contentColor ?? { r: 1, g: 1, b: 1 };
+  }
+
+  let needsSwap = false;
+  if (bgFill) {
     const bgL   = relativeLuminance(bgFill.color.r,   bgFill.color.g,   bgFill.color.b);
-    const compL = relativeLuminance(compFill.color.r, compFill.color.g, compFill.color.b);
+    const compL = relativeLuminance(effectiveCompColor.r, effectiveCompColor.g, effectiveCompColor.b);
     needsSwap = wcagContrast(bgL, compL) < 3;
   }
   if (needsSwap) {
@@ -316,6 +344,18 @@ figma.ui.onmessage = async (msg) => {
     const isOldHandoff = !!(handoffAtivo as any).findOne(
       (n: SceneNode) => n.name === 'keyboard maping' || n.name === 'keyboard mapping'
     );
+
+    // Clones das seções que o usuário NÃO quer atualizar (preenchidos dentro do bloco isOldHandoff)
+    const oldSnapshots: Array<{ sectionName: string; clones: SceneNode[] }> = [];
+
+    // Conteúdo SR do handoff antigo capturado antes do swap (para reutilizar no preview)
+    type OldSRVar = {
+      comp: SceneNode; origX: number; origY: number;
+      badges: { clone: SceneNode; relX: number; relY: number; idx: number }[];
+      numBadge: SceneNode | null;
+    };
+    const oldSRVarCapture: OldSRVar[] = [];
+
     if (isOldHandoff) {
       figma.ui.postMessage({ type: 'feedback', message: '⏳ Substituindo template antigo...' });
       try {
@@ -324,9 +364,101 @@ figma.ui.onmessage = async (msg) => {
         novaInstancia.x = handoffAtivo.x;
         novaInstancia.y = handoffAtivo.y;
         const pai = handoffAtivo.parent;
-        if (pai && 'appendChild' in pai) (pai as any).appendChild(novaInstancia);
+        if (pai) (pai as any).appendChild(novaInstancia);
         const dadosSalvos = (handoffAtivo as any).getPluginData('a11y-component-data');
         if (dadosSalvos) novaInstancia.setPluginData('a11y-component-data', dadosSalvos);
+
+        // Antes de deletar o antigo: clona as seções desmarcadas para preservá-las visualmente.
+        // Os clones são movidos para a página (figma.currentPage) para sobreviver ao .remove() do handoff.
+        const sectionFlags: Array<{ name: string; flag: boolean | undefined; multi: boolean }> = [
+          { name: 'target area',    flag: msg.runTouch,      multi: false },
+          { name: 'focus order',    flag: msg.runTab,         multi: false },
+          { name: 'screen reader',  flag: msg.runLeitor,      multi: false },
+          { name: 'zoom',           flag: msg.runZoom,         multi: false },
+          { name: 'screen size',    flag: msg.runZoom,         multi: false },
+          { name: 'keyboard maping', flag: msg.runMapeamento, multi: true  },
+        ];
+        for (const def of sectionFlags) {
+          if (def.flag === false) {
+            if (def.multi) {
+              const nodes = (handoffAtivo as any).findAll(
+                (n: SceneNode) => n.name === 'keyboard maping' || n.name === 'keyboard mapping'
+              ) as SceneNode[];
+              if (nodes.length > 0) {
+                const clones = nodes.map((n: SceneNode) => {
+                  const c = n.clone();
+                  figma.currentPage.appendChild(c); // move para a página antes do .remove()
+                  c.visible = false;
+                  return c;
+                });
+                oldSnapshots.push({ sectionName: def.name, clones });
+              }
+            } else {
+              const node = (handoffAtivo as any).findOne((n: SceneNode) => n.name === def.name) as SceneNode | null;
+              if (node) {
+                const c = node.clone();
+                figma.currentPage.appendChild(c);
+                c.visible = false;
+                oldSnapshots.push({ sectionName: def.name, clones: [c] });
+              }
+            }
+          }
+        }
+
+        // Captura conteúdo SR por variação antes de deletar o handoff antigo.
+        // IMPORTANTE: mover clones para figma.currentPage imediatamente — eles morrem com handoffAtivo.remove().
+        if (msg.runLeitor !== false) {
+          const oldSRSec = (handoffAtivo as any).findOne((n: SceneNode) => n.name === 'screen reader') as FrameNode | null;
+          const oldImgFr = oldSRSec
+            ? (Array.from(oldSRSec.children as SceneNode[]).find(n => n.name === 'image') as FrameNode | undefined)
+            : undefined;
+          if (oldImgFr) {
+            const comps = (Array.from(oldImgFr.children as SceneNode[]) as SceneNode[])
+              .filter(n => n.type === 'INSTANCE' && !n.name.startsWith('[a11y]') && !n.name.startsWith('[dsc-h]') && n.name !== 'tag')
+              .sort((a: any, b: any) => a.x - b.x);
+            for (let ci = 0; ci < comps.length; ci++) {
+              const comp = comps[ci] as any;
+              const compCX = comp.x + comp.width / 2;
+              const isClosestToThis = (node: any) => comps.every((oc: any, oi: number) =>
+                oi === ci || Math.abs((node.x + node.width / 2) - compCX) <= Math.abs((node.x + node.width / 2) - (oc.x + oc.width / 2))
+              );
+
+              // Clona componente e move para página (sobrevive ao .remove do handoff)
+              const compClone = comp.clone() as SceneNode;
+              figma.currentPage.appendChild(compClone);
+              compClone.visible = false;
+
+              // Clona badges e move para página
+              const varBadges = (Array.from(oldImgFr.children as SceneNode[]) as SceneNode[])
+                .filter(n => n.name.startsWith('[a11y]') && isClosestToThis(n))
+                .sort((a: any, b: any) => a.y - b.y || a.x - b.x)
+                .map((b: any, i: number) => {
+                  const bClone = b.clone() as SceneNode;
+                  figma.currentPage.appendChild(bClone);
+                  bClone.visible = false;
+                  return { clone: bClone, relX: b.x - comp.x, relY: b.y - comp.y, idx: i };
+                });
+
+              // Clona item number e move para página
+              const numBadgeNode = (Array.from(oldImgFr.children as SceneNode[]) as SceneNode[])
+                .find(n => n.name === '[dsc-h] Item Number' && isClosestToThis(n)) || null;
+              let numClone: SceneNode | null = null;
+              if (numBadgeNode) {
+                numClone = (numBadgeNode as SceneNode).clone();
+                figma.currentPage.appendChild(numClone);
+                numClone.visible = false;
+              }
+
+              oldSRVarCapture.push({
+                comp: compClone,
+                origX: comp.x, origY: comp.y,
+                badges: varBadges,
+                numBadge: numClone
+              });
+            }
+          }
+        }
+
         handoffAtivo.remove();
         handoffAtivo = novaInstancia;
       } catch (e) {
@@ -339,19 +471,43 @@ figma.ui.onmessage = async (msg) => {
     const figmaVarsGlobal = (figma as any).variables;
     const allVarsGlobal: any[] = figmaVarsGlobal ? await figmaVarsGlobal.getLocalVariablesAsync() : [];
 
-    // --- NOVO: LÓGICA DE DETACH ---
-    // Se for uma instância, precisamos dar o detach para conseguir usar appendChild nas tabelas
+    // --- LÓGICA DE DETACH ---
     const isUpdate = handoffAtivo.type !== 'INSTANCE';
     let workingFrame: FrameNode;
-    
+
     if (handoffAtivo.type === "INSTANCE") {
       workingFrame = handoffAtivo.detachInstance();
-      // Atualizamos o nome para indicar que foi gerado
       workingFrame.name = `[A11Y Handoff] ${msg.componentName || componentePrincipalAtivo?.name || 'Componente'}`;
-      // Atualizamos a referência global para o novo Frame
       handoffAtivo = workingFrame;
     } else {
       workingFrame = handoffAtivo as FrameNode;
+    }
+
+    // --- Restaura seções do handoff antigo que não devem ser atualizadas ---
+    // Para cada seção desmarcada: substitui a seção vazia do novo template pelo clone do antigo.
+    for (const snapshot of oldSnapshots) {
+      const isKM = snapshot.sectionName === 'keyboard maping';
+      const newSections: SceneNode[] = isKM
+        ? workingFrame.findAll((n: SceneNode) => n.name === 'keyboard maping') as SceneNode[]
+        : [workingFrame.findOne((n: SceneNode) => n.name === snapshot.sectionName) as SceneNode | null].filter(Boolean) as SceneNode[];
+
+      const maxLen = Math.max(snapshot.clones.length, newSections.length);
+      for (let i = 0; i < maxLen; i++) {
+        const clone  = snapshot.clones[i];
+        const newSec = newSections[i];
+        if (clone && newSec) {
+          const parent   = newSec.parent as any;
+          const children = Array.from(parent.children as SceneNode[]);
+          const idx      = children.indexOf(newSec);
+          if (idx >= 0) parent.insertChild(idx, clone); else parent.appendChild(clone);
+          newSec.remove();
+        } else if (newSec) {
+          newSec.remove();                        // mais seções no novo do que no antigo
+        } else if (clone) {
+          workingFrame.appendChild(clone);        // mais seções no antigo do que no novo
+        }
+        if (clone) clone.visible = true;
+      }
     }
 
     // --- PARTE A: LOGICA VISUAL (ESCREVER NAS TABELAS) ---
@@ -505,15 +661,20 @@ figma.ui.onmessage = async (msg) => {
         figma.ui.postMessage({ type: 'feedback', message: `⏳ ${isUpdate ? 'Atualizando' : 'Gerando'} preview de área de toque...` });
         // --- PREENCHER IMAGE (PREVIEW) ---
         if (msg.runTouch !== false) {
-          const imageFrame = workingFrame.findOne((n: SceneNode) =>
+          let imageFrame = workingFrame.findOne((n: SceneNode) =>
             n.name === 'image' &&
             n.parent?.name !== 'screen reader' &&
             (n.type === 'FRAME' || n.type === 'GROUP' || n.type === 'COMPONENT' || n.type === 'INSTANCE')
-          ) as FrameNode | null;
+          ) as FrameNode | InstanceNode | null;
         const variacoes: any[] = msg.variacoes || [];
         const variacoesComAreas = variacoes.filter((v: any) => !v.sem_toque && v.areas_toque && v.areas_toque.length > 0);
 
         if (imageFrame && variacoesComAreas.length > 0 && componentePrincipalAtivo) {
+          // Após swap do template, imageFrame pode ainda ser INSTANCE (detach do pai não é recursivo).
+          // Precisamos desatar antes de inserir filhos ou editar textos aninhados.
+          if (imageFrame.type === 'INSTANCE') {
+            imageFrame = imageFrame.detachInstance();
+          }
           const modelHandoffAreas = Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Handoff areas') as InstanceNode | undefined;
           const modelItemNumber   = Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Item Number')   as InstanceNode | undefined;
 
@@ -582,7 +743,8 @@ figma.ui.onmessage = async (msg) => {
 
                 const areaClone = modelHandoffAreas.clone();
                 areaClone.visible = true;
-                areaClone.resize(area.width, area.height);
+                const isFullWidthPreset = area.preset === '44x100' || area.preset === '24x100';
+                areaClone.resize(isFullWidthPreset ? compClone.width : (area.width > 0 ? area.width : compClone.width), area.height);
                 areaClone.x = area.relX + currentX;
                 areaClone.y = area.relY + currentY;
                 imageFrame.appendChild(areaClone);
@@ -660,19 +822,27 @@ figma.ui.onmessage = async (msg) => {
             let compClone: SceneNode;
             if (variacao.id === 'default') {
               compClone = createComponentInstance(componentePrincipalAtivo);
+              // size=Small por padrão para melhor legibilidade no preview de tabulação
+              if (compClone.type === 'INSTANCE') {
+                try { (compClone as InstanceNode).setProperties({ size: 'Small' }); } catch (_) {}
+              }
             } else if (variacao.instanceNodeId) {
               let srcNode: SceneNode | null = null;
               try { srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null; } catch (_e) { srcNode = null; }
-              
+
               if (srcNode && srcNode.parent && srcNode.parent.type === 'FRAME' && srcNode.parent.name.includes('Variação')) {
                 clearVariationMarkers(srcNode.parent as FrameNode);
               }
               compClone = srcNode ? srcNode.clone() : createComponentInstance(componentePrincipalAtivo);
             } else {
               compClone = createComponentInstance(componentePrincipalAtivo);
-              if (compClone.type === 'INSTANCE' && variacao.propriedades && Object.keys(variacao.propriedades).length > 0) {
-                try { (compClone as InstanceNode).setProperties(variacao.propriedades); } catch (e) {
-                  figma.ui.postMessage({ type: 'feedback', message: '⚠️ Variante tabulação não aplicada: ' + String(e) });
+              if (compClone.type === 'INSTANCE') {
+                // size=Small como padrão; propriedades da variação sobrescrevem se necessário
+                try { (compClone as InstanceNode).setProperties({ size: 'Small' }); } catch (_) {}
+                if (variacao.propriedades && Object.keys(variacao.propriedades).length > 0) {
+                  try { (compClone as InstanceNode).setProperties(variacao.propriedades); } catch (e) {
+                    figma.ui.postMessage({ type: 'feedback', message: '⚠️ Variante tabulação não aplicada: ' + String(e) });
+                  }
                 }
               }
             }
@@ -790,8 +960,61 @@ figma.ui.onmessage = async (msg) => {
               let globalItemCounter = 0;
               let totalWidth = SR_PAD_LEFT;
               let totalHeight = SR_PAD_TOP;
+              let migrVarIdx = 0; // índice na oldSRVarCapture para variações de migração
 
               for (const variacao of variacoesLTComItems) {
+                const conectoresVar = variacao.conectores_leitor || [];
+                const isMigration = isOldHandoff && conectoresVar.length > 0 &&
+                  conectoresVar.every((c: any) => c.origem === 'migração' || c.origem === 'migração-sem-match');
+                const oldCapture = (isMigration && oldSRVarCapture[migrVarIdx]) ? oldSRVarCapture[migrVarIdx] : null;
+                if (isMigration) migrVarIdx++;
+
+                if (oldCapture) {
+                  // ── Variação de migração: reutiliza nós do handoff antigo ──
+                  const oldCompW = (oldCapture.comp as any).width  || componentePrincipalAtivo.width;
+                  const oldCompH = (oldCapture.comp as any).height || componentePrincipalAtivo.height;
+                  if (currentX > SR_PAD_LEFT && currentX + oldCompW > SR_MAX_WIDTH) {
+                    currentX = SR_PAD_LEFT; currentY += rowHeight + SR_GAP_V; rowHeight = 0;
+                  }
+                  // Inserir primeiro no frame, depois setar x,y (coordenadas relativas ao frame pai)
+                  srImageFrame.insertChild(0, oldCapture.comp);
+                  oldCapture.comp.x = currentX;
+                  oldCapture.comp.y = currentY;
+                  oldCapture.comp.visible = true;
+
+                  globalItemCounter++;
+                  const numNode = oldCapture.numBadge ?? (modelItemNumber ? modelItemNumber.clone() : null);
+                  if (numNode) {
+                    srImageFrame.appendChild(numNode);
+                    const numTxts = (numNode as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+                    const numTxt = numTxts.find(n => /^\d+$/.test(n.characters.trim())) || numTxts[0] || null;
+                    if (numTxt) await updateText(numTxt, String(globalItemCounter));
+                    numNode.x = currentX;
+                    numNode.y = currentY - numNode.height - 4;
+                    numNode.visible = true;
+                    try { (numNode as any).setProperties({ 'connector': 'Off' }); } catch(e) {}
+                  }
+
+                  // Filtra badges: inclui os que não foram excluídos (por migrBadgeIdx)
+                  const keepIdxs = new Set(conectoresVar
+                    .filter((c: any) => c.migrBadgeIdx != null && c.migrBadgeIdx >= 0)
+                    .map((c: any) => c.migrBadgeIdx));
+                  const hasIdxData = keepIdxs.size > 0;
+                  for (const bd of oldCapture.badges) {
+                    if (hasIdxData && !keepIdxs.has(bd.idx)) continue;
+                    srImageFrame.appendChild(bd.clone);
+                    bd.clone.x = currentX + bd.relX;
+                    bd.clone.y = currentY + bd.relY;
+                    bd.clone.visible = true;
+                  }
+
+                  rowHeight = Math.max(rowHeight, oldCompH);
+                  totalWidth = Math.max(totalWidth, currentX + oldCompW);
+                  currentX += oldCompW + SR_GAP_H;
+                  continue; // pula a geração normal
+                }
+
+                // ── Variação nova ou sem capture: geração normal ──
                 // Obter clone do componente correto para esta variação
                 let compClone: SceneNode;
                 if (variacao.id === 'default') {
@@ -847,8 +1070,15 @@ figma.ui.onmessage = async (msg) => {
                 const compH = (compClone as FrameNode).height || componentePrincipalAtivo.height;
 
                 for (let i = 0; i < conectores.length; i++) {
-                  const c = conectores[i];
+                  let c = conectores[i];
                   const letra = letrasLT[i];
+
+                  // Fallback para conectores sem dados de posição (migrados do formato antigo)
+                  if (!('relX' in c) && !('relY' in c)) {
+                    const N = conectores.length;
+                    const spacing = compH / (N + 1);
+                    c = { ...c, relX: 0, relY: Math.round(spacing * (i + 1) - 10), width: 20, height: 20 };
+                  }
 
                   if (c.tipoAnotacao === 'agrupamento' && modelAgrupamento) {
                     const agClone = modelAgrupamento.clone();
@@ -858,6 +1088,7 @@ figma.ui.onmessage = async (msg) => {
                     const agW = c.width || 80;
                     const agH = c.height || 40;
                     agClone.resize(agW, agH);
+                    srImageFrame.appendChild(agClone);
                     agClone.x = currentX + agRelX;
                     agClone.y = currentY + agRelY;
                     const spaceRight  = compW - ((c.relX || 0) + (c.width  || 80));
@@ -874,7 +1105,6 @@ figma.ui.onmessage = async (msg) => {
                     const agTexts = agClone.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
                     const agLetraTxt = agTexts.find(n => /^[A-Za-z✦]/.test(n.characters.trim())) || agTexts[0] || null;
                     if (agLetraTxt) await updateText(agLetraTxt, letra);
-                    srImageFrame.appendChild(agClone);
                   } else if (modelConector && c.tipoAnotacao !== 'agrupamento') {
                     const conClone = modelConector.clone();
                     conClone.visible = true;
@@ -943,7 +1173,8 @@ figma.ui.onmessage = async (msg) => {
               );
 
               if (modelConector)    modelConector.remove();
-              if (modelAgrupamento) modelAgrupamento.remove();
+              const agToRemove = agrupamentoAncestor ?? modelAgrupamento;
+              if (agToRemove) agToRemove.remove();
               if (modelItemNumber)  modelItemNumber.remove();
             }
           }
@@ -1165,8 +1396,11 @@ figma.ui.onmessage = async (msg) => {
             zoomCompY = compY;
 
             const compClone = createComponentInstance(componentePrincipalAtivo) as FrameNode & SceneNode;
+            compClone.x = zoomCurrentX;
+            compClone.y = compY;
+            zoomImageFrame.insertChild(0, compClone);
             if (zType === '200% Texto (reflow)') {
-              // Escala apenas os nós de texto 2x
+              // Escala apenas os nós de texto 2x — clone já inserido no frame para referências válidas após await
               const textNodes = compClone.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
               const fontsToLoad = new Set<string>();
               for (const tn of textNodes) {
@@ -1178,16 +1412,15 @@ figma.ui.onmessage = async (msg) => {
                 return figma.loadFontAsync({ family, style });
               }));
               for (const tn of textNodes) {
-                const fs = tn.fontSize;
-                if (typeof fs === 'number') tn.fontSize = fs * 2;
+                try {
+                  const fs = tn.fontSize;
+                  if (typeof fs === 'number') tn.fontSize = fs * 2;
+                } catch (e) {}
               }
             } else if (scale !== 1) {
               // Scaling proporcional do componente inteiro
               (compClone as any).rescale(scale);
             }
-            compClone.x = zoomCurrentX;
-            compClone.y = compY;
-            zoomImageFrame.insertChild(0, compClone);
 
             zoomMaxHeight  = Math.max(zoomMaxHeight, compClone.height);
             zoomTotalWidth = zoomCurrentX + compClone.width;
@@ -1423,6 +1656,8 @@ figma.ui.onmessage = async (msg) => {
       figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo.' });
       return;
     }
+    let instance: SceneNode | null = null;
+    let varFrame: FrameNode | null = null;
     try {
       const comp = componentePrincipalAtivo;
       const parentNode = comp.parent as FrameNode | PageNode;
@@ -1431,7 +1666,6 @@ figma.ui.onmessage = async (msg) => {
         return;
       }
 
-      // Remove frame anterior com mesmo nome se existir, se não encontrar, cria novo
       const frameName = `[A11Y Variação] ${msg.nome}`;
       const existing = figma.currentPage.findOne((n: SceneNode) => n.name === frameName) as FrameNode | null;
       if (existing) {
@@ -1439,28 +1673,19 @@ figma.ui.onmessage = async (msg) => {
         if (existingInstance) {
           figma.currentPage.selection = [existing];
           figma.viewport.scrollAndZoomIntoView([existing]);
-          figma.ui.postMessage({
-            type: 'variation-frame-created', // Mensagem de sucesso para o UI
-            frameNodeId: existing.id,
-            instanceNodeId: existingInstance.id
-          });
-          return; // Termina a execução se encontrou e reusou o frame
+          figma.ui.postMessage({ type: 'variation-frame-created', frameNodeId: existing.id, instanceNodeId: existingInstance.id });
+          return;
         }
       }
-      // Continua a criação normal se não encontrou um frame existente com instância
-      // Cria instância do componente (suporta INSTANCE, COMPONENT, COMPONENT_SET)
-      const instance = createComponentInstance(comp);
+
+      instance = createComponentInstance(comp);
       instance.x = 0;
       instance.y = 0;
-
       if (instance.type === 'INSTANCE' && msg.propriedades && Object.keys(msg.propriedades).length > 0) {
-        try {
-          instance.setProperties(msg.propriedades);
-        } catch(e) { figma.ui.postMessage({ type: "feedback", message: "⚠️ Propriedade não aplicada: " + String(e) }); }
+        try { instance.setProperties(msg.propriedades); } catch(e) { figma.ui.postMessage({ type: "feedback", message: "⚠️ Propriedade não aplicada: " + String(e) }); }
       }
 
-      // Cria frame container sem auto layout — tamanho igual à instância
-      const varFrame = figma.createFrame();
+      varFrame = figma.createFrame();
       varFrame.name = frameName;
       varFrame.fills = [];
       varFrame.clipsContent = false;
@@ -1470,15 +1695,16 @@ figma.ui.onmessage = async (msg) => {
       container.appendChild(varFrame);
       varFrame.appendChild(instance);
 
-      figma.currentPage.selection = [varFrame];
-      figma.viewport.scrollAndZoomIntoView([varFrame]);
+      const frameId = varFrame.id;
+      const instanceId = instance.id;
+      instance = null; varFrame = null; // ancorados — não limpar no catch
 
-      figma.ui.postMessage({
-        type: 'variation-frame-created',
-        frameNodeId: varFrame.id,
-        instanceNodeId: instance.id
-      });
+      const placed = figma.currentPage.findOne((n: SceneNode) => n.id === frameId) as FrameNode;
+      if (placed) { figma.currentPage.selection = [placed]; figma.viewport.scrollAndZoomIntoView([placed]); }
+      figma.ui.postMessage({ type: 'variation-frame-created', frameNodeId: frameId, instanceNodeId: instanceId });
     } catch(e) {
+      try { instance?.remove(); } catch (_) {}
+      try { varFrame?.remove(); } catch (_) {}
       console.error('[create-variation-frame]', e);
       figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar frame de variação: ${e}` });
     }
@@ -1573,6 +1799,8 @@ figma.ui.onmessage = async (msg) => {
       figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo.' });
       return;
     }
+    let instance: SceneNode | null = null;
+    let varFrame: FrameNode | null = null;
     try {
       const comp = componentePrincipalAtivo;
       const parentNode = comp.parent as FrameNode | PageNode;
@@ -1583,13 +1811,13 @@ figma.ui.onmessage = async (msg) => {
       const frameName = `[A11Y LT Variação] ${msg.nome}`;
       const existing = figma.currentPage.findOne((n: SceneNode) => n.name === frameName);
       if (existing) existing.remove();
-      const instance = createComponentInstance(comp);
+      instance = createComponentInstance(comp);
       instance.x = 0;
       instance.y = 0;
       if (instance.type === 'INSTANCE' && msg.propriedades && Object.keys(msg.propriedades).length > 0) {
         try { instance.setProperties(msg.propriedades); } catch (e) { figma.ui.postMessage({ type: "feedback", message: "⚠️ Propriedade não aplicada: " + String(e) }); }
       }
-      const varFrame = figma.createFrame();
+      varFrame = figma.createFrame();
       varFrame.name = frameName;
       varFrame.fills = [];
       varFrame.clipsContent = false;
@@ -1597,10 +1825,14 @@ figma.ui.onmessage = async (msg) => {
       const container = await getOrCreateVariacoesContainer(comp, handoffAtivo, parentNode);
       container.appendChild(varFrame);
       varFrame.appendChild(instance);
-      figma.currentPage.selection = [varFrame];
-      figma.viewport.scrollAndZoomIntoView([varFrame]);
-      figma.ui.postMessage({ type: 'sr-variation-frame-created', frameNodeId: varFrame.id, instanceNodeId: instance.id });
+      const frameId = varFrame.id; const instanceId = instance.id;
+      instance = null; varFrame = null; // ancorados — não limpar no catch
+      const placed = figma.currentPage.findOne((n: SceneNode) => n.id === frameId) as FrameNode;
+      if (placed) { figma.currentPage.selection = [placed]; figma.viewport.scrollAndZoomIntoView([placed]); }
+      figma.ui.postMessage({ type: 'sr-variation-frame-created', frameNodeId: frameId, instanceNodeId: instanceId });
     } catch(e) {
+      try { instance?.remove(); } catch (_) {}
+      try { varFrame?.remove(); } catch (_) {}
       figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar frame de variação de leitor: ${e}` });
     }
   }
@@ -1611,6 +1843,8 @@ figma.ui.onmessage = async (msg) => {
       figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo.' });
       return;
     }
+    let instance: SceneNode | null = null;
+    let varFrame: FrameNode | null = null;
     try {
       const comp = componentePrincipalAtivo;
       const parentNode = comp.parent as FrameNode | PageNode;
@@ -1621,7 +1855,7 @@ figma.ui.onmessage = async (msg) => {
       const frameName = `[A11Y Tab Variação] ${msg.nome}`;
       const existing = figma.currentPage.findOne((n: SceneNode) => n.name === frameName);
       if (existing) existing.remove();
-      const instance = createComponentInstance(comp);
+      instance = createComponentInstance(comp);
       instance.x = 0;
       instance.y = 0;
       if (instance.type === 'INSTANCE' && msg.propriedades && Object.keys(msg.propriedades).length > 0) {
@@ -1629,7 +1863,7 @@ figma.ui.onmessage = async (msg) => {
           figma.ui.postMessage({ type: 'feedback', message: '⚠️ Variante tabulação não aplicada: ' + String(e) });
         }
       }
-      const varFrame = figma.createFrame();
+      varFrame = figma.createFrame();
       varFrame.name = frameName;
       varFrame.fills = [];
       varFrame.clipsContent = false;
@@ -1637,10 +1871,14 @@ figma.ui.onmessage = async (msg) => {
       const container = await getOrCreateVariacoesContainer(comp, handoffAtivo, parentNode);
       container.appendChild(varFrame);
       varFrame.appendChild(instance);
-      figma.currentPage.selection = [varFrame];
-      figma.viewport.scrollAndZoomIntoView([varFrame]);
-      figma.ui.postMessage({ type: 'tab-variation-frame-created', frameNodeId: varFrame.id, instanceNodeId: instance.id });
+      const frameId = varFrame.id; const instanceId = instance.id;
+      instance = null; varFrame = null; // ancorados — não limpar no catch
+      const placed = figma.currentPage.findOne((n: SceneNode) => n.id === frameId) as FrameNode;
+      if (placed) { figma.currentPage.selection = [placed]; figma.viewport.scrollAndZoomIntoView([placed]); }
+      figma.ui.postMessage({ type: 'tab-variation-frame-created', frameNodeId: frameId, instanceNodeId: instanceId });
     } catch(e) {
+      try { instance?.remove(); } catch (_) {}
+      try { varFrame?.remove(); } catch (_) {}
       figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar frame de variação de tabulação: ${e}` });
     }
   }
@@ -1717,17 +1955,20 @@ figma.ui.onmessage = async (msg) => {
   else if (msg.type === 'save-leitor-tela') {
     if (!handoffAtivo) return;
     const dbInstance = (handoffAtivo as any).findOne((n: SceneNode) => n.name === '[dsc-h] Plugin Data A11y') as InstanceNode | null;
-    if (!dbInstance) return;
-    const dados = JSON.parse(dbInstance.getPluginData('a11y-component-data') || '{}');
+    const baseRaw = dbInstance
+      ? dbInstance.getPluginData('a11y-component-data')
+      : (handoffAtivo as any).getPluginData('a11y-component-data');
+    const dados = JSON.parse(baseRaw || '{}');
     dados.conectores_leitor = msg.conectores_leitor ?? [];
     dados.sem_leitor = msg.sem_leitor ?? false;
     dados.variacoes_leitor = msg.variacoes_leitor ?? [];
-    dbInstance.setPluginData('a11y-component-data', JSON.stringify(dados));
-    (handoffAtivo as any).setPluginData('a11y-component-data', JSON.stringify(dados));
+    const saved = JSON.stringify(dados);
+    if (dbInstance) dbInstance.setPluginData('a11y-component-data', saved);
+    (handoffAtivo as any).setPluginData('a11y-component-data', saved);
 
     if (componentePrincipalAtivo) {
       const dataNode = await resolveDataNode(componentePrincipalAtivo);
-      if (dataNode) dataNode.setPluginData('a11y-component-data', JSON.stringify(dados));
+      if (dataNode) dataNode.setPluginData('a11y-component-data', saved);
     }
   }
 
@@ -1759,11 +2000,13 @@ figma.ui.onmessage = async (msg) => {
   else if (msg.type === 'save-partial-data') {
     if (!handoffAtivo) return;
     const dbInstance = await getCachedPluginDataNode();
-    if (!dbInstance) return;
-    const dados = JSON.parse(dbInstance.getPluginData('a11y-component-data') || '{}');
+    const baseRaw = dbInstance
+      ? dbInstance.getPluginData('a11y-component-data')
+      : (handoffAtivo as any).getPluginData('a11y-component-data');
+    const dados = JSON.parse(baseRaw || '{}');
     dados[msg.key] = msg.value;
     const saved = JSON.stringify(dados);
-    dbInstance.setPluginData('a11y-component-data', saved);
+    if (dbInstance) dbInstance.setPluginData('a11y-component-data', saved);
     (handoffAtivo as any).setPluginData('a11y-component-data', saved);
     if (componentePrincipalAtivo) {
       const dataNode = await resolveDataNode(componentePrincipalAtivo);
@@ -1821,15 +2064,17 @@ figma.ui.onmessage = async (msg) => {
       const overlay = figma.createFrame();
       overlay.name = `[A11Y Leitor] ${nome}`;
       overlay.resize(100, 60);
+      figma.currentPage.appendChild(overlay);
       overlay.x = comp.absoluteTransform[0][2];
       overlay.y = comp.absoluteTransform[1][2];
       overlay.fills = [{ type: 'SOLID', color: cor, opacity: 0.25 } as SolidPaint];
       overlay.strokes = [{ type: 'SOLID', color: cor } as SolidPaint];
       overlay.strokeWeight = 2;
-      figma.currentPage.appendChild(overlay);
       figma.currentPage.selection = [overlay];
       figma.viewport.scrollAndZoomIntoView([overlay]);
       tempSROverlayId = overlay.id;
+      tempSROverlayRefX = comp.absoluteTransform[0][2];
+      tempSROverlayRefY = comp.absoluteTransform[1][2];
       figma.ui.postMessage({ type: 'sr-overlay-created' });
     } catch(e) {
       figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar frame de anotação: ${e}` });
@@ -1844,14 +2089,10 @@ figma.ui.onmessage = async (msg) => {
     }
     const overlay = await figma.getNodeByIdAsync(tempSROverlayId) as FrameNode | null;
     if (!overlay) return;
-    const comp = (componenteSRVariacaoAtivo ?? componenteTabVariacaoAtivo ?? componentePrincipalAtivo) as SceneNode & { absoluteTransform: Transform };
-    if (!comp) return;
-    const compX = comp.absoluteTransform[0][2];
-    const compY = comp.absoluteTransform[1][2];
     const item = {
       tipo: 'agrupamento' as const,
-      relX: overlay.x - compX,
-      relY: overlay.y - compY,
+      relX: overlay.x - tempSROverlayRefX,
+      relY: overlay.y - tempSROverlayRefY,
       width: overlay.width,
       height: overlay.height,
     };
@@ -2018,9 +2259,9 @@ function parseRolesList(dbInstance: InstanceNode): { nome: string; especificacao
 // ==========================================
 
 async function parseOldSRData(handoff: SceneNode): Promise<{
-  variacoes: { nome: string; propriedades: Record<string, string>; rawConnectors: { descricao: string }[] }[];
+  variacoes: { nome: string; propriedades: Record<string, string>; rawConnectors: { descricao: string; relX?: number; relY?: number; width?: number; height?: number; tipoAnotacao?: string; migrBadgeIdx?: number }[] }[];
 }> {
-  const variacoes: { nome: string; propriedades: Record<string, string>; rawConnectors: { descricao: string }[] }[] = [];
+  const variacoes: { nome: string; propriedades: Record<string, string>; rawConnectors: { descricao: string; relX?: number; relY?: number; width?: number; height?: number; tipoAnotacao?: string; migrBadgeIdx?: number }[] }[] = [];
 
   const srFrame = (handoff as any).findOne(
     (n: SceneNode) => n.name === 'screen reader'
@@ -2032,7 +2273,7 @@ async function parseOldSRData(handoff: SceneNode): Promise<{
     (n: SceneNode) => n.name === 'image'
   ) as FrameNode | undefined;
 
-  const componentInstances: { props: Record<string, string>; x: number }[] = [];
+  const componentInstances: { props: Record<string, string>; x: number; y: number; w: number; h: number }[] = [];
   if (imageFrame) {
     const instances = Array.from(imageFrame.children as SceneNode[]).filter(
       (n: SceneNode) => n.type === 'INSTANCE' &&
@@ -2051,8 +2292,76 @@ async function parseOldSRData(handoff: SceneNode): Promise<{
         const cleanKey = key.replace(/#[\w:]+$/, '').trim();
         props[cleanKey] = String((val as any).value ?? '');
       }
-      componentInstances.push({ props, x: inst.x });
+      componentInstances.push({ props, x: inst.x, y: inst.y, w: inst.width, h: inst.height });
     }
+  }
+
+  // Agrupa badges [a11y] do imageFrame por variação para incluir posição na migração
+  const badgesByVar: Array<Array<{ relX: number; relY: number; w: number; h: number; tipoAnotacao: string }>> =
+    componentInstances.map(() => []);
+
+  if (imageFrame && componentInstances.length > 0) {
+    const nearestIdx = (badgeX: number, badgeW: number): number => {
+      const cx = badgeX + badgeW / 2;
+      let best = 0, bestDist = Infinity;
+      for (let i = 0; i < componentInstances.length; i++) {
+        const ci = componentInstances[i];
+        const d = Math.abs(cx - (ci.x + ci.w / 2));
+        if (d < bestDist) { bestDist = d; best = i; }
+      }
+      return best;
+    };
+
+    // Conectores regulares: badge fica fora do componente → converter para posição do elemento
+    const connectorNodes = (Array.from(imageFrame.children as SceneNode[]) as SceneNode[]).filter(
+      n => n.name === '[a11y] Conectores'
+    );
+    for (const badge of connectorNodes) {
+      const idx = nearestIdx(badge.x, badge.width);
+      const ci = componentInstances[idx];
+      const isLeft  = badge.x + badge.width <= ci.x;
+      const isRight = badge.x >= ci.x + ci.w;
+      const isAbove = badge.y + badge.height <= ci.y;
+      const isBelow = badge.y >= ci.y + ci.h;
+      const badgeCY = badge.y + badge.height / 2;
+      const badgeCX = badge.x + badge.width / 2;
+      let relX: number, relY: number;
+      if (isLeft) {
+        relX = 0;
+        relY = Math.max(0, Math.min(ci.h - 20, badgeCY - ci.y - 10));
+      } else if (isRight) {
+        relX = ci.w - 20;
+        relY = Math.max(0, Math.min(ci.h - 20, badgeCY - ci.y - 10));
+      } else if (isAbove) {
+        relX = Math.max(0, Math.min(ci.w - 20, badgeCX - ci.x - 10));
+        relY = 0;
+      } else if (isBelow) {
+        relX = Math.max(0, Math.min(ci.w - 20, badgeCX - ci.x - 10));
+        relY = ci.h - 20;
+      } else {
+        relX = Math.max(0, badge.x - ci.x);
+        relY = Math.max(0, badge.y - ci.y);
+      }
+      badgesByVar[idx].push({ relX, relY, w: 20, h: 20, tipoAnotacao: '' });
+    }
+
+    // Agrupamentos: usar posição e tamanho reais (são retângulos que cobrem a área)
+    const agrupamentoNodes = (Array.from(imageFrame.children as SceneNode[]) as SceneNode[]).filter(
+      n => n.name === '[a11y] Agrupamento'
+    );
+    for (const ag of agrupamentoNodes) {
+      const idx = nearestIdx(ag.x, ag.width);
+      const ci = componentInstances[idx];
+      badgesByVar[idx].push({
+        relX: ag.x - ci.x,
+        relY: ag.y - ci.y,
+        w: ag.width,
+        h: ag.height,
+        tipoAnotacao: 'agrupamento'
+      });
+    }
+
+    for (const grp of badgesByVar) grp.sort((a, b) => a.relY - b.relY || a.relX - b.relX);
   }
 
   const specsFrame = Array.from(srFrame.children as SceneNode[]).find(
@@ -2083,7 +2392,7 @@ async function parseOldSRData(handoff: SceneNode): Promise<{
       (n: SceneNode) => n.name === '[a11y] Box specs LT'
     ) as FrameNode[];
 
-    const rawConnectors: { descricao: string }[] = [];
+    const rawConnectors: { descricao: string; relX?: number; relY?: number; width?: number; height?: number; tipoAnotacao?: string; migrBadgeIdx?: number }[] = [];
 
     for (const box of boxes) {
       const contentFrame = Array.from(box.children as SceneNode[]).find(
@@ -2101,7 +2410,13 @@ async function parseOldSRData(handoff: SceneNode): Promise<{
       ) as TextNode | null;
       if (!textNode || !textNode.characters.trim()) continue;
 
-      rawConnectors.push({ descricao: textNode.characters.trim() });
+      const currentBadgeIdx = rawConnectors.length;
+      const badgePos = badgesByVar[idx]?.[currentBadgeIdx];
+      rawConnectors.push({
+        descricao: textNode.characters.trim(),
+        migrBadgeIdx: currentBadgeIdx,
+        ...(badgePos ? { relX: badgePos.relX, relY: badgePos.relY, width: badgePos.w, height: badgePos.h, tipoAnotacao: badgePos.tipoAnotacao } : {})
+      });
     }
 
     if (rawConnectors.length > 0) {
@@ -2277,7 +2592,7 @@ async function parseOldTouchAreas(handoff: SceneNode): Promise<{ variacoes: Touc
       const hStr = codes[0] ? getCodeText(codes[0]) : '';
       const wStr = codes[1] ? getCodeText(codes[1]) : '';
       const h = parseInt(hStr);
-      const w = /^\d+/.test(wStr) ? parseInt(wStr) : 0;
+      const w = /^\d+px$/i.test(wStr) ? parseInt(wStr) : 0;
       if (isNaN(h) || h === 0) continue;
 
       // componentProperties do componente correspondente (por índice)
@@ -2289,11 +2604,33 @@ async function parseOldTouchAreas(handoff: SceneNode): Promise<{ variacoes: Touc
         }
       }
 
+      // Tenta recuperar relX/relY real a partir do overlay visual no imageFrame antigo
+      let relX = 0;
+      let relY = 0;
+      let overlayWidth = w;
+      if (inst && imageFrame) {
+        const overlayFrames = (Array.from(imageFrame.children as SceneNode[]) as SceneNode[]).filter(
+          (n: SceneNode) => n.name !== 'tag' && n.name !== '[dsc-h] Item Number' &&
+            !(instances as SceneNode[]).includes(n) &&
+            (n as any).height != null && Math.round((n as any).height) === h
+        );
+        // Escolhe o overlay mais próximo horizontalmente ao inst
+        const bestOverlay = overlayFrames.sort((a, b) =>
+          Math.abs((a as any).x - inst.x) - Math.abs((b as any).x - inst.x)
+        )[0] as FrameNode | undefined;
+        if (bestOverlay) {
+          relX = (bestOverlay.x - inst.x);
+          relY = (bestOverlay.y - inst.y);
+          overlayWidth = Math.round(bestOverlay.width) === Math.round(inst.width) ? 0 : bestOverlay.width;
+        }
+      }
+      const finalW = overlayWidth > 0 ? overlayWidth : w;
+
       const nomeVar = idx === 0 ? 'Default' : (inst?.name || `Variação ${idx + 1}`);
       variacoes.push({
         nome: nomeVar,
         propriedades,
-        areas: [{ nome, width: w, height: h, preset: toTouchPreset(h, w), relX: 0, relY: 0 }]
+        areas: [{ nome, width: finalW, height: h, preset: toTouchPreset(h, finalW), relX, relY }]
       });
     }
 
@@ -2499,31 +2836,29 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
 
   let componentData: any = { plataformas: [], zoom: [], mapeamentos: [], areas_toque: [], sem_toque: false, variacoes: [], variacoes_tabulacao: [], variacoes_leitor: [], conectores_leitor: [], sem_leitor: false };
 
-  if (!isOldFormat) {
-    // 1. COMPONENT_SET como baseline (apenas para handoffs novos)
-    if (componentePrincipalAtivo) {
-      const dataNode = await resolveDataNode(componentePrincipalAtivo);
-      if (dataNode) {
-        const rawFromComponent = dataNode.getPluginData('a11y-component-data');
-        if (rawFromComponent) {
-          try { componentData = JSON.parse(rawFromComponent); } catch(e) {}
-        }
+  // 1. COMPONENT_SET como baseline
+  if (componentePrincipalAtivo) {
+    const dataNode = await resolveDataNode(componentePrincipalAtivo);
+    if (dataNode) {
+      const rawFromComponent = dataNode.getPluginData('a11y-component-data');
+      if (rawFromComponent) {
+        try { componentData = JSON.parse(rawFromComponent); } catch(e) {}
       }
     }
+  }
 
-    // 2. dbInstance dentro do handoff (override se tem dados — mais específico)
-    if (dbInstance) {
-      const rawSaved = dbInstance.getPluginData('a11y-component-data');
-      if (rawSaved) {
-        try { componentData = JSON.parse(rawSaved); } catch(e) {}
-      }
+  // 2. dbInstance dentro do handoff (override se tem dados — mais específico)
+  if (dbInstance) {
+    const rawSaved = dbInstance.getPluginData('a11y-component-data');
+    if (rawSaved) {
+      try { componentData = JSON.parse(rawSaved); } catch(e) {}
     }
+  }
 
-    // 3. Dados diretos no frame do handoff (override final — mais recente)
-    const rawDirect = (handoff as any).getPluginData('a11y-component-data');
-    if (rawDirect) {
-      try { componentData = JSON.parse(rawDirect); } catch(e) {}
-    }
+  // 3. Dados diretos no frame do handoff (override final — mais recente)
+  const rawDirect = (handoff as any).getPluginData('a11y-component-data');
+  if (rawDirect) {
+    try { componentData = JSON.parse(rawDirect); } catch(e) {}
   }
 
   // parseMasterList e parseRolesList: sempre executam se dbInstance existe

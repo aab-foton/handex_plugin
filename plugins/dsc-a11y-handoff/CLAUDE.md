@@ -7,8 +7,8 @@ Branch atual: `migration-from-old-handoff`.
 
 | Arquivo | Papel |
 |---------|-------|
-| `code.ts` | Lógica do plugin (sandbox Figma, ~2545 linhas) |
-| `ui.html` | Interface (iframe sandboxado, ~2876 linhas) |
+| `code.ts` | Lógica do plugin (sandbox Figma, ~2880 linhas) |
+| `ui.html` | Interface (iframe sandboxado, ~2888 linhas) |
 | `FUNCTIONS.md` | Mapa de funções e handlers com números de linha |
 | `Makefile` | `push-github` / `push-gitlab` / `push-all` |
 
@@ -29,17 +29,21 @@ Seleção Figma (1 componente + 1 handoff)
 
 ```
 Seleção com handoff antigo (tem filho 'keyboard maping/mapping')
-  → carregarDadosEEnviarParaUI() envia isOldFormat=true
-  → UI: exibe banner "Handoff Antigo Detectado"
+  → carregarDadosEEnviarParaUI() carrega pluginData salvo (se existir) e envia isOldFormat=true
+  → UI: se componentData está vazio → exibe banner "Handoff Antigo Detectado"
+         se componentData já tem dados → preenche form diretamente (já foi importado antes)
   → Usuário clica "Importar Tudo"
       → import-old-section para cada seção (geral, toque, tabulacao, leitor)
       → parseOldGeralData / parseOldTouchAreas / parseOldTabOrder / parseOldSRData
+      → save-partial-data / save-leitor-tela salvam no frame do handoff (fallback sem dbInstance)
       → UI preenche formulário com dados migrados
   → Usuário clica "Atualizar Handoff"
   → run-handoff detecta isOldHandoff → swap do template:
+      → clona seções desmarcadas (oldSnapshots) antes de deletar o antigo
       → importComponentByKeyAsync('4ebd8a017a86b29ca60427416ed4b76af05e4a67')  ← variant=Acessibility
       → createInstance() posicionada onde o antigo estava
       → transfere pluginData, deleta o antigo
+      → restaura oldSnapshots nas seções correspondentes do novo template
       → continua fluxo normal (detach → fillTable)
 ```
 
@@ -68,7 +72,10 @@ No template fresco (colocado manualmente pelo designer), `table` pode ter `Heade
 
 ## Persistência
 
-- Chave: `a11y-component-data` no pluginData do nó `[dsc-h] Plugin Data A11y`
+- Chave: `a11y-component-data` — salva em 3 lugares (cascata, mais específico ganha na leitura):
+  1. `[dsc-h] Plugin Data A11y` (dbInstance) — quando existir (template novo)
+  2. Frame do handoff diretamente — sempre (fallback para handoff antigo sem dbInstance)
+  3. COMPONENT_SET / COMPONENT pai — via `resolveDataNode` (baseline compartilhado)
 - Estrutura completa:
 ```ts
 {
@@ -87,6 +94,9 @@ No template fresco (colocado manualmente pelo designer), `table` pode ter `Heade
 - `TouchAreaItem`: `{ nome, preset, width, height, relX, relY }`
 - `Variacao`: `{ id, nome, propriedades, areas_toque, sem_toque, frameNodeId, instanceNodeId }`
 - `TabVar`: `{ id, nome, propriedades, tab_order, sem_tabulacao, frameNodeId, instanceNodeId }`
+- `SRVar`: `{ id, nome, propriedades, conectores_leitor, sem_leitor, frameNodeId, instanceNodeId }`
+- Conector leitor de tela: `{ roleNome, especificacao, tipo, tipoConnector, tipoAnotacao, migrBadgeIdx, origem, descricao, observacao, nomeAcessivel, codigoWeb, codigoRN, relX?, relY?, width?, height? }`
+  - `tipoAnotacao === 'agrupamento'` → renderiza `[a11y] Agrupamento`; demais → `[a11y] Conectores`
 
 ## Convenções
 
@@ -95,3 +105,5 @@ No template fresco (colocado manualmente pelo designer), `table` pode ter `Heade
 - Ao gerar handoff: `detachInstance()` se o nó for `INSTANCE` antes de `appendChild`
 - `figma.getNodeByIdAsync(id)` (async) — `getNodeById` síncrono falha no modo `dynamic-page`
 - Template antigo detectado por: filho com nome `'keyboard maping'` ou `'keyboard mapping'`
+- `tempSROverlayRefX/Y` — armazena posição do componente no momento de `create-sr-overlay` para calcular `relX`/`relY` correto no `confirm-sr-area`
+- Agrupamentos de leitor de tela: `relX`/`relY` são relativos ao componente ativo; `width`/`height` são as dimensões do frame de agrupamento
