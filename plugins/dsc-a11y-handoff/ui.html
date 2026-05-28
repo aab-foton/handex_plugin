@@ -48,6 +48,8 @@
     .remove-btn:hover { color: #FF5252; }
     #settingsOverlay { display: none; }
     #settingsOverlay.open { display: flex; }
+    #infoOverlay { display: none; }
+    #infoOverlay.open { display: flex; }
     #panel-toque.tab-panel.active { display: flex; flex: 1; flex-direction: column; padding: 0; overflow: hidden; }
     #panel-toque { position: relative; overflow: hidden; }
     #touchFormView { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #fff; flex-direction: column; z-index: 10; }
@@ -227,6 +229,7 @@
   <div class='header-content'>
     <div class='header-badge'>A11Y</div>
     <h2 id='compName'>...</h2>
+    <button id='btnInfo' onclick='openInfo()' style='background:none;border:none;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#999;font-size:16px;flex-shrink:0;' title='Como usar'>?</button>
     <button id='btnSettings' onclick='openSettings()' style='background:none;border:none;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#999;font-size:16px;flex-shrink:0;' title='Configurações'>⚙</button>
   </div>
       <div class="tabs">
@@ -1535,6 +1538,13 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
 parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-sync', value: _settingSync } }, '*');
   }
 
+  function openInfo() {
+    el('infoOverlay').classList.add('open');
+  }
+  function closeInfo() {
+    el('infoOverlay').classList.remove('open');
+  }
+
   function reloadTemplateData() {
     closeSettings();
     parent.postMessage({ pluginMessage: { type: 'load-initial-data' } }, '*');
@@ -2812,6 +2822,112 @@ const select = el('srSelectTipoConector');
 
 
   </script>
+
+  <div id='infoOverlay' style='position:fixed;inset:0;background:#FAFAFA;z-index:99999;flex-direction:column;overflow-y:auto;'>
+    <div style='padding:24px 20px 16px;display:flex;align-items:center;justify-content:space-between;background:#fff;border-bottom:1px solid #E5E5E5;flex-shrink:0;'>
+      <span style='font-size:18px;font-weight:700;color:#1a1a1a;'>Como usar</span>
+      <button onclick='closeInfo()' style='background:none;border:none;cursor:pointer;font-size:18px;color:#999;'>×</button>
+    </div>
+    <div style='padding:12px;display:flex;flex-direction:column;gap:8px;'>
+
+      <div style='font-size:11px;font-weight:700;color:#999;letter-spacing:0.08em;'>COMEÇANDO</div>
+
+      <div class='card'>
+        <div class='card-body'>
+          <div style='display:flex;align-items:center;gap:10px;margin-bottom:12px;'>
+            <span style='font-size:18px;background:#EEF0F8;border-radius:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;'>⬡</span>
+            <span style='font-size:14px;font-weight:600;'>Seleção no canvas</span>
+          </div>
+          <p style='font-size:12px;color:#555;line-height:1.5;'>Selecione simultaneamente <strong>o componente</strong> e <strong>o template de handoff</strong> no canvas. O plugin trava o contexto automaticamente e carrega os dados salvos.</p>
+          <p style='font-size:11px;color:#999;margin-top:8px;'>Tipos aceitos: COMPONENT, COMPONENT_SET, INSTANCE ou FRAME.</p>
+        </div>
+      </div>
+
+      <div style='font-size:11px;font-weight:700;color:#999;letter-spacing:0.08em;margin-top:4px;'>ABAS</div>
+
+      <div class='card'>
+        <div class='card-body'>
+          <div style='display:flex;align-items:center;gap:10px;margin-bottom:10px;'>
+            <span style='font-size:18px;background:#EEF0F8;border-radius:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;'>G</span>
+            <span style='font-size:14px;font-weight:600;'>Geral</span>
+          </div>
+          <p style='font-size:12px;color:#555;line-height:1.5;margin-bottom:6px;'>Marque as <strong>plataformas</strong> do componente (Web, Mobile iOS, Android…) e os <strong>tipos de zoom</strong> aplicáveis.</p>
+          <p style='font-size:12px;color:#555;line-height:1.5;'>Use a busca para adicionar <strong>mapeamentos de teclado e gestos</strong> da biblioteca DSC.</p>
+        </div>
+      </div>
+
+      <div class='card'>
+        <div class='card-body'>
+          <div style='display:flex;align-items:center;gap:10px;margin-bottom:10px;'>
+            <span style='font-size:18px;background:#EEF0F8;border-radius:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;'>T</span>
+            <span style='font-size:14px;font-weight:600;'>Área de Toque</span>
+          </div>
+          <p style='font-size:12px;color:#555;line-height:1.5;margin-bottom:6px;'>Crie <strong>variações</strong> de configuração (estado padrão, expandido, etc.). Para cada variação, clique <strong>"Marcar área"</strong> e ajuste o frame rosa no canvas sobre o alvo de toque.</p>
+          <p style='font-size:12px;color:#555;line-height:1.5;'>Escolha o preset de tamanho (Aprimorado 44px, Mínimo 24px, etc.) ou insira dimensões livres.</p>
+        </div>
+      </div>
+
+      <div class='card'>
+        <div class='card-body'>
+          <div style='display:flex;align-items:center;gap:10px;margin-bottom:10px;'>
+            <span style='font-size:18px;background:#EEF0F8;border-radius:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;'>↹</span>
+            <span style='font-size:14px;font-weight:600;'>Tabulação</span>
+          </div>
+          <p style='font-size:12px;color:#555;line-height:1.5;'>Crie variações de configuração. Selecione os elementos focáveis diretamente no canvas e clique <strong>"Adicionar seleção"</strong> para definir a ordem de tabulação.</p>
+        </div>
+      </div>
+
+      <div class='card'>
+        <div class='card-body'>
+          <div style='display:flex;align-items:center;gap:10px;margin-bottom:10px;'>
+            <span style='font-size:18px;background:#EEF0F8;border-radius:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;'>◉</span>
+            <span style='font-size:14px;font-weight:600;'>Leitor de Tela</span>
+          </div>
+          <p style='font-size:12px;color:#555;line-height:1.5;margin-bottom:6px;'>Crie variações de configuração. Adicione <strong>conectores</strong> para cada elemento acessível, escolhendo o tipo de role ARIA e posicionando no canvas.</p>
+          <p style='font-size:12px;color:#555;line-height:1.5;'>Para <strong>agrupamentos</strong>, use "Marcar área de agrupamento" e ajuste o frame no canvas sobre a região a agrupar.</p>
+        </div>
+      </div>
+
+      <div class='card'>
+        <div class='card-body'>
+          <div style='display:flex;align-items:center;gap:10px;margin-bottom:10px;'>
+            <span style='font-size:18px;background:#EEF0F8;border-radius:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;'>↗</span>
+            <span style='font-size:14px;font-weight:600;'>Handoff</span>
+          </div>
+          <p style='font-size:12px;color:#555;line-height:1.5;'>Revise o resumo de todas as seções preenchidas e clique <strong>"Gerar Handoff"</strong> (primeira vez) ou <strong>"Atualizar Handoff"</strong> (atualizações).</p>
+          <p style='font-size:11px;color:#999;margin-top:8px;'>Em ⚙ Configurações você pode escolher quais seções atualizar e preservar edições manuais no template.</p>
+        </div>
+      </div>
+
+      <div style='font-size:11px;font-weight:700;color:#999;letter-spacing:0.08em;margin-top:4px;'>MIGRAÇÃO</div>
+
+      <div class='card'>
+        <div class='card-body'>
+          <div style='display:flex;align-items:center;gap:10px;margin-bottom:10px;'>
+            <span style='font-size:18px;background:#EEF0F8;border-radius:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;'>↻</span>
+            <span style='font-size:14px;font-weight:600;'>Handoff antigo</span>
+          </div>
+          <p style='font-size:12px;color:#555;line-height:1.5;margin-bottom:6px;'>Se o handoff foi criado no formato anterior, o plugin detecta automaticamente e exibe o banner <strong>"Handoff Antigo Detectado"</strong>.</p>
+          <p style='font-size:12px;color:#555;line-height:1.5;margin-bottom:6px;'>Clique <strong>"Importar Tudo"</strong> para migrar os dados. Os dados ficam salvos — na próxima abertura o formulário já vem preenchido.</p>
+          <p style='font-size:12px;color:#555;line-height:1.5;'>Ao clicar <strong>"Atualizar Handoff"</strong>, o template antigo é substituído automaticamente pelo novo, preservando o conteúdo das seções não marcadas para atualizar.</p>
+        </div>
+      </div>
+
+      <div style='font-size:11px;font-weight:700;color:#999;letter-spacing:0.08em;margin-top:4px;'>SOBRE</div>
+
+      <div class='card'>
+        <div class='card-body'>
+          <div style='display:flex;align-items:center;gap:10px;margin-bottom:8px;'>
+            <span style='font-size:18px;background:#EEF0F8;border-radius:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;'>A</span>
+            <span style='font-size:14px;font-weight:600;'>DSC A11Y Handoff</span>
+          </div>
+          <p style='font-size:12px;color:#555;line-height:1.5;'>Plugin Figma para preenchimento de templates de handoff de acessibilidade do Design System Caixa (DSC).</p>
+          <p style='font-size:11px;color:#999;margin-top:8px;'>Os dados de mapeamento de teclado, gestos e roles de leitor de tela são carregados automaticamente da camada <strong>plugin data</strong> do template.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <div id='settingsOverlay' style='position:fixed;inset:0;background:#FAFAFA;z-index:99999;flex-direction:column;overflow-y:auto;'>
     <div style='padding:24px 20px 16px;display:flex;align-items:center;justify-content:space-between;background:#fff;border-bottom:1px solid #E5E5E5;flex-shrink:0;'>
