@@ -1,5 +1,27 @@
 # Changelog — DSC A11Y Handoff
 
+## v2.1.2 — 2026-05-29
+
+### Bugfixes
+
+**Badge de heading mostra h1/h2/h3 em vez de letra alfabética**
+
+No preview e nas specs do leitor de tela, conectores do tipo `'nível de título'` exibiam a letra alfabética do grupo (A, B…) em vez do nível semântico correto. Agora o texto do badge usa `c.especificacao` (ex: `h1`, `h2`, `h3`) quando o conector é do tipo heading, tanto no frame `image` quanto nos boxes `[a11y] Box specs LT`.
+
+**COMPONENT_SET não gera cópia do set inteiro no canvas/handoff**
+
+Quando o componente selecionado era um `COMPONENT_SET` de biblioteca remota, `createComponentInstance` não conseguia acessar os filhos (`children` vazio no contexto do plugin) e caía no fallback `comp.clone()`, que cloana o set inteiro — todas as variantes apareciam soltas no canvas e dentro do handoff. Três correções:
+- `createComponentInstance` agora usa `defaultVariant` como primeira tentativa, depois `children.find(COMPONENT)`, e como último recurso cria um frame placeholder vazio (nunca clona o set).
+- Guardar defensiva em `srcNode.clone()` nos três blocos de variação (toque, tabulação, leitor): se o `instanceNodeId` salvo apontar para um `COMPONENT_SET` (dado corrompido de execuções anteriores), redireciona para `createComponentInstance` em vez de clonar.
+
+**Lixo no canvas após geração do handoff**
+
+Dois tipos de nó podiam ficar soltos na página após "Atualizar Handoff":
+- Overlays `[A11Y Leitor]` pendentes (frame de anotação SR aberto pelo usuário e não confirmado/cancelado antes de gerar): agora removidos no início do `run-handoff`, junto com os overlays `[A11Y Toque]`.
+- Nós de migração SR (`oldSRVarCapture`) que não foram reinseridos no handoff — ocorria quando a seção de leitor estava desmarcada (`runLeitor=false`) ou havia mismatch de variações de migração: agora removidos na limpeza final se ainda estiverem parentes da página.
+
+---
+
 ## v2.1.1 — 2026-05-28
 
 ### Bugfix

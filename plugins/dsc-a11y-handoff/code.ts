@@ -167,8 +167,18 @@ function createComponentInstance(comp: SceneNode): SceneNode {
   if (comp.type === 'INSTANCE') return (comp as InstanceNode).clone();
   if (comp.type === 'COMPONENT') return (comp as ComponentNode).createInstance();
   if (comp.type === 'COMPONENT_SET') {
-    const first = (comp as ComponentSetNode).children.find(c => c.type === 'COMPONENT') as ComponentNode | undefined;
-    if (first) return first.createInstance();
+    const set = comp as ComponentSetNode;
+    // defaultVariant tem prioridade; se ausente, usa o primeiro filho COMPONENT acessível
+    const defaultVar = (set as any).defaultVariant as ComponentNode | undefined;
+    const variant = (defaultVar?.type === 'COMPONENT' ? defaultVar : null)
+      ?? (Array.from(set.children).find(c => c.type === 'COMPONENT') as ComponentNode | undefined);
+    if (variant) return variant.createInstance();
+    // Filhos não acessíveis (componente de biblioteca remota sem cache): NUNCA clonar o set inteiro.
+    // Retorna frame placeholder para não inserir todas as variantes no handoff.
+    const ph = figma.createFrame();
+    ph.fills = [];
+    try { ph.resize(Math.max(1, set.width), Math.max(1, set.height)); } catch (_) {}
+    return ph;
   }
   return comp.clone();
 }
@@ -336,9 +346,10 @@ figma.ui.onmessage = async (msg) => {
       }
     }
 
-    // Limpa todos os frames de overlay de área de toque da página
-    figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y Toque]')).forEach(n => n.remove());
+    // Limpa overlays temporários de área de toque e leitor de tela
+    figma.currentPage.findAll((n: SceneNode) => n.name.startsWith('[A11Y Toque]') || n.name.startsWith('[A11Y Leitor]')).forEach(n => n.remove());
     tempTouchOverlayId = null;
+    tempSROverlayId = null;
 
     // --- SWAP: substitui handoff antigo pelo novo template ---
     const isOldHandoff = !!(handoffAtivo as any).findOne(
@@ -727,7 +738,7 @@ figma.ui.onmessage = async (msg) => {
               if (srcNode && srcNode.parent && srcNode.parent.type === 'FRAME' && srcNode.parent.name.includes('Variação')) {
                 clearVariationMarkers(srcNode.parent as FrameNode);
               }
-              compClone = srcNode ? srcNode.clone() : createComponentInstance(componentePrincipalAtivo);
+              compClone = (srcNode && srcNode.type !== 'COMPONENT_SET') ? srcNode.clone() : createComponentInstance(componentePrincipalAtivo);
             } else {
               // instanceNodeId zerado (após handoff) — clonar e aplicar propriedades salvas
               compClone = createComponentInstance(componentePrincipalAtivo);
@@ -848,7 +859,7 @@ figma.ui.onmessage = async (msg) => {
               if (srcNode && srcNode.parent && srcNode.parent.type === 'FRAME' && srcNode.parent.name.includes('Variação')) {
                 clearVariationMarkers(srcNode.parent as FrameNode);
               }
-              compClone = srcNode ? srcNode.clone() : createComponentInstance(componentePrincipalAtivo);
+              compClone = (srcNode && srcNode.type !== 'COMPONENT_SET') ? srcNode.clone() : createComponentInstance(componentePrincipalAtivo);
             } else {
               compClone = createComponentInstance(componentePrincipalAtivo);
               if (compClone.type === 'INSTANCE') {
@@ -1041,7 +1052,7 @@ figma.ui.onmessage = async (msg) => {
                   if (srcNode && srcNode.parent && srcNode.parent.type === 'FRAME' && srcNode.parent.name.includes('Variação')) {
                     clearVariationMarkers(srcNode.parent as FrameNode);
                   }
-                  compClone = srcNode ? srcNode.clone() : createComponentInstance(componentePrincipalAtivo);
+                  compClone = (srcNode && srcNode.type !== 'COMPONENT_SET') ? srcNode.clone() : createComponentInstance(componentePrincipalAtivo);
                 } else {
                   compClone = createComponentInstance(componentePrincipalAtivo);
                   if (compClone.type === 'INSTANCE' && variacao.propriedades && Object.keys(variacao.propriedades).length > 0) {
@@ -1172,7 +1183,7 @@ figma.ui.onmessage = async (msg) => {
                       conClone.y = currentY + relY + elH;
                     }
                     const numNodeCon = conClone.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
-                    if (numNodeCon) await updateText(numNodeCon, letra);
+                    if (numNodeCon) await updateText(numNodeCon, tipoVariante === 'nível de título' && c.especificacao ? c.especificacao : letra);
                   }
                 }
 
@@ -1297,13 +1308,17 @@ figma.ui.onmessage = async (msg) => {
                     clone.visible = true;
                     curAllBoxes.appendChild(clone);
 
+                    const tSpec = (c.tipo || '').toLowerCase();
+                    const isHeadingSpec = tSpec.includes('título') || tSpec.includes('titulo') || tSpec.includes('heading') || tSpec.includes('nível') || tSpec.includes('nivel');
+                    const badgeLabel = isHeadingSpec && c.especificacao ? c.especificacao : letra;
+
                     const cloneNumTxt = clone.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
-                    if (cloneNumTxt) await updateText(cloneNumTxt, letra);
+                    if (cloneNumTxt) await updateText(cloneNumTxt, badgeLabel);
 
                     const conectorNode = clone.findOne((n: SceneNode) => n.name === '[a11y] Conectores') as SceneNode | null;
                     if (conectorNode && 'findOne' in conectorNode) {
                       const numTxt = (conectorNode as FrameNode).findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
-                      if (numTxt) await updateText(numTxt, letra);
+                      if (numTxt) await updateText(numTxt, badgeLabel);
                     }
 
                     await fillField(clone, 'Descrição', subs.descricao || c.descricao || '');
@@ -1463,6 +1478,16 @@ figma.ui.onmessage = async (msg) => {
     ).forEach(n => n.remove());
     variacoesContainerId = null;
     pluginDataNodeId = null;
+
+    // Remove capturas de migração SR que não foram reinseridas no handoff
+    // (ex: runLeitor=false ou número de variações de migração diferente do esperado)
+    for (const cap of oldSRVarCapture) {
+      try { if (cap.comp.parent === figma.currentPage) cap.comp.remove(); } catch (_) {}
+      for (const b of cap.badges) {
+        try { if (b.clone.parent === figma.currentPage) b.clone.remove(); } catch (_) {}
+      }
+      try { if (cap.numBadge && cap.numBadge.parent === figma.currentPage) cap.numBadge.remove(); } catch (_) {}
+    }
 
     // Zerar frameNodeId/instanceNodeId para que no próximo carregamento os frames sejam recriados
     if (msg.variacoes_tabulacao) {

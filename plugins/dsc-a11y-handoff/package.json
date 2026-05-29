@@ -1,6 +1,6 @@
 {
   "name": "DSC-A11Y-Handoff",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Your Figma Plugin",
   "main": "code.js",
   "scripts": {

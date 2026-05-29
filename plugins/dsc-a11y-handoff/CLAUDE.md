@@ -1,7 +1,7 @@
 # DSC A11Y Handoff — Plugin Figma
 
 Plugin para preencher templates de handoff de acessibilidade no Figma.
-Branch atual: `migration-from-old-handoff`.
+Branch atual: `migration-from-old-handoff`. Versão: `2.1.2`.
 
 ## Arquivos
 
@@ -110,3 +110,7 @@ No template fresco (colocado manualmente pelo designer), `table` pode ter `Heade
 - Badge de número no preview de toque e tabulação: `connector: 'Off'`, posicionado acima do componente (`currentY - numClone.height - 4`), sem linha de conector
 - Limpeza pós-geração: os frames `[A11Y Variação*]` e `[A11Y Variações]` são removidos em **varredura única** do `currentPage.findAll` (não 4 passagens separadas)
 - Painel "Como usar": botão `i` no header abre `infoOverlay` com passo a passo de seleção, descrição das abas e card de configurações
+- Badge de heading no leitor de tela: quando `tipoVariante === 'nível de título'` e `c.especificacao` está preenchido, o texto do badge é `c.especificacao` (h1/h2/h3) — tanto no preview quanto nas specs
+- `createComponentInstance` para `COMPONENT_SET`: usa `defaultVariant` → `children.find(COMPONENT)` → frame placeholder vazio. **Nunca** clona o set inteiro (evita mostrar todas as variantes no canvas/handoff)
+- Limpeza no início de `run-handoff`: remove `[A11Y Toque]` **e** `[A11Y Leitor]` da página; zera `tempTouchOverlayId` e `tempSROverlayId`
+- `oldSRVarCapture` órfãos: nodes de migração SR que não foram reinseridos no handoff são removidos na limpeza final via `cap.comp.parent === figma.currentPage`
