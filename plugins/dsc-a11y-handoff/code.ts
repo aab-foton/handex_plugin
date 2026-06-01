@@ -26,6 +26,7 @@ let tempSROverlayRefY: number = 0;
 let componenteVariacaoAtivo: SceneNode | null = null;
 let componenteTabVariacaoAtivo: SceneNode | null = null;
 let componenteSRVariacaoAtivo: SceneNode | null = null;
+let isHandoffGenerated = false;
 
 // ==========================================
 // 2. FUNÇÕES AUXILIARES
@@ -186,6 +187,28 @@ function createComponentInstance(comp: SceneNode): SceneNode {
 /**
  * Remove todos os marcadores visuais de uma variação
  */
+function ensureHandoffDetached(): FrameNode {
+  if (handoffAtivo && handoffAtivo.type === 'INSTANCE') {
+    const frame = (handoffAtivo as InstanceNode).detachInstance();
+    frame.name = `[A11Y Handoff] ${componentePrincipalAtivo?.name || 'Componente'}`;
+    handoffAtivo = frame;
+  }
+  return handoffAtivo as FrameNode;
+}
+
+async function getTouchImageFrame(): Promise<FrameNode | null> {
+  if (!handoffAtivo) return null;
+  const handoff = ensureHandoffDetached();
+  let img = (handoff as FrameNode).findOne((n: SceneNode) =>
+    n.name === 'image' &&
+    n.parent?.name !== 'screen reader' &&
+    (n.type === 'FRAME' || n.type === 'GROUP' || n.type === 'COMPONENT' || n.type === 'INSTANCE')
+  ) as FrameNode | InstanceNode | null;
+  if (!img) return null;
+  if (img.type === 'INSTANCE') img = img.detachInstance();
+  return img as FrameNode;
+}
+
 function clearVariationMarkers(varFrame: FrameNode) {
   const markers = varFrame.findAll(n => n.name === '[a11y-marker]');
   markers.forEach(m => m.remove());
@@ -352,9 +375,7 @@ figma.ui.onmessage = async (msg) => {
     tempSROverlayId = null;
 
     // --- SWAP: substitui handoff antigo pelo novo template ---
-    const isOldHandoff = !!(handoffAtivo as any).findOne(
-      (n: SceneNode) => n.name === 'keyboard maping' || n.name === 'keyboard mapping'
-    );
+    const isOldHandoff = handoffAtivo.name.startsWith('[dsc] A11Y Handoff:');
 
     // Clones das seções que o usuário NÃO quer atualizar (preenchidos dentro do bloco isOldHandoff)
     const oldSnapshots: Array<{ sectionName: string; clones: SceneNode[] }> = [];
@@ -483,16 +504,8 @@ figma.ui.onmessage = async (msg) => {
     const allVarsGlobal: any[] = figmaVarsGlobal ? await figmaVarsGlobal.getLocalVariablesAsync() : [];
 
     // --- LÓGICA DE DETACH ---
-    const isUpdate = handoffAtivo.type !== 'INSTANCE';
-    let workingFrame: FrameNode;
-
-    if (handoffAtivo.type === "INSTANCE") {
-      workingFrame = handoffAtivo.detachInstance();
-      workingFrame.name = `[A11Y Handoff] ${msg.componentName || componentePrincipalAtivo?.name || 'Componente'}`;
-      handoffAtivo = workingFrame;
-    } else {
-      workingFrame = handoffAtivo as FrameNode;
-    }
+    const wasGenerated = isHandoffGenerated;
+    const workingFrame = ensureHandoffDetached();
 
     // --- Restaura seções do handoff antigo que não devem ser atualizadas ---
     // Para cada seção desmarcada: substitui a seção vazia do novo template pelo clone do antigo.
@@ -589,17 +602,17 @@ figma.ui.onmessage = async (msg) => {
     };
 
     if (msg.runMapeamento !== false) {
-      figma.ui.postMessage({ type: 'feedback', message: `⏳ ${isUpdate ? 'Atualizando' : 'Gerando'} tabelas...` });
+      figma.ui.postMessage({ type: 'feedback', message: `⏳ ${wasGenerated ? 'Atualizando' : 'Gerando'} tabelas...` });
       const keyboardItems = msg.mapeamentos.filter((m: any) => m.utilizacao.toLowerCase().includes("teclado"));
       const gestureItems = msg.mapeamentos.filter((m: any) => m.utilizacao.toLowerCase().includes("gesto"));
 
-      figma.ui.postMessage({ type: 'feedback', message: `⏳ ${isUpdate ? 'Atualizando' : 'Gerando'} tabela de teclado...` });
+      figma.ui.postMessage({ type: 'feedback', message: `⏳ ${wasGenerated ? 'Atualizando' : 'Gerando'} tabela de teclado...` });
       if (msg.sem_teclado) {
         if (allTableContainers.length >= 1) allTableContainers[0].visible = false;
       } else {
         if (allTableContainers.length >= 1) await fillTable(allTableContainers[0], keyboardItems);
       }
-      figma.ui.postMessage({ type: 'feedback', message: `⏳ ${isUpdate ? 'Atualizando' : 'Gerando'} tabela de gestos...` });
+      figma.ui.postMessage({ type: 'feedback', message: `⏳ ${wasGenerated ? 'Atualizando' : 'Gerando'} tabela de gestos...` });
       if (msg.sem_gesto) {
         if (allTableContainers.length >= 2) allTableContainers[1].visible = false;
       } else {
@@ -669,144 +682,67 @@ figma.ui.onmessage = async (msg) => {
     }
     }
 
-        figma.ui.postMessage({ type: 'feedback', message: `⏳ ${isUpdate ? 'Atualizando' : 'Gerando'} preview de área de toque...` });
+        figma.ui.postMessage({ type: 'feedback', message: `⏳ ${wasGenerated ? 'Atualizando' : 'Gerando'} preview de área de toque...` });
         // --- PREENCHER IMAGE (PREVIEW) ---
         if (msg.runTouch !== false) {
+          const variacoes: any[] = msg.variacoes || [];
+
           let imageFrame = workingFrame.findOne((n: SceneNode) =>
             n.name === 'image' &&
             n.parent?.name !== 'screen reader' &&
             (n.type === 'FRAME' || n.type === 'GROUP' || n.type === 'COMPONENT' || n.type === 'INSTANCE')
           ) as FrameNode | InstanceNode | null;
-        const variacoes: any[] = msg.variacoes || [];
-        const variacoesComAreas = variacoes.filter((v: any) => !v.sem_toque && v.areas_toque && v.areas_toque.length > 0);
 
-        if (imageFrame && variacoesComAreas.length > 0 && componentePrincipalAtivo) {
-          // Após swap do template, imageFrame pode ainda ser INSTANCE (detach do pai não é recursivo).
-          // Precisamos desatar antes de inserir filhos ou editar textos aninhados.
-          if (imageFrame.type === 'INSTANCE') {
-            imageFrame = imageFrame.detachInstance();
-          }
-          const modelHandoffAreas = (Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Handoff areas')
-            ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-h] Handoff areas')) as InstanceNode | undefined;
-          const modelItemNumber   = (Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Item Number')
-            ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-h] Item Number'))   as InstanceNode | undefined;
+          if (imageFrame && componentePrincipalAtivo) {
+            if (imageFrame.type === 'INSTANCE') imageFrame = imageFrame.detachInstance();
 
-          // Remover todos os filhos que não são modelos fixos (limpeza de execução anterior)
-          const tagNode = Array.from(imageFrame.children).find(n => n.name === 'tag');
-          // Se os modelos estão aninhados, preserva o ancestral direto do imageFrame
-          const getDirectChildOf = (frame: FrameNode | InstanceNode, node: BaseNode | undefined): BaseNode | undefined => {
-            if (!node) return undefined;
-            let cur: BaseNode = node;
-            while (cur.parent && cur.parent !== frame) cur = cur.parent;
-            return cur.parent === frame ? cur : undefined;
-          };
-          const handoffAreasAncestor = getDirectChildOf(imageFrame, modelHandoffAreas);
-          const itemNumberAncestor   = getDirectChildOf(imageFrame, modelItemNumber);
-          const nodesToKeep = new Set<BaseNode>([tagNode, handoffAreasAncestor ?? modelHandoffAreas, itemNumberAncestor ?? modelItemNumber].filter(Boolean) as BaseNode[]);
-          Array.from(imageFrame.children)
-            .filter(n => !nodesToKeep.has(n))
-            .forEach(n => n.remove());
+            const modelHandoffAreas = (Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Handoff areas')
+              ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-h] Handoff areas')) as InstanceNode | undefined;
+            const modelItemNumber = (Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Item Number')
+              ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-h] Item Number')) as InstanceNode | undefined;
+            if (modelHandoffAreas) modelHandoffAreas.visible = false;
+            if (modelItemNumber) modelItemNumber.visible = false;
 
-          const PAD_TOP  = 80;
-          const PAD_SIDE = 24;
-          const PAD_LEFT = 160;
-          const GAP_H    = 140;  // gap horizontal entre variações
-          const GAP_V    = 60;  // gap vertical ao quebrar linha
-          const MAX_WIDTH = Math.max(imageFrame.width, 800); // limite antes de quebrar linha
-
-          // Ajustar cor de fundo do imageFrame
-          try { await applyWcagBackground(imageFrame, componentePrincipalAtivo, allVarsGlobal); } catch (e) {
-            figma.ui.postMessage({ type: 'feedback', message: `❌ Erro no bloco de cor: ${e}` });
-          }
-
-          let currentX = PAD_LEFT;
-          let currentY = PAD_TOP;
-          let rowHeight = 0;
-          let globalCounter = 0;
-          let totalWidth = PAD_LEFT;
-          let totalHeight = PAD_TOP;
-
-          for (const variacao of variacoesComAreas) {
-            // Obter clone do componente correto para esta variação
-            let compClone: SceneNode;
-            if (variacao.id === 'default') {
-              compClone = createComponentInstance(componentePrincipalAtivo);
-            } else if (variacao.instanceNodeId) {
-              let srcNode: SceneNode | null = null;
-              try { srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null; } catch (_e) { srcNode = null; }
-              
-              if (srcNode && srcNode.parent && srcNode.parent.type === 'FRAME' && srcNode.parent.name.includes('Variação')) {
-                clearVariationMarkers(srcNode.parent as FrameNode);
-              }
-              compClone = (srcNode && srcNode.type !== 'COMPONENT_SET') ? srcNode.clone() : createComponentInstance(componentePrincipalAtivo);
-            } else {
-              // instanceNodeId zerado (após handoff) — clonar e aplicar propriedades salvas
-              compClone = createComponentInstance(componentePrincipalAtivo);
-              if (compClone.type === 'INSTANCE' && variacao.propriedades && Object.keys(variacao.propriedades).length > 0) {
-                try { (compClone as InstanceNode).setProperties(variacao.propriedades); } catch(e) { figma.ui.postMessage({ type: 'feedback', message: '⚠️ Variante toque não aplicada: ' + String(e) }); }
-              }
+            try { await applyWcagBackground(imageFrame as FrameNode, componentePrincipalAtivo, allVarsGlobal); } catch (e) {
+              figma.ui.postMessage({ type: 'feedback', message: `❌ Erro no bloco de cor: ${e}` });
             }
 
-            // Verificar se precisa quebrar linha
-            if (currentX > PAD_LEFT && currentX + compClone.width > MAX_WIDTH) {
-              currentX = PAD_LEFT;
-              currentY += rowHeight + GAP_V;
-              rowHeight = 0;
-            }
-
-            compClone.x = currentX;
-            compClone.y = currentY;
-            imageFrame.insertChild(0, compClone);
-
-            // Criar overlays e marcadores para cada área desta variação
-            if (modelHandoffAreas && modelItemNumber && Array.isArray(variacao.areas_toque)) {
-              for (const area of variacao.areas_toque) {
+            // Re-numerar badges globalmente por ordem de variação → área
+            let globalCounter = 0;
+            for (const variacao of variacoes) {
+              if (variacao.sem_toque || !variacao.areas_toque || variacao.areas_toque.length === 0) continue;
+              const varId = variacao.id;
+              const badges = Array.from(imageFrame.children).filter(n => {
+                try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'touch-badge' && d.variationId === varId; } catch { return false; }
+              }).sort((a, b) => {
+                const da = JSON.parse(a.getPluginData('a11y-meta') || '{}');
+                const db = JSON.parse(b.getPluginData('a11y-meta') || '{}');
+                return (da.index || 0) - (db.index || 0);
+              });
+              for (const badge of badges) {
                 globalCounter++;
-
-                const areaClone = modelHandoffAreas.clone();
-                areaClone.visible = true;
-                const isFullWidthPreset = area.preset === '44x100' || area.preset === '24x100';
-                // Fallback de altura: usa o preset quando area.height foi salvo como 0
-                const presetH = (area.preset === '44x100' || area.preset === '44x44') ? 44
-                              : (area.preset === '24x100' || area.preset === '24x24') ? 24 : 0;
-                const areaH = area.height > 0 ? area.height : (presetH > 0 ? presetH : (compClone as any).height);
-                const areaW = isFullWidthPreset ? (compClone as any).width : (area.width > 0 ? area.width : (compClone as any).width);
-                areaClone.resize(areaW, areaH);
-                areaClone.x = area.relX + currentX;
-                areaClone.y = area.relY + currentY;
-                imageFrame.appendChild(areaClone);
-
-                const numClone = modelItemNumber.clone();
-                numClone.visible = true;
-                const numTexts = numClone.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
-                const numText = numTexts.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numTexts[0] || null;
+                const numTexts = (badge as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+                const numText = numTexts.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numTexts[0];
                 if (numText) await updateText(numText as TextNode, String(globalCounter));
-                try { numClone.setProperties({ 'connector': 'Off' }); } catch(e) {}
-                numClone.x = currentX;
-                numClone.y = currentY - numClone.height - 4;
-                imageFrame.appendChild(numClone);
               }
             }
 
-            rowHeight = Math.max(rowHeight, compClone.height);
-            totalWidth = Math.max(totalWidth, currentX + compClone.width);
-            currentX += compClone.width + GAP_H;
+            // Redimensionar imageFrame com base nas instâncias presentes
+            const allVarInstances = Array.from(imageFrame.children).filter(n => {
+              try { return JSON.parse(n.getPluginData('a11y-meta') || '{}').type === 'variation-component'; } catch { return false; }
+            }) as SceneNode[];
+            if (allVarInstances.length > 0) {
+              const maxRight  = Math.max(...allVarInstances.map(n => (n as any).x + (n as any).width));
+              const maxBottom = Math.max(...allVarInstances.map(n => (n as any).y + (n as any).height));
+              imageFrame.resize(
+                Math.max((imageFrame as FrameNode).width, maxRight + 24),
+                Math.max(maxBottom + 24, 80)
+              );
+            }
           }
-
-          totalHeight = currentY + rowHeight;
-
-          // Redimensionar imageFrame para acomodar tudo
-          imageFrame.resize(
-            Math.max(imageFrame.width, totalWidth + PAD_SIDE),
-            totalHeight + PAD_SIDE
-          );
-
-          if (modelHandoffAreas) modelHandoffAreas.visible = false;
-          if (modelItemNumber)   modelItemNumber.visible   = false;
         }
-      }
 
-    figma.ui.postMessage({ type: 'feedback', message: `⏳ ${isUpdate ? 'Atualizando' : 'Gerando'} preview de tabulação...` });
+    figma.ui.postMessage({ type: 'feedback', message: `⏳ ${wasGenerated ? 'Atualizando' : 'Gerando'} preview de tabulação...` });
     // --- FOCUS ORDER: VISUAL NO TEMPLATE (VARIAÇÕES DE TABULAÇÃO) ---
     const variacoesTab: any[] = msg.variacoes_tabulacao || [];
     const variacoesTabComItems = variacoesTab.filter((v: any) => !v.sem_tabulacao && v.tab_order && v.tab_order.length > 0);
@@ -935,7 +871,7 @@ figma.ui.onmessage = async (msg) => {
       }
     }
 
-        figma.ui.postMessage({ type: 'feedback', message: `⏳ ${isUpdate ? 'Atualizando' : 'Gerando'} preview de leitor de tela...` });
+        figma.ui.postMessage({ type: 'feedback', message: `⏳ ${wasGenerated ? 'Atualizando' : 'Gerando'} preview de leitor de tela...` });
         // --- LEITOR DE TELA: PREVIEW ---
         const variacoesLT: any[] = msg.variacoes_leitor || [];
         const variacoesLTComItems = variacoesLT.filter((v: any) => !v.sem_leitor && v.conectores_leitor && v.conectores_leitor.length > 0);
@@ -1206,7 +1142,7 @@ figma.ui.onmessage = async (msg) => {
           }
         }
 
-    figma.ui.postMessage({ type: 'feedback', message: `⏳ ${isUpdate ? 'Atualizando' : 'Gerando'} specs de leitor de tela...` });
+    figma.ui.postMessage({ type: 'feedback', message: `⏳ ${wasGenerated ? 'Atualizando' : 'Gerando'} specs de leitor de tela...` });
     // --- LEITOR DE TELA: SPECS ---
     const variacoesLTSpecsAll: any[] = msg.variacoes_leitor || [];
     const variacoesLTSpecsComItems = variacoesLTSpecsAll.filter((v: any) => !v.sem_leitor && Array.isArray(v.conectores_leitor) && v.conectores_leitor.length > 0);
@@ -1469,9 +1405,8 @@ figma.ui.onmessage = async (msg) => {
       }
     }
 
-    // Remove frames de variação do canvas após geração do preview (varredura única)
+    // Remove frames de variação do canvas após geração do preview (tab e SR; toque fica no imageFrame)
     figma.currentPage.findAll((n: SceneNode) =>
-      n.name.startsWith('[A11Y Variação]') ||
       n.name.startsWith('[A11Y Tab Variação]') ||
       n.name.startsWith('[A11Y LT Variação]') ||
       n.name === '[A11Y Variações]'
@@ -1568,7 +1503,8 @@ figma.ui.onmessage = async (msg) => {
     });
     workingFrame.setPluginData("a11y-component-data", dataToSaveDirect);
 
-    figma.ui.postMessage({ type: 'feedback', message: `✅ Handoff ${isUpdate ? 'atualizado' : 'gerado'} e dados salvos!` });
+    isHandoffGenerated = true;
+    figma.ui.postMessage({ type: 'feedback', message: `✅ Handoff ${wasGenerated ? 'atualizado' : 'gerado'} e dados salvos!` });
     figma.ui.postMessage({ type: 'handoff-complete' });
   }
 
@@ -1577,76 +1513,171 @@ figma.ui.onmessage = async (msg) => {
       figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo.' });
       return;
     }
-    const comp = (componenteVariacaoAtivo ?? componentePrincipalAtivo) as FrameNode;
-    const overlayName = `[A11Y Toque] ${msg.nome}`;
+    try {
+      const imageFrame = await getTouchImageFrame();
+      if (!imageFrame) {
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Frame de preview não encontrado no template.' });
+        return;
+      }
+      const variationId: string = msg.variationId ?? 'default';
 
-    // Remove overlay anterior com mesmo nome
-    figma.currentPage.findAll((n: SceneNode) => n.name === overlayName).forEach(n => n.remove());
+      // Encontrar ou criar instância de referência desta variação
+      let refInstance = Array.from(imageFrame.children).find(n => {
+        try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'variation-component' && d.variationId === variationId; } catch { return false; }
+      }) as SceneNode | null;
+      if (!refInstance) {
+        refInstance = createComponentInstance(componentePrincipalAtivo);
+        const existingCount = Array.from(imageFrame.children).filter(n => {
+          try { return JSON.parse(n.getPluginData('a11y-meta') || '{}').type === 'variation-component'; } catch { return false; }
+        }).length;
+        refInstance.x = 160 + existingCount * ((componentePrincipalAtivo as any).width + 140);
+        refInstance.y = 80;
+        imageFrame.appendChild(refInstance);
+        refInstance.setPluginData('a11y-meta', JSON.stringify({ type: 'variation-component', variationId }));
+        // Redimensionar e aplicar fundo
+        const neededW = Math.max((imageFrame as FrameNode).width, (refInstance as any).x + (refInstance as any).width + 24);
+        const neededH = Math.max((imageFrame as FrameNode).height, 80 + (refInstance as any).height + 40);
+        imageFrame.resize(neededW, neededH);
+        try { await applyWcagBackground(imageFrame as FrameNode, componentePrincipalAtivo, []); } catch(_e) {}
+      }
 
-    const cw = (comp as any).width  ?? 100;
-    const ch = (comp as any).height ?? 100;
-    const absX = comp.absoluteTransform[0][2];
-    const absY = comp.absoluteTransform[1][2];
-    let w: number, h: number, dx: number, dy: number;
-    if      (msg.preset === '44x100') { w = cw; h = 44;  dx = 0;              dy = (ch - 44) / 2; }
-    else if (msg.preset === '44x44')  { w = 44; h = 44;  dx = (cw - 44) / 2; dy = (ch - 44) / 2; }
-    else if (msg.preset === '24x24')  { w = 24; h = 24;  dx = (cw - 24) / 2; dy = (ch - 24) / 2; }
-    else                              { w = cw; h = 24;  dx = 0;              dy = (ch - 24) / 2; }
+      const modelHandoffAreas = (Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Handoff areas')
+        ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-h] Handoff areas')) as InstanceNode | undefined;
+      const modelItemNumber = (Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Item Number')
+        ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-h] Item Number')) as InstanceNode | undefined;
 
-    const overlay = figma.createFrame();
-    overlay.name = overlayName;
-    overlay.fills = [{ type: 'SOLID', color: { r: 1, g: 0.75, b: 0.75 }, opacity: 0.5 }];
-    overlay.strokes = [];
-    overlay.clipsContent = false;
-    figma.currentPage.appendChild(overlay); // append primeiro para garantir posicionamento correto
-    overlay.resize(w, h);
-    overlay.x = absX + dx;
-    overlay.y = absY + dy;
-    tempTouchOverlayId = overlay.id;
-    figma.currentPage.selection = [overlay];
-    figma.viewport.scrollAndZoomIntoView([overlay]);
+      if (!modelHandoffAreas) {
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Modelo [dsc-h] Handoff areas não encontrado no template.' });
+        return;
+      }
+
+      const cw = (refInstance as any).width ?? 100;
+      const ch = (refInstance as any).height ?? 100;
+      let w: number, h: number, dx: number, dy: number;
+      if      (msg.preset === '44x100') { w = cw; h = 44; dx = 0;              dy = (ch - 44) / 2; }
+      else if (msg.preset === '44x44')  { w = 44; h = 44; dx = (cw - 44) / 2; dy = (ch - 44) / 2; }
+      else if (msg.preset === '24x24')  { w = 24; h = 24; dx = (cw - 24) / 2; dy = (ch - 24) / 2; }
+      else                              { w = cw; h = 24; dx = 0;              dy = (ch - 24) / 2; }
+
+      const areaIndex = Array.from(imageFrame.children).filter(n => {
+        try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'touch-overlay'; } catch { return false; }
+      }).length;
+
+      const areaClone = modelHandoffAreas.clone();
+      areaClone.visible = true;
+      areaClone.resize(w, h);
+      areaClone.x = (refInstance as any).x + dx;
+      areaClone.y = (refInstance as any).y + dy;
+      imageFrame.appendChild(areaClone);
+      areaClone.setPluginData('a11y-meta', JSON.stringify({ type: 'touch-overlay', variationId, nome: msg.nome, index: areaIndex }));
+
+      if (modelItemNumber) {
+        const numClone = modelItemNumber.clone();
+        numClone.visible = true;
+        try { numClone.setProperties({ 'connector': 'Off' }); } catch(_e) {}
+        numClone.x = areaClone.x;
+        numClone.y = areaClone.y - numClone.height - 4;
+        imageFrame.appendChild(numClone);
+        numClone.setPluginData('a11y-meta', JSON.stringify({ type: 'touch-badge', variationId, nome: msg.nome, index: areaIndex }));
+        const numTexts = numClone.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+        const numText = numTexts.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numTexts[0];
+        if (numText) await updateText(numText as TextNode, String(areaIndex + 1));
+        modelItemNumber.visible = false;
+      }
+      modelHandoffAreas.visible = false;
+
+      tempTouchOverlayId = areaClone.id;
+      figma.currentPage.selection = [areaClone];
+      figma.viewport.scrollAndZoomIntoView([areaClone]);
+    } catch(e) {
+      console.error('[create-touch-overlay]', e);
+      figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar overlay: ${e}` });
+    }
   }
 
   else if (msg.type === 'confirm-touch-area') {
     let width = 0, height = 0, relX = 0, relY = 0;
-    if (tempTouchOverlayId) {
-      const frame = await figma.getNodeByIdAsync(tempTouchOverlayId) as FrameNode | null;
-      if (frame) {
-        width = Math.round(frame.width);
-        height = Math.round(frame.height);
-        const refNode = componenteVariacaoAtivo ?? componentePrincipalAtivo;
-        if (refNode) {
-          // frame está na página (absoluteTransform = x/y diretos); refNode pode estar aninhado
-          relX = Math.round(frame.x - (refNode as any).absoluteTransform[0][2]);
-          relY = Math.round(frame.y - (refNode as any).absoluteTransform[1][2]);
+    const badgeProps: Record<string, any> = {};
+    try {
+      if (tempTouchOverlayId) {
+        const overlay = await figma.getNodeByIdAsync(tempTouchOverlayId) as FrameNode | InstanceNode | null;
+        if (overlay) {
+          width  = Math.round((overlay as any).width);
+          height = Math.round((overlay as any).height);
+          const meta = JSON.parse(overlay.getPluginData('a11y-meta') || '{}');
+          const variationId: string = meta.variationId ?? 'default';
+          const imageFrame = overlay.parent as FrameNode;
+          const refInstance = imageFrame
+            ? Array.from(imageFrame.children).find(n => {
+                try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'variation-component' && d.variationId === variationId; } catch { return false; }
+              }) as SceneNode | null
+            : null;
+          if (refInstance) {
+            relX = Math.round((overlay as any).x - (refInstance as any).x);
+            relY = Math.round((overlay as any).y - (refInstance as any).y);
+          }
+          // Ler props do badge correspondente (conector on/off, direção)
+          const badge = imageFrame
+            ? Array.from(imageFrame.children).find(n => {
+                try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'touch-badge' && d.variationId === variationId && d.index === meta.index; } catch { return false; }
+              })
+            : null;
+          if (badge && (badge as any).componentProperties) {
+            for (const [k, v] of Object.entries((badge as any).componentProperties as Record<string, { value: any }>)) {
+              badgeProps[k] = v.value;
+            }
+          }
         }
-        frame.remove();
       }
-      tempTouchOverlayId = null;
-    }
-    figma.ui.postMessage({ type: 'touch-area-confirmed', nome: msg.nome, preset: msg.preset, width, height, relX, relY });
+    } catch(e) { console.error('[confirm-touch-area]', e); }
+    tempTouchOverlayId = null;
+    figma.ui.postMessage({ type: 'touch-area-confirmed', nome: msg.nome, preset: msg.preset, width, height, relX, relY, badgeProps });
   }
 
   else if (msg.type === 'cancel-touch-area') {
     if (tempTouchOverlayId) {
-      const frame = await figma.getNodeByIdAsync(tempTouchOverlayId) as FrameNode | null;
-      if (frame) frame.remove();
+      try {
+        const overlay = await figma.getNodeByIdAsync(tempTouchOverlayId);
+        if (overlay) {
+          const meta = JSON.parse(overlay.getPluginData('a11y-meta') || '{}');
+          if (meta.type === 'touch-overlay' && overlay.parent) {
+            const imageFrame = overlay.parent as FrameNode;
+            const badge = Array.from(imageFrame.children).find(n => {
+              try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'touch-badge' && d.variationId === meta.variationId && d.index === meta.index; } catch { return false; }
+            });
+            if (badge) badge.remove();
+          }
+          overlay.remove();
+        }
+      } catch(_e) {}
       tempTouchOverlayId = null;
     }
   }
 
   else if (msg.type === 'remove-touch-overlay') {
-    const targetName = `[A11Y Toque] ${msg.nome}`;
-    figma.currentPage.findAll((n: SceneNode) => n.name === targetName).forEach(n => n.remove());
+    try {
+      const imageFrame = await getTouchImageFrame();
+      if (!imageFrame) return;
+      const variationId: string = msg.variationId ?? 'default';
+      Array.from(imageFrame.children).filter(n => {
+        try {
+          const d = JSON.parse(n.getPluginData('a11y-meta') || '{}');
+          return (d.type === 'touch-overlay' || d.type === 'touch-badge') && d.variationId === variationId && d.nome === msg.nome;
+        } catch { return false; }
+      }).forEach(n => n.remove());
+    } catch(e) { console.error('[remove-touch-overlay]', e); }
   }
 
   else if (msg.type === 'highlight-touch-area') {
-    const targetName = `[A11Y Toque] ${msg.nome}`;
-    const node = figma.currentPage.findOne((n: SceneNode) => n.name === targetName);
-    if (node) {
-      figma.currentPage.selection = [node];
-      figma.viewport.scrollAndZoomIntoView([node]);
-    }
+    try {
+      const imageFrame = await getTouchImageFrame();
+      if (!imageFrame) return;
+      const variationId: string = msg.variationId ?? 'default';
+      const node = Array.from(imageFrame.children).find(n => {
+        try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'touch-overlay' && d.variationId === variationId && d.nome === msg.nome; } catch { return false; }
+      }) as SceneNode | null;
+      if (node) { figma.currentPage.selection = [node]; figma.viewport.scrollAndZoomIntoView([node]); }
+    } catch(e) { console.error('[highlight-touch-area]', e); }
   }
 
   else if (msg.type === 'get-component-properties') {
@@ -1697,83 +1728,83 @@ figma.ui.onmessage = async (msg) => {
       return;
     }
     let instance: SceneNode | null = null;
-    let varFrame: FrameNode | null = null;
     try {
-      const comp = componentePrincipalAtivo;
-      const parentNode = comp.parent as FrameNode | PageNode;
-      if (!parentNode) {
-        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Componente sem parent.' });
+      const imageFrame = await getTouchImageFrame();
+      if (!imageFrame) {
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Frame de preview não encontrado. Verifique se o template está selecionado.' });
+        return;
+      }
+      const variationId: string = msg.id || msg.nome;
+
+      // Idempotência: reutiliza instância existente desta variação
+      const existingInst = Array.from(imageFrame.children).find(n => {
+        try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'variation-component' && d.variationId === variationId; } catch { return false; }
+      }) as SceneNode | null;
+      if (existingInst) {
+        figma.currentPage.selection = [existingInst];
+        figma.viewport.scrollAndZoomIntoView([existingInst]);
+        figma.ui.postMessage({ type: 'variation-frame-created', frameNodeId: imageFrame.id, instanceNodeId: existingInst.id });
         return;
       }
 
-      const frameName = `[A11Y Variação] ${msg.nome}`;
-      const existing = figma.currentPage.findOne((n: SceneNode) => n.name === frameName) as FrameNode | null;
-      if (existing) {
-        const existingInstance = Array.from(existing.children).find(c => c.type === 'INSTANCE' || c.type === 'COMPONENT') as SceneNode | null;
-        if (existingInstance) {
-          figma.currentPage.selection = [existing];
-          figma.viewport.scrollAndZoomIntoView([existing]);
-          figma.ui.postMessage({ type: 'variation-frame-created', frameNodeId: existing.id, instanceNodeId: existingInstance.id });
-          return;
+      // Ocultar modelos do template que ficam visíveis por padrão
+      const _mHA = (Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Handoff areas')
+        ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-h] Handoff areas')) as InstanceNode | undefined;
+      const _mIN = (Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Item Number')
+        ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-h] Item Number')) as InstanceNode | undefined;
+      if (_mHA) _mHA.visible = false;
+      if (_mIN) _mIN.visible = false;
+
+      // Posição: à direita das instâncias já existentes
+      const PAD_LEFT = 160;
+      const PAD_TOP  = 80;
+      const GAP_H    = 140;
+      const existingCount = Array.from(imageFrame.children).filter(n => {
+        try { return JSON.parse(n.getPluginData('a11y-meta') || '{}').type === 'variation-component'; } catch { return false; }
+      }).length;
+      const insertX = PAD_LEFT + existingCount * ((componentePrincipalAtivo as any).width + GAP_H);
+
+      instance = createComponentInstance(componentePrincipalAtivo);
+      if (instance.type === 'INSTANCE' && msg.propriedades && Object.keys(msg.propriedades).length > 0) {
+        try { instance.setProperties(msg.propriedades); } catch(e) {
+          figma.ui.postMessage({ type: 'feedback', message: '⚠️ Propriedade não aplicada: ' + String(e) });
         }
       }
+      instance.x = insertX;
+      instance.y = PAD_TOP;
+      imageFrame.appendChild(instance);
+      instance.setPluginData('a11y-meta', JSON.stringify({ type: 'variation-component', variationId }));
 
-      instance = createComponentInstance(comp);
-      instance.x = 0;
-      instance.y = 0;
-      if (instance.type === 'INSTANCE' && msg.propriedades && Object.keys(msg.propriedades).length > 0) {
-        try { instance.setProperties(msg.propriedades); } catch(e) { figma.ui.postMessage({ type: "feedback", message: "⚠️ Propriedade não aplicada: " + String(e) }); }
-      }
+      // Redimensionar imageFrame para comportar a instância
+      const neededW = Math.max((imageFrame as FrameNode).width, (instance as any).x + (instance as any).width + 24);
+      const neededH = Math.max((imageFrame as FrameNode).height, PAD_TOP + (instance as any).height + 40);
+      imageFrame.resize(neededW, neededH);
 
-      varFrame = figma.createFrame();
-      varFrame.name = frameName;
-      varFrame.fills = [];
-      varFrame.clipsContent = false;
-      varFrame.resize(instance.width, instance.height);
+      // Aplicar fundo com verificação de contraste WCAG
+      try { await applyWcagBackground(imageFrame as FrameNode, componentePrincipalAtivo, []); } catch(_e) {}
 
-      const container = await getOrCreateVariacoesContainer(comp, handoffAtivo, parentNode);
-      container.appendChild(varFrame);
-      varFrame.appendChild(instance);
-
-      const frameId = varFrame.id;
       const instanceId = instance.id;
-      instance = null; varFrame = null; // ancorados — não limpar no catch
+      instance = null; // ancorado
 
-      const placed = figma.currentPage.findOne((n: SceneNode) => n.id === frameId) as FrameNode;
+      const placed = await figma.getNodeByIdAsync(instanceId) as SceneNode | null;
       if (placed) { figma.currentPage.selection = [placed]; figma.viewport.scrollAndZoomIntoView([placed]); }
-      figma.ui.postMessage({ type: 'variation-frame-created', frameNodeId: frameId, instanceNodeId: instanceId });
+      figma.ui.postMessage({ type: 'variation-frame-created', frameNodeId: imageFrame.id, instanceNodeId: instanceId });
     } catch(e) {
       try { instance?.remove(); } catch (_) {}
-      try { varFrame?.remove(); } catch (_) {}
       console.error('[create-variation-frame]', e);
-      figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar frame de variação: ${e}` });
+      figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar instância de variação: ${e}` });
     }
   }
 
   else if (msg.type === 'activate-variation') {
     try {
-      if (msg.instanceNodeId) {
-        const node = await figma.getNodeByIdAsync(msg.instanceNodeId) as SceneNode | null;
-        componenteVariacaoAtivo = node;
-        
-        // Desenha marcadores no varFrame (parent da instância)
-        if (node && node.parent && node.parent.type === 'FRAME' && node.parent.name.startsWith('[A11Y Variação]')) {
-          const varFrame = node.parent as FrameNode;
-          clearVariationMarkers(varFrame);
-          await drawVariationMarkers(varFrame, msg.areas_toque || [], { r: 1, g: 0.6, b: 0 }, 'touch');
-        }
-      } else {
-        componenteVariacaoAtivo = null;
-      }
-    } catch(e) {
-      componenteVariacaoAtivo = null;
-    }
+      const node = msg.instanceNodeId ? await figma.getNodeByIdAsync(msg.instanceNodeId) as SceneNode | null : null;
+      componenteVariacaoAtivo = node;
+      if (node) { figma.currentPage.selection = [node]; figma.viewport.scrollAndZoomIntoView([node]); }
+    } catch(e) { componenteVariacaoAtivo = null; }
   }
 
   else if (msg.type === 'deactivate-variation') {
-    if (componenteVariacaoAtivo && componenteVariacaoAtivo.parent && componenteVariacaoAtivo.parent.type === 'FRAME') {
-      clearVariationMarkers(componenteVariacaoAtivo.parent as FrameNode);
-    }
     componenteVariacaoAtivo = null;
   }
 
@@ -1825,12 +1856,23 @@ figma.ui.onmessage = async (msg) => {
   }
 
   else if (msg.type === 'delete-variation-frame') {
-    if (msg.frameNodeId) {
-      try {
-        const node = await figma.getNodeByIdAsync(msg.frameNodeId);
+    try {
+      if (msg.instanceNodeId) {
+        const node = await figma.getNodeByIdAsync(msg.instanceNodeId);
         if (node) node.remove();
-      } catch(e) {}
-    }
+      }
+      if (msg.variationId) {
+        const imageFrame = await getTouchImageFrame();
+        if (imageFrame) {
+          Array.from(imageFrame.children).filter(n => {
+            try {
+              const d = JSON.parse(n.getPluginData('a11y-meta') || '{}');
+              return (d.type === 'touch-overlay' || d.type === 'touch-badge') && d.variationId === msg.variationId;
+            } catch { return false; }
+          }).forEach(n => n.remove());
+        }
+      }
+    } catch(e) { console.error('[delete-variation-frame]', e); }
   }
 
   else if (msg.type === 'create-sr-variation-frame') {
@@ -2900,6 +2942,9 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
   if (rawDirect) {
     try { componentData = JSON.parse(rawDirect); } catch(e) {}
   }
+
+  // Flag: verdadeiro se o handoff já foi gerado antes (FRAME = detachado; ou tem pluginData salvo)
+  isHandoffGenerated = handoff.type !== 'INSTANCE' || !!rawDirect;
 
   // parseMasterList e parseRolesList: sempre executam se dbInstance existe
   if (dbInstance) {

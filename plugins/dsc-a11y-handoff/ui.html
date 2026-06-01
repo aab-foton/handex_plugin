@@ -1244,7 +1244,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         currentVariationId = null;
       }
       if (msg.type === 'touch-area-confirmed') {
-        touchData.push({ nome: msg.nome, preset: msg.preset, width: msg.width, height: msg.height, relX: msg.relX, relY: msg.relY });
+        touchData.push({ nome: msg.nome, preset: msg.preset, width: msg.width, height: msg.height, relX: msg.relX, relY: msg.relY, ...(msg.badgeProps && Object.keys(msg.badgeProps).length ? { badgeProps: msg.badgeProps } : {}) });
         // Persiste na variação ativa imediatamente
         if (currentVariationId) {
           const varData = variationsData.find(v => v.id === currentVariationId);
@@ -1603,14 +1603,14 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
 
   function removeTouchArea(i) {
     const nomeRemovido = touchData[i].nome;
-    parent.postMessage({ pluginMessage: { type: 'remove-touch-overlay', nome: nomeRemovido } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'remove-touch-overlay', nome: nomeRemovido, variationId: currentVariationId ?? 'default' } }, '*');
     touchData.splice(i, 1);
     renderTouchList();
     updateSummaryCards();
   }
 
   function highlightTouchArea(nome) {
-    parent.postMessage({ pluginMessage: { type: 'highlight-touch-area', nome: nome } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'highlight-touch-area', nome: nome, variationId: currentVariationId ?? 'default' } }, '*');
   }
 
   function getTouchPreset() {
@@ -2200,8 +2200,8 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
     const idx = variationsData.findIndex(v => v.id === id);
     if (idx === -1) return;
     const v = variationsData[idx];
-    if (v.frameNodeId) {
-      parent.postMessage({ pluginMessage: { type: 'delete-variation-frame', frameNodeId: v.frameNodeId } }, '*');
+    if (v.instanceNodeId) {
+      parent.postMessage({ pluginMessage: { type: 'delete-variation-frame', instanceNodeId: v.instanceNodeId, variationId: v.id } }, '*');
     }
     variationsData.splice(idx, 1);
     saveTouchTabData();
@@ -2294,7 +2294,7 @@ function closeTouchForm() {
       const varData = variationsData.find(v => v.id === currentVariationId);
       if (varData && !varData.frameNodeId) {
         // Criar frame primeiro, depois abrir form quando chegar variation-frame-created
-        parent.postMessage({ pluginMessage: { type: 'create-variation-frame', nome: varData.nome, propriedades: varData.propriedades || {} } }, '*');
+        parent.postMessage({ pluginMessage: { type: 'create-variation-frame', id: varData.id, nome: varData.nome, propriedades: varData.propriedades || {} } }, '*');
         el('btnAddTouch').disabled = true;
         el('btnAddTouch').textContent = '⏳ Preparando...';
         // openTouchForm() será chamado pelo handler variation-frame-created (ver abaixo)
@@ -2387,7 +2387,7 @@ el('btnVariationFormCreate').onclick = () => {
   const btn = el('btnVariationFormCreate');
   btn.textContent = '⏳ Criando…';
   btn.disabled = true;
-  parent.postMessage({ pluginMessage: { type: 'create-variation-frame', nome, propriedades } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'create-variation-frame', id, nome, propriedades } }, '*');
 };
 
   el('btnTouchAdd').onclick = () => {
@@ -2405,8 +2405,8 @@ el('btnCriarFrame').onclick = () => {
   const preset = getTouchPreset();
   if (!preset) return;
   const nome = 'Área de Toque ' + (touchData.length + 1);
-  el('touchPositioningHint').textContent = 'Mova e redimensione o frame rosa, depois clique Concluir.';
-  parent.postMessage({ pluginMessage: { type: 'create-touch-overlay', nome, preset } }, '*');
+  el('touchPositioningHint').textContent = 'Reposicione o overlay no canvas (ele fica no template), depois clique Concluir.';
+  parent.postMessage({ pluginMessage: { type: 'create-touch-overlay', nome, preset, variationId: currentVariationId ?? 'default' } }, '*');
   el('btnCriarFrame').style.display = 'none';
   el('touchPositioning').style.display = 'block';
   el('btnTouchAdd').style.display = 'block';
@@ -2457,6 +2457,11 @@ function onSemGestoChange() {
       sb.classList.remove('loading', 'success', 'error');
       sb.classList.add('loading');
       sb.textContent = isGenerated ? 'Atualizando handoff...' : 'Gerando handoff...';
+
+      // Salva estado da variação de toque ativa (ou default) antes de enviar
+      const touchSaveId = currentVariationId || 'default';
+      const touchSaveVar = variationsData.find(v => v.id === touchSaveId);
+      if (touchSaveVar) touchSaveVar.areas_toque = [...touchData];
 
       // Salva estado da variação de tabulação ativa antes de enviar
       if (currentTabVariationId) {
