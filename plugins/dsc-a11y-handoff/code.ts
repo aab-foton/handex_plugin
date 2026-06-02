@@ -198,6 +198,13 @@ function ensureHandoffDetached(): FrameNode {
 
 async function getTouchImageFrame(): Promise<FrameNode | null> {
   if (!handoffAtivo) return null;
+  // Verifica se o nó ainda existe (pode ter sido deletado pelo usuário)
+  const stillExists = await figma.getNodeByIdAsync(handoffAtivo.id);
+  if (!stillExists) {
+    handoffAtivo = null;
+    figma.ui.postMessage({ type: 'feedback', message: '⚠️ O template foi removido. Selecione novamente o componente e o template.' });
+    return null;
+  }
   const handoff = ensureHandoffDetached();
   let img = (handoff as FrameNode).findOne((n: SceneNode) =>
     n.name === 'image' &&
@@ -1516,7 +1523,8 @@ figma.ui.onmessage = async (msg) => {
     try {
       const imageFrame = await getTouchImageFrame();
       if (!imageFrame) {
-        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Frame de preview não encontrado no template.' });
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Frame de preview não encontrado no template. Gere o handoff primeiro.' });
+        figma.ui.postMessage({ type: 'touch-overlay-failed' });
         return;
       }
       const variationId: string = msg.variationId ?? 'default';
@@ -1547,7 +1555,8 @@ figma.ui.onmessage = async (msg) => {
         ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-h] Item Number')) as InstanceNode | undefined;
 
       if (!modelHandoffAreas) {
-        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Modelo [dsc-h] Handoff areas não encontrado no template.' });
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Modelo [dsc-h] Handoff areas não encontrado. Gere o handoff primeiro.' });
+        figma.ui.postMessage({ type: 'touch-overlay-failed' });
         return;
       }
 
@@ -1589,14 +1598,18 @@ figma.ui.onmessage = async (msg) => {
       tempTouchOverlayId = areaClone.id;
       figma.currentPage.selection = [areaClone];
       figma.viewport.scrollAndZoomIntoView([areaClone]);
+      figma.ui.postMessage({ type: 'touch-overlay-created' });
     } catch(e) {
       console.error('[create-touch-overlay]', e);
       figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar overlay: ${e}` });
+      figma.ui.postMessage({ type: 'touch-overlay-failed' });
     }
   }
 
   else if (msg.type === 'confirm-touch-area') {
     let width = 0, height = 0, relX = 0, relY = 0;
+    let badgeOffsetX = 0, badgeOffsetY = 0;
+    let badgeWidth = 0, badgeHeight = 0;
     const badgeProps: Record<string, any> = {};
     try {
       if (tempTouchOverlayId) {
@@ -1616,22 +1629,28 @@ figma.ui.onmessage = async (msg) => {
             relX = Math.round((overlay as any).x - (refInstance as any).x);
             relY = Math.round((overlay as any).y - (refInstance as any).y);
           }
-          // Ler props do badge correspondente (conector on/off, direção)
+          // Ler badge correspondente: posição relativa ao overlay + componentProperties
           const badge = imageFrame
             ? Array.from(imageFrame.children).find(n => {
                 try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'touch-badge' && d.variationId === variationId && d.index === meta.index; } catch { return false; }
               })
             : null;
-          if (badge && (badge as any).componentProperties) {
-            for (const [k, v] of Object.entries((badge as any).componentProperties as Record<string, { value: any }>)) {
-              badgeProps[k] = v.value;
+          if (badge) {
+            badgeOffsetX = Math.round((badge as any).x - (overlay as any).x);
+            badgeOffsetY = Math.round((badge as any).y - (overlay as any).y);
+            badgeWidth  = Math.round((badge as any).width);
+            badgeHeight = Math.round((badge as any).height);
+            if ((badge as any).componentProperties) {
+              for (const [k, v] of Object.entries((badge as any).componentProperties as Record<string, { value: any }>)) {
+                badgeProps[k] = v.value;
+              }
             }
           }
         }
       }
     } catch(e) { console.error('[confirm-touch-area]', e); }
     tempTouchOverlayId = null;
-    figma.ui.postMessage({ type: 'touch-area-confirmed', nome: msg.nome, preset: msg.preset, width, height, relX, relY, badgeProps });
+    figma.ui.postMessage({ type: 'touch-area-confirmed', nome: msg.nome, preset: msg.preset, width, height, relX, relY, badgeOffsetX, badgeOffsetY, badgeWidth, badgeHeight, badgeProps });
   }
 
   else if (msg.type === 'cancel-touch-area') {
@@ -1798,9 +1817,105 @@ figma.ui.onmessage = async (msg) => {
 
   else if (msg.type === 'activate-variation') {
     try {
-      const node = msg.instanceNodeId ? await figma.getNodeByIdAsync(msg.instanceNodeId) as SceneNode | null : null;
-      componenteVariacaoAtivo = node;
-      if (node) { figma.currentPage.selection = [node]; figma.viewport.scrollAndZoomIntoView([node]); }
+      const imageFrame = await getTouchImageFrame();
+      if (!imageFrame) { componenteVariacaoAtivo = null; return; }
+
+      const variationId: string = msg.variationId ?? 'default';
+
+      // Verifica se a instância ainda existe dentro do imageFrame (por ID ou por pluginData)
+      let instance: SceneNode | null = msg.instanceNodeId
+        ? await figma.getNodeByIdAsync(msg.instanceNodeId) as SceneNode | null
+        : null;
+      if (instance && (instance as any).parent?.id !== imageFrame.id) instance = null;
+
+      // Fallback: busca no imageFrame pelo pluginData (cobre default sem instanceNodeId salvo)
+      if (!instance) {
+        instance = Array.from(imageFrame.children).find(n => {
+          try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'variation-component' && d.variationId === variationId; } catch { return false; }
+        }) as SceneNode | null;
+        if (instance) figma.ui.postMessage({ type: 'variation-instance-recreated', variationId, instanceNodeId: instance.id });
+      }
+
+      if (!instance) {
+        // Recria instância + overlays a partir dos dados salvos
+        if (!componentePrincipalAtivo) { componenteVariacaoAtivo = null; return; }
+
+        const PAD_LEFT = 160, PAD_TOP = 80, GAP_H = 140;
+        const existingCount = Array.from(imageFrame.children).filter(n => {
+          try { return JSON.parse(n.getPluginData('a11y-meta') || '{}').type === 'variation-component'; } catch { return false; }
+        }).length;
+
+        const newInst = createComponentInstance(componentePrincipalAtivo) as InstanceNode;
+        if (msg.propriedades && Object.keys(msg.propriedades).length > 0) {
+          try { (newInst as any).setProperties(msg.propriedades); } catch(_e) {}
+        }
+        const cw = (newInst as any).width;
+        const ch = (newInst as any).height;
+        newInst.x = PAD_LEFT + existingCount * (cw + GAP_H);
+        newInst.y = PAD_TOP;
+        imageFrame.appendChild(newInst);
+        newInst.setPluginData('a11y-meta', JSON.stringify({ type: 'variation-component', variationId }));
+
+        const neededW = Math.max((imageFrame as FrameNode).width, newInst.x + cw + 24);
+        const neededH = Math.max((imageFrame as FrameNode).height, PAD_TOP + ch + 40);
+        imageFrame.resize(neededW, neededH);
+        try { await applyWcagBackground(imageFrame as FrameNode, componentePrincipalAtivo, []); } catch(_e) {}
+
+        const modelHandoffAreas = (
+          Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Handoff areas')
+          ?? (imageFrame as FrameNode).findOne((n: SceneNode) => n.name === '[dsc-h] Handoff areas')
+        ) as InstanceNode | undefined;
+        const modelItemNumber = (
+          Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Item Number')
+          ?? (imageFrame as FrameNode).findOne((n: SceneNode) => n.name === '[dsc-h] Item Number')
+        ) as InstanceNode | undefined;
+        if (modelHandoffAreas) modelHandoffAreas.visible = false;
+        if (modelItemNumber) modelItemNumber.visible = false;
+
+        // Recria overlays a partir das áreas salvas
+        const areas: any[] = msg.areas_toque || [];
+        for (const area of areas) {
+          if (!modelHandoffAreas) break;
+          const globalIndex = Array.from(imageFrame.children).filter(n => {
+            try { return JSON.parse(n.getPluginData('a11y-meta') || '{}').type === 'touch-overlay'; } catch { return false; }
+          }).length;
+
+          const areaClone = (modelHandoffAreas as InstanceNode).clone();
+          areaClone.visible = true;
+          try { areaClone.resize(area.width, area.height); } catch(_e) {}
+          areaClone.x = newInst.x + (area.relX || 0);
+          areaClone.y = newInst.y + (area.relY || 0);
+          imageFrame.appendChild(areaClone);
+          areaClone.setPluginData('a11y-meta', JSON.stringify({ type: 'touch-overlay', variationId, nome: area.nome, index: globalIndex }));
+
+          if (modelItemNumber) {
+            const numClone = (modelItemNumber as InstanceNode).clone();
+            numClone.visible = true;
+            if (area.badgeProps && Object.keys(area.badgeProps).length > 0) {
+              try { (numClone as any).setProperties(area.badgeProps); } catch(_e) {}
+            } else {
+              try { (numClone as any).setProperties({ 'connector': 'Off' }); } catch(_e) {}
+            }
+            if (area.badgeWidth > 0 && area.badgeHeight > 0) {
+              try { numClone.resize(area.badgeWidth, area.badgeHeight); } catch(_e) {}
+            }
+            numClone.x = areaClone.x + (area.badgeOffsetX ?? 0);
+            numClone.y = areaClone.y + (area.badgeOffsetY ?? -((numClone as any).height + 4));
+            imageFrame.appendChild(numClone);
+            numClone.setPluginData('a11y-meta', JSON.stringify({ type: 'touch-badge', variationId, nome: area.nome, index: globalIndex }));
+            const numTexts = (numClone as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+            const numText = numTexts.find((n: TextNode) => /^\d+$/.test(n.characters.trim())) || numTexts[0];
+            if (numText) await updateText(numText as TextNode, String(globalIndex + 1));
+          }
+        }
+
+        instance = newInst;
+        figma.ui.postMessage({ type: 'variation-instance-recreated', variationId, instanceNodeId: instance.id });
+      }
+
+      componenteVariacaoAtivo = instance;
+      figma.currentPage.selection = [instance as SceneNode];
+      figma.viewport.scrollAndZoomIntoView([instance as SceneNode]);
     } catch(e) { componenteVariacaoAtivo = null; }
   }
 
