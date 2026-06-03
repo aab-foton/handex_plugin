@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // handoff.js — geração da Ficha Técnica HTML interativa
 //
 // Inclui:
@@ -23,153 +23,199 @@
     }
 
     function collectHandoffData() {
-      const s1Fluxo = document.getElementById("s1-fluxo");
-      handoffData.step1.fluxo = s1Fluxo ? s1Fluxo.value : "";
-      const s1Status = document.getElementById("s1-status");
-      handoffData.step1.status = s1Status ? s1Status.value : "";
-      const s1Objetivo = document.getElementById("s1-objetivo");
-      handoffData.step1.objetivo = s1Objetivo ? s1Objetivo.value : "";
-      const s1Gerente = document.getElementById("s1-gerente");
-      handoffData.step1.gerente = s1Gerente ? s1Gerente.value : "";
-      const s1GerenteEmail = document.getElementById("s1-gerente-email");
-      handoffData.step1.gerenteEmail = s1GerenteEmail ? s1GerenteEmail.value.trim() : "";
-      const s1Versao = document.getElementById("s1-versao");
-      handoffData.step1.versao = s1Versao ? s1Versao.value : "v1.0";
+      // Step 1
+      const s1Titulo = document.getElementById('s1-titulo');
+      handoffData.step1.titulo = s1Titulo ? s1Titulo.value : '';
+      const s1Status = document.getElementById('s1-status');
+      handoffData.step1.status = s1Status ? s1Status.value : 'rascunho';
+      const s1Versao = document.getElementById('s1-versao');
+      handoffData.step1.versao = s1Versao ? s1Versao.value : 'v1.0';
+      const s1Objetivo = document.getElementById('s1-objetivo');
+      handoffData.step1.objetivo = s1Objetivo ? s1Objetivo.value : '';
+      const s1Jornada = document.getElementById('s1-jornada');
+      handoffData.step1.jornada = s1Jornada ? s1Jornada.value : '';
+      const s1Feature = document.getElementById('s1-feature');
+      handoffData.step1.feature = s1Feature ? s1Feature.value : '';
 
-      handoffData.setup = {
-        ficha: document.getElementById('chk-ficha') ? document.getElementById('chk-ficha').checked : true,
-        espacamentos: document.getElementById('chk-espacamentos') ? document.getElementById('chk-espacamentos').checked : true,
-        anatomia: document.getElementById('chk-anatomia') ? document.getElementById('chk-anatomia').checked : true,
-        instancias: document.getElementById('chk-instancias') ? document.getElementById('chk-instancias').checked : true,
-        componentes: document.getElementById('chk-componentes') ? document.getElementById('chk-componentes').checked : true
-      };
+      // Equipe (step1)
+      handoffData.step1.equipe = handoffData.step1.equipe || [];
 
-      handoffData.step3.team = [];
-      document.querySelectorAll("#list-equipe > div").forEach(item => {
-        const id = item.id.replace("item-", "");
-        handoffData.step3.team.push({
-          role: document.getElementById(`role-${id}`).value,
-          name: document.getElementById(`name-${id}`).value,
-          email: document.getElementById(`email-${id}`).value
-        });
-      });
+      // Step 2 — briefing e regras já são mantidos em handoffData via updateData()
+      const regras = handoffData.step2.regras || [];
 
-      const excecoes = [];
-      const regras = [];
-      const seenIds = new Set();
-      Object.keys(handoffData.step3).forEach(key => {
-        const m = key.match(/^(excecao-\d+|regras-\d+)_/);
-        if (!m) return;
-        const id = m[1];
-        if (seenIds.has(id)) return;
-        seenIds.add(id);
-
-        if (id.startsWith("excecao-")) {
-          excecoes.push({
-            title: handoffData.step3[`${id}_title`] || "Sem título",
-            link: handoffData.step3[`${id}_link`] || "",
-            notes: handoffData.step3[`${id}_notes`] || "",
-            type: handoffData.step3[`${id}_type`] || "Geral"
-          });
-        } else if (id.startsWith("regras-")) {
-          regras.push({
-            title: handoffData.step3[`${id}_title`] || "Regra de Negócio",
-            link: handoffData.step3[`${id}_link`] || "",
-            notes: handoffData.step3[`${id}_notes`] || ""
-          });
-        }
-      });
-
-      handoffData.excecoes = excecoes;
-      handoffData.regras = regras;
-
-      // Collect interactive states & motion (Estados & Motion accordion)
-      const states = [];
-      const motion = [];
-      const stateSeen = new Set();
-      const motionSeen = new Set();
-      Object.keys(handoffData.step3).forEach(key => {
-        const sMatch = key.match(/^(state-\d+(?:-\d+)?)_/);
-        if (sMatch && !stateSeen.has(sMatch[1])) {
-          stateSeen.add(sMatch[1]);
-          const id = sMatch[1];
-          states.push({
-            id,
-            state: handoffData.step3[`${id}_state`] || 'Estado',
-            icon: handoffData.step3[`${id}_icon`] || 'circle',
-            color: handoffData.step3[`${id}_color`] || 'slate',
-            target: handoffData.step3[`${id}_target`] || '',
-            description: handoffData.step3[`${id}_description`] || '',
-            link: handoffData.step3[`${id}_link`] || ''
-          });
-        }
-        const mMatch = key.match(/^(motion-\d+(?:-\d+)?)_/);
-        if (mMatch && !motionSeen.has(mMatch[1])) {
-          motionSeen.add(mMatch[1]);
-          const id = mMatch[1];
-          motion.push({
-            id,
-            target: handoffData.step3[`${id}_target`] || '',
-            property: handoffData.step3[`${id}_property`] || '',
-            trigger: handoffData.step3[`${id}_trigger`] || '',
-            duration: handoffData.step3[`${id}_duration`] || '',
-            easing: handoffData.step3[`${id}_easing`] || '',
-            notes: handoffData.step3[`${id}_notes`] || ''
-          });
-        }
-      });
-      handoffData.states = states;
-      handoffData.motion = motion;
-
-      // Collect docs link visibility (checkbox state + link value)
+      // Step 2 — docs (proto, a11y, research)
+      const protoInput = document.getElementById('s2-proto-link');
+      const a11yInput = document.getElementById('s2-a11y-link');
+      const researchInput = document.getElementById('s2-research-link');
       handoffData.docs = {
-        proto: { checked: !!(document.querySelector('#proto-field') && !document.querySelector('#proto-field').classList.contains('hidden') && handoffData.step3.proto_link), link: handoffData.step3.proto_link || '' },
-        a11y: { checked: !!(document.querySelector('#a11y-field') && !document.querySelector('#a11y-field').classList.contains('hidden') && handoffData.step3.a11y_link), link: handoffData.step3.a11y_link || '' },
-        research: { checked: !!(document.querySelector('#research-field') && !document.querySelector('#research-field').classList.contains('hidden') && handoffData.step3.research_link), link: handoffData.step3.research_link || '' },
+        proto: { link: protoInput ? protoInput.value : '' },
+        a11y: { link: a11yInput ? a11yInput.value : '' },
+        research: { link: researchInput ? researchInput.value : '' }
       };
 
-      let briefingMD = "## Briefing Estratégico\n";
-      if (handoffData.briefing && handoffData.briefing.questions && handoffData.briefing.questions.length > 0) {
-        handoffData.briefing.questions.forEach((q, i) => {
-          briefingMD += `- **#${i+1} [${q.category || "Customizada"}] ${q.question}**: ${q.answer}\n`;
+      // Gera MD resumido para referência
+      const equipe = handoffData.step1.equipe || [];
+      const framesList = handoffData.frames || [];
+
+      let briefingMD = '## Briefing Estratégico\n';
+      const bqs = handoffData.step2.briefingQuestions || [];
+      if (bqs.length > 0) {
+        bqs.forEach((q, i) => {
+          briefingMD += `- **#${i + 1} [${q.category || 'Customizada'}] ${q.question || ''}**: ${q.answer || ''}\n`;
         });
       } else {
-        briefingMD += "Nenhum briefing cadastrado.\n";
+        briefingMD += 'Nenhum briefing cadastrado.\n';
       }
 
-      const mdContent = `# HANDOFF: ${handoffData.step1.fluxo}
+      const mdContent = `# HANDOFF: ${handoffData.step1.titulo}
 
 ${briefingMD}
 
-## Informações Obrigatórias
-- **Título do Fluxo:** ${handoffData.step1.fluxo}
+## Governança
+- **Título:** ${handoffData.step1.titulo}
 - **Status:** ${handoffData.step1.status}
-- **Versão do Documento:** ${handoffData.step1.versao}
-- **Designer Responsável:** ${handoffData.step1.gerente}
-- **Objetivo da entrega:**
-${handoffData.step1.objetivo}
+- **Versão:** ${handoffData.step1.versao}
+- **Objetivo:** ${handoffData.step1.objetivo}${handoffData.step1.jornada ? '\n- **Jornada:** ' + handoffData.step1.jornada : ''}${handoffData.step1.feature ? '\n- **Feature:** ' + handoffData.step1.feature : ''}
 
-## Equipe e Responsáveis
-${handoffData.step3.team.length === 0 ? "Nenhum membro" : handoffData.step3.team.map(m => `- **${m.role}**: ${m.name} (${m.email})`).join('\n')}
+## Equipe
+${equipe.length === 0 ? 'Nenhum membro.' : equipe.map(m => `- **${m.papel}**: ${m.nome} (${m.email})`).join('\n')}
 
-## Cenários de Exceção
-${excecoes.length === 0 ? "Nenhum cenário cadastrado." : excecoes.map(e => `- [${e.title}](${e.link}): ${e.notes}`).join('\n')}
+## Regras de Negócio
+${regras.length === 0 ? 'Nenhuma regra cadastrada.' : regras.map(r => `- **${r.titulo}**: ${r.notas || ''}${r.link ? ' — ' + r.link : ''}`).join('\n')}
 
-## Regras de Negócio e HUs
-${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra](${r.link}): ${r.notes}`).join('\n')}
+## Frames Documentados (${framesList.length})
+${framesList.map(f => `### ${f.nome}\n- Specs: ${f.specs ? 'sim' : 'não'}\n- Medidas: ${(f.measurements || []).length}\n- Especificações: ${(f.createdSpecs || []).length}\n- Exceções: ${(f.excecoes || []).length}`).join('\n\n')}
 
-## Documentação Adicional
-- **Protótipo:** ${handoffData.step3.proto_link || "N/A"}
-- **Acessibilidade:** ${handoffData.step3.a11y_link || "N/A"}
-- **UX Research:** ${handoffData.step3.research_link || "N/A"}
+## Documentação
+- Protótipo: ${handoffData.docs.proto.link || 'N/A'}
+- Acessibilidade: ${handoffData.docs.a11y.link || 'N/A'}
+- UX Research: ${handoffData.docs.research.link || 'N/A'}
 `;
       handoffData.mdContent = mdContent;
     }
 
     function createHandoffOnCanvas() {
       collectHandoffData();
+
+      const titulo   = (handoffData.step1.titulo  || '').trim();
+      const versao   = (handoffData.step1.versao  || '').trim();
+      const objetivo = (handoffData.step1.objetivo || '').trim();
+      const designer = (handoffData.step1.equipe  || []).find(
+        m => (m.papel || '').toLowerCase() === 'designer' && (m.nome || '').trim()
+      );
+
+      const missing = [];
+      if (!titulo)   missing.push('nome do projeto');
+      if (!designer) missing.push('nome do designer');
+      if (!versao)   missing.push('versão');
+      if (!objetivo) missing.push('objetivo da entrega');
+
+      if (missing.length > 0) {
+        const label = missing.length === 1
+          ? `Preencha o ${missing[0]} antes de gerar a ficha.`
+          : `Preencha antes de gerar a ficha: ${missing.join(', ')}.`;
+        showToast(label, 'error');
+        if (typeof openDadosProjetoModal === 'function') openDadosProjetoModal();
+        return;
+      }
+
+      // Se já foi gerada uma ficha, abre o modal de versionamento
+      if (handoffData._fichaGenerated) {
+        _openVersioningModal();
+        return;
+      }
+
       parent.postMessage({ pluginMessage: { type: 'create-handoff', data: handoffData } }, '*');
+      showHandoffLoading();
     }
+
+    function _openVersioningModal() {
+      const current = handoffData.step1.versao || 'v1.0';
+      // Preenche previews de cada tipo
+      const pMajor = document.getElementById('version-preview-major');
+      const pMinor = document.getElementById('version-preview-minor');
+      if (pMajor) pMajor.textContent = current + ' → ' + bumpVersion(current, 'major');
+      if (pMinor) pMinor.textContent = current + ' → ' + bumpVersion(current, 'minor');
+
+      // Seleciona minor por padrão e preenche o input
+      const radios = document.querySelectorAll('input[name="version-type"]');
+      radios.forEach(r => { r.checked = r.value === 'minor'; });
+      const input = document.getElementById('versioning-final-input');
+      if (input) input.value = bumpVersion(current, 'minor');
+
+      if (typeof openModal === 'function') openModal('versioning-modal');
+      try { lucide.createIcons(); } catch(e) {}
+    }
+
+    function _versionTypeChanged() {
+      const selected = document.querySelector('input[name="version-type"]:checked');
+      if (!selected) return;
+      const current = handoffData.step1.versao || 'v1.0';
+      const input = document.getElementById('versioning-final-input');
+      if (input) input.value = bumpVersion(current, selected.value);
+    }
+    window._versionTypeChanged = _versionTypeChanged;
+
+    function confirmHandoffVersion() {
+      const input = document.getElementById('versioning-final-input');
+      const newVersion = (input ? input.value : '').trim();
+      if (!newVersion) { showToast('Informe a versão antes de gerar.', 'error'); return; }
+
+      // Aplica a versão escolhida e persiste
+      handoffData.step1.versao = newVersion;
+      const el = document.getElementById('s1-versao');
+      if (el) el.value = newVersion;
+      saveToStorage();
+
+      if (typeof closeModal === 'function') closeModal('versioning-modal');
+      parent.postMessage({ pluginMessage: { type: 'create-handoff', data: handoffData } }, '*');
+      showHandoffLoading();
+    }
+    window.confirmHandoffVersion = confirmHandoffVersion;
+
+    function showHandoffLoading() {
+      const el = document.getElementById('handoff-loading-overlay');
+      if (el) {
+        el.classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+    }
+
+    function hideHandoffLoading() {
+      const el = document.getElementById('handoff-loading-overlay');
+      if (el) el.classList.add('hidden');
+    }
+
+    function showScanLoading() {
+      const el = document.getElementById('scan-loading-overlay');
+      if (el) el.classList.remove('hidden');
+    }
+
+    function hideScanLoading() {
+      const el = document.getElementById('scan-loading-overlay');
+      if (el) el.classList.add('hidden');
+    }
+    window.showScanLoading = showScanLoading;
+    window.hideScanLoading = hideScanLoading;
+    window.hideHandoffLoading = hideHandoffLoading;
+
+    function _onHandoffVersioned(newVersion) {
+      const el = document.getElementById('s1-versao');
+      if (el) {
+        el.value = newVersion;
+        el.classList.add('ring-2', 'ring-blue-100');
+        setTimeout(() => el.classList.remove('ring-2', 'ring-blue-100'), 1200);
+      }
+      handoffData.step1.versao = newVersion;
+      saveToStorage();
+    }
+    window._onHandoffVersioned = _onHandoffVersioned;
+
+    function _markFichaGenerated() {
+      handoffData._fichaGenerated = true;
+      saveToStorage();
+    }
+    window._markFichaGenerated = _markFichaGenerated;
 
     function exportHandoff() {
       const btn = document.getElementById("btn-final-export");
@@ -202,7 +248,7 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         doc.setFontSize(16);
-        doc.text("Handoff: " + handoffData.step1.fluxo, 10, 20);
+        doc.text("Handoff: " + handoffData.step1.titulo, 10, 20);
         doc.setFontSize(10);
 
         const pdfLines = doc.splitTextToSize(mdContent, 180);
@@ -211,7 +257,7 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
         const pdfBlob = doc.output('blob');
 
         const zip = new JSZip();
-        const rawName = handoffData.step1.fluxo || "handoff";
+        const rawName = handoffData.step1.titulo || "handoff";
         const safeName = rawName.replace(/[\\/:*?"<>|]+/g, "_").replace(/\s+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, "");
 
         const visualizerHTML = getInteractiveHTMLContent();
@@ -249,7 +295,7 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
               const specsData = handoffData.step2.specs || {};
               const snapshot = {
                 exportedAt: new Date().toISOString(),
-                projectName: handoffData.step1.fluxo || null,
+                projectName: handoffData.step1.titulo || null,
                 versao: handoffData.step1.versao || null,
                 status: handoffData.step1.status || null,
                 scan: {
@@ -359,18 +405,22 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
     }
 
     function getInteractiveHTMLContent() {
-      const rawName = handoffData.step1.fluxo || "handoff";
+      const rawName = handoffData.step1.titulo || "handoff";
       const safeName = rawName.replace(/[\\/:*?"<>|]+/g, "_").replace(/\s+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, "");
       const status = handoffData.step1.status || "Pendente";
       const versao = handoffData.step1.versao || "v1.0.0";
-      const autor = handoffData.step1.autor || "Não especificado";
-      const validador = handoffData.step1.validador_po || "Não especificado";
-      const tags = handoffData.step1.tags || "";
+      // Equipe — derivar autor (designer) e validador (PO) da equipe v2
+      const _equipe = handoffData.step1.equipe || [];
+      const _designer = _equipe.find(m => (m.papel || '').toLowerCase() === 'designer');
+      const _po = _equipe.find(m => (m.papel || '').toLowerCase() === 'po');
+      const autor = _designer ? (_designer.nome || "Não especificado") : "Não especificado";
+      const validador = _po ? (_po.nome || "Não especificado") : "Não especificado";
 
-      // High-resolution 2x frame preview base64 conversion
+      // Frame preview: usa o primeiro frame que tenha preview escaneado
       let framePreviewBase64 = "";
-      if (handoffData.step2 && handoffData.step2.specs && handoffData.step2.specs.framePreview) {
-        const fp = handoffData.step2.specs.framePreview;
+      const _framesWithSpecs = (handoffData.frames || []).filter(f => f.specs && f.specs.framePreview);
+      if (_framesWithSpecs.length > 0) {
+        const fp = _framesWithSpecs[0].specs.framePreview;
         if (typeof fp === "string") {
           framePreviewBase64 = fp;
         } else if (fp.byteLength) {
@@ -382,33 +432,25 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
         }
       }
 
-      // Construct flat dynamic variables for tags and links to prevent syntax nesting
-      let tagsHTML = "";
-      if (tags) {
-        const tagSpans = tags.split(',').map(tag => `
-          <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md text-[9px] font-bold text-slate-500 dark:text-slate-400">${tag.trim()}</span>
-        `).join('');
-        tagsHTML = `
-          <div>
-            <span class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Tags</span>
-            <div class="flex flex-wrap gap-1">
-              ${tagSpans}
-            </div>
-          </div>
-        `;
-      }
+      // Docs, excecoes (agregado de todos os frames e specs), regras e anexos — schema v2
+      const docs = handoffData.docs || {};
+      const excecoes = (handoffData.frames || []).flatMap(f => {
+        const frameExcs = f.excecoes || [];
+        const specExcs = (f.createdSpecs || []).flatMap(s => s.excecoes || []);
+        return [...frameExcs, ...specExcs];
+      });
+      const regras = handoffData.step2.regras || [];
+      const uploadedFileNames = (handoffData.step2.anexos || []).map(a => a.name);
 
-      const steps = handoffData.step3 || {};
-      const excecoes = handoffData.excecoes || [];
-      const regras = handoffData.regras || [];
-      const uploadedFileNames = (handoffData.step1 && Array.isArray(handoffData.step1.files)) ? handoffData.step1.files : [];
+      // Auditoria: habilitada se pelo menos um frame tem audit.enabled
+      const isAuditEnabled = (handoffData.frames || []).some(f => f.audit && f.audit.enabled);
 
-      const protoLink = steps.proto_link || '#';
-      const protoTarget = steps.proto_link ? 'target="_blank"' : '';
-      const a11yLink = steps.a11y_link || '#';
-      const a11yTarget = steps.a11y_link ? 'target="_blank"' : '';
-      const researchLink = steps.research_link || '#';
-      const researchTarget = steps.research_link ? 'target="_blank"' : '';
+      const protoLink = (docs.proto && docs.proto.link) || '#';
+      const protoTarget = (docs.proto && docs.proto.link) ? 'target="_blank"' : '';
+      const a11yLink = (docs.a11y && docs.a11y.link) || '#';
+      const a11yTarget = (docs.a11y && docs.a11y.link) ? 'target="_blank"' : '';
+      const researchLink = (docs.research && docs.research.link) || '#';
+      const researchTarget = (docs.research && docs.research.link) ? 'target="_blank"' : '';
 
       // Type → visual mapping for Cenários de Exceção
       const excecaoTypeMap = {
@@ -437,7 +479,7 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
                 </div>
                 <span class="font-black">${title}</span>
               </div>
-              <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform ${rotateClass}"></i>
+              <i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 transition-transform ${rotateClass}"></i>
             </button>
             <div id="${id}" class="${hiddenClass} p-5 border-t border-slate-100 dark:border-slate-800/80">
               ${content}
@@ -450,23 +492,26 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
       let accordionsHTML = "";
 
       // 1. Objetivo da Entrega (sempre aberto, primeiro item)
+      const jornadaFeatureHTML = [
+        handoffData.step1.jornada ? `<div class="flex items-center gap-2"><span class="text-xs font-bold text-slate-500 uppercase tracking-wider w-16">Jornada</span><span class="text-xs text-slate-600 dark:text-slate-300">${handoffData.step1.jornada}</span></div>` : '',
+        handoffData.step1.feature ? `<div class="flex items-center gap-2"><span class="text-xs font-bold text-slate-500 uppercase tracking-wider w-16">Feature</span><span class="text-xs text-slate-600 dark:text-slate-300">${handoffData.step1.feature}</span></div>` : '',
+      ].filter(Boolean).join('');
       const objetivoContent = `
-        <div class="p-4 bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-slate-100 dark:border-slate-800/40 text-left">
+        <div class="p-4 bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-slate-100 dark:border-slate-800/40 text-left space-y-2">
+          ${jornadaFeatureHTML}
           <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${(handoffData.step1.objetivo || "Nenhum objetivo especificado.").replace(/\n/g, '<br>')}</p>
         </div>
       `;
       accordionsHTML += buildAccordionHTML("acc-objetivo", "Objetivo da Entrega", "target", objetivoContent, true);
 
       // 2. Briefing Estratégico (só renderiza se houver conteúdo)
-      const hasBriefing = handoffData.briefing &&
-                          handoffData.briefing.enabled &&
-                          handoffData.briefing.questions &&
-                          handoffData.briefing.questions.some(q => q.answer && q.answer.trim() !== "");
+      const _bqsHTML = (handoffData.step2.briefingQuestions || []).filter(q => q.answer && q.answer.trim() !== "");
+      const hasBriefing = _bqsHTML.length > 0;
 
       if (hasBriefing) {
         const briefingContent = `
           <div class="space-y-4 text-left">
-            ${handoffData.briefing.questions.filter(q => q.answer && q.answer.trim() !== "").map(q => `
+            ${_bqsHTML.map(q => `
               <div class="p-4 bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-slate-100 dark:border-slate-800/40">
                 <span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-[#0070af] dark:text-blue-400 font-bold text-[9px] uppercase tracking-wide rounded mb-2 inline-block">${q.category || "Geral"}</span>
                 <h4 class="text-xs font-black text-slate-800 dark:text-white mb-1.5">${q.question}</h4>
@@ -481,11 +526,11 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
       // 3. Cenários de Exceção & Erro (agrupados por tipo)
       let excecoesContent = "";
       if (excecoes.length === 0) {
-        excecoesContent = '<p class="text-xs text-slate-400 dark:text-slate-500 font-medium">Nenhum cenário de exceção cadastrado.</p>';
+        excecoesContent = '<p class="text-xs text-slate-500 dark:text-slate-500 font-medium">Nenhum cenário de exceção cadastrado.</p>';
       } else {
         const groups = {};
         excecoes.forEach(e => {
-          const t = e.type || "Geral";
+          const t = e.tipo || "Geral";
           if (!groups[t]) groups[t] = [];
           groups[t].push(e);
         });
@@ -502,21 +547,21 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
             <div class="p-4 ${pal.bg} border ${pal.border} rounded-xl">
               <div class="flex items-center justify-between gap-2 mb-1.5">
                 <h4 class="text-xs font-black ${pal.title} flex items-center gap-1.5">
-                  <span class="w-1.5 h-1.5 ${pal.dot} rounded-full"></span>${e.title}
+                  <span class="w-1.5 h-1.5 ${pal.dot} rounded-full"></span>${e.titulo || ''}
                 </h4>
                 <span class="shrink-0 px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wide ${pal.badge}">${map.label}</span>
               </div>
-              ${e.notes ? `<p class="text-xs text-slate-600 dark:text-slate-300 mt-1.5">${e.notes.replace(/\n/g, '<br>')}</p>` : ''}
-              ${e.link ? `<a href="${e.link}" target="_blank" class="inline-flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 font-bold mt-2 hover:underline">Abrir no Figma <i data-lucide="external-link" class="w-2.5 h-2.5"></i></a>` : ''}
+              ${e.notas ? `<p class="text-xs text-slate-600 dark:text-slate-300 mt-1.5">${e.notas.replace(/\n/g, '<br>')}</p>` : ''}
+              ${e.anchor ? `<a href="${e.anchor}" target="_blank" class="inline-flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 font-bold mt-2 hover:underline">Abrir no Figma <i data-lucide="external-link" class="w-2.5 h-2.5"></i></a>` : ''}
             </div>
           `).join('');
           return `
             <div>
-              <div class="flex items-center gap-2 mb-2 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              <div class="flex items-center gap-2 mb-2 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500">
                 <i data-lucide="${map.icon}" class="w-3.5 h-3.5"></i>
                 <span>${map.label}</span>
-                <span class="text-slate-400">·</span>
-                <span class="text-slate-400 dark:text-slate-500 font-bold">${items.length}</span>
+                <span class="text-slate-500">·</span>
+                <span class="text-slate-500 dark:text-slate-500 font-bold">${items.length}</span>
               </div>
               <div class="space-y-2">${cards}</div>
             </div>
@@ -529,11 +574,11 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
       const regrasContent = `
         <div class="space-y-3 text-left">
           ${regras.length === 0
-            ? '<p class="text-xs text-slate-400 dark:text-slate-500 font-medium">Nenhuma regra de negócio cadastrada.</p>'
+            ? '<p class="text-xs text-slate-500 dark:text-slate-500 font-medium">Nenhuma regra de negócio cadastrada.</p>'
             : regras.map(r => `
               <div class="p-4 bg-blue-50/10 dark:bg-blue-950/5 border border-blue-100/50 dark:border-blue-900/20 rounded-xl">
-                <h4 class="text-xs font-black text-blue-800 dark:text-blue-400 flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#0070af] rounded-full"></span>${r.title || 'Regra de Negócio'}</h4>
-                ${r.notes ? `<p class="text-xs text-slate-600 dark:text-slate-300 mt-1.5">${r.notes.replace(/\n/g, '<br>')}</p>` : ''}
+                <h4 class="text-xs font-black text-blue-800 dark:text-blue-400 flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#0070af] rounded-full"></span>${r.titulo || 'Regra de Negócio'}</h4>
+                ${r.notas ? `<p class="text-xs text-slate-600 dark:text-slate-300 mt-1.5">${r.notas.replace(/\n/g, '<br>')}</p>` : ''}
                 ${r.link ? `<a href="${r.link}" target="_blank" class="inline-flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 font-bold mt-2 hover:underline">Ver regras/doc <i data-lucide="external-link" class="w-2.5 h-2.5"></i></a>` : ''}
               </div>
             `).join('')
@@ -572,9 +617,9 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
                   <div class="flex-1 min-w-0">
                     <div class="flex items-baseline gap-2 flex-wrap">
                       <span class="text-[11px] font-black text-slate-800 dark:text-white">${entry.name}</span>
-                      <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">${entry.category}</span>
+                      <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">${entry.category}</span>
                     </div>
-                    ${changesText ? `<p class="text-[10px] text-slate-600 dark:text-slate-400 mt-1 leading-snug font-mono">${changesText}</p>` : ''}
+                    ${changesText ? `<p class="text-[10px] text-slate-600 dark:text-slate-500 mt-1 leading-snug font-mono">${changesText}</p>` : ''}
                   </div>
                 </div>
               </div>
@@ -589,26 +634,26 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
 
           const diffContent = `
             <div class="text-left space-y-4">
-              <div class="p-3 bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60 rounded-xl text-[10px] text-slate-500 dark:text-slate-400">
+              <div class="p-3 bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60 rounded-xl text-[10px] text-slate-500 dark:text-slate-500">
                 <span class="font-bold text-slate-700 dark:text-slate-300">Comparando com versão ${prevVer}</span> · exportada em ${prevFmt}
               </div>
               <div class="grid grid-cols-3 gap-2">
                 <div class="bg-green-50/40 dark:bg-green-950/10 border border-green-100 dark:border-green-900/30 p-2 rounded-lg text-center">
                   <p class="text-base font-black text-green-700 dark:text-green-400">${computedDiff.added.length}</p>
-                  <p class="text-[8px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Adicionados</p>
+                  <p class="text-[8px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-500">Adicionados</p>
                 </div>
                 <div class="bg-amber-50/40 dark:bg-amber-950/10 border border-amber-100 dark:border-amber-900/30 p-2 rounded-lg text-center">
                   <p class="text-base font-black text-amber-700 dark:text-amber-400">${computedDiff.modified.length}</p>
-                  <p class="text-[8px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Modificados</p>
+                  <p class="text-[8px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-500">Modificados</p>
                 </div>
                 <div class="bg-red-50/40 dark:bg-red-950/10 border border-red-100 dark:border-red-900/30 p-2 rounded-lg text-center">
                   <p class="text-base font-black text-red-700 dark:text-red-400">${computedDiff.removed.length}</p>
-                  <p class="text-[8px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Removidos</p>
+                  <p class="text-[8px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-500">Removidos</p>
                 </div>
               </div>
               ${diffSections.map(sec => `
                 <div>
-                  <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">${sec.title} · ${sec.items.length}</p>
+                  <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">${sec.title} · ${sec.items.length}</p>
                   <div class="space-y-2">${sec.items.map(it => renderItem(it, sec.kind)).join('')}</div>
                 </div>
               `).join('')}
@@ -637,14 +682,14 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
         if (statesArr.length > 0) {
           statesHTML = `
             <div>
-              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Estados Interativos · ${statesArr.length}</p>
+              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">Estados Interativos · ${statesArr.length}</p>
               <div class="grid sm:grid-cols-2 gap-3">
                 ${statesArr.map(s => `
                   <div class="p-3 border ${stateColorMap[s.color] || stateColorMap.slate} rounded-xl">
                     <div class="flex items-center gap-2 mb-1.5">
                       <i data-lucide="${s.icon || 'circle'}" class="w-3.5 h-3.5"></i>
                       <span class="text-[11px] font-black">${s.state}</span>
-                      ${s.target ? `<span class="ml-auto text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate" title="${s.target}">${s.target}</span>` : ''}
+                      ${s.target ? `<span class="ml-auto text-[10px] font-bold text-slate-500 dark:text-slate-500 truncate" title="${s.target}">${s.target}</span>` : ''}
                     </div>
                     ${s.description ? `<p class="text-[11px] text-slate-600 dark:text-slate-300 leading-snug mb-1.5">${s.description.replace(/\n/g, '<br>')}</p>` : ''}
                     ${s.link ? `<a href="${s.link}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline">Ver no Figma <i data-lucide="external-link" class="w-2.5 h-2.5"></i></a>` : ''}
@@ -659,7 +704,7 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
         if (motionArr.length > 0) {
           motionHTML = `
             <div>
-              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2 mt-${statesArr.length > 0 ? '4' : '0'}">Motion / Transições · ${motionArr.length}</p>
+              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2 mt-${statesArr.length > 0 ? '4' : '0'}">Motion / Transições · ${motionArr.length}</p>
               <div class="space-y-2">
                 ${motionArr.map(m => `
                   <div class="p-3 bg-pink-50/40 dark:bg-pink-950/10 border border-pink-100/60 dark:border-pink-900/30 rounded-xl">
@@ -685,33 +730,34 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
       }
 
       // 5. Anexos & Documentos (links externos + arquivos físicos na pasta ./Anexos)
-      const hasExternalDocs = !!(steps.proto_link || steps.a11y_link || steps.research_link);
+      const hasExternalDocs = !!(docs.proto && docs.proto.link || docs.a11y && docs.a11y.link || docs.research && docs.research.link);
       const hasAttachedFiles = uploadedFileNames.length > 0;
       let anexosContent = "";
       if (!hasExternalDocs && !hasAttachedFiles) {
-        anexosContent = '<p class="text-xs text-slate-400 dark:text-slate-500 font-medium">Nenhum anexo ou link adicionado.</p>';
+        anexosContent = '<p class="text-xs text-slate-500 dark:text-slate-500 font-medium">Nenhum anexo ou link adicionado.</p>';
       } else {
         let externalHTML = "";
         if (hasExternalDocs) {
-          const docRows = [
-            { key: "proto_link",    label: "Protótipo Navegável",      icon: "eye" },
-            { key: "a11y_link",     label: "Diretrizes de Acessibilidade", icon: "accessibility" },
-            { key: "research_link", label: "UX Research & Insights",   icon: "file-text" }
-          ].filter(d => steps[d.key]).map(d => `
-            <a href="${steps[d.key]}" target="_blank" class="flex items-center gap-3 p-3 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800/40 rounded-xl hover:bg-blue-50/40 dark:hover:bg-blue-900/10 transition-colors">
+          const _docsMap = [
+            { key: "proto",    label: "Protótipo Navegável",          icon: "eye" },
+            { key: "a11y",     label: "Diretrizes de Acessibilidade", icon: "accessibility" },
+            { key: "research", label: "UX Research & Insights",       icon: "file-text" }
+          ];
+          const docRows = _docsMap.filter(d => docs[d.key] && docs[d.key].link).map(d => `
+            <a href="${docs[d.key].link}" target="_blank" class="flex items-center gap-3 p-3 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800/40 rounded-xl hover:bg-blue-50/40 dark:hover:bg-blue-900/10 transition-colors">
               <div class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-[#0070af] dark:text-blue-400 shrink-0">
                 <i data-lucide="${d.icon}" class="w-4 h-4"></i>
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-xs font-black text-slate-800 dark:text-white truncate">${d.label}</p>
-                <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate">${steps[d.key]}</p>
+                <p class="text-[10px] text-slate-500 dark:text-slate-500 truncate">${docs[d.key].link}</p>
               </div>
-              <i data-lucide="external-link" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+              <i data-lucide="external-link" class="w-3.5 h-3.5 text-slate-500 shrink-0"></i>
             </a>
           `).join('');
           externalHTML = `
             <div>
-              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Links externos</p>
+              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">Links externos</p>
               <div class="space-y-2">${docRows}</div>
             </div>
           `;
@@ -734,15 +780,15 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-xs font-black text-slate-800 dark:text-white truncate">${name}</p>
-                  <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate">./Anexos/${name}</p>
+                  <p class="text-[10px] text-slate-500 dark:text-slate-500 truncate">./Anexos/${name}</p>
                 </div>
-                <i data-lucide="download" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                <i data-lucide="download" class="w-3.5 h-3.5 text-slate-500 shrink-0"></i>
               </a>
             `;
           }).join('');
           filesHTML = `
             <div>
-              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2 mt-${hasExternalDocs ? '4' : '0'}">Arquivos anexados (pasta ./Anexos)</p>
+              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2 mt-${hasExternalDocs ? '4' : '0'}">Arquivos anexados (pasta ./Anexos)</p>
               <div class="space-y-2">${fileRows}</div>
             </div>
           `;
@@ -754,22 +800,140 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
       // 6. Equipe & Responsáveis
       const equipeContent = `
         <div class="grid sm:grid-cols-2 gap-4 text-left">
-          ${(handoffData.step3.team && handoffData.step3.team.length > 0)
-            ? handoffData.step3.team.map(m => `
+          ${(_equipe.length > 0)
+            ? _equipe.map(m => `
               <div class="flex items-center gap-3 p-4 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800/40 rounded-xl">
-                <div class="w-8 h-8 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center font-bold text-xs shrink-0">${m.name ? m.name.charAt(0).toUpperCase() : '?'}</div>
+                <div class="w-8 h-8 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center font-bold text-xs shrink-0">${m.nome ? m.nome.charAt(0).toUpperCase() : '?'}</div>
                 <div class="min-w-0 flex-1">
-                  <h4 class="text-xs font-black text-slate-800 dark:text-white truncate">${m.name || "Sem Nome"}</h4>
-                  <p class="text-[9px] font-bold text-[#0070af] dark:text-blue-400 uppercase tracking-wide mt-0.5">${m.role || "Membro"}</p>
-                  ${m.email ? `<p class="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5">${m.email}</p>` : ''}
+                  <h4 class="text-xs font-black text-slate-800 dark:text-white truncate">${m.nome || "Sem Nome"}</h4>
+                  <p class="text-[9px] font-bold text-[#0070af] dark:text-blue-400 uppercase tracking-wide mt-0.5">${m.papel || "Membro"}</p>
+                  ${m.email ? `<p class="text-[10px] text-slate-500 dark:text-slate-500 truncate mt-0.5">${m.email}</p>` : ''}
                 </div>
               </div>
             `).join('')
-            : '<p class="col-span-2 text-xs text-slate-400 dark:text-slate-500 font-medium text-center py-4">Nenhum membro da equipe adicionado.</p>'
+            : '<p class="col-span-2 text-xs text-slate-500 dark:text-slate-500 font-medium text-center py-4">Nenhum membro da equipe adicionado.</p>'
           }
         </div>
       `;
       accordionsHTML += buildAccordionHTML("acc-equipe", "Equipe & Responsáveis", "users", equipeContent, false);
+
+      // 7. Frames Documentados (Hub por Frame — specs, medidas, specs criadas, exceções)
+      const _allFrames = handoffData.frames || [];
+      if (_allFrames.length > 0) {
+        const framesContent = `
+          <div class="space-y-4 text-left">
+            ${_allFrames.map((f, fi) => {
+              const fMeasurements = f.measurements || [];
+              const fCreatedSpecs = f.createdSpecs || [];
+              const fExcecoes = f.excecoes || [];
+              const fSpecExcs = fCreatedSpecs.flatMap(s => s.excecoes || []);
+              const fScanCategories = f.specs ? Object.keys(f.specs).filter(k => k !== 'framePreview' && k !== 'fileKey' && Array.isArray(f.specs[k]) && f.specs[k].length > 0) : [];
+              const fTotalScan = fScanCategories.reduce((acc, k) => acc + f.specs[k].length, 0);
+              const fAuditScore = f.audit && f.audit.results && f.audit.results.adoption != null ? f.audit.results.adoption : null;
+
+              const specsList = fCreatedSpecs.length > 0 ? `
+                <div class="mt-3">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <p class="text-[9px] font-black uppercase tracking-widest text-slate-500">Especificações Criadas · ${fCreatedSpecs.length}</p>
+                    <button onclick="toggleHTMLSection('specs-${fi}', this)" class="text-[9px] font-bold text-slate-500 hover:text-slate-600 transition-colors flex items-center gap-1">
+                      <svg id="specs-eye-${fi}" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                      Ocultar tudo
+                    </button>
+                  </div>
+                  <div id="specs-${fi}" class="space-y-1.5">
+                    ${fCreatedSpecs.map((s, si) => `
+                      <div id="html-spec-${fi}-${si}" data-toggle-item data-hidden="0" class="flex items-center gap-2 p-2 bg-indigo-50/40 dark:bg-indigo-950/10 border border-indigo-100/60 dark:border-indigo-900/30 rounded-lg transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                        <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${s.name || s.label || 'Spec'}</span>
+                        ${s.category ? `<span class="text-[9px] text-slate-500 font-mono shrink-0">${s.category}</span>` : ''}
+                        ${(s.excecoes && s.excecoes.length > 0) ? `<span class="text-[9px] font-bold text-amber-600 dark:text-amber-400 shrink-0">${s.excecoes.length} exc.</span>` : ''}
+                        <button data-toggle-btn onclick="toggleHTMLItem('html-spec-${fi}-${si}', this)" title="Ocultar" class="ml-1 shrink-0 opacity-40 hover:opacity-100 transition-opacity">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>` : '';
+
+              const measuresList = fMeasurements.length > 0 ? `
+                <div class="mt-3">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <p class="text-[9px] font-black uppercase tracking-widest text-slate-500">Medidas · ${fMeasurements.length}</p>
+                    <button onclick="toggleHTMLSection('meas-${fi}', this)" class="text-[9px] font-bold text-slate-500 hover:text-slate-600 transition-colors flex items-center gap-1">
+                      <svg id="meas-eye-${fi}" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                      Ocultar tudo
+                    </button>
+                  </div>
+                  <div id="meas-${fi}" class="space-y-1.5">
+                    ${fMeasurements.map((m, mi) => `
+                      <div id="html-meas-${fi}-${mi}" data-toggle-item data-hidden="0" class="flex items-center gap-2 p-2 bg-cyan-50/40 dark:bg-cyan-950/10 border border-cyan-100/60 dark:border-cyan-900/30 rounded-lg transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21.3 8.7 8.7 21.3c-1 1-2.5 1-3.4 0l-2.6-2.6c-1-1-1-2.5 0-3.4L15.3 2.7c1-1 2.5-1 3.4 0l2.6 2.6c1 1 1 2.5 0 3.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>
+                        <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${m.name || m.label || 'Medida'}</span>
+                        ${m.details ? `<span class="text-[10px] text-slate-500 font-mono shrink-0">${m.details}</span>` : ''}
+                        <button data-toggle-btn onclick="toggleHTMLItem('html-meas-${fi}-${mi}', this)" title="Ocultar" class="ml-1 shrink-0 opacity-40 hover:opacity-100 transition-opacity">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>` : '';
+
+              const excecoesList = (fExcecoes.length + fSpecExcs.length) > 0 ? `
+                <div class="mt-3">
+                  <p class="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1.5">Exceções · ${fExcecoes.length + fSpecExcs.length}</p>
+                  <div class="space-y-1.5">
+                    ${[...fExcecoes, ...fSpecExcs].map(e => `
+                      <div class="flex items-center gap-2 p-2 bg-red-50/40 dark:bg-red-950/10 border border-red-100/60 dark:border-red-900/30 rounded-lg">
+                        <i data-lucide="alert-octagon" class="w-3 h-3 text-red-400 shrink-0"></i>
+                        <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">${e.titulo || 'Exceção'}</span>
+                        <span class="ml-auto text-[9px] font-bold text-slate-500 shrink-0 uppercase">${e.tipo || ''}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>` : '';
+
+              return `
+                <div class="p-4 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800/40 rounded-xl">
+                  <div class="flex items-start justify-between gap-3 mb-2">
+                    <div class="flex items-center gap-2">
+                      <div class="w-6 h-6 rounded-md bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-[#0070af] dark:text-blue-400 shrink-0 text-[10px] font-black">${fi + 1}</div>
+                      <div>
+                        <h4 class="text-xs font-black text-slate-800 dark:text-white">${f.nome || 'Frame'}</h4>
+                        ${f.isNewComponent ? '<span class="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">Novo Componente</span>' : ''}
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                      ${fAuditScore != null ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black ${fAuditScore > 90 ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' : fAuditScore > 70 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'}">${fAuditScore}% DSC</span>` : ''}
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-4 gap-2 text-center mt-3">
+                    <div class="bg-white dark:bg-slate-900 p-2 rounded-lg">
+                      <p class="text-sm font-black text-slate-800 dark:text-white">${fTotalScan}</p>
+                      <p class="text-[8px] font-bold uppercase text-slate-500">Escaneados</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-2 rounded-lg">
+                      <p class="text-sm font-black text-slate-800 dark:text-white">${fCreatedSpecs.length}</p>
+                      <p class="text-[8px] font-bold uppercase text-slate-500">Specs</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-2 rounded-lg">
+                      <p class="text-sm font-black text-slate-800 dark:text-white">${fMeasurements.length}</p>
+                      <p class="text-[8px] font-bold uppercase text-slate-500">Medidas</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-2 rounded-lg">
+                      <p class="text-sm font-black text-slate-800 dark:text-white">${fExcecoes.length + fSpecExcs.length}</p>
+                      <p class="text-[8px] font-bold uppercase text-slate-500">Exceções</p>
+                    </div>
+                  </div>
+                  ${specsList}
+                  ${measuresList}
+                  ${excecoesList}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+        accordionsHTML += buildAccordionHTML("acc-frames", "Frames Documentados", "layers", framesContent, false);
+      }
 
       // Frame & Elementos Tab content
       let assetsHTML = "";
@@ -791,20 +955,21 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
       } else {
         assetsHTML = `
           <div class="text-center py-12 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800/80">
-            <p class="text-sm font-bold text-slate-400 dark:text-slate-500">Nenhuma imagem de preview do frame disponível.</p>
+            <p class="text-sm font-bold text-slate-500 dark:text-slate-500">Nenhuma imagem de preview do frame disponível.</p>
           </div>
         `;
       }
 
-      // Scanned Elements & Audit
+      // Scanned Elements & Audit — agrega todos os frames (schema v2)
       let scannedHTML = "";
-      const specsData = handoffData.step2.specs || {};
+      const _allFramesSpecs = (handoffData.frames || []).map(f => f.specs).filter(Boolean);
+      const specsData = _allFramesSpecs[0] || {};
       const fileKey = specsData.fileKey || "";
-      const components = specsData.components || [];
-      const icons = specsData.icons || [];
-      const typography = specsData.typography || [];
-      const frames = specsData.frames || [];
-      const vectors = specsData.vectors || [];
+      const components = _allFramesSpecs.flatMap(s => s.components || []);
+      const icons = _allFramesSpecs.flatMap(s => s.icons || []);
+      const typography = _allFramesSpecs.flatMap(s => s.typography || []);
+      const frames = _allFramesSpecs.flatMap(s => s.frames || []);
+      const vectors = _allFramesSpecs.flatMap(s => s.vectors || []);
 
       const scannedItemsCount = components.length + icons.length + typography.length + frames.length + vectors.length;
       const hasScannedItems = scannedItemsCount > 0;
@@ -812,7 +977,7 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
       if (!hasScannedItems) {
         scannedHTML = `
           <div class="text-center py-12 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800/80">
-            <p class="text-sm font-bold text-slate-400 dark:text-slate-500">Nenhum item escaneado ou auditado neste frame.</p>
+            <p class="text-sm font-bold text-slate-500 dark:text-slate-500">Nenhum item escaneado ou auditado neste frame.</p>
           </div>
         `;
       } else {
@@ -836,45 +1001,45 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
                 <span class="text-blue-400 dark:text-blue-500">(${count})</span>
               </span>
             `).join('')
-          : '<span class="text-[10px] text-slate-400 dark:text-slate-500">nenhuma biblioteca DSC detectada</span>';
+          : '<span class="text-[10px] text-slate-500 dark:text-slate-500">nenhuma biblioteca DSC detectada</span>';
 
         const frameSummaryHTML = `
           <div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80 mb-4 text-left">
             <div class="flex items-center justify-between mb-3">
-              <h4 class="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Resumo do Frame</h4>
-              <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500">${scannedItemsCount} elementos</span>
+              <h4 class="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500">Resumo do Frame</h4>
+              <span class="text-[10px] font-bold text-slate-500 dark:text-slate-500">${scannedItemsCount} elementos</span>
             </div>
             <div class="grid grid-cols-5 gap-2 mb-3">
               <div class="bg-white dark:bg-slate-900 p-2 rounded-lg text-center">
                 <p class="text-base font-black text-slate-800 dark:text-white">${components.length}</p>
-                <p class="text-[8px] font-bold uppercase tracking-wider text-slate-400">Componentes</p>
+                <p class="text-[8px] font-bold uppercase tracking-wider text-slate-500">Componentes</p>
               </div>
               <div class="bg-white dark:bg-slate-900 p-2 rounded-lg text-center">
                 <p class="text-base font-black text-slate-800 dark:text-white">${icons.length}</p>
-                <p class="text-[8px] font-bold uppercase tracking-wider text-slate-400">Ícones</p>
+                <p class="text-[8px] font-bold uppercase tracking-wider text-slate-500">Ícones</p>
               </div>
               <div class="bg-white dark:bg-slate-900 p-2 rounded-lg text-center">
                 <p class="text-base font-black text-slate-800 dark:text-white">${typography.length}</p>
-                <p class="text-[8px] font-bold uppercase tracking-wider text-slate-400">Tipografia</p>
+                <p class="text-[8px] font-bold uppercase tracking-wider text-slate-500">Tipografia</p>
               </div>
               <div class="bg-white dark:bg-slate-900 p-2 rounded-lg text-center">
                 <p class="text-base font-black text-slate-800 dark:text-white">${frames.length}</p>
-                <p class="text-[8px] font-bold uppercase tracking-wider text-slate-400">Frames</p>
+                <p class="text-[8px] font-bold uppercase tracking-wider text-slate-500">Frames</p>
               </div>
               <div class="bg-white dark:bg-slate-900 p-2 rounded-lg text-center">
                 <p class="text-base font-black text-slate-800 dark:text-white">${vectors.length}</p>
-                <p class="text-[8px] font-bold uppercase tracking-wider text-slate-400">Vetores</p>
+                <p class="text-[8px] font-bold uppercase tracking-wider text-slate-500">Vetores</p>
               </div>
             </div>
             <div>
-              <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Bibliotecas detectadas</p>
+              <p class="text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Bibliotecas detectadas</p>
               <div class="flex flex-wrap gap-1.5">${libsBadgesHTML}</div>
             </div>
           </div>
         `;
 
         // Audit summary
-        const auditSummary = handoffData.step2.isAuditEnabled ? getAuditSummary(specsData) : null;
+        const auditSummary = isAuditEnabled ? getAuditSummary(specsData) : null;
         let auditCardHTML = frameSummaryHTML;
         if (auditSummary) {
           const adoption = auditSummary.adoption;
@@ -891,62 +1056,62 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
               <div class="flex items-center justify-between mb-4">
                 <div>
                   <h4 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Relatório de Auditoria DSC</h4>
-                  <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Análise automática de conformidade com design tokens corporativos</p>
+                  <p class="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-wide">Análise automática de conformidade com design tokens corporativos</p>
                 </div>
                 <div class="text-right">
                   <span class="text-3xl font-black ${statusColor}">${adoption}%</span>
-                  <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Aderência (props)</p>
+                  <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-500">Aderência (props)</p>
                 </div>
               </div>
 
               <!-- Property-level: granular -->
-              <p class="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Propriedades · ${total}</p>
+              <p class="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">Propriedades · ${total}</p>
               <div class="grid grid-cols-3 gap-3 mb-4">
                 <div class="bg-white/60 dark:bg-black/20 p-2.5 rounded-xl">
-                  <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Em conformidade</p>
+                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">Em conformidade</p>
                   <p class="text-base font-black text-[#10b981]">${auditSummary.dsCount}</p>
                 </div>
                 <div class="bg-white/60 dark:bg-black/20 p-2.5 rounded-xl">
-                  <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Necessita revisão</p>
+                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">Necessita revisão</p>
                   <p class="text-base font-black text-amber-500">${adjustments.length}</p>
                 </div>
                 <div class="bg-white/60 dark:bg-black/20 p-2.5 rounded-xl">
-                  <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Fora do padrão</p>
+                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">Fora do padrão</p>
                   <p class="text-base font-black text-red-500">${issues.length}</p>
                 </div>
               </div>
 
               <!-- Element-level: worst-of rule -->
-              <p class="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Elementos · ${auditSummary.elementsTotal} <span class="text-slate-400 dark:text-slate-500 font-bold normal-case tracking-normal ml-1">(classificação pelo pior caso)</span></p>
+              <p class="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">Elementos · ${auditSummary.elementsTotal} <span class="text-slate-500 dark:text-slate-500 font-bold normal-case tracking-normal ml-1">(classificação pelo pior caso)</span></p>
               <div class="grid grid-cols-3 gap-3 mb-4">
                 <div class="bg-white/60 dark:bg-black/20 p-2.5 rounded-xl">
-                  <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">100% conformes</p>
+                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">100% conformes</p>
                   <p class="text-base font-black text-[#10b981]">${auditSummary.elementsOk}</p>
                 </div>
                 <div class="bg-white/60 dark:bg-black/20 p-2.5 rounded-xl">
-                  <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Com revisões</p>
+                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">Com revisões</p>
                   <p class="text-base font-black text-amber-500">${auditSummary.elementsWarning}</p>
                 </div>
                 <div class="bg-white/60 dark:bg-black/20 p-2.5 rounded-xl">
-                  <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Com violações</p>
+                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">Com violações</p>
                   <p class="text-base font-black text-red-500">${auditSummary.elementsError}</p>
                 </div>
               </div>
 
               <div class="bg-white/40 dark:bg-black/10 p-3 rounded-xl">
-                <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">Como o elemento é classificado</p>
+                <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">Como o elemento é classificado</p>
                 <div class="space-y-1.5">
                   <div class="flex items-start gap-2 text-[10px]">
                     <span class="shrink-0 px-2 py-0.5 rounded-md bg-green-50 dark:bg-green-950/40 text-[#10b981] font-bold text-[8px] uppercase tracking-wide">Em conformidade</span>
-                    <span class="text-slate-500 dark:text-slate-400 leading-snug"><strong class="text-slate-700 dark:text-slate-300">Todas</strong> as propriedades têm vínculo direto com tokens da DSC.</span>
+                    <span class="text-slate-500 dark:text-slate-500 leading-snug"><strong class="text-slate-700 dark:text-slate-300">Todas</strong> as propriedades têm vínculo direto com tokens da DSC.</span>
                   </div>
                   <div class="flex items-start gap-2 text-[10px]">
                     <span class="shrink-0 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-500 font-bold text-[8px] uppercase tracking-wide">Necessita revisão</span>
-                    <span class="text-slate-500 dark:text-slate-400 leading-snug font-medium">Pelo menos 1 prop bate por valor/nome (não pela key) — token foi reproduzido manualmente.</span>
+                    <span class="text-slate-500 dark:text-slate-500 leading-snug font-medium">Pelo menos 1 prop bate por valor/nome (não pela key) — token foi reproduzido manualmente.</span>
                   </div>
                   <div class="flex items-start gap-2 text-[10px]">
                     <span class="shrink-0 px-2 py-0.5 rounded-md bg-red-50 dark:bg-red-950/40 text-red-500 font-bold text-[8px] uppercase tracking-wide">Fora do padrão</span>
-                    <span class="text-slate-500 dark:text-slate-400 leading-snug">Pelo menos 1 prop <strong class="text-slate-700 dark:text-slate-300">não corresponde</strong> a nenhum token da DSC.</span>
+                    <span class="text-slate-500 dark:text-slate-500 leading-snug">Pelo menos 1 prop <strong class="text-slate-700 dark:text-slate-300">não corresponde</strong> a nenhum token da DSC.</span>
                   </div>
                 </div>
               </div>
@@ -996,12 +1161,12 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
 
             // Audit badge + property breakdown ("12 props · 11 ok · 1 fora do padrão")
             let badgeHTML = "";
-            if (handoffData.step2.isAuditEnabled) {
+            if (isAuditEnabled) {
               const status = computeItemAuditStatus(item);
               const b = getItemAuditBreakdown(item);
               const breakdownChips = b.total > 0
-                ? `<span class="inline-flex items-center gap-1.5 text-[8px] font-bold text-slate-500 dark:text-slate-400 normal-case tracking-normal ml-1.5">
-                    <span class="text-slate-400 dark:text-slate-500">${b.total} props</span>
+                ? `<span class="inline-flex items-center gap-1.5 text-[8px] font-bold text-slate-500 dark:text-slate-500 normal-case tracking-normal ml-1.5">
+                    <span class="text-slate-500 dark:text-slate-500">${b.total} props</span>
                     ${b.ok > 0 ? `<span class="inline-flex items-center gap-0.5 text-[#10b981]"><i data-lucide="check" class="w-2.5 h-2.5"></i>${b.ok}</span>` : ''}
                     ${b.warning > 0 ? `<span class="inline-flex items-center gap-0.5 text-amber-500"><i data-lucide="alert-triangle" class="w-2.5 h-2.5"></i>${b.warning}</span>` : ''}
                     ${b.error > 0 ? `<span class="inline-flex items-center gap-0.5 text-red-500"><i data-lucide="x" class="w-2.5 h-2.5"></i>${b.error}</span>` : ''}
@@ -1025,7 +1190,7 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
             let figmaLinkHTML = "";
             if (figmaLink) {
               figmaLinkHTML = `
-                <a href="${figmaLink}" target="_blank" title="Focar este elemento no Figma" class="text-slate-400 hover:text-blue-500 transition-colors p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 cursor-pointer ml-auto flex items-center justify-center">
+                <a href="${figmaLink}" target="_blank" title="Focar este elemento no Figma" class="text-slate-500 hover:text-blue-500 transition-colors p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 cursor-pointer ml-auto flex items-center justify-center">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
                 </a>
               `;
@@ -1038,7 +1203,7 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
                 <div class="flex flex-wrap gap-1 mt-1.5 mb-1">
                   ${item.variants.map(v => `
                     <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[9px] font-bold text-slate-600 dark:text-slate-300">
-                      <span class="text-slate-400 dark:text-slate-500">${v.name}:</span>
+                      <span class="text-slate-500 dark:text-slate-500">${v.name}:</span>
                       <span>${v.value}</span>
                     </span>
                   `).join('')}
@@ -1058,7 +1223,7 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
                 <span class="inline-flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[9px] font-bold text-blue-600 dark:text-blue-400 mt-0.5">
                   <span class="inline-flex items-center gap-1"><i data-lucide="library" class="w-2.5 h-2.5"></i>${item.matchedIn}${item.matchedTokenName && item.matchedTokenName !== item.name ? ` · ${item.matchedTokenName}` : ''}</span>
                   ${codeImport ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded font-mono text-[9px]" title="Importe deste pacote no código"><i data-lucide="code-2" class="w-2.5 h-2.5"></i>${codeImport}</span>` : ''}
-                  ${docsHref ? `<a href="${docsHref}" target="_blank" class="inline-flex items-center gap-0.5 text-[9px] text-slate-400 hover:text-blue-500 transition-colors"><i data-lucide="book-open" class="w-2.5 h-2.5"></i>docs</a>` : ''}
+                  ${docsHref ? `<a href="${docsHref}" target="_blank" class="inline-flex items-center gap-0.5 text-[9px] text-slate-500 hover:text-blue-500 transition-colors"><i data-lucide="book-open" class="w-2.5 h-2.5"></i>docs</a>` : ''}
                 </span>
               `;
             }
@@ -1093,7 +1258,7 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
 
               const renderProp = (p) => {
                 let pStatusHTML = "";
-                if (handoffData.step2.isAuditEnabled) {
+                if (isAuditEnabled) {
                   if (p.isDS === true) {
                     pStatusHTML = `<span class="text-[#10b981] shrink-0" title="Em conformidade"><i data-lucide="check" class="w-3.5 h-3.5"></i></span>`;
                   } else if (p.isDS === "warning") {
@@ -1110,12 +1275,12 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
 
                 // Token name + lib origin line (only when matched)
                 let tokenLineHTML = "";
-                if (p.matchedTokenName && handoffData.step2.isAuditEnabled) {
+                if (p.matchedTokenName && isAuditEnabled) {
                   tokenLineHTML = `
                     <div class="flex items-center gap-1 text-[9px] text-blue-600 dark:text-blue-400 font-bold mt-0.5 ml-5.5">
                       <i data-lucide="link-2" class="w-2.5 h-2.5"></i>
                       <span class="truncate" title="Token: ${p.matchedTokenName}${p.matchedIn ? ' · ' + p.matchedIn : ''}">
-                        ${p.matchedTokenName}${p.matchedIn ? ` <span class="text-slate-400 dark:text-slate-500">· ${p.matchedIn}</span>` : ''}
+                        ${p.matchedTokenName}${p.matchedIn ? ` <span class="text-slate-500 dark:text-slate-500">· ${p.matchedIn}</span>` : ''}
                       </span>
                     </div>
                   `;
@@ -1123,22 +1288,22 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
 
                 // Closest match suggestion (only when fora do padrão)
                 let closestHTML = "";
-                if (p.closestMatch && handoffData.step2.isAuditEnabled && p.isDS === false) {
+                if (p.closestMatch && isAuditEnabled && p.isDS === false) {
                   const cm = p.closestMatch;
                   closestHTML = `
                     <div class="flex items-center gap-1 text-[9px] text-amber-600 dark:text-amber-400 font-bold mt-0.5 ml-5.5">
                       <i data-lucide="lightbulb" class="w-2.5 h-2.5"></i>
                       <span class="truncate" title="Sugestão de match mais próximo">
                         Mais próximo: ${cm.tokenName || cm.value}
-                        ${cm.similarity !== undefined ? ` <span class="text-slate-400 dark:text-slate-500">(${cm.similarity}%)</span>` : ''}
-                        ${cm.library ? ` <span class="text-slate-400 dark:text-slate-500">· ${cm.library}</span>` : ''}
+                        ${cm.similarity !== undefined ? ` <span class="text-slate-500 dark:text-slate-500">(${cm.similarity}%)</span>` : ''}
+                        ${cm.library ? ` <span class="text-slate-500 dark:text-slate-500">· ${cm.library}</span>` : ''}
                       </span>
                     </div>
                   `;
                 }
 
                 return `
-                  <div class="text-[11px] text-slate-500 dark:text-slate-400">
+                  <div class="text-[11px] text-slate-500 dark:text-slate-500">
                     <div class="flex items-center justify-between gap-2">
                       <div class="flex items-center gap-2 truncate min-w-0" title="${p.name}">
                         <div class="w-3.5 h-3.5 flex items-center justify-center shrink-0">${pColorPreview}</div>
@@ -1155,7 +1320,7 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
               propertiesHTML = `<div class="mt-3 border-t border-slate-100 dark:border-slate-800 pt-2.5 text-left space-y-3">`
                 + groups.map(g => `
                   <div>
-                    <div class="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1.5">
+                    <div class="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-1.5">
                       <i data-lucide="${g.icon}" class="w-3 h-3"></i>
                       <span>${g.title}</span>
                       <span class="text-slate-300 dark:text-slate-600">·</span>
@@ -1200,10 +1365,10 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
                   </div>
                   <div>
                     <span class="font-black">${sec.title}</span>
-                    <span class="section-count-span text-[9px] font-bold text-slate-400 dark:text-slate-500 ml-1.5 uppercase tracking-wide">(${count} elementos)</span>
+                    <span class="section-count-span text-[9px] font-bold text-slate-500 dark:text-slate-500 ml-1.5 uppercase tracking-wide">(${count} elementos)</span>
                   </div>
                 </div>
-                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform"></i>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 transition-transform"></i>
               </button>
 
               <div id="${gridId}" class="hidden p-5 border-t border-slate-100 dark:border-slate-800/80">
@@ -1232,15 +1397,15 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
       };
       const scanPayload = {
         project: {
-          name: handoffData.step1.fluxo || null,
+          name: handoffData.step1.titulo || null,
           designer: autor,
+          validador: validador,
           status: status,
           versao: versao,
-          generatedAt: new Date().toISOString(),
-          tags: handoffData.step1.tags || null
+          generatedAt: new Date().toISOString()
         },
         audit: {
-          enabled: !!handoffData.step2.isAuditEnabled,
+          enabled: isAuditEnabled,
           librariesUsed: (function () {
             const m = {};
             const all = [...components, ...icons, ...typography, ...frames, ...vectors];
@@ -1285,10 +1450,10 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
       const searchBarHTML = `
         <div class="mb-6">
           <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 dark:text-slate-500">
               <i data-lucide="search" class="w-4 h-4"></i>
             </div>
-            <input type="text" id="scanned-search" oninput="filterElements(this.value)" placeholder="Buscar elemento escaneado..." class="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-xl text-xs focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm" />
+            <input type="text" id="scanned-search" oninput="filterElements(this.value)" placeholder="Buscar elemento escaneado..." class="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-xl text-xs focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder:text-slate-500 dark:placeholder:text-slate-500 shadow-sm" />
           </div>
         </div>
       `;
@@ -1298,7 +1463,7 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Handex Handoff - ${handoffData.step1.fluxo || 'Documento'}</title>
+  <title>Handex Handoff - ${handoffData.step1.titulo || 'Documento'}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
@@ -1352,12 +1517,12 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
       <span class="text-slate-300 dark:text-slate-700 font-bold text-sm">|</span>
       <div>
         <h1 class="text-sm font-black text-slate-900 dark:text-white tracking-[0.15em] uppercase">Handex</h1>
-        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Portal Handoff Desacoplado</p>
+        <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Portal Handoff Desacoplado</p>
       </div>
     </div>
     
     <div class="flex items-center gap-3">
-      <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">${versao}</span>
+      <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-extrabold text-slate-500 dark:text-slate-500 uppercase tracking-wider">${versao}</span>
       <span class="px-2.5 py-1 bg-blue-50 dark:bg-blue-900/20 text-[#0070af] dark:text-blue-400 border border-blue-100 dark:border-blue-900/30 rounded-full text-[10px] font-extrabold uppercase tracking-wider">${status}</span>
       
       <button onclick="downloadJSON()" title="Baixa o JSON estruturado do scan (sem previews) para uso em pipeline de dev" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer">
@@ -1372,7 +1537,7 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
 
       <button onclick="toggleTheme()" class="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">
         <svg id="sun-icon" class="w-4 h-4 text-amber-500 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" /></svg>
-        <svg id="moon-icon" class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+        <svg id="moon-icon" class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
       </button>
     </div>
   </header>
@@ -1380,28 +1545,37 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
   <div class="max-w-7xl mx-auto px-6 py-8 grid md:grid-cols-4 gap-8">
     <aside class="md:col-span-1 space-y-6">
       <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-5 shadow-sm space-y-4 text-left">
-        <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest pb-2 border-b border-slate-100 dark:border-slate-800/60">Especificações</h2>
+        <h2 class="text-xs font-black text-slate-500 uppercase tracking-widest pb-2 border-b border-slate-100 dark:border-slate-800/60">Especificações</h2>
         
         <div>
-          <span class="text-[9px] font-bold text-slate-400 uppercase block mb-0.5">Título do Projeto</span>
-          <span class="text-sm font-bold text-slate-800 dark:text-white">${handoffData.step1.fluxo || "Não especificado"}</span>
+          <span class="text-[9px] font-bold text-slate-500 uppercase block mb-0.5">Título do Projeto</span>
+          <span class="text-sm font-bold text-slate-800 dark:text-white">${handoffData.step1.titulo || "Não especificado"}</span>
         </div>
 
         <div>
-          <span class="text-[9px] font-bold text-slate-400 uppercase block mb-0.5">Designer Responsável</span>
+          <span class="text-[9px] font-bold text-slate-500 uppercase block mb-0.5">Designer Responsável</span>
           <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 block">${autor}</span>
         </div>
 
+        ${validador !== "Não especificado" ? `
         <div>
-          <span class="text-[9px] font-bold text-slate-400 uppercase block mb-0.5">Data de Publicação</span>
+          <span class="text-[9px] font-bold text-slate-500 uppercase block mb-0.5">Validador (PO)</span>
+          <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 block">${validador}</span>
+        </div>` : ''}
+
+        <div>
+          <span class="text-[9px] font-bold text-slate-500 uppercase block mb-0.5">Data de Publicação</span>
           <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 block">${new Date().toLocaleDateString('pt-BR')}</span>
         </div>
 
-        ${tagsHTML}
+        <div>
+          <span class="text-[9px] font-bold text-slate-500 uppercase block mb-0.5">Frames Documentados</span>
+          <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 block">${_allFrames.length}</span>
+        </div>
       </div>
 
       <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-5 shadow-sm space-y-3.5 text-left">
-        <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest pb-2 border-b border-slate-100 dark:border-slate-800/60">Links do Projeto</h2>
+        <h2 class="text-xs font-black text-slate-500 uppercase tracking-widest pb-2 border-b border-slate-100 dark:border-slate-800/60">Links do Projeto</h2>
         
         <a href="${protoLink}" ${protoTarget} class="flex items-center gap-2.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-blue-500 transition-colors">
           <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
@@ -1425,10 +1599,10 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
         <button onclick="switchTab('tab-document')" id="btn-tab-document" class="tab-btn px-1 pb-3 text-sm font-black border-b-2 border-blue-500 text-blue-500 focus:outline-none transition-all uppercase tracking-wider whitespace-nowrap shrink-0">
           📑 Ficha Técnica
         </button>
-        <button onclick="switchTab('tab-assets')" id="btn-tab-assets" class="tab-btn px-1 pb-3 text-sm font-extrabold text-slate-400 dark:text-slate-500 border-b-2 border-transparent hover:text-slate-700 dark:hover:text-slate-300 focus:outline-none transition-all uppercase tracking-wider whitespace-nowrap shrink-0">
+        <button onclick="switchTab('tab-assets')" id="btn-tab-assets" class="tab-btn px-1 pb-3 text-sm font-extrabold text-slate-500 dark:text-slate-500 border-b-2 border-transparent hover:text-slate-700 dark:hover:text-slate-300 focus:outline-none transition-all uppercase tracking-wider whitespace-nowrap shrink-0">
           🖼️ Frame & Elementos
         </button>
-        <button onclick="switchTab('tab-scanned')" id="btn-tab-scanned" class="tab-btn px-1 pb-3 text-sm font-extrabold text-slate-400 dark:text-slate-500 border-b-2 border-transparent hover:text-slate-700 dark:hover:text-slate-300 focus:outline-none transition-all uppercase tracking-wider whitespace-nowrap shrink-0">
+        <button onclick="switchTab('tab-scanned')" id="btn-tab-scanned" class="tab-btn px-1 pb-3 text-sm font-extrabold text-slate-500 dark:text-slate-500 border-b-2 border-transparent hover:text-slate-700 dark:hover:text-slate-300 focus:outline-none transition-all uppercase tracking-wider whitespace-nowrap shrink-0">
           🔍 Elementos Escaneados (${scannedItemsCount})
         </button>
       </div>
@@ -1448,7 +1622,7 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
     </main>
   </div>
 
-  <footer class="mt-16 py-8 border-t border-slate-100 dark:border-slate-800/80 text-center text-slate-400 dark:text-slate-600">
+  <footer class="mt-16 py-8 border-t border-slate-100 dark:border-slate-800/80 text-center text-slate-500 dark:text-slate-600">
     <p class="text-[10px] font-bold uppercase tracking-wider">Handex ecosystem • Design Ops Automação Handoff</p>
     <p class="text-[9px] mt-1">Gerado automaticamente pelo plugin Handex no Figma</p>
   </footer>
@@ -1493,13 +1667,59 @@ ${regras.length === 0 ? "Nenhuma regra cadastrada." : regras.map(r => `- [Regra]
 
       document.querySelectorAll('.tab-btn').forEach(function(btn) {
         btn.classList.remove('text-blue-500', 'border-blue-500', 'font-black');
-        btn.classList.add('text-slate-400', 'dark:text-slate-500', 'border-transparent', 'font-extrabold');
+        btn.classList.add('text-slate-500', 'dark:text-slate-500', 'border-transparent', 'font-extrabold');
       });
 
       var activeBtn = document.getElementById('btn-' + tabId);
       if (activeBtn) {
-        activeBtn.classList.remove('text-slate-400', 'dark:text-slate-500', 'border-transparent', 'font-extrabold');
+        activeBtn.classList.remove('text-slate-500', 'dark:text-slate-500', 'border-transparent', 'font-extrabold');
         activeBtn.classList.add('text-blue-500', 'border-blue-500', 'font-black');
+      }
+    }
+
+    function toggleHTMLItem(id, btn) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var hidden = el.getAttribute('data-hidden') === '1';
+      if (hidden) {
+        el.style.opacity = '1';
+        el.style.pointerEvents = '';
+        el.setAttribute('data-hidden', '0');
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+        btn.title = 'Ocultar';
+      } else {
+        el.style.opacity = '0.25';
+        el.style.pointerEvents = 'none';
+        el.setAttribute('data-hidden', '1');
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+        btn.title = 'Mostrar';
+      }
+    }
+
+    function toggleHTMLSection(sectionId, btn) {
+      var section = document.getElementById(sectionId);
+      if (!section) return;
+      var items = section.querySelectorAll('[data-toggle-item]');
+      var anyVisible = false;
+      items.forEach(function(item) { if (item.getAttribute('data-hidden') !== '1') anyVisible = true; });
+      items.forEach(function(item) {
+        var itemBtn = item.querySelector('[data-toggle-btn]');
+        if (anyVisible) {
+          item.style.opacity = '0.25';
+          item.style.pointerEvents = 'none';
+          item.setAttribute('data-hidden', '1');
+          if (itemBtn) { itemBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'; itemBtn.title = 'Mostrar'; }
+        } else {
+          item.style.opacity = '1';
+          item.style.pointerEvents = '';
+          item.setAttribute('data-hidden', '0');
+          if (itemBtn) { itemBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>'; itemBtn.title = 'Ocultar'; }
+        }
+      });
+      if (anyVisible) {
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Mostrar tudo';
+      } else {
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> Ocultar tudo';
       }
     }
 

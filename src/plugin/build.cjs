@@ -31,6 +31,7 @@ const modMeasure = read('modules/measurement.js');
 const modSpecs   = read('modules/specifications.js');
 const modData    = read('modules/design-data.js');
 const modMsgs    = read('modules/messages.js');
+const modLab     = read('modules/lab.js');
 
 // ── Load reference skeleton (DSC libraries: keys + names only) ─
 // Regenerate via: node src/plugin/refs/build-skeleton.cjs
@@ -71,11 +72,16 @@ if (fs.existsSync(codeMapPath)) {
 
 // ── Load view partials ────────────────────────────────────────
 const viewHome   = read('views/home.html');
+const viewLab    = read('views/lab.html');
+const viewAudit  = read('views/audit.html');
 const viewMeasure = read('views/measurement.html');
 const viewGuide = read('views/guide.html');
 const viewSpecs  = read('views/specifications.html');
-const viewHandoff = read('views/handoff.html');
-const modalsShared = read('views/modals.html');
+const viewFrames           = read('views/handoff.html');
+const viewFlows            = read('views/flows.html');
+const viewDadosProjeto     = read('views/dados-projeto.html');
+const viewHandoffSummary   = read('views/handoff-summary.html');
+const modalsShared         = read('views/modals.html');
 
 // ── Assemble ──────────────────────────────────────────────────
 const html = `<!doctype html>
@@ -143,7 +149,7 @@ const html = `<!doctype html>
               surface: "#1e293b",
               line: "#334155",
               text: "#f1f5f9",
-              muted: "#94a3b8",
+              muted: "#b4c6d8",
             },
           },
         },
@@ -179,14 +185,18 @@ ${css}
         <h1 class="font-bold text-[#1E293B] dark:text-white text-[12px] tracking-[0.15em] uppercase">
           HANDEX
         </h1>
-        <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v3.0.0</span>
+        <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v4.0.0</span>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <div id="autosave-status" role="status" aria-live="polite" class="flex items-center gap-1.5 opacity-40 hover:opacity-100 transition-opacity cursor-help" title="Seu progresso é salvo automaticamente localmente">
-          <span class="w-1 h-1 rounded-full bg-green-500 animate-pulse" aria-hidden="true"></span>
-          <span class="autosave-label text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Autosave</span>
-        </div>
-        <button onclick="toggleUiScale()" data-tooltip="Ajustar escala da interface" aria-label="Ajustar escala da interface"
+        <button onclick="ensureExpanded(); openDadosProjetoModal()" title="Dados do Projeto" aria-label="Dados do Projeto"
+          class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
+          <i data-lucide="clipboard-list" class="w-4 h-4" aria-hidden="true"></i>
+        </button>
+        <button onclick="ensureExpanded(); createHandoffOnCanvas()" title="Gerar Ficha no Canvas" aria-label="Gerar Ficha"
+          class="p-1.5 hover:bg-[#0070af]/10 rounded-md transition-colors cursor-pointer text-[#0070af]">
+          <i data-lucide="send" class="w-4 h-4" aria-hidden="true"></i>
+        </button>
+        <button onclick="ensureExpanded(); toggleUiScale()" data-tooltip="Ajustar escala da interface" aria-label="Ajustar escala da interface"
           class="tooltip-left p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
           <i data-lucide="zoom-in" class="w-5 h-5" aria-hidden="true"></i>
         </button>
@@ -205,35 +215,19 @@ ${css}
 
   </header>
 
-  <div class="flex-1 overflow-y-auto relative" onscroll="handleScroll(this)">
+  <div class="flex-1 overflow-hidden relative">
 ${viewHome}
+${viewLab}
+${viewAudit}
 ${viewMeasure}
 ${viewGuide}
 ${viewSpecs}
-${viewHandoff}
+${viewFrames}
+${viewFlows}
+${viewDadosProjeto}
+${viewHandoffSummary}
 ${modalsShared}
   </div>
-
-  <!-- FOOTER NAVIGATION (Handoff) -->
-  <footer id="footer-handoff"
-    class="hidden border-t border-gray-100 dark:border-dark-line p-2.5 bg-white dark:bg-dark-bg shrink-0">
-    <div class="flex justify-between items-center max-w-[440px] mx-auto gap-3">
-      <button id="btn-back"
-        class="px-4 py-1.5 border-2 border-[#0070af] dark:border-blue-500 text-[#0070af] dark:text-blue-400 font-bold text-[12px] rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all whitespace-nowrap">
-        Voltar
-      </button>
-
-      <p
-        class="footer-signature-text text-[8px] text-gray-400 dark:text-dark-muted font-bold tracking-tight uppercase text-center flex-1 leading-tight">
-        Desenvolvido por Fóton
-      </p>
-
-      <button id="btn-next"
-        class="px-5 py-1.5 bg-[#0070af] text-white font-bold text-[12px] rounded-lg hover:bg-blue-700 transition-all shadow-sm flex items-center gap-1.5 whitespace-nowrap">
-        <span>Próximo</span> <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-      </button>
-    </div>
-  </footer>
 
   <!-- SIGNATURE FOOTER -->
   <footer id="footer-signature" class="pb-2 pt-1 text-center shrink-0 bg-white dark:bg-dark-bg">
@@ -280,43 +274,20 @@ ${modSpecs}
 ${modData}
 
 // ============================================================
+// MODULE: lab.js
+// ============================================================
+${modLab}
+
+// ============================================================
 // MODULE: handoff.js
 // ============================================================
 ${modHandoff}
   </script>
 
-  <!-- SHARED GLOBAL FABs -->
-  <button onclick="openMeasureModal()" title="Adicionar Medida" aria-label="Adicionar Medida"
-    class="hidden fixed bottom-14 right-6 bg-[#005ca9]/30 hover:bg-[#005ca9] text-white rounded-full shadow-lg z-[100] border border-white/20 backdrop-blur-sm fab-main group"
-    id="fab-measure">
-    <i data-lucide="plus" class="w-5 h-5 shrink-0"></i>
-    <span>Inserir medidas</span>
-  </button>
-
-  <button onclick="openSpecFormModal()" title="Adicionar Especificação" aria-label="Adicionar Especificação"
-    class="hidden fixed bottom-14 right-6 bg-[#005ca9]/30 hover:bg-[#005ca9] text-white rounded-full shadow-lg z-[100] border border-white/20 backdrop-blur-sm fab-main group"
-    id="fab-spec">
-    <i data-lucide="plus" class="w-5 h-5 shrink-0"></i>
-    <span>Criar especificação</span>
-  </button>
-
-  <button onclick="openFlowFormModal()" title="Criar Fluxo" aria-label="Criar Fluxo"
-    class="hidden fixed bottom-14 right-6 bg-[#005ca9]/30 hover:bg-[#005ca9] text-white rounded-full shadow-lg z-[100] border border-white/20 backdrop-blur-sm fab-main group"
-    id="fab-flow">
-    <i data-lucide="plus" class="w-5 h-5 shrink-0"></i>
-    <span>Criar fluxo</span>
-  </button>
-
-  <button onclick="addBriefingQuestion()" title="Adicionar Pergunta" aria-label="Adicionar Pergunta"
-    class="hidden fixed bottom-14 right-6 bg-[#005ca9]/30 hover:bg-[#005ca9] text-white rounded-full shadow-lg z-[100] border border-white/20 backdrop-blur-sm fab-main group"
-    id="fab-handoff-briefing">
-    <i data-lucide="plus" class="w-5 h-5 shrink-0"></i>
-    <span>Adicionar pergunta</span>
-  </button>
-
+  <!-- Back-to-top button (ghost at rest, highlighted on hover) -->
   <button id="btn-top" onclick="scrollToTop()" title="Voltar ao topo" aria-label="Voltar ao topo"
-    class="fixed bottom-[136px] right-6 w-12 h-12 bg-[#005ca9]/30 hover:bg-[#005ca9] text-white rounded-full shadow-lg flex items-center justify-center opacity-0 pointer-events-none translate-y-10 transition-all duration-300 hover:scale-110 active:scale-95 z-[100] border border-white/10 backdrop-blur-sm">
-    <i data-lucide="chevron-up" class="w-6 h-6"></i>
+    class="fixed bottom-6 right-6 w-10 h-10 rounded-full flex items-center justify-center opacity-0 pointer-events-none translate-y-10 z-[100]">
+    <i data-lucide="chevron-up" class="w-5 h-5"></i>
   </button>
 
   <script>

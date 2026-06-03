@@ -157,32 +157,73 @@ export function suggestClosestMatch(type, value, referenceTokensInput) {
   const referenceList = Array.isArray(referenceTokensInput) ? referenceTokensInput : [referenceTokensInput];
 
   // 1. Colors: euclidean distance in RGB space (0–441 max for #000↔#FFF).
+  // Searches both style tokens AND resolved color variables.
   const hexMatch = String(value).match(/#([0-9a-f]{6})/i);
-  if (hexMatch && (type === "colors" || type === "color")) {
+  if (hexMatch && (type === "colors" || type === "color" || type === "stroke")) {
     const target = hexToRgb(hexMatch[1]);
     let best = null;
+
     for (const ref of referenceList) {
       const libName = (ref.meta && ref.meta.libraryName) || ref.libraryName || null;
-      const list = (ref.styleTokens && ref.styleTokens.colors) || [];
-      for (const item of list) {
+
+      // a) Style tokens (paint styles)
+      const styleList = (ref.styleTokens && ref.styleTokens.colors) || [];
+      for (const item of styleList) {
         if (!item.value) continue;
         const h = item.value.match(/#([0-9a-f]{6})/i);
         if (!h) continue;
         const rgb = hexToRgb(h[1]);
         const d = Math.sqrt((target.r - rgb.r) ** 2 + (target.g - rgb.g) ** 2 + (target.b - rgb.b) ** 2);
         if (!best || d < best.distance) {
-          best = { tokenName: item.name, value: item.value, library: libName, distance: d, kind: "color" };
+          best = { tokenName: item.name, value: item.value, library: libName, distance: d,
+                   kind: "style", styleKey: item.key || null, variableKey: null };
+        }
+      }
+
+      // b) Color variables (resolved hex stored during extraction)
+      const vars = (ref.designTokens && ref.designTokens.variables) || [];
+      for (const v of vars) {
+        if (!v.value || v.resolvedType !== "COLOR") continue;
+        const h = v.value.match(/#([0-9a-f]{6})/i);
+        if (!h) continue;
+        const rgb = hexToRgb(h[1]);
+        const d = Math.sqrt((target.r - rgb.r) ** 2 + (target.g - rgb.g) ** 2 + (target.b - rgb.b) ** 2);
+        if (!best || d < best.distance) {
+          best = { tokenName: v.name, value: v.value, library: libName, distance: d,
+                   kind: "variable", styleKey: null, variableKey: v.key || null };
         }
       }
     }
-    if (best && best.distance < 80) { // ~30% off in any channel
+
+    if (best && best.distance < 80) {
       best.similarity = Math.max(0, Math.round((1 - best.distance / 441) * 100));
       return best;
     }
     return null;
   }
 
-  // 2. Numeric props (font size, radius, spacing): nearest absolute delta.
+  // 2. Typography: find best matching text style by name/size.
+  if (type === "typography") {
+    let best = null;
+    for (const ref of referenceList) {
+      const libName = (ref.meta && ref.meta.libraryName) || ref.libraryName || null;
+      const list = (ref.styleTokens && ref.styleTokens.typography) || [];
+      for (const item of list) {
+        if (!item.key) continue;
+        // Exact name match preferred
+        if (item.name && item.name === value) {
+          return { tokenName: item.name, value: item.value || item.name, library: libName,
+                   distance: 0, kind: "style", styleKey: item.key, variableKey: null, similarity: 100 };
+        }
+        if (!best) best = { tokenName: item.name, value: item.value || item.name, library: libName,
+                            distance: 999, kind: "style", styleKey: item.key, variableKey: null };
+      }
+    }
+    if (best) { best.similarity = 0; return best; }
+    return null;
+  }
+
+  // 3. Numeric props (font size, radius, spacing): nearest absolute delta.
   const numMatch = String(value).match(/(-?\d+(?:\.\d+)?)\s*px?/);
   if (numMatch) {
     const target = parseFloat(numMatch[1]);
@@ -193,7 +234,8 @@ export function suggestClosestMatch(type, value, referenceTokensInput) {
       for (const c of candidates) {
         const d = Math.abs(target - c.value);
         if (!best || d < best.distance) {
-          best = { tokenName: c.name, value: c.value + "px", library: libName, distance: d, kind: "numeric" };
+          best = { tokenName: c.name, value: c.value + "px", library: libName, distance: d,
+                   kind: "numeric", styleKey: c.styleKey || null, variableKey: c.variableKey || null };
         }
       }
     }
@@ -221,7 +263,7 @@ function collectNumericCandidates(ref, type) {
   // Spacing / borders / radii usually come from variables in the DSC.
   const variables = (ref.designTokens && ref.designTokens.variables) || [];
   for (const v of variables) {
-    if (typeof v.value === "number") out.push({ name: v.name, value: v.value });
+    if (typeof v.value === "number") out.push({ name: v.name, value: v.value, variableKey: v.key || null });
   }
   // Fallback: top-level arrays (spacing, borders) as plain numbers
   for (const cat of ["spacing", "borders", "radii"]) {
