@@ -129,9 +129,11 @@ Guia de navegação rápida. Números de linha referem-se ao estado atual do arq
 | 1592 | `removeTouchArea(i)` | Remove área de toque pelo índice |
 | 1604 | `getTouchPreset()` | Deriva preset string de `touchSelectedSize × touchSelectedForma` |
 | 1635 | `showView(viewId)` | Alterna entre views de variação e main view (toque) |
-| 1641 | `openTabForm()` | Abre form de adição de foco de tabulação (overlay) |
-| 1652 | `closeTabForm()` | Fecha form de tabulação |
-| 1724 | `renderTabOrderList()` | Renderiza lista de tab order da variação ativa |
+| 1675 | `openTabForm()` | Abre form de adição de foco de tabulação (overlay) |
+| 1686 | `closeTabForm()` | Fecha form de tabulação; zera `tabFormPendingSave` |
+| 1693 | `saveTabForm()` | Salva itens do form: se 'selection' → `get-tab-selection`; se 'component' → push + `saveTouchTabData()` + `activate-tab-variation` |
+| 1721 | `selectTabFormType(type)` | Seleciona tipo 'selection' ou 'component'; 'component' aciona `get-component-as-tab` imediatamente |
+| 1757 | `renderTabOrderList()` | Renderiza lista de tab order da variação ativa |
 | 1774 | `showSRView(viewId)` | Alterna entre views de variação e main view (leitor de tela) |
 | 1781 | `renderSRVariationList()` | Renderiza lista de variações de leitor de tela |
 | 1953 | `editTabVariation(id)` | Carrega variação de tabulação |

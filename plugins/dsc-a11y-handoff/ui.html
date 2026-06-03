@@ -1345,9 +1345,15 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
               height: item.height,
             });
           });
-          closeTabForm(); // Close form after saving
+          closeTabForm();
           renderTabOrderList();
           updateSummaryCards();
+          saveTouchTabData();
+          // Redesenha markers no canvas com a lista atualizada
+          const _activeTabVar = tabVariationsData.find(v => v.id === currentTabVariationId);
+          if (_activeTabVar && currentTabVariationId) {
+            parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', variationId: currentTabVariationId, variationIndex: tabVariationsData.findIndex(v => v.id === currentTabVariationId), instanceNodeId: _activeTabVar.instanceNodeId, propriedades: _activeTabVar.propriedades || {}, tab_order: tabOrderData } }, '*');
+          }
         } else if (el('tabFormView').classList.contains('open')) { // If form is open but not pending save
           const before = tabFormTempItems.length;
           msg.items.forEach((item, i) => {
@@ -1378,6 +1384,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           });
           renderTabOrderList();
           updateSummaryCards();
+          saveTouchTabData();
         }
       }
 
@@ -1492,14 +1499,14 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
             el('btnAddTab').disabled = false;
             el('btnAddTab').textContent = '+ Adicionar foco de tabulação';
             const vTab = tabVariationsData.find(v => v.id === currentTabVariationId);
-            if (vTab) parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', instanceNodeId: vTab.instanceNodeId, tab_order: vTab.tab_order } }, '*');
+            if (vTab) parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', variationId: vTab.id, variationIndex: tabVariationsData.findIndex(v => v.id === vTab.id), instanceNodeId: vTab.instanceNodeId, propriedades: vTab.propriedades || {}, tab_order: vTab.tab_order || [] } }, '*');
             openTabForm();
           } else {
             // Criação via form ou editTabVariation — sempre ativa a variação
             closeTabVariationForm();
             const v = tabVariationsData.find(v => v.id === currentTabVariationId);
             if (v && v.instanceNodeId) {
-              parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', instanceNodeId: v.instanceNodeId, tab_order: v.tab_order } }, '*');
+              parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', variationId: v.id, variationIndex: tabVariationsData.findIndex(x => x.id === v.id), instanceNodeId: v.instanceNodeId, propriedades: v.propriedades || {}, tab_order: v.tab_order || [] } }, '*');
             }
           }
           // Carrega dados da variação criada/ativada
@@ -1704,6 +1711,11 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       closeTabForm();
       renderTabOrderList();
       updateSummaryCards();
+      saveTouchTabData();
+      const _activeTabVar = tabVariationsData.find(v => v.id === currentTabVariationId);
+      if (_activeTabVar && currentTabVariationId) {
+        parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', variationId: currentTabVariationId, variationIndex: tabVariationsData.findIndex(v => v.id === currentTabVariationId), instanceNodeId: _activeTabVar.instanceNodeId, propriedades: _activeTabVar.propriedades || {}, tab_order: tabOrderData } }, '*');
+      }
     }
 
     function selectTabFormType(type) {
@@ -1782,6 +1794,7 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       tabOrderData.splice(i, 1);
       renderTabOrderList();
       updateSummaryCards();
+      saveTouchTabData();
     }
 
     function moveTabItem(i, dir) {
@@ -1789,12 +1802,14 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       if (j < 0 || j >= tabOrderData.length) return;
       [tabOrderData[i], tabOrderData[j]] = [tabOrderData[j], tabOrderData[i]];
       renderTabOrderList();
+      saveTouchTabData();
     }
 
     function renameTabItem(i, novoNome) {
       if (tabOrderData[i]) {
         tabOrderData[i].nome = novoNome.trim() || `Tab ${i + 1}`;
         renderTabOrderList();
+        saveTouchTabData();
       }
     }
 
@@ -1983,13 +1998,14 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       varData = { id, nome: id === 'default' ? 'Default' : id, propriedades: {}, tab_order: [], sem_tabulacao: false, frameNodeId: null, instanceNodeId: null };
       tabVariationsData.push(varData);
     }
-    tabOrderData = varData.tab_order || [];
+    if (!varData.tab_order) varData.tab_order = [];       // garante referência válida
+    tabOrderData = varData.tab_order;                      // mesma referência — push atualiza os dois
     semTabulacao = varData.sem_tabulacao || false;
     el('chkSemTabulacao').checked = semTabulacao;
     el('tabFooter').style.display = semTabulacao ? 'none' : 'flex';
     renderTabOrderList();
     el('tabMainViewLabel').textContent = id === 'default' ? 'Default' : varData.nome;
-    parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', variationId: varData.id, instanceNodeId: varData.instanceNodeId, propriedades: varData.propriedades || {}, tab_order: varData.tab_order || [] } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', variationId: varData.id, variationIndex: tabVariationsData.findIndex(v => v.id === varData.id), instanceNodeId: varData.instanceNodeId, propriedades: varData.propriedades || {}, tab_order: tabOrderData } }, '*');
     showTabView('main');
     // Garante que o painel de tabulação permanece ativo
     if (!el('panel-tabulacao').classList.contains('active')) {
@@ -2359,7 +2375,7 @@ el('btnTabVariationFormCreate').onclick = () => {
   const btn = el('btnTabVariationFormCreate');
   btn.textContent = '⏳ Criando…';
   btn.disabled = true;
-  parent.postMessage({ pluginMessage: { type: 'create-tab-variation-frame', nome, propriedades, variationId: id } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'create-tab-variation-frame', nome, propriedades, variationId: id, variationIndex: tabVariationsData.length - 1 } }, '*');
 };
 
 el('btnVariationFormCreate').onclick = () => {

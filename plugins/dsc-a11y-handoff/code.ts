@@ -237,7 +237,7 @@ async function getTabImageFrame(): Promise<FrameNode | null> {
 }
 
 function clearVariationMarkers(varFrame: FrameNode) {
-  const markers = varFrame.findAll(n => n.name === '[a11y-marker]');
+  const markers = varFrame.findAll(n => n.getPluginData('a11y-marker') !== '');
   markers.forEach(m => m.remove());
 }
 
@@ -250,7 +250,7 @@ async function drawVariationMarkers(varFrame: FrameNode, markers: any[], color: 
   for (let i = 0; i < markers.length; i++) {
     const m = markers[i];
     const markerFrame = figma.createFrame();
-    markerFrame.name = '[a11y-marker]';
+    markerFrame.setPluginData('a11y-marker', '1');
     markerFrame.x = m.relX + offsetX;
     markerFrame.y = m.relY + offsetY;
     markerFrame.resize(Math.max(m.width || 20, 1), Math.max(m.height || 20, 1));
@@ -1934,15 +1934,24 @@ figma.ui.onmessage = async (msg) => {
     const compY = comp.absoluteTransform[1][2];
 
     const items = selection
-      .filter(n => n.id !== comp.id && n.id !== handoffAtivo?.id && n.name !== '[a11y-marker]')
-      .map(n => ({
-        layerName: n.name,
-        nodeId: n.id,
-        relX: Math.round(n.absoluteTransform[0][2] - compX),
-        relY: Math.round(n.absoluteTransform[1][2] - compY),
-        width: Math.round((n as FrameNode).width  ?? 0),
-        height: Math.round((n as FrameNode).height ?? 0),
-      }));
+      .filter(n => n.id !== handoffAtivo?.id && n.getPluginData('a11y-marker') === '')
+      .map(n => {
+        if (n.id === comp.id) {
+          return {
+            layerName: n.name, nodeId: n.id,
+            relX: 0, relY: 0,
+            width: Math.round((comp as FrameNode).width ?? 0),
+            height: Math.round((comp as FrameNode).height ?? 0),
+          };
+        }
+        return {
+          layerName: n.name, nodeId: n.id,
+          relX: Math.round(n.absoluteTransform[0][2] - compX),
+          relY: Math.round(n.absoluteTransform[1][2] - compY),
+          width: Math.round((n as FrameNode).width  ?? 0),
+          height: Math.round((n as FrameNode).height ?? 0),
+        };
+      });
 
     if (items.length === 0) {
       figma.ui.postMessage({ type: 'feedback', message: '⚠️ Selecione camadas no canvas e clique novamente.' });
@@ -2046,19 +2055,26 @@ figma.ui.onmessage = async (msg) => {
         return;
       }
       const variationId: string = msg.variationId ?? msg.id ?? ('var_' + Date.now());
+      // Esconde modelos que mostram "0" por padrão
+      const _modelO = Array.from(tabImageFrame.children).find(n => n.name === '[a11y] Order') as InstanceNode | undefined;
+      const _modelN = Array.from(tabImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
+      if (_modelO) _modelO.visible = false;
+      if (_modelN) _modelN.visible = false;
       let inst = Array.from(tabImageFrame.children).find(n => {
         try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'tab-variation-component' && d.variationId === variationId; } catch { return false; }
       }) as SceneNode | null;
       if (!inst) {
         const PAD_LEFT = 160, PAD_TOP = 80, GAP_H = 140;
-        const existingCount = Array.from(tabImageFrame.children).filter(n => {
+        const existingInsts = Array.from(tabImageFrame.children).filter(n => {
           try { return JSON.parse(n.getPluginData('a11y-meta') || '{}').type === 'tab-variation-component'; } catch { return false; }
-        }).length;
+        }) as SceneNode[];
+        const slotIndex = typeof msg.variationIndex === 'number' ? msg.variationIndex : existingInsts.length;
         inst = createComponentInstance(componentePrincipalAtivo);
         if (msg.propriedades && Object.keys(msg.propriedades).length > 0) {
           try { (inst as any).setProperties(msg.propriedades); } catch(_e) {}
         }
-        (inst as any).x = PAD_LEFT + existingCount * ((inst as any).width + GAP_H);
+        const slotWidth = Math.max((inst as any).width, ...existingInsts.map((n: any) => n.width));
+        (inst as any).x = PAD_LEFT + slotIndex * (slotWidth + GAP_H);
         (inst as any).y = PAD_TOP;
         tabImageFrame.appendChild(inst as SceneNode);
         inst.setPluginData('a11y-meta', JSON.stringify({ type: 'tab-variation-component', variationId }));
@@ -2079,9 +2095,19 @@ figma.ui.onmessage = async (msg) => {
   else if (msg.type === 'activate-tab-variation') {
     try {
       const tabImageFrame = await getTabImageFrame();
-      if (!tabImageFrame) { componenteTabVariacaoAtivo = null; return; }
+      if (!tabImageFrame) {
+        componenteTabVariacaoAtivo = null;
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Frame de tabulação não encontrado. Gere o handoff primeiro.' });
+        return;
+      }
       const variationId: string = msg.variationId ?? 'default';
-      clearVariationMarkers(tabImageFrame);
+
+      const modelOrder      = Array.from(tabImageFrame.children).find(n => n.name === '[a11y] Order')        as InstanceNode | undefined;
+      const modelItemNumber = Array.from(tabImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
+      if (modelOrder)      modelOrder.visible      = false;
+      if (modelItemNumber) modelItemNumber.visible = false;
+
+      let instanceWasCreated = false;
       let instance: SceneNode | null = msg.instanceNodeId
         ? await figma.getNodeByIdAsync(msg.instanceNodeId) as SceneNode | null
         : null;
@@ -2093,16 +2119,19 @@ figma.ui.onmessage = async (msg) => {
         if (instance) figma.ui.postMessage({ type: 'tab-variation-instance-recreated', variationId, instanceNodeId: instance.id });
       }
       if (!instance) {
+        instanceWasCreated = true;
         if (!componentePrincipalAtivo) { componenteTabVariacaoAtivo = null; return; }
         const PAD_LEFT = 160, PAD_TOP = 80, GAP_H = 140;
-        const existingCount = Array.from(tabImageFrame.children).filter(n => {
+        const existingInsts = Array.from(tabImageFrame.children).filter(n => {
           try { return JSON.parse(n.getPluginData('a11y-meta') || '{}').type === 'tab-variation-component'; } catch { return false; }
-        }).length;
+        }) as SceneNode[];
+        const slotIndex = typeof msg.variationIndex === 'number' ? msg.variationIndex : existingInsts.length;
         instance = createComponentInstance(componentePrincipalAtivo) as InstanceNode;
         if (msg.propriedades && Object.keys(msg.propriedades).length > 0) {
           try { (instance as any).setProperties(msg.propriedades); } catch(_e) {}
         }
-        (instance as any).x = PAD_LEFT + existingCount * ((instance as any).width + GAP_H);
+        const slotWidth = Math.max((instance as any).width, ...existingInsts.map((n: any) => n.width));
+        (instance as any).x = PAD_LEFT + slotIndex * (slotWidth + GAP_H);
         (instance as any).y = PAD_TOP;
         tabImageFrame.appendChild(instance as SceneNode);
         instance.setPluginData('a11y-meta', JSON.stringify({ type: 'tab-variation-component', variationId }));
@@ -2113,19 +2142,82 @@ figma.ui.onmessage = async (msg) => {
         figma.ui.postMessage({ type: 'tab-variation-instance-recreated', variationId, instanceNodeId: instance.id });
       }
       componenteTabVariacaoAtivo = instance;
-      if ((msg.tab_order || []).length > 0) {
-        await drawVariationMarkers(tabImageFrame as FrameNode, msg.tab_order, { r: 0.2, g: 0.4, b: 0.9 }, 'tab', (instance as any).x, (instance as any).y);
+
+      const instX = (instance as any).x as number;
+      const instY = (instance as any).y as number;
+      const instW = (instance as any).width as number;
+      const instH = (instance as any).height as number;
+
+      // Resolve tabOrder antes de checar marcadores
+      let tabOrder: any[] = msg.tab_order || [];
+      if (tabOrder.length === 0) {
+        try {
+          const dbNode = await getCachedPluginDataNode();
+          if (dbNode) {
+            const saved = JSON.parse(dbNode.getPluginData('a11y-component-data') || '{}');
+            const savedVar = (saved.variacoes_tabulacao || []).find((v: any) => v.id === variationId);
+            if (savedVar?.tab_order?.length > 0) tabOrder = savedVar.tab_order;
+          }
+        } catch(_e) {}
       }
+
+      const variationNumber = typeof msg.variationIndex === 'number' ? msg.variationIndex + 1 : 1;
+
+      // Verifica se marcadores desta variação já estão corretos (não toca marcadores de outras variações)
+      if (!instanceWasCreated) {
+        const currentMarkers = Array.from(tabImageFrame.children)
+          .filter(n => n.getPluginData('a11y-marker') === variationId);
+        const expectedCount = tabOrder.length + (modelItemNumber ? 1 : 0);
+        if (currentMarkers.length === expectedCount) {
+          figma.currentPage.selection = [instance as SceneNode];
+          figma.viewport.scrollAndZoomIntoView([instance as SceneNode]);
+          return;
+        }
+        currentMarkers.forEach(n => n.remove());
+      }
+
+      // [dsc-h] Item Number acima da instância
+      if (modelItemNumber) {
+        const numClone = modelItemNumber.clone();
+        numClone.setPluginData('a11y-marker', variationId);
+        numClone.visible = true;
+        const numTexts = numClone.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+        const numText = numTexts.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numTexts[0] || null;
+        if (numText) await updateText(numText as TextNode, String(variationNumber));
+        numClone.x = instX;
+        numClone.y = instY - numClone.height - 4;
+        tabImageFrame.appendChild(numClone);
+        if (numClone.type === 'INSTANCE') {
+          try { (numClone as InstanceNode).setProperties({ 'connector': 'Off' }); } catch(_e) {}
+        }
+      }
+
+      // [a11y] Order em cada item de tabulação
+      if (modelOrder && tabOrder.length > 0) {
+        for (let i = 0; i < tabOrder.length; i++) {
+          const item = tabOrder[i];
+          const orderClone = modelOrder.clone();
+          orderClone.setPluginData('a11y-marker', variationId);
+          orderClone.visible = true;
+          const numText = orderClone.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
+          if (numText) await updateText(numText, String(i + 1));
+          const rawX = instX + item.relX + item.width  - orderClone.width;
+          const rawY = instY + item.relY + 4;
+          orderClone.x = Math.max(instX, Math.min(rawX, instX + instW - orderClone.width));
+          orderClone.y = Math.max(instY, Math.min(rawY, instY + instH - orderClone.height));
+          tabImageFrame.appendChild(orderClone);
+        }
+      }
+
       figma.currentPage.selection = [instance as SceneNode];
       figma.viewport.scrollAndZoomIntoView([instance as SceneNode]);
-    } catch(e) { componenteTabVariacaoAtivo = null; }
+    } catch(e) {
+      componenteTabVariacaoAtivo = null;
+      console.error('[activate-tab-variation] erro:', e);
+    }
   }
 
   else if (msg.type === 'deactivate-tab-variation') {
-    try {
-      const tabImageFrame = await getTabImageFrame();
-      if (tabImageFrame) clearVariationMarkers(tabImageFrame);
-    } catch(_e) {}
     componenteTabVariacaoAtivo = null;
   }
 
@@ -2136,7 +2228,9 @@ figma.ui.onmessage = async (msg) => {
         Array.from(tabImageFrame.children).filter(n => {
           try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'tab-variation-component' && d.variationId === msg.variationId; } catch { return false; }
         }).forEach(n => n.remove());
-        clearVariationMarkers(tabImageFrame);
+        Array.from(tabImageFrame.children)
+          .filter(n => n.getPluginData('a11y-marker') === msg.variationId)
+          .forEach(n => n.remove());
       }
     } catch(e) { console.error('[delete-tab-variation-frame]', e); }
   }
