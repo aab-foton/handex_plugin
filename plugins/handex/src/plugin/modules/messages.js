@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // messages.js — dispatcher único de window.onmessage
 //
 // Recebe mensagens postadas pelo backend Figma (code.js) e
@@ -74,50 +74,76 @@
           createdSpecs = handoffData.specs || [];
           restoreUIFromState();
           renderFlowsList();
+          // Canvas detection: se há frames de handoff no canvas, marca como gerado
+          if (msg.existingHandoffCount && msg.existingHandoffCount > 0) {
+            handoffData._fichaGenerated = true;
+          }
         }
         // Request handoff history e scan cache ao inicializar
         parent.postMessage({ pluginMessage: { type: 'snapshot-load' } }, '*');
         parent.postMessage({ pluginMessage: { type: 'scan-cache-load' } }, '*');
+        // Onboarding é disparado pelo próprio modals.html via DOMContentLoaded
         return;
       }
 
       if (msg.type === "scan-result") {
-        const btnScan = document.getElementById("btn-scan");
-        if (btnScan) {
-          btnScan.disabled = false;
-          btnScan.innerHTML = '<i data-lucide="search" class="w-4 h-4"></i> Escanear Frame';
-        }
-        
-        const btnAudit = document.getElementById("btn-perform-audit");
-        if (btnAudit) {
-          btnAudit.disabled = false;
-          btnAudit.innerHTML = '<i data-lucide="check-square" class="w-4 h-4"></i> Realizar Auditoria';
-        }
-        
+        if (typeof hideScanLoading === 'function') hideScanLoading();
         try { lucide.createIcons(); } catch(e) {}
 
+        // Preferir frameId embutido na resposta (suporte multi-frame)
+        const targetFrameId = msg.frameId || activeFrameId;
+
         if (msg.error) {
-          const res = document.getElementById("scan-results");
-          if (res) res.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-xl text-xs">${msg.error}</div>`;
+          if (targetFrameId) {
+            const res = document.getElementById(`scan-results-${targetFrameId}`);
+            if (res) res.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-xl text-xs">${msg.error}</div>`;
+            const spinner = document.getElementById(`sub-spinner-tokens-${targetFrameId}`);
+            if (spinner) { spinner.classList.add('hidden'); try { lucide.createIcons(); } catch(e) {} }
+          }
           return;
         }
 
-        handoffData.step2.specs = msg.data;
         lastAuditResults = msg.data;
-        renderSpecs(msg.data);
-        if (handoffData.step2.isAuditEnabled) {
-          renderAuditSummary(msg.data);
+
+        if (targetFrameId) {
+          if (targetFrameId !== activeFrameId) activeFrameId = targetFrameId;
+          const frame = getFrame(targetFrameId);
+          if (frame) {
+            frame.specs = msg.data;
+            renderSpecs(msg.data, targetFrameId);
+            if (typeof showFrameSection === 'function') showFrameSection(targetFrameId, 'tokens');
+          }
+        } else {
+          handoffData.step2.specs = msg.data;
+          renderSpecs(msg.data);
         }
         saveToStorage();
       }
 
       if (msg.type === "selection-link") {
-        const inputTitle = document.getElementById(`title-${msg.targetId}`);
-        if (inputTitle) {
-          inputTitle.value = msg.linkName;
-          updateData('step3', `${msg.targetId}_title`, msg.linkName);
-          inputTitle.classList.add('border-green-500', 'ring-2', 'ring-green-100');
-          setTimeout(() => inputTitle.classList.remove('border-green-500', 'ring-2', 'ring-green-100'), 2000);
+        if (msg.targetId === 'exc-modal-vinc') {
+          const vinc = document.getElementById('exc-modal-vinc');
+          if (vinc) {
+            vinc.value = msg.linkName || '';
+            vinc.classList.add('border-green-500', 'ring-2', 'ring-green-100');
+            setTimeout(() => vinc.classList.remove('border-green-500', 'ring-2', 'ring-green-100'), 2000);
+          }
+          if (msg.deeplink) {
+            const anchor = document.getElementById('exc-modal-anchor');
+            if (anchor && !anchor.value) {
+              anchor.value = msg.deeplink;
+              anchor.classList.add('border-green-500', 'ring-2', 'ring-green-100');
+              setTimeout(() => anchor.classList.remove('border-green-500', 'ring-2', 'ring-green-100'), 2000);
+            }
+          }
+        } else {
+          const inputTitle = document.getElementById(`title-${msg.targetId}`);
+          if (inputTitle) {
+            inputTitle.value = msg.linkName;
+            updateData('step3', `${msg.targetId}_title`, msg.linkName);
+            inputTitle.classList.add('border-green-500', 'ring-2', 'ring-green-100');
+            setTimeout(() => inputTitle.classList.remove('border-green-500', 'ring-2', 'ring-green-100'), 2000);
+          }
         }
       }
 
@@ -158,51 +184,53 @@
         return;
       }
 
-      if (msg.type === 'audit-cache-loaded') {
-        if (msg.bundle && Array.isArray(msg.bundle.libraries) && msg.bundle.libraries.length > 0) {
-          handoffData.step2.auditAutoBundle = msg.bundle;
-          renderAuditRefsReady(msg.bundle);
-        } else {
-          startAuditExtraction();
-        }
-        return;
-      }
-
-      if (msg.type === 'extract-progress') {
-        renderAuditStatus('extracting', {
-          processed: msg.processed,
-          total: msg.total,
-          libName: msg.libName
-        });
-        return;
-      }
-
-      if (msg.type === 'extract-done') {
-        auditExtractInProgress = false;
-        if (msg.error) {
-          renderAuditStatus('unavailable', { message: msg.error });
-          return;
-        }
-        handoffData.step2.auditAutoBundle = msg.bundle;
-        parent.postMessage({ pluginMessage: { type: 'audit-cache-save', bundle: msg.bundle } }, '*');
-        renderAuditRefsReady(msg.bundle);
-        return;
-      }
-
       if (msg.type === "measurements-applied") {
-        handoffData.measurements = (handoffData.measurements || []).concat(msg.data);
-        lastMeasurements = handoffData.measurements;
-        const maxNum = handoffData.measurements.reduce((max, m) => Math.max(max, m.number || 0), 0);
-        handoffData.nextMeasurementNumber = maxNum + 1;
-        nextMeasurementNumber = handoffData.nextMeasurementNumber;
-        renderMeasurementsResults(handoffData.measurements);
+        if (activeFrameId) {
+          const frame = getFrame(activeFrameId);
+          if (frame) {
+            frame.measurements = (frame.measurements || []).concat(msg.data);
+            const maxNum = frame.measurements.reduce((max, m) => Math.max(max, m.number || 0), 0);
+            frame.nextMeasurementNumber = maxNum + 1;
+            renderMeasurementsResults(frame.measurements, activeFrameId);
+            if (typeof renderAllMeasurements === 'function') renderAllMeasurements();
+            if (typeof showFrameSection === 'function') showFrameSection(activeFrameId, 'medidas');
+            setTimeout(() => {
+              const list = document.getElementById(`measurements-list-${activeFrameId}`);
+              const last = list && list.lastElementChild;
+              if (last) autoScrollToNewItem('handoff-scroll-container', last);
+            }, 100);
+          }
+        } else {
+          handoffData.measurements = (handoffData.measurements || []).concat(msg.data);
+          lastMeasurements = handoffData.measurements;
+          const maxNum = handoffData.measurements.reduce((max, m) => Math.max(max, m.number || 0), 0);
+          handoffData.nextMeasurementNumber = maxNum + 1;
+          nextMeasurementNumber = handoffData.nextMeasurementNumber;
+          renderMeasurementsResults(handoffData.measurements);
+        }
         saveToStorage();
       }
 
       if (msg.type === "spec-created") {
-        createdSpecs.push(msg.spec || msg.data);
+        if (activeFrameId) {
+          const frame = getFrame(activeFrameId);
+          if (frame) {
+            if (!frame.createdSpecs) frame.createdSpecs = [];
+            frame.createdSpecs.push(msg.spec || msg.data);
+            renderSpecsListForFrame(activeFrameId);
+            if (typeof syncAndRenderSpecs === 'function') syncAndRenderSpecs();
+            if (typeof showFrameSection === 'function') showFrameSection(activeFrameId, 'specs');
+            setTimeout(() => {
+              const list = document.getElementById(`specs-list-${activeFrameId}`);
+              const last = list && list.lastElementChild;
+              if (last) autoScrollToNewItem('handoff-scroll-container', last);
+            }, 100);
+          }
+        } else {
+          createdSpecs.push(msg.spec || msg.data);
+          renderSpecsList();
+        }
         saveSpecsToStorage();
-        renderSpecsList();
       }
 
       if (msg.type === "flow-created") {
@@ -212,6 +240,11 @@
         renderFlowsList();
         saveToStorage();
         if (msg.flow && msg.flow.id) focusNode(msg.flow.id);
+        setTimeout(() => {
+          const list = document.getElementById('flows-results');
+          const last = list && list.lastElementChild;
+          if (last) autoScrollToNewItem('handoff-scroll-container', last);
+        }, 100);
       }
 
       if (msg.type === "design-data-exported") {
@@ -242,7 +275,7 @@
               list.innerHTML += `
                 <label class="flex items-center justify-between p-3 hover:bg-slate-50 dark:hover:bg-dark-surface/50 rounded-2xl cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-800 transition-all group">
                   <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-dark-bg flex items-center justify-center text-slate-400 group-hover:text-[#0070af] transition-colors">
+                    <div class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-dark-bg flex items-center justify-center text-slate-500 group-hover:text-[#0070af] transition-colors">
                       <i data-lucide="${iconName}" class="w-4 h-4"></i>
                     </div>
                     <div>
@@ -263,18 +296,67 @@
         if (typeof lucide !== 'undefined') lucide.createIcons();
       }
 
-      if (msg.type === 'selection-name') {
-        const input = document.getElementById('s1-fluxo');
-        if (input) {
-          // Só atualiza se o campo estiver vazio ou se o usuário não estiver focado nele OU se for manual
-          if (!input.value || document.activeElement !== input || msg.isManual) {
-            input.value = msg.name;
-            updateData('step1', 'fluxo', msg.name);
-            
-            // Pequeno feedback visual
-            input.classList.add('ring-2', 'ring-blue-100');
-            setTimeout(() => input.classList.remove('ring-2', 'ring-blue-100'), 1000);
-          }
+      if (msg.type === 'selection-info') {
+        const nodes = msg.nodes || (msg.nodeId ? [{ nodeId: msg.nodeId, name: msg.name }] : []);
+        if (msg.error || nodes.length === 0) {
+          showToast('Selecione um ou mais Frames no canvas primeiro.');
+          return;
         }
+        const cats = window._pendingScanCategories || null;
+        window._pendingScanCategories = null;
+        nodes.forEach(node => {
+          if (typeof addFrame === 'function') {
+            const existing = (handoffData.frames || []).find(f => f.figmaId === node.nodeId);
+            if (existing) {
+              showToast(`Frame "${existing.nome}" já escaneado. Atualizando...`);
+              scanFrame(existing.id, cats, null);
+              return;
+            }
+            const frame = addFrame(node.nodeId, node.name);
+            if (frame) scanFrame(frame.id, cats, null);
+          }
+        });
+        return;
+      }
+
+      if (msg.type === 'project-name') {
+        const input = document.getElementById('s1-titulo');
+        if (input && (!input.value || msg.force)) {
+          input.value = msg.name;
+          updateData('step1', 'titulo', msg.name);
+          if (typeof validateStep1 === 'function') validateStep1();
+          input.classList.add('ring-2', 'ring-blue-100');
+          setTimeout(() => input.classList.remove('ring-2', 'ring-blue-100'), 1000);
+        }
+        return;
+      }
+
+      if (msg.type === 'handoff-complete') {
+        if (typeof hideHandoffLoading === 'function') hideHandoffLoading();
+        if (typeof _markFichaGenerated === 'function') _markFichaGenerated();
+        if (msg.isUpdate) {
+          showToast(`Nova versão ${handoffData.step1.versao} gerada ao lado — ${msg.timestamp}`);
+        } else {
+          showToast('Ficha gerada no canvas!');
+        }
+        return;
+      }
+
+      if (msg.type === 'briefing-data-pulled') {
+        const pulled = msg.data || [];
+        if (pulled.length === 0) {
+          showToast('Nenhum framework de briefing encontrado no canvas.');
+          return;
+        }
+        pulled.forEach(q => {
+          if (typeof addBriefingQuestion === 'function') addBriefingQuestion(q.question, q.category);
+        });
+        showToast(`${pulled.length} pergunta(s) de briefing importadas do canvas.`);
+        return;
+      }
+
+      if (msg.type === 'framework-injected') {
+        showToast('Framework inserido no canvas! ✓', 'success');
+        return;
       }
     };

@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // specifications.js — modal "Criar Especificação" + render + flows
 //
 // Inclui:
@@ -17,38 +17,48 @@
 // saveToStorage, focusNode, openModal/closeModal, showToast
 // ============================================================
 
-    function scanFrame(categories = null, selectedLibSlugs = null) {
-      const refs = handoffData.step2.auditReferences || [];
+    function isCurrentFrameAuditEnabled() {
+      return false;
+    }
 
-      // Persiste libs selecionadas para uso no bundle filtering
-      if (selectedLibSlugs !== null) {
-        handoffData.step2.selectedLibSlugs = selectedLibSlugs;
-      }
-      const libSlugs = handoffData.step2.selectedLibSlugs || null;
+    function scanFrame(frameId, categories = null, selectedLibSlugs = null) {
+      if (frameId) activeFrameId = frameId;
 
-      const btn = document.getElementById("btn-scan");
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Escaneando...';
+      const frame = activeFrameId ? getFrame(activeFrameId) : null;
+
+      // Loading visual — overlay de scan + spinner discreto no frame
+      if (typeof showScanLoading === 'function') showScanLoading();
+      if (activeFrameId) {
+        const spinner = document.getElementById(`sub-spinner-tokens-${activeFrameId}`);
+        if (spinner) spinner.classList.remove('hidden');
+        const sec = document.getElementById(`sub-sec-tokens-${activeFrameId}`);
+        if (sec) sec.classList.remove('hidden');
       }
-      if (window.lucide) lucide.createIcons();
+      _refreshIcons();
 
       parent.postMessage({
         pluginMessage: {
           type: "scan-frame",
-          isAudit: handoffData.step2.isAuditEnabled,
-          referenceTokens: refs.length > 0 ? refs : null,
-          selectedLibSlugs: libSlugs,
+          frameId: activeFrameId || null,
+          nodeId: frame ? frame.figmaId : null,
+          isAudit: false,
+          referenceTokens: null,
+          selectedLibSlugs: null,
           categories: categories
         }
       }, "*");
     }
 
 
-    function renderSpecs(data) {
-      const container = document.getElementById("scan-results");
+    function renderSpecs(data, frameId) {
+      const containerId = frameId ? `scan-results-${frameId}` : "scan-results";
+      const container = document.getElementById(containerId);
       if (!container) return;
       container.innerHTML = "";
+
+      // Restaura o activeFrameId para que createAccordionSection / createSpecItem
+      // consigam chamar isCurrentFrameAuditEnabled() corretamente
+      if (frameId) activeFrameId = frameId;
 
       const sections = [
         { title: "Componentes", items: data.components, type: "components", icon: "box" },
@@ -58,13 +68,502 @@
         { title: "Vetores", items: data.vectors, type: "vectors", icon: "pen-tool" }
       ];
 
+      // Oculta spinner do sub-header de tokens
+      if (frameId) {
+        const spinner = document.getElementById(`sub-spinner-tokens-${frameId}`);
+        if (spinner) spinner.classList.add('hidden');
+      }
+
       sections.forEach(section => {
         if (section.items && section.items.length > 0) {
           container.appendChild(createAccordionSection(section));
         }
       });
-      try { lucide.createIcons(); } catch(e) {}
+      _refreshIcons();
     }
+
+    // ── Helpers de visibilidade de seções ──────────────────────────────
+    function showFrameSection(frameId, type) {
+      const wrap = document.getElementById(`sub-sec-${type}-${frameId}`);
+      if (!wrap) return;
+      wrap.classList.remove('hidden');
+      const body = document.getElementById(`sub-body-${type}-${frameId}`);
+      const chev = document.getElementById(`sub-chev-${type}-${frameId}`);
+      if (body && body.classList.contains('hidden')) {
+        body.classList.remove('hidden');
+        if (chev) chev.style.transform = 'rotate(90deg)';
+      }
+    }
+    window.showFrameSection = showFrameSection;
+
+    // ── Accordion card por frame (Step 3 — Documentação & Specs) ────────
+    function renderFrameCard(frame) {
+      const list = document.getElementById('list-frames');
+      if (!list) return;
+
+      const emptyState = document.getElementById('frames-empty-state');
+      if (emptyState) emptyState.classList.add('hidden');
+
+      const fid = frame.id;
+      const card = document.createElement('div');
+      card.id = `frame-card-${fid}`;
+      card.className = 'frame-card bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl overflow-hidden shadow-sm mb-3';
+      card.setAttribute('data-frame-id', fid);
+
+      const subHead = (key, icon, label, countId) => `
+        <button type="button" onclick="event.stopPropagation(); toggleSubAccordion('${key}')"
+          class="w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors text-left">
+          <div class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
+            <i data-lucide="${icon}" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted"></i>
+          </div>
+          <span class="flex-1 text-[12px] font-bold text-slate-700 dark:text-white">${label}</span>
+          <span id="${countId}" class="text-[10px] text-slate-500 dark:text-dark-muted mr-1"></span>
+          <i data-lucide="chevron-right" id="sub-chev-${key}" class="w-3.5 h-3.5 text-gray-300 transition-transform shrink-0"></i>
+        </button>`;
+
+      card.innerHTML = `
+        <!-- Cabeçalho -->
+        <div id="frame-header-${fid}"
+          class="flex items-center gap-2 px-3 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors select-none"
+          onclick="toggleFrameAccordion('${fid}')"
+          onmouseenter="sendHighlight('${frame.figmaId}')"
+          onmouseleave="clearHighlight()">
+          <button type="button"
+            onclick="event.stopPropagation(); focusNode('${frame.figmaId}')"
+            title="Localizar no canvas"
+            class="w-7 h-7 flex items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 text-[#0070af] hover:bg-blue-100 transition-colors shrink-0">
+            <i data-lucide="locate" class="w-3.5 h-3.5"></i>
+          </button>
+          <div class="flex-1 min-w-0">
+            <p class="text-[12px] font-bold text-slate-800 dark:text-white truncate">${frame.nome}</p>
+            <p id="frame-subtitle-${fid}" class="text-[10px] text-green-600 font-medium">Conforme</p>
+          </div>
+          <button type="button"
+            onclick="event.stopPropagation(); removeFrame('${fid}')"
+            title="Remover frame"
+            class="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shrink-0">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+          <i data-lucide="chevron-down" id="frame-chevron-${fid}" class="w-4 h-4 text-gray-300 transition-transform shrink-0"></i>
+        </div>
+
+        <!-- Corpo -->
+        <div id="frame-body-${fid}" class="hidden border-t border-gray-50 dark:border-dark-line">
+
+          <!-- ── Toggle Novo Componente ── -->
+          <div class="px-4 py-2.5 flex items-center justify-between border-b border-gray-50 dark:border-dark-line">
+            <div class="flex items-center gap-2.5">
+              <div class="w-6 h-6 flex items-center justify-center bg-violet-50 dark:bg-violet-900/30 rounded-lg shrink-0">
+                <i data-lucide="component" class="w-3.5 h-3.5 text-violet-500"></i>
+              </div>
+              <div>
+                <p class="text-[12px] font-bold text-slate-700 dark:text-white">Novo Componente</p>
+                <p class="text-[10px] text-slate-500 dark:text-dark-muted">Frame introduz um componente inédito no DSC</p>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+              <input type="checkbox" id="toggle-new-component-${fid}" class="sr-only peer"
+                ${frame.isNewComponent ? 'checked' : ''}
+                onchange="toggleNewComponent('${fid}', this.checked)">
+              <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-violet-500"></div>
+            </label>
+          </div>
+
+          <!-- ── Observações Novo Componente ── -->
+          <div id="new-component-obs-${fid}" class="${frame.isNewComponent ? '' : 'hidden'} px-3 pt-2.5 pb-0">
+            <textarea id="new-component-obs-text-${fid}"
+              onchange="updateNewComponentObs('${fid}', this.value)"
+              placeholder="Descreva o padrão de uso, nomenclatura de tokens e diretrizes de aplicação deste componente..."
+              rows="3"
+              class="w-full bg-violet-50 dark:bg-violet-900/10 border border-violet-200 dark:border-violet-800/30 rounded-xl px-3 py-2.5 text-[11px] text-slate-700 dark:text-white outline-none resize-none focus:border-violet-400 transition-colors"
+            >${frame.newComponentObservations || ''}</textarea>
+          </div>
+
+          <!-- ── Tokens Escaneados (oculto até escanear) ── -->
+          <div id="sub-sec-tokens-${fid}" class="hidden border-b border-gray-50 dark:border-dark-line">
+            <button type="button" onclick="event.stopPropagation(); toggleSubAccordion('tokens-${fid}')"
+              class="w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors text-left">
+              <div class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
+                <i data-lucide="scan-line" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted"></i>
+              </div>
+              <span class="flex-1 text-[12px] font-bold text-slate-700 dark:text-white">Tokens Escaneados</span>
+              <span id="sub-count-tokens-${fid}" class="text-[10px] text-slate-500 dark:text-dark-muted mr-1"></span>
+              <span id="sub-spinner-tokens-${fid}" class="hidden mr-1.5">
+                <i data-lucide="loader-2" class="w-3 h-3 text-[#0070af] animate-spin"></i>
+              </span>
+              <i data-lucide="chevron-right" id="sub-chev-tokens-${fid}" class="w-3.5 h-3.5 text-gray-300 transition-transform shrink-0"></i>
+            </button>
+            <div id="sub-body-tokens-${fid}" class="hidden bg-gray-50/30 dark:bg-dark-bg/20">
+              <div id="scan-results-${fid}" class="p-1"></div>
+            </div>
+          </div>
+
+          <!-- ── Medidas (oculto até inserir) ── -->
+          <div id="sub-sec-medidas-${fid}" class="hidden border-b border-gray-50 dark:border-dark-line">
+            ${subHead(`medidas-${fid}`, 'ruler', 'Medidas', `sub-count-medidas-${fid}`)}
+            <div id="sub-body-medidas-${fid}" class="hidden bg-gray-50/30 dark:bg-dark-bg/20">
+              <div id="measurements-list-${fid}" class="px-2 py-1"></div>
+            </div>
+          </div>
+
+          <!-- ── Especificações (oculto até inserir) ── -->
+          <div id="sub-sec-specs-${fid}" class="hidden border-b border-gray-50 dark:border-dark-line">
+            ${subHead(`specs-${fid}`, 'tag', 'Especificações', `sub-count-specs-${fid}`)}
+            <div id="sub-body-specs-${fid}" class="hidden bg-gray-50/30 dark:bg-dark-bg/20">
+              <div id="specs-list-${fid}" class="px-2 py-2"></div>
+            </div>
+          </div>
+
+          <!-- ── Cenários de Exceção (oculto até inserir) ── -->
+          <div id="sub-sec-excecoes-${fid}" class="hidden">
+            ${subHead(`excecoes-${fid}`, 'alert-circle', 'Cenários de Exceção', `sub-count-excecoes-${fid}`)}
+            <div id="sub-body-excecoes-${fid}" class="hidden bg-gray-50/30 dark:bg-dark-bg/20">
+              <div id="excecoes-list-${fid}" class="px-2 py-2"></div>
+            </div>
+          </div>
+
+          <!-- ── Conformidade DSC ── -->
+          <div class="border-t border-gray-50 dark:border-dark-line px-4 py-3 space-y-1">
+            <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider pb-1">Conformidade DSC</p>
+
+            <!-- Toggle: Check Designs realizado -->
+            <div class="flex items-center justify-between py-1.5">
+              <div>
+                <p class="text-[12px] font-medium text-slate-700 dark:text-white">Check Designs realizado</p>
+                <p class="text-[10px] text-slate-500 dark:text-dark-muted">Verificação com a biblioteca DSC concluída</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                <input type="checkbox" id="check-done-${fid}" class="sr-only peer"
+                  ${frame.audit && frame.audit.checkDone ? 'checked' : ''}
+                  onchange="setFrameCheckDone('${fid}', this.checked)">
+                <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#0070af]"></div>
+              </label>
+            </div>
+
+            <!-- Resultado (visível só quando checkDone) -->
+            <div id="audit-result-${fid}" class="${frame.audit && frame.audit.checkDone ? '' : 'hidden'} space-y-1.5 border-t border-gray-50 dark:border-dark-line pt-2">
+              ${!frame.isNewComponent ? `
+              <div class="flex items-center justify-between py-1.5">
+                <div>
+                  <p class="text-[12px] font-medium text-slate-700 dark:text-white">Sem desvios encontrados</p>
+                  <p class="text-[10px] text-slate-500 dark:text-dark-muted">Frame em conformidade com o DSC</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input type="checkbox" id="sem-desvios-${fid}" class="sr-only peer"
+                    ${frame.audit && frame.audit.semDesvios ? 'checked' : ''}
+                    onchange="setFrameSemDesvios('${fid}', this.checked)">
+                  <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                </label>
+              </div>` : `
+              <div class="flex items-center gap-2 px-3 py-2 bg-violet-50 dark:bg-violet-900/20 rounded-xl border border-violet-100 dark:border-violet-800/30">
+                <i data-lucide="component" class="w-3.5 h-3.5 text-violet-500 shrink-0"></i>
+                <p class="text-[11px] text-violet-700 dark:text-violet-300 leading-snug">Componente novo — desvios são esperados. Registre as divergências nas observações acima.</p>
+              </div>`}
+              <textarea id="audit-obs-${fid}" rows="2"
+                placeholder="Descreva os desvios ou exceções encontrados..."
+                oninput="setFrameAuditObs('${fid}', this.value)"
+                class="${frame.audit && frame.audit.checkDone && (frame.isNewComponent || !frame.audit.semDesvios) ? '' : 'hidden'} w-full bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl px-3 py-2 text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 resize-none focus:ring-2 focus:ring-[#0070af]/20 outline-none transition-all">${frame.audit && frame.audit.observacoes ? frame.audit.observacoes : ''}</textarea>
+            </div>
+          </div>
+
+        </div>
+      `;
+
+      list.appendChild(card);
+
+      // Sync subtitle initial state
+      _updateFrameAuditSubtitle(fid);
+
+      _refreshIcons();
+
+      if (frame.specs) { renderSpecs(frame.specs, fid); showFrameSection(fid, 'tokens'); }
+      if (frame.measurements && frame.measurements.length > 0) { renderMeasurementsResults(frame.measurements, fid); showFrameSection(fid, 'medidas'); }
+      if (frame.createdSpecs && frame.createdSpecs.length > 0) { renderSpecsListForFrame(fid); showFrameSection(fid, 'specs'); }
+      if (frame.excecoes && frame.excecoes.length > 0) { renderExcecoesList(fid); showFrameSection(fid, 'excecoes'); }
+
+      toggleFrameAccordion(fid);
+    }
+
+    // ── Spec helpers (inline edit, obs, visibility) ──────────────────
+    function updateSpecTitle(frameId, index, value) {
+      const frame = getFrame(frameId);
+      if (frame && frame.createdSpecs[index]) {
+        frame.createdSpecs[index].name = value;
+        saveToStorage();
+      }
+    }
+
+    function toggleSpecVisibility(frameId, index) {
+      const frame = getFrame(frameId);
+      if (!frame || !frame.createdSpecs[index]) return;
+      const spec = frame.createdSpecs[index];
+      spec.visible = spec.visible === false ? true : false;
+      if (spec.id) {
+        parent.postMessage({ pluginMessage: { type: spec.visible === false ? 'hide-node' : 'show-node', id: spec.id } }, '*');
+      }
+      saveToStorage();
+      renderSpecsListForFrame(frameId);
+    }
+
+    function toggleSpecObs(obsId) {
+      const el = document.getElementById(obsId);
+      if (el) el.classList.toggle('hidden');
+    }
+
+    function updateSpecObs(frameId, index, value) {
+      const frame = getFrame(frameId);
+      if (frame && frame.createdSpecs[index]) {
+        frame.createdSpecs[index].obs = value;
+        saveToStorage();
+      }
+    }
+
+    function deleteSpecFromFrame(frameId, index, nodeId) {
+      const frame = getFrame(frameId);
+      if (!frame) return;
+      frame.createdSpecs.splice(index, 1);
+      if (nodeId) parent.postMessage({ pluginMessage: { type: 'delete-node', id: nodeId } }, '*');
+      saveToStorage();
+      renderSpecsListForFrame(frameId);
+      if (!frame.createdSpecs.length) {
+        const wrap = document.getElementById(`sub-sec-specs-${frameId}`);
+        if (wrap) wrap.classList.add('hidden');
+      }
+    }
+    window.updateSpecTitle = updateSpecTitle;
+    window.toggleSpecVisibility = toggleSpecVisibility;
+    window.toggleSpecObs = toggleSpecObs;
+    window.updateSpecObs = updateSpecObs;
+    window.deleteSpecFromFrame = deleteSpecFromFrame;
+
+    // ── Render da lista de specs criadas por frame ────────────────────
+    function renderSpecsListForFrame(frameId) {
+      const frame = getFrame(frameId);
+      if (!frame) return;
+      const specsData = frame.createdSpecs || [];
+      const list = document.getElementById(`specs-list-${frameId}`);
+      if (!list) return;
+      list.innerHTML = '';
+
+      const countEl = document.getElementById(`sub-count-specs-${frameId}`);
+      if (countEl) countEl.textContent = specsData.length ? `${specsData.length}` : '';
+
+      if (specsData.length === 0) return;
+
+      const grouped = {};
+      specsData.forEach((spec, idx) => {
+        if (!spec) return;
+        const letter = spec.letter || '?';
+        if (!grouped[letter]) grouped[letter] = [];
+        grouped[letter].push({ ...spec, _idx: idx });
+      });
+
+      Object.keys(grouped).sort().forEach(letter => {
+        const specs = grouped[letter];
+        const color = specs[0].color || '#005ca9';
+        const groupEl = document.createElement('div');
+        groupEl.className = 'mb-3';
+
+        const groupNames = frame.specGroupNames || {};
+        const groupVisible = frame.specGroupVisible || {};
+        const isGroupHidden = groupVisible[letter] === false;
+        const groupName = groupNames[letter] || '';
+
+        // Group header with editable name and visibility toggle
+        const groupHeader = document.createElement('div');
+        groupHeader.className = 'flex items-center gap-1.5 px-1 mb-1.5';
+        groupHeader.innerHTML = `
+          <div class="w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-extrabold text-white shrink-0" style="background-color:${color}">${letter}</div>
+          <input type="text" value="${groupName.replace(/"/g, '&quot;')}"
+            placeholder="Nomear grupo..."
+            title="Nome do grupo"
+            class="flex-1 min-w-0 text-[10px] font-bold text-slate-500 dark:text-slate-500 bg-transparent border border-transparent focus:border-[#0070af]/30 focus:ring-1 focus:ring-[#0070af]/20 rounded px-1 py-0.5 outline-none placeholder:text-gray-300 transition-all"
+            onchange="updateSpecGroupName('${frameId}', '${letter}', this.value)"
+            onclick="event.stopPropagation()" />
+          <span class="text-[10px] text-slate-500 dark:text-slate-500 shrink-0">${specs.length} esp.</span>
+          <button type="button" title="${isGroupHidden ? 'Exibir grupo' : 'Ocultar grupo'}"
+            onclick="event.stopPropagation(); toggleSpecGroupVisibility('${frameId}', '${letter}')"
+            class="w-5 h-5 flex items-center justify-center ${isGroupHidden ? 'text-gray-300' : 'text-slate-500'} hover:text-[#0070af] transition-colors shrink-0">
+            <i data-lucide="${isGroupHidden ? 'eye-off' : 'eye'}" class="w-3 h-3"></i>
+          </button>`;
+        groupEl.appendChild(groupHeader);
+
+        // Items with dashed left connector
+        const itemsWrapper = document.createElement('div');
+        itemsWrapper.className = 'ml-2.5 pl-3 space-y-1.5';
+        itemsWrapper.style.cssText = `border-left: 2px dashed ${color}40;`;
+        if (isGroupHidden) itemsWrapper.style.opacity = '0.4';
+
+        specs.forEach(spec => {
+          const isHidden = spec.visible === false;
+          const detailsId = `spec-details-${frameId}-${spec._idx}`;
+          const excListId = `spec-exc-list-${frameId}-${spec._idx}`;
+          const excCount = (spec.excecoes || []).length;
+          const props = spec.properties || [];
+
+          // Keys where a missing token is a real concern (color/spacing/sizing tokens)
+          const tokenKeys = new Set(['fill', 'stroke', 'padding', 'gap', 'radius', 'fontSize']);
+          const hasRawTokenWarning = props.some(p => tokenKeys.has(p.key) && !p.token);
+
+          // Category pill
+          const categoryPill = spec.category ? `
+            <div class="mb-2.5">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full border border-gray-200 dark:border-dark-line text-[10px] font-bold text-slate-500 dark:text-slate-500 bg-gray-50 dark:bg-slate-800">${spec.category}</span>
+            </div>` : '';
+
+          // Build properties rows HTML
+          const propsHtml = props.length > 0 ? `
+            <div class="mb-3">
+              <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Propriedades</p>
+              ${hasRawTokenWarning ? `
+              <div class="flex items-center gap-1.5 mb-2 px-2 py-1.5 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800/30">
+                <i data-lucide="alert-triangle" class="w-3 h-3 text-amber-500 shrink-0"></i>
+                <p class="text-[10px] text-amber-700 dark:text-amber-400 leading-snug flex-1">Valores sem token. Use o <strong>Check Design</strong> para escanear tokens deste elemento.</p>
+              </div>` : ''}
+              <div class="space-y-1">
+                ${props.map(p => `
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-[10px] text-slate-500 shrink-0">${p.label || p.key}</span>
+                    <span class="text-[10px] font-semibold ${tokenKeys.has(p.key) && !p.token ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-white'} text-right font-mono">${p.token || p.value}</span>
+                  </div>`).join('')}
+              </div>
+            </div>` : '';
+
+          // Build exceptions HTML
+          const excHtml = (spec.excecoes || []).map((exc, ei) => `
+            <div class="flex items-start gap-1.5 px-2 py-1.5 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+              <span class="text-[9px] font-bold text-orange-600 uppercase shrink-0 mt-0.5">${exc.tipo || ''}</span>
+              <span class="flex-1 text-[10px] text-slate-600 dark:text-dark-text leading-snug">${exc.titulo || ''}</span>
+              <button type="button" onclick="event.stopPropagation(); deleteSpecException('${frameId}', ${spec._idx}, ${ei})"
+                class="w-4 h-4 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors shrink-0">
+                <i data-lucide="x" class="w-3 h-3"></i>
+              </button>
+            </div>`).join('');
+
+          const item = document.createElement('div');
+          item.className = `relative bg-white dark:bg-dark-surface rounded-xl border ${isHidden ? 'border-gray-100 opacity-50' : 'border-gray-100 dark:border-dark-line'} overflow-hidden transition-all`;
+
+          item.innerHTML = `
+            <div class="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-dark-surface" style="background-color:${color}"></div>
+            <div class="flex items-center px-2 py-1.5 gap-1.5 cursor-pointer" onclick="toggleSpecDetails('${detailsId}')">
+              <div class="w-4 h-4 rounded flex items-center justify-center text-[8px] font-extrabold text-white shrink-0" style="background-color:${color}">${letter}</div>
+              <input type="text" value="${(spec.name || '').replace(/"/g, '&quot;')}"
+                title="Clique para editar o título"
+                class="flex-1 min-w-0 text-[11px] font-semibold text-slate-700 dark:text-white bg-transparent border border-transparent focus:border-[#0070af]/30 focus:ring-1 focus:ring-[#0070af]/20 rounded px-1 py-0.5 outline-none cursor-text transition-all"
+                onchange="updateSpecTitle('${frameId}', ${spec._idx}, this.value)"
+                onclick="event.stopPropagation()" />
+              ${hasRawTokenWarning ? `<span title="Valores sem token — use Check Design" class="w-4 h-4 flex items-center justify-center text-amber-400 shrink-0"><i data-lucide="alert-triangle" class="w-3 h-3"></i></span>` : ''}
+              ${excCount > 0 ? `<span class="px-1 py-0.5 rounded bg-orange-50 text-[9px] font-bold text-orange-500 shrink-0">${excCount}</span>` : ''}
+              <button type="button" title="Localizar no canvas"
+                onclick="event.stopPropagation(); focusNode('${spec.id}')"
+                class="w-5 h-5 flex items-center justify-center text-gray-300 hover:text-[#0070af] transition-colors shrink-0">
+                <i data-lucide="locate" class="w-3 h-3"></i>
+              </button>
+              <button type="button" title="${isHidden ? 'Mostrar' : 'Ocultar'} no canvas"
+                onclick="event.stopPropagation(); toggleSpecVisibility('${frameId}', ${spec._idx})"
+                class="w-5 h-5 flex items-center justify-center text-gray-300 hover:text-[#0070af] transition-colors shrink-0">
+                <i data-lucide="${isHidden ? 'eye-off' : 'eye'}" class="w-3 h-3"></i>
+              </button>
+              <button type="button" title="Excluir especificação"
+                onclick="event.stopPropagation(); deleteSpecFromFrame('${frameId}', ${spec._idx}, '${spec.id}')"
+                class="w-5 h-5 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors shrink-0">
+                <i data-lucide="trash-2" class="w-3 h-3"></i>
+              </button>
+            </div>
+            <!-- Details panel (expandable) -->
+            <div id="${detailsId}" class="hidden px-3 pb-3 pt-2 border-t border-gray-50 dark:border-dark-line">
+              ${categoryPill}
+              ${propsHtml}
+              <!-- Observations -->
+              <div class="mb-3">
+                <textarea placeholder="Observações sobre esta spec..."
+                  class="w-full text-[11px] text-slate-600 dark:text-slate-300 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg px-2 py-1.5 resize-none outline-none placeholder:text-gray-300 focus:border-[#0070af]/30 transition-all"
+                  rows="2"
+                  onchange="updateSpecObs('${frameId}', ${spec._idx}, this.value)">${spec.obs || ''}</textarea>
+              </div>
+              <!-- Cenários de Exceção -->
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <p class="text-[9px] font-bold text-orange-500 uppercase tracking-wider">Cenários de Exceção</p>
+                  <button type="button" onclick="event.stopPropagation(); openSpecException('${frameId}', ${spec._idx})"
+                    class="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/30 rounded-md hover:bg-orange-100 transition-colors">
+                    <i data-lucide="plus" class="w-2.5 h-2.5"></i> Cenário
+                  </button>
+                </div>
+                <div id="${excListId}" class="space-y-1">
+                  ${excHtml || '<p class="text-[10px] text-slate-300 dark:text-slate-600 italic">Nenhum cenário registrado</p>'}
+                </div>
+              </div>
+            </div>`;
+
+          itemsWrapper.appendChild(item);
+        });
+
+        groupEl.appendChild(itemsWrapper);
+        list.appendChild(groupEl);
+      });
+
+      _refreshIcons();
+    }
+    window.renderSpecsListForFrame = renderSpecsListForFrame;
+
+    // Close spec-cat-popover when clicking outside
+    document.addEventListener('click', function() {
+      const pop = document.getElementById('spec-cat-popover');
+      if (pop) pop.classList.add('hidden');
+    });
+
+    function toggleSpecDetails(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.toggle('hidden');
+      _refreshIcons();
+    }
+    window.toggleSpecDetails = toggleSpecDetails;
+
+    // _currentExceptionSpecIdx is set in core.js; here we only expose the opener
+    function openSpecException(frameId, specIdx) {
+      if (typeof openExceptionModal === 'function') openExceptionModal(frameId);
+      window._currentExceptionSpecIdx = specIdx; // set AFTER openExceptionModal resets it
+    }
+    window.openSpecException = openSpecException;
+
+    function deleteSpecException(frameId, specIdx, excIdx) {
+      const frame = getFrame(frameId);
+      if (!frame) return;
+      const spec = (frame.createdSpecs || [])[specIdx];
+      if (!spec || !spec.excecoes) return;
+      spec.excecoes.splice(excIdx, 1);
+      saveToStorage();
+      renderSpecsListForFrame(frameId);
+    }
+    window.deleteSpecException = deleteSpecException;
+
+    function updateSpecGroupName(frameId, letter, value) {
+      const frame = getFrame(frameId);
+      if (!frame) return;
+      if (!frame.specGroupNames) frame.specGroupNames = {};
+      frame.specGroupNames[letter] = value.trim();
+      saveToStorage();
+    }
+    window.updateSpecGroupName = updateSpecGroupName;
+
+    function toggleSpecGroupVisibility(frameId, letter) {
+      const frame = getFrame(frameId);
+      if (!frame) return;
+      if (!frame.specGroupVisible) frame.specGroupVisible = {};
+      const isNowHidden = !(frame.specGroupVisible[letter] === false);
+      frame.specGroupVisible[letter] = isNowHidden ? false : true;
+      // Toggle visibility of all specs in this group on canvas
+      (frame.createdSpecs || []).forEach(spec => {
+        if ((spec.letter || '?') === letter && spec.id) {
+          parent.postMessage({ pluginMessage: { type: 'hide-node', id: spec.id, forceState: !isNowHidden } }, '*');
+        }
+      });
+      saveToStorage();
+      renderSpecsListForFrame(frameId);
+    }
+    window.toggleSpecGroupVisibility = toggleSpecGroupVisibility;
 
     // Global stores already defined at top: lastMeasurements, createdSpecs
 
@@ -83,7 +582,7 @@
       btn.innerHTML = allHidden
         ? '<i data-lucide="eye" class="w-3.5 h-3.5"></i> Mostrar tudo'
         : '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo';
-      if (typeof lucide !== 'undefined') lucide.createIcons();
+      _refreshIcons();
     }
 
     function updateGroupVisButtonState(letter, groupWrapper) {
@@ -97,7 +596,7 @@
       groupVisBtn.classList.toggle('text-[#005ca9]', isGroupVisible);
       groupVisBtn.classList.toggle('text-gray-400', !isGroupVisible);
       
-      if (typeof lucide !== 'undefined') lucide.createIcons();
+      _refreshIcons();
     }
 
     function toggleAllSpecsVisibility() {
@@ -141,7 +640,7 @@
           : '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo';
       }
       
-      if (typeof lucide !== 'undefined') lucide.createIcons();
+      _refreshIcons();
     }
 
 
@@ -154,7 +653,7 @@
       let issuesCount = 0;
       let adjustmentsCount = 0;
 
-      if (handoffData.step2.isAuditEnabled) {
+      if (isCurrentFrameAuditEnabled()) {
         section.items.forEach(item => {
           const status = computeItemAuditStatus(item);
           item.componentStatus = status;
@@ -311,7 +810,7 @@
       const searchInput = searchId ? document.getElementById(searchId) : null;
       filterSpecItems(gridId, emptyId, searchInput ? searchInput.value : "");
 
-      if (typeof lucide !== 'undefined') lucide.createIcons();
+      _refreshIcons();
     }
     window.toggleStatusFilter = toggleStatusFilter;
 
@@ -327,7 +826,7 @@
       }
 
       const status = item.componentStatus || (item.isDS === true ? "ok" : (item.isDS === "warning" ? "warning" : "error"));
-      const dsStatus = handoffData.step2.isAuditEnabled ? (status === "ok" ?
+      const dsStatus = isCurrentFrameAuditEnabled() ? (status === "ok" ?
         `<span class="flex items-center gap-1 text-[#10b981]"><i data-lucide="check-circle" class="w-2.5 h-2.5"></i>EM CONFORMIDADE</span>` :
         (status === "warning" ?
           `<span class="flex items-center gap-1 text-amber-500 font-bold"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>NECESSITA REVISÃO</span>` :
@@ -353,7 +852,7 @@
         if (!props || props.length === 0) return '';
         let html = `<div class="mt-2 space-y-1 border-t border-gray-100 dark:border-dark-line pt-2">`;
         props.forEach(p => {
-          const pStatus = handoffData.step2.isAuditEnabled ?
+          const pStatus = isCurrentFrameAuditEnabled() ?
             (p.isDS === true ? `<span class="text-[#10b981] shrink-0"><i data-lucide="check" class="w-3 h-3"></i></span>` :
              (p.isDS === "warning" ? `<span class="text-amber-500 shrink-0"><i data-lucide="alert-triangle" class="w-3 h-3"></i></span>` :
               `<span class="text-red-400 shrink-0"><i data-lucide="x" class="w-3 h-3"></i></span>`)) : "";
@@ -551,15 +1050,18 @@
 
     function renderCategoryDropdown() {
       const sel = document.getElementById('ann-category');
-      const current = sel.value;
-      sel.innerHTML = '<option value="">Sem categoria</option>';
-      annCategories.forEach(cat => {
-        const opt = document.createElement('option');
-        opt.value = cat.value;
-        opt.textContent = cat.label;
-        if (cat.value === current) opt.selected = true;
-        sel.appendChild(opt);
-      });
+      const current = sel ? sel.value : '';
+      if (sel) {
+        sel.innerHTML = '<option value="">Sem categoria</option>';
+        annCategories.forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat.value;
+          opt.textContent = cat.label;
+          if (cat.value === current) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      }
+      if (typeof _csSyncPanel === 'function') _csSyncPanel('cs-ann-cat');
     }
 
     function renderCategoryList() {
@@ -582,7 +1084,7 @@
           </button>`;
         list.appendChild(row);
       });
-      if (typeof lucide !== 'undefined') lucide.createIcons();
+      _refreshIcons();
     }
 
     function toggleCategoryManager() {
@@ -674,8 +1176,6 @@
       document.getElementById('spec-properties-modal').classList.add('hidden');
     }
 
-    let lastModalBeforeHelp = null;
-
     function confirmSpecProperties() {
       closeSpecPropertiesModal();
       closeSpecFormModal();
@@ -729,13 +1229,13 @@
             <div class="relative mb-4">
               <i data-lucide="file-text" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
             </div>
-            <p class="text-[12px] font-bold text-slate-400 dark:text-slate-500 text-center px-4 mb-1">Nenhuma especificação criada ainda</p>
+            <p class="text-[12px] font-bold text-slate-500 dark:text-slate-500 text-center px-4 mb-1">Nenhuma especificação criada ainda</p>
             <p class="text-[10px] text-slate-300 dark:text-slate-600 text-center px-6">Selecione um elemento no canvas e toque no botão <strong>+</strong></p>
           </div>
         `;
         if (exportBtn) exportBtn.classList.add('hidden');
         if (hideAllBtn) hideAllBtn.classList.add('hidden');
-        if (window.lucide) lucide.createIcons();
+        _refreshIcons();
         return;
       }
       if (exportBtn) exportBtn.classList.remove('hidden');
@@ -881,7 +1381,7 @@
             btnEl.classList.toggle("text-gray-300", !targetState);
           });
           
-          if (typeof lucide !== 'undefined') lucide.createIcons();
+          _refreshIcons();
           updateHideAllSpecsButtonState();
         };
 
@@ -954,7 +1454,7 @@
               parent.postMessage({ pluginMessage: { type: 'hide-node', id: spec.id, forceState: nowVisible } }, '*');
             }
             saveSpecsToStorage();
-            if (typeof lucide !== 'undefined') lucide.createIcons();
+            _refreshIcons();
             
             updateGroupVisButtonState(letter, groupWrapper);
             updateHideAllSpecsButtonState();
@@ -1009,7 +1509,7 @@
         list.appendChild(groupWrapper);
       });
 
-      if (typeof lucide !== 'undefined') lucide.createIcons();
+      _refreshIcons();
       const currentCount = createdSpecs.length;
       if (typeof lastSpecsCount !== 'undefined' && currentCount > lastSpecsCount) {
         autoScrollToNewItem('specs-scroll-container');
@@ -1053,31 +1553,26 @@
 
     function selectFlowType(type) {
       currentFlowType = type;
-      // UI visual feedback (Main Screen)
-      document.querySelectorAll('.flow-type-card').forEach(el => {
-        el.classList.remove('border-[#0070af]', 'bg-blue-50/30', 'dark:bg-blue-900/10');
-        el.classList.add('border-gray-100', 'dark:border-dark-line');
-      });
-      const activeMain = document.getElementById(`flow-${type}`);
-      if (activeMain) {
-        activeMain.classList.remove('border-gray-100', 'dark:border-dark-line');
-        activeMain.classList.add('border-[#0070af]', 'bg-blue-50/30', 'dark:bg-blue-900/10');
-      }
 
-      // UI visual feedback (Modal)
-      document.querySelectorAll('.flow-type-card-modal').forEach(el => {
-        el.classList.remove('border-[#0070af]', 'bg-blue-50/30', 'dark:bg-blue-900/10');
-        el.classList.add('border-gray-100', 'dark:border-dark-line');
-        const icon = el.querySelector('i');
-        if (icon) icon.classList.replace('text-[#0070af]', 'text-slate-400');
+      // Reset all cards (both main screen and modal) using inline styles for reliability
+      document.querySelectorAll('.flow-type-card, .flow-type-card-modal').forEach(el => {
+        el.style.borderColor = '';
+        el.style.backgroundColor = '';
+        const icon = el.querySelector('i[data-lucide]');
+        if (icon) icon.style.color = '';
         const diamond = el.querySelector('.rotate-45');
-        if (diamond) diamond.classList.replace('border-[#0070af]', 'border-slate-300');
+        if (diamond) diamond.style.borderColor = '';
       });
 
-      const activeModal = document.getElementById(`form-flow-${type}`);
-            if (activeModal) {
-        activeModal.classList.remove('border-gray-100', 'dark:border-dark-line');
-        activeModal.classList.add('border-[#0070af]', 'bg-blue-50/30', 'dark:bg-blue-900/10');
+      // Highlight selected card
+      const activeCard = document.getElementById(`form-flow-${type}`) || document.getElementById(`flow-${type}`);
+      if (activeCard) {
+        activeCard.style.borderColor = '#0070af';
+        activeCard.style.backgroundColor = 'rgba(0, 112, 175, 0.08)';
+        const icon = activeCard.querySelector('i[data-lucide]');
+        if (icon) icon.style.color = '#0070af';
+        const diamond = activeCard.querySelector('.rotate-45');
+        if (diamond) diamond.style.borderColor = '#0070af';
       }
 
       const chipContainer = document.getElementById('flow-chip-container');
@@ -1085,40 +1580,40 @@
         const hasChip = ['line_solid', 'line_dashed', 'diamond', 'diamond_dashed'].includes(type);
         chipContainer.classList.toggle('hidden', !hasChip);
       }
-      
-      // Habilitar botão
+
+      // Enable confirm button
       const btn = document.getElementById('btn-confirm-flow');
       if (btn) {
         btn.disabled = false;
+        btn.style.backgroundColor = '#0070af';
+        btn.style.cursor = 'pointer';
         btn.classList.remove('bg-gray-300', 'cursor-not-allowed');
-        btn.classList.add('bg-[#0070af]', 'hover:bg-blue-700', 'shadow-blue-500/20');
       }
 
-      // Auto-scroll para o final do modal (Lado da Conexão e Chip)
+      // Auto-scroll to bottom of modal
       setTimeout(() => {
         const modalBody = document.querySelector('#flow-form-modal .overflow-y-auto');
-        if (modalBody) {
-          modalBody.scrollTo({
-            top: modalBody.scrollHeight,
-            behavior: 'smooth'
-          });
-        }
+        if (modalBody) modalBody.scrollTo({ top: modalBody.scrollHeight, behavior: 'smooth' });
       }, 150);
     }
+    window.selectFlowType = selectFlowType;
       
     function openFlowFormModal() {
       openModal('flow-form-modal');
       currentFlowType = null;
-      
-      // Reset visual feedback
-      document.querySelectorAll('.flow-type-card-modal').forEach(el => {
-        el.classList.remove('border-[#0070af]', 'bg-blue-50/30', 'dark:bg-blue-900/10');
-        el.classList.add('border-gray-100', 'dark:border-dark-line');
-        const icon = el.querySelector('i');
-        if (icon) icon.classList.replace('text-[#0070af]', 'text-slate-400');
+
+      // Reset all type card visual feedback
+      document.querySelectorAll('.flow-type-card, .flow-type-card-modal').forEach(el => {
+        el.style.borderColor = '';
+        el.style.backgroundColor = '';
+        const icon = el.querySelector('i[data-lucide]');
+        if (icon) icon.style.color = '';
         const diamond = el.querySelector('.rotate-45');
-        if (diamond) diamond.classList.replace('border-[#0070af]', 'border-slate-300');
+        if (diamond) diamond.style.borderColor = '';
       });
+
+      const chipContainer = document.getElementById('flow-chip-container');
+      if (chipContainer) chipContainer.classList.add('hidden');
 
       const decContainer = document.getElementById('flow-decision-container');
       if (decContainer) decContainer.classList.add('hidden');
@@ -1126,8 +1621,10 @@
       const btn = document.getElementById('btn-confirm-flow');
       if (btn) {
         btn.disabled = true;
+        btn.style.backgroundColor = '';
+        btn.style.cursor = '';
         btn.classList.add('bg-gray-300', 'cursor-not-allowed');
-        btn.classList.remove('bg-[#0070af]', 'hover:bg-blue-700', 'shadow-blue-500/20');
+        btn.classList.remove('bg-[#0070af]', 'hover:bg-blue-700');
       }
     }
 
@@ -1154,62 +1651,43 @@
       closeModal('flow-form-modal');
     }
 
+    function confirmDecisionConnection() {
+      const textInput = document.getElementById('decision-text-input');
+      const text = textInput ? textInput.value.trim() : '';
+      closeModal('decision-modal');
+      if (text) showToast(`Decisão registrada: "${text}"`, 'success');
+    }
+    window.confirmDecisionConnection = confirmDecisionConnection;
+
     function switchSpecTab(tabId) {
       currentSpecTab = tabId;
-      const form = document.getElementById('specs-form');
-      const flow = document.getElementById('specs-flow');
-      const tabForm = document.getElementById('tab-specs-form');
-      const tabFlow = document.getElementById('tab-specs-flow');
-      
-      const activeClasses = ['bg-white', 'dark:bg-dark-surface', 'text-[#0070af]', 'dark:text-blue-400', 'shadow-sm'];
-      const inactiveClasses = ['text-gray-500', 'hover:text-gray-800', 'dark:hover:text-gray-200'];
-
-      if (!tabForm || !tabFlow) return;
-
-      if (tabId === 'specs-form') {
-        if (form) form.classList.remove('hidden');
-        if (flow) flow.classList.add('hidden');
-        
-        activeClasses.forEach(c => tabForm.classList.add(c));
-        inactiveClasses.forEach(c => tabForm.classList.remove(c));
-        activeClasses.forEach(c => tabFlow.classList.remove(c));
-        inactiveClasses.forEach(c => tabFlow.classList.add(c));
-        
-        renderSpecsList();
-      } else {
-        if (form) form.classList.add('hidden');
-        if (flow) flow.classList.remove('hidden');
-        
-        activeClasses.forEach(c => tabForm.classList.remove(c));
-        inactiveClasses.forEach(c => tabForm.classList.add(c));
-        activeClasses.forEach(c => tabFlow.classList.add(c));
-        inactiveClasses.forEach(c => tabFlow.classList.remove(c));
-        
-        renderFlowsList();
-      }
-
+      renderSpecsList();
       updateFABVisibility();
     }
 
     function renderFlowsList() {
-      const container = document.getElementById('flows-results');
-      if (!container) return;
+      const containers = [
+        document.getElementById('flows-results'),
+        document.getElementById('flows-results-home')
+      ].filter(Boolean);
+      if (!containers.length) return;
 
       if (!handoffData.createdFlows || handoffData.createdFlows.length === 0) {
-        container.innerHTML = `
+        const emptyHtml = `
           <div class="flex flex-col items-center justify-center py-12 animate-in fade-in duration-500">
             <div class="relative mb-4">
               <i data-lucide="share-2" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
             </div>
-            <p class="text-[12px] font-bold text-slate-400 dark:text-slate-500 text-center px-4 mb-1">Nenhum fluxo criado ainda</p>
+            <p class="text-[12px] font-bold text-slate-500 dark:text-slate-500 text-center px-4 mb-1">Nenhum fluxo criado ainda</p>
             <p class="text-[10px] text-slate-300 dark:text-slate-600 text-center px-6">Selecione 2 elementos no canvas e toque no botão <strong>+</strong></p>
           </div>
         `;
-        if (window.lucide) lucide.createIcons();
+        containers.forEach(c => c.innerHTML = emptyHtml);
+        _refreshIcons();
         return;
       }
 
-      container.innerHTML = handoffData.createdFlows.map((flow, idx) => {
+      const html = handoffData.createdFlows.map((flow, idx) => {
         const isVisible = flow.visible !== false;
         
         const typeLabels = {
@@ -1236,16 +1714,13 @@
             <div class="flex-1 overflow-hidden">
               <div class="flex items-center justify-between gap-2">
                 <div class="flex items-center gap-1.5 flex-1 min-w-0">
-                  <input type="text" 
+                  <input type="text"
                     value="${flow.name || defaultName}"
                     class="flex-1 bg-transparent border-none p-0 text-[13px] font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#0070af]/20 rounded px-1 -ml-1 transition-all truncate"
                     onchange="renameFlow(${idx}, this.value)"
                     onkeydown="if(event.key==='Enter') this.blur()"
                     onclick="event.stopPropagation()"
                     placeholder="Nome da conexão..." />
-                  <button onclick="event.stopPropagation(); this.previousElementSibling.focus()" title="Renomear" aria-label="Renomear fluxo" class="p-1 text-slate-300 hover:text-[#0070af] transition-colors" title="Editar nome">
-                    <i data-lucide="edit-3" class="w-3 h-3"></i>
-                  </button>
                 </div>
                 
                 <div class="flex items-center gap-1 shrink-0">
@@ -1270,8 +1745,9 @@
           </div>
         </div>
       `; }).join('');
-      
-      if (window.lucide) lucide.createIcons();
+
+      containers.forEach(c => c.innerHTML = html);
+      _refreshIcons();
     }
 
 
@@ -1317,15 +1793,17 @@ function toggleLinkInput(show) {
       const container = document.getElementById('spec-link-container');
       container.classList.toggle('hidden', !show);
       if (!show) document.getElementById('spec-link-input').value = '';
-      if (typeof lucide !== 'undefined') lucide.createIcons();
+      _refreshIcons();
     }
 
-    function openSpecFormModal() {
+    function openSpecFormModal(frameId) {
+      if (frameId) activeFrameId = frameId;
       // Modo criação: limpa campos e reseta estado
       document.getElementById('spec-form-modal').dataset.editIdx = '';
       document.getElementById('spec-letter-input').value = 'A';
       document.getElementById('spec-color-input').value = '#005ca9';
       document.getElementById('ann-category').value = '';
+      if (typeof _csSyncLabel === 'function') _csSyncLabel('cs-ann-cat');
       document.getElementById('spec-link-input').value = '';
       document.getElementById('ann-note').value = '';
       
@@ -1348,7 +1826,7 @@ function toggleLinkInput(show) {
       }
       document.getElementById('spec-form-modal').classList.remove('hidden');
       updateFABVisibility(true);
-      if (typeof lucide !== 'undefined') lucide.createIcons();
+      _refreshIcons();
     }
 
     function closeSpecFormModal() {

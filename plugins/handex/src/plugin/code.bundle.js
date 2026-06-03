@@ -1,5 +1,7 @@
 (() => {
   var __defProp = Object.defineProperty;
+  var __defProps = Object.defineProperties;
+  var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
   var __getOwnPropSymbols = Object.getOwnPropertySymbols;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
   var __propIsEnum = Object.prototype.propertyIsEnumerable;
@@ -15,6 +17,7 @@
       }
     return a;
   };
+  var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 
   // src/plugin/audit.js
   var frameJsonTemplate = () => ({
@@ -135,25 +138,88 @@
     if (!value || !referenceTokensInput) return null;
     const referenceList = Array.isArray(referenceTokensInput) ? referenceTokensInput : [referenceTokensInput];
     const hexMatch = String(value).match(/#([0-9a-f]{6})/i);
-    if (hexMatch && (type === "colors" || type === "color")) {
+    if (hexMatch && (type === "colors" || type === "color" || type === "stroke")) {
       const target = hexToRgb(hexMatch[1]);
       let best = null;
       for (const ref of referenceList) {
         const libName = ref.meta && ref.meta.libraryName || ref.libraryName || null;
-        const list = ref.styleTokens && ref.styleTokens.colors || [];
-        for (const item of list) {
+        const styleList = ref.styleTokens && ref.styleTokens.colors || [];
+        for (const item of styleList) {
           if (!item.value) continue;
           const h = item.value.match(/#([0-9a-f]{6})/i);
           if (!h) continue;
           const rgb = hexToRgb(h[1]);
           const d = Math.sqrt((target.r - rgb.r) ** 2 + (target.g - rgb.g) ** 2 + (target.b - rgb.b) ** 2);
           if (!best || d < best.distance) {
-            best = { tokenName: item.name, value: item.value, library: libName, distance: d, kind: "color" };
+            best = {
+              tokenName: item.name,
+              value: item.value,
+              library: libName,
+              distance: d,
+              kind: "style",
+              styleKey: item.key || null,
+              variableKey: null
+            };
+          }
+        }
+        const vars = ref.designTokens && ref.designTokens.variables || [];
+        for (const v of vars) {
+          if (!v.value || v.resolvedType !== "COLOR") continue;
+          const h = v.value.match(/#([0-9a-f]{6})/i);
+          if (!h) continue;
+          const rgb = hexToRgb(h[1]);
+          const d = Math.sqrt((target.r - rgb.r) ** 2 + (target.g - rgb.g) ** 2 + (target.b - rgb.b) ** 2);
+          if (!best || d < best.distance) {
+            best = {
+              tokenName: v.name,
+              value: v.value,
+              library: libName,
+              distance: d,
+              kind: "variable",
+              styleKey: null,
+              variableKey: v.key || null
+            };
           }
         }
       }
       if (best && best.distance < 80) {
         best.similarity = Math.max(0, Math.round((1 - best.distance / 441) * 100));
+        return best;
+      }
+      return null;
+    }
+    if (type === "typography") {
+      let best = null;
+      for (const ref of referenceList) {
+        const libName = ref.meta && ref.meta.libraryName || ref.libraryName || null;
+        const list = ref.styleTokens && ref.styleTokens.typography || [];
+        for (const item of list) {
+          if (!item.key) continue;
+          if (item.name && item.name === value) {
+            return {
+              tokenName: item.name,
+              value: item.value || item.name,
+              library: libName,
+              distance: 0,
+              kind: "style",
+              styleKey: item.key,
+              variableKey: null,
+              similarity: 100
+            };
+          }
+          if (!best) best = {
+            tokenName: item.name,
+            value: item.value || item.name,
+            library: libName,
+            distance: 999,
+            kind: "style",
+            styleKey: item.key,
+            variableKey: null
+          };
+        }
+      }
+      if (best) {
+        best.similarity = 0;
         return best;
       }
       return null;
@@ -168,7 +234,15 @@
         for (const c of candidates) {
           const d = Math.abs(target - c.value);
           if (!best || d < best.distance) {
-            best = { tokenName: c.name, value: c.value + "px", library: libName, distance: d, kind: "numeric" };
+            best = {
+              tokenName: c.name,
+              value: c.value + "px",
+              library: libName,
+              distance: d,
+              kind: "numeric",
+              styleKey: c.styleKey || null,
+              variableKey: c.variableKey || null
+            };
           }
         }
       }
@@ -192,7 +266,7 @@
     }
     const variables = ref.designTokens && ref.designTokens.variables || [];
     for (const v of variables) {
-      if (typeof v.value === "number") out.push({ name: v.name, value: v.value });
+      if (typeof v.value === "number") out.push({ name: v.name, value: v.value, variableKey: v.key || null });
     }
     for (const cat of ["spacing", "borders", "radii"]) {
       const list = ref[cat];
@@ -230,112 +304,61 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  async function extractDesignRefs(skeleton) {
-    if (!skeleton || !Array.isArray(skeleton.libraries) || skeleton.libraries.length === 0) {
-      figma.ui.postMessage({ type: "extract-done", error: "Skeleton de refer\xEAncia indispon\xEDvel." });
-      return;
-    }
-    const totalStyleKeys = skeleton.libraries.reduce((acc, lib) => {
-      const s = lib.styleTokens || {};
-      return acc + (Array.isArray(s.colors) ? s.colors.length : 0) + (Array.isArray(s.typography) ? s.typography.length : 0) + (Array.isArray(s.effects) ? s.effects.length : 0);
-    }, 0);
-    const bundle = {
-      generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
-      libraries: []
-    };
-    let processed = 0;
-    const postProgress = (libSlug, libName) => {
-      figma.ui.postMessage({
-        type: "extract-progress",
-        processed,
-        total: totalStyleKeys,
-        libSlug,
-        libName
-      });
-    };
-    for (let i = 0; i < skeleton.libraries.length; i++) {
-      const lib = skeleton.libraries[i];
-      const libResult = {
-        slug: lib.slug,
-        meta: { libraryName: lib.name, figmaFileKey: lib.fileKey },
-        designTokens: { variables: [] },
-        styleTokens: { colors: [], typography: [], effects: [] },
-        components: Array.isArray(lib.componentKeys) ? lib.componentKeys.map((k) => ({ key: k })) : [],
-        _stats: { resolved: 0, failed: 0, libNotAvailable: false }
+  var PLUGIN_VERSION = true ? "4.0.0" : "dev";
+  function _writeSharedPluginData(data) {
+    var _a, _b, _c, _d, _e, _f, _g;
+    const NS = "handex";
+    try {
+      const project = {
+        titulo: ((_a = data.step1) == null ? void 0 : _a.titulo) || "",
+        versao: ((_b = data.step1) == null ? void 0 : _b.versao) || "",
+        objetivo: ((_c = data.step1) == null ? void 0 : _c.objetivo) || "",
+        status: ((_d = data.step1) == null ? void 0 : _d.status) || "rascunho",
+        equipe: ((_e = data.step1) == null ? void 0 : _e.equipe) || [],
+        briefing: (((_f = data.step2) == null ? void 0 : _f.briefingQuestions) || []).map((q) => ({
+          categoria: q.category || "",
+          pergunta: q.question || "",
+          resposta: q.answer || ""
+        })),
+        regras: (((_g = data.step2) == null ? void 0 : _g.regras) || []).map((r) => ({
+          titulo: r.titulo || "",
+          notas: r.notas || "",
+          link: r.link || ""
+        })),
+        updatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+        plugin: `handex@${PLUGIN_VERSION}`
       };
-      let firstStyleSucceeded = false;
-      for (const styleType of ["colors", "typography", "effects"]) {
-        const list = lib.styleTokens && lib.styleTokens[styleType] || [];
-        for (const item of list) {
-          try {
-            const node = await figma.importStyleByKeyAsync(item.key);
-            if (node) {
-              firstStyleSucceeded = true;
-              libResult.styleTokens[styleType].push(buildStyleEntry(styleType, item, node));
-              libResult._stats.resolved++;
-            } else {
-              libResult._stats.failed++;
-            }
-          } catch (e) {
-            libResult._stats.failed++;
-          }
-          processed++;
-          if (processed % 8 === 0 || processed === totalStyleKeys) {
-            postProgress(lib.slug, lib.name);
-          }
-        }
-      }
-      const hadStyles = (lib.styleTokens && lib.styleTokens.colors.length + lib.styleTokens.typography.length + lib.styleTokens.effects.length) > 0;
-      if (hadStyles && !firstStyleSucceeded) {
-        libResult._stats.libNotAvailable = true;
-      }
+      figma.currentPage.setSharedPluginData(NS, "project", JSON.stringify(project));
+    } catch (e) {
+      console.warn("[handex] setSharedPluginData(project) failed:", e);
+    }
+    (data.frames || []).forEach((frame) => {
       try {
-        if (figma.teamLibrary && typeof figma.teamLibrary.getAvailableLibraryVariableCollectionsAsync === "function") {
-          const allCollections = await figma.teamLibrary.getAvailableLibraryVariableCollectionsAsync();
-          const matching = allCollections.filter((c) => c.libraryName === lib.name);
-          for (const coll of matching) {
-            try {
-              const vars = await figma.teamLibrary.getVariablesInLibraryCollectionAsync(coll.key);
-              for (const v of vars) {
-                libResult.designTokens.variables.push({ key: v.key, name: v.name, resolvedType: v.resolvedType });
-              }
-            } catch (e) {
-            }
-          }
-        }
+        const node = figma.getNodeById(frame.figmaId);
+        if (!node) return;
+        node.setSharedPluginData(NS, "context", JSON.stringify({
+          nome: frame.nome || "",
+          isNewComponent: frame.isNewComponent || false,
+          excecoes: (frame.excecoes || []).map((e) => ({
+            tipo: e.tipo || "",
+            titulo: e.titulo || "",
+            notas: e.notas || "",
+            link: e.link || ""
+          }))
+        }));
       } catch (e) {
       }
-      bundle.libraries.push(libResult);
-      postProgress(lib.slug, lib.name);
-    }
-    figma.ui.postMessage({ type: "extract-done", bundle });
+    });
   }
-  function buildStyleEntry(styleType, skeletonItem, styleNode) {
-    const entry = { key: skeletonItem.key, name: styleNode.name || skeletonItem.name };
-    if (styleType === "colors" && Array.isArray(styleNode.paints) && styleNode.paints.length > 0) {
-      entry.paints = styleNode.paints;
-      const fill = styleNode.paints[0];
-      if (fill && fill.type === "SOLID" && fill.color) {
-        entry.value = rgbToHex(fill.color.r, fill.color.g, fill.color.b);
-      }
-    } else if (styleType === "typography") {
-      if (styleNode.fontName) entry.fontName = styleNode.fontName;
-      if (styleNode.fontSize !== void 0) entry.fontSize = styleNode.fontSize;
-      if (styleNode.lineHeight !== void 0) entry.lineHeight = styleNode.lineHeight;
-      if (styleNode.letterSpacing !== void 0) entry.letterSpacing = styleNode.letterSpacing;
-      const family = styleNode.fontName ? styleNode.fontName.family : "";
-      const style = styleNode.fontName ? styleNode.fontName.style : "";
-      entry.value = `${family} ${style} ${styleNode.fontSize || ""}px`.trim();
-    } else if (styleType === "effects" && Array.isArray(styleNode.effects)) {
-      entry.effects = styleNode.effects;
-    }
-    return entry;
-  }
-  var PLUGIN_VERSION = true ? "3.0.0" : "dev";
   figma.ui.onmessage = async (msg) => {
+    var _a;
     if (msg.type === "ui-ready") {
       const currentUser = figma.currentUser ? { id: figma.currentUser.id, name: figma.currentUser.name, photoUrl: figma.currentUser.photoUrl } : null;
       const theme = figma.ui.theme || "light";
+      const sel = figma.currentPage.selection;
+      const projectName = (sel.length > 0 ? sel[0].name : "") || figma.currentPage.name || figma.root.name || "";
+      const _handoffBase = "[Handoff]";
+      const _existingAtInit = figma.currentPage.findAll((n) => n.type === "FRAME" && n.name.startsWith(_handoffBase));
       try {
         const savedState = await figma.clientStorage.getAsync("handoffData");
         figma.ui.postMessage({
@@ -343,7 +366,9 @@
           version: PLUGIN_VERSION,
           currentUser,
           theme,
-          savedState: savedState || null
+          projectName,
+          savedState: savedState || null,
+          existingHandoffCount: _existingAtInit.length
         });
       } catch (err) {
         console.error("Initialization error (continuing without saved state):", err);
@@ -352,61 +377,36 @@
           version: PLUGIN_VERSION,
           currentUser,
           theme,
-          savedState: null
+          projectName,
+          savedState: null,
+          existingHandoffCount: _existingAtInit.length
         });
       }
       return;
     }
-    if (msg.type === "get-selection-name") {
-      const selection = figma.currentPage.selection;
+    if (msg.type === "get-project-name") {
+      figma.ui.postMessage({ type: "project-name", name: figma.root.name || figma.currentPage.name || "" });
+      return;
+    }
+    if (msg.type === "get-selection-info") {
+      const validTypes = ["FRAME", "COMPONENT", "INSTANCE", "SECTION", "GROUP"];
+      const selection = figma.currentPage.selection.filter((n) => validTypes.includes(n.type));
       if (selection.length > 0) {
-        const node = selection[0];
-        if (node.type === "FRAME" || node.type === "COMPONENT" || node.type === "INSTANCE" || node.type === "SECTION") {
-          figma.ui.postMessage({
-            type: "selection-name",
-            name: node.name,
-            isManual: true
-          });
-        }
+        figma.ui.postMessage({
+          type: "selection-info",
+          nodes: selection.map((n) => ({ nodeId: n.id, name: n.name }))
+        });
       } else {
         figma.ui.postMessage({
-          type: "selection-name",
-          name: figma.root.name,
-          isManual: true
+          type: "selection-info",
+          nodes: [],
+          error: "Nenhum frame selecionado no canvas."
         });
       }
       return;
     }
     if (msg.type === "resize") {
       figma.ui.resize(msg.width, msg.height);
-      return;
-    }
-    if (msg.type === "extract-design-refs") {
-      await extractDesignRefs(msg.skeleton);
-      return;
-    }
-    if (msg.type === "audit-cache-save") {
-      try {
-        await figma.clientStorage.setAsync("handex-audit-refs-v1", msg.bundle);
-      } catch (e) {
-        console.error("audit-cache-save failed:", e);
-      }
-      return;
-    }
-    if (msg.type === "audit-cache-load") {
-      try {
-        const cached = await figma.clientStorage.getAsync("handex-audit-refs-v1");
-        figma.ui.postMessage({ type: "audit-cache-loaded", bundle: cached || null });
-      } catch (e) {
-        figma.ui.postMessage({ type: "audit-cache-loaded", bundle: null });
-      }
-      return;
-    }
-    if (msg.type === "audit-cache-clear") {
-      try {
-        await figma.clientStorage.setAsync("handex-audit-refs-v1", null);
-      } catch (e) {
-      }
       return;
     }
     if (msg.type === "clear-cache") {
@@ -419,6 +419,10 @@
       ];
       try {
         await Promise.all(keys.map((k) => figma.clientStorage.setAsync(k, null)));
+        try {
+          figma.currentPage.setSharedPluginData("handex", "project", "");
+        } catch (e) {
+        }
         figma.ui.postMessage({ type: "cache-cleared" });
       } catch (e) {
         console.error("clear-cache failed:", e);
@@ -535,7 +539,7 @@
           return icons[type] || icons["layout"];
         }, createSection = function(parent, titleText) {
           const section = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
-          section.name = "Section: " + titleText;
+          section.name = `[Se\xE7\xE3o] ${titleText}`;
           if (parent) {
             parent.appendChild(section);
             setFillAndHug(section);
@@ -549,7 +553,7 @@
           return section;
         }, createRow = function(parent, label, value, isLink = false, url = "") {
           const row = createFrame("VERTICAL", 0, 4);
-          row.name = "Row: " + label;
+          row.name = `[Campo] ${label}`;
           if (parent) {
             parent.appendChild(row);
             setFillAndHug(row);
@@ -586,13 +590,22 @@
           }
         }
         const data = msg.data;
+        const _titulo = (((_a = data.step1) == null ? void 0 : _a.titulo) || "Projeto").replace(/\//g, "-");
+        const _handoffBase = `[Handoff] ${_titulo}`;
+        const _existingHandoffs = figma.currentPage.findAll(
+          (n) => n.type === "FRAME" && n.name.startsWith(_handoffBase)
+        );
+        const _isUpdate = _existingHandoffs.length > 0;
+        const _now = /* @__PURE__ */ new Date();
+        const _ts = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}-${String(_now.getDate()).padStart(2, "0")} ${String(_now.getHours()).padStart(2, "0")}:${String(_now.getMinutes()).padStart(2, "0")}`;
+        const _containerName = _isUpdate ? `${_handoffBase} \u2014 ${_ts}` : _handoffBase;
         const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb2("#026173"));
-        mainContainer.name = "Handoff Documentation";
+        mainContainer.name = _containerName;
         mainContainer.counterAxisAlignItems = "MIN";
         mainContainer.primaryAxisSizingMode = "AUTO";
         mainContainer.counterAxisSizingMode = "AUTO";
         const fichaTecnica = createFrame("VERTICAL", 0, 0, { r: 1, g: 1, b: 1 });
-        fichaTecnica.name = "Ficha de projeto";
+        fichaTecnica.name = `${_handoffBase} / Ficha T\xE9cnica`;
         fichaTecnica.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
         fichaTecnica.resize(600, 100);
         fichaTecnica.counterAxisSizingMode = "FIXED";
@@ -631,7 +644,9 @@
         setFillAndHug(content);
         if (!data.setup || data.setup.ficha !== false) {
           const infoSection = createSection(content, "Informa\xE7\xF5es B\xE1sicas");
-          createRow(infoSection, "T\xEDtulo do Projeto", data.step1.fluxo);
+          createRow(infoSection, "T\xEDtulo do Projeto", data.step1.titulo);
+          if (data.step1.jornada) createRow(infoSection, "Jornada", data.step1.jornada);
+          if (data.step1.feature) createRow(infoSection, "Feature", data.step1.feature);
           createRow(infoSection, "Objetivo da Entrega", data.step1.objetivo);
           const subGrid = createFrame("HORIZONTAL", 0, 16);
           infoSection.appendChild(subGrid);
@@ -639,58 +654,9 @@
           createRow(subGrid, "Status", data.step1.status);
           createRow(subGrid, "Vers\xE3o", data.step1.versao);
         }
-        if (data.step1.excecoes && data.step1.excecoes.length > 0) {
-          const excSection = createSection(content, "Cen\xE1rios de Exce\xE7\xE3o");
-          data.step1.excecoes.forEach((exc, idx) => {
-            createRow(excSection, `Cen\xE1rio ${idx + 1}`, exc.scenario);
-          });
-        }
-        if (data.step1.regras && data.step1.regras.length > 0) {
-          const bizSection = createSection(content, "Regras de Neg\xF3cio e HU");
-          data.step1.regras.forEach((regra) => {
-            createRow(bizSection, regra.title, regra.link ? "Link de Refer\xEAncia" : "-", !!regra.link, regra.link);
-          });
-        }
         if (data.step1.equipe && data.step1.equipe.length > 0) {
-          const teamSection = createSection(content, "Equipe");
-          data.step1.equipe.forEach((member) => {
-            createRow(teamSection, member.role, member.name);
-          });
-        }
-        if (data.setup && data.setup.incluirDocs && data.step1.docs && data.step1.docs.length > 0) {
-          const docsSection = createSection(null, "Docs e Anexos");
-          let hasDocs = false;
-          data.step1.docs.forEach((doc) => {
-            if (doc.url) {
-              createRow(docsSection, doc.name || "Documento", doc.url, true, doc.url);
-              hasDocs = true;
-            }
-          });
-          if (hasDocs) {
-            content.appendChild(docsSection);
-            setFillAndHug(docsSection);
-          }
-        }
-        if (data.setup && data.setup.incluirBriefing && data.briefing && data.briefing.questions && data.briefing.questions.length > 0) {
-          const briefingSection = createSection(content, "Briefing Estrat\xE9gico");
-          data.briefing.questions.forEach((q, idx) => {
-            if (q.answer) {
-              const qRow = createFrame("VERTICAL", 0, 4);
-              briefingSection.appendChild(qRow);
-              setFillAndHug(qRow);
-              const qText = createText(`${idx + 1}. ${q.question}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
-              qRow.appendChild(qText);
-              setFillAndHug(qText);
-              const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
-              qRow.appendChild(aText);
-              setFillAndHug(aText);
-            }
-          });
-          content.appendChild(briefingSection);
-        }
-        if (data.step3 && data.step3.team && data.step3.team.length > 0) {
           const teamSection = createSection(content, "Equipe e Respons\xE1veis");
-          data.step3.team.forEach((m) => {
+          data.step1.equipe.forEach((m) => {
             const mRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
             teamSection.appendChild(mRow);
             setFillAndHug(mRow);
@@ -699,23 +665,73 @@
             mRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
             const roleTag = createFrame("HORIZONTAL", 8, 4, { r: 0, g: 0.35, b: 0.79 });
             roleTag.cornerRadius = 4;
-            roleTag.appendChild(createText(m.role, 10, "Bold", { r: 1, g: 1, b: 1 }));
+            roleTag.appendChild(createText(m.papel || "Membro", 10, "Bold", { r: 1, g: 1, b: 1 }));
             mRow.appendChild(roleTag);
-            const nameText = createText(m.name, 12, "Medium");
+            const nameText = createText(m.nome || "", 12, "Medium");
+            nameText.layoutGrow = 1;
             mRow.appendChild(nameText);
-            setFillAndHug(nameText);
             if (m.email) {
               const contactLink = createText("Contato", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
               contactLink.textDecoration = "UNDERLINE";
-              contactLink.hyperlink = { type: "URL", value: m.email.includes("@") ? "mailto:" + m.email : m.email };
+              contactLink.hyperlink = { type: "URL", value: "mailto:" + m.email };
               mRow.appendChild(contactLink);
             }
-            teamSection.appendChild(mRow);
           });
+          content.appendChild(teamSection);
+          setFillAndHug(teamSection);
         }
-        if (data.excecoes && data.excecoes.length > 0) {
+        const _briefingQs = data.step2 && data.step2.briefingQuestions ? data.step2.briefingQuestions.filter((q) => q.answer && q.answer.trim()) : [];
+        if (_briefingQs.length > 0) {
+          const briefingSection = createSection(content, "Briefing Estrat\xE9gico");
+          _briefingQs.forEach((q, idx) => {
+            const qRow = createFrame("VERTICAL", 0, 4);
+            qRow.name = `[Briefing] Pergunta ${idx + 1}`;
+            briefingSection.appendChild(qRow);
+            setFillAndHug(qRow);
+            const qText = createText(`${idx + 1}. ${q.question || ""}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+            qRow.appendChild(qText);
+            setFillAndHug(qText);
+            const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+            qRow.appendChild(aText);
+            setFillAndHug(aText);
+          });
+          content.appendChild(briefingSection);
+          setFillAndHug(briefingSection);
+        }
+        const _regras = data.step2 && data.step2.regras ? data.step2.regras : [];
+        if (_regras.length > 0) {
+          const rulesSection = createSection(content, "Regras de Neg\xF3cio e HUs");
+          _regras.forEach((r) => {
+            const rRow = createFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.98, b: 0.99 });
+            rulesSection.appendChild(rRow);
+            setFillAndHug(rRow);
+            rRow.cornerRadius = 8;
+            rRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+            const rTitle = createText(r.titulo || "", 12, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+            rRow.appendChild(rTitle);
+            setFillAndHug(rTitle);
+            if (r.link && r.link !== "#") {
+              const lText = createText("Acesse o link da HU", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
+              lText.textDecoration = "UNDERLINE";
+              lText.hyperlink = { type: "URL", value: r.link };
+              rRow.appendChild(lText);
+              setFillAndHug(lText);
+            }
+            if (r.notas) {
+              const nText = createText(r.notas, 12, "Regular", { r: 0.4, g: 0.4, b: 0.4 });
+              rRow.appendChild(nText);
+              setFillAndHug(nText);
+            }
+          });
+          content.appendChild(rulesSection);
+          setFillAndHug(rulesSection);
+        }
+        const _allExcecoes = (data.frames || []).flatMap(
+          (f) => (f.excecoes || []).map((e) => __spreadProps(__spreadValues({}, e), { _frame: f.nome }))
+        );
+        if (_allExcecoes.length > 0) {
           const excSection = createSection(content, "Cen\xE1rios de Exce\xE7\xE3o");
-          data.excecoes.forEach((e) => {
+          _allExcecoes.forEach((e) => {
             const eRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
             excSection.appendChild(eRow);
             setFillAndHug(eRow);
@@ -724,38 +740,18 @@
             eRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
             const typeTag = createFrame("HORIZONTAL", 8, 4, { r: 0.9, g: 0.2, b: 0.2 });
             typeTag.cornerRadius = 4;
-            typeTag.appendChild(createText(e.type, 10, "Bold", { r: 1, g: 1, b: 1 }));
+            typeTag.appendChild(createText(e.tipo || "", 10, "Bold", { r: 1, g: 1, b: 1 }));
             eRow.appendChild(typeTag);
-            const titleText = createText(e.title, 12, "Medium");
+            const titleText = createText(`${e.titulo || ""}${e._frame ? " (" + e._frame + ")" : ""}`, 12, "Medium");
+            titleText.layoutGrow = 1;
             eRow.appendChild(titleText);
-            setFillAndHug(titleText);
-            if (e.link && e.link !== "#") {
+            if (e.anchor && e.anchor !== "#") {
               titleText.textDecoration = "UNDERLINE";
-              titleText.hyperlink = { type: "URL", value: e.link };
+              titleText.hyperlink = { type: "URL", value: e.anchor };
             }
           });
-        }
-        if (data.regras && data.regras.length > 0) {
-          const rulesSection = createSection(content, "Regras de Neg\xF3cio e HUs");
-          data.regras.forEach((r) => {
-            const rRow = createFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.98, b: 0.99 });
-            rulesSection.appendChild(rRow);
-            setFillAndHug(rRow);
-            rRow.cornerRadius = 8;
-            rRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
-            if (r.link && r.link !== "#") {
-              const lText = createText("Acesse o link da HU", 12, "Bold", { r: 0, g: 0.35, b: 0.79 });
-              lText.textDecoration = "UNDERLINE";
-              lText.hyperlink = { type: "URL", value: r.link };
-              rRow.appendChild(lText);
-              setFillAndHug(lText);
-            }
-            if (r.notes) {
-              const nText = createText(r.notes, 12, "Regular", { r: 0.4, g: 0.4, b: 0.4 });
-              rRow.appendChild(nText);
-              setFillAndHug(nText);
-            }
-          });
+          content.appendChild(excSection);
+          setFillAndHug(excSection);
         }
         if (data.docs) {
           const docsSection = createSection(null, "Docs e Anexos");
@@ -767,7 +763,7 @@
           let hasDocs = false;
           docItems.forEach((item) => {
             const docData = data.docs[item.key];
-            if (docData && docData.checked && docData.link) {
+            if (docData && docData.link) {
               hasDocs = true;
               const dRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
               dRow.layoutAlign = "STRETCH";
@@ -795,7 +791,7 @@
           let createSpecList = function(title, items, type) {
             if (!items || items.length === 0) return null;
             const sec = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
-            sec.name = "Column: " + title;
+            sec.name = `[Scan] ${title}`;
             sec.cornerRadius = 16;
             sec.resize(280, 100);
             sec.primaryAxisSizingMode = "AUTO";
@@ -808,7 +804,7 @@
             setFillAndHug(listContainer);
             items.forEach((item) => {
               const elCard = createFrame("VERTICAL", 16, 12, { r: 0.98, g: 0.99, b: 1 });
-              elCard.name = "Element: " + item.name;
+              elCard.name = `[Token] ${item.name}`;
               elCard.cornerRadius = 12;
               elCard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.96 } }];
               elCard.strokeWeight = 1;
@@ -886,7 +882,7 @@
             return sec;
           };
           const uiBoard = createFrame("VERTICAL", 32, 24, { r: 1, g: 1, b: 1 });
-          uiBoard.name = "User Interface";
+          uiBoard.name = `${_handoffBase} / Interface`;
           uiBoard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
           uiBoard.cornerRadius = 16;
           uiBoard.resize(800, 100);
@@ -895,21 +891,20 @@
           uiBoard.layoutAlign = "MIN";
           const uiTitle = createText("User Interface", 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
           uiBoard.appendChild(uiTitle);
-          if (data.setup && data.setup.incluirBriefing && data.briefing && data.briefing.questions && data.briefing.questions.length > 0) {
+          const _bqs2 = data.step2 && data.step2.briefingQuestions ? data.step2.briefingQuestions.filter((q) => q.answer && q.answer.trim()) : [];
+          if (_bqs2.length > 0) {
             const briefingSection = createSection(fichaTecnica, "Briefing Estrat\xE9gico");
-            data.briefing.questions.forEach((q, idx) => {
-              if (q.answer) {
-                const qRow = createFrame("VERTICAL", 0, 4);
-                qRow.name = "Question " + (idx + 1);
-                briefingSection.appendChild(qRow);
-                setFillAndHug(qRow);
-                const qText = createText(`${idx + 1}. ${q.question}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
-                qRow.appendChild(qText);
-                setFillAndHug(qText);
-                const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
-                qRow.appendChild(aText);
-                setFillAndHug(aText);
-              }
+            _bqs2.forEach((q, idx) => {
+              const qRow = createFrame("VERTICAL", 0, 4);
+              qRow.name = `[Briefing] Pergunta ${idx + 1}`;
+              briefingSection.appendChild(qRow);
+              setFillAndHug(qRow);
+              const qText = createText(`${idx + 1}. ${q.question || ""}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+              qRow.appendChild(qText);
+              setFillAndHug(qText);
+              const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+              qRow.appendChild(aText);
+              setFillAndHug(aText);
             });
           }
           const specsData = data.step2.specs || { components: [], icons: [], typography: [], frames: [], vectors: [] };
@@ -949,7 +944,7 @@
           for (const node of selection) {
             if (node === mainContainer) continue;
             const specsBoard = createFrame("VERTICAL", 32, 24, { r: 1, g: 1, b: 1 });
-            specsBoard.name = "Design Specs - " + node.name;
+            specsBoard.name = `[Design Specs] ${node.name}`;
             specsBoard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
             specsBoard.cornerRadius = 16;
             specsBoard.resize(800, 100);
@@ -987,7 +982,7 @@
                 if (sf) {
                   const hex = rgbToHex(sf.color.r, sf.color.g, sf.color.b).toUpperCase();
                   const token = getVariableInfo(node, "fills");
-                  createRow(grid, "Fills", token ? `${token} (${hex})` : hex);
+                  createRow(grid, "Fills", token ? token : hex);
                 }
               }
               if ("strokes" in node && Array.isArray(node.strokes)) {
@@ -995,7 +990,7 @@
                 if (ss) {
                   const hex = rgbToHex(ss.color.r, ss.color.g, ss.color.b).toUpperCase();
                   const token = getVariableInfo(node, "strokes");
-                  createRow(grid, "Strokes", `${token ? token + " (" + hex + ")" : hex} (${node.strokeWeight}px)`);
+                  createRow(grid, "Strokes", `${token ? token : hex} (${node.strokeWeight}px)`);
                 }
               }
               if (grid.children.length > 0) {
@@ -1011,7 +1006,7 @@
         }
         if (data.isAudit && data.auditSummary) {
           const auditBoard = createFrame("VERTICAL", 32, 24, { r: 1, g: 1, b: 1 });
-          auditBoard.name = "Design Audit";
+          auditBoard.name = `${_handoffBase} / Auditoria`;
           auditBoard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
           auditBoard.cornerRadius = 16;
           auditBoard.resize(800, 100);
@@ -1049,12 +1044,28 @@
           }
           mainContainer.appendChild(auditBoard);
         }
-        mainContainer.x = figma.viewport.center.x;
-        mainContainer.y = figma.viewport.center.y;
         figma.currentPage.appendChild(mainContainer);
+        if (_isUpdate && _existingHandoffs.length > 0) {
+          const _rightmost = _existingHandoffs.reduce((best, n) => {
+            const bb = n.absoluteBoundingBox;
+            const bestBb = best.absoluteBoundingBox;
+            return bb && bestBb && bb.x + bb.width > bestBb.x + bestBb.width ? n : best;
+          });
+          const _bb = _rightmost.absoluteBoundingBox;
+          if (_bb) {
+            mainContainer.x = _bb.x + _bb.width + 80;
+            mainContainer.y = _bb.y;
+          } else {
+            mainContainer.x = figma.viewport.center.x;
+            mainContainer.y = figma.viewport.center.y;
+          }
+        } else {
+          mainContainer.x = figma.viewport.center.x;
+          mainContainer.y = figma.viewport.center.y;
+        }
         figma.currentPage.selection = [mainContainer];
         figma.viewport.scrollAndZoomIntoView([mainContainer]);
-        figma.ui.postMessage({ type: "handoff-complete" });
+        figma.ui.postMessage({ type: "handoff-complete", isUpdate: _isUpdate, timestamp: _ts });
       } catch (err) {
         console.error("Handoff Error:", err);
         figma.ui.postMessage({ type: "handoff-error", message: err.message });
@@ -1075,7 +1086,7 @@
         figma.notify("Selecione um ou mais itens para mensurar.");
         return;
       }
-      const { measureTypes, storeInParent } = msg;
+      const { measureTypes } = msg;
       (async () => {
         try {
           await figma.loadFontAsync({ family: "Inter", style: "Regular" });
@@ -1255,8 +1266,8 @@
             }
           }
           if (items.length > 0) {
-            const group = figma.group(items, storeInParent && node.parent && node.parent.type !== "PAGE" ? node.parent : figma.currentPage);
-            group.name = `[Medidas ${measureTypes.join(", ")}] ` + node.name;
+            const group = figma.group(items, figma.currentPage);
+            group.name = `[Medida] ${node.name}`;
             group.locked = true;
             appliedMeasuresList.push({ name: node.name, nodeId: group.id, details: appliedDetails });
           }
@@ -1499,7 +1510,8 @@
           const item = map.get(name);
           item.layers.add(name);
         }
-      }, extractSpecs = function(n) {
+      }, extractSpecs = function(n, depth) {
+        if ((depth || 0) > 8) return;
         if (n.visible === false) return;
         try {
           const props = extractNodeProperties(n);
@@ -1518,7 +1530,7 @@
           addElement(category, n, props);
           if ("children" in n && n.children) {
             for (const child of n.children) {
-              extractSpecs(child);
+              extractSpecs(child, (depth || 0) + 1);
             }
           }
         } catch (err) {
@@ -1527,10 +1539,18 @@
           console.error("Erro ao extrair specs do node:", n.name, "(type=" + n.type + ", id=" + n.id + ")", msg2, stack);
         }
       };
-      const selection = figma.currentPage.selection;
+      let selection;
+      if (msg.nodeId) {
+        const specificNode = figma.getNodeById(msg.nodeId);
+        selection = specificNode ? [specificNode] : [];
+      } else {
+        selection = figma.currentPage.selection;
+      }
+      const _scanFrameId = msg.frameId || null;
       if (selection.length === 0) {
         figma.ui.postMessage({
           type: "scan-result",
+          frameId: _scanFrameId,
           error: "Nenhum item selecionado. Por favor, selecione um ou mais frames, se\xE7\xF5es ou grupos no Figma para escanear."
         });
         return;
@@ -1601,6 +1621,7 @@
       };
       figma.ui.postMessage({
         type: "scan-result",
+        frameId: _scanFrameId,
         data: {
           components: formatMap(specs.components),
           icons: formatMap(specs.icons),
@@ -1617,16 +1638,22 @@
       const selection = figma.currentPage.selection;
       if (selection.length > 0) {
         const node = selection[0];
+        const fileKey = figma.fileKey;
+        const deeplink = fileKey ? `https://www.figma.com/design/${fileKey}?node-id=${encodeURIComponent(node.id)}` : "";
         figma.ui.postMessage({
           type: "selection-link",
           targetId: msg.targetId,
-          linkName: node.name
+          linkName: node.name,
+          nodeId: node.id,
+          deeplink
         });
       } else {
         figma.ui.postMessage({
           type: "selection-link",
           targetId: msg.targetId,
-          linkName: figma.root.name
+          linkName: figma.root.name,
+          nodeId: null,
+          deeplink: ""
         });
       }
     }
@@ -1684,10 +1711,11 @@
         const pt = node.paddingTop || 0, pr = node.paddingRight || 0, pb = node.paddingBottom || 0, pl = node.paddingLeft || 0;
         if (pt + pr + pb + pl > 0) {
           const tT = getVar("paddingTop"), tR = getVar("paddingRight"), tB = getVar("paddingBottom"), tL = getVar("paddingLeft");
-          let val = `${pt}px ${pr}px ${pb}px ${pl}px`;
+          let val;
           if (tT || tR || tB || tL) {
-            const tokens = [tT, tR, tB, tL].filter((t) => t).join(", ");
-            if (tokens) val += ` (${tokens})`;
+            val = [tT || `${pt}px`, tR || `${pr}px`, tB || `${pb}px`, tL || `${pl}px`].join(" ");
+          } else {
+            val = `${pt}px ${pr}px ${pb}px ${pl}px`;
           }
           properties.push({ key: "padding", label: "Padding", value: val });
         }
@@ -1696,14 +1724,16 @@
         const sf = node.fills.find((f) => f.type === "SOLID");
         if (sf) {
           const token = getVar("fills");
-          properties.push({ key: "fill", label: "Preenchimento", value: rgbToHex(sf.color.r, sf.color.g, sf.color.b).toUpperCase(), token });
+          const hexFill = rgbToHex(sf.color.r, sf.color.g, sf.color.b).toUpperCase();
+          properties.push({ key: "fill", label: "Preenchimento", value: token || hexFill, token });
         }
       }
       if ("strokes" in node && Array.isArray(node.strokes) && node.strokes.length > 0) {
         const ss = node.strokes.find((s) => s.type === "SOLID");
         if (ss) {
           const token = getVar("strokes");
-          properties.push({ key: "stroke", label: "Contorno", value: rgbToHex(ss.color.r, ss.color.g, ss.color.b).toUpperCase(), token });
+          const hexStroke = rgbToHex(ss.color.r, ss.color.g, ss.color.b).toUpperCase();
+          properties.push({ key: "stroke", label: "Contorno", value: token || hexStroke, token });
         }
         if (node.strokeWeight !== figma.mixed && node.strokeWeight > 0) {
           properties.push({ key: "strokeWidth", label: "Espessura de borda", value: node.strokeWeight + "px" });
@@ -1755,8 +1785,9 @@
         const cg = parseInt(hex.substring(2, 4), 16) / 255;
         const cb = parseInt(hex.substring(4, 6), 16) / 255;
         const themeColor = { r: cr, g: cg, b: cb };
+        const _specBase = `[Spec] ${node.name}`;
         const specCard = figma.createFrame();
-        specCard.name = `Spec Card - ${opts.letter}`;
+        specCard.name = `${_specBase}/Ficha`;
         specCard.layoutMode = "VERTICAL";
         specCard.paddingLeft = 16;
         specCard.paddingRight = 16;
@@ -1776,7 +1807,7 @@
         headerRow.primaryAxisSizingMode = "AUTO";
         headerRow.counterAxisSizingMode = "AUTO";
         const tagCircle = figma.createFrame();
-        tagCircle.name = `Tag Spec ${opts.letter}`;
+        tagCircle.name = `${_specBase}/Tag`;
         tagCircle.layoutMode = "HORIZONTAL";
         tagCircle.primaryAxisSizingMode = "FIXED";
         tagCircle.counterAxisSizingMode = "FIXED";
@@ -1802,7 +1833,7 @@
         specCard.appendChild(headerRow);
         if (opts.categoryLabel) {
           const pill = figma.createFrame();
-          pill.name = "Category Spec";
+          pill.name = `${_specBase}/Categoria/${opts.categoryLabel}`;
           pill.layoutMode = "HORIZONTAL";
           pill.paddingLeft = 8;
           pill.paddingRight = 8;
@@ -1837,9 +1868,11 @@
           propsFrame.fills = [];
           propsFrame.primaryAxisSizingMode = "AUTO";
           propsFrame.counterAxisSizingMode = "AUTO";
+          propsFrame.name = `${_specBase}/Propriedades`;
           propsFrame.layoutAlign = "MIN";
           opts.properties.forEach((p) => {
             const row = figma.createFrame();
+            row.name = `${_specBase}/Prop/${p.label}`;
             row.layoutMode = "HORIZONTAL";
             row.itemSpacing = 12;
             row.fills = [];
@@ -1884,10 +1917,9 @@
         }
         let groupNodes = [];
         const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
-        let targetForConnector = node;
         if (bounds) {
           const contour = figma.createFrame();
-          contour.name = `Highlight - ${opts.letter}`;
+          contour.name = `${_specBase}/Destaque`;
           contour.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
           figma.currentPage.appendChild(contour);
           contour.x = bounds.x - 16;
@@ -1915,7 +1947,6 @@
           contour.appendChild(chip);
           chip.x = 0;
           chip.y = 0;
-          targetForConnector = contour;
           groupNodes.push(contour);
           figma.currentPage.appendChild(specCard);
           const side = opts.guideSide || "right";
@@ -1940,7 +1971,7 @@
           specColumnTracker[colKey] = Math.round(targetY) + specCard.height;
           groupNodes.push(specCard);
           const connector = figma.createVector();
-          connector.name = "Guia de Conex\xE3o";
+          connector.name = `${_specBase}/Conector`;
           let startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
           let endPt = { x: specCard.x, y: specCard.y + 40 };
           if (side === "left") {
@@ -1953,10 +1984,7 @@
             startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
             endPt = { x: specCard.x + specCard.width / 2, y: specCard.y };
           }
-          connector.vectorPaths = [{
-            windingRule: "NONZERO",
-            data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}`
-          }];
+          connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
           connector.strokes = [{ type: "SOLID", color: themeColor }];
           connector.strokeWeight = 1.5;
           connector.dashPattern = [4, 4];
@@ -1970,7 +1998,7 @@
           groupNodes.push(specCard);
         }
         const specGroup = figma.group(groupNodes, figma.currentPage);
-        specGroup.name = `Spec Group - ${opts.letter}`;
+        specGroup.name = `[Spec] ${node.name}`;
         specGroup.locked = true;
         figma.ui.postMessage({
           type: "spec-created",
@@ -2010,12 +2038,13 @@
         if (msg.forceState !== void 0) {
           node.visible = msg.forceState;
         } else {
-          node.visible = !node.visible;
-        }
-        if (msg.forceState === void 0) {
-          figma.notify(node.visible ? "Vis\xEDvel" : "Oculto");
+          node.visible = false;
         }
       }
+    }
+    if (msg.type === "show-node") {
+      const node = figma.getNodeById(msg.id);
+      if (node) node.visible = true;
     }
     if (msg.type === "rename-node") {
       const node = figma.getNodeById(msg.id);
@@ -2059,6 +2088,7 @@
       figma.clientStorage.setAsync("handoffData", msg.data).catch((err) => {
         console.warn("Storage save failed (possibly missing plugin ID in manifest):", err);
       });
+      _writeSharedPluginData(msg.data);
     }
     if (msg.type === "focus-node") {
       const node = figma.getNodeById(msg.id);
@@ -2090,10 +2120,20 @@
         figma.notify("Selecione pelo menos um elemento.");
         return;
       }
-      const nodeA = selection[0];
-      const nodeB = selection[1] || null;
-      const boundsA = nodeA.absoluteBoundingBox || nodeA.absoluteRenderBounds;
-      const boundsB = nodeB ? nodeB.absoluteBoundingBox || nodeB.absoluteRenderBounds : null;
+      let nodeA = selection[0];
+      let nodeB = selection[1] || null;
+      let boundsA = nodeA.absoluteBoundingBox || nodeA.absoluteRenderBounds;
+      let boundsB = nodeB ? nodeB.absoluteBoundingBox || nodeB.absoluteRenderBounds : null;
+      if (!isEvent && boundsB && (!msg.flowSide || msg.flowSide === "auto")) {
+        const cAx = boundsA.x + boundsA.width / 2, cAy = boundsA.y + boundsA.height / 2;
+        const cBx = boundsB.x + boundsB.width / 2, cBy = boundsB.y + boundsB.height / 2;
+        const adx = Math.abs(cBx - cAx), ady = Math.abs(cBy - cAy);
+        const shouldSwap = adx >= ady ? cBx < cAx : cBy < cAy;
+        if (shouldSwap) {
+          [nodeA, nodeB] = [nodeB, nodeA];
+          [boundsA, boundsB] = [boundsB, boundsA];
+        }
+      }
       const getEdgePoints = (b) => ({
         top: { x: b.x + b.width / 2, y: b.y, side: "top" },
         bottom: { x: b.x + b.width / 2, y: b.y + b.height, side: "bottom" },
@@ -2102,33 +2142,28 @@
       });
       const pointsA = getEdgePoints(boundsA);
       let bestA, bestB;
-      if (msg.flowType === "event_start") {
-        bestA = pointsA.left;
-      } else if (msg.flowType === "event_end") {
-        bestA = pointsA.right;
-      } else if (msg.flowSide && msg.flowSide !== "auto" && pointsA[msg.flowSide]) {
-        bestA = pointsA[msg.flowSide];
-      }
+      if (msg.flowType === "event_start") bestA = pointsA.left;
+      else if (msg.flowType === "event_end") bestA = pointsA.right;
+      else if (msg.flowSide && msg.flowSide !== "auto" && pointsA[msg.flowSide]) bestA = pointsA[msg.flowSide];
       if (nodeB && boundsB) {
         const pointsB = getEdgePoints(boundsB);
         if (!bestA) {
-          let minDict = Infinity;
-          for (const pA of Object.values(pointsA)) {
-            for (const pB of Object.values(pointsB)) {
-              const dist = Math.sqrt(Math.pow(pA.x - pB.x, 2) + Math.pow(pA.y - pB.y, 2));
-              if (dist < minDict) {
-                minDict = dist;
-                bestA = pA;
-                bestB = pB;
-              }
-            }
+          const cAx = boundsA.x + boundsA.width / 2, cAy = boundsA.y + boundsA.height / 2;
+          const cBx = boundsB.x + boundsB.width / 2, cBy = boundsB.y + boundsB.height / 2;
+          const dx = cBx - cAx, dy = cBy - cAy;
+          if (Math.abs(dx) >= Math.abs(dy)) {
+            bestA = dx >= 0 ? pointsA.right : pointsA.left;
+            bestB = dx >= 0 ? pointsB.left : pointsB.right;
+          } else {
+            bestA = dy >= 0 ? pointsA.bottom : pointsA.top;
+            bestB = dy >= 0 ? pointsB.top : pointsB.bottom;
           }
         } else {
-          let minDict = Infinity;
+          let minDist = Infinity;
           for (const pB of Object.values(pointsB)) {
-            const dist = Math.sqrt(Math.pow(bestA.x - pB.x, 2) + Math.pow(bestA.y - pB.y, 2));
-            if (dist < minDict) {
-              minDict = dist;
+            const d = Math.sqrt(Math.pow(bestA.x - pB.x, 2) + Math.pow(bestA.y - pB.y, 2));
+            if (d < minDist) {
+              minDist = d;
               bestB = pB;
             }
           }
@@ -2136,36 +2171,31 @@
       } else {
         if (msg.flowType === "event_start") {
           bestA = pointsA.left;
-          bestB = { x: bestA.x - 60, y: bestA.y, side: "left" };
+          bestB = { x: bestA.x - 60, y: bestA.y };
         } else if (msg.flowType === "event_end") {
           bestA = pointsA.right;
-          bestB = { x: bestA.x + 60, y: bestA.y, side: "right" };
+          bestB = { x: bestA.x + 60, y: bestA.y };
         } else {
           bestA = bestA || pointsA.right;
           const offset = 40;
-          bestB = { x: bestA.x, y: bestA.y, side: bestA.side };
+          bestB = { x: bestA.x, y: bestA.y };
           if (bestA.side === "top") bestB.y -= offset;
           else if (bestA.side === "bottom") bestB.y += offset;
           else if (bestA.side === "left") bestB.x -= offset;
           else bestB.x += offset;
         }
       }
-      const connector = figma.createVector();
-      connector.name = `Flow Line`;
-      figma.currentPage.appendChild(connector);
-      connector.x = 0;
-      connector.y = 0;
       const strokeColor = { r: 0.12, g: 0.16, b: 0.23 };
-      connector.strokes = [{ type: "SOLID", color: strokeColor }];
-      connector.strokeWeight = 2;
-      if (msg.flowType === "line_dashed") {
-        connector.dashPattern = [6, 4];
-      }
-      connector.vectorPaths = [{
-        windingRule: "NONZERO",
-        data: `M ${bestA.x} ${bestA.y} L ${bestB.x} ${bestB.y}`
-      }];
-      let nodesToGroup = [connector];
+      const line = figma.createVector();
+      line.name = `Handex/Fluxo/Linha`;
+      figma.currentPage.appendChild(line);
+      line.x = 0;
+      line.y = 0;
+      line.strokes = [{ type: "SOLID", color: strokeColor }];
+      line.strokeWeight = 2;
+      if (msg.flowType === "line_dashed") line.dashPattern = [6, 4];
+      line.vectorPaths = [{ windingRule: "NONZERO", data: `M ${bestA.x} ${bestA.y} L ${bestB.x} ${bestB.y}` }];
+      let nodesToGroup = [line];
       if (msg.flowType !== "event_start") {
         const angle = Math.atan2(bestB.y - bestA.y, bestB.x - bestA.x);
         const arrowSize = 8;
@@ -2181,25 +2211,17 @@
         const y1 = bestB.y - arrowSize * Math.sin(angle - Math.PI / 6);
         const x2 = bestB.x - arrowSize * Math.cos(angle + Math.PI / 6);
         const y2 = bestB.y - arrowSize * Math.sin(angle + Math.PI / 6);
-        arrow.vectorPaths = [{
-          windingRule: "NONZERO",
-          data: `M ${x1} ${y1} L ${bestB.x} ${bestB.y} L ${x2} ${y2}`
-        }];
+        arrow.vectorPaths = [{ windingRule: "NONZERO", data: `M ${x1} ${y1} L ${bestB.x} ${bestB.y} L ${x2} ${y2}` }];
         nodesToGroup.push(arrow);
       }
       if (msg.flowType === "diamond" || msg.flowType === "diamond_dashed") {
-        const midX = (bestA.x + bestB.x) / 2;
-        const midY = (bestA.y + bestB.y) / 2;
-        const size = 64;
-        const halfSize = size / 2;
+        const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
+        const size = 64, halfSize = size / 2;
         const shape = figma.createVector();
         figma.currentPage.appendChild(shape);
         shape.x = 0;
         shape.y = 0;
-        shape.vectorPaths = [{
-          windingRule: "NONZERO",
-          data: `M ${midX} ${midY - halfSize} L ${midX + halfSize} ${midY} L ${midX} ${midY + halfSize} L ${midX - halfSize} ${midY} Z`
-        }];
+        shape.vectorPaths = [{ windingRule: "NONZERO", data: `M ${midX} ${midY - halfSize} L ${midX + halfSize} ${midY} L ${midX} ${midY + halfSize} L ${midX - halfSize} ${midY} Z` }];
         shape.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
         shape.strokes = [{ type: "SOLID", color: strokeColor }];
         shape.strokeWeight = 2;
@@ -2218,10 +2240,9 @@
             symbol.resize(size * 0.8, symbol.height);
             symbol.x = midX - symbol.width / 2;
             symbol.y = midY - symbol.height / 2;
-            const flowNum = msg.nextFlowNumber || 1;
             nodesToGroup.push(shape, symbol);
             const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-            finalGroup.name = `[Flow-${flowNum}] ${msg.flowName || "Decis\xE3o"}`;
+            finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Decis\xE3o"}`;
             figma.ui.postMessage({ type: "flow-created", flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
           } catch (e) {
             console.error(e);
@@ -2229,12 +2250,11 @@
         })();
       } else if (isEvent) {
         const isStart = msg.flowType === "event_start";
-        const targetPoint = bestB;
         const circle = figma.createEllipse();
         figma.currentPage.appendChild(circle);
         circle.resize(48, 48);
-        circle.x = targetPoint.x - 24;
-        circle.y = targetPoint.y - 24;
+        circle.x = bestB.x - 24;
+        circle.y = bestB.y - 24;
         circle.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
         circle.strokes = [{ type: "SOLID", color: isStart ? { r: 0.13, g: 0.6, b: 0.3 } : { r: 0.86, g: 0.1, b: 0.1 } }];
         circle.strokeWeight = isStart ? 2 : 4;
@@ -2251,18 +2271,16 @@
             label.fills = circle.strokes;
             label.x = circle.x + circle.width / 2 - label.width / 2;
             label.y = circle.y + circle.height / 2 - label.height / 2;
-            const flowNum = msg.nextFlowNumber || 1;
             nodesToGroup.push(circle, label);
             const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-            finalGroup.name = `[Flow-${flowNum}] ${msg.flowName || (isStart ? "In\xEDcio" : "Fim")}`;
+            finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || (isStart ? "In\xEDcio" : "Fim")}`;
             figma.ui.postMessage({ type: "flow-created", flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
           } catch (e) {
             console.error(e);
           }
         })();
       } else if (msg.decisionText && (msg.flowType === "line_solid" || msg.flowType === "line_dashed")) {
-        const midX = (bestA.x + bestB.x) / 2;
-        const midY = (bestA.y + bestB.y) / 2;
+        const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
         (async () => {
           try {
             await figma.loadFontAsync({ family: "Inter", style: "Bold" });
@@ -2274,8 +2292,7 @@
             textNode.textAlignHorizontal = "CENTER";
             textNode.textAlignVertical = "CENTER";
             textNode.fills = [{ type: "SOLID", color: strokeColor }];
-            const paddingH = 8;
-            const paddingV = 4;
+            const paddingH = 8, paddingV = 4;
             const chipBg = figma.createRectangle();
             figma.currentPage.appendChild(chipBg);
             chipBg.name = "Fundo";
@@ -2289,19 +2306,17 @@
             figma.currentPage.appendChild(textNode);
             textNode.x = chipBg.x + paddingH;
             textNode.y = chipBg.y + paddingV;
-            const flowNum = msg.nextFlowNumber || 1;
             nodesToGroup.push(chipBg, textNode);
             const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-            finalGroup.name = `[Flow-${flowNum}] ${msg.flowName || "Conex\xE3o"}`;
+            finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Conex\xE3o"}`;
             figma.ui.postMessage({ type: "flow-created", flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
           } catch (e) {
             console.error(e);
           }
         })();
       } else {
-        const flowNum = msg.nextFlowNumber || 1;
         const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-        finalGroup.name = `[Flow-${flowNum}] ${msg.flowName || "Conex\xE3o"}`;
+        finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Conex\xE3o"}`;
         figma.ui.postMessage({ type: "flow-created", flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
       }
       figma.notify("Fluxo criado!");
@@ -2321,7 +2336,7 @@
         } catch (e) {
         }
         const legendFrame = figma.createFrame();
-        legendFrame.name = "Legendas e Indicadores";
+        legendFrame.name = "Handex/Fluxo/Legendas";
         legendFrame.layoutMode = "VERTICAL";
         legendFrame.paddingLeft = 20;
         legendFrame.paddingRight = 20;
@@ -2376,20 +2391,656 @@
         figma.notify("Legenda criada!");
       })();
     }
+    if (msg.type === "pull-briefing-from-canvas") {
+      const briefingFrame = figma.currentPage.findOne((n) => n.type === "FRAME" && n.name === "Briefing Estruturado");
+      if (!briefingFrame) {
+        figma.ui.postMessage({ type: "briefing-data-pulled", data: [] });
+        return;
+      }
+      const data = [];
+      let currentHeader = null;
+      const texts = briefingFrame.findAll((n) => n.type === "TEXT");
+      for (const child of texts) {
+        const style = child.fontName.style || "";
+        if (style.includes("Bold") || style.includes("SemiBold") || style.includes("Black")) {
+          currentHeader = child.characters;
+        } else if (style.includes("Regular") && currentHeader) {
+          if (child.characters.trim().length > 0 && child.characters.trim() !== "Clique para adicionar...") {
+            data.push({ category: "Importado do Canvas", question: currentHeader, answer: child.characters });
+          }
+          currentHeader = null;
+        }
+      }
+      figma.ui.postMessage({ type: "briefing-data-pulled", data });
+      return;
+    }
+    if (msg.type === "inject-framework") {
+      (async () => {
+        for (const font of [
+          { family: "Inter", style: "Regular" },
+          { family: "Inter", style: "Medium" },
+          { family: "Inter", style: "Bold" }
+        ]) {
+          try {
+            await figma.loadFontAsync(font);
+          } catch (e) {
+          }
+        }
+        const CAIXA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 205.51265 46.553631"><g transform="translate(-284.78446,-475.51214)"><g transform="matrix(1.25,0,0,-1.25,15.493106,1024.9702)"><g transform="scale(0.24,0.24)"><path d="m 1107.19,1780.04 -17.74,-44.21 24.55,0 -6.73,44.39 -0.08,-0.18 z m -93.98,-101.49 72.77,149.83 55.02,0 30.68,-149.83 -48.3,0 -3.56,19.97 -46.86,0 -10.78,-19.97 -48.97,0 z m 181.34,0 21.08,149.83 48.67,0 -21.07,-149.83 -48.68,0 z m 323.71,101.67 -17.81,-44.39 24.54,0 -6.73,44.39 z m -94.06,-101.67 72.78,149.83 55.01,0 30.69,-149.83 -48.31,0 -3.55,19.97 -46.87,0 -10.78,-19.97 -48.97,0" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1316.6,1748.61 60.99,0 41.79,-69.21 -61,0 -41.78,69.21" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1322.94,1759.24 63.04,0 54.75,68.92 -63.04,0 -54.75,-68.92" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1259.91,1678.98 63.03,0 54.75,69.76 -63.04,0 -54.74,-69.76" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1282.64,1829 58.83,0 40.31,-69.76 -58.84,0 -40.3,69.76" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1014.65,1823.02 -4.68,-44.07 c -17.939,24.75 -59.517,7.67 -62.782,-23.16 -4.149,-39.13 35.867,-48.25 57.642,-25.21 l -4.69,-44.17 c -6.499,-3.19 -12.855,-5.67 -19.128,-7.34 -6.239,-1.68 -12.492,-2.57 -18.696,-2.7 -7.8,-0.17 -14.867,0.65 -21.234,2.44 -6.367,1.76 -12.129,4.56 -17.227,8.34 -9.832,7.19 -16.941,16.33 -21.32,27.45 -4.379,11.16 -5.82,23.75 -4.328,37.82 1.203,11.31 4.051,21.62 8.59,30.97 4.5,9.34 10.734,17.84 18.672,25.54 7.504,7.34 15.676,12.88 24.519,16.64 8.809,3.73 18.422,5.72 28.813,5.94 6.207,0.13 12.297,-0.49 18.207,-1.92 5.942,-1.42 11.802,-3.64 17.642,-6.57" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/></g></g></g></svg>`;
+        const mkLogo = (h) => {
+          try {
+            const n = figma.createNodeFromSvg(CAIXA_SVG);
+            n.name = "CAIXA Logo";
+            n.resize(Math.round(h * 205.51 / 46.55), h);
+            return n;
+          } catch (e) {
+            const t = tx("CAIXA", Math.round(h * 0.6), "Bold", C.blue);
+            return t;
+          }
+        };
+        const mkHeader = (title) => {
+          const bar = figma.createFrame();
+          bar.layoutMode = "HORIZONTAL";
+          bar.paddingLeft = bar.paddingRight = 16;
+          bar.paddingTop = bar.paddingBottom = 14;
+          bar.itemSpacing = 12;
+          bar.primaryAxisSizingMode = "AUTO";
+          bar.counterAxisSizingMode = "AUTO";
+          bar.layoutAlign = "STRETCH";
+          bar.counterAxisAlignItems = "CENTER";
+          bar.fills = [{ type: "SOLID", color: C.bgBlue }];
+          bar.appendChild(mkLogo(20));
+          bar.appendChild(tx("|", 14, "Regular", C.blueDark));
+          bar.appendChild(tx(title, 14, "Bold", C.blueDark));
+          return bar;
+        };
+        const mkCanvas = (h, fill) => {
+          const c = figma.createFrame();
+          c.resize(100, h);
+          c.fills = fill ? [{ type: "SOLID", color: fill }] : [];
+          c.layoutAlign = "STRETCH";
+          return c;
+        };
+        const C = {
+          blue: { r: 0, g: 0.439, b: 0.686 },
+          blueDark: { r: 0, g: 0.247, b: 0.478 },
+          blueLight: { r: 0.91, g: 0.957, b: 0.98 },
+          orange: { r: 0.965, g: 0.51, b: 0.165 },
+          teal: { r: 0.298, g: 0.745, b: 0.714 },
+          tealLight: { r: 0.851, g: 0.961, b: 0.957 },
+          lime: { r: 0.831, g: 0.969, b: 0.188 },
+          yellow: { r: 1, g: 0.949, b: 0.749 },
+          white: { r: 1, g: 1, b: 1 },
+          bg: { r: 0.941, g: 0.953, b: 0.969 },
+          bgBlue: { r: 0.91, g: 0.957, b: 0.98 },
+          line: { r: 0.882, g: 0.894, b: 0.91 },
+          text: { r: 0.118, g: 0.161, b: 0.231 },
+          muted: { r: 0.392, g: 0.455, b: 0.545 },
+          light: { r: 0.651, g: 0.706, b: 0.78 },
+          green: { r: 0.133, g: 0.694, b: 0.298 },
+          greenLight: { r: 0.941, g: 0.992, b: 0.949 },
+          amber: { r: 0.961, g: 0.769, b: 0.188 },
+          red: { r: 0.941, g: 0.263, b: 0.212 }
+        };
+        const tx = (text, size, weight, color) => {
+          const n = figma.createText();
+          n.fontName = { family: "Inter", style: weight || "Regular" };
+          n.characters = String(text || "");
+          n.fontSize = size || 12;
+          n.fills = [{ type: "SOLID", color: color || C.text }];
+          n.textAutoResize = "WIDTH_AND_HEIGHT";
+          return n;
+        };
+        const vb = (w, pad, gap, fill, cr) => {
+          const f = figma.createFrame();
+          f.layoutMode = "VERTICAL";
+          f.paddingLeft = f.paddingRight = pad;
+          f.paddingTop = f.paddingBottom = pad;
+          f.itemSpacing = gap;
+          f.fills = fill ? [{ type: "SOLID", color: fill }] : [];
+          if (cr) f.cornerRadius = cr;
+          if (w !== null) {
+            f.counterAxisSizingMode = "FIXED";
+            f.resize(w, 10);
+          } else {
+            f.counterAxisSizingMode = "AUTO";
+          }
+          f.primaryAxisSizingMode = "AUTO";
+          return f;
+        };
+        const hb = (pad, gap, fill, cr) => {
+          const f = figma.createFrame();
+          f.layoutMode = "HORIZONTAL";
+          f.paddingLeft = f.paddingRight = pad;
+          f.paddingTop = f.paddingBottom = pad;
+          f.itemSpacing = gap;
+          f.primaryAxisSizingMode = "AUTO";
+          f.counterAxisSizingMode = "AUTO";
+          f.counterAxisAlignItems = "CENTER";
+          f.fills = fill ? [{ type: "SOLID", color: fill }] : [];
+          if (cr) f.cornerRadius = cr;
+          return f;
+        };
+        const addT = (parent, text, size, weight, color) => {
+          const n = tx(text, size, weight, color);
+          n.textAutoResize = "HEIGHT";
+          n.layoutAlign = "STRETCH";
+          parent.appendChild(n);
+          return n;
+        };
+        const sp = (h) => {
+          const r = figma.createRectangle();
+          r.resize(4, h);
+          r.opacity = 0;
+          return r;
+        };
+        const rct = (w, h, fill, cr, strokeC, strokeW, dash) => {
+          const r = figma.createRectangle();
+          r.resize(w, h);
+          r.fills = fill ? [{ type: "SOLID", color: fill }] : [];
+          if (cr) r.cornerRadius = cr;
+          if (strokeC) {
+            r.strokes = [{ type: "SOLID", color: strokeC }];
+            r.strokeWeight = strokeW || 1;
+            if (dash) r.dashPattern = dash;
+          }
+          return r;
+        };
+        const ell = (w, h, fill, strokeC, strokeW, dash) => {
+          const e = figma.createEllipse();
+          e.resize(w, h);
+          e.fills = fill ? [{ type: "SOLID", color: fill }] : [];
+          if (strokeC) {
+            e.strokes = [{ type: "SOLID", color: strokeC }];
+            e.strokeWeight = strokeW || 1;
+            if (dash) e.dashPattern = dash;
+          }
+          return e;
+        };
+        const addLogo = (parent, x, y, size) => {
+          size = size || 36;
+          const c = ell(size, size, C.blue);
+          c.x = x;
+          c.y = y;
+          parent.appendChild(c);
+          const lt = tx("UX", Math.round(size * 0.3), "Bold", C.white);
+          lt.x = x + Math.round(size * 0.22);
+          lt.y = y + Math.round(size * 0.33);
+          parent.appendChild(lt);
+        };
+        let mainFrame = null;
+        if (msg.frameworkId === "briefing") {
+          mainFrame = vb(700, 48, 0, C.white, 16);
+          mainFrame.name = "Briefing Estruturado";
+          const hdr = mkHeader("Briefing Estruturado");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          mainFrame.appendChild(sp(20));
+          const fieldRow = (label, val) => {
+            const row = hb(0, 6, null);
+            row.counterAxisAlignItems = "MIN";
+            row.appendChild(tx(label + "  ", 13, "Bold", C.blue));
+            row.appendChild(tx(val, 13, "Regular", C.text));
+            mainFrame.appendChild(row);
+            mainFrame.appendChild(sp(4));
+          };
+          const section = (header, body, sub) => {
+            mainFrame.appendChild(sp(sub ? 4 : 14));
+            addT(mainFrame, header, sub ? 12 : 14, "Bold", sub ? C.orange : C.blue);
+            if (body) {
+              mainFrame.appendChild(sp(4));
+              addT(mainFrame, body, 12, "Regular", C.muted);
+            }
+          };
+          fieldRow("Nome do Projeto:", "Nome do projeto");
+          fieldRow("Data de In\xEDcio:", "00/00/00");
+          mainFrame.appendChild(sp(12));
+          const sep = rct(604, 1, C.line);
+          mainFrame.appendChild(sep);
+          section("Contexto", "Descreva o contexto atual do projeto e por que ele est\xE1 sendo demandado. Se existirem jornadas mapeadas ou algum material, ele deve ser registrado ou linkado nesta sess\xE3o.");
+          section("Resultados-chave e crit\xE9rio de sucesso", "Como o sucesso do projeto ser\xE1 medido?");
+          section("Atores e usu\xE1rios", "Quem \xE9 o p\xFAblico deste projeto? Voc\xEA pode aprofundar, aqui, para um estudo de personas.");
+          section("Stakeholders e equipe", "Anote quem faz parte da(s) equipe(s), quais s\xE3o suas responsabilidades. Importante anotar quem vai validar as decis\xF5es.");
+          section("Escopo");
+          section("Est\xE1 no escopo", "O que precisa ser trabalhado e por que.", true);
+          section("Pode estar no escopo", "O que depende de outros fatores para entrar no escopo.", true);
+          section("N\xE3o est\xE1 no escopo", "Limita\xE7\xF5es t\xE9cnicas ou escopo exclu\xEDdo explicitamente.", true);
+          section("Depend\xEAncias", "Outras \xE1reas que podem ter conhecimento ou dom\xEDnio sobre parte do projeto.");
+          section("Riscos", "Riscos que atrapalhem o sucesso do projeto. O que pode acontecer se n\xE3o atingirmos as metas?");
+          section("Tempo", "Roadmaps, prazos, sprints necess\xE1rias, qualquer fator que tangibilize tempo de projeto.");
+          section("Organiza\xE7\xE3o do trabalho");
+          section("Rotina de trabalho da equipe", "Reuni\xF5es di\xE1rias? Sprint? Retr\xF4?", true);
+          section("Comunica\xE7\xE3o", "Exemplo: reuni\xF5es marcadas por email, feitas pelo Teams.", true);
+          section("Compartilhamento de dados", "Softwares e pastas, meio de compartilhamento, formatos de arquivos.", true);
+          section("Notas adicionais", "Notas aqui.");
+          mainFrame.appendChild(sp(8));
+        } else if (msg.frameworkId === "csd") {
+          mainFrame = vb(940, 0, 0, C.white, 16);
+          mainFrame.name = "Matriz CSD";
+          const hdr = mkHeader("Matriz CSD \u2013 Certezas \xB7 Suposi\xE7\xF5es \xB7 D\xFAvidas");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const csdRow = hb(20, 16, null);
+          csdRow.layoutAlign = "STRETCH";
+          mainFrame.appendChild(csdRow);
+          const csdCols = [
+            { label: "Certezas", sub: "O que sabemos com certeza.", hdr: C.green, bg: C.greenLight },
+            { label: "Suposi\xE7\xF5es", sub: "O que acreditamos, mas n\xE3o validamos.", hdr: C.amber, bg: { r: 1, g: 0.98, b: 0.929 } },
+            { label: "D\xFAvidas", sub: "O que precisamos descobrir.", hdr: C.red, bg: { r: 1, g: 0.949, b: 0.949 } }
+          ];
+          csdCols.forEach((col) => {
+            const card = vb(280, 0, 8, col.bg, 12);
+            card.paddingBottom = 16;
+            const chdr = vb(280, 16, 4, col.hdr, 0);
+            chdr.paddingTop = chdr.paddingBottom = 10;
+            chdr.layoutAlign = "STRETCH";
+            const ct = tx(col.label, 13, "Bold", C.white);
+            ct.layoutAlign = "STRETCH";
+            ct.textAutoResize = "HEIGHT";
+            const cs = tx(col.sub, 10, "Regular", C.white);
+            cs.opacity = 0.85;
+            cs.layoutAlign = "STRETCH";
+            cs.textAutoResize = "HEIGHT";
+            chdr.appendChild(ct);
+            chdr.appendChild(cs);
+            card.appendChild(chdr);
+            for (let i = 0; i < 3; i++) {
+              const itemWrap = vb(248, 12, 0, C.white, 8);
+              itemWrap.paddingTop = itemWrap.paddingBottom = 10;
+              itemWrap.strokes = [{ type: "SOLID", color: C.line }];
+              itemWrap.strokeWeight = 1;
+              itemWrap.layoutAlign = "STRETCH";
+              const ph = tx("Clique para adicionar...", 11, "Regular", C.light);
+              ph.layoutAlign = "STRETCH";
+              ph.textAutoResize = "HEIGHT";
+              itemWrap.appendChild(ph);
+              card.appendChild(itemWrap);
+            }
+            csdRow.appendChild(card);
+          });
+        } else if (msg.frameworkId === "five-whys") {
+          mainFrame = vb(600, 40, 0, C.bgBlue, 20);
+          mainFrame.name = "Os 5 Porqu\xEAs";
+          const hdr = mkHeader("Os 5 porqu\xEA?");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          mainFrame.appendChild(sp(12));
+          mainFrame.appendChild(rct(520, 1, C.line));
+          mainFrame.appendChild(sp(12));
+          const probRow = hb(0, 8, null);
+          probRow.counterAxisAlignItems = "MIN";
+          probRow.appendChild(tx("Problema:  ", 13, "Bold", C.blue));
+          probRow.appendChild(tx("Diga qual o problema encontrado.", 13, "Regular", C.muted));
+          mainFrame.appendChild(probRow);
+          const emojis = ["\u{1F600}", "\u{1F60A}", "\u{1F914}", "\u{1F622}", "\u{1F92F}", "\u{1F631}"];
+          const qLabels = ["Porqu\xEA o problema ocorre?", "Porqu\xEA?", "Porqu\xEA?", "Porqu\xEA?", "Porqu\xEA?", "Porqu\xEA?"];
+          const motivos = ["1\xB0 motivo", "2\xB0 motivo", "3\xB0 motivo", "4\xB0 motivo", "5\xB0 motivo", "6\xB0 motivo"];
+          for (let i = 0; i < 6; i++) {
+            mainFrame.appendChild(sp(14));
+            const row = hb(0, 12, null);
+            row.counterAxisAlignItems = "CENTER";
+            row.appendChild(tx(emojis[i], 18, "Regular", C.text));
+            const block = vb(null, 0, 2, null);
+            block.appendChild(tx(qLabels[i], 13, "Bold", C.blue));
+            block.appendChild(tx(motivos[i], 12, "Regular", C.muted));
+            row.appendChild(block);
+            mainFrame.appendChild(row);
+          }
+          mainFrame.appendChild(sp(20));
+          mainFrame.appendChild(rct(520, 1, C.line));
+          mainFrame.appendChild(sp(12));
+          addT(mainFrame, "Causa raiz", 14, "Bold", C.blue);
+          mainFrame.appendChild(sp(4));
+          addT(mainFrame, "A real causa do problema \xE9...", 12, "Regular", C.muted);
+          mainFrame.appendChild(sp(8));
+        } else if (msg.frameworkId === "stakeholders") {
+          const shCanvas = figma.createFrame();
+          shCanvas.resize(600, 620);
+          shCanvas.fills = [{ type: "SOLID", color: C.white }];
+          shCanvas.layoutAlign = "STRETCH";
+          const cx = 300, cy = 330;
+          [[520, 460], [390, 344], [260, 230], [130, 115]].forEach(([ew, eh]) => {
+            const e = ell(ew, eh, null, C.line, 1.5, [8, 8]);
+            e.x = cx - ew / 2;
+            e.y = cy - eh / 2;
+            shCanvas.appendChild(e);
+          });
+          const solT = tx("Solu\xE7\xE3o", 13, "Bold", C.text);
+          solT.x = cx - 26;
+          solT.y = cy + 10;
+          shCanvas.appendChild(solT);
+          const stickyBg = rct(106, 84, { r: 1, g: 0.937, b: 0.698 }, 4);
+          stickyBg.x = cx - 100;
+          stickyBg.y = cy - 88;
+          shCanvas.appendChild(stickyBg);
+          const st1 = tx("Stakeholder", 10, "Medium", C.text);
+          st1.x = cx - 94;
+          st1.y = cy - 76;
+          shCanvas.appendChild(st1);
+          const st2 = tx("\u2022 Necessidade", 10, "Regular", C.text);
+          st2.x = cx - 94;
+          st2.y = cy - 60;
+          shCanvas.appendChild(st2);
+          mainFrame = vb(600, 0, 0, C.white, 16);
+          mainFrame.name = "Mapa de Stakeholders";
+          const hdr = mkHeader("Mapa de Stakeholders");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          mainFrame.appendChild(shCanvas);
+        } else if (msg.frameworkId === "value-effort") {
+          const veCanvas = figma.createFrame();
+          veCanvas.resize(620, 720);
+          veCanvas.fills = [{ type: "SOLID", color: C.white }];
+          veCanvas.layoutAlign = "STRETCH";
+          const chartBg = rct(500, 580, C.bgBlue, 8);
+          chartBg.x = 60;
+          chartBg.y = 20;
+          veCanvas.appendChild(chartBg);
+          const yAx = rct(2, 500, C.text);
+          yAx.x = 100;
+          yAx.y = 40;
+          veCanvas.appendChild(yAx);
+          const xAx = rct(420, 2, C.text);
+          xAx.x = 100;
+          xAx.y = 560;
+          veCanvas.appendChild(xAx);
+          mainFrame = vb(620, 0, 0, C.white, 16);
+          mainFrame.name = "Matriz Valor \xD7 Esfor\xE7o";
+          const hdr = mkHeader("Matriz Valor \xD7 Esfor\xE7o");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          mainFrame.appendChild(veCanvas);
+        } else if (msg.frameworkId === "atomic-research") {
+          mainFrame = vb(960, 0, 0, C.white, 16);
+          mainFrame.name = "Atomic Research";
+          const hdr = mkHeader("Atomic Research");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const b = vb(null, 40, 24, null);
+          mainFrame.appendChild(b);
+          b.layoutAlign = "STRETCH";
+          b.appendChild(tx("Insira dados de pesquisa at\xF4mica aqui...", 14, "Regular", C.muted));
+        } else if (msg.frameworkId === "blueprint") {
+          mainFrame = vb(1200, 0, 0, C.white, 16);
+          mainFrame.name = "Blueprint de Servi\xE7o";
+          const hdr = mkHeader("Blueprint de Servi\xE7o");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const b = vb(null, 40, 24, null);
+          mainFrame.appendChild(b);
+          b.layoutAlign = "STRETCH";
+          b.appendChild(tx("Construa o blueprint de servi\xE7o aqui...", 14, "Regular", C.muted));
+        } else if (msg.frameworkId === "heuristics") {
+          mainFrame = vb(960, 0, 0, C.white, 16);
+          mainFrame.name = "Heur\xEDsticas de Nielsen";
+          const hdr = mkHeader("Heur\xEDsticas de Nielsen");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const b = vb(null, 40, 24, null);
+          mainFrame.appendChild(b);
+          b.layoutAlign = "STRETCH";
+          b.appendChild(tx("Avalia\xE7\xE3o heur\xEDstica aqui...", 14, "Regular", C.muted));
+        } else if (msg.frameworkId === "opportunities") {
+          mainFrame = vb(960, 0, 0, C.white, 16);
+          mainFrame.name = "Mapa de Oportunidades";
+          const hdr = mkHeader("Mapa de Oportunidades");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const b = vb(null, 40, 24, null);
+          mainFrame.appendChild(b);
+          b.layoutAlign = "STRETCH";
+          b.appendChild(tx("Mapeamento de oportunidades aqui...", 14, "Regular", C.muted));
+        } else if (msg.frameworkId === "personas") {
+          mainFrame = vb(800, 0, 0, { r: 0.961, g: 0.98, b: 0.992 }, 16);
+          mainFrame.name = "Painel de Personas";
+          const hdr = mkHeader("Painel de Personas");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const body = vb(null, 40, 24, null);
+          mainFrame.appendChild(body);
+          body.layoutAlign = "STRETCH";
+          const infoRow = hb(0, 16, null);
+          infoRow.counterAxisAlignItems = "CENTER";
+          const pic = rct(48, 48, C.blue, 24);
+          infoRow.appendChild(pic);
+          const nameCol = vb(null, 0, 4, null);
+          nameCol.appendChild(tx("Perfil 1 - Nome do Perfil", 18, "Bold", C.blueDark));
+          nameCol.appendChild(tx("Breve descri\xE7\xE3o (exemplo: Perfil 1 foi mapeado entendendo cliente interno)", 12, "Regular", C.muted));
+          infoRow.appendChild(nameCol);
+          body.appendChild(infoRow);
+          const sep1 = rct(720, 1, C.blueLight);
+          body.appendChild(sep1);
+          sep1.layoutAlign = "STRETCH";
+          const detailsRow = hb(0, 32, null);
+          detailsRow.counterAxisAlignItems = "MIN";
+          const photo = rct(160, 200, C.blue, 12);
+          detailsRow.appendChild(photo);
+          const dataCol = vb(null, 0, 16, null);
+          const addData = (l, v) => {
+            const r = hb(0, 8, null);
+            r.appendChild(tx(l + ":", 14, "Bold", C.blueDark));
+            r.appendChild(tx(v, 14, "Regular", C.text));
+            dataCol.appendChild(r);
+          };
+          addData("Nome", "Um nome (opcional)");
+          addData("Idade", "idade m\xE9dia do perfil (pode ser conseguido por dados)");
+          addData("Ocupa\xE7\xE3o", "Trabalho / meio de trabalho");
+          addData("Renda", "Renda m\xE9dia");
+          addData("Escolaridade", "Educa\xE7\xE3o formal");
+          detailsRow.appendChild(dataCol);
+          body.appendChild(detailsRow);
+          const colsRow = hb(0, 40, null);
+          colsRow.layoutAlign = "STRETCH";
+          const col1 = vb(null, 0, 12, null);
+          col1.layoutAlign = "STRETCH";
+          col1.appendChild(tx("Objetivos", 16, "Bold", C.blueDark));
+          const objT = tx("Listar objetivos relacionados ao produto, sejam eles objetivos de vida ou objetivos do dia, organiza\xE7\xE3o financeira, etc.", 13, "Regular", C.text);
+          col1.appendChild(objT);
+          objT.textAutoResize = "HEIGHT";
+          objT.layoutAlign = "STRETCH";
+          colsRow.appendChild(col1);
+          const col2 = vb(null, 0, 12, null);
+          col2.layoutAlign = "STRETCH";
+          col2.appendChild(tx("Necessidade", 16, "Bold", C.blueDark));
+          const necT = tx("Listar necessidades relacionados ao produto, aqui podemos mapear dores para identificar oportunidades.", 13, "Regular", C.text);
+          col2.appendChild(necT);
+          necT.textAutoResize = "HEIGHT";
+          necT.layoutAlign = "STRETCH";
+          colsRow.appendChild(col2);
+          body.appendChild(colsRow);
+          const oppCol = vb(null, 0, 12, null);
+          oppCol.layoutAlign = "STRETCH";
+          oppCol.appendChild(tx("Oportunidades", 16, "Bold", C.blueDark));
+          const oppT = tx("Liste oportunidades de produto relacionadas \xE0s sess\xF5es anteriores.", 13, "Regular", C.text);
+          oppCol.appendChild(oppT);
+          oppT.textAutoResize = "HEIGHT";
+          oppT.layoutAlign = "STRETCH";
+          body.appendChild(oppCol);
+          const sep2 = rct(720, 1, C.blueLight);
+          body.appendChild(sep2);
+          sep2.layoutAlign = "STRETCH";
+          const obsCol = vb(null, 0, 12, null);
+          obsCol.layoutAlign = "STRETCH";
+          obsCol.appendChild(tx("Observa\xE7\xF5es adicionais", 14, "Bold", C.blueDark));
+          const obsT = tx("Escreva aqui observa\xE7\xF5es de hip\xF3teses descobertas em an\xE1lise de dados internos e externos que ajudaram a mapear perfis de clientes / usu\xE1rios.", 13, "Regular", C.text);
+          obsCol.appendChild(obsT);
+          obsT.textAutoResize = "HEIGHT";
+          obsT.layoutAlign = "STRETCH";
+          body.appendChild(obsCol);
+        } else if (msg.frameworkId === "interview-script") {
+          mainFrame = vb(800, 0, 0, C.white, 16);
+          mainFrame.name = "Roteiro de Entrevistas";
+          const hdr = mkHeader("Tag - Nome do Projeto");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const body = vb(null, 40, 24, null);
+          mainFrame.appendChild(body);
+          body.layoutAlign = "STRETCH";
+          const title = tx("Roteiro de Entrevistas", 24, "Bold", C.blueDark);
+          body.appendChild(title);
+          const addSec = (titleStr, descStr, isTitle = false) => {
+            const sec = vb(null, 0, 8, null);
+            sec.layoutAlign = "STRETCH";
+            const t = tx(titleStr, isTitle ? 18 : 14, "Bold", isTitle ? C.blueDark : C.text);
+            sec.appendChild(t);
+            const d = tx(descStr, 13, "Regular", C.muted);
+            sec.appendChild(d);
+            d.textAutoResize = "HEIGHT";
+            d.layoutAlign = "STRETCH";
+            body.appendChild(sec);
+          };
+          addSec("1. Introdu\xE7\xE3o e Aquecimento", "Apresente-se, explique o objetivo da entrevista de forma neutra (sem enviesar) e pe\xE7a consentimento para gravar. Fa\xE7a perguntas que quebrem o gelo.", true);
+          addSec("Sugest\xF5es de perguntas:", "- Como \xE9 um dia t\xEDpico de trabalho para voc\xEA?\n- Quais ferramentas voc\xEA mais utiliza hoje?");
+          const sep1 = rct(720, 1, C.line);
+          body.appendChild(sep1);
+          sep1.layoutAlign = "STRETCH";
+          addSec("2. Descoberta e Contexto", "Entenda como o usu\xE1rio lida com o problema hoje, antes de apresentar qualquer solu\xE7\xE3o.", true);
+          addSec("Sugest\xF5es de perguntas:", "- Me conte sobre a \xFAltima vez que voc\xEA precisou realizar [tarefa].\n- O que foi mais dif\xEDcil nesse processo?\n- Como voc\xEA contorna esse problema atualmente?");
+          const sep2 = rct(720, 1, C.line);
+          body.appendChild(sep2);
+          sep2.layoutAlign = "STRETCH";
+          addSec("3. Aprofundamento (Solu\xE7\xE3o / Prot\xF3tipo)", "Caso haja um prot\xF3tipo, apresente agora. Pe\xE7a para o usu\xE1rio pensar em voz alta.", true);
+          addSec("Sugest\xF5es de perguntas:", "- O que voc\xEA acha que essa tela faz?\n- Onde voc\xEA clicaria para [a\xE7\xE3o]?\n- O que voc\xEA esperava que acontecesse ao clicar ali?");
+          const sep3 = rct(720, 1, C.line);
+          body.appendChild(sep3);
+          sep3.layoutAlign = "STRETCH";
+          addSec("4. Encerramento", "Abra espa\xE7o para considera\xE7\xF5es finais e agrade\xE7a.", true);
+          addSec("Sugest\xF5es de perguntas:", "- H\xE1 algo que n\xE3o perguntei e que voc\xEA gostaria de comentar?\n- Como voc\xEA resumiria essa experi\xEAncia?");
+        } else if (msg.frameworkId === "journey") {
+          mainFrame = vb(1e3, 0, 0, { r: 0.941, g: 0.965, b: 0.976 }, 16);
+          mainFrame.name = "Jornada de Usu\xE1rio";
+          const hdr = mkHeader("Jornada de Usu\xE1rio");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const body = hb(24, 24, null);
+          mainFrame.appendChild(body);
+          body.layoutAlign = "STRETCH";
+          const leftCol = vb(220, 0, 12, null);
+          body.appendChild(leftCol);
+          const mkL = (title, sub, h) => {
+            const b = vb(220, 16, 4, C.white, 8);
+            if (h) {
+              b.counterAxisSizingMode = "FIXED";
+              b.resize(220, h);
+              b.primaryAxisSizingMode = "FIXED";
+            }
+            b.appendChild(tx(title, 16, "Bold", C.text));
+            if (sub) b.appendChild(tx(sub, 12, "Regular", C.muted));
+            return b;
+          };
+          const topBlock = mkL("Jornada", "Etapas da jornada");
+          leftCol.appendChild(topBlock);
+          leftCol.appendChild(mkL("Passos", "O que faz..."));
+          leftCol.appendChild(mkL("Pensa e fala", "O que pensa e fala..."));
+          leftCol.appendChild(mkL("Sentimentos", ""));
+          leftCol.appendChild(mkL("Oportunidades", ""));
+          leftCol.appendChild(mkL("Experi\xEAncia", "", 240));
+          const rightCol = hb(0, 12, null);
+          body.appendChild(rightCol);
+          rightCol.layoutAlign = "STRETCH";
+          const numEtapas = 2;
+          for (let i = 1; i <= numEtapas; i++) {
+            const col = vb(330, 0, 12, null);
+            col.layoutAlign = "STRETCH";
+            const eTop = vb(null, 16, 4, { r: 0.2, g: 0.8, b: 0.96 }, 8);
+            eTop.layoutAlign = "STRETCH";
+            eTop.appendChild(tx(i + ". Nome da Etapa", 16, "Bold", C.blueDark));
+            eTop.appendChild(tx("Descri\xE7\xE3o (opcional)", 12, "Regular", C.blueDark));
+            col.appendChild(eTop);
+            const mkr = (val, h) => {
+              const b = vb(null, 16, 4, C.white, 8);
+              b.layoutAlign = "STRETCH";
+              if (h) {
+                b.counterAxisSizingMode = "FIXED";
+                b.resize(330, h);
+                b.primaryAxisSizingMode = "FIXED";
+              }
+              b.appendChild(tx(val, 13, "Regular", C.text));
+              return b;
+            };
+            const s1 = mkr("1.1 Passo");
+            const s2 = mkr("1.2 Passo");
+            const wS = vb(null, 0, 8, null);
+            wS.layoutAlign = "STRETCH";
+            wS.appendChild(s1);
+            wS.appendChild(s2);
+            col.appendChild(wS);
+            const wP = vb(null, 0, 8, null);
+            wP.layoutAlign = "STRETCH";
+            wP.appendChild(mkr("Pensamento"));
+            wP.appendChild(mkr("Pensamento"));
+            col.appendChild(wP);
+            const wF = vb(null, 0, 8, null);
+            wF.layoutAlign = "STRETCH";
+            wF.appendChild(mkr("Sentimento"));
+            wF.appendChild(mkr("Sentimento"));
+            col.appendChild(wF);
+            const wO = vb(null, 0, 8, null);
+            wO.layoutAlign = "STRETCH";
+            wO.appendChild(mkr("Oportunidade"));
+            wO.appendChild(mkr("Oportunidade"));
+            col.appendChild(wO);
+            const expB = vb(null, 16, 4, null, 0);
+            expB.layoutAlign = "STRETCH";
+            expB.counterAxisSizingMode = "FIXED";
+            expB.resize(330, 240);
+            expB.primaryAxisSizingMode = "FIXED";
+            const line = rct(330, 1, C.muted);
+            expB.appendChild(line);
+            line.layoutAlign = "STRETCH";
+            col.appendChild(expB);
+            rightCol.appendChild(col);
+          }
+        } else if (msg.frameworkId === "relational-map") {
+          mainFrame = vb(1e3, 0, 0, C.white, 16);
+          mainFrame.name = "Mapa Relacional";
+          const hdr = mkHeader("Mapa Relacional");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const body = hb(40, 32, null);
+          mainFrame.appendChild(body);
+          body.layoutAlign = "STRETCH";
+          for (let i = 0; i < 4; i++) {
+            const col = vb(200, 0, 16, null);
+            const headB = vb(200, 12, 0, C.white, 4);
+            headB.strokes = [{ type: "SOLID", color: C.blue }];
+            headB.strokeWeight = 1.5;
+            const ht = tx("Classifique, por temas gerais, os itens a serem agrupados abaixo", 10, "Bold", C.text);
+            ht.textAlignHorizontal = "CENTER";
+            ht.textAutoResize = "HEIGHT";
+            ht.layoutAlign = "STRETCH";
+            headB.appendChild(ht);
+            col.appendChild(headB);
+            for (let j = 0; j < 4; j++) {
+              const card = vb(200, 16, 0, { r: 0.94, g: 0.95, b: 0.96 }, 8);
+              card.counterAxisSizingMode = "FIXED";
+              card.resize(200, 100);
+              card.primaryAxisSizingMode = "FIXED";
+              const dot = ell(20, 20, j % 2 == 0 ? C.teal : j == 1 ? C.blue : C.orange);
+              card.appendChild(dot);
+              col.appendChild(card);
+            }
+            body.appendChild(col);
+          }
+        }
+        if (mainFrame) {
+          const frameName = mainFrame.name;
+          figma.currentPage.appendChild(mainFrame);
+          const vp = figma.viewport.bounds;
+          mainFrame.x = Math.round(vp.x + (vp.width - mainFrame.width) / 2);
+          mainFrame.y = Math.round(vp.y + (vp.height - mainFrame.height) / 2);
+          const grp = figma.group([mainFrame], figma.currentPage);
+          grp.name = frameName;
+          figma.currentPage.selection = [grp];
+          figma.viewport.scrollAndZoomIntoView([grp]);
+          figma.ui.postMessage({ type: "framework-injected", name: msg.frameworkId });
+          figma.notify("Framework inserido no canvas! \u2713");
+        }
+      })();
+      return;
+    }
     if (msg.type === "close") {
       figma.closePlugin();
     }
   };
-  figma.on("selectionchange", () => {
-    const selection = figma.currentPage.selection;
-    if (selection.length === 1) {
-      const node = selection[0];
-      if (node.type === "FRAME" || node.type === "COMPONENT" || node.type === "INSTANCE" || node.type === "SECTION") {
-        figma.ui.postMessage({
-          type: "selection-name",
-          name: node.name
-        });
-      }
-    }
-  });
 })();

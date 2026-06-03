@@ -152,11 +152,52 @@ body {
       outline-color: #38a9f8;
     }
 
+    /* Inline action button (sits in view header — compact, no expand) */
+    .fab-inline {
+      width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border-radius: 999px;
+      background: rgba(0, 112, 175, 0.13);
+      border: 1px solid rgba(0, 112, 175, 0.28);
+      color: #0070af;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.18s ease, transform 0.15s ease;
+    }
+    .fab-inline > i, .fab-inline > svg { flex-shrink: 0; }
+    .fab-inline span { display: none; }
+    .fab-inline:hover { background: rgba(0, 112, 175, 0.24); }
+    .fab-inline:active { transform: scale(0.92); }
+    .dark .fab-inline { background: rgba(0,112,175,0.18); border-color: rgba(96,165,250,0.35); color: #60a5fa; }
+    .dark .fab-inline:hover { background: rgba(0,112,175,0.3); }
+
+    /* Back-to-top button — ghost at rest, highlighted on hover */
+    #btn-top {
+      background: rgba(148, 163, 184, 0.08);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: rgba(148, 163, 184, 0.55);
+      box-shadow: none;
+      transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease, opacity 0.3s ease, translate 0.3s ease;
+    }
+    #btn-top:hover {
+      background: rgba(0, 112, 175, 0.65);
+      border-color: rgba(0, 112, 175, 0.5);
+      color: white;
+      box-shadow: 0 4px 16px -4px rgba(0, 112, 175, 0.5);
+      transform: scale(1.1);
+    }
+
     /* Standardized FAB Styling */
     .fab-main {
       width: 48px;
       height: 48px;
-      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease !important;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease !important;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -164,12 +205,17 @@ body {
       overflow: hidden;
       white-space: nowrap;
     }
-    
+
+    .fab-main:active {
+      transform: scale(0.94);
+    }
+
     .fab-main:hover {
       width: auto;
       min-width: 160px;
       padding: 0 20px;
       justify-content: flex-start;
+      box-shadow: 0 8px 24px -4px rgba(0,112,175,0.45);
     }
 
     .fab-main span {
@@ -178,6 +224,7 @@ body {
       transition: max-width 0.3s ease, opacity 0.2s ease, margin 0.3s ease !important;
       font-size: 12px;
       font-weight: 700;
+      letter-spacing: 0.01em;
     }
 
     .fab-main:hover span {

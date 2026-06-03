@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // measurement.js — modal "Inserir Medidas" + render no plugin
 //
 // Inclui:
@@ -11,42 +11,69 @@
 // (escopo global compartilhado com core.js)
 // ============================================================
 
-    function renderMeasurementsResults(data) {
-      const container = document.getElementById("measurements-results");
+    function renderMeasurementsResults(data, frameId) {
+      // Renderiza em container do frame (se frameId), senão fallback para global
+      const containerId = frameId ? `measurements-list-${frameId}` : 'measurements-results';
+      const container = document.getElementById(containerId);
       if (!container) return;
       container.innerHTML = "";
-      
-      const hint = document.getElementById('hint-measures');
-      if (hint) {
-        if (data && data.length > 0) hint.classList.add('hidden');
-        else hint.classList.remove('hidden');
-      }
 
-      const exportBtn = document.getElementById('btn-export-measures');
-      const hideAllBtn = document.getElementById('btn-hide-all-measures');
-      if (data && data.length > 0) {
-        if (exportBtn) exportBtn.classList.remove('hidden');
-        if (hideAllBtn) hideAllBtn.classList.remove('hidden');
-      } else {
-        if (exportBtn) exportBtn.classList.add('hidden');
-        if (hideAllBtn) hideAllBtn.classList.add('hidden');
+      // Hint e botões globais (apenas na tela de medidas standalone)
+      if (!frameId) {
+        const hint = document.getElementById('hint-measures');
+        if (hint) {
+          if (data && data.length > 0) hint.classList.add('hidden');
+          else hint.classList.remove('hidden');
+        }
+        const exportBtn = document.getElementById('btn-export-measures');
+        const hideAllBtn = document.getElementById('btn-hide-all-measures');
+        if (data && data.length > 0) {
+          if (exportBtn) exportBtn.classList.remove('hidden');
+          if (hideAllBtn) hideAllBtn.classList.remove('hidden');
+        } else {
+          if (exportBtn) exportBtn.classList.add('hidden');
+          if (hideAllBtn) hideAllBtn.classList.add('hidden');
+        }
       }
 
       if (!data || data.length === 0) {
-        container.innerHTML = `
-          <div class="flex flex-col items-center justify-center py-12 animate-in fade-in duration-500">
-            <div class="relative mb-4">
-              <i data-lucide="ruler" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
+        if (!frameId) {
+          container.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-12 animate-in fade-in duration-500">
+              <div class="relative mb-4">
+                <i data-lucide="ruler" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
+              </div>
+              <p class="text-[12px] font-bold text-slate-500 dark:text-slate-500 text-center px-4 mb-1">Nenhuma medida criada ainda</p>
+              <p class="text-[10px] text-slate-300 dark:text-slate-600 text-center px-6">Selecione elementos no canvas e toque no botão <strong>+</strong></p>
             </div>
-            <p class="text-[12px] font-bold text-slate-400 dark:text-slate-500 text-center px-4 mb-1">Nenhuma medida criada ainda</p>
-            <p class="text-[10px] text-slate-300 dark:text-slate-600 text-center px-6">Selecione elementos no canvas e toque no botão <strong>+</strong></p>
-          </div>
-        `;
-        if (window.lucide) lucide.createIcons();
+          `;
+          _refreshIcons();
+        }
         return;
       }
 
-      if (!data || data.length === 0) return;
+      // Atualiza contador no sub-accordion
+      if (frameId) {
+        const countEl = document.getElementById(`sub-count-medidas-${frameId}`);
+        if (countEl) countEl.textContent = data.length;
+      }
+
+      // Cabeçalho de grupo com toggle de visibilidade em bloco
+      if (frameId) {
+        const frame = getFrame(frameId);
+        const isGroupVisible = !(frame && frame.measurementsGroupVisible === false);
+        const groupHeader = document.createElement('div');
+        groupHeader.className = 'flex items-center justify-between px-2 pb-2 pt-1';
+        groupHeader.innerHTML = `
+          <span class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wide">${data.length} medida${data.length !== 1 ? 's' : ''}</span>
+          <button type="button" title="${isGroupVisible ? 'Ocultar todas as medidas' : 'Exibir todas as medidas'}"
+            onclick="toggleMeasurementsGroup('${frameId}')"
+            class="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold ${isGroupVisible ? 'text-[#0070af]' : 'text-gray-300'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+            <i data-lucide="${isGroupVisible ? 'eye' : 'eye-off'}" class="w-3 h-3"></i>
+            ${isGroupVisible ? 'Ocultar todas' : 'Exibir todas'}
+          </button>`;
+        container.appendChild(groupHeader);
+      }
 
       data.forEach((item, index) => {
         const section = document.createElement("div");
@@ -104,7 +131,7 @@
             parent.postMessage({ pluginMessage: { type: 'hide-node', id: item.nodeId, forceState: nowVisible } }, '*');
           }
           saveToStorage();
-          if (typeof lucide !== 'undefined') lucide.createIcons();
+          _refreshIcons();
           updateHideAllMeasuresButtonState();
         };
 
@@ -119,19 +146,15 @@
           if (item.nodeId) {
             parent.postMessage({ pluginMessage: { type: 'delete-node', id: item.nodeId } }, '*');
           }
-          handoffData.measurements = (handoffData.measurements || []).filter(m => m.nodeId !== item.nodeId);
-          lastMeasurements = handoffData.measurements;
+          if (frameId) {
+            const fr = getFrame(frameId);
+            if (fr) fr.measurements = (fr.measurements || []).filter(m => m.nodeId !== item.nodeId);
+          } else {
+            handoffData.measurements = (handoffData.measurements || []).filter(m => m.nodeId !== item.nodeId);
+            lastMeasurements = handoffData.measurements;
+          }
           saveToStorage();
           section.remove();
-          
-          // Verifica se a lista ficou vazia para mostrar o hint novamente
-          const remaining = container.querySelectorAll('.border.rounded-xl.overflow-hidden').length;
-          if (remaining === 0) {
-            const h = document.getElementById('hint-measures');
-            if (h) h.classList.remove('hidden');
-            const ex = document.getElementById('btn-export-measures');
-            if (ex) ex.classList.add('hidden');
-          }
         };
 
         header.appendChild(btn);
@@ -153,13 +176,15 @@
         section.appendChild(content);
         container.appendChild(section);
       });
-      lucide.createIcons();
-      const currentCount = (data || []).length;
-      if (currentCount > (lastMeasurements ? lastMeasurements.length : 0)) {
-        autoScrollToNewItem('measures-scroll-container');
+      _refreshIcons();
+      if (!frameId) {
+        const currentCount = (data || []).length;
+        if (currentCount > (lastMeasurements ? lastMeasurements.length : 0)) {
+          autoScrollToNewItem('measures-scroll-container');
+        }
+        lastMeasurements = data;
+        updateHideAllMeasuresButtonState();
       }
-      lastMeasurements = data;
-      updateHideAllMeasuresButtonState();
     }
 
 
@@ -178,8 +203,25 @@
       btn.innerHTML = allHidden
         ? '<i data-lucide="eye" class="w-3.5 h-3.5"></i> Mostrar tudo'
         : '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo';
-      if (typeof lucide !== 'undefined') lucide.createIcons();
+      _refreshIcons();
     }
+
+    function toggleMeasurementsGroup(frameId) {
+      if (!frameId) return;
+      const frame = getFrame(frameId);
+      if (!frame) return;
+      const isNowHiding = !(frame.measurementsGroupVisible === false);
+      frame.measurementsGroupVisible = !isNowHiding;
+      (frame.measurements || []).forEach(m => {
+        if (m.nodeId) {
+          parent.postMessage({ pluginMessage: { type: 'hide-node', id: m.nodeId, forceState: !isNowHiding } }, '*');
+        }
+      });
+      saveToStorage();
+      renderMeasurementsResults(frame.measurements || [], frameId);
+      _refreshIcons();
+    }
+    window.toggleMeasurementsGroup = toggleMeasurementsGroup;
 
     function toggleAllMeasuresVisibility() {
       const measurements = handoffData.measurements || [];
@@ -218,12 +260,13 @@
           : '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo';
       }
       
-      if (typeof lucide !== 'undefined') lucide.createIcons();
+      _refreshIcons();
     }
 
     let _specsHidden = false;
 
-    function openMeasureModal() {
+    function openMeasureModal(frameId) {
+      if (frameId) activeFrameId = frameId;
       openModal('measure-form-modal');
     }
     function closeMeasureModal() {
@@ -249,7 +292,7 @@
           btn.classList.add('border-[#0070af]', 'bg-blue-50', 'dark:bg-blue-900/20');
           const icon = btn.querySelector('.measure-icon');
           if (icon) {
-            icon.classList.remove('text-slate-400');
+            icon.classList.remove('text-slate-500');
             icon.classList.add('text-[#0070af]', 'dark:text-blue-400');
           }
           const label = btn.querySelector('.measure-label');
@@ -263,7 +306,7 @@
           const icon = btn.querySelector('.measure-icon');
           if (icon) {
             icon.classList.remove('text-[#0070af]', 'dark:text-blue-400');
-            icon.classList.add('text-slate-400');
+            icon.classList.add('text-slate-500');
           }
           const label = btn.querySelector('.measure-label');
           if (label) {
@@ -276,13 +319,15 @@
 
     function executeMeasurement() {
       const storeInParent = document.getElementById('chk-store-parent').checked;
-      parent.postMessage({ 
-        pluginMessage: { 
-          type: 'measure-nodes-custom', 
-          measureTypes: currentMeasureTypes, 
+      const frame = activeFrameId ? getFrame(activeFrameId) : null;
+      const startNum = frame ? (frame.nextMeasurementNumber || 1) : nextMeasurementNumber;
+      parent.postMessage({
+        pluginMessage: {
+          type: 'measure-nodes-custom',
+          measureTypes: currentMeasureTypes,
           storeInParent,
-          startingNumber: nextMeasurementNumber 
-        } 
+          startingNumber: startNum
+        }
       }, '*');
       closeMeasureModal();
     }

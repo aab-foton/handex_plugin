@@ -29,131 +29,62 @@ function rgbToHex(r, g, b) {
 // Walks the bundled skeleton and resolves real values via Plugin
 // API. Posts progress events to the UI as it goes.
 // ============================================================
-async function extractDesignRefs(skeleton) {
-  if (!skeleton || !Array.isArray(skeleton.libraries) || skeleton.libraries.length === 0) {
-    figma.ui.postMessage({ type: "extract-done", error: "Skeleton de referência indisponível." });
-    return;
-  }
-
-  const totalStyleKeys = skeleton.libraries.reduce((acc, lib) => {
-    const s = lib.styleTokens || {};
-    return acc
-      + (Array.isArray(s.colors) ? s.colors.length : 0)
-      + (Array.isArray(s.typography) ? s.typography.length : 0)
-      + (Array.isArray(s.effects) ? s.effects.length : 0);
-  }, 0);
-
-  const bundle = {
-    generatedAt: new Date().toISOString(),
-    libraries: []
-  };
-
-  let processed = 0;
-  const postProgress = (libSlug, libName) => {
-    figma.ui.postMessage({
-      type: "extract-progress",
-      processed,
-      total: totalStyleKeys,
-      libSlug,
-      libName
-    });
-  };
-
-  for (let i = 0; i < skeleton.libraries.length; i++) {
-    const lib = skeleton.libraries[i];
-    const libResult = {
-      slug: lib.slug,
-      meta: { libraryName: lib.name, figmaFileKey: lib.fileKey },
-      designTokens: { variables: [] },
-      styleTokens: { colors: [], typography: [], effects: [] },
-      components: Array.isArray(lib.componentKeys) ? lib.componentKeys.map(k => ({ key: k })) : [],
-      _stats: { resolved: 0, failed: 0, libNotAvailable: false }
-    };
-
-    let firstStyleSucceeded = false;
-    for (const styleType of ["colors", "typography", "effects"]) {
-      const list = (lib.styleTokens && lib.styleTokens[styleType]) || [];
-      for (const item of list) {
-        try {
-          const node = await figma.importStyleByKeyAsync(item.key);
-          if (node) {
-            firstStyleSucceeded = true;
-            libResult.styleTokens[styleType].push(buildStyleEntry(styleType, item, node));
-            libResult._stats.resolved++;
-          } else {
-            libResult._stats.failed++;
-          }
-        } catch (e) {
-          libResult._stats.failed++;
-        }
-        processed++;
-        if (processed % 8 === 0 || processed === totalStyleKeys) {
-          postProgress(lib.slug, lib.name);
-        }
-      }
-    }
-
-    // If nothing resolved AND the lib had styles to resolve, the lib is
-    // probably not subscribed in this file — flag it for the UI.
-    const hadStyles = (lib.styleTokens && (
-      lib.styleTokens.colors.length + lib.styleTokens.typography.length + lib.styleTokens.effects.length
-    )) > 0;
-    if (hadStyles && !firstStyleSucceeded) {
-      libResult._stats.libNotAvailable = true;
-    }
-
-    // Variables — discovered at runtime (REST API doesn't list them).
-    try {
-      if (figma.teamLibrary && typeof figma.teamLibrary.getAvailableLibraryVariableCollectionsAsync === "function") {
-        const allCollections = await figma.teamLibrary.getAvailableLibraryVariableCollectionsAsync();
-        const matching = allCollections.filter(c => c.libraryName === lib.name);
-        for (const coll of matching) {
-          try {
-            const vars = await figma.teamLibrary.getVariablesInLibraryCollectionAsync(coll.key);
-            for (const v of vars) {
-              libResult.designTokens.variables.push({ key: v.key, name: v.name, resolvedType: v.resolvedType });
-            }
-          } catch (e) { /* skip individual collection failures */ }
-        }
-      }
-    } catch (e) {
-      // teamLibrary API may not be available (Starter/Pro plans); skip.
-    }
-
-    bundle.libraries.push(libResult);
-    postProgress(lib.slug, lib.name);
-  }
-
-  figma.ui.postMessage({ type: "extract-done", bundle });
-}
-
-function buildStyleEntry(styleType, skeletonItem, styleNode) {
-  const entry = { key: skeletonItem.key, name: styleNode.name || skeletonItem.name };
-
-  if (styleType === "colors" && Array.isArray(styleNode.paints) && styleNode.paints.length > 0) {
-    entry.paints = styleNode.paints;
-    const fill = styleNode.paints[0];
-    if (fill && fill.type === "SOLID" && fill.color) {
-      entry.value = rgbToHex(fill.color.r, fill.color.g, fill.color.b);
-    }
-  } else if (styleType === "typography") {
-    if (styleNode.fontName) entry.fontName = styleNode.fontName;
-    if (styleNode.fontSize !== undefined) entry.fontSize = styleNode.fontSize;
-    if (styleNode.lineHeight !== undefined) entry.lineHeight = styleNode.lineHeight;
-    if (styleNode.letterSpacing !== undefined) entry.letterSpacing = styleNode.letterSpacing;
-    const family = styleNode.fontName ? styleNode.fontName.family : "";
-    const style = styleNode.fontName ? styleNode.fontName.style : "";
-    entry.value = `${family} ${style} ${styleNode.fontSize || ""}px`.trim();
-  } else if (styleType === "effects" && Array.isArray(styleNode.effects)) {
-    entry.effects = styleNode.effects;
-  }
-
-  return entry;
-}
-
 // Em desenvolvimento (sem bundle), cai no fallback 'dev'.
 /* global __HANDEX_VERSION__ */
 const PLUGIN_VERSION = (typeof __HANDEX_VERSION__ !== 'undefined') ? __HANDEX_VERSION__ : 'dev';
+
+// ── Shared Plugin Data (MCP / REST API readable) ──────────────────────
+// Usa setSharedPluginData (namespace 'handex') para que agentes externos
+// (MCP, REST API) consigam ler o contexto de negócio embutido nos nodes.
+// setPluginData seria sandboxed ao plugin ID — inacessível externamente.
+function _writeSharedPluginData(data) {
+  const NS = 'handex';
+  try {
+    // Contexto do projeto na página atual
+    const project = {
+      titulo:    data.step1?.titulo   || '',
+      versao:    data.step1?.versao   || '',
+      objetivo:  data.step1?.objetivo || '',
+      status:    data.step1?.status   || 'rascunho',
+      equipe:    data.step1?.equipe   || [],
+      briefing:  (data.step2?.briefingQuestions || []).map(q => ({
+        categoria: q.category || '',
+        pergunta:  q.question || '',
+        resposta:  q.answer   || ''
+      })),
+      regras: (data.step2?.regras || []).map(r => ({
+        titulo: r.titulo || '',
+        notas:  r.notas  || '',
+        link:   r.link   || ''
+      })),
+      updatedAt: new Date().toISOString(),
+      plugin: `handex@${PLUGIN_VERSION}`
+    };
+    figma.currentPage.setSharedPluginData(NS, 'project', JSON.stringify(project));
+  } catch (e) {
+    console.warn('[handex] setSharedPluginData(project) failed:', e);
+  }
+
+  // Contexto por frame — getNodeById é O(1), não percorre a árvore
+  (data.frames || []).forEach(frame => {
+    try {
+      const node = figma.getNodeById(frame.figmaId);
+      if (!node) return;
+      node.setSharedPluginData(NS, 'context', JSON.stringify({
+        nome:           frame.nome           || '',
+        isNewComponent: frame.isNewComponent || false,
+        excecoes: (frame.excecoes || []).map(e => ({
+          tipo:   e.tipo   || '',
+          titulo: e.titulo || '',
+          notas:  e.notas  || '',
+          link:   e.link   || ''
+        }))
+      }));
+    } catch (e) {
+      // Node pode ter sido deletado — ignorar silenciosamente
+    }
+  });
+}
 
 figma.ui.onmessage = async (msg) => {
   if (msg.type === 'ui-ready') {
@@ -161,6 +92,10 @@ figma.ui.onmessage = async (msg) => {
       ? { id: figma.currentUser.id, name: figma.currentUser.name, photoUrl: figma.currentUser.photoUrl }
       : null;
     const theme = figma.ui.theme || 'light';
+    const sel = figma.currentPage.selection;
+    const projectName = (sel.length > 0 ? sel[0].name : '') || figma.currentPage.name || figma.root.name || '';
+    const _handoffBase = '[Handoff]';
+    const _existingAtInit = figma.currentPage.findAll(n => n.type === 'FRAME' && n.name.startsWith(_handoffBase));
     try {
       const savedState = await figma.clientStorage.getAsync('handoffData');
       figma.ui.postMessage({
@@ -168,7 +103,9 @@ figma.ui.onmessage = async (msg) => {
         version: PLUGIN_VERSION,
         currentUser,
         theme,
-        savedState: savedState || null
+        projectName,
+        savedState: savedState || null,
+        existingHandoffCount: _existingAtInit.length
       });
     } catch (err) {
       console.error("Initialization error (continuing without saved state):", err);
@@ -177,66 +114,38 @@ figma.ui.onmessage = async (msg) => {
         version: PLUGIN_VERSION,
         currentUser,
         theme,
-        savedState: null
+        projectName,
+        savedState: null,
+        existingHandoffCount: _existingAtInit.length
       });
     }
     return;
   }
 
-  if (msg.type === 'get-selection-name') {
-    const selection = figma.currentPage.selection;
+  if (msg.type === 'get-project-name') {
+    figma.ui.postMessage({ type: 'project-name', name: figma.root.name || figma.currentPage.name || '' });
+    return;
+  }
+
+  if (msg.type === 'get-selection-info') {
+    const validTypes = ['FRAME', 'COMPONENT', 'INSTANCE', 'SECTION', 'GROUP'];
+    const selection = figma.currentPage.selection.filter(n => validTypes.includes(n.type));
     if (selection.length > 0) {
-      const node = selection[0];
-      if (node.type === "FRAME" || node.type === "COMPONENT" || node.type === "INSTANCE" || node.type === "SECTION") {
-        figma.ui.postMessage({
-          type: 'selection-name',
-          name: node.name,
-          isManual: true
-        });
-      }
-    } else {
-      // No selection: fallback to file/project name
       figma.ui.postMessage({
-        type: 'selection-name',
-        name: figma.root.name,
-        isManual: true
+        type: 'selection-info',
+        nodes: selection.map(n => ({ nodeId: n.id, name: n.name }))
+      });
+    } else {
+      figma.ui.postMessage({
+        type: 'selection-info',
+        nodes: [],
+        error: 'Nenhum frame selecionado no canvas.'
       });
     }
     return;
   }
   if (msg.type === "resize") {
     figma.ui.resize(msg.width, msg.height);
-    return;
-  }
-
-  if (msg.type === "extract-design-refs") {
-    await extractDesignRefs(msg.skeleton);
-    return;
-  }
-
-  if (msg.type === "audit-cache-save") {
-    try {
-      await figma.clientStorage.setAsync('handex-audit-refs-v1', msg.bundle);
-    } catch (e) {
-      console.error("audit-cache-save failed:", e);
-    }
-    return;
-  }
-
-  if (msg.type === "audit-cache-load") {
-    try {
-      const cached = await figma.clientStorage.getAsync('handex-audit-refs-v1');
-      figma.ui.postMessage({ type: "audit-cache-loaded", bundle: cached || null });
-    } catch (e) {
-      figma.ui.postMessage({ type: "audit-cache-loaded", bundle: null });
-    }
-    return;
-  }
-
-  if (msg.type === "audit-cache-clear") {
-    try {
-      await figma.clientStorage.setAsync('handex-audit-refs-v1', null);
-    } catch (e) {}
     return;
   }
 
@@ -250,6 +159,8 @@ figma.ui.onmessage = async (msg) => {
     ];
     try {
       await Promise.all(keys.map(k => figma.clientStorage.setAsync(k, null)));
+      // Limpa também os sharedPluginData da página atual
+      try { figma.currentPage.setSharedPluginData('handex', 'project', ''); } catch (e) {}
       figma.ui.postMessage({ type: 'cache-cleared' });
     } catch (e) {
       console.error("clear-cache failed:", e);
@@ -404,7 +315,7 @@ figma.ui.onmessage = async (msg) => {
 
       function createSection(parent, titleText) {
         const section = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
-        section.name = "Section: " + titleText;
+        section.name = `[Seção] ${titleText}`;
         if (parent) {
           parent.appendChild(section);
           setFillAndHug(section);
@@ -421,7 +332,7 @@ figma.ui.onmessage = async (msg) => {
 
       function createRow(parent, label, value, isLink = false, url = "") {
         const row = createFrame("VERTICAL", 0, 4);
-        row.name = "Row: " + label;
+        row.name = `[Campo] ${label}`;
         if (parent) {
            parent.appendChild(row);
            setFillAndHug(row);
@@ -448,16 +359,31 @@ figma.ui.onmessage = async (msg) => {
 
 
 
+      // Semantic name prefix for all handoff canvas nodes
+      const _titulo = (data.step1?.titulo || 'Projeto').replace(/\//g, '-');
+      const _handoffBase = `[Handoff] ${_titulo}`;
+
+      // Detecta fichas anteriores do mesmo projeto para posicionar a nova versão
+      const _existingHandoffs = figma.currentPage.findAll(n =>
+        n.type === 'FRAME' && n.name.startsWith(_handoffBase)
+      );
+      const _isUpdate = _existingHandoffs.length > 0;
+
+      // Nome com timestamp apenas quando for atualização
+      const _now = new Date();
+      const _ts = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')} ${String(_now.getHours()).padStart(2,'0')}:${String(_now.getMinutes()).padStart(2,'0')}`;
+      const _containerName = _isUpdate ? `${_handoffBase} — ${_ts}` : _handoffBase;
+
       // MAIN CONTAINER
       const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb("#026173"));
-      mainContainer.name = "Handoff Documentation";
+      mainContainer.name = _containerName;
       mainContainer.counterAxisAlignItems = "MIN"; // Top align
       mainContainer.primaryAxisSizingMode = "AUTO"; // Hug children width
       mainContainer.counterAxisSizingMode = "AUTO"; // Hug children height
 
       // 1. FICHA TÉCNICA
       const fichaTecnica = createFrame("VERTICAL", 0, 0, { r: 1, g: 1, b: 1 });
-      fichaTecnica.name = "Ficha de projeto";
+      fichaTecnica.name = `${_handoffBase} / Ficha Técnica`;
       fichaTecnica.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
       fichaTecnica.resize(600, 100);
       fichaTecnica.counterAxisSizingMode = "FIXED"; // Base width 600
@@ -505,168 +431,138 @@ figma.ui.onmessage = async (msg) => {
       // 1.1 INFORMAÇÕES BÁSICAS
       if (!data.setup || data.setup.ficha !== false) {
         const infoSection = createSection(content, "Informações Básicas");
-        createRow(infoSection, "Título do Projeto", data.step1.fluxo);
+        createRow(infoSection, "Título do Projeto", data.step1.titulo);
+        if (data.step1.jornada) createRow(infoSection, "Jornada", data.step1.jornada);
+        if (data.step1.feature) createRow(infoSection, "Feature", data.step1.feature);
         createRow(infoSection, "Objetivo da Entrega", data.step1.objetivo);
-        
+
         const subGrid = createFrame("HORIZONTAL", 0, 16);
         infoSection.appendChild(subGrid);
         setFillAndHug(subGrid);
-        
+
         createRow(subGrid, "Status", data.step1.status);
         createRow(subGrid, "Versão", data.step1.versao);
       }
 
-      // 1.2 EXCEÇÕES
-      if (data.step1.excecoes && data.step1.excecoes.length > 0) {
-        const excSection = createSection(content, "Cenários de Exceção");
-        data.step1.excecoes.forEach((exc, idx) => {
-          createRow(excSection, `Cenário ${idx + 1}`, exc.scenario);
-        });
-      }
-
-      // 1.3 REGRAS DE NEGÓCIO
-      if (data.step1.regras && data.step1.regras.length > 0) {
-        const bizSection = createSection(content, "Regras de Negócio e HU");
-        data.step1.regras.forEach((regra) => {
-          createRow(bizSection, regra.title, regra.link ? "Link de Referência" : "-", !!regra.link, regra.link);
-        });
-      }
-
-      // 1.4 EQUIPE
+      // 1.2 EQUIPE E RESPONSÁVEIS
       if (data.step1.equipe && data.step1.equipe.length > 0) {
-        const teamSection = createSection(content, "Equipe");
-        data.step1.equipe.forEach(member => {
-          createRow(teamSection, member.role, member.name);
-        });
-      }
-
-      // 1.5 DOCS E ANEXOS
-      if (data.setup && data.setup.incluirDocs && data.step1.docs && data.step1.docs.length > 0) {
-        const docsSection = createSection(null, "Docs e Anexos");
-        let hasDocs = false;
-        data.step1.docs.forEach(doc => {
-          if (doc.url) {
-            createRow(docsSection, doc.name || "Documento", doc.url, true, doc.url);
-            hasDocs = true;
-          }
-        });
-        if (hasDocs) {
-          content.appendChild(docsSection);
-          setFillAndHug(docsSection);
-        }
-      }
-
-      // 1.6 BRIEFING ESTRATÉGICO
-      if (data.setup && data.setup.incluirBriefing && data.briefing && data.briefing.questions && data.briefing.questions.length > 0) {
-        const briefingSection = createSection(content, "Briefing Estratégico");
-        data.briefing.questions.forEach((q, idx) => {
-          if (q.answer) {
-            const qRow = createFrame("VERTICAL", 0, 4);
-            briefingSection.appendChild(qRow);
-            setFillAndHug(qRow);
-            
-            const qText = createText(`${idx + 1}. ${q.question}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
-            qRow.appendChild(qText);
-            setFillAndHug(qText);
-            
-            const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
-            qRow.appendChild(aText);
-            setFillAndHug(aText);
-          }
-        });
-        content.appendChild(briefingSection);
-      }
-
-      // 1.3 EQUIPE E RESPONSÁVEIS
-      if (data.step3 && data.step3.team && data.step3.team.length > 0) {
         const teamSection = createSection(content, "Equipe e Responsáveis");
-        data.step3.team.forEach(m => {
+        data.step1.equipe.forEach(m => {
           const mRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
           teamSection.appendChild(mRow);
           setFillAndHug(mRow);
-          
           mRow.counterAxisAlignItems = "CENTER";
           mRow.cornerRadius = 8;
           mRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
 
           const roleTag = createFrame("HORIZONTAL", 8, 4, { r: 0, g: 0.35, b: 0.79 });
           roleTag.cornerRadius = 4;
-          roleTag.appendChild(createText(m.role, 10, "Bold", { r: 1, g: 1, b: 1 }));
+          roleTag.appendChild(createText(m.papel || 'Membro', 10, "Bold", { r: 1, g: 1, b: 1 }));
           mRow.appendChild(roleTag);
-          // Tags usually hug width, but if the user insists ALL items... 
-          // However, tags in mRow (HORIZONTAL) with layoutGrow=1 would be weird.
-          // I'll keep tags as Hug-Hug unless they look wrong.
-          // Wait, roleTag is a child of mRow (HORIZONTAL). setFillAndHug(roleTag) would make it fill width.
-          // I'll only setFillAndHug on the nameText to push other items.
 
-          const nameText = createText(m.name, 12, "Medium");
+          const nameText = createText(m.nome || '', 12, "Medium");
+          nameText.layoutGrow = 1;
           mRow.appendChild(nameText);
-          setFillAndHug(nameText);
 
           if (m.email) {
             const contactLink = createText("Contato", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
             contactLink.textDecoration = "UNDERLINE";
-            contactLink.hyperlink = { type: "URL", value: m.email.includes("@") ? "mailto:" + m.email : m.email };
+            contactLink.hyperlink = { type: "URL", value: "mailto:" + m.email };
             mRow.appendChild(contactLink);
-            // Don't fill contactLink, just let it hug.
           }
-          teamSection.appendChild(mRow);
         });
+        content.appendChild(teamSection);
+        setFillAndHug(teamSection);
       }
 
-      // 1.4 CENÁRIOS DE EXCEÇÃO
-      if (data.excecoes && data.excecoes.length > 0) {
+      // 1.3 BRIEFING ESTRATÉGICO
+      const _briefingQs = (data.step2 && data.step2.briefingQuestions)
+        ? data.step2.briefingQuestions.filter(q => q.answer && q.answer.trim())
+        : [];
+      if (_briefingQs.length > 0) {
+        const briefingSection = createSection(content, "Briefing Estratégico");
+        _briefingQs.forEach((q, idx) => {
+          const qRow = createFrame("VERTICAL", 0, 4);
+          qRow.name = `[Briefing] Pergunta ${idx + 1}`;
+          briefingSection.appendChild(qRow);
+          setFillAndHug(qRow);
+
+          const qText = createText(`${idx + 1}. ${q.question || ''}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+          qRow.appendChild(qText);
+          setFillAndHug(qText);
+
+          const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+          qRow.appendChild(aText);
+          setFillAndHug(aText);
+        });
+        content.appendChild(briefingSection);
+        setFillAndHug(briefingSection);
+      }
+
+      // 1.4 REGRAS DE NEGÓCIO E HUs
+      const _regras = (data.step2 && data.step2.regras) ? data.step2.regras : [];
+      if (_regras.length > 0) {
+        const rulesSection = createSection(content, "Regras de Negócio e HUs");
+        _regras.forEach(r => {
+          const rRow = createFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.98, b: 0.99 });
+          rulesSection.appendChild(rRow);
+          setFillAndHug(rRow);
+          rRow.cornerRadius = 8;
+          rRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+
+          const rTitle = createText(r.titulo || '', 12, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+          rRow.appendChild(rTitle);
+          setFillAndHug(rTitle);
+
+          if (r.link && r.link !== "#") {
+            const lText = createText("Acesse o link da HU", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
+            lText.textDecoration = "UNDERLINE";
+            lText.hyperlink = { type: "URL", value: r.link };
+            rRow.appendChild(lText);
+            setFillAndHug(lText);
+          }
+          if (r.notas) {
+            const nText = createText(r.notas, 12, "Regular", { r: 0.4, g: 0.4, b: 0.4 });
+            rRow.appendChild(nText);
+            setFillAndHug(nText);
+          }
+        });
+        content.appendChild(rulesSection);
+        setFillAndHug(rulesSection);
+      }
+
+      // 1.5 CENÁRIOS DE EXCEÇÃO (agregados de todos os frames)
+      const _allExcecoes = (data.frames || []).flatMap(f =>
+        (f.excecoes || []).map(e => ({ ...e, _frame: f.nome }))
+      );
+      if (_allExcecoes.length > 0) {
         const excSection = createSection(content, "Cenários de Exceção");
-        data.excecoes.forEach(e => {
+        _allExcecoes.forEach(e => {
           const eRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
           excSection.appendChild(eRow);
           setFillAndHug(eRow);
-          
           eRow.counterAxisAlignItems = "CENTER";
           eRow.cornerRadius = 8;
           eRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
 
           const typeTag = createFrame("HORIZONTAL", 8, 4, { r: 0.9, g: 0.2, b: 0.2 });
           typeTag.cornerRadius = 4;
-          typeTag.appendChild(createText(e.type, 10, "Bold", { r: 1, g: 1, b: 1 }));
+          typeTag.appendChild(createText(e.tipo || '', 10, "Bold", { r: 1, g: 1, b: 1 }));
           eRow.appendChild(typeTag);
 
-          const titleText = createText(e.title, 12, "Medium");
+          const titleText = createText(`${e.titulo || ''}${e._frame ? ' (' + e._frame + ')' : ''}`, 12, "Medium");
+          titleText.layoutGrow = 1;
           eRow.appendChild(titleText);
-          setFillAndHug(titleText);
-          
-          if (e.link && e.link !== "#") {
+
+          if (e.anchor && e.anchor !== "#") {
             titleText.textDecoration = "UNDERLINE";
-            titleText.hyperlink = { type: "URL", value: e.link };
+            titleText.hyperlink = { type: "URL", value: e.anchor };
           }
         });
+        content.appendChild(excSection);
+        setFillAndHug(excSection);
       }
 
-      // 1.5 REGRAS DE NEGÓCIO E HUS
-      if (data.regras && data.regras.length > 0) {
-        const rulesSection = createSection(content, "Regras de Negócio e HUs");
-        data.regras.forEach(r => {
-          const rRow = createFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.98, b: 0.99 });
-          rulesSection.appendChild(rRow);
-          setFillAndHug(rRow);
-          
-          rRow.cornerRadius = 8;
-          rRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
-
-          if (r.link && r.link !== "#") {
-            const lText = createText("Acesse o link da HU", 12, "Bold", { r: 0, g: 0.35, b: 0.79 });
-            lText.textDecoration = "UNDERLINE";
-            lText.hyperlink = { type: "URL", value: r.link };
-            rRow.appendChild(lText);
-            setFillAndHug(lText);
-          }
-          if (r.notes) {
-            const nText = createText(r.notes, 12, "Regular", { r: 0.4, g: 0.4, b: 0.4 });
-            rRow.appendChild(nText);
-            setFillAndHug(nText);
-          }
-        });
-      }
 
       // 1.6 DOCS E ANEXOS
       if (data.docs) {
@@ -680,7 +576,7 @@ figma.ui.onmessage = async (msg) => {
         let hasDocs = false;
         docItems.forEach(item => {
           const docData = data.docs[item.key];
-          if (docData && docData.checked && docData.link) {
+          if (docData && docData.link) {
             hasDocs = true;
             const dRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
             dRow.layoutAlign = "STRETCH";
@@ -712,7 +608,7 @@ figma.ui.onmessage = async (msg) => {
       // 2. USER INTERFACE
       if (!data.setup || data.setup.componentes !== false) {
         const uiBoard = createFrame("VERTICAL", 32, 24, { r: 1, g: 1, b: 1 });
-        uiBoard.name = "User Interface";
+        uiBoard.name = `${_handoffBase} / Interface`;
         uiBoard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
         uiBoard.cornerRadius = 16;
         uiBoard.resize(800, 100);
@@ -728,7 +624,7 @@ figma.ui.onmessage = async (msg) => {
           if (!items || items.length === 0) return null;
           
           const sec = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
-          sec.name = "Column: " + title;
+          sec.name = `[Scan] ${title}`;
           sec.cornerRadius = 16;
           sec.resize(280, 100);
           sec.primaryAxisSizingMode = "AUTO";  // Hug height
@@ -744,7 +640,7 @@ figma.ui.onmessage = async (msg) => {
 
           items.forEach(item => {
             const elCard = createFrame("VERTICAL", 16, 12, { r: 0.98, g: 0.99, b: 1 });
-            elCard.name = "Element: " + item.name;
+            elCard.name = `[Token] ${item.name}`;
             elCard.cornerRadius = 12;
             elCard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.96 } }];
             elCard.strokeWeight = 1;
@@ -840,23 +736,24 @@ figma.ui.onmessage = async (msg) => {
         }
 
         // Briefing Estratégico Section
-        if (data.setup && data.setup.incluirBriefing && data.briefing && data.briefing.questions && data.briefing.questions.length > 0) {
+        const _bqs2 = (data.step2 && data.step2.briefingQuestions)
+          ? data.step2.briefingQuestions.filter(q => q.answer && q.answer.trim())
+          : [];
+        if (_bqs2.length > 0) {
            const briefingSection = createSection(fichaTecnica, "Briefing Estratégico");
-           data.briefing.questions.forEach((q, idx) => {
-              if (q.answer) {
-                 const qRow = createFrame("VERTICAL", 0, 4);
-                 qRow.name = "Question " + (idx + 1);
-                 briefingSection.appendChild(qRow);
-                 setFillAndHug(qRow);
+           _bqs2.forEach((q, idx) => {
+              const qRow = createFrame("VERTICAL", 0, 4);
+              qRow.name = `[Briefing] Pergunta ${idx + 1}`;
+              briefingSection.appendChild(qRow);
+              setFillAndHug(qRow);
 
-                 const qText = createText(`${idx + 1}. ${q.question}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
-                 qRow.appendChild(qText);
-                 setFillAndHug(qText);
+              const qText = createText(`${idx + 1}. ${q.question || ''}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+              qRow.appendChild(qText);
+              setFillAndHug(qText);
 
-                 const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
-                 qRow.appendChild(aText);
-                 setFillAndHug(aText);
-              }
+              const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+              qRow.appendChild(aText);
+              setFillAndHug(aText);
            });
         }
 
@@ -905,7 +802,7 @@ figma.ui.onmessage = async (msg) => {
           if (node === mainContainer) continue;
 
           const specsBoard = createFrame("VERTICAL", 32, 24, { r: 1, g: 1, b: 1 });
-          specsBoard.name = "Design Specs - " + node.name;
+          specsBoard.name = `[Design Specs] ${node.name}`;
           specsBoard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
           specsBoard.cornerRadius = 16;
           specsBoard.resize(800, 100);
@@ -950,7 +847,7 @@ figma.ui.onmessage = async (msg) => {
               if (sf) {
                 const hex = rgbToHex(sf.color.r, sf.color.g, sf.color.b).toUpperCase();
                 const token = getVariableInfo(node, 'fills');
-                createRow(grid, "Fills", token ? `${token} (${hex})` : hex);
+                createRow(grid, "Fills", token ? token : hex);
               }
             }
             if ('strokes' in node && Array.isArray(node.strokes)) {
@@ -958,7 +855,7 @@ figma.ui.onmessage = async (msg) => {
               if (ss) {
                 const hex = rgbToHex(ss.color.r, ss.color.g, ss.color.b).toUpperCase();
                 const token = getVariableInfo(node, 'strokes');
-                createRow(grid, "Strokes", `${token ? token + ' (' + hex + ')' : hex} (${node.strokeWeight}px)`);
+                createRow(grid, "Strokes", `${token ? token : hex} (${node.strokeWeight}px)`);
               }
             }
 
@@ -978,7 +875,7 @@ figma.ui.onmessage = async (msg) => {
       // 4. AUDIT SUMMARY
       if (data.isAudit && data.auditSummary) {
         const auditBoard = createFrame("VERTICAL", 32, 24, { r: 1, g: 1, b: 1 });
-        auditBoard.name = "Design Audit";
+        auditBoard.name = `${_handoffBase} / Auditoria`;
         auditBoard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
         auditBoard.cornerRadius = 16;
         auditBoard.resize(800, 100);
@@ -1023,15 +920,32 @@ figma.ui.onmessage = async (msg) => {
         mainContainer.appendChild(auditBoard);
       }
 
-      // Posiciona no centro
-      mainContainer.x = figma.viewport.center.x;
-      mainContainer.y = figma.viewport.center.y;
-
+      // Posiciona: à direita da ficha existente (update) ou no centro do viewport (primeira vez)
       figma.currentPage.appendChild(mainContainer);
+
+      if (_isUpdate && _existingHandoffs.length > 0) {
+        const _rightmost = _existingHandoffs.reduce((best, n) => {
+          const bb = n.absoluteBoundingBox;
+          const bestBb = best.absoluteBoundingBox;
+          return bb && bestBb && (bb.x + bb.width) > (bestBb.x + bestBb.width) ? n : best;
+        });
+        const _bb = _rightmost.absoluteBoundingBox;
+        if (_bb) {
+          mainContainer.x = _bb.x + _bb.width + 80;
+          mainContainer.y = _bb.y;
+        } else {
+          mainContainer.x = figma.viewport.center.x;
+          mainContainer.y = figma.viewport.center.y;
+        }
+      } else {
+        mainContainer.x = figma.viewport.center.x;
+        mainContainer.y = figma.viewport.center.y;
+      }
+
       figma.currentPage.selection = [mainContainer];
       figma.viewport.scrollAndZoomIntoView([mainContainer]);
 
-      figma.ui.postMessage({ type: "handoff-complete" });
+      figma.ui.postMessage({ type: "handoff-complete", isUpdate: _isUpdate, timestamp: _ts });
     } catch (err) {
       console.error("Handoff Error:", err);
       figma.ui.postMessage({ type: "handoff-error", message: err.message });
@@ -1047,7 +961,7 @@ figma.ui.onmessage = async (msg) => {
       return;
     }
 
-    const { measureTypes, storeInParent } = msg;
+    const { measureTypes } = msg;
 
     function getVariableInfo(node, prop) {
       if (!node.boundVariables) return null;
@@ -1220,11 +1134,62 @@ figma.ui.onmessage = async (msg) => {
         }
 
         if (items.length > 0) {
-          const group = figma.group(items, storeInParent && node.parent && node.parent.type !== "PAGE" ? node.parent : figma.currentPage);
-          group.name = `[Medidas ${measureTypes.join(', ')}] ` + node.name;
+          const group = figma.group(items, figma.currentPage);
+          group.name = `[Medida] ${node.name}`;
           group.locked = true;
           appliedMeasuresList.push({ name: node.name, nodeId: group.id, details: appliedDetails });
         }
+
+        /* ── DORMANT: Frame Auxiliar de Medidas ─────────────────────────────
+         * Para ativar:
+         *   1. Remover o bloco `figma.group(...)` acima
+         *   2. Descomentar este bloco
+         *   3. Remover `disabled` e `opacity-50` do checkbox `chk-store-parent` no modal
+         *
+         * Comportamento: cria "[Medida-Aux] NomeDoFrame" ao lado do original,
+         * coloca uma cópia do frame dentro, aplica as medidas na cópia e
+         * cria um conector pontilhado ligando original → auxiliar.
+         * Re-scan substitui o frame auxiliar existente.
+         */
+        // if (items.length > 0) {
+        //   const pageLvl = figma.currentPage;
+        //   const orig = (node.parent && node.parent.type === 'FRAME') ? node.parent : node;
+        //   const auxName = `[Medida-Aux] ${orig.name}`;
+        //
+        //   // Re-scan: substitui frame auxiliar anterior
+        //   const existing = pageLvl.children.find(n => n.name === auxName && n.type === 'FRAME');
+        //   if (existing) existing.remove();
+        //
+        //   // Cria frame auxiliar ao lado do original
+        //   const auxFrame = figma.createFrame();
+        //   auxFrame.name = auxName;
+        //   auxFrame.resize(orig.width + 120, orig.height + 120);
+        //   auxFrame.x = orig.x + orig.width + 80;
+        //   auxFrame.y = orig.y;
+        //   auxFrame.fills = [{ type: 'SOLID', color: { r: 0.97, g: 0.97, b: 0.98 } }];
+        //   pageLvl.appendChild(auxFrame);
+        //
+        //   // Copia o frame original para dentro do auxiliar
+        //   const clone = orig.clone();
+        //   clone.x = 60; clone.y = 60;
+        //   auxFrame.appendChild(clone);
+        //
+        //   // Insere as anotações de medida no frame auxiliar
+        //   const group = figma.group(items, auxFrame);
+        //   group.name = `[Medidas] ${node.name}`;
+        //   group.locked = true;
+        //
+        //   // Conector pontilhado: original → auxiliar
+        //   const connector = figma.createConnector();
+        //   connector.connectorStart = { endpointNodeId: orig.id, magnet: 'AUTO' };
+        //   connector.connectorEnd   = { endpointNodeId: auxFrame.id, magnet: 'AUTO' };
+        //   connector.connectorLineType = 'ELBOWED';
+        //   connector.strokes = [{ type: 'SOLID', color: { r: 0.6, g: 0.6, b: 0.7 } }];
+        //   connector.strokeWeight = 1.5;
+        //   connector.dashPattern = [4, 4];
+        //
+        //   appliedMeasuresList.push({ name: node.name, nodeId: auxFrame.id, details: appliedDetails });
+        // }
       }
 
       figma.ui.postMessage({ type: "measurements-applied", data: appliedMeasuresList });
@@ -1232,11 +1197,82 @@ figma.ui.onmessage = async (msg) => {
     })();
   }
 
+  /* ── DORMANT: Feature 5 — Mapeamento de Protótipo (Conectores + Mermaid) ──
+   * Para ativar:
+   *   1. Descomentar o bloco abaixo
+   *   2. Adicionar botão "Mapear Protótipo" na view de Fluxos (Step 4)
+   *      com onclick: parent.postMessage({ pluginMessage: { type: 'map-prototype-flows' } }, '*')
+   *   3. Adicionar handler 'prototype-flows-mapped' em messages.js para receber
+   *      { edges, mermaid } e renderizar na lista de fluxos
+   *
+   * Limitação conhecida: reactions contém apenas transições configuradas no
+   * modo Prototype. Frames sem ligação não aparecem — informar o usuário e
+   * deixar adição manual via Fluxos (Feature 4) como complemento.
+   */
+  // if (msg.type === 'map-prototype-flows') {
+  //   const frames = figma.currentPage.children.filter(n =>
+  //     n.type === 'FRAME' || n.type === 'COMPONENT' || n.type === 'SECTION'
+  //   );
+  //   const edges = [];
+  //   const nodeIndex = {};
+  //   frames.forEach(frame => { nodeIndex[frame.id] = frame.name; });
+  //
+  //   frames.forEach(frame => {
+  //     (frame.reactions || []).forEach(r => {
+  //       if (r.action?.type === 'NODE' && r.action.destinationId) {
+  //         edges.push({
+  //           sourceId:   frame.id,
+  //           sourceName: frame.name,
+  //           destId:     r.action.destinationId,
+  //           destName:   nodeIndex[r.action.destinationId] || r.action.destinationId,
+  //           trigger:    r.trigger?.type || 'ON_CLICK'
+  //         });
+  //         // Conector visual no canvas
+  //         const connector = figma.createConnector();
+  //         connector.connectorStart = { endpointNodeId: frame.id, magnet: 'AUTO' };
+  //         connector.connectorEnd   = { endpointNodeId: r.action.destinationId, magnet: 'AUTO' };
+  //         connector.connectorLineType = 'ELBOWED';
+  //         connector.strokes = [{ type: 'SOLID', color: { r: 0.3, g: 0.5, b: 0.9 } }];
+  //         connector.strokeWeight = 2;
+  //       }
+  //     });
+  //   });
+  //
+  //   // Serialização Mermaid
+  //   // Exemplo de saída: flowchart LR\n  N0["Home"] -->|ON_CLICK| N1["Dashboard"]
+  //   const idMap = {};
+  //   let idx = 0;
+  //   let mermaid = 'flowchart LR\n';
+  //   edges.forEach(e => {
+  //     if (!idMap[e.sourceId]) idMap[e.sourceId] = `N${idx++}`;
+  //     if (!idMap[e.destId])   idMap[e.destId]   = `N${idx++}`;
+  //     const src = e.sourceName.replace(/"/g, "'");
+  //     const dst = e.destName.replace(/"/g, "'");
+  //     mermaid += `  ${idMap[e.sourceId]}["${src}"] -->|${e.trigger}| ${idMap[e.destId]}["${dst}"]\n`;
+  //   });
+  //
+  //   figma.ui.postMessage({ type: 'prototype-flows-mapped', edges, mermaid });
+  //   if (edges.length === 0) {
+  //     figma.notify('Nenhuma ligação de protótipo encontrada. Adicione conexões manualmente via Fluxos.');
+  //   }
+  //   return;
+  // }
+
   if (msg.type === "scan-frame") {
-    const selection = figma.currentPage.selection;
+    // Se veio um nodeId específico, usa ele; senão usa a seleção atual do canvas
+    let selection;
+    if (msg.nodeId) {
+      const specificNode = figma.getNodeById(msg.nodeId);
+      selection = specificNode ? [specificNode] : [];
+    } else {
+      selection = figma.currentPage.selection;
+    }
+    const _scanFrameId = msg.frameId || null;
+
     if (selection.length === 0) {
       figma.ui.postMessage({
         type: "scan-result",
+        frameId: _scanFrameId,
         error: "Nenhum item selecionado. Por favor, selecione um ou mais frames, seções ou grupos no Figma para escanear.",
       });
       return;
@@ -1542,7 +1578,8 @@ figma.ui.onmessage = async (msg) => {
       }
     }
 
-    function extractSpecs(n) {
+    function extractSpecs(n, depth) {
+      if ((depth || 0) > 8) return;
       // SKIP HIDDEN NODES
       if (n.visible === false) return;
 
@@ -1568,7 +1605,7 @@ figma.ui.onmessage = async (msg) => {
 
         if ('children' in n && n.children) {
           for (const child of n.children) {
-            extractSpecs(child);
+            extractSpecs(child, (depth || 0) + 1);
           }
         }
       } catch (err) {
@@ -1631,6 +1668,7 @@ figma.ui.onmessage = async (msg) => {
 
     figma.ui.postMessage({
       type: "scan-result",
+      frameId: _scanFrameId,
       data: {
         components: formatMap(specs.components),
         icons: formatMap(specs.icons),
@@ -1648,17 +1686,24 @@ figma.ui.onmessage = async (msg) => {
     const selection = figma.currentPage.selection;
     if (selection.length > 0) {
       const node = selection[0];
+      const fileKey = figma.fileKey;
+      const deeplink = fileKey
+        ? `https://www.figma.com/design/${fileKey}?node-id=${encodeURIComponent(node.id)}`
+        : '';
       figma.ui.postMessage({
         type: "selection-link",
         targetId: msg.targetId,
-        linkName: node.name
+        linkName: node.name,
+        nodeId: node.id,
+        deeplink
       });
     } else {
-      // Fallback to project name if nothing is selected
       figma.ui.postMessage({
         type: "selection-link",
         targetId: msg.targetId,
-        linkName: figma.root.name
+        linkName: figma.root.name,
+        nodeId: null,
+        deeplink: ''
       });
     }
   }
@@ -1728,10 +1773,11 @@ figma.ui.onmessage = async (msg) => {
       const pt = node.paddingTop || 0, pr = node.paddingRight || 0, pb = node.paddingBottom || 0, pl = node.paddingLeft || 0;
       if (pt + pr + pb + pl > 0) {
         const tT = getVar("paddingTop"), tR = getVar("paddingRight"), tB = getVar("paddingBottom"), tL = getVar("paddingLeft");
-        let val = `${pt}px ${pr}px ${pb}px ${pl}px`;
+        let val;
         if (tT || tR || tB || tL) {
-          const tokens = [tT, tR, tB, tL].filter(t => t).join(", ");
-          if (tokens) val += ` (${tokens})`;
+          val = [tT || `${pt}px`, tR || `${pr}px`, tB || `${pb}px`, tL || `${pl}px`].join(' ');
+        } else {
+          val = `${pt}px ${pr}px ${pb}px ${pl}px`;
         }
         properties.push({ key: "padding", label: "Padding", value: val });
       }
@@ -1742,14 +1788,16 @@ figma.ui.onmessage = async (msg) => {
       const sf = node.fills.find(f => f.type === "SOLID");
       if (sf) {
         const token = getVar("fills");
-        properties.push({ key: "fill", label: "Preenchimento", value: rgbToHex(sf.color.r, sf.color.g, sf.color.b).toUpperCase(), token });
+        const hexFill = rgbToHex(sf.color.r, sf.color.g, sf.color.b).toUpperCase();
+        properties.push({ key: "fill", label: "Preenchimento", value: token || hexFill, token });
       }
     }
     if ("strokes" in node && Array.isArray(node.strokes) && node.strokes.length > 0) {
       const ss = node.strokes.find(s => s.type === "SOLID");
       if (ss) {
         const token = getVar("strokes");
-        properties.push({ key: "stroke", label: "Contorno", value: rgbToHex(ss.color.r, ss.color.g, ss.color.b).toUpperCase(), token });
+        const hexStroke = rgbToHex(ss.color.r, ss.color.g, ss.color.b).toUpperCase();
+        properties.push({ key: "stroke", label: "Contorno", value: token || hexStroke, token });
       }
       if (node.strokeWeight !== figma.mixed && node.strokeWeight > 0) {
         properties.push({ key: "strokeWidth", label: "Espessura de borda", value: node.strokeWeight + "px" });
@@ -1802,9 +1850,12 @@ figma.ui.onmessage = async (msg) => {
       const cb = parseInt(hex.substring(4, 6), 16) / 255;
       const themeColor = { r: cr, g: cg, b: cb };
 
+      // Semantic name prefix used throughout all nodes of this spec
+      const _specBase = `[Spec] ${node.name}`;
+
       // Create Spec Card
       const specCard = figma.createFrame();
-      specCard.name = `Spec Card - ${opts.letter}`;
+      specCard.name = `${_specBase}/Ficha`;
       specCard.layoutMode = "VERTICAL";
       specCard.paddingLeft = 16;
       specCard.paddingRight = 16;
@@ -1827,7 +1878,7 @@ figma.ui.onmessage = async (msg) => {
       headerRow.counterAxisSizingMode = "AUTO";
 
       const tagCircle = figma.createFrame();
-      tagCircle.name = `Tag Spec ${opts.letter}`;
+      tagCircle.name = `${_specBase}/Tag`;
       tagCircle.layoutMode = "HORIZONTAL";
       tagCircle.primaryAxisSizingMode = "FIXED";
       tagCircle.counterAxisSizingMode = "FIXED";
@@ -1856,7 +1907,7 @@ figma.ui.onmessage = async (msg) => {
 
       if (opts.categoryLabel) {
         const pill = figma.createFrame();
-        pill.name = "Category Spec";
+        pill.name = `${_specBase}/Categoria/${opts.categoryLabel}`;
         pill.layoutMode = "HORIZONTAL";
         pill.paddingLeft = 8; pill.paddingRight = 8;
         pill.paddingTop = 4; pill.paddingBottom = 4;
@@ -1893,10 +1944,12 @@ figma.ui.onmessage = async (msg) => {
         propsFrame.fills = [];
         propsFrame.primaryAxisSizingMode = "AUTO";
         propsFrame.counterAxisSizingMode = "AUTO";
+        propsFrame.name = `${_specBase}/Propriedades`;
         propsFrame.layoutAlign = "MIN";
 
         opts.properties.forEach(p => {
           const row = figma.createFrame();
+          row.name = `${_specBase}/Prop/${p.label}`;
           row.layoutMode = "HORIZONTAL";
           row.itemSpacing = 12;
           row.fills = [];
@@ -1952,12 +2005,10 @@ figma.ui.onmessage = async (msg) => {
 
       // Positioning
       const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
-      let targetForConnector = node;
-
       if (bounds) {
         // Draw a dotted highlight frame around the node
         const contour = figma.createFrame();
-        contour.name = `Highlight - ${opts.letter}`;
+        contour.name = `${_specBase}/Destaque`;
         contour.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
 
         // Append first, then set absolute coordinates to avoid origin issues
@@ -1991,7 +2042,6 @@ figma.ui.onmessage = async (msg) => {
         chip.x = 0;
         chip.y = 0;
 
-        targetForConnector = contour; // Connect to the highlight box
         groupNodes.push(contour);
 
         // Append card to page first to calculate its real height
@@ -2026,36 +2076,27 @@ figma.ui.onmessage = async (msg) => {
         specColumnTracker[colKey] = Math.round(targetY) + specCard.height;
         groupNodes.push(specCard);
 
-        // --- Improved Vector Connector (Guia) ---
+        // --- Vector Connector (Guia) ---
         const connector = figma.createVector();
-        connector.name = "Guia de Conexão";
+        connector.name = `${_specBase}/Conector`;
 
-        // Define points based on side
-        let startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 }; // Right center
-        let endPt = { x: specCard.x, y: specCard.y + 40 }; // Card left side (approx header)
-
+        let startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+        let endPt   = { x: specCard.x, y: specCard.y + 40 };
         if (side === "left") {
           startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
-          endPt = { x: specCard.x + specCard.width, y: specCard.y + 40 };
+          endPt   = { x: specCard.x + specCard.width, y: specCard.y + 40 };
         } else if (side === "top") {
           startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
-          endPt = { x: specCard.x + specCard.width / 2, y: specCard.y + specCard.height };
+          endPt   = { x: specCard.x + specCard.width / 2, y: specCard.y + specCard.height };
         } else if (side === "bottom") {
           startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
-          endPt = { x: specCard.x + specCard.width / 2, y: specCard.y };
+          endPt   = { x: specCard.x + specCard.width / 2, y: specCard.y };
         }
-
-        // Draw direct vector path
-        connector.vectorPaths = [{
-          windingRule: "NONZERO",
-          data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}`
-        }];
-
+        connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
         connector.strokes = [{ type: "SOLID", color: themeColor }];
         connector.strokeWeight = 1.5;
         connector.dashPattern = [4, 4];
         connector.strokeCap = "ROUND";
-
         figma.currentPage.appendChild(connector);
         groupNodes.push(connector);
 
@@ -2068,7 +2109,7 @@ figma.ui.onmessage = async (msg) => {
 
       // Always create group at the Page level to avoid nesting in selected components
       const specGroup = figma.group(groupNodes, figma.currentPage);
-      specGroup.name = `Spec Group - ${opts.letter}`;
+      specGroup.name = `[Spec] ${node.name}`;
       specGroup.locked = true; 
 
 
@@ -2111,13 +2152,14 @@ figma.ui.onmessage = async (msg) => {
       if (msg.forceState !== undefined) {
         node.visible = msg.forceState;
       } else {
-        node.visible = !node.visible;
-      }
-      // Evita disparar múltiplos notificações se for um comando em massa
-      if (msg.forceState === undefined) {
-        figma.notify(node.visible ? "Visível" : "Oculto");
+        node.visible = false;
       }
     }
+  }
+
+  if (msg.type === "show-node") {
+    const node = figma.getNodeById(msg.id);
+    if (node) node.visible = true;
   }
 
   if (msg.type === 'rename-node') {
@@ -2164,6 +2206,7 @@ figma.ui.onmessage = async (msg) => {
     figma.clientStorage.setAsync('handoffData', msg.data).catch(err => {
       console.warn("Storage save failed (possibly missing plugin ID in manifest):", err);
     });
+    _writeSharedPluginData(msg.data);
   }
 
   if (msg.type === 'focus-node') {
@@ -2202,175 +2245,128 @@ figma.ui.onmessage = async (msg) => {
       return;
     }
 
-    const nodeA = selection[0];
-    const nodeB = selection[1] || null;
+    let nodeA = selection[0];
+    let nodeB = selection[1] || null;
+    let boundsA = nodeA.absoluteBoundingBox || nodeA.absoluteRenderBounds;
+    let boundsB = nodeB ? (nodeB.absoluteBoundingBox || nodeB.absoluteRenderBounds) : null;
 
-    const boundsA = nodeA.absoluteBoundingBox || nodeA.absoluteRenderBounds;
-    const boundsB = nodeB ? (nodeB.absoluteBoundingBox || nodeB.absoluteRenderBounds) : null;
+    if (!isEvent && boundsB && (!msg.flowSide || msg.flowSide === 'auto')) {
+      const cAx = boundsA.x + boundsA.width / 2, cAy = boundsA.y + boundsA.height / 2;
+      const cBx = boundsB.x + boundsB.width / 2, cBy = boundsB.y + boundsB.height / 2;
+      const adx = Math.abs(cBx - cAx), ady = Math.abs(cBy - cAy);
+      const shouldSwap = adx >= ady ? (cBx < cAx) : (cBy < cAy);
+      if (shouldSwap) { [nodeA, nodeB] = [nodeB, nodeA]; [boundsA, boundsB] = [boundsB, boundsA]; }
+    }
 
     const getEdgePoints = (b) => ({
-      top: { x: b.x + b.width / 2, y: b.y, side: 'top' },
-      bottom: { x: b.x + b.width / 2, y: b.y + b.height, side: 'bottom' },
-      left: { x: b.x, y: b.y + b.height / 2, side: 'left' },
-      right: { x: b.x + b.width, y: b.y + b.height / 2, side: 'right' }
+      top:    { x: b.x + b.width / 2,  y: b.y,              side: 'top'    },
+      bottom: { x: b.x + b.width / 2,  y: b.y + b.height,   side: 'bottom' },
+      left:   { x: b.x,                y: b.y + b.height / 2, side: 'left'  },
+      right:  { x: b.x + b.width,      y: b.y + b.height / 2, side: 'right' }
     });
 
     const pointsA = getEdgePoints(boundsA);
     let bestA, bestB;
 
-    // Forçar lado para eventos de Início (Esquerda) e Fim (Direita)
-    if (msg.flowType === "event_start") {
-      bestA = pointsA.left;
-    } else if (msg.flowType === "event_end") {
-      bestA = pointsA.right;
-    } else if (msg.flowSide && msg.flowSide !== 'auto' && pointsA[msg.flowSide]) {
-      bestA = pointsA[msg.flowSide];
-    }
+    if (msg.flowType === "event_start")      bestA = pointsA.left;
+    else if (msg.flowType === "event_end")   bestA = pointsA.right;
+    else if (msg.flowSide && msg.flowSide !== 'auto' && pointsA[msg.flowSide]) bestA = pointsA[msg.flowSide];
 
     if (nodeB && boundsB) {
       const pointsB = getEdgePoints(boundsB);
       if (!bestA) {
-        let minDict = Infinity;
-        for (const pA of Object.values(pointsA)) {
-          for (const pB of Object.values(pointsB)) {
-            const dist = Math.sqrt(Math.pow(pA.x - pB.x, 2) + Math.pow(pA.y - pB.y, 2));
-            if (dist < minDict) {
-              minDict = dist;
-              bestA = pA;
-              bestB = pB;
-            }
-          }
-        }
+        const cAx = boundsA.x + boundsA.width / 2, cAy = boundsA.y + boundsA.height / 2;
+        const cBx = boundsB.x + boundsB.width / 2, cBy = boundsB.y + boundsB.height / 2;
+        const dx = cBx - cAx, dy = cBy - cAy;
+        if (Math.abs(dx) >= Math.abs(dy)) { bestA = dx >= 0 ? pointsA.right : pointsA.left; bestB = dx >= 0 ? pointsB.left : pointsB.right; }
+        else                              { bestA = dy >= 0 ? pointsA.bottom : pointsA.top;  bestB = dy >= 0 ? pointsB.top : pointsB.bottom; }
       } else {
-        let minDict = Infinity;
+        let minDist = Infinity;
         for (const pB of Object.values(pointsB)) {
-          const dist = Math.sqrt(Math.pow(bestA.x - pB.x, 2) + Math.pow(bestA.y - pB.y, 2));
-          if (dist < minDict) {
-            minDict = dist;
-            bestB = pB;
-          }
+          const d = Math.sqrt(Math.pow(bestA.x - pB.x, 2) + Math.pow(bestA.y - pB.y, 2));
+          if (d < minDist) { minDist = d; bestB = pB; }
         }
       }
     } else {
-      // Se for apenas um nó (comum para eventos de início/fim)
-      if (msg.flowType === "event_start") {
-        bestA = pointsA.left;
-        bestB = { x: bestA.x - 60, y: bestA.y, side: 'left' };
-      } else if (msg.flowType === "event_end") {
-        bestA = pointsA.right;
-        bestB = { x: bestA.x + 60, y: bestA.y, side: 'right' };
-      } else {
+      if (msg.flowType === "event_start")     { bestA = pointsA.left;  bestB = { x: bestA.x - 60, y: bestA.y }; }
+      else if (msg.flowType === "event_end")  { bestA = pointsA.right; bestB = { x: bestA.x + 60, y: bestA.y }; }
+      else {
         bestA = bestA || pointsA.right;
         const offset = 40;
-        bestB = { x: bestA.x, y: bestA.y, side: bestA.side };
+        bestB = { x: bestA.x, y: bestA.y };
         if (bestA.side === 'top') bestB.y -= offset;
         else if (bestA.side === 'bottom') bestB.y += offset;
-        else if (bestA.side === 'left') bestB.x -= offset;
+        else if (bestA.side === 'left')   bestB.x -= offset;
         else bestB.x += offset;
       }
     }
 
-    const connector = figma.createVector();
-    connector.name = `Flow Line`;
-    figma.currentPage.appendChild(connector);
-    connector.x = 0;
-    connector.y = 0;
+    const strokeColor = { r: 0.12, g: 0.16, b: 0.23 };
+    const line = figma.createVector();
+    line.name = `Handex/Fluxo/Linha`;
+    figma.currentPage.appendChild(line);
+    line.x = 0; line.y = 0;
+    line.strokes = [{ type: "SOLID", color: strokeColor }];
+    line.strokeWeight = 2;
+    if (msg.flowType === "line_dashed") line.dashPattern = [6, 4];
+    line.vectorPaths = [{ windingRule: "NONZERO", data: `M ${bestA.x} ${bestA.y} L ${bestB.x} ${bestB.y}` }];
 
-    const strokeColor = { r: 0.12, g: 0.16, b: 0.23 }; // #1E293B
-    connector.strokes = [{ type: "SOLID", color: strokeColor }];
-    connector.strokeWeight = 2;
+    let nodesToGroup = [line];
 
-    if (msg.flowType === "line_dashed") {
-      connector.dashPattern = [6, 4];
-    }
-
-    // Caminho da linha
-    connector.vectorPaths = [{
-      windingRule: "NONZERO",
-      data: `M ${bestA.x} ${bestA.y} L ${bestB.x} ${bestB.y}`
-    }];
-
-    let nodesToGroup = [connector];
-
-    // Desenhar seta manualmente se não for início de jornada
     if (msg.flowType !== "event_start") {
       const angle = Math.atan2(bestB.y - bestA.y, bestB.x - bestA.x);
       const arrowSize = 8;
       const arrow = figma.createVector();
       figma.currentPage.appendChild(arrow);
-      arrow.x = 0;
-      arrow.y = 0;
+      arrow.x = 0; arrow.y = 0;
       arrow.strokes = [{ type: "SOLID", color: strokeColor }];
-      arrow.strokeWeight = 2;
-      arrow.strokeCap = "ROUND";
-      arrow.strokeJoin = "ROUND";
-
+      arrow.strokeWeight = 2; arrow.strokeCap = "ROUND"; arrow.strokeJoin = "ROUND";
       const x1 = bestB.x - arrowSize * Math.cos(angle - Math.PI / 6);
       const y1 = bestB.y - arrowSize * Math.sin(angle - Math.PI / 6);
       const x2 = bestB.x - arrowSize * Math.cos(angle + Math.PI / 6);
       const y2 = bestB.y - arrowSize * Math.sin(angle + Math.PI / 6);
-
-      arrow.vectorPaths = [{
-        windingRule: "NONZERO",
-        data: `M ${x1} ${y1} L ${bestB.x} ${bestB.y} L ${x2} ${y2}`
-      }];
+      arrow.vectorPaths = [{ windingRule: "NONZERO", data: `M ${x1} ${y1} L ${bestB.x} ${bestB.y} L ${x2} ${y2}` }];
       nodesToGroup.push(arrow);
     }
 
     if (msg.flowType === "diamond" || msg.flowType === "diamond_dashed") {
-      const midX = (bestA.x + bestB.x) / 2;
-      const midY = (bestA.y + bestB.y) / 2;
-      const size = 64;
-      const halfSize = size / 2;
-
+      const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
+      const size = 64, halfSize = size / 2;
       const shape = figma.createVector();
       figma.currentPage.appendChild(shape);
-      shape.x = 0;
-      shape.y = 0;
-      shape.vectorPaths = [{
-        windingRule: "NONZERO",
-        data: `M ${midX} ${midY - halfSize} L ${midX + halfSize} ${midY} L ${midX} ${midY + halfSize} L ${midX - halfSize} ${midY} Z`
-      }];
+      shape.x = 0; shape.y = 0;
+      shape.vectorPaths = [{ windingRule: "NONZERO", data: `M ${midX} ${midY - halfSize} L ${midX + halfSize} ${midY} L ${midX} ${midY + halfSize} L ${midX - halfSize} ${midY} Z` }];
       shape.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
       shape.strokes = [{ type: "SOLID", color: strokeColor }];
       shape.strokeWeight = 2;
       if (msg.flowType === "diamond_dashed") shape.dashPattern = [6, 4];
-
       (async () => {
         try {
           await figma.loadFontAsync({ family: "Inter", style: "Bold" });
           const symbol = figma.createText();
           figma.currentPage.appendChild(symbol);
           symbol.fontName = { family: "Inter", style: "Bold" };
-          symbol.characters = (msg.decisionText || "IF");
+          symbol.characters = msg.decisionText || "IF";
           symbol.fontSize = 11;
-          symbol.textAlignHorizontal = "CENTER";
-          symbol.textAlignVertical = "CENTER";
+          symbol.textAlignHorizontal = "CENTER"; symbol.textAlignVertical = "CENTER";
           symbol.fills = [{ type: "SOLID", color: strokeColor }];
           symbol.resize(size * 0.8, symbol.height);
-          symbol.x = midX - (symbol.width / 2);
-          symbol.y = midY - (symbol.height / 2);
-
-          const flowNum = msg.nextFlowNumber || 1;
-          
+          symbol.x = midX - symbol.width / 2; symbol.y = midY - symbol.height / 2;
           nodesToGroup.push(shape, symbol);
           const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-          finalGroup.name = `[Flow-${flowNum}] ${msg.flowName || "Decisão"}`;
+          finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Decisão"}`;
           figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
         } catch (e) { console.error(e); }
       })();
     } else if (isEvent) {
       const isStart = msg.flowType === "event_start";
-      const targetPoint = bestB;
       const circle = figma.createEllipse();
       figma.currentPage.appendChild(circle);
       circle.resize(48, 48);
-      circle.x = targetPoint.x - 24;
-      circle.y = targetPoint.y - 24;
+      circle.x = bestB.x - 24; circle.y = bestB.y - 24;
       circle.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
       circle.strokes = [{ type: "SOLID", color: isStart ? { r: 0.13, g: 0.6, b: 0.3 } : { r: 0.86, g: 0.1, b: 0.1 } }];
       circle.strokeWeight = isStart ? 2 : 4;
-
       (async () => {
         try {
           await figma.loadFontAsync({ family: "Inter", style: "Bold" });
@@ -2379,72 +2375,48 @@ figma.ui.onmessage = async (msg) => {
           label.fontName = { family: "Inter", style: "Bold" };
           label.characters = isStart ? "INÍCIO" : "FIM";
           label.fontSize = 8;
-          label.textAlignHorizontal = "CENTER";
-          label.textAlignVertical = "CENTER";
+          label.textAlignHorizontal = "CENTER"; label.textAlignVertical = "CENTER";
           label.fills = circle.strokes;
-          label.x = circle.x + (circle.width / 2) - (label.width / 2);
-          label.y = circle.y + (circle.height / 2) - (label.height / 2);
-
-          const flowNum = msg.nextFlowNumber || 1;
-
+          label.x = circle.x + circle.width / 2 - label.width / 2;
+          label.y = circle.y + circle.height / 2 - label.height / 2;
           nodesToGroup.push(circle, label);
           const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-          finalGroup.name = `[Flow-${flowNum}] ${msg.flowName || (isStart ? "Início" : "Fim")}`;
+          finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || (isStart ? "Início" : "Fim")}`;
           figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
         } catch (e) { console.error(e); }
       })();
     } else if (msg.decisionText && (msg.flowType === "line_solid" || msg.flowType === "line_dashed")) {
-      const midX = (bestA.x + bestB.x) / 2;
-      const midY = (bestA.y + bestB.y) / 2;
-      
+      const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
       (async () => {
         try {
           await figma.loadFontAsync({ family: "Inter", style: "Bold" });
-
-          // Criar textNode para medir as dimensões
           const textNode = figma.createText();
           textNode.name = "Texto";
           textNode.fontName = { family: "Inter", style: "Bold" };
           textNode.characters = msg.decisionText;
           textNode.fontSize = 10;
-          textNode.textAlignHorizontal = "CENTER";
-          textNode.textAlignVertical = "CENTER";
+          textNode.textAlignHorizontal = "CENTER"; textNode.textAlignVertical = "CENTER";
           textNode.fills = [{ type: "SOLID", color: strokeColor }];
-
-          const paddingH = 8;
-          const paddingV = 4;
-
-          // Appendar chipBg PRIMEIRO na página → z-order mais baixo (atrás)
+          const paddingH = 8, paddingV = 4;
           const chipBg = figma.createRectangle();
           figma.currentPage.appendChild(chipBg);
           chipBg.name = "Fundo";
           chipBg.resize(textNode.width + paddingH * 2, textNode.height + paddingV * 2);
           chipBg.cornerRadius = 6;
           chipBg.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
-          chipBg.strokes = [{ type: "SOLID", color: strokeColor }];
-          chipBg.strokeWeight = 1;
-          chipBg.x = midX - (chipBg.width / 2);
-          chipBg.y = midY - (chipBg.height / 2);
-
-          // Appendar textNode DEPOIS na página → z-order mais alto (frente)
+          chipBg.strokes = [{ type: "SOLID", color: strokeColor }]; chipBg.strokeWeight = 1;
+          chipBg.x = midX - chipBg.width / 2; chipBg.y = midY - chipBg.height / 2;
           figma.currentPage.appendChild(textNode);
-          textNode.x = chipBg.x + paddingH;
-          textNode.y = chipBg.y + paddingV;
-          
-          const flowNum = msg.nextFlowNumber || 1;
-
-          // Garantir que Texto (textNode) venha DEPOIS do Fundo (chipBg) para ficar à frente
+          textNode.x = chipBg.x + paddingH; textNode.y = chipBg.y + paddingV;
           nodesToGroup.push(chipBg, textNode);
           const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-          finalGroup.name = `[Flow-${flowNum}] ${msg.flowName || "Conexão"}`;
+          finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Conexão"}`;
           figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
         } catch (e) { console.error(e); }
       })();
     } else {
-      const flowNum = msg.nextFlowNumber || 1;
-
       const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-      finalGroup.name = `[Flow-${flowNum}] ${msg.flowName || "Conexão"}`;
+      finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Conexão"}`;
       figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
     }
     figma.notify("Fluxo criado!");
@@ -2457,7 +2429,7 @@ figma.ui.onmessage = async (msg) => {
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
 
       const legendFrame = figma.createFrame();
-      legendFrame.name = "Legendas e Indicadores";
+      legendFrame.name = "Handex/Fluxo/Legendas";
       legendFrame.layoutMode = "VERTICAL";
       legendFrame.paddingLeft = 20;
       legendFrame.paddingRight = 20;
@@ -2521,22 +2493,720 @@ figma.ui.onmessage = async (msg) => {
     })();
   }
 
+
+  if (msg.type === 'pull-briefing-from-canvas') {
+    const briefingFrame = figma.currentPage.findOne(n => n.type === 'FRAME' && n.name === 'Briefing Estruturado');
+    if (!briefingFrame) {
+      figma.ui.postMessage({ type: 'briefing-data-pulled', data: [] });
+      return;
+    }
+
+    const data = [];
+    let currentHeader = null;
+
+    const texts = briefingFrame.findAll(n => n.type === 'TEXT');
+    for (const child of texts) {
+      const style = child.fontName.style || '';
+      if (style.includes('Bold') || style.includes('SemiBold') || style.includes('Black')) {
+        currentHeader = child.characters;
+      } else if (style.includes('Regular') && currentHeader) {
+        if (child.characters.trim().length > 0 && child.characters.trim() !== 'Clique para adicionar...') {
+          data.push({ category: "Importado do Canvas", question: currentHeader, answer: child.characters });
+        }
+        currentHeader = null; 
+      }
+    }
+
+    figma.ui.postMessage({ type: 'briefing-data-pulled', data });
+    return;
+  }
+
+  // ─── INJECT FRAMEWORK ────────────────────────────────────────────
+  if (msg.type === 'inject-framework') {
+    (async () => {
+      for (const font of [
+        { family: "Inter", style: "Regular" },
+        { family: "Inter", style: "Medium" },
+        { family: "Inter", style: "Bold" }
+      ]) {
+        try { await figma.loadFontAsync(font); } catch(e) {}
+      }
+
+      const CAIXA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 205.51265 46.553631"><g transform="translate(-284.78446,-475.51214)"><g transform="matrix(1.25,0,0,-1.25,15.493106,1024.9702)"><g transform="scale(0.24,0.24)"><path d="m 1107.19,1780.04 -17.74,-44.21 24.55,0 -6.73,44.39 -0.08,-0.18 z m -93.98,-101.49 72.77,149.83 55.02,0 30.68,-149.83 -48.3,0 -3.56,19.97 -46.86,0 -10.78,-19.97 -48.97,0 z m 181.34,0 21.08,149.83 48.67,0 -21.07,-149.83 -48.68,0 z m 323.71,101.67 -17.81,-44.39 24.54,0 -6.73,44.39 z m -94.06,-101.67 72.78,149.83 55.01,0 30.69,-149.83 -48.31,0 -3.55,19.97 -46.87,0 -10.78,-19.97 -48.97,0" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1316.6,1748.61 60.99,0 41.79,-69.21 -61,0 -41.78,69.21" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1322.94,1759.24 63.04,0 54.75,68.92 -63.04,0 -54.75,-68.92" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1259.91,1678.98 63.03,0 54.75,69.76 -63.04,0 -54.74,-69.76" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1282.64,1829 58.83,0 40.31,-69.76 -58.84,0 -40.3,69.76" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1014.65,1823.02 -4.68,-44.07 c -17.939,24.75 -59.517,7.67 -62.782,-23.16 -4.149,-39.13 35.867,-48.25 57.642,-25.21 l -4.69,-44.17 c -6.499,-3.19 -12.855,-5.67 -19.128,-7.34 -6.239,-1.68 -12.492,-2.57 -18.696,-2.7 -7.8,-0.17 -14.867,0.65 -21.234,2.44 -6.367,1.76 -12.129,4.56 -17.227,8.34 -9.832,7.19 -16.941,16.33 -21.32,27.45 -4.379,11.16 -5.82,23.75 -4.328,37.82 1.203,11.31 4.051,21.62 8.59,30.97 4.5,9.34 10.734,17.84 18.672,25.54 7.504,7.34 15.676,12.88 24.519,16.64 8.809,3.73 18.422,5.72 28.813,5.94 6.207,0.13 12.297,-0.49 18.207,-1.92 5.942,-1.42 11.802,-3.64 17.642,-6.57" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/></g></g></g></svg>`;
+
+      const mkLogo = (h) => {
+        try {
+          const n = figma.createNodeFromSvg(CAIXA_SVG);
+          n.name = "CAIXA Logo";
+          n.resize(Math.round(h * 205.51 / 46.55), h);
+          return n;
+        } catch(e) {
+          const t = tx("CAIXA", Math.round(h * 0.6), "Bold", C.blue);
+          return t;
+        }
+      };
+
+      const mkHeader = (title) => {
+        const bar = figma.createFrame();
+        bar.layoutMode = "HORIZONTAL";
+        bar.paddingLeft = bar.paddingRight = 16;
+        bar.paddingTop = bar.paddingBottom = 14;
+        bar.itemSpacing = 12;
+        bar.primaryAxisSizingMode = "AUTO";
+        bar.counterAxisSizingMode = "AUTO";
+        bar.layoutAlign = "STRETCH";
+        bar.counterAxisAlignItems = "CENTER";
+        bar.fills = [{ type: "SOLID", color: C.bgBlue }];
+        bar.appendChild(mkLogo(20));
+        bar.appendChild(tx("|", 14, "Regular", C.blueDark));
+        bar.appendChild(tx(title, 14, "Bold", C.blueDark));
+        return bar;
+      };
+
+      const mkCanvas = (h, fill) => {
+        const c = figma.createFrame();
+        c.resize(100, h);
+        c.fills = fill ? [{ type: "SOLID", color: fill }] : [];
+        c.layoutAlign = "STRETCH";
+        return c;
+      };
+
+      const C = {
+        blue:      { r: 0,     g: 0.439, b: 0.686 },
+        blueDark:  { r: 0,     g: 0.247, b: 0.478 },
+        blueLight: { r: 0.910, g: 0.957, b: 0.980 },
+        orange:    { r: 0.965, g: 0.510, b: 0.165 },
+        teal:      { r: 0.298, g: 0.745, b: 0.714 },
+        tealLight: { r: 0.851, g: 0.961, b: 0.957 },
+        lime:      { r: 0.831, g: 0.969, b: 0.188 },
+        yellow:    { r: 1,     g: 0.949, b: 0.749 },
+        white:     { r: 1,     g: 1,     b: 1     },
+        bg:        { r: 0.941, g: 0.953, b: 0.969 },
+        bgBlue:    { r: 0.910, g: 0.957, b: 0.980 },
+        line:      { r: 0.882, g: 0.894, b: 0.910 },
+        text:      { r: 0.118, g: 0.161, b: 0.231 },
+        muted:     { r: 0.392, g: 0.455, b: 0.545 },
+        light:     { r: 0.651, g: 0.706, b: 0.780 },
+        green:     { r: 0.133, g: 0.694, b: 0.298 },
+        greenLight:{ r: 0.941, g: 0.992, b: 0.949 },
+        amber:     { r: 0.961, g: 0.769, b: 0.188 },
+        red:       { r: 0.941, g: 0.263, b: 0.212 },
+      };
+
+      const tx = (text, size, weight, color) => {
+        const n = figma.createText();
+        n.fontName = { family: "Inter", style: weight || "Regular" };
+        n.characters = String(text || "");
+        n.fontSize = size || 12;
+        n.fills = [{ type: "SOLID", color: color || C.text }];
+        n.textAutoResize = "WIDTH_AND_HEIGHT";
+        return n;
+      };
+
+      const vb = (w, pad, gap, fill, cr) => {
+        const f = figma.createFrame();
+        f.layoutMode = "VERTICAL";
+        f.paddingLeft = f.paddingRight = pad;
+        f.paddingTop = f.paddingBottom = pad;
+        f.itemSpacing = gap;
+        f.fills = fill ? [{ type: "SOLID", color: fill }] : [];
+        if (cr) f.cornerRadius = cr;
+        if (w !== null) {
+          f.counterAxisSizingMode = "FIXED";
+          f.resize(w, 10);
+        } else {
+          f.counterAxisSizingMode = "AUTO";
+        }
+        f.primaryAxisSizingMode = "AUTO"; 
+        return f;
+      };
+
+      const hb = (pad, gap, fill, cr) => {
+        const f = figma.createFrame();
+        f.layoutMode = "HORIZONTAL";
+        f.paddingLeft = f.paddingRight = pad;
+        f.paddingTop = f.paddingBottom = pad;
+        f.itemSpacing = gap;
+        f.primaryAxisSizingMode = "AUTO";
+        f.counterAxisSizingMode = "AUTO";
+        f.counterAxisAlignItems = "CENTER";
+        f.fills = fill ? [{ type: "SOLID", color: fill }] : [];
+        if (cr) f.cornerRadius = cr;
+        return f;
+      };
+
+      const addT = (parent, text, size, weight, color) => {
+        const n = tx(text, size, weight, color);
+        n.textAutoResize = "HEIGHT";
+        n.layoutAlign = "STRETCH";
+        parent.appendChild(n);
+        return n;
+      };
+
+      const sp = (h) => {
+        const r = figma.createRectangle();
+        r.resize(4, h); r.opacity = 0;
+        return r;
+      };
+
+      const rct = (w, h, fill, cr, strokeC, strokeW, dash) => {
+        const r = figma.createRectangle();
+        r.resize(w, h);
+        r.fills = fill ? [{ type: "SOLID", color: fill }] : [];
+        if (cr) r.cornerRadius = cr;
+        if (strokeC) {
+          r.strokes = [{ type: "SOLID", color: strokeC }];
+          r.strokeWeight = strokeW || 1;
+          if (dash) r.dashPattern = dash;
+        }
+        return r;
+      };
+
+      const ell = (w, h, fill, strokeC, strokeW, dash) => {
+        const e = figma.createEllipse();
+        e.resize(w, h);
+        e.fills = fill ? [{ type: "SOLID", color: fill }] : [];
+        if (strokeC) {
+          e.strokes = [{ type: "SOLID", color: strokeC }];
+          e.strokeWeight = strokeW || 1;
+          if (dash) e.dashPattern = dash;
+        }
+        return e;
+      };
+
+      const addLogo = (parent, x, y, size) => {
+        size = size || 36;
+        const c = ell(size, size, C.blue);
+        c.x = x; c.y = y; parent.appendChild(c);
+        const lt = tx("UX", Math.round(size * 0.3), "Bold", C.white);
+        lt.x = x + Math.round(size * 0.22); lt.y = y + Math.round(size * 0.33);
+        parent.appendChild(lt);
+      };
+
+      let mainFrame = null;
+
+      if (msg.frameworkId === 'briefing') {
+        mainFrame = vb(700, 48, 0, C.white, 16);
+        mainFrame.name = "Briefing Estruturado";
+        const hdr = mkHeader("Briefing Estruturado");
+        mainFrame.appendChild(hdr);
+        hdr.layoutAlign = "STRETCH";
+        mainFrame.appendChild(sp(20));
+
+        const fieldRow = (label, val) => {
+          const row = hb(0, 6, null);
+          row.counterAxisAlignItems = "MIN";
+          row.appendChild(tx(label + "  ", 13, "Bold", C.blue));
+          row.appendChild(tx(val, 13, "Regular", C.text));
+          mainFrame.appendChild(row);
+          mainFrame.appendChild(sp(4));
+        };
+
+        const section = (header, body, sub) => {
+          mainFrame.appendChild(sp(sub ? 4 : 14));
+          addT(mainFrame, header, sub ? 12 : 14, "Bold", sub ? C.orange : C.blue);
+          if (body) {
+            mainFrame.appendChild(sp(4));
+            addT(mainFrame, body, 12, "Regular", C.muted);
+          }
+        };
+
+        fieldRow("Nome do Projeto:", "Nome do projeto");
+        fieldRow("Data de Início:", "00/00/00");
+        mainFrame.appendChild(sp(12));
+        const sep = rct(604, 1, C.line); mainFrame.appendChild(sep);
+
+        section("Contexto", "Descreva o contexto atual do projeto e por que ele está sendo demandado. Se existirem jornadas mapeadas ou algum material, ele deve ser registrado ou linkado nesta sessão.");
+        section("Resultados-chave e critério de sucesso", "Como o sucesso do projeto será medido?");
+        section("Atores e usuários", "Quem é o público deste projeto? Você pode aprofundar, aqui, para um estudo de personas.");
+        section("Stakeholders e equipe", "Anote quem faz parte da(s) equipe(s), quais são suas responsabilidades. Importante anotar quem vai validar as decisões.");
+        section("Escopo");
+        section("Está no escopo", "O que precisa ser trabalhado e por que.", true);
+        section("Pode estar no escopo", "O que depende de outros fatores para entrar no escopo.", true);
+        section("Não está no escopo", "Limitações técnicas ou escopo excluído explicitamente.", true);
+        section("Dependências", "Outras áreas que podem ter conhecimento ou domínio sobre parte do projeto.");
+        section("Riscos", "Riscos que atrapalhem o sucesso do projeto. O que pode acontecer se não atingirmos as metas?");
+        section("Tempo", "Roadmaps, prazos, sprints necessárias, qualquer fator que tangibilize tempo de projeto.");
+        section("Organização do trabalho");
+        section("Rotina de trabalho da equipe", "Reuniões diárias? Sprint? Retrô?", true);
+        section("Comunicação", "Exemplo: reuniões marcadas por email, feitas pelo Teams.", true);
+        section("Compartilhamento de dados", "Softwares e pastas, meio de compartilhamento, formatos de arquivos.", true);
+        section("Notas adicionais", "Notas aqui.");
+        mainFrame.appendChild(sp(8));
+      }
+      else if (msg.frameworkId === 'csd') {
+        mainFrame = vb(940, 0, 0, C.white, 16);
+        mainFrame.name = "Matriz CSD";
+        const hdr = mkHeader("Matriz CSD – Certezas · Suposições · Dúvidas");
+        mainFrame.appendChild(hdr);
+        hdr.layoutAlign = "STRETCH";
+
+        const csdRow = hb(20, 16, null);
+        csdRow.layoutAlign = "STRETCH";
+        mainFrame.appendChild(csdRow);
+
+        const csdCols = [
+          { label: "Certezas",   sub: "O que sabemos com certeza.",              hdr: C.green,  bg: C.greenLight },
+          { label: "Suposições", sub: "O que acreditamos, mas não validamos.",   hdr: C.amber,  bg: { r:1, g:0.980, b:0.929 } },
+          { label: "Dúvidas",   sub: "O que precisamos descobrir.",              hdr: C.red,    bg: { r:1, g:0.949, b:0.949 } },
+        ];
+
+        csdCols.forEach(col => {
+          const card = vb(280, 0, 8, col.bg, 12);
+          card.paddingBottom = 16;
+          const chdr = vb(280, 16, 4, col.hdr, 0);
+          chdr.paddingTop = chdr.paddingBottom = 10;
+          chdr.layoutAlign = "STRETCH";
+          const ct = tx(col.label, 13, "Bold", C.white);
+          ct.layoutAlign = "STRETCH"; ct.textAutoResize = "HEIGHT";
+          const cs = tx(col.sub, 10, "Regular", C.white); cs.opacity = 0.85;
+          cs.layoutAlign = "STRETCH"; cs.textAutoResize = "HEIGHT";
+          chdr.appendChild(ct); chdr.appendChild(cs);
+          card.appendChild(chdr);
+
+          for (let i = 0; i < 3; i++) {
+            const itemWrap = vb(248, 12, 0, C.white, 8);
+            itemWrap.paddingTop = itemWrap.paddingBottom = 10;
+            itemWrap.strokes = [{ type: "SOLID", color: C.line }];
+            itemWrap.strokeWeight = 1;
+            itemWrap.layoutAlign = "STRETCH";
+            const ph = tx("Clique para adicionar...", 11, "Regular", C.light);
+            ph.layoutAlign = "STRETCH"; ph.textAutoResize = "HEIGHT";
+            itemWrap.appendChild(ph);
+            card.appendChild(itemWrap);
+          }
+          csdRow.appendChild(card);
+        });
+      }
+      else if (msg.frameworkId === 'five-whys') {
+        mainFrame = vb(600, 40, 0, C.bgBlue, 20);
+        mainFrame.name = "Os 5 Porquês";
+        const hdr = mkHeader("Os 5 porquê?");
+        mainFrame.appendChild(hdr);
+        hdr.layoutAlign = "STRETCH";
+
+        mainFrame.appendChild(sp(12));
+        mainFrame.appendChild(rct(520, 1, C.line));
+        mainFrame.appendChild(sp(12));
+
+        const probRow = hb(0, 8, null);
+        probRow.counterAxisAlignItems = "MIN";
+        probRow.appendChild(tx("Problema:  ", 13, "Bold", C.blue));
+        probRow.appendChild(tx("Diga qual o problema encontrado.", 13, "Regular", C.muted));
+        mainFrame.appendChild(probRow);
+
+        const emojis  = ["😀","😊","🤔","😢","🤯","😱"];
+        const qLabels = ["Porquê o problema ocorre?","Porquê?","Porquê?","Porquê?","Porquê?","Porquê?"];
+        const motivos = ["1° motivo","2° motivo","3° motivo","4° motivo","5° motivo","6° motivo"];
+
+        for (let i = 0; i < 6; i++) {
+          mainFrame.appendChild(sp(14));
+          const row = hb(0, 12, null);
+          row.counterAxisAlignItems = "CENTER";
+          row.appendChild(tx(emojis[i], 18, "Regular", C.text));
+          const block = vb(null, 0, 2, null);
+          block.appendChild(tx(qLabels[i], 13, "Bold", C.blue));
+          block.appendChild(tx(motivos[i], 12, "Regular", C.muted));
+          row.appendChild(block);
+          mainFrame.appendChild(row);
+        }
+
+        mainFrame.appendChild(sp(20));
+        mainFrame.appendChild(rct(520, 1, C.line));
+        mainFrame.appendChild(sp(12));
+        addT(mainFrame, "Causa raiz", 14, "Bold", C.blue);
+        mainFrame.appendChild(sp(4));
+        addT(mainFrame, "A real causa do problema é...", 12, "Regular", C.muted);
+        mainFrame.appendChild(sp(8));
+      }
+      else if (msg.frameworkId === 'stakeholders') {
+        const shCanvas = figma.createFrame();
+        shCanvas.resize(600, 620);
+        shCanvas.fills = [{ type: "SOLID", color: C.white }];
+        shCanvas.layoutAlign = "STRETCH";
+
+        const cx = 300, cy = 330;
+        [[520, 460], [390, 344], [260, 230], [130, 115]].forEach(([ew, eh]) => {
+          const e = ell(ew, eh, null, C.line, 1.5, [8, 8]);
+          e.x = cx - ew / 2; e.y = cy - eh / 2;
+          shCanvas.appendChild(e);
+        });
+
+        const solT = tx("Solução", 13, "Bold", C.text);
+        solT.x = cx - 26; solT.y = cy + 10; shCanvas.appendChild(solT);
+
+        const stickyBg = rct(106, 84, { r:1, g:0.937, b:0.698 }, 4);
+        stickyBg.x = cx - 100; stickyBg.y = cy - 88; shCanvas.appendChild(stickyBg);
+        const st1 = tx("Stakeholder", 10, "Medium", C.text);
+        st1.x = cx - 94; st1.y = cy - 76; shCanvas.appendChild(st1);
+        const st2 = tx("• Necessidade", 10, "Regular", C.text);
+        st2.x = cx - 94; st2.y = cy - 60; shCanvas.appendChild(st2);
+
+        mainFrame = vb(600, 0, 0, C.white, 16);
+        mainFrame.name = "Mapa de Stakeholders";
+        const hdr = mkHeader("Mapa de Stakeholders");
+        mainFrame.appendChild(hdr);
+        hdr.layoutAlign = "STRETCH";
+        mainFrame.appendChild(shCanvas);
+      }
+      else if (msg.frameworkId === 'value-effort') {
+        const veCanvas = figma.createFrame();
+        veCanvas.resize(620, 720);
+        veCanvas.fills = [{ type: "SOLID", color: C.white }];
+        veCanvas.layoutAlign = "STRETCH";
+
+        const chartBg = rct(500, 580, C.bgBlue, 8);
+        chartBg.x = 60; chartBg.y = 20; veCanvas.appendChild(chartBg);
+
+        const yAx = rct(2, 500, C.text); yAx.x = 100; yAx.y = 40; veCanvas.appendChild(yAx);
+        const xAx = rct(420, 2, C.text); xAx.x = 100; xAx.y = 560; veCanvas.appendChild(xAx);
+        
+        mainFrame = vb(620, 0, 0, C.white, 16);
+        mainFrame.name = "Matriz Valor × Esforço";
+        const hdr = mkHeader("Matriz Valor × Esforço");
+        mainFrame.appendChild(hdr);
+        hdr.layoutAlign = "STRETCH";
+        mainFrame.appendChild(veCanvas);
+      }
+      else if (msg.frameworkId === 'atomic-research') {
+        mainFrame = vb(960, 0, 0, C.white, 16);
+        mainFrame.name = "Atomic Research";
+        const hdr = mkHeader("Atomic Research");
+        mainFrame.appendChild(hdr);
+        hdr.layoutAlign = "STRETCH";
+        
+        const b = vb(null, 40, 24, null);
+        mainFrame.appendChild(b);
+        b.layoutAlign = "STRETCH";
+        b.appendChild(tx("Insira dados de pesquisa atômica aqui...", 14, "Regular", C.muted));
+      }
+      else if (msg.frameworkId === 'blueprint') {
+        mainFrame = vb(1200, 0, 0, C.white, 16);
+        mainFrame.name = "Blueprint de Serviço";
+        const hdr = mkHeader("Blueprint de Serviço");
+        mainFrame.appendChild(hdr);
+        hdr.layoutAlign = "STRETCH";
+        
+        const b = vb(null, 40, 24, null);
+        mainFrame.appendChild(b);
+        b.layoutAlign = "STRETCH";
+        b.appendChild(tx("Construa o blueprint de serviço aqui...", 14, "Regular", C.muted));
+      }
+      else if (msg.frameworkId === 'heuristics') {
+        mainFrame = vb(960, 0, 0, C.white, 16);
+        mainFrame.name = "Heurísticas de Nielsen";
+        const hdr = mkHeader("Heurísticas de Nielsen");
+        mainFrame.appendChild(hdr);
+        hdr.layoutAlign = "STRETCH";
+        
+        const b = vb(null, 40, 24, null);
+        mainFrame.appendChild(b);
+        b.layoutAlign = "STRETCH";
+        b.appendChild(tx("Avaliação heurística aqui...", 14, "Regular", C.muted));
+      }
+      else if (msg.frameworkId === 'opportunities') {
+        mainFrame = vb(960, 0, 0, C.white, 16);
+        mainFrame.name = "Mapa de Oportunidades";
+        const hdr = mkHeader("Mapa de Oportunidades");
+        mainFrame.appendChild(hdr);
+        hdr.layoutAlign = "STRETCH";
+        
+        const b = vb(null, 40, 24, null);
+        mainFrame.appendChild(b);
+        b.layoutAlign = "STRETCH";
+        b.appendChild(tx("Mapeamento de oportunidades aqui...", 14, "Regular", C.muted));
+      }
+      else if (msg.frameworkId === 'personas') {
+        mainFrame = vb(800, 0, 0, { r:0.961, g:0.98, b:0.992 }, 16); 
+        mainFrame.name = "Painel de Personas";
+        const hdr = mkHeader("Painel de Personas");
+        mainFrame.appendChild(hdr);
+        hdr.layoutAlign = "STRETCH";
+        
+        const body = vb(null, 40, 24, null);
+        mainFrame.appendChild(body);
+        body.layoutAlign = "STRETCH";
+
+        const infoRow = hb(0, 16, null);
+        infoRow.counterAxisAlignItems = "CENTER";
+        const pic = rct(48, 48, C.blue, 24);
+        infoRow.appendChild(pic);
+        const nameCol = vb(null, 0, 4, null);
+        nameCol.appendChild(tx("Perfil 1 - Nome do Perfil", 18, "Bold", C.blueDark));
+        nameCol.appendChild(tx("Breve descrição (exemplo: Perfil 1 foi mapeado entendendo cliente interno)", 12, "Regular", C.muted));
+        infoRow.appendChild(nameCol);
+        body.appendChild(infoRow);
+
+        const sep1 = rct(720, 1, C.blueLight);
+        body.appendChild(sep1);
+        sep1.layoutAlign = "STRETCH";
+
+        const detailsRow = hb(0, 32, null);
+        detailsRow.counterAxisAlignItems = "MIN";
+        const photo = rct(160, 200, C.blue, 12);
+        detailsRow.appendChild(photo);
+        
+        const dataCol = vb(null, 0, 16, null);
+        const addData = (l, v) => {
+          const r = hb(0, 8, null);
+          r.appendChild(tx(l+":", 14, "Bold", C.blueDark));
+          r.appendChild(tx(v, 14, "Regular", C.text));
+          dataCol.appendChild(r);
+        };
+        addData("Nome", "Um nome (opcional)");
+        addData("Idade", "idade média do perfil (pode ser conseguido por dados)");
+        addData("Ocupação", "Trabalho / meio de trabalho");
+        addData("Renda", "Renda média");
+        addData("Escolaridade", "Educação formal");
+        detailsRow.appendChild(dataCol);
+        body.appendChild(detailsRow);
+
+        const colsRow = hb(0, 40, null);
+        colsRow.layoutAlign = "STRETCH";
+        
+        const col1 = vb(null, 0, 12, null);
+        col1.layoutAlign = "STRETCH";
+        col1.appendChild(tx("Objetivos", 16, "Bold", C.blueDark));
+        const objT = tx("Listar objetivos relacionados ao produto, sejam eles objetivos de vida ou objetivos do dia, organização financeira, etc.", 13, "Regular", C.text);
+        col1.appendChild(objT);
+        objT.textAutoResize = "HEIGHT"; objT.layoutAlign = "STRETCH";
+        colsRow.appendChild(col1);
+
+        const col2 = vb(null, 0, 12, null);
+        col2.layoutAlign = "STRETCH";
+        col2.appendChild(tx("Necessidade", 16, "Bold", C.blueDark));
+        const necT = tx("Listar necessidades relacionados ao produto, aqui podemos mapear dores para identificar oportunidades.", 13, "Regular", C.text);
+        col2.appendChild(necT);
+        necT.textAutoResize = "HEIGHT"; necT.layoutAlign = "STRETCH";
+        colsRow.appendChild(col2);
+
+        body.appendChild(colsRow);
+
+        const oppCol = vb(null, 0, 12, null);
+        oppCol.layoutAlign = "STRETCH";
+        oppCol.appendChild(tx("Oportunidades", 16, "Bold", C.blueDark));
+        const oppT = tx("Liste oportunidades de produto relacionadas às sessões anteriores.", 13, "Regular", C.text);
+        oppCol.appendChild(oppT);
+        oppT.textAutoResize = "HEIGHT"; oppT.layoutAlign = "STRETCH";
+        body.appendChild(oppCol);
+
+        const sep2 = rct(720, 1, C.blueLight);
+        body.appendChild(sep2);
+        sep2.layoutAlign = "STRETCH";
+
+        const obsCol = vb(null, 0, 12, null);
+        obsCol.layoutAlign = "STRETCH";
+        obsCol.appendChild(tx("Observações adicionais", 14, "Bold", C.blueDark));
+        const obsT = tx("Escreva aqui observações de hipóteses descobertas em análise de dados internos e externos que ajudaram a mapear perfis de clientes / usuários.", 13, "Regular", C.text);
+        obsCol.appendChild(obsT);
+        obsT.textAutoResize = "HEIGHT"; obsT.layoutAlign = "STRETCH";
+        body.appendChild(obsCol);
+      }
+      else if (msg.frameworkId === 'interview-script') {
+        mainFrame = vb(800, 0, 0, C.white, 16);
+        mainFrame.name = "Roteiro de Entrevistas";
+        const hdr = mkHeader("Tag - Nome do Projeto");
+        mainFrame.appendChild(hdr);
+        hdr.layoutAlign = "STRETCH";
+
+        const body = vb(null, 40, 24, null);
+        mainFrame.appendChild(body);
+        body.layoutAlign = "STRETCH";
+
+        const title = tx("Roteiro de Entrevistas", 24, "Bold", C.blueDark);
+        body.appendChild(title);
+
+        const addSec = (titleStr, descStr, isTitle = false) => {
+          const sec = vb(null, 0, 8, null);
+          sec.layoutAlign = "STRETCH";
+          const t = tx(titleStr, isTitle ? 18 : 14, "Bold", isTitle ? C.blueDark : C.text);
+          sec.appendChild(t);
+          const d = tx(descStr, 13, "Regular", C.muted);
+          sec.appendChild(d);
+          d.textAutoResize = "HEIGHT"; d.layoutAlign = "STRETCH";
+          body.appendChild(sec);
+        };
+
+        addSec("1. Introdução e Aquecimento", "Apresente-se, explique o objetivo da entrevista de forma neutra (sem enviesar) e peça consentimento para gravar. Faça perguntas que quebrem o gelo.", true);
+        addSec("Sugestões de perguntas:", "- Como é um dia típico de trabalho para você?\n- Quais ferramentas você mais utiliza hoje?");
+        
+        const sep1 = rct(720, 1, C.line); body.appendChild(sep1); sep1.layoutAlign = "STRETCH";
+
+        addSec("2. Descoberta e Contexto", "Entenda como o usuário lida com o problema hoje, antes de apresentar qualquer solução.", true);
+        addSec("Sugestões de perguntas:", "- Me conte sobre a última vez que você precisou realizar [tarefa].\n- O que foi mais difícil nesse processo?\n- Como você contorna esse problema atualmente?");
+
+        const sep2 = rct(720, 1, C.line); body.appendChild(sep2); sep2.layoutAlign = "STRETCH";
+
+        addSec("3. Aprofundamento (Solução / Protótipo)", "Caso haja um protótipo, apresente agora. Peça para o usuário pensar em voz alta.", true);
+        addSec("Sugestões de perguntas:", "- O que você acha que essa tela faz?\n- Onde você clicaria para [ação]?\n- O que você esperava que acontecesse ao clicar ali?");
+
+        const sep3 = rct(720, 1, C.line); body.appendChild(sep3); sep3.layoutAlign = "STRETCH";
+
+        addSec("4. Encerramento", "Abra espaço para considerações finais e agradeça.", true);
+        addSec("Sugestões de perguntas:", "- Há algo que não perguntei e que você gostaria de comentar?\n- Como você resumiria essa experiência?");
+      }
+      else if (msg.frameworkId === 'journey') {
+        mainFrame = vb(1000, 0, 0, { r:0.941, g:0.965, b:0.976 }, 16); 
+        mainFrame.name = "Jornada de Usuário";
+        const hdr = mkHeader("Jornada de Usuário");
+        mainFrame.appendChild(hdr);
+        hdr.layoutAlign = "STRETCH";
+
+        const body = hb(24, 24, null);
+        mainFrame.appendChild(body);
+        body.layoutAlign = "STRETCH";
+
+        const leftCol = vb(220, 0, 12, null);
+        body.appendChild(leftCol);
+
+        const mkL = (title, sub, h) => {
+          const b = vb(220, 16, 4, C.white, 8);
+          if(h) {
+            b.counterAxisSizingMode = "FIXED";
+            b.resize(220, h);
+            b.primaryAxisSizingMode = "FIXED"; 
+          }
+          b.appendChild(tx(title, 16, "Bold", C.text));
+          if(sub) b.appendChild(tx(sub, 12, "Regular", C.muted));
+          return b;
+        };
+
+        const topBlock = mkL("Jornada", "Etapas da jornada");
+        leftCol.appendChild(topBlock);
+        leftCol.appendChild(mkL("Passos", "O que faz..."));
+        leftCol.appendChild(mkL("Pensa e fala", "O que pensa e fala..."));
+        leftCol.appendChild(mkL("Sentimentos", ""));
+        leftCol.appendChild(mkL("Oportunidades", ""));
+        leftCol.appendChild(mkL("Experiência", "", 240));
+
+        const rightCol = hb(0, 12, null);
+        body.appendChild(rightCol);
+        rightCol.layoutAlign = "STRETCH";
+
+        const numEtapas = 2; 
+        for(let i=1; i<=numEtapas; i++) {
+          const col = vb(330, 0, 12, null);
+          col.layoutAlign = "STRETCH";
+          
+          const eTop = vb(null, 16, 4, { r:0.2, g:0.8, b:0.96 }, 8);
+          eTop.layoutAlign = "STRETCH";
+          eTop.appendChild(tx(i + ". Nome da Etapa", 16, "Bold", C.blueDark));
+          eTop.appendChild(tx("Descrição (opcional)", 12, "Regular", C.blueDark));
+          col.appendChild(eTop);
+
+          const mkr = (val, h) => {
+            const b = vb(null, 16, 4, C.white, 8);
+            b.layoutAlign = "STRETCH";
+            if(h) {
+              b.counterAxisSizingMode = "FIXED"; 
+              b.resize(330, h);
+              b.primaryAxisSizingMode = "FIXED"; 
+            }
+            b.appendChild(tx(val, 13, "Regular", C.text));
+            return b;
+          };
+
+          const s1 = mkr("1.1 Passo");
+          const s2 = mkr("1.2 Passo");
+          const wS = vb(null, 0, 8, null);
+          wS.layoutAlign = "STRETCH";
+          wS.appendChild(s1); wS.appendChild(s2);
+          col.appendChild(wS);
+
+          const wP = vb(null, 0, 8, null);
+          wP.layoutAlign = "STRETCH";
+          wP.appendChild(mkr("Pensamento")); wP.appendChild(mkr("Pensamento"));
+          col.appendChild(wP);
+
+          const wF = vb(null, 0, 8, null);
+          wF.layoutAlign = "STRETCH";
+          wF.appendChild(mkr("Sentimento")); wF.appendChild(mkr("Sentimento"));
+          col.appendChild(wF);
+
+          const wO = vb(null, 0, 8, null);
+          wO.layoutAlign = "STRETCH";
+          wO.appendChild(mkr("Oportunidade")); wO.appendChild(mkr("Oportunidade"));
+          col.appendChild(wO);
+
+          const expB = vb(null, 16, 4, null, 0); 
+          expB.layoutAlign = "STRETCH";
+          expB.counterAxisSizingMode = "FIXED";
+          expB.resize(330, 240);
+          expB.primaryAxisSizingMode = "FIXED";
+          
+          const line = rct(330, 1, C.muted);
+          expB.appendChild(line); 
+          line.layoutAlign = "STRETCH";
+          
+          col.appendChild(expB);
+
+          rightCol.appendChild(col);
+        }
+      }
+      else if (msg.frameworkId === 'relational-map') {
+        mainFrame = vb(1000, 0, 0, C.white, 16);
+        mainFrame.name = "Mapa Relacional";
+        const hdr = mkHeader("Mapa Relacional");
+        mainFrame.appendChild(hdr);
+        hdr.layoutAlign = "STRETCH";
+
+        const body = hb(40, 32, null);
+        mainFrame.appendChild(body);
+        body.layoutAlign = "STRETCH";
+
+        for (let i=0; i<4; i++) {
+          const col = vb(200, 0, 16, null);
+          
+          const headB = vb(200, 12, 0, C.white, 4);
+          headB.strokes = [{ type: "SOLID", color: C.blue }];
+          headB.strokeWeight = 1.5;
+          const ht = tx("Classifique, por temas gerais, os itens a serem agrupados abaixo", 10, "Bold", C.text);
+          ht.textAlignHorizontal = "CENTER";
+          ht.textAutoResize = "HEIGHT";
+          ht.layoutAlign = "STRETCH";
+          headB.appendChild(ht);
+          col.appendChild(headB);
+
+          for (let j=0; j<4; j++) {
+            const card = vb(200, 16, 0, { r:0.94, g:0.95, b:0.96 }, 8); 
+            card.counterAxisSizingMode = "FIXED";
+            card.resize(200, 100);
+            card.primaryAxisSizingMode = "FIXED";
+            
+            const dot = ell(20, 20, j%2==0 ? C.teal : (j==1 ? C.blue : C.orange));
+            card.appendChild(dot);
+            
+            col.appendChild(card);
+          }
+
+          body.appendChild(col);
+        }
+      }
+
+      // ── finalizar no canvas ───────────────────────────────────────
+      if (mainFrame) {
+        const frameName = mainFrame.name;
+        figma.currentPage.appendChild(mainFrame);
+
+        const vp = figma.viewport.bounds;
+        mainFrame.x = Math.round(vp.x + (vp.width  - mainFrame.width)  / 2);
+        mainFrame.y = Math.round(vp.y + (vp.height - mainFrame.height) / 2);
+
+        const grp = figma.group([mainFrame], figma.currentPage);
+        grp.name = frameName;
+
+        figma.currentPage.selection = [grp];
+        figma.viewport.scrollAndZoomIntoView([grp]);
+        figma.ui.postMessage({ type: 'framework-injected', name: msg.frameworkId });
+        figma.notify("Framework inserido no canvas! ✓");
+      }
+    })();
+    return;
+  }
+
   if (msg.type === "close") {
     figma.closePlugin();
   }
 };
 
-// --- SELECTION AUTO-NAMING ---
-figma.on("selectionchange", () => {
-  const selection = figma.currentPage.selection;
-  if (selection.length === 1) {
-    const node = selection[0];
-    if (node.type === "FRAME" || node.type === "COMPONENT" || node.type === "INSTANCE" || node.type === "SECTION") {
-      figma.ui.postMessage({
-        type: 'selection-name',
-        name: node.name
-      });
-    }
-  }
-});
 

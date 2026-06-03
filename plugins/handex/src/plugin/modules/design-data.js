@@ -14,7 +14,7 @@
       const dataStr = JSON.stringify(handoffData, null, 2);
       const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
       
-      const fileName = `handex-backup-${handoffData.step1.fluxo || 'projeto'}-${new Date().toISOString().split('T')[0]}.json`;
+      const fileName = `handex-backup-${handoffData.step1.titulo || 'projeto'}-${new Date().toISOString().split('T')[0]}.json`;
       
       const linkElement = document.createElement('a');
       linkElement.setAttribute('href', dataUri);
@@ -72,9 +72,9 @@
           alert("Progresso recuperado!");
           startHandoff();
           // Populate UI fields Seeder if possible
-          if (handoffData.step1.fluxo) {
-            const el = document.getElementById("s1-fluxo");
-            if (el) el.value = handoffData.step1.fluxo;
+          if (handoffData.step1.titulo) {
+            const el = document.getElementById("s1-titulo");
+            if (el) el.value = handoffData.step1.titulo;
           }
         } catch (err) { alert("Erro ao importar JSON"); }
       };
@@ -83,14 +83,12 @@
 
     function exportProgress() {
       // Coleta dados pendentes
-      const s1FluxoExp = document.getElementById("s1-fluxo");
-      handoffData.step1.fluxo = s1FluxoExp ? s1FluxoExp.value : "";
+      const s1TituloExp = document.getElementById("s1-titulo");
+      handoffData.step1.titulo = s1TituloExp ? s1TituloExp.value : "";
       const s1StatusExp = document.getElementById("s1-status");
       handoffData.step1.status = s1StatusExp ? s1StatusExp.value : "";
       const s1ObjetivoExp = document.getElementById("s1-objetivo");
       handoffData.step1.objetivo = s1ObjetivoExp ? s1ObjetivoExp.value : "";
-      const s1GerenteExp = document.getElementById("s1-gerente");
-      handoffData.step1.gerente = s1GerenteExp ? s1GerenteExp.value : "";
 
       // Faz uma copia limpa sem as specs pesadas que contem Uint8Array
       const exportData = JSON.parse(JSON.stringify(handoffData));
@@ -106,7 +104,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      const safeName = handoffData.step1.fluxo ? handoffData.step1.fluxo.replace(/\s+/g, '_') : 'progresso';
+      const safeName = handoffData.step1.titulo ? handoffData.step1.titulo.replace(/\s+/g, '_') : 'progresso';
       a.download = `handex_${safeName}.json`;
 
       try {
