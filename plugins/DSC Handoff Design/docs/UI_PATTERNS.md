@@ -31,21 +31,21 @@ Referência de padrões visuais e de interação estabelecidos. Seguir sempre ao
 ### Botão primário (ação principal)
 ```css
 background: #0D47A1; color: white; border: none;
-padding: 10px 16px; border-radius: 8px;
-font-size: 12px; font-weight: 600; cursor: pointer;
+padding: 12px 16px; border-radius: 9px;
+font-size: 13px; font-weight: 700; cursor: pointer;
 transition: background 0.15s, opacity 0.15s;
 width: 100%;
 ```
 Hover: `background: #0a3a85`
 Disabled: `opacity: 0.5; cursor: not-allowed`
 Classe: `.btn-action`
-Usado em: "Gerar Handoff", "Atualizar Handoff", "Entendi" (intro)
+Usado em: "Gerar Handoff", "Atualizar Handoff"
 
 ### Botão ícone circular (settings / info)
 ```css
-width: 22px; height: 22px; border-radius: 50%;
+width: 26px; height: 26px; border-radius: 50%;
 border: 1.5px solid #bbb; background: none;
-font-size: 12px; font-weight: 700; color: #888;
+font-size: 13px; font-weight: 700; color: #888;
 cursor: pointer; display: flex; align-items: center; justify-content: center;
 transition: border-color 0.15s, color 0.15s;
 ```
@@ -108,7 +108,7 @@ color: white; font-size: 22px; font-weight: 700;
 
 ```html
 <div class="header">
-  <div class="header-icon">H</div>  <!-- 28×28px, bg #0D47A1, br 6px, branco 13px 700 -->
+  <div class="header-icon">H</div>  <!-- 30×30px, bg #0D47A1, br 7px, branco 13px 700 -->
   <h2>DSC Handoff</h2>              <!-- 14px 700 #1a1a1a, flex:1 -->
   <button class="btn-settings" id="btnSettings">⚙ (SVG)</button>
   <button class="btn-info" id="btnInfo">i</button>
@@ -152,22 +152,25 @@ Painéis que cobrem toda a tela quando abertos.
 ## Tabs
 
 ```css
-.tabs { display: flex; border-bottom: 1px solid #e0e0e0; gap: 0; }
+.tabs {
+  display: flex; border-bottom: 2px solid #e0e0e0; gap: 0;
+  margin-left: -24px; margin-right: -24px; /* edge-to-edge */
+}
 .tab {
-  flex: 1; padding: 8px 0;
-  font-size: 12px; font-weight: 600; font-family: 'Inter', sans-serif;
-  border: none; background: none; cursor: pointer; color: #888;
-  border-bottom: 2px solid transparent;
+  flex: 1; padding: 10px 0;
+  font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+  border: none; background: none; cursor: pointer; color: #aaa;
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
   transition: color 0.15s, border-color 0.15s;
 }
-.tab:hover:not(.active):not(:disabled) { color: #555; }
+.tab:hover:not(.active):not(:disabled) { color: #666; }
 .tab.active { color: #0D47A1; border-bottom-color: #0D47A1; }
 .tab:disabled { opacity: 0.5; cursor: not-allowed; }
 ```
 
 ### Tab panels
 ```css
-.tab-panel { display: none; flex-direction: column; gap: 16px; }
+.tab-panel { display: none; flex-direction: column; gap: 14px; }
 .tab-panel.active { display: flex; }
 ```
 
@@ -246,14 +249,37 @@ Sucesso se auto-limpa após 4 segundos.
 ### Checkbox
 ```css
 .checkbox-field {
-  display: flex; flex-direction: row; gap: 8px;
+  display: flex; flex-direction: row; gap: 9px;
   align-items: center; cursor: pointer;
   font-size: 12px; color: #333;
 }
 .checkbox-field input[type="checkbox"] {
-  accent-color: #0D47A1; width: 14px; height: 14px; cursor: pointer;
+  accent-color: #0D47A1; width: 14px; height: 14px; cursor: pointer; flex-shrink: 0;
 }
 ```
+
+### Chips (seleção de propriedades — Eixo Y da Matriz)
+
+Usados quando o usuário precisa selecionar/desselecionar itens de forma compacta.
+Ativo = azul preenchido; inativo = contorno cinza.
+
+```css
+.chips-row { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip {
+  display: inline-flex; align-items: center;
+  padding: 4px 12px; border-radius: 100px;
+  font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif;
+  cursor: pointer; border: 1.5px solid #e0e0e0;
+  background: none; color: #999;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  user-select: none;
+}
+.chip.on  { border-color: #0D47A1; background: #EEF2FF; color: #0D47A1; }
+.chip:hover:not(.on) { border-color: #bbb; color: #555; }
+```
+
+Toggle via JS: `chip.classList.toggle('on')`
+Leitura do estado: `document.querySelectorAll('#eixoYChips .chip.on')`
 
 ### Select
 ```css

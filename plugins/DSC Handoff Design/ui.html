@@ -5,7 +5,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', sans-serif;
-      padding: 24px;
+      padding: 20px 24px 24px;
       background: #fff;
       color: #333;
       height: 100vh;
@@ -15,19 +15,19 @@
     .container {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
       flex: 1;
     }
     .header {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
     .header-icon {
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
       background: #0D47A1;
-      border-radius: 6px;
+      border-radius: 7px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -43,12 +43,12 @@
       flex: 1;
     }
     .btn-info {
-      width: 22px;
-      height: 22px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       border: 1.5px solid #bbb;
       background: none;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
       color: #888;
       cursor: pointer;
@@ -158,8 +158,8 @@
       margin: 6px 0;
     }
     .btn-settings {
-      width: 22px;
-      height: 22px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       border: 1.5px solid #bbb;
       background: none;
@@ -240,24 +240,27 @@
     /* Tabs */
     .tabs {
       display: flex;
-      border-bottom: 1px solid #e0e0e0;
+      border-bottom: 2px solid #e0e0e0;
       gap: 0;
+      margin-left: -24px;
+      margin-right: -24px;
     }
     .tab {
       flex: 1;
-      padding: 8px 0;
-      font-size: 12px;
+      padding: 10px 0;
+      font-size: 13px;
       font-weight: 600;
       font-family: 'Inter', sans-serif;
       border: none;
       background: none;
       cursor: pointer;
-      color: #888;
+      color: #aaa;
       border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
       transition: color 0.15s, border-color 0.15s;
     }
     .tab:hover:not(.active):not(:disabled) {
-      color: #555;
+      color: #666;
     }
     .tab.active {
       color: #0D47A1;
@@ -272,7 +275,7 @@
     .tab-panel {
       display: none;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
     }
     .tab-panel.active {
       display: flex;
@@ -370,7 +373,7 @@
     .checkbox-field {
       display: flex;
       flex-direction: row;
-      gap: 8px;
+      gap: 9px;
       align-items: center;
       cursor: pointer;
       font-size: 12px;
@@ -381,6 +384,7 @@
       width: 14px;
       height: 14px;
       cursor: pointer;
+      flex-shrink: 0;
     }
 
     /* Action button */
@@ -388,10 +392,10 @@
       background: #0D47A1;
       color: white;
       border: none;
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
+      padding: 12px 16px;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 700;
       font-family: 'Inter', sans-serif;
       cursor: pointer;
       transition: background 0.15s, opacity 0.15s;
@@ -450,8 +454,8 @@
 
     /* Novos elementos da tab Geral */
     .section-label {
-      font-size: 11px; font-weight: 700; color: #888;
-      text-transform: uppercase; letter-spacing: 0.5px;
+      font-size: 11px; font-weight: 700; color: #aaa;
+      text-transform: uppercase; letter-spacing: 0.6px;
       margin-bottom: 2px;
     }
     .component-card {
@@ -485,6 +489,34 @@
     .btn-extra:hover { background: #0D47A1; color: #fff; }
     .btn-extra.ghost { border-color: #bbb; color: #888; }
     .btn-extra.ghost:hover { border-color: #555; color: #555; background: none; }
+
+    /* Chips do eixo Y */
+    .chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      border: 1.5px solid #e0e0e0;
+      background: none;
+      color: #999;
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+      user-select: none;
+    }
+    .chip.on {
+      border-color: #0D47A1;
+      background: #EEF2FF;
+      color: #0D47A1;
+    }
+    .chip:hover:not(.on) { border-color: #bbb; color: #555; }
 
     /* Waiting state */
     .waiting-state {
@@ -623,6 +655,14 @@
         </label>
       </div>
 
+      <div id="eixoYSection" style="display:none;">
+        <div class="divider"></div>
+        <div class="geral-group" style="margin-top:16px;">
+          <div class="section-label">Eixo Y da Matriz de Estados</div>
+          <div id="eixoYChips" class="chips-row"></div>
+        </div>
+      </div>
+
       <div class="divider"></div>
 
       <button id="action-btn" class="btn-action">Gerar Handoff</button>
@@ -645,7 +685,7 @@
     </div>
   </div>
 
-  <div class="footer" id="mainFooter" style="display:none;">DSC Handoff v2.0.3</div>
+  <div class="footer" id="mainFooter" style="display:none;">DSC Handoff v2.1.0</div>
 
   <script>
     const waitingState = document.getElementById('waitingState');
@@ -692,6 +732,31 @@
     const actionBtn = document.getElementById('action-btn');
     const statusBar = document.getElementById('status');
     let _isUpdate = false;
+    let _propsEixoY = [];
+
+    function atualizarEixoY(props) {
+      _propsEixoY = props || [];
+      const section = document.getElementById('eixoYSection');
+      const container = document.getElementById('eixoYChips');
+      if (!props || props.length <= 1) {
+        section.style.display = 'none';
+        return;
+      }
+      section.style.display = '';
+      container.innerHTML = '';
+      props.forEach(function(nome, i) {
+        const chip = document.createElement('span');
+        chip.className = 'chip' + (i < 2 ? ' on' : '');
+        chip.textContent = nome;
+        chip.onclick = function() { chip.classList.toggle('on'); };
+        container.appendChild(chip);
+      });
+    }
+
+    function getPropsEixoYSelecionadas() {
+      const chips = document.querySelectorAll('#eixoYChips .chip.on');
+      return Array.from(chips).map(function(c) { return c.textContent; });
+    }
 
     function setLoading(message) {
       actionBtn.disabled = true;
@@ -720,6 +785,7 @@
         [document.getElementById('settingSecaoEstados'), 'states'],
       ].filter(([cb]) => cb.checked).map(([, nome]) => nome);
 
+      const propsEixoYSelecionadas = getPropsEixoYSelecionadas();
       if (_isUpdate) {
         setLoading('Atualizando handoff...');
         parent.postMessage({ pluginMessage: {
@@ -729,6 +795,8 @@
           manterEdicoes: document.getElementById('settingManterEdicoes').checked,
           incluirComponente,
           secoesAtualizar,
+          truePrimeiro: document.getElementById('settingTruePrimeiro').checked,
+          propsEixoYSelecionadas,
         } }, '*');
       } else {
         setLoading('Gerando handoff...');
@@ -739,6 +807,7 @@
           incluirComponente,
           preencherDescricao: document.getElementById('settingPreencherDescricao').checked,
           truePrimeiro: document.getElementById('settingTruePrimeiro').checked,
+          propsEixoYSelecionadas,
         } }, '*');
       }
     };
@@ -774,6 +843,7 @@
         document.getElementById('componentNameLabel').textContent = msg.componentName || 'Componente';
         document.getElementById('action-btn').textContent = msg.isUpdate ? 'Atualizar Handoff' : 'Gerar Handoff';
         _isUpdate = msg.isUpdate || false;
+        atualizarEixoY(msg.propsEixoY);
         return;
       }
       if (msg.type === 'estado-sections') {

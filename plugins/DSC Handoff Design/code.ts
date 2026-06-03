@@ -10,8 +10,8 @@
 // === CONFIGURAÇÃO ===
 
 /** Dimensões da janela do plugin */
-const UI_LARGURA = 320;
-const UI_ALTURA = 500;
+const UI_LARGURA = 380;
+const UI_ALTURA = 600;
 
 /** Layout dos cards de variação e matriz */
 const CARD_LARGURA_MINIMA = 160;
@@ -21,8 +21,6 @@ const CARD_PADDING = 48;
 /** Limiar de contraste WCAG — abaixo deste valor, aplica fundo escuro */
 const LIMIAR_CONTRASTE_WCAG = 3;
 
-/** Candidatos a eixo Y da matriz de estados */
-const CANDIDATOS_EIXO_Y = ["variant", "type", "theme", "mode", "color", "size"];
 
 /** Propriedades ignoradas na matriz de estados (não geram cópias extras) */
 const PROPRIEDADES_IGNORAR_MATRIZ = ["device", "breakpoint"];
@@ -144,10 +142,29 @@ async function avaliarSelecao(): Promise<void> {
   const nomeBase = componentSet.name.replace(/^\[.*?\]/, '').trim();
   const nomeFormatado = capitalizar(nomeBase);
   const isUpdate = !!buscarHandoffExistente(componentSet);
+
+  // Coletar props VARIANT não-estado disponíveis para o seletor de eixo Y
+  const defsParaEixoY = componentSet.componentPropertyDefinitions;
+  const chaveEstadoEixoY = Object.keys(defsParaEixoY).find(p =>
+    limparNomePropriedade(p).toLowerCase().includes("state") && defsParaEixoY[p].type === "VARIANT"
+  );
+  const propsEixoY = Object.keys(defsParaEixoY)
+    .filter(k => {
+      const nome = limparNomePropriedade(k).toLowerCase();
+      return defsParaEixoY[k].type === "VARIANT"
+        && k !== chaveEstadoEixoY
+        && !PROPRIEDADES_IGNORAR_MATRIZ.some(ig => nome === ig)
+        && !nome.includes("slot")
+        && !nome.startsWith("change")
+        && !nome.startsWith("swap");
+    })
+    .map(k => limparNomePropriedade(k));
+
   figma.ui.postMessage({
     type: 'selection-ready',
     componentName: nomeFormatado,
     isUpdate,
+    propsEixoY,
   });
 }
 
@@ -863,6 +880,62 @@ function buscarOpcoesVariante(componentSet: ComponenteDocumentavel, nome: string
     }
   }
   return valores.size > 0 ? Array.from(valores) : [];
+}
+
+/**
+ * Encontra o ComponentNode de uma variante específica no ComponentSet.
+ * Estratégia em dois passos:
+ * 1. Coleta TODOS os variants que satisfazem as props pedidas (matching parcial)
+ * 2. Entre os candidatos, devolve o mais parecido com o variant padrão nas
+ *    demais dimensões (State=Default, Type=base, etc.)
+ * Isso evita falha quando nem toda combinação de propriedades existe no set.
+ */
+function encontrarVarianteComProps(
+  componentSet: ComponentSetNode,
+  propsVariante: Record<string, string>
+): ComponentNode | null {
+  // Props pedidas: nome limpo lowercase → valor lowercase
+  const pedidas: Record<string, string> = {};
+  for (const [chaveHash, valor] of Object.entries(propsVariante)) {
+    pedidas[limparNomePropriedade(chaveHash).toLowerCase()] = valor.toLowerCase();
+  }
+
+  // Props do variant padrão como referência de desempate
+  const defaultVP = componentSet.defaultVariant.variantProperties || {};
+  const defaultNorm: Record<string, string> = {};
+  for (const [k, v] of Object.entries(defaultVP)) {
+    defaultNorm[k.toLowerCase()] = v.toLowerCase();
+  }
+
+  // 1. Filtrar candidatos que atendem APENAS as props pedidas
+  const candidatos: ComponentNode[] = [];
+  for (const filho of componentSet.children) {
+    if (filho.type !== 'COMPONENT') continue;
+    const vp = (filho as ComponentNode).variantProperties || {};
+    const bate = Object.keys(pedidas).every(nome => {
+      const par = Object.entries(vp).find(([k]) => k.toLowerCase() === nome);
+      return (par?.[1] ?? '').toLowerCase() === pedidas[nome];
+    });
+    if (bate) candidatos.push(filho as ComponentNode);
+  }
+
+  if (candidatos.length === 0) return null;
+  if (candidatos.length === 1) return candidatos[0];
+
+  // 2. Desempate: maior pontuação de similaridade com o variant padrão
+  let melhor = candidatos[0];
+  let melhorScore = -1;
+  for (const cand of candidatos) {
+    const vp = cand.variantProperties || {};
+    let score = 0;
+    for (const [k, v] of Object.entries(defaultNorm)) {
+      if (pedidas[k]) continue; // prop já foi satisfeita — não conta
+      const par = Object.entries(vp).find(([vk]) => vk.toLowerCase() === k);
+      if ((par?.[1] ?? '').toLowerCase() === v) score++;
+    }
+    if (score > melhorScore) { melhorScore = score; melhor = cand; }
+  }
+  return melhor;
 }
 
 // === SISTEMA DE CONTRASTE WCAG ===
@@ -1678,12 +1751,32 @@ async function criarCardVariacao(
   const swapSlot = buscarFilho(card, "[base] Swap Slot");
   if (swapSlot) swapSlot.remove();
 
-  // Criar instância e aplicar propriedades com cascata DNA
-  const instancia = obterVariantePadrao(componentSet).createInstance();
+  // Criar instância com props — VARIANT props via busca direta no ComponentSet,
+  // demais props (BOOLEAN, TEXT, INSTANCE_SWAP) via setProperties
   const propsFinais: Record<string, any> = { ...propriedades };
   aplicarCascataDNA(propsFinais, dna);
 
-  try { instancia.setProperties(propsFinais); } catch {}
+  const defsRaizCard = componentSet.componentPropertyDefinitions;
+  const propsVarianteCard: Record<string, string> = {};
+  const propsOutrasCard: Record<string, any> = {};
+  for (const [chave, valor] of Object.entries(propsFinais)) {
+    if (defsRaizCard[chave]?.type === "VARIANT" && typeof valor === "string") {
+      propsVarianteCard[chave] = valor;
+    } else {
+      propsOutrasCard[chave] = valor;
+    }
+  }
+
+  let variantBaseCard = obterVariantePadrao(componentSet);
+  if (ehComponentSet(componentSet) && Object.keys(propsVarianteCard).length > 0) {
+    const encontrado = encontrarVarianteComProps(componentSet as ComponentSetNode, propsVarianteCard);
+    if (encontrado) variantBaseCard = encontrado;
+  }
+
+  const instancia = variantBaseCard.createInstance();
+  if (Object.keys(propsOutrasCard).length > 0) {
+    try { instancia.setProperties(propsOutrasCard); } catch {}
+  }
 
   card.appendChild(instancia);
 
@@ -1776,7 +1869,7 @@ function sincronizarPropriedadesLayout(origem: FrameNode, destino: FrameNode): v
   // Visual
   destino.fills = JSON.parse(JSON.stringify(origem.fills));
   destino.strokes = JSON.parse(JSON.stringify(origem.strokes));
-  destino.strokeWeight = origem.strokeWeight;
+  if (typeof origem.strokeWeight !== 'symbol') destino.strokeWeight = origem.strokeWeight;
   destino.strokeAlign = origem.strokeAlign;
   destino.cornerRadius = origem.cornerRadius;
   if (origem.cornerRadius === figma.mixed) {
@@ -3231,6 +3324,7 @@ async function popularMatrizEstados(
       const card = desvincularTodasInstancias(cardBruto) as FrameNode;
       card.layoutSizingHorizontal = "FIXED";
       card.resize(larguraCelula, card.height);
+      card.layoutSizingVertical = "HUG";
 
       const swapSlot = buscarFilho(card, "[base] Swap Slot");
       if (swapSlot) swapSlot.remove();
@@ -3251,8 +3345,28 @@ async function popularMatrizEstados(
         if (chaveSize && tamanho) props[chaveSize] = tamanho;
         aplicarCascataDNA(props, dna);
 
-        const instancia = obterVariantePadrao(componentSet).createInstance();
-        try { instancia.setProperties(props); } catch {}
+        // Separar VARIANT das demais para criação robusta da instância
+        const defsRaizMatriz = componentSet.componentPropertyDefinitions;
+        const propsVarianteMatriz: Record<string, string> = {};
+        const propsOutrasMatriz: Record<string, any> = {};
+        for (const [chave, valor] of Object.entries(props)) {
+          if (defsRaizMatriz[chave]?.type === "VARIANT" && typeof valor === "string") {
+            propsVarianteMatriz[chave] = valor;
+          } else {
+            propsOutrasMatriz[chave] = valor;
+          }
+        }
+
+        let variantBaseMatriz = obterVariantePadrao(componentSet);
+        if (ehComponentSet(componentSet) && Object.keys(propsVarianteMatriz).length > 0) {
+          const encontrado = encontrarVarianteComProps(componentSet as ComponentSetNode, propsVarianteMatriz);
+          if (encontrado) variantBaseMatriz = encontrado;
+        }
+
+        const instancia = variantBaseMatriz.createInstance();
+        if (Object.keys(propsOutrasMatriz).length > 0) {
+          try { instancia.setProperties(propsOutrasMatriz); } catch {}
+        }
 
         // Dark mode: setar na instância individualmente (não no wrapper da seção)
         if (modeDark) {
@@ -3299,7 +3413,8 @@ async function popularMatrizEstados(
 async function gerarMatrizEstados(
   container: FrameNode,
   componentSet: ComponenteDocumentavel,
-  dna: MapaDNA
+  dna: MapaDNA,
+  propsEixoYSelecionadas?: string[]
 ): Promise<void> {
   const defsRaiz = componentSet.componentPropertyDefinitions;
 
@@ -3324,13 +3439,21 @@ async function gerarMatrizEstados(
   if (!containerMatriz || opcoesEstado.length === 0) return;
 
   // --- Preparar eixo Y (combinações de variantes, sem size) ---
-  const propsEixoY = Object.keys(defsRaiz).filter(k => {
+  // Coletar TODAS as props VARIANT não-estado (sem restrição de nome)
+  const todasPropsEixoY = Object.keys(defsRaiz).filter(k => {
     const nome = limparNomePropriedade(k).toLowerCase();
-    return CANDIDATOS_EIXO_Y.some(c => nome === c)
+    return defsRaiz[k].type === "VARIANT"
+      && k !== chaveEstado
       && !PROPRIEDADES_IGNORAR_MATRIZ.some(ig => nome === ig)
-      && defsRaiz[k].type === "VARIANT"
-      && k !== chaveEstado;
+      && !nome.includes("slot")
+      && !nome.startsWith("change")
+      && !nome.startsWith("swap");
   });
+
+  // Filtrar por seleção do usuário ou usar as 2 primeiras por padrão
+  const propsEixoY = (propsEixoYSelecionadas && propsEixoYSelecionadas.length > 0)
+    ? todasPropsEixoY.filter(k => propsEixoYSelecionadas.includes(limparNomePropriedade(k)))
+    : todasPropsEixoY.slice(0, 2);
 
   const chaveSize = propsEixoY.find(k => limparNomePropriedade(k).toLowerCase() === 'size');
   const opcoesSize: string[] = chaveSize ? (defsRaiz[chaveSize].variantOptions || []) : [];
@@ -3361,14 +3484,32 @@ async function gerarMatrizEstados(
   const combinacoesY = produtoCartesiano(dadosEixoY);
   if (combinacoesY.length === 0) combinacoesY.push({});
 
-  // Calcular largura da célula usando o maior tamanho do componente
+  // Calcular largura da célula medindo TODAS as combinações Y × tamanhos.
+  // Necessário pois variantes diferentes (ex: Horizontal vs Vertical) têm larguras distintas.
   let larguraMaxima = 0;
   const tamanhosAmostra = opcoesSize.length > 0 ? opcoesSize : [null];
-  for (const tamanho of tamanhosAmostra) {
-    const amostra = obterVariantePadrao(componentSet).createInstance();
-    if (chaveSize && tamanho) try { amostra.setProperties({ [chaveSize]: tamanho }); } catch {}
-    larguraMaxima = Math.max(larguraMaxima, amostra.width);
-    amostra.remove();
+  for (const comboY of combinacoesY) {
+    for (const tamanho of tamanhosAmostra) {
+      const propsVarCombo: Record<string, string> = {};
+      const propsOutCombo: Record<string, any> = {};
+      for (const [chave, valor] of Object.entries(comboY)) {
+        if (defsRaiz[chave]?.type === "VARIANT" && typeof valor === "string") {
+          propsVarCombo[chave] = valor;
+        } else {
+          propsOutCombo[chave] = valor;
+        }
+      }
+      let variantBaseAmostra = obterVariantePadrao(componentSet);
+      if (ehComponentSet(componentSet) && Object.keys(propsVarCombo).length > 0) {
+        const enc = encontrarVarianteComProps(componentSet as ComponentSetNode, propsVarCombo);
+        if (enc) variantBaseAmostra = enc;
+      }
+      const amostra = variantBaseAmostra.createInstance();
+      if (Object.keys(propsOutCombo).length > 0) try { amostra.setProperties(propsOutCombo); } catch {}
+      if (chaveSize && tamanho) try { amostra.setProperties({ [chaveSize]: tamanho }); } catch {}
+      larguraMaxima = Math.max(larguraMaxima, amostra.width);
+      amostra.remove();
+    }
   }
   const larguraCelula = Math.max(CARD_LARGURA_MINIMA, larguraMaxima + CARD_PADDING);
 
@@ -3479,7 +3620,8 @@ async function atualizarSecao(
   compLinhaTabela: ComponentNode | null,
   ordemSecoes: string[] = ORDEM_SECOES,
   manterEdicoes: boolean = true,
-  truePrimeiro: boolean = false
+  truePrimeiro: boolean = false,
+  propsEixoYSelecionadas?: string[]
 ): Promise<void> {
   // 1. Buscar seção existente — busca recursiva (seções podem estar aninhadas em wrappers)
   let secaoExistente: SceneNode | null = null;
@@ -3584,7 +3726,7 @@ async function atualizarSecao(
       persistirEdicoes(container, nomeSecao, edicoes);
     }
   } else if (nomeSecao === "states") {
-    await gerarMatrizEstados(container, componentSet, dna);
+    await gerarMatrizEstados(container, componentSet, dna, propsEixoYSelecionadas);
     const statesGerada = buscarFilho(container, "states");
     if (statesGerada) {
       await reinjetarEdicoesManuais(statesGerada, edicoes);
@@ -4008,6 +4150,7 @@ figma.ui.onmessage = async (msg) => {
         incluirComponente: !!msg.incluirComponente,
         preencherDescricao: !!msg.preencherDescricao,
         truePrimeiro: !!msg.truePrimeiro,
+        propsEixoYSelecionadas: msg.propsEixoYSelecionadas as string[] | undefined,
       };
       const ok = await gerarDocumentoHandoff(componentSet, noComponente, templateSelecionado, undefined, modo, opcoes);
       if (ok) figma.ui.postMessage({ type: 'status', status: 'success', message: 'Handoff gerado com sucesso!' });
@@ -4151,10 +4294,11 @@ figma.ui.onmessage = async (msg) => {
       // Atualizar cada seção do domínio selecionado (seções de outros domínios ficam intactas)
       const manterEdicoes = msg.manterEdicoes !== false;
       const truePrimeiro = !!msg.truePrimeiro;
+      const propsEixoYSelecionadas = msg.propsEixoYSelecionadas as string[] | undefined;
       for (const nomeSecao of secoesDoModo) {
         const nomeAmigavel = NOMES_SECOES[nomeSecao] || capitalizar(nomeSecao);
         enviarProgresso(`Atualizando ${nomeAmigavel}...`);
-        await atualizarSecao(handoffExistente, nomeSecao, templateCompId, componentSet, dna, compLinhaTabela, secoesNoTemplate, manterEdicoes, truePrimeiro);
+        await atualizarSecao(handoffExistente, nomeSecao, templateCompId, componentSet, dna, compLinhaTabela, secoesNoTemplate, manterEdicoes, truePrimeiro, propsEixoYSelecionadas);
       }
 
       // Reordenar filhos para corresponder à ordem do template
@@ -4293,7 +4437,7 @@ async function gerarDocumentoHandoff(
   templateOverride?: InstanceNode,
   posOverride?: { x: number; y: number },
   modo: string = 'complete',
-  opcoes: { incluirComponente?: boolean; preencherDescricao?: boolean; truePrimeiro?: boolean } = {}
+  opcoes: { incluirComponente?: boolean; preencherDescricao?: boolean; truePrimeiro?: boolean; propsEixoYSelecionadas?: string[] } = {}
 ): Promise<boolean> {
   const gerarDesign = modo === 'complete' || modo === 'design';
 
@@ -4383,7 +4527,7 @@ async function gerarDocumentoHandoff(
     } else if (nomeSecao === "variants") {
       await gerarSecaoVariacoes(container, componentSet, dna, !!opcoes.truePrimeiro);
     } else if (nomeSecao === "states") {
-      await gerarMatrizEstados(container, componentSet, dna);
+      await gerarMatrizEstados(container, componentSet, dna, opcoes.propsEixoYSelecionadas);
     }
   }
 

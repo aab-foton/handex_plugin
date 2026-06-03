@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSC Handoff — Comparativo de UI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #E8E8E8;
+      min-height: 100vh;
+      padding: 48px 32px 64px;
+    }
+
+    /* ─── Page chrome ─── */
+    .page-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .page-eyebrow {
+      font-size: 10px;
+      font-weight: 700;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .page-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+    .page-subtitle {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    .comparison {
+      display: flex;
+      gap: 48px;
+      justify-content: center;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .col-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .col-tag {
+      display: inline-block;
+      background: #0D47A1;
+      color: white;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 100px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+    .col-desc {
+      font-size: 11px;
+      color: #999;
+      text-align: center;
+      max-width: 260px;
+      line-height: 1.55;
+      margin-bottom: 4px;
+    }
+
+    /* ─── Plugin window shell ─── */
+    .plugin {
+      width: 320px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.06),
+        0 4px 12px rgba(0,0,0,0.08),
+        0 16px 40px rgba(0,0,0,0.1);
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      color: #333;
+    }
+
+    /* ─── Header ─── */
+    .p-header {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 13px 14px 11px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .p-icon {
+      width: 26px; height: 26px;
+      background: #0D47A1;
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 11px; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .p-title {
+      font-size: 13px; font-weight: 700; color: #1a1a1a; flex: 1;
+    }
+    .p-icon-btn {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      border: 1.5px solid #ddd;
+      background: none;
+      font-size: 11px; color: #aaa;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .p-icon-btn:hover { border-color: #0D47A1; color: #0D47A1; }
+
+    /* ─── Tabs ─── */
+    .p-tabs { display: flex; border-bottom: 1px solid #ebebeb; }
+    .p-tab {
+      flex: 1; padding: 7px 0;
+      font-size: 11px; font-weight: 600;
+      border: none; background: none; cursor: pointer;
+      color: #aaa; border-bottom: 2px solid transparent;
+      font-family: 'Inter', sans-serif;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .p-tab:hover:not(.active) { color: #666; }
+    .p-tab.active { color: #0D47A1; border-bottom-color: #0D47A1; }
+
+    /* ─── Content area ─── */
+    .p-content {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ─── Component card ─── */
+    .p-comp-card {
+      background: #EEF2FF; border: 1px solid #C7D2F0;
+      border-radius: 7px; padding: 9px 11px;
+      display: flex; align-items: center; gap: 7px;
+      font-size: 12px; font-weight: 700; color: #0D47A1;
+    }
+
+    /* ─── Section label ─── */
+    .p-label {
+      font-size: 10px; font-weight: 700; color: #bbb;
+      text-transform: uppercase; letter-spacing: 0.6px;
+    }
+
+    /* ─── Group ─── */
+    .p-group { display: flex; flex-direction: column; gap: 8px; }
+
+    /* ─── Checkbox ─── */
+    .p-check {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 11px; color: #444; cursor: pointer;
+    }
+    .p-check input[type="checkbox"] {
+      accent-color: #0D47A1;
+      width: 13px; height: 13px; cursor: pointer; flex-shrink: 0;
+    }
+
+    /* ─── Divider ─── */
+    .p-div {
+      height: 1px; background: #f0f0f0; margin: 0 -14px;
+    }
+
+    /* ─── Button ─── */
+    .p-btn {
+      background: #0D47A1; color: white; border: none;
+      padding: 10px; border-radius: 7px;
+      font-size: 12px; font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer; width: 100%;
+      transition: background 0.15s;
+    }
+    .p-btn:hover { background: #0a3a85; }
+
+    /* ─── Footer ─── */
+    .p-footer {
+      font-size: 10px; color: #ddd; text-align: center;
+      padding: 4px 14px 12px;
+    }
+
+    /* ══════════════════════════════════
+       VARIAÇÃO A — COLAPSÍVEL
+    ══════════════════════════════════ */
+    .p-collapse-trigger {
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; background: none; border: none; width: 100%;
+      padding: 0; font-family: 'Inter', sans-serif;
+    }
+    .p-collapse-trigger .p-label { margin: 0; }
+
+    .p-chevron {
+      width: 14px; height: 14px; color: #ccc;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      flex-shrink: 0;
+    }
+    .p-collapse-trigger.is-open .p-chevron {
+      transform: rotate(180deg);
+      color: #0D47A1;
+    }
+
+    .p-collapse-body {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity 0.2s ease;
+      opacity: 0;
+    }
+    .p-collapse-body.is-open {
+      max-height: 200px;
+      opacity: 1;
+    }
+    .p-collapse-inner {
+      padding-top: 9px;
+      display: flex; flex-direction: column; gap: 7px;
+    }
+    .p-hint { font-size: 10px; color: #ccc; line-height: 1.5; }
+
+    /* ══════════════════════════════════
+       VARIAÇÃO B — CHIPS
+    ══════════════════════════════════ */
+    .p-chips-group { display: flex; flex-direction: column; gap: 7px; }
+
+    .p-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+
+    .p-chip {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 100px;
+      font-size: 11px; font-weight: 500;
+      cursor: pointer;
+      border: 1.5px solid #e4e4e4;
+      background: none; color: #aaa;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .p-chip.is-on {
+      border-color: #0D47A1;
+      background: #EEF2FF;
+      color: #0D47A1;
+    }
+    .p-chip:hover:not(.is-on) { border-color: #bbb; color: #666; }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="page-eyebrow">DSC Handoff Plugin</div>
+    <div class="page-title">Comparativo de UI — Eixo Y da Matriz</div>
+    <div class="page-subtitle">Ambas as variações são interativas. Clique nos elementos para testar.</div>
+  </div>
+
+  <div class="comparison">
+
+    <!-- ═══════════════════════════════════
+         VARIAÇÃO A — COLAPSÍVEL
+    ═══════════════════════════════════ -->
+    <div class="col">
+      <div class="col-label">Variação A</div>
+      <span class="col-tag">Colapsível</span>
+      <div class="col-desc">A seção fecha por padrão. O usuário só a abre quando precisa escolher. Boa para quem aceita o padrão (2 primeiras) sem pensar.</div>
+
+      <div class="plugin">
+        <div class="p-header">
+          <div class="p-icon">H</div>
+          <div class="p-title">DSC Handoff</div>
+          <button class="p-icon-btn" title="Configurações">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M6.5 1l.4 1.7c-.6.2-1.1.5-1.6.9L3.7 3 2.7 4.7l1.3 1.1c-.1.4-.2.8-.2 1.2s.1.8.2 1.2L2.7 9.3l1 1.7 1.6-.6c.5.4 1 .7 1.6.9L7.3 13h2l.4-1.7c.6-.2 1.1-.5 1.6-.9l1.6.6 1-1.7-1.3-1.1c.1-.4.2-.8.2-1.2s-.1-.8-.2-1.2l1.3-1.1-1-1.7-1.6.6c-.5-.4-1-.7-1.6-.9L9.3 1H6.5zm1.8 4a2 2 0 110 4 2 2 0 010-4z"/>
+            </svg>
+          </button>
+          <button class="p-icon-btn" title="Instruções">i</button>
+        </div>
+
+        <div class="p-tabs">
+          <button class="p-tab active">Geral</button>
+          <button class="p-tab">Extras</button>
+        </div>
+
+        <div class="p-content">
+          <div class="p-comp-card">
+            <span>⬡</span><span>Step</span>
+          </div>
+
+          <div class="p-group">
+            <label class="p-check"><input type="checkbox"> Formatar Component Set na página</label>
+          </div>
+
+          <div class="p-div"></div>
+
+          <div class="p-group">
+            <div class="p-label">Seções a atualizar</div>
+            <label class="p-check"><input type="checkbox" checked> Anatomia</label>
+            <label class="p-check"><input type="checkbox" checked> Tabela de propriedades</label>
+            <label class="p-check"><input type="checkbox" checked> Variações</label>
+            <label class="p-check"><input type="checkbox" checked> Matriz de estados</label>
+          </div>
+
+          <div class="p-div"></div>
+
+          <!-- EIXO Y — COLAPSÍVEL -->
+          <div class="p-group" style="gap:0">
+            <button class="p-collapse-trigger is-open" id="triggerA" onclick="toggleA()">
+              <span class="p-label">Eixo Y da Matriz</span>
+              <svg class="p-chevron" viewBox="0 0 14 14" fill="none">
+                <path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <div class="p-collapse-body is-open" id="bodyA">
+              <div class="p-collapse-inner">
+                <div class="p-hint">Combinadas na Matriz de Estados. As 2 primeiras são padrão.</div>
+                <label class="p-check"><input type="checkbox" checked> type</label>
+                <label class="p-check"><input type="checkbox" checked> color</label>
+                <label class="p-check"><input type="checkbox"> orientation</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-div"></div>
+
+          <button class="p-btn">Gerar Handoff</button>
+        </div>
+
+        <div class="p-footer">DSC Handoff v2.0.3</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         VARIAÇÃO B — CHIPS
+    ═══════════════════════════════════ -->
+    <div class="col">
+      <div class="col-label">Variação B</div>
+      <span class="col-tag">Chips</span>
+      <div class="col-desc">Sempre visível, sempre compacto. Os chips ficam em linha e ocupam ~2 linhas no máximo. Seleção imediata, sem expandir nada.</div>
+
+      <div class="plugin">
+        <div class="p-header">
+          <div class="p-icon">H</div>
+          <div class="p-title">DSC Handoff</div>
+          <button class="p-icon-btn" title="Configurações">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M6.5 1l.4 1.7c-.6.2-1.1.5-1.6.9L3.7 3 2.7 4.7l1.3 1.1c-.1.4-.2.8-.2 1.2s.1.8.2 1.2L2.7 9.3l1 1.7 1.6-.6c.5.4 1 .7 1.6.9L7.3 13h2l.4-1.7c.6-.2 1.1-.5 1.6-.9l1.6.6 1-1.7-1.3-1.1c.1-.4.2-.8.2-1.2s-.1-.8-.2-1.2l1.3-1.1-1-1.7-1.6.6c-.5-.4-1-.7-1.6-.9L9.3 1H6.5zm1.8 4a2 2 0 110 4 2 2 0 010-4z"/>
+            </svg>
+          </button>
+          <button class="p-icon-btn" title="Instruções">i</button>
+        </div>
+
+        <div class="p-tabs">
+          <button class="p-tab active">Geral</button>
+          <button class="p-tab">Extras</button>
+        </div>
+
+        <div class="p-content">
+          <div class="p-comp-card">
+            <span>⬡</span><span>Step</span>
+          </div>
+
+          <div class="p-group">
+            <label class="p-check"><input type="checkbox"> Formatar Component Set na página</label>
+          </div>
+
+          <div class="p-div"></div>
+
+          <div class="p-group">
+            <div class="p-label">Seções a atualizar</div>
+            <label class="p-check"><input type="checkbox" checked> Anatomia</label>
+            <label class="p-check"><input type="checkbox" checked> Tabela de propriedades</label>
+            <label class="p-check"><input type="checkbox" checked> Variações</label>
+            <label class="p-check"><input type="checkbox" checked> Matriz de estados</label>
+          </div>
+
+          <div class="p-div"></div>
+
+          <!-- EIXO Y — CHIPS -->
+          <div class="p-chips-group">
+            <div class="p-label">Eixo Y da Matriz</div>
+            <div class="p-chips">
+              <span class="p-chip is-on" onclick="this.classList.toggle('is-on')">type</span>
+              <span class="p-chip is-on" onclick="this.classList.toggle('is-on')">color</span>
+              <span class="p-chip" onclick="this.classList.toggle('is-on')">orientation</span>
+            </div>
+          </div>
+
+          <div class="p-div"></div>
+
+          <button class="p-btn">Gerar Handoff</button>
+        </div>
+
+        <div class="p-footer">DSC Handoff v2.0.3</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function toggleA() {
+      const t = document.getElementById('triggerA');
+      const b = document.getElementById('bodyA');
+      t.classList.toggle('is-open');
+      b.classList.toggle('is-open');
+    }
+  </script>
+
+</body>
+</html>
