@@ -1237,15 +1237,17 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
       }
 
       if (msg.type === 'handoff-complete') {
-        // Frames de variação foram removidos do canvas — zera IDs stale para evitar lookups falhos
-        variationsData.forEach(v => { if (v.id !== 'default') { v.frameNodeId = null; v.instanceNodeId = null; } });
-        tabVariationsData.forEach(v => { if (v.id !== 'default') { v.frameNodeId = null; v.instanceNodeId = null; } });
+        // SR ainda usa frames temporários no canvas — zera só SR IDs
         srVariationsData.forEach(v => { if (v.id !== 'default') { v.frameNodeId = null; v.instanceNodeId = null; } });
         currentVariationId = null;
       }
       if (msg.type === 'variation-instance-recreated') {
         const v = variationsData.find(v => v.id === msg.variationId);
         if (v) { v.instanceNodeId = msg.instanceNodeId; saveTouchTabData(); }
+      }
+      if (msg.type === 'tab-variation-instance-recreated') {
+        const v = tabVariationsData.find(v => v.id === msg.variationId);
+        if (v) { v.frameNodeId = msg.instanceNodeId; v.instanceNodeId = msg.instanceNodeId; saveTouchTabData(); }
       }
       if (msg.type === 'touch-overlay-created') {
         el('btnCriarFrame').style.display = 'none';
@@ -1987,16 +1989,8 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
     el('tabFooter').style.display = semTabulacao ? 'none' : 'flex';
     renderTabOrderList();
     el('tabMainViewLabel').textContent = id === 'default' ? 'Default' : varData.nome;
-    if (id === 'default') {
-      parent.postMessage({ pluginMessage: { type: 'deactivate-tab-variation' } }, '*');
-      showTabView('main');
-    } else if (varData.instanceNodeId) {
-      parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', instanceNodeId: varData.instanceNodeId, tab_order: varData.tab_order } }, '*');
-      showTabView('main');
-    } else {
-      parent.postMessage({ pluginMessage: { type: 'deactivate-tab-variation' } }, '*');
-      showTabView('main');
-    }
+    parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', variationId: varData.id, instanceNodeId: varData.instanceNodeId, propriedades: varData.propriedades || {}, tab_order: varData.tab_order || [] } }, '*');
+    showTabView('main');
     // Garante que o painel de tabulação permanece ativo
     if (!el('panel-tabulacao').classList.contains('active')) {
       document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
@@ -2025,12 +2019,10 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
     const idx = tabVariationsData.findIndex(v => v.id === id);
     if (idx === -1) return;
     const v = tabVariationsData[idx];
-    if (v.frameNodeId) {
-      parent.postMessage({ pluginMessage: { type: 'delete-tab-variation-frame', frameNodeId: v.frameNodeId } }, '*');
-    }
     tabVariationsData.splice(idx, 1);
-    saveTouchTabData();
+    saveTouchTabData(); // salva ANTES de remover do canvas (evita race com selectionchange)
     renderTabVariationList();
+    parent.postMessage({ pluginMessage: { type: 'delete-tab-variation-frame', variationId: v.id } }, '*');
   }
 
   function openTabVariationForm() {
@@ -2311,16 +2303,6 @@ function closeTouchForm() {
 el("btnAddVariation").onclick = () => { openVariationForm(); };
 
   function onAddTabClick() {
-    if (currentTabVariationId && currentTabVariationId !== 'default') {
-      const varData = tabVariationsData.find(v => v.id === currentTabVariationId);
-      if (varData && !varData.frameNodeId) {
-        parent.postMessage({ pluginMessage: { type: 'create-tab-variation-frame', nome: varData.nome, propriedades: varData.propriedades || {} } }, '*');
-        el('btnAddTab').disabled = true;
-        el('btnAddTab').textContent = '⏳ Preparando...';
-        window._pendingAddTab = true;
-        return;
-      }
-    }
     openTabForm();
   }
 
@@ -2377,7 +2359,7 @@ el('btnTabVariationFormCreate').onclick = () => {
   const btn = el('btnTabVariationFormCreate');
   btn.textContent = '⏳ Criando…';
   btn.disabled = true;
-  parent.postMessage({ pluginMessage: { type: 'create-tab-variation-frame', nome, propriedades } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'create-tab-variation-frame', nome, propriedades, variationId: id } }, '*');
 };
 
 el('btnVariationFormCreate').onclick = () => {
