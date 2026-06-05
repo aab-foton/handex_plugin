@@ -4,7 +4,7 @@ Guia de navegação rápida. Números de linha referem-se ao estado atual do arq
 
 ---
 
-## code.ts (~2965 linhas)
+## code.ts (~3100 linhas)
 
 ### Variáveis globais (17–29)
 
@@ -15,12 +15,13 @@ Guia de navegação rápida. Números de linha referem-se ao estado atual do arq
 | 19 | `variacoesContainerId` | ID do frame `[A11Y Variações]` no canvas |
 | 20 | `pluginDataNodeId` | Cache do ID do nó `[dsc-h] Plugin Data A11y` |
 | 22 | `tempTouchOverlayId` | ID do overlay de área de toque ativo (dentro do imageFrame) |
-| 23 | `tempSROverlayId` | ID do frame temporário de área de leitor de tela |
-| 24 | `tempSROverlayRefX/Y` | Posição do componente no momento de `create-sr-overlay` (referência para calcular relX/relY) |
-| 26 | `componenteVariacaoAtivo` | Nó da variação de toque ativa no canvas |
-| 27 | `componenteTabVariacaoAtivo` | Nó da variação de tabulação ativa |
-| 28 | `componenteSRVariacaoAtivo` | Nó da variação de leitor de tela ativa |
-| 29 | `isHandoffGenerated` | `boolean` — true após o primeiro `run-handoff` bem-sucedido na sessão |
+| 23 | `tempSROverlayId` | ID do clone de conector SR pendente de confirmação (dentro do srImageFrame) |
+| 24 | `tempSROverlayRefX/Y` | Posição da instância SR ativa no momento de `create-sr-overlay` (referência para relX/relY) |
+| 26 | `tempSROverlayTipo` | Tipo do overlay SR pendente: `'agrupamento'` ou `'conector'` |
+| 27 | `componenteVariacaoAtivo` | Nó da variação de toque ativa no canvas |
+| 28 | `componenteTabVariacaoAtivo` | Nó da variação de tabulação ativa |
+| 29 | `componenteSRVariacaoAtivo` | Nó da variação de leitor de tela ativa |
+| 30 | `isHandoffGenerated` | `boolean` — true após o primeiro `run-handoff` bem-sucedido na sessão |
 
 ### Utilitários (39–354)
 
@@ -35,8 +36,10 @@ Guia de navegação rápida. Números de linha referem-se ao estado atual do arq
 | 167 | `createComponentInstance(comp)` | Cria instância de COMPONENT/COMPONENT_SET com fallback para clone |
 | 190 | `ensureHandoffDetached()` | Detacha `handoffAtivo` se for INSTANCE; renomeia; atualiza a variável global |
 | 199 | `getTouchImageFrame()` | Encontra o frame `image` (target area) no handoff; detacha se necessário |
-| 212 | `clearVariationMarkers(varFrame)` | Remove todos os filhos marcadores de um frame de variação |
-| 220 | `drawVariationMarkers(varFrame, markers, color, type)` | Desenha overlays e marcadores numerados para toque/tab/SR |
+| 219 | `getTabImageFrame()` | Análogo para `focus order > image` |
+| 240 | `getSRImageFrame()` | Análogo para `screen reader > image`; detacha INSTANCE |
+| 259 | `clearVariationMarkers(varFrame)` | Remove todos os nós com `a11y-marker ≠ ''` de um frame |
+| 264 | `drawVariationMarkers(varFrame, markers, color, type, offsetX, offsetY)` | Desenha retângulos de marcação (toque/tab) com offset |
 | 275 | `getOrCreateVariacoesContainer(comp, handoff, parent)` | Garante existência do frame `[A11Y Variações]` no canvas |
 
 ### Handler principal — `figma.ui.onmessage` (311–2208)
@@ -67,16 +70,21 @@ Guia de navegação rápida. Números de linha referem-se ao estado atual do arq
 | 1807 | `deactivate-variation` | Zera `componenteVariacaoAtivo` |
 | 1811 | `get-tab-selection` | Retorna nó selecionado para adicionar ao tab order |
 | 1858 | `delete-variation-frame` | Remove instância por `instanceNodeId` + overlays/badges por `variationId` do imageFrame |
-| 1878 | `create-sr-variation-frame` | Cria frame de variação de leitor de tela |
-| 1922 | `create-tab-variation-frame` | Cria frame de variação de tabulação |
-| 1968 | `activate-tab-variation` | Foca variação de tabulação no canvas |
-| 1994 | `delete-tab-variation-frame` | Remove frame de tabulação |
-| 2037 | `save-leitor-tela` | Salva conectores/variações de leitor de tela; usa `handoffAtivo` como fallback |
-| 2057 | `import-old-section` | Chama o parser correto e responde com `old-section-data` |
-| 2082 | `save-partial-data` | Salva chave específica no `a11y-component-data` |
-| 2099 | `get-sr-selection` | Retorna nó selecionado para leitor de tela |
-| 2129 | `create-sr-overlay` | Cria overlay de área de leitor de tela; armazena `tempSROverlayRefX/Y` |
-| 2166 | `confirm-sr-area` | Confirma área de leitor de tela usando `tempSROverlayRefX/Y` como referência |
+| 2021 | `create-sr-variation-frame` | Cria instância SR no srImageFrame (idempotente por pluginData); oculta modelos |
+| 2060 | `create-tab-variation-frame` | Cria instância tab no tabImageFrame (idempotente) |
+| 2100 | `activate-tab-variation` | Recria/busca instância tab; desenha markers com offset; envia `tab-variation-instance-recreated` |
+| 2148 | `delete-tab-variation-frame` | Remove instância tab por `variationId` |
+| 2168 | `save-leitor-tela` | Salva conectores/variações SR; usa `handoffAtivo` como fallback |
+| 2188 | `import-old-section` | Chama o parser correto e responde com `old-section-data` |
+| 2213 | `save-partial-data` | Salva chave específica no `a11y-component-data` |
+| 2230 | `get-sr-selection` | Retorna nó selecionado para leitor de tela (compatibilidade legado) |
+| 2263 | `activate-sr-variation` | Busca/cria instância SR; padrão create-then-remove (sem flicker); desenha badge + conectores reais |
+| 2436 | `deactivate-sr-variation` | Zera `componenteSRVariacaoAtivo` |
+| 2440 | `append-sr-marker` | Adiciona só o marker do conector recém-adicionado, sem tocar nos existentes |
+| 2533 | `delete-sr-variation-frame` | Remove instância SR por `variationId` + clearVariationMarkers |
+| 2644 | `create-sr-overlay` | Clona `[a11y] Conectores` ou `[a11y] Agrupamento` dentro do srImageFrame para posicionamento; armazena `tempSROverlayRefX/Y` e `tempSROverlayTipo` |
+| 2705 | `confirm-sr-area` | Lê posição/dimensão do clone relativo à instância; adiciona `positioned: true`; remove clone |
+| 2726 | `cancel-sr-area` | Remove clone pendente do srImageFrame |
 
 ### Funções de suporte (2210–2341)
 

@@ -23,6 +23,7 @@ let tempTouchOverlayId: string | null = null;
 let tempSROverlayId: string | null = null;
 let tempSROverlayRefX: number = 0;
 let tempSROverlayRefY: number = 0;
+let tempSROverlayTipo: string = 'conector';
 let componenteVariacaoAtivo: SceneNode | null = null;
 let componenteTabVariacaoAtivo: SceneNode | null = null;
 let componenteSRVariacaoAtivo: SceneNode | null = null;
@@ -228,6 +229,26 @@ async function getTabImageFrame(): Promise<FrameNode | null> {
   const focusOrderContainer = Array.from((handoff as FrameNode).children).find(n => n.name === 'focus order') as FrameNode | null;
   if (!focusOrderContainer) return null;
   let img = Array.from((focusOrderContainer as FrameNode).children).find(n =>
+    n.name === 'image' &&
+    (n.type === 'FRAME' || n.type === 'GROUP' || n.type === 'INSTANCE')
+  ) as FrameNode | InstanceNode | null;
+  if (!img) return null;
+  if (img.type === 'INSTANCE') img = img.detachInstance();
+  return img as FrameNode;
+}
+
+async function getSRImageFrame(): Promise<FrameNode | null> {
+  if (!handoffAtivo) return null;
+  const stillExists = await figma.getNodeByIdAsync(handoffAtivo.id);
+  if (!stillExists) {
+    handoffAtivo = null;
+    figma.ui.postMessage({ type: 'feedback', message: '⚠️ O template foi removido. Selecione novamente o componente e o template.' });
+    return null;
+  }
+  const handoff = ensureHandoffDetached();
+  const srSection = Array.from((handoff as FrameNode).children).find(n => n.name === 'screen reader') as FrameNode | null;
+  if (!srSection) return null;
+  let img = Array.from((srSection as FrameNode).children).find(n =>
     n.name === 'image' &&
     (n.type === 'FRAME' || n.type === 'GROUP' || n.type === 'INSTANCE')
   ) as FrameNode | InstanceNode | null;
@@ -914,9 +935,13 @@ figma.ui.onmessage = async (msg) => {
                 }
                 return current.parent === frame ? current : null;
               }
+              const srInstances = Array.from(srImageFrame.children).filter(n => {
+                try { return JSON.parse(n.getPluginData('a11y-meta') || '{}').type === 'sr-variation-component'; } catch { return false; }
+              });
               const agrupamentoAncestor = modelAgrupamento ? getDirectChild(srImageFrame, modelAgrupamento) : null;
-              const keepSR = new Set<BaseNode>([tagSR, modelConector, agrupamentoAncestor ?? modelAgrupamento, modelItemNumber].filter(Boolean) as BaseNode[]);
+              const keepSR = new Set<BaseNode>([tagSR, modelConector, agrupamentoAncestor ?? modelAgrupamento, modelItemNumber, ...srInstances].filter(Boolean) as BaseNode[]);
               Array.from(srImageFrame.children).filter(n => !keepSR.has(n)).forEach(n => n.remove());
+              clearVariationMarkers(srImageFrame);
               const itemNumH = modelItemNumber ? modelItemNumber.height : 36;
 
               srImageFrame.clipsContent = false;
@@ -993,26 +1018,21 @@ figma.ui.onmessage = async (msg) => {
                   continue; // pula a geração normal
                 }
 
-                // ── Variação nova ou sem capture: geração normal ──
-                // Obter clone do componente correto para esta variação
-                let compClone: SceneNode;
-                if (variacao.id === 'default') {
+                // ── Variação nova ou instância já no srImageFrame (nova arquitetura) ──
+                let compClone: SceneNode | null = Array.from(srImageFrame.children).find(n => {
+                  try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'sr-variation-component' && d.variationId === variacao.id; } catch { return false; }
+                }) as SceneNode | null;
+                if (!compClone) {
                   compClone = createComponentInstance(componentePrincipalAtivo);
-                } else if (variacao.instanceNodeId) {
-                  let srcNode: SceneNode | null = null;
-                  try { srcNode = await figma.getNodeByIdAsync(variacao.instanceNodeId) as SceneNode | null; } catch (_e) { srcNode = null; }
-                  
-                  if (srcNode && srcNode.parent && srcNode.parent.type === 'FRAME' && srcNode.parent.name.includes('Variação')) {
-                    clearVariationMarkers(srcNode.parent as FrameNode);
-                  }
-                  compClone = (srcNode && srcNode.type !== 'COMPONENT_SET') ? srcNode.clone() : createComponentInstance(componentePrincipalAtivo);
-                } else {
-                  compClone = createComponentInstance(componentePrincipalAtivo);
-                  if (compClone.type === 'INSTANCE' && variacao.propriedades && Object.keys(variacao.propriedades).length > 0) {
-                    try { (compClone as InstanceNode).setProperties(variacao.propriedades); } catch (e) {
-                      figma.ui.postMessage({ type: 'feedback', message: '⚠️ Variante SR não aplicada: ' + String(e) });
+                  if (variacao.id !== 'default' && variacao.propriedades && Object.keys(variacao.propriedades).length > 0) {
+                    if (compClone.type === 'INSTANCE') {
+                      try { (compClone as InstanceNode).setProperties(variacao.propriedades); } catch (e) {
+                        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Variante SR não aplicada: ' + String(e) });
+                      }
                     }
                   }
+                  srImageFrame.insertChild(0, compClone);
+                  compClone.setPluginData('a11y-meta', JSON.stringify({ type: 'sr-variation-component', variationId: variacao.id }));
                 }
 
                 // Verificar se precisa quebrar linha
@@ -1024,7 +1044,6 @@ figma.ui.onmessage = async (msg) => {
 
                 compClone.x = currentX;
                 compClone.y = currentY;
-                srImageFrame.insertChild(0, compClone);
 
                 // [dsc-h] Item Number: 1 por instância do componente (global), connector 'off'
                 globalItemCounter++;
@@ -1094,46 +1113,56 @@ figma.ui.onmessage = async (msg) => {
                     else if (t.includes('marco') || t.includes('naveg'))                                tipoVariante = 'marcos de navegação';
                     else if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel')) tipoVariante = 'nível de título';
                     else if (t.includes('infor') || t.includes('adicional'))                            tipoVariante = 'informações adicionais';
-                    
-                    const distLeft   = c.relX || 0;
-                    const distRight  = compW - ((c.relX || 0) + (c.width || 20));
-                    const distTop    = c.relY || 0;
-                    const distBottom = compH - ((c.relY || 0) + (c.height || 20));
-                    const minDist = Math.min(distLeft, distRight, distTop, distBottom);
-                    const lado = minDist === distLeft   ? 'esquerda'
-                               : minDist === distRight  ? 'direita'
-                               : minDist === distTop    ? 'superior'
-                               : 'inferior';
-                    
-                    try { (conClone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': lado }); } catch(e) {}
-                    
-                    const BADGE_SIZE = 32;
-                    const OUT_GAP    = 8;
-                    const relX = c.relX || 0;
-                    const relY = c.relY || 0;
-                    const elW  = c.width  || 0;
-                    const elH  = c.height || 0;
-                    let lineLength = 80;
-                    if (lado === 'esquerda') {
-                      lineLength = Math.max(OUT_GAP, OUT_GAP + relX);
-                      try { conClone.resize(BADGE_SIZE + lineLength, conClone.height); } catch(e) {}
-                      conClone.x = currentX - OUT_GAP - BADGE_SIZE;
-                      conClone.y = currentY + relY + elH / 2 - conClone.height / 2;
-                    } else if (lado === 'direita') {
-                      lineLength = Math.max(OUT_GAP, OUT_GAP + (compW - relX - elW));
-                      try { conClone.resize(BADGE_SIZE + lineLength, conClone.height); } catch(e) {}
-                      conClone.x = currentX + relX + elW;
-                      conClone.y = currentY + relY + elH / 2 - conClone.height / 2;
-                    } else if (lado === 'superior') {
-                      lineLength = Math.max(OUT_GAP, OUT_GAP + relY + itemNumH + 4);
-                      try { conClone.resize(conClone.width, BADGE_SIZE + lineLength); } catch(e) {}
-                      conClone.x = currentX + relX + elW / 2 - conClone.width / 2;
-                      conClone.y = currentY - OUT_GAP - BADGE_SIZE - itemNumH - 4;
+
+                    if ((c as any).positioned) {
+                      const relX = c.relX || 0, relY = c.relY || 0;
+                      const savedW = (c as any).width || conClone.width;
+                      const savedH = (c as any).height || conClone.height;
+                      let lado: string;
+                      if      (relX + savedW <= 0)  lado = 'esquerda';
+                      else if (relX >= compW)        lado = 'direita';
+                      else if (relY + savedH <= 0)   lado = 'superior';
+                      else if (relY >= compH)         lado = 'inferior';
+                      else {
+                        const dL = Math.abs(relX), dR = Math.abs(compW - relX - savedW);
+                        const dT = Math.abs(relY), dB = Math.abs(compH - relY - savedH);
+                        const minD = Math.min(dL, dR, dT, dB);
+                        lado = minD === dL ? 'esquerda' : minD === dR ? 'direita' : minD === dT ? 'superior' : 'inferior';
+                      }
+                      try { (conClone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': lado }); } catch(e) {}
+                      try { conClone.resize(savedW, savedH); } catch(e) {}
+                      conClone.x = currentX + relX;
+                      conClone.y = currentY + relY;
                     } else {
-                      lineLength = Math.max(OUT_GAP, OUT_GAP + (compH - relY - elH));
-                      try { conClone.resize(conClone.width, BADGE_SIZE + lineLength); } catch(e) {}
-                      conClone.x = currentX + relX + elW / 2 - conClone.width / 2;
-                      conClone.y = currentY + relY + elH;
+                      const distLeft   = c.relX || 0;
+                      const distRight  = compW - ((c.relX || 0) + (c.width || 20));
+                      const distTop    = c.relY || 0;
+                      const distBottom = compH - ((c.relY || 0) + (c.height || 20));
+                      const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+                      const lado = minDist === distLeft   ? 'esquerda'
+                                 : minDist === distRight  ? 'direita'
+                                 : minDist === distTop    ? 'superior'
+                                 : 'inferior';
+                      try { (conClone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': lado }); } catch(e) {}
+                      const BADGE_SIZE = 32, OUT_GAP = 8;
+                      const relX = c.relX || 0, relY = c.relY || 0, elW = c.width || 0, elH = c.height || 0;
+                      if (lado === 'esquerda') {
+                        try { conClone.resize(BADGE_SIZE + Math.max(OUT_GAP, OUT_GAP + relX), conClone.height); } catch(e) {}
+                        conClone.x = currentX - OUT_GAP - BADGE_SIZE;
+                        conClone.y = currentY + relY + elH / 2 - conClone.height / 2;
+                      } else if (lado === 'direita') {
+                        try { conClone.resize(BADGE_SIZE + Math.max(OUT_GAP, OUT_GAP + (compW - relX - elW)), conClone.height); } catch(e) {}
+                        conClone.x = currentX + relX + elW;
+                        conClone.y = currentY + relY + elH / 2 - conClone.height / 2;
+                      } else if (lado === 'superior') {
+                        try { conClone.resize(conClone.width, BADGE_SIZE + Math.max(OUT_GAP, OUT_GAP + relY + itemNumH + 4)); } catch(e) {}
+                        conClone.x = currentX + relX + elW / 2 - conClone.width / 2;
+                        conClone.y = currentY - OUT_GAP - BADGE_SIZE - itemNumH - 4;
+                      } else {
+                        try { conClone.resize(conClone.width, BADGE_SIZE + Math.max(OUT_GAP, OUT_GAP + (compH - relY - elH))); } catch(e) {}
+                        conClone.x = currentX + relX + elW / 2 - conClone.width / 2;
+                        conClone.y = currentY + relY + elH;
+                      }
                     }
                     const numNodeCon = conClone.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
                     if (numNodeCon) await updateText(numNodeCon, tipoVariante === 'nível de título' && c.especificacao ? c.especificacao : letra);
@@ -1422,9 +1451,8 @@ figma.ui.onmessage = async (msg) => {
       }
     }
 
-    // Remove frames temporários de SR do canvas (toque e tab ficam no imageFrame permanentemente)
+    // Remove container de variações de toque legado se ainda existir
     figma.currentPage.findAll((n: SceneNode) =>
-      n.name.startsWith('[A11Y LT Variação]') ||
       n.name === '[A11Y Variações]'
     ).forEach(n => n.remove());
     variacoesContainerId = null;
@@ -1448,15 +1476,6 @@ figma.ui.onmessage = async (msg) => {
         }
       }
     }
-    if (msg.variacoes_leitor) {
-      for (const v of msg.variacoes_leitor) {
-        if (v.id !== 'default') {
-          v.frameNodeId = null;
-          v.instanceNodeId = null;
-        }
-      }
-    }
-
     figma.ui.postMessage({ type: 'feedback', message: '⏳ Salvando dados...' });
     const dbInstance = workingFrame.findOne((node: SceneNode) => node.name === "[dsc-h] Plugin Data A11y") as InstanceNode;
     if (dbInstance) {
@@ -2000,46 +2019,52 @@ figma.ui.onmessage = async (msg) => {
   }
 
   else if (msg.type === 'create-sr-variation-frame') {
-    figma.ui.postMessage({ type: 'feedback', message: '⏳ Criando frame de variação...' });
     if (!componentePrincipalAtivo) {
       figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo.' });
       return;
     }
-    let instance: SceneNode | null = null;
-    let varFrame: FrameNode | null = null;
     try {
-      const comp = componentePrincipalAtivo;
-      const parentNode = comp.parent as FrameNode | PageNode;
-      if (!parentNode) {
-        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Componente sem parent.' });
+      const srImageFrame = await getSRImageFrame();
+      if (!srImageFrame) {
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Frame de leitor de tela não encontrado. Gere o handoff primeiro.' });
         return;
       }
-      const frameName = `[A11Y LT Variação] ${msg.nome}`;
-      const existing = figma.currentPage.findOne((n: SceneNode) => n.name === frameName);
-      if (existing) existing.remove();
-      instance = createComponentInstance(comp);
-      instance.x = 0;
-      instance.y = 0;
-      if (instance.type === 'INSTANCE' && msg.propriedades && Object.keys(msg.propriedades).length > 0) {
-        try { instance.setProperties(msg.propriedades); } catch (e) { figma.ui.postMessage({ type: "feedback", message: "⚠️ Propriedade não aplicada: " + String(e) }); }
+      const variationId: string = msg.variationId ?? msg.id ?? ('sr_' + Date.now());
+      const _modelC = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Conectores') as InstanceNode | undefined;
+      const _modelN = Array.from(srImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
+      const _modelA = srImageFrame.findOne(n => n.name === '[a11y] Agrupamento') as InstanceNode | undefined;
+      if (_modelC) _modelC.visible = false;
+      if (_modelN) _modelN.visible = false;
+      if (_modelA) _modelA.visible = false;
+      let inst = Array.from(srImageFrame.children).find(n => {
+        try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'sr-variation-component' && d.variationId === variationId; } catch { return false; }
+      }) as SceneNode | null;
+      if (!inst) {
+        const PAD_LEFT = 160, PAD_TOP = 120, GAP_H = 140;
+        const existingInsts = Array.from(srImageFrame.children).filter(n => {
+          try { return JSON.parse(n.getPluginData('a11y-meta') || '{}').type === 'sr-variation-component'; } catch { return false; }
+        }) as SceneNode[];
+        const slotIndex = typeof msg.variationIndex === 'number' ? msg.variationIndex : existingInsts.length;
+        inst = createComponentInstance(componentePrincipalAtivo);
+        if (msg.propriedades && Object.keys(msg.propriedades).length > 0) {
+          try { (inst as any).setProperties(msg.propriedades); } catch(_e) {}
+        }
+        const slotWidth = Math.max((inst as any).width, ...existingInsts.map((n: any) => n.width));
+        (inst as any).x = PAD_LEFT + slotIndex * (slotWidth + GAP_H);
+        (inst as any).y = PAD_TOP;
+        srImageFrame.appendChild(inst as SceneNode);
+        inst.setPluginData('a11y-meta', JSON.stringify({ type: 'sr-variation-component', variationId }));
+        const neededW = Math.max((srImageFrame as FrameNode).width, (inst as any).x + (inst as any).width + 24);
+        const neededH = Math.max((srImageFrame as FrameNode).height, PAD_TOP + (inst as any).height + 40);
+        srImageFrame.resize(neededW, neededH);
+        try { await applyWcagBackground(srImageFrame as FrameNode, componentePrincipalAtivo, []); } catch(_e) {}
       }
-      varFrame = figma.createFrame();
-      varFrame.name = frameName;
-      varFrame.fills = [];
-      varFrame.clipsContent = false;
-      varFrame.resize(instance.width, instance.height);
-      const container = await getOrCreateVariacoesContainer(comp, handoffAtivo, parentNode);
-      container.appendChild(varFrame);
-      varFrame.appendChild(instance);
-      const frameId = varFrame.id; const instanceId = instance.id;
-      instance = null; varFrame = null; // ancorados — não limpar no catch
-      const placed = figma.currentPage.findOne((n: SceneNode) => n.id === frameId) as FrameNode;
-      if (placed) { figma.currentPage.selection = [placed]; figma.viewport.scrollAndZoomIntoView([placed]); }
-      figma.ui.postMessage({ type: 'sr-variation-frame-created', frameNodeId: frameId, instanceNodeId: instanceId });
+      componenteSRVariacaoAtivo = inst;
+      figma.currentPage.selection = [inst as SceneNode];
+      figma.viewport.scrollAndZoomIntoView([inst as SceneNode]);
+      figma.ui.postMessage({ type: 'sr-variation-frame-created', frameNodeId: inst.id, instanceNodeId: inst.id });
     } catch(e) {
-      try { instance?.remove(); } catch (_) {}
-      try { varFrame?.remove(); } catch (_) {}
-      figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar frame de variação de leitor: ${e}` });
+      figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar variação de leitor de tela: ${e}` });
     }
   }
 
@@ -2237,36 +2262,291 @@ figma.ui.onmessage = async (msg) => {
 
   else if (msg.type === 'activate-sr-variation') {
     try {
-      if (msg.instanceNodeId) {
-        const node = await figma.getNodeByIdAsync(msg.instanceNodeId) as SceneNode | null;
-        componenteSRVariacaoAtivo = node;
-
-        if (node && node.parent && node.parent.type === 'FRAME' && node.parent.name.startsWith('[A11Y LT Variação]')) {
-          const varFrame = node.parent as FrameNode;
-          clearVariationMarkers(varFrame);
-          await drawVariationMarkers(varFrame, msg.conectores_leitor || [], { r: 0.6, g: 0.2, b: 0.9 }, 'sr');
-        }
-      } else {
+      const srImageFrame = await getSRImageFrame();
+      if (!srImageFrame) {
         componenteSRVariacaoAtivo = null;
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Frame de leitor de tela não encontrado. Gere o handoff primeiro.' });
+        return;
       }
+      const variationId: string = msg.variationId ?? 'default';
+      const variationNumber = typeof msg.variationIndex === 'number' ? msg.variationIndex + 1 : 1;
+      const modelConector    = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Conectores')   as InstanceNode | undefined;
+      const modelItemNumber  = Array.from(srImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
+      const modelAgrupamento = srImageFrame.findOne(n => n.name === '[a11y] Agrupamento') as InstanceNode | undefined;
+      if (modelConector)    modelConector.visible    = false;
+      if (modelItemNumber)  modelItemNumber.visible  = false;
+      if (modelAgrupamento) modelAgrupamento.visible = false;
+
+      let instance: SceneNode | null = msg.instanceNodeId
+        ? await figma.getNodeByIdAsync(msg.instanceNodeId) as SceneNode | null
+        : null;
+      if (instance && (instance as any).parent?.id !== srImageFrame.id) instance = null;
+      if (!instance) {
+        instance = Array.from(srImageFrame.children).find(n => {
+          try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'sr-variation-component' && d.variationId === variationId; } catch { return false; }
+        }) as SceneNode | null;
+        if (instance) figma.ui.postMessage({ type: 'sr-variation-instance-recreated', variationId, instanceNodeId: instance.id });
+      }
+
+      if (!instance) {
+        if (!componentePrincipalAtivo) { componenteSRVariacaoAtivo = null; return; }
+        const PAD_LEFT = 160, PAD_TOP = 120, GAP_H = 140;
+        const existingInsts = Array.from(srImageFrame.children).filter(n => {
+          try { return JSON.parse(n.getPluginData('a11y-meta') || '{}').type === 'sr-variation-component'; } catch { return false; }
+        }) as SceneNode[];
+        const slotIndex = typeof msg.variationIndex === 'number' ? msg.variationIndex : existingInsts.length;
+        instance = createComponentInstance(componentePrincipalAtivo);
+        if (msg.propriedades && Object.keys(msg.propriedades).length > 0) {
+          try { (instance as any).setProperties(msg.propriedades); } catch(_e) {}
+        }
+        const slotWidth = Math.max((instance as any).width, ...existingInsts.map((n: any) => n.width));
+        (instance as any).x = PAD_LEFT + slotIndex * (slotWidth + GAP_H);
+        (instance as any).y = PAD_TOP;
+        srImageFrame.appendChild(instance as SceneNode);
+        instance.setPluginData('a11y-meta', JSON.stringify({ type: 'sr-variation-component', variationId }));
+        const neededW = Math.max((srImageFrame as FrameNode).width, (instance as any).x + (instance as any).width + 24);
+        const neededH = Math.max((srImageFrame as FrameNode).height, PAD_TOP + (instance as any).height + 40);
+        srImageFrame.resize(neededW, neededH);
+        try { await applyWcagBackground(srImageFrame as FrameNode, componentePrincipalAtivo, []); } catch(_e) {}
+        figma.ui.postMessage({ type: 'sr-variation-instance-recreated', variationId, instanceNodeId: instance.id });
+      }
+      componenteSRVariacaoAtivo = instance;
+      const oldMarkers = (srImageFrame as FrameNode).findAll(n => n.getPluginData('a11y-marker') !== '');
+
+      const instX    = (instance as any).x as number;
+      const instY    = (instance as any).y as number;
+      const instW    = (instance as any).width  as number;
+      const instH    = (instance as any).height as number;
+      const itemNumH = modelItemNumber ? (modelItemNumber as any).height : 36;
+
+      // Badge de número acima da instância
+      if (modelItemNumber) {
+        const numClone = modelItemNumber.clone();
+        numClone.setPluginData('a11y-marker', '1');
+        numClone.visible = true;
+        const numTexts = (numClone as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+        const numText = numTexts.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numTexts[0] || null;
+        if (numText) await updateText(numText as TextNode, String(variationNumber));
+        numClone.x = instX;
+        numClone.y = instY - numClone.height - 4;
+        srImageFrame.appendChild(numClone);
+        if (numClone.type === 'INSTANCE') {
+          try { (numClone as InstanceNode).setProperties({ 'connector': 'Off' }); } catch(_e) {}
+        }
+      }
+
+      // Conectores e agrupamentos reais (como no run-handoff, mas marcados para cleanup)
+      const conectoresAct = msg.conectores_leitor || [];
+      const letrasAct = computeLetrasTS(conectoresAct);
+      for (let i = 0; i < conectoresAct.length; i++) {
+        let c = conectoresAct[i];
+        const letra = letrasAct[i];
+        if (!('relX' in c) && !('relY' in c)) {
+          const spacing = instH / (conectoresAct.length + 1);
+          c = { ...c, relX: 0, relY: Math.round(spacing * (i + 1) - 10), width: 20, height: 20 };
+        }
+        if (c.tipoAnotacao === 'agrupamento' && modelAgrupamento) {
+          const agClone = modelAgrupamento.clone();
+          agClone.setPluginData('a11y-marker', '1');
+          agClone.visible = true;
+          agClone.resize(c.width || 80, c.height || 40);
+          srImageFrame.appendChild(agClone);
+          agClone.x = instX + (c.relX || 0);
+          agClone.y = instY + (c.relY || 0);
+          const spaceRight  = instW - ((c.relX || 0) + (c.width  || 80));
+          const spaceLeft   = c.relX || 0;
+          const spaceBottom = instH - ((c.relY || 0) + (c.height || 40));
+          const maxSpace = Math.max(spaceRight, spaceLeft, spaceBottom);
+          const orientacao = maxSpace === spaceRight ? 'direita' : maxSpace === spaceLeft ? 'esquerda' : 'inferior';
+          try { (agClone as InstanceNode).setProperties({ 'orientação': orientacao }); } catch(_e) {}
+          const agTexts = (agClone as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+          const agLetraTxt = agTexts.find(n => /^[A-Za-z✦]/.test(n.characters.trim())) || agTexts[0] || null;
+          if (agLetraTxt) await updateText(agLetraTxt, letra);
+        } else if (modelConector && c.tipoAnotacao !== 'agrupamento') {
+          const conClone = modelConector.clone();
+          conClone.setPluginData('a11y-marker', '1');
+          conClone.visible = true;
+          srImageFrame.appendChild(conClone);
+          const t = (c.tipo || '').toLowerCase();
+          let tipoVariante = 'função valor rótulos';
+          if (t.includes('decorat'))                                                                             tipoVariante = 'elementos decorativos';
+          else if (t.includes('marco') || t.includes('naveg'))                                                   tipoVariante = 'marcos de navegação';
+          else if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel')) tipoVariante = 'nível de título';
+          else if (t.includes('infor') || t.includes('adicional'))                                               tipoVariante = 'informações adicionais';
+          if ((c as any).positioned) {
+            const relX = c.relX || 0, relY = c.relY || 0;
+            const savedW = (c as any).width || conClone.width;
+            const savedH = (c as any).height || conClone.height;
+            let lado: string;
+            if      (relX + savedW <= 0)  lado = 'esquerda';
+            else if (relX >= instW)       lado = 'direita';
+            else if (relY + savedH <= 0)  lado = 'superior';
+            else if (relY >= instH)       lado = 'inferior';
+            else {
+              const dL = Math.abs(relX), dR = Math.abs(instW - relX - savedW);
+              const dT = Math.abs(relY), dB = Math.abs(instH - relY - savedH);
+              const minD = Math.min(dL, dR, dT, dB);
+              lado = minD === dL ? 'esquerda' : minD === dR ? 'direita' : minD === dT ? 'superior' : 'inferior';
+            }
+            try { (conClone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': lado }); } catch(_e) {}
+            try { conClone.resize(savedW, savedH); } catch(_e) {}
+            conClone.x = instX + relX;
+            conClone.y = instY + relY;
+          } else {
+            const distLeft   = c.relX || 0;
+            const distRight  = instW - ((c.relX || 0) + (c.width  || 20));
+            const distTop    = c.relY || 0;
+            const distBottom = instH - ((c.relY || 0) + (c.height || 20));
+            const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+            const lado = minDist === distLeft ? 'esquerda' : minDist === distRight ? 'direita' : minDist === distTop ? 'superior' : 'inferior';
+            try { (conClone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': lado }); } catch(_e) {}
+            const BADGE_SIZE = 32, OUT_GAP = 8;
+            const relX = c.relX || 0, relY = c.relY || 0, elW = c.width || 0, elH = c.height || 0;
+            if (lado === 'esquerda') {
+              try { conClone.resize(BADGE_SIZE + Math.max(OUT_GAP, OUT_GAP + relX), conClone.height); } catch(_e) {}
+              conClone.x = instX - OUT_GAP - BADGE_SIZE;
+              conClone.y = instY + relY + elH / 2 - conClone.height / 2;
+            } else if (lado === 'direita') {
+              try { conClone.resize(BADGE_SIZE + Math.max(OUT_GAP, OUT_GAP + (instW - relX - elW)), conClone.height); } catch(_e) {}
+              conClone.x = instX + relX + elW;
+              conClone.y = instY + relY + elH / 2 - conClone.height / 2;
+            } else if (lado === 'superior') {
+              try { conClone.resize(conClone.width, BADGE_SIZE + Math.max(OUT_GAP, OUT_GAP + relY + itemNumH + 4)); } catch(_e) {}
+              conClone.x = instX + relX + elW / 2 - conClone.width / 2;
+              conClone.y = instY - OUT_GAP - BADGE_SIZE - itemNumH - 4;
+            } else {
+              try { conClone.resize(conClone.width, BADGE_SIZE + Math.max(OUT_GAP, OUT_GAP + (instH - relY - elH))); } catch(_e) {}
+              conClone.x = instX + relX + elW / 2 - conClone.width / 2;
+              conClone.y = instY + relY + elH;
+            }
+          }
+          const numNodeCon = (conClone as any).findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
+          if (numNodeCon) await updateText(numNodeCon, tipoVariante === 'nível de título' && c.especificacao ? c.especificacao : letra);
+        }
+      }
+
+      oldMarkers.forEach(m => m.remove());
+      figma.currentPage.selection = [instance];
+      figma.viewport.scrollAndZoomIntoView([instance]);
     } catch(e) {
       componenteSRVariacaoAtivo = null;
     }
   }
 
   else if (msg.type === 'deactivate-sr-variation') {
-    if (componenteSRVariacaoAtivo && componenteSRVariacaoAtivo.parent && componenteSRVariacaoAtivo.parent.type === 'FRAME') {
-      clearVariationMarkers(componenteSRVariacaoAtivo.parent as FrameNode);
-    }
     componenteSRVariacaoAtivo = null;
   }
 
+  else if (msg.type === 'append-sr-marker') {
+    try {
+      const srImageFrame = await getSRImageFrame();
+      const inst = componenteSRVariacaoAtivo;
+      if (!srImageFrame || !inst) return;
+      const c = msg.connector;
+      const letra: string = msg.letra || 'A';
+      const instX = (inst as any).x as number;
+      const instY = (inst as any).y as number;
+      const instW = (inst as any).width  as number;
+      const instH = (inst as any).height as number;
+      const modelConector    = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Conectores')   as InstanceNode | undefined;
+      const modelAgrupamento = srImageFrame.findOne(n => n.name === '[a11y] Agrupamento') as InstanceNode | undefined;
+      const modelItemNumber  = Array.from(srImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
+      const itemNumH = modelItemNumber ? (modelItemNumber as any).height : 36;
+      if (c.tipoAnotacao === 'agrupamento' && modelAgrupamento) {
+        const agClone = modelAgrupamento.clone();
+        agClone.setPluginData('a11y-marker', '1');
+        agClone.visible = true;
+        agClone.resize(c.width || 80, c.height || 40);
+        srImageFrame.appendChild(agClone);
+        agClone.x = instX + (c.relX || 0);
+        agClone.y = instY + (c.relY || 0);
+        const spaceRight  = instW - ((c.relX || 0) + (c.width  || 80));
+        const spaceLeft   = c.relX || 0;
+        const spaceBottom = instH - ((c.relY || 0) + (c.height || 40));
+        const maxSpace = Math.max(spaceRight, spaceLeft, spaceBottom);
+        const orientacao = maxSpace === spaceRight ? 'direita' : maxSpace === spaceLeft ? 'esquerda' : 'inferior';
+        try { (agClone as InstanceNode).setProperties({ 'orientação': orientacao }); } catch(_e) {}
+        const agTexts = (agClone as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+        const agLetraTxt = agTexts.find(n => /^[A-Za-z✦]/.test(n.characters.trim())) || agTexts[0] || null;
+        if (agLetraTxt) await updateText(agLetraTxt, letra);
+      } else if (modelConector && c.tipoAnotacao !== 'agrupamento') {
+        const conClone = modelConector.clone();
+        conClone.setPluginData('a11y-marker', '1');
+        conClone.visible = true;
+        srImageFrame.appendChild(conClone);
+        const t = (c.tipo || '').toLowerCase();
+        let tipoVariante = 'função valor rótulos';
+        if (t.includes('decorat'))                                                                              tipoVariante = 'elementos decorativos';
+        else if (t.includes('marco') || t.includes('naveg'))                                                   tipoVariante = 'marcos de navegação';
+        else if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel')) tipoVariante = 'nível de título';
+        else if (t.includes('infor') || t.includes('adicional'))                                               tipoVariante = 'informações adicionais';
+        if ((c as any).positioned) {
+          const relX = c.relX || 0, relY = c.relY || 0;
+          const savedW = (c as any).width || conClone.width, savedH = (c as any).height || conClone.height;
+          let lado: string;
+          if      (relX + savedW <= 0)  lado = 'esquerda';
+          else if (relX >= instW)       lado = 'direita';
+          else if (relY + savedH <= 0)  lado = 'superior';
+          else if (relY >= instH)       lado = 'inferior';
+          else {
+            const dL = Math.abs(relX), dR = Math.abs(instW - relX - savedW);
+            const dT = Math.abs(relY), dB = Math.abs(instH - relY - savedH);
+            const minD = Math.min(dL, dR, dT, dB);
+            lado = minD === dL ? 'esquerda' : minD === dR ? 'direita' : minD === dT ? 'superior' : 'inferior';
+          }
+          try { (conClone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': lado }); } catch(_e) {}
+          try { conClone.resize(savedW, savedH); } catch(_e) {}
+          conClone.x = instX + relX;
+          conClone.y = instY + relY;
+        } else {
+          const distLeft = c.relX || 0, distRight = instW - ((c.relX || 0) + (c.width || 20));
+          const distTop  = c.relY || 0, distBottom = instH - ((c.relY || 0) + (c.height || 20));
+          const minDist  = Math.min(distLeft, distRight, distTop, distBottom);
+          const lado = minDist === distLeft ? 'esquerda' : minDist === distRight ? 'direita' : minDist === distTop ? 'superior' : 'inferior';
+          try { (conClone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': lado }); } catch(_e) {}
+          const BADGE_SIZE = 32, OUT_GAP = 8;
+          const relX = c.relX || 0, relY = c.relY || 0, elW = c.width || 0, elH = c.height || 0;
+          if (lado === 'esquerda') {
+            try { conClone.resize(BADGE_SIZE + Math.max(OUT_GAP, OUT_GAP + relX), conClone.height); } catch(_e) {}
+            conClone.x = instX - OUT_GAP - BADGE_SIZE;
+            conClone.y = instY + relY + elH / 2 - conClone.height / 2;
+          } else if (lado === 'direita') {
+            try { conClone.resize(BADGE_SIZE + Math.max(OUT_GAP, OUT_GAP + (instW - relX - elW)), conClone.height); } catch(_e) {}
+            conClone.x = instX + relX + elW;
+            conClone.y = instY + relY + elH / 2 - conClone.height / 2;
+          } else if (lado === 'superior') {
+            try { conClone.resize(conClone.width, BADGE_SIZE + Math.max(OUT_GAP, OUT_GAP + relY + itemNumH + 4)); } catch(_e) {}
+            conClone.x = instX + relX + elW / 2 - conClone.width / 2;
+            conClone.y = instY - OUT_GAP - BADGE_SIZE - itemNumH - 4;
+          } else {
+            try { conClone.resize(conClone.width, BADGE_SIZE + Math.max(OUT_GAP, OUT_GAP + (instH - relY - elH))); } catch(_e) {}
+            conClone.x = instX + relX + elW / 2 - conClone.width / 2;
+            conClone.y = instY + relY + elH;
+          }
+        }
+        const numNodeCon = (conClone as any).findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
+        if (numNodeCon) await updateText(numNodeCon, tipoVariante === 'nível de título' && c.especificacao ? c.especificacao : letra);
+      }
+    } catch(_e) {}
+  }
+
   else if (msg.type === 'delete-sr-variation-frame') {
-    if (msg.frameNodeId) {
-      try {
-        const node = await figma.getNodeByIdAsync(msg.frameNodeId);
-        if (node) node.remove();
-      } catch (e) { figma.ui.postMessage({ type: "feedback", message: "⚠️ Propriedade não aplicada: " + String(e) }); }    }
+    try {
+      const srImageFrame = await getSRImageFrame();
+      if (!srImageFrame || !msg.variationId) return;
+      let wasActive = false;
+      if (componenteSRVariacaoAtivo) {
+        try {
+          const meta = JSON.parse((componenteSRVariacaoAtivo as any).getPluginData?.('a11y-meta') || '{}');
+          wasActive = meta.variationId === msg.variationId;
+        } catch {}
+      }
+      Array.from(srImageFrame.children).filter(n => {
+        try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'sr-variation-component' && d.variationId === msg.variationId; } catch { return false; }
+      }).forEach(n => n.remove());
+      clearVariationMarkers(srImageFrame);
+      if (wasActive) componenteSRVariacaoAtivo = null;
+    } catch(e) {}
   }
 
   else if (msg.type === 'save-leitor-tela') {
@@ -2362,56 +2642,81 @@ figma.ui.onmessage = async (msg) => {
   }
 
   else if (msg.type === 'create-sr-overlay') {
-    const comp = (componenteSRVariacaoAtivo ?? componenteTabVariacaoAtivo ?? componentePrincipalAtivo) as SceneNode & { absoluteTransform: Transform };
-    if (!comp) {
-      figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo. Reabra o plugin com o componente selecionado.' });
-      return;
-    }
-    
     try {
-      const t = ((msg.tipoConnector as string) || '').toLowerCase();
-      let cor: RGB;
-      if (t.includes('decorat'))                                        cor = { r: 0.898, g: 0.224, b: 0.208 }; // vermelho
-      else if (t.includes('marco') || t.includes('naveg'))              cor = { r: 0.984, g: 0.45,  b: 0.42  }; // salmão
-      else if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel'))
-                                                                        cor = { r: 0.263, g: 0.627, b: 0.278 }; // verde
-      else if (t.includes('infor') || t.includes('adicional'))          cor = { r: 0.984, g: 0.549, b: 0     }; // laranja
-      else                                                              cor = { r: 0.976, g: 0.659, b: 0.145 }; // amarelo (padrão)
-      const nome = (msg.roleNome as string) || 'conector';
-      const overlay = figma.createFrame();
-      overlay.name = `[A11Y Leitor] ${nome}`;
-      overlay.resize(100, 60);
-      figma.currentPage.appendChild(overlay);
-      overlay.x = comp.absoluteTransform[0][2];
-      overlay.y = comp.absoluteTransform[1][2];
-      overlay.fills = [{ type: 'SOLID', color: cor, opacity: 0.25 } as SolidPaint];
-      overlay.strokes = [{ type: 'SOLID', color: cor } as SolidPaint];
-      overlay.strokeWeight = 2;
-      figma.currentPage.selection = [overlay];
-      figma.viewport.scrollAndZoomIntoView([overlay]);
-      tempSROverlayId = overlay.id;
-      tempSROverlayRefX = comp.absoluteTransform[0][2];
-      tempSROverlayRefY = comp.absoluteTransform[1][2];
+      const srImageFrame = await getSRImageFrame();
+      if (!srImageFrame) {
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Frame de leitor de tela não encontrado. Gere o handoff primeiro.' });
+        return;
+      }
+      const inst = componenteSRVariacaoAtivo;
+      if (!inst) {
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhuma variação de leitor de tela ativa.' });
+        return;
+      }
+      const tipoAnotacao = (msg.tipoAnotacao as string) || 'conector';
+      tempSROverlayTipo   = tipoAnotacao;
+      tempSROverlayRefX   = (inst as any).x as number;
+      tempSROverlayRefY   = (inst as any).y as number;
+      const instX = (inst as any).x as number;
+      const instY = (inst as any).y as number;
+      const instW = (inst as any).width  as number;
+      const instH = (inst as any).height as number;
+
+      let modelNode: InstanceNode | undefined;
+      if (tipoAnotacao === 'agrupamento') {
+        modelNode = srImageFrame.findOne(n => n.name === '[a11y] Agrupamento') as InstanceNode | undefined;
+      } else {
+        modelNode = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Conectores') as InstanceNode | undefined;
+      }
+      if (!modelNode) {
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Modelo de conector não encontrado. Gere o handoff primeiro.' });
+        return;
+      }
+
+      const clone = modelNode.clone() as InstanceNode;
+      clone.visible = true;
+      srImageFrame.appendChild(clone);
+
+      if (tipoAnotacao === 'agrupamento') {
+        clone.resize(Math.min(80, instW), Math.min(40, instH));
+        clone.x = instX + Math.round(instW / 4);
+        clone.y = instY + Math.round(instH / 4);
+      } else {
+        const t = ((msg.tipoConnector as string) || '').toLowerCase();
+        let tipoVariante = 'função valor rótulos';
+        if (t.includes('decorat'))                                                                              tipoVariante = 'elementos decorativos';
+        else if (t.includes('marco') || t.includes('naveg'))                                                   tipoVariante = 'marcos de navegação';
+        else if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel')) tipoVariante = 'nível de título';
+        else if (t.includes('infor') || t.includes('adicional'))                                               tipoVariante = 'informações adicionais';
+        try { (clone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': 'direita' }); } catch(_e) {}
+        clone.x = instX + instW + 8;
+        clone.y = instY + Math.round(instH / 2 - clone.height / 2);
+      }
+
+      tempSROverlayId = clone.id;
+      figma.currentPage.selection = [clone];
+      figma.viewport.scrollAndZoomIntoView([clone]);
       figma.ui.postMessage({ type: 'sr-overlay-created' });
     } catch(e) {
-      figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar frame de anotação: ${e}` });
+      figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar conector: ${e}` });
     }
   }
 
   else if (msg.type === 'confirm-sr-area') {
     if (!tempSROverlayId) {
-      figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum frame de área encontrado. Clique em Confirmar para criar o frame primeiro.' });
+      figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum conector encontrado. Clique em Confirmar para criar o conector primeiro.' });
       figma.ui.postMessage({ type: 'sr-overlay-missing' });
       return;
     }
-    const overlay = await figma.getNodeByIdAsync(tempSROverlayId) as FrameNode | null;
-    if (!overlay) return;
+    const overlay = await figma.getNodeByIdAsync(tempSROverlayId) as SceneNode | null;
+    if (!overlay) { tempSROverlayId = null; return; }
     const item = {
-      tipo: 'agrupamento' as const,
-      relX: overlay.x - tempSROverlayRefX,
-      relY: overlay.y - tempSROverlayRefY,
-      width: overlay.width,
-      height: overlay.height,
+      tipo: tempSROverlayTipo,
+      relX: Math.round((overlay as any).x - tempSROverlayRefX),
+      relY: Math.round((overlay as any).y - tempSROverlayRefY),
+      width: Math.round((overlay as any).width),
+      height: Math.round((overlay as any).height),
+      positioned: true,
     };
     overlay.remove();
     tempSROverlayId = null;

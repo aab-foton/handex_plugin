@@ -573,23 +573,7 @@
             <span id="srFormTitle">Adicionar Conector</span>
           </div>
 
-          <!-- Etapa 0: origem -->
-          <div id="srStepOrigem" style="padding:16px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
-            <p style="font-size:12px;font-weight:700;color:#666;margin:0 0 4px;">Escolha a origem:</p>
-            <div class="tab-type-row">
-              <button class="tab-type-btn" id="srOrigemInterno" onclick="selectSROrigem('interno')">
-                <span class="tab-btn-label">Interno</span>
-                <span class="tab-btn-value">Elemento dentro do componente</span>
-              </button>
-              <button class="tab-type-btn" id="srOrigemCanvas" onclick="selectSROrigem('canvas')">
-                <span class="tab-btn-label">Componente</span>
-                <span class="tab-btn-value">Elemento no canvas</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- NOVO: Form único #srFormBody -->
-          <div id="srFormBody" style="display:none;">
+          <div id="srFormBody" style="display:flex;">
             <div class="sr-field-row">
               <label>Tipo de Anotação</label>
               <select id="srSelectTipoAnotacao" class="sr-form-input" onchange="populateSRTipoConector()">
@@ -1237,8 +1221,6 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
       }
 
       if (msg.type === 'handoff-complete') {
-        // SR ainda usa frames temporários no canvas — zera só SR IDs
-        srVariationsData.forEach(v => { if (v.id !== 'default') { v.frameNodeId = null; v.instanceNodeId = null; } });
         currentVariationId = null;
       }
       if (msg.type === 'variation-instance-recreated') {
@@ -1248,6 +1230,10 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
       if (msg.type === 'tab-variation-instance-recreated') {
         const v = tabVariationsData.find(v => v.id === msg.variationId);
         if (v) { v.frameNodeId = msg.instanceNodeId; v.instanceNodeId = msg.instanceNodeId; saveTouchTabData(); }
+      }
+      if (msg.type === 'sr-variation-instance-recreated') {
+        const v = srVariationsData.find(v => v.id === msg.variationId);
+        if (v) { v.frameNodeId = msg.instanceNodeId; v.instanceNodeId = msg.instanceNodeId; saveLeitorTela(); }
       }
       if (msg.type === 'touch-overlay-created') {
         el('btnCriarFrame').style.display = 'none';
@@ -1278,13 +1264,6 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
       if (msg.type === 'sr-selection-result') {
         if (msg.error) {
           pendingSRItem = null; srFormPendingConfirm = false;
-          const hint = el('srCanvasHint');
-          if (hint) {
-            el('srCanvasHintTitle').textContent = '⚠ Nenhum elemento selecionado';
-            el('srCanvasHintBody').textContent = 'Selecione um elemento no canvas e clique em Confirmar.';
-            hint.style.display = 'flex';
-            hint.style.background = '#FFF3E0';
-          }
           return;
         }
         pendingSRItem = msg.item;
@@ -1452,7 +1431,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           const btn2 = document.querySelector('[onclick="onAddSRClick()"]');
           if (btn2) { btn2.disabled = false; btn2.textContent = '+ Adicionar Conector'; }
           const vSR = srVariationsData.find(v => v.id === currentSRVariationId);
-          if (vSR && vSR.instanceNodeId) parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', instanceNodeId: vSR.instanceNodeId, conectores_leitor: vSR.conectores_leitor || [] } }, '*');
+          if (vSR && vSR.instanceNodeId) parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', variationId: vSR.id, instanceNodeId: vSR.instanceNodeId, conectores_leitor: vSR.conectores_leitor || [] } }, '*');
           showSRView('main');
           renderLeitorList();
           openSRForm();
@@ -1460,13 +1439,13 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           window._pendingSRFormOpen = false;
           const v = srVariationsData.find(v => v.id === currentSRVariationId);
           if (v && v.instanceNodeId) {
-            parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', instanceNodeId: v.instanceNodeId, conectores_leitor: v.conectores_leitor || [] } }, '*');
+            parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', variationId: v.id, instanceNodeId: v.instanceNodeId, conectores_leitor: v.conectores_leitor || [] } }, '*');
           }
           showSRView('main');
         } else if (currentSRVariationId && currentSRVariationId !== 'default') {
           const v = srVariationsData.find(v => v.id === currentSRVariationId);
           if (v && v.instanceNodeId) {
-            parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', instanceNodeId: v.instanceNodeId, conectores_leitor: v.conectores_leitor || [] } }, '*');
+            parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', variationId: v.id, instanceNodeId: v.instanceNodeId, conectores_leitor: v.conectores_leitor || [] } }, '*');
           }
         }
         // Atualiza leitorState e label com dados da nova variação
@@ -1863,17 +1842,8 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
     const label = el('srMainViewLabel');
     if (label) label.textContent = varData.nome || 'Default';
 
-    if (id === 'default') {
-      parent.postMessage({ pluginMessage: { type: 'deactivate-sr-variation' } }, '*');
-      showSRView('main');
-    } else if (varData.instanceNodeId) {
-      parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', instanceNodeId: varData.instanceNodeId, conectores_leitor: varData.conectores_leitor || [] } }, '*');
-      showSRView('main');
-    } else {
-      // Sem frame — abre main view direto, frame criado apenas ao Adicionar
-      parent.postMessage({ pluginMessage: { type: 'deactivate-sr-variation' } }, '*');
-      showSRView('main');
-    }
+    parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', variationId: varData.id, variationIndex: srVariationsData.findIndex(v => v.id === varData.id), instanceNodeId: varData.instanceNodeId, propriedades: varData.propriedades || {}, conectores_leitor: varData.conectores_leitor || [] } }, '*');
+    showSRView('main');
     renderLeitorList();
     // Garante que o painel de leitor de tela permanece ativo
     if (!el('panel-leitor').classList.contains('active')) {
@@ -1886,8 +1856,8 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
 
   function deleteSRVariation(id) {
     const v = srVariationsData.find(v => v.id === id);
-    if (v && v.frameNodeId) {
-      parent.postMessage({ pluginMessage: { type: 'delete-sr-variation-frame', frameNodeId: v.frameNodeId } }, '*');
+    if (v && v.instanceNodeId) {
+      parent.postMessage({ pluginMessage: { type: 'delete-sr-variation-frame', variationId: v.id } }, '*');
     }
     srVariationsData = srVariationsData.filter(v => v.id !== id);
     if (currentSRVariationId === id) {
@@ -2325,8 +2295,8 @@ el("btnAddVariation").onclick = () => { openVariationForm(); };
   function onAddSRClick() {
     if (currentSRVariationId && currentSRVariationId !== 'default') {
       const varData = srVariationsData.find(v => v.id === currentSRVariationId);
-      if (varData && !varData.frameNodeId) {
-        parent.postMessage({ pluginMessage: { type: 'create-sr-variation-frame', nome: varData.nome, propriedades: varData.propriedades || {} } }, '*');
+      if (varData && !varData.instanceNodeId) {
+        parent.postMessage({ pluginMessage: { type: 'create-sr-variation-frame', variationId: varData.id, nome: varData.nome, propriedades: varData.propriedades || {}, variationIndex: srVariationsData.filter(v => v.id !== 'default').findIndex(v => v.id === varData.id) } }, '*');
         const btn = document.querySelector('[onclick="onAddSRClick()"]');
         if (btn) { btn.disabled = true; btn.textContent = '⏳ Preparando...'; }
         window._pendingAddSR = true;
@@ -2361,7 +2331,7 @@ el('btnSRVariationFormCreate').onclick = () => {
   const btn = el('btnSRVariationFormCreate');
   btn.textContent = '⏳ Criando…';
   btn.disabled = true;
-  parent.postMessage({ pluginMessage: { type: 'create-sr-variation-frame', nome, propriedades } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'create-sr-variation-frame', variationId: id, nome, propriedades, variationIndex: srVariationsData.filter(v => v.id !== 'default').length - 1 } }, '*');
 };
 el('btnSRVariationFormCancel').onclick = () => closeSRVariationForm();
 el('btnTabVariationFormCancel').onclick = () => { closeTabVariationForm(); };
@@ -2578,10 +2548,17 @@ function onSemGestoChange() {
       }}, '*');
     }
 
+    function reactivateSRMarkers() {
+      const v = srVariationsData.find(v => v.id === currentSRVariationId);
+      if (!v) return;
+      parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', variationId: v.id, variationIndex: srVariationsData.findIndex(x => x.id === v.id), instanceNodeId: v.instanceNodeId, propriedades: v.propriedades || {}, conectores_leitor: v.conectores_leitor || [] } }, '*');
+    }
+
     function removeConector(i) {
       leitorState.conectores.splice(i, 1);
       renderLeitorList();
       saveLeitorTela();
+      reactivateSRMarkers();
     }
 
     let pendingSRTipo = null;
@@ -2593,10 +2570,7 @@ function onSemGestoChange() {
       leitorState.pendingSROrigem = null;
       pendingSRTipo = null;
       pendingSRItem = null;
-      el('srStepOrigem').style.display = 'flex';
-      el('srFormBody').style.display = 'none';
-      el('srOrigemInterno').classList.remove('active');
-      el('srOrigemCanvas').classList.remove('active');
+      srOverlayCreated = false;
       el('srSelectTipoAnotacao').value = '';
       el('srSelectTipoConector').innerHTML = '<option value="">Aguardando anotação...</option>';
       el('srSelectTipoConector').disabled = true;
@@ -2611,14 +2585,6 @@ function onSemGestoChange() {
       el('srCanvasHint').style.display = 'none';
       el('btnSRFormConfirm').disabled = true;
       el('srFormView').classList.add('open');
-    }
-
-    function selectSROrigem(origem) {
-      leitorState.pendingSROrigem = origem;
-      el('srOrigemInterno').classList.toggle('active', origem === 'interno');
-      el('srOrigemCanvas').classList.toggle('active', origem === 'canvas');
-      el('srStepOrigem').style.display = 'none';
-      el('srFormBody').style.display = 'flex';
     }
 
     function closeSRForm() {
@@ -2784,15 +2750,6 @@ const select = el('srSelectTipoConector');
       }
 
       el('btnSRFormConfirm').disabled = !roleNome;
-      
-      const anotacao = el('srSelectTipoAnotacao').value;
-      if (!!roleNome && (anotacao === 'simples' || anotacao === 'agrupamento')) {
-        el('srCanvasHintTitle').textContent = 'Selecione no canvas';
-        el('srCanvasHintBody').textContent  = anotacao === 'agrupamento' ? 'Selecione os elementos que deseja agrupar e clique em Confirmar.' : 'Escolha o elemento e clique em Confirmar.';
-        el('srCanvasHint').style.display = 'flex';
-      } else {
-        el('srCanvasHint').style.display = 'none';
-      }
     }
 
     function onSRFormConfirm() {
@@ -2802,25 +2759,20 @@ const select = el('srSelectTipoConector');
       const anotacao = el('srSelectTipoAnotacao').value;
 
       if (!roleNome) { alert('Selecione um role.'); return; }
-      
-      if (anotacao === 'agrupamento') {
-        if (!srOverlayCreated) {
-          srOverlayCreated = true;
-          el('srCanvasHintTitle').textContent = 'Ajuste o retângulo no canvas';
-          el('srCanvasHintBody').textContent = 'Redimensione a área e clique em Confirmar.';
-          el('srCanvasHint').style.display = 'flex';
-          parent.postMessage({ pluginMessage: { type: 'create-sr-overlay', tipoConnector: conector, roleNome: roleNome } }, '*');
-          return;
-        }
-        if (!pendingSRItem) {
-          parent.postMessage({ pluginMessage: { type: 'confirm-sr-area' } }, '*');
-          return;
-        }
+
+      if (!srOverlayCreated) {
+        srOverlayCreated = true;
+        el('srCanvasHintTitle').textContent = anotacao === 'agrupamento' ? 'Posicione o agrupamento' : 'Posicione o conector';
+        el('srCanvasHintBody').textContent = anotacao === 'agrupamento'
+          ? 'Redimensione e posicione o agrupamento sobre os elementos e clique em Confirmar.'
+          : 'Arraste o conector sobre o elemento que deseja anotar e clique em Confirmar.';
+        el('srCanvasHint').style.display = 'flex';
+        parent.postMessage({ pluginMessage: { type: 'create-sr-overlay', tipoAnotacao: anotacao, tipoConnector: conector, roleNome: roleNome } }, '*');
+        return;
       }
 
       if (!pendingSRItem) {
-        srFormPendingConfirm = true;
-        parent.postMessage({ pluginMessage: { type: 'get-sr-selection', tipo: anotacao } }, '*');
+        parent.postMessage({ pluginMessage: { type: 'confirm-sr-area' } }, '*');
         return;
       }
 
@@ -2856,6 +2808,11 @@ const select = el('srSelectTipoConector');
       leitorState.conectores.push(finalConector);
       renderLeitorList();
       saveLeitorTela();
+      // Só adiciona o marker novo — sem remover os existentes
+      const letras = computeLetras(leitorState.conectores);
+      const letra = letras[leitorState.conectores.length - 1] || 'A';
+      const v = srVariationsData.find(v => v.id === currentSRVariationId);
+      parent.postMessage({ pluginMessage: { type: 'append-sr-marker', connector: finalConector, letra, instanceNodeId: v?.instanceNodeId } }, '*');
       closeSRForm();
     }
 
