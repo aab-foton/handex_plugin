@@ -88,7 +88,7 @@
 
       if (msg.type === "scan-result") {
         if (typeof hideScanLoading === 'function') hideScanLoading();
-        try { lucide.createIcons(); } catch(e) {}
+        _refreshIcons()
 
         // Preferir frameId embutido na resposta (suporte multi-frame)
         const targetFrameId = msg.frameId || activeFrameId;
@@ -98,7 +98,7 @@
             const res = document.getElementById(`scan-results-${targetFrameId}`);
             if (res) res.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-xl text-xs">${msg.error}</div>`;
             const spinner = document.getElementById(`sub-spinner-tokens-${targetFrameId}`);
-            if (spinner) { spinner.classList.add('hidden'); try { lucide.createIcons(); } catch(e) {} }
+            if (spinner) { spinner.classList.add('hidden'); _refreshIcons() }
           }
           return;
         }
@@ -293,7 +293,7 @@
           }
         }
         document.getElementById('spec-properties-modal').classList.remove('hidden');
-        if (typeof lucide !== 'undefined') lucide.createIcons();
+        _refreshIcons()
       }
 
       if (msg.type === 'selection-info') {

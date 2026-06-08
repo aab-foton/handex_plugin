@@ -144,7 +144,7 @@ ${framesList.map(f => `### ${f.nome}\n- Specs: ${f.specs ? 'sim' : 'não'}\n- Me
       if (input) input.value = bumpVersion(current, 'minor');
 
       if (typeof openModal === 'function') openModal('versioning-modal');
-      try { lucide.createIcons(); } catch(e) {}
+      _refreshIcons()
     }
 
     function _versionTypeChanged() {
@@ -177,7 +177,7 @@ ${framesList.map(f => `### ${f.nome}\n- Specs: ${f.specs ? 'sim' : 'não'}\n- Me
       const el = document.getElementById('handoff-loading-overlay');
       if (el) {
         el.classList.remove('hidden');
-        if (typeof lucide !== 'undefined') lucide.createIcons();
+        _refreshIcons()
       }
     }
 
@@ -217,13 +217,13 @@ ${framesList.map(f => `### ${f.nome}\n- Specs: ${f.specs ? 'sim' : 'não'}\n- Me
     }
     window._markFichaGenerated = _markFichaGenerated;
 
-    function exportHandoff() {
+    async function exportHandoff() {
       const btn = document.getElementById("btn-final-export");
       if (btn) {
         btn.disabled = true;
         btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> <span>Exportando...</span>';
       }
-      lucide.createIcons();
+      _refreshIcons()
 
       collectHandoffData();
 
@@ -245,6 +245,10 @@ ${framesList.map(f => `### ${f.nome}\n- Specs: ${f.specs ? 'sim' : 'não'}\n- Me
       const mdContent = handoffData.mdContent;
 
       try {
+        await Promise.all([
+          window.jspdf  ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'; s.onload = res; s.onerror = rej; document.head.appendChild(s); }),
+          window.JSZip  ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'; s.onload = res; s.onerror = rej; document.head.appendChild(s); }),
+        ]);
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         doc.setFontSize(16);
@@ -318,14 +322,14 @@ ${framesList.map(f => `### ${f.nome}\n- Specs: ${f.specs ? 'sim' : 'não'}\n- Me
           if (btn) {
             btn.disabled = false;
             btn.innerHTML = '<span>Exportar Handoff (ZIP)</span> <i data-lucide="download" class="w-4 h-4"></i>';
-            lucide.createIcons();
+            _refreshIcons()
           }
         }).catch(err => {
           console.error("ZIP Generation error", err);
           if (btn) {
             btn.disabled = false;
             btn.innerHTML = '<span>Exportar Handoff (ZIP)</span> <i data-lucide="download" class="w-4 h-4"></i>';
-            lucide.createIcons();
+            _refreshIcons()
           }
         });
       } catch (err) {
@@ -333,7 +337,7 @@ ${framesList.map(f => `### ${f.nome}\n- Specs: ${f.specs ? 'sim' : 'não'}\n- Me
         if (btn) {
           btn.disabled = false;
           btn.innerHTML = '<span>Exportar Handoff (ZIP)</span> <i data-lucide="download" class="w-4 h-4"></i>';
-          lucide.createIcons();
+          _refreshIcons()
         }
       }
     }
@@ -1642,7 +1646,7 @@ ${framesList.map(f => `### ${f.nome}\n- Specs: ${f.specs ? 'sim' : 'não'}\n- Me
 
   <script>
     if (typeof window.lucide !== 'undefined') {
-      window.lucide.createIcons();
+      _refreshIcons()
     }
 
     function toggleTheme() {

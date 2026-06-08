@@ -1254,7 +1254,7 @@ function updateFooterButtons() {
   _refreshIcons();
 }
 
-initBriefingSuggestions();
+setTimeout(initBriefingSuggestions, 0);
 
 // ── Storage ────────────────────────────────────────────────────────────
 function saveToStorage() {

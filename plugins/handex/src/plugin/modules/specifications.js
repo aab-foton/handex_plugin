@@ -938,7 +938,7 @@
               this.innerHTML = isHidden
                 ? '<i data-lucide=\\'chevron-up\\' class=\\'w-2.5 h-2.5\\'></i> Ocultar inativas'
                 : '<i data-lucide=\\'eye-off\\' class=\\'w-2.5 h-2.5\\'></i> ${toggleLabel}';
-              if(window.lucide) lucide.createIcons();"
+              _refreshIcons()"
             class="mt-1.5 flex items-center gap-1 text-[9px] text-gray-400 dark:text-gray-500 hover:text-[#0070af] dark:hover:text-blue-400 transition-colors font-medium">
             <i data-lucide="eye-off" class="w-2.5 h-2.5"></i>
             ${toggleLabel}
