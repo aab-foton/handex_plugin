@@ -388,6 +388,66 @@
       figma.ui.postMessage({ type: "project-name", name: figma.root.name || figma.currentPage.name || "" });
       return;
     }
+    if (msg.type === "refresh-spec-card") {
+      const grpNode = figma.getNodeById(msg.nodeId);
+      if (!grpNode) {
+        figma.ui.postMessage({ type: "toast", message: "Card n\xE3o encontrado no canvas.", kind: "error" });
+        return;
+      }
+      const children = grpNode.type === "GROUP" ? grpNode.children : [grpNode];
+      const cardFrame = children.find((n) => n.name && n.name.endsWith("/Ficha"));
+      if (!cardFrame || cardFrame.type !== "FRAME") {
+        figma.ui.postMessage({ type: "toast", message: "Card n\xE3o encontrado no grupo.", kind: "error" });
+        return;
+      }
+      const existing = cardFrame.children.find((n) => n.name === "[Spec] Exce\xE7\xF5es");
+      if (existing) existing.remove();
+      if (msg.excecoes && msg.excecoes.length > 0) {
+        (async () => {
+          await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+          await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+          const excFrame = figma.createFrame();
+          excFrame.name = "[Spec] Exce\xE7\xF5es";
+          excFrame.layoutMode = "VERTICAL";
+          excFrame.itemSpacing = 4;
+          excFrame.fills = [{ type: "SOLID", color: { r: 1, g: 0.95, b: 0.93 } }];
+          excFrame.paddingLeft = 8;
+          excFrame.paddingRight = 8;
+          excFrame.paddingTop = 6;
+          excFrame.paddingBottom = 6;
+          excFrame.cornerRadius = 6;
+          excFrame.primaryAxisSizingMode = "AUTO";
+          excFrame.counterAxisSizingMode = "AUTO";
+          const excTitle = figma.createText();
+          excTitle.fontName = { family: "Inter", style: "Bold" };
+          excTitle.fontSize = 9;
+          excTitle.fills = [{ type: "SOLID", color: { r: 0.8, g: 0.3, b: 0.1 } }];
+          excTitle.characters = `CEN\xC1RIOS (${msg.excecoes.length})`;
+          excTitle.textAutoResize = "WIDTH_AND_HEIGHT";
+          excFrame.appendChild(excTitle);
+          msg.excecoes.forEach((exc) => {
+            const t = figma.createText();
+            t.fontName = { family: "Inter", style: "Regular" };
+            t.fontSize = 10;
+            t.fills = [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2 } }];
+            t.characters = `[${exc.tipo || "Geral"}] ${exc.titulo || ""}`;
+            t.textAutoResize = "WIDTH_AND_HEIGHT";
+            excFrame.appendChild(t);
+          });
+          cardFrame.appendChild(excFrame);
+          figma.ui.postMessage({ type: "toast", message: "Card atualizado com os cen\xE1rios.", kind: "success" });
+        })();
+      } else {
+        figma.ui.postMessage({ type: "toast", message: "Card atualizado.", kind: "success" });
+      }
+      return;
+    }
+    if (msg.type === "get-context-name") {
+      const sel = figma.currentPage.selection;
+      const name = sel.length > 0 ? sel[0].name : "";
+      figma.ui.postMessage({ type: "context-name", name });
+      return;
+    }
     if (msg.type === "get-selection-info") {
       const validTypes = ["FRAME", "COMPONENT", "INSTANCE", "SECTION", "GROUP"];
       const selection = figma.currentPage.selection.filter((n) => validTypes.includes(n.type));
@@ -784,6 +844,188 @@
             content.appendChild(docsSection);
             setFillAndHug(docsSection);
           }
+        }
+        const _globalSpecs = (data.specs || []).filter((s) => s.visible !== false);
+        if (_globalSpecs.length > 0) {
+          const specsSection = createSection(content, "Especifica\xE7\xF5es Visuais");
+          _globalSpecs.forEach((s) => {
+            const sRow = figma.createFrame();
+            sRow.name = `[Spec/${s.letter || "A"}] ${s.name || ""}`;
+            sRow.layoutMode = "VERTICAL";
+            sRow.itemSpacing = 4;
+            sRow.paddingLeft = 10;
+            sRow.paddingRight = 10;
+            sRow.paddingTop = 8;
+            sRow.paddingBottom = 8;
+            sRow.cornerRadius = 8;
+            sRow.fills = [{ type: "SOLID", color: { r: 0.98, g: 0.98, b: 1 } }];
+            sRow.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.92, b: 0.96 } }];
+            sRow.primaryAxisSizingMode = "AUTO";
+            sRow.counterAxisSizingMode = "AUTO";
+            specsSection.appendChild(sRow);
+            setFillAndHug(sRow);
+            const sHeader = figma.createFrame();
+            sHeader.layoutMode = "HORIZONTAL";
+            sHeader.itemSpacing = 8;
+            sHeader.fills = [];
+            sHeader.counterAxisAlignItems = "CENTER";
+            sHeader.primaryAxisSizingMode = "AUTO";
+            sHeader.counterAxisSizingMode = "AUTO";
+            sRow.appendChild(sHeader);
+            const tag = figma.createFrame();
+            tag.layoutMode = "HORIZONTAL";
+            tag.resize(20, 20);
+            tag.cornerRadius = 4;
+            const tc = s.color ? { r: parseInt(s.color.slice(1, 3), 16) / 255, g: parseInt(s.color.slice(3, 5), 16) / 255, b: parseInt(s.color.slice(5, 7), 16) / 255 } : themeColor;
+            tag.fills = [{ type: "SOLID", color: tc }];
+            tag.primaryAxisAlignItems = "CENTER";
+            tag.counterAxisAlignItems = "CENTER";
+            const tagT = figma.createText();
+            tagT.fontName = { family: "Inter", style: "Bold" };
+            tagT.fontSize = 9;
+            tagT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+            tagT.characters = s.letter || "A";
+            tagT.textAutoResize = "WIDTH_AND_HEIGHT";
+            tag.appendChild(tagT);
+            sHeader.appendChild(tag);
+            const sName = figma.createText();
+            sName.fontName = { family: "Inter", style: "Bold" };
+            sName.fontSize = 11;
+            sName.fills = [{ type: "SOLID", color: { r: 0.12, g: 0.16, b: 0.23 } }];
+            sName.characters = s.name || "";
+            sName.textAutoResize = "WIDTH_AND_HEIGHT";
+            sHeader.appendChild(sName);
+            if (s.note) {
+              const sNote = figma.createText();
+              sNote.fontName = { family: "Inter", style: "Regular" };
+              sNote.fontSize = 10;
+              sNote.fills = [{ type: "SOLID", color: { r: 0.4, g: 0.4, b: 0.4 } }];
+              sNote.characters = s.note;
+              sNote.textAutoResize = "WIDTH_AND_HEIGHT";
+              sRow.appendChild(sNote);
+            }
+            const sExcs = s.excecoes || [];
+            if (sExcs.length > 0) {
+              const _excRgb = { "Erro": { r: 0.8, g: 0.15, b: 0.15 }, "Alerta": { r: 0.8, g: 0.5, b: 0 }, "Sucesso": { r: 0.1, g: 0.55, b: 0.25 }, "Confirma\xE7\xE3o": { r: 0.05, g: 0.35, b: 0.8 } };
+              sExcs.forEach((exc) => {
+                const eRow = figma.createFrame();
+                eRow.layoutMode = "HORIZONTAL";
+                eRow.itemSpacing = 6;
+                eRow.fills = [];
+                eRow.primaryAxisSizingMode = "AUTO";
+                eRow.counterAxisSizingMode = "AUTO";
+                eRow.counterAxisAlignItems = "CENTER";
+                sRow.appendChild(eRow);
+                const eType = figma.createText();
+                eType.fontName = { family: "Inter", style: "Bold" };
+                eType.fontSize = 9;
+                eType.fills = [{ type: "SOLID", color: _excRgb[exc.tipo] || { r: 0.4, g: 0.4, b: 0.4 } }];
+                eType.characters = (exc.tipo || "GERAL").toUpperCase();
+                eType.textAutoResize = "WIDTH_AND_HEIGHT";
+                const eTitle = figma.createText();
+                eTitle.fontName = { family: "Inter", style: "Regular" };
+                eTitle.fontSize = 10;
+                eTitle.fills = [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2 } }];
+                eTitle.characters = exc.titulo || "";
+                eTitle.textAutoResize = "WIDTH_AND_HEIGHT";
+                eRow.appendChild(eType);
+                eRow.appendChild(eTitle);
+              });
+            }
+          });
+          content.appendChild(specsSection);
+          setFillAndHug(specsSection);
+        }
+        const _frames = data.frames || [];
+        if (_frames.length > 0) {
+          const framesSection = createSection(content, "Frames Documentados");
+          _frames.forEach((f, fi) => {
+            const fRow = createFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.99, b: 1 });
+            fRow.name = `[Frame] ${f.nome || "Frame " + (fi + 1)}`;
+            fRow.cornerRadius = 8;
+            fRow.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.92, b: 0.96 } }];
+            framesSection.appendChild(fRow);
+            setFillAndHug(fRow);
+            const fHeader = createFrame("HORIZONTAL", 0, 8);
+            fHeader.counterAxisAlignItems = "CENTER";
+            fRow.appendChild(fHeader);
+            setFillAndHug(fHeader);
+            const fName = createText(f.nome || "Frame", 12, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+            fName.layoutGrow = 1;
+            fHeader.appendChild(fName);
+            if (f.isNewComponent) {
+              const badge = createFrame("HORIZONTAL", 6, 3, { r: 0.38, g: 0.4, b: 0.95 });
+              badge.cornerRadius = 4;
+              badge.appendChild(createText("Novo componente", 9, "Bold", { r: 1, g: 1, b: 1 }));
+              fHeader.appendChild(badge);
+            }
+            if (f.audit && f.audit.status) {
+              createRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? " \u2014 " + f.audit.justificativa : ""));
+            }
+            const fMeasurements = f.measurements || [];
+            if (fMeasurements.length > 0) {
+              const mLabel = createText(`Medidas (${fMeasurements.length})`, 10, "Bold", { r: 0.4, g: 0.45, b: 0.55 });
+              fRow.appendChild(mLabel);
+              setFillAndHug(mLabel);
+              fMeasurements.forEach((m) => {
+                const details = Array.isArray(m.details) ? m.details.join(" | ") : m.details || "";
+                createRow(fRow, m.name || "Medida", details);
+              });
+            }
+            const fSpecs = f.createdSpecs || [];
+            if (fSpecs.length > 0) {
+              const sLabel = createText(`Especifica\xE7\xF5es (${fSpecs.length})`, 10, "Bold", { r: 0.4, g: 0.45, b: 0.55 });
+              fRow.appendChild(sLabel);
+              setFillAndHug(sLabel);
+              fSpecs.forEach((s) => {
+                const sVal = `[${s.category || s.categoryLabel || "Geral"}]${s.note ? " " + s.note : ""}`;
+                const sRow = createFrame("HORIZONTAL", 8, 6, { r: 0.97, g: 0.97, b: 1 });
+                sRow.cornerRadius = 6;
+                sRow.counterAxisAlignItems = "CENTER";
+                fRow.appendChild(sRow);
+                setFillAndHug(sRow);
+                const sName = createText(s.name || s.label || "Spec", 11, "Bold");
+                sName.layoutGrow = 1;
+                sRow.appendChild(sName);
+                const sCat = createText(sVal, 10, "Regular", { r: 0.5, g: 0.5, b: 0.6 });
+                sRow.appendChild(sCat);
+                setFillAndHug(sCat);
+                if (s.link) {
+                  sName.textDecoration = "UNDERLINE";
+                  sName.hyperlink = { type: "URL", value: s.link };
+                }
+              });
+            }
+          });
+          content.appendChild(framesSection);
+          setFillAndHug(framesSection);
+        }
+        const _flows = data.createdFlows || [];
+        if (_flows.length > 0) {
+          const flowsSection = createSection(content, "Fluxos de Tela");
+          const flowTypeLabel = { line_solid: "Linha s\xF3lida", line_dashed: "Linha tracejada", diamond: "Decis\xE3o", diamond_dashed: "Decis\xE3o tracejada", event_start: "In\xEDcio", event_end: "Fim", gateway_parallel: "Paralelo" };
+          _flows.forEach((flow, fi) => {
+            const fRow = createFrame("HORIZONTAL", 12, 8, { r: 0.97, g: 0.96, b: 1 });
+            fRow.name = `[Fluxo] ${flow.name || "Fluxo " + (fi + 1)}`;
+            fRow.cornerRadius = 8;
+            fRow.strokes = [{ type: "SOLID", color: { r: 0.86, g: 0.84, b: 0.96 } }];
+            fRow.counterAxisAlignItems = "CENTER";
+            flowsSection.appendChild(fRow);
+            setFillAndHug(fRow);
+            const fName = createText(flow.name || "Fluxo", 12, "Bold");
+            fName.layoutGrow = 1;
+            fRow.appendChild(fName);
+            const fType = createText(flowTypeLabel[flow.type] || flow.type || "", 10, "Regular", { r: 0.45, g: 0.35, b: 0.75 });
+            fRow.appendChild(fType);
+            setFillAndHug(fType);
+            if (flow.decisionText) {
+              const dText = createText(`"${flow.decisionText}"`, 10, "Regular", { r: 0.5, g: 0.5, b: 0.6 });
+              fRow.appendChild(dText);
+              setFillAndHug(dText);
+            }
+          });
+          content.appendChild(flowsSection);
+          setFillAndHug(flowsSection);
         }
         fichaTecnica.appendChild(content);
         mainContainer.appendChild(fichaTecnica);
@@ -1711,13 +1953,17 @@
         const pt = node.paddingTop || 0, pr = node.paddingRight || 0, pb = node.paddingBottom || 0, pl = node.paddingLeft || 0;
         if (pt + pr + pb + pl > 0) {
           const tT = getVar("paddingTop"), tR = getVar("paddingRight"), tB = getVar("paddingBottom"), tL = getVar("paddingLeft");
-          let val;
-          if (tT || tR || tB || tL) {
-            val = [tT || `${pt}px`, tR || `${pr}px`, tB || `${pb}px`, tL || `${pl}px`].join(" ");
+          const vT = tT || `${pt}px`, vR = tR || `${pr}px`, vB = tB || `${pb}px`, vL = tL || `${pl}px`;
+          let val, token;
+          if (vT === vR && vR === vB && vB === vL) {
+            val = vT;
+          } else if (vT === vB && vR === vL) {
+            val = `${vT} ${vR}`;
           } else {
-            val = `${pt}px ${pr}px ${pb}px ${pl}px`;
+            val = `${vT} ${vR} ${vB} ${vL}`;
           }
-          properties.push({ key: "padding", label: "Padding", value: val });
+          token = tT || tR || tB || tL || null;
+          properties.push({ key: "padding", label: "Padding", value: val, token });
         }
       }
       if ("fills" in node && Array.isArray(node.fills) && node.fills.length > 0) {
@@ -1784,8 +2030,8 @@
         const cr = parseInt(hex.substring(0, 2), 16) / 255;
         const cg = parseInt(hex.substring(2, 4), 16) / 255;
         const cb = parseInt(hex.substring(4, 6), 16) / 255;
-        const themeColor = { r: cr, g: cg, b: cb };
-        const _specBase = `[Spec] ${node.name}`;
+        const themeColor2 = { r: cr, g: cg, b: cb };
+        const _specBase = `[Spec/${opts.letter}] ${node.name}`;
         const specCard = figma.createFrame();
         specCard.name = `${_specBase}/Ficha`;
         specCard.layoutMode = "VERTICAL";
@@ -1796,7 +2042,7 @@
         specCard.itemSpacing = 12;
         specCard.cornerRadius = 8;
         specCard.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
-        specCard.strokes = [{ type: "SOLID", color: themeColor }];
+        specCard.strokes = [{ type: "SOLID", color: themeColor2 }];
         specCard.strokeWeight = 1.5;
         specCard.primaryAxisSizingMode = "AUTO";
         specCard.counterAxisSizingMode = "AUTO";
@@ -1813,7 +2059,7 @@
         tagCircle.counterAxisSizingMode = "FIXED";
         tagCircle.resize(42, 42);
         tagCircle.cornerRadius = 8;
-        tagCircle.fills = [{ type: "SOLID", color: themeColor }];
+        tagCircle.fills = [{ type: "SOLID", color: themeColor2 }];
         tagCircle.primaryAxisAlignItems = "CENTER";
         tagCircle.counterAxisAlignItems = "CENTER";
         const tagText = figma.createText();
@@ -1843,11 +2089,11 @@
           pill.primaryAxisSizingMode = "AUTO";
           pill.counterAxisSizingMode = "AUTO";
           pill.fills = [];
-          pill.strokes = [{ type: "SOLID", color: themeColor }];
+          pill.strokes = [{ type: "SOLID", color: themeColor2 }];
           const pillText = figma.createText();
           pillText.fontName = { family: "Inter", style: "Medium" };
           pillText.fontSize = 10;
-          pillText.fills = [{ type: "SOLID", color: themeColor }];
+          pillText.fills = [{ type: "SOLID", color: themeColor2 }];
           pillText.characters = opts.categoryLabel;
           pill.appendChild(pillText);
           specCard.appendChild(pill);
@@ -1889,22 +2135,69 @@
             const pVal = figma.createText();
             pVal.fontName = { family: "Inter", style: "Bold" };
             pVal.fontSize = 11;
-            pVal.fills = [{ type: "SOLID", color: { r: 0.1, g: 0.1, b: 0.1 } }];
-            pVal.characters = String(p.value);
+            pVal.fills = [{ type: "SOLID", color: p.token ? themeColor2 : { r: 0.1, g: 0.1, b: 0.1 } }];
+            pVal.characters = p.token || String(p.value);
             pVal.textAutoResize = "WIDTH_AND_HEIGHT";
             row.appendChild(pLabel);
             row.appendChild(pVal);
-            if (p.token) {
-              const pToken = figma.createText();
-              pToken.fontName = { family: "Inter", style: "Medium" };
-              pToken.fontSize = 9;
-              pToken.fills = [{ type: "SOLID", color: themeColor }];
-              pToken.characters = `(${p.token})`;
-              row.appendChild(pToken);
-            }
             propsFrame.appendChild(row);
           });
           specCard.appendChild(propsFrame);
+        }
+        const specExcecoes = opts.excecoes || [];
+        if (specExcecoes.length > 0) {
+          await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+          await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+          const excFrame = figma.createFrame();
+          excFrame.layoutMode = "VERTICAL";
+          excFrame.itemSpacing = 6;
+          excFrame.fills = [{ type: "SOLID", color: { r: 1, g: 0.95, b: 0.93 } }];
+          excFrame.paddingLeft = 10;
+          excFrame.paddingRight = 10;
+          excFrame.paddingTop = 8;
+          excFrame.paddingBottom = 8;
+          excFrame.cornerRadius = 6;
+          excFrame.primaryAxisSizingMode = "AUTO";
+          excFrame.counterAxisSizingMode = "AUTO";
+          const excTitle = figma.createText();
+          excTitle.fontName = { family: "Inter", style: "Bold" };
+          excTitle.fontSize = 9;
+          excTitle.fills = [{ type: "SOLID", color: { r: 0.8, g: 0.3, b: 0.1 } }];
+          excTitle.characters = `CEN\xC1RIOS DE EXCE\xC7\xC3O (${specExcecoes.length})`;
+          excTitle.textAutoResize = "WIDTH_AND_HEIGHT";
+          excFrame.appendChild(excTitle);
+          const _excTypeRgb = {
+            "Erro": { r: 0.8, g: 0.15, b: 0.15 },
+            "Alerta": { r: 0.8, g: 0.5, b: 0 },
+            "Sucesso": { r: 0.1, g: 0.55, b: 0.25 },
+            "Confirma\xE7\xE3o": { r: 0.05, g: 0.35, b: 0.8 }
+          };
+          specExcecoes.forEach((exc) => {
+            const excRow = figma.createFrame();
+            excRow.layoutMode = "HORIZONTAL";
+            excRow.itemSpacing = 6;
+            excRow.fills = [];
+            excRow.primaryAxisSizingMode = "AUTO";
+            excRow.counterAxisSizingMode = "AUTO";
+            excRow.counterAxisAlignItems = "CENTER";
+            const typeColor = _excTypeRgb[exc.tipo] || { r: 0.4, g: 0.4, b: 0.4 };
+            const typeLabel = figma.createText();
+            typeLabel.fontName = { family: "Inter", style: "Bold" };
+            typeLabel.fontSize = 9;
+            typeLabel.fills = [{ type: "SOLID", color: typeColor }];
+            typeLabel.characters = (exc.tipo || "GERAL").toUpperCase();
+            typeLabel.textAutoResize = "WIDTH_AND_HEIGHT";
+            const titleLabel = figma.createText();
+            titleLabel.fontName = { family: "Inter", style: "Regular" };
+            titleLabel.fontSize = 10;
+            titleLabel.fills = [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2 } }];
+            titleLabel.characters = `${exc.titulo || ""}${exc.notas ? " \u2014 " + exc.notas : ""}`;
+            titleLabel.textAutoResize = "WIDTH_AND_HEIGHT";
+            excRow.appendChild(typeLabel);
+            excRow.appendChild(titleLabel);
+            excFrame.appendChild(excRow);
+          });
+          specCard.appendChild(excFrame);
         }
         if (opts.link) {
           const linkTxt = figma.createText();
@@ -1925,7 +2218,7 @@
           contour.x = bounds.x - 16;
           contour.y = bounds.y - 16;
           contour.fills = [];
-          contour.strokes = [{ type: "SOLID", color: themeColor }];
+          contour.strokes = [{ type: "SOLID", color: themeColor2 }];
           contour.strokeWeight = 2;
           contour.dashPattern = [4, 4];
           contour.locked = true;
@@ -1935,7 +2228,7 @@
           chip.counterAxisSizingMode = "FIXED";
           chip.resize(42, 42);
           chip.cornerRadius = 8;
-          chip.fills = [{ type: "SOLID", color: themeColor }];
+          chip.fills = [{ type: "SOLID", color: themeColor2 }];
           chip.primaryAxisAlignItems = "CENTER";
           chip.counterAxisAlignItems = "CENTER";
           const chipText = figma.createText();
@@ -1985,7 +2278,7 @@
             endPt = { x: specCard.x + specCard.width / 2, y: specCard.y };
           }
           connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
-          connector.strokes = [{ type: "SOLID", color: themeColor }];
+          connector.strokes = [{ type: "SOLID", color: themeColor2 }];
           connector.strokeWeight = 1.5;
           connector.dashPattern = [4, 4];
           connector.strokeCap = "ROUND";
@@ -2151,12 +2444,22 @@
           const cAx = boundsA.x + boundsA.width / 2, cAy = boundsA.y + boundsA.height / 2;
           const cBx = boundsB.x + boundsB.width / 2, cBy = boundsB.y + boundsB.height / 2;
           const dx = cBx - cAx, dy = cBy - cAy;
-          if (Math.abs(dx) >= Math.abs(dy)) {
+          const noOverlapH = boundsA.x + boundsA.width <= boundsB.x || boundsB.x + boundsB.width <= boundsA.x;
+          const noOverlapV = boundsA.y + boundsA.height <= boundsB.y || boundsB.y + boundsB.height <= boundsA.y;
+          if (noOverlapH) {
             bestA = dx >= 0 ? pointsA.right : pointsA.left;
             bestB = dx >= 0 ? pointsB.left : pointsB.right;
-          } else {
+          } else if (noOverlapV) {
             bestA = dy >= 0 ? pointsA.bottom : pointsA.top;
             bestB = dy >= 0 ? pointsB.top : pointsB.bottom;
+          } else {
+            if (Math.abs(dx) >= Math.abs(dy)) {
+              bestA = dx >= 0 ? pointsA.right : pointsA.left;
+              bestB = dx >= 0 ? pointsB.left : pointsB.right;
+            } else {
+              bestA = dy >= 0 ? pointsA.bottom : pointsA.top;
+              bestB = dy >= 0 ? pointsB.top : pointsB.bottom;
+            }
           }
         } else {
           let minDist = Infinity;
@@ -2193,7 +2496,7 @@
       line.y = 0;
       line.strokes = [{ type: "SOLID", color: strokeColor }];
       line.strokeWeight = 2;
-      if (msg.flowType === "line_dashed") line.dashPattern = [6, 4];
+      if (msg.flowType === "line_dashed" || msg.flowType === "diamond_dashed") line.dashPattern = [6, 4];
       line.vectorPaths = [{ windingRule: "NONZERO", data: `M ${bestA.x} ${bestA.y} L ${bestB.x} ${bestB.y}` }];
       let nodesToGroup = [line];
       if (msg.flowType !== "event_start") {

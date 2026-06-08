@@ -164,6 +164,7 @@ function clearPluginCache() {
 }
 
 function saveSpecsToStorage() {
+  handoffData.specs = createdSpecs;
   saveToStorage();
 }
 
@@ -522,6 +523,23 @@ function updateExcecoesCount(frameId) {
   }
 }
 
+function toggleContextField(field, checked) {
+  const fieldDiv = document.getElementById(field + '-field');
+  const input = document.getElementById('s1-' + field);
+  if (checked) {
+    if (fieldDiv) fieldDiv.classList.remove('hidden');
+    // Pré-preenche com o nome do frame selecionado no Figma, se houver
+    window._pendingContextField = field;
+    parent.postMessage({ pluginMessage: { type: 'get-context-name' } }, '*');
+    if (input) setTimeout(function() { input.focus(); }, 100);
+  } else {
+    if (fieldDiv) fieldDiv.classList.add('hidden');
+    if (input) input.value = '';
+    updateData('step1', field, '');
+  }
+}
+window.toggleContextField = toggleContextField;
+
 function linkCurrentSelectionForExc(id) {
   parent.postMessage({ pluginMessage: { type: 'get-selection-link', targetId: id } }, '*');
 }
@@ -598,13 +616,35 @@ function selectExceptionType(tipo, icon, color) {
 }
 
 function confirmException() {
-  if (!_currentExceptionFrameId || !_currentExceptionType) return;
+  if (!_currentExceptionType) return;
   const vinc   = (document.getElementById('exc-modal-vinc')?.value   || '').trim();
   const anchor = (document.getElementById('exc-modal-anchor')?.value || '').trim();
   const obsCheck = document.getElementById('exc-modal-has-obs');
   const obsArea  = document.getElementById('exc-modal-obs');
   const obs = (obsCheck && obsCheck.checked && obsArea) ? obsArea.value.trim() : '';
 
+  // ── Caso: exceção de spec global (view-specifications sem frame) ───
+  const globalIdx = window._globalSpecExceptionIdx;
+  if (globalIdx !== null && globalIdx !== undefined && _currentExceptionFrameId === '__global__') {
+    if (typeof createdSpecs !== 'undefined' && createdSpecs[globalIdx]) {
+      if (!createdSpecs[globalIdx].excecoes) createdSpecs[globalIdx].excecoes = [];
+      createdSpecs[globalIdx].excecoes.push({
+        tipo: _currentExceptionType.tipo,
+        titulo: vinc,
+        anchor,
+        obs
+      });
+      if (typeof saveSpecsToStorage === 'function') saveSpecsToStorage();
+      window._expandSpecIdAfterRender = createdSpecs[globalIdx].id;
+      if (typeof renderSpecsList === 'function') renderSpecsList();
+    }
+    window._globalSpecExceptionIdx = null;
+    _currentExceptionFrameId = null;
+    closeModal('exception-modal');
+    return;
+  }
+
+  if (!_currentExceptionFrameId) return;
   const specIdx = window._currentExceptionSpecIdx;
   if (specIdx !== null && specIdx !== undefined) {
     // Store exception inside the spec item
@@ -619,6 +659,7 @@ function confirmException() {
         obs
       });
       saveToStorage();
+      window._expandSpecIdAfterRender = frame.createdSpecs[specIdx].id;
       if (typeof renderSpecsListForFrame === 'function') renderSpecsListForFrame(_currentExceptionFrameId);
     }
     window._currentExceptionSpecIdx = null;
@@ -658,6 +699,7 @@ function addFrame(figmaId, nome) {
   renderFrameCard(frame);
   updateEmptyFramesState();
   saveToStorage();
+  _toastSaved();
   const card = document.getElementById(`frame-card-${id}`);
   if (card) autoScrollToNewItem('handoff-scroll-container', card);
   return frame;
@@ -1261,6 +1303,19 @@ function saveToStorage() {
   parent.postMessage({ pluginMessage: { type: 'save-storage', data: handoffData } }, '*');
 }
 
+function saveAndReturn() {
+  saveToStorage();
+  showToast('Salvo automaticamente', 'success');
+  navigate('view-home');
+}
+window.saveAndReturn = saveAndReturn;
+
+// Mostra toast de salvo ao adicionar qualquer item relevante
+function _toastSaved() {
+  showToast('Salvo automaticamente', 'success');
+}
+window._toastSaved = _toastSaved;
+
 function toggleTheme() {
   document.documentElement.classList.toggle("dark");
   const isDark = document.documentElement.classList.contains("dark");
@@ -1664,6 +1719,15 @@ function restoreUIFromState() {
   if (s1Jornada) s1Jornada.value = handoffData.step1.jornada || "";
   const s1Feature = document.getElementById("s1-feature");
   if (s1Feature) s1Feature.value = handoffData.step1.feature || "";
+
+  // Restaurar estado dos toggles de Jornada e Feature
+  ['jornada', 'feature'].forEach(function(field) {
+    const hasValue = !!(handoffData.step1[field] || '').trim();
+    const toggle = document.getElementById('toggle-' + field);
+    const fieldDiv = document.getElementById(field + '-field');
+    if (toggle) toggle.checked = hasValue;
+    if (fieldDiv) fieldDiv.classList.toggle('hidden', !hasValue);
+  });
 
   // Equipe (now in step1)
   const listEquipe = document.getElementById("list-equipe");

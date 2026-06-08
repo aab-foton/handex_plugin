@@ -23,6 +23,9 @@
     }
 
     function collectHandoffData() {
+      // Sincroniza specs globais antes de exportar
+      if (typeof createdSpecs !== 'undefined') handoffData.specs = createdSpecs;
+
       // Step 1
       const s1Titulo = document.getElementById('s1-titulo');
       handoffData.step1.titulo = s1Titulo ? s1Titulo.value : '';
@@ -84,7 +87,40 @@ ${equipe.length === 0 ? 'Nenhum membro.' : equipe.map(m => `- **${m.papel}**: ${
 ${regras.length === 0 ? 'Nenhuma regra cadastrada.' : regras.map(r => `- **${r.titulo}**: ${r.notas || ''}${r.link ? ' — ' + r.link : ''}`).join('\n')}
 
 ## Frames Documentados (${framesList.length})
-${framesList.map(f => `### ${f.nome}\n- Specs: ${f.specs ? 'sim' : 'não'}\n- Medidas: ${(f.measurements || []).length}\n- Especificações: ${(f.createdSpecs || []).length}\n- Exceções: ${(f.excecoes || []).length}`).join('\n\n')}
+${framesList.map(f => {
+  const measurements = f.measurements || [];
+  const createdSpecs = f.createdSpecs || [];
+  const excecoes = f.excecoes || [];
+  const isNew = f.isNewComponent ? '\n- **Novo Componente**' : '';
+  const auditMD = f.audit && f.audit.status ? `\n- **Auditoria DSC:** ${f.audit.status}${f.audit.justificativa ? ' — ' + f.audit.justificativa : ''}` : '';
+  const measuresMD = measurements.length === 0 ? '' :
+    '\n\n#### Medidas (' + measurements.length + ')\n' +
+    measurements.map(m => `- **${m.name || 'Medida'}**: ${Array.isArray(m.details) ? m.details.join(' | ') : m.details || ''}`).join('\n');
+  const specsMD = createdSpecs.length === 0 ? '' :
+    '\n\n#### Especificações (' + createdSpecs.length + ')\n' +
+    createdSpecs.map(s => `- **${s.name || s.label || 'Spec'}** [${s.category || s.categoryLabel || 'Geral'}]${s.note ? ': ' + s.note : ''}${s.link ? ' — [DS](' + s.link + ')' : ''}`).join('\n');
+  const excMD = excecoes.length === 0 ? '' :
+    '\n\n#### Exceções (' + excecoes.length + ')\n' +
+    excecoes.map(e => `- [${e.tipo || 'Geral'}] **${e.titulo || ''}**${e.notas ? ': ' + e.notas : ''}`).join('\n');
+  return `### ${f.nome}${isNew}${auditMD}\n- Tokens escaneados: ${f.specs ? 'sim' : 'não'}${measuresMD}${specsMD}${excMD}`;
+}).join('\n\n')}
+
+## Fluxos de Tela (${(handoffData.createdFlows || []).length})
+${(handoffData.createdFlows || []).length === 0
+  ? 'Nenhum fluxo mapeado.'
+  : (handoffData.createdFlows || []).map(flow => `- **${flow.name || 'Fluxo'}** — ${flow.type || ''}${flow.decisionText ? ' ("' + flow.decisionText + '")' : ''}`).join('\n')}
+
+## Especificações Visuais (${(handoffData.specs || []).filter(s => s.visible !== false).length} visíveis)
+${(handoffData.specs || []).length === 0 ? 'Nenhuma especificação registrada.' :
+  (handoffData.specs || []).map(s => {
+    const vis = s.visible !== false ? '' : ' *(oculta)*';
+    const cat = s.category || s.categoryLabel || 'Geral';
+    const excs = (s.excecoes || []).length > 0
+      ? '\n' + s.excecoes.map(e => `  - [${e.tipo || 'Geral'}] **${e.titulo || ''}**${e.obs ? ': ' + e.obs : ''}`).join('\n')
+      : '';
+    return `- **${s.letter || 'A'} — ${s.name || ''}** [${cat}]${vis}${s.note ? ': ' + s.note : ''}${excs}`;
+  }).join('\n')
+}
 
 ## Documentação
 - Protótipo: ${handoffData.docs.proto.link || 'N/A'}
@@ -937,6 +973,61 @@ ${framesList.map(f => `### ${f.nome}\n- Specs: ${f.specs ? 'sim' : 'não'}\n- Me
           </div>
         `;
         accordionsHTML += buildAccordionHTML("acc-frames", "Frames Documentados", "layers", framesContent, false);
+      }
+
+      // 8. Fluxos de Tela
+      const _allFlows = handoffData.createdFlows || [];
+      if (_allFlows.length > 0) {
+        const flowTypeLabel = { line_solid: 'Linha sólida', line_dashed: 'Linha tracejada', diamond: 'Decisão', diamond_dashed: 'Decisão tracejada', event_start: 'Início', event_end: 'Fim', gateway_parallel: 'Paralelo' };
+        const flowsContent = `
+          <div class="space-y-2 text-left">
+            ${_allFlows.map((flow, fi) => `
+              <div class="flex items-center gap-3 p-3 bg-purple-50/40 dark:bg-purple-950/10 border border-purple-100/60 dark:border-purple-900/30 rounded-xl">
+                <div class="w-6 h-6 rounded-md bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0 text-[10px] font-black">${fi + 1}</div>
+                <div class="flex-1 min-w-0">
+                  <span class="text-[11px] font-black text-slate-800 dark:text-white">${flow.name || 'Fluxo'}</span>
+                  ${flow.decisionText ? `<span class="ml-2 text-[10px] text-slate-500 dark:text-dark-muted">"${flow.decisionText}"</span>` : ''}
+                </div>
+                <span class="text-[9px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider shrink-0">${flowTypeLabel[flow.type] || flow.type || ''}</span>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        accordionsHTML += buildAccordionHTML("acc-flows", "Fluxos de Tela", "git-branch", flowsContent, false);
+      }
+
+      // 9. Especificações Visuais (specs globais)
+      const _globalSpecs = (handoffData.specs || []);
+      if (_globalSpecs.length > 0) {
+        const _excColorsHTML = { 'Erro': '#dc2626', 'Alerta': '#d97706', 'Sucesso': '#16a34a', 'Confirmação': '#2563eb' };
+        const globalSpecsContent = `
+          <div class="space-y-2 text-left">
+            ${_globalSpecs.map(s => {
+              const isHidden = s.visible === false;
+              const cat = s.category || s.categoryLabel || '';
+              const excs = s.excecoes || [];
+              return `
+                <div class="p-3 ${isHidden ? 'opacity-40' : ''} bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800/40 rounded-xl">
+                  <div class="flex items-center gap-2 mb-1">
+                    <div class="w-5 h-5 rounded flex items-center justify-center text-[9px] font-black text-white shrink-0" style="background:${s.color || '#005ca9'}">${s.letter || 'A'}</div>
+                    <span class="text-[11px] font-bold text-slate-800 dark:text-white flex-1">${s.name || ''}</span>
+                    ${isHidden ? '<span class="text-[9px] text-slate-400 italic">oculta</span>' : ''}
+                    ${cat ? `<span class="text-[9px] text-slate-500 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded">${cat}</span>` : ''}
+                  </div>
+                  ${s.note ? `<p class="text-[10px] text-slate-500 dark:text-slate-400 mb-1.5 ml-7">${s.note}</p>` : ''}
+                  ${excs.length > 0 ? `
+                    <div class="ml-7 space-y-1 mt-1.5">
+                      ${excs.map(e => `
+                        <div class="flex items-center gap-1.5">
+                          <span class="text-[9px] font-bold uppercase shrink-0 w-16" style="color:${_excColorsHTML[e.tipo] || '#64748b'}">${e.tipo || ''}</span>
+                          <span class="text-[10px] text-slate-600 dark:text-slate-300">${e.titulo || ''}</span>
+                        </div>`).join('')}
+                    </div>` : ''}
+                </div>`;
+            }).join('')}
+          </div>
+        `;
+        accordionsHTML += buildAccordionHTML("acc-global-specs", "Especificações Visuais", "tag", globalSpecsContent, false);
       }
 
       // Frame & Elementos Tab content
