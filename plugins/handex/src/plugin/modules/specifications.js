@@ -198,30 +198,6 @@
             </div>
           </div>
 
-          <!-- ── Medidas (oculto até inserir) ── -->
-          <div id="sub-sec-medidas-${fid}" class="hidden border-b border-gray-50 dark:border-dark-line">
-            ${subHead(`medidas-${fid}`, 'ruler', 'Medidas', `sub-count-medidas-${fid}`)}
-            <div id="sub-body-medidas-${fid}" class="hidden bg-gray-50/30 dark:bg-dark-bg/20">
-              <div id="measurements-list-${fid}" class="px-2 py-1"></div>
-            </div>
-          </div>
-
-          <!-- ── Especificações (oculto até inserir) ── -->
-          <div id="sub-sec-specs-${fid}" class="hidden border-b border-gray-50 dark:border-dark-line">
-            ${subHead(`specs-${fid}`, 'tag', 'Especificações', `sub-count-specs-${fid}`)}
-            <div id="sub-body-specs-${fid}" class="hidden bg-gray-50/30 dark:bg-dark-bg/20">
-              <div id="specs-list-${fid}" class="px-2 py-2"></div>
-            </div>
-          </div>
-
-          <!-- ── Cenários de Exceção (oculto até inserir) ── -->
-          <div id="sub-sec-excecoes-${fid}" class="hidden">
-            ${subHead(`excecoes-${fid}`, 'alert-circle', 'Cenários de Exceção', `sub-count-excecoes-${fid}`)}
-            <div id="sub-body-excecoes-${fid}" class="hidden bg-gray-50/30 dark:bg-dark-bg/20">
-              <div id="excecoes-list-${fid}" class="px-2 py-2"></div>
-            </div>
-          </div>
-
           <!-- ── Conformidade DSC ── -->
           <div class="border-t border-gray-50 dark:border-dark-line px-4 py-3 space-y-1">
             <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider pb-1">Conformidade DSC</p>
@@ -277,9 +253,6 @@
       _refreshIcons();
 
       if (frame.specs) { renderSpecs(frame.specs, fid); showFrameSection(fid, 'tokens'); }
-      if (frame.measurements && frame.measurements.length > 0) { renderMeasurementsResults(frame.measurements, fid); showFrameSection(fid, 'medidas'); }
-      if (frame.createdSpecs && frame.createdSpecs.length > 0) { renderSpecsListForFrame(fid); showFrameSection(fid, 'specs'); }
-      if (frame.excecoes && frame.excecoes.length > 0) { renderExcecoesList(fid); showFrameSection(fid, 'excecoes'); }
 
       toggleFrameAccordion(fid);
     }
@@ -336,7 +309,28 @@
     window.updateSpecObs = updateSpecObs;
     window.deleteSpecFromFrame = deleteSpecFromFrame;
 
-    // ── Render da lista de specs criadas por frame ────────────────────
+    // ── Cores por tipo de exceção ─────────────────────────────────────
+    const _excColors = {
+      'Erro':        { bg: 'bg-red-50 dark:bg-red-900/20',    border: 'border-red-100 dark:border-red-900/30',    text: 'text-red-600 dark:text-red-400',    dot: 'bg-red-500' },
+      'Alerta':      { bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-100 dark:border-amber-900/30', text: 'text-amber-600 dark:text-amber-400', dot: 'bg-amber-500' },
+      'Sucesso':     { bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-green-100 dark:border-green-900/30', text: 'text-green-600 dark:text-green-400', dot: 'bg-green-500' },
+      'Confirmação': { bg: 'bg-blue-50 dark:bg-blue-900/20',   border: 'border-blue-100 dark:border-blue-900/30',   text: 'text-blue-600 dark:text-blue-400',   dot: 'bg-blue-500' },
+    };
+    function _excColor(tipo) {
+      return _excColors[tipo] || { bg: 'bg-slate-50 dark:bg-slate-800/30', border: 'border-slate-100 dark:border-dark-line', text: 'text-slate-500', dot: 'bg-slate-400' };
+    }
+    function _renderExcItem(exc, onDelete) {
+      const c = _excColor(exc.tipo);
+      return `<div class="flex items-center gap-1.5 px-2 py-1.5 ${c.bg} border ${c.border} rounded-lg">
+        <span class="text-[9px] font-bold ${c.text} uppercase shrink-0 px-1.5 py-0.5 rounded-md ${c.bg} border ${c.border}">${exc.tipo || ''}</span>
+        <span class="flex-1 min-w-0 text-[10px] text-slate-600 dark:text-dark-text leading-snug truncate">${exc.titulo || ''}</span>
+        ${onDelete ? `<button type="button" onclick="event.stopPropagation(); ${onDelete}"
+          class="w-4 h-4 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors shrink-0">
+          <i data-lucide="x" class="w-3 h-3"></i></button>` : ''}
+      </div>`;
+    }
+
+    // ── Render da lista de specs criadas por frame ─────────────────────
     function renderSpecsListForFrame(frameId) {
       const frame = getFrame(frameId);
       if (!frame) return;
@@ -430,30 +424,27 @@
             </div>` : '';
 
           // Build exceptions HTML
-          const excHtml = (spec.excecoes || []).map((exc, ei) => `
-            <div class="flex items-start gap-1.5 px-2 py-1.5 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-              <span class="text-[9px] font-bold text-orange-600 uppercase shrink-0 mt-0.5">${exc.tipo || ''}</span>
-              <span class="flex-1 text-[10px] text-slate-600 dark:text-dark-text leading-snug">${exc.titulo || ''}</span>
-              <button type="button" onclick="event.stopPropagation(); deleteSpecException('${frameId}', ${spec._idx}, ${ei})"
-                class="w-4 h-4 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors shrink-0">
-                <i data-lucide="x" class="w-3 h-3"></i>
-              </button>
-            </div>`).join('');
+          const excHtml = (spec.excecoes || []).map((exc, ei) =>
+            _renderExcItem(exc, `deleteSpecException('${frameId}', ${spec._idx}, ${ei})`)
+          ).join('');
 
           const item = document.createElement('div');
           item.className = `relative bg-white dark:bg-dark-surface rounded-xl border ${isHidden ? 'border-gray-100 opacity-50' : 'border-gray-100 dark:border-dark-line'} overflow-hidden transition-all`;
 
           item.innerHTML = `
             <div class="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-dark-surface" style="background-color:${color}"></div>
-            <div class="flex items-center px-2 py-1.5 gap-1.5 cursor-pointer" onclick="toggleSpecDetails('${detailsId}')">
+            <div class="flex items-center px-2 py-1.5 gap-1.5 cursor-pointer select-none" onclick="toggleSpecDetails('${detailsId}')">
               <div class="w-4 h-4 rounded flex items-center justify-center text-[8px] font-extrabold text-white shrink-0" style="background-color:${color}">${letter}</div>
-              <input type="text" value="${(spec.name || '').replace(/"/g, '&quot;')}"
-                title="Clique para editar o título"
-                class="flex-1 min-w-0 text-[11px] font-semibold text-slate-700 dark:text-white bg-transparent border border-transparent focus:border-[#0070af]/30 focus:ring-1 focus:ring-[#0070af]/20 rounded px-1 py-0.5 outline-none cursor-text transition-all"
-                onchange="updateSpecTitle('${frameId}', ${spec._idx}, this.value)"
-                onclick="event.stopPropagation()" />
+              <div class="flex-1 min-w-0">
+                <input type="text" value="${(spec.name || '').replace(/"/g, '&quot;')}"
+                  title="Clique para editar o título"
+                  class="w-full text-[11px] font-semibold text-slate-700 dark:text-white bg-transparent border border-transparent focus:border-[#0070af]/30 focus:ring-1 focus:ring-[#0070af]/20 rounded px-1 py-0 outline-none cursor-text transition-all"
+                  onchange="updateSpecTitle('${frameId}', ${spec._idx}, this.value)"
+                  onclick="event.stopPropagation()" />
+                ${spec.category ? `<p class="text-[9px] text-slate-400 dark:text-dark-muted px-1 leading-none">${spec.category}</p>` : `<p class="text-[9px] text-slate-300 dark:text-slate-600 px-1 leading-none">Sem categoria</p>`}
+              </div>
               ${hasRawTokenWarning ? `<span title="Valores sem token — use Check Design" class="w-4 h-4 flex items-center justify-center text-amber-400 shrink-0"><i data-lucide="alert-triangle" class="w-3 h-3"></i></span>` : ''}
-              ${excCount > 0 ? `<span class="px-1 py-0.5 rounded bg-orange-50 text-[9px] font-bold text-orange-500 shrink-0">${excCount}</span>` : ''}
+              ${excCount > 0 ? `<span class="px-1 py-0.5 rounded bg-orange-50 text-[9px] font-bold text-orange-500 shrink-0">${excCount} exc</span>` : ''}
               <button type="button" title="Localizar no canvas"
                 onclick="event.stopPropagation(); focusNode('${spec.id}')"
                 class="w-5 h-5 flex items-center justify-center text-gray-300 hover:text-[#0070af] transition-colors shrink-0">
@@ -464,6 +455,7 @@
                 class="w-5 h-5 flex items-center justify-center text-gray-300 hover:text-[#0070af] transition-colors shrink-0">
                 <i data-lucide="${isHidden ? 'eye-off' : 'eye'}" class="w-3 h-3"></i>
               </button>
+              <i data-lucide="chevron-down" id="chev-${detailsId}" class="w-3.5 h-3.5 text-gray-300 transition-transform shrink-0"></i>
               <button type="button" title="Excluir especificação"
                 onclick="event.stopPropagation(); deleteSpecFromFrame('${frameId}', ${spec._idx}, '${spec.id}')"
                 class="w-5 h-5 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors shrink-0">
@@ -485,10 +477,18 @@
               <div>
                 <div class="flex items-center justify-between mb-1.5">
                   <p class="text-[9px] font-bold text-orange-500 uppercase tracking-wider">Cenários de Exceção</p>
-                  <button type="button" onclick="event.stopPropagation(); openSpecException('${frameId}', ${spec._idx})"
-                    class="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/30 rounded-md hover:bg-orange-100 transition-colors">
-                    <i data-lucide="plus" class="w-2.5 h-2.5"></i> Cenário
-                  </button>
+                  <div class="flex items-center gap-1.5">
+                    ${(spec.excecoes || []).length > 0 ? `
+                    <button type="button" onclick="event.stopPropagation(); refreshSpecCardOnCanvas('${frameId}', ${spec._idx})"
+                      title="Atualiza o card no Figma com os cenários mapeados"
+                      class="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-bold text-slate-500 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-line rounded-md hover:bg-slate-100 transition-colors">
+                      <i data-lucide="refresh-cw" class="w-2.5 h-2.5"></i> Atualizar card
+                    </button>` : ''}
+                    <button type="button" onclick="event.stopPropagation(); openSpecException('${frameId}', ${spec._idx})"
+                      class="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/30 rounded-md hover:bg-orange-100 transition-colors">
+                      <i data-lucide="plus" class="w-2.5 h-2.5"></i> Cenário
+                    </button>
+                  </div>
                 </div>
                 <div id="${excListId}" class="space-y-1">
                   ${excHtml || '<p class="text-[10px] text-slate-300 dark:text-slate-600 italic">Nenhum cenário registrado</p>'}
@@ -504,6 +504,24 @@
       });
 
       _refreshIcons();
+
+      // Expand spec sinalizada após adicionar cenário
+      const targetId = window._expandSpecIdAfterRender;
+      if (targetId) {
+        window._expandSpecIdAfterRender = null;
+        setTimeout(() => {
+          const detailsEl = document.getElementById('spec-details-' + frameId + '-' + (() => {
+            const specs = frame.createdSpecs || [];
+            return specs.findIndex(s => s.id === targetId);
+          })());
+          if (detailsEl && detailsEl.classList.contains('hidden')) {
+            detailsEl.classList.remove('hidden');
+            const chev = document.getElementById('chev-' + detailsEl.id);
+            if (chev) chev.style.transform = 'rotate(180deg)';
+            detailsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        }, 50);
+      }
     }
     window.renderSpecsListForFrame = renderSpecsListForFrame;
 
@@ -516,7 +534,9 @@
     function toggleSpecDetails(id) {
       const el = document.getElementById(id);
       if (!el) return;
-      el.classList.toggle('hidden');
+      const isHidden = el.classList.toggle('hidden');
+      const chev = document.getElementById('chev-' + id);
+      if (chev) chev.style.transform = isHidden ? '' : 'rotate(180deg)';
       _refreshIcons();
     }
     window.toggleSpecDetails = toggleSpecDetails;
@@ -527,6 +547,37 @@
       window._currentExceptionSpecIdx = specIdx; // set AFTER openExceptionModal resets it
     }
     window.openSpecException = openSpecException;
+
+    function openGlobalSpecException(originalIndex) {
+      window._globalSpecExceptionIdx = originalIndex;
+      window._currentExceptionSpecIdx = null;
+      if (typeof openExceptionModal === 'function') openExceptionModal('__global__');
+    }
+    window.openGlobalSpecException = openGlobalSpecException;
+
+    function deleteGlobalSpecException(specIdx, excIdx) {
+      if (!createdSpecs[specIdx]) return;
+      if (!createdSpecs[specIdx].excecoes) return;
+      createdSpecs[specIdx].excecoes.splice(excIdx, 1);
+      saveSpecsToStorage();
+      renderSpecsList();
+    }
+    window.deleteGlobalSpecException = deleteGlobalSpecException;
+
+    function refreshSpecCardOnCanvas(frameId, specIdx) {
+      const frame = getFrame(frameId);
+      if (!frame) return;
+      const spec = (frame.createdSpecs || [])[specIdx];
+      if (!spec || !spec.id) { showToast('Spec sem ID de canvas. Recrie a anotação.', 'error'); return; }
+      parent.postMessage({ pluginMessage: {
+        type: 'refresh-spec-card',
+        nodeId: spec.id,
+        excecoes: spec.excecoes || [],
+        letter: spec.letter || spec.name?.[0] || 'A',
+        name: spec.name || ''
+      }}, '*');
+    }
+    window.refreshSpecCardOnCanvas = refreshSpecCardOnCanvas;
 
     function deleteSpecException(frameId, specIdx, excIdx) {
       const frame = getFrame(frameId);
@@ -1022,7 +1073,6 @@
 
     // ── Category Management ──────────────────────────────────────────────
     const DEFAULT_CATEGORIES = [
-      { label: "Cenário de exceção", value: "cenario" },
       { label: "Informação extra", value: "info" },
       { label: "Comportamento", value: "comportamento" },
       { label: "Regra de Negócio", value: "regra" },
@@ -1409,7 +1459,15 @@
           btn.title = "Expandir/Recolher";
           btn.ariaLabel = "Expandir";
           btn.className = "flex-1 flex items-center justify-between text-left p-2.5 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors";
-          btn.onclick = () => toggleAccordion(btn, spec.id, spec.letter, spec.color);
+          btn.onclick = () => {
+            const contentEl = document.getElementById('content-' + spec.id);
+            if (!contentEl) return;
+            const isHidden = contentEl.classList.contains('hidden');
+            contentEl.classList.toggle('hidden');
+            const icon = btn.querySelector('[data-lucide="chevron-down"]');
+            if (icon) icon.style.transform = isHidden ? 'rotate(180deg)' : '';
+            if (spec.id) focusNode(spec.id);
+          };
           
           btn.innerHTML = `
             <div class="flex items-center gap-2.5 flex-1 min-w-0">
@@ -1441,21 +1499,23 @@
 
           visBtn.onclick = (e) => {
             e.stopPropagation();
-            const nowVisible = !(spec.visible !== false);
+            // Lê sempre da fonte (não da cópia estática do closure)
+            const currentVis = createdSpecs[spec.originalIndex]?.visible !== false;
+            const nowVisible = !currentVis;
             if (createdSpecs[spec.originalIndex]) {
               createdSpecs[spec.originalIndex].visible = nowVisible;
             }
-            
+
             visBtn.innerHTML = nowVisible ? `<i data-lucide="eye" class="w-3.5 h-3.5"></i>` : `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>`;
             visBtn.classList.toggle("text-[#005ca9]", nowVisible);
             visBtn.classList.toggle("text-gray-300", !nowVisible);
-            
+
             if (spec.id) {
               parent.postMessage({ pluginMessage: { type: 'hide-node', id: spec.id, forceState: nowVisible } }, '*');
             }
             saveSpecsToStorage();
             _refreshIcons();
-            
+
             updateGroupVisButtonState(letter, groupWrapper);
             updateHideAllSpecsButtonState();
           };
@@ -1495,10 +1555,36 @@
               const detEl = document.createElement("div");
               detEl.className = "flex justify-between text-[10px] bg-white dark:bg-dark-bg p-1.5 rounded border border-gray-100 dark:border-dark-line";
               const valStr = p.token ? `<span class="text-[8px] text-[#0070af] dark:text-blue-400 font-medium mr-1 px-1 bg-blue-50 dark:bg-blue-900/20 rounded-sm border border-blue-100 dark:border-blue-800">${p.token}</span>${p.value}` : p.value;
-              detEl.innerHTML = `<span class="text-slate-500">${p.label}</span><span class="font-bold text-slate-700 dark:text-white flex items-center">${valStr}</span>`;
+              const displayVal = p.token || p.value;
+              const valStr2 = p.token
+                ? `<span class="text-[9px] text-[#0070af] dark:text-blue-400 font-medium px-1 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-100 dark:border-blue-800">${p.token}</span>`
+                : `<span class="font-mono">${p.value}</span>`;
+              detEl.innerHTML = `<span class="text-slate-500">${p.label}</span><span class="font-bold text-slate-700 dark:text-white flex items-center">${valStr2}</span>`;
               content.appendChild(detEl);
             });
           }
+
+          // ── Cenários de Exceção ──────────────────────────────────────────
+          const excSection = document.createElement('div');
+          excSection.className = 'pt-1';
+          const specExcs = spec.excecoes || [];
+          const excListId = 'global-exc-list-' + spec.originalIndex;
+          excSection.innerHTML = `
+            <div class="flex items-center justify-between mb-1">
+              <p class="text-[9px] font-bold text-orange-500 uppercase tracking-wider">Cenários de Exceção ${specExcs.length > 0 ? '(' + specExcs.length + ')' : ''}</p>
+              <button type="button" onclick="event.stopPropagation(); openGlobalSpecException(${spec.originalIndex})"
+                class="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/30 rounded-md hover:bg-orange-100 transition-colors">
+                <i data-lucide="plus" class="w-2.5 h-2.5"></i> Cenário
+              </button>
+            </div>
+            <div id="${excListId}" class="space-y-1">
+              ${specExcs.length === 0
+                ? '<p class="text-[10px] text-slate-300 dark:text-slate-600 italic">Nenhum cenário registrado</p>'
+                : specExcs.map((exc, ei) => _renderExcItem(exc, `deleteGlobalSpecException(${spec.originalIndex}, ${ei})`)).join('')
+              }
+            </div>
+          `;
+          content.appendChild(excSection);
 
           section.appendChild(content);
           groupContent.appendChild(section);
@@ -1510,11 +1596,38 @@
       });
 
       _refreshIcons();
-      const currentCount = createdSpecs.length;
-      if (typeof lastSpecsCount !== 'undefined' && currentCount > lastSpecsCount) {
-        autoScrollToNewItem('specs-scroll-container');
+
+      // Expand spec sinalizada (nova spec ou novo cenário adicionado)
+      const targetId = window._expandSpecIdAfterRender;
+      if (targetId) {
+        window._expandSpecIdAfterRender = null;
+        setTimeout(() => {
+          const contentEl = document.getElementById('content-' + targetId);
+          if (contentEl && contentEl.classList.contains('hidden')) {
+            contentEl.classList.remove('hidden');
+            const chevron = contentEl.closest('.border')?.querySelector('[data-lucide="chevron-down"]');
+            if (chevron) chevron.style.transform = 'rotate(180deg)';
+          }
+          if (contentEl) contentEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 50);
+      } else {
+        const currentCount = createdSpecs.length;
+        if (typeof lastSpecsCount !== 'undefined' && currentCount > lastSpecsCount) {
+          const lastSpec = createdSpecs[createdSpecs.length - 1];
+          if (lastSpec && lastSpec.id) {
+            setTimeout(() => {
+              const contentEl = document.getElementById('content-' + lastSpec.id);
+              if (contentEl && contentEl.classList.contains('hidden')) {
+                contentEl.classList.remove('hidden');
+                const chevron = contentEl.closest('.border')?.querySelector('[data-lucide="chevron-down"]');
+                if (chevron) chevron.style.transform = 'rotate(180deg)';
+              }
+              autoScrollToNewItem('specs-scroll-container');
+            }, 50);
+          }
+        }
+        lastSpecsCount = createdSpecs.length;
       }
-      lastSpecsCount = currentCount;
       updateHideAllSpecsButtonState();
     }
     let lastSpecsCount = 0;

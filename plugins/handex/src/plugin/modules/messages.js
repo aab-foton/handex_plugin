@@ -209,6 +209,7 @@
           renderMeasurementsResults(handoffData.measurements);
         }
         saveToStorage();
+        if (window._toastSaved) _toastSaved();
       }
 
       if (msg.type === "spec-created") {
@@ -231,6 +232,7 @@
           renderSpecsList();
         }
         saveSpecsToStorage();
+        if (window._toastSaved) _toastSaved();
       }
 
       if (msg.type === "flow-created") {
@@ -239,6 +241,7 @@
         handoffData.nextFlowNumber = (handoffData.nextFlowNumber || 1) + 1;
         renderFlowsList();
         saveToStorage();
+        if (window._toastSaved) _toastSaved();
         if (msg.flow && msg.flow.id) focusNode(msg.flow.id);
         setTimeout(() => {
           const list = document.getElementById('flows-results');
@@ -283,7 +286,7 @@
                         <span class="text-[12px] font-bold text-slate-700 dark:text-white uppercase tracking-tight">${prop.label}</span>
                         ${tokenBadge}
                       </div>
-                      <span class="block text-[11px] text-slate-500 font-mono">${prop.value}</span>
+                      ${!prop.token ? `<span class="block text-[11px] text-slate-500 font-mono">${prop.value}</span>` : ''}
                     </div>
                   </div>
                   <input type="checkbox" id="${id}" value="${prop.key}" checked class="w-5 h-5 rounded-lg border-gray-200 text-[#0070af] focus:ring-[#0070af] transition-all cursor-pointer" />
@@ -294,6 +297,18 @@
         }
         document.getElementById('spec-properties-modal').classList.remove('hidden');
         _refreshIcons()
+      }
+
+      if (msg.type === 'context-name') {
+        const field = window._pendingContextField;
+        window._pendingContextField = null;
+        if (field && msg.name) {
+          const input = document.getElementById('s1-' + field);
+          if (input && !input.value.trim()) {
+            input.value = msg.name;
+            updateData('step1', field, msg.name);
+          }
+        }
       }
 
       if (msg.type === 'selection-info') {

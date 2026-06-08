@@ -2,25 +2,25 @@
 <main id="view-dados-projeto" class="view flex p-0 flex-col h-full overflow-hidden">
 
   <!-- Sub-Header -->
-  <div class="px-4 pt-5 pb-4 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
+  <div class="px-4 pt-3 pb-3 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
     <div class="flex items-center gap-2">
       <button onclick="navigate('view-home')" aria-label="Voltar"
         class="p-2 bg-gray-100 dark:bg-slate-800 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors shrink-0">
         <i data-lucide="arrow-left" class="w-4 h-4 text-gray-600 dark:text-gray-300"></i>
       </button>
       <div>
-        <h2 class="text-[#1E293B] dark:text-white font-bold text-[16px] leading-tight">Dados do Projeto</h2>
-        <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-none mt-0.5">Governança, equipe e contexto de negócio</p>
+        <h2 class="text-[#1E293B] dark:text-white font-bold text-[16px] leading-tight">Informações do Projeto</h2>
+        <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-none mt-0.5">Título, versão, equipe e contexto</p>
       </div>
     </div>
   </div>
 
   <!-- Scrollable Content -->
-  <div class="flex-1 overflow-y-auto pb-10" onscroll="handleScroll(this)">
+  <div class="flex-1 overflow-y-auto pb-2" onscroll="handleScroll(this)">
 
     <!-- ── SEÇÃO 1: CONFIGURAÇÃO ───────────────────────────── -->
-    <div class="px-4 pt-5 pb-2">
-      <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Configuração</p>
+    <div class="px-4 pt-1 pb-1">
+      <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Configuração</p>
     </div>
 
     <div class="px-4 space-y-3">
@@ -82,16 +82,36 @@
         </div>
       </div>
 
-      <!-- Jornada + Feature -->
-      <div class="grid grid-cols-2 gap-3">
-        <div class="bg-white dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line p-4">
-          <label for="s1-jornada" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Jornada</label>
+      <!-- Jornada -->
+      <div class="bg-white dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line p-4">
+        <label class="flex items-center justify-between cursor-pointer select-none">
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="toggle-jornada"
+              onchange="toggleContextField('jornada', this.checked)"
+              class="w-4 h-4 rounded accent-[#0070af] cursor-pointer shrink-0">
+            <span class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Jornada</span>
+          </div>
+          <span class="text-[10px] text-slate-400 dark:text-dark-muted">Opcional · usa o frame selecionado</span>
+        </label>
+        <div id="jornada-field" class="hidden mt-2.5">
           <input type="text" id="s1-jornada" placeholder="Ex: Onboarding"
             oninput="updateData('step1', 'jornada', this.value)"
             class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-800 dark:text-white focus:ring-2 focus:ring-[#0070af]/20 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600" />
         </div>
-        <div class="bg-white dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line p-4">
-          <label for="s1-feature" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Feature</label>
+      </div>
+
+      <!-- Feature -->
+      <div class="bg-white dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line p-4">
+        <label class="flex items-center justify-between cursor-pointer select-none">
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="toggle-feature"
+              onchange="toggleContextField('feature', this.checked)"
+              class="w-4 h-4 rounded accent-[#0070af] cursor-pointer shrink-0">
+            <span class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Feature</span>
+          </div>
+          <span class="text-[10px] text-slate-400 dark:text-dark-muted">Opcional · usa o frame selecionado</span>
+        </label>
+        <div id="feature-field" class="hidden mt-2.5">
           <input type="text" id="s1-feature" placeholder="Ex: Cadastro de usuário"
             oninput="updateData('step1', 'feature', this.value)"
             class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-800 dark:text-white focus:ring-2 focus:ring-[#0070af]/20 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600" />
@@ -259,6 +279,8 @@
       </div>
 
     </div>
+
+
   </div>
 
 </main>
