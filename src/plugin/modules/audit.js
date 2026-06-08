@@ -87,7 +87,7 @@
             </div>
           </div>`;
       }
-      try { lucide.createIcons(); } catch(e) {}
+      _refreshIcons()
     }
 
     function setFrameCheckDone(frameId, checked) {
