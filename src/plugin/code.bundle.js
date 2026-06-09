@@ -361,7 +361,7 @@
       const currentUser = figma.currentUser ? { id: figma.currentUser.id, name: figma.currentUser.name, photoUrl: figma.currentUser.photoUrl } : null;
       const theme = figma.ui.theme || "light";
       const sel = figma.currentPage.selection;
-      const projectName = (sel.length > 0 ? sel[0].name : "") || figma.currentPage.name || figma.root.name || "";
+      const projectName = figma.root.name || figma.currentPage.name || "";
       const _handoffBase = "[Handoff]";
       const _existingAtInit = figma.currentPage.findAll((n) => n.type === "FRAME" && n.name.startsWith(_handoffBase));
       try {
