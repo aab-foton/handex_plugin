@@ -309,6 +309,24 @@
     window.updateSpecObs = updateSpecObs;
     window.deleteSpecFromFrame = deleteSpecFromFrame;
 
+    // ── Cores por categoria de spec ─────────────────────────────────
+    const _CAT_COLORS = {
+      'info':          { bg: 'bg-slate-100 dark:bg-slate-700',      text: 'text-slate-600 dark:text-slate-400',      border: 'border-slate-200 dark:border-slate-600'      },
+      'comportamento': { bg: 'bg-pink-50 dark:bg-pink-900/30',      text: 'text-pink-600 dark:text-pink-400',        border: 'border-pink-200 dark:border-pink-800/40'      },
+      'regra':         { bg: 'bg-blue-50 dark:bg-blue-900/30',      text: 'text-blue-600 dark:text-blue-400',        border: 'border-blue-200 dark:border-blue-800/40'      },
+      'api':           { bg: 'bg-lime-50 dark:bg-lime-900/20',      text: 'text-lime-700 dark:text-lime-400',        border: 'border-lime-200 dark:border-lime-800/40'      },
+      'layout':        { bg: 'bg-indigo-50 dark:bg-indigo-900/20',  text: 'text-indigo-600 dark:text-indigo-400',    border: 'border-indigo-200 dark:border-indigo-800/40'  },
+      'componente':    { bg: 'bg-rose-50 dark:bg-rose-900/20',      text: 'text-rose-600 dark:text-rose-400',        border: 'border-rose-200 dark:border-rose-800/40'      },
+      'interacao':     { bg: 'bg-emerald-50 dark:bg-emerald-900/20',text: 'text-emerald-700 dark:text-emerald-400',  border: 'border-emerald-200 dark:border-emerald-800/40'},
+      'tipografia':    { bg: 'bg-yellow-50 dark:bg-yellow-900/20',  text: 'text-yellow-700 dark:text-yellow-500',    border: 'border-yellow-200 dark:border-yellow-800/40'  },
+      'cor':           { bg: 'bg-teal-50 dark:bg-teal-900/20',      text: 'text-teal-600 dark:text-teal-400',        border: 'border-teal-200 dark:border-teal-800/40'      },
+      'acessibilidade':{ bg: 'bg-purple-50 dark:bg-purple-900/20',  text: 'text-purple-600 dark:text-purple-400',    border: 'border-purple-200 dark:border-purple-800/40'  },
+      'conteudo':      { bg: 'bg-cyan-50 dark:bg-cyan-900/20',      text: 'text-cyan-700 dark:text-cyan-400',        border: 'border-cyan-200 dark:border-cyan-800/40'      },
+    };
+    function _getCatColor(value) {
+      return _CAT_COLORS[value] || { bg: 'bg-gray-50 dark:bg-slate-800', text: 'text-slate-500 dark:text-slate-400', border: 'border-gray-200 dark:border-slate-700' };
+    }
+
     // ── Cores por tipo de exceção ─────────────────────────────────────
     const _excColors = {
       'Erro':        { bg: 'bg-red-50 dark:bg-red-900/20',    border: 'border-red-100 dark:border-red-900/30',    text: 'text-red-600 dark:text-red-400',    dot: 'bg-red-500' },
@@ -400,9 +418,10 @@
           const hasRawTokenWarning = props.some(p => tokenKeys.has(p.key) && !p.token);
 
           // Category pill
+          const _ccPill = _getCatColor(spec.category);
           const categoryPill = spec.category ? `
             <div class="mb-2.5">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-full border border-gray-200 dark:border-dark-line text-[10px] font-bold text-slate-500 dark:text-slate-500 bg-gray-50 dark:bg-slate-800">${spec.category}</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full border ${_ccPill.border} text-[10px] font-bold ${_ccPill.text} ${_ccPill.bg}">${spec.categoryLabel || spec.category}</span>
             </div>` : '';
 
           // Build properties rows HTML
@@ -441,7 +460,7 @@
                   class="w-full text-[11px] font-semibold text-slate-700 dark:text-white bg-transparent border border-transparent focus:border-[#0070af]/30 focus:ring-1 focus:ring-[#0070af]/20 rounded px-1 py-0 outline-none cursor-text transition-all"
                   onchange="updateSpecTitle('${frameId}', ${spec._idx}, this.value)"
                   onclick="event.stopPropagation()" />
-                ${spec.category ? `<p class="text-[9px] text-slate-400 dark:text-dark-muted px-1 leading-none">${spec.category}</p>` : `<p class="text-[9px] text-slate-300 dark:text-slate-600 px-1 leading-none">Sem categoria</p>`}
+                ${spec.category ? `<span class="inline-flex mt-0.5 px-1.5 py-0.5 rounded-full border ${_ccPill.border} text-[9px] font-bold ${_ccPill.text} ${_ccPill.bg}">${spec.categoryLabel || spec.category}</span>` : `<p class="text-[9px] text-slate-300 dark:text-slate-600 px-1 leading-none">Sem categoria</p>`}
               </div>
               ${hasRawTokenWarning ? `<span title="Valores sem token — use Check Design" class="w-4 h-4 flex items-center justify-center text-amber-400 shrink-0"><i data-lucide="alert-triangle" class="w-3 h-3"></i></span>` : ''}
               ${excCount > 0 ? `<span class="px-1 py-0.5 rounded bg-orange-50 text-[9px] font-bold text-orange-500 shrink-0">${excCount} exc</span>` : ''}
@@ -1469,11 +1488,15 @@
             if (spec.id) focusNode(spec.id);
           };
           
+          const _ccSpec = spec.category ? _getCatColor(spec.category) : null;
           btn.innerHTML = `
             <div class="flex items-center gap-2.5 flex-1 min-w-0">
-              <div class="flex flex-col overflow-hidden min-w-0 text-left">
-                <span class="text-[12px] font-bold text-slate-800 dark:text-white truncate" title="${spec.name}">${spec.name}</span>
-                <span class="text-[10px] text-slate-500 truncate">${spec.type}</span>
+              <div class="flex flex-col overflow-hidden min-w-0 text-left gap-0.5">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-[12px] font-bold text-slate-800 dark:text-white truncate" title="${spec.name}">${spec.name}</span>
+                  ${spec.category && _ccSpec ? `<span class="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${_ccSpec.border} ${_ccSpec.bg} ${_ccSpec.text}">${spec.categoryLabel || spec.category}</span>` : ''}
+                </div>
+                <span class="text-[10px] text-slate-500 truncate">${spec.type || ''}</span>
               </div>
             </div>
             <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0"></i>
