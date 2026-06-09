@@ -955,12 +955,13 @@
         updatePZCount();
         el('chkSemTeclado').checked = msg.componentData?.sem_teclado || false;
         el('chkSemGesto').checked = msg.componentData?.sem_gesto || false;
-        touchData = msg.componentData?.areas_toque || [];
         variationsData = msg.componentData?.variacoes || [];
         // Garante que Default sempre existe
         if (!variationsData.find(v => v.id === 'default')) {
           variationsData.unshift({ id: 'default', nome: 'Default', propriedades: {}, areas_toque: msg.componentData?.areas_toque || [], sem_toque: msg.componentData?.sem_toque || false, frameNodeId: null, instanceNodeId: null });
         }
+        // Inicializa touchData a partir da variação default (não do legado top-level)
+        { const _defV = variationsData.find(v => v.id === 'default'); touchData = _defV?.areas_toque || msg.componentData?.areas_toque || []; }
         renderVariationList();
         tabVariationsData = msg.componentData?.variacoes_tabulacao || [];
         // Migração: se não tem variações mas tem tab_order antigo, cria default com esses dados
@@ -1246,11 +1247,11 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
       }
       if (msg.type === 'touch-area-confirmed') {
         touchData.push({ nome: msg.nome, preset: msg.preset, width: msg.width, height: msg.height, relX: msg.relX, relY: msg.relY, badgeOffsetX: msg.badgeOffsetX ?? 0, badgeOffsetY: msg.badgeOffsetY ?? 0, badgeWidth: msg.badgeWidth ?? 0, badgeHeight: msg.badgeHeight ?? 0, ...(msg.badgeProps && Object.keys(msg.badgeProps).length ? { badgeProps: msg.badgeProps } : {}) });
-        // Persiste na variação ativa imediatamente
-        if (currentVariationId) {
-          const varData = variationsData.find(v => v.id === currentVariationId);
-          if (varData) { varData.areas_toque = [...touchData]; saveTouchTabData(); }
-        }
+        // Persiste na variação ativa (ou default se nenhuma selecionada)
+        // touchData.push() já rodou acima, então touchData é sempre fresco aqui
+        { const _tSaveId = currentVariationId ?? 'default';
+          const _tSaveVar = variationsData.find(v => v.id === _tSaveId);
+          if (_tSaveVar) { _tSaveVar.areas_toque = [...touchData]; saveTouchTabData(); } }
         if (msg.preset === 'livre' && (msg.width < 44 || msg.height < 44)) {
           const sb = el('statusBar');
           sb.classList.remove('loading','success','error');
@@ -1373,6 +1374,13 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         if (el('tabVariationFormView') && el('tabVariationFormView').classList.contains('open')) renderTabVariationProps();
         if (el('srVariationFormView') && el('srVariationFormView').classList.contains('open')) renderSRVariationProps();
       }
+      if (msg.type === 'variation-frame-failed') {
+        const _vffBtn = el('btnVariationFormCreate');
+        if (_vffBtn) { _vffBtn.textContent = 'Criar variante'; _vffBtn.disabled = false; }
+        window._pendingOpenTouchForm = false;
+        const _vffAdd = el('btnAddTouch');
+        if (_vffAdd) { _vffAdd.textContent = '+ Adicionar área de toque'; _vffAdd.disabled = false; }
+      }
       if (msg.type === 'variation-frame-created') {
         el('statusBar').classList.remove('loading', 'success', 'error'); el('statusBar').textContent = '';
         // Atualiza a variação que aguardava o frame (pode ser nova criação OU recriação ao editar)
@@ -1394,7 +1402,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
             touchData = v.areas_toque || [];
             el('chkSemToque').checked = v.sem_toque || false;
             el('btnAddTouch').style.display = v.sem_toque ? 'none' : 'block';
-            parent.postMessage({ pluginMessage: { type: 'activate-variation', variationId: v.id, instanceNodeId: v.instanceNodeId, propriedades: v.propriedades, areas_toque: v.areas_toque } }, '*');
+            parent.postMessage({ pluginMessage: { type: 'activate-variation', variationId: v.id, instanceNodeId: v.instanceNodeId, propriedades: v.propriedades, areas_toque: v.areas_toque, variationPrefix: getVariationPrefix(v.id) } }, '*');
             showView('main');
             el('btnAddTouch').disabled = false;
             el('btnAddTouch').textContent = '+ Adicionar área de toque';
@@ -1404,7 +1412,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           const v = variationsData.find(v => v.id === currentVariationId);
           if (v) {
             el('touchMainViewLabel').textContent = v.nome;
-            parent.postMessage({ pluginMessage: { type: 'activate-variation', variationId: v.id, instanceNodeId: v.instanceNodeId, propriedades: v.propriedades, areas_toque: v.areas_toque } }, '*');
+            parent.postMessage({ pluginMessage: { type: 'activate-variation', variationId: v.id, instanceNodeId: v.instanceNodeId, propriedades: v.propriedades, areas_toque: v.areas_toque, variationPrefix: getVariationPrefix(v.id) } }, '*');
             showView('main');
           } else {
             closeVariationForm();
@@ -1431,7 +1439,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           const btn2 = document.querySelector('[onclick="onAddSRClick()"]');
           if (btn2) { btn2.disabled = false; btn2.textContent = '+ Adicionar Conector'; }
           const vSR = srVariationsData.find(v => v.id === currentSRVariationId);
-          if (vSR && vSR.instanceNodeId) parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', variationId: vSR.id, instanceNodeId: vSR.instanceNodeId, conectores_leitor: vSR.conectores_leitor || [] } }, '*');
+          if (vSR && vSR.instanceNodeId) parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', variationId: vSR.id, variationIndex: srVariationsData.findIndex(x => x.id === vSR.id), instanceNodeId: vSR.instanceNodeId, conectores_leitor: vSR.conectores_leitor || [] } }, '*');
           showSRView('main');
           renderLeitorList();
           openSRForm();
@@ -1439,13 +1447,13 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           window._pendingSRFormOpen = false;
           const v = srVariationsData.find(v => v.id === currentSRVariationId);
           if (v && v.instanceNodeId) {
-            parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', variationId: v.id, instanceNodeId: v.instanceNodeId, conectores_leitor: v.conectores_leitor || [] } }, '*');
+            parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', variationId: v.id, variationIndex: srVariationsData.findIndex(x => x.id === v.id), instanceNodeId: v.instanceNodeId, conectores_leitor: v.conectores_leitor || [] } }, '*');
           }
           showSRView('main');
         } else if (currentSRVariationId && currentSRVariationId !== 'default') {
           const v = srVariationsData.find(v => v.id === currentSRVariationId);
           if (v && v.instanceNodeId) {
-            parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', variationId: v.id, instanceNodeId: v.instanceNodeId, conectores_leitor: v.conectores_leitor || [] } }, '*');
+            parent.postMessage({ pluginMessage: { type: 'activate-sr-variation', variationId: v.id, variationIndex: srVariationsData.findIndex(x => x.id === v.id), instanceNodeId: v.instanceNodeId, conectores_leitor: v.conectores_leitor || [] } }, '*');
           }
         }
         // Atualiza leitorState e label com dados da nova variação
@@ -1598,7 +1606,8 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       const itemClass = isAAA ? 'touch-item-aaa' : isAA ? 'touch-item-aa' : 'touch-item-livre';
       const badge = isAAA ? "<span class='touch-compliance-badge badge-aaa'>AAA</span>"
                   : isAA  ? "<span class='touch-compliance-badge badge-aa'>AA</span>" : '';
-      list.innerHTML += `<div class='touch-item-card ${itemClass}' onclick='highlightTouchArea("${item.nome}")' style='cursor:pointer;'><span style='background:#2D4496;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;'>${i+1}</span><div style='flex:1;min-width:0;'><div style='font-size:12px;font-weight:600;color:#1a1a1a;'>${item.nome}</div><div style='font-size:10px;color:#AAA;margin-top:1px;'>${presetLabel}</div></div>${badge}<button onclick='event.stopPropagation(); removeTouchArea(${i})' class='remove-btn'>×</button></div>`;
+      const prefix = getVariationPrefix(currentVariationId ?? 'default');
+      list.innerHTML += `<div class='touch-item-card ${itemClass}' onclick='highlightTouchArea("${item.nome}")' style='cursor:pointer;'><span style='background:#2D4496;color:#fff;border-radius:10px;min-width:28px;height:20px;padding:0 4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;'>${prefix}.${i+1}</span><div style='flex:1;min-width:0;'><div style='font-size:12px;font-weight:600;color:#1a1a1a;'>${item.nome}</div><div style='font-size:10px;color:#AAA;margin-top:1px;'>${presetLabel}</div></div>${badge}<button onclick='event.stopPropagation(); removeTouchArea(${i})' class='remove-btn'>×</button></div>`;
     });
   }
 
@@ -1637,12 +1646,19 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
     el('touchPositioning').style.display = 'none';
     el('btnTouchAdd').style.display = 'none';
     el('btnCriarFrame').style.display = 'none';
+    el('btnCriarFrame').disabled = false;
+    el('btnCriarFrame').textContent = 'Criar no Figma';
   }
 
   // ===== VARIAÇÕES =====
 
   function generateId() {
     return Math.random().toString(36).slice(2, 10);
+  }
+
+  function getVariationPrefix(variationId) {
+    const idx = variationsData.findIndex(v => v.id === (variationId ?? 'default'));
+    return idx >= 0 ? idx + 1 : 1;
   }
 
   function showView(viewId) {
@@ -1831,6 +1847,14 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
   }
 
   function selectSRVariation(id) {
+    if (currentSRVariationId) {
+      const currentVar = srVariationsData.find(v => v.id === currentSRVariationId);
+      if (currentVar) {
+        currentVar.conectores_leitor = [...leitorState.conectores];
+        currentVar.sem_leitor = leitorState.semLeitor;
+      }
+      saveLeitorTela();
+    }
     let varData = srVariationsData.find(v => v.id === id);
     if (!varData) {
       varData = { id, nome: id, propriedades: {}, conectores_leitor: [], sem_leitor: false, frameNodeId: null, instanceNodeId: null };
@@ -2112,7 +2136,7 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
 
     // Ativa variação no code.ts (verifica/recria instância se necessário)
     const areasParaEnviar = id === 'default' ? touchData : (varData.areas_toque || []);
-    parent.postMessage({ pluginMessage: { type: 'activate-variation', variationId: varData.id, instanceNodeId: varData.instanceNodeId, propriedades: varData.propriedades || {}, areas_toque: areasParaEnviar } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'activate-variation', variationId: varData.id, instanceNodeId: varData.instanceNodeId, propriedades: varData.propriedades || {}, areas_toque: areasParaEnviar, variationPrefix: getVariationPrefix(varData.id) } }, '*');
     showView('main');
     // Garante que o painel de área de toque permanece ativo
     if (!el('panel-toque').classList.contains('active')) {
@@ -2325,13 +2349,20 @@ el('btnSRVariationFormCreate').onclick = () => {
   el('srVarPropsContainer').querySelectorAll('.sr-var-prop-check').forEach(chk => {
     propriedades[chk.dataset.prop] = chk.checked;
   });
+  // Salva variação atual ANTES de trocar
+  const _prevId = currentSRVariationId;
+  const _prevVar = srVariationsData.find(v => v.id === _prevId);
+  if (_prevVar) {
+    _prevVar.conectores_leitor = [...leitorState.conectores];
+    _prevVar.sem_leitor = leitorState.semLeitor;
+  }
   const id = 'sr_' + Date.now();
   srVariationsData.push({ id, nome, propriedades, conectores_leitor: [], sem_leitor: false, frameNodeId: null, instanceNodeId: null });
   currentSRVariationId = id;
   const btn = el('btnSRVariationFormCreate');
   btn.textContent = '⏳ Criando…';
   btn.disabled = true;
-  parent.postMessage({ pluginMessage: { type: 'create-sr-variation-frame', variationId: id, nome, propriedades, variationIndex: srVariationsData.filter(v => v.id !== 'default').length - 1 } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'create-sr-variation-frame', variationId: id, nome, propriedades, variationIndex: srVariationsData.length - 1 } }, '*');
 };
 el('btnSRVariationFormCancel').onclick = () => closeSRVariationForm();
 el('btnTabVariationFormCancel').onclick = () => { closeTabVariationForm(); };
@@ -2380,7 +2411,7 @@ el('btnCriarFrame').onclick = () => {
   el('touchPositioningHint').textContent = 'Reposicione o overlay no canvas (ele fica no template), depois clique Concluir.';
   el('btnCriarFrame').disabled = true;
   el('btnCriarFrame').textContent = 'Criando…';
-  parent.postMessage({ pluginMessage: { type: 'create-touch-overlay', nome, preset, variationId: currentVariationId ?? 'default' } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'create-touch-overlay', nome, preset, variationId: currentVariationId ?? 'default', variationPrefix: getVariationPrefix(currentVariationId ?? 'default') } }, '*');
 };
 
 el('chkSemToque').onchange = () => {
@@ -2429,10 +2460,12 @@ function onSemGestoChange() {
       sb.classList.add('loading');
       sb.textContent = isGenerated ? 'Atualizando handoff...' : 'Gerando handoff...';
 
-      // Salva estado da variação de toque ativa (ou default) antes de enviar
-      const touchSaveId = currentVariationId || 'default';
-      const touchSaveVar = variationsData.find(v => v.id === touchSaveId);
-      if (touchSaveVar) touchSaveVar.areas_toque = [...touchData];
+      // Salva estado da variação de toque ativa antes de enviar
+      // Só salva se uma variação está explicitamente ativa (null = nenhuma selecionada → não sobrescreve)
+      if (currentVariationId) {
+        const touchSaveVar = variationsData.find(v => v.id === currentVariationId);
+        if (touchSaveVar) touchSaveVar.areas_toque = [...touchData];
+      }
 
       // Salva estado da variação de tabulação ativa antes de enviar
       if (currentTabVariationId) {
@@ -2767,7 +2800,7 @@ const select = el('srSelectTipoConector');
           ? 'Redimensione e posicione o agrupamento sobre os elementos e clique em Confirmar.'
           : 'Arraste o conector sobre o elemento que deseja anotar e clique em Confirmar.';
         el('srCanvasHint').style.display = 'flex';
-        parent.postMessage({ pluginMessage: { type: 'create-sr-overlay', tipoAnotacao: anotacao, tipoConnector: conector, roleNome: roleNome } }, '*');
+        parent.postMessage({ pluginMessage: { type: 'create-sr-overlay', tipoAnotacao: anotacao, tipoConnector: conector, roleNome: roleNome, especificacao: espec } }, '*');
         return;
       }
 

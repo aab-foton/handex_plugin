@@ -197,6 +197,46 @@ function ensureHandoffDetached(): FrameNode {
   return handoffAtivo as FrameNode;
 }
 
+async function renumberTouchBadges(imageFrame: FrameNode): Promise<void> {
+  // Group overlays by variationId, sort each group by current index, renumber locally
+  const allOverlays = Array.from(imageFrame.children)
+    .filter(n => { try { return JSON.parse(n.getPluginData('a11y-meta') || '{}').type === 'touch-overlay'; } catch { return false; } });
+
+  const byVariation = new Map<string, SceneNode[]>();
+  for (const ov of allOverlays) {
+    const meta = JSON.parse(ov.getPluginData('a11y-meta') || '{}');
+    const vid = meta.variationId ?? 'default';
+    if (!byVariation.has(vid)) byVariation.set(vid, []);
+    byVariation.get(vid)!.push(ov);
+  }
+
+  for (const [, overlays] of byVariation) {
+    overlays.sort((a, b) => {
+      const ia = JSON.parse(a.getPluginData('a11y-meta') || '{}').index ?? 0;
+      const ib = JSON.parse(b.getPluginData('a11y-meta') || '{}').index ?? 0;
+      return ia - ib;
+    });
+    for (let i = 0; i < overlays.length; i++) {
+      const ov = overlays[i];
+      const meta = JSON.parse(ov.getPluginData('a11y-meta') || '{}');
+      meta.index = i;
+      ov.setPluginData('a11y-meta', JSON.stringify(meta));
+      const prefix: number = meta.variationPrefix ?? 1;
+      const badge = Array.from(imageFrame.children).find(n => {
+        try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'touch-badge' && d.variationId === meta.variationId && d.nome === meta.nome; } catch { return false; }
+      });
+      if (badge) {
+        const bMeta = JSON.parse(badge.getPluginData('a11y-meta') || '{}');
+        bMeta.index = i;
+        badge.setPluginData('a11y-meta', JSON.stringify(bMeta));
+        const numText = ((badge as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[])
+          .find((n: TextNode) => /^[\d.]+$/.test(n.characters.trim()));
+        if (numText) await updateText(numText as TextNode, `${prefix}.${i + 1}`);
+      }
+    }
+  }
+}
+
 async function getTouchImageFrame(): Promise<FrameNode | null> {
   if (!handoffAtivo) return null;
   // Verifica se o nó ainda existe (pode ter sido deletado pelo usuário)
@@ -207,9 +247,10 @@ async function getTouchImageFrame(): Promise<FrameNode | null> {
     return null;
   }
   const handoff = ensureHandoffDetached();
-  let img = (handoff as FrameNode).findOne((n: SceneNode) =>
+  const targetAreaSection = Array.from((handoff as FrameNode).children).find(n => n.name === 'target area') as FrameNode | null;
+  if (!targetAreaSection) return null;
+  let img = Array.from((targetAreaSection as FrameNode).children).find(n =>
     n.name === 'image' &&
-    n.parent?.name !== 'screen reader' &&
     (n.type === 'FRAME' || n.type === 'GROUP' || n.type === 'COMPONENT' || n.type === 'INSTANCE')
   ) as FrameNode | InstanceNode | null;
   if (!img) return null;
@@ -390,7 +431,7 @@ async function getOrCreateVariacoesContainer(comp: SceneNode, handoff: SceneNode
 // 3. ROTEADOR DE MENSAGENS (UI -> FIGMA)
 // ==========================================
 figma.ui.onmessage = async (msg) => {
-  
+
   if (msg.type === 'load-initial-data') {
     const selection = figma.currentPage.selection;
     if (selection.length > 0) {
@@ -635,14 +676,28 @@ figma.ui.onmessage = async (msg) => {
         newRow.visible = true; // garante visibilidade caso o modelo esteja oculto
         tableWrapper.appendChild(newRow);
 
-        const textNodes = newRow.findAll((n: SceneNode) => n.type === "TEXT") as TextNode[];
-        if (textNodes.length >= 2) {
-          let textoLimpo = item.mapeamento
+        // Percorre por coluna (filho direto do row) para evitar índice errado quando
+        // células têm número de text nodes diferente (ex: linha de gesto tem 4 nodes, teclado tem 3)
+        const columns = Array.from((newRow as any).children || []) as SceneNode[];
+        let mapText: TextNode | null = null;
+        let descText: TextNode | null = null;
+        if (columns.length >= 2) {
+          const col0Texts = (columns[0] as any).findAll?.((n: SceneNode) => n.type === 'TEXT') as TextNode[] ?? [];
+          const col1Texts = (columns[1] as any).findAll?.((n: SceneNode) => n.type === 'TEXT') as TextNode[] ?? [];
+          mapText  = col0Texts[0] || null;
+          descText = col1Texts[0] || null;
+        } else {
+          const textNodes = newRow.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+          mapText  = textNodes[0] || null;
+          descText = textNodes[1] || null;
+        }
+        if (mapText) {
+          const textoLimpo = item.mapeamento
             .replace(/\s*\(unitário\)/gi, '')
             .replace(/\s*\(em sequência\)/gi, '');
-          await updateText(textNodes[0], textoLimpo);
-          await updateText(textNodes[1], item.descricao);
+          await updateText(mapText, textoLimpo);
         }
+        if (descText) await updateText(descText, item.descricao);
       }
 
       // Oculta o modelo em vez de deletar — permite updates futuros
@@ -653,7 +708,6 @@ figma.ui.onmessage = async (msg) => {
       figma.ui.postMessage({ type: 'feedback', message: `⏳ ${wasGenerated ? 'Atualizando' : 'Gerando'} tabelas...` });
       const keyboardItems = msg.mapeamentos.filter((m: any) => m.utilizacao.toLowerCase().includes("teclado"));
       const gestureItems = msg.mapeamentos.filter((m: any) => m.utilizacao.toLowerCase().includes("gesto"));
-
       figma.ui.postMessage({ type: 'feedback', message: `⏳ ${wasGenerated ? 'Atualizando' : 'Gerando'} tabela de teclado...` });
       if (msg.sem_teclado) {
         if (allTableContainers.length >= 1) allTableContainers[0].visible = false;
@@ -674,13 +728,16 @@ figma.ui.onmessage = async (msg) => {
     if (msg.runTouch !== false) {
       const todasAsAreas: any[] = [];
     if (msg.variacoes && msg.variacoes.length > 0) {
-      for (const v of msg.variacoes) {
+      for (let varIdx = 0; varIdx < msg.variacoes.length; varIdx++) {
+        const v = msg.variacoes[varIdx];
         if (!v.sem_toque && Array.isArray(v.areas_toque)) {
-          for (const a of v.areas_toque) todasAsAreas.push(a);
+          for (let aIdx = 0; aIdx < v.areas_toque.length; aIdx++) {
+            todasAsAreas.push({ ...v.areas_toque[aIdx], _varPrefix: varIdx + 1, _localIdx: aIdx + 1 });
+          }
         }
       }
     } else if (Array.isArray(msg.areas_toque)) {
-      todasAsAreas.push(...msg.areas_toque);
+      todasAsAreas.push(...(msg.areas_toque as any[]).map((a: any, i: number) => ({ ...a, _varPrefix: 1, _localIdx: i + 1 })));
     }
 
     if (todasAsAreas.length > 0) {
@@ -699,9 +756,11 @@ figma.ui.onmessage = async (msg) => {
               const nameInst = row.findOne((n: SceneNode) => n.name === 'Element name') as InstanceNode | null;
               if (nameInst) {
                 const allTexts = nameInst.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+                const badgeLabel = `${area._varPrefix ?? 1}.${area._localIdx ?? (i + 1)}`;
+                const nomeDisplay = (area.nome as string).replace(/\s+\d+$/, '');
                 for (const t of allTexts) {
-                  if (t.characters === 'Elemento') await updateText(t, area.nome);
-                  else if (/^\d+$/.test(t.characters.trim())) await updateText(t, String(i + 1));
+                  if (t.characters === 'Elemento') await updateText(t, nomeDisplay);
+                  else if (/^[\d.]+$/.test(t.characters.trim())) await updateText(t, badgeLabel);
                 }
               }
               const codes = Array.from(row.children).filter(n => n.name === 'code') as FrameNode[];
@@ -755,11 +814,12 @@ figma.ui.onmessage = async (msg) => {
               figma.ui.postMessage({ type: 'feedback', message: `❌ Erro no bloco de cor: ${e}` });
             }
 
-            // Re-numerar badges globalmente por ordem de variação → área
-            let globalCounter = 0;
-            for (const variacao of variacoes) {
+            // Re-numerar badges por variação com formato X.Y (X = índice da variação, Y = área local)
+            for (let varIdx = 0; varIdx < variacoes.length; varIdx++) {
+              const variacao = variacoes[varIdx];
               if (variacao.sem_toque || !variacao.areas_toque || variacao.areas_toque.length === 0) continue;
               const varId = variacao.id;
+              const varPrefix = varIdx + 1;
               const badges = Array.from(imageFrame.children).filter(n => {
                 try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'touch-badge' && d.variationId === varId; } catch { return false; }
               }).sort((a, b) => {
@@ -767,11 +827,11 @@ figma.ui.onmessage = async (msg) => {
                 const db = JSON.parse(b.getPluginData('a11y-meta') || '{}');
                 return (da.index || 0) - (db.index || 0);
               });
-              for (const badge of badges) {
-                globalCounter++;
+              for (let localIdx = 0; localIdx < badges.length; localIdx++) {
+                const badge = badges[localIdx];
                 const numTexts = (badge as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
-                const numText = numTexts.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numTexts[0];
-                if (numText) await updateText(numText as TextNode, String(globalCounter));
+                const numText = numTexts.find((n: TextNode) => /^[\d.]+$/.test(n.characters.trim())) || numTexts[0];
+                if (numText) await updateText(numText as TextNode, `${varPrefix}.${localIdx + 1}`);
               }
             }
 
@@ -1089,20 +1149,42 @@ figma.ui.onmessage = async (msg) => {
                     srImageFrame.appendChild(agClone);
                     agClone.x = currentX + agRelX;
                     agClone.y = currentY + agRelY;
-                    const spaceRight  = compW - ((c.relX || 0) + (c.width  || 80));
-                    const spaceLeft   = c.relX  || 0;
-                    const spaceBottom = compH - ((c.relY || 0) + (c.height || 40));
-                    const maxSpace = Math.max(spaceRight, spaceLeft, spaceBottom);
-                    const orientacao = maxSpace === spaceRight  ? 'direita'
-                                     : maxSpace === spaceLeft   ? 'esquerda'
-                                     : 'inferior';
-
-                    try { agClone.setProperties({ 'orientação': orientacao }); } catch(e) {
+                    let orientacao: string = (c as any).orientacao || '';
+                    if (!orientacao) {
+                      const _agRHRX   = (c.relX || 0) + (c.width  || 80);
+                      const _agRHBot  = (c.relY || 0) + (c.height || 40);
+                      const _agRHRGap = compW - _agRHRX;
+                      const _agRHVGap = compH - _agRHBot;
+                      if      (_agRHRGap < (c.width  || 80) * 0.15) orientacao = 'direita';
+                      else if (_agRHVGap < (c.height || 40) * 0.15) orientacao = 'inferior';
+                      else orientacao = (_agRHRX - (c.width || 80) / 2) < compW / 2 ? 'esquerda' : 'direita';
+                    }
+                    const _agT = (c.tipo || c.tipoConnector || '').toLowerCase();
+                    let _agTipo = 'função valor rótulos';
+                    if (_agT.includes('decorat'))                                                                        _agTipo = 'elementos decorativos';
+                    else if (_agT.includes('marco') || _agT.includes('naveg'))                                           _agTipo = 'marcos de navegação';
+                    else if (_agT.includes('título') || _agT.includes('titulo') || _agT.includes('nível') || _agT.includes('nivel')) _agTipo = 'nível de título';
+                    else if (_agT.includes('infor') || _agT.includes('adicional'))                                       _agTipo = 'informações adicionais';
+                    try { agClone.setProperties({ 'tipo': _agTipo, 'orientação': orientacao }); } catch(e) {
                       figma.ui.postMessage({ type: 'feedback', message: '⚠️ Agrupamento props não aplicadas: ' + String(e) });
                     }
+                    if (_agTipo === 'nível de título' && c.especificacao) {
+                      const _agRHKeys = Object.keys(agClone.componentProperties || {});
+                      const _agRHHKey = _agRHKeys.find(k => k.toLowerCase().includes('nível') || k.toLowerCase().includes('nivel') || k.toLowerCase().includes('título') || k.toLowerCase().includes('titulo') || k.toLowerCase().includes('heading'));
+                      if (_agRHHKey) {
+                        // Tenta minúsculo (ex: 'h3'); se falhar, tenta maiúsculo ('H3') — valor exato depende do componente
+                        try { agClone.setProperties({ [_agRHHKey]: c.especificacao }); } catch(_e) {
+                          try { agClone.setProperties({ [_agRHHKey]: c.especificacao.toUpperCase() }); } catch(_e2) { /* ignore */ }
+                        }
+                      }
+                    }
                     const agTexts = agClone.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
-                    const agLetraTxt = agTexts.find(n => /^[A-Za-z✦]/.test(n.characters.trim())) || agTexts[0] || null;
-                    if (agLetraTxt) await updateText(agLetraTxt, letra);
+                    // Prioriza nó com padrão H1/H2/H3 (badge de heading), depois qualquer letra inicial
+                    const agLetraTxt = agTexts.find(n => /^H\d+$/i.test(n.characters.trim()))
+                      || agTexts.find(n => /^[A-Za-z✦]/.test(n.characters.trim()))
+                      || agTexts[0] || null;
+                    const _agRHBadge = _agTipo === 'nível de título' && c.especificacao ? c.especificacao : letra;
+                    if (agLetraTxt) await updateText(agLetraTxt, _agRHBadge);
                   } else if (modelConector && c.tipoAnotacao !== 'agrupamento') {
                     const conClone = modelConector.clone();
                     conClone.visible = true;
@@ -1164,8 +1246,14 @@ figma.ui.onmessage = async (msg) => {
                         conClone.y = currentY + relY + elH;
                       }
                     }
+                    if (tipoVariante === 'nível de título' && c.especificacao) {
+                      const _rhKeys = Object.keys((conClone as any).componentProperties || {});
+                      const _rhHKey = _rhKeys.find(k => k.toLowerCase().includes('nível') || k.toLowerCase().includes('nivel') || k.toLowerCase().includes('título') || k.toLowerCase().includes('titulo') || k.toLowerCase().includes('heading'));
+                      if (_rhHKey) try { (conClone as InstanceNode).setProperties({ [_rhHKey]: c.especificacao }); } catch(_e) {}
+                    }
                     const numNodeCon = conClone.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
-                    if (numNodeCon) await updateText(numNodeCon, tipoVariante === 'nível de título' && c.especificacao ? c.especificacao : letra);
+                    const _badgeValRH = tipoVariante === 'nível de título' && c.especificacao ? c.especificacao : letra;
+                    if (numNodeCon) await updateText(numNodeCon, _badgeValRH);
                   }
                 }
 
@@ -1294,14 +1382,29 @@ figma.ui.onmessage = async (msg) => {
                     const isHeadingSpec = tSpec.includes('título') || tSpec.includes('titulo') || tSpec.includes('heading') || tSpec.includes('nível') || tSpec.includes('nivel');
                     const badgeLabel = isHeadingSpec && c.especificacao ? c.especificacao : letra;
 
-                    const cloneNumTxt = clone.findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
-                    if (cloneNumTxt) await updateText(cloneNumTxt, badgeLabel);
-
                     const conectorNode = clone.findOne((n: SceneNode) => n.name === '[a11y] Conectores') as SceneNode | null;
-                    if (conectorNode && 'findOne' in conectorNode) {
-                      const numTxt = (conectorNode as FrameNode).findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
-                      if (numTxt) await updateText(numTxt, badgeLabel);
+
+                    // setProperties ANTES dos updateText para evitar reset de overrides
+                    if (conectorNode && conectorNode.type === 'INSTANCE') {
+                      const t = (c.tipo || '').toLowerCase();
+                      let tipoVariante = 'função valor rótulos';
+                      if (t.includes('decorat'))                                                                                                    tipoVariante = 'elementos decorativos';
+                      else if (t.includes('marco') || t.includes('naveg'))                                                                          tipoVariante = 'marcos de navegação';
+                      else if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel')) tipoVariante = 'nível de título';
+                      else if (t.includes('infor') || t.includes('adicional'))                                                                      tipoVariante = 'informações adicionais';
+                      try { (conectorNode as InstanceNode).setProperties({ 'tipo': tipoVariante }); } catch(_e) {}
                     }
+
+                    // Atualiza letra do role dentro do [a11y] Conectores
+                    const innerNumTxt = conectorNode && 'findOne' in conectorNode
+                      ? (conectorNode as FrameNode).findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null
+                      : null;
+                    if (innerNumTxt) await updateText(innerNumTxt, badgeLabel);
+
+                    // Atualiza número sequencial no campo externo (distinto do interno)
+                    const allNumTxts = clone.findAll((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode[];
+                    const outerNumTxt = allNumTxts.find(n => n !== innerNumTxt) || null;
+                    if (outerNumTxt) await updateText(outerNumTxt as TextNode, String(i + 1));
 
                     await fillField(clone, 'Descrição', subs.descricao || c.descricao || '');
 
@@ -1327,16 +1430,6 @@ figma.ui.onmessage = async (msg) => {
                     }
                     hideIfEmpty(clone, 'Notas', notasFinal);
                     await fillField(clone, 'Notas', notasFinal);
-
-                    if (conectorNode && conectorNode.type === 'INSTANCE') {
-                      const t = (c.tipo || '').toLowerCase();
-                      let tipoVariante = 'função valor rótulos';
-                      if (t.includes('decorat'))                                                          tipoVariante = 'elementos decorativos';
-                      else if (t.includes('marco') || t.includes('naveg'))                                tipoVariante = 'marcos de navegação';
-                      else if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel')) tipoVariante = 'nível de título';
-                      else if (t.includes('infor') || t.includes('adicional'))                            tipoVariante = 'informações adicionais';
-                      try { (conectorNode as InstanceNode).setProperties({ 'tipo': tipoVariante }); } catch(e) {}
-                    }
                   }
 
                   // FIX 4 — Auto layout do curAllBoxes (por variação)
@@ -1537,6 +1630,7 @@ figma.ui.onmessage = async (msg) => {
   else if (msg.type === 'create-touch-overlay') {
     if (!componentePrincipalAtivo) {
       figma.ui.postMessage({ type: 'feedback', message: '⚠️ Nenhum componente ativo.' });
+      figma.ui.postMessage({ type: 'touch-overlay-failed' });
       return;
     }
     try {
@@ -1587,9 +1681,11 @@ figma.ui.onmessage = async (msg) => {
       else if (msg.preset === '24x24')  { w = 24; h = 24; dx = (cw - 24) / 2; dy = (ch - 24) / 2; }
       else                              { w = cw; h = 24; dx = 0;              dy = (ch - 24) / 2; }
 
-      const areaIndex = Array.from(imageFrame.children).filter(n => {
-        try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'touch-overlay'; } catch { return false; }
+      // Local index within this variation (for X.Y numbering)
+      const localAreaIndex = Array.from(imageFrame.children).filter(n => {
+        try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'touch-overlay' && d.variationId === variationId; } catch { return false; }
       }).length;
+      const variationPrefix: number = msg.variationPrefix ?? 1;
 
       const areaClone = modelHandoffAreas.clone();
       areaClone.visible = true;
@@ -1597,7 +1693,7 @@ figma.ui.onmessage = async (msg) => {
       areaClone.x = (refInstance as any).x + dx;
       areaClone.y = (refInstance as any).y + dy;
       imageFrame.appendChild(areaClone);
-      areaClone.setPluginData('a11y-meta', JSON.stringify({ type: 'touch-overlay', variationId, nome: msg.nome, index: areaIndex }));
+      areaClone.setPluginData('a11y-meta', JSON.stringify({ type: 'touch-overlay', variationId, nome: msg.nome, index: localAreaIndex, variationPrefix }));
 
       if (modelItemNumber) {
         const numClone = modelItemNumber.clone();
@@ -1606,10 +1702,10 @@ figma.ui.onmessage = async (msg) => {
         numClone.x = areaClone.x;
         numClone.y = areaClone.y - numClone.height - 4;
         imageFrame.appendChild(numClone);
-        numClone.setPluginData('a11y-meta', JSON.stringify({ type: 'touch-badge', variationId, nome: msg.nome, index: areaIndex }));
+        numClone.setPluginData('a11y-meta', JSON.stringify({ type: 'touch-badge', variationId, nome: msg.nome, index: localAreaIndex, variationPrefix }));
         const numTexts = numClone.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
-        const numText = numTexts.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numTexts[0];
-        if (numText) await updateText(numText as TextNode, String(areaIndex + 1));
+        const numText = numTexts.find(n => /^[\d.]+$/.test((n as TextNode).characters.trim())) || numTexts[0];
+        if (numText) await updateText(numText as TextNode, `${variationPrefix}.${localAreaIndex + 1}`);
         modelItemNumber.visible = false;
       }
       modelHandoffAreas.visible = false;
@@ -1703,6 +1799,7 @@ figma.ui.onmessage = async (msg) => {
           return (d.type === 'touch-overlay' || d.type === 'touch-badge') && d.variationId === variationId && d.nome === msg.nome;
         } catch { return false; }
       }).forEach(n => n.remove());
+      await renumberTouchBadges(imageFrame);
     } catch(e) { console.error('[remove-touch-overlay]', e); }
   }
 
@@ -1769,7 +1866,8 @@ figma.ui.onmessage = async (msg) => {
     try {
       const imageFrame = await getTouchImageFrame();
       if (!imageFrame) {
-        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Frame de preview não encontrado. Verifique se o template está selecionado.' });
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Frame de preview não encontrado. Gere o handoff primeiro, depois adicione variações.' });
+        figma.ui.postMessage({ type: 'variation-frame-failed' });
         return;
       }
       const variationId: string = msg.id || msg.nome;
@@ -1831,6 +1929,7 @@ figma.ui.onmessage = async (msg) => {
       try { instance?.remove(); } catch (_) {}
       console.error('[create-variation-frame]', e);
       figma.ui.postMessage({ type: 'feedback', message: `❌ Erro ao criar instância de variação: ${e}` });
+      figma.ui.postMessage({ type: 'variation-frame-failed' });
     }
   }
 
@@ -1893,11 +1992,10 @@ figma.ui.onmessage = async (msg) => {
 
         // Recria overlays a partir das áreas salvas
         const areas: any[] = msg.areas_toque || [];
-        for (const area of areas) {
+        const recrPrefix: number = msg.variationPrefix ?? 1;
+        for (let areaIdx = 0; areaIdx < areas.length; areaIdx++) {
+          const area = areas[areaIdx];
           if (!modelHandoffAreas) break;
-          const globalIndex = Array.from(imageFrame.children).filter(n => {
-            try { return JSON.parse(n.getPluginData('a11y-meta') || '{}').type === 'touch-overlay'; } catch { return false; }
-          }).length;
 
           const areaClone = (modelHandoffAreas as InstanceNode).clone();
           areaClone.visible = true;
@@ -1905,7 +2003,7 @@ figma.ui.onmessage = async (msg) => {
           areaClone.x = newInst.x + (area.relX || 0);
           areaClone.y = newInst.y + (area.relY || 0);
           imageFrame.appendChild(areaClone);
-          areaClone.setPluginData('a11y-meta', JSON.stringify({ type: 'touch-overlay', variationId, nome: area.nome, index: globalIndex }));
+          areaClone.setPluginData('a11y-meta', JSON.stringify({ type: 'touch-overlay', variationId, nome: area.nome, index: areaIdx, variationPrefix: recrPrefix }));
 
           if (modelItemNumber) {
             const numClone = (modelItemNumber as InstanceNode).clone();
@@ -1921,10 +2019,10 @@ figma.ui.onmessage = async (msg) => {
             numClone.x = areaClone.x + (area.badgeOffsetX ?? 0);
             numClone.y = areaClone.y + (area.badgeOffsetY ?? -((numClone as any).height + 4));
             imageFrame.appendChild(numClone);
-            numClone.setPluginData('a11y-meta', JSON.stringify({ type: 'touch-badge', variationId, nome: area.nome, index: globalIndex }));
+            numClone.setPluginData('a11y-meta', JSON.stringify({ type: 'touch-badge', variationId, nome: area.nome, index: areaIdx, variationPrefix: recrPrefix }));
             const numTexts = (numClone as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
-            const numText = numTexts.find((n: TextNode) => /^\d+$/.test(n.characters.trim())) || numTexts[0];
-            if (numText) await updateText(numText as TextNode, String(globalIndex + 1));
+            const numText = numTexts.find((n: TextNode) => /^[\d.]+$/.test(n.characters.trim())) || numTexts[0];
+            if (numText) await updateText(numText as TextNode, `${recrPrefix}.${areaIdx + 1}`);
           }
         }
 
@@ -2311,7 +2409,7 @@ figma.ui.onmessage = async (msg) => {
         figma.ui.postMessage({ type: 'sr-variation-instance-recreated', variationId, instanceNodeId: instance.id });
       }
       componenteSRVariacaoAtivo = instance;
-      const oldMarkers = (srImageFrame as FrameNode).findAll(n => n.getPluginData('a11y-marker') !== '');
+      const oldMarkers = (srImageFrame as FrameNode).findAll(n => n.getPluginData('a11y-marker') === variationId);
 
       const instX    = (instance as any).x as number;
       const instY    = (instance as any).y as number;
@@ -2322,7 +2420,7 @@ figma.ui.onmessage = async (msg) => {
       // Badge de número acima da instância
       if (modelItemNumber) {
         const numClone = modelItemNumber.clone();
-        numClone.setPluginData('a11y-marker', '1');
+        numClone.setPluginData('a11y-marker', variationId);
         numClone.visible = true;
         const numTexts = (numClone as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
         const numText = numTexts.find(n => /^\d+$/.test((n as TextNode).characters.trim())) || numTexts[0] || null;
@@ -2347,24 +2445,47 @@ figma.ui.onmessage = async (msg) => {
         }
         if (c.tipoAnotacao === 'agrupamento' && modelAgrupamento) {
           const agClone = modelAgrupamento.clone();
-          agClone.setPluginData('a11y-marker', '1');
+          agClone.setPluginData('a11y-marker', variationId);
           agClone.visible = true;
           agClone.resize(c.width || 80, c.height || 40);
           srImageFrame.appendChild(agClone);
           agClone.x = instX + (c.relX || 0);
           agClone.y = instY + (c.relY || 0);
-          const spaceRight  = instW - ((c.relX || 0) + (c.width  || 80));
-          const spaceLeft   = c.relX || 0;
-          const spaceBottom = instH - ((c.relY || 0) + (c.height || 40));
-          const maxSpace = Math.max(spaceRight, spaceLeft, spaceBottom);
-          const orientacao = maxSpace === spaceRight ? 'direita' : maxSpace === spaceLeft ? 'esquerda' : 'inferior';
-          try { (agClone as InstanceNode).setProperties({ 'orientação': orientacao }); } catch(_e) {}
+          let orientacao: string = (c as any).orientacao || '';
+          if (!orientacao) {
+            const _agActRX  = (c.relX || 0) + (c.width || 80);
+            const _agActBot = (c.relY || 0) + (c.height || 40);
+            const _agActRGap = instW - _agActRX;
+            const _agActVGap = instH - _agActBot;
+            if      (_agActRGap < (c.width || 80) * 0.15) orientacao = 'direita';
+            else if (_agActVGap < (c.height || 40) * 0.15) orientacao = 'inferior';
+            else orientacao = (_agActRX - (c.width || 80) / 2) < instW / 2 ? 'esquerda' : 'direita';
+          }
+          const _agActT = (c.tipo || c.tipoConnector || '').toLowerCase();
+          let _agActTipo = 'função valor rótulos';
+          if (_agActT.includes('decorat'))                                                                              _agActTipo = 'elementos decorativos';
+          else if (_agActT.includes('marco') || _agActT.includes('naveg'))                                             _agActTipo = 'marcos de navegação';
+          else if (_agActT.includes('título') || _agActT.includes('titulo') || _agActT.includes('nível') || _agActT.includes('nivel')) _agActTipo = 'nível de título';
+          else if (_agActT.includes('infor') || _agActT.includes('adicional'))                                         _agActTipo = 'informações adicionais';
+          try { (agClone as InstanceNode).setProperties({ 'tipo': _agActTipo, 'orientação': orientacao }); } catch(_e) {}
+          if (_agActTipo === 'nível de título' && c.especificacao) {
+            const _agActKeys = Object.keys((agClone as any).componentProperties || {});
+            const _agActHKey = _agActKeys.find(k => k.toLowerCase().includes('nível') || k.toLowerCase().includes('nivel') || k.toLowerCase().includes('título') || k.toLowerCase().includes('titulo') || k.toLowerCase().includes('heading'));
+            if (_agActHKey) {
+              try { (agClone as InstanceNode).setProperties({ [_agActHKey]: c.especificacao }); } catch(_e) {
+                try { (agClone as InstanceNode).setProperties({ [_agActHKey]: c.especificacao.toUpperCase() }); } catch(_e2) { /* ignore */ }
+              }
+            }
+          }
           const agTexts = (agClone as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
-          const agLetraTxt = agTexts.find(n => /^[A-Za-z✦]/.test(n.characters.trim())) || agTexts[0] || null;
-          if (agLetraTxt) await updateText(agLetraTxt, letra);
+          const agLetraTxt = agTexts.find(n => /^H\d+$/i.test(n.characters.trim()))
+            || agTexts.find(n => /^[A-Za-z✦]/.test(n.characters.trim()))
+            || agTexts[0] || null;
+          const _agActBadge = _agActTipo === 'nível de título' && c.especificacao ? c.especificacao : letra;
+          if (agLetraTxt) await updateText(agLetraTxt, _agActBadge);
         } else if (modelConector && c.tipoAnotacao !== 'agrupamento') {
           const conClone = modelConector.clone();
-          conClone.setPluginData('a11y-marker', '1');
+          conClone.setPluginData('a11y-marker', variationId);
           conClone.visible = true;
           srImageFrame.appendChild(conClone);
           const t = (c.tipo || '').toLowerCase();
@@ -2420,8 +2541,14 @@ figma.ui.onmessage = async (msg) => {
               conClone.y = instY + relY + elH;
             }
           }
+          if (tipoVariante === 'nível de título' && c.especificacao) {
+            const _actKeys = Object.keys((conClone as any).componentProperties || {});
+            const _actHKey = _actKeys.find(k => k.toLowerCase().includes('nível') || k.toLowerCase().includes('nivel') || k.toLowerCase().includes('título') || k.toLowerCase().includes('titulo') || k.toLowerCase().includes('heading'));
+            if (_actHKey) try { (conClone as InstanceNode).setProperties({ [_actHKey]: c.especificacao }); } catch(_e) {}
+          }
           const numNodeCon = (conClone as any).findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
-          if (numNodeCon) await updateText(numNodeCon, tipoVariante === 'nível de título' && c.especificacao ? c.especificacao : letra);
+          const _badgeValAct = tipoVariante === 'nível de título' && c.especificacao ? c.especificacao : letra;
+          if (numNodeCon) await updateText(numNodeCon, _badgeValAct);
         }
       }
 
@@ -2444,6 +2571,8 @@ figma.ui.onmessage = async (msg) => {
       if (!srImageFrame || !inst) return;
       const c = msg.connector;
       const letra: string = msg.letra || 'A';
+      const _srAppMeta = JSON.parse((inst as any).getPluginData?.('a11y-meta') || '{}');
+      const _srAppVarId: string = _srAppMeta.variationId || 'default';
       const instX = (inst as any).x as number;
       const instY = (inst as any).y as number;
       const instW = (inst as any).width  as number;
@@ -2454,24 +2583,47 @@ figma.ui.onmessage = async (msg) => {
       const itemNumH = modelItemNumber ? (modelItemNumber as any).height : 36;
       if (c.tipoAnotacao === 'agrupamento' && modelAgrupamento) {
         const agClone = modelAgrupamento.clone();
-        agClone.setPluginData('a11y-marker', '1');
+        agClone.setPluginData('a11y-marker', _srAppVarId);
         agClone.visible = true;
         agClone.resize(c.width || 80, c.height || 40);
         srImageFrame.appendChild(agClone);
         agClone.x = instX + (c.relX || 0);
         agClone.y = instY + (c.relY || 0);
-        const spaceRight  = instW - ((c.relX || 0) + (c.width  || 80));
-        const spaceLeft   = c.relX || 0;
-        const spaceBottom = instH - ((c.relY || 0) + (c.height || 40));
-        const maxSpace = Math.max(spaceRight, spaceLeft, spaceBottom);
-        const orientacao = maxSpace === spaceRight ? 'direita' : maxSpace === spaceLeft ? 'esquerda' : 'inferior';
-        try { (agClone as InstanceNode).setProperties({ 'orientação': orientacao }); } catch(_e) {}
+        let orientacao: string = (c as any).orientacao || '';
+        if (!orientacao) {
+          const _agAppRX   = (c.relX || 0) + (c.width  || 80);
+          const _agAppBot  = (c.relY || 0) + (c.height || 40);
+          const _agAppRGap = instW - _agAppRX;
+          const _agAppVGap = instH - _agAppBot;
+          if      (_agAppRGap < (c.width  || 80) * 0.15) orientacao = 'direita';
+          else if (_agAppVGap < (c.height || 40) * 0.15) orientacao = 'inferior';
+          else orientacao = (_agAppRX - (c.width || 80) / 2) < instW / 2 ? 'esquerda' : 'direita';
+        }
+        const _agAppT = (c.tipo || c.tipoConnector || '').toLowerCase();
+        let _agAppTipo = 'função valor rótulos';
+        if (_agAppT.includes('decorat'))                                                                              _agAppTipo = 'elementos decorativos';
+        else if (_agAppT.includes('marco') || _agAppT.includes('naveg'))                                             _agAppTipo = 'marcos de navegação';
+        else if (_agAppT.includes('título') || _agAppT.includes('titulo') || _agAppT.includes('nível') || _agAppT.includes('nivel')) _agAppTipo = 'nível de título';
+        else if (_agAppT.includes('infor') || _agAppT.includes('adicional'))                                         _agAppTipo = 'informações adicionais';
+        try { (agClone as InstanceNode).setProperties({ 'tipo': _agAppTipo, 'orientação': orientacao }); } catch(_e) {}
+        if (_agAppTipo === 'nível de título' && c.especificacao) {
+          const _agAppKeys = Object.keys((agClone as any).componentProperties || {});
+          const _agAppHKey = _agAppKeys.find(k => k.toLowerCase().includes('nível') || k.toLowerCase().includes('nivel') || k.toLowerCase().includes('título') || k.toLowerCase().includes('titulo') || k.toLowerCase().includes('heading'));
+          if (_agAppHKey) {
+            try { (agClone as InstanceNode).setProperties({ [_agAppHKey]: c.especificacao }); } catch(_e) {
+              try { (agClone as InstanceNode).setProperties({ [_agAppHKey]: c.especificacao.toUpperCase() }); } catch(_e2) { /* ignore */ }
+            }
+          }
+        }
         const agTexts = (agClone as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
-        const agLetraTxt = agTexts.find(n => /^[A-Za-z✦]/.test(n.characters.trim())) || agTexts[0] || null;
-        if (agLetraTxt) await updateText(agLetraTxt, letra);
+        const agLetraTxt = agTexts.find(n => /^H\d+$/i.test(n.characters.trim()))
+          || agTexts.find(n => /^[A-Za-z✦]/.test(n.characters.trim()))
+          || agTexts[0] || null;
+        const _agAppBadge = _agAppTipo === 'nível de título' && c.especificacao ? c.especificacao : letra;
+        if (agLetraTxt) await updateText(agLetraTxt, _agAppBadge);
       } else if (modelConector && c.tipoAnotacao !== 'agrupamento') {
         const conClone = modelConector.clone();
-        conClone.setPluginData('a11y-marker', '1');
+        conClone.setPluginData('a11y-marker', _srAppVarId);
         conClone.visible = true;
         srImageFrame.appendChild(conClone);
         const t = (c.tipo || '').toLowerCase();
@@ -2524,8 +2676,14 @@ figma.ui.onmessage = async (msg) => {
             conClone.y = instY + relY + elH;
           }
         }
+        if (tipoVariante === 'nível de título' && c.especificacao) {
+          const _appKeys = Object.keys((conClone as any).componentProperties || {});
+          const _appHKey = _appKeys.find(k => k.toLowerCase().includes('nível') || k.toLowerCase().includes('nivel') || k.toLowerCase().includes('título') || k.toLowerCase().includes('titulo') || k.toLowerCase().includes('heading'));
+          if (_appHKey) try { (conClone as InstanceNode).setProperties({ [_appHKey]: c.especificacao }); } catch(_e) {}
+        }
         const numNodeCon = (conClone as any).findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null;
-        if (numNodeCon) await updateText(numNodeCon, tipoVariante === 'nível de título' && c.especificacao ? c.especificacao : letra);
+        const _badgeValApp = tipoVariante === 'nível de título' && c.especificacao ? c.especificacao : letra;
+        if (numNodeCon) await updateText(numNodeCon, _badgeValApp);
       }
     } catch(_e) {}
   }
@@ -2544,7 +2702,7 @@ figma.ui.onmessage = async (msg) => {
       Array.from(srImageFrame.children).filter(n => {
         try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'sr-variation-component' && d.variationId === msg.variationId; } catch { return false; }
       }).forEach(n => n.remove());
-      clearVariationMarkers(srImageFrame);
+      (srImageFrame as any).findAll((n: any) => n.getPluginData('a11y-marker') === msg.variationId).forEach((n: any) => n.remove());
       if (wasActive) componenteSRVariacaoAtivo = null;
     } catch(e) {}
   }
@@ -2681,6 +2839,18 @@ figma.ui.onmessage = async (msg) => {
         clone.resize(Math.min(80, instW), Math.min(40, instH));
         clone.x = instX + Math.round(instW / 4);
         clone.y = instY + Math.round(instH / 4);
+        const _agOvT = ((msg.tipoConnector as string) || '').toLowerCase();
+        let _agOvTipo = 'função valor rótulos';
+        if (_agOvT.includes('decorat'))                                                                              _agOvTipo = 'elementos decorativos';
+        else if (_agOvT.includes('marco') || _agOvT.includes('naveg'))                                              _agOvTipo = 'marcos de navegação';
+        else if (_agOvT.includes('título') || _agOvT.includes('titulo') || _agOvT.includes('nível') || _agOvT.includes('nivel')) _agOvTipo = 'nível de título';
+        else if (_agOvT.includes('infor') || _agOvT.includes('adicional'))                                          _agOvTipo = 'informações adicionais';
+        try { (clone as InstanceNode).setProperties({ 'tipo': _agOvTipo }); } catch(_e) {}
+        if (_agOvTipo === 'nível de título' && msg.especificacao) {
+          const _agOvKeys = Object.keys((clone as InstanceNode).componentProperties || {});
+          const _agOvHKey = _agOvKeys.find(k => k.toLowerCase().includes('titulo') || k.toLowerCase().includes('título') || k.toLowerCase().includes('heading'));
+          if (_agOvHKey) try { (clone as InstanceNode).setProperties({ [_agOvHKey]: msg.especificacao }); } catch(_e) {}
+        }
       } else {
         const t = ((msg.tipoConnector as string) || '').toLowerCase();
         let tipoVariante = 'função valor rótulos';
@@ -2689,6 +2859,11 @@ figma.ui.onmessage = async (msg) => {
         else if (t.includes('título') || t.includes('titulo') || t.includes('heading') || t.includes('nível') || t.includes('nivel')) tipoVariante = 'nível de título';
         else if (t.includes('infor') || t.includes('adicional'))                                               tipoVariante = 'informações adicionais';
         try { (clone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': 'direita' }); } catch(_e) {}
+        if (tipoVariante === 'nível de título' && msg.especificacao) {
+          const _overlayKeys = Object.keys((clone as any).componentProperties || {});
+          const _hKey = _overlayKeys.find(k => k.toLowerCase().includes('nível') || k.toLowerCase().includes('nivel') || k.toLowerCase().includes('título') || k.toLowerCase().includes('titulo') || k.toLowerCase().includes('heading'));
+          if (_hKey) try { (clone as InstanceNode).setProperties({ [_hKey]: msg.especificacao }); } catch(_e) {}
+        }
         clone.x = instX + instW + 8;
         clone.y = instY + Math.round(instH / 2 - clone.height / 2);
       }
@@ -2710,6 +2885,13 @@ figma.ui.onmessage = async (msg) => {
     }
     const overlay = await figma.getNodeByIdAsync(tempSROverlayId) as SceneNode | null;
     if (!overlay) { tempSROverlayId = null; return; }
+    // Lê orientação diretamente da propriedade do componente — o que o usuário viu é o que fica
+    let _ciOrient = 'esquerda';
+    try {
+      const _props = (overlay as InstanceNode).componentProperties;
+      const _orientKey = Object.keys(_props).find(k => k.toLowerCase().includes('orienta'));
+      if (_orientKey) _ciOrient = String((_props[_orientKey] as any).value || 'esquerda');
+    } catch(_e) {}
     const item = {
       tipo: tempSROverlayTipo,
       relX: Math.round((overlay as any).x - tempSROverlayRefX),
@@ -2717,6 +2899,7 @@ figma.ui.onmessage = async (msg) => {
       width: Math.round((overlay as any).width),
       height: Math.round((overlay as any).height),
       positioned: true,
+      orientacao: _ciOrient,
     };
     overlay.remove();
     tempSROverlayId = null;
