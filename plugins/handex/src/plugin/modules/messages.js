@@ -79,9 +79,7 @@
             handoffData._fichaGenerated = true;
           }
         }
-        // Request handoff history e scan cache ao inicializar
-        parent.postMessage({ pluginMessage: { type: 'snapshot-load' } }, '*');
-        parent.postMessage({ pluginMessage: { type: 'scan-cache-load' } }, '*');
+        // snapshot-load e scan-cache-load são solicitados sob demanda (na navegação para as views que precisam)
         // Onboarding é disparado pelo próprio modals.html via DOMContentLoaded
         return;
       }

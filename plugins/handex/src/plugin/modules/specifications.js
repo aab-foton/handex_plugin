@@ -339,12 +339,15 @@
     }
     function _renderExcItem(exc, onDelete) {
       const c = _excColor(exc.tipo);
-      return `<div class="flex items-center gap-1.5 px-2 py-1.5 ${c.bg} border ${c.border} rounded-lg">
-        <span class="text-[9px] font-bold ${c.text} uppercase shrink-0 px-1.5 py-0.5 rounded-md ${c.bg} border ${c.border}">${exc.tipo || ''}</span>
-        <span class="flex-1 min-w-0 text-[10px] text-slate-600 dark:text-dark-text leading-snug truncate">${exc.titulo || ''}</span>
-        ${onDelete ? `<button type="button" onclick="event.stopPropagation(); ${onDelete}"
-          class="w-4 h-4 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors shrink-0">
-          <i data-lucide="x" class="w-3 h-3"></i></button>` : ''}
+      return `<div class="flex flex-col gap-1 px-2 py-1.5 ${c.bg} border ${c.border} rounded-lg">
+        <div class="flex items-center gap-1.5">
+          <span class="text-[9px] font-bold ${c.text} uppercase shrink-0 px-1.5 py-0.5 rounded-md ${c.bg} border ${c.border}">${exc.tipo || ''}</span>
+          <span class="flex-1 min-w-0 text-[10px] text-slate-600 dark:text-dark-text leading-snug truncate">${exc.titulo || ''}</span>
+          ${onDelete ? `<button type="button" onclick="event.stopPropagation(); ${onDelete}"
+            class="w-4 h-4 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors shrink-0">
+            <i data-lucide="x" class="w-3 h-3"></i></button>` : ''}
+        </div>
+        ${exc.obs ? `<p class="text-[9px] text-slate-500 dark:text-dark-muted leading-snug pl-1 italic">${exc.obs}</p>` : ''}
       </div>`;
     }
 

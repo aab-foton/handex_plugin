@@ -102,7 +102,26 @@ ${framesList.map(f => {
   const excMD = excecoes.length === 0 ? '' :
     '\n\n#### Exceções (' + excecoes.length + ')\n' +
     excecoes.map(e => `- [${e.tipo || 'Geral'}] **${e.titulo || ''}**${e.notas ? ': ' + e.notas : ''}`).join('\n');
-  return `### ${f.nome}${isNew}${auditMD}\n- Tokens escaneados: ${f.specs ? 'sim' : 'não'}${measuresMD}${specsMD}${excMD}`;
+  let tokensMD = '';
+  if (f.specs) {
+    const cats = [
+      { label: 'Componentes',        items: f.specs.components  },
+      { label: 'Ícones',             items: f.specs.icons       },
+      { label: 'Tipografia',         items: f.specs.typography  },
+      { label: 'Frames e Layouts',   items: f.specs.frames      },
+      { label: 'Vetores',            items: f.specs.vectors     },
+    ].filter(c => c.items && c.items.length > 0);
+    if (cats.length > 0) {
+      tokensMD = '\n\n#### Tokens Escaneados\n' +
+        cats.map(c => `- **${c.label}** (${c.items.length}): ` +
+          c.items.slice(0, 10).map(it => it.name || it.label || '—').join(', ') +
+          (c.items.length > 10 ? ` +${c.items.length - 10} mais` : '')
+        ).join('\n');
+    } else {
+      tokensMD = '\n- Tokens escaneados: nenhum encontrado';
+    }
+  }
+  return `### ${f.nome}${isNew}${auditMD}${tokensMD}${measuresMD}${specsMD}${excMD}`;
 }).join('\n\n')}
 
 ## Fluxos de Tela (${(handoffData.createdFlows || []).length})
@@ -508,7 +527,7 @@ ${(handoffData.specs || []).length === 0 ? 'Nenhuma especificação registrada.'
       };
       function _getCatStyleHTML(value) {
         const c = _catColorMapHTML[value] || { bg: '#f9fafb', text: '#64748b', border: '#e5e7eb' };
-        return `background-color:${c.bg};color:${c.text};border:1px solid ${c.border};border-radius:9999px;padding:1px 7px;font-size:9px;font-weight:700;display:inline-block;white-space:nowrap`;
+        return `background-color:${c.bg};color:${c.text};border:1px solid ${c.border};border-radius:9999px;padding:1px 7px;font-size:9px;font-weight:700;display:inline-block;white-space:nowrap;cursor:default;pointer-events:none;user-select:none`;
       }
 
       // Type → visual mapping for Cenários de Exceção

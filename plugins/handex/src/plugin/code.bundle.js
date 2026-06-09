@@ -651,21 +651,20 @@
         }
         const data = msg.data;
         const _titulo = (((_a = data.step1) == null ? void 0 : _a.titulo) || "Projeto").replace(/\//g, "-");
-        const _handoffBase = `[Handoff] ${_titulo}`;
+        const _handoffBase = `Handex | Ficha de Projeto | ${_titulo}`;
         const _existingHandoffs = figma.currentPage.findAll(
           (n) => n.type === "FRAME" && n.name.startsWith(_handoffBase)
         );
-        const _isUpdate = _existingHandoffs.length > 0;
         const _now = /* @__PURE__ */ new Date();
         const _ts = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}-${String(_now.getDate()).padStart(2, "0")} ${String(_now.getHours()).padStart(2, "0")}:${String(_now.getMinutes()).padStart(2, "0")}`;
-        const _containerName = _isUpdate ? `${_handoffBase} \u2014 ${_ts}` : _handoffBase;
+        const _containerName = `${_handoffBase} | ${_ts}`;
         const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb2("#026173"));
         mainContainer.name = _containerName;
         mainContainer.counterAxisAlignItems = "MIN";
         mainContainer.primaryAxisSizingMode = "AUTO";
         mainContainer.counterAxisSizingMode = "AUTO";
         const fichaTecnica = createFrame("VERTICAL", 0, 0, { r: 1, g: 1, b: 1 });
-        fichaTecnica.name = `${_handoffBase} / Ficha de Projeto`;
+        fichaTecnica.name = `${_handoffBase} | ${_ts} / Ficha de Projeto`;
         fichaTecnica.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
         fichaTecnica.resize(600, 100);
         fichaTecnica.counterAxisSizingMode = "FIXED";
@@ -711,7 +710,27 @@
           const subGrid = createFrame("HORIZONTAL", 0, 16);
           infoSection.appendChild(subGrid);
           setFillAndHug(subGrid);
-          createRow(subGrid, "Status", data.step1.status);
+          {
+            const _statusMap = {
+              "rascunho": { label: "Rascunho", bg: { r: 0.94, g: 0.95, b: 0.96 }, text: { r: 0.42, g: 0.47, b: 0.55 } },
+              "em-revisao": { label: "Em Revis\xE3o", bg: { r: 1, g: 0.96, b: 0.84 }, text: { r: 0.72, g: 0.45, b: 0 } },
+              "pronto-para-dev": { label: "Pronto para Dev", bg: { r: 0.86, g: 0.93, b: 1 }, text: { r: 0, g: 0.35, b: 0.79 } },
+              "finalizado": { label: "Finalizado", bg: { r: 0.86, g: 0.97, b: 0.88 }, text: { r: 0.07, g: 0.53, b: 0.18 } }
+            };
+            const _sc = _statusMap[data.step1.status] || _statusMap["rascunho"];
+            const statusCol = createFrame("VERTICAL", 0, 4);
+            statusCol.name = "[Campo] Status";
+            subGrid.appendChild(statusCol);
+            setFillAndHug(statusCol);
+            statusCol.appendChild(createText("Status", 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 }));
+            const chip = createFrame("HORIZONTAL", 8, 4, _sc.bg);
+            chip.cornerRadius = 999;
+            chip.primaryAxisSizingMode = "AUTO";
+            chip.counterAxisSizingMode = "AUTO";
+            chip.counterAxisAlignItems = "CENTER";
+            chip.appendChild(createText(_sc.label, 11, "Bold", _sc.text));
+            statusCol.appendChild(chip);
+          }
           createRow(subGrid, "Vers\xE3o", data.step1.versao);
         }
         if (data.step1.equipe && data.step1.equipe.length > 0) {
@@ -1149,7 +1168,16 @@
               setFillAndHug(aText);
             });
           }
-          const specsData = data.step2.specs || { components: [], icons: [], typography: [], frames: [], vectors: [] };
+          const _allFrameSpecs = (data.frames || []).map((f) => f.specs).filter(Boolean);
+          const _globalSpecs2 = data.step2 && data.step2.specs ? data.step2.specs : null;
+          const _specsSource = _allFrameSpecs.length > 0 ? _allFrameSpecs : _globalSpecs2 ? [_globalSpecs2] : [];
+          const specsData = {
+            components: _specsSource.flatMap((s) => s.components || []),
+            icons: _specsSource.flatMap((s) => s.icons || []),
+            typography: _specsSource.flatMap((s) => s.typography || []),
+            frames: _specsSource.flatMap((s) => s.frames || []),
+            vectors: _specsSource.flatMap((s) => s.vectors || [])
+          };
           const categories = [
             { title: "Componentes", items: specsData.components, type: "components" },
             { title: "\xCDcones", items: specsData.icons, type: "icons" },
@@ -1286,6 +1314,7 @@
           }
           mainContainer.appendChild(auditBoard);
         }
+        mainContainer.locked = true;
         figma.currentPage.appendChild(mainContainer);
         if (_isUpdate && _existingHandoffs.length > 0) {
           const _rightmost = _existingHandoffs.reduce((best, n) => {
@@ -2363,6 +2392,52 @@
         }
       }
     }
+    if (msg.type === "inject-obs-to-spec") {
+      (async () => {
+        try {
+          await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+          await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+          const specNode = figma.getNodeById(msg.specNodeId);
+          if (!specNode) {
+            figma.notify("Frame de spec n\xE3o encontrado", { error: true });
+            return;
+          }
+          const obsFrame = figma.createFrame();
+          obsFrame.name = `[Obs] ${msg.tipo || "Exce\xE7\xE3o"}`;
+          obsFrame.layoutMode = "VERTICAL";
+          obsFrame.paddingLeft = 10;
+          obsFrame.paddingRight = 10;
+          obsFrame.paddingTop = 8;
+          obsFrame.paddingBottom = 8;
+          obsFrame.itemSpacing = 4;
+          obsFrame.primaryAxisSizingMode = "AUTO";
+          obsFrame.counterAxisSizingMode = "AUTO";
+          obsFrame.fills = [{ type: "SOLID", color: { r: 1, g: 0.97, b: 0.91 } }];
+          obsFrame.strokes = [{ type: "SOLID", color: { r: 0.98, g: 0.7, b: 0.3 } }];
+          obsFrame.strokeWeight = 1;
+          obsFrame.cornerRadius = 8;
+          const labelText = figma.createText();
+          labelText.fontName = { family: "Inter", style: "Bold" };
+          labelText.characters = `Obs \xB7 ${msg.tipo || "Exce\xE7\xE3o"}: ${msg.titulo || ""}`;
+          labelText.fontSize = 10;
+          labelText.fills = [{ type: "SOLID", color: { r: 0.72, g: 0.39, b: 0 } }];
+          obsFrame.appendChild(labelText);
+          const obsText = figma.createText();
+          obsText.fontName = { family: "Inter", style: "Regular" };
+          obsText.characters = msg.obs;
+          obsText.fontSize = 11;
+          obsText.fills = [{ type: "SOLID", color: { r: 0.25, g: 0.25, b: 0.25 } }];
+          obsFrame.appendChild(obsText);
+          const parent = specNode.parent || figma.currentPage;
+          parent.appendChild(obsFrame);
+          obsFrame.x = specNode.x;
+          obsFrame.y = (specNode.y || 0) + (specNode.height || 0) + 8;
+          figma.notify("Observa\xE7\xE3o injetada no canvas");
+        } catch (e) {
+          figma.notify("Erro ao injetar observa\xE7\xE3o: " + e.message, { error: true });
+        }
+      })();
+    }
     if (msg.type === "delete-node") {
       const node = figma.getNodeById(msg.id);
       if (node) {
@@ -2546,6 +2621,7 @@
             nodesToGroup.push(shape, symbol);
             const finalGroup = figma.group(nodesToGroup, figma.currentPage);
             finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Decis\xE3o"}`;
+            finalGroup.locked = true;
             figma.ui.postMessage({ type: "flow-created", flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
           } catch (e) {
             console.error(e);
@@ -2577,6 +2653,7 @@
             nodesToGroup.push(circle, label);
             const finalGroup = figma.group(nodesToGroup, figma.currentPage);
             finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || (isStart ? "In\xEDcio" : "Fim")}`;
+            finalGroup.locked = true;
             figma.ui.postMessage({ type: "flow-created", flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
           } catch (e) {
             console.error(e);
@@ -2612,6 +2689,7 @@
             nodesToGroup.push(chipBg, textNode);
             const finalGroup = figma.group(nodesToGroup, figma.currentPage);
             finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Conex\xE3o"}`;
+            finalGroup.locked = true;
             figma.ui.postMessage({ type: "flow-created", flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
           } catch (e) {
             console.error(e);
@@ -2620,6 +2698,7 @@
       } else {
         const finalGroup = figma.group(nodesToGroup, figma.currentPage);
         finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Conex\xE3o"}`;
+        finalGroup.locked = true;
         figma.ui.postMessage({ type: "flow-created", flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
       }
       figma.notify("Fluxo criado!");
@@ -2688,6 +2767,7 @@
         }
         legendFrame.x = figma.viewport.center.x - 120;
         legendFrame.y = figma.viewport.center.y - 100;
+        legendFrame.locked = true;
         figma.currentPage.appendChild(legendFrame);
         figma.currentPage.selection = [legendFrame];
         figma.viewport.scrollAndZoomIntoView([legendFrame]);
