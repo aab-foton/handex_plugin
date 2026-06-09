@@ -288,6 +288,11 @@
   // src/plugin/code.js
   figma.showUI(__html__, { width: 480, height: 750 });
   var activeHighlightNode = null;
+  function _nodeOnCurrentPage(node) {
+    let n = node;
+    while (n && n.type !== "PAGE") n = n.parent;
+    return n != null && n.id === figma.currentPage.id;
+  }
   var specColumnTracker = {};
   function hexToRgb2(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -304,7 +309,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "4.0.0" : "dev";
+  var PLUGIN_VERSION = true ? "4.1.1" : "dev";
   function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
     const NS = "handex";
@@ -391,23 +396,23 @@
     if (msg.type === "refresh-spec-card") {
       const grpNode = figma.getNodeById(msg.nodeId);
       if (!grpNode) {
-        figma.ui.postMessage({ type: "toast", message: "Card n\xE3o encontrado no canvas.", kind: "error" });
+        figma.ui.postMessage({ type: "toast", message: "Card n\xC3\xA3o encontrado no canvas.", kind: "error" });
         return;
       }
       const children = grpNode.type === "GROUP" ? grpNode.children : [grpNode];
       const cardFrame = children.find((n) => n.name && n.name.endsWith("/Ficha"));
       if (!cardFrame || cardFrame.type !== "FRAME") {
-        figma.ui.postMessage({ type: "toast", message: "Card n\xE3o encontrado no grupo.", kind: "error" });
+        figma.ui.postMessage({ type: "toast", message: "Card n\xC3\xA3o encontrado no grupo.", kind: "error" });
         return;
       }
-      const existing = cardFrame.children.find((n) => n.name === "[Spec] Exce\xE7\xF5es");
+      const existing = cardFrame.children.find((n) => n.name === "[Spec] Exce\xC3\xA7\xC3\xB5es");
       if (existing) existing.remove();
       if (msg.excecoes && msg.excecoes.length > 0) {
         (async () => {
           await figma.loadFontAsync({ family: "Inter", style: "Bold" });
           await figma.loadFontAsync({ family: "Inter", style: "Regular" });
           const excFrame = figma.createFrame();
-          excFrame.name = "[Spec] Exce\xE7\xF5es";
+          excFrame.name = "[Spec] Exce\xC3\xA7\xC3\xB5es";
           excFrame.layoutMode = "VERTICAL";
           excFrame.itemSpacing = 4;
           excFrame.fills = [{ type: "SOLID", color: { r: 1, g: 0.95, b: 0.93 } }];
@@ -422,7 +427,7 @@
           excTitle.fontName = { family: "Inter", style: "Bold" };
           excTitle.fontSize = 9;
           excTitle.fills = [{ type: "SOLID", color: { r: 0.8, g: 0.3, b: 0.1 } }];
-          excTitle.characters = `CEN\xC1RIOS (${msg.excecoes.length})`;
+          excTitle.characters = `CEN\xC3\x81RIOS (${msg.excecoes.length})`;
           excTitle.textAutoResize = "WIDTH_AND_HEIGHT";
           excFrame.appendChild(excTitle);
           msg.excecoes.forEach((exc) => {
@@ -435,7 +440,7 @@
             excFrame.appendChild(t);
           });
           cardFrame.appendChild(excFrame);
-          figma.ui.postMessage({ type: "toast", message: "Card atualizado com os cen\xE1rios.", kind: "success" });
+          figma.ui.postMessage({ type: "toast", message: "Card atualizado com os cen\xC3\xA1rios.", kind: "success" });
         })();
       } else {
         figma.ui.postMessage({ type: "toast", message: "Card atualizado.", kind: "success" });
@@ -547,7 +552,7 @@
           f.itemSpacing = spacing;
           f.primaryAxisSizingMode = "AUTO";
           f.counterAxisSizingMode = "AUTO";
-          f.layoutAlign = "MIN";
+          f.layoutAlign = "INHERIT";
           if (fill) {
             f.fills = [{ type: "SOLID", color: fill }];
           } else {
@@ -577,7 +582,7 @@
             }
           } else if (pMode === "HORIZONTAL") {
             node.layoutGrow = 1;
-            node.layoutAlign = "MIN";
+            node.layoutAlign = "INHERIT";
             if (node.type === "FRAME") {
               if (node.layoutMode === "HORIZONTAL") node.counterAxisSizingMode = "AUTO";
               else node.primaryAxisSizingMode = "AUTO";
@@ -599,7 +604,7 @@
           return icons[type] || icons["layout"];
         }, createSection = function(parent, titleText) {
           const section = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
-          section.name = `[Se\xE7\xE3o] ${titleText}`;
+          section.name = `[Se\xC3\xA7\xC3\xA3o] ${titleText}`;
           if (parent) {
             parent.appendChild(section);
             setFillAndHug(section);
@@ -702,8 +707,8 @@
         fichaTecnica.appendChild(content);
         setFillAndHug(content);
         if (!data.setup || data.setup.ficha !== false) {
-          const infoSection = createSection(content, "Informa\xE7\xF5es B\xE1sicas");
-          createRow(infoSection, "T\xEDtulo do Projeto", data.step1.titulo);
+          const infoSection = createSection(content, "Informa\xC3\xA7\xC3\xB5es B\xC3\xA1sicas");
+          createRow(infoSection, "T\xC3\xADtulo do Projeto", data.step1.titulo);
           if (data.step1.jornada) createRow(infoSection, "Jornada", data.step1.jornada);
           if (data.step1.feature) createRow(infoSection, "Feature", data.step1.feature);
           createRow(infoSection, "Objetivo da Entrega", data.step1.objetivo);
@@ -713,7 +718,7 @@
           {
             const _statusMap = {
               "rascunho": { label: "Rascunho", bg: { r: 0.94, g: 0.95, b: 0.96 }, text: { r: 0.42, g: 0.47, b: 0.55 } },
-              "em-revisao": { label: "Em Revis\xE3o", bg: { r: 1, g: 0.96, b: 0.84 }, text: { r: 0.72, g: 0.45, b: 0 } },
+              "em-revisao": { label: "Em Revis\xC3\xA3o", bg: { r: 1, g: 0.96, b: 0.84 }, text: { r: 0.72, g: 0.45, b: 0 } },
               "pronto-para-dev": { label: "Pronto para Dev", bg: { r: 0.86, g: 0.93, b: 1 }, text: { r: 0, g: 0.35, b: 0.79 } },
               "finalizado": { label: "Finalizado", bg: { r: 0.86, g: 0.97, b: 0.88 }, text: { r: 0.07, g: 0.53, b: 0.18 } }
             };
@@ -731,10 +736,10 @@
             chip.appendChild(createText(_sc.label, 11, "Bold", _sc.text));
             statusCol.appendChild(chip);
           }
-          createRow(subGrid, "Vers\xE3o", data.step1.versao);
+          createRow(subGrid, "Vers\xC3\xA3o", data.step1.versao);
         }
         if (data.step1.equipe && data.step1.equipe.length > 0) {
-          const teamSection = createSection(content, "Equipe e Respons\xE1veis");
+          const teamSection = createSection(content, "Equipe e Respons\xC3\xA1veis");
           data.step1.equipe.forEach((m) => {
             const mRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
             teamSection.appendChild(mRow);
@@ -761,7 +766,7 @@
         }
         const _briefingQs = data.step2 && data.step2.briefingQuestions ? data.step2.briefingQuestions.filter((q) => q.answer && q.answer.trim()) : [];
         if (_briefingQs.length > 0) {
-          const briefingSection = createSection(content, "Briefing Estrat\xE9gico");
+          const briefingSection = createSection(content, "Briefing Estrat\xC3\xA9gico");
           _briefingQs.forEach((q, idx) => {
             const qRow = createFrame("VERTICAL", 0, 4);
             qRow.name = `[Briefing] Pergunta ${idx + 1}`;
@@ -779,7 +784,7 @@
         }
         const _regras = data.step2 && data.step2.regras ? data.step2.regras : [];
         if (_regras.length > 0) {
-          const rulesSection = createSection(content, "Regras de Neg\xF3cio e HUs");
+          const rulesSection = createSection(content, "Regras de Neg\xC3\xB3cio e HUs");
           _regras.forEach((r) => {
             const rRow = createFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.98, b: 0.99 });
             rulesSection.appendChild(rRow);
@@ -809,7 +814,7 @@
           (f) => (f.excecoes || []).map((e) => __spreadProps(__spreadValues({}, e), { _frame: f.nome }))
         );
         if (_allExcecoes.length > 0) {
-          const excSection = createSection(content, "Cen\xE1rios de Exce\xE7\xE3o");
+          const excSection = createSection(content, "Cen\xC3\xA1rios de Exce\xC3\xA7\xC3\xA3o");
           _allExcecoes.forEach((e) => {
             const eRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
             excSection.appendChild(eRow);
@@ -835,7 +840,7 @@
         if (data.docs) {
           const docsSection = createSection(null, "Docs e Anexos");
           const docItems = [
-            { key: "proto", label: "Prot\xF3tipo Naveg\xE1vel" },
+            { key: "proto", label: "Prot\xC3\xB3tipo Naveg\xC3\xA1vel" },
             { key: "a11y", label: "Handoff Acessibilidade" },
             { key: "research", label: "Pesquisa de UX" }
           ];
@@ -866,7 +871,7 @@
         }
         const _globalSpecs = (data.specs || []).filter((s) => s.visible !== false);
         if (_globalSpecs.length > 0) {
-          const specsSection = createSection(content, "Especifica\xE7\xF5es Visuais");
+          const specsSection = createSection(content, "Especifica\xC3\xA7\xC3\xB5es Visuais");
           _globalSpecs.forEach((s) => {
             const sRow = figma.createFrame();
             sRow.name = `[Spec/${s.letter || "A"}] ${s.name || ""}`;
@@ -925,7 +930,7 @@
             }
             const sExcs = s.excecoes || [];
             if (sExcs.length > 0) {
-              const _excRgb = { "Erro": { r: 0.8, g: 0.15, b: 0.15 }, "Alerta": { r: 0.8, g: 0.5, b: 0 }, "Sucesso": { r: 0.1, g: 0.55, b: 0.25 }, "Confirma\xE7\xE3o": { r: 0.05, g: 0.35, b: 0.8 } };
+              const _excRgb = { "Erro": { r: 0.8, g: 0.15, b: 0.15 }, "Alerta": { r: 0.8, g: 0.5, b: 0 }, "Sucesso": { r: 0.1, g: 0.55, b: 0.25 }, "Confirma\xC3\xA7\xC3\xA3o": { r: 0.05, g: 0.35, b: 0.8 } };
               sExcs.forEach((exc) => {
                 const eRow = figma.createFrame();
                 eRow.layoutMode = "HORIZONTAL";
@@ -979,7 +984,7 @@
               fHeader.appendChild(badge);
             }
             if (f.audit && f.audit.status) {
-              createRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? " \u2014 " + f.audit.justificativa : ""));
+              createRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? " \xE2\u20AC\u201D " + f.audit.justificativa : ""));
             }
             const fMeasurements = f.measurements || [];
             if (fMeasurements.length > 0) {
@@ -993,7 +998,7 @@
             }
             const fSpecs = f.createdSpecs || [];
             if (fSpecs.length > 0) {
-              const sLabel = createText(`Especifica\xE7\xF5es (${fSpecs.length})`, 10, "Bold", { r: 0.4, g: 0.45, b: 0.55 });
+              const sLabel = createText(`Especifica\xC3\xA7\xC3\xB5es (${fSpecs.length})`, 10, "Bold", { r: 0.4, g: 0.45, b: 0.55 });
               fRow.appendChild(sLabel);
               setFillAndHug(sLabel);
               fSpecs.forEach((s) => {
@@ -1022,7 +1027,7 @@
         const _flows = data.createdFlows || [];
         if (_flows.length > 0) {
           const flowsSection = createSection(content, "Fluxos de Tela");
-          const flowTypeLabel = { line_solid: "Linha s\xF3lida", line_dashed: "Linha tracejada", diamond: "Decis\xE3o", diamond_dashed: "Decis\xE3o tracejada", event_start: "In\xEDcio", event_end: "Fim", gateway_parallel: "Paralelo" };
+          const flowTypeLabel = { line_solid: "Linha s\xC3\xB3lida", line_dashed: "Linha tracejada", diamond: "Decis\xC3\xA3o", diamond_dashed: "Decis\xC3\xA3o tracejada", event_start: "In\xC3\xADcio", event_end: "Fim", gateway_parallel: "Paralelo" };
           _flows.forEach((flow, fi) => {
             const fRow = createFrame("HORIZONTAL", 12, 8, { r: 0.97, g: 0.96, b: 1 });
             fRow.name = `[Fluxo] ${flow.name || "Fluxo " + (fi + 1)}`;
@@ -1149,12 +1154,12 @@
           uiBoard.resize(800, 100);
           uiBoard.counterAxisSizingMode = "FIXED";
           uiBoard.primaryAxisSizingMode = "AUTO";
-          uiBoard.layoutAlign = "MIN";
+          uiBoard.layoutAlign = "INHERIT";
           const uiTitle = createText("User Interface", 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
           uiBoard.appendChild(uiTitle);
           const _bqs2 = data.step2 && data.step2.briefingQuestions ? data.step2.briefingQuestions.filter((q) => q.answer && q.answer.trim()) : [];
           if (_bqs2.length > 0) {
-            const briefingSection = createSection(fichaTecnica, "Briefing Estrat\xE9gico");
+            const briefingSection = createSection(fichaTecnica, "Briefing Estrat\xC3\xA9gico");
             _bqs2.forEach((q, idx) => {
               const qRow = createFrame("VERTICAL", 0, 4);
               qRow.name = `[Briefing] Pergunta ${idx + 1}`;
@@ -1180,7 +1185,7 @@
           };
           const categories = [
             { title: "Componentes", items: specsData.components, type: "components" },
-            { title: "\xCDcones", items: specsData.icons, type: "icons" },
+            { title: "\xC3\x8Dcones", items: specsData.icons, type: "icons" },
             { title: "Tipografia", items: specsData.typography, type: "typography" },
             { title: "Frames e Layouts", items: specsData.frames, type: "frames" },
             { title: "Vetores", items: specsData.vectors, type: "vectors" }
@@ -1220,7 +1225,7 @@
             specsBoard.resize(800, 100);
             specsBoard.counterAxisSizingMode = "FIXED";
             specsBoard.primaryAxisSizingMode = "AUTO";
-            specsBoard.layoutAlign = "MIN";
+            specsBoard.layoutAlign = "INHERIT";
             const specsTitle = createText("Design Specs: " + node.name, 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
             specsBoard.appendChild(specsTitle);
             setFillAndHug(specsTitle);
@@ -1241,7 +1246,7 @@
               setFillAndHug(grid);
             }
             if (data.setup.instancias || data.setup.anatomia) {
-              const appearSec = createSection(specsBoard, "Apar\xEAncia");
+              const appearSec = createSection(specsBoard, "Apar\xC3\xAAncia");
               const grid = createFrame("HORIZONTAL", 0, 16);
               grid.layoutWrap = "WRAP";
               grid.layoutAlign = "STRETCH";
@@ -1282,13 +1287,13 @@
           auditBoard.resize(800, 100);
           auditBoard.counterAxisSizingMode = "FIXED";
           auditBoard.primaryAxisSizingMode = "AUTO";
-          const auditTitle = createText("Relat\xF3rio de Auditoria", 24, "Bold", { r: 0, g: 0.35, b: 0.79 });
+          const auditTitle = createText("Relat\xC3\xB3rio de Auditoria", 24, "Bold", { r: 0, g: 0.35, b: 0.79 });
           auditBoard.appendChild(auditTitle);
           setFillAndHug(auditTitle);
-          const summaryText = createText(`Ader\xEAncia ao Design System: ${data.auditSummary.adoption}%`, 18, "Bold", data.auditSummary.adoption > 90 ? { r: 0, g: 0.5, b: 0 } : { r: 0.8, g: 0, b: 0 });
+          const summaryText = createText(`Ader\xC3\xAAncia ao Design System: ${data.auditSummary.adoption}%`, 18, "Bold", data.auditSummary.adoption > 90 ? { r: 0, g: 0.5, b: 0 } : { r: 0.8, g: 0, b: 0 });
           auditBoard.appendChild(summaryText);
           setFillAndHug(summaryText);
-          const statsText = createText(`Resumo: ${data.auditSummary.issues.length} Fora do Padr\xE3o | ${data.auditSummary.adjustments.length} Ajustes`, 14, "Medium", { r: 0.4, g: 0.45, b: 0.5 });
+          const statsText = createText(`Resumo: ${data.auditSummary.issues.length} Fora do Padr\xC3\xA3o | ${data.auditSummary.adjustments.length} Ajustes`, 14, "Medium", { r: 0.4, g: 0.45, b: 0.5 });
           auditBoard.appendChild(statsText);
           setFillAndHug(statsText);
           if (data.auditSummary.adjustments && data.auditSummary.adjustments.length > 0) {
@@ -1300,7 +1305,7 @@
             });
           }
           if (data.auditSummary.issues && data.auditSummary.issues.length > 0) {
-            const issueList = createSection(auditBoard, "Pend\xEAncias Cr\xEDticas (Fora do Padr\xE3o)");
+            const issueList = createSection(auditBoard, "Pend\xC3\xAAncias Cr\xC3\xADticas (Fora do Padr\xC3\xA3o)");
             data.auditSummary.issues.slice(0, 20).forEach((issue) => {
               const iRow = createText(`- [${issue.cat}] ${issue.name}`, 12, "Regular", { r: 0.8, g: 0.2, b: 0.2 });
               issueList.appendChild(iRow);
@@ -1448,7 +1453,7 @@
             const hToken = getVariableInfo2(node, "height");
             items.push(...createMeasurementLine(bounds.x, bounds.y - 20, bounds.x + bounds.width, bounds.y - 20, bounds.width, "horizontal", { r: 1, g: 0.2, b: 0.2 }, wToken));
             items.push(...createMeasurementLine(bounds.x - 20, bounds.y, bounds.x - 20, bounds.y + bounds.height, bounds.height, "vertical", { r: 1, g: 0.2, b: 0.2 }, hToken));
-            let whLabel = `Dimens\xF5es: ${Math.round(bounds.width)}x${Math.round(bounds.height)}`;
+            let whLabel = `Dimens\xC3\xB5es: ${Math.round(bounds.width)}x${Math.round(bounds.height)}`;
             if (wToken || hToken) whLabel += ` [Tokens: ${wToken || "-"} x ${hToken || "-"}]`;
             appliedDetails.push(whLabel);
           }
@@ -1505,7 +1510,7 @@
                 }
               }
             }
-            if (spaceCount > 0) appliedDetails.push(`Gaps: ${spaceCount} espa\xE7os de ${node.itemSpacing}px ${gapToken ? "[" + gapToken + "]" : ""}`);
+            if (spaceCount > 0) appliedDetails.push(`Gaps: ${spaceCount} espa\xC3\xA7os de ${node.itemSpacing}px ${gapToken ? "[" + gapToken + "]" : ""}`);
           }
           if (measureTypes && measureTypes.includes("outer")) {
             if (node.parent && node.parent.type !== "PAGE") {
@@ -1530,7 +1535,7 @@
                   items.push(...createMeasurementLine(shiftX, bounds.y + bounds.height, shiftX, pb.y + pb.height, pb.y + pb.height - (bounds.y + bounds.height), "vertical", { r: 1, g: 0.5, b: 0 }));
                   outers.push(`Bottom: ${Math.round(pb.y + pb.height - (bounds.y + bounds.height))}`);
                 }
-                if (outers.length > 0) appliedDetails.push(`Espa\xE7amento Externo: ${outers.join(", ")}`);
+                if (outers.length > 0) appliedDetails.push(`Espa\xC3\xA7amento Externo: ${outers.join(", ")}`);
               }
             } else {
               figma.notify("Outer padding necessita que o node esteja dentro de um frame.");
@@ -1822,7 +1827,7 @@
         figma.ui.postMessage({
           type: "scan-result",
           frameId: _scanFrameId,
-          error: "Nenhum item selecionado. Por favor, selecione um ou mais frames, se\xE7\xF5es ou grupos no Figma para escanear."
+          error: "Nenhum item selecionado. Por favor, selecione um ou mais frames, se\xC3\xA7\xC3\xB5es ou grupos no Figma para escanear."
         });
         return;
       }
@@ -1935,7 +1940,7 @@
           node.remove();
           figma.notify("Medida removida.");
         } else {
-          figma.notify("Elemento n\xE3o encontrado (j\xE1 removido?).");
+          figma.notify("Elemento n\xC3\xA3o encontrado (j\xC3\xA1 removido?).");
         }
       } catch (e) {
         figma.notify("Erro ao remover: " + e.message);
@@ -1945,7 +1950,7 @@
       const properties = [];
       const selection = figma.currentPage.selection;
       if (selection.length === 0) {
-        figma.notify("Selecione um elemento para escane\xE1-lo.");
+        figma.notify("Selecione um elemento para escane\xC3\xA1-lo.");
         figma.ui.postMessage({ type: "show-spec-properties", properties: [] });
         return;
       }
@@ -1972,12 +1977,12 @@
         properties.push({ key: "radius", label: "Raio de borda", value: node.cornerRadius + "px", token });
       }
       if ("layoutMode" in node && node.layoutMode !== "NONE") {
-        properties.push({ key: "direction", label: "Dire\xE7\xE3o", value: node.layoutMode === "HORIZONTAL" ? "Horizontal" : "Vertical" });
+        properties.push({ key: "direction", label: "Dire\xC3\xA7\xC3\xA3o", value: node.layoutMode === "HORIZONTAL" ? "Horizontal" : "Vertical" });
         const align = `${node.primaryAxisAlignItems} / ${node.counterAxisAlignItems}`;
         properties.push({ key: "alignment", label: "Alinhamento", value: align });
         if (node.itemSpacing !== figma.mixed && node.itemSpacing > 0) {
           const token = getVar("itemSpacing");
-          properties.push({ key: "gap", label: "Espa\xE7amento (Gap)", value: node.itemSpacing + "px", token });
+          properties.push({ key: "gap", label: "Espa\xC3\xA7amento (Gap)", value: node.itemSpacing + "px", token });
         }
         const pt = node.paddingTop || 0, pr = node.paddingRight || 0, pb = node.paddingBottom || 0, pl = node.paddingLeft || 0;
         if (pt + pr + pb + pl > 0) {
@@ -2016,7 +2021,7 @@
       }
       if (node.type === "TEXT") {
         if (node.fontName !== figma.mixed) {
-          properties.push({ key: "fontFamily", label: "Fam\xEDlia", value: node.fontName.family });
+          properties.push({ key: "fontFamily", label: "Fam\xC3\xADlia", value: node.fontName.family });
           properties.push({ key: "fontWeight", label: "Peso", value: node.fontName.style });
         }
         if (node.fontSize !== figma.mixed) {
@@ -2144,7 +2149,7 @@
           propsFrame.primaryAxisSizingMode = "AUTO";
           propsFrame.counterAxisSizingMode = "AUTO";
           propsFrame.name = `${_specBase}/Propriedades`;
-          propsFrame.layoutAlign = "MIN";
+          propsFrame.layoutAlign = "INHERIT";
           opts.properties.forEach((p) => {
             const row = figma.createFrame();
             row.name = `${_specBase}/Prop/${p.label}`;
@@ -2153,7 +2158,7 @@
             row.fills = [];
             row.primaryAxisSizingMode = "AUTO";
             row.counterAxisSizingMode = "AUTO";
-            row.layoutAlign = "MIN";
+            row.layoutAlign = "INHERIT";
             row.counterAxisAlignItems = "CENTER";
             const pLabel = figma.createText();
             pLabel.fontName = { family: "Inter", style: "Medium" };
@@ -2192,14 +2197,14 @@
           excTitle.fontName = { family: "Inter", style: "Bold" };
           excTitle.fontSize = 9;
           excTitle.fills = [{ type: "SOLID", color: { r: 0.8, g: 0.3, b: 0.1 } }];
-          excTitle.characters = `CEN\xC1RIOS DE EXCE\xC7\xC3O (${specExcecoes.length})`;
+          excTitle.characters = `CEN\xC3\x81RIOS DE EXCE\xC3\u2021\xC3\u0192O (${specExcecoes.length})`;
           excTitle.textAutoResize = "WIDTH_AND_HEIGHT";
           excFrame.appendChild(excTitle);
           const _excTypeRgb = {
             "Erro": { r: 0.8, g: 0.15, b: 0.15 },
             "Alerta": { r: 0.8, g: 0.5, b: 0 },
             "Sucesso": { r: 0.1, g: 0.55, b: 0.25 },
-            "Confirma\xE7\xE3o": { r: 0.05, g: 0.35, b: 0.8 }
+            "Confirma\xC3\xA7\xC3\xA3o": { r: 0.05, g: 0.35, b: 0.8 }
           };
           specExcecoes.forEach((exc) => {
             const excRow = figma.createFrame();
@@ -2220,7 +2225,7 @@
             titleLabel.fontName = { family: "Inter", style: "Regular" };
             titleLabel.fontSize = 10;
             titleLabel.fills = [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2 } }];
-            titleLabel.characters = `${exc.titulo || ""}${exc.notas ? " \u2014 " + exc.notas : ""}`;
+            titleLabel.characters = `${exc.titulo || ""}${exc.notas ? " \xE2\u20AC\u201D " + exc.notas : ""}`;
             titleLabel.textAutoResize = "WIDTH_AND_HEIGHT";
             excRow.appendChild(typeLabel);
             excRow.appendChild(titleLabel);
@@ -2335,7 +2340,7 @@
             properties: opts.properties
           }
         });
-        figma.notify("Especifica\xE7\xE3o criada com sucesso!");
+        figma.notify("Especifica\xC3\xA7\xC3\xA3o criada com sucesso!");
       })();
     }
     if (msg.type === "highlight-node") {
@@ -2347,7 +2352,7 @@
         activeHighlightNode = null;
       }
       const node = figma.getNodeById(msg.id);
-      if (node && node.visible) {
+      if (node && node.visible && _nodeOnCurrentPage(node)) {
         figma.currentPage.selection = [node];
         if (msg.shouldScroll !== false) {
           figma.viewport.scrollAndZoomIntoView([node]);
@@ -2399,11 +2404,11 @@
           await figma.loadFontAsync({ family: "Inter", style: "Bold" });
           const specNode = figma.getNodeById(msg.specNodeId);
           if (!specNode) {
-            figma.notify("Frame de spec n\xE3o encontrado", { error: true });
+            figma.notify("Frame de spec n\xC3\xA3o encontrado", { error: true });
             return;
           }
           const obsFrame = figma.createFrame();
-          obsFrame.name = `[Obs] ${msg.tipo || "Exce\xE7\xE3o"}`;
+          obsFrame.name = `[Obs] ${msg.tipo || "Exce\xC3\xA7\xC3\xA3o"}`;
           obsFrame.layoutMode = "VERTICAL";
           obsFrame.paddingLeft = 10;
           obsFrame.paddingRight = 10;
@@ -2418,7 +2423,7 @@
           obsFrame.cornerRadius = 8;
           const labelText = figma.createText();
           labelText.fontName = { family: "Inter", style: "Bold" };
-          labelText.characters = `Obs \xB7 ${msg.tipo || "Exce\xE7\xE3o"}: ${msg.titulo || ""}`;
+          labelText.characters = `Obs \xC2\xB7 ${msg.tipo || "Exce\xC3\xA7\xC3\xA3o"}: ${msg.titulo || ""}`;
           labelText.fontSize = 10;
           labelText.fills = [{ type: "SOLID", color: { r: 0.72, g: 0.39, b: 0 } }];
           obsFrame.appendChild(labelText);
@@ -2432,9 +2437,9 @@
           parent.appendChild(obsFrame);
           obsFrame.x = specNode.x;
           obsFrame.y = (specNode.y || 0) + (specNode.height || 0) + 8;
-          figma.notify("Observa\xE7\xE3o injetada no canvas");
+          figma.notify("Observa\xC3\xA7\xC3\xA3o injetada no canvas");
         } catch (e) {
-          figma.notify("Erro ao injetar observa\xE7\xE3o: " + e.message, { error: true });
+          figma.notify("Erro ao injetar observa\xC3\xA7\xC3\xA3o: " + e.message, { error: true });
         }
       })();
     }
@@ -2442,7 +2447,7 @@
       const node = figma.getNodeById(msg.id);
       if (node) {
         node.remove();
-        figma.notify("Item exclu\xEDdo com sucesso");
+        figma.notify("Item exclu\xC3\xADdo com sucesso");
       }
       if (activeHighlightNode) {
         try {
@@ -2460,7 +2465,7 @@
     }
     if (msg.type === "focus-node") {
       const node = figma.getNodeById(msg.id);
-      if (node) {
+      if (node && _nodeOnCurrentPage(node)) {
         figma.currentPage.selection = [node];
         figma.viewport.scrollAndZoomIntoView([node]);
       }
@@ -2620,7 +2625,7 @@
             symbol.y = midY - symbol.height / 2;
             nodesToGroup.push(shape, symbol);
             const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-            finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Decis\xE3o"}`;
+            finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Decis\xC3\xA3o"}`;
             finalGroup.locked = true;
             figma.ui.postMessage({ type: "flow-created", flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
           } catch (e) {
@@ -2643,7 +2648,7 @@
             const label = figma.createText();
             figma.currentPage.appendChild(label);
             label.fontName = { family: "Inter", style: "Bold" };
-            label.characters = isStart ? "IN\xCDCIO" : "FIM";
+            label.characters = isStart ? "IN\xC3\x8DCIO" : "FIM";
             label.fontSize = 8;
             label.textAlignHorizontal = "CENTER";
             label.textAlignVertical = "CENTER";
@@ -2652,7 +2657,7 @@
             label.y = circle.y + circle.height / 2 - label.height / 2;
             nodesToGroup.push(circle, label);
             const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-            finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || (isStart ? "In\xEDcio" : "Fim")}`;
+            finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || (isStart ? "In\xC3\xADcio" : "Fim")}`;
             finalGroup.locked = true;
             figma.ui.postMessage({ type: "flow-created", flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
           } catch (e) {
@@ -2688,7 +2693,7 @@
             textNode.y = chipBg.y + paddingV;
             nodesToGroup.push(chipBg, textNode);
             const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-            finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Conex\xE3o"}`;
+            finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Conex\xC3\xA3o"}`;
             finalGroup.locked = true;
             figma.ui.postMessage({ type: "flow-created", flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
           } catch (e) {
@@ -2697,7 +2702,7 @@
         })();
       } else {
         const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-        finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Conex\xE3o"}`;
+        finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Conex\xC3\xA3o"}`;
         finalGroup.locked = true;
         figma.ui.postMessage({ type: "flow-created", flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
       }
@@ -2733,15 +2738,15 @@
         legendFrame.counterAxisSizingMode = "AUTO";
         const legendTitle = figma.createText();
         legendTitle.fontName = { family: "Inter", style: "Bold" };
-        legendTitle.characters = "Legendas de Especifica\xE7\xE3o";
+        legendTitle.characters = "Legendas de Especifica\xC3\xA7\xC3\xA3o";
         legendTitle.fontSize = 14;
         legendTitle.fills = [{ type: "SOLID", color: { r: 0.1, g: 0.1, b: 0.1 } }];
         legendFrame.appendChild(legendTitle);
         const types = [
-          { name: "Cen\xE1rio de exce\xE7\xE3o", c: { r: 0.97, g: 0.45, b: 0.08 } },
-          { name: "Informa\xE7\xE3o extra", c: { r: 0.05, g: 0.64, b: 0.91 } },
+          { name: "Cen\xC3\xA1rio de exce\xC3\xA7\xC3\xA3o", c: { r: 0.97, g: 0.45, b: 0.08 } },
+          { name: "Informa\xC3\xA7\xC3\xA3o extra", c: { r: 0.05, g: 0.64, b: 0.91 } },
           { name: "Comportamento", c: { r: 0.92, g: 0.28, b: 0.6 } },
-          { name: "Regra de Neg\xF3cio", c: { r: 0.02, g: 0.71, b: 0.82 } },
+          { name: "Regra de Neg\xC3\xB3cio", c: { r: 0.02, g: 0.71, b: 0.82 } },
           { name: "Dados da API", c: { r: 0.51, g: 0.8, b: 0.08 } }
         ];
         for (const t of types) {
@@ -2976,31 +2981,31 @@
             }
           };
           fieldRow("Nome do Projeto:", "Nome do projeto");
-          fieldRow("Data de In\xEDcio:", "00/00/00");
+          fieldRow("Data de In\xC3\xADcio:", "00/00/00");
           mainFrame.appendChild(sp(12));
           const sep = rct(604, 1, C.line);
           mainFrame.appendChild(sep);
-          section("Contexto", "Descreva o contexto atual do projeto e por que ele est\xE1 sendo demandado. Se existirem jornadas mapeadas ou algum material, ele deve ser registrado ou linkado nesta sess\xE3o.");
-          section("Resultados-chave e crit\xE9rio de sucesso", "Como o sucesso do projeto ser\xE1 medido?");
-          section("Atores e usu\xE1rios", "Quem \xE9 o p\xFAblico deste projeto? Voc\xEA pode aprofundar, aqui, para um estudo de personas.");
-          section("Stakeholders e equipe", "Anote quem faz parte da(s) equipe(s), quais s\xE3o suas responsabilidades. Importante anotar quem vai validar as decis\xF5es.");
+          section("Contexto", "Descreva o contexto atual do projeto e por que ele est\xC3\xA1 sendo demandado. Se existirem jornadas mapeadas ou algum material, ele deve ser registrado ou linkado nesta sess\xC3\xA3o.");
+          section("Resultados-chave e crit\xC3\xA9rio de sucesso", "Como o sucesso do projeto ser\xC3\xA1 medido?");
+          section("Atores e usu\xC3\xA1rios", "Quem \xC3\xA9 o p\xC3\xBAblico deste projeto? Voc\xC3\xAA pode aprofundar, aqui, para um estudo de personas.");
+          section("Stakeholders e equipe", "Anote quem faz parte da(s) equipe(s), quais s\xC3\xA3o suas responsabilidades. Importante anotar quem vai validar as decis\xC3\xB5es.");
           section("Escopo");
-          section("Est\xE1 no escopo", "O que precisa ser trabalhado e por que.", true);
+          section("Est\xC3\xA1 no escopo", "O que precisa ser trabalhado e por que.", true);
           section("Pode estar no escopo", "O que depende de outros fatores para entrar no escopo.", true);
-          section("N\xE3o est\xE1 no escopo", "Limita\xE7\xF5es t\xE9cnicas ou escopo exclu\xEDdo explicitamente.", true);
-          section("Depend\xEAncias", "Outras \xE1reas que podem ter conhecimento ou dom\xEDnio sobre parte do projeto.");
-          section("Riscos", "Riscos que atrapalhem o sucesso do projeto. O que pode acontecer se n\xE3o atingirmos as metas?");
-          section("Tempo", "Roadmaps, prazos, sprints necess\xE1rias, qualquer fator que tangibilize tempo de projeto.");
-          section("Organiza\xE7\xE3o do trabalho");
-          section("Rotina de trabalho da equipe", "Reuni\xF5es di\xE1rias? Sprint? Retr\xF4?", true);
-          section("Comunica\xE7\xE3o", "Exemplo: reuni\xF5es marcadas por email, feitas pelo Teams.", true);
+          section("N\xC3\xA3o est\xC3\xA1 no escopo", "Limita\xC3\xA7\xC3\xB5es t\xC3\xA9cnicas ou escopo exclu\xC3\xADdo explicitamente.", true);
+          section("Depend\xC3\xAAncias", "Outras \xC3\xA1reas que podem ter conhecimento ou dom\xC3\xADnio sobre parte do projeto.");
+          section("Riscos", "Riscos que atrapalhem o sucesso do projeto. O que pode acontecer se n\xC3\xA3o atingirmos as metas?");
+          section("Tempo", "Roadmaps, prazos, sprints necess\xC3\xA1rias, qualquer fator que tangibilize tempo de projeto.");
+          section("Organiza\xC3\xA7\xC3\xA3o do trabalho");
+          section("Rotina de trabalho da equipe", "Reuni\xC3\xB5es di\xC3\xA1rias? Sprint? Retr\xC3\xB4?", true);
+          section("Comunica\xC3\xA7\xC3\xA3o", "Exemplo: reuni\xC3\xB5es marcadas por email, feitas pelo Teams.", true);
           section("Compartilhamento de dados", "Softwares e pastas, meio de compartilhamento, formatos de arquivos.", true);
           section("Notas adicionais", "Notas aqui.");
           mainFrame.appendChild(sp(8));
         } else if (msg.frameworkId === "csd") {
           mainFrame = vb(940, 0, 0, C.white, 16);
           mainFrame.name = "Matriz CSD";
-          const hdr = mkHeader("Matriz CSD \u2013 Certezas \xB7 Suposi\xE7\xF5es \xB7 D\xFAvidas");
+          const hdr = mkHeader("Matriz CSD \xE2\u20AC\u201C Certezas \xC2\xB7 Suposi\xC3\xA7\xC3\xB5es \xC2\xB7 D\xC3\xBAvidas");
           mainFrame.appendChild(hdr);
           hdr.layoutAlign = "STRETCH";
           const csdRow = hb(20, 16, null);
@@ -3008,8 +3013,8 @@
           mainFrame.appendChild(csdRow);
           const csdCols = [
             { label: "Certezas", sub: "O que sabemos com certeza.", hdr: C.green, bg: C.greenLight },
-            { label: "Suposi\xE7\xF5es", sub: "O que acreditamos, mas n\xE3o validamos.", hdr: C.amber, bg: { r: 1, g: 0.98, b: 0.929 } },
-            { label: "D\xFAvidas", sub: "O que precisamos descobrir.", hdr: C.red, bg: { r: 1, g: 0.949, b: 0.949 } }
+            { label: "Suposi\xC3\xA7\xC3\xB5es", sub: "O que acreditamos, mas n\xC3\xA3o validamos.", hdr: C.amber, bg: { r: 1, g: 0.98, b: 0.929 } },
+            { label: "D\xC3\xBAvidas", sub: "O que precisamos descobrir.", hdr: C.red, bg: { r: 1, g: 0.949, b: 0.949 } }
           ];
           csdCols.forEach((col) => {
             const card = vb(280, 0, 8, col.bg, 12);
@@ -3043,8 +3048,8 @@
           });
         } else if (msg.frameworkId === "five-whys") {
           mainFrame = vb(600, 40, 0, C.bgBlue, 20);
-          mainFrame.name = "Os 5 Porqu\xEAs";
-          const hdr = mkHeader("Os 5 porqu\xEA?");
+          mainFrame.name = "Os 5 Porqu\xC3\xAAs";
+          const hdr = mkHeader("Os 5 porqu\xC3\xAA?");
           mainFrame.appendChild(hdr);
           hdr.layoutAlign = "STRETCH";
           mainFrame.appendChild(sp(12));
@@ -3055,9 +3060,9 @@
           probRow.appendChild(tx("Problema:  ", 13, "Bold", C.blue));
           probRow.appendChild(tx("Diga qual o problema encontrado.", 13, "Regular", C.muted));
           mainFrame.appendChild(probRow);
-          const emojis = ["\u{1F600}", "\u{1F60A}", "\u{1F914}", "\u{1F622}", "\u{1F92F}", "\u{1F631}"];
-          const qLabels = ["Porqu\xEA o problema ocorre?", "Porqu\xEA?", "Porqu\xEA?", "Porqu\xEA?", "Porqu\xEA?", "Porqu\xEA?"];
-          const motivos = ["1\xB0 motivo", "2\xB0 motivo", "3\xB0 motivo", "4\xB0 motivo", "5\xB0 motivo", "6\xB0 motivo"];
+          const emojis = ["\xF0\u0178\u02DC\u20AC", "\xF0\u0178\u02DC\u0160", "\xF0\u0178\xA4\u201D", "\xF0\u0178\u02DC\xA2", "\xF0\u0178\xA4\xAF", "\xF0\u0178\u02DC\xB1"];
+          const qLabels = ["Porqu\xC3\xAA o problema ocorre?", "Porqu\xC3\xAA?", "Porqu\xC3\xAA?", "Porqu\xC3\xAA?", "Porqu\xC3\xAA?", "Porqu\xC3\xAA?"];
+          const motivos = ["1\xC2\xB0 motivo", "2\xC2\xB0 motivo", "3\xC2\xB0 motivo", "4\xC2\xB0 motivo", "5\xC2\xB0 motivo", "6\xC2\xB0 motivo"];
           for (let i = 0; i < 6; i++) {
             mainFrame.appendChild(sp(14));
             const row = hb(0, 12, null);
@@ -3074,7 +3079,7 @@
           mainFrame.appendChild(sp(12));
           addT(mainFrame, "Causa raiz", 14, "Bold", C.blue);
           mainFrame.appendChild(sp(4));
-          addT(mainFrame, "A real causa do problema \xE9...", 12, "Regular", C.muted);
+          addT(mainFrame, "A real causa do problema \xC3\xA9...", 12, "Regular", C.muted);
           mainFrame.appendChild(sp(8));
         } else if (msg.frameworkId === "stakeholders") {
           const shCanvas = figma.createFrame();
@@ -3088,7 +3093,7 @@
             e.y = cy - eh / 2;
             shCanvas.appendChild(e);
           });
-          const solT = tx("Solu\xE7\xE3o", 13, "Bold", C.text);
+          const solT = tx("Solu\xC3\xA7\xC3\xA3o", 13, "Bold", C.text);
           solT.x = cx - 26;
           solT.y = cy + 10;
           shCanvas.appendChild(solT);
@@ -3100,7 +3105,7 @@
           st1.x = cx - 94;
           st1.y = cy - 76;
           shCanvas.appendChild(st1);
-          const st2 = tx("\u2022 Necessidade", 10, "Regular", C.text);
+          const st2 = tx("\xE2\u20AC\xA2 Necessidade", 10, "Regular", C.text);
           st2.x = cx - 94;
           st2.y = cy - 60;
           shCanvas.appendChild(st2);
@@ -3128,8 +3133,8 @@
           xAx.y = 560;
           veCanvas.appendChild(xAx);
           mainFrame = vb(620, 0, 0, C.white, 16);
-          mainFrame.name = "Matriz Valor \xD7 Esfor\xE7o";
-          const hdr = mkHeader("Matriz Valor \xD7 Esfor\xE7o");
+          mainFrame.name = "Matriz Valor \xC3\u2014 Esfor\xC3\xA7o";
+          const hdr = mkHeader("Matriz Valor \xC3\u2014 Esfor\xC3\xA7o");
           mainFrame.appendChild(hdr);
           hdr.layoutAlign = "STRETCH";
           mainFrame.appendChild(veCanvas);
@@ -3142,27 +3147,27 @@
           const b = vb(null, 40, 24, null);
           mainFrame.appendChild(b);
           b.layoutAlign = "STRETCH";
-          b.appendChild(tx("Insira dados de pesquisa at\xF4mica aqui...", 14, "Regular", C.muted));
+          b.appendChild(tx("Insira dados de pesquisa at\xC3\xB4mica aqui...", 14, "Regular", C.muted));
         } else if (msg.frameworkId === "blueprint") {
           mainFrame = vb(1200, 0, 0, C.white, 16);
-          mainFrame.name = "Blueprint de Servi\xE7o";
-          const hdr = mkHeader("Blueprint de Servi\xE7o");
+          mainFrame.name = "Blueprint de Servi\xC3\xA7o";
+          const hdr = mkHeader("Blueprint de Servi\xC3\xA7o");
           mainFrame.appendChild(hdr);
           hdr.layoutAlign = "STRETCH";
           const b = vb(null, 40, 24, null);
           mainFrame.appendChild(b);
           b.layoutAlign = "STRETCH";
-          b.appendChild(tx("Construa o blueprint de servi\xE7o aqui...", 14, "Regular", C.muted));
+          b.appendChild(tx("Construa o blueprint de servi\xC3\xA7o aqui...", 14, "Regular", C.muted));
         } else if (msg.frameworkId === "heuristics") {
           mainFrame = vb(960, 0, 0, C.white, 16);
-          mainFrame.name = "Heur\xEDsticas de Nielsen";
-          const hdr = mkHeader("Heur\xEDsticas de Nielsen");
+          mainFrame.name = "Heur\xC3\xADsticas de Nielsen";
+          const hdr = mkHeader("Heur\xC3\xADsticas de Nielsen");
           mainFrame.appendChild(hdr);
           hdr.layoutAlign = "STRETCH";
           const b = vb(null, 40, 24, null);
           mainFrame.appendChild(b);
           b.layoutAlign = "STRETCH";
-          b.appendChild(tx("Avalia\xE7\xE3o heur\xEDstica aqui...", 14, "Regular", C.muted));
+          b.appendChild(tx("Avalia\xC3\xA7\xC3\xA3o heur\xC3\xADstica aqui...", 14, "Regular", C.muted));
         } else if (msg.frameworkId === "opportunities") {
           mainFrame = vb(960, 0, 0, C.white, 16);
           mainFrame.name = "Mapa de Oportunidades";
@@ -3188,7 +3193,7 @@
           infoRow.appendChild(pic);
           const nameCol = vb(null, 0, 4, null);
           nameCol.appendChild(tx("Perfil 1 - Nome do Perfil", 18, "Bold", C.blueDark));
-          nameCol.appendChild(tx("Breve descri\xE7\xE3o (exemplo: Perfil 1 foi mapeado entendendo cliente interno)", 12, "Regular", C.muted));
+          nameCol.appendChild(tx("Breve descri\xC3\xA7\xC3\xA3o (exemplo: Perfil 1 foi mapeado entendendo cliente interno)", 12, "Regular", C.muted));
           infoRow.appendChild(nameCol);
           body.appendChild(infoRow);
           const sep1 = rct(720, 1, C.blueLight);
@@ -3206,10 +3211,10 @@
             dataCol.appendChild(r);
           };
           addData("Nome", "Um nome (opcional)");
-          addData("Idade", "idade m\xE9dia do perfil (pode ser conseguido por dados)");
-          addData("Ocupa\xE7\xE3o", "Trabalho / meio de trabalho");
-          addData("Renda", "Renda m\xE9dia");
-          addData("Escolaridade", "Educa\xE7\xE3o formal");
+          addData("Idade", "idade m\xC3\xA9dia do perfil (pode ser conseguido por dados)");
+          addData("Ocupa\xC3\xA7\xC3\xA3o", "Trabalho / meio de trabalho");
+          addData("Renda", "Renda m\xC3\xA9dia");
+          addData("Escolaridade", "Educa\xC3\xA7\xC3\xA3o formal");
           detailsRow.appendChild(dataCol);
           body.appendChild(detailsRow);
           const colsRow = hb(0, 40, null);
@@ -3217,7 +3222,7 @@
           const col1 = vb(null, 0, 12, null);
           col1.layoutAlign = "STRETCH";
           col1.appendChild(tx("Objetivos", 16, "Bold", C.blueDark));
-          const objT = tx("Listar objetivos relacionados ao produto, sejam eles objetivos de vida ou objetivos do dia, organiza\xE7\xE3o financeira, etc.", 13, "Regular", C.text);
+          const objT = tx("Listar objetivos relacionados ao produto, sejam eles objetivos de vida ou objetivos do dia, organiza\xC3\xA7\xC3\xA3o financeira, etc.", 13, "Regular", C.text);
           col1.appendChild(objT);
           objT.textAutoResize = "HEIGHT";
           objT.layoutAlign = "STRETCH";
@@ -3234,7 +3239,7 @@
           const oppCol = vb(null, 0, 12, null);
           oppCol.layoutAlign = "STRETCH";
           oppCol.appendChild(tx("Oportunidades", 16, "Bold", C.blueDark));
-          const oppT = tx("Liste oportunidades de produto relacionadas \xE0s sess\xF5es anteriores.", 13, "Regular", C.text);
+          const oppT = tx("Liste oportunidades de produto relacionadas \xC3\xA0s sess\xC3\xB5es anteriores.", 13, "Regular", C.text);
           oppCol.appendChild(oppT);
           oppT.textAutoResize = "HEIGHT";
           oppT.layoutAlign = "STRETCH";
@@ -3244,8 +3249,8 @@
           sep2.layoutAlign = "STRETCH";
           const obsCol = vb(null, 0, 12, null);
           obsCol.layoutAlign = "STRETCH";
-          obsCol.appendChild(tx("Observa\xE7\xF5es adicionais", 14, "Bold", C.blueDark));
-          const obsT = tx("Escreva aqui observa\xE7\xF5es de hip\xF3teses descobertas em an\xE1lise de dados internos e externos que ajudaram a mapear perfis de clientes / usu\xE1rios.", 13, "Regular", C.text);
+          obsCol.appendChild(tx("Observa\xC3\xA7\xC3\xB5es adicionais", 14, "Bold", C.blueDark));
+          const obsT = tx("Escreva aqui observa\xC3\xA7\xC3\xB5es de hip\xC3\xB3teses descobertas em an\xC3\xA1lise de dados internos e externos que ajudaram a mapear perfis de clientes / usu\xC3\xA1rios.", 13, "Regular", C.text);
           obsCol.appendChild(obsT);
           obsT.textAutoResize = "HEIGHT";
           obsT.layoutAlign = "STRETCH";
@@ -3272,27 +3277,27 @@
             d.layoutAlign = "STRETCH";
             body.appendChild(sec);
           };
-          addSec("1. Introdu\xE7\xE3o e Aquecimento", "Apresente-se, explique o objetivo da entrevista de forma neutra (sem enviesar) e pe\xE7a consentimento para gravar. Fa\xE7a perguntas que quebrem o gelo.", true);
-          addSec("Sugest\xF5es de perguntas:", "- Como \xE9 um dia t\xEDpico de trabalho para voc\xEA?\n- Quais ferramentas voc\xEA mais utiliza hoje?");
+          addSec("1. Introdu\xC3\xA7\xC3\xA3o e Aquecimento", "Apresente-se, explique o objetivo da entrevista de forma neutra (sem enviesar) e pe\xC3\xA7a consentimento para gravar. Fa\xC3\xA7a perguntas que quebrem o gelo.", true);
+          addSec("Sugest\xC3\xB5es de perguntas:", "- Como \xC3\xA9 um dia t\xC3\xADpico de trabalho para voc\xC3\xAA?\n- Quais ferramentas voc\xC3\xAA mais utiliza hoje?");
           const sep1 = rct(720, 1, C.line);
           body.appendChild(sep1);
           sep1.layoutAlign = "STRETCH";
-          addSec("2. Descoberta e Contexto", "Entenda como o usu\xE1rio lida com o problema hoje, antes de apresentar qualquer solu\xE7\xE3o.", true);
-          addSec("Sugest\xF5es de perguntas:", "- Me conte sobre a \xFAltima vez que voc\xEA precisou realizar [tarefa].\n- O que foi mais dif\xEDcil nesse processo?\n- Como voc\xEA contorna esse problema atualmente?");
+          addSec("2. Descoberta e Contexto", "Entenda como o usu\xC3\xA1rio lida com o problema hoje, antes de apresentar qualquer solu\xC3\xA7\xC3\xA3o.", true);
+          addSec("Sugest\xC3\xB5es de perguntas:", "- Me conte sobre a \xC3\xBAltima vez que voc\xC3\xAA precisou realizar [tarefa].\n- O que foi mais dif\xC3\xADcil nesse processo?\n- Como voc\xC3\xAA contorna esse problema atualmente?");
           const sep2 = rct(720, 1, C.line);
           body.appendChild(sep2);
           sep2.layoutAlign = "STRETCH";
-          addSec("3. Aprofundamento (Solu\xE7\xE3o / Prot\xF3tipo)", "Caso haja um prot\xF3tipo, apresente agora. Pe\xE7a para o usu\xE1rio pensar em voz alta.", true);
-          addSec("Sugest\xF5es de perguntas:", "- O que voc\xEA acha que essa tela faz?\n- Onde voc\xEA clicaria para [a\xE7\xE3o]?\n- O que voc\xEA esperava que acontecesse ao clicar ali?");
+          addSec("3. Aprofundamento (Solu\xC3\xA7\xC3\xA3o / Prot\xC3\xB3tipo)", "Caso haja um prot\xC3\xB3tipo, apresente agora. Pe\xC3\xA7a para o usu\xC3\xA1rio pensar em voz alta.", true);
+          addSec("Sugest\xC3\xB5es de perguntas:", "- O que voc\xC3\xAA acha que essa tela faz?\n- Onde voc\xC3\xAA clicaria para [a\xC3\xA7\xC3\xA3o]?\n- O que voc\xC3\xAA esperava que acontecesse ao clicar ali?");
           const sep3 = rct(720, 1, C.line);
           body.appendChild(sep3);
           sep3.layoutAlign = "STRETCH";
-          addSec("4. Encerramento", "Abra espa\xE7o para considera\xE7\xF5es finais e agrade\xE7a.", true);
-          addSec("Sugest\xF5es de perguntas:", "- H\xE1 algo que n\xE3o perguntei e que voc\xEA gostaria de comentar?\n- Como voc\xEA resumiria essa experi\xEAncia?");
+          addSec("4. Encerramento", "Abra espa\xC3\xA7o para considera\xC3\xA7\xC3\xB5es finais e agrade\xC3\xA7a.", true);
+          addSec("Sugest\xC3\xB5es de perguntas:", "- H\xC3\xA1 algo que n\xC3\xA3o perguntei e que voc\xC3\xAA gostaria de comentar?\n- Como voc\xC3\xAA resumiria essa experi\xC3\xAAncia?");
         } else if (msg.frameworkId === "journey") {
           mainFrame = vb(1e3, 0, 0, { r: 0.941, g: 0.965, b: 0.976 }, 16);
-          mainFrame.name = "Jornada de Usu\xE1rio";
-          const hdr = mkHeader("Jornada de Usu\xE1rio");
+          mainFrame.name = "Jornada de Usu\xC3\xA1rio";
+          const hdr = mkHeader("Jornada de Usu\xC3\xA1rio");
           mainFrame.appendChild(hdr);
           hdr.layoutAlign = "STRETCH";
           const body = hb(24, 24, null);
@@ -3317,7 +3322,7 @@
           leftCol.appendChild(mkL("Pensa e fala", "O que pensa e fala..."));
           leftCol.appendChild(mkL("Sentimentos", ""));
           leftCol.appendChild(mkL("Oportunidades", ""));
-          leftCol.appendChild(mkL("Experi\xEAncia", "", 240));
+          leftCol.appendChild(mkL("Experi\xC3\xAAncia", "", 240));
           const rightCol = hb(0, 12, null);
           body.appendChild(rightCol);
           rightCol.layoutAlign = "STRETCH";
@@ -3328,7 +3333,7 @@
             const eTop = vb(null, 16, 4, { r: 0.2, g: 0.8, b: 0.96 }, 8);
             eTop.layoutAlign = "STRETCH";
             eTop.appendChild(tx(i + ". Nome da Etapa", 16, "Bold", C.blueDark));
-            eTop.appendChild(tx("Descri\xE7\xE3o (opcional)", 12, "Regular", C.blueDark));
+            eTop.appendChild(tx("Descri\xC3\xA7\xC3\xA3o (opcional)", 12, "Regular", C.blueDark));
             col.appendChild(eTop);
             const mkr = (val, h) => {
               const b = vb(null, 16, 4, C.white, 8);
@@ -3417,7 +3422,7 @@
           figma.currentPage.selection = [grp];
           figma.viewport.scrollAndZoomIntoView([grp]);
           figma.ui.postMessage({ type: "framework-injected", name: msg.frameworkId });
-          figma.notify("Framework inserido no canvas! \u2713");
+          figma.notify("Framework inserido no canvas! \xE2\u0153\u201C");
         }
       })();
       return;

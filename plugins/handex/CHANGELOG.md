@@ -2,6 +2,109 @@
 
 ---
 
+## v4.1.1 — 2026-06-09
+
+### Resumo
+Correções de bugs de backend, melhorias de UX consistentes em todas as views, arquivamento de funcionalidades fora de escopo e limpeza geral do código-fonte.
+
+---
+
+### Correções de Backend (`code.js`)
+
+| Bug | Causa | Correção |
+|---|---|---|
+| `MIN is no longer a supported value for layoutAlign` (~30 avisos) | 6 ocorrências de `layoutAlign = "MIN"` em `code.js` | Substituídas por `"INHERIT"` (valor correto na API atual do Figma) |
+| `set_selection: The selection of a page can only include nodes in that page` | `figma.currentPage.selection = [node]` chamado com nó de outra página | Adicionada função `_nodeOnCurrentPage()` e guard nos handlers `scroll-node-into-view` e `focus-node` |
+| `localStorage SecurityError` repetido | `localStorage.getItem/setItem` chamado em contexto `data:` URL | Todos os acessos em `messages.js` e `core.js` envolvidos em `try/catch` |
+
+---
+
+### "Ocultar todas as medidas" não funcionava com medidas por frame
+
+- `_getAllMeasurements()` agora agrega `handoffData.measurements` global + medidas de todos os `handoffData.frames[]`
+- `updateHideAllMeasuresButtonState` e `toggleAllMeasuresVisibility` atualizados para usar a função agregada
+
+---
+
+### Canvas — Geração da Ficha Técnica
+
+- **Nome do frame sempre inclui data** — formato: `Handex | Ficha de Projeto | {Título} | {Data}`
+- **Locking automático** — todos os nós gerados pelo plugin (specs, medidas, fluxos, ficha) são criados com `node.locked = true`
+- **Chip de status com semântica de cor:**
+  - `rascunho` → cinza
+  - `em-revisao` → amarelo
+  - `pronto-para-dev` → azul
+  - `finalizado` → verde
+- **Tokens escaneados** — ficha e exportação MD/HTML agora listam os nomes reais dos tokens por categoria (até 10 + contagem de excedente), em vez de exibir apenas "sim/não"
+- **Tags de categoria no HTML** — estilo `cursor:default; pointer-events:none` para não parecerem botões clicáveis
+- **Specs do canvas** agregam specs de todos os frames (`frames[].components`), não apenas `step2.specs`
+
+---
+
+### Exceções — Injetar observação no frame de spec
+
+- `exc.obs` agora exibido na UI do plugin (texto itálico abaixo do título da exceção)
+- Novo checkbox **"Injetar observação no frame de especificação"** na modal de exceção
+  - Visível apenas quando obs está preenchida e a exceção tem `nodeId` de spec
+  - Ao confirmar, envia `inject-obs-to-spec` que cria um frame `[Obs]` no canvas abaixo do frame de spec correspondente
+
+---
+
+### UX — Espaçamento e Tipografia
+
+- **Header das views** — padding ajustado para `pt-0 pb-3`: sem espaço acima do título, 12 px de respiro abaixo
+- **Conteúdo das views** — top padding reduzido de `p-4` para `pt-1 px-4 pb-4`
+- **Fontes padronizadas** em todas as views:
+  - Views simples: `font-bold text-[18px]`
+  - Views com subtítulo (Handoff, Conformidade DSC, Laboratório): `font-bold text-[16px]`
+- **"CONFIGURAÇÃO"** — label desnecessária removida da view Informações do Projeto
+- **Jornada / Feature** — descrição movida para linha separada abaixo do checkbox (era inline à direita, cortava o texto)
+- **Hint `?` de Especificações** — agora abre o guia completo diretamente (`openHelp()`), sem popover intermediário
+- **Hint de layers bloqueadas** (Como Usar) — movido para o final do card; descrição atualizada: "Para remover ou recriar um item, utilize os botões de exclusão dentro do próprio plugin."
+
+---
+
+### Performance
+
+- `snapshot-load` e `scan-cache-load` removidos do handler `init-plugin` — carregamento diferido elimina lentidão na abertura do plugin
+
+---
+
+### Arquivamento de funcionalidades fora de escopo
+
+Movidos para `src/plugin/_unused/` (código preservado, fora do bundle):
+
+| Arquivo | Funcionalidade |
+|---|---|
+| `views/lab.html` | Laboratório de Design |
+| `views/audit.html` | Conformidade DSC |
+| `modules/lab.js` | Lógica do Laboratório |
+| `modules/audit.js` | Lógica de Auditoria (UI) |
+
+- Referências removidas de `build.cjs` e `modules/core.js`
+- Bundle reduzido de ~1471 KB para ~1442 KB (−29 KB)
+
+---
+
+### Arquivos Modificados
+
+| Arquivo | Tipo de mudança |
+|---|---|
+| `src/plugin/code.js` | Fix `layoutAlign "MIN"`, guard cross-page selection, `_nodeOnCurrentPage()` |
+| `src/plugin/modules/core.js` | Fix `localStorage`, remove `navigateToAudit` |
+| `src/plugin/modules/messages.js` | Fix `localStorage` em `applyFigmaTheme` |
+| `src/plugin/modules/measurement.js` | `_getAllMeasurements()` agrega medidas por frame |
+| `src/plugin/modules/specifications.js` | Exibe `exc.obs`, checkbox injetar obs |
+| `src/plugin/modules/handoff.js` | Tokens com nomes reais, tags não-clicáveis |
+| `src/plugin/build.cjs` | Remove lab/audit do bundle |
+| `src/plugin/views/specifications.html` | Hint `?` abre guia direto |
+| `src/plugin/views/dados-projeto.html` | Remove label "Configuração", descrição jornada/feature em linha separada |
+| `src/plugin/views/guide.html` | Hint de layers no final, descrição atualizada |
+| `src/plugin/views/*.html` (todas) | Padding de header e fontes padronizados |
+| `src/plugin/_unused/` | Lab e Audit arquivados |
+
+---
+
 ## v4.0.0-beta — 2026-06-02
 
 ### Resumo

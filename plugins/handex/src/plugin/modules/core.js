@@ -71,7 +71,6 @@ Object.assign(window, {
   toggleBriefingSection,
   scrollToStep,
   scanFrame,
-  navigateToAudit,
   setFrameCheckDone,
   setFrameSemDesvios,
   setFrameAuditObs,
@@ -1276,8 +1275,9 @@ function nextStep() {
   // Step 3 → Step 4: exibe instrução de Check Designs na primeira vez
   if (currentStep === 3) {
     const key = 'handex-check-designs-prompted-v1';
-    if (!localStorage.getItem(key)) {
-      localStorage.setItem(key, '1');
+    let _storageHit = false;
+    try { _storageHit = !localStorage.getItem(key); if (_storageHit) localStorage.setItem(key, '1'); } catch (e) { }
+    if (_storageHit) {
       const modal = document.getElementById('check-designs-modal');
       if (modal) {
         modal.classList.remove('hidden');
@@ -1339,7 +1339,7 @@ window._toastSaved = _toastSaved;
 function toggleTheme() {
   document.documentElement.classList.toggle("dark");
   const isDark = document.documentElement.classList.contains("dark");
-  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch (e) { }
   document.querySelectorAll(".sun-icon").forEach(el => el.classList.toggle("hidden", isDark));
   document.querySelectorAll(".moon-icon").forEach(el => el.classList.toggle("hidden", !isDark));
   _refreshIcons();
