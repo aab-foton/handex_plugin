@@ -1,7 +1,7 @@
 # DSC A11Y Handoff — Plugin Figma
 
 Plugin para preencher templates de handoff de acessibilidade no Figma.
-Branch atual: `migration-from-old-handoff`. Versão: `2.1.2`.
+Branch atual: `feat/instance-based-preview`. Versão: `2.2.0`.
 
 ## Arquivos
 

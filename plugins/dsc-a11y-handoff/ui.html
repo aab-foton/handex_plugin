@@ -43,7 +43,7 @@
     .search-wrapper { position: relative; width: 100%; margin-bottom: 12px; }
     .search-wrapper input { width: 100%; box-sizing: border-box; border: 1.5px solid #EEE; border-radius: 8px; padding: 10px 12px; font-size: 13px; outline: none; }
     .search-wrapper input:focus { border-color: #2D4496; }
-    .searchResults { display: none; position: absolute; left: 0; right: 0; background: #fff; border: 1px solid #D1D5DB; border-radius: 8px; z-index: 100000; max-height: 180px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+    .searchResults { display: none; position: fixed; background: #fff; border: 1px solid #D1D5DB; border-radius: 8px; z-index: 100000; max-height: 180px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
     .search-item { padding: 10px 12px; cursor: pointer; font-size: 12px; color: #333; border-bottom: 1px solid #F3F4F6; }
     .search-item:last-child { border-bottom: none; }
     .search-item:hover { background: #F9FAFB; color: #2D4496; }
@@ -683,13 +683,14 @@
 
     <div class="footer-bar">
       <button class="footer-nav-btn" id="btnNavPrev" onclick="navigateTab(-1)">‹ Anterior</button>
-      <span class="version-text">DSC A11Y Handoff v2.1.1</span>
+      <span class="version-text">DSC A11Y Handoff v2.2.0</span>
       <button class="footer-nav-btn" id="btnNavNext" onclick="navigateTab(1)">Próximo ›</button>
     </div>
   </div>
 
   <script>
     const el = (id) => document.getElementById(id);
+    const escapeHtml = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     let masterList = [];
     let _settingSync = true;
     let currentData = [];
@@ -755,29 +756,34 @@
         }).slice(0, 10);
         if (currentFiltered.length === 0) { res.style.display = 'none'; return; }
         res.innerHTML = currentFiltered.map((m, idx) =>
-          `<div class="search-item" data-index="${idx}">${m.mapeamento} → ${m.descricao}</div>`
+          `<div class="search-item" data-index="${idx}">${escapeHtml(m.mapeamento)} → ${escapeHtml(m.descricao)}</div>`
         ).join('');
         res.querySelectorAll('.search-item').forEach((item, idx) => {
           item.onclick = (e) => { e.stopPropagation(); addItem(currentFiltered[idx]); };
         });
         const rect = input.getBoundingClientRect();
+        res.style.left = rect.left + 'px';
+        res.style.width = rect.width + 'px';
         if (window.innerHeight - rect.bottom < 180) {
-          res.style.top = 'auto'; res.style.bottom = '100%';
-          res.style.marginBottom = '4px'; res.style.marginTop = '0';
+          res.style.top = 'auto';
+          res.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
         } else {
-          res.style.top = '100%'; res.style.bottom = 'auto';
-          res.style.marginTop = '4px'; res.style.marginBottom = '0';
+          res.style.top = (rect.bottom + 4) + 'px';
+          res.style.bottom = 'auto';
         }
         res.style.display = 'block';
       };
 
+      const closeMenu = () => { res.style.display = 'none'; parentCard.classList.remove('active-card'); };
+
       input.addEventListener('click', openMenu);
       input.addEventListener('input', openMenu);
       document.addEventListener('click', (e) => {
-        if (!input.contains(e.target) && !res.contains(e.target)) {
-          res.style.display = 'none';
-          parentCard.classList.remove('active-card');
-        }
+        if (!input.contains(e.target) && !res.contains(e.target)) closeMenu();
+      });
+      // Fecha e reposiciona ao scrollar (dropdown fixed não acompanha o scroll)
+      document.querySelector('.content-area')?.addEventListener('scroll', () => {
+        if (res.style.display === 'block') closeMenu();
       });
     }
 
@@ -796,19 +802,21 @@
     function renderLists() {
       const tList = el('tList'), gList = el('gList');
       if (!tList || !gList) return;
-      tList.innerHTML = ''; gList.innerHTML = '';
+      const tHtml = [], gHtml = [];
       currentData.forEach((m, i) => {
         const isTeclado = m.utilizacao.toLowerCase().includes('teclado');
         const html = `
           <div class="selected-item-card">
-            <div class="item-content" title="${m.mapeamento} → ${m.descricao}">
-              <span class="item-title">${m.mapeamento}</span>
-              <span class="item-desc">→ ${m.descricao}</span>
+            <div class="item-content" title="${escapeHtml(m.mapeamento)} → ${escapeHtml(m.descricao)}">
+              <span class="item-title">${escapeHtml(m.mapeamento)}</span>
+              <span class="item-desc">→ ${escapeHtml(m.descricao)}</span>
             </div>
             <button class='remove-btn' onclick='removeItem(${i})'>×</button>
           </div>`;
-        (isTeclado ? tList : gList).innerHTML += html;
+        (isTeclado ? tHtml : gHtml).push(html);
       });
+      tList.innerHTML = tHtml.join('');
+      gList.innerHTML = gHtml.join('');
       const t = currentData.filter(m => m.utilizacao.toLowerCase().includes('teclado')).length;
       const g = currentData.filter(m => m.utilizacao.toLowerCase().includes('gesto')).length;
       el('tBadge').textContent = t;
@@ -835,12 +843,10 @@
       const gestures = currentData.filter(m => m.utilizacao.toLowerCase().includes('gesto')).length;
 
       const pills = el('summaryPills');
-      pills.innerHTML = '';
-      [...platforms, ...zooms].forEach(label => {
-        pills.innerHTML += `<span class='summary-pill'>${label}</span>`;
-      });
-      if (keyboards > 0) pills.innerHTML += `<span class='summary-pill'>${keyboards} tecla${keyboards !== 1 ? 's' : ''}</span>`;
-      if (gestures > 0) pills.innerHTML += `<span class='summary-pill'>${gestures} gesto${gestures !== 1 ? 's' : ''}</span>`;
+      const pillsHtml = [...platforms, ...zooms].map(label => `<span class='summary-pill'>${label}</span>`);
+      if (keyboards > 0) pillsHtml.push(`<span class='summary-pill'>${keyboards} tecla${keyboards !== 1 ? 's' : ''}</span>`);
+      if (gestures > 0) pillsHtml.push(`<span class='summary-pill'>${gestures} gesto${gestures !== 1 ? 's' : ''}</span>`);
+      pills.innerHTML = pillsHtml.join('');
       
       const totalAreas = variationsData.reduce((sum, v) => {
         const areas = v.id === currentVariationId ? touchData : (v.areas_toque || []);
@@ -871,9 +877,10 @@
         summaryTabCard.style.display = totalTabItems > 0 ? 'block' : 'none';
         const tabPills = el('summaryTabPills');
         if (tabPills) {
-          tabPills.innerHTML = '';
-          if (totalTabVars > 0) tabPills.innerHTML += `<span class='summary-pill'>${totalTabVars} variação${totalTabVars !== 1 ? 'ões' : ''}</span>`;
-          if (totalTabItems > 0) tabPills.innerHTML += `<span class='summary-pill'>${totalTabItems} foco${totalTabItems !== 1 ? 's' : ''}</span>`;
+          const tabPillsHtml = [];
+          if (totalTabVars > 0) tabPillsHtml.push(`<span class='summary-pill'>${totalTabVars} variação${totalTabVars !== 1 ? 'ões' : ''}</span>`);
+          if (totalTabItems > 0) tabPillsHtml.push(`<span class='summary-pill'>${totalTabItems} foco${totalTabItems !== 1 ? 's' : ''}</span>`);
+          tabPills.innerHTML = tabPillsHtml.join('');
         }
       }
 
@@ -887,9 +894,10 @@
         summaryLeitorCard.style.display = totalLeitorItems > 0 || totalLeitorVars > 0 ? 'block' : 'none';
         const leitorPills = el('summaryLeitorPills');
         if (leitorPills) {
-          leitorPills.innerHTML = '';
-          if (totalLeitorVars > 0) leitorPills.innerHTML += `<span class='summary-pill'>${totalLeitorVars} variação${totalLeitorVars !== 1 ? 'ões' : ''}</span>`;
-          if (totalLeitorItems > 0) leitorPills.innerHTML += `<span class='summary-pill'>${totalLeitorItems} anotaç${totalLeitorItems !== 1 ? 'ões' : 'ão'}</span>`;
+          const leitorPillsHtml = [];
+          if (totalLeitorVars > 0) leitorPillsHtml.push(`<span class='summary-pill'>${totalLeitorVars} variação${totalLeitorVars !== 1 ? 'ões' : ''}</span>`);
+          if (totalLeitorItems > 0) leitorPillsHtml.push(`<span class='summary-pill'>${totalLeitorItems} anotaç${totalLeitorItems !== 1 ? 'ões' : 'ão'}</span>`);
+          leitorPills.innerHTML = leitorPillsHtml.join('');
         }
       }
 
@@ -1637,7 +1645,7 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
       const badge = isAAA ? "<span class='touch-compliance-badge badge-aaa'>AAA</span>"
                   : isAA  ? "<span class='touch-compliance-badge badge-aa'>AA</span>" : '';
       const prefix = getVariationPrefix(currentVariationId ?? 'default');
-      list.innerHTML += `<div class='touch-item-card ${itemClass}' onclick='highlightTouchArea("${item.nome}")' style='cursor:pointer;'><span style='background:#2D4496;color:#fff;border-radius:10px;min-width:28px;height:20px;padding:0 4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;'>${prefix}.${i+1}</span><div style='flex:1;min-width:0;'><div style='font-size:12px;font-weight:600;color:#1a1a1a;'>${item.nome}</div><div style='font-size:10px;color:#AAA;margin-top:1px;'>${presetLabel}</div></div>${badge}<button onclick='event.stopPropagation(); removeTouchArea(${i})' class='remove-btn'>×</button></div>`;
+      list.innerHTML += `<div class='touch-item-card ${itemClass}' data-touch-nome="${escapeHtml(item.nome)}" onclick='highlightTouchArea(this.dataset.touchNome)' style='cursor:pointer;'><span style='background:#2D4496;color:#fff;border-radius:10px;min-width:28px;height:20px;padding:0 4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;'>${prefix}.${i+1}</span><div style='flex:1;min-width:0;'><div style='font-size:12px;font-weight:600;color:#1a1a1a;'>${escapeHtml(item.nome)}</div><div style='font-size:10px;color:#AAA;margin-top:1px;'>${escapeHtml(presetLabel)}</div></div>${badge}<button onclick='event.stopPropagation(); removeTouchArea(${i})' class='remove-btn'>×</button></div>`;
     });
   }
 
@@ -1862,11 +1870,11 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
     if (customs.length > 0) {
       container.innerHTML += `<div style='font-size:10px;font-weight:700;color:#999;letter-spacing:0.05em;padding:6px 0 2px;'>VARIANTES PARAMETRIZADAS</div>`;
       customs.forEach((v, i) => {
-        const propsLabel = Object.entries(v.propriedades || {}).map(([k, val]) => `${k}=${val}`).join(', ') || '—';
+        const propsLabel = Object.entries(v.propriedades || {}).map(([k, val]) => `${escapeHtml(k)}=${escapeHtml(val)}`).join(', ') || '—';
         container.innerHTML += `<div style='border:1.5px solid #E0E0E0;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;background:#fff;'>
           <span style='background:#2D4496;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;'>${i+1}</span>
           <div style='flex:1;min-width:0;'>
-            <div style='font-size:12px;font-weight:700;color:#1a1a1a;'>${v.nome}</div>
+            <div style='font-size:12px;font-weight:700;color:#1a1a1a;'>${escapeHtml(v.nome)}</div>
             <div style='font-size:10px;color:#888;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${propsLabel}</div>
           </div>
           <button onclick='selectSRVariation("${v.id}")' style='background:none;border:1.5px solid #2D4496;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#2D4496;cursor:pointer;'>Editar</button>
@@ -2001,11 +2009,11 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
     if (customs.length > 0) {
       container.innerHTML += `<div style='font-size:10px;font-weight:700;color:#999;letter-spacing:0.05em;padding:6px 0 2px;'>VARIANTES PARAMETRIZADAS</div>`;
       customs.forEach((v, i) => {
-        const propsLabel = Object.entries(v.propriedades || {}).map(([k, val]) => `${k}=${val}`).join(', ') || '—';
+        const propsLabel = Object.entries(v.propriedades || {}).map(([k, val]) => `${escapeHtml(k)}=${escapeHtml(val)}`).join(', ') || '—';
         container.innerHTML += `<div style='border:1.5px solid #E0E0E0;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;background:#fff;'>
           <span style='background:#2D4496;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;'>${i+1}</span>
           <div style='flex:1;min-width:0;'>
-            <div style='font-size:12px;font-weight:700;color:#1a1a1a;'>${v.nome}</div>
+            <div style='font-size:12px;font-weight:700;color:#1a1a1a;'>${escapeHtml(v.nome)}</div>
             <div style='font-size:10px;color:#888;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${propsLabel}</div>
           </div>
           <button onclick='editTabVariation("${v.id}")' style='background:none;border:1.5px solid #2D4496;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#2D4496;cursor:pointer;'>Editar</button>
@@ -2129,12 +2137,12 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
     if (customs.length > 0) {
       container.innerHTML += `<div style='font-size:10px;font-weight:700;color:#999;letter-spacing:0.05em;padding:6px 0 2px;'>VARIANTES PARAMETRIZADAS</div>`;
       customs.forEach((v, i) => {
-        const propsLabel = Object.entries(v.propriedades || {}).map(([k, val]) => `${k}=${val}`).join(', ') || '—';
+        const propsLabel = Object.entries(v.propriedades || {}).map(([k, val]) => `${escapeHtml(k)}=${escapeHtml(val)}`).join(', ') || '—';
         container.innerHTML += `
           <div style='border:1.5px solid #E0E0E0;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;background:#fff;'>
             <span style='background:#2D4496;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;'>${i+1}</span>
             <div style='flex:1;min-width:0;'>
-              <div style='font-size:12px;font-weight:700;color:#1a1a1a;'>${v.nome}</div>
+              <div style='font-size:12px;font-weight:700;color:#1a1a1a;'>${escapeHtml(v.nome)}</div>
               <div style='font-size:10px;color:#888;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>${propsLabel}</div>
             </div>
             <button onclick='editVariation("${v.id}")' style='background:none;border:1.5px solid #2D4496;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#2D4496;cursor:pointer;'>Editar</button>
