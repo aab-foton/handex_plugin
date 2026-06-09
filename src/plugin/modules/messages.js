@@ -8,7 +8,8 @@
 
     function applyFigmaTheme(theme) {
       // Preferência manual do usuário tem prioridade sobre o tema do Figma
-      const override = localStorage.getItem('theme');
+      let override = null;
+      try { override = localStorage.getItem('theme'); } catch (e) { }
       const resolved = override || theme || 'light';
       const isDark = resolved === 'dark';
       document.documentElement.classList.toggle('dark', isDark);

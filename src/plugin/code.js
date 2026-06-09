@@ -1,10 +1,16 @@
-import { auditProperty, AUDIT_SCORE, AUDIT_THRESHOLDS, frameJsonTemplate, suggestClosestMatch } from './audit.js';
+﻿import { auditProperty, AUDIT_SCORE, AUDIT_THRESHOLDS, frameJsonTemplate, suggestClosestMatch } from './audit.js';
 
 figma.showUI(__html__, { width: 480, height: 750 });
 
 let activeHighlightNode = null;
 
-// Tracks the lowest occupied Y per column (keyed by rounded X) — avoids traversing the Figma tree
+function _nodeOnCurrentPage(node) {
+  let n = node;
+  while (n && n.type !== 'PAGE') n = n.parent;
+  return n != null && n.id === figma.currentPage.id;
+}
+
+// Tracks the lowest occupied Y per column (keyed by rounded X) â€” avoids traversing the Figma tree
 const specColumnTracker = {};
 
 function hexToRgb(hex) {
@@ -33,14 +39,14 @@ function rgbToHex(r, g, b) {
 /* global __HANDEX_VERSION__ */
 const PLUGIN_VERSION = (typeof __HANDEX_VERSION__ !== 'undefined') ? __HANDEX_VERSION__ : 'dev';
 
-// ── Shared Plugin Data (MCP / REST API readable) ──────────────────────
+// â”€â”€ Shared Plugin Data (MCP / REST API readable) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Usa setSharedPluginData (namespace 'handex') para que agentes externos
-// (MCP, REST API) consigam ler o contexto de negócio embutido nos nodes.
-// setPluginData seria sandboxed ao plugin ID — inacessível externamente.
+// (MCP, REST API) consigam ler o contexto de negÃ³cio embutido nos nodes.
+// setPluginData seria sandboxed ao plugin ID â€” inacessÃ­vel externamente.
 function _writeSharedPluginData(data) {
   const NS = 'handex';
   try {
-    // Contexto do projeto na página atual
+    // Contexto do projeto na pÃ¡gina atual
     const project = {
       titulo:    data.step1?.titulo   || '',
       versao:    data.step1?.versao   || '',
@@ -65,7 +71,7 @@ function _writeSharedPluginData(data) {
     console.warn('[handex] setSharedPluginData(project) failed:', e);
   }
 
-  // Contexto por frame — getNodeById é O(1), não percorre a árvore
+  // Contexto por frame â€” getNodeById Ã© O(1), nÃ£o percorre a Ã¡rvore
   (data.frames || []).forEach(frame => {
     try {
       const node = figma.getNodeById(frame.figmaId);
@@ -81,7 +87,7 @@ function _writeSharedPluginData(data) {
         }))
       }));
     } catch (e) {
-      // Node pode ter sido deletado — ignorar silenciosamente
+      // Node pode ter sido deletado â€” ignorar silenciosamente
     }
   });
 }
@@ -129,20 +135,20 @@ figma.ui.onmessage = async (msg) => {
 
   if (msg.type === 'refresh-spec-card') {
     const grpNode = figma.getNodeById(msg.nodeId);
-    if (!grpNode) { figma.ui.postMessage({ type: 'toast', message: 'Card não encontrado no canvas.', kind: 'error' }); return; }
+    if (!grpNode) { figma.ui.postMessage({ type: 'toast', message: 'Card nÃ£o encontrado no canvas.', kind: 'error' }); return; }
     // Find the spec card frame inside the group (name ends with /Ficha)
     const children = grpNode.type === 'GROUP' ? grpNode.children : [grpNode];
     const cardFrame = children.find(n => n.name && n.name.endsWith('/Ficha'));
-    if (!cardFrame || cardFrame.type !== 'FRAME') { figma.ui.postMessage({ type: 'toast', message: 'Card não encontrado no grupo.', kind: 'error' }); return; }
-    // Remove existing exception frame if any (named /Exceções)
-    const existing = cardFrame.children.find(n => n.name === '[Spec] Exceções');
+    if (!cardFrame || cardFrame.type !== 'FRAME') { figma.ui.postMessage({ type: 'toast', message: 'Card nÃ£o encontrado no grupo.', kind: 'error' }); return; }
+    // Remove existing exception frame if any (named /ExceÃ§Ãµes)
+    const existing = cardFrame.children.find(n => n.name === '[Spec] ExceÃ§Ãµes');
     if (existing) existing.remove();
     if (msg.excecoes && msg.excecoes.length > 0) {
       (async () => {
         await figma.loadFontAsync({ family: "Inter", style: "Bold" });
         await figma.loadFontAsync({ family: "Inter", style: "Regular" });
         const excFrame = figma.createFrame();
-        excFrame.name = '[Spec] Exceções';
+        excFrame.name = '[Spec] ExceÃ§Ãµes';
         excFrame.layoutMode = "VERTICAL";
         excFrame.itemSpacing = 4;
         excFrame.fills = [{ type: "SOLID", color: { r: 1, g: 0.95, b: 0.93 } }];
@@ -155,7 +161,7 @@ figma.ui.onmessage = async (msg) => {
         excTitle.fontName = { family: "Inter", style: "Bold" };
         excTitle.fontSize = 9;
         excTitle.fills = [{ type: "SOLID", color: { r: 0.8, g: 0.3, b: 0.1 } }];
-        excTitle.characters = `CENÁRIOS (${msg.excecoes.length})`;
+        excTitle.characters = `CENÃRIOS (${msg.excecoes.length})`;
         excTitle.textAutoResize = "WIDTH_AND_HEIGHT";
         excFrame.appendChild(excTitle);
         msg.excecoes.forEach(exc => {
@@ -168,7 +174,7 @@ figma.ui.onmessage = async (msg) => {
           excFrame.appendChild(t);
         });
         cardFrame.appendChild(excFrame);
-        figma.ui.postMessage({ type: 'toast', message: 'Card atualizado com os cenários.', kind: 'success' });
+        figma.ui.postMessage({ type: 'toast', message: 'Card atualizado com os cenÃ¡rios.', kind: 'success' });
       })();
     } else {
       figma.ui.postMessage({ type: 'toast', message: 'Card atualizado.', kind: 'success' });
@@ -215,7 +221,7 @@ figma.ui.onmessage = async (msg) => {
     ];
     try {
       await Promise.all(keys.map(k => figma.clientStorage.setAsync(k, null)));
-      // Limpa também os sharedPluginData da página atual
+      // Limpa tambÃ©m os sharedPluginData da pÃ¡gina atual
       try { figma.currentPage.setSharedPluginData('handex', 'project', ''); } catch (e) {}
       figma.ui.postMessage({ type: 'cache-cleared' });
     } catch (e) {
@@ -242,7 +248,7 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
-  // ─── Handoff snapshots / history (for diff between versions) ────────
+  // â”€â”€â”€ Handoff snapshots / history (for diff between versions) â”€â”€â”€â”€â”€â”€â”€â”€
   if (msg.type === "snapshot-load") {
     try {
       const fileKey = (figma.root && figma.root.id) ? figma.root.id : "default";
@@ -309,7 +315,7 @@ figma.ui.onmessage = async (msg) => {
         
         f.primaryAxisSizingMode = "AUTO";
         f.counterAxisSizingMode = "AUTO";
-        f.layoutAlign = "MIN";
+        f.layoutAlign = "INHERIT";
 
         if (fill) {
           f.fills = [{ type: "SOLID", color: fill }];
@@ -344,7 +350,7 @@ figma.ui.onmessage = async (msg) => {
           }
         } else if (pMode === "HORIZONTAL") {
           node.layoutGrow = 1; // Fill width
-          node.layoutAlign = "MIN"; // Hug height (don't stretch)
+          node.layoutAlign = "INHERIT"; // Hug height (don't stretch)
           if (node.type === "FRAME") {
             if (node.layoutMode === "HORIZONTAL") node.counterAxisSizingMode = "AUTO"; // Hug height
             else node.primaryAxisSizingMode = "AUTO"; // Hug height
@@ -371,7 +377,7 @@ figma.ui.onmessage = async (msg) => {
 
       function createSection(parent, titleText) {
         const section = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
-        section.name = `[Seção] ${titleText}`;
+        section.name = `[SeÃ§Ã£o] ${titleText}`;
         if (parent) {
           parent.appendChild(section);
           setFillAndHug(section);
@@ -419,12 +425,12 @@ figma.ui.onmessage = async (msg) => {
       const _titulo = (data.step1?.titulo || 'Projeto').replace(/\//g, '-');
       const _handoffBase = `Handex | Ficha de Projeto | ${_titulo}`;
 
-      // Detecta fichas anteriores do mesmo projeto para posicionar a nova versão
+      // Detecta fichas anteriores do mesmo projeto para posicionar a nova versÃ£o
       const _existingHandoffs = figma.currentPage.findAll(n =>
         n.type === 'FRAME' && n.name.startsWith(_handoffBase)
       );
 
-      // Nome sempre inclui data (primeira versão ou atualização)
+      // Nome sempre inclui data (primeira versÃ£o ou atualizaÃ§Ã£o)
       const _now = new Date();
       const _ts = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')} ${String(_now.getHours()).padStart(2,'0')}:${String(_now.getMinutes()).padStart(2,'0')}`;
       const _containerName = `${_handoffBase} | ${_ts}`;
@@ -436,7 +442,7 @@ figma.ui.onmessage = async (msg) => {
       mainContainer.primaryAxisSizingMode = "AUTO"; // Hug children width
       mainContainer.counterAxisSizingMode = "AUTO"; // Hug children height
 
-      // 1. FICHA TÉCNICA
+      // 1. FICHA TÃ‰CNICA
       const fichaTecnica = createFrame("VERTICAL", 0, 0, { r: 1, g: 1, b: 1 });
       fichaTecnica.name = `${_handoffBase} | ${_ts} / Ficha de Projeto`;
       fichaTecnica.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
@@ -483,10 +489,10 @@ figma.ui.onmessage = async (msg) => {
       fichaTecnica.appendChild(content);
       setFillAndHug(content);
       
-      // 1.1 INFORMAÇÕES BÁSICAS
+      // 1.1 INFORMAÃ‡Ã•ES BÃSICAS
       if (!data.setup || data.setup.ficha !== false) {
-        const infoSection = createSection(content, "Informações Básicas");
-        createRow(infoSection, "Título do Projeto", data.step1.titulo);
+        const infoSection = createSection(content, "InformaÃ§Ãµes BÃ¡sicas");
+        createRow(infoSection, "TÃ­tulo do Projeto", data.step1.titulo);
         if (data.step1.jornada) createRow(infoSection, "Jornada", data.step1.jornada);
         if (data.step1.feature) createRow(infoSection, "Feature", data.step1.feature);
         createRow(infoSection, "Objetivo da Entrega", data.step1.objetivo);
@@ -495,11 +501,11 @@ figma.ui.onmessage = async (msg) => {
         infoSection.appendChild(subGrid);
         setFillAndHug(subGrid);
 
-        // Status chip com semântica de cor
+        // Status chip com semÃ¢ntica de cor
         {
           const _statusMap = {
             'rascunho':       { label: 'Rascunho',        bg: { r: 0.94, g: 0.95, b: 0.96 }, text: { r: 0.42, g: 0.47, b: 0.55 } },
-            'em-revisao':     { label: 'Em Revisão',      bg: { r: 1,    g: 0.96, b: 0.84 }, text: { r: 0.72, g: 0.45, b: 0.00 } },
+            'em-revisao':     { label: 'Em RevisÃ£o',      bg: { r: 1,    g: 0.96, b: 0.84 }, text: { r: 0.72, g: 0.45, b: 0.00 } },
             'pronto-para-dev':{ label: 'Pronto para Dev', bg: { r: 0.86, g: 0.93, b: 1.00 }, text: { r: 0.00, g: 0.35, b: 0.79 } },
             'finalizado':     { label: 'Finalizado',      bg: { r: 0.86, g: 0.97, b: 0.88 }, text: { r: 0.07, g: 0.53, b: 0.18 } },
           };
@@ -517,12 +523,12 @@ figma.ui.onmessage = async (msg) => {
           chip.appendChild(createText(_sc.label, 11, "Bold", _sc.text));
           statusCol.appendChild(chip);
         }
-        createRow(subGrid, "Versão", data.step1.versao);
+        createRow(subGrid, "VersÃ£o", data.step1.versao);
       }
 
-      // 1.2 EQUIPE E RESPONSÁVEIS
+      // 1.2 EQUIPE E RESPONSÃVEIS
       if (data.step1.equipe && data.step1.equipe.length > 0) {
-        const teamSection = createSection(content, "Equipe e Responsáveis");
+        const teamSection = createSection(content, "Equipe e ResponsÃ¡veis");
         data.step1.equipe.forEach(m => {
           const mRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
           teamSection.appendChild(mRow);
@@ -551,12 +557,12 @@ figma.ui.onmessage = async (msg) => {
         setFillAndHug(teamSection);
       }
 
-      // 1.3 BRIEFING ESTRATÉGICO
+      // 1.3 BRIEFING ESTRATÃ‰GICO
       const _briefingQs = (data.step2 && data.step2.briefingQuestions)
         ? data.step2.briefingQuestions.filter(q => q.answer && q.answer.trim())
         : [];
       if (_briefingQs.length > 0) {
-        const briefingSection = createSection(content, "Briefing Estratégico");
+        const briefingSection = createSection(content, "Briefing EstratÃ©gico");
         _briefingQs.forEach((q, idx) => {
           const qRow = createFrame("VERTICAL", 0, 4);
           qRow.name = `[Briefing] Pergunta ${idx + 1}`;
@@ -575,10 +581,10 @@ figma.ui.onmessage = async (msg) => {
         setFillAndHug(briefingSection);
       }
 
-      // 1.4 REGRAS DE NEGÓCIO E HUs
+      // 1.4 REGRAS DE NEGÃ“CIO E HUs
       const _regras = (data.step2 && data.step2.regras) ? data.step2.regras : [];
       if (_regras.length > 0) {
-        const rulesSection = createSection(content, "Regras de Negócio e HUs");
+        const rulesSection = createSection(content, "Regras de NegÃ³cio e HUs");
         _regras.forEach(r => {
           const rRow = createFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.98, b: 0.99 });
           rulesSection.appendChild(rRow);
@@ -607,12 +613,12 @@ figma.ui.onmessage = async (msg) => {
         setFillAndHug(rulesSection);
       }
 
-      // 1.5 CENÁRIOS DE EXCEÇÃO (agregados de todos os frames)
+      // 1.5 CENÃRIOS DE EXCEÃ‡ÃƒO (agregados de todos os frames)
       const _allExcecoes = (data.frames || []).flatMap(f =>
         (f.excecoes || []).map(e => ({ ...e, _frame: f.nome }))
       );
       if (_allExcecoes.length > 0) {
-        const excSection = createSection(content, "Cenários de Exceção");
+        const excSection = createSection(content, "CenÃ¡rios de ExceÃ§Ã£o");
         _allExcecoes.forEach(e => {
           const eRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
           excSection.appendChild(eRow);
@@ -644,7 +650,7 @@ figma.ui.onmessage = async (msg) => {
       if (data.docs) {
         const docsSection = createSection(null, "Docs e Anexos");
         const docItems = [
-          { key: "proto", label: "Protótipo Navegável" },
+          { key: "proto", label: "ProtÃ³tipo NavegÃ¡vel" },
           { key: "a11y", label: "Handoff Acessibilidade" },
           { key: "research", label: "Pesquisa de UX" }
         ];
@@ -678,10 +684,10 @@ figma.ui.onmessage = async (msg) => {
         }
       }
 
-      // 1.6b ESPECIFICAÇÕES VISUAIS (specs globais)
+      // 1.6b ESPECIFICAÃ‡Ã•ES VISUAIS (specs globais)
       const _globalSpecs = (data.specs || []).filter(s => s.visible !== false);
       if (_globalSpecs.length > 0) {
-        const specsSection = createSection(content, "Especificações Visuais");
+        const specsSection = createSection(content, "EspecificaÃ§Ãµes Visuais");
         _globalSpecs.forEach(s => {
           const sRow = figma.createFrame();
           sRow.name = `[Spec/${s.letter || 'A'}] ${s.name || ''}`;
@@ -735,7 +741,7 @@ figma.ui.onmessage = async (msg) => {
 
           const sExcs = s.excecoes || [];
           if (sExcs.length > 0) {
-            const _excRgb = { 'Erro': { r: 0.80, g: 0.15, b: 0.15 }, 'Alerta': { r: 0.80, g: 0.50, b: 0.00 }, 'Sucesso': { r: 0.10, g: 0.55, b: 0.25 }, 'Confirmação': { r: 0.05, g: 0.35, b: 0.80 } };
+            const _excRgb = { 'Erro': { r: 0.80, g: 0.15, b: 0.15 }, 'Alerta': { r: 0.80, g: 0.50, b: 0.00 }, 'Sucesso': { r: 0.10, g: 0.55, b: 0.25 }, 'ConfirmaÃ§Ã£o': { r: 0.05, g: 0.35, b: 0.80 } };
             sExcs.forEach(exc => {
               const eRow = figma.createFrame();
               eRow.layoutMode = "HORIZONTAL"; eRow.itemSpacing = 6; eRow.fills = [];
@@ -785,7 +791,7 @@ figma.ui.onmessage = async (msg) => {
             fHeader.appendChild(badge);
           }
           if (f.audit && f.audit.status) {
-            createRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? ' — ' + f.audit.justificativa : ''));
+            createRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? ' â€” ' + f.audit.justificativa : ''));
           }
           // Medidas
           const fMeasurements = f.measurements || [];
@@ -801,7 +807,7 @@ figma.ui.onmessage = async (msg) => {
           // Specs criadas
           const fSpecs = f.createdSpecs || [];
           if (fSpecs.length > 0) {
-            const sLabel = createText(`Especificações (${fSpecs.length})`, 10, "Bold", { r: 0.4, g: 0.45, b: 0.55 });
+            const sLabel = createText(`EspecificaÃ§Ãµes (${fSpecs.length})`, 10, "Bold", { r: 0.4, g: 0.45, b: 0.55 });
             fRow.appendChild(sLabel);
             setFillAndHug(sLabel);
             fSpecs.forEach(s => {
@@ -832,7 +838,7 @@ figma.ui.onmessage = async (msg) => {
       const _flows = data.createdFlows || [];
       if (_flows.length > 0) {
         const flowsSection = createSection(content, "Fluxos de Tela");
-        const flowTypeLabel = { line_solid: 'Linha sólida', line_dashed: 'Linha tracejada', diamond: 'Decisão', diamond_dashed: 'Decisão tracejada', event_start: 'Início', event_end: 'Fim', gateway_parallel: 'Paralelo' };
+        const flowTypeLabel = { line_solid: 'Linha sÃ³lida', line_dashed: 'Linha tracejada', diamond: 'DecisÃ£o', diamond_dashed: 'DecisÃ£o tracejada', event_start: 'InÃ­cio', event_end: 'Fim', gateway_parallel: 'Paralelo' };
         _flows.forEach((flow, fi) => {
           const fRow = createFrame("HORIZONTAL", 12, 8, { r: 0.97, g: 0.96, b: 1 });
           fRow.name = `[Fluxo] ${flow.name || 'Fluxo ' + (fi + 1)}`;
@@ -869,7 +875,7 @@ figma.ui.onmessage = async (msg) => {
         uiBoard.resize(800, 100);
         uiBoard.counterAxisSizingMode = "FIXED"; // Base width 800
         uiBoard.primaryAxisSizingMode = "AUTO";  // Hug height
-        uiBoard.layoutAlign = "MIN"; // Don't stretch height in horizontal parent
+        uiBoard.layoutAlign = "INHERIT"; // Don't stretch height in horizontal parent
 
         const uiTitle = createText("User Interface", 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
         uiBoard.appendChild(uiTitle);
@@ -990,12 +996,12 @@ figma.ui.onmessage = async (msg) => {
           return sec;
         }
 
-        // Briefing Estratégico Section
+        // Briefing EstratÃ©gico Section
         const _bqs2 = (data.step2 && data.step2.briefingQuestions)
           ? data.step2.briefingQuestions.filter(q => q.answer && q.answer.trim())
           : [];
         if (_bqs2.length > 0) {
-           const briefingSection = createSection(fichaTecnica, "Briefing Estratégico");
+           const briefingSection = createSection(fichaTecnica, "Briefing EstratÃ©gico");
            _bqs2.forEach((q, idx) => {
               const qRow = createFrame("VERTICAL", 0, 4);
               qRow.name = `[Briefing] Pergunta ${idx + 1}`;
@@ -1026,7 +1032,7 @@ figma.ui.onmessage = async (msg) => {
 
         const categories = [
           { title: "Componentes", items: specsData.components, type: "components" },
-          { title: "Ícones", items: specsData.icons, type: "icons" },
+          { title: "Ãcones", items: specsData.icons, type: "icons" },
           { title: "Tipografia", items: specsData.typography, type: "typography" },
           { title: "Frames e Layouts", items: specsData.frames, type: "frames" },
           { title: "Vetores", items: specsData.vectors, type: "vectors" }
@@ -1073,7 +1079,7 @@ figma.ui.onmessage = async (msg) => {
           specsBoard.resize(800, 100);
           specsBoard.counterAxisSizingMode = "FIXED"; // Base width 800
           specsBoard.primaryAxisSizingMode = "AUTO";  // Hug height
-          specsBoard.layoutAlign = "MIN";         // Don't stretch height in horizontal parent
+          specsBoard.layoutAlign = "INHERIT";         // Don't stretch height in horizontal parent
 
           const specsTitle = createText("Design Specs: " + node.name, 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
           specsBoard.appendChild(specsTitle);
@@ -1099,7 +1105,7 @@ figma.ui.onmessage = async (msg) => {
           }
 
           if (data.setup.instancias || data.setup.anatomia) {
-            const appearSec = createSection(specsBoard, "Aparência");
+            const appearSec = createSection(specsBoard, "AparÃªncia");
             const grid = createFrame("HORIZONTAL", 0, 16);
             grid.layoutWrap = "WRAP";
             grid.layoutAlign = "STRETCH";
@@ -1147,15 +1153,15 @@ figma.ui.onmessage = async (msg) => {
         auditBoard.counterAxisSizingMode = "FIXED";
         auditBoard.primaryAxisSizingMode = "AUTO";
         
-        const auditTitle = createText("Relatório de Auditoria", 24, "Bold", { r: 0, g: 0.35, b: 0.79 });
+        const auditTitle = createText("RelatÃ³rio de Auditoria", 24, "Bold", { r: 0, g: 0.35, b: 0.79 });
         auditBoard.appendChild(auditTitle);
         setFillAndHug(auditTitle);
 
-        const summaryText = createText(`Aderência ao Design System: ${data.auditSummary.adoption}%`, 18, "Bold", data.auditSummary.adoption > 90 ? { r: 0, g: 0.5, b: 0 } : { r: 0.8, g: 0, b: 0 });
+        const summaryText = createText(`AderÃªncia ao Design System: ${data.auditSummary.adoption}%`, 18, "Bold", data.auditSummary.adoption > 90 ? { r: 0, g: 0.5, b: 0 } : { r: 0.8, g: 0, b: 0 });
         auditBoard.appendChild(summaryText);
         setFillAndHug(summaryText);
 
-        const statsText = createText(`Resumo: ${data.auditSummary.issues.length} Fora do Padrão | ${data.auditSummary.adjustments.length} Ajustes`, 14, "Medium", { r: 0.4, g: 0.45, b: 0.5 });
+        const statsText = createText(`Resumo: ${data.auditSummary.issues.length} Fora do PadrÃ£o | ${data.auditSummary.adjustments.length} Ajustes`, 14, "Medium", { r: 0.4, g: 0.45, b: 0.5 });
         auditBoard.appendChild(statsText);
         setFillAndHug(statsText);
 
@@ -1169,7 +1175,7 @@ figma.ui.onmessage = async (msg) => {
         }
 
         if (data.auditSummary.issues && data.auditSummary.issues.length > 0) {
-           const issueList = createSection(auditBoard, "Pendências Críticas (Fora do Padrão)");
+           const issueList = createSection(auditBoard, "PendÃªncias CrÃ­ticas (Fora do PadrÃ£o)");
            data.auditSummary.issues.slice(0, 20).forEach(issue => {
              const iRow = createText(`- [${issue.cat}] ${issue.name}`, 12, "Regular", { r: 0.8, g: 0.2, b: 0.2 });
              issueList.appendChild(iRow);
@@ -1185,7 +1191,7 @@ figma.ui.onmessage = async (msg) => {
         mainContainer.appendChild(auditBoard);
       }
 
-      // Posiciona: à direita da ficha existente (update) ou no centro do viewport (primeira vez)
+      // Posiciona: Ã  direita da ficha existente (update) ou no centro do viewport (primeira vez)
       mainContainer.locked = true;
       figma.currentPage.appendChild(mainContainer);
 
@@ -1329,7 +1335,7 @@ figma.ui.onmessage = async (msg) => {
           items.push(...createMeasurementLine(bounds.x, bounds.y - 20, bounds.x + bounds.width, bounds.y - 20, bounds.width, 'horizontal', { r: 1, g: 0.2, b: 0.2 }, wToken));
           items.push(...createMeasurementLine(bounds.x - 20, bounds.y, bounds.x - 20, bounds.y + bounds.height, bounds.height, 'vertical', { r: 1, g: 0.2, b: 0.2 }, hToken));
 
-          let whLabel = `Dimensões: ${Math.round(bounds.width)}x${Math.round(bounds.height)}`;
+          let whLabel = `DimensÃµes: ${Math.round(bounds.width)}x${Math.round(bounds.height)}`;
           if (wToken || hToken) whLabel += ` [Tokens: ${wToken || '-'} x ${hToken || '-'}]`;
           appliedDetails.push(whLabel);
         }
@@ -1378,7 +1384,7 @@ figma.ui.onmessage = async (msg) => {
               }
             }
           }
-          if (spaceCount > 0) appliedDetails.push(`Gaps: ${spaceCount} espaços de ${node.itemSpacing}px ${gapToken ? '[' + gapToken + ']' : ''}`);
+          if (spaceCount > 0) appliedDetails.push(`Gaps: ${spaceCount} espaÃ§os de ${node.itemSpacing}px ${gapToken ? '[' + gapToken + ']' : ''}`);
         }
 
         if (measureTypes && measureTypes.includes('outer')) {
@@ -1392,7 +1398,7 @@ figma.ui.onmessage = async (msg) => {
               if (bounds.x > pb.x) { items.push(...createMeasurementLine(pb.x, shiftY, bounds.x, shiftY, bounds.x - pb.x, 'horizontal', { r: 1, g: 0.5, b: 0 })); outers.push(`Left: ${Math.round(bounds.x - pb.x)}`); }
               if (pb.x + pb.width > bounds.x + bounds.width) { items.push(...createMeasurementLine(bounds.x + bounds.width, shiftY, pb.x + pb.width, shiftY, (pb.x + pb.width) - (bounds.x + bounds.width), 'horizontal', { r: 1, g: 0.5, b: 0 })); outers.push(`Right: ${Math.round((pb.x + pb.width) - (bounds.x + bounds.width))}`); }
               if (pb.y + pb.height > bounds.y + bounds.height) { items.push(...createMeasurementLine(shiftX, bounds.y + bounds.height, shiftX, pb.y + pb.height, (pb.y + pb.height) - (bounds.y + bounds.height), 'vertical', { r: 1, g: 0.5, b: 0 })); outers.push(`Bottom: ${Math.round((pb.y + pb.height) - (bounds.y + bounds.height))}`); }
-              if (outers.length > 0) appliedDetails.push(`Espaçamento Externo: ${outers.join(', ')}`);
+              if (outers.length > 0) appliedDetails.push(`EspaÃ§amento Externo: ${outers.join(', ')}`);
             }
           } else {
             figma.notify("Outer padding necessita que o node esteja dentro de um frame.");
@@ -1406,15 +1412,15 @@ figma.ui.onmessage = async (msg) => {
           appliedMeasuresList.push({ name: node.name, nodeId: group.id, details: appliedDetails });
         }
 
-        /* ── DORMANT: Frame Auxiliar de Medidas ─────────────────────────────
+        /* â”€â”€ DORMANT: Frame Auxiliar de Medidas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
          * Para ativar:
          *   1. Remover o bloco `figma.group(...)` acima
          *   2. Descomentar este bloco
          *   3. Remover `disabled` e `opacity-50` do checkbox `chk-store-parent` no modal
          *
          * Comportamento: cria "[Medida-Aux] NomeDoFrame" ao lado do original,
-         * coloca uma cópia do frame dentro, aplica as medidas na cópia e
-         * cria um conector pontilhado ligando original → auxiliar.
+         * coloca uma cÃ³pia do frame dentro, aplica as medidas na cÃ³pia e
+         * cria um conector pontilhado ligando original â†’ auxiliar.
          * Re-scan substitui o frame auxiliar existente.
          */
         // if (items.length > 0) {
@@ -1440,12 +1446,12 @@ figma.ui.onmessage = async (msg) => {
         //   clone.x = 60; clone.y = 60;
         //   auxFrame.appendChild(clone);
         //
-        //   // Insere as anotações de medida no frame auxiliar
+        //   // Insere as anotaÃ§Ãµes de medida no frame auxiliar
         //   const group = figma.group(items, auxFrame);
         //   group.name = `[Medidas] ${node.name}`;
         //   group.locked = true;
         //
-        //   // Conector pontilhado: original → auxiliar
+        //   // Conector pontilhado: original â†’ auxiliar
         //   const connector = figma.createConnector();
         //   connector.connectorStart = { endpointNodeId: orig.id, magnet: 'AUTO' };
         //   connector.connectorEnd   = { endpointNodeId: auxFrame.id, magnet: 'AUTO' };
@@ -1463,17 +1469,17 @@ figma.ui.onmessage = async (msg) => {
     })();
   }
 
-  /* ── DORMANT: Feature 5 — Mapeamento de Protótipo (Conectores + Mermaid) ──
+  /* â”€â”€ DORMANT: Feature 5 â€” Mapeamento de ProtÃ³tipo (Conectores + Mermaid) â”€â”€
    * Para ativar:
    *   1. Descomentar o bloco abaixo
-   *   2. Adicionar botão "Mapear Protótipo" na view de Fluxos (Step 4)
+   *   2. Adicionar botÃ£o "Mapear ProtÃ³tipo" na view de Fluxos (Step 4)
    *      com onclick: parent.postMessage({ pluginMessage: { type: 'map-prototype-flows' } }, '*')
    *   3. Adicionar handler 'prototype-flows-mapped' em messages.js para receber
    *      { edges, mermaid } e renderizar na lista de fluxos
    *
-   * Limitação conhecida: reactions contém apenas transições configuradas no
-   * modo Prototype. Frames sem ligação não aparecem — informar o usuário e
-   * deixar adição manual via Fluxos (Feature 4) como complemento.
+   * LimitaÃ§Ã£o conhecida: reactions contÃ©m apenas transiÃ§Ãµes configuradas no
+   * modo Prototype. Frames sem ligaÃ§Ã£o nÃ£o aparecem â€” informar o usuÃ¡rio e
+   * deixar adiÃ§Ã£o manual via Fluxos (Feature 4) como complemento.
    */
   // if (msg.type === 'map-prototype-flows') {
   //   const frames = figma.currentPage.children.filter(n =>
@@ -1504,8 +1510,8 @@ figma.ui.onmessage = async (msg) => {
   //     });
   //   });
   //
-  //   // Serialização Mermaid
-  //   // Exemplo de saída: flowchart LR\n  N0["Home"] -->|ON_CLICK| N1["Dashboard"]
+  //   // SerializaÃ§Ã£o Mermaid
+  //   // Exemplo de saÃ­da: flowchart LR\n  N0["Home"] -->|ON_CLICK| N1["Dashboard"]
   //   const idMap = {};
   //   let idx = 0;
   //   let mermaid = 'flowchart LR\n';
@@ -1519,13 +1525,13 @@ figma.ui.onmessage = async (msg) => {
   //
   //   figma.ui.postMessage({ type: 'prototype-flows-mapped', edges, mermaid });
   //   if (edges.length === 0) {
-  //     figma.notify('Nenhuma ligação de protótipo encontrada. Adicione conexões manualmente via Fluxos.');
+  //     figma.notify('Nenhuma ligaÃ§Ã£o de protÃ³tipo encontrada. Adicione conexÃµes manualmente via Fluxos.');
   //   }
   //   return;
   // }
 
   if (msg.type === "scan-frame") {
-    // Se veio um nodeId específico, usa ele; senão usa a seleção atual do canvas
+    // Se veio um nodeId especÃ­fico, usa ele; senÃ£o usa a seleÃ§Ã£o atual do canvas
     let selection;
     if (msg.nodeId) {
       const specificNode = figma.getNodeById(msg.nodeId);
@@ -1539,7 +1545,7 @@ figma.ui.onmessage = async (msg) => {
       figma.ui.postMessage({
         type: "scan-result",
         frameId: _scanFrameId,
-        error: "Nenhum item selecionado. Por favor, selecione um ou mais frames, seções ou grupos no Figma para escanear.",
+        error: "Nenhum item selecionado. Por favor, selecione um ou mais frames, seÃ§Ãµes ou grupos no Figma para escanear.",
       });
       return;
     }
@@ -1572,7 +1578,7 @@ figma.ui.onmessage = async (msg) => {
       const isDS = result.score >= AUDIT_SCORE.EXACT ? true
                  : result.score >= AUDIT_SCORE.SOFT ? "warning"
                  : false;
-      // When the prop is below the AJUSTE threshold (fora do padrão), compute a
+      // When the prop is below the AJUSTE threshold (fora do padrÃ£o), compute a
       // closest-match suggestion so the dev sees what to use instead.
       let closestMatch = null;
       if (isAudit && result.score < AUDIT_THRESHOLDS.AJUSTE) {
@@ -1763,7 +1769,7 @@ figma.ui.onmessage = async (msg) => {
     }
 
     function addElement(category, node, props) {
-      // FILTRAGEM POR CATEGORIA (apenas se não for auditoria)
+      // FILTRAGEM POR CATEGORIA (apenas se nÃ£o for auditoria)
       if (!isAudit && allowedCategories && allowedCategories.length > 0) {
         let isAllowed = false;
         if (category === "frames" && allowedCategories.includes("containers")) isAllowed = true;
@@ -1981,7 +1987,7 @@ figma.ui.onmessage = async (msg) => {
         node.remove();
         figma.notify("Medida removida.");
       } else {
-        figma.notify("Elemento não encontrado (já removido?).");
+        figma.notify("Elemento nÃ£o encontrado (jÃ¡ removido?).");
       }
     } catch (e) {
       figma.notify("Erro ao remover: " + e.message);
@@ -1992,7 +1998,7 @@ figma.ui.onmessage = async (msg) => {
     const properties = [];
     const selection = figma.currentPage.selection;
     if (selection.length === 0) {
-      figma.notify("Selecione um elemento para escaneá-lo.");
+      figma.notify("Selecione um elemento para escaneÃ¡-lo.");
       figma.ui.postMessage({ type: "show-spec-properties", properties: [] });
       return;
     }
@@ -2026,14 +2032,14 @@ figma.ui.onmessage = async (msg) => {
 
     // 3. Auto Layout
     if ("layoutMode" in node && node.layoutMode !== "NONE") {
-      properties.push({ key: "direction", label: "Direção", value: node.layoutMode === "HORIZONTAL" ? "Horizontal" : "Vertical" });
+      properties.push({ key: "direction", label: "DireÃ§Ã£o", value: node.layoutMode === "HORIZONTAL" ? "Horizontal" : "Vertical" });
 
       const align = `${node.primaryAxisAlignItems} / ${node.counterAxisAlignItems}`;
       properties.push({ key: "alignment", label: "Alinhamento", value: align });
 
       if (node.itemSpacing !== figma.mixed && node.itemSpacing > 0) {
         const token = getVar("itemSpacing");
-        properties.push({ key: "gap", label: "Espaçamento (Gap)", value: node.itemSpacing + "px", token });
+        properties.push({ key: "gap", label: "EspaÃ§amento (Gap)", value: node.itemSpacing + "px", token });
       }
 
       const pt = node.paddingTop || 0, pr = node.paddingRight || 0, pb = node.paddingBottom || 0, pl = node.paddingLeft || 0;
@@ -2042,13 +2048,13 @@ figma.ui.onmessage = async (msg) => {
         const vT = tT || `${pt}px`, vR = tR || `${pr}px`, vB = tB || `${pb}px`, vL = tL || `${pl}px`;
         let val, token;
         if (vT === vR && vR === vB && vB === vL) {
-          val = vT;                           // todos iguais — mostra 1
+          val = vT;                           // todos iguais â€” mostra 1
         } else if (vT === vB && vR === vL) {
-          val = `${vT} ${vR}`;               // simétrico V H
+          val = `${vT} ${vR}`;               // simÃ©trico V H
         } else {
           val = `${vT} ${vR} ${vB} ${vL}`;  // formato completo T R B L
         }
-        // token: usa o primeiro token encontrado como referência
+        // token: usa o primeiro token encontrado como referÃªncia
         token = tT || tR || tB || tL || null;
         properties.push({ key: "padding", label: "Padding", value: val, token });
       }
@@ -2078,7 +2084,7 @@ figma.ui.onmessage = async (msg) => {
     // 5. Typography
     if (node.type === "TEXT") {
       if (node.fontName !== figma.mixed) {
-        properties.push({ key: "fontFamily", label: "Família", value: node.fontName.family });
+        properties.push({ key: "fontFamily", label: "FamÃ­lia", value: node.fontName.family });
         properties.push({ key: "fontWeight", label: "Peso", value: node.fontName.style });
       }
       if (node.fontSize !== figma.mixed) {
@@ -2216,7 +2222,7 @@ figma.ui.onmessage = async (msg) => {
         propsFrame.primaryAxisSizingMode = "AUTO";
         propsFrame.counterAxisSizingMode = "AUTO";
         propsFrame.name = `${_specBase}/Propriedades`;
-        propsFrame.layoutAlign = "MIN";
+        propsFrame.layoutAlign = "INHERIT";
 
         opts.properties.forEach(p => {
           const row = figma.createFrame();
@@ -2226,7 +2232,7 @@ figma.ui.onmessage = async (msg) => {
           row.fills = [];
           row.primaryAxisSizingMode = "AUTO";
           row.counterAxisSizingMode = "AUTO";
-          row.layoutAlign = "MIN";
+          row.layoutAlign = "INHERIT";
           row.counterAxisAlignItems = "CENTER";
 
           const pLabel = figma.createText();
@@ -2251,7 +2257,7 @@ figma.ui.onmessage = async (msg) => {
         specCard.appendChild(propsFrame);
       }
 
-      // Exceções mapeadas para esta spec
+      // ExceÃ§Ãµes mapeadas para esta spec
       const specExcecoes = opts.excecoes || [];
       if (specExcecoes.length > 0) {
         await figma.loadFontAsync({ family: "Inter", style: "Bold" });
@@ -2269,14 +2275,14 @@ figma.ui.onmessage = async (msg) => {
         excTitle.fontName = { family: "Inter", style: "Bold" };
         excTitle.fontSize = 9;
         excTitle.fills = [{ type: "SOLID", color: { r: 0.8, g: 0.3, b: 0.1 } }];
-        excTitle.characters = `CENÁRIOS DE EXCEÇÃO (${specExcecoes.length})`;
+        excTitle.characters = `CENÃRIOS DE EXCEÃ‡ÃƒO (${specExcecoes.length})`;
         excTitle.textAutoResize = "WIDTH_AND_HEIGHT";
         excFrame.appendChild(excTitle);
         const _excTypeRgb = {
           'Erro':        { r: 0.80, g: 0.15, b: 0.15 },
           'Alerta':      { r: 0.80, g: 0.50, b: 0.00 },
           'Sucesso':     { r: 0.10, g: 0.55, b: 0.25 },
-          'Confirmação': { r: 0.05, g: 0.35, b: 0.80 },
+          'ConfirmaÃ§Ã£o': { r: 0.05, g: 0.35, b: 0.80 },
         };
         specExcecoes.forEach(exc => {
           const excRow = figma.createFrame();
@@ -2297,7 +2303,7 @@ figma.ui.onmessage = async (msg) => {
           titleLabel.fontName = { family: "Inter", style: "Regular" };
           titleLabel.fontSize = 10;
           titleLabel.fills = [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2 } }];
-          titleLabel.characters = `${exc.titulo || ''}${exc.notas ? ' — ' + exc.notas : ''}`;
+          titleLabel.characters = `${exc.titulo || ''}${exc.notas ? ' â€” ' + exc.notas : ''}`;
           titleLabel.textAutoResize = "WIDTH_AND_HEIGHT";
           excRow.appendChild(typeLabel);
           excRow.appendChild(titleLabel);
@@ -2443,7 +2449,7 @@ figma.ui.onmessage = async (msg) => {
         }
       });
 
-      figma.notify("Especificação criada com sucesso!");
+      figma.notify("EspecificaÃ§Ã£o criada com sucesso!");
     })();
   }
 
@@ -2455,7 +2461,7 @@ figma.ui.onmessage = async (msg) => {
     }
 
     const node = figma.getNodeById(msg.id);
-    if (node && node.visible) {
+    if (node && node.visible && _nodeOnCurrentPage(node)) {
       figma.currentPage.selection = [node];
       if (msg.shouldScroll !== false) {
         figma.viewport.scrollAndZoomIntoView([node]);
@@ -2483,7 +2489,7 @@ figma.ui.onmessage = async (msg) => {
     const node = figma.getNodeById(msg.id);
     if (node) {
       node.name = msg.name;
-      // Se for um grupo ou frame, tenta encontrar um texto interno para atualizar também
+      // Se for um grupo ou frame, tenta encontrar um texto interno para atualizar tambÃ©m
       if (node.type === 'GROUP' || node.type === 'FRAME' || node.type === 'COMPONENT' || node.type === 'INSTANCE') {
         const textNode = node.findOne(n => n.type === 'TEXT');
         if (textNode) {
@@ -2491,7 +2497,7 @@ figma.ui.onmessage = async (msg) => {
             try {
               await figma.loadFontAsync(textNode.fontName);
               textNode.characters = msg.name;
-              // Reposicionar texto se houver um fundo (losango, círculo, etc)
+              // Reposicionar texto se houver um fundo (losango, cÃ­rculo, etc)
               const bg = node.findOne(n => n.type === 'POLYGON' || n.type === 'ELLIPSE' || n.type === 'RECTANGLE' || n.type === 'STAR' || n.type === 'VECTOR');
               if (bg) {
                 textNode.x = bg.x + (bg.width / 2) - (textNode.width / 2);
@@ -2512,10 +2518,10 @@ figma.ui.onmessage = async (msg) => {
         await figma.loadFontAsync({ family: "Inter", style: "Regular" });
         await figma.loadFontAsync({ family: "Inter", style: "Bold" });
         const specNode = figma.getNodeById(msg.specNodeId);
-        if (!specNode) { figma.notify("Frame de spec não encontrado", { error: true }); return; }
+        if (!specNode) { figma.notify("Frame de spec nÃ£o encontrado", { error: true }); return; }
 
         const obsFrame = figma.createFrame();
-        obsFrame.name = `[Obs] ${msg.tipo || 'Exceção'}`;
+        obsFrame.name = `[Obs] ${msg.tipo || 'ExceÃ§Ã£o'}`;
         obsFrame.layoutMode = "VERTICAL";
         obsFrame.paddingLeft = 10; obsFrame.paddingRight = 10;
         obsFrame.paddingTop = 8; obsFrame.paddingBottom = 8;
@@ -2529,7 +2535,7 @@ figma.ui.onmessage = async (msg) => {
 
         const labelText = figma.createText();
         labelText.fontName = { family: "Inter", style: "Bold" };
-        labelText.characters = `Obs · ${msg.tipo || 'Exceção'}: ${msg.titulo || ''}`;
+        labelText.characters = `Obs Â· ${msg.tipo || 'ExceÃ§Ã£o'}: ${msg.titulo || ''}`;
         labelText.fontSize = 10;
         labelText.fills = [{ type: "SOLID", color: { r: 0.72, g: 0.39, b: 0.0 } }];
         obsFrame.appendChild(labelText);
@@ -2545,9 +2551,9 @@ figma.ui.onmessage = async (msg) => {
         parent.appendChild(obsFrame);
         obsFrame.x = specNode.x;
         obsFrame.y = (specNode.y || 0) + (specNode.height || 0) + 8;
-        figma.notify("Observação injetada no canvas");
+        figma.notify("ObservaÃ§Ã£o injetada no canvas");
       } catch (e) {
-        figma.notify("Erro ao injetar observação: " + e.message, { error: true });
+        figma.notify("Erro ao injetar observaÃ§Ã£o: " + e.message, { error: true });
       }
     })();
   }
@@ -2556,9 +2562,9 @@ figma.ui.onmessage = async (msg) => {
     const node = figma.getNodeById(msg.id);
     if (node) {
       node.remove();
-      figma.notify("Item excluído com sucesso");
+      figma.notify("Item excluÃ­do com sucesso");
     }
-    // Remove também o highlight temporário se estiver ativo
+    // Remove tambÃ©m o highlight temporÃ¡rio se estiver ativo
     if (activeHighlightNode) {
       try { activeHighlightNode.remove(); } catch (e) { }
       activeHighlightNode = null;
@@ -2574,7 +2580,7 @@ figma.ui.onmessage = async (msg) => {
 
   if (msg.type === 'focus-node') {
     const node = figma.getNodeById(msg.id);
-    if (node) {
+    if (node && _nodeOnCurrentPage(node)) {
       figma.currentPage.selection = [node];
       figma.viewport.scrollAndZoomIntoView([node]);
     }
@@ -2642,13 +2648,13 @@ figma.ui.onmessage = async (msg) => {
         const cBx = boundsB.x + boundsB.width / 2, cBy = boundsB.y + boundsB.height / 2;
         const dx = cBx - cAx, dy = cBy - cAy;
 
-        // Se os frames não se sobrepõem horizontalmente → estão lado a lado → right↔left
+        // Se os frames nÃ£o se sobrepÃµem horizontalmente â†’ estÃ£o lado a lado â†’ rightâ†”left
         const noOverlapH = boundsA.x + boundsA.width <= boundsB.x || boundsB.x + boundsB.width <= boundsA.x;
-        // Se os frames não se sobrepõem verticalmente → estão empilhados → bottom↔top
+        // Se os frames nÃ£o se sobrepÃµem verticalmente â†’ estÃ£o empilhados â†’ bottomâ†”top
         const noOverlapV = boundsA.y + boundsA.height <= boundsB.y || boundsB.y + boundsB.height <= boundsA.y;
 
         if (noOverlapH) {
-          // Lado a lado: sempre horizontal, independente da distância dos centros
+          // Lado a lado: sempre horizontal, independente da distÃ¢ncia dos centros
           bestA = dx >= 0 ? pointsA.right  : pointsA.left;
           bestB = dx >= 0 ? pointsB.left   : pointsB.right;
         } else if (noOverlapV) {
@@ -2656,7 +2662,7 @@ figma.ui.onmessage = async (msg) => {
           bestA = dy >= 0 ? pointsA.bottom : pointsA.top;
           bestB = dy >= 0 ? pointsB.top    : pointsB.bottom;
         } else {
-          // Sobreposição em ambos os eixos: usar direção dominante dos centros
+          // SobreposiÃ§Ã£o em ambos os eixos: usar direÃ§Ã£o dominante dos centros
           if (Math.abs(dx) >= Math.abs(dy)) { bestA = dx >= 0 ? pointsA.right : pointsA.left; bestB = dx >= 0 ? pointsB.left : pointsB.right; }
           else                              { bestA = dy >= 0 ? pointsA.bottom : pointsA.top;  bestB = dy >= 0 ? pointsB.top : pointsB.bottom; }
         }
@@ -2734,7 +2740,7 @@ figma.ui.onmessage = async (msg) => {
           symbol.x = midX - symbol.width / 2; symbol.y = midY - symbol.height / 2;
           nodesToGroup.push(shape, symbol);
           const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-          finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Decisão"}`;
+          finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "DecisÃ£o"}`;
           finalGroup.locked = true;
           figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
         } catch (e) { console.error(e); }
@@ -2754,7 +2760,7 @@ figma.ui.onmessage = async (msg) => {
           const label = figma.createText();
           figma.currentPage.appendChild(label);
           label.fontName = { family: "Inter", style: "Bold" };
-          label.characters = isStart ? "INÍCIO" : "FIM";
+          label.characters = isStart ? "INÃCIO" : "FIM";
           label.fontSize = 8;
           label.textAlignHorizontal = "CENTER"; label.textAlignVertical = "CENTER";
           label.fills = circle.strokes;
@@ -2762,7 +2768,7 @@ figma.ui.onmessage = async (msg) => {
           label.y = circle.y + circle.height / 2 - label.height / 2;
           nodesToGroup.push(circle, label);
           const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-          finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || (isStart ? "Início" : "Fim")}`;
+          finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || (isStart ? "InÃ­cio" : "Fim")}`;
           finalGroup.locked = true;
           figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
         } catch (e) { console.error(e); }
@@ -2792,14 +2798,14 @@ figma.ui.onmessage = async (msg) => {
           textNode.x = chipBg.x + paddingH; textNode.y = chipBg.y + paddingV;
           nodesToGroup.push(chipBg, textNode);
           const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-          finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Conexão"}`;
+          finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "ConexÃ£o"}`;
           finalGroup.locked = true;
           figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
         } catch (e) { console.error(e); }
       })();
     } else {
       const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-      finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Conexão"}`;
+      finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "ConexÃ£o"}`;
       finalGroup.locked = true;
       figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
     }
@@ -2830,16 +2836,16 @@ figma.ui.onmessage = async (msg) => {
       // Title
       const legendTitle = figma.createText();
       legendTitle.fontName = { family: "Inter", style: "Bold" };
-      legendTitle.characters = "Legendas de Especificação";
+      legendTitle.characters = "Legendas de EspecificaÃ§Ã£o";
       legendTitle.fontSize = 14;
       legendTitle.fills = [{ type: "SOLID", color: { r: 0.1, g: 0.1, b: 0.1 } }];
       legendFrame.appendChild(legendTitle);
 
       const types = [
-        { name: "Cenário de exceção", c: { r: 0.97, g: 0.45, b: 0.08 } },
-        { name: "Informação extra", c: { r: 0.05, g: 0.64, b: 0.91 } },
+        { name: "CenÃ¡rio de exceÃ§Ã£o", c: { r: 0.97, g: 0.45, b: 0.08 } },
+        { name: "InformaÃ§Ã£o extra", c: { r: 0.05, g: 0.64, b: 0.91 } },
         { name: "Comportamento", c: { r: 0.92, g: 0.28, b: 0.60 } },
-        { name: "Regra de Negócio", c: { r: 0.02, g: 0.71, b: 0.82 } },
+        { name: "Regra de NegÃ³cio", c: { r: 0.02, g: 0.71, b: 0.82 } },
         { name: "Dados da API", c: { r: 0.51, g: 0.80, b: 0.08 } }
       ];
 
@@ -2906,7 +2912,7 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
-  // ─── INJECT FRAMEWORK ────────────────────────────────────────────
+  // â”€â”€â”€ INJECT FRAMEWORK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (msg.type === 'inject-framework') {
     (async () => {
       for (const font of [
@@ -3097,24 +3103,24 @@ figma.ui.onmessage = async (msg) => {
         };
 
         fieldRow("Nome do Projeto:", "Nome do projeto");
-        fieldRow("Data de Início:", "00/00/00");
+        fieldRow("Data de InÃ­cio:", "00/00/00");
         mainFrame.appendChild(sp(12));
         const sep = rct(604, 1, C.line); mainFrame.appendChild(sep);
 
-        section("Contexto", "Descreva o contexto atual do projeto e por que ele está sendo demandado. Se existirem jornadas mapeadas ou algum material, ele deve ser registrado ou linkado nesta sessão.");
-        section("Resultados-chave e critério de sucesso", "Como o sucesso do projeto será medido?");
-        section("Atores e usuários", "Quem é o público deste projeto? Você pode aprofundar, aqui, para um estudo de personas.");
-        section("Stakeholders e equipe", "Anote quem faz parte da(s) equipe(s), quais são suas responsabilidades. Importante anotar quem vai validar as decisões.");
+        section("Contexto", "Descreva o contexto atual do projeto e por que ele estÃ¡ sendo demandado. Se existirem jornadas mapeadas ou algum material, ele deve ser registrado ou linkado nesta sessÃ£o.");
+        section("Resultados-chave e critÃ©rio de sucesso", "Como o sucesso do projeto serÃ¡ medido?");
+        section("Atores e usuÃ¡rios", "Quem Ã© o pÃºblico deste projeto? VocÃª pode aprofundar, aqui, para um estudo de personas.");
+        section("Stakeholders e equipe", "Anote quem faz parte da(s) equipe(s), quais sÃ£o suas responsabilidades. Importante anotar quem vai validar as decisÃµes.");
         section("Escopo");
-        section("Está no escopo", "O que precisa ser trabalhado e por que.", true);
+        section("EstÃ¡ no escopo", "O que precisa ser trabalhado e por que.", true);
         section("Pode estar no escopo", "O que depende de outros fatores para entrar no escopo.", true);
-        section("Não está no escopo", "Limitações técnicas ou escopo excluído explicitamente.", true);
-        section("Dependências", "Outras áreas que podem ter conhecimento ou domínio sobre parte do projeto.");
-        section("Riscos", "Riscos que atrapalhem o sucesso do projeto. O que pode acontecer se não atingirmos as metas?");
-        section("Tempo", "Roadmaps, prazos, sprints necessárias, qualquer fator que tangibilize tempo de projeto.");
-        section("Organização do trabalho");
-        section("Rotina de trabalho da equipe", "Reuniões diárias? Sprint? Retrô?", true);
-        section("Comunicação", "Exemplo: reuniões marcadas por email, feitas pelo Teams.", true);
+        section("NÃ£o estÃ¡ no escopo", "LimitaÃ§Ãµes tÃ©cnicas ou escopo excluÃ­do explicitamente.", true);
+        section("DependÃªncias", "Outras Ã¡reas que podem ter conhecimento ou domÃ­nio sobre parte do projeto.");
+        section("Riscos", "Riscos que atrapalhem o sucesso do projeto. O que pode acontecer se nÃ£o atingirmos as metas?");
+        section("Tempo", "Roadmaps, prazos, sprints necessÃ¡rias, qualquer fator que tangibilize tempo de projeto.");
+        section("OrganizaÃ§Ã£o do trabalho");
+        section("Rotina de trabalho da equipe", "ReuniÃµes diÃ¡rias? Sprint? RetrÃ´?", true);
+        section("ComunicaÃ§Ã£o", "Exemplo: reuniÃµes marcadas por email, feitas pelo Teams.", true);
         section("Compartilhamento de dados", "Softwares e pastas, meio de compartilhamento, formatos de arquivos.", true);
         section("Notas adicionais", "Notas aqui.");
         mainFrame.appendChild(sp(8));
@@ -3122,7 +3128,7 @@ figma.ui.onmessage = async (msg) => {
       else if (msg.frameworkId === 'csd') {
         mainFrame = vb(940, 0, 0, C.white, 16);
         mainFrame.name = "Matriz CSD";
-        const hdr = mkHeader("Matriz CSD – Certezas · Suposições · Dúvidas");
+        const hdr = mkHeader("Matriz CSD â€“ Certezas Â· SuposiÃ§Ãµes Â· DÃºvidas");
         mainFrame.appendChild(hdr);
         hdr.layoutAlign = "STRETCH";
 
@@ -3132,8 +3138,8 @@ figma.ui.onmessage = async (msg) => {
 
         const csdCols = [
           { label: "Certezas",   sub: "O que sabemos com certeza.",              hdr: C.green,  bg: C.greenLight },
-          { label: "Suposições", sub: "O que acreditamos, mas não validamos.",   hdr: C.amber,  bg: { r:1, g:0.980, b:0.929 } },
-          { label: "Dúvidas",   sub: "O que precisamos descobrir.",              hdr: C.red,    bg: { r:1, g:0.949, b:0.949 } },
+          { label: "SuposiÃ§Ãµes", sub: "O que acreditamos, mas nÃ£o validamos.",   hdr: C.amber,  bg: { r:1, g:0.980, b:0.929 } },
+          { label: "DÃºvidas",   sub: "O que precisamos descobrir.",              hdr: C.red,    bg: { r:1, g:0.949, b:0.949 } },
         ];
 
         csdCols.forEach(col => {
@@ -3165,8 +3171,8 @@ figma.ui.onmessage = async (msg) => {
       }
       else if (msg.frameworkId === 'five-whys') {
         mainFrame = vb(600, 40, 0, C.bgBlue, 20);
-        mainFrame.name = "Os 5 Porquês";
-        const hdr = mkHeader("Os 5 porquê?");
+        mainFrame.name = "Os 5 PorquÃªs";
+        const hdr = mkHeader("Os 5 porquÃª?");
         mainFrame.appendChild(hdr);
         hdr.layoutAlign = "STRETCH";
 
@@ -3180,9 +3186,9 @@ figma.ui.onmessage = async (msg) => {
         probRow.appendChild(tx("Diga qual o problema encontrado.", 13, "Regular", C.muted));
         mainFrame.appendChild(probRow);
 
-        const emojis  = ["😀","😊","🤔","😢","🤯","😱"];
-        const qLabels = ["Porquê o problema ocorre?","Porquê?","Porquê?","Porquê?","Porquê?","Porquê?"];
-        const motivos = ["1° motivo","2° motivo","3° motivo","4° motivo","5° motivo","6° motivo"];
+        const emojis  = ["ðŸ˜€","ðŸ˜Š","ðŸ¤”","ðŸ˜¢","ðŸ¤¯","ðŸ˜±"];
+        const qLabels = ["PorquÃª o problema ocorre?","PorquÃª?","PorquÃª?","PorquÃª?","PorquÃª?","PorquÃª?"];
+        const motivos = ["1Â° motivo","2Â° motivo","3Â° motivo","4Â° motivo","5Â° motivo","6Â° motivo"];
 
         for (let i = 0; i < 6; i++) {
           mainFrame.appendChild(sp(14));
@@ -3201,7 +3207,7 @@ figma.ui.onmessage = async (msg) => {
         mainFrame.appendChild(sp(12));
         addT(mainFrame, "Causa raiz", 14, "Bold", C.blue);
         mainFrame.appendChild(sp(4));
-        addT(mainFrame, "A real causa do problema é...", 12, "Regular", C.muted);
+        addT(mainFrame, "A real causa do problema Ã©...", 12, "Regular", C.muted);
         mainFrame.appendChild(sp(8));
       }
       else if (msg.frameworkId === 'stakeholders') {
@@ -3217,14 +3223,14 @@ figma.ui.onmessage = async (msg) => {
           shCanvas.appendChild(e);
         });
 
-        const solT = tx("Solução", 13, "Bold", C.text);
+        const solT = tx("SoluÃ§Ã£o", 13, "Bold", C.text);
         solT.x = cx - 26; solT.y = cy + 10; shCanvas.appendChild(solT);
 
         const stickyBg = rct(106, 84, { r:1, g:0.937, b:0.698 }, 4);
         stickyBg.x = cx - 100; stickyBg.y = cy - 88; shCanvas.appendChild(stickyBg);
         const st1 = tx("Stakeholder", 10, "Medium", C.text);
         st1.x = cx - 94; st1.y = cy - 76; shCanvas.appendChild(st1);
-        const st2 = tx("• Necessidade", 10, "Regular", C.text);
+        const st2 = tx("â€¢ Necessidade", 10, "Regular", C.text);
         st2.x = cx - 94; st2.y = cy - 60; shCanvas.appendChild(st2);
 
         mainFrame = vb(600, 0, 0, C.white, 16);
@@ -3247,8 +3253,8 @@ figma.ui.onmessage = async (msg) => {
         const xAx = rct(420, 2, C.text); xAx.x = 100; xAx.y = 560; veCanvas.appendChild(xAx);
         
         mainFrame = vb(620, 0, 0, C.white, 16);
-        mainFrame.name = "Matriz Valor × Esforço";
-        const hdr = mkHeader("Matriz Valor × Esforço");
+        mainFrame.name = "Matriz Valor Ã— EsforÃ§o";
+        const hdr = mkHeader("Matriz Valor Ã— EsforÃ§o");
         mainFrame.appendChild(hdr);
         hdr.layoutAlign = "STRETCH";
         mainFrame.appendChild(veCanvas);
@@ -3263,31 +3269,31 @@ figma.ui.onmessage = async (msg) => {
         const b = vb(null, 40, 24, null);
         mainFrame.appendChild(b);
         b.layoutAlign = "STRETCH";
-        b.appendChild(tx("Insira dados de pesquisa atômica aqui...", 14, "Regular", C.muted));
+        b.appendChild(tx("Insira dados de pesquisa atÃ´mica aqui...", 14, "Regular", C.muted));
       }
       else if (msg.frameworkId === 'blueprint') {
         mainFrame = vb(1200, 0, 0, C.white, 16);
-        mainFrame.name = "Blueprint de Serviço";
-        const hdr = mkHeader("Blueprint de Serviço");
+        mainFrame.name = "Blueprint de ServiÃ§o";
+        const hdr = mkHeader("Blueprint de ServiÃ§o");
         mainFrame.appendChild(hdr);
         hdr.layoutAlign = "STRETCH";
         
         const b = vb(null, 40, 24, null);
         mainFrame.appendChild(b);
         b.layoutAlign = "STRETCH";
-        b.appendChild(tx("Construa o blueprint de serviço aqui...", 14, "Regular", C.muted));
+        b.appendChild(tx("Construa o blueprint de serviÃ§o aqui...", 14, "Regular", C.muted));
       }
       else if (msg.frameworkId === 'heuristics') {
         mainFrame = vb(960, 0, 0, C.white, 16);
-        mainFrame.name = "Heurísticas de Nielsen";
-        const hdr = mkHeader("Heurísticas de Nielsen");
+        mainFrame.name = "HeurÃ­sticas de Nielsen";
+        const hdr = mkHeader("HeurÃ­sticas de Nielsen");
         mainFrame.appendChild(hdr);
         hdr.layoutAlign = "STRETCH";
         
         const b = vb(null, 40, 24, null);
         mainFrame.appendChild(b);
         b.layoutAlign = "STRETCH";
-        b.appendChild(tx("Avaliação heurística aqui...", 14, "Regular", C.muted));
+        b.appendChild(tx("AvaliaÃ§Ã£o heurÃ­stica aqui...", 14, "Regular", C.muted));
       }
       else if (msg.frameworkId === 'opportunities') {
         mainFrame = vb(960, 0, 0, C.white, 16);
@@ -3318,7 +3324,7 @@ figma.ui.onmessage = async (msg) => {
         infoRow.appendChild(pic);
         const nameCol = vb(null, 0, 4, null);
         nameCol.appendChild(tx("Perfil 1 - Nome do Perfil", 18, "Bold", C.blueDark));
-        nameCol.appendChild(tx("Breve descrição (exemplo: Perfil 1 foi mapeado entendendo cliente interno)", 12, "Regular", C.muted));
+        nameCol.appendChild(tx("Breve descriÃ§Ã£o (exemplo: Perfil 1 foi mapeado entendendo cliente interno)", 12, "Regular", C.muted));
         infoRow.appendChild(nameCol);
         body.appendChild(infoRow);
 
@@ -3339,10 +3345,10 @@ figma.ui.onmessage = async (msg) => {
           dataCol.appendChild(r);
         };
         addData("Nome", "Um nome (opcional)");
-        addData("Idade", "idade média do perfil (pode ser conseguido por dados)");
-        addData("Ocupação", "Trabalho / meio de trabalho");
-        addData("Renda", "Renda média");
-        addData("Escolaridade", "Educação formal");
+        addData("Idade", "idade mÃ©dia do perfil (pode ser conseguido por dados)");
+        addData("OcupaÃ§Ã£o", "Trabalho / meio de trabalho");
+        addData("Renda", "Renda mÃ©dia");
+        addData("Escolaridade", "EducaÃ§Ã£o formal");
         detailsRow.appendChild(dataCol);
         body.appendChild(detailsRow);
 
@@ -3352,7 +3358,7 @@ figma.ui.onmessage = async (msg) => {
         const col1 = vb(null, 0, 12, null);
         col1.layoutAlign = "STRETCH";
         col1.appendChild(tx("Objetivos", 16, "Bold", C.blueDark));
-        const objT = tx("Listar objetivos relacionados ao produto, sejam eles objetivos de vida ou objetivos do dia, organização financeira, etc.", 13, "Regular", C.text);
+        const objT = tx("Listar objetivos relacionados ao produto, sejam eles objetivos de vida ou objetivos do dia, organizaÃ§Ã£o financeira, etc.", 13, "Regular", C.text);
         col1.appendChild(objT);
         objT.textAutoResize = "HEIGHT"; objT.layoutAlign = "STRETCH";
         colsRow.appendChild(col1);
@@ -3370,7 +3376,7 @@ figma.ui.onmessage = async (msg) => {
         const oppCol = vb(null, 0, 12, null);
         oppCol.layoutAlign = "STRETCH";
         oppCol.appendChild(tx("Oportunidades", 16, "Bold", C.blueDark));
-        const oppT = tx("Liste oportunidades de produto relacionadas às sessões anteriores.", 13, "Regular", C.text);
+        const oppT = tx("Liste oportunidades de produto relacionadas Ã s sessÃµes anteriores.", 13, "Regular", C.text);
         oppCol.appendChild(oppT);
         oppT.textAutoResize = "HEIGHT"; oppT.layoutAlign = "STRETCH";
         body.appendChild(oppCol);
@@ -3381,8 +3387,8 @@ figma.ui.onmessage = async (msg) => {
 
         const obsCol = vb(null, 0, 12, null);
         obsCol.layoutAlign = "STRETCH";
-        obsCol.appendChild(tx("Observações adicionais", 14, "Bold", C.blueDark));
-        const obsT = tx("Escreva aqui observações de hipóteses descobertas em análise de dados internos e externos que ajudaram a mapear perfis de clientes / usuários.", 13, "Regular", C.text);
+        obsCol.appendChild(tx("ObservaÃ§Ãµes adicionais", 14, "Bold", C.blueDark));
+        const obsT = tx("Escreva aqui observaÃ§Ãµes de hipÃ³teses descobertas em anÃ¡lise de dados internos e externos que ajudaram a mapear perfis de clientes / usuÃ¡rios.", 13, "Regular", C.text);
         obsCol.appendChild(obsT);
         obsT.textAutoResize = "HEIGHT"; obsT.layoutAlign = "STRETCH";
         body.appendChild(obsCol);
@@ -3412,28 +3418,28 @@ figma.ui.onmessage = async (msg) => {
           body.appendChild(sec);
         };
 
-        addSec("1. Introdução e Aquecimento", "Apresente-se, explique o objetivo da entrevista de forma neutra (sem enviesar) e peça consentimento para gravar. Faça perguntas que quebrem o gelo.", true);
-        addSec("Sugestões de perguntas:", "- Como é um dia típico de trabalho para você?\n- Quais ferramentas você mais utiliza hoje?");
+        addSec("1. IntroduÃ§Ã£o e Aquecimento", "Apresente-se, explique o objetivo da entrevista de forma neutra (sem enviesar) e peÃ§a consentimento para gravar. FaÃ§a perguntas que quebrem o gelo.", true);
+        addSec("SugestÃµes de perguntas:", "- Como Ã© um dia tÃ­pico de trabalho para vocÃª?\n- Quais ferramentas vocÃª mais utiliza hoje?");
         
         const sep1 = rct(720, 1, C.line); body.appendChild(sep1); sep1.layoutAlign = "STRETCH";
 
-        addSec("2. Descoberta e Contexto", "Entenda como o usuário lida com o problema hoje, antes de apresentar qualquer solução.", true);
-        addSec("Sugestões de perguntas:", "- Me conte sobre a última vez que você precisou realizar [tarefa].\n- O que foi mais difícil nesse processo?\n- Como você contorna esse problema atualmente?");
+        addSec("2. Descoberta e Contexto", "Entenda como o usuÃ¡rio lida com o problema hoje, antes de apresentar qualquer soluÃ§Ã£o.", true);
+        addSec("SugestÃµes de perguntas:", "- Me conte sobre a Ãºltima vez que vocÃª precisou realizar [tarefa].\n- O que foi mais difÃ­cil nesse processo?\n- Como vocÃª contorna esse problema atualmente?");
 
         const sep2 = rct(720, 1, C.line); body.appendChild(sep2); sep2.layoutAlign = "STRETCH";
 
-        addSec("3. Aprofundamento (Solução / Protótipo)", "Caso haja um protótipo, apresente agora. Peça para o usuário pensar em voz alta.", true);
-        addSec("Sugestões de perguntas:", "- O que você acha que essa tela faz?\n- Onde você clicaria para [ação]?\n- O que você esperava que acontecesse ao clicar ali?");
+        addSec("3. Aprofundamento (SoluÃ§Ã£o / ProtÃ³tipo)", "Caso haja um protÃ³tipo, apresente agora. PeÃ§a para o usuÃ¡rio pensar em voz alta.", true);
+        addSec("SugestÃµes de perguntas:", "- O que vocÃª acha que essa tela faz?\n- Onde vocÃª clicaria para [aÃ§Ã£o]?\n- O que vocÃª esperava que acontecesse ao clicar ali?");
 
         const sep3 = rct(720, 1, C.line); body.appendChild(sep3); sep3.layoutAlign = "STRETCH";
 
-        addSec("4. Encerramento", "Abra espaço para considerações finais e agradeça.", true);
-        addSec("Sugestões de perguntas:", "- Há algo que não perguntei e que você gostaria de comentar?\n- Como você resumiria essa experiência?");
+        addSec("4. Encerramento", "Abra espaÃ§o para consideraÃ§Ãµes finais e agradeÃ§a.", true);
+        addSec("SugestÃµes de perguntas:", "- HÃ¡ algo que nÃ£o perguntei e que vocÃª gostaria de comentar?\n- Como vocÃª resumiria essa experiÃªncia?");
       }
       else if (msg.frameworkId === 'journey') {
         mainFrame = vb(1000, 0, 0, { r:0.941, g:0.965, b:0.976 }, 16); 
-        mainFrame.name = "Jornada de Usuário";
-        const hdr = mkHeader("Jornada de Usuário");
+        mainFrame.name = "Jornada de UsuÃ¡rio";
+        const hdr = mkHeader("Jornada de UsuÃ¡rio");
         mainFrame.appendChild(hdr);
         hdr.layoutAlign = "STRETCH";
 
@@ -3462,7 +3468,7 @@ figma.ui.onmessage = async (msg) => {
         leftCol.appendChild(mkL("Pensa e fala", "O que pensa e fala..."));
         leftCol.appendChild(mkL("Sentimentos", ""));
         leftCol.appendChild(mkL("Oportunidades", ""));
-        leftCol.appendChild(mkL("Experiência", "", 240));
+        leftCol.appendChild(mkL("ExperiÃªncia", "", 240));
 
         const rightCol = hb(0, 12, null);
         body.appendChild(rightCol);
@@ -3476,7 +3482,7 @@ figma.ui.onmessage = async (msg) => {
           const eTop = vb(null, 16, 4, { r:0.2, g:0.8, b:0.96 }, 8);
           eTop.layoutAlign = "STRETCH";
           eTop.appendChild(tx(i + ". Nome da Etapa", 16, "Bold", C.blueDark));
-          eTop.appendChild(tx("Descrição (opcional)", 12, "Regular", C.blueDark));
+          eTop.appendChild(tx("DescriÃ§Ã£o (opcional)", 12, "Regular", C.blueDark));
           col.appendChild(eTop);
 
           const mkr = (val, h) => {
@@ -3568,7 +3574,7 @@ figma.ui.onmessage = async (msg) => {
         }
       }
 
-      // ── finalizar no canvas ───────────────────────────────────────
+      // â”€â”€ finalizar no canvas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       if (mainFrame) {
         const frameName = mainFrame.name;
         figma.currentPage.appendChild(mainFrame);
@@ -3583,7 +3589,7 @@ figma.ui.onmessage = async (msg) => {
         figma.currentPage.selection = [grp];
         figma.viewport.scrollAndZoomIntoView([grp]);
         figma.ui.postMessage({ type: 'framework-injected', name: msg.frameworkId });
-        figma.notify("Framework inserido no canvas! ✓");
+        figma.notify("Framework inserido no canvas! âœ“");
       }
     })();
     return;

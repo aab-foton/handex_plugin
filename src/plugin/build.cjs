@@ -32,7 +32,6 @@ const modMeasure = read('modules/measurement.js');
 const modSpecs   = read('modules/specifications.js');
 const modData    = read('modules/design-data.js');
 const modMsgs    = read('modules/messages.js');
-const modLab     = read('modules/lab.js');
 
 // ── Load reference skeleton (DSC libraries: keys + names only) ─
 // Regenerate via: node src/plugin/refs/build-skeleton.cjs
@@ -73,8 +72,6 @@ if (fs.existsSync(codeMapPath)) {
 
 // ── Load view partials ────────────────────────────────────────
 const viewHome   = read('views/home.html');
-const viewLab    = read('views/lab.html');
-const viewAudit  = read('views/audit.html');
 const viewMeasure = read('views/measurement.html');
 const viewGuide = read('views/guide.html');
 const viewSpecs  = read('views/specifications.html');
@@ -143,7 +140,7 @@ ${css}
         <h1 class="font-bold text-[#1E293B] dark:text-white text-[12px] tracking-[0.15em] uppercase">
           HANDEX
         </h1>
-        <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v4.0.0</span>
+        <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v4.1.1</span>
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <button onclick="ensureExpanded(); openDadosProjetoModal()" title="Dados do Projeto" aria-label="Dados do Projeto"
@@ -175,8 +172,6 @@ ${css}
 
   <div class="flex-1 overflow-hidden relative">
 ${viewHome}
-${viewLab}
-${viewAudit}
 ${viewMeasure}
 ${viewGuide}
 ${viewSpecs}
@@ -212,11 +207,6 @@ ${modCore}
 ${modMsgs}
 
 // ============================================================
-// MODULE: audit.js
-// ============================================================
-${read('modules/audit.js')}
-
-// ============================================================
 // MODULE: measurement.js
 // ============================================================
 ${modMeasure}
@@ -230,11 +220,6 @@ ${modSpecs}
 // MODULE: design-data.js
 // ============================================================
 ${modData}
-
-// ============================================================
-// MODULE: lab.js
-// ============================================================
-${modLab}
 
 // ============================================================
 // MODULE: handoff.js
