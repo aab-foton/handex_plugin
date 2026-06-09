@@ -80,6 +80,17 @@
             handoffData._fichaGenerated = true;
           }
         }
+
+        // Auto-fill do título com o nome do arquivo/projeto Figma se campo ainda estiver vazio
+        if (msg.projectName) {
+          const tituloInput = document.getElementById('s1-titulo');
+          if (tituloInput && !tituloInput.value.trim()) {
+            tituloInput.value = msg.projectName;
+            updateData('step1', 'titulo', msg.projectName);
+            if (typeof validateStep1 === 'function') validateStep1();
+          }
+        }
+
         // snapshot-load e scan-cache-load são solicitados sob demanda (na navegação para as views que precisam)
         // Onboarding é disparado pelo próprio modals.html via DOMContentLoaded
         return;
