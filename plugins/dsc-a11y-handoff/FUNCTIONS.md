@@ -4,7 +4,7 @@ Guia de navegação rápida. Números de linha referem-se ao estado atual do arq
 
 ---
 
-## code.ts (~3100 linhas)
+## code.ts (~3714 linhas)
 
 ### Variáveis globais (17–29)
 
@@ -21,9 +21,9 @@ Guia de navegação rápida. Números de linha referem-se ao estado atual do arq
 | 27 | `componenteVariacaoAtivo` | Nó da variação de toque ativa no canvas |
 | 28 | `componenteTabVariacaoAtivo` | Nó da variação de tabulação ativa |
 | 29 | `componenteSRVariacaoAtivo` | Nó da variação de leitor de tela ativa |
-| 30 | `isHandoffGenerated` | `boolean` — true após o primeiro `run-handoff` bem-sucedido na sessão |
+| 30 | `isHandoffGenerated` | `boolean` — true após o primeiro `run-handoff` bem-sucedido; lido da chave `a11y-handoff-generated` no pluginData do frame |
 
-### Utilitários (39–354)
+### Utilitários (39–360)
 
 | Linha | Função | Resumo |
 |-------|--------|--------|
@@ -35,9 +35,10 @@ Guia de navegação rápida. Números de linha referem-se ao estado atual do arq
 | 148 | `computeLetrasTS(conectores)` | Gera array de letras/números para labels de conectores de leitor de tela |
 | 167 | `createComponentInstance(comp)` | Cria instância de COMPONENT/COMPONENT_SET com fallback para clone |
 | 190 | `ensureHandoffDetached()` | Detacha `handoffAtivo` se for INSTANCE; renomeia; atualiza a variável global |
-| 199 | `getTouchImageFrame()` | Encontra o frame `image` (target area) no handoff; detacha se necessário |
-| 219 | `getTabImageFrame()` | Análogo para `focus order > image` |
-| 240 | `getSRImageFrame()` | Análogo para `screen reader > image`; detacha INSTANCE |
+| 200 | `renumberTouchBadges(imageFrame)` | Renumera badges de toque por variação; usa `Map` pré-indexado para O(1) lookup (sem JSON.parse repetido) |
+| 252 | `getTouchImageFrame()` | Encontra o frame `image` (target area) no handoff; detacha se necessário |
+| 273 | `getTabImageFrame()` | Análogo para `focus order > image` |
+| 293 | `getSRImageFrame()` | Análogo para `screen reader > image`; detacha INSTANCE |
 | 259 | `clearVariationMarkers(varFrame)` | Remove todos os nós com `a11y-marker ≠ ''` de um frame |
 | 264 | `drawVariationMarkers(varFrame, markers, color, type, offsetX, offsetY)` | Desenha retângulos de marcação (toque/tab) com offset |
 | 275 | `getOrCreateVariacoesContainer(comp, handoff, parent)` | Garante existência do frame `[A11Y Variações]` no canvas |
@@ -107,12 +108,13 @@ Guia de navegação rápida. Números de linha referem-se ao estado atual do arq
 
 ---
 
-## ui.html — Script (~3077 linhas)
+## ui.html — Script (~3116 linhas)
 
 ### Variáveis globais principais
 
 | Linha | Variável | Tipo / Descrição |
 |-------|----------|-----------------|
+| 692 | `escapeHtml(s)` | Helper de sanitização: converte `&`, `<`, `>`, `"`, `'` para entidades HTML antes de interpolar em `innerHTML` |
 | 701 | `masterList` | `{ mapeamento, descricao, utilizacao }[]` — lido do template via `setup-ui` |
 | 701 | `currentData` | Mapeamentos selecionados para o componente atual |
 | 701 | `touchData` | Áreas de toque da variação ativa (`TouchAreaItem[]` com `badgeProps` opcional) |
@@ -126,7 +128,7 @@ Guia de navegação rápida. Números de linha referem-se ao estado atual do arq
 
 | Linha | Função | Resumo |
 |-------|--------|--------|
-| 730 | `setupSearch(inputId, resId, filterType)` | Registra listeners de busca; chamado **1× por tipo** fora do `onmessage` |
+| 742 | `setupSearch(inputId, resId, filterType)` | Registra listeners de busca; chamado **1× por tipo** fora do `onmessage`; dropdown usa `position: fixed` + `getBoundingClientRect` para não ser clipado pelo scroll container |
 | 773 | `addItem(item)` | Adiciona mapeamento a `currentData`; sem duplicatas |
 | 785 | `renderLists()` | Renderiza cards de teclado/gesto; atualiza badges |
 | 820 | `updateSummaryCards()` | Atualiza contadores nos cards de resumo de todas as abas |

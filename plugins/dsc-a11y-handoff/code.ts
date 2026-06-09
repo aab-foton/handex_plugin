@@ -198,35 +198,46 @@ function ensureHandoffDetached(): FrameNode {
 }
 
 async function renumberTouchBadges(imageFrame: FrameNode): Promise<void> {
-  // Group overlays by variationId, sort each group by current index, renumber locally
-  const allOverlays = Array.from(imageFrame.children)
-    .filter(n => { try { return JSON.parse(n.getPluginData('a11y-meta') || '{}').type === 'touch-overlay'; } catch { return false; } });
+  const children = Array.from(imageFrame.children);
+
+  // Parse metadata once for all children — O(n) instead of O(n²) or O(n log n)
+  const metaCache = new Map<string, any>();
+  for (const n of children) {
+    try { metaCache.set(n.id, JSON.parse(n.getPluginData('a11y-meta') || '{}')); } catch { metaCache.set(n.id, {}); }
+  }
+
+  const allOverlays = children.filter(n => metaCache.get(n.id)?.type === 'touch-overlay');
+
+  // Pre-index badges by "variationId:nome" for O(1) lookup
+  const badgeMap = new Map<string, SceneNode>();
+  for (const n of children) {
+    const d = metaCache.get(n.id);
+    if (d?.type === 'touch-badge') {
+      badgeMap.set(`${d.variationId ?? 'default'}:${d.nome}`, n);
+    }
+  }
 
   const byVariation = new Map<string, SceneNode[]>();
   for (const ov of allOverlays) {
-    const meta = JSON.parse(ov.getPluginData('a11y-meta') || '{}');
-    const vid = meta.variationId ?? 'default';
+    const vid = metaCache.get(ov.id)?.variationId ?? 'default';
     if (!byVariation.has(vid)) byVariation.set(vid, []);
     byVariation.get(vid)!.push(ov);
   }
 
   for (const [, overlays] of byVariation) {
-    overlays.sort((a, b) => {
-      const ia = JSON.parse(a.getPluginData('a11y-meta') || '{}').index ?? 0;
-      const ib = JSON.parse(b.getPluginData('a11y-meta') || '{}').index ?? 0;
-      return ia - ib;
-    });
+    // Sort uses cached metadata — no JSON.parse inside comparator
+    overlays.sort((a, b) => (metaCache.get(a.id)?.index ?? 0) - (metaCache.get(b.id)?.index ?? 0));
+
     for (let i = 0; i < overlays.length; i++) {
       const ov = overlays[i];
-      const meta = JSON.parse(ov.getPluginData('a11y-meta') || '{}');
+      const meta = metaCache.get(ov.id)!;
       meta.index = i;
       ov.setPluginData('a11y-meta', JSON.stringify(meta));
       const prefix: number = meta.variationPrefix ?? 1;
-      const badge = Array.from(imageFrame.children).find(n => {
-        try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'touch-badge' && d.variationId === meta.variationId && d.nome === meta.nome; } catch { return false; }
-      });
+
+      const badge = badgeMap.get(`${meta.variationId ?? 'default'}:${meta.nome}`);
       if (badge) {
-        const bMeta = JSON.parse(badge.getPluginData('a11y-meta') || '{}');
+        const bMeta = metaCache.get(badge.id)!;
         bMeta.index = i;
         badge.setPluginData('a11y-meta', JSON.stringify(bMeta));
         const numText = ((badge as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[])
@@ -241,7 +252,7 @@ async function getTouchImageFrame(): Promise<FrameNode | null> {
   if (!handoffAtivo) return null;
   // Verifica se o nó ainda existe (pode ter sido deletado pelo usuário)
   const stillExists = await figma.getNodeByIdAsync(handoffAtivo.id);
-  if (!stillExists) {
+  if (!stillExists || !handoffAtivo) {
     handoffAtivo = null;
     figma.ui.postMessage({ type: 'feedback', message: '⚠️ O template foi removido. Selecione novamente o componente e o template.' });
     return null;
@@ -261,7 +272,7 @@ async function getTouchImageFrame(): Promise<FrameNode | null> {
 async function getTabImageFrame(): Promise<FrameNode | null> {
   if (!handoffAtivo) return null;
   const stillExists = await figma.getNodeByIdAsync(handoffAtivo.id);
-  if (!stillExists) {
+  if (!stillExists || !handoffAtivo) {
     handoffAtivo = null;
     figma.ui.postMessage({ type: 'feedback', message: '⚠️ O template foi removido. Selecione novamente o componente e o template.' });
     return null;
@@ -281,7 +292,7 @@ async function getTabImageFrame(): Promise<FrameNode | null> {
 async function getSRImageFrame(): Promise<FrameNode | null> {
   if (!handoffAtivo) return null;
   const stillExists = await figma.getNodeByIdAsync(handoffAtivo.id);
-  if (!stillExists) {
+  if (!stillExists || !handoffAtivo) {
     handoffAtivo = null;
     figma.ui.postMessage({ type: 'feedback', message: '⚠️ O template foi removido. Selecione novamente o componente e o template.' });
     return null;
@@ -479,9 +490,10 @@ figma.ui.onmessage = async (msg) => {
 
     if (isOldHandoff) {
       figma.ui.postMessage({ type: 'feedback', message: '⏳ Substituindo template antigo...' });
+      let novaInstancia: InstanceNode | null = null;
       try {
         const novoComp = await figma.importComponentByKeyAsync('4ebd8a017a86b29ca60427416ed4b76af05e4a67');
-        const novaInstancia = novoComp.createInstance();
+        novaInstancia = novoComp.createInstance();
         novaInstancia.x = handoffAtivo.x;
         novaInstancia.y = handoffAtivo.y;
         const pai = handoffAtivo.parent;
@@ -583,7 +595,18 @@ figma.ui.onmessage = async (msg) => {
         handoffAtivo.remove();
         handoffAtivo = novaInstancia;
       } catch (e) {
-        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Não foi possível importar o novo template. Verifique se a biblioteca DSC está conectada ao arquivo.' });
+        // Remove o novo template se já foi criado antes da falha (evita duplicata órfã na página)
+        try { if (handoffAtivo !== novaInstancia && novaInstancia?.parent) novaInstancia.remove(); } catch (_) {}
+        // Remove clones de seções e SR que foram jogados na página mas não foram restaurados
+        for (const snap of oldSnapshots) {
+          for (const c of snap.clones) { try { if (c.parent) c.remove(); } catch (_) {} }
+        }
+        for (const cap of oldSRVarCapture) {
+          try { if (cap.comp.parent) cap.comp.remove(); } catch (_) {}
+          for (const b of cap.badges) { try { if (b.clone.parent) b.clone.remove(); } catch (_) {} }
+          try { if (cap.numBadge?.parent) cap.numBadge.remove(); } catch (_) {}
+        }
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Não foi possível substituir o template antigo. Verifique se a biblioteca DSC está conectada ao arquivo.' });
         return;
       }
     }
@@ -1623,6 +1646,7 @@ figma.ui.onmessage = async (msg) => {
     workingFrame.setPluginData("a11y-component-data", dataToSaveDirect);
 
     isHandoffGenerated = true;
+    workingFrame.setPluginData('a11y-handoff-generated', 'true');
     figma.ui.postMessage({ type: 'feedback', message: `✅ Handoff ${wasGenerated ? 'atualizado' : 'gerado'} e dados salvos!` });
     figma.ui.postMessage({ type: 'handoff-complete' });
   }
@@ -3666,8 +3690,10 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
     try { componentData = JSON.parse(rawDirect); } catch(e) {}
   }
 
-  // Flag: verdadeiro se o handoff já foi gerado antes (FRAME = detachado; ou tem pluginData salvo)
-  isHandoffGenerated = handoff.type !== 'INSTANCE' || !!rawDirect;
+  // Flag: verdadeiro somente se run-handoff completou com sucesso ao menos uma vez.
+  // Não usar type !== 'INSTANCE': o detach acontece ao criar qualquer preview, antes da geração.
+  // Não usar rawDirect: save-partial-data também escreve no frame durante preenchimento dos previews.
+  isHandoffGenerated = (handoff as any).getPluginData('a11y-handoff-generated') === 'true';
 
   // parseMasterList e parseRolesList: sempre executam se dbInstance existe
   if (dbInstance) {
