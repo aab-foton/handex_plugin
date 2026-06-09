@@ -190,16 +190,27 @@
 
     // ── Ocultar Tudo helpers ───────────────────────────────────────
     let _measuresHidden = false;
+
+    function _getAllMeasurements() {
+      const standalone = handoffData.measurements || [];
+      const perFrame = (handoffData.frames || []).flatMap(f => f.measurements || []);
+      return [...standalone, ...perFrame];
+    }
+
     function updateHideAllMeasuresButtonState() {
       const btn = document.getElementById('btn-hide-all-measures');
       if (!btn) return;
-      
-      const measurements = handoffData.measurements || [];
-      if (measurements.length === 0) return;
-      
+
+      const measurements = _getAllMeasurements();
+      if (measurements.length === 0) {
+        btn.classList.add('hidden');
+        return;
+      }
+      btn.classList.remove('hidden');
+
       const allHidden = measurements.every(m => m.visible === false);
       _measuresHidden = allHidden;
-      
+
       btn.innerHTML = allHidden
         ? '<i data-lucide="eye" class="w-3.5 h-3.5"></i> Mostrar tudo'
         : '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo';
@@ -224,42 +235,36 @@
     window.toggleMeasurementsGroup = toggleMeasurementsGroup;
 
     function toggleAllMeasuresVisibility() {
-      const measurements = handoffData.measurements || [];
+      const measurements = _getAllMeasurements();
       if (measurements.length === 0) return;
-      
+
       const anyVisible = measurements.some(m => m.visible !== false);
       const targetState = !anyVisible;
-      
+
       measurements.forEach(m => {
         m.visible = targetState;
         if (m.nodeId) {
           parent.postMessage({ pluginMessage: { type: 'hide-node', id: m.nodeId, forceState: targetState } }, '*');
         }
       });
-      
+
       _measuresHidden = !targetState;
       saveToStorage();
-      
-      const container = document.getElementById('measurements-results');
-      if (container) {
-        const sections = container.querySelectorAll('[data-node-id]');
-        sections.forEach(section => {
-          const visBtn = section.querySelector('[data-vis-btn]');
-          if (visBtn) {
-            visBtn.innerHTML = targetState ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
-            visBtn.classList.toggle("text-[#005ca9]", targetState);
-            visBtn.classList.toggle("text-gray-300", !targetState);
-          }
-        });
-      }
-      
+
+      // Atualiza botões de visibilidade em todos os containers (global + por frame)
+      document.querySelectorAll('[data-node-id] [data-vis-btn]').forEach(visBtn => {
+        visBtn.innerHTML = targetState ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
+        visBtn.classList.toggle("text-[#005ca9]", targetState);
+        visBtn.classList.toggle("text-gray-300", !targetState);
+      });
+
       const btn = document.getElementById('btn-hide-all-measures');
       if (btn) {
         btn.innerHTML = _measuresHidden
           ? '<i data-lucide="eye" class="w-3.5 h-3.5"></i> Mostrar tudo'
           : '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo';
       }
-      
+
       _refreshIcons();
     }
 

@@ -661,6 +661,20 @@ function confirmException() {
       saveToStorage();
       window._expandSpecIdAfterRender = frame.createdSpecs[specIdx].id;
       if (typeof renderSpecsListForFrame === 'function') renderSpecsListForFrame(_currentExceptionFrameId);
+
+      // Inject obs into spec frame if checkbox checked
+      const injectCheck = document.getElementById('exc-modal-inject-spec');
+      if (injectCheck && injectCheck.checked && obs && frame.createdSpecs[specIdx].id) {
+        parent.postMessage({
+          pluginMessage: {
+            type: 'inject-obs-to-spec',
+            specNodeId: frame.createdSpecs[specIdx].id,
+            tipo: _currentExceptionType.tipo,
+            titulo: vinc,
+            obs
+          }
+        }, '*');
+      }
     }
     window._currentExceptionSpecIdx = null;
   } else {
@@ -674,6 +688,12 @@ function confirmException() {
 function toggleExcModalObs(checked) {
   const area = document.getElementById('exc-modal-obs');
   if (area) area.classList.toggle('hidden', !checked);
+  const injectWrap = document.getElementById('exc-modal-inject-wrap');
+  if (injectWrap) {
+    // Only show inject option when in a spec exception context
+    const hasSpecCtx = window._currentExceptionSpecIdx !== null && window._currentExceptionSpecIdx !== undefined;
+    injectWrap.classList.toggle('hidden', !checked || !hasSpecCtx);
+  }
 }
 
 function linkExcModalVinc() {
@@ -1296,7 +1316,7 @@ function updateFooterButtons() {
   _refreshIcons();
 }
 
-setTimeout(initBriefingSuggestions, 0);
+// initBriefingSuggestions é inicializado sob demanda (ao abrir o briefing pela primeira vez)
 
 // ── Storage ────────────────────────────────────────────────────────────
 function saveToStorage() {
