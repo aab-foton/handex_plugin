@@ -492,6 +492,25 @@ ${(handoffData.specs || []).length === 0 ? 'Nenhuma especificação registrada.'
       const researchLink = (docs.research && docs.research.link) || '#';
       const researchTarget = (docs.research && docs.research.link) ? 'target="_blank"' : '';
 
+      // Color map for spec categories (used in HTML export inline styles)
+      const _catColorMapHTML = {
+        'info':          { bg: '#f1f5f9', text: '#475569', border: '#cbd5e1' },
+        'comportamento': { bg: '#fdf2f8', text: '#be185d', border: '#fbcfe8' },
+        'regra':         { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' },
+        'api':           { bg: '#f7fee7', text: '#4d7c0f', border: '#bef264' },
+        'layout':        { bg: '#eef2ff', text: '#4338ca', border: '#c7d2fe' },
+        'componente':    { bg: '#fff1f2', text: '#e11d48', border: '#fecdd3' },
+        'interacao':     { bg: '#ecfdf5', text: '#047857', border: '#6ee7b7' },
+        'tipografia':    { bg: '#fefce8', text: '#a16207', border: '#fde68a' },
+        'cor':           { bg: '#f0fdfa', text: '#0d9488', border: '#5eead4' },
+        'acessibilidade':{ bg: '#faf5ff', text: '#7c3aed', border: '#d8b4fe' },
+        'conteudo':      { bg: '#ecfeff', text: '#0e7490', border: '#67e8f9' },
+      };
+      function _getCatStyleHTML(value) {
+        const c = _catColorMapHTML[value] || { bg: '#f9fafb', text: '#64748b', border: '#e5e7eb' };
+        return `background-color:${c.bg};color:${c.text};border:1px solid ${c.border};border-radius:9999px;padding:1px 7px;font-size:9px;font-weight:700;display:inline-block;white-space:nowrap`;
+      }
+
       // Type → visual mapping for Cenários de Exceção
       const excecaoTypeMap = {
         "Erro":         { color: "red",    icon: "alert-circle",   label: "Erro" },
@@ -885,7 +904,7 @@ ${(handoffData.specs || []).length === 0 ? 'Nenhuma especificação registrada.'
                       <div id="html-spec-${fi}-${si}" data-toggle-item data-hidden="0" class="flex items-center gap-2 p-2 bg-indigo-50/40 dark:bg-indigo-950/10 border border-indigo-100/60 dark:border-indigo-900/30 rounded-lg transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
                         <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${s.name || s.label || 'Spec'}</span>
-                        ${s.category ? `<span class="text-[9px] text-slate-500 font-mono shrink-0">${s.category}</span>` : ''}
+                        ${s.category ? `<span class="shrink-0" style="${_getCatStyleHTML(s.category)}">${s.categoryLabel || s.category}</span>` : ''}
                         ${(s.excecoes && s.excecoes.length > 0) ? `<span class="text-[9px] font-bold text-amber-600 dark:text-amber-400 shrink-0">${s.excecoes.length} exc.</span>` : ''}
                         <button data-toggle-btn onclick="toggleHTMLItem('html-spec-${fi}-${si}', this)" title="Ocultar" class="ml-1 shrink-0 opacity-40 hover:opacity-100 transition-opacity">
                           <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -1012,7 +1031,7 @@ ${(handoffData.specs || []).length === 0 ? 'Nenhuma especificação registrada.'
                     <div class="w-5 h-5 rounded flex items-center justify-center text-[9px] font-black text-white shrink-0" style="background:${s.color || '#005ca9'}">${s.letter || 'A'}</div>
                     <span class="text-[11px] font-bold text-slate-800 dark:text-white flex-1">${s.name || ''}</span>
                     ${isHidden ? '<span class="text-[9px] text-slate-400 italic">oculta</span>' : ''}
-                    ${cat ? `<span class="text-[9px] text-slate-500 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded">${cat}</span>` : ''}
+                    ${cat ? `<span style="${_getCatStyleHTML(s.category)}">${cat}</span>` : ''}
                   </div>
                   ${s.note ? `<p class="text-[10px] text-slate-500 dark:text-slate-400 mb-1.5 ml-7">${s.note}</p>` : ''}
                   ${excs.length > 0 ? `
@@ -1627,7 +1646,7 @@ ${(handoffData.specs || []).length === 0 ? 'Nenhuma especificação registrada.'
 
       <button onclick="downloadSelf()" class="flex items-center gap-1.5 px-3 py-1.5 bg-[#0070af] hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-        <span>Gerar Ficha Técnica</span>
+        <span>Gerar Ficha de Projeto</span>
       </button>
 
       <button onclick="toggleTheme()" class="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">
@@ -1692,7 +1711,7 @@ ${(handoffData.specs || []).length === 0 ? 'Nenhuma especificação registrada.'
     <main class="md:col-span-3 space-y-6">
       <div class="flex border-b border-slate-100 dark:border-slate-800/80 gap-6 overflow-x-auto pb-1">
         <button onclick="switchTab('tab-document')" id="btn-tab-document" class="tab-btn px-1 pb-3 text-sm font-black border-b-2 border-blue-500 text-blue-500 focus:outline-none transition-all uppercase tracking-wider whitespace-nowrap shrink-0">
-          📑 Ficha Técnica
+          📑 Ficha de Projeto
         </button>
         <button onclick="switchTab('tab-assets')" id="btn-tab-assets" class="tab-btn px-1 pb-3 text-sm font-extrabold text-slate-500 dark:text-slate-500 border-b-2 border-transparent hover:text-slate-700 dark:hover:text-slate-300 focus:outline-none transition-all uppercase tracking-wider whitespace-nowrap shrink-0">
           🖼️ Frame & Elementos

@@ -665,7 +665,7 @@
         mainContainer.primaryAxisSizingMode = "AUTO";
         mainContainer.counterAxisSizingMode = "AUTO";
         const fichaTecnica = createFrame("VERTICAL", 0, 0, { r: 1, g: 1, b: 1 });
-        fichaTecnica.name = `${_handoffBase} / Ficha T\xE9cnica`;
+        fichaTecnica.name = `${_handoffBase} / Ficha de Projeto`;
         fichaTecnica.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
         fichaTecnica.resize(600, 100);
         fichaTecnica.counterAxisSizingMode = "FIXED";
