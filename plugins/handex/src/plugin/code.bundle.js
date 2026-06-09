@@ -838,17 +838,16 @@
           setFillAndHug(excSection);
         }
         if (data.docs) {
-          const docsSection = createSection(null, "Docs e Anexos");
           const docItems = [
             { key: "proto", label: "Prot\xC3\xB3tipo Naveg\xC3\xA1vel" },
             { key: "a11y", label: "Handoff Acessibilidade" },
             { key: "research", label: "Pesquisa de UX" }
           ];
-          let hasDocs = false;
-          docItems.forEach((item) => {
-            const docData = data.docs[item.key];
-            if (docData && docData.link) {
-              hasDocs = true;
+          const validDocItems = docItems.filter((item) => data.docs[item.key] && data.docs[item.key].link);
+          if (validDocItems.length > 0) {
+            const docsSection = createSection(content, "Docs e Anexos");
+            validDocItems.forEach((item) => {
+              const docData = data.docs[item.key];
               const dRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
               dRow.layoutAlign = "STRETCH";
               dRow.counterAxisAlignItems = "CENTER";
@@ -862,10 +861,7 @@
               dLink.hyperlink = { type: "URL", value: docData.link };
               dRow.appendChild(dLink);
               docsSection.appendChild(dRow);
-            }
-          });
-          if (hasDocs) {
-            content.appendChild(docsSection);
+            });
             setFillAndHug(docsSection);
           }
         }
