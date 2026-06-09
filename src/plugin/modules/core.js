@@ -121,6 +121,7 @@ Object.assign(window, {
   toggleStatusDropdown,
   selectStatus,
   _syncStatusUI,
+  _closeStatusPanel,
   // Frame hub functions
   addFrame,
   removeFrame,
@@ -916,6 +917,13 @@ function _syncStatusUI(value) {
   });
 }
 
+function _closeStatusPanel() {
+  const panel = document.getElementById('s1-status-panel');
+  const chev  = document.getElementById('s1-status-chev');
+  if (panel) { panel.classList.add('hidden'); panel.style.cssText = ''; }
+  if (chev)  chev.style.transform = '';
+}
+
 function toggleStatusDropdown(e) {
   if (e) e.stopPropagation();
   const panel = document.getElementById('s1-status-panel');
@@ -923,17 +931,21 @@ function toggleStatusDropdown(e) {
   if (!panel) return;
   const isOpen = !panel.classList.contains('hidden');
   if (isOpen) {
-    panel.classList.add('hidden');
-    if (chev) chev.style.transform = '';
+    _closeStatusPanel();
   } else {
+    // Usa position:fixed para escapar de containers com overflow:hidden
+    const btn = document.getElementById('s1-status-btn');
+    if (btn) {
+      const r = btn.getBoundingClientRect();
+      panel.style.cssText = `position:fixed;top:${r.bottom + 2}px;left:${r.left}px;width:${r.width}px;z-index:9999;`;
+    }
     panel.classList.remove('hidden');
     if (chev) chev.style.transform = 'rotate(180deg)';
     // Fecha ao clicar fora
     const close = (ev) => {
       const wrapper = document.getElementById('s1-status-wrapper');
       if (wrapper && !wrapper.contains(ev.target)) {
-        panel.classList.add('hidden');
-        if (chev) chev.style.transform = '';
+        _closeStatusPanel();
         document.removeEventListener('click', close, true);
       }
     };
@@ -944,10 +956,7 @@ function toggleStatusDropdown(e) {
 function selectStatus(value) {
   handoffData.step1.status = value;
   _syncStatusUI(value);
-  const panel = document.getElementById('s1-status-panel');
-  const chev  = document.getElementById('s1-status-chev');
-  if (panel) panel.classList.add('hidden');
-  if (chev)  chev.style.transform = '';
+  _closeStatusPanel();
   saveToStorage();
 }
 
