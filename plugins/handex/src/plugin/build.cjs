@@ -147,7 +147,7 @@ ${css}
           class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
           <i data-lucide="clipboard-list" class="w-4 h-4" aria-hidden="true"></i>
         </button>
-        <button onclick="ensureExpanded(); createHandoffOnCanvas()" title="Gerar Ficha no Canvas" aria-label="Gerar Ficha"
+        <button onclick="ensureExpanded(); navigate('view-handoff-summary')" title="Gerar Ficha no Canvas" aria-label="Gerar Ficha"
           class="p-1.5 hover:bg-[#0070af]/10 rounded-md transition-colors cursor-pointer text-[#0070af]">
           <i data-lucide="send" class="w-4 h-4" aria-hidden="true"></i>
         </button>

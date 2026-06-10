@@ -1504,12 +1504,6 @@ function openDadosProjetoModal() {
 }
 
 function navigate(viewId) {
-  if (viewId !== 'view-dados-projeto') {
-    window._dadosProjetoSnackShown = false;
-    clearTimeout(window._dadosProjetoSnackTimer);
-    const snack = document.getElementById('dados-projeto-snackbar');
-    if (snack) snack.classList.add('hidden');
-  }
   document.querySelectorAll(".view").forEach((el) => el.classList.remove("active"));
   const targetView = document.getElementById(viewId);
   if (targetView) targetView.classList.add("active");
@@ -1803,13 +1797,13 @@ function handleScroll(el) {
   if (el.closest && el.closest('#view-dados-projeto')) {
     const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 24;
     const snack = document.getElementById('dados-projeto-snackbar');
-    if (snack && atBottom && !window._dadosProjetoSnackShown) {
-      window._dadosProjetoSnackShown = true;
+    if (snack && atBottom && !localStorage.getItem('handex_snack_dados_shown')) {
+      localStorage.setItem('handex_snack_dados_shown', '1');
       snack.classList.remove('hidden');
       clearTimeout(window._dadosProjetoSnackTimer);
       window._dadosProjetoSnackTimer = setTimeout(() => {
         snack.classList.add('hidden');
-      }, 6000);
+      }, 4000);
     }
   }
 }
