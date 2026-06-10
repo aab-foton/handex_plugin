@@ -232,13 +232,23 @@ ${(handoffData.specs || []).length === 0 ? 'Nenhuma especificação registrada.'
       const el = document.getElementById('handoff-loading-overlay');
       if (el) {
         el.classList.remove('hidden');
-        _refreshIcons()
+        const hint = document.getElementById('handoff-loading-hint');
+        if (hint) hint.classList.add('hidden');
+        _refreshIcons();
+        clearTimeout(window._handoffLoadingTimer);
+        window._handoffLoadingTimer = setTimeout(() => {
+          const h = document.getElementById('handoff-loading-hint');
+          if (h) h.classList.remove('hidden');
+        }, 30000);
       }
     }
 
     function hideHandoffLoading() {
       const el = document.getElementById('handoff-loading-overlay');
       if (el) el.classList.add('hidden');
+      clearTimeout(window._handoffLoadingTimer);
+      const hint = document.getElementById('handoff-loading-hint');
+      if (hint) hint.classList.add('hidden');
     }
 
     function showScanLoading() {
