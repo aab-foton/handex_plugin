@@ -757,33 +757,14 @@ function confirmException() {
     addExcecaoForFrame(_currentExceptionFrameId, _currentExceptionType.tipo,
       _currentExceptionType.icon, _currentExceptionType.color, vinc, anchor, obs, vinc);
 
-    // Criar spec no canvas se checkbox marcado
+    // Injetar cenário no card de spec selecionado no canvas
     const createSpecCheck = document.getElementById('exc-modal-create-spec');
     if (createSpecCheck && createSpecCheck.checked) {
-      const _excColors = {
-        'Erro': '#DC2626', 'Sucesso': '#16A34A',
-        'Confirmação': '#2563EB', 'Alerta': '#D97706'
-      };
-      const tipo  = _currentExceptionType.tipo;
-      const color = _excColors[tipo] || '#DC2626';
-      const frame = getFrame(_currentExceptionFrameId);
-      // Aponta activeFrameId para que spec-created salve no frame correto
-      if (typeof activeFrameId !== 'undefined') activeFrameId = _currentExceptionFrameId;
+      const tipo = _currentExceptionType.tipo;
       parent.postMessage({
         pluginMessage: {
-          type: 'create-unified-spec',
-          opts: {
-            letter: tipo.charAt(0).toUpperCase(),
-            color,
-            category: '',
-            categoryLabel: tipo,
-            note: vinc || tipo,
-            link: anchor || '',
-            guideSide: 'right',
-            properties: [],
-            excecoes: [{ tipo, titulo: vinc || tipo, obs, anchor }],
-            targetNodeId: frame ? frame.figmaId : null
-          }
+          type: 'inject-exception-to-spec-canvas',
+          exc: { tipo, titulo: vinc || tipo, obs }
         }
       }, '*');
     }
