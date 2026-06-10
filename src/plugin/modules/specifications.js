@@ -600,7 +600,19 @@
       if (!createdSpecs[specIdx].excecoes) return;
       createdSpecs[specIdx].excecoes.splice(excIdx, 1);
       saveSpecsToStorage();
-      renderSpecsList();
+      const excListEl = document.getElementById('global-exc-list-' + specIdx);
+      if (excListEl) {
+        const excs = createdSpecs[specIdx].excecoes;
+        excListEl.innerHTML = excs.length
+          ? excs.map((exc, ei) => _renderExcItem(exc, `deleteGlobalSpecException(${specIdx}, ${ei})`)).join('')
+          : '<p class="text-[10px] text-slate-300 dark:text-slate-600 italic">Nenhum cenário registrado</p>';
+        const hdr = excListEl.previousElementSibling;
+        if (hdr) {
+          const p = hdr.querySelector('p');
+          if (p) p.textContent = 'Cenários de Exceção' + (excs.length > 0 ? ' (' + excs.length + ')' : '');
+        }
+        _refreshIcons();
+      }
     }
     window.deleteGlobalSpecException = deleteGlobalSpecException;
 
