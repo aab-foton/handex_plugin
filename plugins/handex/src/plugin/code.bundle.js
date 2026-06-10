@@ -739,9 +739,6 @@
         const data = msg.data;
         const _titulo = (((_a = data.step1) == null ? void 0 : _a.titulo) || "Projeto").replace(/\//g, "-");
         const _handoffBase = `Handex | Ficha de Projeto | ${_titulo}`;
-        const _existingHandoffs = figma.currentPage.findAll(
-          (n) => n.type === "FRAME" && n.name.startsWith(_handoffBase)
-        );
         const _now = /* @__PURE__ */ new Date();
         const _ts = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}-${String(_now.getDate()).padStart(2, "0")} ${String(_now.getHours()).padStart(2, "0")}:${String(_now.getMinutes()).padStart(2, "0")}`;
         const _containerName = `${_handoffBase} | ${_ts}`;
@@ -1399,23 +1396,23 @@
         }
         mainContainer.locked = true;
         figma.currentPage.appendChild(mainContainer);
-        if (_isUpdate && _existingHandoffs.length > 0) {
-          const _rightmost = _existingHandoffs.reduce((best, n) => {
-            const bb = n.absoluteBoundingBox;
-            const bestBb = best.absoluteBoundingBox;
-            return bb && bestBb && bb.x + bb.width > bestBb.x + bestBb.width ? n : best;
-          });
-          const _bb = _rightmost.absoluteBoundingBox;
-          if (_bb) {
-            mainContainer.x = _bb.x + _bb.width + 80;
-            mainContainer.y = _bb.y;
-          } else {
-            mainContainer.x = figma.viewport.center.x;
-            mainContainer.y = figma.viewport.center.y;
+        let _positioned = false;
+        const _mainFrames = data.frames || [];
+        for (const _f of _mainFrames) {
+          if (!_f.figmaId) continue;
+          const _fNode = figma.getNodeById(_f.figmaId);
+          if (!_fNode) continue;
+          const _fBb = _fNode.absoluteBoundingBox;
+          if (_fBb) {
+            mainContainer.x = Math.round(_fBb.x + _fBb.width + 80);
+            mainContainer.y = Math.round(_fBb.y);
+            _positioned = true;
+            break;
           }
-        } else {
-          mainContainer.x = figma.viewport.center.x;
-          mainContainer.y = figma.viewport.center.y;
+        }
+        if (!_positioned) {
+          mainContainer.x = Math.round(figma.viewport.center.x);
+          mainContainer.y = Math.round(figma.viewport.center.y);
         }
         figma.currentPage.selection = [mainContainer];
         figma.viewport.scrollAndZoomIntoView([mainContainer]);
