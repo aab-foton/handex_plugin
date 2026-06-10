@@ -92,7 +92,23 @@ ${framesList.map(f => {
   const createdSpecs = f.createdSpecs || [];
   const excecoes = f.excecoes || [];
   const isNew = f.isNewComponent ? '\n- **Novo Componente**' : '';
-  const auditMD = f.audit && f.audit.status ? `\n- **Auditoria DSC:** ${f.audit.status}${f.audit.justificativa ? ' — ' + f.audit.justificativa : ''}` : '';
+  const _auditStatus = (() => {
+    if (!f.audit || !f.audit.checkDone) return null;
+    const res = f.audit.ressalvas || [];
+    if (f.audit.semDesvios && res.length > 0) return 'Conforme com ressalvas';
+    if (f.audit.semDesvios) return 'Conforme';
+    return 'Não Conforme';
+  })();
+  const auditMD = _auditStatus
+    ? `\n- **Conformidade DSC:** ${_auditStatus}${f.audit.obs ? ' — ' + f.audit.obs : ''}`
+    : '';
+  const ressalvas = (f.audit && f.audit.ressalvas) || [];
+  const ressalvasMD = ressalvas.length === 0 ? '' :
+    '\n\n#### Ressalvas de Conformidade DSC (' + ressalvas.length + ')\n' +
+    '*Itens identificados no escaneamento e reconhecidos pelo designer como desvios intencionais ou pendentes de adequação:*\n' +
+    ressalvas.map(r =>
+      `- [${r.label}] **${r.name}**${r.status === 'warning' ? ' *(revisão recomendada)*' : ''}${r.nodeId ? ` — Node ID: \`${r.nodeId}\`` : ''}`
+    ).join('\n');
   const measuresMD = measurements.length === 0 ? '' :
     '\n\n#### Medidas (' + measurements.length + ')\n' +
     measurements.map(m => `- **${m.name || 'Medida'}**: ${Array.isArray(m.details) ? m.details.join(' | ') : m.details || ''}`).join('\n');
@@ -121,7 +137,7 @@ ${framesList.map(f => {
       tokensMD = '\n- Tokens escaneados: nenhum encontrado';
     }
   }
-  return `### ${f.nome}${isNew}${auditMD}${tokensMD}${measuresMD}${specsMD}${excMD}`;
+  return `### ${f.nome}${isNew}${auditMD}${ressalvasMD}${tokensMD}${measuresMD}${specsMD}${excMD}`;
 }).join('\n\n')}
 
 ## Fluxos de Tela (${(handoffData.createdFlows || []).length})
@@ -918,6 +934,13 @@ ${(handoffData.specs || []).length === 0 ? 'Nenhuma especificação registrada.'
               const fScanCategories = f.specs ? Object.keys(f.specs).filter(k => k !== 'framePreview' && k !== 'fileKey' && Array.isArray(f.specs[k]) && f.specs[k].length > 0) : [];
               const fTotalScan = fScanCategories.reduce((acc, k) => acc + f.specs[k].length, 0);
               const fAuditScore = f.audit && f.audit.results && f.audit.results.adoption != null ? f.audit.results.adoption : null;
+              const fRessalvas = (f.audit && f.audit.ressalvas) || [];
+              const fConformStatus = (() => {
+                if (!f.audit || !f.audit.checkDone) return null;
+                if (f.audit.semDesvios && fRessalvas.length > 0) return { label: 'Conforme com ressalvas', cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' };
+                if (f.audit.semDesvios) return { label: 'Conforme', cls: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' };
+                return { label: 'Não Conforme', cls: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' };
+              })();
 
               const specsList = fCreatedSpecs.length > 0 ? `
                 <div class="mt-3">
@@ -991,7 +1014,7 @@ ${(handoffData.specs || []).length === 0 ? 'Nenhuma especificação registrada.'
                       </div>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
-                      ${fAuditScore != null ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black ${fAuditScore > 90 ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' : fAuditScore > 70 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'}">${fAuditScore}% DSC</span>` : ''}
+                      ${fConformStatus ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black ${fConformStatus.cls}">${fConformStatus.label}</span>` : fAuditScore != null ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black ${fAuditScore > 90 ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' : fAuditScore > 70 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'}">${fAuditScore}% DSC</span>` : ''}
                     </div>
                   </div>
                   <div class="grid grid-cols-4 gap-2 text-center mt-3">
@@ -1015,6 +1038,21 @@ ${(handoffData.specs || []).length === 0 ? 'Nenhuma especificação registrada.'
                   ${specsList}
                   ${measuresList}
                   ${excecoesList}
+                  ${fRessalvas.length > 0 ? `
+                <div class="mt-3">
+                  <p class="text-[9px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-1.5">Ressalvas DSC · ${fRessalvas.length}</p>
+                  <div class="space-y-1">
+                    ${fRessalvas.map(r => `
+                      <div class="flex items-center gap-2 p-2 bg-amber-50/60 dark:bg-amber-950/15 border border-amber-100 dark:border-amber-800/30 rounded-lg">
+                        <i data-lucide="${r.status === 'error' ? 'x-circle' : 'alert-triangle'}" class="w-3 h-3 ${r.status === 'error' ? 'text-red-400' : 'text-amber-400'} shrink-0"></i>
+                        <span class="text-[9px] text-slate-400 shrink-0">${r.label}</span>
+                        <span class="text-[10px] font-medium text-slate-700 dark:text-slate-300 truncate flex-1">${r.name}</span>
+                        ${r.nodeId ? `<span class="text-[8px] font-mono text-slate-300 dark:text-slate-600 shrink-0 truncate max-w-[60px]" title="Node ID: ${r.nodeId}">${r.nodeId.substring(0,8)}…</span>` : ''}
+                      </div>
+                    `).join('')}
+                  </div>
+                  ${f.audit && f.audit.obs ? `<p class="text-[10px] text-amber-700 dark:text-amber-300 mt-2 italic">"${f.audit.obs}"</p>` : ''}
+                </div>` : ''}
                 </div>
               `;
             }).join('')}

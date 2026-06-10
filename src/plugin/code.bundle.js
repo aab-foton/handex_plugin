@@ -42,21 +42,12 @@
     return { score: AUDIT_SCORE.NONE, matchedBy: null, matchedIn: null, matchedTokenName: null };
   }
   function auditProperty(name, value, type, figmaKey, referenceTokensInput, isAudit) {
-    if (!isAudit || !referenceTokensInput) return emptyResult();
-    if (!name) return emptyResult();
-    const lowerName = String(name).toLowerCase();
-    const targetValue = String(value || "").toLowerCase();
+    if (!referenceTokensInput) return emptyResult();
     const referenceList = Array.isArray(referenceTokensInput) ? referenceTokensInput : [referenceTokensInput];
-    let best = emptyResult();
-    const considerSofterMatch = (libName) => {
-      if (best.score < AUDIT_SCORE.SOFT) {
-        best = { score: AUDIT_SCORE.SOFT, matchedBy: null, matchedIn: libName, matchedTokenName: null };
-      }
-    };
-    for (const referenceTokens of referenceList) {
-      if (!referenceTokens) continue;
-      const libName = referenceTokens.meta && referenceTokens.meta.libraryName || referenceTokens.libraryName || null;
-      if (figmaKey) {
+    if (figmaKey) {
+      for (const referenceTokens of referenceList) {
+        if (!referenceTokens) continue;
+        const libName = referenceTokens.meta && referenceTokens.meta.libraryName || referenceTokens.libraryName || null;
         if (referenceTokens.designTokens && Array.isArray(referenceTokens.designTokens.variables)) {
           const v = referenceTokens.designTokens.variables.find((t) => t.key === figmaKey || t.$key === figmaKey);
           if (v) {
@@ -84,6 +75,19 @@
           return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: libName, matchedTokenName: null };
         }
       }
+    }
+    if (!isAudit || !name) return emptyResult();
+    const lowerName = String(name).toLowerCase();
+    const targetValue = String(value || "").toLowerCase();
+    let best = emptyResult();
+    const considerSofterMatch = (libName) => {
+      if (best.score < AUDIT_SCORE.SOFT) {
+        best = { score: AUDIT_SCORE.SOFT, matchedBy: null, matchedIn: libName, matchedTokenName: null };
+      }
+    };
+    for (const referenceTokens of referenceList) {
+      if (!referenceTokens) continue;
+      const libName = referenceTokens.meta && referenceTokens.meta.libraryName || referenceTokens.libraryName || null;
       const categoryList = referenceTokens[type] || referenceTokens[type.replace(/s$/, "")] || null;
       const softMatchList = (list) => {
         if (!Array.isArray(list)) return null;
@@ -312,7 +316,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "4.1.1" : "dev";
+  var PLUGIN_VERSION = true ? "4.1.2" : "dev";
   function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
     const NS = "handex";
@@ -1631,7 +1635,10 @@
       })();
     }
     if (msg.type === "scan-frame") {
-      let audit = function(propType, propValue, propKey, propName) {
+      let audit = function(propType, propValue, propKey, propName, isRemote) {
+        if (isRemote) {
+          return { isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "remote", matchedIn: null, matchedTokenName: null, closestMatch: null };
+        }
         const result = auditProperty(propName, propValue, propType, propKey, referenceTokens, isAudit);
         const isDS = result.score >= AUDIT_SCORE.EXACT ? true : result.score >= AUDIT_SCORE.SOFT ? "warning" : false;
         let closestMatch = null;
@@ -1659,17 +1666,19 @@
         const id = Array.isArray(v) ? v[0] && v[0].id : v.id;
         if (!id) return null;
         const variable = figma.variables.getVariableById(id);
-        return variable ? { name: variable.name, key: variable.key } : null;
+        return variable ? { name: variable.name, key: variable.key, remote: variable.remote === true } : null;
       }, extractNodeProperties = function(n) {
         const props = [];
         if ("fills" in n && Array.isArray(n.fills)) {
           let styleName = null;
           let styleKey = null;
+          let fillStyleRemote = false;
           if ("fillStyleId" in n && typeof n.fillStyleId === "string" && n.fillStyleId) {
             const style = figma.getStyleById(n.fillStyleId);
             if (style) {
               styleName = style.name;
               styleKey = style.key;
+              fillStyleRemote = style.remote === true;
             }
           }
           for (const fill of n.fills) {
@@ -1679,18 +1688,21 @@
               const vInfo = getVar(n, "fills");
               const name = vInfo && vInfo.name || styleName || hex;
               const key = vInfo && vInfo.key || styleKey;
-              props.push(__spreadValues({ type: "color", name, value: hex, rawValue: hex, key, variableKey: vInfo ? vInfo.key : null, styleKey, label: "Cor (Fill)" }, audit("colors", hex, key, name)));
+              const _isRemote = vInfo && vInfo.remote || fillStyleRemote;
+              props.push(__spreadValues({ type: "color", name, value: hex, rawValue: hex, key, variableKey: vInfo ? vInfo.key : null, styleKey, label: "Cor (Fill)" }, audit("colors", hex, key, name, _isRemote)));
             }
           }
         }
         if (n.type === "TEXT") {
           let styleName = null;
           let styleKey = null;
+          let textStyleRemote = false;
           if ("textStyleId" in n && typeof n.textStyleId === "string" && n.textStyleId !== figma.mixed && n.textStyleId) {
             const style = figma.getStyleById(n.textStyleId);
             if (style) {
               styleName = style.name;
               styleKey = style.key;
+              textStyleRemote = style.remote === true;
             }
           }
           const family = n.fontName && n.fontName !== figma.mixed ? n.fontName.family : "Mixed";
@@ -1698,7 +1710,7 @@
           const size = n.fontSize && n.fontSize !== figma.mixed ? n.fontSize : "Mixed";
           const name = styleName || `${family} ${fontStyle} (${size}px)`;
           const rawSize = typeof size === "number" ? size : null;
-          props.push(__spreadValues({ type: "typography", name, value: name, rawValue: rawSize, key: styleKey, styleKey, label: "Tipografia" }, audit("typography", name, styleKey, name)));
+          props.push(__spreadValues({ type: "typography", name, value: name, rawValue: rawSize, key: styleKey, styleKey, label: "Tipografia" }, audit("typography", name, styleKey, name, textStyleRemote)));
         }
         if ("layoutMode" in n && n.layoutMode !== "NONE") {
           if (n.itemSpacing !== figma.mixed && n.itemSpacing > 0) {
@@ -1706,7 +1718,7 @@
             const val = `${n.itemSpacing}px`;
             const name = vInfo && vInfo.name || val;
             const propKey = vInfo ? vInfo.key : null;
-            props.push(__spreadValues({ type: "spacing", name, value: val, rawValue: n.itemSpacing, key: propKey, variableKey: propKey, label: "Gap" }, audit("spacing", val, propKey, name)));
+            props.push(__spreadValues({ type: "spacing", name, value: val, rawValue: n.itemSpacing, key: propKey, variableKey: propKey, label: "Gap" }, audit("spacing", val, propKey, name, vInfo && vInfo.remote)));
           }
           const paddings = [
             { prop: "paddingTop", label: "Top" },
@@ -1720,7 +1732,7 @@
               const val = `${n[p.prop]}px`;
               const name = vInfo && vInfo.name || val;
               const propKey = vInfo ? vInfo.key : null;
-              props.push(__spreadValues({ type: "spacing", name, value: val, rawValue: n[p.prop], key: propKey, variableKey: propKey, label: `Padding ${p.label}` }, audit("spacing", val, propKey, name)));
+              props.push(__spreadValues({ type: "spacing", name, value: val, rawValue: n[p.prop], key: propKey, variableKey: propKey, label: `Padding ${p.label}` }, audit("spacing", val, propKey, name, vInfo && vInfo.remote)));
             }
           });
         }
@@ -1738,17 +1750,19 @@
               const hex = rgbToHex2(visibleStroke.color.r, visibleStroke.color.g, visibleStroke.color.b).toUpperCase();
               let styleName = null;
               let styleKey = null;
+              let strokeStyleRemote = false;
               if ("strokeStyleId" in n && n.strokeStyleId) {
                 const st = figma.getStyleById(n.strokeStyleId);
                 if (st) {
                   styleName = st.name;
                   styleKey = st.key;
+                  strokeStyleRemote = st.remote === true;
                 }
               }
               const sVar = getVar(n, "strokes");
               const strokeKey = sVar && sVar.key || styleKey;
               const strokeName = sVar && sVar.name || styleName || hex;
-              props.push(__spreadValues({ type: "stroke", name: strokeName, value: hex, rawValue: hex, key: strokeKey, variableKey: sVar ? sVar.key : null, styleKey, label: "Border Color" }, audit("colors", hex, strokeKey, strokeName)));
+              props.push(__spreadValues({ type: "stroke", name: strokeName, value: hex, rawValue: hex, key: strokeKey, variableKey: sVar ? sVar.key : null, styleKey, label: "Border Color" }, audit("colors", hex, strokeKey, strokeName, sVar && sVar.remote || strokeStyleRemote)));
             }
           }
         }
@@ -1757,22 +1771,24 @@
           const val = `${n.cornerRadius}px`;
           const name = vInfo && vInfo.name || val;
           const propKey = vInfo ? vInfo.key : null;
-          props.push(__spreadValues({ type: "radius", name, value: val, rawValue: n.cornerRadius, key: propKey, variableKey: propKey, label: "Radius" }, audit("borders", val, propKey, name)));
+          props.push(__spreadValues({ type: "radius", name, value: val, rawValue: n.cornerRadius, key: propKey, variableKey: propKey, label: "Radius" }, audit("borders", val, propKey, name, vInfo && vInfo.remote)));
         }
         if ("effects" in n && Array.isArray(n.effects)) {
           let styleName = null;
           let styleKey = null;
+          let effectStyleRemote = false;
           if ("effectStyleId" in n && n.effectStyleId) {
             const style = figma.getStyleById(n.effectStyleId);
             if (style) {
               styleName = style.name;
               styleKey = style.key;
+              effectStyleRemote = style.remote === true;
             }
           }
           for (const effect of n.effects) {
             if (effect.visible) {
               const name = styleName || `${effect.type} (${effect.type.includes("SHADOW") ? "Sombra" : "Blur"})`;
-              props.push(__spreadValues({ type: "effect", name, value: effect.type, key: styleKey, styleKey, label: "Effect" }, audit("effects", effect.type, styleKey, name)));
+              props.push(__spreadValues({ type: "effect", name, value: effect.type, key: styleKey, styleKey, label: "Effect" }, audit("effects", effect.type, styleKey, name, effectStyleRemote)));
             }
           }
         }
@@ -1826,8 +1842,18 @@
           elementMatchedIn = a.matchedIn;
           elementMatchedTokenName = a.matchedTokenName;
           if (dsElement !== true && /^\[dsc\]/i.test(name)) dsElement = true;
-          if (dsElement === false && node.type === "INSTANCE" && node.mainComponent && node.mainComponent.remote) {
-            dsElement = "warning";
+          if (dsElement !== true && node.type === "INSTANCE" && node.mainComponent && node.mainComponent.remote) {
+            dsElement = true;
+          }
+        }
+        if (category === "frames") {
+          const _auditableProps = props.filter((p) => p.isDS !== void 0 && p.type !== "variant");
+          if (_auditableProps.length === 0) {
+            dsElement = true;
+          } else {
+            const _allOk = _auditableProps.every((p) => p.isDS === true);
+            const _anyOk = _auditableProps.some((p) => p.isDS === true);
+            dsElement = _allOk ? true : _anyOk ? "warning" : false;
           }
         }
         if (category === "typography") {
@@ -1838,6 +1864,10 @@
             elementMatchedBy = _typoProp.matchedBy || null;
             elementMatchedIn = _typoProp.matchedIn || null;
             elementMatchedTokenName = _typoProp.matchedTokenName || null;
+            if (dsElement === false && _typoProp.styleKey) {
+              const _family = node.fontName && node.fontName !== figma.mixed ? node.fontName.family : "";
+              if (/caixa/i.test(_family)) dsElement = true;
+            }
           }
         }
         const variants = props.filter((p) => p.type === "variant").map((p) => ({ name: p.name, value: p.value }));

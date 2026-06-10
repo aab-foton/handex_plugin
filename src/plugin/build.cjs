@@ -116,9 +116,9 @@ ${css}
   </style>
 </head>
 
-<body class="h-screen flex flex-col overflow-hidden bg-white text-slate-900 dark:bg-dark-bg dark:text-dark-text">
+<body class="h-screen flex flex-col overflow-hidden bg-light-bg text-slate-900 dark:bg-dark-bg dark:text-dark-text">
   <header
-    class="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-dark-line shrink-0 bg-white dark:bg-dark-bg z-50">
+    class="flex items-center justify-between px-4 py-2 border-b border-light-line dark:border-dark-line shrink-0 bg-light-surface dark:bg-dark-bg z-50">
     <!-- Home Header -->
     <div id="header-home" class="flex items-center justify-between w-full">
       <div class="flex items-center gap-2">
@@ -144,7 +144,7 @@ ${css}
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <button onclick="ensureExpanded(); openDadosProjetoModal()" title="Dados do Projeto" aria-label="Dados do Projeto"
-          class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
+          class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
           <i data-lucide="clipboard-list" class="w-4 h-4" aria-hidden="true"></i>
         </button>
         <button onclick="ensureExpanded(); navigate('view-handoff-summary')" title="Gerar Ficha no Canvas" aria-label="Gerar Ficha"
@@ -152,17 +152,17 @@ ${css}
           <i data-lucide="send" class="w-4 h-4" aria-hidden="true"></i>
         </button>
         <button onclick="ensureExpanded(); toggleUiScale()" data-tooltip="Ajustar escala da interface" aria-label="Ajustar escala da interface"
-          class="tooltip-left p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
+          class="tooltip-left p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
           <i data-lucide="zoom-in" class="w-5 h-5" aria-hidden="true"></i>
         </button>
         <button onclick="toggleTheme()" title="Alternar tema" aria-label="Alternar tema claro/escuro"
-          class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
+          class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
           <i data-lucide="sun" class="sun-icon w-5 h-5" aria-hidden="true"></i>
           <i data-lucide="moon" class="moon-icon w-5 h-5 hidden" aria-hidden="true"></i>
         </button>
         <button onclick="toggleCollapse()" id="btn-collapse" aria-label="Minimizar plugin"
           title="Minimizar — clique no ícone para expandir novamente"
-          class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
+          class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
           <i data-lucide="minimize-2" class="w-4 h-4" aria-hidden="true"></i>
         </button>
       </div>
@@ -183,7 +183,7 @@ ${modalsShared}
   </div>
 
   <!-- SIGNATURE FOOTER -->
-  <footer id="footer-signature" class="pb-2 pt-1 text-center shrink-0 bg-white dark:bg-dark-bg">
+  <footer id="footer-signature" class="pb-2 pt-1 text-center shrink-0 bg-light-surface dark:bg-dark-bg border-t border-light-line dark:border-dark-line">
     <p class="text-[9px] text-gray-400 dark:text-dark-muted font-bold tracking-wider uppercase">
       Desenvolvido por Fóton
     </p>

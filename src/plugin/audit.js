@@ -31,37 +31,27 @@ function scoreToLegacy(score) {
 
 // Score-based audit:
 //   1.0 (EXACT) — element matched by Figma internal `key` (variable or style)
-//   0.5 (SOFT)  — element matched only by value or name (low precision)
+//   0.5 (SOFT)  — element matched only by value or name (low precision, audit mode only)
 //   0.0 (NONE)  — no match in any provided reference library
 //
 // Returns: { score, matchedBy: "key"|"value"|"name"|null, matchedIn: <libName>|null }
 // Notes:
-//   - When multiple reference libraries are provided, picks the highest score (any
-//     library confirming an exact key match is enough to make the prop "ouro").
-//   - When isAudit is false or no reference is provided, score is NONE — UI hides the
-//     audit indicator in that mode via handoffData.step2.isAuditEnabled.
+//   - Key-based lookup always runs regardless of isAudit (ground truth from Figma).
+//   - Soft/value matching only runs when isAudit:true (explicit audit mode).
+//   - When multiple reference libraries are provided, picks the highest score.
 export function auditProperty(name, value, type, figmaKey, referenceTokensInput, isAudit) {
-  if (!isAudit || !referenceTokensInput) return emptyResult();
-  if (!name) return emptyResult();
+  if (!referenceTokensInput) return emptyResult();
 
-  const lowerName = String(name).toLowerCase();
-  const targetValue = String(value || "").toLowerCase();
   const referenceList = Array.isArray(referenceTokensInput) ? referenceTokensInput : [referenceTokensInput];
 
-  let best = emptyResult();
+  // Pass 1 — exact key-based match (always runs, regardless of isAudit).
+  // Figma keys are ground truth: if the style/variable/component key is in the DSC
+  // reference, the element is compliant regardless of scan mode.
+  if (figmaKey) {
+    for (const referenceTokens of referenceList) {
+      if (!referenceTokens) continue;
+      const libName = (referenceTokens.meta && referenceTokens.meta.libraryName) || referenceTokens.libraryName || null;
 
-  const considerSofterMatch = (libName) => {
-    if (best.score < AUDIT_SCORE.SOFT) {
-      best = { score: AUDIT_SCORE.SOFT, matchedBy: null, matchedIn: libName, matchedTokenName: null };
-    }
-  };
-
-  for (const referenceTokens of referenceList) {
-    if (!referenceTokens) continue;
-    const libName = (referenceTokens.meta && referenceTokens.meta.libraryName) || referenceTokens.libraryName || null;
-
-    // 1. Exact match by Figma internal key (variables + styles) — highest precision.
-    if (figmaKey) {
       if (referenceTokens.designTokens && Array.isArray(referenceTokens.designTokens.variables)) {
         const v = referenceTokens.designTokens.variables.find(t => t.key === figmaKey || t.$key === figmaKey);
         if (v) {
@@ -90,8 +80,28 @@ export function auditProperty(name, value, type, figmaKey, referenceTokensInput,
         return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: libName, matchedTokenName: null };
       }
     }
+  }
 
-    // 2. Soft match — by value, name, or category list (spacing/borders/etc.).
+  // Pass 2 — soft/value-based matching (only in explicit audit mode).
+  // Normal scans (isAudit: false) rely solely on key-based detection above.
+  if (!isAudit || !name) return emptyResult();
+
+  const lowerName = String(name).toLowerCase();
+  const targetValue = String(value || "").toLowerCase();
+
+  let best = emptyResult();
+
+  const considerSofterMatch = (libName) => {
+    if (best.score < AUDIT_SCORE.SOFT) {
+      best = { score: AUDIT_SCORE.SOFT, matchedBy: null, matchedIn: libName, matchedTokenName: null };
+    }
+  };
+
+  for (const referenceTokens of referenceList) {
+    if (!referenceTokens) continue;
+    const libName = (referenceTokens.meta && referenceTokens.meta.libraryName) || referenceTokens.libraryName || null;
+
+    // Soft match — by value, name, or category list (spacing/borders/etc.).
     const categoryList = referenceTokens[type] || referenceTokens[type.replace(/s$/, "")] || null;
 
     const softMatchList = (list) => {

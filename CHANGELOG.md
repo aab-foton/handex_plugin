@@ -2,6 +2,91 @@
 
 ---
 
+## v4.1.2 — 2026-06-10
+
+### Resumo
+Melhorias significativas na detecção de conformidade DSC — correção do bug central de auditoria, novo status "Conforme com ressalvas", ressalvas salvas na documentação, detecção por `variable.remote`/`style.remote`, e refinamentos de UX no contraste visual e comportamento do plugin minimizado.
+
+---
+
+### Conformidade DSC — Correções e Novos Comportamentos
+
+**Bug crítico corrigido — `auditProperty` bloqueava todo lookup em modo normal**
+- `audit.js`: a guard `if (!isAudit || ...)` impedia qualquer verificação de chave quando `isAudit: false` (todos os scans normais). Reestruturado em dois passes: Pass 1 (lookup por chave Figma — sempre roda) e Pass 2 (soft matching — só em modo auditoria).
+
+**Detecção por `variable.remote` e `style.remote`**
+- `code.js`: `getVar()` agora retorna `remote: true` quando a variável vem de biblioteca publicada
+- Função `audit()` aceita novo parâmetro `isRemote` — se `true`, retorna `EXACT` sem consultar o skeleton
+- Aplicado a: cores (fill), tipografia, espaçamentos, paddings, bordas, raios e efeitos
+- Mitiga o problema de `variables: 0` nas bibliotecas cujos tokens não foram buscados via REST API
+
+**Tipografia — nova regra de conformidade**
+- Se o nó TEXT tem estilo vinculado (`styleKey != null`) e a fonte é CAIXAstd → `isDS: true`
+- Antes: tipografia com token DSC aplicado continuava aparecendo como não conforme
+
+**Instâncias remotas → conformes (não mais "revisão")**
+- Componentes e ícones com `mainComponent.remote = true` agora recebem `isDS: true` (antes `'warning'`)
+- Ícones da lib Fundamentos Visuais paravam de aparecer indevidamente no alerta
+
+**Frames fora de padrão → aparecem no alerta**
+- `addElement("frames")` calcula `isDS` com base nas props de estilo: todos DSC → `true`; mix → `'warning'`; nenhum → `false`
+- Frames não conformes aparecem na lista "Itens para revisar:" com label "Frame"
+
+**Novo status "Conforme com ressalvas"**
+- Quando `semDesvios = true` mas o scan ainda aponta itens: status âmbar "Conforme com ressalvas"
+- Quando `semDesvios = true` e scan está limpo: status verde "Conforme"
+
+**Ressalvas salvas na documentação**
+- Ao ativar "Sem desvios encontrados", snapshot dos itens pendentes é salvo em `frame.audit.ressalvas[]`
+- Cada ressalva contém: `{ category, label, name, nodeId, status }`
+- Incluídas na ficha canvas (seção "Ressalvas DSC") e no arquivo MD exportado (com Node ID para rastreabilidade em auditoria futura)
+
+**Novo Componente — conformidade ocultada**
+- Toggle "Novo Componente" esconde a seção inteira de Conformidade DSC
+- Frames novos passarão por revisão dedicada no time DSC — não faz sentido auditar contra a lib existente
+- Status do cabeçalho: "Novo Componente" (violeta), imune a chamadas de `_updateFrameAuditSubtitle`
+
+**Label do alerta**
+- "Itens para adequação" → "Itens para revisar:"
+
+---
+
+### Fetch de Refs — Variáveis
+
+- `fetch-design-refs.cjs`: tenta buscar `/v1/files/{fileKey}/variables/local` por biblioteca
+- Se o token tiver acesso de editor, popula `designTokens.variables[]` no skeleton
+- Falha silenciosa com aviso (não quebra o build) caso o token não tenha acesso ao arquivo
+
+---
+
+### UX
+
+**Contraste visual**
+- Fundo do plugin: `bg-white` → `#eef2f7` (cinza-azulado suave)
+- Header e rodapé: `bg-light-surface` (`#ffffff`) com borda `#dde3ec`
+- Palette `light` adicionada ao `tailwind.config.cjs`: `light-bg`, `light-surface`, `light-line`
+
+**Botão "Voltar ao topo" oculto quando minimizado**
+- `toggleCollapse()` força ocultação do `btn-top` ao minimizar
+- `handleScroll` não exibe o botão enquanto `isCollapsed = true`
+
+---
+
+### Arquivos Modificados
+
+| Arquivo | Mudança |
+|---|---|
+| `src/plugin/audit.js` | Reestrutura `auditProperty` em dois passes |
+| `src/plugin/code.js` | `getVar` + `remote`; `audit()` + `isRemote`; `isDS` para frames e tipografia; instâncias remotas → `true` |
+| `src/plugin/modules/core.js` | Status "Conforme com ressalvas"; snapshot de ressalvas; conformidade oculta p/ novo componente; `btn-top` no collapse |
+| `src/plugin/modules/specifications.js` | Frames no alerta; label "Itens para revisar:"; `conformance-section` com `id` |
+| `src/plugin/modules/handoff.js` | `auditMD` usa `semDesvios`/`checkDone`/`ressalvas`; seção "Ressalvas DSC" na ficha canvas e no MD |
+| `src/plugin/build.cjs` | `bg-light-bg`, `bg-light-surface`, `border-light-line` no body/header/footer |
+| `src/plugin/styles/tailwind.config.cjs` | Palette `light` adicionada |
+| `src/plugin/refs/fetch-design-refs.cjs` | Endpoint `/variables/local` |
+
+---
+
 ## v4.1.1 — 2026-06-09
 
 ### Resumo
