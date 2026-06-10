@@ -1876,8 +1876,12 @@ figma.ui.onmessage = async (msg) => {
         elementMatchedBy = a.matchedBy;
         elementMatchedIn = a.matchedIn;
         elementMatchedTokenName = a.matchedTokenName;
-        // Convenção [dsc] é suficiente para confirmar conformidade, independente da chave na lib
+        // Convenção [dsc] no nome confirma conformidade (fallback quando chave não está no skeleton)
         if (dsElement !== true && /^\[dsc\]/i.test(name)) dsElement = true;
+        // Instância de biblioteca externa (remote=true): chave de outra versão da lib → warning
+        if (dsElement === false && node.type === 'INSTANCE' && node.mainComponent && node.mainComponent.remote) {
+          dsElement = 'warning';
+        }
       }
 
       // Pluck variant props from props[] into a separate flat list so the UI
@@ -1959,7 +1963,8 @@ figma.ui.onmessage = async (msg) => {
           ((() => {
             const _ck = n.type === "INSTANCE" && n.mainComponent ? n.mainComponent.key : (n.key || null);
             const _a = audit(category, n.name, _ck, n.name);
-            return _a.isDS === true || /^\[dsc\]/i.test(n.name);
+            const _isRemote = n.type === 'INSTANCE' && n.mainComponent && n.mainComponent.remote;
+            return _a.isDS === true || /^\[dsc\]/i.test(n.name) || _isRemote;
           })());
 
         if (!_skipChildren && 'children' in n && n.children) {
