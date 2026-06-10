@@ -1883,6 +1883,22 @@ figma.ui.onmessage = async (msg) => {
           dsElement = 'warning';
         }
       }
+      if (category === "typography" && node.type === "TEXT") {
+        let _styleKey = null;
+        if ('textStyleId' in node && typeof node.textStyleId === "string" && node.textStyleId !== figma.mixed && node.textStyleId) {
+          const _style = figma.getStyleById(node.textStyleId);
+          if (_style) _styleKey = _style.key;
+        }
+        if (_styleKey) {
+          const a = audit("typography", name, _styleKey, name);
+          dsElement = a.isDS;
+          elementScore = a.score;
+          elementMatchedBy = a.matchedBy;
+          elementMatchedIn = a.matchedIn;
+          elementMatchedTokenName = a.matchedTokenName;
+        }
+        // Sem estilo aplicado → dsElement permanece false (tipografia hardcoded)
+      }
 
       // Pluck variant props from props[] into a separate flat list so the UI
       // can render them as pills in the card header (most relevant info for dev).
