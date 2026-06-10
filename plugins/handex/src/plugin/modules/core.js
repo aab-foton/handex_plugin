@@ -99,6 +99,8 @@ function setFrameCheckDone(frameId, checked) {
   frame.audit.checkDone = checked;
   const el = document.getElementById(`audit-result-${frameId}`);
   if (el) el.classList.toggle('hidden', !checked);
+  const rescanRow = document.getElementById(`rescan-row-${frameId}`);
+  if (rescanRow) rescanRow.classList.toggle('hidden', !checked);
   _updateFrameAuditSubtitle(frameId);
   saveToStorage();
 }
