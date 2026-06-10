@@ -656,12 +656,10 @@ function openExceptionModal(frameId) {
   const anchorInput = document.getElementById('exc-modal-anchor');
   const obsCheck    = document.getElementById('exc-modal-has-obs');
   const obsArea     = document.getElementById('exc-modal-obs');
-  const createSpec  = document.getElementById('exc-modal-create-spec');
   if (vincInput)   vincInput.value   = '';
   if (anchorInput) anchorInput.value = '';
   if (obsCheck)    obsCheck.checked  = false;
   if (obsArea)     obsArea.classList.add('hidden');
-  if (createSpec)  createSpec.checked = false;
   const confirm = document.getElementById('exc-modal-confirm');
   if (confirm) confirm.disabled = true;
   openModal('exception-modal');
@@ -758,20 +756,6 @@ function confirmException() {
     addExcecaoForFrame(_currentExceptionFrameId, _currentExceptionType.tipo,
       _currentExceptionType.icon, _currentExceptionType.color, vinc, anchor, obs, vinc);
 
-    // Injetar exceções nos cards de spec do canvas para este frame
-    const createSpecCheck = document.getElementById('exc-modal-create-spec');
-    if (createSpecCheck && createSpecCheck.checked) {
-      const frame = getFrame(_currentExceptionFrameId);
-      const specs = frame ? (frame.createdSpecs || []) : [];
-      const excList = frame ? (frame.excecoes || []) : [];
-      specs.forEach(spec => {
-        if (spec && spec.id) {
-          parent.postMessage({
-            pluginMessage: { type: 'refresh-spec-card', nodeId: spec.id, excecoes: excList }
-          }, '*');
-        }
-      });
-    }
   }
   closeModal('exception-modal');
   if (typeof renderExcecoesView === 'function') renderExcecoesView();
