@@ -2103,13 +2103,20 @@ figma.ui.onmessage = async (msg) => {
 
   if (msg.type === "create-unified-spec") {
     (async () => {
-      const selection = figma.currentPage.selection;
-      if (selection.length === 0) {
-        figma.notify("Selecione um elemento.");
-        return;
-      }
-      const node = selection[0];
       const opts = msg.opts;
+      // Suporte a targetNodeId (spec gerada a partir de exceção de frame)
+      let node = null;
+      if (opts.targetNodeId) {
+        node = figma.getNodeById(opts.targetNodeId);
+      }
+      if (!node) {
+        const selection = figma.currentPage.selection;
+        if (selection.length === 0) {
+          figma.notify("Selecione um elemento no canvas.");
+          return;
+        }
+        node = selection[0];
+      }
 
       try { await figma.loadFontAsync({ family: "Inter", style: "Regular" }); } catch (e) { }
       try { await figma.loadFontAsync({ family: "Inter", style: "Medium" }); } catch (e) { }
