@@ -85,6 +85,10 @@ export function auditProperty(name, value, type, figmaKey, referenceTokensInput,
           return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: libName, matchedTokenName: c.name || null };
         }
       }
+      // _skeleton.json stores component keys as flat string array in componentKeys
+      if (Array.isArray(referenceTokens.componentKeys) && referenceTokens.componentKeys.includes(figmaKey)) {
+        return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: libName, matchedTokenName: null };
+      }
     }
 
     // 2. Soft match — by value, name, or category list (spacing/borders/etc.).
