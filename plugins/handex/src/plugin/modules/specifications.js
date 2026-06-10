@@ -484,7 +484,7 @@
                 ${spec.category ? `<span class="inline-flex mt-0.5 px-1.5 py-0.5 rounded-full border ${_ccPill.border} text-[9px] font-bold ${_ccPill.text} ${_ccPill.bg}">${spec.categoryLabel || spec.category}</span>` : `<p class="text-[9px] text-slate-300 dark:text-slate-600 px-1 leading-none">Sem categoria</p>`}
               </div>
               ${hasRawTokenWarning ? `<span title="Valores sem token — use Check Design" class="w-4 h-4 flex items-center justify-center text-amber-400 shrink-0"><i data-lucide="alert-triangle" class="w-3 h-3"></i></span>` : ''}
-              ${excCount > 0 ? `<span class="px-1 py-0.5 rounded bg-orange-50 text-[9px] font-bold text-orange-500 shrink-0">${excCount} exc</span>` : ''}
+              <span id="exc-badge-${frameId}-${specIdx}" class="px-1 py-0.5 rounded bg-orange-50 text-[9px] font-bold text-orange-500 shrink-0 ${excCount > 0 ? '' : 'hidden'}">${excCount} exc</span>
               <button type="button" title="Localizar no canvas"
                 onclick="event.stopPropagation(); focusNode('${spec.id}')"
                 class="w-5 h-5 flex items-center justify-center text-gray-300 hover:text-[#0070af] transition-colors shrink-0">
@@ -626,7 +626,18 @@
       if (!spec || !spec.excecoes) return;
       spec.excecoes.splice(excIdx, 1);
       saveToStorage();
-      renderSpecsListForFrame(frameId);
+      const excListEl = document.getElementById('spec-exc-list-' + frameId + '-' + specIdx);
+      if (excListEl) {
+        excListEl.innerHTML = spec.excecoes.length
+          ? spec.excecoes.map((exc, ei) => _renderExcItem(exc, `deleteSpecException('${frameId}', ${specIdx}, ${ei})`)).join('')
+          : '<p class="text-[10px] text-slate-300 dark:text-slate-600 italic">Nenhum cenário registrado</p>';
+        _refreshIcons();
+      }
+      const badge = document.getElementById('exc-badge-' + frameId + '-' + specIdx);
+      if (badge) {
+        badge.textContent = `${spec.excecoes.length} exc`;
+        badge.classList.toggle('hidden', spec.excecoes.length === 0);
+      }
     }
     window.deleteSpecException = deleteSpecException;
 
