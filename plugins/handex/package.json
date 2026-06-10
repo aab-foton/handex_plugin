@@ -11,6 +11,7 @@
     "lint": "tsc --noEmit",
     "refs:fetch": "node src/plugin/refs/fetch-design-refs.cjs",
     "refs:rebuild": "npm run refs:fetch && node src/plugin/refs/build-skeleton.cjs",
+    "refs:update": "npm run refs:rebuild && npm run bundle:ui && npm run bundle:code",
     "bundle:refs": "node src/plugin/refs/build-skeleton.cjs",
     "bundle:css": "tailwindcss --config src/plugin/styles/tailwind.config.cjs -i src/plugin/styles/tailwind-input.css -o src/plugin/styles/tailwind-compiled.css --minify",
     "bundle:ui": "npm run bundle:css && npm run bundle:refs && node src/plugin/build.cjs",
