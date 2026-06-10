@@ -334,8 +334,8 @@
             <div class="relative flex items-center">
               <input type="text" id="spec-letter-input" maxlength="2" value="A" 
                 class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl pl-3 pr-8 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-100 outline-none transition-all uppercase" />
-              <input type="color" id="spec-color-input" value="#005ca9" 
-                class="absolute right-2 w-5 h-5 rounded cursor-pointer border-0 p-0" title="Cor do contorno e tag" />
+              <span id="spec-color-swatch" class="absolute right-2 w-5 h-5 rounded-full border border-white/30 shrink-0" style="background-color:#005ca9" title="Cor definida pela categoria"></span>
+              <input type="hidden" id="spec-color-input" value="#005ca9" />
             </div>
           </div>
           <div class="col-span-3">
@@ -352,7 +352,7 @@
               </button>
             </div>
             <div class="relative" id="cs-ann-cat">
-              <select id="ann-category" class="hidden">
+              <select id="ann-category" class="hidden" onchange="syncSpecColorFromCategory()">
                 <option value="">Sem categoria</option>
               </select>
               <button type="button" onclick="_csToggle('cs-ann-cat', event)"
@@ -456,6 +456,8 @@
       document.getElementById('spec-form-modal').dataset.editIdx = '';
       document.getElementById('spec-letter-input').value = 'A';
       document.getElementById('spec-color-input').value = '#005ca9';
+      const _sw = document.getElementById('spec-color-swatch');
+      if (_sw) _sw.style.backgroundColor = '#005ca9';
       document.getElementById('ann-category').value = '';
       document.getElementById('spec-link-input').value = '';
       document.getElementById('ann-note').value = '';
