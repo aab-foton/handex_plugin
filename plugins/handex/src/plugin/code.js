@@ -2406,7 +2406,8 @@ figma.ui.onmessage = async (msg) => {
         linkTxt.fontSize = 11;
         linkTxt.fills = [{ type: "SOLID", color: { r: 0, g: 0.4, b: 0.8 } }];
         linkTxt.characters = "Link: " + opts.link;
-        linkTxt.textAutoResize = "WIDTH_AND_HEIGHT";
+        linkTxt.textAutoResize = "HEIGHT";
+        linkTxt.resize(220, 20);
         specCard.appendChild(linkTxt);
       }
 
