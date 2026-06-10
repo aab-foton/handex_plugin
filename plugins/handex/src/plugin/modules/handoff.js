@@ -98,7 +98,7 @@ ${framesList.map(f => {
     measurements.map(m => `- **${m.name || 'Medida'}**: ${Array.isArray(m.details) ? m.details.join(' | ') : m.details || ''}`).join('\n');
   const specsMD = createdSpecs.length === 0 ? '' :
     '\n\n#### Especificações (' + createdSpecs.length + ')\n' +
-    createdSpecs.map(s => `- **${s.name || s.label || 'Spec'}** [${s.category || s.categoryLabel || 'Geral'}]${s.note ? ': ' + s.note : ''}${s.link ? ' — [DS](' + s.link + ')' : ''}`).join('\n');
+    createdSpecs.map(s => `- **${s.name || s.label || 'Spec'}** [${s.category || s.categoryLabel || 'Geral'}]${s.note ? ': ' + s.note : ''}${s.link ? ' — [DSC](' + s.link + ')' : ''}`).join('\n');
   const excMD = excecoes.length === 0 ? '' :
     '\n\n#### Exceções (' + excecoes.length + ')\n' +
     excecoes.map(e => `- [${e.tipo || 'Geral'}] **${e.titulo || ''}**${e.notas ? ': ' + e.notas : ''}`).join('\n');
