@@ -1504,6 +1504,12 @@ function openDadosProjetoModal() {
 }
 
 function navigate(viewId) {
+  if (viewId !== 'view-dados-projeto') {
+    window._dadosProjetoSnackShown = false;
+    clearTimeout(window._dadosProjetoSnackTimer);
+    const snack = document.getElementById('dados-projeto-snackbar');
+    if (snack) snack.classList.add('hidden');
+  }
   document.querySelectorAll(".view").forEach((el) => el.classList.remove("active"));
   const targetView = document.getElementById(viewId);
   if (targetView) targetView.classList.add("active");
@@ -1784,13 +1790,27 @@ function closeHelpAndReturn() {
 // ── Scroll ─────────────────────────────────────────────────────────────
 function handleScroll(el) {
   const btnTop = document.getElementById('btn-top');
-  if (!btnTop) return;
-  if (el.scrollTop > 100) {
-    btnTop.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
-    btnTop.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
-  } else {
-    btnTop.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
-    btnTop.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
+  if (btnTop) {
+    if (el.scrollTop > 100) {
+      btnTop.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
+      btnTop.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
+    } else {
+      btnTop.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
+      btnTop.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
+    }
+  }
+  // Snackbar ao chegar no fim da view de Informações do Projeto
+  if (el.closest && el.closest('#view-dados-projeto')) {
+    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 24;
+    const snack = document.getElementById('dados-projeto-snackbar');
+    if (snack && atBottom && !window._dadosProjetoSnackShown) {
+      window._dadosProjetoSnackShown = true;
+      snack.classList.remove('hidden');
+      clearTimeout(window._dadosProjetoSnackTimer);
+      window._dadosProjetoSnackTimer = setTimeout(() => {
+        snack.classList.add('hidden');
+      }, 6000);
+    }
   }
 }
 
