@@ -1822,6 +1822,7 @@
           elementMatchedBy = a.matchedBy;
           elementMatchedIn = a.matchedIn;
           elementMatchedTokenName = a.matchedTokenName;
+          if (dsElement === false && /^\[dsc\]/i.test(name)) dsElement = "warning";
         }
         const variants = props.filter((p) => p.type === "variant").map((p) => ({ name: p.name, value: p.value }));
         const map = specs[category];
@@ -1879,7 +1880,13 @@
             category = "frames";
           }
           addElement(category, n, props);
-          if ("children" in n && n.children) {
+          const _isDSCInstance = (n.type === "INSTANCE" || n.type === "COMPONENT") && (category === "components" || category === "icons");
+          const _skipChildren = _isDSCInstance && (() => {
+            const _ck = n.type === "INSTANCE" && n.mainComponent ? n.mainComponent.key : n.key || null;
+            const _a2 = audit(category, n.name, _ck, n.name);
+            return _a2.isDS === true || /^\[dsc\]/i.test(n.name);
+          })();
+          if (!_skipChildren && "children" in n && n.children) {
             for (const child of n.children) {
               extractSpecs(child, (depth || 0) + 1);
             }
