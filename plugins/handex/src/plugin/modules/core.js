@@ -89,6 +89,7 @@ function _updateFrameAuditSubtitle(frameId) {
     subtitle.className = 'text-[10px] text-red-500 font-medium';
     subtitle.textContent = 'Não Conforme';
   }
+  if (typeof _refreshConformanceAlert === 'function') _refreshConformanceAlert(frameId);
 }
 
 function setFrameCheckDone(frameId, checked) {

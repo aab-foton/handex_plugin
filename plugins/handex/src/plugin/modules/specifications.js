@@ -99,6 +99,64 @@
     }
     window.showFrameSection = showFrameSection;
 
+    // ── Conformance alert helpers ────────────────────────────────────────
+    function _buildConformanceAlertHTML(frame) {
+      if (!frame || !frame.audit || !frame.audit.checkDone) return '';
+      const hasUnl = typeof _computeFrameHasUnlinked === 'function' ? _computeFrameHasUnlinked(frame) : false;
+      const semDesvios = frame.audit.semDesvios;
+      if (semDesvios && !hasUnl && !frame.isNewComponent) return '';
+
+      const secDefs = [
+        { key: 'components', label: 'Componente' },
+        { key: 'icons', label: 'Ícone' },
+        { key: 'typography', label: 'Tipografia' },
+        { key: 'vectors', label: 'Vetor' }
+      ];
+      const items = [];
+      if (frame.specs) {
+        secDefs.forEach(sec => {
+          (frame.specs[sec.key] || []).forEach(item => {
+            if (item.isDS === false) items.push({ label: sec.label, name: item.name || '(sem nome)', status: 'error' });
+            else if (item.isDS === 'warning') items.push({ label: sec.label, name: item.name || '(sem nome)', status: 'warning' });
+          });
+        });
+      }
+
+      if (items.length === 0) {
+        return `<div class="flex items-start gap-2 px-3 py-2.5 bg-amber-50 dark:bg-amber-900/15 rounded-xl border border-amber-100 dark:border-amber-800/30">
+          <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5"></i>
+          <p class="text-[11px] text-amber-700 dark:text-amber-300 leading-snug">Desvios declarados. Descreva abaixo quais adequações são necessárias.</p>
+        </div>`;
+      }
+
+      const rows = items.map(it => {
+        const icon = it.status === 'error' ? 'x-circle' : 'alert-triangle';
+        const cls  = it.status === 'error' ? 'text-red-400' : 'text-amber-500';
+        return `<li class="flex items-center gap-1.5 min-w-0">
+          <i data-lucide="${icon}" class="w-3 h-3 ${cls} shrink-0"></i>
+          <span class="text-[10px] text-slate-400 dark:text-dark-muted shrink-0">${it.label}</span>
+          <span class="text-[10px] font-medium text-slate-700 dark:text-white truncate">${it.name}</span>
+        </li>`;
+      }).join('');
+
+      return `<div class="px-3 py-2.5 bg-red-50 dark:bg-red-900/15 rounded-xl border border-red-100 dark:border-red-800/30 space-y-1.5">
+        <div class="flex items-center gap-1.5">
+          <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-red-500 shrink-0"></i>
+          <p class="text-[11px] font-bold text-red-600 dark:text-red-400">Itens para adequação</p>
+        </div>
+        <ul class="space-y-1 pl-0.5">${rows}</ul>
+      </div>`;
+    }
+
+    function _refreshConformanceAlert(frameId) {
+      const frame = typeof getFrame === 'function' ? getFrame(frameId) : null;
+      if (!frame) return;
+      const el = document.getElementById('conformance-alert-' + frameId);
+      if (!el) return;
+      el.innerHTML = _buildConformanceAlertHTML(frame);
+      if (typeof _refreshIcons === 'function') _refreshIcons();
+    }
+
     // ── Accordion card por frame (Step 3 — Documentação & Specs) ────────
     function renderFrameCard(frame) {
       const list = document.getElementById('list-frames');
@@ -253,6 +311,7 @@
                 <i data-lucide="component" class="w-3.5 h-3.5 text-violet-500 shrink-0"></i>
                 <p class="text-[11px] text-violet-700 dark:text-violet-300 leading-snug">Componente novo — desvios são esperados. Registre as divergências nas observações acima.</p>
               </div>`}
+              <div id="conformance-alert-${fid}">${_buildConformanceAlertHTML(frame)}</div>
               <textarea id="audit-obs-${fid}" rows="2"
                 placeholder="Descreva os desvios encontrados ou o motivo da não conformidade com o DSC..."
                 oninput="setFrameAuditObs('${fid}', this.value)"
