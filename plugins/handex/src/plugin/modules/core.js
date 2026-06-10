@@ -885,7 +885,17 @@ function _csSyncLabel(wid) {
   const labelEl   = w.querySelector('[data-cs-label]');
   if (!hiddenSel || !labelEl) return;
   const sel = hiddenSel.options[hiddenSel.selectedIndex];
-  if (sel) labelEl.textContent = sel.text;
+  if (!sel) return;
+  if (wid === 'cs-ann-cat' && sel.value) {
+    const color = typeof getCategoryColor === 'function' ? getCategoryColor(sel.value) : '#005ca9';
+    labelEl.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${color};margin-right:6px;vertical-align:middle;flex-shrink:0"></span>${sel.text}`;
+  } else {
+    labelEl.textContent = sel.text;
+  }
+  // Sincroniza a cor do swatch no formulário
+  if (wid === 'cs-ann-cat' && typeof syncSpecColorFromCategory === 'function') {
+    syncSpecColorFromCategory();
+  }
 }
 
 function _csMarkActive(wid, value) {
@@ -913,14 +923,21 @@ function _csSyncPanel(wid) {
   if (!hiddenSel || !panel) return;
   const currentVal = hiddenSel.value;
   panel.innerHTML = '';
+  const isCatPanel = wid === 'cs-ann-cat';
   Array.from(hiddenSel.options).forEach(opt => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.setAttribute('data-cs-opt', opt.value);
     btn.setAttribute('onclick', `_csSelect('${wid}', ${JSON.stringify(opt.value)})`);
     const isActive = opt.value === currentVal;
-    btn.className = `w-full text-left px-3 py-2 text-[12px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors${isActive ? ' bg-blue-50 dark:bg-blue-900/20 text-[#0070af] font-bold' : ''}`;
-    btn.textContent = opt.text;
+    btn.className = `w-full text-left flex items-center gap-2 px-3 py-2 text-[12px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors${isActive ? ' bg-blue-50 dark:bg-blue-900/20 font-bold' : ''}`;
+    if (isCatPanel && opt.value) {
+      const dot = document.createElement('span');
+      const color = typeof getCategoryColor === 'function' ? getCategoryColor(opt.value) : '#005ca9';
+      dot.style.cssText = `width:8px;height:8px;border-radius:50%;background-color:${color};flex-shrink:0`;
+      btn.appendChild(dot);
+    }
+    btn.appendChild(document.createTextNode(opt.text));
     panel.appendChild(btn);
   });
   _csSyncLabel(wid);
