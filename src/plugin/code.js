@@ -1883,21 +1883,16 @@ figma.ui.onmessage = async (msg) => {
           dsElement = 'warning';
         }
       }
-      if (category === "typography" && node.type === "TEXT") {
-        let _styleKey = null;
-        if ('textStyleId' in node && typeof node.textStyleId === "string" && node.textStyleId !== figma.mixed && node.textStyleId) {
-          const _style = figma.getStyleById(node.textStyleId);
-          if (_style) _styleKey = _style.key;
+      if (category === "typography") {
+        // extractNodeProperties já calculou isDS para a prop de tipografia — reutilizar
+        const _typoProp = props.find(p => p.type === "typography");
+        if (_typoProp) {
+          dsElement = _typoProp.isDS !== undefined ? _typoProp.isDS : false;
+          elementScore = _typoProp.score || null;
+          elementMatchedBy = _typoProp.matchedBy || null;
+          elementMatchedIn = _typoProp.matchedIn || null;
+          elementMatchedTokenName = _typoProp.matchedTokenName || null;
         }
-        if (_styleKey) {
-          const a = audit("typography", name, _styleKey, name);
-          dsElement = a.isDS;
-          elementScore = a.score;
-          elementMatchedBy = a.matchedBy;
-          elementMatchedIn = a.matchedIn;
-          elementMatchedTokenName = a.matchedTokenName;
-        }
-        // Sem estilo aplicado → dsElement permanece false (tipografia hardcoded)
       }
 
       // Pluck variant props from props[] into a separate flat list so the UI
