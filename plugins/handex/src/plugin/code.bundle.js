@@ -1823,6 +1823,9 @@
           elementMatchedIn = a.matchedIn;
           elementMatchedTokenName = a.matchedTokenName;
           if (dsElement !== true && /^\[dsc\]/i.test(name)) dsElement = true;
+          if (dsElement === false && node.type === "INSTANCE" && node.mainComponent && node.mainComponent.remote) {
+            dsElement = "warning";
+          }
         }
         const variants = props.filter((p) => p.type === "variant").map((p) => ({ name: p.name, value: p.value }));
         const map = specs[category];
@@ -1884,7 +1887,8 @@
           const _skipChildren = _isDSCInstance && (() => {
             const _ck = n.type === "INSTANCE" && n.mainComponent ? n.mainComponent.key : n.key || null;
             const _a2 = audit(category, n.name, _ck, n.name);
-            return _a2.isDS === true || /^\[dsc\]/i.test(n.name);
+            const _isRemote = n.type === "INSTANCE" && n.mainComponent && n.mainComponent.remote;
+            return _a2.isDS === true || /^\[dsc\]/i.test(n.name) || _isRemote;
           })();
           if (!_skipChildren && "children" in n && n.children) {
             for (const child of n.children) {
