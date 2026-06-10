@@ -82,7 +82,10 @@ function _updateFrameAuditSubtitle(frameId) {
   }
 
   const hasUnlinked = _computeFrameHasUnlinked(frame);
-  if (frame.audit.semDesvios && !hasUnlinked) {
+  if (frame.audit.semDesvios && hasUnlinked) {
+    subtitle.className = 'text-[10px] text-amber-500 font-medium';
+    subtitle.textContent = 'Conforme com ressalvas';
+  } else if (frame.audit.semDesvios && !hasUnlinked) {
     subtitle.className = 'text-[10px] text-green-600 font-medium';
     subtitle.textContent = 'Conforme';
   } else {
@@ -110,6 +113,37 @@ function setFrameSemDesvios(frameId, checked) {
   if (!frame) return;
   if (!frame.audit) frame.audit = {};
   frame.audit.semDesvios = checked;
+
+  // Ao declarar conformidade, captura snapshot dos itens pendentes como ressalvas.
+  // Limpa ao desmarcar para que um novo scan redefina a lista.
+  if (checked) {
+    const _secDefs = [
+      { key: 'components', label: 'Componente' },
+      { key: 'icons',      label: 'Ícone'      },
+      { key: 'typography', label: 'Tipografia' },
+      { key: 'vectors',    label: 'Vetor'      }
+    ];
+    const _ressalvas = [];
+    if (frame.specs) {
+      _secDefs.forEach(sec => {
+        (frame.specs[sec.key] || []).forEach(item => {
+          if (item.isDS === false || item.isDS === 'warning') {
+            _ressalvas.push({
+              category: sec.key,
+              label: sec.label,
+              name: item.name || '(sem nome)',
+              nodeId: item.nodeId || null,
+              status: item.isDS === false ? 'error' : 'warning'
+            });
+          }
+        });
+      });
+    }
+    frame.audit.ressalvas = _ressalvas;
+  } else {
+    frame.audit.ressalvas = [];
+  }
+
   // Obs fica visível quando sem desvios=false OU há itens desvinculados do DSC
   const hasUnlinked = _computeFrameHasUnlinked(frame);
   const showObs = !checked || hasUnlinked;
@@ -261,9 +295,11 @@ function toggleCollapse() {
   isCollapsed = !isCollapsed;
   const mainContent = document.querySelector('body > div.flex-1');
   const collapseBtn = document.getElementById('btn-collapse');
+  const btnTop = document.getElementById('btn-top');
   if (isCollapsed) {
     if (mainContent) mainContent.classList.add('hidden');
     if (collapseBtn) collapseBtn.innerHTML = '<i data-lucide="maximize-2" class="w-4 h-4" aria-hidden="true"></i>';
+    if (btnTop) { btnTop.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10'); btnTop.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0'); }
   } else {
     if (mainContent) mainContent.classList.remove('hidden');
     if (collapseBtn) collapseBtn.innerHTML = '<i data-lucide="minimize-2" class="w-4 h-4" aria-hidden="true"></i>';
@@ -823,16 +859,10 @@ function toggleNewComponent(frameId, checked) {
   if (badge) badge.classList.toggle('hidden', !checked);
   const obsDiv = document.getElementById(`new-component-obs-${frameId}`);
   if (obsDiv) obsDiv.classList.toggle('hidden', !checked);
-  // Atualiza subtítulo do cabeçalho
-  const subtitle = document.getElementById(`frame-subtitle-${frameId}`);
-  if (subtitle) {
-    if (checked) {
-      subtitle.className = 'text-[10px] text-violet-500 font-medium';
-      subtitle.textContent = 'Novo Componente';
-    } else if (typeof _updateFrameAuditSubtitle === 'function') {
-      _updateFrameAuditSubtitle(frameId, frame && frame.audit ? frame.audit.status : null);
-    }
-  }
+  // Oculta/exibe a seção de Conformidade DSC inteira
+  const conformDiv = document.getElementById(`conformance-section-${frameId}`);
+  if (conformDiv) conformDiv.classList.toggle('hidden', checked);
+  _updateFrameAuditSubtitle(frameId);
 }
 
 function updateNewComponentObs(frameId, value) {
@@ -1788,7 +1818,7 @@ function closeHelpAndReturn() {
 function handleScroll(el) {
   const btnTop = document.getElementById('btn-top');
   if (btnTop) {
-    if (el.scrollTop > 100) {
+    if (!isCollapsed && el.scrollTop > 100) {
       btnTop.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
       btnTop.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
     } else {
