@@ -2,10 +2,10 @@
   "meta": {
     "libraryName": "Super Gerenciador",
     "figmaFileKey": "erkqbRKIbaFWbkHe51BeiZ",
-    "exportedAt": "2026-05-20T22:25:47.633Z",
+    "exportedAt": "2026-06-10T14:05:23.574Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
-      "styles: /nodes bloqueado — sem valores resolvidos (só keys)"
+      "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
     ]
   },
   "designTokens": {
@@ -9872,7 +9872,8 @@
     {
       "key": "e0abbad58a643e1c88c9ce8fdda79057def06ebf",
       "name": "[base] Swap Slot",
-      "description": ""
+      "description": "",
+      "containingFrame": ""
     },
     {
       "key": "e7517768df1a4b258be8eea8d3a64e3c7f8df9ec",
@@ -9911,54 +9912,6 @@
       "containingFrame": "open-in-browser"
     },
     {
-      "key": "0768d1cd4e59c58af94567b337f96fd98cee37fd",
-      "name": "variant=slider",
-      "description": "❖ [dsc] Progress\n<N/A>",
-      "containingFrame": ""
-    },
-    {
-      "key": "1654e45cfc905f739ceaba9b4a85e92c5b851ce9",
-      "name": "variant=range slider",
-      "description": "❖ [dsc] Progress\n<N/A>",
-      "containingFrame": ""
-    },
-    {
-      "key": "a0e7d4230219446debb2eace7d868f79b83e36fa",
-      "name": "variant=no results, configuration=illustration",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6f6e56f1ee78841b9cd304a312680ba98e8c418d",
-      "name": "variant=error, configuration=illustration",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "aca364e5b799fe6da53b15f87a0981582ba90c57",
-      "name": "variant=custom, configuration=illustration",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "71b2291590abcebb9274c367f7d6f4fd254f32b7",
-      "name": "variant=neutral, size=standard",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "110242b7c2ce3183ece5c0964357f8d56b6c664d",
-      "name": "variant=neutral, size=large",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "8e97b195fe80356a3fd52d76b1b7fbc6fbf9bcdb",
-      "name": "variant=neutral, size=small",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "1a82975bf409d44fd8abf58c157e1c33657df15c",
       "name": "state=focus, variant=default",
       "description": "",
@@ -9977,86 +9930,14 @@
       "containingFrame": ""
     },
     {
-      "key": "38ece60c9c30482089b558b12450d225de2fdd1a",
-      "name": "variant=no results, configuration=icon",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "70ab0569354c7cd111f0769f1977c8518d28a5f9",
-      "name": "variant=custom, configuration=icon",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "772fce9931fc8db092dfb9305839901bf0c88d43",
       "name": "state=default, variant=on gray bg",
       "description": "",
       "containingFrame": ""
     },
     {
-      "key": "7caae470c405a2509cd0bb8b0f874c602f831a94",
-      "name": "variant=warning, size=standard",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "8efcbaf32c53eaa54169d2600260d7dae01c6a92",
-      "name": "variant=success, size=standard",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9117dcafe80364c66303ca278dc0775945db3530",
-      "name": "variant=warning, size=small",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ae7ab838a559426e55641707df0a5db27e2d4d07",
-      "name": "variant=highlight, size=standard",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "bfc313041ba7b5d7fafce2095da07eeb45b460fb",
-      "name": "variant=slot, configuration=default, show overlay=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1f3a043a4edee213909727fdc6a318e474f1d9a5",
-      "name": "variant=success, size=large",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "213813775ce71e056499fbfd688331d7b53b382e",
-      "name": "variant=error, configuration=icon",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "2e32f1a59ec35204c5ae521dab99c306ae8eb84f",
       "name": "variant=danger, size=standard",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "2e86710246de8c78cdaf474d9bf77ab2f4bb9fee",
-      "name": "variant=highlight, size=small",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "2f127306208d2b4a393d445bb38eba92b9d0c875",
-      "name": "variant=success, size=small",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "df28ef3d6b9f5c5d61132478decf756f1820af8d",
-      "name": "variant=danger, size=large",
       "description": "",
       "containingFrame": ""
     },
@@ -10069,36 +9950,6 @@
     {
       "key": "e8cc11d0df717d6cd9deab8065b2ca5eb3d750a5",
       "name": "state=pressed, variant=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ff017216d85b52b53f4cbe6f1c5c33718c51ec2f",
-      "name": "variant=danger, size=small",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "be83fd2e6b9d75156d4787610123ea6b237d1a6e",
-      "name": "pattern=default, compact=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9f1fb35a7a21f67ab19c33e5e95e8b1ac4551d1a",
-      "name": "pattern=default, compact=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "60cd8619795cfa3f9fa543b22249a63d68fd6b65",
-      "name": "pattern=antessala, compact=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3517251b239b51d28353d2cb3ee4f22885ffd0c6",
-      "name": "pattern=antessala, compact=true",
       "description": "",
       "containingFrame": ""
     },
@@ -13447,961 +13298,8 @@
     {
       "key": "17808c1214e442274360c74ac968e16e7a59b9b7",
       "name": "[base] Image Swap Slot",
-      "description": ""
-    },
-    {
-      "key": "020189a582c3534b12c98d5148908ee0077f6c46",
-      "name": "state=read-only, configuration=avatar, compact=true",
       "description": "",
       "containingFrame": ""
-    },
-    {
-      "key": "034afb35c18eccd00bc0bed0b47af3f3d7452bfd",
-      "name": "state=read-only, configuration=avatar, compact=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "06f16516aa5b0f419f5564ad59af70824df4eb6d",
-      "name": "variant=checkbox, type=unexpansible, state=pressed, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "07a49a4fa362350f66b10c9a60a98f1dbf9c65de",
-      "name": "type=selectable, variant=account, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0a484b90415934ba38a915c777f64befc010f952",
-      "name": "state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0cb974b3a68d6deec3a744dbbaa1541896e3a0bd",
-      "name": "type=navigation, variant=group, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "10a8674c0222c25ee42b0a1b26e6204145921ad7",
-      "name": "variant=radio button, type=expandable, state=hover, selected=false, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1193d92cac9291c3790e1ad4f8dddafa690d1a85",
-      "name": "state=focus, configuration=avatar, compact=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "156dc7a8f33516cf95a9b66aced15eae79a1b4cd",
-      "name": "state=focus, compact=false, show balance=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "16caeee9f2c8e458e2a6fd9c2f547f0906c89eb8",
-      "name": "state=hover, compact=false, show balance=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "18ce99e373fe0b39c2afa7e3895c8c37924d39b5",
-      "name": "state=focus, variant=neutral",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "19ab2f9a79268191d1e3a21434e5a047400ede50",
-      "name": "type=selectable, variant=account, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1ab7a19e77dbba42bc8e71f443413ff21c37eef0",
-      "name": "state=selected, variant=group",
-      "description": "",
-      "containingFrame": "Card Account / Card Group "
-    },
-    {
-      "key": "1ff162cc80f009f3d9f4b402e91c8cfde310488a",
-      "name": "variant=radio button, type=unexpansible, state=pressed, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "201cdf5935fb7bc2a210d24ab2d59a5a634a7099",
-      "name": "variant=checkbox, type=expandable, state=pressed, selected=true, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "219be1dc058a90eb0ce9a55979b716017b0c2c3e",
-      "name": "state=pressed, configuration=icon, compact=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "229758fce9a4e4221c33ffbf202c55daafb0893d",
-      "name": "state=hover, variant=account",
-      "description": "",
-      "containingFrame": "Card Account / Card Group "
-    },
-    {
-      "key": "229bf5b6cc5a2ed91277e07136add0a93fbd3a0c",
-      "name": "variant=radio button, type=expandable, state=hover, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "22e15fd79095d96b54ba7bfcf10f7d4a8306fa70",
-      "name": "type=navigation, variant=account, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "24d35d7286a6b860a5b78d19df521a6f48429671",
-      "name": "variant=checkbox, type=expandable, state=default, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "28c8a482612322be8e26cfa23fe6b57d98d3564f",
-      "name": "type=selectable, variant=account, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "2996363b85611057471094a35ee293299746f0cf",
-      "name": "variant=radio button, type=expandable, state=pressed, selected=true, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "2a72f2fa19eefd1843ca15e8191889c724f4d181",
-      "name": "type=navigation, variant=group, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "2aa79807c21c8c93219bbff0c0084ab052c91d6c",
-      "name": "variant=radio button, type=unexpansible, state=focus, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "2b98352135d0b68288836b40439e6954f1ad8ce3",
-      "name": "variant=checkbox, type=expandable, state=disabled, selected=false, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "2d7003f928e57f24327bb3c5b0d9fa74b60c9ca7",
-      "name": "type=selectable, variant=account, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "2db62240c0092763fea5cb8a24b6b0045aa1c778",
-      "name": "type=navigation, variant=account, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "2ea7cdd232969c8152bf36377555b720dd72ee87",
-      "name": "state=default, compact=false, show balance=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "30d5a060517c006aa3b4c75d501e176a1da665f4",
-      "name": "state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "323a3c3a7dd999b9c12cde2dc2ea5f450ee7f598",
-      "name": "variant=checkbox, type=expandable, state=disabled, selected=true, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3290f7ae655332ce7b08e3c43b02a6ac2fd625f0",
-      "name": "state=hover, compact=true, show balance=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "32b7a378aae9cb7cf41d686404663124f2219130",
-      "name": "variant=radio button, type=unexpansible, state=focus, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "34234bbf4a7fad8852f60a10d520e86c588e6f0f",
-      "name": "variant=inline",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "36f853192efa0014f79b4ccc280e7f751c67a42f",
-      "name": "state=default, configuration=icon, compact=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3843d6346c3f21231c4e9cc933e0db1ed4002303",
-      "name": "state=hover, configuration=avatar, compact=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3870b71508e6aabeadae85502f6699a2ae6a858e",
-      "name": "variant=checkbox, type=unexpansible, state=disabled, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "39f0e3b9d63e17ab7d51ee14ce0ed69d593a0b56",
-      "name": "variant=radio button, type=expandable, state=default, selected=true, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3c225b5f78778aad0009019fc0511421fc74ba5e",
-      "name": "state=focus, configuration=icon, compact=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "5e6e8e036fe5b3d9a41041b6fcd94465846870aa",
-      "name": "variant=checkbox, type=expandable, state=pressed, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3e7a9401d67ec58ab09faf13bfe14e3c83a87240",
-      "name": "variant=radio button, type=expandable, state=disabled, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3ff39db8e80b57411b93472e217d199ad36e7661",
-      "name": "variant=radio button, type=unexpansible, state=hover, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "407719d09377beadff1112ee0313e4833476a998",
-      "name": "variant=checkbox, type=expandable, state=hover, selected=false, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "4580e6a2202bbb7a0f5ace20e772b2d446c52fbc",
-      "name": "state=hover, variant=group",
-      "description": "",
-      "containingFrame": "Card Account / Card Group "
-    },
-    {
-      "key": "473aa5803bae2a919b6b4742779eb08062899f0b",
-      "name": "variant=checkbox, type=unexpansible, state=hover, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "520e5dcd9fb39c9c3eb8a90302b604bd6a1e9697",
-      "name": "state=default, configuration=icon, compact=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "556ad6eeb0aa2340d456f327af53292886278d88",
-      "name": "variant=checkbox, type=expandable, state=focus, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "56639cc5f129e87805a4de08f57d34102d52a6de",
-      "name": "state=read-only, configuration=icon, compact=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "5703d6857ff05a1360d4fca447395c8e4438b3da",
-      "name": "type=selectable, variant=group, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "5fe27ccf54211cc54fc6873d5aafb1d4cfae25a6",
-      "name": "variant=checkbox, type=expandable, state=disabled, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "5ebd0c0d2baca25fb912865a1a599194edd4dfc1",
-      "name": "variant=mobile, rows/columns=9",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "5a40fe2339fff3a2992928a699a3d71e810e7d84",
-      "name": "state=hover, variant=neutral",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "5dffcf0db0296c86a946aa8f4627fda31cd578de",
-      "name": "type=navigation, variant=group, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "628a3696ce98a41e8ceee92821b74a2fa45468f8",
-      "name": "variant=checkbox, type=expandable, state=hover, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "654a08428b9e738a32c1cbe71dfe844202b7be17",
-      "name": "state=hover, variant=danger",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6f3674d6fb31ae30c604de615fb11795db1def9a",
-      "name": "variant=radio button, type=expandable, state=disabled, selected=true, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "7090e74de1df232a72e43fa935f2c86a71987b77",
-      "name": "variant=radio button, type=unexpansible, state=default, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "7393cd7753659ccf2f572b2305316e1160148db9",
-      "name": "ovelay=false",
-      "description": "🚧 Sobreposição que exibe uma mensagem importante ao usuário dentro de uma janela modal. Ele interrompe o fluxo da interface para chamar a atenção sobre uma ação que precisa de confirmação, como exclusões, erros ou decisões sensíveis.\n\n\n🏷️ alert, dialog, modal, confirmation, warning, message, error, decision, alerta, diálogo, modal, confirmação, aviso, mensagem, erro, decisão.",
-      "containingFrame": ""
-    },
-    {
-      "key": "75e06700ac5d27ed2dcb17ea1d059cebe23fc281",
-      "name": "type=selectable, variant=group, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "7811b8455619c6cd7e43061af9e43fedd223dafc",
-      "name": "state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "7c48ebe8e6ce47e5fced6cf646338e2b06b296ba",
-      "name": "state=focus, variant=success",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "7f3e64adeb0ee568f2c99ae89734aa81a4377ac8",
-      "name": "variant=radio button, type=expandable, state=default, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "807b18334e7c4d0e7135c938a91c57d59e92789d",
-      "name": "state=focus, variant=danger",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "816781d61f4a7d89b181984489194d74a931a98b",
-      "name": "variant=radio button, type=unexpansible, state=pressed, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "839933b4173f648a8b3691b2153bc1c083a8caf4",
-      "name": "variant=radio button, type=unexpansible, state=hover, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "84fec43bca9051b1d384751989bee59b7768fe28",
-      "name": "state=hover, configuration=avatar, compact=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "8524fc7c0c2d75aac5bc0d2aa1f1a3569fa1a2b1",
-      "name": "variant=radio button, type=expandable, state=focus, selected=true, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "8887a5abeab28b5852b00d9a9b17635aa4f881f9",
-      "name": "variant=radio button, type=unexpansible, state=default, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "8ddc3209430e6d1263df66237ae9ca2b5d403ec9",
-      "name": "ovelay=true",
-      "description": "🚧 Sobreposição que exibe uma mensagem importante ao usuário dentro de uma janela modal. Ele interrompe o fluxo da interface para chamar a atenção sobre uma ação que precisa de confirmação, como exclusões, erros ou decisões sensíveis.\n\n\n🏷️ alert, dialog, modal, confirmation, warning, message, error, decision, alerta, diálogo, modal, confirmação, aviso, mensagem, erro, decisão.",
-      "containingFrame": ""
-    },
-    {
-      "key": "8ebde31a9554ca87c0ff2bb975ba13dce6d6eff0",
-      "name": "state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "8ee4add4a3bb061e1f4d16101554746c2759d917",
-      "name": "state=default, compact=true, show balance=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "911c9cb454748e0fac95cdd24b38be0f80500654",
-      "name": "state=pressed, compact=false, show balance=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "92f1493a3a3a4d4b14f563038a95bfe4d6cf6717",
-      "name": "state=default, configuration=avatar, compact=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "952983f93264df152452266e4a8cc72f32f02581",
-      "name": "state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9724a89afbe8671e3ea840b75293348cf6ce657c",
-      "name": "variant=checkbox, type=expandable, state=default, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "97846aca084e11bf42eb93907dd7901af786776f",
-      "name": "state=default, compact=true, show balance=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "98d76d9470934d085fd695e87644efcb0838e98a",
-      "name": "variant=radio button, type=expandable, state=disabled, selected=false, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "98fe43181a9f945a2630088b161321ff77293695",
-      "name": "state=selected, variant=account",
-      "description": "",
-      "containingFrame": "Card Account / Card Group "
-    },
-    {
-      "key": "990d10519181c0d0b2490d52f0aa1797bbbbe666",
-      "name": "variant=checkbox, type=unexpansible, state=default, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "99a573ab21d47b86cb7b51e60c853cd635b92a42",
-      "name": "variant=radio button, type=expandable, state=pressed, selected=false, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "99e31670bd4d9afd06b87379d0b59b1110f71666",
-      "name": "state=pressed, variant=success",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9d1be3a73785203d45ec8a45927ac76293a01804",
-      "name": "type=navigation, variant=account, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9ec90d1258050ea80f5962f855beccf5ffed16fc",
-      "name": "variant=radio button, type=expandable, state=hover, selected=true, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9f05611d291c7701f4cc49e5b70e369736772143",
-      "name": "variant=radio button, type=expandable, state=default, selected=false, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9f36f9ec41f264105d6a2a8cac498638237eb067",
-      "name": "variant=radio button, type=expandable, state=focus, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a228a5403e82ebd27dd4d645b6226a8132c0cc78",
-      "name": "type=selectable, variant=group, state=selected",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a24184ae81a7959be9c8c3204c599dae8d2dd86e",
-      "name": "type=selectable, variant=account, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a262c9bf5fb444d3d4c2db99138f1762319f1251",
-      "name": "state=pressed, compact=true, show balance=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a6b29b816d54469626d9ceb825bee2b498619f57",
-      "name": "state=default, variant=neutral",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a8d42cbede4c302029244e47cecbd0f60164675e",
-      "name": "state=pressed, configuration=avatar, compact=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ab10069fca65193b25399769c6ef72d71caff897",
-      "name": "state=hover, configuration=icon, compact=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ac8204c6bb240b6be2768e64d4df97af917d5cf2",
-      "name": "state=default, variant=danger",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "acdec007d326628de87870701cea6e29ef46f3b8",
-      "name": "variant=radio button, type=expandable, state=focus, selected=false, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ae13f8066bcc82171cfb2feb682f5bc259d1b432",
-      "name": "variant=checkbox, type=expandable, state=pressed, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "af9b31300e3e4b290875f6fe9eb2cd7c4ee82055",
-      "name": "state=hover, compact=true, show balance=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "b01ccc46aae0542c54d62c64520b02b4a6e67630",
-      "name": "variant=radio button, type=expandable, state=disabled, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "b8f0f78c72b1fc342e97ce2d82f241e13b45d4a2",
-      "name": "state=hover, configuration=icon, compact=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "bddfe25b3bd547d5a336c226efe38545846760b9",
-      "name": "state=pressed, compact=true, show balance=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c0a9d0ef571d47337395c4e01522aac0403f14a6",
-      "name": "state=hover, compact=false, show balance=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c520eef1b09ae7323bc737c4cddddc6e3fccd5d9",
-      "name": "type=navigation, variant=group, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c7ff76dfa5bbc7ddf8f54721a0f37df5abfc92ba",
-      "name": "type=navigation, variant=account, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ca5eb84babfffb8727c9023015dc2e3ee8fc2df4",
-      "name": "variant=checkbox, type=unexpansible, state=focus, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "cc33773656222ceebe81894736922322f40aabd4",
-      "name": "type=navigation, variant=group, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "cc3c3188fa0038fd2950223531ae741624aad8e4",
-      "name": "state=read-only, configuration=icon, compact=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ccae0e9531846d9f5f396ec00bef42a2f7cb8df7",
-      "name": "type=selectable, variant=account, state=selected",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "cebd8b78723012f685ed7887b5b00848c481e86d",
-      "name": "state=focus, compact=true, show balance=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "cecb9d5e115c1c8a44b05052e4c34a87caa7750e",
-      "name": "variant=radio button, type=unexpansible, state=disabled, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d2587f1048fddb07e2d6d995915e5dc473fa96e0",
-      "name": "variant=checkbox, type=unexpansible, state=pressed, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d4e26e975f66be709d427133474d4086ab301090",
-      "name": "variant=card",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d781cc15c2eb437ebf178f0e99781e9439e0ccd9",
-      "name": "state=default, variant=group",
-      "description": "",
-      "containingFrame": "Card Account / Card Group "
-    },
-    {
-      "key": "d90269e1ee97729059580601bcc1ae508eb62f75",
-      "name": "variant=radio button, type=expandable, state=focus, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "da4af37b5fdc0af5ad42a2ce23ef8843e9c85043",
-      "name": "variant=checkbox, type=expandable, state=focus, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "dafacdca09592adab3caba589731a5bea3755064",
-      "name": "variant=radio button, type=expandable, state=default, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "db0d0157b0f014e1253491204b902aa17ad586fe",
-      "name": "variant=checkbox, type=expandable, state=default, selected=false, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "dcc0a897295d7251ee2d9efaab6ed35c646d16b1",
-      "name": "state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "dcc69c4ed0df6cfc38467a674ca693a347e8d97e",
-      "name": "state=default, configuration=avatar, compact=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "df33ee7d337a7cdeb9773eb978f01872484f2380",
-      "name": "state=default, compact=false, show balance=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "df510747ac3511c3f0538d28634cd0cb3503ddcb",
-      "name": "state=focus, configuration=avatar, compact=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "df8b0a9656af9c077170987150f9efbd44ee49b4",
-      "name": "state=focus, compact=true, show balance=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e2da33d279a616dff9ef64707395042809a2fce2",
-      "name": "state=disabled, variant=account",
-      "description": "",
-      "containingFrame": "Card Account / Card Group "
-    },
-    {
-      "key": "e4864ba4f3e442a2bdf7370eb660b9d572fbaa25",
-      "name": "variant=radio button, type=expandable, state=pressed, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e5231f037b001279f15909f0d3073e3561e06691",
-      "name": "state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e5567d12984be9c50079cc71bd071abd51c4bd61",
-      "name": "variant=checkbox, type=expandable, state=disabled, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e6c047f76664a998398e666b06a4c3e86ef9b0af",
-      "name": "state=disabled, variant=group",
-      "description": "",
-      "containingFrame": "Card Account / Card Group "
-    },
-    {
-      "key": "e7141c7782945305e52e3892069fb7070f775be0",
-      "name": "state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e9286f83c4a09a4e03c507514abec58b480b6a72",
-      "name": "type=selectable, variant=group, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "eb3707e9d5153e675fcf4f7ff9e087615837d70b",
-      "name": "variant=checkbox, type=unexpansible, state=disabled, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ecd4e4b573015ae280c1b74235b7ab26a925f446",
-      "name": "state=focus, variant=account",
-      "description": "",
-      "containingFrame": "Card Account / Card Group "
-    },
-    {
-      "key": "eeff4ba7e5cfa25ec91a60c6bb2c0559c7fe4e0d",
-      "name": "state=pressed, configuration=icon, compact=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ef2b27091277b068c7f1c488cbdb4b9a3de0fbdf",
-      "name": "state=pressed, configuration=avatar, compact=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "efbca8218053bfd2801983f4d31c33e4f653bd23",
-      "name": "state=pressed, variant=neutral",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f12e12ea6d8e4119775fa339e43860295a7e1ebf",
-      "name": "type=navigation, variant=account, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f293b8269fb719aaf4d8363fda51ddc661478d01",
-      "name": "state=focus, configuration=icon, compact=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f55828c53148474e3f065ad4cd3a57dd01992927",
-      "name": "type=selectable, variant=group, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f73c8c73126a1799a0e671cc526819f44a89f595",
-      "name": "state=pressed, variant=danger",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "03635356b55ac6cf005da46cef863c14c9aaa901",
-      "name": "state=disabled, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "10cc9a1d5a5ba1643d3d8e07d5f7d8d857f4ca33",
-      "name": "[deprecated] List Footer",
-      "description": "🚫 [deprecated] Usar o componente [dsc] List Item",
-      "containingFrame": ""
-    },
-    {
-      "key": "25e5a2378c061190bc98d9c6b352af0ec0d5695b",
-      "name": "variant=neutral",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "2a79f6995c7625ebcf9386235faba538a25fd63b",
-      "name": "state=hover, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "728ef0776cee81b9f043e46a1742a5c84503f352",
-      "name": "position=last",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "75c032620c6f2cb364eda0248b23e9c68c3f20fc",
-      "name": "variant=negative",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "830b357364ab963d0f065d77ce12bb6fb381411c",
-      "name": "breakpoint=medium",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "85f818a49c772770ee347460fb5c31638372d390",
-      "name": "state=pressed, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "94250f2ea797763729fda66ee7c1fece8eca6fe5",
-      "name": "variant=highlight",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9d1da71a3025d45fc0adad2050dd3d30ead995ab",
-      "name": "breakpoint=extra large",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a4de91b45515eb45f4b4bcb9f32e14d6d11d7e3f",
-      "name": "position=middle",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a5031347a666c5760a2074dca395af1d0b38fd3e",
-      "name": "breakpoint=small",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a9410f6a8a604f284378fcc51d8a4297f0653a03",
-      "name": "state=pressed, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "aa266b3cb69eb814210424b9d969abf28b4b7fe3",
-      "name": "state=default, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "be4f572d783885f102dcf22f82c663f871284613",
-      "name": "breakpoint=large",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "cb52509ebd5b81bd01e31c9e8ea5171cfc976af1",
-      "name": "state=default, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d4a81a9b84a9c37112d1d51cd9419acceaf6a02d",
-      "name": "position=first",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "dae207aa86eb7297889d654b06d2d958966697a9",
-      "name": "state=disabled, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e91f2396be6dcaf58b9fd7bbe6d34662f143b6d3",
-      "name": "state=focus, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f247e3fae13a200db2757ece083a4a721273d060",
-      "name": "breakpoint=extra small",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f703529d49badcacf01c50b04970c9412cec6e0d",
-      "name": "state=focus, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ca5e1807b5f6e9d3f019b25e0caeaf7922fb0216",
-      "name": "color=info",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "90bd6e8b6be9ec1e6adde5f7520dd1f34a494643",
-      "name": "color=success",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d17ab08317772ac495ed088c53b8eeae7bc19404",
-      "name": "state=default, variant=account",
-      "description": "",
-      "containingFrame": "Card Account / Card Group "
-    },
-    {
-      "key": "ffea7edb17500d2eee791e0f0eeb0b0e233c6b89",
-      "name": "state=focus, variant=group",
-      "description": "",
-      "containingFrame": "Card Account / Card Group "
     },
     {
       "key": "008b42b71e79c4e13bbda25114b7ddd216187d4b",
@@ -14442,12 +13340,6 @@
     {
       "key": "0bf1cf9b85b2c4decd86d1dfddccf97880eda2f2",
       "name": "state=hover, variant=neutral",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0dd4c19386e77cf56d076fb59ebc70a1c3ffb215",
-      "name": "breakpoint=small, container=wide",
       "description": "",
       "containingFrame": ""
     },
@@ -14716,12 +13608,6 @@
       "containingFrame": ""
     },
     {
-      "key": "78fb62cf6bd1b2acdcf923aadd121b948ff9280c",
-      "name": "breakpoint=medium, container=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "79c4d9d707c1bc0f79a4da03a5f6f7f83ad161a3",
       "name": "mode=text, filled=true, state=default",
       "description": "",
@@ -14782,20 +13668,8 @@
       "containingFrame": ""
     },
     {
-      "key": "93776bf7c8dc8184e9f958e986431a6fb3975878",
-      "name": "breakpoint=extra large, container=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "964cc775533a21d8ecb21af6ba37efbda111202f",
       "name": "variant=danger, alignment=left, configuration=column",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "97def77c5b814229c0760026d5e450c4606dbb32",
-      "name": "breakpoint=large, container=wide",
       "description": "",
       "containingFrame": ""
     },
@@ -14832,12 +13706,6 @@
     {
       "key": "9ccdb83082b477a309e6d56a446839b5a6a1b7ed",
       "name": "variant=default, alignment=left, configuration=column",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9f9e530aa17c66d11e072e675f57691c02de3955",
-      "name": "breakpoint=extra small, container=default",
       "description": "",
       "containingFrame": ""
     },
@@ -14896,12 +13764,6 @@
       "containingFrame": ""
     },
     {
-      "key": "bbfe012aec45fd35d77682cd589738e4bbba1117",
-      "name": "breakpoint=extra small, container=wide",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "c1335a9259c776af7bbc8a482fdbfdcbdfd29849",
       "name": "variant=success, alignment=right, configuration=column",
       "description": "",
@@ -14940,12 +13802,6 @@
     {
       "key": "d58a03898bc39193a0f20b2f0d59f66c5746e6eb",
       "name": "type=horizontal, color=highlight, state=active, status=completed, slot=off",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d7270cc6b4d38bc4a2a1c6cddc62fe88cc045011",
-      "name": "breakpoint=large, container=default",
       "description": "",
       "containingFrame": ""
     },
@@ -15814,12 +14670,6 @@
       "containingFrame": ""
     },
     {
-      "key": "49ac18f1df6d30193e4b527a1f1f549636b1a8ff",
-      "name": "state=hover, variant=success",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "498babf2b99ad1c297068d1b7bb967c5e82e7858",
       "name": "variant=highlight, size=standard, type=plain, state=disabled",
       "description": "",
@@ -16254,12 +15104,6 @@
     {
       "key": "b6b4d5d979f7d54560b8d3570da9507696875c11",
       "name": "variant=highlight, size=large, type=chromeless, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "bd97e6520413c3d87a92d484a4fd969dbddb18ad",
-      "name": "state=default, variant=success",
       "description": "",
       "containingFrame": ""
     },
@@ -16756,12 +15600,6 @@
       "containingFrame": "dashboard-speed"
     },
     {
-      "key": "499242a1bf44e24295f7cae57352c93cc5735bcf",
-      "name": "state=focus, compact=false, show balance=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "4f49e3ce62e52d6d6838b28368f0042d569144c0",
       "name": "Weight=Dynamic",
       "description": "",
@@ -16850,12 +15688,6 @@
       "name": "Weight=Solid",
       "description": "",
       "containingFrame": "half-cookie"
-    },
-    {
-      "key": "77735da625ca2ab1044364a257b6a82169ffeba4",
-      "name": "state=pressed, compact=false, show balance=true",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "821aa9bd46d65ae7ccaf722208572debb32dbb6d",
@@ -17206,12 +16038,6 @@
       "containingFrame": "copyright"
     },
     {
-      "key": "067371fa4bb41c58414bfa766784b3715a860946",
-      "name": "variant=radio button, type=expandable, state=hover, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "07683f9c0e039307afe37bcdf09249bf3da5b1f3",
       "name": "Weight=Solid",
       "description": "",
@@ -17258,12 +16084,6 @@
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "bookmark-circle"
-    },
-    {
-      "key": "273cb4ae98f034efb1960079777cec2c38c83e74",
-      "name": "variant=checkbox, type=expandable, state=focus, selected=true, collapsed=false",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "27838f269b06256ebfe5edb41461f1aaf64529f2",
@@ -17332,12 +16152,6 @@
       "containingFrame": "lock-slash"
     },
     {
-      "key": "5a736d371b62ba1b2ef2e5ad5974c738d9005a1f",
-      "name": "variant=checkbox, type=expandable, state=default, selected=true, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "63232ac7465db48d950b16ce4ac3b6b8213475c5",
       "name": "Weight=Dynamic",
       "description": "",
@@ -17368,12 +16182,6 @@
       "containingFrame": "ecology-book"
     },
     {
-      "key": "6d01c7037d2e60dfadf5ba091621cc0fb7fc524b",
-      "name": "variant=checkbox, type=expandable, state=hover, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "73c6f7e63a2ab33cfbcaf7bc07e8c14629c1ce1c",
       "name": "Weight=Dynamic",
       "description": "",
@@ -17386,12 +16194,6 @@
       "containingFrame": "more-vert-circle"
     },
     {
-      "key": "7c587ef963b096bed933f1c407d961471c4fa5bf",
-      "name": "variant=radio button, type=unexpansible, state=disabled, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "80c05dd3b1e2537f53409a60b115e4671f8b3869",
       "name": "state=default, status=error, filled=false",
       "description": "",
@@ -17402,12 +16204,6 @@
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "vegan-circle"
-    },
-    {
-      "key": "7ffc14097698134f6489ceb4bb763b0fde45df9c",
-      "name": "variant=checkbox, type=unexpansible, state=hover, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "851809aa565526538a6c97215f773bff44740556",
@@ -17524,12 +16320,6 @@
       "containingFrame": "shortcut-square"
     },
     {
-      "key": "b366a84fed25375b5132ddf9615f72fb3d48da7d",
-      "name": "variant=checkbox, type=expandable, state=hover, selected=true, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "b4624b65233b25fe328fb5f431c6b17ff32f54c5",
       "name": "Weight=Dynamic",
       "description": "",
@@ -17558,18 +16348,6 @@
       "name": "Weight=Solid",
       "description": "",
       "containingFrame": "african-tree"
-    },
-    {
-      "key": "baf9e990fd366eb5d21bcd9d23e8a8b0821c90d8",
-      "name": "variant=checkbox, type=unexpansible, state=default, selected=false, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "bc15cb96fe47fee01761ece8f4389cb76a50706b",
-      "name": "variant=checkbox, type=expandable, state=focus, selected=false, collapsed=false",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "bcfa1cb40928ae8a7f0656ed055e6a5be7fdae8e",
@@ -17678,24 +16456,6 @@
       "name": "Weight=Solid",
       "description": "",
       "containingFrame": "security-pass"
-    },
-    {
-      "key": "ed60292b5a207e37a40c91d2c8b5e6a09c3c6029",
-      "name": "variant=checkbox, type=unexpansible, state=focus, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ef1444b00b86b5067c0f44e6a6ccdc8c7136c5a8",
-      "name": "variant=checkbox, type=expandable, state=pressed, selected=false, collapsed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ef15e3fbc6ede581024cc42fb7352809cd45ebea",
-      "name": "variant=radio button, type=expandable, state=pressed, selected=true, collapsed=true",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "ef33fadd3e45f1e9e27f70566976d2371d5bb2d6",
@@ -20194,30 +18954,6 @@
       "containingFrame": ""
     },
     {
-      "key": "09d35579a6b10f0a4c5fe6176a43a5ce0e6fcbab",
-      "name": "pattern=card detail, pattern state=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "4cc49e5aa37f0de32f524f595345b8d0a645684e",
-      "name": "pattern=card option, pattern state=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e869c754ff0b4ee74726999cc00c76aa6af83710",
-      "name": "pattern=card selectable, pattern state=default state",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a358b1728f34ced0048f23a11235e1451ccf8e0b",
-      "name": "pattern=card selectable, pattern state=active state",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "00aa225e3abe0c7f6e154df65bae38df958e2644",
       "name": "variant=accent, state=focus, selection=radio, selection state=unchecked",
       "description": "",
@@ -21628,154 +20364,10 @@
       "containingFrame": ""
     },
     {
-      "key": "0937bde3549674057762f39ab2b09dace6fba944",
-      "name": "variant=danger, size=large, type=plain, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "09667cc7ce9869e1862f47abcbe7cf58a6454313",
-      "name": "variant=on media bg, size=small, type=chromeless, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0a564b496a26d3946d7a01516347f83b76f682bb",
-      "name": "variant=highlight, size=large, type=chromeless, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0a98f17ce4383b5f01492882ed2e9282f8f92b66",
-      "name": "variant=on media bg, size=small, type=chromeless, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0b2900bdedbc6bac91252186bb438348dfd06f2a",
-      "name": "variant=danger, size=small, type=plain, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0b5c4da78a41bb53a56bff1c60bdfcf6508b027f",
-      "name": "variant=highlight, size=large, type=outline, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0ca03a700cba37f4a75a788e94e5a7e3593e6843",
-      "name": "variant=on media bg, size=large, type=outline, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0e25e785c04c9f07d7b73b24b4828e781b73a1b6",
-      "name": "variant=highlight, size=small, type=outline, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0e7c4347f20c101006b93243b6f0b300ed21efa8",
-      "name": "variant=danger, size=small, type=outline, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "10225c6eac698427009004ac958eb6cdaaa8a13a",
-      "name": "variant=highlight, size=standard, type=outline, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1426daf7a71f474859b53e17b8202d18b48bbf7f",
-      "name": "variant=danger, size=standard, type=plain, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "15ab5302faf38f2560e1d0cfc08ece1a59a9a0c9",
-      "name": "variant=on media bg, size=small, type=outline, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "15db534f2c766fc4956c06f6125261af16fdb555",
-      "name": "variant=highlight, size=small, type=chromeless, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "17ad671c56defc35826f315a630419b4bb0e452c",
-      "name": "variant=danger, size=standard, type=outline, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "198f4845a345f83f8032fb409a8c23282d9e9056",
-      "name": "variant=on media bg, size=large, type=chromeless, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "19989c653eacc3c32dbef2b77f5ef333fefd51d4",
-      "name": "variant=danger, size=standard, type=chromeless, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "1b17af630e64bc4eab9eb1b13e56b088bef1b75a",
       "name": "Weight=Solid",
       "description": "",
       "containingFrame": "percentage-square"
-    },
-    {
-      "key": "1e5234336727eb1c88c2976dd97e1054358404e4",
-      "name": "variant=danger, size=small, type=plain, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1e6ff0bd428c4d494547b9da5cc074e539df9b7e",
-      "name": "variant=danger, size=standard, type=plain, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1e7087f1f54cbb8e60c467f32543c644566cad1f",
-      "name": "variant=highlight, size=large, type=plain, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "223c22624832582ae590d8bc10e4c71ab817e96e",
-      "name": "variant=highlight, size=standard, type=outline, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "2311f1b257c54fc58a5bec2a26f140c3995552be",
-      "name": "variant=danger, size=standard, type=outline, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "23fe94253259e6cb680d1dd125524164c1568ee9",
-      "name": "variant=highlight, size=small, type=plain, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "25e833b22cfd2fcc84a16466e9dccf1b8db3f894",
-      "name": "variant=highlight, size=small, type=outline, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "28a1bec43eb45c0503cc9a0dfe178e18bfa44036",
-      "name": "variant=danger, size=large, type=chromeless, state=focus",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "2cf1f2d52cc4f5c0545005783572f874105af15f",
@@ -21784,40 +20376,10 @@
       "containingFrame": "clock-rotate-right"
     },
     {
-      "key": "2dbe55b6b54676ee38857ec62fd565f8551dce95",
-      "name": "variant=on media bg, size=small, type=outline, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "2e99c5d3104ded0c151a3f6730f2b84744f15727",
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "cylinder"
-    },
-    {
-      "key": "309aaef8a1ce9b0d6d43ecf2f121c391de1ac0d3",
-      "name": "variant=highlight, size=large, type=plain, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3226cfe03f9671d189605ca15aa43b717d88f4de",
-      "name": "variant=highlight, size=standard, type=chromeless, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "338411890871b5c0031137ce84a14dc0c4114ace",
-      "name": "variant=highlight, size=large, type=chromeless, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "35ad2e233d05cd360417d306903ca7b9bd5e168d",
-      "name": "variant=highlight, size=small, type=outline, state=hover",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "375111fb1f670cf451657e7952751fd9f858787c",
@@ -21826,148 +20388,16 @@
       "containingFrame": "cylinder"
     },
     {
-      "key": "38d4b2480e5ae35ca9575d684826add72f0f44fd",
-      "name": "variant=highlight, size=large, type=chromeless, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3d8374b27e24569e4ae6101d911c33c8eb9eba37",
-      "name": "variant=on media bg, size=small, type=plain, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3fcd5e8260f733223fc5313b9d35d22fee8a13dc",
-      "name": "variant=on media bg, size=small, type=plain, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "4022eff88215a85ffa9fae223c855b812c1265e8",
-      "name": "variant=highlight, size=standard, type=outline, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "421103266114a7e93019eb12d1e707555c1a05a2",
-      "name": "variant=highlight, size=large, type=plain, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "428fb6e7a14bd9fb026ca152136f6b363cc1bf1c",
-      "name": "variant=danger, size=standard, type=plain, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "43562c6e003fbc801a1011458c525b9cdea27e0b",
-      "name": "variant=on media bg, size=small, type=chromeless, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "441e558103e58fc0576bf88a72825a139432c6d0",
-      "name": "variant=on media bg, size=large, type=chromeless, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "44770a23b5a9d13fa56e18bc491b149774937645",
-      "name": "variant=danger, size=large, type=chromeless, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "477a2d689a4e3854157059e3c995f24af0dcc328",
-      "name": "variant=on media bg, size=standard, type=outline, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "49579fa30600b09389bf055f57ef1acb566f6765",
-      "name": "variant=on media bg, size=small, type=outline, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "4c54a0ed3aabe230433558dde00b82d1265f5820",
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "bubble-outcome"
     },
     {
-      "key": "4f0125b7d737c7f30da8414f0b018cdb3ae34390",
-      "name": "variant=on media bg, size=large, type=plain, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "5055ad06f626fc52374e31522bc5482c8ac836a5",
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "percentage-square"
-    },
-    {
-      "key": "527c09d13358c9ae83fd6ac5a6047a06bcb55aad",
-      "name": "variant=danger, size=large, type=outline, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "54985870039bac735da96b264dfa8f76cb884b5a",
-      "name": "variant=highlight, size=large, type=chromeless, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "54d827597481b418f951938956301d187ea28135",
-      "name": "variant=on media bg, size=small, type=plain, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "55663c0b5835804544da7e6865a2d73e8e2e70b3",
-      "name": "variant=highlight, size=standard, type=chromeless, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "583ab28f798682bdb5e5422a6bc7183cfcaa300e",
-      "name": "variant=on media bg, size=standard, type=chromeless, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "5a8aec6e1e3ba95d036989351eba739e253bd144",
-      "name": "variant=highlight, size=small, type=chromeless, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "5b372e260d8f748982ff96a287705c4d8dc7fb76",
-      "name": "variant=on media bg, size=standard, type=chromeless, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "5b69692772f6938a5b6bd78e99d2a4ea6d4fd210",
-      "name": "variant=danger, size=standard, type=plain, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "5e670ab05a9a336840f7cd6c3f2091080998cd38",
-      "name": "variant=on media bg, size=small, type=plain, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "60b1bf7627cc96026275e0f94547b2046b3f081d",
-      "name": "variant=highlight, size=large, type=plain, state=pressed",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "620c2327c7c4622640c03ee7c79ae346d0efb53c",
@@ -21982,50 +20412,8 @@
       "containingFrame": ""
     },
     {
-      "key": "6488556628f692d44b73d1a0fe1def7ef7983e22",
-      "name": "variant=highlight, size=small, type=chromeless, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "656b9e3df17a9234508fa18af9978f22f07481e4",
-      "name": "variant=highlight, size=standard, type=outline, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "65fbd29b0313c53f82edc89dd2a77651e4348cfd",
       "name": "variant=on media bg, size=standard, type=plain, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "66429d873abe3aa8dd68fdab304675a10da50d05",
-      "name": "variant=on media bg, size=small, type=outline, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6822fee88ddb12b9f02eb555908a5410b0a63bfb",
-      "name": "variant=danger, size=small, type=chromeless, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "68668c1377795f809633af0bd869f6547e24aac0",
-      "name": "variant=on media bg, size=large, type=chromeless, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6911d2ece3d1585cec07eaab29ada3e324c8be8f",
-      "name": "variant=highlight, size=small, type=plain, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6a06bbe8aa53a963f09521c8eee41ee3dee64255",
-      "name": "variant=on media bg, size=standard, type=plain, state=disabled",
       "description": "",
       "containingFrame": ""
     },
@@ -22036,86 +20424,8 @@
       "containingFrame": ""
     },
     {
-      "key": "6bb5074b78909f7849cfd6619f5f360a0b916a29",
-      "name": "variant=on media bg, size=standard, type=outline, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6bbb69f01719f8dc88bc9f9d27319362c570395b",
-      "name": "variant=highlight, size=standard, type=plain, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6e4062a9295e7b2cc8a65d49f44c6027ca0f7b3c",
-      "name": "variant=danger, size=large, type=chromeless, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "7116c038e84169825d5aa9ed00cc6014ad192813",
-      "name": "variant=on media bg, size=standard, type=plain, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "718ba8004ba382ed0ec18fa3f26fcd609942a849",
       "name": "variant=on media bg, size=standard, type=chromeless, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "71962d6e30a4f13f554120bbabcb8b00c248aec7",
-      "name": "variant=danger, size=large, type=outline, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "76f231f1671601593acc5f780775ee06f15cee40",
-      "name": "variant=on media bg, size=small, type=outline, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "775022b59f7ef97f9c5d89a914b95e6c7e6073e7",
-      "name": "variant=danger, size=standard, type=chromeless, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "79747cbf71b25b52a3df15bbff4018fee8232625",
-      "name": "variant=on media bg, size=large, type=outline, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "79daac01e62dd254cdb7ad4d87ab22eaeb7e2f09",
-      "name": "variant=highlight, size=large, type=outline, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "7a3cd653a34eed4ddd8c0c4d03b06d1d3927935d",
-      "name": "variant=on media bg, size=small, type=outline, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "7de768b395a30620ba996c5566a8134d47ce87a4",
-      "name": "variant=danger, size=small, type=plain, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "839c1771a8deb8d994267306b9cac786be161d44",
-      "name": "variant=highlight, size=large, type=outline, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "856aa786b6bcf7f03e69da80b4ea3f405801b472",
-      "name": "variant=highlight, size=small, type=outline, state=pressed",
       "description": "",
       "containingFrame": ""
     },
@@ -22126,82 +20436,10 @@
       "containingFrame": ""
     },
     {
-      "key": "8b1b37c92e83c36e45adcb7112a6387653f2a606",
-      "name": "variant=danger, size=large, type=chromeless, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "8d3b7734f9f22241fd913384541c271a48b781fd",
-      "name": "variant=on media bg, size=standard, type=chromeless, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "8e0ee2830c99f6f44c3ea3fc94014f0d6b956494",
-      "name": "variant=danger, size=large, type=plain, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "8eca2ed5ac907db6acecb49a5b85d86e55d4c8a2",
-      "name": "variant=highlight, size=standard, type=plain, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "901e33aa993fc040f64b8e45ce568168f2861d98",
-      "name": "variant=on media bg, size=standard, type=outline, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "90b3593e9d87f1376d31abd1de230ed6a2fa2536",
-      "name": "variant=danger, size=large, type=outline, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "931efcc908aa8319a9ca24a70794771d07ec7888",
-      "name": "variant=on media bg, size=standard, type=outline, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "932e0567a52972ce2b703c66b7d41fce98395032",
       "name": "Weight=Solid",
       "description": "",
       "containingFrame": "bubble-outcome"
-    },
-    {
-      "key": "978c7c44b71ce092fc2fb2ef2ce3be1c4eacb815",
-      "name": "variant=danger, size=small, type=outline, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9945ffa53169a2fd6a8ea7cbedd550c61d57f530",
-      "name": "variant=highlight, size=large, type=plain, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9d1d69177fcc956bb8c488575740e690ea1bb99f",
-      "name": "variant=on media bg, size=large, type=plain, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9dfd32286ab824120466cfe3274a33316dc0e7d2",
-      "name": "variant=danger, size=large, type=plain, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9ea1eee81a393e2379c5660200a9e53809c9922a",
-      "name": "variant=danger, size=standard, type=outline, state=pressed",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "9eb0deb88d3cdc282d5b27f006a65c5a0569c986",
@@ -22216,106 +20454,16 @@
       "containingFrame": ""
     },
     {
-      "key": "a1a08450d34b9c87dbbf02a6df4dba11c656b744",
-      "name": "variant=highlight, size=small, type=chromeless, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a2331d167f52d145893bfe72cbfb1ce97815db4b",
-      "name": "variant=on media bg, size=large, type=chromeless, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "a27f759d82403300c3e9c0d6900a483323706d47",
       "name": "Weight=Solid",
       "description": "",
       "containingFrame": "clock-rotate-right"
     },
     {
-      "key": "a47a25f23069eb0ba7a98d7b9db863b59f954b75",
-      "name": "variant=on media bg, size=standard, type=outline, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a5241626f743cebe92eeaef76e3fe7de1b67b1ea",
-      "name": "variant=danger, size=large, type=outline, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a61a78e29f8646dab21560bfa39261ecb4fe4610",
-      "name": "variant=highlight, size=small, type=outline, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "a804e954247946a8734cdbddeafc66e4c01809a2",
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "shopping-bag-pocket"
-    },
-    {
-      "key": "a818a30d82baeb9c720ec89f4b5673c36a9f52f2",
-      "name": "variant=danger, size=standard, type=outline, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "aada2e907b2df3decc799272df1132f670dcaa8a",
-      "name": "variant=on media bg, size=large, type=chromeless, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ac5a68c00980e284f31e01231455c25ade320270",
-      "name": "variant=highlight, size=large, type=outline, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "af217471b396344ec0132e13fd7a3aaea657a11e",
-      "name": "variant=danger, size=standard, type=chromeless, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "af8564a2b0f82b1d4f8b9fe27628f1c0e5d4e964",
-      "name": "variant=highlight, size=standard, type=outline, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "b037122a3e4120adca7b0ad294a1adef13330f30",
-      "name": "variant=highlight, size=standard, type=plain, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "b0a865198e568fbbf07e81b38f87e9ceb127ebf4",
-      "name": "variant=highlight, size=large, type=plain, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "b3fc5d593a3e00764fad098f2e1bcdc89d0789d3",
-      "name": "variant=on media bg, size=standard, type=plain, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "b599a7a5431bf6796d94cfbe02640bba50f34ed4",
-      "name": "variant=on media bg, size=large, type=outline, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "b94264036f7f087c233b6e7c1021ed54a866925a",
-      "name": "variant=on media bg, size=large, type=plain, state=focus",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "bd7f1a021717ddf22d2578e69085ae85841948d1",
@@ -22330,104 +20478,14 @@
       "containingFrame": ""
     },
     {
-      "key": "be31d247f1557cf4fa2931268fcdd3b9f29d453f",
-      "name": "variant=on media bg, size=standard, type=chromeless, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c134388b7114e2340b7573111e8f18ec33e9b11e",
-      "name": "variant=highlight, size=standard, type=outline, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c1c0ad6c6316ed2e69efc3770f9a3eb85eba52a5",
-      "name": "variant=danger, size=large, type=plain, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c26eacd841fac2b892faa421da683309b0a6b2b3",
-      "name": "variant=danger, size=small, type=plain, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c2a7bae573c2835e9dcb26cf1a5d21504d84c7e5",
-      "name": "variant=highlight, size=standard, type=plain, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c2f80f4cc848bb632fde77641ce29ac4bdf59730",
-      "name": "variant=on media bg, size=large, type=outline, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c464496d6ea8ecd28eb71eae714546b951ab5053",
-      "name": "variant=danger, size=small, type=outline, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c86f006da1a25455bedafa40987140447ffb40dc",
-      "name": "variant=on media bg, size=small, type=chromeless, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "caa24115ed31e4659740e610986813f3146be3f8",
-      "name": "variant=highlight, size=small, type=plain, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "cb16715e4e929c996a718d489c284c7cbfd946dd",
-      "name": "variant=danger, size=standard, type=plain, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "cb286a8b8ee5fa9d4e909a41b02a26bee84efc58",
       "name": "Weight=Solid",
       "description": "",
       "containingFrame": "shopping-bag-pocket"
     },
     {
-      "key": "cbf0494149621dba320575c00d5f35e2dd619457",
-      "name": "variant=danger, size=small, type=chromeless, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "cbfcede5545f544cc12b5a61849fcc3501675cf6",
-      "name": "variant=danger, size=standard, type=chromeless, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "cd1176fc287e4e97372dfb107e33a74271262269",
-      "name": "variant=danger, size=small, type=chromeless, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "d0017f37d95fcfe4d8a1f1817c409aadbb76ed1e",
       "name": "variant=highlight, size=standard, type=plain, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d04a027eb84f5f462a2e9c8e8a18fc21aac22697",
-      "name": "variant=on media bg, size=large, type=outline, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d0d10cd97c3d60c7eb6a9afb8f8ff22855647b7c",
-      "name": "variant=on media bg, size=large, type=plain, state=loading",
       "description": "",
       "containingFrame": ""
     },
@@ -22438,142 +20496,10 @@
       "containingFrame": ""
     },
     {
-      "key": "d1c2406ce19ea7e58c5419fc1e39911750def5b8",
-      "name": "variant=highlight, size=small, type=chromeless, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "d26f653b3cd970aba46ff66629ec3f5b8f3edc27",
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "git-cherry-pick-commit"
-    },
-    {
-      "key": "d2adfbad7aef7b1e2579b1f2d166b38a8bbd7b33",
-      "name": "variant=on media bg, size=large, type=plain, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d511ab298e9fdb54c4a0a15bb09b5c314619a5e0",
-      "name": "variant=highlight, size=large, type=outline, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d6245a73e86c10aa310cafc383a95728066679c5",
-      "name": "variant=highlight, size=small, type=plain, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d765c3dfd002857740e5f8c758d485e45d30063a",
-      "name": "variant=danger, size=small, type=outline, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d8b86170a217c603fd177193ff518e203bf679d7",
-      "name": "variant=highlight, size=large, type=outline, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d9f64af6841ac4807e9d51f4cffc5e2ec29163b1",
-      "name": "variant=on media bg, size=standard, type=chromeless, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "da1a48b0e0129ef1e2e9597975f0b88248697ab8",
-      "name": "variant=highlight, size=small, type=outline, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "da6e076894d954a07dbb573a459dfb96c1d8f4db",
-      "name": "variant=danger, size=standard, type=chromeless, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "da9a07832f84258ddf8caab078b211c3a4d39669",
-      "name": "variant=on media bg, size=small, type=plain, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "db6e60e280486b136ce1a743d8e0cb82c02a7525",
-      "name": "variant=on media bg, size=small, type=plain, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "dfe6004248462de384c2230bc7b00883a9adbd67",
-      "name": "variant=highlight, size=large, type=chromeless, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "dfeafec29c55b12643b0dee326fd9f33d4c14540",
-      "name": "variant=on media bg, size=small, type=chromeless, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e33065e8e145b9d0a1302e7ed000daa4ddaf4308",
-      "name": "variant=on media bg, size=standard, type=outline, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e3ad17c5efcef898126f73aa47a4f4cd0336c738",
-      "name": "variant=danger, size=large, type=plain, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e40c3509009568b3663151394e4721bb3ba4d341",
-      "name": "variant=danger, size=small, type=outline, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e46c83f3c7b1be392639c9258b2ba0895e53f502",
-      "name": "variant=on media bg, size=large, type=outline, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e772234dac260dc516a04894d1a236cf4ead5fba",
-      "name": "variant=danger, size=large, type=chromeless, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e84f3a2e6c80cb35e02ea55f96097f91c5ee6b67",
-      "name": "variant=danger, size=standard, type=chromeless, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e9c6a5b27c88c223dd5fcd4bc622770780c99a0c",
-      "name": "variant=danger, size=small, type=chromeless, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e9f4f8bdfc50fe455dd7cde170eeac060330ee66",
-      "name": "variant=highlight, size=small, type=chromeless, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ea19c282bb70dffdfa735ac0fa283d61b83b94cb",
-      "name": "variant=highlight, size=standard, type=chromeless, state=pressed",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "ea2ae6278253aaa3d8591a9ca620b5c1030f4c29",
@@ -22590,60 +20516,6 @@
     {
       "key": "f11eeb89a23fdadcb32d2fd244a53809e415202c",
       "name": "variant=on media bg, size=standard, type=plain, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f1c772b7592c5a3d9ec3f45dc852223ec18665dc",
-      "name": "variant=highlight, size=standard, type=chromeless, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f47fe3d893b354839bbbc5541fee5e5170534095",
-      "name": "variant=highlight, size=small, type=plain, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f61da82f971017feeade581f0f14ba2160a9df5f",
-      "name": "variant=danger, size=small, type=plain, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f6858e807ee73f01325050a46907a90532b713c4",
-      "name": "variant=danger, size=large, type=outline, state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f76cd1a9564a32bdaf044bba0793b55d0f6e6fd7",
-      "name": "variant=on media bg, size=standard, type=plain, state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f98bf36c88848a556852743aae4d8bf553f6fba9",
-      "name": "variant=danger, size=standard, type=outline, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f9e48b540607bbad8e004da5292ab99fcf33df3e",
-      "name": "variant=highlight, size=standard, type=plain, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "faea36f5cc87ba967144cd54e1eed305526c2f27",
-      "name": "variant=highlight, size=large, type=chromeless, state=hover",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "fd8836e5058bdc18b011a5186fe2045b83487ec1",
-      "name": "variant=on media bg, size=large, type=chromeless, state=focus",
       "description": "",
       "containingFrame": ""
     },
@@ -22710,12 +20582,14 @@
     {
       "key": "4881dc9af72020e0558a115c0b891af785373f44",
       "name": "[wip] Command Palette",
-      "description": ""
+      "description": "",
+      "containingFrame": ""
     },
     {
       "key": "f39ed83098dc69c490b666d669ff9f68b9226bad",
       "name": "Arrow/ S/ Outline/ Right/ Purple",
-      "description": ""
+      "description": "",
+      "containingFrame": ""
     },
     {
       "key": "00983f5a5685689d1aeddf910126fec432b11f08",
@@ -24002,38 +21876,8 @@
       "containingFrame": "cloud-check"
     },
     {
-      "key": "898c2827a8c558173f31f7d80749286a5fcb13aa",
-      "name": "type=vertical, count=6, position=first",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "8b8a870e54d0815c64be77fd1698c403f072383b",
-      "name": "pattern=bank account, pattern state=active state",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "8ea5bd9869b8f8992185b29a5e446f0328a34ef1",
       "name": "device=desktop, variant=default, container=wide",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "908f5290c8d4137c1838192da1801a878144981f",
-      "name": "pattern=account group, pattern state=active state",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "91330e0a8d12fbed465b3245099a506cb6134708",
-      "name": "pattern=transaction, pattern state=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9798084cdfc80024d19f4fbdb99424bda484bc58",
-      "name": "pattern=actions, pattern state=none",
       "description": "",
       "containingFrame": ""
     },
@@ -24080,12 +21924,6 @@
       "containingFrame": "video-camera-off"
     },
     {
-      "key": "b1c99e3bfe05160a2928db41e3865f1f437f0ea4",
-      "name": "pattern=expandable + selection, pattern state=active state",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "b783c8423f9d7e643abf3f811c785c7fbb2767ba",
       "name": "Weight=Dynamic",
       "description": "",
@@ -24116,12 +21954,6 @@
       "containingFrame": "cpu"
     },
     {
-      "key": "c284116456126d63fe1a381cb2374a0d33fb6dc0",
-      "name": "type=vertical, count=6, position=last",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "c48f93fb4a7cc790aa7d18a25fe03a1733186a90",
       "name": "stroke=light, width=2px, position=inside",
       "description": "",
@@ -24130,12 +21962,6 @@
     {
       "key": "ce590a7d3c6609663f7dfaa3105d8fab0c092884",
       "name": "variant=Bradesco",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ce9f105acde55ff95ecdcb0cb36e846ab85a4571",
-      "name": "pattern=actions + selection, pattern state=default state",
       "description": "",
       "containingFrame": ""
     },
@@ -24194,40 +22020,16 @@
       "containingFrame": "plug-type-c"
     },
     {
-      "key": "fb9b68ecd6c1df9a60c71ce8299868102fa3c1bc",
-      "name": "pattern=account group, pattern state=default state",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "fec2e4e26c7b91246953b2f81a7e666fbc5f8fb8",
       "name": "Weight=Solid",
       "description": "",
       "containingFrame": "video-camera-off"
     },
     {
-      "key": "04fdfa7b75550f26b7a91c005628492b013b060c",
-      "name": "pattern=bank account, pattern state=default state",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1052b4aa34e960aab2381bb24fb1f372a4947d9f",
-      "name": "pattern=expandable, pattern state=default state",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "11089c611f098c934821f312f185704bb3cbc2f5",
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "chromecast-active"
-    },
-    {
-      "key": "1c059f4e360fe01f059e285cfa853399980d3a03",
-      "name": "type=horizontal, count=3, position=middle",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "22d39e6698cc57fe6872ce42295a98a6766f875f",
@@ -24250,12 +22052,6 @@
     {
       "key": "288176419d1d3064b304dd0def2dba49cd3f0966",
       "name": "variant=Nubank",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "31d935e9f06303db64699c1dad5dace911526e7a",
-      "name": "pattern=balance, pattern state=none",
       "description": "",
       "containingFrame": ""
     },
@@ -24290,12 +22086,6 @@
       "containingFrame": "align-horizontal-centers"
     },
     {
-      "key": "5b55bcfd146ec09e15f36cd48d10dc500088b2da",
-      "name": "pattern=settings toggle, pattern state=default state",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "5d6d21a90fd41ff098ba00bd1a0e4483a9e7e623",
       "name": "Weight=Solid",
       "description": "",
@@ -24326,24 +22116,6 @@
       "containingFrame": "server-connection"
     },
     {
-      "key": "6695e25dfcb0a52186640b959082310c2e94fb90",
-      "name": "pattern=settings toggle, pattern state=active state",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "685ffece6cbc222920099488d6a836d5d81af4de",
-      "name": "pattern=expandable + selection, pattern state=default state",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6b14ccf93c7dee87c7ba17c5214250592b93ea9e",
-      "name": "pattern=actions + selection, pattern state=active state",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "6b9cc13d9d3317d522557690606dbdce65d5a3f9",
       "name": "Weight=Dynamic",
       "description": "",
@@ -24366,18 +22138,6 @@
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "packages"
-    },
-    {
-      "key": "7c9244a054813a95d8cff84819f765f324a126c4",
-      "name": "pattern=selection, pattern state=active state",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "827c1b0cfefae04cee44e158b7674c50db240690",
-      "name": "pattern=selection, pattern state=default state",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "86967615ff2635b2a97ddf443dc3f617f05bd5b6",
@@ -24424,7 +22184,8 @@
     {
       "key": "49fc55a1ce43301c9d6c4d47e943c778e73cb21e",
       "name": "[dsc] Overlay",
-      "description": ""
+      "description": "",
+      "containingFrame": ""
     },
     {
       "key": "4a82669bdf8acd274c6b995007bc78a69010c4b3",
@@ -24805,12 +22566,6 @@
       "containingFrame": ""
     },
     {
-      "key": "55ffac2ee29e45950057c2078b04c4cef0421ca7",
-      "name": "state=focus",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "56513682c800863db7aee0bff2add54fcd2f1ee6",
       "name": "state=focus, variant=danger, status=unchecked",
       "description": "",
@@ -24891,12 +22646,6 @@
     {
       "key": "af88387b4e0da9636bb3010fb9481ef52f749676",
       "name": "variant=smart tips, action=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "bf20c7c28c66cb96e2107a90383cd377693800b6",
-      "name": "state=hover, collapsed=true",
       "description": "",
       "containingFrame": ""
     },
@@ -24985,6 +22734,12 @@
       "containingFrame": ""
     },
     {
+      "key": "4d17b0e956fb6c0e1739ef852bba17bda5d5259c",
+      "name": "color=danger",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
       "key": "3b4ba3e2144bf653af2efe5577eaa4247aeaa8bc",
       "name": "variant=INSS",
       "description": "",
@@ -24993,12 +22748,6 @@
     {
       "key": "3f49a2df7d290118c809b05b99a35a9d1a695f93",
       "name": "variant=Banco do Brasil",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "4d17b0e956fb6c0e1739ef852bba17bda5d5259c",
-      "name": "color=danger",
       "description": "",
       "containingFrame": ""
     },
@@ -25015,14 +22764,14 @@
       "containingFrame": "[dsc] Focus Indicator"
     },
     {
-      "key": "7020758a5db2da7b53606116b5a1532e7c50c2de",
-      "name": "color=neutral",
+      "key": "6c3617459af48cb758d0d0bdc6b0ece6806a5ac6",
+      "name": "variant=Itaú",
       "description": "",
       "containingFrame": ""
     },
     {
-      "key": "6c3617459af48cb758d0d0bdc6b0ece6806a5ac6",
-      "name": "variant=Itaú",
+      "key": "7020758a5db2da7b53606116b5a1532e7c50c2de",
+      "name": "color=neutral",
       "description": "",
       "containingFrame": ""
     },
@@ -25165,24 +22914,6 @@
       "containingFrame": ""
     },
     {
-      "key": "9f1f5ab3becb7cb3eb1c7a903be036b75990f078",
-      "name": "type=vertical, count=3, position=first",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0cd825beaf664618e5432ca0aec56c2e898bb25d",
-      "name": "type=vertical, count=5, position=last",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3e1b94d3edf15bf41e48f7a49f9df5f13b32f8c7",
-      "name": "type=horizontal, count=6, position=first",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "28ce8b2d1f64488f82fba7c71ed915e7d0d2905c",
       "name": "variant=decorative, size=standard",
       "description": "",
@@ -25207,20 +22938,8 @@
       "containingFrame": ""
     },
     {
-      "key": "020877e45243d73d27795531467882cd18f4c46b",
-      "name": "breakpoint=medium, container=wide",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "0ac23109a42422264bf2ad0041bb424b09cb81a6",
       "name": "state=disabled, status=default, filled=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1e83b0ce9119010402228da04d973c179d54dc3f",
-      "name": "breakpoint=small, container=default",
       "description": "",
       "containingFrame": ""
     },
@@ -25263,12 +22982,6 @@
     {
       "key": "47a084daeaba84f8be413960c5cac352a2d18dfe",
       "name": "variant=accent, size=large",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6e131a605104c4643d4a860dafe013ca15cd35c5",
-      "name": "breakpoint=extra large, container=wide",
       "description": "",
       "containingFrame": ""
     },
@@ -25399,12 +23112,6 @@
       "containingFrame": ""
     },
     {
-      "key": "12cb3cd39759be58fcef29eaff66efbc36554138",
-      "name": "variant=highlight, size=large",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "9e7f3a53d7a6c9999cf3281cba636901ffb7f543",
       "name": "status=error, state=disabled, filed=true",
       "description": "",
@@ -25419,12 +23126,6 @@
     {
       "key": "f6958cfc82fdc8e69c11468bc72f38e7f01ebba8",
       "name": "status=error, state=default, filed=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ffc1720d77087ffda4a95c813829daeadb259d30",
-      "name": "variant=positive",
       "description": "",
       "containingFrame": ""
     },
@@ -25573,12 +23274,6 @@
       "containingFrame": ""
     },
     {
-      "key": "9807b267ff2ca823446dbcbba1c013d0099fbbc4",
-      "name": "type=selectable, variant=group, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "65c1ca515def824ecc1aa21c961408a650709dcf",
       "name": "aspect ratio=16x9",
       "description": "",
@@ -25633,32 +23328,8 @@
       "containingFrame": ""
     },
     {
-      "key": "3179fb0c3f0c77d64c5d97d7855dd5d2d8793153",
-      "name": "device=desktop, variant=rows/columns, rows/columns=12",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3d87626aa91951f24711c9483dfd6a4bd4b45f56",
-      "name": "variant=header, rows/columns=1",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "3fec76ac188c6e0d7089e6f3a7ba3ee4b931d215",
       "name": "variant=slot, device=mobile",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "4550ba7fca6d52525568789bb4e8f4957a274a38",
-      "name": "variant=header, rows/columns=11",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "48e69c2b801cfe807f92527e57b43935882c53a6",
-      "name": "variant=row, rows/columns=3",
       "description": "",
       "containingFrame": ""
     },
@@ -25671,24 +23342,6 @@
     {
       "key": "678fda5f66006172724e89cd669001ffd11cb9a0",
       "name": "variant=currency text, device=mobile",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "726fbbefb7d8350c785198d13cad72e7aaae1ac5",
-      "name": "device=desktop, variant=rows/columns, rows/columns=8",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "77505fcdd3ac7cec9cace235a0825b913c785667",
-      "name": "device=desktop, variant=empty, rows/columns=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "77cd553b48c1efd6be59424ed18b9684574e286e",
-      "name": "device=mobile, variant=rows/columns, rows/columns=2",
       "description": "",
       "containingFrame": ""
     },
@@ -25711,80 +23364,14 @@
       "containingFrame": ""
     },
     {
-      "key": "a8a6c24966c348ca067c09664ae91fd42e4fc976",
-      "name": "variant=row, rows/columns=5",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "b08af5ce6cb0fe20eafffde5a86a3beb6e34454e",
       "name": "variant=text, state=default, device=desktop",
       "description": "",
       "containingFrame": ""
     },
     {
-      "key": "cf01a129beea78d4334b05bf3e093a8ce3d673c2",
-      "name": "variant=header, rows/columns=3",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d86223541719a4415ef078fc797afb46ec7681da",
-      "name": "device=mobile, variant=rows/columns, rows/columns=8",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "8cc1d6379cf70d4a88315a2f4d971e8d25e8aecc",
-      "name": "variant=search - suggestions, configuration=default, show overlay=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "96031881ddfc88d1bd1b46088703198de0c96f4a",
-      "name": "variant=search - suggestions, configuration=default, show overlay=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "023c6130a71fa2a0e39253a01bc0482ede4a5ae3",
-      "name": "variant=search - no results, configuration=default, show overlay=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0ad067250d94634f48b9c65e34d0070d1aeda130",
-      "name": "variant=filter, configuration=wide, show overlay=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "148576c96d49b76cac0da27be5e9206e313bc816",
-      "name": "variant=default, configuration=default, show overlay=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "17b97063139de00dd6ed0471b994998c0fcf98b6",
       "name": "variant=on gray bg, state=disabled, status=filled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "18b20b65b54ca54ccc02bb8c1d92241f0aaa8a44",
-      "name": "variant=default, configuration=default, show overlay=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1ee32330864a4f270b7ee4ea3199eaba79317167",
-      "name": "variant=search - standard, configuration=default, show overlay=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "2770690c577b33615e20674042049c89bfb28938",
-      "name": "variant=default, configuration=wide, show overlay=false",
       "description": "",
       "containingFrame": ""
     },
@@ -25819,24 +23406,6 @@
       "containingFrame": ""
     },
     {
-      "key": "4379bafd7adf465eb6f5d58d38fd87063ffcf140",
-      "name": "variant=filter, configuration=default, show overlay=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "4950c0f57117cd93e74fdeb0b8d9ffcc058338a2",
-      "name": "variant=filter, configuration=wide, show overlay=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "63aa19fd4770c2909989d8c4a9baaef9e164c9d9",
-      "name": "variant=filter, configuration=default, show overlay=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "6f2e25c3ae51a6256b404049f129ad5f1393f61f",
       "name": "variant=default, state=focus, status=filled",
       "description": "",
@@ -25845,12 +23414,6 @@
     {
       "key": "7004d45b2a48d4f1ad5ac55e4c7162686cc4591c",
       "name": "variant=on gray bg, state=default, status=filled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "75017bd3d75b7595f119899d845e0a96ac09a24f",
-      "name": "variant=error, configuration=default, show overlay=false",
       "description": "",
       "containingFrame": ""
     },
@@ -25873,12 +23436,6 @@
       "containingFrame": ""
     },
     {
-      "key": "912cb60956d2a9939b62e07cc3d70a0ad8e2ead3",
-      "name": "variant=default, configuration=wide, show overlay=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "a428d537de10ac57f170a257aaad5aeeefec1cdc",
       "name": "variant=on gray bg, state=default, status=empty",
       "description": "",
@@ -25897,44 +23454,8 @@
       "containingFrame": ""
     },
     {
-      "key": "d5106609883f0ea4979a3d522cabc2eca718e286",
-      "name": "variant=error, configuration=default, show overlay=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "dccbe03cc3fea065e5cd398a186a8fed495f550f",
-      "name": "variant=search - standard, configuration=default, show overlay=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ea039137da7cf616cdb1f57660d96209fe587dfe",
-      "name": "variant=slot, configuration=default, show overlay=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f3aa58b9d84d9a384c3e5e9c14ba982724d6f9f1",
-      "name": "variant=error, configuration=wide, show overlay=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "f3b5eab66c3261d80451ad922ab799841c4742b4",
       "name": "variant=on gray bg, state=focus, status=empty",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f54ec9760d656c8d5e0e4206d1da748b76f3e3c4",
-      "name": "variant=user profile, configuration=default, show overlay=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f78fe34bc306aafd2ecca0d908d8f6bc0876f1f0",
-      "name": "variant=user profile, configuration=default, show overlay=true",
       "description": "",
       "containingFrame": ""
     },
@@ -26317,26 +23838,8 @@
       "containingFrame": ""
     },
     {
-      "key": "077f0d3b9fce7cf01cddf927a227aa4fec569b25",
-      "name": "device=desktop, variant=rows/columns, rows/columns=10",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "0b2d53d22030859fd7245d65470b4408b866b1fb",
       "name": "device=mobile, ovelay=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0b654b026acaf5882102ed7783f1f35d137c0d33",
-      "name": "variant=empty",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0d8df28c0e7f908b44996a1050abf7ee99b86d38",
-      "name": "variant=mobile, rows/columns=2",
       "description": "",
       "containingFrame": ""
     },
@@ -26347,56 +23850,14 @@
       "containingFrame": ""
     },
     {
-      "key": "0fce25fa8bc2645af9c4c6da88107e461abf7248",
-      "name": "variant=header, rows/columns=12",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "11f786f2e17a22778d81cb98dd40f64dd3463f68",
-      "name": "variant=row, rows/columns=1",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "162082f1c910ff12fee9537b6d73e56193bffca8",
-      "name": "variant=mobile, rows/columns=1",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "178f839aa6f708adbfbbe08a60f5ee3b1c87681b",
-      "name": "variant=mobile, rows/columns=8",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "18c2218888b63cbbeb39a102e548e1757a91b66e",
       "name": "variant=text, state=pressed, device=desktop",
       "description": "",
       "containingFrame": ""
     },
     {
-      "key": "190c1987f725e81c95338fdaff0d71648ce875d4",
-      "name": "variant=row, rows/columns=12",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "1a2780396e3cd36992a2c1cf9acb1e74fbfce629",
       "name": "pattern=excluir débito, device=desktop",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1bd383789927935718981d977b41efb315f28fb1",
-      "name": "device=mobile, variant=rows/columns, rows/columns=11",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1c139c80677045e3d8fc5560f648c5d9bc23f307",
-      "name": "variant=row, rows/columns=8",
       "description": "",
       "containingFrame": ""
     },
@@ -26413,62 +23874,8 @@
       "containingFrame": ""
     },
     {
-      "key": "246f1d3536e5b1238b6f90d7109a2a7d1241bd43",
-      "name": "variant=row, rows/columns=4",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "263f1f2df474c6b078fbdc64701e2da841cdba54",
-      "name": "variant=header, rows/columns=10",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "26ba6a8f935993a65894e5a39155848e7722df1c",
-      "name": "variant=mobile, rows/columns=7",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "271cbd2078e4dd4050778f05240fd5cc3e7f2904",
-      "name": "variant=row, rows/columns=10",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "2bbb56bb1402867eb4f05db00328c8bf01649081",
-      "name": "device=mobile, variant=empty, rows/columns=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "2c15bd7820ea06e0b954dc0e4fa5a547d584c0aa",
-      "name": "variant=row, rows/columns=9",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "2eaf5347c90d10b2e7027d01eae3d3703e539b06",
       "name": "pattern=senha, device=mobile",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3d364cc661e6884116dae1bec9463e4350e3f4b1",
-      "name": "variant=mobile, rows/columns=12",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "416b4bfc477fbec09aa166fd1d77d204d1745485",
-      "name": "pattern=criar grupo, device=mobile",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "41d11b4ebceccf0b9491017a909b55af6e98b6ec",
-      "name": "device=mobile, variant=rows/columns, rows/columns=4",
       "description": "",
       "containingFrame": ""
     },
@@ -26479,8 +23886,8 @@
       "containingFrame": ""
     },
     {
-      "key": "48cbdb6b95f20baa82dcc0a86cb669bf42ccc0da",
-      "name": "device=mobile, variant=rows/columns, rows/columns=3",
+      "key": "416b4bfc477fbec09aa166fd1d77d204d1745485",
+      "name": "pattern=criar grupo, device=mobile",
       "description": "",
       "containingFrame": ""
     },
@@ -26491,38 +23898,8 @@
       "containingFrame": ""
     },
     {
-      "key": "508b448819f44dca2964688479b9ae98a4ad6735",
-      "name": "variant=row, rows/columns=7",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "541f050de41f9902078bc617965c20c8979384a9",
-      "name": "variant=mobile, rows/columns=4",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "596171bfe94950fa155624ba9a5160c539a12e7d",
-      "name": "variant=header, rows/columns=5",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "5eb68926ce670e1868b0a31facf4931fec8b4ad3",
-      "name": "device=desktop, variant=rows/columns, rows/columns=3",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "612d91a0973b803f0036165971d2eda23192263b",
       "name": "variant=empty, state=default, device=mobile",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "61fb9a80fe2ffcd4ca243fd60bd211b152080d76",
-      "name": "device=desktop, variant=rows/columns, rows/columns=9",
       "description": "",
       "containingFrame": ""
     },
@@ -26539,30 +23916,6 @@
       "containingFrame": ""
     },
     {
-      "key": "6863ee0be1b5e0298e6239476c671a7ec7d9fa24",
-      "name": "variant=header, rows/columns=6",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6eb5c6d98a4425f0fcc60b054ac1f820ca63fa72",
-      "name": "device=desktop, variant=rows/columns, rows/columns=6",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "70a36b849b5d5136084860ccebaba798568331ad",
-      "name": "variant=mobile, rows/columns=5",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "725c67be9c999a98e7cc0fe5aa1bede6695735df",
-      "name": "pattern=excluir débito, device=mobile",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "79053cbc4d7a2d45edbe847bfbec26d16f3fb7ba",
       "name": "variant=text, state=disabled, device=desktop",
       "description": "",
@@ -26571,6 +23924,12 @@
     {
       "key": "7a579f4d7ceb0e591d7b0e1d3e997f08fdbf0b2a",
       "name": "variant=badge text, device=mobile",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "725c67be9c999a98e7cc0fe5aa1bede6695735df",
+      "name": "pattern=excluir débito, device=mobile",
       "description": "",
       "containingFrame": ""
     },
@@ -26589,12 +23948,6 @@
     {
       "key": "7fd442ef10df3fdc47eedd71575b6a7135fc1eb7",
       "name": "variant=checkbox, device=desktop",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "81876f6c939a27d0dd9b731f16fed244667ce02e",
-      "name": "variant=default",
       "description": "",
       "containingFrame": ""
     },
@@ -26629,62 +23982,8 @@
       "containingFrame": ""
     },
     {
-      "key": "8ff4f5fd1545f5356731b2588086189ee65f4659",
-      "name": "variant=header, rows/columns=4",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "91ef86ddb7ce5c055b9d8df9a74e7c3d31162c1e",
-      "name": "device=mobile, variant=rows/columns, rows/columns=5",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "92029f44703422114a625914685823ee6859501d",
-      "name": "variant=header, rows/columns=8",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "940f622dde34856805273ca843a8be80e86b9489",
       "name": "pattern=forma de pagamento, device=desktop",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9b83eaa1e1760db45b287bd653f0fa9af4222b8e",
-      "name": "variant=row, rows/columns=6",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9ce55441b988acdcc58d68597029120437a58afa",
-      "name": "variant=mobile, rows/columns=11",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a3b76dac3a9b1ea843942405950d34e53c4f55f7",
-      "name": "variant=mobile, rows/columns=3",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a3cdba4e7ab33228074b16f8a0a01cb6b29ba0e0",
-      "name": "device=mobile, variant=rows/columns, rows/columns=12",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a52cca4ffce740ffea32f3b2079c3acacecfc030",
-      "name": "device=mobile, variant=rows/columns, rows/columns=6",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a770e27aa4781567ef3395d024aaac2b309bf881",
-      "name": "variant=empty",
       "description": "",
       "containingFrame": ""
     },
@@ -26695,20 +23994,14 @@
       "containingFrame": ""
     },
     {
+      "key": "a770e27aa4781567ef3395d024aaac2b309bf881",
+      "name": "variant=empty",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
       "key": "af063ba1ff2c150d4b281e8e08b89008ac6935b9",
       "name": "variant=empty, device=mobile",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "b03976d70e0659d5bb3852aedac5d22e916698a2",
-      "name": "variant=mobile, rows/columns=10",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "b0f867514e18e3e4a655d723cd59c6dba19da4d6",
-      "name": "device=desktop, variant=rows/columns, rows/columns=4",
       "description": "",
       "containingFrame": ""
     },
@@ -26719,44 +24012,8 @@
       "containingFrame": ""
     },
     {
-      "key": "b9cddc674d1db575083621365af886e1b9dff086",
-      "name": "device=mobile, variant=slot, rows/columns=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "bb6b1356c861d22ead827492d5e6ba4657233872",
-      "name": "variant=row, rows/columns=2",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "bd0ef42198a30ae0d3ac30d9cb0ef2bb21ddce76",
-      "name": "variant=header, rows/columns=2",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c09a16e58e56fc725b8a5685af433f107bde7ffa",
-      "name": "device=desktop, variant=rows/columns, rows/columns=5",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c0b11516f809916e84bb14fc7b87a6e42ea8a1b4",
-      "name": "variant=header, rows/columns=9",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c0d6480c42573301515bb1432d4664313d6cffd3",
-      "name": "variant=mobile, rows/columns=6",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c7fafb2ecd956b362c981193569a79ff425928fd",
-      "name": "variant=row, rows/columns=11",
+      "key": "c9a6f213818b5fe5bc8f2f9db72924718490c96f",
+      "name": "variant=icon button, device=desktop",
       "description": "",
       "containingFrame": ""
     },
@@ -26767,32 +24024,8 @@
       "containingFrame": ""
     },
     {
-      "key": "c9a6f213818b5fe5bc8f2f9db72924718490c96f",
-      "name": "variant=icon button, device=desktop",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "cb04f51f7756424fda3f5c21a29efded873a288c",
-      "name": "device=desktop, variant=rows/columns, rows/columns=11",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d28b9758ffbc290fd72f3c708a670a2ef23603c1",
-      "name": "variant=header, rows/columns=7",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "d2b23fe93f53cfd4e415b806a77c151fd1f19e82",
       "name": "device=desktop, ovelay=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d8d7d64f7dc651c8d6dd99768234f27298222b67",
-      "name": "device=mobile, variant=rows/columns, rows/columns=1",
       "description": "",
       "containingFrame": ""
     },
@@ -26803,26 +24036,14 @@
       "containingFrame": ""
     },
     {
-      "key": "d9964bc945743c857454d4713b8252a67c21b8a7",
-      "name": "pattern=criar grupo, device=desktop",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "df854bd015f6b21c56a5ae4ab592f5a34e89c0ad",
       "name": "variant=double text, device=desktop",
       "description": "",
       "containingFrame": ""
     },
     {
-      "key": "e42b88eaa46c94a80d646cb05cc12fb505bc692f",
-      "name": "device=mobile, variant=rows/columns, rows/columns=9",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e6f33e41fd230badacff143e743e0a944c0d4550",
-      "name": "device=desktop, variant=rows/columns, rows/columns=2",
+      "key": "d9964bc945743c857454d4713b8252a67c21b8a7",
+      "name": "pattern=criar grupo, device=desktop",
       "description": "",
       "containingFrame": ""
     },
@@ -26839,44 +24060,14 @@
       "containingFrame": ""
     },
     {
-      "key": "f0c5eb69cb4ed39b1155824d891348d713f15094",
-      "name": "device=desktop, variant=slot, rows/columns=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f4b722aba9df6ff74064469f170f833991579488",
-      "name": "device=desktop, variant=rows/columns, rows/columns=1",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "fab2fe62537dacde10093e87834bc626bc1d382f",
-      "name": "device=mobile, variant=rows/columns, rows/columns=10",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "fb2ff6faed8f6ba572fb0718e41ae95a57887bd2",
       "name": "variant=checkbox, state=default, device=mobile",
       "description": "",
       "containingFrame": ""
     },
     {
-      "key": "fb82413f3bf929c58d4bacab5670a5e2dba4e9ef",
-      "name": "device=desktop, variant=rows/columns, rows/columns=7",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "fd9c5624dc5a83493b4e499e6c9b922247670d51",
       "name": "variant=slot, device=desktop",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "fdc1fead6ca03b061dd728774d5244637b08eb6e",
-      "name": "device=mobile, variant=rows/columns, rows/columns=7",
       "description": "",
       "containingFrame": ""
     },
@@ -26953,12 +24144,6 @@
       "containingFrame": ""
     },
     {
-      "key": "581ecf45594f28e5c0f1fed14125cc79769241b8",
-      "name": "type=vertical, count=3, position=middle",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "5ae595b75302694cab912ee76d2eb4fb5045109a",
       "name": "count pages=4, active=page 2",
       "description": "",
@@ -27001,12 +24186,6 @@
       "containingFrame": ""
     },
     {
-      "key": "66993f7ad02496c805f5807b4ad71f7d6f8efc94",
-      "name": "type=horizontal, count=5, position=last",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "6c27be1dc8be6e4900ffc60f0047e548f0b372b9",
       "name": "count pages=8, active=page 2",
       "description": "",
@@ -27015,12 +24194,6 @@
     {
       "key": "71c73647ea0080973a7720c87e5ccf3101645c56",
       "name": "count pages=2, active=page 3",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "7214bb93d7661fc3a4465104e1ab6205259402ed",
-      "name": "type=vertical, count=6, position=middle",
       "description": "",
       "containingFrame": ""
     },
@@ -27073,32 +24246,8 @@
       "containingFrame": ""
     },
     {
-      "key": "8c0ae6d0203fc1918140befb28a05d5fc504fbfc",
-      "name": "type=horizontal, count=6, position=middle",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "8cfdc9a0bf821de8d8556035439f631234e6f06c",
-      "name": "type=horizontal, count=3, position=first",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9497c6d1683c92bd3a5f84b5a3df1fa38320a660",
-      "name": "type=vertical, count=3, position=last",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "94a9411101dee1e5c2e88bcaad8a383c44c4fac6",
       "name": "count pages=3, active=page 1",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "eb7ca99b8d295057875eabecda27cebec92ce9c9",
-      "name": "type=horizontal, count=4, position=last",
       "description": "",
       "containingFrame": ""
     },
@@ -27129,18 +24278,6 @@
     {
       "key": "f3551e1baddba9927d7aabe92d4ec057f6bebfe6",
       "name": "count pages=7, active=page 3",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "962ca5794813a2568ec945a63b4c2452114a282b",
-      "name": "variant=search - no results, configuration=default, show overlay=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9d6dfd8f48e94241c933320c23453991946d0dc3",
-      "name": "variant=error, configuration=wide, show overlay=true",
       "description": "",
       "containingFrame": ""
     },
@@ -27183,12 +24320,6 @@
     {
       "key": "b2aaa6d869bcabe65b860d4d0239562a3444eea8",
       "name": "count pages=4, active=page 4",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "b398d9c678647e560ec9b8a54fb54e89cb915adb",
-      "name": "type=vertical, count=4, position=last",
       "description": "",
       "containingFrame": ""
     },
@@ -27247,18 +24378,6 @@
       "containingFrame": ""
     },
     {
-      "key": "c2d699562ce46c06f27e22023d1a0371b05caa68",
-      "name": "type=vertical, count=5, position=middle",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c87866c542e88d28be83d6511ee85eb1cfcef4d9",
-      "name": "variant=slot, configuration=wide, show overlay=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "c945fbc68e87bd35ae1c023c4aca2e5b7d7872a8",
       "name": "count pages=10, active=page 5",
       "description": "",
@@ -27271,12 +24390,6 @@
       "containingFrame": ""
     },
     {
-      "key": "c9e0e23b000c7603280544821ad472887bba50ab",
-      "name": "variant=slot, configuration=wide, show overlay=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "caa2684f6fdfccee532159b849921a3b3e00ff89",
       "name": "count pages=6, active=page 2",
       "description": "",
@@ -27285,12 +24398,6 @@
     {
       "key": "cc8f6a5adb8ac21a4a922db227ee65aa4880a73d",
       "name": "count pages=3, active=page 10",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "cce6f5acb4b8049b6d188f62635cde905f16656e",
-      "name": "type=horizontal, count=6, position=last",
       "description": "",
       "containingFrame": ""
     },
@@ -27319,18 +24426,6 @@
       "containingFrame": ""
     },
     {
-      "key": "d68e41a04198c80a9c8205304f726f92da2ffdfc",
-      "name": "type=vertical, count=5, position=first",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ddb8b3c91830244ea2dcb05dc8cb0c4fdb41a196",
-      "name": "type=horizontal, count=5, position=first",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "de0894bc7e2369b6643d961882cadf61d5c482fb",
       "name": "count pages=3, active=page 4",
       "description": "",
@@ -27345,12 +24440,6 @@
     {
       "key": "e7dbcb1e43046d171943ef7e1a8aef57f37f39e9",
       "name": "count pages=9, active=page 8",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e8b5d37eebd22f7d5811f5274d983c6735cb0be7",
-      "name": "type=horizontal, count=4, position=first",
       "description": "",
       "containingFrame": ""
     },
@@ -27433,12 +24522,6 @@
       "containingFrame": ""
     },
     {
-      "key": "0b6a01710cfc43e34b45d6bab4fc0ab5dcba0a1b",
-      "name": "type=vertical, count=4, position=middle",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "0ba70d8b908ede1458a6f779c43e77eb9093059b",
       "name": "count pages=5, active=page 7",
       "description": "",
@@ -27469,12 +24552,6 @@
       "containingFrame": ""
     },
     {
-      "key": "22e936263fad1df73801fcc8c0f891a89e0ad472",
-      "name": "type=vertical, count=4, position=first",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "24b5c9670c0531fbf395869d400710845ee9e83d",
       "name": "count pages=3, active=page 2",
       "description": "",
@@ -27487,20 +24564,8 @@
       "containingFrame": ""
     },
     {
-      "key": "272454609ad93d74340c600828d362c7619c26ac",
-      "name": "type=horizontal, count=4, position=middle",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "27d774b93bcec169480136f80a4912fccb1e8113",
       "name": "count pages=2, active=page 9",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "2a5933fce2bd9797d9e65cb4d0219797ec78146a",
-      "name": "type=horizontal, count=5, position=middle",
       "description": "",
       "containingFrame": ""
     },
@@ -27585,12 +24650,745 @@
     {
       "key": "982a7e60741885835bb6454d0c334db111edf0ec",
       "name": "[dsc] Dropdown background",
-      "description": ""
+      "description": "",
+      "containingFrame": ""
     },
     {
       "key": "c8778923b2a7bde4c68142e3b5612d1ca6a4bb63",
       "name": "[dsc] Dropdown Breadcrumb",
       "description": "❖ [dsc] Dropdown Breadcrumb\n<N/A>",
+      "containingFrame": ""
+    },
+    {
+      "key": "023c6130a71fa2a0e39253a01bc0482ede4a5ae3",
+      "name": "variant=search - no results, configuration=default, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0ad067250d94634f48b9c65e34d0070d1aeda130",
+      "name": "variant=filter, configuration=wide, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "148576c96d49b76cac0da27be5e9206e313bc816",
+      "name": "variant=default, configuration=default, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "18b20b65b54ca54ccc02bb8c1d92241f0aaa8a44",
+      "name": "variant=default, configuration=default, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1ee32330864a4f270b7ee4ea3199eaba79317167",
+      "name": "variant=search - standard, configuration=default, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2770690c577b33615e20674042049c89bfb28938",
+      "name": "variant=default, configuration=wide, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4379bafd7adf465eb6f5d58d38fd87063ffcf140",
+      "name": "variant=filter, configuration=default, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4950c0f57117cd93e74fdeb0b8d9ffcc058338a2",
+      "name": "variant=filter, configuration=wide, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "63aa19fd4770c2909989d8c4a9baaef9e164c9d9",
+      "name": "variant=filter, configuration=default, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "75017bd3d75b7595f119899d845e0a96ac09a24f",
+      "name": "variant=error, configuration=default, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8cc1d6379cf70d4a88315a2f4d971e8d25e8aecc",
+      "name": "variant=search - suggestions, configuration=default, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "912cb60956d2a9939b62e07cc3d70a0ad8e2ead3",
+      "name": "variant=default, configuration=wide, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "96031881ddfc88d1bd1b46088703198de0c96f4a",
+      "name": "variant=search - suggestions, configuration=default, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "962ca5794813a2568ec945a63b4c2452114a282b",
+      "name": "variant=search - no results, configuration=default, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9d6dfd8f48e94241c933320c23453991946d0dc3",
+      "name": "variant=error, configuration=wide, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "bfc313041ba7b5d7fafce2095da07eeb45b460fb",
+      "name": "variant=slot, configuration=default, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c87866c542e88d28be83d6511ee85eb1cfcef4d9",
+      "name": "variant=slot, configuration=wide, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c9e0e23b000c7603280544821ad472887bba50ab",
+      "name": "variant=slot, configuration=wide, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d5106609883f0ea4979a3d522cabc2eca718e286",
+      "name": "variant=error, configuration=default, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "dccbe03cc3fea065e5cd398a186a8fed495f550f",
+      "name": "variant=search - standard, configuration=default, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f3aa58b9d84d9a384c3e5e9c14ba982724d6f9f1",
+      "name": "variant=error, configuration=wide, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f54ec9760d656c8d5e0e4206d1da748b76f3e3c4",
+      "name": "variant=user profile, configuration=default, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f78fe34bc306aafd2ecca0d908d8f6bc0876f1f0",
+      "name": "variant=user profile, configuration=default, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "020877e45243d73d27795531467882cd18f4c46b",
+      "name": "breakpoint=medium, container=wide",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "04fdfa7b75550f26b7a91c005628492b013b060c",
+      "name": "pattern=bank account, pattern state=default state",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "09d35579a6b10f0a4c5fe6176a43a5ce0e6fcbab",
+      "name": "pattern=card detail, pattern state=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0b080eca64166896ce2158fa863d9e094099209c",
+      "name": "breakpoint=extra large, variant=warning",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0b654b026acaf5882102ed7783f1f35d137c0d33",
+      "name": "variant=empty",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0b6a01710cfc43e34b45d6bab4fc0ab5dcba0a1b",
+      "name": "type=vertical, count=4, position=middle",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0bef2df173162e6609fadcaa84a74f55986f0ed8",
+      "name": "pattern=form, wide=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0cd825beaf664618e5432ca0aec56c2e898bb25d",
+      "name": "type=vertical, count=5, position=last",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0dd4c19386e77cf56d076fb59ebc70a1c3ffb215",
+      "name": "breakpoint=small, container=wide",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "102d9de32e521c5a7d2ac4f5f650b89cccae33c7",
+      "name": "breakpoint=extra large, variant=success",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1052b4aa34e960aab2381bb24fb1f372a4947d9f",
+      "name": "pattern=expandable, pattern state=default state",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "125f8a2558eeb30421659a73183fa38fc5bcf5b6",
+      "name": "breakpoint=small, variant=warning",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "153cb0a4dcfb830d1da894cfa325f0017cc7b576",
+      "name": "pattern=search - suggestions, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1543fa02f24bddbd0bb47472cca2d96397d3f5dd",
+      "name": "breakpoint=large, variant=warning",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1c059f4e360fe01f059e285cfa853399980d3a03",
+      "name": "type=horizontal, count=3, position=middle",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1e83b0ce9119010402228da04d973c179d54dc3f",
+      "name": "breakpoint=small, container=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1f058c262c80bd8ed2e233758da6538424adff90",
+      "name": "pattern=user profile, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "213813775ce71e056499fbfd688331d7b53b382e",
+      "name": "variant=error, configuration=icon",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "22e936263fad1df73801fcc8c0f891a89e0ad472",
+      "name": "type=vertical, count=4, position=first",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "272454609ad93d74340c600828d362c7619c26ac",
+      "name": "type=horizontal, count=4, position=middle",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "27f9422d281582335d1a596d014a163824acff33",
+      "name": "pattern=feedback - danger, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2a5933fce2bd9797d9e65cb4d0219797ec78146a",
+      "name": "type=horizontal, count=5, position=middle",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2c76a242fe789ca71e5e5748fdf5551278c1ac80",
+      "name": "pattern=error, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "31d935e9f06303db64699c1dad5dace911526e7a",
+      "name": "pattern=balance, pattern state=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "33176a1d6fab6553451c8e1464dfa93b0e37c98a",
+      "name": "pattern=search - no results, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3517251b239b51d28353d2cb3ee4f22885ffd0c6",
+      "name": "pattern=antessala, compact=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "38ece60c9c30482089b558b12450d225de2fdd1a",
+      "name": "variant=no results, configuration=icon",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3cc1263abd47aafe528a6948e9872d56b730991e",
+      "name": "breakpoint=small, variant=success",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3e1b94d3edf15bf41e48f7a49f9df5f13b32f8c7",
+      "name": "type=horizontal, count=6, position=first",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4175dc8e809615011fe6f6ea5c56eaf116dc96c4",
+      "name": "breakpoint=large, variant=danger",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4c5283f050cd87943756f988058f3fc99a780125",
+      "name": "breakpoint=extra small, variant=success",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4cc49e5aa37f0de32f524f595345b8d0a645684e",
+      "name": "pattern=card option, pattern state=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "53f17b61729ee27cd128bd0b6321c8b566763d83",
+      "name": "pattern=detail, wide=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "581ecf45594f28e5c0f1fed14125cc79769241b8",
+      "name": "type=vertical, count=3, position=middle",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "59f278f7c4e863873da6adb12cb8044f1b4ec29c",
+      "name": "pattern=feedback - success, wide=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "5b55bcfd146ec09e15f36cd48d10dc500088b2da",
+      "name": "pattern=settings toggle, pattern state=default state",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "60cd8619795cfa3f9fa543b22249a63d68fd6b65",
+      "name": "pattern=antessala, compact=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6366bec3504dbdaccc30470959a3555ece3349fc",
+      "name": "pattern=filter, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6695e25dfcb0a52186640b959082310c2e94fb90",
+      "name": "pattern=settings toggle, pattern state=active state",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "66993f7ad02496c805f5807b4ad71f7d6f8efc94",
+      "name": "type=horizontal, count=5, position=last",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "68389356ad0e2e0f596140316423c9746e808a3e",
+      "name": "breakpoint=medium, variant=warning",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "685ffece6cbc222920099488d6a836d5d81af4de",
+      "name": "pattern=expandable + selection, pattern state=default state",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "68dac9890ea41b71a30ad86c4f417b9830a5c89b",
+      "name": "breakpoint=extra small, variant=warning",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6b14ccf93c7dee87c7ba17c5214250592b93ea9e",
+      "name": "pattern=actions + selection, pattern state=active state",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6e131a605104c4643d4a860dafe013ca15cd35c5",
+      "name": "breakpoint=extra large, container=wide",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6f6e56f1ee78841b9cd304a312680ba98e8c418d",
+      "name": "variant=error, configuration=illustration",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "70ab0569354c7cd111f0769f1977c8518d28a5f9",
+      "name": "variant=custom, configuration=icon",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7214bb93d7661fc3a4465104e1ab6205259402ed",
+      "name": "type=vertical, count=6, position=middle",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "78fb62cf6bd1b2acdcf923aadd121b948ff9280c",
+      "name": "breakpoint=medium, container=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7c9244a054813a95d8cff84819f765f324a126c4",
+      "name": "pattern=selection, pattern state=active state",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "81876f6c939a27d0dd9b731f16fed244667ce02e",
+      "name": "variant=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "827c1b0cfefae04cee44e158b7674c50db240690",
+      "name": "pattern=selection, pattern state=default state",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "898c2827a8c558173f31f7d80749286a5fcb13aa",
+      "name": "type=vertical, count=6, position=first",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8af1c457f61963d1759c0863bccc1561977b7202",
+      "name": "breakpoint=large, variant=informative",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8b02e22bcf0241f9086ddc82fc9d2c924d83708d",
+      "name": "breakpoint=extra small, variant=informative",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8b8a870e54d0815c64be77fd1698c403f072383b",
+      "name": "pattern=bank account, pattern state=active state",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8c0ae6d0203fc1918140befb28a05d5fc504fbfc",
+      "name": "type=horizontal, count=6, position=middle",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8cfdc9a0bf821de8d8556035439f631234e6f06c",
+      "name": "type=horizontal, count=3, position=first",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "908f5290c8d4137c1838192da1801a878144981f",
+      "name": "pattern=account group, pattern state=active state",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "91330e0a8d12fbed465b3245099a506cb6134708",
+      "name": "pattern=transaction, pattern state=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "93776bf7c8dc8184e9f958e986431a6fb3975878",
+      "name": "breakpoint=extra large, container=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9497c6d1683c92bd3a5f84b5a3df1fa38320a660",
+      "name": "type=vertical, count=3, position=last",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "956a0639a7e5b210df0bd0944b372abf279f6fc7",
+      "name": "pattern=search - standard, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9798084cdfc80024d19f4fbdb99424bda484bc58",
+      "name": "pattern=actions, pattern state=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "97def77c5b814229c0760026d5e450c4606dbb32",
+      "name": "breakpoint=large, container=wide",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9f1f5ab3becb7cb3eb1c7a903be036b75990f078",
+      "name": "type=vertical, count=3, position=first",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9f1fb35a7a21f67ab19c33e5e95e8b1ac4551d1a",
+      "name": "pattern=default, compact=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9f9e530aa17c66d11e072e675f57691c02de3955",
+      "name": "breakpoint=extra small, container=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a0e7d4230219446debb2eace7d868f79b83e36fa",
+      "name": "variant=no results, configuration=illustration",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a358b1728f34ced0048f23a11235e1451ccf8e0b",
+      "name": "pattern=card selectable, pattern state=active state",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "aca364e5b799fe6da53b15f87a0981582ba90c57",
+      "name": "variant=custom, configuration=illustration",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "af4d246097a86cf9b4a1fe6c5b56c746df5f516c",
+      "name": "breakpoint=medium, variant=informative",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b1c99e3bfe05160a2928db41e3865f1f437f0ea4",
+      "name": "pattern=expandable + selection, pattern state=active state",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b398d9c678647e560ec9b8a54fb54e89cb915adb",
+      "name": "type=vertical, count=4, position=last",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "bba7178bdb76e88366d8b8d849240f7c782f30a9",
+      "name": "pattern=feedback - informative, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "bbfe012aec45fd35d77682cd589738e4bbba1117",
+      "name": "breakpoint=extra small, container=wide",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "be83fd2e6b9d75156d4787610123ea6b237d1a6e",
+      "name": "pattern=default, compact=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c1e48980af8ce8b403f5d7cea6eb6a1c75733a43",
+      "name": "pattern=feedback - warning, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c284116456126d63fe1a381cb2374a0d33fb6dc0",
+      "name": "type=vertical, count=6, position=last",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c2d3503040e3b535e25bbd358f02a52d5c7c0115",
+      "name": "pattern=form, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c2d699562ce46c06f27e22023d1a0371b05caa68",
+      "name": "type=vertical, count=5, position=middle",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c5bf411f7448de70ce9695a015c066cf4844b434",
+      "name": "pattern=feedback - success, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "cbb8f156617f27fb29e82df53cfd93f1298f854e",
+      "name": "pattern=feedback - danger, wide=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "cce6f5acb4b8049b6d188f62635cde905f16656e",
+      "name": "type=horizontal, count=6, position=last",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ce9f105acde55ff95ecdcb0cb36e846ab85a4571",
+      "name": "pattern=actions + selection, pattern state=default state",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d46bc3e6ca8d3303bc80756dfcf7e69a6f49a19b",
+      "name": "breakpoint=extra large, variant=informative",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d68e41a04198c80a9c8205304f726f92da2ffdfc",
+      "name": "type=vertical, count=5, position=first",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d7270cc6b4d38bc4a2a1c6cddc62fe88cc045011",
+      "name": "breakpoint=large, container=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d7c0a571bfd75d7ff7006c95e81e024b233edd1b",
+      "name": "pattern=feedback - informative, wide=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ddb8b3c91830244ea2dcb05dc8cb0c4fdb41a196",
+      "name": "type=horizontal, count=5, position=first",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e3da4a99806afc99878a14f88c9e9afc94a73d54",
+      "name": "pattern=detail, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e869c754ff0b4ee74726999cc00c76aa6af83710",
+      "name": "pattern=card selectable, pattern state=default state",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e8b5d37eebd22f7d5811f5274d983c6735cb0be7",
+      "name": "type=horizontal, count=4, position=first",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "eb7ca99b8d295057875eabecda27cebec92ce9c9",
+      "name": "type=horizontal, count=4, position=last",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ed62cb8d927a872a2c0b8fb9907230bf2f970aac",
+      "name": "breakpoint=medium, variant=danger",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f167bd863c1c2978efacfa72abc57a0c2b39a2ac",
+      "name": "breakpoint=extra large, variant=danger",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f479cc0ec2896c97a58c97050dfb5e34e8a90efe",
+      "name": "pattern=feedback - warning, wide=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f4cd9270d1226dd027d0f92a39c01615d9961b8e",
+      "name": "breakpoint=medium, variant=success",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "fb9b68ecd6c1df9a60c71ce8299868102fa3c1bc",
+      "name": "pattern=account group, pattern state=default state",
+      "description": "",
       "containingFrame": ""
     },
     {
@@ -27910,6 +25708,1038 @@
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "custom-edit-pencil"
+    },
+    {
+      "key": "5ac735979873b9266c5f38e8d41746e722d2f857",
+      "name": "configuration=default, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b0a0629e270fa37a80ddc1632e7e4f05eead5d76",
+      "name": "configuration=default, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "28f8675f261ef38f05823037473148ec7ae9618c",
+      "name": "configuration=wide, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a5e87e8985b2e18d5a9295f62e3d0bb455aa5d92",
+      "name": "configuration=wide, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8c90b79c2410ae9d3f7b2de1e9d111fc00d6113a",
+      "name": "variant=slider",
+      "description": "❖ [dsc] Progress\n<N/A>",
+      "containingFrame": ""
+    },
+    {
+      "key": "092df26f1ef87acefa7837e5a63ee53ae98720dc",
+      "name": "variant=range slider",
+      "description": "❖ [dsc] Progress\n<N/A>",
+      "containingFrame": ""
+    },
+    {
+      "key": "56a9ffc5a3550c921f9f4e5e06b4db4fc7bf560f",
+      "name": "color=warning",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "eb5c9622fcc8a82e497ce468507da306f1085c4e",
+      "name": "pattern=error, wide=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "110242b7c2ce3183ece5c0964357f8d56b6c664d",
+      "name": "variant=neutral, size=large",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "12cb3cd39759be58fcef29eaff66efbc36554138",
+      "name": "variant=highlight, size=large",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1f3a043a4edee213909727fdc6a318e474f1d9a5",
+      "name": "variant=success, size=large",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2e86710246de8c78cdaf474d9bf77ab2f4bb9fee",
+      "name": "variant=highlight, size=small",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2f127306208d2b4a393d445bb38eba92b9d0c875",
+      "name": "variant=success, size=small",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "71b2291590abcebb9274c367f7d6f4fd254f32b7",
+      "name": "variant=neutral, size=standard",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7caae470c405a2509cd0bb8b0f874c602f831a94",
+      "name": "variant=warning, size=standard",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8e97b195fe80356a3fd52d76b1b7fbc6fbf9bcdb",
+      "name": "variant=neutral, size=small",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8efcbaf32c53eaa54169d2600260d7dae01c6a92",
+      "name": "variant=success, size=standard",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "90bd6e8b6be9ec1e6adde5f7520dd1f34a494643",
+      "name": "color=success",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9117dcafe80364c66303ca278dc0775945db3530",
+      "name": "variant=warning, size=small",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ae7ab838a559426e55641707df0a5db27e2d4d07",
+      "name": "variant=highlight, size=standard",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ca5e1807b5f6e9d3f019b25e0caeaf7922fb0216",
+      "name": "color=info",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "df28ef3d6b9f5c5d61132478decf756f1820af8d",
+      "name": "variant=danger, size=large",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ff017216d85b52b53f4cbe6f1c5c33718c51ec2f",
+      "name": "variant=danger, size=small",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ea039137da7cf616cdb1f57660d96209fe587dfe",
+      "name": "variant=slot, configuration=default, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "cddbb43187a6df3128fce23139134c3905df8c7b",
+      "name": "breakpoint=extra small, variant=danger",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1d650ede033f826e42ef153a31f540ccc9a70378",
+      "name": "breakpoint=large, variant=success",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "cb54b6b9b87837e184223d9132ff82f41d56608d",
+      "name": "breakpoint=small, variant=informative",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6d4d0a9be93dc52dc57dc03eab4cbfa2ee7414e3",
+      "name": "breakpoint=small, variant=danger",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0937bde3549674057762f39ab2b09dace6fba944",
+      "name": "variant=danger, size=large, type=plain, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "09667cc7ce9869e1862f47abcbe7cf58a6454313",
+      "name": "variant=on media bg, size=small, type=chromeless, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0a564b496a26d3946d7a01516347f83b76f682bb",
+      "name": "variant=highlight, size=large, type=chromeless, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0a98f17ce4383b5f01492882ed2e9282f8f92b66",
+      "name": "variant=on media bg, size=small, type=chromeless, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0b2900bdedbc6bac91252186bb438348dfd06f2a",
+      "name": "variant=danger, size=small, type=plain, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0b5c4da78a41bb53a56bff1c60bdfcf6508b027f",
+      "name": "variant=highlight, size=large, type=outline, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0ca03a700cba37f4a75a788e94e5a7e3593e6843",
+      "name": "variant=on media bg, size=large, type=outline, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0e25e785c04c9f07d7b73b24b4828e781b73a1b6",
+      "name": "variant=highlight, size=small, type=outline, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0e7c4347f20c101006b93243b6f0b300ed21efa8",
+      "name": "variant=danger, size=small, type=outline, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "10225c6eac698427009004ac958eb6cdaaa8a13a",
+      "name": "variant=highlight, size=standard, type=outline, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1426daf7a71f474859b53e17b8202d18b48bbf7f",
+      "name": "variant=danger, size=standard, type=plain, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "15ab5302faf38f2560e1d0cfc08ece1a59a9a0c9",
+      "name": "variant=on media bg, size=small, type=outline, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "15db534f2c766fc4956c06f6125261af16fdb555",
+      "name": "variant=highlight, size=small, type=chromeless, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "17ad671c56defc35826f315a630419b4bb0e452c",
+      "name": "variant=danger, size=standard, type=outline, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "198f4845a345f83f8032fb409a8c23282d9e9056",
+      "name": "variant=on media bg, size=large, type=chromeless, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "19989c653eacc3c32dbef2b77f5ef333fefd51d4",
+      "name": "variant=danger, size=standard, type=chromeless, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1e5234336727eb1c88c2976dd97e1054358404e4",
+      "name": "variant=danger, size=small, type=plain, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1e6ff0bd428c4d494547b9da5cc074e539df9b7e",
+      "name": "variant=danger, size=standard, type=plain, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1e7087f1f54cbb8e60c467f32543c644566cad1f",
+      "name": "variant=highlight, size=large, type=plain, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "223c22624832582ae590d8bc10e4c71ab817e96e",
+      "name": "variant=highlight, size=standard, type=outline, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2311f1b257c54fc58a5bec2a26f140c3995552be",
+      "name": "variant=danger, size=standard, type=outline, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "23fe94253259e6cb680d1dd125524164c1568ee9",
+      "name": "variant=highlight, size=small, type=plain, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "25e833b22cfd2fcc84a16466e9dccf1b8db3f894",
+      "name": "variant=highlight, size=small, type=outline, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "28a1bec43eb45c0503cc9a0dfe178e18bfa44036",
+      "name": "variant=danger, size=large, type=chromeless, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2dbe55b6b54676ee38857ec62fd565f8551dce95",
+      "name": "variant=on media bg, size=small, type=outline, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "309aaef8a1ce9b0d6d43ecf2f121c391de1ac0d3",
+      "name": "variant=highlight, size=large, type=plain, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3226cfe03f9671d189605ca15aa43b717d88f4de",
+      "name": "variant=highlight, size=standard, type=chromeless, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "338411890871b5c0031137ce84a14dc0c4114ace",
+      "name": "variant=highlight, size=large, type=chromeless, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "35ad2e233d05cd360417d306903ca7b9bd5e168d",
+      "name": "variant=highlight, size=small, type=outline, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "38d4b2480e5ae35ca9575d684826add72f0f44fd",
+      "name": "variant=highlight, size=large, type=chromeless, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3d8374b27e24569e4ae6101d911c33c8eb9eba37",
+      "name": "variant=on media bg, size=small, type=plain, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3fcd5e8260f733223fc5313b9d35d22fee8a13dc",
+      "name": "variant=on media bg, size=small, type=plain, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4022eff88215a85ffa9fae223c855b812c1265e8",
+      "name": "variant=highlight, size=standard, type=outline, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "421103266114a7e93019eb12d1e707555c1a05a2",
+      "name": "variant=highlight, size=large, type=plain, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "428fb6e7a14bd9fb026ca152136f6b363cc1bf1c",
+      "name": "variant=danger, size=standard, type=plain, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "43562c6e003fbc801a1011458c525b9cdea27e0b",
+      "name": "variant=on media bg, size=small, type=chromeless, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "441e558103e58fc0576bf88a72825a139432c6d0",
+      "name": "variant=on media bg, size=large, type=chromeless, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "44770a23b5a9d13fa56e18bc491b149774937645",
+      "name": "variant=danger, size=large, type=chromeless, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "477a2d689a4e3854157059e3c995f24af0dcc328",
+      "name": "variant=on media bg, size=standard, type=outline, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "49579fa30600b09389bf055f57ef1acb566f6765",
+      "name": "variant=on media bg, size=small, type=outline, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4f0125b7d737c7f30da8414f0b018cdb3ae34390",
+      "name": "variant=on media bg, size=large, type=plain, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "527c09d13358c9ae83fd6ac5a6047a06bcb55aad",
+      "name": "variant=danger, size=large, type=outline, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "54985870039bac735da96b264dfa8f76cb884b5a",
+      "name": "variant=highlight, size=large, type=chromeless, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "54d827597481b418f951938956301d187ea28135",
+      "name": "variant=on media bg, size=small, type=plain, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "55663c0b5835804544da7e6865a2d73e8e2e70b3",
+      "name": "variant=highlight, size=standard, type=chromeless, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "583ab28f798682bdb5e5422a6bc7183cfcaa300e",
+      "name": "variant=on media bg, size=standard, type=chromeless, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "5a8aec6e1e3ba95d036989351eba739e253bd144",
+      "name": "variant=highlight, size=small, type=chromeless, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "5b372e260d8f748982ff96a287705c4d8dc7fb76",
+      "name": "variant=on media bg, size=standard, type=chromeless, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "5b69692772f6938a5b6bd78e99d2a4ea6d4fd210",
+      "name": "variant=danger, size=standard, type=plain, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "5e670ab05a9a336840f7cd6c3f2091080998cd38",
+      "name": "variant=on media bg, size=small, type=plain, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "60b1bf7627cc96026275e0f94547b2046b3f081d",
+      "name": "variant=highlight, size=large, type=plain, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6488556628f692d44b73d1a0fe1def7ef7983e22",
+      "name": "variant=highlight, size=small, type=chromeless, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "656b9e3df17a9234508fa18af9978f22f07481e4",
+      "name": "variant=highlight, size=standard, type=outline, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "66429d873abe3aa8dd68fdab304675a10da50d05",
+      "name": "variant=on media bg, size=small, type=outline, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6822fee88ddb12b9f02eb555908a5410b0a63bfb",
+      "name": "variant=danger, size=small, type=chromeless, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "68668c1377795f809633af0bd869f6547e24aac0",
+      "name": "variant=on media bg, size=large, type=chromeless, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6911d2ece3d1585cec07eaab29ada3e324c8be8f",
+      "name": "variant=highlight, size=small, type=plain, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6a06bbe8aa53a963f09521c8eee41ee3dee64255",
+      "name": "variant=on media bg, size=standard, type=plain, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6bb5074b78909f7849cfd6619f5f360a0b916a29",
+      "name": "variant=on media bg, size=standard, type=outline, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6bbb69f01719f8dc88bc9f9d27319362c570395b",
+      "name": "variant=highlight, size=standard, type=plain, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6e4062a9295e7b2cc8a65d49f44c6027ca0f7b3c",
+      "name": "variant=danger, size=large, type=chromeless, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7116c038e84169825d5aa9ed00cc6014ad192813",
+      "name": "variant=on media bg, size=standard, type=plain, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "71962d6e30a4f13f554120bbabcb8b00c248aec7",
+      "name": "variant=danger, size=large, type=outline, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "76f231f1671601593acc5f780775ee06f15cee40",
+      "name": "variant=on media bg, size=small, type=outline, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "775022b59f7ef97f9c5d89a914b95e6c7e6073e7",
+      "name": "variant=danger, size=standard, type=chromeless, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "79747cbf71b25b52a3df15bbff4018fee8232625",
+      "name": "variant=on media bg, size=large, type=outline, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "79daac01e62dd254cdb7ad4d87ab22eaeb7e2f09",
+      "name": "variant=highlight, size=large, type=outline, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7a3cd653a34eed4ddd8c0c4d03b06d1d3927935d",
+      "name": "variant=on media bg, size=small, type=outline, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7de768b395a30620ba996c5566a8134d47ce87a4",
+      "name": "variant=danger, size=small, type=plain, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "839c1771a8deb8d994267306b9cac786be161d44",
+      "name": "variant=highlight, size=large, type=outline, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "856aa786b6bcf7f03e69da80b4ea3f405801b472",
+      "name": "variant=highlight, size=small, type=outline, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8b1b37c92e83c36e45adcb7112a6387653f2a606",
+      "name": "variant=danger, size=large, type=chromeless, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8d3b7734f9f22241fd913384541c271a48b781fd",
+      "name": "variant=on media bg, size=standard, type=chromeless, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8e0ee2830c99f6f44c3ea3fc94014f0d6b956494",
+      "name": "variant=danger, size=large, type=plain, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8eca2ed5ac907db6acecb49a5b85d86e55d4c8a2",
+      "name": "variant=highlight, size=standard, type=plain, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "901e33aa993fc040f64b8e45ce568168f2861d98",
+      "name": "variant=on media bg, size=standard, type=outline, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "90b3593e9d87f1376d31abd1de230ed6a2fa2536",
+      "name": "variant=danger, size=large, type=outline, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "931efcc908aa8319a9ca24a70794771d07ec7888",
+      "name": "variant=on media bg, size=standard, type=outline, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "978c7c44b71ce092fc2fb2ef2ce3be1c4eacb815",
+      "name": "variant=danger, size=small, type=outline, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9945ffa53169a2fd6a8ea7cbedd550c61d57f530",
+      "name": "variant=highlight, size=large, type=plain, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9d1d69177fcc956bb8c488575740e690ea1bb99f",
+      "name": "variant=on media bg, size=large, type=plain, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9dfd32286ab824120466cfe3274a33316dc0e7d2",
+      "name": "variant=danger, size=large, type=plain, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9ea1eee81a393e2379c5660200a9e53809c9922a",
+      "name": "variant=danger, size=standard, type=outline, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a1a08450d34b9c87dbbf02a6df4dba11c656b744",
+      "name": "variant=highlight, size=small, type=chromeless, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a2331d167f52d145893bfe72cbfb1ce97815db4b",
+      "name": "variant=on media bg, size=large, type=chromeless, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a47a25f23069eb0ba7a98d7b9db863b59f954b75",
+      "name": "variant=on media bg, size=standard, type=outline, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a5241626f743cebe92eeaef76e3fe7de1b67b1ea",
+      "name": "variant=danger, size=large, type=outline, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a61a78e29f8646dab21560bfa39261ecb4fe4610",
+      "name": "variant=highlight, size=small, type=outline, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a818a30d82baeb9c720ec89f4b5673c36a9f52f2",
+      "name": "variant=danger, size=standard, type=outline, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "aada2e907b2df3decc799272df1132f670dcaa8a",
+      "name": "variant=on media bg, size=large, type=chromeless, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ac5a68c00980e284f31e01231455c25ade320270",
+      "name": "variant=highlight, size=large, type=outline, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "af217471b396344ec0132e13fd7a3aaea657a11e",
+      "name": "variant=danger, size=standard, type=chromeless, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "af8564a2b0f82b1d4f8b9fe27628f1c0e5d4e964",
+      "name": "variant=highlight, size=standard, type=outline, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b037122a3e4120adca7b0ad294a1adef13330f30",
+      "name": "variant=highlight, size=standard, type=plain, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b0a865198e568fbbf07e81b38f87e9ceb127ebf4",
+      "name": "variant=highlight, size=large, type=plain, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b3fc5d593a3e00764fad098f2e1bcdc89d0789d3",
+      "name": "variant=on media bg, size=standard, type=plain, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b599a7a5431bf6796d94cfbe02640bba50f34ed4",
+      "name": "variant=on media bg, size=large, type=outline, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b94264036f7f087c233b6e7c1021ed54a866925a",
+      "name": "variant=on media bg, size=large, type=plain, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "be31d247f1557cf4fa2931268fcdd3b9f29d453f",
+      "name": "variant=on media bg, size=standard, type=chromeless, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c134388b7114e2340b7573111e8f18ec33e9b11e",
+      "name": "variant=highlight, size=standard, type=outline, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c1c0ad6c6316ed2e69efc3770f9a3eb85eba52a5",
+      "name": "variant=danger, size=large, type=plain, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c26eacd841fac2b892faa421da683309b0a6b2b3",
+      "name": "variant=danger, size=small, type=plain, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c2a7bae573c2835e9dcb26cf1a5d21504d84c7e5",
+      "name": "variant=highlight, size=standard, type=plain, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c2f80f4cc848bb632fde77641ce29ac4bdf59730",
+      "name": "variant=on media bg, size=large, type=outline, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c464496d6ea8ecd28eb71eae714546b951ab5053",
+      "name": "variant=danger, size=small, type=outline, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c86f006da1a25455bedafa40987140447ffb40dc",
+      "name": "variant=on media bg, size=small, type=chromeless, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "caa24115ed31e4659740e610986813f3146be3f8",
+      "name": "variant=highlight, size=small, type=plain, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "cb16715e4e929c996a718d489c284c7cbfd946dd",
+      "name": "variant=danger, size=standard, type=plain, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "cbf0494149621dba320575c00d5f35e2dd619457",
+      "name": "variant=danger, size=small, type=chromeless, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "cbfcede5545f544cc12b5a61849fcc3501675cf6",
+      "name": "variant=danger, size=standard, type=chromeless, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "cd1176fc287e4e97372dfb107e33a74271262269",
+      "name": "variant=danger, size=small, type=chromeless, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d04a027eb84f5f462a2e9c8e8a18fc21aac22697",
+      "name": "variant=on media bg, size=large, type=outline, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d0d10cd97c3d60c7eb6a9afb8f8ff22855647b7c",
+      "name": "variant=on media bg, size=large, type=plain, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d1c2406ce19ea7e58c5419fc1e39911750def5b8",
+      "name": "variant=highlight, size=small, type=chromeless, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d2adfbad7aef7b1e2579b1f2d166b38a8bbd7b33",
+      "name": "variant=on media bg, size=large, type=plain, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d511ab298e9fdb54c4a0a15bb09b5c314619a5e0",
+      "name": "variant=highlight, size=large, type=outline, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d6245a73e86c10aa310cafc383a95728066679c5",
+      "name": "variant=highlight, size=small, type=plain, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d765c3dfd002857740e5f8c758d485e45d30063a",
+      "name": "variant=danger, size=small, type=outline, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d8b86170a217c603fd177193ff518e203bf679d7",
+      "name": "variant=highlight, size=large, type=outline, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d9f64af6841ac4807e9d51f4cffc5e2ec29163b1",
+      "name": "variant=on media bg, size=standard, type=chromeless, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "da1a48b0e0129ef1e2e9597975f0b88248697ab8",
+      "name": "variant=highlight, size=small, type=outline, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "da6e076894d954a07dbb573a459dfb96c1d8f4db",
+      "name": "variant=danger, size=standard, type=chromeless, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "da9a07832f84258ddf8caab078b211c3a4d39669",
+      "name": "variant=on media bg, size=small, type=plain, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "db6e60e280486b136ce1a743d8e0cb82c02a7525",
+      "name": "variant=on media bg, size=small, type=plain, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "dfe6004248462de384c2230bc7b00883a9adbd67",
+      "name": "variant=highlight, size=large, type=chromeless, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "dfeafec29c55b12643b0dee326fd9f33d4c14540",
+      "name": "variant=on media bg, size=small, type=chromeless, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e33065e8e145b9d0a1302e7ed000daa4ddaf4308",
+      "name": "variant=on media bg, size=standard, type=outline, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e3ad17c5efcef898126f73aa47a4f4cd0336c738",
+      "name": "variant=danger, size=large, type=plain, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e40c3509009568b3663151394e4721bb3ba4d341",
+      "name": "variant=danger, size=small, type=outline, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e46c83f3c7b1be392639c9258b2ba0895e53f502",
+      "name": "variant=on media bg, size=large, type=outline, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e772234dac260dc516a04894d1a236cf4ead5fba",
+      "name": "variant=danger, size=large, type=chromeless, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e84f3a2e6c80cb35e02ea55f96097f91c5ee6b67",
+      "name": "variant=danger, size=standard, type=chromeless, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e9c6a5b27c88c223dd5fcd4bc622770780c99a0c",
+      "name": "variant=danger, size=small, type=chromeless, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e9f4f8bdfc50fe455dd7cde170eeac060330ee66",
+      "name": "variant=highlight, size=small, type=chromeless, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ea19c282bb70dffdfa735ac0fa283d61b83b94cb",
+      "name": "variant=highlight, size=standard, type=chromeless, state=pressed",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f1c772b7592c5a3d9ec3f45dc852223ec18665dc",
+      "name": "variant=highlight, size=standard, type=chromeless, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f47fe3d893b354839bbbc5541fee5e5170534095",
+      "name": "variant=highlight, size=small, type=plain, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f61da82f971017feeade581f0f14ba2160a9df5f",
+      "name": "variant=danger, size=small, type=plain, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f6858e807ee73f01325050a46907a90532b713c4",
+      "name": "variant=danger, size=large, type=outline, state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f76cd1a9564a32bdaf044bba0793b55d0f6e6fd7",
+      "name": "variant=on media bg, size=standard, type=plain, state=focus",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f98bf36c88848a556852743aae4d8bf553f6fba9",
+      "name": "variant=danger, size=standard, type=outline, state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f9e48b540607bbad8e004da5292ab99fcf33df3e",
+      "name": "variant=highlight, size=standard, type=plain, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "faea36f5cc87ba967144cd54e1eed305526c2f27",
+      "name": "variant=highlight, size=large, type=chromeless, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "fd8836e5058bdc18b011a5186fe2045b83487ec1",
+      "name": "variant=on media bg, size=large, type=chromeless, state=focus",
+      "description": "",
+      "containingFrame": ""
     }
   ],
   "spacing": [],

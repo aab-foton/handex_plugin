@@ -2,9 +2,11 @@
   "meta": {
     "libraryName": "Design Acessível",
     "figmaFileKey": "Wy0IhXRVZMSOOr8E609UqI",
-    "exportedAt": "2026-05-20T22:25:55.542Z",
+    "exportedAt": "2026-06-10T14:05:34.578Z",
     "generator": "fetch-design-refs.cjs",
-    "warnings": []
+    "warnings": [
+      "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
+    ]
   },
   "designTokens": {
     "variables": []
@@ -930,7 +932,8 @@
     {
       "key": "8ea1db30e2555b3552278493d9a9624775aa4624",
       "name": "Handoff de acessibilidade - Ordem de tabulação e Leitor de Telas [Web] V1",
-      "description": ""
+      "description": "",
+      "containingFrame": ""
     },
     {
       "key": "9b3ebe6790d8777d3c75abdfffbcba069ba405d3",
