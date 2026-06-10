@@ -296,6 +296,19 @@
               </label>
             </div>
 
+            <!-- Re-escanear (visível só quando checkDone) -->
+            <div id="rescan-row-${fid}" class="${frame.audit && frame.audit.checkDone ? '' : 'hidden'} flex items-center justify-between py-1 border-t border-gray-50 dark:border-dark-line pt-2">
+              <div>
+                <p class="text-[11px] font-medium text-slate-600 dark:text-dark-muted">Atualizar escaneamento</p>
+                <p class="text-[10px] text-slate-400 dark:text-dark-muted leading-snug">Re-escaneia o frame após ajustes</p>
+              </div>
+              <button onclick="scanFrame('${fid}')"
+                class="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#0070af]/8 hover:bg-[#0070af]/15 border border-[#0070af]/20 rounded-lg text-[#0070af] dark:text-blue-400 text-[10px] font-bold transition-colors shrink-0">
+                <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+                Escanear
+              </button>
+            </div>
+
             <!-- Resultado (visível só quando checkDone) -->
             <div id="audit-result-${fid}" class="${frame.audit && frame.audit.checkDone ? '' : 'hidden'} space-y-1.5 border-t border-gray-50 dark:border-dark-line pt-2">
               ${!frame.isNewComponent ? `
