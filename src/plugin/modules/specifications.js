@@ -64,7 +64,6 @@
         { title: "Componentes", items: data.components, type: "components", icon: "box" },
         { title: "Ícones", items: data.icons, type: "icons", icon: "image" },
         { title: "Tipografia", items: data.typography, type: "typography", icon: "type" },
-        { title: "Frames e Layouts", items: data.frames, type: "frames", icon: "layout" },
         { title: "Vetores", items: data.vectors, type: "vectors", icon: "pen-tool" }
       ];
 
@@ -80,6 +79,10 @@
         }
       });
       _refreshIcons();
+      // Atualiza subtítulo de conformidade após scan (itens desvinculados podem mudar o estado)
+      if (frameId && typeof _updateFrameAuditSubtitle === 'function') {
+        _updateFrameAuditSubtitle(frameId);
+      }
     }
 
     // ── Helpers de visibilidade de seções ──────────────────────────────
@@ -121,6 +124,21 @@
           <i data-lucide="chevron-right" id="sub-chev-${key}" class="w-3.5 h-3.5 text-gray-300 transition-transform shrink-0"></i>
         </button>`;
 
+      // Subtítulo dinâmico baseado no estado de conformidade DSC
+      let _subCls, _subLabel;
+      if (frame.isNewComponent) {
+        _subCls = 'text-[10px] text-violet-500 font-medium'; _subLabel = 'Novo Componente';
+      } else if (!frame.audit || !frame.audit.checkDone) {
+        _subCls = 'text-[10px] text-slate-400 font-medium'; _subLabel = 'Pendente';
+      } else {
+        const _hasUnl = typeof _computeFrameHasUnlinked === 'function' ? _computeFrameHasUnlinked(frame) : false;
+        if (frame.audit.semDesvios && !_hasUnl) {
+          _subCls = 'text-[10px] text-green-600 font-medium'; _subLabel = 'Conforme';
+        } else {
+          _subCls = 'text-[10px] text-red-500 font-medium'; _subLabel = 'Não Conforme';
+        }
+      }
+
       card.innerHTML = `
         <!-- Cabeçalho -->
         <div id="frame-header-${fid}"
@@ -136,7 +154,7 @@
           </button>
           <div class="flex-1 min-w-0">
             <p class="text-[12px] font-bold text-slate-800 dark:text-white truncate">${frame.nome}</p>
-            <p id="frame-subtitle-${fid}" class="text-[10px] text-green-600 font-medium">Conforme</p>
+            <p id="frame-subtitle-${fid}" class="${_subCls}">${_subLabel}</p>
           </div>
           <button type="button"
             onclick="event.stopPropagation(); removeFrame('${fid}')"
@@ -236,9 +254,9 @@
                 <p class="text-[11px] text-violet-700 dark:text-violet-300 leading-snug">Componente novo — desvios são esperados. Registre as divergências nas observações acima.</p>
               </div>`}
               <textarea id="audit-obs-${fid}" rows="2"
-                placeholder="Descreva os desvios ou exceções encontrados..."
+                placeholder="Descreva os desvios encontrados ou o motivo da não conformidade com o DSC..."
                 oninput="setFrameAuditObs('${fid}', this.value)"
-                class="${frame.audit && frame.audit.checkDone && (frame.isNewComponent || !frame.audit.semDesvios) ? '' : 'hidden'} w-full bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl px-3 py-2 text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 resize-none focus:ring-2 focus:ring-[#0070af]/20 outline-none transition-all">${frame.audit && frame.audit.observacoes ? frame.audit.observacoes : ''}</textarea>
+                class="${(() => { const _hasUnl = typeof _computeFrameHasUnlinked === 'function' ? _computeFrameHasUnlinked(frame) : false; const _show = frame.audit && frame.audit.checkDone && (frame.isNewComponent || !frame.audit.semDesvios || _hasUnl); return _show ? '' : 'hidden'; })()} w-full bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl px-3 py-2 text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 resize-none focus:ring-2 focus:ring-[#0070af]/20 outline-none transition-all">${frame.audit && frame.audit.observacoes ? frame.audit.observacoes : ''}</textarea>
             </div>
           </div>
 
