@@ -462,7 +462,7 @@ figma.ui.onmessage = async (msg) => {
     if (!handoffNode) {
       handoffAtivo = null;
       componentePrincipalAtivo = null;
-      tentarTravarContexto(figma.currentPage.selection);
+      tentarTravarContexto(figma.currentPage.selection, true);
       if (!handoffAtivo) {
         figma.ui.postMessage({ type: 'feedback', message: '⚠️ Template não encontrado. Selecione o novo template e o componente no canvas.' });
         return;
@@ -826,15 +826,99 @@ figma.ui.onmessage = async (msg) => {
           if (imageFrame && componentePrincipalAtivo) {
             if (imageFrame.type === 'INSTANCE') imageFrame = imageFrame.detachInstance();
 
-            const modelHandoffAreas = (Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Handoff areas')
-              ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-h] Handoff areas')) as InstanceNode | undefined;
-            const modelItemNumber = (Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Item Number')
-              ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-h] Item Number')) as InstanceNode | undefined;
+            const modelHandoffAreas = (Array.from(imageFrame.children).find(n => n.name === '[a11y] Touch areas')
+              ?? (imageFrame as FrameNode).findOne(n => n.name === '[a11y] Touch areas')) as InstanceNode | undefined;
+            const modelItemNumber = (Array.from(imageFrame.children).find(n => n.name === '[a11y] Touch Area Connector')
+              ?? (imageFrame as FrameNode).findOne(n => n.name === '[a11y] Touch Area Connector')) as InstanceNode | undefined;
             if (modelHandoffAreas) modelHandoffAreas.visible = false;
             if (modelItemNumber) modelItemNumber.visible = false;
 
             try { await applyWcagBackground(imageFrame as FrameNode, componentePrincipalAtivo, allVarsGlobal); } catch (e) {
               figma.ui.postMessage({ type: 'feedback', message: `❌ Erro no bloco de cor: ${e}` });
+            }
+
+            // Garante instâncias lado a lado: cria se faltar, reposiciona se sobreposta.
+            // Dois passes: (1) coleta/cria instâncias; (2) posiciona e recria overlays se necessário.
+            const PAD_LEFT_RH = 160, PAD_TOP_RH = 80, GAP_H_RH = 140;
+            type RhVarEntry = { variacao: any; varId: string; inst: SceneNode };
+            const rhEntries: RhVarEntry[] = [];
+
+            // Passe 1: coleta ou cria instâncias (sem posicionar ainda)
+            for (const variacao of variacoes) {
+              if (variacao.sem_toque || !variacao.areas_toque || variacao.areas_toque.length === 0) continue;
+              const varId: string = variacao.id;
+              let inst = Array.from(imageFrame.children).find(n => {
+                try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}'); return d.type === 'variation-component' && d.variationId === varId; } catch { return false; }
+              }) as SceneNode | null;
+              if (!inst) {
+                inst = createComponentInstance(componentePrincipalAtivo) as InstanceNode;
+                if (variacao.propriedades && Object.keys(variacao.propriedades).length > 0) {
+                  try { (inst as any).setProperties(variacao.propriedades); } catch(_e) {}
+                }
+                imageFrame.appendChild(inst);
+                inst.setPluginData('a11y-meta', JSON.stringify({ type: 'variation-component', variationId: varId }));
+              }
+              rhEntries.push({ variacao, varId, inst });
+            }
+
+            // Passe 2: posiciona instâncias lado a lado; move ou cria overlays/badges
+            let rhNextX = PAD_LEFT_RH;
+            for (let ei = 0; ei < rhEntries.length; ei++) {
+              const { variacao, varId, inst } = rhEntries[ei];
+              const recrPrefix = variacoes.indexOf(variacao) + 1;
+              const instW = (inst as any).width, instH = (inst as any).height;
+              const targetX = rhNextX, targetY = PAD_TOP_RH;
+
+              (inst as any).x = targetX;
+              (inst as any).y = targetY;
+              imageFrame.resize(
+                Math.max((imageFrame as FrameNode).width, targetX + instW + 24),
+                Math.max((imageFrame as FrameNode).height, PAD_TOP_RH + instH + 40)
+              );
+
+              // Sempre recria overlays e badges para garantir posicionamento consistente.
+              Array.from(imageFrame.children)
+                .filter(n => {
+                  try { const d = JSON.parse(n.getPluginData('a11y-meta') || '{}');
+                    return (d.type === 'touch-overlay' || d.type === 'touch-badge') && d.variationId === varId;
+                  } catch { return false; }
+                })
+                .forEach(n => n.remove());
+              const areas: any[] = variacao.areas_toque || [];
+              for (let areaIdx = 0; areaIdx < areas.length; areaIdx++) {
+                const area = areas[areaIdx];
+                if (!modelHandoffAreas) continue;
+                const areaClone = (modelHandoffAreas as InstanceNode).clone();
+                areaClone.visible = true;
+                try { areaClone.resize(area.width, area.height); } catch(_e) {}
+                areaClone.x = targetX + (area.relX || 0);
+                areaClone.y = targetY + (area.relY || 0);
+                imageFrame.appendChild(areaClone);
+                areaClone.setPluginData('a11y-meta', JSON.stringify({ type: 'touch-overlay', variationId: varId, nome: area.nome, index: areaIdx, variationPrefix: recrPrefix }));
+                if (modelItemNumber) {
+                  const numClone = (modelItemNumber as InstanceNode).clone();
+                  numClone.visible = true;
+                  // Badge sempre à esquerda do overlay com conector apontando para direita.
+                  // Ignora badgeOffsetX salvo — pode estar incorreto se instâncias foram movidas.
+                  if (area.badgeProps && Object.keys(area.badgeProps).length > 0) {
+                    try { (numClone as any).setProperties({ ...area.badgeProps, 'conector': 'direita' }); } catch(_e) {}
+                  } else {
+                    try { (numClone as any).setProperties({ 'conector': 'direita' }); } catch(_e) {}
+                  }
+                  if (area.badgeWidth > 0 && area.badgeHeight > 0) {
+                    try { numClone.resize(area.badgeWidth, area.badgeHeight); } catch(_e) {}
+                  }
+                  numClone.x = areaClone.x - (numClone as any).width;
+                  numClone.y = areaClone.y + Math.round(area.height / 2) - Math.round((numClone as any).height / 2);
+                  imageFrame.appendChild(numClone);
+                  numClone.setPluginData('a11y-meta', JSON.stringify({ type: 'touch-badge', variationId: varId, nome: area.nome, index: areaIdx, variationPrefix: recrPrefix }));
+                  const numTexts = (numClone as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+                  const numText = numTexts.find((n: TextNode) => /^[\d.]+$/.test(n.characters.trim())) || numTexts[0];
+                  if (numText) await updateText(numText as TextNode, `${recrPrefix}.${areaIdx + 1}`);
+                }
+              }
+
+              rhNextX = targetX + instW + GAP_H_RH;
             }
 
             // Re-numerar badges por variação com formato X.Y (X = índice da variação, Y = área local)
@@ -1005,8 +1089,8 @@ figma.ui.onmessage = async (msg) => {
           if (srSection) {
             const srImageFrame = Array.from(srSection.children).find((n: SceneNode) => n.name === 'image') as FrameNode | null;
             if (srImageFrame) {
-              const modelConector    = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Conectores')   as InstanceNode | undefined;
-              const modelAgrupamento = srImageFrame.findOne(n => n.name === '[a11y] Agrupamento')  as InstanceNode | undefined;
+              const modelConector    = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Screen Reader Conector')   as InstanceNode | undefined;
+              const modelAgrupamento = srImageFrame.findOne(n => n.name === '[a11y] Screen Reader Gruping')  as InstanceNode | undefined;
               const modelItemNumber  = Array.from(srImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
               const tagSR            = Array.from(srImageFrame.children).find(n => n.name === 'tag');
 
@@ -1405,7 +1489,7 @@ figma.ui.onmessage = async (msg) => {
                     const isHeadingSpec = tSpec.includes('título') || tSpec.includes('titulo') || tSpec.includes('heading') || tSpec.includes('nível') || tSpec.includes('nivel');
                     const badgeLabel = isHeadingSpec && c.especificacao ? c.especificacao : letra;
 
-                    const conectorNode = clone.findOne((n: SceneNode) => n.name === '[a11y] Conectores') as SceneNode | null;
+                    const conectorNode = clone.findOne((n: SceneNode) => n.name === '[a11y] Screen Reader Conector') as SceneNode | null;
 
                     // setProperties ANTES dos updateText para evitar reset de overrides
                     if (conectorNode && conectorNode.type === 'INSTANCE') {
@@ -1418,7 +1502,7 @@ figma.ui.onmessage = async (msg) => {
                       try { (conectorNode as InstanceNode).setProperties({ 'tipo': tipoVariante }); } catch(_e) {}
                     }
 
-                    // Atualiza letra do role dentro do [a11y] Conectores
+                    // Atualiza letra do role dentro do [a11y] Screen Reader Conector
                     const innerNumTxt = conectorNode && 'findOne' in conectorNode
                       ? (conectorNode as FrameNode).findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null
                       : null;
@@ -1565,6 +1649,35 @@ figma.ui.onmessage = async (msg) => {
 
         }
       }
+
+      // Sync 'screen size' spec rows: hide rows whose zoom type is not selected, renumber visible ones
+      // Fixed positional order matches the template: row0=texto/reflow, row1=componente 200% mobile, row2=componente 400%
+      const ZOOM_ROW_TYPES = [
+        '200% Texto (reflow)',
+        '200% Componente (scaling)',
+        '400% Componente (scaling)',
+      ];
+      let screenSizeSection = workingFrame.findOne((n: SceneNode) => n.name === 'screen size') as FrameNode | null;
+      if (screenSizeSection) {
+        if ((screenSizeSection as any).type === 'INSTANCE') {
+          screenSizeSection = (screenSizeSection as any as InstanceNode).detachInstance() as unknown as FrameNode;
+        }
+        const specsHolder = (screenSizeSection.findOne((n: SceneNode) => n.name === 'specs') ?? screenSizeSection) as FrameNode;
+        const specRows = Array.from(specsHolder.children)
+          .filter(n => n.name !== 'element' && n.name !== 'tag' && n.name !== 'header' && n.name !== 'title') as SceneNode[];
+        let visNum = 0;
+        for (let ri = 0; ri < ZOOM_ROW_TYPES.length && ri < specRows.length; ri++) {
+          const row = specRows[ri];
+          const isSelected = zoomTypes.includes(ZOOM_ROW_TYPES[ri]);
+          (row as any).visible = isSelected;
+          if (isSelected) {
+            visNum++;
+            const numTexts = (row as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+            const numText = numTexts.find((n: TextNode) => /^\d+$/.test(n.characters.trim()));
+            if (numText) await updateText(numText as TextNode, String(visNum));
+          }
+        }
+      }
     }
 
     // Remove container de variações de toque legado se ainda existir
@@ -1686,13 +1799,13 @@ figma.ui.onmessage = async (msg) => {
         try { await applyWcagBackground(imageFrame as FrameNode, componentePrincipalAtivo, []); } catch(_e) {}
       }
 
-      const modelHandoffAreas = (Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Handoff areas')
-        ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-h] Handoff areas')) as InstanceNode | undefined;
-      const modelItemNumber = (Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Item Number')
-        ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-h] Item Number')) as InstanceNode | undefined;
+      const modelHandoffAreas = (Array.from(imageFrame.children).find(n => n.name === '[a11y] Touch areas')
+        ?? (imageFrame as FrameNode).findOne(n => n.name === '[a11y] Touch areas')) as InstanceNode | undefined;
+      const modelItemNumber = (Array.from(imageFrame.children).find(n => n.name === '[a11y] Touch Area Connector')
+        ?? (imageFrame as FrameNode).findOne(n => n.name === '[a11y] Touch Area Connector')) as InstanceNode | undefined;
 
       if (!modelHandoffAreas) {
-        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Modelo [dsc-h] Handoff areas não encontrado. Gere o handoff primeiro.' });
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Modelo [a11y] Touch areas não encontrado. Gere o handoff primeiro.' });
         figma.ui.postMessage({ type: 'touch-overlay-failed' });
         return;
       }
@@ -1722,7 +1835,7 @@ figma.ui.onmessage = async (msg) => {
       if (modelItemNumber) {
         const numClone = modelItemNumber.clone();
         numClone.visible = true;
-        try { numClone.setProperties({ 'connector': 'Off' }); } catch(_e) {}
+        try { numClone.setProperties({ 'conector': 'desativado' }); } catch(_e) {}
         numClone.x = areaClone.x;
         numClone.y = areaClone.y - numClone.height - 4;
         imageFrame.appendChild(numClone);
@@ -1908,10 +2021,10 @@ figma.ui.onmessage = async (msg) => {
       }
 
       // Ocultar modelos do template que ficam visíveis por padrão
-      const _mHA = (Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Handoff areas')
-        ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-h] Handoff areas')) as InstanceNode | undefined;
-      const _mIN = (Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Item Number')
-        ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-h] Item Number')) as InstanceNode | undefined;
+      const _mHA = (Array.from(imageFrame.children).find(n => n.name === '[a11y] Touch areas')
+        ?? (imageFrame as FrameNode).findOne(n => n.name === '[a11y] Touch areas')) as InstanceNode | undefined;
+      const _mIN = (Array.from(imageFrame.children).find(n => n.name === '[a11y] Touch Area Connector')
+        ?? (imageFrame as FrameNode).findOne(n => n.name === '[a11y] Touch Area Connector')) as InstanceNode | undefined;
       if (_mHA) _mHA.visible = false;
       if (_mIN) _mIN.visible = false;
 
@@ -2004,12 +2117,12 @@ figma.ui.onmessage = async (msg) => {
         try { await applyWcagBackground(imageFrame as FrameNode, componentePrincipalAtivo, []); } catch(_e) {}
 
         const modelHandoffAreas = (
-          Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Handoff areas')
-          ?? (imageFrame as FrameNode).findOne((n: SceneNode) => n.name === '[dsc-h] Handoff areas')
+          Array.from(imageFrame.children).find(n => n.name === '[a11y] Touch areas')
+          ?? (imageFrame as FrameNode).findOne((n: SceneNode) => n.name === '[a11y] Touch areas')
         ) as InstanceNode | undefined;
         const modelItemNumber = (
-          Array.from(imageFrame.children).find(n => n.name === '[dsc-h] Item Number')
-          ?? (imageFrame as FrameNode).findOne((n: SceneNode) => n.name === '[dsc-h] Item Number')
+          Array.from(imageFrame.children).find(n => n.name === '[a11y] Touch Area Connector')
+          ?? (imageFrame as FrameNode).findOne((n: SceneNode) => n.name === '[a11y] Touch Area Connector')
         ) as InstanceNode | undefined;
         if (modelHandoffAreas) modelHandoffAreas.visible = false;
         if (modelItemNumber) modelItemNumber.visible = false;
@@ -2035,7 +2148,7 @@ figma.ui.onmessage = async (msg) => {
             if (area.badgeProps && Object.keys(area.badgeProps).length > 0) {
               try { (numClone as any).setProperties(area.badgeProps); } catch(_e) {}
             } else {
-              try { (numClone as any).setProperties({ 'connector': 'Off' }); } catch(_e) {}
+              try { (numClone as any).setProperties({ 'conector': 'desativado' }); } catch(_e) {}
             }
             if (area.badgeWidth > 0 && area.badgeHeight > 0) {
               try { numClone.resize(area.badgeWidth, area.badgeHeight); } catch(_e) {}
@@ -2152,9 +2265,9 @@ figma.ui.onmessage = async (msg) => {
         return;
       }
       const variationId: string = msg.variationId ?? msg.id ?? ('sr_' + Date.now());
-      const _modelC = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Conectores') as InstanceNode | undefined;
+      const _modelC = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Screen Reader Conector') as InstanceNode | undefined;
       const _modelN = Array.from(srImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
-      const _modelA = srImageFrame.findOne(n => n.name === '[a11y] Agrupamento') as InstanceNode | undefined;
+      const _modelA = srImageFrame.findOne(n => n.name === '[a11y] Screen Reader Gruping') as InstanceNode | undefined;
       if (_modelC) _modelC.visible = false;
       if (_modelN) _modelN.visible = false;
       if (_modelA) _modelA.visible = false;
@@ -2392,9 +2505,9 @@ figma.ui.onmessage = async (msg) => {
       }
       const variationId: string = msg.variationId ?? 'default';
       const variationNumber = typeof msg.variationIndex === 'number' ? msg.variationIndex + 1 : 1;
-      const modelConector    = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Conectores')   as InstanceNode | undefined;
+      const modelConector    = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Screen Reader Conector')   as InstanceNode | undefined;
       const modelItemNumber  = Array.from(srImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
-      const modelAgrupamento = srImageFrame.findOne(n => n.name === '[a11y] Agrupamento') as InstanceNode | undefined;
+      const modelAgrupamento = srImageFrame.findOne(n => n.name === '[a11y] Screen Reader Gruping') as InstanceNode | undefined;
       if (modelConector)    modelConector.visible    = false;
       if (modelItemNumber)  modelItemNumber.visible  = false;
       if (modelAgrupamento) modelAgrupamento.visible = false;
@@ -2601,8 +2714,8 @@ figma.ui.onmessage = async (msg) => {
       const instY = (inst as any).y as number;
       const instW = (inst as any).width  as number;
       const instH = (inst as any).height as number;
-      const modelConector    = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Conectores')   as InstanceNode | undefined;
-      const modelAgrupamento = srImageFrame.findOne(n => n.name === '[a11y] Agrupamento') as InstanceNode | undefined;
+      const modelConector    = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Screen Reader Conector')   as InstanceNode | undefined;
+      const modelAgrupamento = srImageFrame.findOne(n => n.name === '[a11y] Screen Reader Gruping') as InstanceNode | undefined;
       const modelItemNumber  = Array.from(srImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
       const itemNumH = modelItemNumber ? (modelItemNumber as any).height : 36;
       if (c.tipoAnotacao === 'agrupamento' && modelAgrupamento) {
@@ -2846,9 +2959,9 @@ figma.ui.onmessage = async (msg) => {
 
       let modelNode: InstanceNode | undefined;
       if (tipoAnotacao === 'agrupamento') {
-        modelNode = srImageFrame.findOne(n => n.name === '[a11y] Agrupamento') as InstanceNode | undefined;
+        modelNode = srImageFrame.findOne(n => n.name === '[a11y] Screen Reader Gruping') as InstanceNode | undefined;
       } else {
-        modelNode = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Conectores') as InstanceNode | undefined;
+        modelNode = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Screen Reader Conector') as InstanceNode | undefined;
       }
       if (!modelNode) {
         figma.ui.postMessage({ type: 'feedback', message: '⚠️ Modelo de conector não encontrado. Gere o handoff primeiro.' });
@@ -2954,7 +3067,7 @@ figma.on('selectionchange', () => {
   }
 });
 
-function tentarTravarContexto(selection: readonly SceneNode[]) {
+function tentarTravarContexto(selection: readonly SceneNode[], skipUISetup = false) {
   const handoffs = selection.filter(n =>
     n.name.includes("[dsc-h] Template Handoff") ||
     n.name.startsWith('[A11Y Handoff]')
@@ -2970,7 +3083,7 @@ function tentarTravarContexto(selection: readonly SceneNode[]) {
       componentePrincipalAtivo = null;
       handoffAtivo = h;
       contextoTravado = true;
-      carregarDadosEEnviarParaUI(h);
+      if (!skipUISetup) carregarDadosEEnviarParaUI(h);
       return;
     }
   }
@@ -3009,7 +3122,7 @@ function tentarTravarContexto(selection: readonly SceneNode[]) {
   componentePrincipalAtivo = component;
   handoffAtivo = handoff;
   contextoTravado = true;
-  carregarDadosEEnviarParaUI(handoffAtivo);
+  if (!skipUISetup) carregarDadosEEnviarParaUI(handoffAtivo);
 }
 
 function parseMasterList(dbInstance: InstanceNode): { mapeamento: string; descricao: string; utilizacao: string }[] {
@@ -3143,7 +3256,7 @@ async function parseOldSRData(handoff: SceneNode): Promise<{
 
     // Conectores regulares: badge fica fora do componente → converter para posição do elemento
     const connectorNodes = (Array.from(imageFrame.children as SceneNode[]) as SceneNode[]).filter(
-      n => n.name === '[a11y] Conectores'
+      n => n.name === '[a11y] Screen Reader Conector'
     );
     for (const badge of connectorNodes) {
       const idx = nearestIdx(badge.x, badge.width);
@@ -3176,7 +3289,7 @@ async function parseOldSRData(handoff: SceneNode): Promise<{
 
     // Agrupamentos: usar posição e tamanho reais (são retângulos que cobrem a área)
     const agrupamentoNodes = (Array.from(imageFrame.children as SceneNode[]) as SceneNode[]).filter(
-      n => n.name === '[a11y] Agrupamento'
+      n => n.name === '[a11y] Screen Reader Gruping'
     );
     for (const ag of agrupamentoNodes) {
       const idx = nearestIdx(ag.x, ag.width);
@@ -3684,8 +3797,13 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
     }
   }
 
+  // Após o primeiro await, handoffAtivo pode ter sido atualizado para o FRAME novo
+  // (ensureHandoffDetached transfere pluginData e atualiza handoffAtivo).
+  // Usar activeHandoff garante que os acessos pós-await usem um nó ainda válido.
+  const activeHandoff = (handoffAtivo || handoff) as any;
+
   // 3. Dados diretos no frame do handoff (override final — mais recente)
-  const rawDirect = (handoff as any).getPluginData('a11y-component-data');
+  const rawDirect = activeHandoff.getPluginData('a11y-component-data');
   if (rawDirect) {
     try { componentData = JSON.parse(rawDirect); } catch(e) {}
   }
@@ -3693,7 +3811,7 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
   // Flag: verdadeiro somente se run-handoff completou com sucesso ao menos uma vez.
   // Não usar type !== 'INSTANCE': o detach acontece ao criar qualquer preview, antes da geração.
   // Não usar rawDirect: save-partial-data também escreve no frame durante preenchimento dos previews.
-  isHandoffGenerated = (handoff as any).getPluginData('a11y-handoff-generated') === 'true';
+  isHandoffGenerated = activeHandoff.getPluginData('a11y-handoff-generated') === 'true';
 
   // parseMasterList e parseRolesList: sempre executam se dbInstance existe
   if (dbInstance) {
@@ -3707,9 +3825,9 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
     rolesList,
     componentData,
     componentName: componentePrincipalAtivo?.name
-      || (handoff.name.startsWith('[A11Y Handoff]') ? handoff.name.slice('[A11Y Handoff]'.length).trim() : null)
+      || (activeHandoff.name.startsWith('[A11Y Handoff]') ? activeHandoff.name.slice('[A11Y Handoff]'.length).trim() : null)
       || "Componente",
-    isGenerated: handoff.type !== "INSTANCE",
+    isGenerated: activeHandoff.type !== "INSTANCE",
     settings: { syncTemplate: settingSync }
   });
 }

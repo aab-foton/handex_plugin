@@ -107,7 +107,7 @@ No template fresco (colocado manualmente pelo designer), `table` pode ter `Heade
 - Template antigo detectado por: filho com nome `'keyboard maping'` ou `'keyboard mapping'`
 - `tempSROverlayRefX/Y` — armazena posição do componente no momento de `create-sr-overlay` para calcular `relX`/`relY` correto no `confirm-sr-area`
 - Agrupamentos de leitor de tela: `relX`/`relY` são relativos ao componente ativo; `width`/`height` são as dimensões do frame de agrupamento
-- Badge de número no preview de toque e tabulação: `connector: 'Off'`, posicionado acima do componente (`currentY - numClone.height - 4`), sem linha de conector
+- Badge de área de toque no `run-handoff`: sempre recriado junto com o overlay; posicionado à esquerda do overlay (`x = overlay.x - badge.width`), centralizado verticalmente, `conector: 'direita'` forçado (independente do `badgeProps` salvo — garante que o conector aponte para o overlay)
 - Limpeza pós-geração: os frames `[A11Y Variação*]` e `[A11Y Variações]` são removidos em **varredura única** do `currentPage.findAll` (não 4 passagens separadas)
 - Painel "Como usar": botão `i` no header abre `infoOverlay` com passo a passo de seleção, descrição das abas e card de configurações
 - Badge de heading no leitor de tela: quando `tipoVariante === 'nível de título'` e `c.especificacao` está preenchido, o texto do badge é `c.especificacao` (h1/h2/h3) — tanto no preview quanto nas specs
