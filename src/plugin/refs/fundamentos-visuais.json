@@ -2,10 +2,10 @@
   "meta": {
     "libraryName": "Fundamentos Visuais",
     "figmaFileKey": "nbv8CUA2nbukjSkhK44kgQ",
-    "exportedAt": "2026-05-20T22:25:37.693Z",
+    "exportedAt": "2026-06-10T14:05:07.970Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
-      "styles: /nodes bloqueado — sem valores resolvidos (só keys)"
+      "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
     ]
   },
   "designTokens": {
@@ -16,62 +16,62 @@
       {
         "key": "078ff908ab8d47c6e05c328867dad28c6d0ca009",
         "name": "gradient/outono",
-        "description": "HEX: #54bbab 0%\n        #ef765e 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais  .\n\nMais informações em design.caixa"
+        "description": "HEX: #54bbab 0%\n        #ef765e 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais.\n\nMais informações em design.caixa"
       },
       {
         "key": "129931e122b5dbee228a803efb2f19b6021a11b7",
         "name": "gradient/goiaba",
-        "description": "HEX: #005ca9 0%\n        #ef765e 63%\n        #ef765e 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais  .\n\nMais informações em design.caixa"
+        "description": "HEX: #005ca9 0%\n        #ef765e 63%\n        #ef765e 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais.\n\nMais informações em design.caixa"
       },
       {
         "key": "1f460f5b29e25a9c11f07980fb7269c7e9755149",
         "name": "gradient/verao",
-        "description": "HEX: #54bbab 0%\n        #f9b000 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais  .\n\nMais informações em design.caixa"
+        "description": "HEX: #54bbab 0%\n        #f9b000 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais.\n\nMais informações em design.caixa"
       },
       {
         "key": "4e23f18f5879fd0573a76f3bb6d1a1cd5610f6a1",
         "name": "gradient/ceu",
-        "description": "HEX: #005ca9 0%\n        #00b5e5 63%\n        #00b5e5 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais  .\n\nMais informações em design.caixa"
+        "description": "HEX: #005ca9 0%\n        #00b5e5 63%\n        #00b5e5 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais.\n\nMais informações em design.caixa"
       },
       {
         "key": "6279696363c048be5ac551b889449e52e513628f",
         "name": "gradient/limao",
-        "description": "HEX: #005ca9 0%\n        #54bbab 60%\n        #afca0b 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais.\n\n  Mais informações em design.caixa"
+        "description": "HEX: #005ca9 0%\n        #54bbab 60%\n        #afca0b 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais.\n\nMais informações em design.caixa"
       },
       {
         "key": "87db205a23403cebc83e9a81cb91cbdf37f161d6",
         "name": "gradient/inverno",
-        "description": "HEX: #54bbab 0%\n        #afca0b 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais.\n\n  Mais informações em design.caixa"
+        "description": "HEX: #54bbab 0%\n        #afca0b 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais.\n\nMais informações em design.caixa"
       },
       {
         "key": "8a7abaf26aaa6fe252f8b0ffadd4730c719c40de",
         "name": "gradient/agua",
-        "description": "HEX: #54bbab 0%\n        #00b5e5 100%\nUso: Devem ser aplicados para auxiliar nas composições visuais  .\n\nMais informações em design.caixa"
+        "description": "HEX: #54bbab 0%\n        #00b5e5 100%\nUso: Devem ser aplicados para auxiliar nas composições visuais.\n\nMais informações em design.caixa"
       },
       {
         "key": "b6ee48cd1217f00a39380377c806fcd9bb0a810e",
         "name": "gradient/primavera",
-        "description": "HEX: #54bbab 0%\n        #b26f9b 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais  .\n\nMais informações em design.caixa"
+        "description": "HEX: #54bbab 0%\n        #b26f9b 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais.\n\nMais informações em design.caixa"
       },
       {
         "key": "bf84f1b91366cf18325780739f3cf075d26e8351",
         "name": "gradient/oceano",
-        "description": "HEX: #005ca9 0%\n        #54bbab 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais.\n\n  Mais informações em design.caixa"
+        "description": "HEX: #005ca9 0%\n        #54bbab 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais.\n\nMais informações em design.caixa"
       },
       {
         "key": "f62fb56a1e3f8412f0aee890ef0c8b32a8a4c0f8",
         "name": "gradient/uva",
-        "description": "HEX: #005ca9 0%\n        #b26f9b 63%\n        #b26f9b 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais.\n\n  Mais informações em design.caixa"
+        "description": "HEX: #005ca9 0%\n        #b26f9b 63%\n        #b26f9b 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais.\n\nMais informações em design.caixa"
       },
       {
         "key": "d87db00cdc9039ea32aac95928a8c6d850a8eeff",
         "name": "gradient/tangerina",
-        "description": "HEX: #005ca9 0%\n        #005ca9 23%\n        #54bbab 60%\n        #f9b000 90%\n        #f9b000 100%       \nUso: Devem ser aplicados apenas para auxiliar nas composições visuais  .\n\nMais informações em design.caixa"
+        "description": "HEX: #005ca9 0%\n        #005ca9 23%\n        #54bbab 60%\n        #f9b000 90%\n        #f9b000 100%       \nUso: Devem ser aplicados apenas para auxiliar nas composições visuais.\n\nMais informações em design.caixa"
       },
       {
         "key": "ed9d705f3ba229226d1710680e85bd7301bd0b42",
         "name": "gradient/gelo",
-        "description": "HEX: #ffffff 0%\n        #d0e0e3 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais  .\n\nMais informações em design.caixa"
+        "description": "HEX: #ffffff 0%\n        #d0e0e3 100%\nUso: Devem ser aplicados apenas para auxiliar nas composições visuais.\n\nMais informações em design.caixa"
       }
     ],
     "typography": [
@@ -88,27 +88,27 @@
       {
         "key": "1f85fbe053df5c6d34a96e32f99ef2ce3c81becb",
         "name": "text huge/700 (bold)",
-        "description": "Tamanho: 24px | 1.5rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\n  Mais informações em design.caixa"
+        "description": "Tamanho: 24px | 1.5rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\nMais informações em design.caixa"
       },
       {
         "key": "2f0a08313a1aba08b214dec7071dbad5ab6eca6a",
         "name": "text big/700 (bold)",
-        "description": "Tamanho: 20px | 1.25rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\n  Mais informações em design.caixa"
+        "description": "Tamanho: 20px | 1.25rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\nMais informações em design.caixa"
       },
       {
         "key": "2f140d7335423daa509190bd8ee79c7ff187c22d",
         "name": "display large/700 (bold)",
-        "description": "Tamanho: 60px | 3.75rem\nUso: Textos publicitários curtos de maior destaque, nas tags HTML H1, H2 ou H3.  \n\nMais informações em design.caixa"
+        "description": "Tamanho: 60px | 3.75rem\nUso: Textos publicitários curtos de maior destaque, nas tags HTML H1, H2 ou H3.\n\nMais informações em design.caixa"
       },
       {
         "key": "33c3e1f6b494b5b4c7c99cd547126f2992e7b19d",
         "name": "display standard/700 (bold)",
-        "description": "Tamanho: 52px | 3.25rem\nUso: Textos publicitários curtos de maior destaque, nas tags HTML H1, H2 ou H3.  \n\nMais informações em design.caixa"
+        "description": "Tamanho: 52px | 3.25rem\nUso: Textos publicitários curtos de maior destaque, nas tags HTML H1, H2 ou H3.\n\nMais informações em design.caixa"
       },
       {
         "key": "3769264b6841ca0fb00ed90ef23173e8a2034f90",
         "name": "text huge/600 (semibold)",
-        "description": "Tamanho: 24px | 1.5rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\n  Mais informações em design.caixa"
+        "description": "Tamanho: 24px | 1.5rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\nMais informações em design.caixa"
       },
       {
         "key": "3ca5ef36f8e8cb260f05470b7f52a73623b0bbc4",
@@ -118,27 +118,27 @@
       {
         "key": "429a81aa117d02ac73f0c796a5f2643c102c8cbe",
         "name": "text small/600 (semibold)",
-        "description": "Tamanho: 14px | 0.875rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.  \n\nMais informações em design.caixa"
+        "description": "Tamanho: 14px | 0.875rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\nMais informações em design.caixa"
       },
       {
         "key": "42e30f7f5ba1a01eb907a5b61c033f28f7e559c6",
         "name": "text huge/400 (regular)",
-        "description": "Tamanho: 24px | 1.5rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\n  Mais informações em design.caixa"
+        "description": "Tamanho: 24px | 1.5rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\nMais informações em design.caixa"
       },
       {
         "key": "45014e348e7acaea5a8cd904a9518185568ab2e3",
         "name": "text standard/400 (regular)",
-        "description": "Tamanho: 16px | 1rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.  \n\nMais informações em design.caixa"
+        "description": "Tamanho: 16px | 1rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\nMais informações em design.caixa"
       },
       {
         "key": "45b268830f91322444fc8fe38c0c5377ea1cd47e",
         "name": "display standard/600 (semibold)",
-        "description": "Tamanho: 52px | 3.25rem\nUso: Textos publicitários curtos de maior destaque, nas tags HTML H1, H2 ou H3.  \n\nMais informações em design.caixa"
+        "description": "Tamanho: 52px | 3.25rem\nUso: Textos publicitários curtos de maior destaque, nas tags HTML H1, H2 ou H3.\n\nMais informações em design.caixa"
       },
       {
         "key": "4f53231235ad718977ba8fa68bda71215ef021c8",
         "name": "caption standard/600 (semibold)",
-        "description": "Tamanho: 12px | 0.75rem\nUso: Em legendas e textos mais superficiais.  \n\nMais informações em design.caixa"
+        "description": "Tamanho: 12px | 0.75rem\nUso: Em legendas e textos mais superficiais.\n\nMais informações em design.caixa"
       },
       {
         "key": "50d3626d84c3113f0f99a1de02cecf88d69b6d5c",
@@ -148,7 +148,7 @@
       {
         "key": "67728bf85f9316cd90400e41e92dff133b9987fe",
         "name": "text standard/700 (bold)",
-        "description": "Tamanho: 16px | 1rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.  \n\nMais informações em design.caixa"
+        "description": "Tamanho: 16px | 1rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\nMais informações em design.caixa"
       },
       {
         "key": "68114ccefebe212ab84e94c1a09d23ac8c320832",
@@ -158,12 +158,12 @@
       {
         "key": "6cd28fa0a239790f3fe3ca4b529a18187997a07b",
         "name": "text large/700 (bold)",
-        "description": "Tamanho: 18px | 1.125rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\n  Mais informações em design.caixa"
+        "description": "Tamanho: 18px | 1.125rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\nMais informações em design.caixa"
       },
       {
         "key": "754f9a1c93437ef35e907d486d489008a401f10d",
         "name": "text large/600 (semibold)",
-        "description": "Tamanho: 18px | 1.125rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\n  Mais informações em design.caixa"
+        "description": "Tamanho: 18px | 1.125rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\nMais informações em design.caixa"
       },
       {
         "key": "7978c780c365b7ab810b1032fc1e585a932a530c",
@@ -178,7 +178,7 @@
       {
         "key": "82fdf903e99b4c27236ddcbec9fd8f5d53a0519e",
         "name": "display small/600 (semibold)",
-        "description": "Tamanho: 44px | 2.75rem\nUso: Textos publicitários curtos de maior destaque, nas tags HTML H1, H2 ou H3.  \n\nMais informações em design.caixa"
+        "description": "Tamanho: 44px | 2.75rem\nUso: Textos publicitários curtos de maior destaque, nas tags HTML H1, H2 ou H3.\n\nMais informações em design.caixa"
       },
       {
         "key": "8b5459d4e63f6ba73e1b7787442fec5e12b99cc2",
@@ -193,22 +193,22 @@
       {
         "key": "8fa3750f88983da3183bbc843fbbb7bf3a1801b7",
         "name": "text big/400 (regular)",
-        "description": "Tamanho: 20px | 1.25rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\n  Mais informações em design.caixa"
+        "description": "Tamanho: 20px | 1.25rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\nMais informações em design.caixa"
       },
       {
         "key": "94cbe58632df53e868845ca47b1a4656855c602e",
         "name": "text big/600 (semibold)",
-        "description": "Tamanho: 20px | 1.25rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\n  Mais informações em design.caixa"
+        "description": "Tamanho: 20px | 1.25rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\nMais informações em design.caixa"
       },
       {
         "key": "9519970850b64ec48b00062e572654664c5c6347",
         "name": "text small/400 (regular)",
-        "description": "Tamanho: 14px | 0.875rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.  \n\nMais informações em design.caixa"
+        "description": "Tamanho: 14px | 0.875rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\nMais informações em design.caixa"
       },
       {
         "key": "b22f6ffd850dc0f75f719d57eea3a57b8fc673a1",
         "name": "display small/700 (bold)",
-        "description": "Tamanho: 44px | 2.75rem\nUso: Textos publicitários curtos de maior destaque, nas tags HTML H1, H2 ou H3.  \n\nMais informações em design.caixa"
+        "description": "Tamanho: 44px | 2.75rem\nUso: Textos publicitários curtos de maior destaque, nas tags HTML H1, H2 ou H3.\n\nMais informações em design.caixa"
       },
       {
         "key": "b513fdd624ed33c38a673fdd1fdd99141ce0b5df",
@@ -228,7 +228,7 @@
       {
         "key": "f52a06bbeeae43b971609e2b2459ccd7bf49bd71",
         "name": "display large/600 (semibold)",
-        "description": "Tamanho: 60px | 3.75rem\nUso: Textos publicitários curtos de maior destaque, nas tags HTML H1, H2 ou H3.  \n\nMais informações em design.caixa"
+        "description": "Tamanho: 60px | 3.75rem\nUso: Textos publicitários curtos de maior destaque, nas tags HTML H1, H2 ou H3.\n\nMais informações em design.caixa"
       },
       {
         "key": "f56533a6b8e0e039b167fc4a4a39ffa4c6fa0871",
@@ -238,7 +238,7 @@
       {
         "key": "f591d4667715e05780b7d2e7e66d6dfcc534d792",
         "name": "text large/400 (regular)",
-        "description": "Tamanho: 18px | 1.125rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\n  Mais informações em design.caixa"
+        "description": "Tamanho: 18px | 1.125rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\nMais informações em design.caixa"
       },
       {
         "key": "f6962044097eb4b3c9edf8a6144739fed896b9d2",
@@ -253,7 +253,7 @@
       {
         "key": "fce4788b9c6c97d40fbdace37f54955ef12d7ed6",
         "name": "text standard/600 (semibold)",
-        "description": "Tamanho: 16px | 1rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.  \n\nMais informações em design.caixa"
+        "description": "Tamanho: 16px | 1rem\nUso: Em parágrafos, nas tags HTML <p> e <span> e em textos dentro de componentes.\n\nMais informações em design.caixa"
       },
       {
         "key": "fd5bd9cf9af4e81c1d88a47e44a004ac34ae1da8",
@@ -263,7 +263,7 @@
       {
         "key": "fe258bf1140d575ea88f82dac762029336fb7244",
         "name": "caption standard/400 (regular)",
-        "description": "Tamanho: 12px | 0.75rem\nUso: Em legendas e textos mais superficiais.  \n\nMais informações em design.caixa"
+        "description": "Tamanho: 12px | 0.75rem\nUso: Em legendas e textos mais superficiais.\n\nMais informações em design.caixa"
       },
       {
         "key": "ff9f494575cade37fb29a387a905defc05f0be60",
@@ -275,27 +275,27 @@
       {
         "key": "188fc2bb14317c7188fd9b3e62b28a6f18e2c791",
         "name": "[M3] Elevation 1",
-        "description": "Uso: Aplicar quando precisar trazer o efeito de muita proximidade para o elemento em relação ao background.\n\n  Mais informações em design.caixa."
+        "description": "Uso: Aplicar quando precisar trazer o efeito de muita proximidade para o elemento em relação ao background.\n\nMais informações em design.caixa."
       },
       {
         "key": "07b0bc38941e92ebaf496dc55d43f76acd8baed9",
         "name": "[M3] Elevation 3",
-        "description": "Uso: Aplicar quando precisar trazer efeito de distanciamento mediano para o elemento em relação ao background.  \n\nMais informações em design.caixa."
+        "description": "Uso: Aplicar quando precisar trazer efeito de distanciamento mediano para o elemento em relação ao background.\n\nMais informações em design.caixa."
       },
       {
         "key": "16593896e8aaaebd747918f021236a27ac92b576",
         "name": "[M3] Elevation 4",
-        "description": "Uso: Aplicar quando precisar trazer efeito de distanciamento para o elemento em relação ao background.\n\n  Mais informações em design.caixa."
+        "description": "Uso: Aplicar quando precisar trazer efeito de distanciamento para o elemento em relação ao background.\n\nMais informações em design.caixa."
       },
       {
         "key": "7e6a4e9705c7a4c11cd17960a0f789a65fb96461",
         "name": "[M3] Elevation 5",
-        "description": "Uso: Aplicar quando precisar trazer efeito de muito distanciamento para o elemento em relação ao background.  \n\nMais informações em design.caixa."
+        "description": "Uso: Aplicar quando precisar trazer efeito de muito distanciamento para o elemento em relação ao background.\n\nMais informações em design.caixa."
       },
       {
         "key": "fd7d6ed66761b0f68c17621fac0e7509ae61facd",
         "name": "[M3] Elevation 2",
-        "description": "Uso: Aplicar quando precisar trazer o efeito de proximidade para o elemento em relação ao background.  \n\nMais informações em design.caixa."
+        "description": "Uso: Aplicar quando precisar trazer o efeito de proximidade para o elemento em relação ao background.\n\nMais informações em design.caixa."
       }
     ]
   },
@@ -62073,7 +62073,8 @@
     {
       "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5",
       "name": "Material Icon",
-      "description": "Defaut Icon\n-----\nEste ícone não existe em código, serve apenas como referencial de localização de um ícone na interface e que ainda precisa ser substituído por outro ícone."
+      "description": "Defaut Icon\n-----\nEste ícone não existe em código, serve apenas como referencial de localização de um ícone na interface e que ainda precisa ser substituído por outro ícone.",
+      "containingFrame": ""
     },
     {
       "key": "1d3f1cb807ce0a402b9258704c3545e747743d96",
