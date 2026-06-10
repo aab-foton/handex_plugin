@@ -1,5 +1,5 @@
 ﻿<!-- VIEW: DADOS DO PROJETO -->
-<main id="view-dados-projeto" class="view flex p-0 flex-col h-full overflow-hidden">
+<main id="view-dados-projeto" class="view flex p-0 flex-col h-full overflow-hidden relative">
 
   <!-- Sub-Header -->
   <div class="px-4 pt-0 pb-3 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
@@ -271,7 +271,21 @@
 
     </div>
 
-
   </div>
+
+  <!-- Snackbar: scroll ao fim -->
+  <div id="dados-projeto-snackbar"
+    class="hidden absolute bottom-4 left-3 right-3 z-50 flex items-center gap-3 px-4 py-3 bg-slate-800 dark:bg-slate-900 text-white rounded-2xl shadow-xl border border-white/10 animate-in slide-in-from-bottom-3 duration-300">
+    <i data-lucide="check-circle" class="w-4 h-4 text-green-400 shrink-0"></i>
+    <p class="flex-1 text-[11px] leading-snug">
+      <span class="font-bold block">Informações preenchidas!</span>
+      <span class="text-slate-300">Clique em <strong class="text-white">← Voltar</strong> no topo para continuar documentando seu handoff.</span>
+    </p>
+    <button onclick="document.getElementById('dados-projeto-snackbar').classList.add('hidden')"
+      class="text-slate-400 hover:text-white transition-colors shrink-0 p-1">
+      <i data-lucide="x" class="w-3.5 h-3.5"></i>
+    </button>
+  </div>
+
 
 </main>
