@@ -1876,6 +1876,8 @@ figma.ui.onmessage = async (msg) => {
         elementMatchedBy = a.matchedBy;
         elementMatchedIn = a.matchedIn;
         elementMatchedTokenName = a.matchedTokenName;
+        // Se a chave não foi encontrada na lib mas o nome segue convenção [dsc], rebaixa para warning
+        if (dsElement === false && /^\[dsc\]/i.test(name)) dsElement = 'warning';
       }
 
       // Pluck variant props from props[] into a separate flat list so the UI
@@ -1948,7 +1950,19 @@ figma.ui.onmessage = async (msg) => {
 
         addElement(category, n, props);
 
-        if ('children' in n && n.children) {
+        // Não recursionar dentro de instâncias de componentes DSC — seus
+        // filhos são gerenciados pela biblioteca e não são responsabilidade
+        // do designer. A instância-pai já representa o ponto de adequação.
+        const _isDSCInstance = (n.type === "INSTANCE" || n.type === "COMPONENT") &&
+          (category === "components" || category === "icons");
+        const _skipChildren = _isDSCInstance &&
+          ((() => {
+            const _ck = n.type === "INSTANCE" && n.mainComponent ? n.mainComponent.key : (n.key || null);
+            const _a = audit(category, n.name, _ck, n.name);
+            return _a.isDS === true || /^\[dsc\]/i.test(n.name);
+          })());
+
+        if (!_skipChildren && 'children' in n && n.children) {
           for (const child of n.children) {
             extractSpecs(child, (depth || 0) + 1);
           }
