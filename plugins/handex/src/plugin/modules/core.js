@@ -655,10 +655,12 @@ function openExceptionModal(frameId) {
   const anchorInput = document.getElementById('exc-modal-anchor');
   const obsCheck    = document.getElementById('exc-modal-has-obs');
   const obsArea     = document.getElementById('exc-modal-obs');
+  const createSpec  = document.getElementById('exc-modal-create-spec');
   if (vincInput)   vincInput.value   = '';
   if (anchorInput) anchorInput.value = '';
   if (obsCheck)    obsCheck.checked  = false;
   if (obsArea)     obsArea.classList.add('hidden');
+  if (createSpec)  createSpec.checked = false;
   const confirm = document.getElementById('exc-modal-confirm');
   if (confirm) confirm.disabled = true;
   openModal('exception-modal');
@@ -754,6 +756,37 @@ function confirmException() {
   } else {
     addExcecaoForFrame(_currentExceptionFrameId, _currentExceptionType.tipo,
       _currentExceptionType.icon, _currentExceptionType.color, vinc, anchor, obs, vinc);
+
+    // Criar spec no canvas se checkbox marcado
+    const createSpecCheck = document.getElementById('exc-modal-create-spec');
+    if (createSpecCheck && createSpecCheck.checked) {
+      const _excColors = {
+        'Erro': '#DC2626', 'Sucesso': '#16A34A',
+        'Confirmação': '#2563EB', 'Alerta': '#D97706'
+      };
+      const tipo  = _currentExceptionType.tipo;
+      const color = _excColors[tipo] || '#DC2626';
+      const frame = getFrame(_currentExceptionFrameId);
+      // Aponta activeFrameId para que spec-created salve no frame correto
+      if (typeof activeFrameId !== 'undefined') activeFrameId = _currentExceptionFrameId;
+      parent.postMessage({
+        pluginMessage: {
+          type: 'create-unified-spec',
+          opts: {
+            letter: tipo.charAt(0).toUpperCase(),
+            color,
+            category: '',
+            categoryLabel: tipo,
+            note: vinc || tipo,
+            link: anchor || '',
+            guideSide: 'right',
+            properties: [],
+            excecoes: [{ tipo, titulo: vinc || tipo, obs, anchor }],
+            targetNodeId: frame ? frame.figmaId : null
+          }
+        }
+      }, '*');
+    }
   }
   closeModal('exception-modal');
   if (typeof renderExcecoesView === 'function') renderExcecoesView();
