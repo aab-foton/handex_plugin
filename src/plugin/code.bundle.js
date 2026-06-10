@@ -80,6 +80,9 @@
             return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: libName, matchedTokenName: c.name || null };
           }
         }
+        if (Array.isArray(referenceTokens.componentKeys) && referenceTokens.componentKeys.includes(figmaKey)) {
+          return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: libName, matchedTokenName: null };
+        }
       }
       const categoryList = referenceTokens[type] || referenceTokens[type.replace(/s$/, "")] || null;
       const softMatchList = (list) => {
