@@ -98,7 +98,27 @@ async function fetchLibrary(libMeta) {
     out.meta.warnings.push(`styles fetch error: ${e.message}`);
   }
 
-  // 2. Components (paginated via cursor on large libs)
+  // 2. Variables (Figma Variables API — requer acesso de editor ao arquivo)
+  try {
+    const varsResp = await figmaGet(`/v1/files/${libMeta.fileKey}/variables/local`);
+    const variables = (varsResp && varsResp.meta && varsResp.meta.variables) || (varsResp && varsResp.variables) || {};
+    const varList = Array.isArray(variables) ? variables : Object.values(variables);
+    for (const v of varList) {
+      if (!v || !v.key) continue;
+      out.designTokens.variables.push({
+        key: v.key,
+        name: clean(v.name || ''),
+        resolvedType: v.resolvedType || v.type || null
+      });
+    }
+    console.log(`    variables: ${out.designTokens.variables.length}`);
+  } catch (e) {
+    // Variables endpoint requires editor access — silently skip if unavailable
+    console.warn(`    ⚠  variables skipped: ${e.message.slice(0, 80)}`);
+    out.meta.warnings.push(`variables fetch skipped: ${e.message.slice(0, 120)}`);
+  }
+
+  // 3. Components (paginated via cursor on large libs)
   try {
     let cursor = null;
     let total = 0;

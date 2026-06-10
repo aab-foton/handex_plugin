@@ -1,7 +1,7 @@
 # HANDEX — Regras de Negócio, Travas, Disclaimers e Jornadas
 
 > Documento de referência técnica e funcional do plugin Handex v4.1+
-> Última atualização: 2026-06-09
+> Última atualização: 2026-06-10
 
 ---
 
@@ -69,11 +69,11 @@
   newComponentObservations: '',
   specs: null,                    // resultado do scan de tokens
   audit: {
-    status: null,
-    justificativa: '',
-    checkDone: false,
-    semDesvios: false,
-    observacoes: ''
+    checkDone: false,       // Check Designs realizado
+    semDesvios: false,      // designer declara conformidade
+    observacoes: '',        // texto livre de desvios/justificativa
+    ressalvas: []           // snapshot dos itens não conformes no momento da declaração
+                            // [{ category, label, name, nodeId, status: 'error'|'warning' }]
   },
   measurements: [],
   nextMeasurementNumber: 1,
@@ -159,13 +159,39 @@ Toda a seção é opcional. Nenhum campo bloqueia avanço ou geração de ficha.
 
 **Novo Componente:**
 - Toggle por frame
-- Se marcado: exibe campo de observações e muda subtítulo do card
-- Frames marcados como "Novo Componente" são destacados na ficha e no checklist
+- Se marcado: exibe campo de observações (`newComponentObservations`), muda subtítulo para "Novo Componente" (violeta) e **oculta a seção de Conformidade DSC**
+- Justificativa: componente inédito passará por revisão dedicada no time DSC — auditoria contra a lib existente não se aplica
+- Frames marcados como "Novo Componente" são destacados na ficha e nos documentos exportados
 
-**Conformidade DSC:**
-- Campo `checkDone` — declaração de que o Check Designs foi executado
-- Se executado: radio "sem desvios" ou textarea de desvios
-- Textarea de observações visível apenas se `checkDone = true` E (`isNewComponent = true` OU `semDesvios = false`)
+**Conformidade DSC** (visível apenas quando `isNewComponent = false`):
+- `checkDone` — declaração de que o Check Designs foi executado
+- Se `checkDone = true`:
+  - Toggle "Sem desvios encontrados" (`semDesvios`)
+  - Ao ativar `semDesvios`: snapshot dos itens não conformes salvo em `audit.ressalvas[]`
+  - Textarea de observações visível quando `semDesvios = false` ou há itens no scan
+
+**Status de conformidade (subtítulo do card):**
+
+| Condição | Status | Cor |
+|---|---|---|
+| `isNewComponent = true` | Novo Componente | Violeta |
+| `checkDone = false` | Pendente | Cinza |
+| `semDesvios = true` + scan limpo | Conforme | Verde |
+| `semDesvios = true` + itens no scan | Conforme com ressalvas | Âmbar |
+| `semDesvios = false` | Não Conforme | Vermelho |
+
+**Ressalvas:**
+- Ao marcar `semDesvios = true`, o plugin salva um snapshot dos itens `isDS === false/warning` em `audit.ressalvas[]`
+- As ressalvas são incluídas na ficha canvas e no MD exportado com Node ID para rastreabilidade em auditoria futura
+- Ao desmarcar `semDesvios`, `ressalvas` é limpo
+
+**Detecção de conformidade (scan):**
+- `variable.remote = true` → token de variável de biblioteca publicada → `isDS: true`
+- `style.remote = true` → estilo (cor, tipografia, efeito) de biblioteca publicada → `isDS: true`
+- `mainComponent.remote = true` → instância de biblioteca publicada → `isDS: true`
+- Tipografia: `styleKey != null` + fonte CAIXAstd → `isDS: true`
+- Componente com prefixo `[dsc]` no nome → `isDS: true` (fallback sem chave no skeleton)
+- Chave da instância presente em `componentKeys[]` do skeleton → `isDS: true` (match exato)
 
 ---
 
