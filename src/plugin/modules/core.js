@@ -757,16 +757,19 @@ function confirmException() {
     addExcecaoForFrame(_currentExceptionFrameId, _currentExceptionType.tipo,
       _currentExceptionType.icon, _currentExceptionType.color, vinc, anchor, obs, vinc);
 
-    // Injetar cenário no card de spec selecionado no canvas
+    // Injetar exceções nos cards de spec do canvas para este frame
     const createSpecCheck = document.getElementById('exc-modal-create-spec');
     if (createSpecCheck && createSpecCheck.checked) {
-      const tipo = _currentExceptionType.tipo;
-      parent.postMessage({
-        pluginMessage: {
-          type: 'inject-exception-to-spec-canvas',
-          exc: { tipo, titulo: vinc || tipo, obs }
+      const frame = getFrame(_currentExceptionFrameId);
+      const specs = frame ? (frame.createdSpecs || []) : [];
+      const excList = frame ? (frame.excecoes || []) : [];
+      specs.forEach(spec => {
+        if (spec && spec.id) {
+          parent.postMessage({
+            pluginMessage: { type: 'refresh-spec-card', nodeId: spec.id, excecoes: excList }
+          }, '*');
         }
-      }, '*');
+      });
     }
   }
   closeModal('exception-modal');
