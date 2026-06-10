@@ -1093,6 +1093,44 @@
     }
 
 
+    // ── Category Colors ──────────────────────────────────────────────────
+    const CATEGORY_COLORS = {
+      'comportamento':  '#9333EA',
+      'regra':          '#0D9488',
+      'info':           '#16A34A',
+      'api':            '#CA8A04',
+      'layout':         '#2563EB',
+      'componente':     '#4F46E5',
+      'interacao':      '#DB2777',
+      'tipografia':     '#D97706',
+      'cor':            '#DC2626',
+      'acessibilidade': '#0891B2',
+      'conteudo':       '#EA580C',
+    };
+    const _CAT_FALLBACK_PALETTE = [
+      '#7C3AED','#0891B2','#059669','#D97706','#DC2626',
+      '#4F46E5','#DB2777','#065F46','#92400E','#1D4ED8',
+    ];
+
+    function getCategoryColor(value) {
+      if (!value) return '#005ca9';
+      if (CATEGORY_COLORS[value]) return CATEGORY_COLORS[value];
+      // Para categorias customizadas: cor baseada no índice da lista
+      const idx = annCategories.findIndex(c => c.value === value);
+      return _CAT_FALLBACK_PALETTE[idx >= 0 ? idx % _CAT_FALLBACK_PALETTE.length : 0];
+    }
+
+    function syncSpecColorFromCategory() {
+      const catEl    = document.getElementById('ann-category');
+      const colorIn  = document.getElementById('spec-color-input');
+      const swatch   = document.getElementById('spec-color-swatch');
+      const color    = getCategoryColor(catEl ? catEl.value : '');
+      if (colorIn) colorIn.value = color;
+      if (swatch)  swatch.style.backgroundColor = color;
+    }
+    window.getCategoryColor        = getCategoryColor;
+    window.syncSpecColorFromCategory = syncSpecColorFromCategory;
+
     // ── Category Management ──────────────────────────────────────────────
     const DEFAULT_CATEGORIES = [
       { label: "Informação extra", value: "info" },
@@ -1144,9 +1182,11 @@
         return;
       }
       annCategories.forEach((cat, idx) => {
+        const color = getCategoryColor(cat.value);
         const row = document.createElement('div');
         row.className = 'flex items-center justify-between px-4 py-2 hover:bg-gray-50 dark:hover:bg-dark-bg/30 group';
         row.innerHTML = `
+          <span class="w-2.5 h-2.5 rounded-full shrink-0 mr-2" style="background-color:${color}"></span>
           <input type="text" value="${cat.label}"
             class="flex-1 text-[12px] text-slate-700 dark:text-dark-text bg-transparent outline-none focus:bg-gray-50 dark:focus:bg-dark-bg rounded px-1 py-0.5"
             onchange="renameCategory(${idx}, this.value)" />
@@ -1943,6 +1983,7 @@ function toggleLinkInput(show) {
       document.getElementById('spec-color-input').value = '#005ca9';
       document.getElementById('ann-category').value = '';
       if (typeof _csSyncLabel === 'function') _csSyncLabel('cs-ann-cat');
+      if (typeof syncSpecColorFromCategory === 'function') syncSpecColorFromCategory();
       document.getElementById('spec-link-input').value = '';
       document.getElementById('ann-note').value = '';
       
