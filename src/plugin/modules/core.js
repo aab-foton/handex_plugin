@@ -54,8 +54,43 @@ let handoffData = {
   _history: []
 };
 
-// Stubs para funções de auditoria arquivadas (audit.js removido do bundle)
-// Mantidas aqui para que o Object.assign e os onchange/oninput dos frames não quebrem
+// Helpers de conformidade DSC
+function _computeFrameHasUnlinked(frame) {
+  if (!frame || !frame.specs) return false;
+  const sections = ['components', 'icons', 'typography', 'vectors'];
+  return sections.some(sec =>
+    Array.isArray(frame.specs[sec]) &&
+    frame.specs[sec].some(item => item.isDS === false)
+  );
+}
+
+function _updateFrameAuditSubtitle(frameId) {
+  const frame = getFrame(frameId);
+  const subtitle = document.getElementById(`frame-subtitle-${frameId}`);
+  if (!subtitle || !frame) return;
+
+  if (frame.isNewComponent) {
+    subtitle.className = 'text-[10px] text-violet-500 font-medium';
+    subtitle.textContent = 'Novo Componente';
+    return;
+  }
+
+  if (!frame.audit || !frame.audit.checkDone) {
+    subtitle.className = 'text-[10px] text-slate-400 font-medium';
+    subtitle.textContent = 'Pendente';
+    return;
+  }
+
+  const hasUnlinked = _computeFrameHasUnlinked(frame);
+  if (frame.audit.semDesvios && !hasUnlinked) {
+    subtitle.className = 'text-[10px] text-green-600 font-medium';
+    subtitle.textContent = 'Conforme';
+  } else {
+    subtitle.className = 'text-[10px] text-red-500 font-medium';
+    subtitle.textContent = 'Não Conforme';
+  }
+}
+
 function setFrameCheckDone(frameId, checked) {
   const frame = getFrame(frameId);
   if (!frame) return;
@@ -63,17 +98,24 @@ function setFrameCheckDone(frameId, checked) {
   frame.audit.checkDone = checked;
   const el = document.getElementById(`audit-result-${frameId}`);
   if (el) el.classList.toggle('hidden', !checked);
+  _updateFrameAuditSubtitle(frameId);
   saveToStorage();
 }
+
 function setFrameSemDesvios(frameId, checked) {
   const frame = getFrame(frameId);
   if (!frame) return;
   if (!frame.audit) frame.audit = {};
   frame.audit.semDesvios = checked;
+  // Obs fica visível quando sem desvios=false OU há itens desvinculados do DSC
+  const hasUnlinked = _computeFrameHasUnlinked(frame);
+  const showObs = !checked || hasUnlinked;
   const el = document.getElementById(`audit-obs-${frameId}`);
-  if (el) el.classList.toggle('hidden', checked);
+  if (el) el.classList.toggle('hidden', !showObs);
+  _updateFrameAuditSubtitle(frameId);
   saveToStorage();
 }
+
 function setFrameAuditObs(frameId, value) {
   const frame = getFrame(frameId);
   if (!frame) return;
@@ -81,15 +123,7 @@ function setFrameAuditObs(frameId, value) {
   frame.audit.observacoes = value;
   saveToStorage();
 }
-function _updateFrameAuditSubtitle(frameId) {
-  const frame = getFrame(frameId);
-  const subtitle = document.getElementById(`frame-subtitle-${frameId}`);
-  if (!subtitle || !frame) return;
-  if (frame.isNewComponent) {
-    subtitle.className = 'text-[10px] text-violet-500 font-medium';
-    subtitle.textContent = 'Novo Componente';
-  }
-}
+
 function _refreshAuditView() {}
 
 // Expose functions to window IMMEDIATELY
@@ -187,7 +221,12 @@ Object.assign(window, {
   openExceptionForSpecs,
   renderExcecoesView,
   syncAndRenderSpecs,
-  renderAllMeasurements
+  renderAllMeasurements,
+  _computeFrameHasUnlinked,
+  _updateFrameAuditSubtitle,
+  setFrameCheckDone,
+  setFrameSemDesvios,
+  setFrameAuditObs
 });
 
 function clearPluginCache() {
