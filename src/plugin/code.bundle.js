@@ -1822,7 +1822,7 @@
           elementMatchedBy = a.matchedBy;
           elementMatchedIn = a.matchedIn;
           elementMatchedTokenName = a.matchedTokenName;
-          if (dsElement === false && /^\[dsc\]/i.test(name)) dsElement = "warning";
+          if (dsElement !== true && /^\[dsc\]/i.test(name)) dsElement = true;
         }
         const variants = props.filter((p) => p.type === "variant").map((p) => ({ name: p.name, value: p.value }));
         const map = specs[category];

@@ -1876,8 +1876,8 @@ figma.ui.onmessage = async (msg) => {
         elementMatchedBy = a.matchedBy;
         elementMatchedIn = a.matchedIn;
         elementMatchedTokenName = a.matchedTokenName;
-        // Se a chave não foi encontrada na lib mas o nome segue convenção [dsc], rebaixa para warning
-        if (dsElement === false && /^\[dsc\]/i.test(name)) dsElement = 'warning';
+        // Convenção [dsc] é suficiente para confirmar conformidade, independente da chave na lib
+        if (dsElement !== true && /^\[dsc\]/i.test(name)) dsElement = true;
       }
 
       // Pluck variant props from props[] into a separate flat list so the UI
