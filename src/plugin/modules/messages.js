@@ -73,12 +73,8 @@
           mergedState.currentUser = handoffData.currentUser;
           handoffData = mergedState;
           createdSpecs = handoffData.specs || [];
-          restoreUIFromState();
-          renderFlowsList();
-          // Canvas detection: se há frames de handoff no canvas, marca como gerado
-          if (msg.existingHandoffCount && msg.existingHandoffCount > 0) {
-            handoffData._fichaGenerated = true;
-          }
+          // Restaura apenas step1 no boot — frames/flows/specs são lazy-loaded na navegação
+          if (typeof _restoreStep1Fields === 'function') _restoreStep1Fields();
         }
 
         // Auto-fill do título com o nome do arquivo/projeto Figma se campo ainda estiver vazio

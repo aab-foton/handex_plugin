@@ -100,8 +100,6 @@ figma.ui.onmessage = async (msg) => {
     const theme = figma.ui.theme || 'light';
     const sel = figma.currentPage.selection;
     const projectName = figma.root.name || figma.currentPage.name || '';
-    const _handoffBase = '[Handoff]';
-    const _existingAtInit = figma.currentPage.findAll(n => n.type === 'FRAME' && n.name.startsWith(_handoffBase));
     try {
       const savedState = await figma.clientStorage.getAsync('handoffData');
       figma.ui.postMessage({
@@ -110,8 +108,7 @@ figma.ui.onmessage = async (msg) => {
         currentUser,
         theme,
         projectName,
-        savedState: savedState || null,
-        existingHandoffCount: _existingAtInit.length
+        savedState: savedState || null
       });
     } catch (err) {
       console.error("Initialization error (continuing without saved state):", err);
@@ -121,8 +118,7 @@ figma.ui.onmessage = async (msg) => {
         currentUser,
         theme,
         projectName,
-        savedState: null,
-        existingHandoffCount: _existingAtInit.length
+        savedState: null
       });
     }
     return;
