@@ -118,6 +118,7 @@
             frame.specs = msg.data;
             renderSpecs(msg.data, targetFrameId);
             if (typeof showFrameSection === 'function') showFrameSection(targetFrameId, 'tokens');
+            if (typeof _updateFrameAuditSubtitle === 'function') _updateFrameAuditSubtitle(targetFrameId);
           }
         } else {
           handoffData.step2.specs = msg.data;
