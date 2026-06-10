@@ -54,6 +54,44 @@ let handoffData = {
   _history: []
 };
 
+// Stubs para funções de auditoria arquivadas (audit.js removido do bundle)
+// Mantidas aqui para que o Object.assign e os onchange/oninput dos frames não quebrem
+function setFrameCheckDone(frameId, checked) {
+  const frame = getFrame(frameId);
+  if (!frame) return;
+  if (!frame.audit) frame.audit = {};
+  frame.audit.checkDone = checked;
+  const el = document.getElementById(`audit-result-${frameId}`);
+  if (el) el.classList.toggle('hidden', !checked);
+  saveToStorage();
+}
+function setFrameSemDesvios(frameId, checked) {
+  const frame = getFrame(frameId);
+  if (!frame) return;
+  if (!frame.audit) frame.audit = {};
+  frame.audit.semDesvios = checked;
+  const el = document.getElementById(`audit-obs-${frameId}`);
+  if (el) el.classList.toggle('hidden', checked);
+  saveToStorage();
+}
+function setFrameAuditObs(frameId, value) {
+  const frame = getFrame(frameId);
+  if (!frame) return;
+  if (!frame.audit) frame.audit = {};
+  frame.audit.observacoes = value;
+  saveToStorage();
+}
+function _updateFrameAuditSubtitle(frameId) {
+  const frame = getFrame(frameId);
+  const subtitle = document.getElementById(`frame-subtitle-${frameId}`);
+  if (!subtitle || !frame) return;
+  if (frame.isNewComponent) {
+    subtitle.className = 'text-[10px] text-violet-500 font-medium';
+    subtitle.textContent = 'Novo Componente';
+  }
+}
+function _refreshAuditView() {}
+
 // Expose functions to window IMMEDIATELY
 Object.assign(window, {
   toggleTheme,
@@ -71,9 +109,6 @@ Object.assign(window, {
   toggleBriefingSection,
   scrollToStep,
   scanFrame,
-  setFrameCheckDone,
-  setFrameSemDesvios,
-  setFrameAuditObs,
   openMeasureModal,
   openSpecFormModal,
   openFlowFormModal,
