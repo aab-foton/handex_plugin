@@ -339,16 +339,10 @@
             </div>
           </div>
           <div class="col-span-3">
-            <div class="flex items-center justify-between mb-1.5 px-1">
-              <div class="flex items-center gap-1.5">
-                <label for="ann-category" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Categoria</label>
-                <button onclick="openHelp('spec-form-modal')" title="Ajuda" aria-label="Ajuda" class="text-slate-300 hover:text-[#0070af] transition-colors" title="Guia de categorias">
-                  <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
-                </button>
-              </div>
-              <button onclick="toggleCategoryManager()" id="btn-manage-cats"
-                class="text-[10px] text-[#005ca9] hover:underline flex items-center gap-1 font-medium">
-                <i data-lucide="settings-2" class="w-3 h-3"></i> Gerenciar
+            <div class="flex items-center gap-1.5 mb-1.5 px-1">
+              <label for="ann-category" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Categoria</label>
+              <button onclick="openHelp('spec-form-modal')" title="Ajuda" aria-label="Ajuda" class="text-slate-300 hover:text-[#0070af] transition-colors">
+                <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
               </button>
             </div>
             <div class="relative" id="cs-ann-cat">
@@ -391,24 +385,6 @@
               <i data-lucide="arrow-down" class="w-4 h-4 text-gray-400 group-has-[:checked]:text-[#0070af]"></i>
               <span class="text-[9px] font-bold text-gray-500 group-has-[:checked]:text-[#0070af]">Base</span>
             </label>
-          </div>
-        </div>
-
-        <!-- Category manager panel -->
-        <div id="category-manager"
-          class="hidden mb-6 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl overflow-hidden animate-in slide-in-from-top-2 duration-200">
-          <div class="px-4 py-2 bg-gray-100/50 dark:bg-slate-800 border-b border-gray-100 dark:border-dark-line">
-            <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase">Categorias Ativas</p>
-          </div>
-          <div id="cat-list" class="divide-y divide-gray-100 dark:divide-dark-line max-h-40 overflow-y-auto"></div>
-          <div class="flex items-center gap-2 p-3 bg-white dark:bg-dark-surface border-t border-gray-100 dark:border-dark-line">
-            <input id="cat-new-input" type="text" placeholder="Nova categoria..."
-              class="flex-1 px-3 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-700 dark:text-dark-text outline-none focus:ring-2 focus:ring-blue-100 transition-all"
-              onkeydown="if(event.key==='Enter') addCategory()" />
-            <button onclick="addCategory()"
-              class="px-3 py-2 bg-[#005ca9] text-white text-[11px] font-bold rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1 shadow-sm">
-              <i data-lucide="plus" class="w-3 h-3"></i> Criar
-            </button>
           </div>
         </div>
 
