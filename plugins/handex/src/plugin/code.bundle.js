@@ -1830,19 +1830,14 @@
             dsElement = "warning";
           }
         }
-        if (category === "typography" && node.type === "TEXT") {
-          let _styleKey = null;
-          if ("textStyleId" in node && typeof node.textStyleId === "string" && node.textStyleId !== figma.mixed && node.textStyleId) {
-            const _style = figma.getStyleById(node.textStyleId);
-            if (_style) _styleKey = _style.key;
-          }
-          if (_styleKey) {
-            const a = audit("typography", name, _styleKey, name);
-            dsElement = a.isDS;
-            elementScore = a.score;
-            elementMatchedBy = a.matchedBy;
-            elementMatchedIn = a.matchedIn;
-            elementMatchedTokenName = a.matchedTokenName;
+        if (category === "typography") {
+          const _typoProp = props.find((p) => p.type === "typography");
+          if (_typoProp) {
+            dsElement = _typoProp.isDS !== void 0 ? _typoProp.isDS : false;
+            elementScore = _typoProp.score || null;
+            elementMatchedBy = _typoProp.matchedBy || null;
+            elementMatchedIn = _typoProp.matchedIn || null;
+            elementMatchedTokenName = _typoProp.matchedTokenName || null;
           }
         }
         const variants = props.filter((p) => p.type === "variant").map((p) => ({ name: p.name, value: p.value }));
