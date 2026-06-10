@@ -110,6 +110,7 @@
         { key: 'components', label: 'Componente' },
         { key: 'icons', label: 'Ícone' },
         { key: 'typography', label: 'Tipografia' },
+        { key: 'frames', label: 'Frame' },
         { key: 'vectors', label: 'Vetor' }
       ];
       const items = [];
@@ -146,7 +147,7 @@
       return `<div class="px-3 py-2.5 bg-red-50 dark:bg-red-900/15 rounded-xl border border-red-100 dark:border-red-800/30 space-y-1.5">
         <div class="flex items-center gap-1.5">
           <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-red-500 shrink-0"></i>
-          <p class="text-[11px] font-bold text-red-600 dark:text-red-400">Itens para adequação</p>
+          <p class="text-[11px] font-bold text-red-600 dark:text-red-400">Itens para revisar:</p>
         </div>
         <ul class="space-y-1 pl-0.5">${rows}</ul>
       </div>`;
@@ -278,8 +279,8 @@
             </div>
           </div>
 
-          <!-- ── Conformidade DSC ── -->
-          <div class="border-t border-gray-50 dark:border-dark-line px-4 py-3 space-y-1">
+          <!-- ── Conformidade DSC (oculta para Novo Componente — passa por revisão dedicada no DSC) ── -->
+          <div id="conformance-section-${fid}" class="${frame.isNewComponent ? 'hidden' : ''} border-t border-gray-50 dark:border-dark-line px-4 py-3 space-y-1">
             <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider pb-1">Conformidade DSC</p>
 
             <!-- Toggle: Check Designs realizado -->

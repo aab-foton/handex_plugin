@@ -35,6 +35,12 @@ module.exports = {
           900: '#4f2800',
           950: '#2e1800',
         },
+        light: {
+          bg:      '#eef2f7',
+          surface: '#ffffff',
+          line:    '#dde3ec',
+          muted:   '#8394a8',
+        },
         dark: {
           bg:      '#0f172a',
           surface: '#1e293b',

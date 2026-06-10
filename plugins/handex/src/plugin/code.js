@@ -1646,13 +1646,16 @@ figma.ui.onmessage = async (msg) => {
     // Wraps auditProperty + derives the legacy isDS flag (true | "warning" | false).
     // Returns an object that can be spread into the prop, e.g.:
     //   props.push({ ..., ...audit("colors", hex, key) });
-    function audit(propType, propValue, propKey, propName) {
+    // isRemote: variável ou estilo vem de lib publicada (variable.remote / style.remote).
+    // Nesse caso o Figma já garante a origem — não precisa checar no skeleton.
+    function audit(propType, propValue, propKey, propName, isRemote) {
+      if (isRemote) {
+        return { isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: 'remote', matchedIn: null, matchedTokenName: null, closestMatch: null };
+      }
       const result = auditProperty(propName, propValue, propType, propKey, referenceTokens, isAudit);
       const isDS = result.score >= AUDIT_SCORE.EXACT ? true
                  : result.score >= AUDIT_SCORE.SOFT ? "warning"
                  : false;
-      // When the prop is below the AJUSTE threshold (fora do padrão), compute a
-      // closest-match suggestion so the dev sees what to use instead.
       let closestMatch = null;
       if (isAudit && result.score < AUDIT_THRESHOLDS.AJUSTE) {
         closestMatch = suggestClosestMatch(propType, propValue, referenceTokens);
@@ -1682,7 +1685,7 @@ figma.ui.onmessage = async (msg) => {
       const id = Array.isArray(v) ? (v[0] && v[0].id) : v.id;
       if (!id) return null;
       const variable = figma.variables.getVariableById(id);
-      return variable ? { name: variable.name, key: variable.key } : null;
+      return variable ? { name: variable.name, key: variable.key, remote: variable.remote === true } : null;
     }
 
     function extractNodeProperties(n) {
@@ -1692,9 +1695,10 @@ figma.ui.onmessage = async (msg) => {
       if ('fills' in n && Array.isArray(n.fills)) {
         let styleName = null;
         let styleKey = null;
+        let fillStyleRemote = false;
         if ('fillStyleId' in n && typeof n.fillStyleId === "string" && n.fillStyleId) {
           const style = figma.getStyleById(n.fillStyleId);
-          if (style) { styleName = style.name; styleKey = style.key; }
+          if (style) { styleName = style.name; styleKey = style.key; fillStyleRemote = style.remote === true; }
         }
         for (const fill of n.fills) {
           // SKIP HIDDEN FILLS
@@ -1705,7 +1709,8 @@ figma.ui.onmessage = async (msg) => {
             const vInfo = getVar(n, "fills");
             const name = (vInfo && vInfo.name) || styleName || hex;
             const key = (vInfo && vInfo.key) || styleKey;
-            props.push({ type: "color", name, value: hex, rawValue: hex, key, variableKey: vInfo ? vInfo.key : null, styleKey, label: "Cor (Fill)", ...audit("colors", hex, key, name) });
+            const _isRemote = (vInfo && vInfo.remote) || fillStyleRemote;
+            props.push({ type: "color", name, value: hex, rawValue: hex, key, variableKey: vInfo ? vInfo.key : null, styleKey, label: "Cor (Fill)", ...audit("colors", hex, key, name, _isRemote) });
           }
         }
       }
@@ -1714,16 +1719,17 @@ figma.ui.onmessage = async (msg) => {
       if (n.type === "TEXT") {
         let styleName = null;
         let styleKey = null;
+        let textStyleRemote = false;
         if ('textStyleId' in n && typeof n.textStyleId === "string" && n.textStyleId !== figma.mixed && n.textStyleId) {
           const style = figma.getStyleById(n.textStyleId);
-          if (style) { styleName = style.name; styleKey = style.key; }
+          if (style) { styleName = style.name; styleKey = style.key; textStyleRemote = style.remote === true; }
         }
         const family = (n.fontName && n.fontName !== figma.mixed) ? n.fontName.family : "Mixed";
         const fontStyle = (n.fontName && n.fontName !== figma.mixed) ? n.fontName.style : "Mixed";
         const size = (n.fontSize && n.fontSize !== figma.mixed) ? n.fontSize : "Mixed";
         const name = styleName || `${family} ${fontStyle} (${size}px)`;
         const rawSize = typeof size === "number" ? size : null;
-        props.push({ type: "typography", name, value: name, rawValue: rawSize, key: styleKey, styleKey, label: "Tipografia", ...audit("typography", name, styleKey, name) });
+        props.push({ type: "typography", name, value: name, rawValue: rawSize, key: styleKey, styleKey, label: "Tipografia", ...audit("typography", name, styleKey, name, textStyleRemote) });
       }
 
       // Spacing, Alignment
@@ -1733,7 +1739,7 @@ figma.ui.onmessage = async (msg) => {
           const val = `${n.itemSpacing}px`;
           const name = (vInfo && vInfo.name) || val;
           const propKey = vInfo ? vInfo.key : null;
-          props.push({ type: "spacing", name, value: val, rawValue: n.itemSpacing, key: propKey, variableKey: propKey, label: "Gap", ...audit("spacing", val, propKey, name) });
+          props.push({ type: "spacing", name, value: val, rawValue: n.itemSpacing, key: propKey, variableKey: propKey, label: "Gap", ...audit("spacing", val, propKey, name, vInfo && vInfo.remote) });
         }
         const paddings = [
           { prop: 'paddingTop', label: 'Top' }, { prop: 'paddingRight', label: 'Right' },
@@ -1745,7 +1751,7 @@ figma.ui.onmessage = async (msg) => {
             const val = `${n[p.prop]}px`;
             const name = (vInfo && vInfo.name) || val;
             const propKey = vInfo ? vInfo.key : null;
-            props.push({ type: "spacing", name, value: val, rawValue: n[p.prop], key: propKey, variableKey: propKey, label: `Padding ${p.label}`, ...audit("spacing", val, propKey, name) });
+            props.push({ type: "spacing", name, value: val, rawValue: n[p.prop], key: propKey, variableKey: propKey, label: `Padding ${p.label}`, ...audit("spacing", val, propKey, name, vInfo && vInfo.remote) });
           }
         });
       }
@@ -1771,15 +1777,15 @@ figma.ui.onmessage = async (msg) => {
 
           if (visibleStroke.type === "SOLID") {
             const hex = rgbToHex(visibleStroke.color.r, visibleStroke.color.g, visibleStroke.color.b).toUpperCase();
-            let styleName = null; let styleKey = null;
+            let styleName = null; let styleKey = null; let strokeStyleRemote = false;
             if ('strokeStyleId' in n && n.strokeStyleId) {
               const st = figma.getStyleById(n.strokeStyleId);
-              if (st) { styleName = st.name; styleKey = st.key; }
+              if (st) { styleName = st.name; styleKey = st.key; strokeStyleRemote = st.remote === true; }
             }
             const sVar = getVar(n, "strokes");
             const strokeKey = (sVar && sVar.key) || styleKey;
             const strokeName = (sVar && sVar.name) || styleName || hex;
-            props.push({ type: "stroke", name: strokeName, value: hex, rawValue: hex, key: strokeKey, variableKey: sVar ? sVar.key : null, styleKey, label: "Border Color", ...audit("colors", hex, strokeKey, strokeName) });
+            props.push({ type: "stroke", name: strokeName, value: hex, rawValue: hex, key: strokeKey, variableKey: sVar ? sVar.key : null, styleKey, label: "Border Color", ...audit("colors", hex, strokeKey, strokeName, (sVar && sVar.remote) || strokeStyleRemote) });
           }
         }
       }
@@ -1789,20 +1795,20 @@ figma.ui.onmessage = async (msg) => {
         const val = `${n.cornerRadius}px`;
         const name = (vInfo && vInfo.name) || val;
         const propKey = vInfo ? vInfo.key : null;
-        props.push({ type: "radius", name, value: val, rawValue: n.cornerRadius, key: propKey, variableKey: propKey, label: "Radius", ...audit("borders", val, propKey, name) });
+        props.push({ type: "radius", name, value: val, rawValue: n.cornerRadius, key: propKey, variableKey: propKey, label: "Radius", ...audit("borders", val, propKey, name, vInfo && vInfo.remote) });
       }
 
       // Effects
       if ('effects' in n && Array.isArray(n.effects)) {
-        let styleName = null; let styleKey = null;
+        let styleName = null; let styleKey = null; let effectStyleRemote = false;
         if ('effectStyleId' in n && n.effectStyleId) {
           const style = figma.getStyleById(n.effectStyleId);
-          if (style) { styleName = style.name; styleKey = style.key; }
+          if (style) { styleName = style.name; styleKey = style.key; effectStyleRemote = style.remote === true; }
         }
         for (const effect of n.effects) {
           if (effect.visible) {
              const name = styleName || `${effect.type} (${effect.type.includes('SHADOW') ? 'Sombra' : 'Blur'})`;
-             props.push({ type: "effect", name, value: effect.type, key: styleKey, styleKey, label: "Effect", ...audit("effects", effect.type, styleKey, name) });
+             props.push({ type: "effect", name, value: effect.type, key: styleKey, styleKey, label: "Effect", ...audit("effects", effect.type, styleKey, name, effectStyleRemote) });
           }
         }
       }
@@ -1878,13 +1884,24 @@ figma.ui.onmessage = async (msg) => {
         elementMatchedTokenName = a.matchedTokenName;
         // Convenção [dsc] no nome confirma conformidade (fallback quando chave não está no skeleton)
         if (dsElement !== true && /^\[dsc\]/i.test(name)) dsElement = true;
-        // Instância de biblioteca externa (remote=true): chave de outra versão da lib → warning
-        if (dsElement === false && node.type === 'INSTANCE' && node.mainComponent && node.mainComponent.remote) {
-          dsElement = 'warning';
+        // Instância de biblioteca publicada (remote=true) → conforme ao DSC por definição
+        if (dsElement !== true && node.type === 'INSTANCE' && node.mainComponent && node.mainComponent.remote) {
+          dsElement = true;
+        }
+      }
+      if (category === "frames") {
+        // Frame é conforme se todos os seus tokens de estilo vêm do DSC.
+        // Props sem isDS definido (variantes, etc.) são ignoradas na conta.
+        const _auditableProps = props.filter(p => p.isDS !== undefined && p.type !== 'variant');
+        if (_auditableProps.length === 0) {
+          dsElement = true; // sem props auditáveis — sem desvio declarável
+        } else {
+          const _allOk = _auditableProps.every(p => p.isDS === true);
+          const _anyOk = _auditableProps.some(p => p.isDS === true);
+          dsElement = _allOk ? true : (_anyOk ? 'warning' : false);
         }
       }
       if (category === "typography") {
-        // extractNodeProperties já calculou isDS para a prop de tipografia — reutilizar
         const _typoProp = props.find(p => p.type === "typography");
         if (_typoProp) {
           dsElement = _typoProp.isDS !== undefined ? _typoProp.isDS : false;
@@ -1892,6 +1909,11 @@ figma.ui.onmessage = async (msg) => {
           elementMatchedBy = _typoProp.matchedBy || null;
           elementMatchedIn = _typoProp.matchedIn || null;
           elementMatchedTokenName = _typoProp.matchedTokenName || null;
+          // Token de estilo aplicado + fonte CAIXAstd = tipografia conforme ao DSC
+          if (dsElement === false && _typoProp.styleKey) {
+            const _family = (node.fontName && node.fontName !== figma.mixed) ? node.fontName.family : '';
+            if (/caixa/i.test(_family)) dsElement = true;
+          }
         }
       }
 
