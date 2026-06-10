@@ -116,8 +116,8 @@
       if (frame.specs) {
         secDefs.forEach(sec => {
           (frame.specs[sec.key] || []).forEach(item => {
-            if (item.isDS === false) items.push({ label: sec.label, name: item.name || '(sem nome)', status: 'error' });
-            else if (item.isDS === 'warning') items.push({ label: sec.label, name: item.name || '(sem nome)', status: 'warning' });
+            if (item.isDS === false) items.push({ label: sec.label, name: item.name || '(sem nome)', nodeId: item.nodeId || null, status: 'error' });
+            else if (item.isDS === 'warning') items.push({ label: sec.label, name: item.name || '(sem nome)', nodeId: item.nodeId || null, status: 'warning' });
           });
         });
       }
@@ -132,10 +132,14 @@
       const rows = items.map(it => {
         const icon = it.status === 'error' ? 'x-circle' : 'alert-triangle';
         const cls  = it.status === 'error' ? 'text-red-400' : 'text-amber-500';
-        return `<li class="flex items-center gap-1.5 min-w-0">
+        const clickable = it.nodeId
+          ? `onclick="focusNode('${it.nodeId}')" title="Localizar no canvas" class="flex items-center gap-1.5 min-w-0 w-full cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30 rounded px-1 py-0.5 transition-colors group"`
+          : `class="flex items-center gap-1.5 min-w-0 w-full px-1 py-0.5"`;
+        return `<li ${clickable}>
           <i data-lucide="${icon}" class="w-3 h-3 ${cls} shrink-0"></i>
           <span class="text-[10px] text-slate-400 dark:text-dark-muted shrink-0">${it.label}</span>
-          <span class="text-[10px] font-medium text-slate-700 dark:text-white truncate">${it.name}</span>
+          <span class="text-[10px] font-medium text-slate-700 dark:text-white truncate flex-1">${it.name}</span>
+          ${it.nodeId ? `<i data-lucide="locate" class="w-3 h-3 text-slate-300 dark:text-slate-600 group-hover:text-red-400 shrink-0 transition-colors"></i>` : ''}
         </li>`;
       }).join('');
 
