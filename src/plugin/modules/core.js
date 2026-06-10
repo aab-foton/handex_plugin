@@ -226,7 +226,8 @@ Object.assign(window, {
   _updateFrameAuditSubtitle,
   setFrameCheckDone,
   setFrameSemDesvios,
-  setFrameAuditObs
+  setFrameAuditObs,
+  _restoreStep1Fields
 });
 
 function clearPluginCache() {
@@ -1840,6 +1841,25 @@ function autoScrollToNewItem(containerId, targetElement = null) {
 
 function focusNode(id) {
   parent.postMessage({ pluginMessage: { type: 'highlight-node', id, highlight: true, shouldScroll: true, color: '#0070af' } }, '*');
+}
+
+// ── Restauração leve no boot (só step1, sem renderizar frames/flows/specs) ──
+function _restoreStep1Fields() {
+  const fields = ['s1-titulo', 's1-versao', 's1-objetivo', 's1-jornada', 's1-feature'];
+  fields.forEach(id => {
+    const key = id.replace('s1-', '');
+    const el = document.getElementById(id);
+    if (el) el.value = handoffData.step1[key] || (key === 'versao' ? 'v1.0' : '');
+  });
+  _syncStatusUI(handoffData.step1.status || 'rascunho');
+  ['jornada', 'feature'].forEach(function(field) {
+    const hasValue = !!(handoffData.step1[field] || '').trim();
+    const toggle = document.getElementById('toggle-' + field);
+    const fieldDiv = document.getElementById(field + '-field');
+    if (toggle) toggle.checked = hasValue;
+    if (fieldDiv) fieldDiv.classList.toggle('hidden', !hasValue);
+  });
+  if (typeof validateStep1 === 'function') validateStep1();
 }
 
 // ── UI Restoration ─────────────────────────────────────────────────────
