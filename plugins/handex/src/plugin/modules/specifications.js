@@ -1728,11 +1728,6 @@
     let lastSpecsCount = 0;
 
 
-    // Call once to render any persisted specs on load
-    document.addEventListener("DOMContentLoaded", () => {
-      renderSpecsList();
-    });
-
     function hideNode(id) {
       parent.postMessage({ pluginMessage: { type: 'hide-node', id } }, '*');
     }
