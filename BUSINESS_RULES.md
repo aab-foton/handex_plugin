@@ -1,7 +1,7 @@
 # HANDEX — Regras de Negócio, Travas, Disclaimers e Jornadas
 
 > Documento de referência técnica e funcional do plugin Handex v4.1+
-> Última atualização: 2026-06-10
+> Última atualização: 2026-06-11
 
 ---
 
@@ -352,9 +352,39 @@ Todos os nós gerados pelo plugin são criados com `node.locked = true`:
 | pronto-para-dev | azul (#0070af) |
 | finalizado | verde (#22c55e) |
 
+**Seção de Especificações na ficha:**
+
+- As seções "Especificações Visuais" e "Especificações Anotadas" foram **mescladas** em um único card "Especificações"
+- Specs são organizadas por letra (grupo), com cabeçalho de nome do grupo quando `frame.specGroupNames[letra]` estiver definido
+- Grupos com `frame.specGroupVisible[letra] === false` são omitidos da ficha
+- Cada spec exibe:
+  - **Chip de categoria** com cor semântica proveniente de `spec.color` (bg suave + borda colorida) e o label de `spec.type || spec.categoryLabel || spec.category` (fallback: `'Geral'`)
+  - **Nome da spec** — se `spec.targetNodeId` existir e o nó estiver no documento, o nome é sublinhado e funciona como hyperlink `type: "NODE"` para o elemento anotado no canvas
+  - **Propriedades técnicas** — cada entrada de `spec.properties[]` é exibida como linha com `prop.label`, `prop.token` e `prop.value`
+
 ---
 
-### 2.9 Exportação
+### 2.9 Limpar Todos os Dados
+
+**Botão:** ícone `trash-2` ao lado do botão "Importar JSON" na home.
+
+**Fluxo:**
+1. Clique abre o modal `confirm-clear-modal` (confirmação destrutiva)
+2. Ao confirmar "Sim, limpar tudo":
+   - `localStorage['handex-state']` removido
+   - `localStorage['handex-ann-categories-v2']` removido
+   - `handoffData` resetado para o estado inicial (schema v2 limpo)
+   - `createdSpecs` esvaziado em memória
+   - UI re-populada via `restoreUIFromState()`
+   - Navegação para `view-home`
+   - Toast: "Todos os dados foram removidos."
+3. Ao cancelar: modal fechado sem alteração
+
+> **Nota:** `location.reload()` não é suportado no WebView do Figma (resulta em tela branca). O reset é feito inteiramente em memória sem recarregar a página.
+
+---
+
+### 2.10 Exportação
 
 **Formatos disponíveis:**
 - **JSON** — backup completo do `handoffData` (sem previews Uint8Array)
@@ -435,6 +465,8 @@ Ao tentar focar/selecionar um nó no canvas, o plugin verifica se o nó pertence
 | Gera ficha uma segunda vez | Abre modal de versionamento antes de prosseguir |
 | Adiciona novo item a uma lista | Auto-scroll para o item adicionado (100 ms) |
 | Ativa tema dark/light | Persiste preferência em `localStorage['theme']` |
+| Clica em "Limpar todos os dados" (lixeira) | Abre modal de confirmação destrutiva |
+| Confirma limpeza no modal | Reseta `handoffData` em memória, limpa localStorage, navega para home e exibe toast |
 
 ---
 
@@ -480,6 +512,7 @@ Mensagens exibidas como notificação nativa do Figma:
 | Ação | Confirmação |
 |---|---|
 | Limpar cache do plugin | `window.confirm("Limpar todo o cache do plugin?\n\nIsso removerá: formulário, frames, auditoria, medidas, fluxos e histórico.\n\nEssa ação não pode ser desfeita.")` |
+| Limpar todos os dados (botão lixeira na home) | Modal `confirm-clear-modal` — título "Limpar todos os dados?", botões "Cancelar" e "Sim, limpar tudo" (vermelho) |
 
 ### 5.5 Disclaimers técnicos (sem exibição ao usuário)
 

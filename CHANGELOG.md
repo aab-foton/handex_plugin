@@ -2,6 +2,65 @@
 
 ---
 
+## v4.1.5 — 2026-06-11
+
+### Resumo
+Melhorias na seção de Especificações da ficha canvas: chip de categoria semântico, link direto para o nó no canvas, exibição de propriedades técnicas e organização por grupos nomeados. Novo botão "Limpar todos os dados" na home com modal de confirmação e reset programático (sem tela branca). Padronização de `rounded-2xl` em todos os botões do plugin.
+
+---
+
+### Ficha Canvas — Seção de Especificações
+
+**Chip de categoria corrigido e semântico**
+- O chip exibia "Geral" por usar `s.category` (ausente na estrutura de spec). Corrigido para `s.type || s.categoryLabel || s.category` com fallback para `'Geral'`.
+- Cor do chip agora deriva de `spec.color`: background 12% saturado + borda na cor original + texto na cor original — alinhado à semântica visual das categorias do plugin.
+
+**Seção única "Especificações"**
+- "Especificações Visuais" e "Especificações Anotadas" mescladas em um único card; não havia diferença de conteúdo entre as duas.
+
+**Link para o nó no canvas**
+- Nome da spec sublinhado e com hyperlink `{ type: "NODE", value: spec.targetNodeId }` ao clicar diretamente no canvas do Figma.
+- Guard `figma.getNodeById(spec.targetNodeId)` evita o erro `Invalid hyperlink target node specified` para specs cujo nó não existe mais no documento.
+
+**Propriedades técnicas na ficha**
+- Cada entrada de `spec.properties[]` é exibida como linha com `prop.label`, `prop.token` e `prop.value` dentro do card da spec.
+
+**Organização por grupos nomeados**
+- Specs agrupadas por letra com cabeçalho de nome do grupo quando `frame.specGroupNames[letra]` estiver definido.
+- Grupos com `frame.specGroupVisible[letra] === false` são omitidos da ficha.
+
+---
+
+### Limpar Todos os Dados
+
+- **Botão lixeira** (`trash-2`) adicionado à home ao lado do botão "Importar JSON".
+- Clique abre modal de confirmação (`confirm-clear-modal`) com descrição do impacto e botão "Sim, limpar tudo" (vermelho).
+- `confirmClearAllData()`: reseta `handoffData` em memória para o estado inicial do schema v2, limpa `localStorage['handex-state']` e `localStorage['handex-ann-categories-v2']`, esvazia `createdSpecs`, chama `restoreUIFromState()`, navega para home e exibe toast "Todos os dados foram removidos."
+- **Correção de tela branca:** `location.reload()` não é suportado no WebView do Figma — substituído por reset programático em memória.
+
+---
+
+### UI — Border-radius consistente
+
+- Todos os elementos `<button>` do plugin agora usam `rounded-2xl` (1 rem) — atualização via script em 12 arquivos de views e módulos.
+- Antes: botões da home usavam `rounded-2xl` enquanto o restante do plugin usava `rounded-xl`/`rounded-lg`; agora todos estão padronizados.
+
+---
+
+### Arquivos Modificados
+
+| Arquivo | Mudança |
+|---|---|
+| `src/plugin/code.js` | Chip semântico de categoria; link NODE com guard `getNodeById`; specs agrupadas por letra com header; propriedades na ficha; seção única |
+| `src/plugin/modules/design-data.js` | `clearAllData()` + `confirmClearAllData()` com reset programático |
+| `src/plugin/modules/core.js` | Exposição de `clearAllData` e `confirmClearAllData` no `window` |
+| `src/plugin/views/home.html` | Botão lixeira ao lado de "Importar JSON" |
+| `src/plugin/views/modals.html` | Modal `confirm-clear-modal` |
+| `src/plugin/views/*.html` (8 arquivos) | `rounded-xl` → `rounded-2xl` em `<button>` |
+| `src/plugin/modules/*.js` (4 arquivos) | `rounded-xl` → `rounded-2xl` em `<button>` |
+
+---
+
 ## v4.1.4 — 2026-06-11
 
 ### Resumo
