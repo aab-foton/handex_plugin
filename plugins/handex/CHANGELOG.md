@@ -2,6 +2,58 @@
 
 ---
 
+## v4.1.4 — 2026-06-11
+
+### Resumo
+Importação de JSON com aplicação no canvas, rastreabilidade de specs via `targetNodeId`, correções de UX no scroll/header/acordeões, posicionamento da ficha e specs no canvas, otimização de performance e reestruturação da ficha em 3 cards.
+
+---
+
+### Importação JSON → Aplicar no Canvas
+
+- **Modal pós-importação** (`import-apply-modal`) — ao importar um JSON de progresso, exibe um resumo com contadores de frames, specs, medidas e fluxos, e oferece três ações de canvas:
+  - **Gerar Ficha Técnica** — aciona `createHandoffOnCanvas()` com os dados importados (sempre disponível).
+  - **Recriar Cards de Especificação** — reenvia `create-unified-spec` para cada spec salva, usando `targetNodeId` preciso quando disponível.
+  - **Reaplicar Medidas** — novo handler `reapply-measurements` em `code.js`; localiza cada elemento pelo nome dentro do frame e recria anotações W×H no canvas.
+- **"Apenas restaurar"** fecha o modal sem tocar o canvas, preservando o comportamento anterior.
+- Opções sem dados ficam desabilitadas automaticamente com mensagem explicativa.
+
+### Rastreabilidade de Specs — `targetNodeId`
+
+- **`code.js`** — a mensagem `spec-created` agora inclui `targetNodeId: node.id`, o ID Figma do elemento exato que foi anotado.
+- **`messages.js`** — persiste o campo automaticamente em `frame.createdSpecs[]` (sem alteração de código — o push já copia o objeto inteiro).
+- **`design-data.js`** — re-aplicação via JSON usa `spec.targetNodeId` como prioridade; cai para `frame.figmaId` como fallback para specs geradas antes desta versão (compatibilidade retroativa).
+- **Habilitado para auditoria futura** — com o ID do nó original armazenado, será possível comparar as propriedades documentadas na spec com o estado atual do elemento no canvas, detectando drift de tokens.
+
+### Correções de UX — Header, Scroll e Acordeões
+
+- **Header sempre visível** — adicionado `position: relative` ao `<header>` para que `z-50` tenha efeito; antes o conteúdo das views sobrepunha o header por ordem DOM.
+- **Reset de scroll sem flash** — `navigate()` reseta `scrollTop` de todas as sub-regiões **antes** de ativar a view (enquanto `display: none`), eliminando o flash de conteúdo defasado.
+- **Botão "Recolher tudo" (Collapse All)** — corrigido seletor de `button[onclick*="toggleAccordion"]` para `[onclick*="toggleAccordion"]` (elementos usam `<div role="button">`, não `<button>`); botão adicionado também às views de Medidas e Frames (estava apenas em "Anotar Specs").
+
+### Canvas — Posicionamento da Ficha e Specs
+
+- **Ficha não gerada sobre o frame principal** — `mainContainer` agora é posicionado em `(-99999, -99999)` imediatamente após `appendChild`, antes de qualquer cálculo; se nenhum critério de posicionamento for satisfeito, o fallback é a borda direita do viewport.
+- **Ficha desbloqueada** — `mainContainer.locked = false`; antes a ficha chegava travada, forçando o uso do painel de layers para movê-la.
+- **Specs sempre à direita** — direção simplificada: toda nova spec é criada à direita do elemento anotado; mesma letra empilha verticalmente, letra diferente abre nova coluna.
+- **Posicionamento persistente entre sessões** — substituído o `specColumnTracker` (objeto em memória, zerado ao fechar o plugin) por varredura de `figma.currentPage.children` a cada criação, reconstituindo o mapa de posições a partir do canvas.
+
+### Performance
+
+- **`findAll` → `children.forEach`** — `figma.currentPage.findAll()` percorre toda a árvore de nós da página (potencialmente milhares), causando lentidão perceptível em arquivos complexos. Substituído por `figma.currentPage.children.forEach()` para localizar grupos de spec e fichas — todos são filhos diretos da página.
+
+### Layout da Ficha — 3 Cards Separados
+
+- **Card 1 — Informações Básicas** (480 px): Informações Básicas + Equipe e Responsáveis.
+- **Card 2 — Briefing Estratégico** (440 px): criado somente quando há perguntas respondidas; briefing extraído do card principal.
+- **Card 3 — User Interface** (largura AUTO): colunas Componentes, Ícones, Vetores, Tipografia e Frames dispostas lado a lado, sem wrap. `specsRow` com `layoutWrap` removido e `itemSpacing: 24`.
+
+### Visual
+
+- **Chip "Novo Componente" na ficha** — trocado de retângulo violeta sólido (`cornerRadius: 4`, texto branco) para pill com fundo lilás suave (`#F0EBFF`), borda `#B399F5` e texto roxo `#6130C7` — alinhado visualmente ao chip de papel da seção Equipe.
+
+---
+
 ## v4.1.3 — 2026-06-10
 
 ### Resumo
