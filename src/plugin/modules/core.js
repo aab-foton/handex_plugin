@@ -880,7 +880,7 @@ function updateNewComponentObs(frameId, value) {
 
 function toggleFrameAccordion(frameId) {
   const body = document.getElementById(`frame-body-${frameId}`);
-  const arrow = document.getElementById(`frame-arrow-${frameId}`);
+  const arrow = document.getElementById(`frame-chevron-${frameId}`);
   if (!body) return;
   const isHidden = body.classList.contains('hidden');
   body.classList.toggle('hidden', !isHidden);
@@ -1752,18 +1752,25 @@ function collapseAllAccordions(containerEl) {
   allContent.forEach(c => {
     const isHidden = c.classList.contains('hidden');
     if (anyOpen ? !isHidden : isHidden) {
-      // Find toggle button
-      const parent = c.closest('.border, .rounded-xl, .mb-3');
-      const btn = parent ? parent.querySelector('[onclick*="toggleAccordion"]') : null;
       c.classList.toggle('hidden');
-      if (btn) {
-        btn.setAttribute('aria-expanded', anyOpen ? 'false' : 'true');
-        const icon = btn.querySelector('[data-lucide="chevron-down"]');
-        if (icon) icon.style.transform = anyOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+      // Frame body (id="frame-body-{id}") — rotate frame-chevron
+      if (c.id && c.id.startsWith('frame-body-')) {
+        const frameId = c.id.replace('frame-body-', '');
+        const chevron = document.getElementById(`frame-chevron-${frameId}`);
+        if (chevron) chevron.style.transform = anyOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+      } else {
+        // Regular accordion — find toggle button
+        const parent = c.closest('.border, .rounded-xl, .mb-3');
+        const btn = parent ? parent.querySelector('[onclick*="toggleAccordion"]') : null;
+        if (btn) {
+          btn.setAttribute('aria-expanded', anyOpen ? 'false' : 'true');
+          const icon = btn.querySelector('[data-lucide="chevron-down"]');
+          if (icon) icon.style.transform = anyOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+        }
       }
     }
   });
-  // Update toggle button icon
+  // Update collapse-toggle button icon
   const toggleBtn = root.querySelector ? root.querySelector('[data-collapse-toggle]') : null;
   if (toggleBtn) {
     const icon = toggleBtn.querySelector('i[data-lucide]');

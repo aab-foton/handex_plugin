@@ -230,7 +230,7 @@
         </div>
 
         <!-- Corpo -->
-        <div id="frame-body-${fid}" class="hidden border-t border-gray-50 dark:border-dark-line">
+        <div id="frame-body-${fid}" class="accordion-content hidden border-t border-gray-50 dark:border-dark-line">
 
           <!-- ── Toggle Novo Componente ── -->
           <div class="px-4 py-2.5 flex items-center justify-between border-b border-gray-50 dark:border-dark-line">
