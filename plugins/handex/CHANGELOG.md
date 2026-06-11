@@ -2,6 +2,67 @@
 
 ---
 
+## v4.1.6 — 2026-06-11
+
+### Resumo
+Refinamentos de UX na ficha canvas e na view de escaneamento de tokens: remoção dos indicadores de conformidade por propriedade (decisão de produto — conformidade é responsabilidade do designer, não informação para o dev), filtragem inteligente de vetores e frames-container dos resultados de scan, ícone de localização explícito nos cards escaneados e correção do botão de recolher/expandir accordions.
+
+---
+
+### Ficha Canvas — Card User Interface
+
+**Remoção dos dots de conformidade por propriedade**
+- Os indicadores coloridos (verde/âmbar/vermelho) por linha de propriedade foram removidos da ficha.
+- Razão: criavam uma falsa impressão de "100% conforme" pois refletiam apenas o resultado do scan automatizado, não a declaração de conformidade do designer. A acurácia de conformidade é responsabilidade do designer e já está registrada nos toggles do plugin.
+- O badge de status do componente (DSC / AJUSTE / FORA), visível apenas quando a auditoria está ativa, permanece.
+
+**Remoção da legenda de status do header**
+- A legenda "● Conforme ● Atenção ● Fora" adicionada ao header do card foi removida junto com os dots que a justificavam.
+
+---
+
+### Escaneamento de Tokens — Filtragem de Resultados
+
+**Vetores removidos completamente**
+- Nós do tipo `VECTOR`, `BOOLEAN_OPERATION`, `ELLIPSE` e `RECTANGLE` não geram mais entradas nos resultados de scan.
+- Razão: shapes primitivos não são elementos do DS — sua presença ou ausência de token não representa não-conformidade.
+
+**Frames-container filtrados; apenas frames "puros" mantidos**
+- Frames que contêm ao menos um descendente `INSTANCE` ou `COMPONENT` são removidos dos resultados.
+- Razão: um frame que agrupa componentes é um contêiner de layout; a conformidade vive nos filhos, não no frame em si.
+- Exceção preservada: frames sem nenhum filho DS (100% custom, sem uso de biblioteca) continuam aparecendo como alerta — indicam tela construída fora do DS.
+
+---
+
+### Scan — Ícone de Localização nos Cards
+
+- Cada card de elemento escaneado exibe um ícone `locate` no canto direito do header, visível no hover.
+- O card inteiro já era clicável e chamava `focusNode(item.nodeId)` — o ícone torna essa ação descobrível.
+
+---
+
+### Accordions — Recolher/Expandir Todos
+
+**`collapseAllAccordions` inclui cards de frame**
+- O botão `⇅` agora recolhe/expande também os cards de frame (accordions da view "Escanear Tokens"), não apenas os accordions internos (seções de tokens, medidas, specs).
+- Implementado adicionando a classe `accordion-content` ao div `frame-body-{id}` e tratando a rotação do chevron via prefixo `frame-body-` no id.
+
+**Correção de bug: chevron dos cards de frame não rotacionava**
+- `toggleFrameAccordion` buscava `frame-arrow-{id}` mas o HTML renderizava `frame-chevron-{id}`.
+- Corrigido para `frame-chevron-{id}` — o chevron agora rota corretamente ao abrir/fechar manualmente um card de frame.
+
+---
+
+### Arquivos Modificados
+
+| Arquivo | Mudança |
+|---|---|
+| `src/plugin/code.js` | Remove dots de conformidade e legenda; filtro de vetores e frames-container em `addElement()` |
+| `src/plugin/modules/core.js` | `collapseAllAccordions` inclui frame bodies; `toggleFrameAccordion` usa `frame-chevron` |
+| `src/plugin/modules/specifications.js` | `frame-body` recebe classe `accordion-content`; ícone `locate` nos cards do scan |
+
+---
+
 ## v4.1.5 — 2026-06-11
 
 ### Resumo

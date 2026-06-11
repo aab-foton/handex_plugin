@@ -1,7 +1,7 @@
 # HANDEX — Regras de Negócio, Travas, Disclaimers e Jornadas
 
 > Documento de referência técnica e funcional do plugin Handex v4.1+
-> Última atualização: 2026-06-11
+> Última atualização: 2026-06-11 (v4.1.6)
 
 ---
 
@@ -156,6 +156,20 @@ Toda a seção é opcional. Nenhum campo bloqueia avanço ou geração de ficha.
 - Envia `scan-frame` com `{ frameId, nodeId, categories, selectedLibSlugs }`
 - Resultado organizado em accordion por tipo; exibe contagem por categoria
 - Se > 10 itens em uma seção: exibe campo de busca
+
+**Filtragem automática de resultados:**
+
+| Tipo de nó | Comportamento |
+|---|---|
+| `VECTOR`, `BOOLEAN_OPERATION`, `ELLIPSE`, `RECTANGLE` | Removidos sempre — shapes primitivos não representam conformidade DS |
+| `FRAME` / `GROUP` com filhos `INSTANCE` ou `COMPONENT` | Removidos — são contêineres de layout; a conformidade vive nos filhos |
+| `FRAME` / `GROUP` sem nenhum filho DS (100% custom) | Mantidos como alerta — indicam construção fora do DS |
+
+Razão da regra: a conformidade não se aplica ao contêiner, mas ao que está dentro dele. Exibir frames de layout como "não conformes" induz o dev a erro sobre a natureza do problema.
+
+**Ícone de localização nos cards escaneados:**
+- Cada card de elemento exibe ícone `locate` no header (visível no hover)
+- O card inteiro é clicável e chama `focusNode(item.nodeId)` para navegar ao nó no canvas
 
 **Novo Componente:**
 - Toggle por frame
@@ -364,6 +378,12 @@ Todos os nós gerados pelo plugin são criados com `node.locked = true`:
   - **Nome da spec** — se `spec.targetNodeId` existir e o nó estiver no documento, o nome é sublinhado e funciona como hyperlink `type: "NODE"` para o elemento anotado no canvas
   - **Propriedades técnicas** — cada entrada de `spec.properties[]` é exibida como linha com `prop.label`, `prop.token` e `prop.value`
 
+**Card User Interface — indicadores de propriedade:**
+
+- Cada propriedade escaneada exibe um ícone semântico por tipo (espaçamento direcional, tipografia, cor como swatch real, borda, raio etc.) seguido de label e valor
+- **Dots de conformidade por propriedade foram removidos** — a acurácia de conformidade é responsabilidade do designer e não é informação acionável para o dev
+- O badge de status do componente (DSC / AJUSTE / FORA) permanece visível no header do card do elemento, mas apenas quando a auditoria está ativa (`data.isAudit = true`)
+
 ---
 
 ### 2.9 Limpar Todos os Dados
@@ -469,6 +489,7 @@ Ao tentar focar/selecionar um nó no canvas, o plugin verifica se o nó pertence
 | Ativa tema dark/light | Persiste preferência em `localStorage['theme']` |
 | Clica em "Limpar todos os dados" (lixeira) | Abre modal de confirmação destrutiva |
 | Confirma limpeza no modal | Reseta `handoffData` em memória, limpa localStorage, navega para home e exibe toast |
+| Clica em `⇅` (recolher/expandir) | `collapseAllAccordions(container)` — recolhe ou expande todos os accordions visíveis no container, incluindo os cards de frame (`frame-body-{id}`) e accordions internos (tokens, medidas, specs) |
 
 ---
 
