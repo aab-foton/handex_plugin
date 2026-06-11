@@ -1779,17 +1779,17 @@ ${(handoffData.specs || []).length === 0 ? 'Nenhuma especificação registrada.'
       <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-extrabold text-slate-500 dark:text-slate-500 uppercase tracking-wider">${versao}</span>
       <span class="px-2.5 py-1 bg-blue-50 dark:bg-blue-900/20 text-[#0070af] dark:text-blue-400 border border-blue-100 dark:border-blue-900/30 rounded-full text-[10px] font-extrabold uppercase tracking-wider">${status}</span>
       
-      <button onclick="downloadJSON()" title="Baixa o JSON estruturado do scan (sem previews) para uso em pipeline de dev" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer">
+      <button onclick="downloadJSON()" title="Baixa o JSON estruturado do scan (sem previews) para uso em pipeline de dev" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all cursor-pointer">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3M13 15h3M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" /></svg>
         <span>Exportar JSON</span>
       </button>
 
-      <button onclick="downloadSelf()" class="flex items-center gap-1.5 px-3 py-1.5 bg-[#0070af] hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer">
+      <button onclick="downloadSelf()" class="flex items-center gap-1.5 px-3 py-1.5 bg-[#0070af] hover:bg-blue-700 text-white rounded-2xl text-xs font-bold transition-all shadow-md cursor-pointer">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
         <span>Gerar Ficha de Projeto</span>
       </button>
 
-      <button onclick="toggleTheme()" class="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">
+      <button onclick="toggleTheme()" class="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl transition-colors cursor-pointer">
         <svg id="sun-icon" class="w-4 h-4 text-amber-500 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" /></svg>
         <svg id="moon-icon" class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
       </button>

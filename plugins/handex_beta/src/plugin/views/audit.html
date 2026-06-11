@@ -1,0 +1,51 @@
+﻿<!-- VIEW: AUDIT -->
+<main id="view-audit" class="view p-0 flex flex-col h-full overflow-hidden">
+
+  <!-- Header -->
+  <div class="px-4 pt-4 pb-3 border-b border-gray-100 dark:border-dark-line flex items-center gap-3 shrink-0">
+    <button onclick="navigate('view-home')" aria-label="Voltar para início"
+      class="p-2 bg-gray-100 dark:bg-slate-800 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors shrink-0">
+      <i data-lucide="arrow-left" class="w-4 h-4 text-gray-600 dark:text-gray-300"></i>
+    </button>
+    <div class="flex-1 min-w-0">
+      <h2 class="text-[14px] font-extrabold text-slate-800 dark:text-white">Conformidade DSC</h2>
+      <p class="text-[10px] text-slate-500 dark:text-dark-muted">Declaração de conformidade por frame</p>
+    </div>
+  </div>
+
+  <div class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+
+    <!-- Empty state: nenhum frame documentado -->
+    <div id="audit-empty-state" class="flex flex-col items-center justify-center py-16 text-center">
+      <i data-lucide="layers" class="w-12 h-12 text-slate-200 dark:text-slate-700 mb-4"></i>
+      <p class="text-[12px] font-bold text-slate-500 dark:text-slate-500 mb-1">Nenhum frame documentado</p>
+      <p class="text-[11px] text-slate-300 dark:text-slate-600 mb-5 px-4">Complete o Handoff para registrar frames antes de verificar a conformidade.</p>
+      <button onclick="startHandoff()"
+        class="px-5 py-2.5 bg-[#005ca9] text-white text-[12px] font-bold rounded-xl hover:bg-[#004d8f] transition-colors">
+        Ir para o Handoff
+      </button>
+    </div>
+
+    <!-- Controles (visível quando há frames) -->
+    <div id="audit-controls" class="hidden space-y-4">
+
+      <!-- Resumo numérico -->
+      <div id="audit-summary"></div>
+
+      <!-- Orientação -->
+      <div class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 rounded-xl flex gap-3">
+        <i data-lucide="info" class="w-4 h-4 text-[#0070af] shrink-0 mt-0.5"></i>
+        <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-relaxed">
+          O status é declarado em cada frame no Handoff. Use a seção <strong>Conformidade DSC</strong> dentro do accordion do frame para registrar desvios intencionais e suas justificativas.
+        </p>
+      </div>
+
+      <!-- Lista de frames -->
+      <div>
+        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3 px-1">Frames Documentados</p>
+        <div id="audit-frame-list" class="space-y-2"></div>
+      </div>
+
+    </div>
+  </div>
+</main>

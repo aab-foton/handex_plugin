@@ -1,0 +1,351 @@
+[
+  {
+    "id": "briefing",
+    "name": "Briefing Estruturado",
+    "icon": "clipboard-list",
+    "color": "text-blue-600",
+    "bg": "bg-blue-50 dark:bg-blue-900/20",
+    "category": "Descoberta",
+    "categoryColor": "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+    "description": "Alinha o time no início do projeto: contexto, escopo, atores, riscos e critérios de sucesso em um único artefato.",
+    "when": "Kickoff do projeto ou quando a demanda chega sem documentação clara.",
+    "fields": [
+      { "id": "context",      "label": "Contexto",          "type": "text",  "required": true  },
+      { "id": "objectives",   "label": "Resultados-chave",   "type": "list",  "required": true  },
+      { "id": "actors",       "label": "Atores",             "type": "list",  "required": false },
+      { "id": "in_scope",     "label": "Está no escopo",     "type": "list",  "required": false },
+      { "id": "maybe_scope",  "label": "Pode entrar",        "type": "list",  "required": false },
+      { "id": "out_scope",    "label": "Não está no escopo", "type": "list",  "required": false },
+      { "id": "dependencies", "label": "Dependências",       "type": "list",  "required": false },
+      { "id": "risks",        "label": "Riscos",             "type": "list",  "required": false },
+      { "id": "deadline",     "label": "Prazo",              "type": "text",  "required": false }
+    ]
+  },
+  {
+    "id": "csd",
+    "name": "Matriz CSD",
+    "icon": "triangle-alert",
+    "color": "text-amber-500",
+    "bg": "bg-amber-50 dark:bg-amber-900/20",
+    "category": "Alinhamento",
+    "categoryColor": "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+    "description": "Mapeia o que o time sabe (Certezas), o que supõe (Suposições) e o que ainda precisa descobrir (Dúvidas).",
+    "when": "Antes de sair para pesquisa ou quando o time tem muita divergência de visão.",
+    "fields": [
+      { "id": "certainties",  "label": "Certezas",    "type": "list", "required": true  },
+      { "id": "assumptions",  "label": "Suposições",  "type": "list", "required": true  },
+      { "id": "doubts",       "label": "Dúvidas",     "type": "list", "required": true  }
+    ]
+  },
+  {
+    "id": "five-whys",
+    "name": "5 Porquês",
+    "icon": "search",
+    "color": "text-red-500",
+    "bg": "bg-red-50 dark:bg-red-900/20",
+    "category": "Diagnóstico",
+    "categoryColor": "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+    "description": "Investiga a causa raiz de um problema através de cinco camadas sucessivas de questionamento.",
+    "when": "Quando o problema é conhecido mas a causa real ainda não está clara.",
+    "fields": [
+      { "id": "problem",    "label": "Problema",    "type": "text", "required": true  },
+      { "id": "why1",       "label": "Por quê? 1",  "type": "text", "required": true  },
+      { "id": "why2",       "label": "Por quê? 2",  "type": "text", "required": true  },
+      { "id": "why3",       "label": "Por quê? 3",  "type": "text", "required": false },
+      { "id": "why4",       "label": "Por quê? 4",  "type": "text", "required": false },
+      { "id": "why5",       "label": "Por quê? 5",  "type": "text", "required": false },
+      { "id": "root_cause", "label": "Causa Raiz",  "type": "text", "required": true  }
+    ]
+  },
+  {
+    "id": "stakeholders",
+    "name": "Mapa de Stakeholders",
+    "icon": "users",
+    "color": "text-teal-500",
+    "bg": "bg-teal-50 dark:bg-teal-900/20",
+    "category": "Alinhamento",
+    "categoryColor": "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
+    "description": "Posiciona os envolvidos em uma matriz Poder × Interesse para definir a estratégia de engajamento de cada grupo.",
+    "when": "No início do projeto para mapear quem decide, quem aprova e quem apenas é informado.",
+    "fields": [
+      { "id": "manage_closely", "label": "Gerenciar de Perto (alto poder, alto interesse)", "type": "list", "required": true  },
+      { "id": "keep_satisfied", "label": "Manter Satisfeito (alto poder, baixo interesse)", "type": "list", "required": false },
+      { "id": "keep_informed",  "label": "Manter Informado (baixo poder, alto interesse)",  "type": "list", "required": false },
+      { "id": "monitor",        "label": "Monitorar (baixo poder, baixo interesse)",         "type": "list", "required": false }
+    ]
+  },
+  {
+    "id": "value-effort",
+    "name": "Matriz Valor × Esforço",
+    "icon": "layout-grid",
+    "color": "text-green-600",
+    "bg": "bg-green-50 dark:bg-green-900/20",
+    "category": "Priorização",
+    "categoryColor": "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+    "description": "Prioriza iniciativas cruzando o valor entregue ao usuário com o esforço de implementação.",
+    "when": "Quando há muitas iniciativas em disputa e o time precisa decidir o que fazer primeiro.",
+    "fields": [
+      { "id": "quick_wins",      "label": "Quick Wins (alto valor, baixo esforço)",         "type": "list", "required": false },
+      { "id": "big_bets",        "label": "Grandes Apostas (alto valor, alto esforço)",      "type": "list", "required": false },
+      { "id": "fill_ins",        "label": "Fill-ins (baixo valor, baixo esforço)",           "type": "list", "required": false },
+      { "id": "thankless_tasks", "label": "Thankless Tasks (baixo valor, alto esforço)",     "type": "list", "required": false }
+    ]
+  },
+  {
+    "id": "atomic-research",
+    "name": "Atomic Research",
+    "icon": "atom",
+    "color": "text-purple-500",
+    "bg": "bg-purple-50 dark:bg-purple-900/20",
+    "category": "Pesquisa",
+    "categoryColor": "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
+    "description": "Estrutura os achados de pesquisa em quatro níveis atômicos: Experimento, Fato, Insight e Conclusão.",
+    "when": "Para registrar e compartilhar pesquisas de forma rastreável e reaproveitável.",
+    "fields": [
+      { "id": "experiment", "label": "Experimento", "type": "text", "required": true  },
+      { "id": "fact",       "label": "Fato",        "type": "text", "required": true  },
+      { "id": "insight",    "label": "Insight",     "type": "text", "required": true  },
+      { "id": "conclusion", "label": "Conclusão",   "type": "text", "required": false }
+    ]
+  },
+  {
+    "id": "blueprint",
+    "name": "Blueprint de Serviço",
+    "icon": "map",
+    "color": "text-indigo-500",
+    "bg": "bg-indigo-50 dark:bg-indigo-900/20",
+    "category": "Mapeamento",
+    "categoryColor": "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
+    "description": "Mapeia a experiência completa do serviço em swim lanes, incluindo o que o usuário vê e o que acontece nos bastidores.",
+    "when": "Para visualizar a entrega ponta a ponta e identificar gaps entre front e backstage.",
+    "fields": [
+      { "id": "evidence",      "label": "Evidências",              "type": "list", "required": false },
+      { "id": "user_journey",  "label": "Jornada do Usuário",      "type": "list", "required": true  },
+      { "id": "frontstage",    "label": "Ações de Frontstage",     "type": "list", "required": true  },
+      { "id": "technology",    "label": "Tecnologia",              "type": "list", "required": false },
+      { "id": "backstage",     "label": "Ações de Backstage",      "type": "list", "required": false },
+      { "id": "support",       "label": "Processos de Suporte",    "type": "list", "required": false }
+    ]
+  },
+  {
+    "id": "heuristics",
+    "name": "Heurísticas de Nielsen",
+    "icon": "shield-check",
+    "color": "text-orange-500",
+    "bg": "bg-orange-50 dark:bg-orange-900/20",
+    "category": "Avaliação",
+    "categoryColor": "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
+    "description": "Avalia a usabilidade de interfaces com base nas 10 heurísticas clássicas de Jakob Nielsen.",
+    "when": "Revisão de usabilidade de um fluxo existente antes de entregar para dev.",
+    "fields": [
+      { "id": "visibility",        "label": "Visibilidade do status",         "type": "scale", "required": false },
+      { "id": "real_world",        "label": "Correspondência com o real",      "type": "scale", "required": false },
+      { "id": "user_control",      "label": "Controle do usuário",            "type": "scale", "required": false },
+      { "id": "consistency",       "label": "Consistência e padrões",         "type": "scale", "required": false },
+      { "id": "error_prevention",  "label": "Prevenção de erros",             "type": "scale", "required": false },
+      { "id": "recognition",       "label": "Reconhecimento",                 "type": "scale", "required": false },
+      { "id": "flexibility",       "label": "Flexibilidade",                  "type": "scale", "required": false },
+      { "id": "aesthetics",        "label": "Estética e minimalismo",         "type": "scale", "required": false },
+      { "id": "error_recovery",    "label": "Recuperação de erros",           "type": "scale", "required": false },
+      { "id": "help_docs",         "label": "Ajuda e documentação",           "type": "scale", "required": false }
+    ]
+  },
+  {
+    "id": "opportunities",
+    "name": "Mapa de Oportunidades",
+    "icon": "lightbulb",
+    "color": "text-yellow-500",
+    "bg": "bg-yellow-50 dark:bg-yellow-900/20",
+    "category": "Ideação",
+    "categoryColor": "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300",
+    "description": "Organiza oportunidades identificadas em clusters por tema, permitindo visualizar padrões e prioridades.",
+    "when": "Após rodadas de pesquisa ou brainstorm, para sintetizar e agrupar descobertas.",
+    "fields": [
+      { "id": "clusters",     "label": "Clusters temáticos", "type": "list", "required": true  },
+      { "id": "priority",     "label": "Prioridade",         "type": "list", "required": false },
+      { "id": "responsible",  "label": "Responsável",        "type": "list", "required": false },
+      { "id": "next_steps",   "label": "Próximos passos",    "type": "list", "required": false }
+    ]
+  },
+  {
+    "id": "personas",
+    "name": "Painel de Personas",
+    "icon": "user-circle",
+    "color": "text-blue-500",
+    "bg": "bg-blue-50 dark:bg-blue-900/20",
+    "category": "Descoberta",
+    "categoryColor": "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+    "description": "Constrói um perfil tangível do seu usuário, alinhando necessidades, objetivos e características-chave.",
+    "when": "No início do projeto ou após pesquisas exploratórias, para alinhar quem é o usuário central.",
+    "fields": [
+      { "id": "demographics", "label": "Dados demográficos", "type": "text", "required": true  },
+      { "id": "goals",        "label": "Objetivos",          "type": "list", "required": true  },
+      { "id": "needs",        "label": "Necessidades",       "type": "list", "required": true  },
+      { "id": "pain_points",  "label": "Dores",              "type": "list", "required": false },
+      { "id": "opportunities","label": "Oportunidades",      "type": "list", "required": false }
+    ]
+  },
+  {
+    "id": "interview-script",
+    "name": "Roteiro de Entrevistas",
+    "icon": "mic",
+    "color": "text-rose-500",
+    "bg": "bg-rose-50 dark:bg-rose-900/20",
+    "category": "Pesquisa",
+    "categoryColor": "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+    "description": "Estrutura um guia seguro e neutro para conduzir entrevistas de profundidade com usuários.",
+    "when": "Antes de iniciar qualquer ciclo de entrevistas qualitativas.",
+    "fields": [
+      { "id": "objective",    "label": "Objetivo da entrevista", "type": "text", "required": true  },
+      { "id": "warmup",       "label": "Aquecimento",            "type": "list", "required": false },
+      { "id": "discovery",    "label": "Descoberta",             "type": "list", "required": true  },
+      { "id": "deepening",    "label": "Aprofundamento",         "type": "list", "required": false },
+      { "id": "closing",      "label": "Encerramento",           "type": "list", "required": false }
+    ]
+  },
+  {
+    "id": "journey",
+    "name": "Jornada de Usuário",
+    "icon": "route",
+    "color": "text-cyan-500",
+    "bg": "bg-cyan-50 dark:bg-cyan-900/20",
+    "category": "Mapeamento",
+    "categoryColor": "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300",
+    "description": "Visualiza o passo a passo da experiência do usuário, mapeando dores, sentimentos e pensamentos ao longo do tempo.",
+    "when": "Para entender o cenário atual ou desenhar o fluxo ideal de uma experiência complexa.",
+    "fields": [
+      { "id": "stages",             "label": "Etapas",             "type": "list", "required": true  },
+      { "id": "actions",            "label": "Ações",              "type": "list", "required": false },
+      { "id": "thoughts",           "label": "Pensamentos",        "type": "list", "required": false },
+      { "id": "feelings",           "label": "Sentimentos",        "type": "list", "required": false },
+      { "id": "pain_points",        "label": "Dores",              "type": "list", "required": false },
+      { "id": "opportunities",      "label": "Oportunidades",      "type": "list", "required": false },
+      { "id": "experience_curve",   "label": "Curva de Experiência","type": "text", "required": false }
+    ]
+  },
+  {
+    "id": "relational-map",
+    "name": "Mapa Relacional",
+    "icon": "network",
+    "color": "text-sky-500",
+    "bg": "bg-sky-50 dark:bg-sky-900/20",
+    "category": "Ideação",
+    "categoryColor": "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
+    "description": "Conecta certezas, suposições e dúvidas geradas a métodos de pesquisa que responderão essas questões.",
+    "when": "Logo após uma matriz CSD, para planejar os métodos de pesquisa mais adequados.",
+    "fields": [
+      { "id": "themes",      "label": "Temas",                                         "type": "list", "required": true  },
+      { "id": "hypotheses",  "label": "Hipóteses",                                     "type": "list", "required": true  },
+      { "id": "methods",     "label": "Métodos (Questionário, Entrevista, etc.)",      "type": "list", "required": false }
+    ]
+  },
+  {
+    "id": "5w2h",
+    "name": "5W2H",
+    "icon": "table-2",
+    "color": "text-blue-600",
+    "bg": "bg-blue-50 dark:bg-blue-900/20",
+    "category": "Diagnóstico",
+    "categoryColor": "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+    "description": "Estrutura um plano de ação respondendo 7 perguntas essenciais: O quê, Por quê, Quem, Onde, Quando, Como e Quanto custa.",
+    "when": "Para planejar ações de forma objetiva, muito útil em equipes públicas que precisam de rastreabilidade.",
+    "fields": [
+      { "id": "what",      "label": "O quê? (What)",        "type": "text", "required": true  },
+      { "id": "why",       "label": "Por quê? (Why)",       "type": "text", "required": true  },
+      { "id": "who",       "label": "Quem? (Who)",          "type": "text", "required": true  },
+      { "id": "where",     "label": "Onde? (Where)",        "type": "text", "required": false },
+      { "id": "when",      "label": "Quando? (When)",       "type": "text", "required": false },
+      { "id": "how",       "label": "Como? (How)",          "type": "text", "required": true  },
+      { "id": "how_much",  "label": "Quanto custa? (How Much)", "type": "text", "required": false }
+    ]
+  },
+  {
+    "id": "golden-circle",
+    "name": "Golden Circle",
+    "icon": "target",
+    "color": "text-yellow-600",
+    "bg": "bg-yellow-50 dark:bg-yellow-900/20",
+    "category": "Alinhamento",
+    "categoryColor": "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+    "description": "O modelo de Simon Sinek que parte do Porquê (propósito) para o Como (processo) e o Quê (produto), alinhando times em torno de um propósito comum.",
+    "when": "No início de um projeto estratégico ou quando o time perde o senso de propósito.",
+    "fields": [
+      { "id": "why",  "label": "Por quê? (Propósito/Crença)",    "type": "text", "required": true  },
+      { "id": "how",  "label": "Como? (Processo/Valores)",        "type": "text", "required": true  },
+      { "id": "what", "label": "O quê? (Produto/Serviço)",        "type": "text", "required": true  }
+    ]
+  },
+  {
+    "id": "risk-matrix",
+    "name": "Matriz de Riscos",
+    "icon": "shield-alert",
+    "color": "text-red-600",
+    "bg": "bg-red-50 dark:bg-red-900/20",
+    "category": "Diagnóstico",
+    "categoryColor": "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+    "description": "Classifica riscos pela combinação de Probabilidade de ocorrência e Impacto no projeto, priorizando o que exige atenção imediata.",
+    "when": "Em planejamento de projeto, antes de sprints críticas ou na análise de mudanças de escopo.",
+    "fields": [
+      { "id": "critical",  "label": "Riscos Críticos (alta prob. + alto impacto)",    "type": "list", "required": true  },
+      { "id": "high",      "label": "Riscos Altos",                                   "type": "list", "required": false },
+      { "id": "moderate",  "label": "Riscos Moderados",                               "type": "list", "required": false },
+      { "id": "low",       "label": "Riscos Baixos",                                  "type": "list", "required": false }
+    ]
+  },
+  {
+    "id": "crazy-8s",
+    "name": "Crazy 8s",
+    "icon": "zap",
+    "color": "text-purple-600",
+    "bg": "bg-purple-50 dark:bg-purple-900/20",
+    "category": "Ideação",
+    "categoryColor": "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300",
+    "description": "Exercício de ideação rápida do Design Sprint: 8 ideias em 8 minutos para estimular criatividade sem autojulgamento.",
+    "when": "Em sessões de ideação, quando o time precisa divergir e sair do óbvio rapidamente.",
+    "fields": [
+      { "id": "idea_1", "label": "Ideia 1", "type": "text", "required": false },
+      { "id": "idea_2", "label": "Ideia 2", "type": "text", "required": false },
+      { "id": "idea_3", "label": "Ideia 3", "type": "text", "required": false },
+      { "id": "idea_4", "label": "Ideia 4", "type": "text", "required": false },
+      { "id": "idea_5", "label": "Ideia 5", "type": "text", "required": false },
+      { "id": "idea_6", "label": "Ideia 6", "type": "text", "required": false },
+      { "id": "idea_7", "label": "Ideia 7", "type": "text", "required": false },
+      { "id": "idea_8", "label": "Ideia 8", "type": "text", "required": false }
+    ]
+  },
+  {
+    "id": "dot-voting",
+    "name": "Dot Voting",
+    "icon": "vote",
+    "color": "text-emerald-600",
+    "bg": "bg-emerald-50 dark:bg-emerald-900/20",
+    "category": "Priorização",
+    "categoryColor": "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+    "description": "Técnica de votação democrática onde cada participante distribui pontos (dots) entre as opções para revelar as preferências do grupo.",
+    "when": "Após brainstorm ou listagem de ideias, para o grupo convergir e priorizar colaborativamente.",
+    "fields": [
+      { "id": "items",       "label": "Itens para votação",   "type": "list", "required": true  },
+      { "id": "participants","label": "Participantes",         "type": "list", "required": false },
+      { "id": "results",     "label": "Resultado/Vencedores", "type": "list", "required": false }
+    ]
+  },
+  {
+    "id": "journey-versioning",
+    "name": "Versionamento de Jornadas",
+    "icon": "git-branch",
+    "color": "text-cyan-600",
+    "bg": "bg-cyan-50 dark:bg-cyan-900/20",
+    "category": "Mapeamento",
+    "categoryColor": "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300",
+    "description": "Compara versões da jornada do usuário (Atual vs. Proposta) lado a lado, evidenciando melhorias, dores resolvidas e oportunidades futuras.",
+    "when": "Após redesenho de fluxo para comunicar ao time e stakeholders o que muda e por quê.",
+    "fields": [
+      { "id": "stages",      "label": "Etapas da Jornada",            "type": "list", "required": true  },
+      { "id": "v1_actions",  "label": "v1.0 — Ações do Usuário",      "type": "list", "required": true  },
+      { "id": "v1_pains",    "label": "v1.0 — Dores",                 "type": "list", "required": false },
+      { "id": "v2_actions",  "label": "v2.0 — Ações do Usuário",      "type": "list", "required": true  },
+      { "id": "v2_improved", "label": "v2.0 — Melhorias",             "type": "list", "required": false },
+      { "id": "delta",       "label": "O que muda (Delta)",           "type": "list", "required": false }
+    ]
+  }
+]

@@ -1,0 +1,128 @@
+// ============================================================
+// design-data.js — import/export de progresso (JSON do handoff)
+//
+// Inclui:
+//   - exportHandoffData / importHandoffData — backup full do estado
+//   - exportProgress / importProgress — backup leve (sem specs pesadas)
+//   - exportDesignData — pede ao backend Figma para exportar (CSV/JSON design data)
+//
+// Depende de: handoffData, createdSpecs, saveToStorage, restoreUIFromState,
+// startHandoff, incrementVersion
+// ============================================================
+
+    function exportHandoffData() {
+      const dataStr = JSON.stringify(handoffData, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const fileName = `handex-backup-${handoffData.step1.fluxo || 'projeto'}-${new Date().toISOString().split('T')[0]}.json`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', fileName);
+      linkElement.click();
+    }
+
+    function importHandoffData() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = event => {
+          try {
+            const importedData = JSON.parse(event.target.result);
+            
+            // Validate basic structure
+            if (!importedData.step1) throw new Error("Formato de JSON inválido para o Handex.");
+            
+            // Automatic versioning
+            const oldVersion = importedData.step1.versao || 'v1.0.0';
+            const newVersion = incrementVersion(oldVersion);
+            importedData.step1.versao = newVersion;
+            
+            // Update state
+            Object.assign(handoffData, importedData);
+            
+            // Save and Refresh
+            saveToStorage();
+            restoreUIFromState();
+            
+            // Visual feedback
+            alert(`Ô£à Dados importados!\nVersão anterior: ${oldVersion}\nVersão atual: ${newVersion}`);
+          } catch (err) {
+            alert('ÔØî Erro na importação: ' + err.message);
+          }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    }
+
+    function importProgress(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          Object.assign(handoffData, data);
+          alert("Progresso recuperado!");
+          startHandoff();
+          // Populate UI fields Seeder if possible
+          if (handoffData.step1.fluxo) {
+            const el = document.getElementById("s1-fluxo");
+            if (el) el.value = handoffData.step1.fluxo;
+          }
+        } catch (err) { alert("Erro ao importar JSON"); }
+      };
+      reader.readAsText(file);
+    }
+
+    function exportProgress() {
+      // Coleta dados pendentes
+      const s1FluxoExp = document.getElementById("s1-fluxo");
+      handoffData.step1.fluxo = s1FluxoExp ? s1FluxoExp.value : "";
+      const s1StatusExp = document.getElementById("s1-status");
+      handoffData.step1.status = s1StatusExp ? s1StatusExp.value : "";
+      const s1ObjetivoExp = document.getElementById("s1-objetivo");
+      handoffData.step1.objetivo = s1ObjetivoExp ? s1ObjetivoExp.value : "";
+      const s1GerenteExp = document.getElementById("s1-gerente");
+      handoffData.step1.gerente = s1GerenteExp ? s1GerenteExp.value : "";
+
+      // Faz uma copia limpa sem as specs pesadas que contem Uint8Array
+      const exportData = JSON.parse(JSON.stringify(handoffData));
+      exportData.specs = createdSpecs.map(s => {
+        const sCopy = JSON.parse(JSON.stringify(s));
+        sCopy.preview = null;
+        return sCopy;
+      });
+      exportData.step2 = { specs: null };
+
+      const jsonStr = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const safeName = handoffData.step1.fluxo ? handoffData.step1.fluxo.replace(/\s+/g, '_') : 'progresso';
+      a.download = `handex_${safeName}.json`;
+
+      try {
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+      } catch (e) {
+        console.error("Erro no download JSON:", e);
+        alert("O Figma bloqueou o download direto. Se possivel tente rodar o plugin no Browser.");
+      }
+    }
+
+
+    function exportDesignData(format) {
+      parent.postMessage({ pluginMessage: { type: 'export-design-data', format } }, '*');
+    }

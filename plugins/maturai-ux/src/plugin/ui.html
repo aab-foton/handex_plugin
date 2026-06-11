@@ -1,0 +1,1118 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    if (typeof window.lucide === 'undefined') {
+      window.lucide = { createIcons: function () {} };
+    }
+  </script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            emerald: {
+              50:  '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              300: '#86efac',
+              400: '#4ade80',
+              500: '#22c55e',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+              950: '#022c22',
+            },
+            dark: {
+              bg:      "#0f172a",
+              surface: "#1e293b",
+              line:    "#334155",
+              text:    "#f1f5f9",
+              muted:   "#94a3b8",
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.view { display: none !important; }
+.view.active { display: block !important; }
+.view.active.flex { display: flex !important; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.dark ::-webkit-scrollbar-thumb { background: #475569; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+* { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
+
+.checklist-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: #F8FAFC;
+  border: 1px solid #F1F5F9;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.dark .checklist-pill { background: #1e293b; border-color: #334155; color: #94a3b8; }
+.checklist-pill:has(input:checked) {
+  background: #047857;
+  border-color: #047857;
+  color: white;
+  box-shadow: 0 4px 12px rgba(4, 120, 87, 0.2);
+}
+
+button:not(.rounded-full) { border-radius: 8px !important; }
+
+button.bg-\[\#059669\], button.bg-emerald-600, button.bg-emerald-500 {
+  background-color: #047857 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border: none !important;
+  transition: background-color 0.2s ease !important;
+}
+button.bg-\[\#059669\]:hover, button.bg-emerald-600:hover, button.bg-emerald-500:hover {
+  background-color: #065f46 !important;
+}
+
+button.border-\[\#059669\], button.border-emerald-500 {
+  background-color: #ffffff !important;
+  color: #047857 !important;
+  border: 1.5px solid #047857 !important;
+  font-weight: 700 !important;
+  transition: all 0.2s ease !important;
+}
+button.border-\[\#059669\]:hover, button.border-emerald-500:hover {
+  background-color: #f0fdf4 !important;
+}
+
+.dark button.bg-\[\#059669\], .dark button.bg-emerald-600, .dark button.bg-emerald-500 {
+  background-color: #047857 !important;
+}
+.dark button.border-\[\#059669\], .dark button.border-emerald-500 {
+  background-color: #1e293b !important;
+  color: #34d399 !important;
+  border-color: #34d399 !important;
+}
+
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid #047857;
+  outline-offset: 2px;
+}
+.dark button:focus-visible { outline-color: #34d399; }
+
+.fab-inline {
+  width: 30px; height: 30px;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0; border-radius: 999px;
+  background: rgba(5, 150, 105, 0.13);
+  border: 1px solid rgba(5, 150, 105, 0.28);
+  color: #059669;
+  cursor: pointer; flex-shrink: 0;
+  transition: background 0.18s ease, transform 0.15s ease;
+}
+.fab-inline > i, .fab-inline > svg { flex-shrink: 0; }
+.fab-inline span { display: none; }
+.fab-inline:hover { background: rgba(5, 150, 105, 0.24); }
+.fab-inline:active { transform: scale(0.92); }
+.dark .fab-inline { background: rgba(5,150,105,0.18); border-color: rgba(52,211,153,0.35); color: #34d399; }
+.dark .fab-inline:hover { background: rgba(5,150,105,0.3); }
+
+#btn-top {
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(148, 163, 184, 0.55);
+  box-shadow: none;
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease, opacity 0.3s ease, translate 0.3s ease;
+}
+#btn-top:hover {
+  background: rgba(5, 150, 105, 0.65);
+  border-color: rgba(5, 150, 105, 0.5);
+  color: white;
+  box-shadow: 0 4px 16px -4px rgba(5, 150, 105, 0.5);
+  transform: scale(1.1);
+}
+
+.fab-main {
+  width: 48px; height: 48px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease !important;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0; overflow: hidden; white-space: nowrap;
+}
+.fab-main:active { transform: scale(0.94); }
+.fab-main:hover {
+  width: auto; min-width: 160px; padding: 0 20px;
+  justify-content: flex-start;
+  box-shadow: 0 8px 24px -4px rgba(5,150,105,0.45);
+}
+.fab-main span {
+  max-width: 0; opacity: 0;
+  transition: max-width 0.3s ease, opacity 0.2s ease, margin 0.3s ease !important;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.01em;
+}
+.fab-main:hover span { max-width: 200px; opacity: 1; margin-left: 8px; }
+
+#toast-container {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; gap: 8px;
+  z-index: 9999; pointer-events: none;
+}
+@keyframes slideUp {
+  from { transform: translate(-50%, 100%); opacity: 0; }
+  to   { transform: translate(-50%, 0); opacity: 1; }
+}
+.animate-toast { animation: slideUp 0.3s ease-out forwards; }
+.fade-out {
+  opacity: 0 !important;
+  transform: translate(-50%, 10px) !important;
+  transition: opacity 0.3s ease, transform 0.3s ease !important;
+}
+
+[data-tooltip] { position: relative; }
+[data-tooltip]:before {
+  content: attr(data-tooltip);
+  position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
+  padding: 6px 10px; background-color: #1e293b; color: #fff;
+  font-size: 10px; border-radius: 6px; white-space: normal;
+  width: max-content; max-width: 180px; line-height: 1.4; text-align: center;
+  opacity: 0; visibility: hidden; transition: all 0.2s ease; z-index: 1000;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); border: 1px solid #334155; pointer-events: none;
+}
+[data-tooltip]:after {
+  content: ''; position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%);
+  border-width: 5px; border-style: solid; border-color: #1e293b transparent transparent transparent;
+  opacity: 0; visibility: hidden; transition: all 0.2s ease; z-index: 1000; pointer-events: none;
+}
+[data-tooltip]:hover:before, [data-tooltip]:hover:after { opacity: 1; visibility: visible; bottom: 135%; }
+.dark [data-tooltip]:before { background-color: #0f172a; border-color: #1e293b; }
+.dark [data-tooltip]:after { border-color: #0f172a transparent transparent transparent; }
+[data-tooltip].tooltip-left:before { left: auto; right: 0; transform: translateX(0); }
+[data-tooltip].tooltip-left:after { left: auto; right: 15px; transform: translateX(0); }
+[data-tooltip].tooltip-right:before { left: 0; transform: translateX(0); }
+[data-tooltip].tooltip-right:after { left: 15px; transform: translateX(0); }
+
+#resize-handle {
+  position: fixed; bottom: 0; right: 0; width: 14px; height: 14px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 50%, #94a3b8 50%);
+  z-index: 10000; opacity: 0.5; transition: opacity 0.2s;
+}
+#resize-handle:hover { opacity: 1; }
+.dark #resize-handle { background: linear-gradient(135deg, transparent 50%, #475569 50%); }
+
+:root { --ui-scale: 1; }
+body { zoom: var(--ui-scale); width: 100%; height: 100vh; overflow: hidden; }
+
+body.scale-high header h1,
+body.scale-high header #version-badge,
+body.scale-high footer .footer-signature-text { display: none !important; }
+body.scale-high header { padding-left: 8px; padding-right: 8px; }
+body.scale-high header .gap-2 { gap: 4px; }
+body.scale-high footer { padding: 8px 12px; }
+
+.flex-1.overflow-y-auto { min-height: 0; }
+
+.bg-white.dark\:bg-dark-surface,
+.bg-white.dark\:bg-dark-bg,
+[id$="-card"],
+.view > section > div {
+  border-radius: 16px !important;
+  border: 1px solid #f1f5f9 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.dark .bg-white.dark\:bg-dark-surface,
+.dark .bg-white.dark\:bg-dark-bg,
+.dark [id$="-card"],
+.dark .view > section > div {
+  border-color: #1e293b !important;
+  background-color: #0f172a !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+.bg-white.dark\:bg-dark-surface:hover,
+.bg-white.dark\:bg-dark-bg:hover,
+[id$="-card"]:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
+  border-color: #e2e8f0 !important;
+}
+.dark .bg-white.dark\:bg-dark-surface:hover,
+.dark .bg-white.dark\:bg-dark-bg:hover,
+.dark [id$="-card"]:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.25) !important;
+  border-color: #334155 !important;
+}
+
+h1, h2, h3, .text-slate-800 {
+  font-family: 'Inter', sans-serif !important;
+  letter-spacing: -0.01em !important;
+}
+label, .text-\[10px\], .text-\[11px\], .checklist-pill {
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.03em !important;
+}
+
+input[type="text"], input[type="search"], input[type="email"], select, textarea {
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  background-color: #f8fafc !important;
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+  color: #334155 !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+.dark input[type="text"], .dark input[type="search"], .dark input[type="email"], .dark select, .dark textarea {
+  border-color: #1e293b !important;
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+input[type="text"]:focus, input[type="search"]:focus, input[type="email"]:focus, select:focus, textarea:focus {
+  border-color: #047857 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.15) !important;
+  outline: none !important;
+}
+.dark input[type="text"]:focus, .dark input[type="search"]:focus, .dark input[type="email"]:focus, .dark select:focus, .dark textarea:focus {
+  border-color: #34d399 !important;
+  background-color: #0f172a !important;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15) !important;
+}
+textarea { min-height: 80px; }
+
+input::placeholder, textarea::placeholder, select::placeholder {
+  font-weight: 400 !important;
+  color: #94a3b8 !important;
+  opacity: 0.85 !important;
+}
+.dark input::placeholder, .dark textarea::placeholder, .dark select::placeholder {
+  font-weight: 400 !important;
+  color: #64748b !important;
+  opacity: 0.85 !important;
+}
+
+header {
+  border-top-left-radius: 0px !important;
+  border-top-right-radius: 0px !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+  </style>
+</head>
+
+<body class="h-screen flex flex-col overflow-hidden bg-white text-slate-900 dark:bg-dark-bg dark:text-dark-text">
+
+  <header class="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-dark-line shrink-0 bg-white dark:bg-dark-bg z-50">
+    <div class="flex items-center gap-2">
+      <!-- Logo Maturai UX -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" class="h-6 w-6">
+        <rect width="40" height="40" rx="8" fill="#059669"/>
+        <path d="M8 28 L8 16 L14 22 L20 14 L26 22 L32 12 L32 28" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="32" cy="12" r="2.5" fill="#34d399"/>
+      </svg>
+      <span class="text-[#1E293B] dark:text-white font-bold text-[12px] opacity-50">|</span>
+      <h1 class="font-bold text-[#1E293B] dark:text-white text-[12px] tracking-[0.15em] uppercase">MATURAI UX</h1>
+      <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded flex items-center justify-center">v1.0.0</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <button onclick="exportMaturaiData()" title="Exportar dados do projeto" aria-label="Exportar"
+        class="p-1.5 hover:bg-emerald-50 dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-emerald-600 dark:text-emerald-400">
+        <i data-lucide="download" class="w-4 h-4" aria-hidden="true"></i>
+      </button>
+      <button onclick="toggleTheme()" title="Alternar tema" aria-label="Alternar tema claro/escuro"
+        class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
+        <i data-lucide="sun" class="sun-icon w-5 h-5" aria-hidden="true"></i>
+        <i data-lucide="moon" class="moon-icon w-5 h-5 hidden" aria-hidden="true"></i>
+      </button>
+      <button onclick="toggleCollapse()" id="btn-collapse"
+        title="Minimizar — clique no ícone para expandir novamente" aria-label="Minimizar plugin"
+        class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
+        <i data-lucide="minimize-2" class="w-4 h-4" aria-hidden="true"></i>
+      </button>
+    </div>
+  </header>
+
+  <div class="flex-1 overflow-y-auto relative" onscroll="handleScroll(this)">
+<!-- VIEW: HOME -->
+<main id="view-home" class="view active px-5 py-5 flex flex-col h-full overflow-y-auto">
+
+  <div class="mb-4">
+    <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[15px] tracking-tight">O que vamos mapear hoje?</h2>
+    <p class="text-slate-400 dark:text-dark-muted text-[11px] mt-0.5">Selecione uma ferramenta para começar.</p>
+  </div>
+
+  <!-- Cards 2×2 -->
+  <div class="grid grid-cols-2 gap-2.5 w-full">
+
+    <!-- Briefing -->
+    <button onclick="navigate('view-briefing')" aria-label="Briefing do Projeto"
+      class="flex flex-col items-start gap-2 p-3.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-emerald-300 hover:bg-emerald-50/40 dark:hover:bg-slate-800 rounded-2xl shadow-sm transition-all focus:ring-2 focus:ring-emerald-300/30 outline-none text-left relative">
+      <div class="w-8 h-8 flex items-center justify-center bg-emerald-50 dark:bg-emerald-900/20 rounded-xl shrink-0">
+        <i data-lucide="clipboard-list" class="w-4 h-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true"></i>
+      </div>
+      <div class="min-w-0">
+        <p class="font-extrabold text-[11.5px] tracking-tight text-slate-800 dark:text-white leading-tight">Briefing</p>
+        <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-0.5 leading-tight">Contexto e objetivos</p>
+      </div>
+      <span id="badge-briefing" class="hidden absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-emerald-500"></span>
+    </button>
+
+    <!-- Frameworks -->
+    <button onclick="navigateToFrameworks()" aria-label="Frameworks de UX"
+      class="flex flex-col items-start gap-2 p-3.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-violet-200 dark:hover:border-violet-800 hover:bg-violet-50/40 dark:hover:bg-slate-800 rounded-2xl shadow-sm transition-all focus:ring-2 focus:ring-violet-300/30 outline-none text-left relative">
+      <div class="w-8 h-8 flex items-center justify-center bg-violet-50 dark:bg-violet-900/20 rounded-xl shrink-0">
+        <i data-lucide="layout-template" class="w-4 h-4 text-violet-500 dark:text-violet-400" aria-hidden="true"></i>
+      </div>
+      <div class="min-w-0">
+        <p class="font-extrabold text-[11.5px] tracking-tight text-slate-800 dark:text-white leading-tight">Frameworks</p>
+        <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-0.5 leading-tight">13 instrumentos de UX</p>
+      </div>
+      <span id="badge-frameworks" class="hidden absolute top-2 right-2 min-w-[16px] h-4 px-1 bg-violet-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"></span>
+    </button>
+
+    <!-- Dados Coletados -->
+    <button onclick="navigate('view-collected')" aria-label="Dados Coletados"
+      class="flex flex-col items-start gap-2 p-3.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-sky-200 hover:bg-sky-50/40 dark:hover:bg-slate-800 rounded-2xl shadow-sm transition-all focus:ring-2 focus:ring-sky-300/30 outline-none text-left">
+      <div class="w-8 h-8 flex items-center justify-center bg-sky-50 dark:bg-sky-900/20 rounded-xl shrink-0">
+        <i data-lucide="database" class="w-4 h-4 text-sky-500 dark:text-sky-400" aria-hidden="true"></i>
+      </div>
+      <div class="min-w-0">
+        <p class="font-extrabold text-[11.5px] tracking-tight text-slate-800 dark:text-white leading-tight">Dados Coletados</p>
+        <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-0.5 leading-tight">Resultados escaneados</p>
+      </div>
+    </button>
+
+    <!-- Guia -->
+    <button onclick="navigate('view-guide')" aria-label="Guia de uso"
+      class="flex flex-col items-start gap-2 p-3.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-slate-300 hover:bg-slate-50/60 dark:hover:bg-slate-800 rounded-2xl shadow-sm transition-all focus:ring-2 focus:ring-slate-300/30 outline-none text-left">
+      <div class="w-8 h-8 flex items-center justify-center bg-gray-50 dark:bg-slate-700 rounded-xl shrink-0">
+        <i data-lucide="book-open" class="w-4 h-4 text-slate-500 dark:text-slate-300" aria-hidden="true"></i>
+      </div>
+      <div class="min-w-0">
+        <p class="font-extrabold text-[11.5px] tracking-tight text-slate-800 dark:text-white leading-tight">Guia</p>
+        <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-0.5 leading-tight">Como usar o plugin</p>
+      </div>
+    </button>
+
+  </div>
+
+  <!-- CTA Exportar -->
+  <div class="mt-auto pt-5">
+    <button onclick="exportMaturaiData()"
+      class="w-full py-3 bg-[#059669] hover:bg-[#047857] text-white text-[13px] font-extrabold rounded-2xl transition-colors flex items-center justify-center gap-2 shadow-sm">
+      <i data-lucide="download" class="w-4 h-4" aria-hidden="true"></i>
+      Exportar Dados do Projeto
+    </button>
+    <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center mt-2 leading-tight">
+      <i data-lucide="info" class="w-3 h-3 inline-block mr-1 opacity-70" aria-hidden="true"></i>
+      Gera JSON para importação no HANDEX ou análise pela vertical.
+    </p>
+  </div>
+
+</main>
+
+<!-- VIEW: BRIEFING -->
+<main id="view-briefing" class="view px-5 py-5 flex flex-col h-full overflow-y-auto">
+
+  <!-- Header da view -->
+  <div class="flex items-center gap-3 mb-5">
+    <button onclick="navigate('view-home')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-lg transition-colors text-slate-400" aria-label="Voltar">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    </button>
+    <div>
+      <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[14px] tracking-tight">Briefing do Projeto</h2>
+      <p class="text-slate-400 dark:text-dark-muted text-[10px]">Campos padronizados para coleta estruturada</p>
+    </div>
+  </div>
+
+  <div class="space-y-4 flex-1">
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">
+        Nome do Projeto <span class="text-red-400">*</span>
+      </label>
+      <input id="b-project-name" type="text" placeholder="Ex: Portal do Servidor v3"
+        class="w-full" />
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Squad / Equipe</label>
+      <input id="b-squad" type="text" placeholder="Ex: Squad Acesso Digital"
+        class="w-full" />
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">
+        Contexto <span class="text-red-400">*</span>
+      </label>
+      <textarea id="b-context" rows="3" placeholder="Descreva o contexto e o problema que motivou este projeto."
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">
+        Objetivos e Resultados-Chave <span class="text-red-400">*</span>
+      </label>
+      <textarea id="b-objectives" rows="3" placeholder="Quais resultados mensuráveis este projeto deve atingir?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Prazo / Milestone</label>
+      <input id="b-timeline" type="text" placeholder="Ex: Q3 2026 / Sprint 12"
+        class="w-full" />
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Está no Escopo</label>
+      <textarea id="b-scope" rows="2" placeholder="O que está definitivamente incluído nesta entrega?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Fora do Escopo</label>
+      <textarea id="b-out-of-scope" rows="2" placeholder="O que explicitamente não faz parte desta entrega?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+  </div>
+
+  <!-- Ações -->
+  <div class="pt-5 flex gap-3">
+    <button onclick="clearBriefing()"
+      class="px-4 py-2.5 text-[12px] font-bold text-slate-400 hover:text-slate-600 dark:text-dark-muted border border-gray-200 dark:border-dark-line rounded-xl transition-colors">
+      Limpar
+    </button>
+    <button onclick="saveBriefing()"
+      class="flex-1 py-2.5 bg-[#059669] hover:bg-[#047857] text-white text-[13px] font-extrabold rounded-xl transition-colors flex items-center justify-center gap-2">
+      <i data-lucide="check" class="w-4 h-4"></i>
+      Salvar Briefing
+    </button>
+  </div>
+
+</main>
+
+<!-- VIEW: FRAMEWORKS -->
+<main id="view-frameworks" class="view px-5 py-5 flex flex-col h-full overflow-y-auto">
+
+  <!-- Header da view -->
+  <div class="flex items-center gap-3 mb-4">
+    <button onclick="navigate('view-home')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-lg transition-colors text-slate-400" aria-label="Voltar">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    </button>
+    <div class="flex-1 min-w-0">
+      <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[14px] tracking-tight">Frameworks de UX</h2>
+      <p class="text-slate-400 dark:text-dark-muted text-[10px]">Insira no canvas, preencha e escaneie os dados</p>
+    </div>
+    <button onclick="scanAll()"
+      class="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-[#059669] hover:bg-[#047857] text-white text-[11px] font-bold rounded-xl transition-colors">
+      <i data-lucide="scan-line" class="w-3.5 h-3.5"></i>
+      Escanear
+    </button>
+  </div>
+
+  <!-- Filtros de categoria -->
+  <div class="flex gap-1.5 flex-wrap mb-4">
+    <button data-fw-filter="Todos" onclick="filterFrameworks('Todos')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Todos</button>
+    <button data-fw-filter="Descoberta" onclick="filterFrameworks('Descoberta')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Descoberta</button>
+    <button data-fw-filter="Alinhamento" onclick="filterFrameworks('Alinhamento')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Alinhamento</button>
+    <button data-fw-filter="Diagnóstico" onclick="filterFrameworks('Diagnóstico')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Diagnóstico</button>
+    <button data-fw-filter="Priorização" onclick="filterFrameworks('Priorização')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Priorização</button>
+    <button data-fw-filter="Pesquisa" onclick="filterFrameworks('Pesquisa')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Pesquisa</button>
+    <button data-fw-filter="Mapeamento" onclick="filterFrameworks('Mapeamento')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Mapeamento</button>
+    <button data-fw-filter="Avaliação" onclick="filterFrameworks('Avaliação')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Avaliação</button>
+    <button data-fw-filter="Ideação" onclick="filterFrameworks('Ideação')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Ideação</button>
+  </div>
+
+  <!-- Lista de frameworks -->
+  <div id="framework-list" class="space-y-3 pb-4"></div>
+
+</main>
+
+<!-- VIEW: DADOS COLETADOS -->
+<main id="view-collected" class="view px-5 py-5 flex flex-col h-full overflow-y-auto">
+
+  <!-- Header da view -->
+  <div class="flex items-center gap-3 mb-5">
+    <button onclick="navigate('view-home')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-lg transition-colors text-slate-400" aria-label="Voltar">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    </button>
+    <div class="flex-1">
+      <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[14px] tracking-tight">Dados Coletados</h2>
+      <p class="text-slate-400 dark:text-dark-muted text-[10px]">Frameworks escaneados neste projeto</p>
+    </div>
+    <button onclick="scanAll()"
+      class="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-[#059669] hover:bg-[#047857] text-white text-[11px] font-bold rounded-xl transition-colors">
+      <i data-lucide="scan-line" class="w-3.5 h-3.5"></i>
+      Escanear
+    </button>
+  </div>
+
+  <!-- Lista de instâncias escaneadas -->
+  <div id="scanned-instances" class="space-y-3 flex-1"></div>
+
+</main>
+
+<!-- VIEW: GUIA -->
+<main id="view-guide" class="view px-5 py-5 flex flex-col h-full overflow-y-auto">
+
+  <div class="flex items-center gap-3 mb-5">
+    <button onclick="navigate('view-home')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-lg transition-colors text-slate-400" aria-label="Voltar">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    </button>
+    <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[14px] tracking-tight">Como usar</h2>
+  </div>
+
+  <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/40 rounded-2xl p-4 mb-5">
+    <p class="font-extrabold text-emerald-700 dark:text-emerald-300 text-[13px] mb-1.5">O que é o Maturai UX?</p>
+    <p class="text-[11px] text-emerald-800 dark:text-emerald-200 leading-relaxed">Plugin de coleta de dados de maturidade de UX. Estrutura o processo de discovery e análise dos projetos para alimentar a vertical de métricas de UX.</p>
+  </div>
+
+  <div class="space-y-4">
+
+    <div class="flex gap-3 items-start">
+      <span class="w-6 h-6 rounded-full bg-[#059669] text-white text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">1</span>
+      <div>
+        <p class="font-extrabold text-[12px] text-slate-800 dark:text-white">Preencha o Briefing</p>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5 leading-relaxed">Registre o contexto, objetivos e escopo do projeto com campos padronizados.</p>
+      </div>
+    </div>
+
+    <div class="flex gap-3 items-start">
+      <span class="w-6 h-6 rounded-full bg-[#059669] text-white text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">2</span>
+      <div>
+        <p class="font-extrabold text-[12px] text-slate-800 dark:text-white">Insira frameworks no canvas</p>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5 leading-relaxed">Escolha um framework na lista e clique "Inserir no Canvas". Um template estruturado será criado no Figma com campos nomeados.</p>
+      </div>
+    </div>
+
+    <div class="flex gap-3 items-start">
+      <span class="w-6 h-6 rounded-full bg-[#059669] text-white text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">3</span>
+      <div>
+        <p class="font-extrabold text-[12px] text-slate-800 dark:text-white">Preencha os campos no Figma</p>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5 leading-relaxed">Edite os textos dentro do frame gerado. Cada campo tem um nome semântico que o scanner reconhece.</p>
+      </div>
+    </div>
+
+    <div class="flex gap-3 items-start">
+      <span class="w-6 h-6 rounded-full bg-[#059669] text-white text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">4</span>
+      <div>
+        <p class="font-extrabold text-[12px] text-slate-800 dark:text-white">Escaneie o canvas</p>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5 leading-relaxed">Clique em "Escanear" para extrair os dados preenchidos e estruturá-los no plugin.</p>
+      </div>
+    </div>
+
+    <div class="flex gap-3 items-start">
+      <span class="w-6 h-6 rounded-full bg-[#059669] text-white text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">5</span>
+      <div>
+        <p class="font-extrabold text-[12px] text-slate-800 dark:text-white">Exporte para o HANDEX</p>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5 leading-relaxed">Use o botão "Exportar Dados" para gerar um JSON que pode ser importado no HANDEX ou enviado para análise pela vertical.</p>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<!-- MODAL: Loading -->
+<div id="maturai-loading" class="hidden fixed inset-0 z-[2000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+  <div class="bg-white dark:bg-dark-bg rounded-2xl shadow-2xl p-8 flex flex-col items-center gap-4 w-[220px]">
+    <div class="relative w-12 h-12">
+      <div class="absolute inset-0 rounded-full border-4 border-emerald-200"></div>
+      <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-emerald-600 animate-spin"></div>
+    </div>
+    <p class="text-[12px] font-bold text-slate-700 dark:text-white text-center">Processando...</p>
+  </div>
+</div>
+
+  </div>
+
+  <footer id="footer-signature" class="pb-2 pt-1 text-center shrink-0 bg-white dark:bg-dark-bg">
+    <p class="text-[9px] text-gray-400 dark:text-dark-muted font-bold tracking-wider uppercase">
+      Vertical de Métricas de UX
+    </p>
+  </footer>
+
+  <script>
+    // Frameworks data — embutido do refs/frameworks.json no build
+    const MATURAI_FRAMEWORKS = [{"id":"briefing","name":"Briefing Estruturado","icon":"clipboard-list","color":"text-blue-600","bg":"bg-blue-50 dark:bg-blue-900/20","category":"Descoberta","categoryColor":"bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300","description":"Alinha o time no início do projeto: contexto, escopo, atores, riscos e critérios de sucesso em um único artefato.","when":"Kickoff do projeto ou quando a demanda chega sem documentação clara.","fields":[{"id":"context","label":"Contexto","type":"text","required":true},{"id":"objectives","label":"Resultados-chave","type":"list","required":true},{"id":"actors","label":"Atores","type":"list","required":false},{"id":"in_scope","label":"Está no escopo","type":"list","required":false},{"id":"maybe_scope","label":"Pode entrar","type":"list","required":false},{"id":"out_scope","label":"Não está no escopo","type":"list","required":false},{"id":"dependencies","label":"Dependências","type":"list","required":false},{"id":"risks","label":"Riscos","type":"list","required":false},{"id":"deadline","label":"Prazo","type":"text","required":false}]},{"id":"csd","name":"Matriz CSD","icon":"triangle-alert","color":"text-amber-500","bg":"bg-amber-50 dark:bg-amber-900/20","category":"Alinhamento","categoryColor":"bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300","description":"Mapeia o que o time sabe (Certezas), o que supõe (Suposições) e o que ainda precisa descobrir (Dúvidas).","when":"Antes de sair para pesquisa ou quando o time tem muita divergência de visão.","fields":[{"id":"certainties","label":"Certezas","type":"list","required":true},{"id":"assumptions","label":"Suposições","type":"list","required":true},{"id":"doubts","label":"Dúvidas","type":"list","required":true}]},{"id":"five-whys","name":"5 Porquês","icon":"search","color":"text-red-500","bg":"bg-red-50 dark:bg-red-900/20","category":"Diagnóstico","categoryColor":"bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300","description":"Investiga a causa raiz de um problema através de cinco camadas sucessivas de questionamento.","when":"Quando o problema é conhecido mas a causa real ainda não está clara.","fields":[{"id":"problem","label":"Problema","type":"text","required":true},{"id":"why1","label":"Por quê? 1","type":"text","required":true},{"id":"why2","label":"Por quê? 2","type":"text","required":true},{"id":"why3","label":"Por quê? 3","type":"text","required":false},{"id":"why4","label":"Por quê? 4","type":"text","required":false},{"id":"why5","label":"Por quê? 5","type":"text","required":false},{"id":"root_cause","label":"Causa Raiz","type":"text","required":true}]},{"id":"stakeholders","name":"Mapa de Stakeholders","icon":"users","color":"text-teal-500","bg":"bg-teal-50 dark:bg-teal-900/20","category":"Alinhamento","categoryColor":"bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300","description":"Posiciona os envolvidos em uma matriz Poder × Interesse para definir a estratégia de engajamento de cada grupo.","when":"No início do projeto para mapear quem decide, quem aprova e quem apenas é informado.","fields":[{"id":"manage_closely","label":"Gerenciar de Perto (alto poder, alto interesse)","type":"list","required":true},{"id":"keep_satisfied","label":"Manter Satisfeito (alto poder, baixo interesse)","type":"list","required":false},{"id":"keep_informed","label":"Manter Informado (baixo poder, alto interesse)","type":"list","required":false},{"id":"monitor","label":"Monitorar (baixo poder, baixo interesse)","type":"list","required":false}]},{"id":"value-effort","name":"Matriz Valor × Esforço","icon":"layout-grid","color":"text-green-600","bg":"bg-green-50 dark:bg-green-900/20","category":"Priorização","categoryColor":"bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300","description":"Prioriza iniciativas cruzando o valor entregue ao usuário com o esforço de implementação.","when":"Quando há muitas iniciativas em disputa e o time precisa decidir o que fazer primeiro.","fields":[{"id":"quick_wins","label":"Quick Wins (alto valor, baixo esforço)","type":"list","required":false},{"id":"big_bets","label":"Grandes Apostas (alto valor, alto esforço)","type":"list","required":false},{"id":"fill_ins","label":"Fill-ins (baixo valor, baixo esforço)","type":"list","required":false},{"id":"thankless_tasks","label":"Thankless Tasks (baixo valor, alto esforço)","type":"list","required":false}]},{"id":"atomic-research","name":"Atomic Research","icon":"atom","color":"text-purple-500","bg":"bg-purple-50 dark:bg-purple-900/20","category":"Pesquisa","categoryColor":"bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300","description":"Estrutura os achados de pesquisa em quatro níveis atômicos: Experimento, Fato, Insight e Conclusão.","when":"Para registrar e compartilhar pesquisas de forma rastreável e reaproveitável.","fields":[{"id":"experiment","label":"Experimento","type":"text","required":true},{"id":"fact","label":"Fato","type":"text","required":true},{"id":"insight","label":"Insight","type":"text","required":true},{"id":"conclusion","label":"Conclusão","type":"text","required":false}]},{"id":"blueprint","name":"Blueprint de Serviço","icon":"map","color":"text-indigo-500","bg":"bg-indigo-50 dark:bg-indigo-900/20","category":"Mapeamento","categoryColor":"bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300","description":"Mapeia a experiência completa do serviço em swim lanes, incluindo o que o usuário vê e o que acontece nos bastidores.","when":"Para visualizar a entrega ponta a ponta e identificar gaps entre front e backstage.","fields":[{"id":"evidence","label":"Evidências","type":"list","required":false},{"id":"user_journey","label":"Jornada do Usuário","type":"list","required":true},{"id":"frontstage","label":"Ações de Frontstage","type":"list","required":true},{"id":"technology","label":"Tecnologia","type":"list","required":false},{"id":"backstage","label":"Ações de Backstage","type":"list","required":false},{"id":"support","label":"Processos de Suporte","type":"list","required":false}]},{"id":"heuristics","name":"Heurísticas de Nielsen","icon":"shield-check","color":"text-orange-500","bg":"bg-orange-50 dark:bg-orange-900/20","category":"Avaliação","categoryColor":"bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300","description":"Avalia a usabilidade de interfaces com base nas 10 heurísticas clássicas de Jakob Nielsen.","when":"Revisão de usabilidade de um fluxo existente antes de entregar para dev.","fields":[{"id":"visibility","label":"Visibilidade do status","type":"scale","required":false},{"id":"real_world","label":"Correspondência com o real","type":"scale","required":false},{"id":"user_control","label":"Controle do usuário","type":"scale","required":false},{"id":"consistency","label":"Consistência e padrões","type":"scale","required":false},{"id":"error_prevention","label":"Prevenção de erros","type":"scale","required":false},{"id":"recognition","label":"Reconhecimento","type":"scale","required":false},{"id":"flexibility","label":"Flexibilidade","type":"scale","required":false},{"id":"aesthetics","label":"Estética e minimalismo","type":"scale","required":false},{"id":"error_recovery","label":"Recuperação de erros","type":"scale","required":false},{"id":"help_docs","label":"Ajuda e documentação","type":"scale","required":false}]},{"id":"opportunities","name":"Mapa de Oportunidades","icon":"lightbulb","color":"text-yellow-500","bg":"bg-yellow-50 dark:bg-yellow-900/20","category":"Ideação","categoryColor":"bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300","description":"Organiza oportunidades identificadas em clusters por tema, permitindo visualizar padrões e prioridades.","when":"Após rodadas de pesquisa ou brainstorm, para sintetizar e agrupar descobertas.","fields":[{"id":"clusters","label":"Clusters temáticos","type":"list","required":true},{"id":"priority","label":"Prioridade","type":"list","required":false},{"id":"responsible","label":"Responsável","type":"list","required":false},{"id":"next_steps","label":"Próximos passos","type":"list","required":false}]},{"id":"personas","name":"Painel de Personas","icon":"user-circle","color":"text-blue-500","bg":"bg-blue-50 dark:bg-blue-900/20","category":"Descoberta","categoryColor":"bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300","description":"Constrói um perfil tangível do seu usuário, alinhando necessidades, objetivos e características-chave.","when":"No início do projeto ou após pesquisas exploratórias, para alinhar quem é o usuário central.","fields":[{"id":"demographics","label":"Dados demográficos","type":"text","required":true},{"id":"goals","label":"Objetivos","type":"list","required":true},{"id":"needs","label":"Necessidades","type":"list","required":true},{"id":"pain_points","label":"Dores","type":"list","required":false},{"id":"opportunities","label":"Oportunidades","type":"list","required":false}]},{"id":"interview-script","name":"Roteiro de Entrevistas","icon":"mic","color":"text-rose-500","bg":"bg-rose-50 dark:bg-rose-900/20","category":"Pesquisa","categoryColor":"bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300","description":"Estrutura um guia seguro e neutro para conduzir entrevistas de profundidade com usuários.","when":"Antes de iniciar qualquer ciclo de entrevistas qualitativas.","fields":[{"id":"objective","label":"Objetivo da entrevista","type":"text","required":true},{"id":"warmup","label":"Aquecimento","type":"list","required":false},{"id":"discovery","label":"Descoberta","type":"list","required":true},{"id":"deepening","label":"Aprofundamento","type":"list","required":false},{"id":"closing","label":"Encerramento","type":"list","required":false}]},{"id":"journey","name":"Jornada de Usuário","icon":"route","color":"text-cyan-500","bg":"bg-cyan-50 dark:bg-cyan-900/20","category":"Mapeamento","categoryColor":"bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300","description":"Visualiza o passo a passo da experiência do usuário, mapeando dores, sentimentos e pensamentos ao longo do tempo.","when":"Para entender o cenário atual ou desenhar o fluxo ideal de uma experiência complexa.","fields":[{"id":"stages","label":"Etapas","type":"list","required":true},{"id":"actions","label":"Ações","type":"list","required":false},{"id":"thoughts","label":"Pensamentos","type":"list","required":false},{"id":"feelings","label":"Sentimentos","type":"list","required":false},{"id":"pain_points","label":"Dores","type":"list","required":false},{"id":"opportunities","label":"Oportunidades","type":"list","required":false},{"id":"experience_curve","label":"Curva de Experiência","type":"text","required":false}]},{"id":"relational-map","name":"Mapa Relacional","icon":"network","color":"text-sky-500","bg":"bg-sky-50 dark:bg-sky-900/20","category":"Ideação","categoryColor":"bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300","description":"Conecta certezas, suposições e dúvidas geradas a métodos de pesquisa que responderão essas questões.","when":"Logo após uma matriz CSD, para planejar os métodos de pesquisa mais adequados.","fields":[{"id":"themes","label":"Temas","type":"list","required":true},{"id":"hypotheses","label":"Hipóteses","type":"list","required":true},{"id":"methods","label":"Métodos (Questionário, Entrevista, etc.)","type":"list","required":false}]},{"id":"5w2h","name":"5W2H","icon":"table-2","color":"text-blue-600","bg":"bg-blue-50 dark:bg-blue-900/20","category":"Diagnóstico","categoryColor":"bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300","description":"Estrutura um plano de ação respondendo 7 perguntas essenciais: O quê, Por quê, Quem, Onde, Quando, Como e Quanto custa.","when":"Para planejar ações de forma objetiva, muito útil em equipes públicas que precisam de rastreabilidade.","fields":[{"id":"what","label":"O quê? (What)","type":"text","required":true},{"id":"why","label":"Por quê? (Why)","type":"text","required":true},{"id":"who","label":"Quem? (Who)","type":"text","required":true},{"id":"where","label":"Onde? (Where)","type":"text","required":false},{"id":"when","label":"Quando? (When)","type":"text","required":false},{"id":"how","label":"Como? (How)","type":"text","required":true},{"id":"how_much","label":"Quanto custa? (How Much)","type":"text","required":false}]},{"id":"golden-circle","name":"Golden Circle","icon":"target","color":"text-yellow-600","bg":"bg-yellow-50 dark:bg-yellow-900/20","category":"Alinhamento","categoryColor":"bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300","description":"O modelo de Simon Sinek que parte do Porquê (propósito) para o Como (processo) e o Quê (produto), alinhando times em torno de um propósito comum.","when":"No início de um projeto estratégico ou quando o time perde o senso de propósito.","fields":[{"id":"why","label":"Por quê? (Propósito/Crença)","type":"text","required":true},{"id":"how","label":"Como? (Processo/Valores)","type":"text","required":true},{"id":"what","label":"O quê? (Produto/Serviço)","type":"text","required":true}]},{"id":"risk-matrix","name":"Matriz de Riscos","icon":"shield-alert","color":"text-red-600","bg":"bg-red-50 dark:bg-red-900/20","category":"Diagnóstico","categoryColor":"bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300","description":"Classifica riscos pela combinação de Probabilidade de ocorrência e Impacto no projeto, priorizando o que exige atenção imediata.","when":"Em planejamento de projeto, antes de sprints críticas ou na análise de mudanças de escopo.","fields":[{"id":"critical","label":"Riscos Críticos (alta prob. + alto impacto)","type":"list","required":true},{"id":"high","label":"Riscos Altos","type":"list","required":false},{"id":"moderate","label":"Riscos Moderados","type":"list","required":false},{"id":"low","label":"Riscos Baixos","type":"list","required":false}]},{"id":"crazy-8s","name":"Crazy 8s","icon":"zap","color":"text-purple-600","bg":"bg-purple-50 dark:bg-purple-900/20","category":"Ideação","categoryColor":"bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300","description":"Exercício de ideação rápida do Design Sprint: 8 ideias em 8 minutos para estimular criatividade sem autojulgamento.","when":"Em sessões de ideação, quando o time precisa divergir e sair do óbvio rapidamente.","fields":[{"id":"idea_1","label":"Ideia 1","type":"text","required":false},{"id":"idea_2","label":"Ideia 2","type":"text","required":false},{"id":"idea_3","label":"Ideia 3","type":"text","required":false},{"id":"idea_4","label":"Ideia 4","type":"text","required":false},{"id":"idea_5","label":"Ideia 5","type":"text","required":false},{"id":"idea_6","label":"Ideia 6","type":"text","required":false},{"id":"idea_7","label":"Ideia 7","type":"text","required":false},{"id":"idea_8","label":"Ideia 8","type":"text","required":false}]},{"id":"dot-voting","name":"Dot Voting","icon":"vote","color":"text-emerald-600","bg":"bg-emerald-50 dark:bg-emerald-900/20","category":"Priorização","categoryColor":"bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300","description":"Técnica de votação democrática onde cada participante distribui pontos (dots) entre as opções para revelar as preferências do grupo.","when":"Após brainstorm ou listagem de ideias, para o grupo convergir e priorizar colaborativamente.","fields":[{"id":"items","label":"Itens para votação","type":"list","required":true},{"id":"participants","label":"Participantes","type":"list","required":false},{"id":"results","label":"Resultado/Vencedores","type":"list","required":false}]},{"id":"journey-versioning","name":"Versionamento de Jornadas","icon":"git-branch","color":"text-cyan-600","bg":"bg-cyan-50 dark:bg-cyan-900/20","category":"Mapeamento","categoryColor":"bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300","description":"Compara versões da jornada do usuário (Atual vs. Proposta) lado a lado, evidenciando melhorias, dores resolvidas e oportunidades futuras.","when":"Após redesenho de fluxo para comunicar ao time e stakeholders o que muda e por quê.","fields":[{"id":"stages","label":"Etapas da Jornada","type":"list","required":true},{"id":"v1_actions","label":"v1.0 — Ações do Usuário","type":"list","required":true},{"id":"v1_pains","label":"v1.0 — Dores","type":"list","required":false},{"id":"v2_actions","label":"v2.0 — Ações do Usuário","type":"list","required":true},{"id":"v2_improved","label":"v2.0 — Melhorias","type":"list","required":false},{"id":"delta","label":"O que muda (Delta)","type":"list","required":false}]}];
+
+// ============================================================
+// MODULE: core.js
+// ============================================================
+// ============================================================
+// core.js — Estado, navegação e persistência do Maturai UX
+// ============================================================
+
+const MATURAI_VERSION = '1.0.0';
+
+let maturaiData = _defaultState();
+
+function _defaultState() {
+  return {
+    _schemaVersion: 1,
+    projectId: _generateId(),
+    createdAt: new Date().toISOString(),
+    briefing: {
+      projectName: '',
+      squad: '',
+      context: '',
+      objectives: '',
+      timeline: '',
+      scope: '',
+      outOfScope: ''
+    },
+    frameworks: []
+  };
+}
+
+function _generateId() {
+  return 'mx-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// ── Navigation ────────────────────────────────────────────────
+function navigate(viewId) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const target = document.getElementById(viewId);
+  if (target) target.classList.add('active');
+  try { lucide.createIcons(); } catch(e) {}
+}
+
+// ── Persistence ───────────────────────────────────────────────
+function saveState() {
+  parent.postMessage({ pluginMessage: { type: 'save-state', data: maturaiData } }, '*');
+}
+
+function restoreUIFromState() {
+  const b = maturaiData.briefing || {};
+  _setVal('b-project-name', b.projectName);
+  _setVal('b-squad', b.squad);
+  _setVal('b-context', b.context);
+  _setVal('b-objectives', b.objectives);
+  _setVal('b-timeline', b.timeline);
+  _setVal('b-scope', b.scope);
+  _setVal('b-out-of-scope', b.outOfScope);
+  renderFrameworkInstances();
+  updateHomeBadges();
+}
+
+function _setVal(id, val) {
+  const el = document.getElementById(id);
+  if (el && val !== undefined && val !== null) el.value = val;
+}
+
+// ── Briefing ──────────────────────────────────────────────────
+function saveBriefing() {
+  maturaiData.briefing = {
+    projectName: document.getElementById('b-project-name')?.value?.trim() || '',
+    squad:       document.getElementById('b-squad')?.value?.trim() || '',
+    context:     document.getElementById('b-context')?.value?.trim() || '',
+    objectives:  document.getElementById('b-objectives')?.value?.trim() || '',
+    timeline:    document.getElementById('b-timeline')?.value?.trim() || '',
+    scope:       document.getElementById('b-scope')?.value?.trim() || '',
+    outOfScope:  document.getElementById('b-out-of-scope')?.value?.trim() || ''
+  };
+  saveState();
+  showToast('Briefing salvo.');
+  updateHomeBadges();
+}
+
+function clearBriefing() {
+  maturaiData.briefing = _defaultState().briefing;
+  restoreUIFromState();
+  saveState();
+  showToast('Briefing limpo.');
+}
+
+// ── Framework instances ───────────────────────────────────────
+function renderFrameworkInstances() {
+  const container = document.getElementById('scanned-instances');
+  if (!container) return;
+  const instances = maturaiData.frameworks || [];
+
+  if (instances.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-8 text-slate-400 dark:text-dark-muted">
+        <i data-lucide="scan-line" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
+        <p class="text-[12px]">Nenhum framework escaneado ainda.</p>
+        <p class="text-[11px] mt-1 opacity-70">Insira um framework no canvas e clique em Escanear.</p>
+      </div>`;
+    try { lucide.createIcons(); } catch(e) {}
+    return;
+  }
+
+  container.innerHTML = instances.map((inst, i) => {
+    const fw = MATURAI_FRAMEWORKS.find(f => f.id === inst.frameworkId);
+    const fieldCount = Object.keys(inst.data || {}).filter(k => inst.data[k]).length;
+    const totalFields = fw ? fw.fields.length : 0;
+    return `
+      <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-xl p-3.5 space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2 min-w-0">
+            <i data-lucide="${fw?.icon || 'file'}" class="w-4 h-4 shrink-0 ${fw?.color || 'text-slate-400'}"></i>
+            <span class="font-bold text-[12px] text-slate-800 dark:text-white truncate">${inst.frameName || fw?.name || inst.frameworkId}</span>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="text-[10px] text-slate-400">${fieldCount}/${totalFields} campos</span>
+            <button onclick="removeFrameworkInstance(${i})" class="text-slate-300 hover:text-red-400 transition-colors">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-1">
+          ${Object.entries(inst.data || {}).filter(([,v]) => v).slice(0, 3).map(([k, v]) =>
+            `<span class="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold rounded-full truncate max-w-[120px]">${v.slice(0, 40)}</span>`
+          ).join('')}
+          ${Object.values(inst.data || {}).filter(v => v).length > 3 ? `<span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-400 text-[9px] font-bold rounded-full">+${Object.values(inst.data).filter(v => v).length - 3}</span>` : ''}
+        </div>
+        <p class="text-[10px] text-slate-400">Escaneado em ${new Date(inst.scannedAt).toLocaleDateString('pt-BR')}</p>
+      </div>`;
+  }).join('');
+
+  try { lucide.createIcons(); } catch(e) {}
+}
+
+function removeFrameworkInstance(idx) {
+  maturaiData.frameworks.splice(idx, 1);
+  renderFrameworkInstances();
+  saveState();
+  updateHomeBadges();
+}
+
+// ── Home badges ───────────────────────────────────────────────
+function updateHomeBadges() {
+  const briefingFilled = Object.values(maturaiData.briefing || {}).some(v => v);
+  const el = document.getElementById('badge-briefing');
+  if (el) el.classList.toggle('hidden', !briefingFilled);
+
+  const fwCount = (maturaiData.frameworks || []).length;
+  const fwBadge = document.getElementById('badge-frameworks');
+  if (fwBadge) {
+    fwBadge.textContent = fwCount;
+    fwBadge.classList.toggle('hidden', fwCount === 0);
+  }
+}
+
+// ── Export ────────────────────────────────────────────────────
+function exportMaturaiData() {
+  const payload = {
+    ...maturaiData,
+    exportedAt: new Date().toISOString(),
+    _plugin: 'Maturai UX',
+    _version: MATURAI_VERSION
+  };
+  parent.postMessage({ pluginMessage: { type: 'export-data', data: payload } }, '*');
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `maturai-${maturaiData.briefing.projectName || 'projeto'}-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Dados exportados com sucesso!', 'success');
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function showToast(msg, type = 'default') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const colors = {
+    default: 'bg-slate-800 text-white',
+    success: 'bg-emerald-600 text-white',
+    error:   'bg-red-600 text-white',
+    info:    'bg-[#059669] text-white'
+  };
+  const toast = document.createElement('div');
+  toast.className = `px-4 py-2.5 rounded-xl text-[12px] font-bold shadow-lg ${colors[type] || colors.default} transition-all`;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// ── Collapse / Expand ─────────────────────────────────────────
+let _isCollapsed = false;
+const _FULL_W = 380, _FULL_H = 600, _MINI_H = 44;
+
+function toggleCollapse() {
+  _isCollapsed = !_isCollapsed;
+  const content = document.querySelector('body > div.flex-1');
+  const footer  = document.getElementById('footer-signature');
+  const btn     = document.getElementById('btn-collapse');
+  if (_isCollapsed) {
+    if (content) content.classList.add('hidden');
+    if (footer)  footer.classList.add('hidden');
+    if (btn) btn.innerHTML = '<i data-lucide="maximize-2" class="w-4 h-4" aria-hidden="true"></i>';
+  } else {
+    if (content) content.classList.remove('hidden');
+    if (footer)  footer.classList.remove('hidden');
+    if (btn) btn.innerHTML = '<i data-lucide="minimize-2" class="w-4 h-4" aria-hidden="true"></i>';
+  }
+  parent.postMessage({
+    pluginMessage: { type: 'resize-ui', width: _FULL_W, height: _isCollapsed ? _MINI_H : _FULL_H }
+  }, '*');
+  try { lucide.createIcons(); } catch(e) {}
+}
+
+// ── Theme ─────────────────────────────────────────────────────
+function toggleTheme() {
+  const isDark = document.documentElement.classList.toggle('dark');
+  try { localStorage.setItem('maturai-theme', isDark ? 'dark' : 'light'); } catch(e) {}
+  document.querySelectorAll('.sun-icon').forEach(el => el.classList.toggle('hidden', isDark));
+  document.querySelectorAll('.moon-icon').forEach(el => el.classList.toggle('hidden', !isDark));
+  try { lucide.createIcons(); } catch(e) {}
+}
+
+function applyTheme() {
+  let dark = false;
+  try { dark = localStorage.getItem('maturai-theme') === 'dark'; } catch(e) {}
+  if (dark) {
+    document.documentElement.classList.add('dark');
+    document.querySelectorAll('.sun-icon').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.moon-icon').forEach(el => el.classList.remove('hidden'));
+  }
+}
+
+applyTheme();
+
+function handleScroll(el) {
+  const btn = document.getElementById('btn-top');
+  if (!btn) return;
+  if (el.scrollTop > 80) {
+    btn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
+  } else {
+    btn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
+  }
+}
+
+function scrollToTop() {
+  document.querySelectorAll('.view.active').forEach(v => v.scrollTo({ top: 0, behavior: 'smooth' }));
+  const sc = document.querySelector('.flex-1.overflow-y-auto');
+  if (sc) sc.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+Object.assign(window, {
+  navigate, saveBriefing, clearBriefing,
+  removeFrameworkInstance, exportMaturaiData,
+  showToast, toggleTheme, updateHomeBadges,
+  handleScroll, scrollToTop,
+  toggleCollapse
+});
+
+
+// ============================================================
+// MODULE: messages.js
+// ============================================================
+// ============================================================
+// messages.js — Bridge de mensagens UI ↔ canvas (Maturai UX)
+// ============================================================
+
+window.addEventListener('message', (event) => {
+  const msg = event.data?.pluginMessage;
+  if (!msg) return;
+
+  if (msg.type === 'init-plugin') {
+    if (msg.savedState && msg.savedState._schemaVersion === 1) {
+      maturaiData = msg.savedState;
+    }
+    if (msg.currentUser?.name) {
+      const el = document.getElementById('current-user');
+      if (el) el.textContent = msg.currentUser.name;
+    }
+    restoreUIFromState();
+    return;
+  }
+
+  if (msg.type === 'framework-injected') {
+    showToast(`Framework inserido: "${msg.frameName}"`, 'success');
+    return;
+  }
+
+  if (msg.type === 'scan-complete') {
+    const results = msg.results || [];
+    if (results.length === 0) {
+      showToast('Nenhum framework [MaturAI] encontrado no canvas.', 'info');
+      return;
+    }
+    results.forEach(inst => {
+      const existing = maturaiData.frameworks.findIndex(f => f.instanceId === inst.instanceId);
+      if (existing >= 0) {
+        maturaiData.frameworks[existing] = inst;
+      } else {
+        maturaiData.frameworks.push(inst);
+      }
+    });
+    saveState();
+    renderFrameworkInstances();
+    updateHomeBadges();
+    showToast(`${results.length} framework(s) escaneado(s).`, 'success');
+    return;
+  }
+});
+
+
+// ============================================================
+// MODULE: frameworks.js
+// ============================================================
+// ============================================================
+// frameworks.js — Catálogo e operações de frameworks (Maturai UX)
+// ============================================================
+
+let _activeCategory = 'Todos';
+
+function renderFrameworks() {
+  const list = document.getElementById('framework-list');
+  if (!list) return;
+
+  const filtered = _activeCategory === 'Todos'
+    ? MATURAI_FRAMEWORKS
+    : MATURAI_FRAMEWORKS.filter(f => f.category === _activeCategory);
+
+  list.innerHTML = '';
+
+  filtered.forEach(fw => {
+    const fieldsHtml = fw.fields.map(f =>
+      `<span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-dark-muted text-[10px] font-bold rounded-full">${f.label}</span>`
+    ).join('');
+
+    const card = document.createElement('div');
+    card.className = 'bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-4 space-y-3 shadow-sm';
+    card.innerHTML = `
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 flex items-center justify-center ${fw.bg} rounded-xl shrink-0">
+          <i data-lucide="${fw.icon}" class="w-5 h-5 ${fw.color}"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <p class="font-extrabold text-[13px] text-slate-800 dark:text-white tracking-tight">${fw.name}</p>
+            <span class="px-2 py-0.5 text-[9px] font-bold rounded uppercase tracking-wide ${fw.categoryColor}">${fw.category}</span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-1 leading-relaxed">${fw.description}</p>
+        </div>
+      </div>
+      <div class="bg-slate-50 dark:bg-dark-bg/40 rounded-xl px-3 py-2">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Quando usar</p>
+        <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">${fw.when}</p>
+      </div>
+      <div>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-2">Campos estruturados (${fw.fields.length})</p>
+        <div class="flex flex-wrap gap-1.5">${fieldsHtml}</div>
+      </div>
+      <button onclick="injectFramework('${fw.id}')"
+        class="w-full py-2.5 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-600 hover:text-white text-emerald-700 dark:text-emerald-300 text-[12px] font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+        Inserir no Canvas
+      </button>
+    `;
+    list.appendChild(card);
+  });
+
+  try { lucide.createIcons(); } catch(e) {}
+}
+
+function _applyFilterStyles(category) {
+  document.querySelectorAll('[data-fw-filter]').forEach(btn => {
+    const active = btn.dataset.fwFilter === category;
+    btn.className = `px-2.5 py-1 text-[10px] font-bold rounded-full transition-all ${
+      active
+        ? 'bg-[#059669] text-white'
+        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-dark-muted hover:bg-slate-200'
+    }`;
+  });
+}
+
+function filterFrameworks(category) {
+  _activeCategory = category;
+  _applyFilterStyles(category);
+  renderFrameworks();
+}
+
+function injectFramework(id) {
+  const fw = MATURAI_FRAMEWORKS.find(f => f.id === id);
+  if (!fw) return;
+  parent.postMessage({ pluginMessage: { type: 'inject-framework', framework: fw } }, '*');
+  showToast('Inserindo framework no canvas...', 'info');
+}
+
+function scanAll() {
+  parent.postMessage({ pluginMessage: { type: 'scan-frameworks', frameworkIds: [] } }, '*');
+  showToast('Escaneando canvas...', 'info');
+}
+
+function navigateToFrameworks() {
+  navigate('view-frameworks');
+  setTimeout(() => {
+    _applyFilterStyles(_activeCategory);
+    renderFrameworks();
+  }, 50);
+}
+
+Object.assign(window, { renderFrameworks, filterFrameworks, injectFramework, scanAll, navigateToFrameworks });
+
+  </script>
+
+  <button id="btn-top" onclick="scrollToTop()" title="Voltar ao topo" aria-label="Voltar ao topo"
+    class="fixed bottom-6 right-6 w-10 h-10 rounded-full flex items-center justify-center opacity-0 pointer-events-none translate-y-10 z-[100]">
+    <i data-lucide="chevron-up" class="w-5 h-5"></i>
+  </button>
+
+  <script>
+    window.addEventListener('load', () => {
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+
+    function handleScroll(el) {
+      const btn = document.getElementById('btn-top');
+      if (!btn) return;
+      if (el.scrollTop > 80) {
+        btn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
+      } else {
+        btn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
+      }
+    }
+    function scrollToTop() {
+      document.querySelectorAll('.view.active').forEach(v => v.scrollTo({ top: 0, behavior: 'smooth' }));
+      const sc = document.querySelector('.flex-1.overflow-y-auto');
+      if (sc) sc.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+
+  <div id="toast-container"></div>
+  <div id="resize-handle"></div>
+
+</body>
+</html>

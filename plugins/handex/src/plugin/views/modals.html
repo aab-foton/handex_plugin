@@ -48,7 +48,7 @@
           <h3 class="text-[15px] font-extrabold text-slate-800 dark:text-white">Versionar Ficha de Projeto</h3>
           <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5">Já existe uma ficha gerada. Escolha o tipo de atualização.</p>
         </div>
-        <button onclick="closeModal('versioning-modal')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500">
+        <button onclick="closeModal('versioning-modal')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
@@ -95,11 +95,11 @@
       <!-- Footer -->
       <div class="px-5 pb-5 flex gap-3">
         <button onclick="closeModal('versioning-modal')"
-          class="flex-1 py-2.5 text-[12px] font-bold text-slate-500 hover:text-slate-600 dark:text-dark-muted border border-gray-100 dark:border-dark-line rounded-xl transition-colors">
+          class="flex-1 py-2.5 text-[12px] font-bold text-slate-500 hover:text-slate-600 dark:text-dark-muted border border-gray-100 dark:border-dark-line rounded-2xl transition-colors">
           Cancelar
         </button>
         <button onclick="confirmHandoffVersion()"
-          class="flex-1 py-2.5 bg-[#005ca9] hover:bg-[#004d8f] text-white text-[13px] font-extrabold rounded-xl transition-colors flex items-center justify-center gap-2">
+          class="flex-1 py-2.5 bg-[#005ca9] hover:bg-[#004d8f] text-white text-[13px] font-extrabold rounded-2xl transition-colors flex items-center justify-center gap-2">
           <i data-lucide="send" class="w-4 h-4"></i>
           Gerar
         </button>
@@ -218,7 +218,7 @@
 
         <div class="p-6 border-t border-gray-100 dark:border-dark-line flex justify-end gap-3 shrink-0">
           <button onclick="closeModal('flow-form-modal')" class="px-4 py-2 text-[13px] font-bold text-gray-500 hover:text-gray-700 transition-colors">Cancelar</button>
-          <button id="btn-confirm-flow" onclick="confirmFlowConnection()" disabled class="px-8 py-3 bg-gray-300 text-white font-bold rounded-xl cursor-not-allowed transition-all shadow-lg active:scale-95">Conectar Agora</button>
+          <button id="btn-confirm-flow" onclick="confirmFlowConnection()" disabled class="px-8 py-3 bg-gray-300 text-white font-bold rounded-2xl cursor-not-allowed transition-all shadow-lg active:scale-95">Conectar Agora</button>
         </div>
       </div>
     </div>
@@ -244,7 +244,7 @@
         </div>
         <div class="p-4 border-t border-gray-100 dark:border-dark-line flex justify-end gap-3">
           <button onclick="closeModal('decision-modal')" class="px-4 py-2 text-[13px] font-bold text-gray-500 hover:text-gray-700">Cancelar</button>
-          <button onclick="confirmDecisionConnection()" class="px-6 py-2 bg-[#0070af] text-white font-bold rounded-lg hover:bg-blue-700 transition-all shadow-md">Confirmar</button>
+          <button onclick="confirmDecisionConnection()" class="px-6 py-2 bg-[#0070af] text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md">Confirmar</button>
         </div>
       </div>
     </div>
@@ -331,7 +331,7 @@
           </div>
         </div>
         <div class="p-4 border-t border-gray-100 dark:border-dark-line flex justify-end">
-          <button onclick="closeHelpAndReturn()" class="px-6 py-2 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-600 transition-all">Entendi</button>
+          <button onclick="closeHelpAndReturn()" class="px-6 py-2 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 transition-all">Entendi</button>
         </div>
       </div>
     </div>
@@ -372,7 +372,7 @@
                 <option value="">Sem categoria</option>
               </select>
               <button type="button" onclick="_csToggle('cs-ann-cat', event)"
-                class="w-full flex items-center justify-between px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl text-[12px] text-slate-700 dark:text-dark-text focus:ring-2 focus:ring-blue-100 outline-none cursor-pointer hover:border-gray-300 transition-all">
+                class="w-full flex items-center justify-between px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] text-slate-700 dark:text-dark-text focus:ring-2 focus:ring-blue-100 outline-none cursor-pointer hover:border-gray-300 transition-all">
                 <span data-cs-label class="truncate">Sem categoria</span>
                 <i data-lucide="chevron-down" data-cs-chev class="w-3.5 h-3.5 text-gray-400 shrink-0 transition-transform"></i>
               </button>
@@ -435,8 +435,8 @@
         </div>
       </div>
       <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
-        <button onclick="closeSpecFormModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">Cancelar</button>
-        <button id="btn-spec-form-confirm" onclick="requestSpecProperties()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 rounded-xl transition-colors shadow-lg shadow-blue-500/20">Avançar para Propriedades</button>
+        <button onclick="closeSpecFormModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Cancelar</button>
+        <button id="btn-spec-form-confirm" onclick="requestSpecProperties()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Avançar para Propriedades</button>
       </div>
     </div>
   </div>
@@ -517,8 +517,8 @@
         </div>
       </div>
       <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
-        <button onclick="closeSpecPropertiesModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">Voltar</button>
-        <button onclick="confirmSpecProperties()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 rounded-xl transition-colors shadow-lg shadow-blue-500/20">Inserir</button>
+        <button onclick="closeSpecPropertiesModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Voltar</button>
+        <button onclick="confirmSpecProperties()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Inserir</button>
       </div>
     </div>
   </div>
@@ -538,22 +538,22 @@
         
         <div class="grid grid-cols-2 gap-3 mb-6">
           <button onclick="selectMeasurement('wh')" id="btn-measure-wh"
-            class="measure-btn flex flex-col items-center justify-center p-3 bg-white dark:bg-dark-surface border-2 border-[#0070af] rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all">
+            class="measure-btn flex flex-col items-center justify-center p-3 bg-white dark:bg-dark-surface border-2 border-[#0070af] rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all">
             <i data-lucide="scaling" class="w-6 h-6 text-[#0070af] mb-1.5 measure-icon"></i>
             <span class="text-[10px] font-bold text-[#0070af] dark:text-blue-400 measure-label text-center leading-tight">Altura e Largura</span>
           </button>
           <button onclick="selectMeasurement('outer')" id="btn-measure-outer"
-            class="measure-btn flex flex-col items-center justify-center p-3 bg-white dark:bg-dark-surface border-2 border-gray-100 dark:border-dark-line rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-all">
+            class="measure-btn flex flex-col items-center justify-center p-3 bg-white dark:bg-dark-surface border-2 border-gray-100 dark:border-dark-line rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-all">
             <i data-lucide="box-select" class="w-6 h-6 text-slate-500 mb-1.5 measure-icon"></i>
             <span class="text-[10px] font-bold text-slate-500 dark:text-dark-text measure-label text-center leading-tight">Espaçamento Externo</span>
           </button>
           <button onclick="selectMeasurement('inner')" id="btn-measure-inner"
-            class="measure-btn flex flex-col items-center justify-center p-3 bg-white dark:bg-dark-surface border-2 border-gray-100 dark:border-dark-line rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-all">
+            class="measure-btn flex flex-col items-center justify-center p-3 bg-white dark:bg-dark-surface border-2 border-gray-100 dark:border-dark-line rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-all">
             <i data-lucide="focus" class="w-6 h-6 text-slate-500 mb-1.5 measure-icon"></i>
             <span class="text-[10px] font-bold text-slate-500 dark:text-dark-text measure-label text-center leading-tight">Padding Interno</span>
           </button>
           <button onclick="selectMeasurement('spacing')" id="btn-measure-spacing"
-            class="measure-btn flex flex-col items-center justify-center p-3 bg-white dark:bg-dark-surface border-2 border-gray-100 dark:border-dark-line rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-all">
+            class="measure-btn flex flex-col items-center justify-center p-3 bg-white dark:bg-dark-surface border-2 border-gray-100 dark:border-dark-line rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-all">
             <i data-lucide="align-horizontal-space-between" class="w-6 h-6 text-slate-500 mb-1.5 measure-icon"></i>
             <span class="text-[10px] font-bold text-slate-500 dark:text-dark-text measure-label text-center leading-tight">Padding e Gaps</span>
           </button>
@@ -567,8 +567,8 @@
         <input type="checkbox" id="chk-store-parent" class="hidden" />
       </div>
       <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
-        <button onclick="closeMeasureModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">Cancelar</button>
-        <button onclick="executeMeasurement()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 rounded-xl transition-colors shadow-lg shadow-blue-500/20">Inserir</button>
+        <button onclick="closeMeasureModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Cancelar</button>
+        <button onclick="executeMeasurement()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Inserir</button>
       </div>
     </div>
   </div>
@@ -635,8 +635,8 @@
 
       </div>
       <div class="p-5 border-t border-gray-100 dark:border-dark-line flex gap-3">
-        <button onclick="closeModal('scan-categories-modal')" class="flex-1 py-3 text-[13px] font-bold text-gray-500 bg-gray-50 hover:bg-gray-100 dark:bg-dark-bg dark:hover:bg-slate-800 rounded-xl transition-colors">Cancelar</button>
-        <button onclick="executeScanFrameWithCategories()" class="flex-1 py-3 text-[13px] font-bold text-white bg-[#0070af] hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95">Escanear Agora</button>
+        <button onclick="closeModal('scan-categories-modal')" class="flex-1 py-3 text-[13px] font-bold text-gray-500 bg-gray-50 hover:bg-gray-100 dark:bg-dark-bg dark:hover:bg-slate-800 rounded-2xl transition-colors">Cancelar</button>
+        <button onclick="executeScanFrameWithCategories()" class="flex-1 py-3 text-[13px] font-bold text-white bg-[#0070af] hover:bg-blue-700 rounded-2xl transition-all shadow-lg shadow-blue-500/20 active:scale-95">Escanear Agora</button>
       </div>
     </div>
   </div>
@@ -661,7 +661,7 @@
 
       <div class="px-5 pb-5 flex flex-col gap-2">
         <button onclick="toggleCollapse(); document.getElementById('check-designs-modal').classList.add('hidden')"
-          class="w-full py-3 bg-[#005ca9] hover:bg-[#004d8f] text-white text-[13px] font-bold rounded-xl transition-colors flex items-center justify-center gap-2 active:scale-95">
+          class="w-full py-3 bg-[#005ca9] hover:bg-[#004d8f] text-white text-[13px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-2 active:scale-95">
           <i data-lucide="minimize-2" class="w-4 h-4"></i>
           Recolher e verificar agora
         </button>
@@ -693,25 +693,25 @@
           <div class="grid grid-cols-2 gap-2">
             <button onclick="selectExceptionType('Erro', 'x-circle', 'text-red-500')"
               id="exc-type-Erro"
-              class="exc-type-btn flex items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-xl transition-all hover:border-red-300 group">
+              class="exc-type-btn flex items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all hover:border-red-300 group">
               <i data-lucide="x-circle" class="w-5 h-5 text-gray-300 group-hover:text-red-500 transition-colors"></i>
               <span class="text-[12px] font-bold text-slate-600 dark:text-dark-text">Erro</span>
             </button>
             <button onclick="selectExceptionType('Sucesso', 'check-circle', 'text-green-500')"
               id="exc-type-Sucesso"
-              class="exc-type-btn flex items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-xl transition-all hover:border-green-300 group">
+              class="exc-type-btn flex items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all hover:border-green-300 group">
               <i data-lucide="check-circle" class="w-5 h-5 text-gray-300 group-hover:text-green-500 transition-colors"></i>
               <span class="text-[12px] font-bold text-slate-600 dark:text-dark-text">Sucesso</span>
             </button>
             <button onclick="selectExceptionType('Confirmação', 'help-circle', 'text-blue-500')"
               id="exc-type-Confirmação"
-              class="exc-type-btn flex items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-xl transition-all hover:border-blue-300 group">
+              class="exc-type-btn flex items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all hover:border-blue-300 group">
               <i data-lucide="help-circle" class="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors"></i>
               <span class="text-[12px] font-bold text-slate-600 dark:text-dark-text">Confirmação</span>
             </button>
             <button onclick="selectExceptionType('Alerta', 'alert-triangle', 'text-amber-500')"
               id="exc-type-Alerta"
-              class="exc-type-btn flex items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-xl transition-all hover:border-amber-300 group">
+              class="exc-type-btn flex items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all hover:border-amber-300 group">
               <i data-lucide="alert-triangle" class="w-5 h-5 text-gray-300 group-hover:text-amber-500 transition-colors"></i>
               <span class="text-[12px] font-bold text-slate-600 dark:text-dark-text">Alerta</span>
             </button>
@@ -725,7 +725,7 @@
             <input type="text" id="exc-modal-vinc" placeholder="Ex: Usuário sem permissão de acesso"
               class="flex-1 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#0070af]/20 outline-none transition-all" />
             <button onclick="linkExcModalVinc()" title="Usar nome e link do frame selecionado no canvas"
-              class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-[#0070af] hover:text-white text-slate-500 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 shrink-0">
+              class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-[#0070af] hover:text-white text-slate-500 rounded-2xl text-[11px] font-bold transition-all flex items-center gap-1.5 shrink-0">
               <i data-lucide="crosshair" class="w-3.5 h-3.5"></i> Vincular
             </button>
           </div>
@@ -762,9 +762,9 @@
       </div>
 
       <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
-        <button onclick="closeModal('exception-modal')" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl transition-colors">Cancelar</button>
+        <button onclick="closeModal('exception-modal')" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-2xl transition-colors">Cancelar</button>
         <button id="exc-modal-confirm" onclick="confirmException()" disabled
-          class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-xl transition-colors shadow-lg shadow-blue-500/20">Salvar Cenário</button>
+          class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Salvar Cenário</button>
       </div>
     </div>
   </div>
@@ -827,7 +827,7 @@
         <h3 class="text-[14px] font-extrabold text-slate-800 dark:text-white leading-tight">Dados importados!</h3>
         <p id="import-modal-subtitle" class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5 leading-tight">Versão importada com sucesso.</p>
       </div>
-      <button onclick="closeModal('import-apply-modal')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-400 shrink-0">
+      <button onclick="closeModal('import-apply-modal')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 shrink-0">
         <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     </div>
@@ -883,10 +883,10 @@
 
     <!-- Footer -->
     <div class="px-5 py-4 flex gap-2.5 border-t border-gray-100 dark:border-dark-line mt-2">
-      <button onclick="closeModal('import-apply-modal')" class="flex-1 px-4 py-2.5 border border-gray-200 dark:border-dark-line text-slate-600 dark:text-dark-muted text-[12px] font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+      <button onclick="closeModal('import-apply-modal')" class="flex-1 px-4 py-2.5 border border-gray-200 dark:border-dark-line text-slate-600 dark:text-dark-muted text-[12px] font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
         Apenas restaurar
       </button>
-      <button onclick="applyImportedDataToCanvas()" class="flex-1 px-4 py-2.5 bg-[#0070af] text-white text-[12px] font-bold rounded-xl hover:bg-[#005a8e] transition-colors flex items-center justify-center gap-2">
+      <button onclick="applyImportedDataToCanvas()" class="flex-1 px-4 py-2.5 bg-[#0070af] text-white text-[12px] font-bold rounded-2xl hover:bg-[#005a8e] transition-colors flex items-center justify-center gap-2">
         <i data-lucide="zap" class="w-3.5 h-3.5"></i>
         Aplicar no canvas
       </button>
@@ -909,11 +909,11 @@
     </div>
     <div class="flex gap-2 pt-1">
       <button onclick="closeModal('confirm-clear-modal')"
-        class="flex-1 py-2 rounded-xl border border-gray-200 dark:border-dark-line text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+        class="flex-1 py-2 rounded-2xl border border-gray-200 dark:border-dark-line text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
         Cancelar
       </button>
       <button onclick="confirmClearAllData()"
-        class="flex-1 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold transition-colors">
+        class="flex-1 py-2 rounded-2xl bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold transition-colors">
         Sim, limpar tudo
       </button>
     </div>

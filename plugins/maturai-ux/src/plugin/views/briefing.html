@@ -1,0 +1,80 @@
+<!-- VIEW: BRIEFING -->
+<main id="view-briefing" class="view px-5 py-5 flex flex-col h-full overflow-y-auto">
+
+  <!-- Header da view -->
+  <div class="flex items-center gap-3 mb-5">
+    <button onclick="navigate('view-home')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-lg transition-colors text-slate-400" aria-label="Voltar">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    </button>
+    <div>
+      <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[14px] tracking-tight">Briefing do Projeto</h2>
+      <p class="text-slate-400 dark:text-dark-muted text-[10px]">Campos padronizados para coleta estruturada</p>
+    </div>
+  </div>
+
+  <div class="space-y-4 flex-1">
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">
+        Nome do Projeto <span class="text-red-400">*</span>
+      </label>
+      <input id="b-project-name" type="text" placeholder="Ex: Portal do Servidor v3"
+        class="w-full" />
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Squad / Equipe</label>
+      <input id="b-squad" type="text" placeholder="Ex: Squad Acesso Digital"
+        class="w-full" />
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">
+        Contexto <span class="text-red-400">*</span>
+      </label>
+      <textarea id="b-context" rows="3" placeholder="Descreva o contexto e o problema que motivou este projeto."
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">
+        Objetivos e Resultados-Chave <span class="text-red-400">*</span>
+      </label>
+      <textarea id="b-objectives" rows="3" placeholder="Quais resultados mensuráveis este projeto deve atingir?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Prazo / Milestone</label>
+      <input id="b-timeline" type="text" placeholder="Ex: Q3 2026 / Sprint 12"
+        class="w-full" />
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Está no Escopo</label>
+      <textarea id="b-scope" rows="2" placeholder="O que está definitivamente incluído nesta entrega?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Fora do Escopo</label>
+      <textarea id="b-out-of-scope" rows="2" placeholder="O que explicitamente não faz parte desta entrega?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+  </div>
+
+  <!-- Ações -->
+  <div class="pt-5 flex gap-3">
+    <button onclick="clearBriefing()"
+      class="px-4 py-2.5 text-[12px] font-bold text-slate-400 hover:text-slate-600 dark:text-dark-muted border border-gray-200 dark:border-dark-line rounded-xl transition-colors">
+      Limpar
+    </button>
+    <button onclick="saveBriefing()"
+      class="flex-1 py-2.5 bg-[#059669] hover:bg-[#047857] text-white text-[13px] font-extrabold rounded-xl transition-colors flex items-center justify-center gap-2">
+      <i data-lucide="check" class="w-4 h-4"></i>
+      Salvar Briefing
+    </button>
+  </div>
+
+</main>

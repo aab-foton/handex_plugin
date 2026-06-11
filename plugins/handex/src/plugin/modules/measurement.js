@@ -68,7 +68,7 @@
           <span class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wide">${data.length} medida${data.length !== 1 ? 's' : ''}</span>
           <button type="button" title="${isGroupVisible ? 'Ocultar todas as medidas' : 'Exibir todas as medidas'}"
             onclick="toggleMeasurementsGroup('${frameId}')"
-            class="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold ${isGroupVisible ? 'text-[#0070af]' : 'text-gray-300'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+            class="flex items-center gap-1 px-2 py-0.5 rounded-xl text-[10px] font-bold ${isGroupVisible ? 'text-[#0070af]' : 'text-gray-300'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
             <i data-lucide="${isGroupVisible ? 'eye' : 'eye-off'}" class="w-3 h-3"></i>
             ${isGroupVisible ? 'Ocultar todas' : 'Exibir todas'}
           </button>`;

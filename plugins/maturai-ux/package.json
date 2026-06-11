@@ -1,0 +1,14 @@
+{
+  "name": "maturai-ux",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Plugin de maturidade de UX — coleta estruturada de dados de projeto",
+  "scripts": {
+    "bundle:ui": "node src/plugin/build.cjs",
+    "bundle:code": "node scripts/bundle-code.cjs",
+    "build": "npm run bundle:ui && npm run bundle:code"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0"
+  }
+}

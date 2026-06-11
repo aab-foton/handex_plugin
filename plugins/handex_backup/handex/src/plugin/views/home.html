@@ -1,0 +1,57 @@
+<!-- VIEW: HOME -->
+<main id="view-home" class="view active px-6 py-6 flex flex-col items-center justify-center text-center h-full">
+  <div class="mb-8 w-full">
+    <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[18px] mb-2 tracking-tight">O que vamos documentar hoje?</h2>
+    <p class="text-slate-500 dark:text-dark-muted text-[12px] leading-relaxed px-4">
+      Selecione uma das ferramentas abaixo para iniciar seu processo de documentação acelerada.
+    </p>
+  </div>
+  <div class="grid grid-cols-2 gap-4 w-full">
+    <button onclick="startHandoff()" aria-label="Abrir ferramenta de Handoff"
+      class="flex flex-col items-center justify-center py-6 px-4 bg-[#F8FAFC] dark:bg-dark-surface rounded-2xl hover:bg-[#F1F5F9] dark:hover:bg-slate-700 focus:ring-2 focus:ring-[#0070af] outline-none transition-all border border-transparent hover:border-blue-100 dark:hover:border-blue-900 hover:shadow-md group cursor-pointer">
+      <div class="text-[#0070af] dark:text-blue-400 mb-3 group-hover:scale-110 transition-transform duration-200">
+        <i data-lucide="type" class="w-8 h-8" aria-hidden="true"></i>
+      </div>
+      <span class="text-[#1E293B] dark:text-dark-text font-bold text-[12px] tracking-tight">Handoff</span>
+    </button>
+    <button onclick="navigate('view-measurement')" aria-label="Abrir ferramenta de Dimensões e Medidas"
+      class="flex flex-col items-center justify-center py-6 px-4 bg-[#F8FAFC] dark:bg-dark-surface rounded-2xl hover:bg-[#F1F5F9] dark:hover:bg-slate-700 focus:ring-2 focus:ring-[#0070af] outline-none transition-all border border-transparent hover:border-blue-100 dark:hover:border-blue-900 hover:shadow-md group cursor-pointer">
+      <div class="text-[#0070af] dark:text-blue-400 mb-3 group-hover:scale-110 transition-transform duration-200">
+        <i data-lucide="ruler" class="w-8 h-8" aria-hidden="true"></i>
+      </div>
+      <span class="text-[#1E293B] dark:text-dark-text font-bold text-[12px] tracking-tight">Dimensões/Medidas</span>
+    </button>
+    <button onclick="navigate('view-guide')" aria-label="Abrir ferramenta de Guia de Estilos"
+      class="flex flex-col items-center justify-center py-6 px-4 bg-[#F8FAFC] dark:bg-dark-surface rounded-2xl hover:bg-[#F1F5F9] dark:hover:bg-slate-700 focus:ring-2 focus:ring-[#0070af] outline-none transition-all border border-transparent hover:border-blue-100 dark:hover:border-blue-900 hover:shadow-md group cursor-pointer">
+      <div class="text-[#0070af] dark:text-blue-400 mb-3 group-hover:scale-110 transition-transform duration-200">
+        <i data-lucide="book-open" class="w-8 h-8" aria-hidden="true"></i>
+      </div>
+      <span class="text-[#1E293B] dark:text-dark-text font-bold text-[12px] tracking-tight">Guia</span>
+    </button>
+    <button onclick="navigate('view-specifications')" aria-label="Abrir ferramenta de Especificações Técnicas"
+      class="flex flex-col items-center justify-center py-6 px-4 bg-[#F8FAFC] dark:bg-dark-surface rounded-2xl hover:bg-[#F1F5F9] dark:hover:bg-slate-700 focus:ring-2 focus:ring-[#0070af] outline-none transition-all border border-transparent hover:border-blue-100 dark:hover:border-blue-900 hover:shadow-md group cursor-pointer">
+      <div class="text-[#0070af] dark:text-blue-400 mb-3 group-hover:scale-110 transition-transform duration-200">
+        <i data-lucide="git-merge" class="w-8 h-8" aria-hidden="true"></i>
+      </div>
+      <span class="text-[#1E293B] dark:text-dark-text font-bold text-[12px] tracking-tight">Especificações</span>
+    </button>
+  </div>
+
+  <!-- Backup / Advanced Row -->
+  <div class="mt-auto pt-8 w-full">
+    <div class="flex items-center justify-center gap-4 mb-3">
+      <button id="btn-export-json" onclick="exportHandoffData()" disabled aria-label="Exportar dados do handoff para JSON"
+        class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 focus:ring-2 focus:ring-[#0070af]/20 outline-none transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+        <i data-lucide="download" class="w-3.5 h-3.5" aria-hidden="true"></i> Exportar JSON
+      </button>
+      <button onclick="importHandoffData()" aria-label="Importar dados do handoff de um arquivo JSON"
+        class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 focus:ring-2 focus:ring-[#0070af]/20 outline-none transition-all shadow-sm">
+        <i data-lucide="upload" class="w-3.5 h-3.5" aria-hidden="true"></i> Importar JSON
+      </button>
+    </div>
+    <p class="text-[10px] text-slate-400 dark:text-dark-muted leading-tight">
+      <i data-lucide="info" class="w-3 h-3 inline-block mr-1 opacity-70" aria-hidden="true"></i>
+      Use estes botões para salvar ou restaurar seu progresso entre sessões diferentes.
+    </p>
+  </div>
+</main>

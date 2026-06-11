@@ -1,0 +1,23 @@
+<!-- VIEW: DADOS COLETADOS -->
+<main id="view-collected" class="view px-5 py-5 flex flex-col h-full overflow-y-auto">
+
+  <!-- Header da view -->
+  <div class="flex items-center gap-3 mb-5">
+    <button onclick="navigate('view-home')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-lg transition-colors text-slate-400" aria-label="Voltar">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    </button>
+    <div class="flex-1">
+      <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[14px] tracking-tight">Dados Coletados</h2>
+      <p class="text-slate-400 dark:text-dark-muted text-[10px]">Frameworks escaneados neste projeto</p>
+    </div>
+    <button onclick="scanAll()"
+      class="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-[#059669] hover:bg-[#047857] text-white text-[11px] font-bold rounded-xl transition-colors">
+      <i data-lucide="scan-line" class="w-3.5 h-3.5"></i>
+      Escanear
+    </button>
+  </div>
+
+  <!-- Lista de instâncias escaneadas -->
+  <div id="scanned-instances" class="space-y-3 flex-1"></div>
+
+</main>

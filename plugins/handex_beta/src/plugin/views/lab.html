@@ -1,0 +1,54 @@
+﻿<!-- VIEW: LABORATÓRIO DE DESIGN -->
+<main id="view-lab" class="view p-0 flex flex-col h-full overflow-hidden">
+
+  <!-- Header -->
+  <div class="px-4 pt-4 pb-3 border-b border-gray-100 dark:border-dark-line flex items-center gap-3 shrink-0">
+    <button onclick="navigate('view-home')" aria-label="Voltar para início"
+      class="p-2 bg-gray-100 dark:bg-slate-800 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors shrink-0">
+      <i data-lucide="arrow-left" class="w-4 h-4 text-gray-600 dark:text-gray-300"></i>
+    </button>
+    <div class="flex-1 min-w-0">
+      <h2 class="text-[14px] font-extrabold text-slate-800 dark:text-white">Laboratório de Design</h2>
+      <p class="text-[10px] text-slate-500 dark:text-dark-muted">Frameworks estratégicos para seu projeto</p>
+    </div>
+  </div>
+
+  <!-- Filtro por categoria -->
+  <div class="px-4 py-3 border-b border-gray-100 dark:border-dark-line shrink-0">
+    <div class="relative" id="cs-lab-filter">
+      <select id="lab-filter-select" class="hidden" onchange="filterLab(this.value)">
+        <option value="Todos" selected>Todos os frameworks</option>
+        <option value="Descoberta">Descoberta</option>
+        <option value="Alinhamento">Alinhamento</option>
+        <option value="Diagnóstico">Diagnóstico</option>
+        <option value="Priorização">Priorização</option>
+        <option value="Pesquisa">Pesquisa</option>
+        <option value="Mapeamento">Mapeamento</option>
+        <option value="Avaliação">Avaliação</option>
+        <option value="Ideação">Ideação</option>
+      </select>
+      <button type="button" onclick="_csToggle('cs-lab-filter', event)"
+        class="w-full flex items-center justify-between px-3 py-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl text-[12px] font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-[#0070af]/30 outline-none transition-all cursor-pointer hover:border-gray-300">
+        <span data-cs-label>Todos os frameworks</span>
+        <i data-lucide="chevron-down" data-cs-chev class="w-3.5 h-3.5 text-gray-400 shrink-0 transition-transform"></i>
+      </button>
+      <div data-cs-panel class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl shadow-lg z-50 overflow-hidden py-1">
+        <button type="button" onclick="_csSelect('cs-lab-filter','Todos')"      data-cs-opt="Todos"      class="w-full text-left px-3 py-2 text-[12px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors bg-blue-50 dark:bg-blue-900/20 text-[#0070af] font-bold">Todos os frameworks</button>
+        <button type="button" onclick="_csSelect('cs-lab-filter','Descoberta')" data-cs-opt="Descoberta" class="w-full text-left px-3 py-2 text-[12px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Descoberta</button>
+        <button type="button" onclick="_csSelect('cs-lab-filter','Alinhamento')" data-cs-opt="Alinhamento" class="w-full text-left px-3 py-2 text-[12px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Alinhamento</button>
+        <button type="button" onclick="_csSelect('cs-lab-filter','Diagnóstico')" data-cs-opt="Diagnóstico" class="w-full text-left px-3 py-2 text-[12px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Diagnóstico</button>
+        <button type="button" onclick="_csSelect('cs-lab-filter','Priorização')" data-cs-opt="Priorização" class="w-full text-left px-3 py-2 text-[12px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Priorização</button>
+        <button type="button" onclick="_csSelect('cs-lab-filter','Pesquisa')"   data-cs-opt="Pesquisa"   class="w-full text-left px-3 py-2 text-[12px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Pesquisa</button>
+        <button type="button" onclick="_csSelect('cs-lab-filter','Mapeamento')" data-cs-opt="Mapeamento" class="w-full text-left px-3 py-2 text-[12px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Mapeamento</button>
+        <button type="button" onclick="_csSelect('cs-lab-filter','Avaliação')"  data-cs-opt="Avaliação"  class="w-full text-left px-3 py-2 text-[12px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Avaliação</button>
+        <button type="button" onclick="_csSelect('cs-lab-filter','Ideação')"    data-cs-opt="Ideação"    class="w-full text-left px-3 py-2 text-[12px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Ideação</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de frameworks -->
+  <div class="flex-1 overflow-y-auto px-4 py-4">
+    <div id="lab-framework-list" class="space-y-4"></div>
+  </div>
+
+</main>

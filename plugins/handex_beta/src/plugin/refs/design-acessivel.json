@@ -1,0 +1,1778 @@
+{
+  "meta": {
+    "libraryName": "Design Acessível",
+    "figmaFileKey": "Wy0IhXRVZMSOOr8E609UqI",
+    "exportedAt": "2026-05-20T22:25:55.542Z",
+    "generator": "fetch-design-refs.cjs",
+    "warnings": []
+  },
+  "designTokens": {
+    "variables": []
+  },
+  "styleTokens": {
+    "colors": [],
+    "typography": [],
+    "effects": []
+  },
+  "components": [
+    {
+      "key": "042ce5e1829e0b0a711148702062ba6d02d34785",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "08d601cc1bc8ce4f6738ed9bf99bf7e21f0e8d5f",
+      "name": "tipo=somente caixa",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "0dcab74cc89a2966f6265b797bbae944391b6ca4",
+      "name": "tipo=ordenada",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "146a8e1864594c2625735a2bc598bee34bd64887",
+      "name": "tipo=default",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "14ac6033b4593ec2cd50de15c04840dd97322b09",
+      "name": "tipo=aside",
+      "description": "",
+      "containingFrame": "Specs - Estrutura da Página [Handoff]"
+    },
+    {
+      "key": "1fe0340751fc273de437456bc9e9f9298ed02f24",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "27d146543848c7dc74b254101ced79c77b0a34fc",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "2ad7b82385fadd7f63b9e7a5d73fb8c44ccbeb3e",
+      "name": "tipo=radio e rotulo",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "322cbbc84e951f020fb6e2c277b0cb6e17eb779d",
+      "name": "tipo=com expansao",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "3ce5c470feb302cadd9fe3ac01d6573cf6334af0",
+      "name": "tipo=nao ordenada",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "3e8b5a4b85fdd21236b2dd1f86acae3080d593af",
+      "name": "tipo=Somente switch",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "424b5e727ae6fe92f3a362f59cfc5bc54fbd1848",
+      "name": "tipo=nova janela",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "45fc4f16bf83cd45d18224c66d164c60e1e562b7",
+      "name": "tipo=header",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "4c74d65aa1d0126689109d55807f11bfeb518adb",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "4c84c0f68eae3ec2ffd22b90c33a524a93430830",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "527f595a404d7eb65cbeb6b3a87d76a33b9464e4",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "64eddaf13fd5cef4f35b067fc978acded289b24a",
+      "name": "tipo=das partes",
+      "description": "",
+      "containingFrame": "Specs - Estrutura da Página [Handoff]"
+    },
+    {
+      "key": "6549f79e966b20d3be5757b3cf2d9247da542e89",
+      "name": "tipo=com nome acessivel",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "6a16166a086a046582ae27563214133984a204a0",
+      "name": "tipo=enviar email",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "6de33fcbe4b141b77371e0a9fe66dcbd53f871ac",
+      "name": "tipo=desabilitado",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "6e96bd4a386ad4e4913a9e65c3a8c4bec4a8a80d",
+      "name": "tipo=Somente rádio",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "6ec0097163779432d8a92d2b0e7ea9345705411d",
+      "name": "tipo=main",
+      "description": "",
+      "containingFrame": "Specs - Estrutura da Página [Handoff]"
+    },
+    {
+      "key": "98640df84d5b4bfa02acaeced5d0da3940d96003",
+      "name": "tipo=footer",
+      "description": "",
+      "containingFrame": "Specs - Estrutura da Página [Handoff]"
+    },
+    {
+      "key": "9bd0106bcdf050cc43b7b13046dff0e27bcf7ddc",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Informações Adicionais [Handoff]"
+    },
+    {
+      "key": "9ddb802a9b8aef64197d12374ab075792d0025f4",
+      "name": "tipo=texto truncado",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "9fe357a0868d5c7a676ff1b78a76f28cd72e0a94",
+      "name": "tipo=de icone",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "b801b79c635f789a347e1a5fe62539626f30fffc",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Estrutura da Página [Handoff]"
+    },
+    {
+      "key": "bc439af55bd824f989e44ff18e3a7ed5cf1907ae",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "c2d33277fc32d9de6afadd24703d6e10d4de5bb7",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "db5685bfcd59214d39cbe0d00efd8ba3d0d386a8",
+      "name": "tipo=agrupado",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "dd89af4fc38c9595707c9b05244a0933d09fb2dd",
+      "name": "tipo=texto alternativo",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "e7fd2987738a64ec10c853cce584753a32a0e77f",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "eb67b262cb2b9efc3f21bb49bee31a2195f36090",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "ed6bc3288b0a7a32a7383ba871badac0a44e88e1",
+      "name": "tipo=agrupado",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "ff74b1f0ca7ee77d3fccd3587b9796f417624df1",
+      "name": "tipo=header",
+      "description": "",
+      "containingFrame": "Specs - Estrutura da Página [Handoff]"
+    },
+    {
+      "key": "08080cd07bfde34e3ba90e2d352d85369cee99fe",
+      "name": "tipo=preenchido",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "12934ea53bbf3cd6af7f51dba8b146fe5fd64af0",
+      "name": "tipo=tipo senha",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "166fa3046962bcd4db85aa5ba2120f109a535815",
+      "name": "tipo=botao (i) e tooltip",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "27110a1aadd3d3678c42626f3a60a221821a94a2",
+      "name": "tipo=tipo data",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "393a8641d82474b1bb7d9ec942487a315add7787",
+      "name": "tipo=tipo numero",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "43d46bb31b37954f0259ed55058f228bea17a7da",
+      "name": "tipo=somente leitura",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "5b759c2904110d3c60891be859e24f64d15833e9",
+      "name": "tipo=nível de título, orientação=esquerda, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "5fdfdfc7505db180c05de52ab5ad0259aa51738f",
+      "name": "tipo=inativo",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "625a28708db4453614eb3d18f2163f53a01738fc",
+      "name": "tipo=decorativo, orientação=superior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "63e22dc70dde84d0aa43c1592388751e6bb8c44e",
+      "name": "tipo=estrutura da página, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "670c7c055ed7ebc01a523add5b69499680076419",
+      "name": "tipo=nível de título / titulo, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "6b06c9e8fec7a5ad25fd7636b324a65abe720724",
+      "name": "tipo=tabs",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "6ff837f754087caa380fdce8ad27a1e7c857adf1",
+      "name": "tipo=listagem",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "b0c3dbfc33bcc621f4ea156d52ffa4ccf4353419",
+      "name": "[NÃO UTILIZAR][a11y base] titulo da pagina",
+      "description": "❗Este componente é uma peça para construir um maior. Certifique-se de usar sempre o componente completo, identificado pela tag [a11y] no nome. ❗",
+      "containingFrame": "Specs - Estrutura da Página [Handoff]"
+    },
+    {
+      "key": "bede1027ed202debd92d92fa547534b74f12b391",
+      "name": "size=small",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "c45fd7a45cae85248199d7632b92227f1941a397",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "c6272deed8014a0582b1fd7a1f44743bbc21e55c",
+      "name": "tipo=tipo selecao",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "caee32b2c063f1f2a5f3471f862e3326702d59a5",
+      "name": "tipo=default",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "d20fe53262997bead7fe63ae9bf0fda9e20e94f1",
+      "name": "tipo=função e valor, orientação=superior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "e8f3d9d0780157821292998f6d31a0873619518d",
+      "name": "tipo=atual",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "ef2237f5b83461e212850b3c8aaaa00f8eb5b146",
+      "name": "size=large",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "f693d2322ba06b3a2f524d4ca0c8339b30dd722b",
+      "name": "tipo=botao visualizar senha",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "faaea0167c9884d676125742b545b011b24cd518",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "37415dbfcea0ddda74c30cd3c697776de2dd6368",
+      "name": "tipo=handoffs",
+      "description": "",
+      "containingFrame": "Specs - Informações Adicionais [Handoff]"
+    },
+    {
+      "key": "8307eb14f1fe3d36edc76003daeefe370ef9bbc1",
+      "name": "tipo=conteudo extra",
+      "description": "",
+      "containingFrame": "Specs - Informações Adicionais [Handoff]"
+    },
+    {
+      "key": "0316991f755c2dc4f1179c7e8087b3282a0cb127",
+      "name": "tipo=caixa de selecao",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "0e9e2dcf0fa99a1180f85564c0f1f5a0dbe67ff1",
+      "name": "tipo=switch e rotulo",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "0fbbfeda0520aaedc89ed85034f7bc4d693e7942",
+      "name": "tipo=nav",
+      "description": "",
+      "containingFrame": "Specs - Estrutura da Página [Handoff]"
+    },
+    {
+      "key": "2cd2e7f73832ce2a02792ddcec6a0f119420e8d9",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Estrutura da Página [Handoff]"
+    },
+    {
+      "key": "2f20051b81c4f423bccbd61f2fa8b6c2d600a3a1",
+      "name": "tipo=estruturada",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "33e758acc4df6e7c4ccba1d8e1a115301e09b7a5",
+      "name": "tipo=celula",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "4924d1c03fdb8547ee1279e1b7face75a652f98a",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "581551f7a69458903e44542155f1b1d29b90cbec",
+      "name": "tipo=link inicio",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "67fe550e6df434e3d366dc83b90cab6a1745a365",
+      "name": "tipo=caixa e rotulo",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "81465d8254658b6933d73b0d7a6970485ca38173",
+      "name": "tipo=default",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "8c6105b108ee16629169ad9c6d13f9ced0f46b8c",
+      "name": "tipo=de icone com expansao",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "a0f3c1415be5d877757dab90554f5b048f0bbea3",
+      "name": "tipo=notificacao imediata",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "a4f16e29b3ab333055afd0c326591952acd3855c",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "afc1a0df8f2fd6066dc4dcac71e8b286b1167732",
+      "name": "tipo=pagina atual",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "b6eab8d1e04d8c05f418f9ab662b4f433577bcb1",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "c15cfbab332ae9dc52c69628d5ea6f207b2a8d4c",
+      "name": "tipo=botao de ordenacao",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "cf2bf260211a3b8d6faee245c936a1fc9e18f05f",
+      "name": "tipo=default",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "d2b4400b33e0b83d9a1178ec6433f9b3f5f7d073",
+      "name": "tipo=com nome acessivel",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "da0868f8b6907f8f5541e585159e3e558e5d72d5",
+      "name": "tipo=da pagina",
+      "description": "",
+      "containingFrame": "Specs - Estrutura da Página [Handoff]"
+    },
+    {
+      "key": "e2b12a4723537ec50ddad0e81d7b63031f1762c7",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "ee7160ddb63b1f19d94085975f695840136dabbb",
+      "name": "tipo=editavel",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "f0a11e6f6babdff089d5ae59ca255644e491b17e",
+      "name": "tipo=link secundario",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "f584ceb51f934080201b573e76e5fc1b11f7efd6",
+      "name": "tipo=cabecalho",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "fec864888285d90b6938a09270343a7c4900880b",
+      "name": "tipo=Indeterminada em grupo",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "017035741e6228e0a4333bab8a2bdd9e460467aa",
+      "name": "tipo=de definicao",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "1ebcd30f6253df5a4180d78ee3643bc4d410f525",
+      "name": "variação=ordem de foco e tabulação web",
+      "description": "",
+      "containingFrame": "Outros Elementos elementos"
+    },
+    {
+      "key": "08ec11bff941a75a75bbe248b822da7715140da7",
+      "name": "tipo=decorativo, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "13141fdadb7e8675d8a47ba70be1b6d24d4ed35c",
+      "name": "tipo=estrutura da página, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "2621f5cdadea32e0802c8196aad03db1da20bf72",
+      "name": "tipo=estrutura da página, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "3021c901640ffb86e8228dd12bd730ee3f770ebb",
+      "name": "tipo=estrutura da página, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "3dafdf7d0543989b82c25686abb88134c879a94c",
+      "name": "tipo=nível de título / titulo, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "4866349b6246fbd45cf493cce308f7da2c312569",
+      "name": "tipo=decorativo, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "509491cd5e458ec0cf974b00390f8f65d078c326",
+      "name": "tipo=elementos interativos e imagens, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "76d6ba85e4fed4a5d0bd67c709860877fe236d2f",
+      "name": "tipo=estrutura da página, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "85ff209c592f55cc2149b256909ac65e2e06a66b",
+      "name": "tipo=decorativo, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "9c1f1679ab73055ef68dbcbd11b89fc711629f6a",
+      "name": "tipo=elementos interativos e imagens, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "a419476ffe6c0b6c10a32c080d624091cf083171",
+      "name": "tipo=decorativo, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "ad87c4797c992bfaadbb41d8d05e9c81fc4207c2",
+      "name": "tipo=decorativo, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "ba1aa8640e1593f93ed1e0ee03cd59ed4ff54ae8",
+      "name": "tipo=nível de título / titulo, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "baf0b4ea8417911a42f7d890654ad8dc3d047881",
+      "name": "tipo=nível de título / titulo, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "c2ef79c032a76ffefcb0a8b3123bf91ff2c8a221",
+      "name": "tipo=informações adicionais, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "cef964a1a1bfa7ea3d0e4d24d005d3a669ca56b2",
+      "name": "tipo=informações adicionais, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "ceff0c518ef33fc326eec74af0320255a6ba53a8",
+      "name": "tipo=informações adicionais, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "eb12c7da71c1b661a72438ff4e27462ce798c07e",
+      "name": "tipo=elementos interativos e imagens, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "edb9fed9e58a7bf279d8804014f8755ffc4e711d",
+      "name": "tipo=informações adicionais, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "eec4d7b2153d9eb6bc300787c861b8cfee10dcbf",
+      "name": "tipo=elementos interativos e imagens, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "f63a82ad250bcc8569d83affbcc39d6f226d64ca",
+      "name": "tipo=nível de título / titulo, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "f8dcedebd882a13e26659b1a614adf16166b996d",
+      "name": "tipo=informações adicionais, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "fcdb189d2cbdcda11488030e4d4c523d08d95865",
+      "name": "tipo=elementos interativos e imagens, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "060a2f17dff2dc489fcb1620404eda5269b5e182",
+      "name": "tipo=informações adicionais, orientação=superior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "0736255a49a164a93dbe5913925e8cd94474c102",
+      "name": "tipo=estrutura da página, orientação=esquerda, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "1a32480d314943f85d5bf48e97beda44be37233b",
+      "name": "tipo=elementos interativos e imagens, orientação=direita, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "2f62f4c09d769578d3c5f9f7c42de94ea4b5a559",
+      "name": "tipo=estrutura da página, orientação=direita, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "42eafe50b7b07e5cdacbbc1845c05af877768337",
+      "name": "tipo=informações adicionais, orientação=direita, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "4df3d05e26dd4168c7d7de71fe689515c9b1895c",
+      "name": "tipo=nível de título, orientação=direita, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "75e44fd1fc2f346fdaa7c6c59a9af09356bb045f",
+      "name": "tipo=nível de título, orientação=superior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "918dc37577a8ba0b0b9b421bbfa4c0e831696b7a",
+      "name": "tipo=elementos interativos e imagens, orientação=esquerda, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "a638d41c126fc85074ecfb6b5c013ded77a7ca30",
+      "name": "tipo=decorativo, orientação=esquerda, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "a8abbf67336b205d944ec2a97a62879c7f8a378e",
+      "name": "tipo=decorativo, orientação=inferior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "b1155ae94b549e7de188458b1289b8ba476af73d",
+      "name": "tipo=informações adicionais, orientação=esquerda, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "cb88b4fe2d7a34fa5db191e1e29e99a462eaa88e",
+      "name": "tipo=estrutura da página, orientação=superior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "d1de84d4afe1d169d51471b049e3b55191319b72",
+      "name": "tipo=estrutura da página, orientação=inferior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "db8057dd5440ba35593fed4823b6b0746d2a5d3a",
+      "name": "tipo=decorativo, orientação=direita, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "e58a10ad987b3cc2feb7c7acf4b77e4e132c0b62",
+      "name": "tipo=elementos interativos e imagens, orientação=superior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "f18bae60d1e9109c2ecd1b3c5e49bacdb3c6267a",
+      "name": "tipo=nível de título, orientação=inferior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "f70dae1493341f9839a3a2e11b93855ddb78192b",
+      "name": "tipo=elementos interativos e imagens, orientação=inferior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "faa943c3ccdec90b2fb06e6e58aaaa9ba0cbb867",
+      "name": "tipo=informações adicionais, orientação=inferior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "5a3a927d60d20014473782bfbe7ffb8b75df53d4",
+      "name": "variação=só vertical, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "683436fb483bbbd84909e19a22ef44ca85b77788",
+      "name": "variação=só vertical, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "74fba6bdbbd2a02788176d58723802909e46ef33",
+      "name": "variação=dupla horizontal, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "8022fdb598077eff42c81cf9a2cfff74300413db",
+      "name": "variação=dupla horizontal, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "836529947666a324678552bd57d377ee94c686ad",
+      "name": "variação=dupla vertical, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "8da5d723b005b4ab001fab5cf9ad301f334cbbe6",
+      "name": "variação=dupla horizontal, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "a27bb28570c0041fb41ceebe4a37539f3d508fc5",
+      "name": "variação=só horizontal, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "213f18aa23c4a840ddaae07ffe5aeeabe4615627",
+      "name": "variação=só vertical, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "2a2e7ce268d169c65086bb59c9c82cf19debbf14",
+      "name": "variação=dupla vertical, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "3baea19ba737593ece499033603469d0ccba2f44",
+      "name": "variação=só vertical, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "486d97e5dd243af65f2142aed26bc6f439d707a1",
+      "name": "variação=só horizontal, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "08ac04391034777646eec9395c6d221189ee6d46",
+      "name": "conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "71719f112ec0135b16df0deb6584fbc44af3aff2",
+      "name": "conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "b355a26c5a89aea074effe28ca6767b08e4a7f99",
+      "name": "conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "f9cd4394c0bfc48ae86d3028e836877887d23fcd",
+      "name": "conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "ff43b15ac0c078b35219984bf035c4c0f0089cf1",
+      "name": "conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "a8c6982340d110a2de97f700fa8641f79e8ab0dc",
+      "name": "variação=só vertical, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "ab50550d6b4fa0c9bd6fb582b4f9d4623693df23",
+      "name": "variação=só horizontal, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "b219d9ac725540f309a06675cbefac94baec3132",
+      "name": "variação=dupla vertical, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "be7a32a35125f7b086d47de7f6f93c4901299faf",
+      "name": "variação=só horizontal, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "c8be4be969e448d2c111482d0a3fc43fe620bec7",
+      "name": "variação=só horizontal, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "c9c0cd18390420ec66c1e0a66bf3f53a99d41509",
+      "name": "variação=dupla horizontal, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "ca002cd0f9bb8a236f74b9e4170431fd8492509f",
+      "name": "variação=dupla vertical, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "d2569306f2cd11e8d6ced4b308b403e03387b170",
+      "name": "variação=dupla vertical, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "ddbec1765daf151d178927b7ea8224776cea2aa3",
+      "name": "variação=dupla horizontal, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "8ea1db30e2555b3552278493d9a9624775aa4624",
+      "name": "Handoff de acessibilidade - Ordem de tabulação e Leitor de Telas [Web] V1",
+      "description": ""
+    },
+    {
+      "key": "9b3ebe6790d8777d3c75abdfffbcba069ba405d3",
+      "name": "[a11y] Conectores",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "597cd74195f0f06bb939a207f62fc9d0871c3cda",
+      "name": "[a11y] Conectores",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "52bc4566e98d5f5281b71b70818f5c2951d2659a",
+      "name": "[a11y] Conectores",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "90af79644541a999bc3439f4051d4286e7f3fb12",
+      "name": "[a11y] Conectores",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "1274dd0120cd321b28c76a32297361d9523c329f",
+      "name": "[a11y] Conectores",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "0a5c934dbd23876fcba6901f599b07eb92368e07",
+      "name": "tipo=função e valor, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "0de50e6d93707567ba32ba6b56bcb00843d2af74",
+      "name": "tipo=função e valor, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "1dd1112f1544577d21dce3a924b076b6dcb319b8",
+      "name": "tipo=nome acessível e texto alternativo, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "24adaae161cd740fa5f01d5787b9c70bcfae852c",
+      "name": "tipo=nível de título / titulo, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "2c1d61a049d2a26f59d59d52aecf6ed6d708a860",
+      "name": "tipo=outros, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "32a738fafd840cdba830984ec9890bc7b45b49c1",
+      "name": "type=extra small, size=menor que 576px",
+      "description": "",
+      "containingFrame": "Outros Elementos elementos"
+    },
+    {
+      "key": "27f43faeaa473d96dd35d845641931e2e0851d0c",
+      "name": "[NÃO UTILIZAR][a11y base] Content Box edit",
+      "description": "❗Este componente é uma peça para construir um maior. Certifique-se de usar sempre o componente completo, identificado pela tag [a11y] no nome. ❗",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "52516fa6f428ee147d744ec46760cbf1c5d683de",
+      "name": "tipo=nível de título / titulo, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "66d85352144f3720f0f33b1021731da2e313780c",
+      "name": "size=small",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "6b73fec11cb68eb21ff2d53feffb288f379deb44",
+      "name": "tipo=função e valor, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "6e70441561f78c9414981beac0ca9f3fc058f009",
+      "name": "tipo=decorativo, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "6ea52f8df8dad7386ae169850635cfc7b9e704d0",
+      "name": "tipo=nível de título / titulo, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "74b359422e1eab91a90a63d25b2e5ca6f235ac84",
+      "name": "tipo=decorativo, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "79913e2cecc775ec8db055fcfa0c6dc65ab412d7",
+      "name": "tipo=elementos estruturais, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "843c16802441fea2f652feaf26bd8befe818e83b",
+      "name": "tipo=nome acessível e texto alternativo, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "87c4ae24672179a9747d5d74a8be970ba6acaaa1",
+      "name": "conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "8ea72c5fdcc8d445ebd6891d5ac8ce3deb15a373",
+      "name": "type=medium, size=entre 768px e 992px",
+      "description": "",
+      "containingFrame": "Outros Elementos elementos"
+    },
+    {
+      "key": "9de8a296dd5a8658706d72b5ffb542955a733c92",
+      "name": "conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "9eba3fcc69d147d28e263be79555244e6214798c",
+      "name": "tipo=elementos estruturais, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "a2369a10b5536f98951911379411870756c24a5f",
+      "name": "tipo=decorativo, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "b4b6edb5a4f5bd618338b478766883bb93ba1e77",
+      "name": "tipo=nível de título / titulo, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "bce804874dc62b670a0295eb3aea838fab966ba6",
+      "name": "tipo=função e valor, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "c557a1bb82cf1e749e2ba7caf4cafec5ad719c53",
+      "name": "tipo=nome acessível e texto alternativo, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "cc59309dac9d2407ad64c18bd100747703ec6611",
+      "name": "conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "ccd2ab8d89a934e4460d8b8a3deb078dc2650014",
+      "name": "size=large",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "d70b9ff9b398c616baa4cb89dad82d54a1bb2ca2",
+      "name": "conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "e6127eed5ee0d29a842bc073e6d71a02b58ec970",
+      "name": "tipo=decorativo, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "f3b93fbc7b88e102d5ea51e3bdd68462441327d5",
+      "name": "tipo=elementos estruturais, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "52cce8c73bddd840140354697d96ce9a21775d33",
+      "name": "[a11y] Header Docs",
+      "description": "",
+      "containingFrame": "Outros Elementos elementos"
+    },
+    {
+      "key": "034fb91b7cc6bc15ca34497a6a0a9550f380d2c3",
+      "name": "variação=dupla vertical, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "05fbf19c0a2596c3d80abe61514a6a7bfe34f682",
+      "name": "tipo=elementos estruturais, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "11e6dd9f8ed2d95f2c56b8f5619dbc286c49bc70",
+      "name": "type=large, size=entre 992px e 1200px",
+      "description": "",
+      "containingFrame": "Outros Elementos elementos"
+    },
+    {
+      "key": "148e61d0b507e44dbd72686a679d6b9d380cd244",
+      "name": "tipo=elementos estruturais, orientação=direita, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "1780cfb4c5fb21b1a534df95f552d05985e8f4e4",
+      "name": "tipo=função e valor, orientação=direita, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "1987d3072bbd8d7a22c355538f84d8a234bd9c08",
+      "name": "tipo=outros, orientação=inferior, variação=grupo",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "22fa0a566d67142e81c78ac8de3947567007ba7c",
+      "name": "tipo=outros, orientação=direita, variação=grupo",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "2504d595330e43d80abcb353440d72a81b2c0b92",
+      "name": "type=extra large, size=maior que 1200px",
+      "description": "",
+      "containingFrame": "Outros Elementos elementos"
+    },
+    {
+      "key": "29c4e3dacc187130c0b5f239fc2406479b2557c1",
+      "name": "variação=só vertical, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "2f7f1f77c295fef498690d9061fbc223567830aa",
+      "name": "variação=só horizontal, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "30e22687c3573dac9d791e56de911d178348b8ef",
+      "name": "tipo=texto alternativo, orientação=esquerda, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "32f65a1ffd7623bdafa4196321280422c89994ce",
+      "name": "tipo=outros, orientação=superior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "3502e938031a19f83daa3044b4f9df668002cd72",
+      "name": "variação=dupla vertical, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "3a5d31d9996df793e47b89a053b0fedce08b450c",
+      "name": "variação=só horizontal, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "3d0773a6f40b86d52ef9faf268327c278552bf3b",
+      "name": "value=200%",
+      "description": "",
+      "containingFrame": "Outros Elementos elementos"
+    },
+    {
+      "key": "41836ba3fc8de9b83afc4e707305b05018759d47",
+      "name": "type=small, size=entre 576px e 768px",
+      "description": "",
+      "containingFrame": "Outros Elementos elementos"
+    },
+    {
+      "key": "429aa4bdd5e04f0b340accfc9ae386cf47e09853",
+      "name": "variação=web 2",
+      "description": "",
+      "containingFrame": "Outros Elementos elementos"
+    },
+    {
+      "key": "43785e84aef6beababb5e51016ad8ab245591af8",
+      "name": "tipo=decorativo, orientação=inferior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "481d0ce520ff80880fdf2b6559642793983e51cc",
+      "name": "tipo=outros, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "50f887f3e491b2919eab25dd92aff3c1d4a38aab",
+      "name": "[NÃO UTILIZAR][a11y base] Content Box blocked",
+      "description": "❗Este componente é uma peça para construir um maior. Certifique-se de usar sempre o componente completo, identificado pela tag [a11y] no nome. ❗",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "51701baab6eccce2161a2d61ef886e38d1b538de",
+      "name": "variação=ordem de foco e tabulação DS",
+      "description": "",
+      "containingFrame": "Outros Elementos elementos"
+    },
+    {
+      "key": "56f0802bef5397f89827b3d6133153986e6875eb",
+      "name": "conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "57121b4fd0abca47cf0841651b2088a3ae336754",
+      "name": "tipo=nível de título, orientação=direita, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "57372ba5bba73ca8363125352f8c83359540780e",
+      "name": "tipo=decorativo, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "576dacb37625a3753c1ed3d0f6efdd81c38c84a2",
+      "name": "tipo=outros, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "5c988c7b9581345398b7303545937d0ae88eece4",
+      "name": "tipo=outros, orientação=superior, variação=grupo",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "6048f5ca2cabfe062975b2e59ec16db4019c1258",
+      "name": "tipo=outros, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "647f6d702dbcfcf8ed939990955c52c7a7ec7d00",
+      "name": "variação=dupla horizontal, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "6b1acac4640eeb357bf2197f6c05f480cb7fe77f",
+      "name": "tipo=outros, orientação=direita, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "6b4da2d0468b39e6ed4b08c69e270cb025b7d77f",
+      "name": "tipo=nome acessível e texto alternativo, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "6c9b7a0c18680d53edd27614c227f1d614aff63a",
+      "name": "tipo=outros, orientação=esquerda, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "70f0fc9840f1beffd6980109220a840d6fd52020",
+      "name": "variação=dupla horizontal, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "751541765840b7af9c3882fe005d763d272978c0",
+      "name": "tipo=nível de título, orientação=inferior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "789f6b87a37ae7102986527775c1f98e3f98131a",
+      "name": "tipo=nível de título, orientação=esquerda, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "7d9cd5b32bb5f84a17f89072d7608f4a2b50fd6b",
+      "name": "tipo=nome acessível e texto alternativo, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "7f6f97a4fc3df8c49a630975fbf35c465d0e5cb1",
+      "name": "tipo=função e valor, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "8055985e1ccc29330301f5b194361d5a674c878e",
+      "name": "tipo=nível de título / titulo, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "89400dd5b236f0c07f29337d6553441b1b31d21e",
+      "name": "tipo=texto alternativo, orientação=superior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "8ab0f20626565b7bb415c33e4b9967448e678fde",
+      "name": "tipo=decorativo, orientação=superior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "978c651829ffc88e918dc2e7997a36b41f1f1e58",
+      "name": "value=400%",
+      "description": "",
+      "containingFrame": "Outros Elementos elementos"
+    },
+    {
+      "key": "9a13c4e0e656f3761dd50d8af4e07be7d0459ec3",
+      "name": "tipo=decorativo, orientação=direita, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "9ab6453adf84acdbdd9d81ed90dacf1fc126184e",
+      "name": "variação=só horizontal, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "a1372d598fe73204bf0b028faeb16a48f271ad06",
+      "name": "variação=dupla horizontal, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "ad88348503bac31b0bc4f6a5d22516c255b16ba7",
+      "name": "tipo=função e valor, orientação=inferior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "adb1cf1b52620f874544f6d4d80641b5b0ef6013",
+      "name": "variação=só vertical, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "b7f6b04bedeab0dd18a33d4e032c3b93988070b4",
+      "name": "tipo=outros, orientação=inferior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "b92bf2774f29086611fed2c724a85899d2a3111c",
+      "name": "tipo=outros, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "be17e6d8afa170bca4ace8c5c705afa442fee012",
+      "name": "tipo=elementos estruturais, orientação=esquerda, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "bf42964a07ccb242c71a7605fd938e2bfc67cf90",
+      "name": "variação=dupla horizontal, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "c33c5bfaffca154b4eac25355eb7c86cbad7fdad",
+      "name": "tipo=texto alternativo, orientação=inferior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "c5fec32a29be9f049496fe8f54025f4984c32b9f",
+      "name": "variação=dupla vertical, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "c6b5d706e3df46e6a0272ce2871568fcb7edec9e",
+      "name": "tipo=função e valor, orientação=esquerd, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "c74f2381cbcbd0c6c155b1246993be63304d3d10",
+      "name": "tipo=elementos estruturais, orientação=superior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "d27d7a5be261f90d477f8c92fd9ff147fea4e23c",
+      "name": "variação=dupla horizontal, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "d44f4377e68bde14890d960b9e596f565988dd14",
+      "name": "tipo=outros, orientação=esquerda, variação=grupo",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "d89890ec225462c049fa3475064d21e85ccbde25",
+      "name": "value=200% text resized",
+      "description": "",
+      "containingFrame": "Outros Elementos elementos"
+    },
+    {
+      "key": "dd95a0db7a1f7bdda92ea68098e3f1ff8838a535",
+      "name": "variação=mobile",
+      "description": "",
+      "containingFrame": "Outros Elementos elementos"
+    },
+    {
+      "key": "eae271861e0bb47f7b15cf25b7b979d87460bfbb",
+      "name": "tipo=texto alternativo, orientação=direita, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "eb96b3531a691f408716eb1ce8e98705b781fe2a",
+      "name": "variação=só horizontal, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "ec1429559a09878d3d1fdf141196f89c266e0f29",
+      "name": "variação=só vertical, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "ed9d11ff01b982f34784c6595ace8602c1ac6fc6",
+      "name": "variação=só vertical, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "eedadcb55541d54e224b09de48bb9d346d585e50",
+      "name": "variação=dupla vertical, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "f4125c4ddaf0f6ca47046bbb8380c9b4d9937cc1",
+      "name": "variação=dupla vertical, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "f48d952341b4c5426dba400e1a7253aeb1731f78",
+      "name": "variação=só horizontal, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "f68c9cd9ef3046dec7ab396e113eb161c4081f2a",
+      "name": "tipo=nível de título, orientação=superior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "f6ac688a601326d74b09432fdb7f49872919c449",
+      "name": "tipo=elementos estruturais, orientação=inferior, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "f98726d0493b85d6f21bdb97199ef2a30de80173",
+      "name": "variação=web",
+      "description": "",
+      "containingFrame": "Outros Elementos elementos"
+    },
+    {
+      "key": "fc6a3f4fe6b118992d8a36f5238a6cd13a3ed30a",
+      "name": "variação=só vertical, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "fd0fe1646cc6857efd8c2faa857874362bd22b5b",
+      "name": "tipo=decorativo, orientação=esquerda, variação=unitário",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "fd58cead7aad16d01443d7b485c0cc34b74ea6db",
+      "name": "tipo=elementos estruturais, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [DSC Handoff]"
+    },
+    {
+      "key": "09f9a5b936c829da0ede3ea97b2d61da560f150c",
+      "name": "variacao=titulo da pagina",
+      "description": "",
+      "containingFrame": "Specs - Estrutura da Página [Handoff]"
+    },
+    {
+      "key": "0f43a912de061abfd506f409ed0ba747322af6c5",
+      "name": "variante=componente, componente=accordion",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "21b3161c9df25de0a916ee5211e61da320020ac7",
+      "name": "variante=componente, componente=switch",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "22cd2cf9df241e54c9624de18b96b646cba608b3",
+      "name": "nivel=h4",
+      "description": "",
+      "containingFrame": "Specs - Niveis de título [Handoff]"
+    },
+    {
+      "key": "24570d3b99701048675344edd95642c76ba9af3a",
+      "name": "variante=componente, componente=stepper",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "2babe92e38752a86f8a4de111ccea4af40c5b659",
+      "name": "variacao=idiomas",
+      "description": "",
+      "containingFrame": "Specs - Estrutura da Página [Handoff]"
+    },
+    {
+      "key": "2ed0dcb4eb05a24c4b4ef029aec7008878a998b2",
+      "name": "tipo=ignorar pelo LT",
+      "description": "",
+      "containingFrame": "Specs - Elementos decorativos [Handoff]"
+    },
+    {
+      "key": "358f10ccc0ceb777e2e9f312fc8ae28b7427031f",
+      "name": "nivel=h2",
+      "description": "",
+      "containingFrame": "Specs - Niveis de título [Handoff]"
+    },
+    {
+      "key": "457867aa9f0281a4aa01445f54183dd4e6d3ef8b",
+      "name": "nivel=h1",
+      "description": "",
+      "containingFrame": "Specs - Niveis de título [Handoff]"
+    },
+    {
+      "key": "4caf7476f773df94921ebfb0f264789adaff5958",
+      "name": "conector=estrutura da página",
+      "description": "",
+      "containingFrame": "Specs - Estrutura [Handoff]"
+    },
+    {
+      "key": "66517bc70c17f5f8f7bcfd57b6aa0c37e021c472",
+      "name": "nivel=h3",
+      "description": "",
+      "containingFrame": "Specs - Niveis de título [Handoff]"
+    },
+    {
+      "key": "6b10e0445825724f0bc6b737362c67b2f553c3af",
+      "name": "tipo=texto alternativo",
+      "description": "",
+      "containingFrame": "Specs - Elementos decorativos [Handoff]"
+    },
+    {
+      "key": "6c1493eb88fe6ea7c933bb3b817c1685c8bd7dea",
+      "name": "nivel=h6",
+      "description": "",
+      "containingFrame": "Specs - Niveis de título [Handoff]"
+    },
+    {
+      "key": "777297433b69f67325878b4398ed510b379b8bac",
+      "name": "conector=niveis de titulo",
+      "description": "",
+      "containingFrame": "Specs - Estrutura [Handoff]"
+    },
+    {
+      "key": "779e8453b7e179d5160d3b37b56d6522d9a1d7b6",
+      "name": "variante=componente, componente=snackbar",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "7e83861112fc98cceadd5416cd6f67a0fbb685af",
+      "name": "variacao=marco de navegacao",
+      "description": "",
+      "containingFrame": "Specs - Estrutura da Página [Handoff]"
+    },
+    {
+      "key": "80b43b74348e2db8cd1f28dda241cac7ed220b2f",
+      "name": "conector=informações adicionais",
+      "description": "",
+      "containingFrame": "Specs - Estrutura [Handoff]"
+    },
+    {
+      "key": "82c5d6d585c4105fc645d4fcf3c3d20ed2fb7589",
+      "name": "variante=componente, componente=table",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "8bd2ba348fbd6635528d0119c8b58c540b7405d0",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Elementos decorativos [Handoff]"
+    },
+    {
+      "key": "912854534d63f868a12742f01a0d48f80dfde771",
+      "name": "variante=componente, componente=breadcrumb",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "9ee625ccf363ab5cd28bb89d443aeb1c6317a869",
+      "name": "conector=elementos decorativos",
+      "description": "",
+      "containingFrame": "Specs - Estrutura [Handoff]"
+    },
+    {
+      "key": "a2db95cba010300824cf51d1e1a1b133b6150354",
+      "name": "variante=componente, componente=button",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "a3128bee2566fdb9f89ce04191e15193068273a8",
+      "name": "variante=texto alternativo para imagens, componente=imagem",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "adc32227e192fc338fe69f99f24054be3e948afd",
+      "name": "variacao=gerais",
+      "description": "",
+      "containingFrame": "Specs - Elementos decorativos [Handoff]"
+    },
+    {
+      "key": "b0518ad8d7d5bd613f7b66a8f0d3ee5cc9efb373",
+      "name": "variacao=imagem",
+      "description": "",
+      "containingFrame": "Specs - Elementos decorativos [Handoff]"
+    },
+    {
+      "key": "b6b6a08cc11af2025b0a6a0f14a135965ddfe7a2",
+      "name": "variante=componente, componente=listas",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "b9d9e37206230b316848837dee08fbd813fb37d5",
+      "name": "nivel=h5",
+      "description": "",
+      "containingFrame": "Specs - Niveis de título [Handoff]"
+    },
+    {
+      "key": "bd1ae0cd750d3b04d08b79cceedd17ebcabaaef7",
+      "name": "variante=componente, componente=dialog",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "c7653134ee5afddb34dc451551312fc46a5f7ae7",
+      "name": "tipo=customizável",
+      "description": "",
+      "containingFrame": "Specs - Elementos decorativos [Handoff]"
+    },
+    {
+      "key": "caaea4a59df1a68d12a6cf8a8818d34af9f7a9a9",
+      "name": "variante=componente, componente=paginator",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "e154fd2c2922d968c26112b2d02752a3dc02ec07",
+      "name": "variante=componente, componente=link",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "f1bf785a343f191cff72e702d68a27a3a97f0ee9",
+      "name": "conector=elementos interativos e imagens",
+      "description": "",
+      "containingFrame": "Specs - Estrutura [Handoff]"
+    },
+    {
+      "key": "f2c4791675bef2a46fa97c35f86fa6c761802629",
+      "name": "variante=componente, componente=checkbox",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "f7a379504edcdec4540ae33aa9977c0eb4f8bf3b",
+      "name": "variante=componente, componente=inputs",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "f7e6c590989fd1afec28562d62bc5391811f38cb",
+      "name": "variante=componente, componente=radio button",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    },
+    {
+      "key": "ffb0eb6cf636e5dfb3846e37ad90fc901c8bbe51",
+      "name": "variante=componente, componente=tab group",
+      "description": "",
+      "containingFrame": "Specs - Componentes, ícones e imagens[Handoff]"
+    }
+  ],
+  "spacing": [],
+  "borders": []
+}

@@ -1,0 +1,42 @@
+﻿<!-- VIEW: FRAMES (Hub por Frame) -->
+<main id="view-frames" class="view flex p-0 flex-col h-full overflow-hidden">
+  <!-- Sub-Header -->
+  <div class="px-4 pt-3 pb-3 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
+    <div class="flex items-center gap-2">
+      <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial"
+        class="p-2 bg-gray-100 dark:bg-slate-800 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors shrink-0">
+        <i data-lucide="arrow-left" class="w-4 h-4 text-gray-600 dark:text-gray-300" aria-hidden="true"></i>
+      </button>
+      <h2 class="text-[#1E293B] dark:text-white font-bold text-[16px] leading-tight">Design Tokens</h2>
+    </div>
+    <button onclick="requestFrameRegistration()" class="fab-inline" title="Registrar Frame" aria-label="Registrar Frame">
+      <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
+      <span>Registrar Frame</span>
+    </button>
+  </div>
+
+  <!-- Scrollable Content -->
+  <div class="flex-1 overflow-y-auto p-4 pb-24 space-y-3" onscroll="handleScroll(this)">
+
+    <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-2.5">
+      <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5"></i>
+      <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-tight">
+        Selecione um <strong>Frame</strong> no canvas do Figma e clique em <strong>Registrar Frame</strong> para documentá-lo com tokens, medidas e specs.
+      </p>
+    </div>
+
+    <div id="frames-empty-state" class="py-12 text-center">
+      <div class="w-14 h-14 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3">
+        <i data-lucide="layout" class="w-6 h-6 text-slate-300 dark:text-slate-600"></i>
+      </div>
+      <p class="text-[13px] font-bold text-slate-500 dark:text-slate-500">Nenhum frame documentado</p>
+      <p class="text-[11px] text-gray-400 mt-1">Selecione um frame no canvas e toque em <strong>Registrar Frame</strong></p>
+    </div>
+
+    <div id="list-frames" class="space-y-3">
+      <!-- renderFrameCard() insere aqui -->
+    </div>
+
+  </div>
+
+</main>

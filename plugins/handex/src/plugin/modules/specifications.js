@@ -213,7 +213,7 @@
           <button type="button"
             onclick="event.stopPropagation(); focusNode('${frame.figmaId}')"
             title="Localizar no canvas"
-            class="w-7 h-7 flex items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 text-[#0070af] hover:bg-blue-100 transition-colors shrink-0">
+            class="w-7 h-7 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/30 text-[#0070af] hover:bg-blue-100 transition-colors shrink-0">
             <i data-lucide="locate" class="w-3.5 h-3.5"></i>
           </button>
           <div class="flex-1 min-w-0">
@@ -223,7 +223,7 @@
           <button type="button"
             onclick="event.stopPropagation(); removeFrame('${fid}')"
             title="Remover frame"
-            class="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shrink-0">
+            class="w-7 h-7 flex items-center justify-center rounded-xl text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shrink-0">
             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
           </button>
           <i data-lucide="chevron-down" id="frame-chevron-${fid}" class="w-4 h-4 text-gray-300 transition-transform shrink-0"></i>
@@ -305,7 +305,7 @@
                 <p class="text-[10px] text-slate-400 dark:text-dark-muted leading-snug">Re-escaneia o frame após ajustes</p>
               </div>
               <button onclick="scanFrame('${fid}')"
-                class="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#0070af]/8 hover:bg-[#0070af]/15 border border-[#0070af]/20 rounded-lg text-[#0070af] dark:text-blue-400 text-[10px] font-bold transition-colors shrink-0">
+                class="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#0070af]/8 hover:bg-[#0070af]/15 border border-[#0070af]/20 rounded-xl text-[#0070af] dark:text-blue-400 text-[10px] font-bold transition-colors shrink-0">
                 <i data-lucide="refresh-cw" class="w-3 h-3"></i>
                 Escanear
               </button>
@@ -2020,12 +2020,12 @@
                 
                 <div class="flex items-center gap-1 shrink-0">
                   <button onclick="event.stopPropagation(); toggleFlowVisibility('${flow.id}', ${idx})" 
-                    class="w-7 h-7 rounded-lg flex items-center justify-center ${isVisible ? 'text-[#0070af]' : 'text-gray-300'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                    class="w-7 h-7 rounded-xl flex items-center justify-center ${isVisible ? 'text-[#0070af]' : 'text-gray-300'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
                     title="${isVisible ? 'Ocultar fluxo' : 'Exibir fluxo'}" aria-label="Alterar visibilidade">
                     <i data-lucide="${isVisible ? 'eye' : 'eye-off'}" class="w-3.5 h-3.5"></i>
                   </button>
                   <button onclick="event.stopPropagation(); deleteNode('${flow.id}', ${idx}, 'flow')" title="Excluir" aria-label="Excluir fluxo"
-                    class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all">
+                    class="w-7 h-7 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all">
                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                   </button>
                 </div>
