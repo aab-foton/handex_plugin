@@ -316,7 +316,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "4.1.2" : "dev";
+  var PLUGIN_VERSION = true ? "4.1.3" : "dev";
   function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
     const NS = "handex";
@@ -792,8 +792,19 @@
         const content = createFrame("VERTICAL", 24, 24, { r: 1, g: 1, b: 1 });
         fichaTecnica.appendChild(content);
         setFillAndHug(content);
+        const topInfoRow = createFrame("HORIZONTAL", 0, 16);
+        topInfoRow.name = "[Row] Info e Briefing";
+        topInfoRow.counterAxisAlignItems = "MIN";
+        topInfoRow.fills = [];
+        content.appendChild(topInfoRow);
+        setFillAndHug(topInfoRow);
+        const leftInfoCol = createFrame("VERTICAL", 0, 16);
+        leftInfoCol.name = "[Col] Info e Equipe";
+        leftInfoCol.fills = [];
+        topInfoRow.appendChild(leftInfoCol);
+        setFillAndHug(leftInfoCol);
         if (!data.setup || data.setup.ficha !== false) {
-          const infoSection = createSection(content, "Informa\xE7\xF5es B\xE1sicas");
+          const infoSection = createSection(leftInfoCol, "Informa\xE7\xF5es B\xE1sicas");
           createRow(infoSection, "T\xEDtulo do Projeto", data.step1.titulo);
           if (data.step1.jornada) createRow(infoSection, "Jornada", data.step1.jornada);
           if (data.step1.feature) createRow(infoSection, "Feature", data.step1.feature);
@@ -825,7 +836,7 @@
           createRow(subGrid, "Vers\xE3o", data.step1.versao);
         }
         if (data.step1.equipe && data.step1.equipe.length > 0) {
-          const teamSection = createSection(content, "Equipe e Respons\xE1veis");
+          const teamSection = createSection(leftInfoCol, "Equipe e Respons\xE1veis");
           data.step1.equipe.forEach((m) => {
             const mRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
             teamSection.appendChild(mRow);
@@ -833,9 +844,11 @@
             mRow.counterAxisAlignItems = "CENTER";
             mRow.cornerRadius = 8;
             mRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
-            const roleTag = createFrame("HORIZONTAL", 8, 4, { r: 0, g: 0.35, b: 0.79 });
-            roleTag.cornerRadius = 4;
-            roleTag.appendChild(createText(m.papel || "Membro", 10, "Bold", { r: 1, g: 1, b: 1 }));
+            const roleTag = createFrame("HORIZONTAL", 8, 3, { r: 0.93, g: 0.96, b: 1 });
+            roleTag.cornerRadius = 999;
+            roleTag.strokes = [{ type: "SOLID", color: { r: 0.7, g: 0.82, b: 0.96 } }];
+            roleTag.strokeWeight = 1;
+            roleTag.appendChild(createText(m.papel || "Membro", 9, "Medium", { r: 0, g: 0.35, b: 0.79 }));
             mRow.appendChild(roleTag);
             const nameText = createText(m.nome || "", 12, "Medium");
             nameText.layoutGrow = 1;
@@ -847,12 +860,10 @@
               mRow.appendChild(contactLink);
             }
           });
-          content.appendChild(teamSection);
-          setFillAndHug(teamSection);
         }
         const _briefingQs = data.step2 && data.step2.briefingQuestions ? data.step2.briefingQuestions.filter((q) => q.answer && q.answer.trim()) : [];
         if (_briefingQs.length > 0) {
-          const briefingSection = createSection(content, "Briefing Estrat\xE9gico");
+          const briefingSection = createSection(topInfoRow, "Briefing Estrat\xE9gico");
           _briefingQs.forEach((q, idx) => {
             const qRow = createFrame("VERTICAL", 0, 4);
             qRow.name = `[Briefing] Pergunta ${idx + 1}`;
@@ -865,8 +876,6 @@
             qRow.appendChild(aText);
             setFillAndHug(aText);
           });
-          content.appendChild(briefingSection);
-          setFillAndHug(briefingSection);
         }
         const _regras = data.step2 && data.step2.regras ? data.step2.regras : [];
         if (_regras.length > 0) {
@@ -1174,6 +1183,17 @@
               }
               const iName = createText(item.name, 13, "Bold", { r: 0.1, g: 0.15, b: 0.25 });
               iName.layoutGrow = 1;
+              if (item.nodeId && figma.fileKey) {
+                try {
+                  iName.hyperlink = {
+                    type: "URL",
+                    value: `https://www.figma.com/design/${figma.fileKey}?node-id=${encodeURIComponent(item.nodeId)}`
+                  };
+                  iName.textDecoration = "UNDERLINE";
+                  iName.fills = [{ type: "SOLID", color: { r: 0, g: 0.35, b: 0.79 } }];
+                } catch (e) {
+                }
+              }
               headerRow.appendChild(iName);
               const status = item.componentStatus || (item.isDS === true ? "ok" : item.isDS === "warning" ? "warning" : "error");
               if (data.isAudit) {
@@ -1265,13 +1285,6 @@
             frames: _specsSource.flatMap((s) => s.frames || []),
             vectors: _specsSource.flatMap((s) => s.vectors || [])
           };
-          const categories = [
-            { title: "Componentes", items: specsData.components, type: "components" },
-            { title: "\xCDcones", items: specsData.icons, type: "icons" },
-            { title: "Tipografia", items: specsData.typography, type: "typography" },
-            { title: "Frames e Layouts", items: specsData.frames, type: "frames" },
-            { title: "Vetores", items: specsData.vectors, type: "vectors" }
-          ];
           const specsRow = figma.createFrame();
           specsRow.layoutMode = "HORIZONTAL";
           specsRow.layoutWrap = "WRAP";
@@ -1284,10 +1297,31 @@
           specsRow.fills = [];
           specsRow.primaryAxisSizingMode = "AUTO";
           specsRow.counterAxisSizingMode = "AUTO";
-          categories.forEach((cat) => {
-            const sec = createSpecList(cat.title, cat.items, cat.type);
-            if (sec) specsRow.appendChild(sec);
-          });
+          const secComponents = createSpecList("Componentes", specsData.components, "components");
+          if (secComponents) specsRow.appendChild(secComponents);
+          const secIcons = createSpecList("\xCDcones", specsData.icons, "icons");
+          const secVectors = createSpecList("Vetores", specsData.vectors, "vectors");
+          if (secIcons || secVectors) {
+            const iconsVectorsCol = figma.createFrame();
+            iconsVectorsCol.name = "[Col] \xCDcones e Vetores";
+            iconsVectorsCol.layoutMode = "VERTICAL";
+            iconsVectorsCol.itemSpacing = 16;
+            iconsVectorsCol.paddingLeft = 0;
+            iconsVectorsCol.paddingRight = 0;
+            iconsVectorsCol.paddingTop = 0;
+            iconsVectorsCol.paddingBottom = 0;
+            iconsVectorsCol.fills = [];
+            iconsVectorsCol.primaryAxisSizingMode = "AUTO";
+            iconsVectorsCol.counterAxisSizingMode = "AUTO";
+            iconsVectorsCol.counterAxisAlignItems = "MIN";
+            if (secIcons) iconsVectorsCol.appendChild(secIcons);
+            if (secVectors) iconsVectorsCol.appendChild(secVectors);
+            specsRow.appendChild(iconsVectorsCol);
+          }
+          const secTypo = createSpecList("Tipografia", specsData.typography, "typography");
+          const secFrames = createSpecList("Frames e Layouts", specsData.frames, "frames");
+          if (secTypo) specsRow.appendChild(secTypo);
+          if (secFrames) specsRow.appendChild(secFrames);
           if (specsRow.children.length > 0) {
             uiBoard.appendChild(specsRow);
             setFillAndHug(specsRow);
@@ -1926,14 +1960,7 @@
             category = "frames";
           }
           addElement(category, n, props);
-          const _isDSCInstance = (n.type === "INSTANCE" || n.type === "COMPONENT") && (category === "components" || category === "icons");
-          const _skipChildren = _isDSCInstance && (() => {
-            const _ck = n.type === "INSTANCE" && n.mainComponent ? n.mainComponent.key : n.key || null;
-            const _a2 = audit(category, n.name, _ck, n.name);
-            const _isRemote = n.type === "INSTANCE" && n.mainComponent && n.mainComponent.remote;
-            return _a2.isDS === true || /^\[dsc\]/i.test(n.name) || _isRemote;
-          })();
-          if (!_skipChildren && "children" in n && n.children) {
+          if ("children" in n && n.children) {
             for (const child of n.children) {
               extractSpecs(child, (depth || 0) + 1);
             }

@@ -1566,6 +1566,13 @@ function navigate(viewId) {
     restoreUIFromState();
     initBriefingSuggestions();
     parent.postMessage({ pluginMessage: { type: 'get-project-name' } }, '*');
+    // Snackbar: se o conteúdo couber sem scroll, dispara após breve delay
+    setTimeout(() => {
+      const scrollEl = document.querySelector('#view-dados-projeto .overflow-y-auto');
+      if (scrollEl && scrollEl.scrollHeight <= scrollEl.clientHeight) {
+        _showDadosProjetoSnackbar();
+      }
+    }, 800);
   }
   if (viewId === 'view-handoff-summary') {
     updateHandoffSummary();
@@ -1829,16 +1836,20 @@ function handleScroll(el) {
   // Snackbar ao chegar no fim da view de Informações do Projeto
   if (el.closest && el.closest('#view-dados-projeto')) {
     const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 24;
-    const snack = document.getElementById('dados-projeto-snackbar');
-    if (snack && atBottom && !localStorage.getItem('handex_snack_dados_shown')) {
-      localStorage.setItem('handex_snack_dados_shown', '1');
-      snack.classList.remove('hidden');
-      clearTimeout(window._dadosProjetoSnackTimer);
-      window._dadosProjetoSnackTimer = setTimeout(() => {
-        snack.classList.add('hidden');
-      }, 4000);
-    }
+    if (atBottom) _showDadosProjetoSnackbar();
   }
+}
+
+function _showDadosProjetoSnackbar() {
+  const snack = document.getElementById('dados-projeto-snackbar');
+  if (!snack || sessionStorage.getItem('handex_snack_dados_shown')) return;
+  sessionStorage.setItem('handex_snack_dados_shown', '1');
+  snack.classList.remove('hidden');
+  if (typeof _refreshIcons === 'function') _refreshIcons();
+  clearTimeout(window._dadosProjetoSnackTimer);
+  window._dadosProjetoSnackTimer = setTimeout(() => {
+    snack.classList.add('hidden');
+  }, 5000);
 }
 
 function scrollToTop() {
