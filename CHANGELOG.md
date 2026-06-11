@@ -2,6 +2,46 @@
 
 ---
 
+## v4.1.3 — 2026-06-10
+
+### Resumo
+Refinamentos de scan, UX e layout da ficha canvas: scan percorre todo o frame (incluindo interior de componentes DSC), tokens clicáveis no plugin e na ficha, reorganização do layout da ficha, correção do loading persistente e ajustes visuais.
+
+---
+
+### Scan — Granularidade Completa
+
+- **Remoção do skip de filhos em instâncias DSC** — `extractSpecs` agora percorre toda a árvore do frame sem interromper em componentes da biblioteca. Tipografia, ícones, vetores e frames internos a componentes DSC aparecem nos seus respectivos accordions de resultado.
+
+### Tokens Clicáveis
+
+- **Plugin UI** — cada linha de propriedade (cor, espaçamento, tipografia, raio, etc.) nos cards de scan tem `onclick="focusNode(nodeId)"`, focando o nó correspondente no canvas do Figma ao clicar.
+- **Ficha canvas** — o nome de cada elemento nas colunas de componentes, ícones, tipografia, vetores e frames aparece como link azul sublinhado apontando para `figma.com/design/{fileKey}?node-id={nodeId}`.
+
+### Layout da Ficha Canvas
+
+- **Briefing ao lado das Informações Básicas** — criada linha horizontal `topInfoRow`: coluna esquerda contém Informações Básicas + Equipe; coluna direita contém Briefing Estratégico.
+- **Vetores ao lado de Ícones** — nas colunas de componentes UI, Ícones e Vetores agora formam uma coluna vertical dupla posicionada lado a lado com Componentes, Tipografia e Frames.
+- **Chip de papel (Equipe)** — `roleTag` trocado de botão sólido azul para pill com fundo azul-claro, borda suave e texto azul.
+
+### Correções
+
+- **Loading persistente** — adicionado handler para `handoff-error` em `messages.js`; qualquer exceção durante a geração da ficha agora fecha o overlay e exibe toast de erro.
+- **Snackbar "Informações preenchidas"** — corrigidos dois problemas: (1) `localStorage` trocado por `sessionStorage` (mostrava apenas uma vez na vida inteira); (2) adicionado trigger na entrada da view para janelas onde o conteúdo não requer scroll.
+
+### UX / Visual
+
+- **Botão "Voltar ao topo"** — contraste elevado no estado default: fundo `slate-900/20` translúcido com borda `slate-900/20`; hover mantém azul `#0070af`. Compilador Tailwind corrigido de v4 para v3 (`tw3`) para que classes com modificador `/` sejam geradas corretamente.
+- **Botão "Publicar no SharePoint"** — ocultado (integração em discussão técnica).
+
+### Versionamento
+
+- `manifest.json` — adicionado campo `version: "4.1.2"` (antes ausente).
+- Badge visual no header do plugin atualizado de `v4.1.1` para `v4.1.2`.
+- `bundle:css` corrigido para usar `tw3` (Tailwind v3) em vez de `tailwindcss` (v4), resolvendo incompatibilidade de config.
+
+---
+
 ## v4.1.2 — 2026-06-10
 
 ### Resumo
