@@ -1140,7 +1140,7 @@
         : '';
 
       return `
-        <div class="col-span-2 p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#0070af] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" title="Clicar para localizar no board">
+        <div class="col-span-2 p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#0070af] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" title="Localizar no Figma">
           <div class="flex items-center gap-2 mb-1 pointer-events-none">
             ${preview}
             <div class="flex-1 min-w-0">
@@ -1149,6 +1149,7 @@
                 ${dsStatus}
               </div>
             </div>
+            <i data-lucide="locate" class="w-3 h-3 text-gray-300 dark:text-gray-600 group-hover:text-[#0070af] dark:group-hover:text-blue-400 transition-colors shrink-0"></i>
           </div>
           ${appliedHtml}
           ${inactiveHtml}

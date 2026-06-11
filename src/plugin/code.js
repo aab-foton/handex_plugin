@@ -2196,6 +2196,24 @@ figma.ui.onmessage = async (msg) => {
       // If props is empty, and it's not a component/icon/text, skip to reduce noise
       if (props.length === 0 && (category === "frames" || category === "vectors")) return;
 
+      // Vectors: skip entirely — primitive shapes carry no DS conformance signal
+      if (category === "vectors") return;
+
+      // Frames: only keep "pure custom" frames — those with zero INSTANCE/COMPONENT descendants.
+      // A frame that contains DS components is just a layout container; the conformance
+      // signal lives on its children, not on the frame itself.
+      if (category === "frames") {
+        const _hasDSChild = (n) => {
+          if (!n.children) return false;
+          for (const c of n.children) {
+            if (c.type === 'INSTANCE' || c.type === 'COMPONENT') return true;
+            if (_hasDSChild(c)) return true;
+          }
+          return false;
+        };
+        if (_hasDSChild(node)) return;
+      }
+
       const name = node.name;
 
       let componentKey = null;
