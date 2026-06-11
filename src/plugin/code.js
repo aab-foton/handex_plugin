@@ -1334,8 +1334,16 @@ figma.ui.onmessage = async (msg) => {
                     iconNode.resize(12, 12);
                     const neutral = { r: 0.55, g: 0.58, b: 0.62 };
                     function setSvgColor(node, color) {
-                      if ('fills' in node && node.fills.length) node.fills = [{ type: 'SOLID', color }];
-                      if ('strokes' in node && node.strokes.length) node.strokes = [{ type: 'SOLID', color }];
+                      const isContainer = node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT';
+                      if (isContainer) {
+                        // Clear background of container — never fill it
+                        if ('fills' in node) node.fills = [];
+                        if ('strokes' in node) node.strokes = [];
+                      } else {
+                        // Color only leaf shapes (vectors, paths)
+                        if ('fills' in node && node.fills.length) node.fills = [{ type: 'SOLID', color }];
+                        if ('strokes' in node && node.strokes.length) node.strokes = [{ type: 'SOLID', color }];
+                      }
                       if ('children' in node) node.children.forEach(c => setSvgColor(c, color));
                     }
                     setSvgColor(iconNode, neutral);

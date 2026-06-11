@@ -1451,8 +1451,14 @@
                   } else {
                     try {
                       let setSvgColor = function(node, color) {
-                        if ("fills" in node && node.fills.length) node.fills = [{ type: "SOLID", color }];
-                        if ("strokes" in node && node.strokes.length) node.strokes = [{ type: "SOLID", color }];
+                        const isContainer = node.type === "FRAME" || node.type === "GROUP" || node.type === "COMPONENT";
+                        if (isContainer) {
+                          if ("fills" in node) node.fills = [];
+                          if ("strokes" in node) node.strokes = [];
+                        } else {
+                          if ("fills" in node && node.fills.length) node.fills = [{ type: "SOLID", color }];
+                          if ("strokes" in node && node.strokes.length) node.strokes = [{ type: "SOLID", color }];
+                        }
                         if ("children" in node) node.children.forEach((c) => setSvgColor(c, color));
                       };
                       const iconSvg = getIconSvg(prop.type, prop.label);
