@@ -1501,8 +1501,32 @@
           uiBoard.primaryAxisSizingMode = "AUTO";
           uiBoard.counterAxisSizingMode = "AUTO";
           uiBoard.layoutAlign = "INHERIT";
+          const uiHeaderRow = createFrame("HORIZONTAL", 0, 12);
+          uiHeaderRow.counterAxisAlignItems = "CENTER";
+          setFillAndHug(uiHeaderRow);
+          uiBoard.appendChild(uiHeaderRow);
           const uiTitle = createText("User Interface", 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-          uiBoard.appendChild(uiTitle);
+          uiTitle.layoutGrow = 1;
+          uiHeaderRow.appendChild(uiTitle);
+          const legendItems = [
+            { color: { r: 0.13, g: 0.7, b: 0.38 }, label: "Conforme" },
+            { color: { r: 0.85, g: 0.55, b: 0.1 }, label: "Aten\xE7\xE3o" },
+            { color: { r: 0.88, g: 0.28, b: 0.28 }, label: "Fora" }
+          ];
+          const legendRow = createFrame("HORIZONTAL", 0, 10);
+          legendRow.counterAxisAlignItems = "CENTER";
+          legendItems.forEach((li) => {
+            const legendItem = createFrame("HORIZONTAL", 0, 4);
+            legendItem.counterAxisAlignItems = "CENTER";
+            const dot = figma.createEllipse();
+            dot.resize(7, 7);
+            dot.fills = [{ type: "SOLID", color: li.color }];
+            legendItem.appendChild(dot);
+            const lbl = createText(li.label, 10, "Regular", { r: 0.4, g: 0.45, b: 0.52 });
+            legendItem.appendChild(lbl);
+            legendRow.appendChild(legendItem);
+          });
+          uiHeaderRow.appendChild(legendRow);
           const _allFrameSpecs = (data.frames || []).map((f) => f.specs).filter(Boolean);
           const _globalSpecs2 = data.step2 && data.step2.specs ? data.step2.specs : null;
           const _specsSource = _allFrameSpecs.length > 0 ? _allFrameSpecs : _globalSpecs2 ? [_globalSpecs2] : [];
