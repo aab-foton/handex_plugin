@@ -1144,15 +1144,18 @@ figma.ui.onmessage = async (msg) => {
             elCard.appendChild(headerRow);
             setFillAndHug(headerRow);
 
-            // Preview if exists
+            // Preview if exists — createRectangle só é chamado após obter o hash
+            // para evitar que um rect órfão fique solto na raiz da página caso
+            // createImage lance exceção.
             if (item.preview) {
-               try {
-                 const rect = figma.createRectangle();
-                 rect.resize(32, 32);
-                 rect.fills = [{ type: "IMAGE", imageHash: figma.createImage(item.preview).hash, scaleMode: "FIT" }];
-                 rect.cornerRadius = 4;
-                 headerRow.appendChild(rect);
-               } catch(e) {}
+              try {
+                const imageHash = figma.createImage(item.preview).hash;
+                const rect = figma.createRectangle();
+                rect.resize(32, 32);
+                rect.fills = [{ type: "IMAGE", imageHash, scaleMode: "FIT" }];
+                rect.cornerRadius = 4;
+                headerRow.appendChild(rect);
+              } catch(e) {}
             }
 
             const iName = createText(item.name, 13, "Bold", { r: 0.1, g: 0.15, b: 0.25 });
@@ -2306,23 +2309,24 @@ figma.ui.onmessage = async (msg) => {
     (async () => {
       try { await figma.loadFontAsync({ family: "Inter", style: "Regular" }); } catch (e) {}
 
-      function _makeMeasLine(x1, y1, x2, y2, value, type, color) {
-        const els = [];
-        const line = figma.createLine();
-        line.strokes = [{ type: "SOLID", color }];
-        line.strokeWeight = 1;
-        line.x = x1; line.y = y1;
-        if (type === 'h') {
-          line.resize(Math.max(0.01, x2 - x1), 0);
+      // Mesma lógica da createMeasurementLine — cria linha + terminadores + chip com valor
+      function _measLine(x1, y1, x2, y2, value, type, color) {
+        const elements = [];
+        const mainLine = figma.createLine();
+        mainLine.strokes = [{ type: "SOLID", color }];
+        mainLine.strokeWeight = 1;
+        mainLine.x = x1; mainLine.y = y1;
+        if (type === 'horizontal') {
+          mainLine.resize(Math.max(0.01, x2 - x1), 0);
           const t1 = figma.createLine(); t1.strokes = [{ type: "SOLID", color }]; t1.x = x1; t1.y = y1 - 4; t1.resize(8, 0); t1.rotation = -90;
           const t2 = figma.createLine(); t2.strokes = [{ type: "SOLID", color }]; t2.x = x2; t2.y = y1 - 4; t2.resize(8, 0); t2.rotation = -90;
-          els.push(line, t1, t2);
+          elements.push(mainLine, t1, t2);
         } else {
-          line.rotation = -90;
-          line.resize(Math.max(0.01, y2 - y1), 0);
+          mainLine.rotation = -90;
+          mainLine.resize(Math.max(0.01, y2 - y1), 0);
           const t1 = figma.createLine(); t1.strokes = [{ type: "SOLID", color }]; t1.x = x1 - 4; t1.y = y1; t1.resize(8, 0);
           const t2 = figma.createLine(); t2.strokes = [{ type: "SOLID", color }]; t2.x = x1 - 4; t2.y = y2; t2.resize(8, 0);
-          els.push(line, t1, t2);
+          elements.push(mainLine, t1, t2);
         }
         const label = figma.createText();
         label.fontName = { family: "Inter", style: "Regular" };
@@ -2333,28 +2337,31 @@ figma.ui.onmessage = async (msg) => {
         bg.resize(label.width + 8, label.height + 4);
         bg.fills = [{ type: "SOLID", color }];
         bg.cornerRadius = 4;
-        const mid = type === 'h' ? { x: (x1 + x2) / 2 - bg.width / 2, y: y1 - bg.height - 4 } : { x: x1 - bg.width - 6, y: (y1 + y2) / 2 - bg.height / 2 };
-        bg.x = mid.x; bg.y = mid.y;
-        label.x = mid.x + 4; label.y = mid.y + 2;
-        els.push(bg, label);
-        return els;
+        figma.currentPage.appendChild(label);
+        if (type === 'horizontal') {
+          const cx = x1 + (x2 - x1) / 2;
+          bg.x = cx - bg.width / 2; bg.y = y1 - bg.height / 2;
+        } else {
+          const cy = y1 + (y2 - y1) / 2;
+          bg.x = x1 - bg.width / 2; bg.y = cy - bg.height / 2;
+        }
+        label.x = bg.x + 4; label.y = bg.y + 2;
+        elements.push(bg, label);
+        return elements;
       }
 
       const red = { r: 1, g: 0.2, b: 0.2 };
       let created = 0;
 
       for (const m of measurements) {
-        let target = null;
-        // Try to find the element by name within the frame (first match)
-        target = frameNode.findOne(n => n.name === m.name && n.type !== 'GROUP');
-        if (!target) target = frameNode; // fallback to frame itself
-
+        // Localiza o elemento pelo nome dentro do frame; fallback para o próprio frame
+        const target = frameNode.findOne(n => n.name === m.name && n.type !== 'GROUP') || frameNode;
         const bounds = target.absoluteBoundingBox;
         if (!bounds) continue;
 
         const items = [
-          ..._makeMeasLine(bounds.x, bounds.y - 20, bounds.x + bounds.width, bounds.y - 20, bounds.width, 'h', red),
-          ..._makeMeasLine(bounds.x + bounds.width + 10, bounds.y, bounds.x + bounds.width + 10, bounds.y + bounds.height, bounds.height, 'v', red)
+          ..._measLine(bounds.x, bounds.y - 20, bounds.x + bounds.width, bounds.y - 20, bounds.width, 'horizontal', red),
+          ..._measLine(bounds.x - 20, bounds.y, bounds.x - 20, bounds.y + bounds.height, bounds.height, 'vertical', red)
         ];
 
         if (items.length > 0) {
@@ -2798,9 +2805,16 @@ figma.ui.onmessage = async (msg) => {
           targetX = _rightmost.right + _SPEC_COL_GAP;
           targetY = _rightmost.topY;
         } else {
-          // Primeira spec: sempre à direita do elemento selecionado
-          targetX = bounds.x + bounds.width + 100;
-          targetY = bounds.y;
+          // Primeira spec: à direita do frame de nível de página que contém o elemento.
+          // Isso evita que a spec caia dentro de um frame grande quando o alvo é um
+          // elemento interno (ex.: componente dentro de um frame de 1920px).
+          let _anchorNode = node;
+          while (_anchorNode.parent && _anchorNode.parent.type !== 'PAGE') {
+            _anchorNode = _anchorNode.parent;
+          }
+          const _anchorBounds = _anchorNode.absoluteBoundingBox || bounds;
+          targetX = _anchorBounds.x + _anchorBounds.width + 100;
+          targetY = _anchorBounds.y;
         }
 
         specCard.x = Math.round(targetX);
