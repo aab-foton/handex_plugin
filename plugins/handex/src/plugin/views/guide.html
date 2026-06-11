@@ -1,52 +1,241 @@
-﻿<!-- VIEW: GUIDE -->
+<!-- VIEW: GUIDE -->
     <main id="view-guide" class="view flex flex-col h-full overflow-hidden">
       <div class="px-4 pt-0 pb-3 border-b border-gray-100 dark:border-dark-line flex flex-col shrink-0">
         <div class="flex items-center gap-3">
           <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial"
-            class="p-2 bg-gray-100 dark:bg-slate-800 rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">
+            class="p-2 bg-gray-100 dark:bg-slate-800 rounded-2xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">
             <i data-lucide="arrow-left" class="w-4 h-4 text-gray-600 dark:text-gray-300" aria-hidden="true"></i>
           </button>
           <h2 class="text-[#1E293B] dark:text-white font-bold text-[18px]">Como usar o plugin</h2>
         </div>
       </div>
 
-      <div class="flex-1 overflow-y-auto pt-1 px-4 pb-4" onscroll="handleScroll(this)">
-        <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-sm p-5 max-w-[440px] mx-auto">
-          <div class="flex items-center gap-2 mb-4">
-            <div class="w-1 h-5 bg-[#0070af] rounded-full"></div>
-            <h3 class="font-bold text-[#1E293B] dark:text-white text-[14px]">Documentação de Apoio</h3>
-          </div>
+      <div class="flex-1 overflow-y-auto pt-3 px-4 pb-4 space-y-3" onscroll="handleScroll(this)">
 
-          <p class="text-[12px] text-slate-500 dark:text-dark-muted mb-6 leading-relaxed">
-            Acesse os materiais de apoio para entender como utilizar o Handex ou consultar diretrizes técnicas.
+        <!-- Intro -->
+        <div class="bg-[#0070af]/5 dark:bg-blue-900/10 border border-[#0070af]/20 dark:border-blue-800/30 rounded-2xl p-3.5">
+          <p class="text-[11px] text-[#005ca9] dark:text-blue-300 leading-relaxed">
+            O <strong>Handex</strong> organiza toda a documentação de handoff em ferramentas independentes. Use cada uma no momento certo — não precisa seguir uma ordem. Quando tudo estiver pronto, gere a Ficha de Handoff no canvas.
           </p>
+        </div>
 
-          <div class="space-y-3 mb-6">
-            <button onclick="window.open('https://designsystem.caixa.gov.br', '_blank')" class="w-full py-3.5 bg-white dark:bg-dark-bg border border-[#0070af] text-[#0070af] font-bold rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all flex items-center justify-center gap-2 shadow-sm">
-              <i data-lucide="layers" class="w-4 h-4"></i> Toolkit DSC
-            </button>
-
-            <button onclick="window.open('https://designsystem.caixa.gov.br/passo-a-passo', '_blank')" class="w-full py-3.5 bg-white dark:bg-dark-bg border border-[#0070af] text-[#0070af] font-bold rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all flex items-center justify-center gap-2 shadow-sm">
-              <i data-lucide="map" class="w-4 h-4"></i> Passo a Passo
-            </button>
-            
-            <button onclick="window.open('https://designsystem.caixa.gov.br/tutoriais', '_blank')" class="w-full py-3.5 bg-white dark:bg-dark-bg border border-[#0070af] text-[#0070af] font-bold rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all flex items-center justify-center gap-2 shadow-sm">
-              <i data-lucide="video" class="w-4 h-4"></i> Tutoriais
-            </button>
+        <!-- Accordion helper (inline JS) -->
+        <!-- 1. Informações do Projeto -->
+        <div class="border border-gray-100 dark:border-dark-line rounded-2xl overflow-hidden shadow-sm">
+          <button onclick="var b=this.nextElementSibling;b.classList.toggle('hidden');this.querySelector('.acc-chev').classList.toggle('rotate-180')"
+            class="w-full flex items-center justify-between p-3.5 bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
+            <div class="flex items-center gap-2.5">
+              <div class="w-6 h-6 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
+                <i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-[#0070af]" aria-hidden="true"></i>
+              </div>
+              <span class="text-[12px] font-bold text-slate-800 dark:text-white">Informações do Projeto</span>
+            </div>
+            <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" aria-hidden="true"></i>
+          </button>
+          <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
+            <ol class="space-y-2.5 text-[11px] text-slate-600 dark:text-slate-300 leading-snug list-none">
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-[#0070af]/10 text-[#0070af] font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">1</span><span>Clique em <strong>Informações do Projeto</strong> na home — o modal abre sobre qualquer tela, sem precisar sair do que está fazendo.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-[#0070af]/10 text-[#0070af] font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">2</span><span>Preencha <strong>Título</strong>, <strong>Versão</strong> e <strong>Objetivo</strong> — esses três campos são obrigatórios para gerar a ficha.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-[#0070af]/10 text-[#0070af] font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">3</span><span>Adicione ao menos <strong>1 membro de equipe</strong> com e-mail válido e papel <strong>Designer</strong> — sem isso o botão de gerar ficha fica bloqueado.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-[#0070af]/10 text-[#0070af] font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">4</span><span><em>Opcional:</em> ative o <strong>Briefing Estratégico</strong> para responder perguntas de contexto (escopo, stakeholders, UX), adicione <strong>Regras de Negócio</strong> e cole links de protótipo, acessibilidade e pesquisa.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-[#0070af]/10 text-[#0070af] font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">5</span><span>Tudo é <strong>salvo automaticamente</strong> a cada alteração — não há botão de salvar.</span></li>
+            </ol>
           </div>
+        </div>
 
-          <!-- Dica: layers bloqueadas -->
-          <div class="flex items-start gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-xl p-3.5">
-            <i data-lucide="lock" class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"></i>
-            <div>
-              <p class="text-[11px] font-bold text-amber-700 dark:text-amber-400 mb-0.5">Layers geradas pelo plugin são bloqueadas</p>
-              <p class="text-[10px] text-amber-600 dark:text-amber-500 leading-snug">
-                Specs, medidas, fluxos e a Ficha de Projeto são criados com bloqueio de edição para preservar a integridade do handoff. Para remover ou recriar um item, utilize os botões de exclusão dentro do próprio plugin.
-              </p>
+        <!-- 2. Escanear Tokens -->
+        <div class="border border-gray-100 dark:border-dark-line rounded-2xl overflow-hidden shadow-sm">
+          <button onclick="var b=this.nextElementSibling;b.classList.toggle('hidden');this.querySelector('.acc-chev').classList.toggle('rotate-180')"
+            class="w-full flex items-center justify-between p-3.5 bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
+            <div class="flex items-center gap-2.5">
+              <div class="w-6 h-6 rounded-xl bg-sky-50 dark:bg-sky-900/20 flex items-center justify-center shrink-0">
+                <i data-lucide="scan-line" class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" aria-hidden="true"></i>
+              </div>
+              <span class="text-[12px] font-bold text-slate-800 dark:text-white">Escanear Tokens</span>
+            </div>
+            <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" aria-hidden="true"></i>
+          </button>
+          <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
+            <ol class="space-y-2.5 text-[11px] text-slate-600 dark:text-slate-300 leading-snug list-none">
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">1</span><span><strong>Selecione um Frame</strong> (ou Componente, Seção, Grupo) diretamente no canvas do Figma antes de abrir esta ferramenta.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">2</span><span>Clique em <strong>+ Registrar Frame</strong> — o plugin captura o ID e o nome do nó selecionado e cria um card de frame.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">3</span><span>Dentro do card, escolha as <strong>categorias de scan</strong> (Componentes, Ícones, Tipografia, Frames/Layouts, Vetores) e confirme.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">4</span><span>O resultado aparece agrupado por tipo. Clique em qualquer item para <strong>destacar o elemento no canvas</strong>.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">5</span><span>Declare a <strong>Conformidade DSC</strong>: marque "Check Designs realizado", informe se há desvios e adicione observações. Desvios são salvos como ressalvas e aparecem na ficha.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">6</span><span>Se o frame é um <strong>Novo Componente</strong>, ative o toggle — a seção de conformidade é ocultada (não se aplica a componentes inéditos) e o frame é destacado na ficha.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">7</span><span>Repita para cada frame do projeto. Você pode ter <strong>múltiplos frames documentados</strong> em paralelo.</span></li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- 3. Anotar Specs -->
+        <div class="border border-gray-100 dark:border-dark-line rounded-2xl overflow-hidden shadow-sm">
+          <button onclick="var b=this.nextElementSibling;b.classList.toggle('hidden');this.querySelector('.acc-chev').classList.toggle('rotate-180')"
+            class="w-full flex items-center justify-between p-3.5 bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
+            <div class="flex items-center gap-2.5">
+              <div class="w-6 h-6 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center shrink-0">
+                <i data-lucide="tag" class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" aria-hidden="true"></i>
+              </div>
+              <span class="text-[12px] font-bold text-slate-800 dark:text-white">Anotar Specs</span>
+            </div>
+            <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" aria-hidden="true"></i>
+          </button>
+          <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
+            <ol class="space-y-2.5 text-[11px] text-slate-600 dark:text-slate-300 leading-snug list-none">
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-indigo-500/10 text-indigo-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">1</span><span><strong>Selecione um elemento</strong> no canvas do Figma — pode ser um componente, texto, ícone ou qualquer nó.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-indigo-500/10 text-indigo-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">2</span><span>Clique no <strong>botão +</strong> no rodapé da view de Especificações. O formulário abre com o nó selecionado já vinculado.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-indigo-500/10 text-indigo-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">3</span><span>Defina a <strong>Letra</strong> (tag de referência, ex: A, B, C1), a <strong>Categoria</strong> (Comportamento, Regra, Layout, API etc.) e a <strong>Cor</strong> do grupo.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-indigo-500/10 text-indigo-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">4</span><span>Adicione uma <strong>Nota técnica</strong> e, se aplicável, um link para o componente no DSC.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-indigo-500/10 text-indigo-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">5</span><span>Em <strong>Propriedades</strong>, adicione os atributos técnicos da spec: nome da propriedade, token do Design System e valor aplicado.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-indigo-500/10 text-indigo-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">6</span><span>A spec é criada <strong>à direita do elemento</strong> no canvas, com a letra visível. Mesma letra empilha verticalmente; letra diferente abre nova coluna.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-indigo-500/10 text-indigo-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">7</span><span>Na lista, você pode <strong>nomear grupos</strong> de letra (ex: "Grupo A — Botão Primário") e ocultar grupos inteiros da ficha.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-indigo-500/10 text-indigo-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">8</span><span>Para documentar cenários alternativos, expanda uma spec e clique em <strong>+ Exceção</strong> — escolha Erro, Sucesso, Alerta ou Confirmação.</span></li>
+            </ol>
+            <div class="mt-3 bg-indigo-50/60 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/30 rounded-xl p-2.5">
+              <p class="text-[10px] text-indigo-700 dark:text-indigo-300 leading-snug"><strong>Dica:</strong> o scroll e o destaque no canvas só ocorrem ao <em>expandir</em> uma spec na lista — não ao passar o mouse.</p>
             </div>
           </div>
-
         </div>
-      </div>
 
+        <!-- 4. Anotar Medidas -->
+        <div class="border border-gray-100 dark:border-dark-line rounded-2xl overflow-hidden shadow-sm">
+          <button onclick="var b=this.nextElementSibling;b.classList.toggle('hidden');this.querySelector('.acc-chev').classList.toggle('rotate-180')"
+            class="w-full flex items-center justify-between p-3.5 bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
+            <div class="flex items-center gap-2.5">
+              <div class="w-6 h-6 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 flex items-center justify-center shrink-0">
+                <i data-lucide="ruler" class="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" aria-hidden="true"></i>
+              </div>
+              <span class="text-[12px] font-bold text-slate-800 dark:text-white">Anotar Medidas</span>
+            </div>
+            <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" aria-hidden="true"></i>
+          </button>
+          <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
+            <ol class="space-y-2.5 text-[11px] text-slate-600 dark:text-slate-300 leading-snug list-none">
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-cyan-500/10 text-cyan-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">1</span><span><strong>Selecione 1 ou mais elementos</strong> no canvas do Figma que você quer documentar dimensionalmente.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-cyan-500/10 text-cyan-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">2</span><span>Clique no <strong>botão +</strong> no rodapé da view de Medidas. Escolha ao menos um tipo:</span></li>
+            </ol>
+            <div class="ml-7 mt-2 grid grid-cols-2 gap-1.5 text-[10px]">
+              <div class="bg-cyan-50/60 dark:bg-cyan-900/10 border border-cyan-100 dark:border-cyan-800/30 rounded-xl p-2"><strong class="text-cyan-700 dark:text-cyan-300">W × H</strong><p class="text-slate-500 dark:text-slate-400 mt-0.5">Largura e altura do elemento</p></div>
+              <div class="bg-cyan-50/60 dark:bg-cyan-900/10 border border-cyan-100 dark:border-cyan-800/30 rounded-xl p-2"><strong class="text-cyan-700 dark:text-cyan-300">Margin</strong><p class="text-slate-500 dark:text-slate-400 mt-0.5">Espaçamento externo (outer)</p></div>
+              <div class="bg-cyan-50/60 dark:bg-cyan-900/10 border border-cyan-100 dark:border-cyan-800/30 rounded-xl p-2"><strong class="text-cyan-700 dark:text-cyan-300">Padding</strong><p class="text-slate-500 dark:text-slate-400 mt-0.5">Espaçamento interno</p></div>
+              <div class="bg-cyan-50/60 dark:bg-cyan-900/10 border border-cyan-100 dark:border-cyan-800/30 rounded-xl p-2"><strong class="text-cyan-700 dark:text-cyan-300">Spacing</strong><p class="text-slate-500 dark:text-slate-400 mt-0.5">Padding + gaps automáticos</p></div>
+            </div>
+            <ol class="space-y-2.5 text-[11px] text-slate-600 dark:text-slate-300 leading-snug list-none mt-2.5">
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-cyan-500/10 text-cyan-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">3</span><span>Confirme — as anotações são criadas no canvas do Figma e aparecem na lista do plugin com nome e valores.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-cyan-500/10 text-cyan-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">4</span><span>Use o botão <strong>Ocultar tudo</strong> para esconder temporariamente todas as medidas do canvas sem excluí-las.</span></li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- 5. Fluxos de Tela -->
+        <div class="border border-gray-100 dark:border-dark-line rounded-2xl overflow-hidden shadow-sm">
+          <button onclick="var b=this.nextElementSibling;b.classList.toggle('hidden');this.querySelector('.acc-chev').classList.toggle('rotate-180')"
+            class="w-full flex items-center justify-between p-3.5 bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
+            <div class="flex items-center gap-2.5">
+              <div class="w-6 h-6 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center shrink-0">
+                <i data-lucide="git-branch" class="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" aria-hidden="true"></i>
+              </div>
+              <span class="text-[12px] font-bold text-slate-800 dark:text-white">Fluxos de Tela</span>
+            </div>
+            <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" aria-hidden="true"></i>
+          </button>
+          <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
+            <ol class="space-y-2.5 text-[11px] text-slate-600 dark:text-slate-300 leading-snug list-none">
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-purple-500/10 text-purple-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">1</span><span>Para <strong>Início</strong> ou <strong>Fim</strong> de jornada: selecione <strong>1 frame</strong> no canvas. Para todos os outros tipos: selecione <strong>2 frames</strong>.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-purple-500/10 text-purple-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">2</span><span>Clique em <strong>+ Conectar Frames</strong> e escolha o tipo de conexão:</span></li>
+            </ol>
+            <div class="ml-7 mt-2 space-y-1 text-[10px]">
+              <div class="flex items-center gap-2"><span class="w-16 shrink-0 font-bold text-purple-700 dark:text-purple-300">Sólida</span><span class="text-slate-500 dark:text-slate-400">Transição sequencial entre telas</span></div>
+              <div class="flex items-center gap-2"><span class="w-16 shrink-0 font-bold text-purple-700 dark:text-purple-300">Tracejada</span><span class="text-slate-500 dark:text-slate-400">Mensagem, evento ou chamada assíncrona</span></div>
+              <div class="flex items-center gap-2"><span class="w-16 shrink-0 font-bold text-purple-700 dark:text-purple-300">Decisão</span><span class="text-slate-500 dark:text-slate-400">Losango de bifurcação (obriga texto)</span></div>
+              <div class="flex items-center gap-2"><span class="w-16 shrink-0 font-bold text-purple-700 dark:text-purple-300">Paralelo</span><span class="text-slate-500 dark:text-slate-400">Fork ou join de processos paralelos</span></div>
+            </div>
+            <ol class="space-y-2.5 text-[11px] text-slate-600 dark:text-slate-300 leading-snug list-none mt-2.5">
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-purple-500/10 text-purple-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">3</span><span>Para tipos <strong>Decisão</strong>, preencha o texto do losango (ex: "Usuário autenticado?"). Para Linha, adicione um chip opcional (ex: "Sim", "Não").</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-purple-500/10 text-purple-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">4</span><span>Escolha o <strong>lado da âncora</strong> (auto, topo, base, esquerda, direita) para controlar de onde a seta sai.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-purple-500/10 text-purple-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">5</span><span>O fluxo é criado no canvas e aparece na lista. Clique no ícone de foco para <strong>centralizar a seta no canvas</strong>.</span></li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- 6. Gerar Ficha -->
+        <div class="border border-gray-100 dark:border-dark-line rounded-2xl overflow-hidden shadow-sm">
+          <button onclick="var b=this.nextElementSibling;b.classList.toggle('hidden');this.querySelector('.acc-chev').classList.toggle('rotate-180')"
+            class="w-full flex items-center justify-between p-3.5 bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
+            <div class="flex items-center gap-2.5">
+              <div class="w-6 h-6 rounded-xl bg-[#005ca9]/10 flex items-center justify-center shrink-0">
+                <i data-lucide="send" class="w-3.5 h-3.5 text-[#005ca9]" aria-hidden="true"></i>
+              </div>
+              <span class="text-[12px] font-bold text-slate-800 dark:text-white">Gerar Ficha de Handoff</span>
+            </div>
+            <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" aria-hidden="true"></i>
+          </button>
+          <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
+            <ol class="space-y-2.5 text-[11px] text-slate-600 dark:text-slate-300 leading-snug list-none">
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-[#005ca9]/10 text-[#005ca9] font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">1</span><span>Verifique que os <strong>pré-requisitos</strong> estão preenchidos: título, objetivo, ao menos 1 Designer com e-mail válido.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-[#005ca9]/10 text-[#005ca9] font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">2</span><span>Clique em <strong>Gerar Ficha de Handoff</strong> na home. Se já existe uma ficha, o plugin pergunta se a nova versão é <strong>Minor</strong> (ajuste) ou <strong>Major</strong> (redesenho).</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-[#005ca9]/10 text-[#005ca9] font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">3</span><span>A ficha é criada no canvas com o nome <code class="bg-gray-100 dark:bg-slate-800 px-1 rounded text-[9px]">Handex | Ficha de Projeto | {Título} | {Data}</code> e posicionada fora dos frames existentes.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-[#005ca9]/10 text-[#005ca9] font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">4</span><span>Na tela de resumo, você também pode exportar a documentação como <strong>Markdown</strong> (.md), <strong>JSON</strong> (.json) ou <strong>HTML interativo</strong> — útil para compartilhar com devs sem acesso ao Figma.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-[#005ca9]/10 text-[#005ca9] font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">5</span><span>A ficha é criada <strong>desbloqueada</strong> — você pode mover e organizar no canvas à vontade. Specs, medidas e fluxos individuais permanecem bloqueados.</span></li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- 7. Importar / Exportar -->
+        <div class="border border-gray-100 dark:border-dark-line rounded-2xl overflow-hidden shadow-sm">
+          <button onclick="var b=this.nextElementSibling;b.classList.toggle('hidden');this.querySelector('.acc-chev').classList.toggle('rotate-180')"
+            class="w-full flex items-center justify-between p-3.5 bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
+            <div class="flex items-center gap-2.5">
+              <div class="w-6 h-6 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                <i data-lucide="upload" class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" aria-hidden="true"></i>
+              </div>
+              <span class="text-[12px] font-bold text-slate-800 dark:text-white">Importar / Exportar dados</span>
+            </div>
+            <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" aria-hidden="true"></i>
+          </button>
+          <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
+            <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Exportar</p>
+            <ol class="space-y-2 text-[11px] text-slate-600 dark:text-slate-300 leading-snug list-none mb-3">
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>Acesse <strong>Gerar Ficha de Handoff</strong> → use os botões de exportação no rodapé para baixar <strong>JSON</strong> (backup completo), <strong>Markdown</strong> ou <strong>HTML interativo</strong>.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>O <strong>JSON</strong> é a fonte completa de dados — contém specs, medidas, fluxos, propriedades e tokens escaneados. Ideal para integrações com outros sistemas.</span></li>
+            </ol>
+            <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Importar</p>
+            <ol class="space-y-2 text-[11px] text-slate-600 dark:text-slate-300 leading-snug list-none">
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>Clique em <strong>Importar JSON</strong> na home e selecione um arquivo exportado anteriormente. O plugin restaura todos os dados e incrementa a versão automaticamente.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>Após importar, escolha o que recriar no canvas: <strong>Ficha Técnica</strong>, <strong>Cards de Spec</strong> e/ou <strong>Medidas</strong>.</span></li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Documentação de Apoio -->
+        <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-sm p-4">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-1 h-4 bg-[#0070af] rounded-full"></div>
+            <h3 class="font-bold text-[#1E293B] dark:text-white text-[12px]">Documentação de Apoio</h3>
+          </div>
+          <div class="space-y-2">
+            <button onclick="window.open('https://designsystem.caixa.gov.br', '_blank')" class="w-full py-3 bg-white dark:bg-dark-bg border border-[#0070af] text-[#0070af] font-bold rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all flex items-center justify-center gap-2 shadow-sm text-[11px]">
+              <i data-lucide="layers" class="w-3.5 h-3.5" aria-hidden="true"></i> Toolkit DSC
+            </button>
+            <button onclick="window.open('https://designsystem.caixa.gov.br/passo-a-passo', '_blank')" class="w-full py-3 bg-white dark:bg-dark-bg border border-[#0070af] text-[#0070af] font-bold rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all flex items-center justify-center gap-2 shadow-sm text-[11px]">
+              <i data-lucide="map" class="w-3.5 h-3.5" aria-hidden="true"></i> Passo a Passo
+            </button>
+            <button onclick="window.open('https://designsystem.caixa.gov.br/tutoriais', '_blank')" class="w-full py-3 bg-white dark:bg-dark-bg border border-[#0070af] text-[#0070af] font-bold rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all flex items-center justify-center gap-2 shadow-sm text-[11px]">
+              <i data-lucide="video" class="w-3.5 h-3.5" aria-hidden="true"></i> Tutoriais
+            </button>
+          </div>
+        </div>
+
+        <!-- Dica: layers bloqueadas -->
+        <div class="flex items-start gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-2xl p-3.5">
+          <i data-lucide="lock" class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" aria-hidden="true"></i>
+          <div>
+            <p class="text-[11px] font-bold text-amber-700 dark:text-amber-400 mb-0.5">Layers geradas pelo plugin são bloqueadas</p>
+            <p class="text-[10px] text-amber-600 dark:text-amber-500 leading-snug">
+              Specs, medidas, fluxos e a Ficha de Projeto são criados com bloqueio de edição para preservar a integridade do handoff. Para remover ou recriar um item, utilize os botões de exclusão dentro do próprio plugin.
+            </p>
+          </div>
+        </div>
+
+      </div>
     </main>
