@@ -1289,9 +1289,10 @@
               setFillAndHug(headerRow);
               if (item.preview) {
                 try {
+                  const imageHash = figma.createImage(item.preview).hash;
                   const rect = figma.createRectangle();
                   rect.resize(32, 32);
-                  rect.fills = [{ type: "IMAGE", imageHash: figma.createImage(item.preview).hash, scaleMode: "FIT" }];
+                  rect.fills = [{ type: "IMAGE", imageHash, scaleMode: "FIT" }];
                   rect.cornerRadius = 4;
                   headerRow.appendChild(rect);
                 } catch (e) {
@@ -2234,15 +2235,15 @@
           await figma.loadFontAsync({ family: "Inter", style: "Regular" });
         } catch (e) {
         }
-        function _makeMeasLine(x1, y1, x2, y2, value, type, color) {
-          const els = [];
-          const line = figma.createLine();
-          line.strokes = [{ type: "SOLID", color }];
-          line.strokeWeight = 1;
-          line.x = x1;
-          line.y = y1;
-          if (type === "h") {
-            line.resize(Math.max(0.01, x2 - x1), 0);
+        function _measLine(x1, y1, x2, y2, value, type, color) {
+          const elements = [];
+          const mainLine = figma.createLine();
+          mainLine.strokes = [{ type: "SOLID", color }];
+          mainLine.strokeWeight = 1;
+          mainLine.x = x1;
+          mainLine.y = y1;
+          if (type === "horizontal") {
+            mainLine.resize(Math.max(0.01, x2 - x1), 0);
             const t1 = figma.createLine();
             t1.strokes = [{ type: "SOLID", color }];
             t1.x = x1;
@@ -2255,10 +2256,10 @@
             t2.y = y1 - 4;
             t2.resize(8, 0);
             t2.rotation = -90;
-            els.push(line, t1, t2);
+            elements.push(mainLine, t1, t2);
           } else {
-            line.rotation = -90;
-            line.resize(Math.max(0.01, y2 - y1), 0);
+            mainLine.rotation = -90;
+            mainLine.resize(Math.max(0.01, y2 - y1), 0);
             const t1 = figma.createLine();
             t1.strokes = [{ type: "SOLID", color }];
             t1.x = x1 - 4;
@@ -2269,7 +2270,7 @@
             t2.x = x1 - 4;
             t2.y = y2;
             t2.resize(8, 0);
-            els.push(line, t1, t2);
+            elements.push(mainLine, t1, t2);
           }
           const label = figma.createText();
           label.fontName = { family: "Inter", style: "Regular" };
@@ -2280,25 +2281,30 @@
           bg.resize(label.width + 8, label.height + 4);
           bg.fills = [{ type: "SOLID", color }];
           bg.cornerRadius = 4;
-          const mid = type === "h" ? { x: (x1 + x2) / 2 - bg.width / 2, y: y1 - bg.height - 4 } : { x: x1 - bg.width - 6, y: (y1 + y2) / 2 - bg.height / 2 };
-          bg.x = mid.x;
-          bg.y = mid.y;
-          label.x = mid.x + 4;
-          label.y = mid.y + 2;
-          els.push(bg, label);
-          return els;
+          figma.currentPage.appendChild(label);
+          if (type === "horizontal") {
+            const cx = x1 + (x2 - x1) / 2;
+            bg.x = cx - bg.width / 2;
+            bg.y = y1 - bg.height / 2;
+          } else {
+            const cy = y1 + (y2 - y1) / 2;
+            bg.x = x1 - bg.width / 2;
+            bg.y = cy - bg.height / 2;
+          }
+          label.x = bg.x + 4;
+          label.y = bg.y + 2;
+          elements.push(bg, label);
+          return elements;
         }
         const red = { r: 1, g: 0.2, b: 0.2 };
         let created = 0;
         for (const m of measurements) {
-          let target = null;
-          target = frameNode.findOne((n) => n.name === m.name && n.type !== "GROUP");
-          if (!target) target = frameNode;
+          const target = frameNode.findOne((n) => n.name === m.name && n.type !== "GROUP") || frameNode;
           const bounds = target.absoluteBoundingBox;
           if (!bounds) continue;
           const items = [
-            ..._makeMeasLine(bounds.x, bounds.y - 20, bounds.x + bounds.width, bounds.y - 20, bounds.width, "h", red),
-            ..._makeMeasLine(bounds.x + bounds.width + 10, bounds.y, bounds.x + bounds.width + 10, bounds.y + bounds.height, bounds.height, "v", red)
+            ..._measLine(bounds.x, bounds.y - 20, bounds.x + bounds.width, bounds.y - 20, bounds.width, "horizontal", red),
+            ..._measLine(bounds.x - 20, bounds.y, bounds.x - 20, bounds.y + bounds.height, bounds.height, "vertical", red)
           ];
           if (items.length > 0) {
             const group = figma.group(items, figma.currentPage);
@@ -2684,8 +2690,13 @@
             targetX = _rightmost.right + _SPEC_COL_GAP;
             targetY = _rightmost.topY;
           } else {
-            targetX = bounds.x + bounds.width + 100;
-            targetY = bounds.y;
+            let _anchorNode = node;
+            while (_anchorNode.parent && _anchorNode.parent.type !== "PAGE") {
+              _anchorNode = _anchorNode.parent;
+            }
+            const _anchorBounds = _anchorNode.absoluteBoundingBox || bounds;
+            targetX = _anchorBounds.x + _anchorBounds.width + 100;
+            targetY = _anchorBounds.y;
           }
           specCard.x = Math.round(targetX);
           specCard.y = Math.round(targetY);
