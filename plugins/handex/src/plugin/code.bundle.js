@@ -1176,6 +1176,7 @@
               sBadgeT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
               sBadgeT.characters = s.letter || "A";
               sBadgeT.textAutoResize = "WIDTH_AND_HEIGHT";
+              if (s.id) sBadgeT.hyperlink = { type: "NODE", value: s.id };
               sBadge.appendChild(sBadgeT);
               const sName = createText(s.name || s.label || "Spec", 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
               sName.layoutGrow = 1;
@@ -1183,6 +1184,9 @@
               if (s.link) {
                 sName.textDecoration = "UNDERLINE";
                 sName.hyperlink = { type: "URL", value: s.link };
+              } else if (s.id) {
+                sName.textDecoration = "UNDERLINE";
+                sName.hyperlink = { type: "NODE", value: s.id };
               }
               const sCatTag = createFrame("HORIZONTAL", 6, 3, scBg);
               sCatTag.cornerRadius = 999;
@@ -1195,6 +1199,31 @@
                 const sNote = createText(s.note, 10, "Regular", { r: 0.4, g: 0.45, b: 0.55 });
                 sRow.appendChild(sNote);
                 setFillAndHug(sNote);
+              }
+              const _props = s.properties || [];
+              if (_props.length > 0) {
+                const propsFrame = createFrame("VERTICAL", 0, 3);
+                propsFrame.fills = [];
+                setFillAndHug(propsFrame);
+                sRow.appendChild(propsFrame);
+                _props.forEach((prop) => {
+                  const pRow = createFrame("HORIZONTAL", 8, 4, { r: 0.93, g: 0.95, b: 1 });
+                  pRow.cornerRadius = 4;
+                  pRow.counterAxisAlignItems = "CENTER";
+                  setFillAndHug(pRow);
+                  propsFrame.appendChild(pRow);
+                  const pKey = createText(prop.label || prop.key || "", 9, "Regular", { r: 0.35, g: 0.4, b: 0.5 });
+                  pKey.layoutGrow = 1;
+                  pRow.appendChild(pKey);
+                  if (prop.token) {
+                    const tBadge = createText(prop.token, 8, "Medium", { r: 0, g: 0.44, b: 0.69 });
+                    setFillAndHug(tBadge);
+                    pRow.appendChild(tBadge);
+                  }
+                  const pVal = createText(String(prop.value || ""), 9, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+                  setFillAndHug(pVal);
+                  pRow.appendChild(pVal);
+                });
               }
             });
           });
