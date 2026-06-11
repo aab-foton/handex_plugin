@@ -242,5 +242,20 @@
       closeModal('confirm-clear-modal');
       try { localStorage.removeItem('handex-state'); } catch (e) {}
       try { localStorage.removeItem('handex-ann-categories-v2'); } catch (e) {}
-      location.reload();
+      // Reseta o estado em memória para os valores iniciais
+      Object.assign(handoffData, {
+        _schemaVersion: 2,
+        step1: { titulo: '', versao: 'v1.0', objetivo: '', status: 'rascunho', jornada: '', feature: '', equipe: [] },
+        step2: { briefingEnabled: false, briefingQuestions: [], regras: [], anexos: [], auditAutoBundle: null, selectedLibSlugs: [], auditReferences: [] },
+        frames: [],
+        createdFlows: [],
+        nextFlowNumber: 1,
+        currentUser: null,
+        _fichaGenerated: false,
+        _history: []
+      });
+      if (typeof createdSpecs !== 'undefined') createdSpecs.length = 0;
+      restoreUIFromState();
+      navigate('view-home');
+      showToast('Todos os dados foram removidos.');
     }
