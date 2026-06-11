@@ -934,8 +934,7 @@
             setFillAndHug(docsSection);
           }
         }
-        const _globalSpecs = (data.specs || []).filter((s) => s.visible !== false);
-        if (_globalSpecs.length > 0) {
+        if (false) {
           let buildSpecCard = function(s) {
             const tc = s.color ? { r: parseInt(s.color.slice(1, 3), 16) / 255, g: parseInt(s.color.slice(3, 5), 16) / 255, b: parseInt(s.color.slice(5, 7), 16) / 255 } : themeColor;
             const card = figma.createFrame();
@@ -1142,7 +1141,7 @@
         }
         const _framesWithSpecs = (_frames || []).filter((f) => (f.createdSpecs || []).length > 0);
         if (_framesWithSpecs.length > 0) {
-          const annotSection = createSection(content, "Especifica\xE7\xF5es Anotadas");
+          const annotSection = createSection(content, "Especifica\xE7\xF5es");
           _framesWithSpecs.forEach((f) => {
             const fGroup = createFrame("VERTICAL", 0, 6);
             fGroup.name = `[Specs] ${f.nome || "Frame"}`;
@@ -1152,29 +1151,46 @@
             fGroup.appendChild(fLabel);
             setFillAndHug(fLabel);
             f.createdSpecs.forEach((s) => {
-              const catLabel = s.category || s.categoryLabel || "Geral";
+              const catLabel = s.type || s.categoryLabel || s.category || "Geral";
+              const sc = s.color ? hexToRgb2(s.color) : { r: 0.38, g: 0.35, b: 0.75 };
+              const scBg = { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
               const sRow = createFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.97, b: 1 });
-              sRow.name = `[Spec] ${s.name || s.label || "Spec"}`;
+              sRow.name = `[Spec/${s.letter || "A"}] ${s.name || s.label || "Spec"}`;
               sRow.cornerRadius = 8;
               sRow.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.88, b: 0.96 } }];
               fGroup.appendChild(sRow);
               setFillAndHug(sRow);
-              const sTop = createFrame("HORIZONTAL", 0, 4);
+              const sTop = createFrame("HORIZONTAL", 0, 6);
               sTop.counterAxisAlignItems = "CENTER";
               sRow.appendChild(sTop);
               setFillAndHug(sTop);
-              const sName = createText(s.name || s.label || "Spec", 12, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+              const sBadge = createFrame("HORIZONTAL", 0, 0, sc);
+              sBadge.resize(20, 20);
+              sBadge.cornerRadius = 4;
+              sBadge.primaryAxisAlignItems = "CENTER";
+              sBadge.counterAxisAlignItems = "CENTER";
+              sTop.appendChild(sBadge);
+              const sBadgeT = figma.createText();
+              sBadgeT.fontName = { family: "Inter", style: "Bold" };
+              sBadgeT.fontSize = 9;
+              sBadgeT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+              sBadgeT.characters = s.letter || "A";
+              sBadgeT.textAutoResize = "WIDTH_AND_HEIGHT";
+              sBadge.appendChild(sBadgeT);
+              const sName = createText(s.name || s.label || "Spec", 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
               sName.layoutGrow = 1;
               sTop.appendChild(sName);
               if (s.link) {
                 sName.textDecoration = "UNDERLINE";
                 sName.hyperlink = { type: "URL", value: s.link };
               }
-              const sCatTag = createFrame("HORIZONTAL", 6, 3, { r: 0.93, g: 0.93, b: 1 });
+              const sCatTag = createFrame("HORIZONTAL", 6, 3, scBg);
               sCatTag.cornerRadius = 999;
+              sCatTag.strokes = [{ type: "SOLID", color: sc }];
+              sCatTag.strokeWeight = 1;
               sTop.appendChild(sCatTag);
               setFillAndHug(sCatTag);
-              sCatTag.appendChild(createText(catLabel, 9, "Medium", { r: 0.38, g: 0.35, b: 0.75 }));
+              sCatTag.appendChild(createText(catLabel, 9, "Medium", sc));
               if (s.note) {
                 const sNote = createText(s.note, 10, "Regular", { r: 0.4, g: 0.45, b: 0.55 });
                 sRow.appendChild(sNote);
