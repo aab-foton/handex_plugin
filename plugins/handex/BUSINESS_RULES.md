@@ -201,15 +201,17 @@ Toda a seção é opcional. Nenhum campo bloqueia avanço ou geração de ficha.
 ```js
 {
   id: '<figmaNodeId>',
+  targetNodeId: '',   // ID Figma do elemento anotado (para link NODE na ficha e reimportação)
   name: '',           // obrigatório (editável inline)
   letter: 'A',        // 1-2 chars, uppercase, obrigatório
-  color: '#005ca9',   // hex
-  category: '',       // enum de categorias
-  categoryLabel: '',
+  color: '#005ca9',   // hex — cor semântica da categoria
+  type: '',           // campo primário da categoria (alias de categoryLabel); usado na ficha como chip
+  category: '',       // slug interno da categoria (ex: 'comportamento', 'layout')
+  categoryLabel: '',  // label legível; fallback quando type estiver ausente
   note: '',
   link: '',
   guideSide: 'right', // right | left | top | bottom
-  properties: [],
+  properties: [],     // [{ label, token, value }]
   obs: '',
   excecoes: [],
   visible: true
