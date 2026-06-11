@@ -961,94 +961,137 @@ figma.ui.onmessage = async (msg) => {
       if (_framesWithSpecs.length > 0) {
         const annotSection = createSection(content, "Especificações");
         _framesWithSpecs.forEach(f => {
-          const fGroup = createFrame("VERTICAL", 0, 6);
+          const fGroup = createFrame("VERTICAL", 0, 10);
           fGroup.name = `[Specs] ${f.nome || 'Frame'}`;
           annotSection.appendChild(fGroup);
           setFillAndHug(fGroup);
           const fLabel = createText(f.nome || 'Frame', 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
           fGroup.appendChild(fLabel);
           setFillAndHug(fLabel);
-          f.createdSpecs.forEach(s => {
-            const catLabel = s.type || s.categoryLabel || s.category || 'Geral';
-            const sc = s.color ? hexToRgb(s.color) : { r: 0.38, g: 0.35, b: 0.75 };
-            const scBg = { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
-            const sRow = createFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.97, b: 1 });
-            sRow.name = `[Spec/${s.letter || 'A'}] ${s.name || s.label || 'Spec'}`;
-            sRow.cornerRadius = 8;
-            sRow.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.88, b: 0.96 } }];
-            fGroup.appendChild(sRow);
-            setFillAndHug(sRow);
-            // Linha topo: badge da letra + nome + categoria
-            const sTop = createFrame("HORIZONTAL", 0, 6);
-            sTop.counterAxisAlignItems = "CENTER";
-            sRow.appendChild(sTop);
-            setFillAndHug(sTop);
-            // Letter badge — clicável, navega para a spec no canvas
-            const sBadge = createFrame("HORIZONTAL", 0, 0, sc);
-            sBadge.resize(20, 20);
-            sBadge.cornerRadius = 4;
-            sBadge.primaryAxisAlignItems = "CENTER";
-            sBadge.counterAxisAlignItems = "CENTER";
-            sTop.appendChild(sBadge);
-            const sBadgeT = figma.createText();
-            sBadgeT.fontName = { family: "Inter", style: "Bold" };
-            sBadgeT.fontSize = 9;
-            sBadgeT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
-            sBadgeT.characters = s.letter || 'A';
-            sBadgeT.textAutoResize = "WIDTH_AND_HEIGHT";
-            if (s.id) sBadgeT.hyperlink = { type: "NODE", value: s.id };
-            sBadge.appendChild(sBadgeT);
-            // Nome: link para spec no canvas (ou DSC docs se houver s.link)
-            const sName = createText(s.name || s.label || 'Spec', 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-            sName.layoutGrow = 1;
-            sTop.appendChild(sName);
-            if (s.link) {
-              sName.textDecoration = "UNDERLINE";
-              sName.hyperlink = { type: "URL", value: s.link };
-            } else if (s.id) {
-              sName.textDecoration = "UNDERLINE";
-              sName.hyperlink = { type: "NODE", value: s.id };
+
+          // Agrupa specs por letra, mantendo ordem de aparição
+          const groupNames = f.specGroupNames || {};
+          const groupVisible = f.specGroupVisible || {};
+          const letterOrder = [];
+          const specsByLetter = {};
+          (f.createdSpecs || []).forEach(s => {
+            const l = s.letter || 'A';
+            if (!specsByLetter[l]) { specsByLetter[l] = []; letterOrder.push(l); }
+            specsByLetter[l].push(s);
+          });
+
+          letterOrder.forEach(letter => {
+            if (groupVisible[letter] === false) return; // grupo oculto
+            const groupSpecs = specsByLetter[letter];
+            const groupColor = groupSpecs[0]?.color ? hexToRgb(groupSpecs[0].color) : { r: 0.38, g: 0.35, b: 0.75 };
+            const groupNameText = groupNames[letter] || '';
+
+            // Contêiner do grupo
+            const gBox = createFrame("VERTICAL", 0, 6);
+            gBox.name = `[Grupo/${letter}] ${groupNameText || letter}`;
+            fGroup.appendChild(gBox);
+            setFillAndHug(gBox);
+
+            // Cabeçalho do grupo: badge da letra + nome do grupo
+            const gHeader = createFrame("HORIZONTAL", 0, 6);
+            gHeader.counterAxisAlignItems = "CENTER";
+            gBox.appendChild(gHeader);
+            setFillAndHug(gHeader);
+            const gBadge = createFrame("HORIZONTAL", 0, 0, groupColor);
+            gBadge.resize(18, 18);
+            gBadge.cornerRadius = 4;
+            gBadge.primaryAxisAlignItems = "CENTER";
+            gBadge.counterAxisAlignItems = "CENTER";
+            gHeader.appendChild(gBadge);
+            const gBadgeT = figma.createText();
+            gBadgeT.fontName = { family: "Inter", style: "Bold" };
+            gBadgeT.fontSize = 9;
+            gBadgeT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+            gBadgeT.characters = letter;
+            gBadgeT.textAutoResize = "WIDTH_AND_HEIGHT";
+            gBadge.appendChild(gBadgeT);
+            if (groupNameText) {
+              const gName = createText(groupNameText, 10, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+              gHeader.appendChild(gName);
+              setFillAndHug(gName);
             }
-            // Categoria chip
-            const sCatTag = createFrame("HORIZONTAL", 6, 3, scBg);
-            sCatTag.cornerRadius = 999;
-            sCatTag.strokes = [{ type: "SOLID", color: sc }];
-            sCatTag.strokeWeight = 1;
-            sTop.appendChild(sCatTag);
-            setFillAndHug(sCatTag);
-            sCatTag.appendChild(createText(catLabel, 9, "Medium", sc));
-            // Nota (se tiver)
-            if (s.note) {
-              const sNote = createText(s.note, 10, "Regular", { r: 0.4, g: 0.45, b: 0.55 });
-              sRow.appendChild(sNote);
-              setFillAndHug(sNote);
-            }
-            // Propriedades selecionadas na spec
-            const _props = s.properties || [];
-            if (_props.length > 0) {
-              const propsFrame = createFrame("VERTICAL", 0, 3);
-              propsFrame.fills = [];
-              setFillAndHug(propsFrame);
-              sRow.appendChild(propsFrame);
-              _props.forEach(prop => {
-                const pRow = createFrame("HORIZONTAL", 8, 4, { r: 0.93, g: 0.95, b: 1 });
-                pRow.cornerRadius = 4;
-                pRow.counterAxisAlignItems = "CENTER";
-                setFillAndHug(pRow);
-                propsFrame.appendChild(pRow);
-                const pKey = createText(prop.label || prop.key || '', 9, "Regular", { r: 0.35, g: 0.4, b: 0.5 });
-                pKey.layoutGrow = 1;
-                pRow.appendChild(pKey);
-                if (prop.token) {
-                  const tBadge = createText(prop.token, 8, "Medium", { r: 0, g: 0.44, b: 0.69 });
-                  setFillAndHug(tBadge);
-                  pRow.appendChild(tBadge);
-                }
-                const pVal = createText(String(prop.value || ''), 9, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-                setFillAndHug(pVal);
-                pRow.appendChild(pVal);
-              });
-            }
+            const gCount = createText(`${groupSpecs.length} esp.`, 9, "Regular", { r: 0.55, g: 0.6, b: 0.65 });
+            gHeader.appendChild(gCount);
+            setFillAndHug(gCount);
+
+            // Specs do grupo
+            const gSpecs = createFrame("VERTICAL", 0, 4);
+            gSpecs.fills = [];
+            gBox.appendChild(gSpecs);
+            setFillAndHug(gSpecs);
+
+            groupSpecs.forEach(s => {
+              const catLabel = s.type || s.categoryLabel || s.category || 'Geral';
+              const sc = s.color ? hexToRgb(s.color) : { r: 0.38, g: 0.35, b: 0.75 };
+              const scBg = { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
+              const sRow = createFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.97, b: 1 });
+              sRow.name = `[Spec/${s.letter || 'A'}] ${s.name || s.label || 'Spec'}`;
+              sRow.cornerRadius = 8;
+              sRow.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.88, b: 0.96 } }];
+              gSpecs.appendChild(sRow);
+              setFillAndHug(sRow);
+              // Linha topo: nome + categoria (badge da letra no grupo já identifica)
+              const sTop = createFrame("HORIZONTAL", 0, 6);
+              sTop.counterAxisAlignItems = "CENTER";
+              sRow.appendChild(sTop);
+              setFillAndHug(sTop);
+              // Nome: link para spec no canvas (ou DSC docs)
+              const sName = createText(s.name || s.label || 'Spec', 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+              sName.layoutGrow = 1;
+              sTop.appendChild(sName);
+              if (s.link) {
+                sName.textDecoration = "UNDERLINE";
+                sName.hyperlink = { type: "URL", value: s.link };
+              } else if (s.id && figma.getNodeById(s.id)) {
+                sName.textDecoration = "UNDERLINE";
+                sName.hyperlink = { type: "NODE", value: s.id };
+              }
+              // Categoria chip
+              const sCatTag = createFrame("HORIZONTAL", 6, 3, scBg);
+              sCatTag.cornerRadius = 999;
+              sCatTag.strokes = [{ type: "SOLID", color: sc }];
+              sCatTag.strokeWeight = 1;
+              sTop.appendChild(sCatTag);
+              setFillAndHug(sCatTag);
+              sCatTag.appendChild(createText(catLabel, 9, "Medium", sc));
+              // Nota (se tiver)
+              if (s.note) {
+                const sNote = createText(s.note, 10, "Regular", { r: 0.4, g: 0.45, b: 0.55 });
+                sRow.appendChild(sNote);
+                setFillAndHug(sNote);
+              }
+              // Propriedades selecionadas na spec
+              const _props = s.properties || [];
+              if (_props.length > 0) {
+                const propsFrame = createFrame("VERTICAL", 0, 3);
+                propsFrame.fills = [];
+                setFillAndHug(propsFrame);
+                sRow.appendChild(propsFrame);
+                _props.forEach(prop => {
+                  const pRow = createFrame("HORIZONTAL", 8, 4, { r: 0.93, g: 0.95, b: 1 });
+                  pRow.cornerRadius = 4;
+                  pRow.counterAxisAlignItems = "CENTER";
+                  setFillAndHug(pRow);
+                  propsFrame.appendChild(pRow);
+                  const pKey = createText(prop.label || prop.key || '', 9, "Regular", { r: 0.35, g: 0.4, b: 0.5 });
+                  pKey.layoutGrow = 1;
+                  pRow.appendChild(pKey);
+                  if (prop.token) {
+                    const tBadge = createText(prop.token, 8, "Medium", { r: 0, g: 0.44, b: 0.69 });
+                    setFillAndHug(tBadge);
+                    pRow.appendChild(tBadge);
+                  }
+                  const pVal = createText(String(prop.value || ''), 9, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+                  setFillAndHug(pVal);
+                  pRow.appendChild(pVal);
+                });
+              }
+            });
           });
         });
         content.appendChild(annotSection);
