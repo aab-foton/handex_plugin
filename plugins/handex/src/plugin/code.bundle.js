@@ -2103,6 +2103,18 @@
           if (!isAllowed) return;
         }
         if (props.length === 0 && (category === "frames" || category === "vectors")) return;
+        if (category === "vectors") return;
+        if (category === "frames") {
+          const _hasDSChild = (n) => {
+            if (!n.children) return false;
+            for (const c of n.children) {
+              if (c.type === "INSTANCE" || c.type === "COMPONENT") return true;
+              if (_hasDSChild(c)) return true;
+            }
+            return false;
+          };
+          if (_hasDSChild(node)) return;
+        }
         const name = node.name;
         let componentKey = null;
         if (node.type === "INSTANCE" && node.mainComponent) {
