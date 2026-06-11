@@ -29,36 +29,145 @@
       input.onchange = e => {
         const file = e.target.files[0];
         if (!file) return;
-        
+
         const reader = new FileReader();
         reader.onload = event => {
           try {
             const importedData = JSON.parse(event.target.result);
-            
-            // Validate basic structure
+
             if (!importedData.step1) throw new Error("Formato de JSON inválido para o Handex.");
-            
-            // Automatic versioning
+
             const oldVersion = importedData.step1.versao || 'v1.0.0';
             const newVersion = incrementVersion(oldVersion);
             importedData.step1.versao = newVersion;
-            
-            // Update state
+
             Object.assign(handoffData, importedData);
-            
-            // Save and Refresh
             saveToStorage();
             restoreUIFromState();
-            
-            // Visual feedback
-            alert(`Ô£à Dados importados!\nVersão anterior: ${oldVersion}\nVersão atual: ${newVersion}`);
+
+            // Contagens para o modal
+            const nFrames = (handoffData.frames || []).length;
+            const nSpecs = (handoffData.frames || []).reduce((s, f) => s + (f.createdSpecs || []).length, 0);
+            const nMeasures = (handoffData.frames || []).reduce((s, f) => s + (f.measurements || []).length, 0);
+            const nFlows = (handoffData.createdFlows || []).length;
+
+            const subtitle = document.getElementById('import-modal-subtitle');
+            if (subtitle) subtitle.textContent = `${oldVersion} → ${newVersion} importado com sucesso.`;
+
+            const setCount = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            setCount('import-count-frames', nFrames);
+            setCount('import-count-specs', nSpecs);
+            setCount('import-count-measures', nMeasures);
+            setCount('import-count-flows', nFlows);
+
+            // Desabilita opções sem dados
+            const specsLabel = document.getElementById('import-opt-specs-label');
+            const specsInput = document.getElementById('import-opt-specs');
+            if (specsLabel && specsInput) {
+              if (nSpecs === 0) {
+                specsInput.disabled = true;
+                specsLabel.classList.add('opacity-40', 'cursor-not-allowed');
+                const hint = document.getElementById('import-specs-hint');
+                if (hint) hint.textContent = 'Nenhuma especificação encontrada no JSON.';
+              } else {
+                specsInput.disabled = false;
+                specsLabel.classList.remove('opacity-40', 'cursor-not-allowed');
+                const hint = document.getElementById('import-specs-hint');
+                if (hint) hint.textContent = `${nSpecs} spec(s) encontrada(s) — serão recriadas no canvas.`;
+              }
+            }
+
+            const measLabel = document.getElementById('import-opt-measures-label');
+            const measInput = document.getElementById('import-opt-measures');
+            if (measLabel && measInput) {
+              if (nMeasures === 0) {
+                measInput.disabled = true;
+                measLabel.classList.add('opacity-40', 'cursor-not-allowed');
+                const hint = document.getElementById('import-measures-hint');
+                if (hint) hint.textContent = 'Nenhuma medida encontrada no JSON.';
+              } else {
+                measInput.disabled = false;
+                measLabel.classList.remove('opacity-40', 'cursor-not-allowed');
+                const hint = document.getElementById('import-measures-hint');
+                if (hint) hint.textContent = `${nMeasures} medida(s) encontrada(s) — serão reaplicadas no canvas.`;
+              }
+            }
+
+            openModal('import-apply-modal');
+            if (typeof _refreshIcons === 'function') _refreshIcons();
           } catch (err) {
-            alert('ÔØî Erro na importação: ' + err.message);
+            showToast('Erro na importação: ' + err.message);
           }
         };
         reader.readAsText(file);
       };
       input.click();
+    }
+
+    // Aplica os dados importados no canvas conforme as opções selecionadas no modal
+    function applyImportedDataToCanvas() {
+      closeModal('import-apply-modal');
+
+      const doFicha = document.getElementById('import-opt-ficha')?.checked;
+      const doSpecs = document.getElementById('import-opt-specs')?.checked;
+      const doMeasures = document.getElementById('import-opt-measures')?.checked;
+
+      if (!doFicha && !doSpecs && !doMeasures) {
+        showToast('Nenhuma opção selecionada.');
+        return;
+      }
+
+      if (doFicha) {
+        // Pequeno delay para deixar o modal fechar antes do loading aparecer
+        setTimeout(() => {
+          if (typeof createHandoffOnCanvas === 'function') {
+            createHandoffOnCanvas();
+          }
+        }, 150);
+      }
+
+      if (doSpecs) {
+        const frames = handoffData.frames || [];
+        let count = 0;
+        frames.forEach(frame => {
+          (frame.createdSpecs || []).forEach(spec => {
+            const resolvedNodeId = spec.targetNodeId || frame.figmaId;
+            if (!resolvedNodeId) return;
+            parent.postMessage({
+              pluginMessage: {
+                type: 'create-unified-spec',
+                opts: {
+                  targetNodeId: resolvedNodeId,
+                  letter: spec.letter || 'A',
+                  color: spec.color || '#0070af',
+                  note: spec.note || '',
+                  properties: spec.properties || [],
+                  categoryLabel: spec.type || ''
+                }
+              }
+            }, '*');
+            count++;
+          });
+        });
+        if (count > 0) showToast(`${count} spec(s) sendo recriadas no canvas...`);
+      }
+
+      if (doMeasures) {
+        const frames = handoffData.frames || [];
+        let count = 0;
+        frames.forEach(frame => {
+          if (!frame.figmaId || !(frame.measurements || []).length) return;
+          parent.postMessage({
+            pluginMessage: {
+              type: 'reapply-measurements',
+              frameId: frame.figmaId,
+              measurements: frame.measurements
+            }
+          }, '*');
+          count += frame.measurements.length;
+        });
+        if (count > 0) showToast(`${count} medida(s) sendo reaplicadas no canvas...`);
+      }
     }
 
     function importProgress(input) {

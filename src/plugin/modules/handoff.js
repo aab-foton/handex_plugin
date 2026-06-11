@@ -109,12 +109,6 @@ ${framesList.map(f => {
     ressalvas.map(r =>
       `- [${r.label}] **${r.name}**${r.status === 'warning' ? ' *(revisão recomendada)*' : ''}${r.nodeId ? ` — Node ID: \`${r.nodeId}\`` : ''}`
     ).join('\n');
-  const measuresMD = measurements.length === 0 ? '' :
-    '\n\n#### Medidas (' + measurements.length + ')\n' +
-    measurements.map(m => `- **${m.name || 'Medida'}**: ${Array.isArray(m.details) ? m.details.join(' | ') : m.details || ''}`).join('\n');
-  const specsMD = createdSpecs.length === 0 ? '' :
-    '\n\n#### Especificações (' + createdSpecs.length + ')\n' +
-    createdSpecs.map(s => `- **${s.name || s.label || 'Spec'}** [${s.category || s.categoryLabel || 'Geral'}]${s.note ? ': ' + s.note : ''}${s.link ? ' — [DSC](' + s.link + ')' : ''}`).join('\n');
   const excMD = excecoes.length === 0 ? '' :
     '\n\n#### Exceções (' + excecoes.length + ')\n' +
     excecoes.map(e => `- [${e.tipo || 'Geral'}] **${e.titulo || ''}**${e.notas ? ': ' + e.notas : ''}`).join('\n');
@@ -137,8 +131,28 @@ ${framesList.map(f => {
       tokensMD = '\n- Tokens escaneados: nenhum encontrado';
     }
   }
-  return `### ${f.nome}${isNew}${auditMD}${ressalvasMD}${tokensMD}${measuresMD}${specsMD}${excMD}`;
+  return `### ${f.nome}${isNew}${auditMD}${ressalvasMD}${tokensMD}${excMD}`;
 }).join('\n\n')}
+
+## Medidas (${framesList.reduce((n, f) => n + (f.measurements || []).length, 0)})
+${(() => {
+  const framesWithMeasures = framesList.filter(f => (f.measurements || []).length > 0);
+  if (framesWithMeasures.length === 0) return 'Nenhuma medida registrada.';
+  return framesWithMeasures.map(f =>
+    `### ${f.nome}\n` +
+    f.measurements.map(m => `- **${m.name || 'Medida'}**: ${Array.isArray(m.details) ? m.details.join(' | ') : m.details || ''}`).join('\n')
+  ).join('\n\n');
+})()}
+
+## Especificações Anotadas (${framesList.reduce((n, f) => n + (f.createdSpecs || []).length, 0)})
+${(() => {
+  const framesWithSpecs = framesList.filter(f => (f.createdSpecs || []).length > 0);
+  if (framesWithSpecs.length === 0) return 'Nenhuma especificação anotada.';
+  return framesWithSpecs.map(f =>
+    `### ${f.nome}\n` +
+    f.createdSpecs.map(s => `- **${s.name || s.label || 'Spec'}** [${s.category || s.categoryLabel || 'Geral'}]${s.note ? ': ' + s.note : ''}${s.link ? ' — [DSC](' + s.link + ')' : ''}`).join('\n')
+  ).join('\n\n');
+})()}
 
 ## Fluxos de Tela (${(handoffData.createdFlows || []).length})
 ${(handoffData.createdFlows || []).length === 0
@@ -1059,6 +1073,65 @@ ${(handoffData.specs || []).length === 0 ? 'Nenhuma especificação registrada.'
           </div>
         `;
         accordionsHTML += buildAccordionHTML("acc-frames", "Frames Documentados", "layers", framesContent, false);
+      }
+
+      // 7.1 Medidas (seção independente, agrupada por frame)
+      const _framesWithMeas = (_allFrames).filter(f => (f.measurements || []).length > 0);
+      if (_framesWithMeas.length > 0) {
+        const totalMeas = _framesWithMeas.reduce((n, f) => n + f.measurements.length, 0);
+        const measContent = `
+          <div class="space-y-4 text-left">
+            ${_framesWithMeas.map((f, fi) => `
+              <div>
+                <p class="text-[9px] font-black uppercase tracking-widest text-[#0070af] dark:text-blue-400 mb-1.5 flex items-center gap-1.5">
+                  <i data-lucide="layers" class="w-3 h-3"></i> ${f.nome || 'Frame'}
+                </p>
+                <div class="space-y-1.5">
+                  ${f.measurements.map((m, mi) => `
+                    <div class="flex items-center gap-2 p-2 bg-cyan-50/40 dark:bg-cyan-950/10 border border-cyan-100/60 dark:border-cyan-900/30 rounded-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21.3 8.7 8.7 21.3c-1 1-2.5 1-3.4 0l-2.6-2.6c-1-1-1-2.5 0-3.4L15.3 2.7c1-1 2.5-1 3.4 0l2.6 2.6c1 1 1 2.5 0 3.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>
+                      <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${m.name || m.label || 'Medida'}</span>
+                      ${m.details ? `<span class="text-[10px] font-mono text-cyan-700 dark:text-cyan-400 shrink-0">${Array.isArray(m.details) ? m.details.join(' | ') : m.details}</span>` : ''}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        accordionsHTML += buildAccordionHTML("acc-medidas", `Medidas · ${totalMeas}`, "ruler", measContent, false);
+      }
+
+      // 7.2 Especificações Anotadas (seção independente, agrupada por frame)
+      const _framesWithAnnot = (_allFrames).filter(f => (f.createdSpecs || []).length > 0);
+      if (_framesWithAnnot.length > 0) {
+        const totalAnnot = _framesWithAnnot.reduce((n, f) => n + f.createdSpecs.length, 0);
+        const annotContent = `
+          <div class="space-y-4 text-left">
+            ${_framesWithAnnot.map((f, fi) => `
+              <div>
+                <p class="text-[9px] font-black uppercase tracking-widest text-[#0070af] dark:text-blue-400 mb-1.5 flex items-center gap-1.5">
+                  <i data-lucide="layers" class="w-3 h-3"></i> ${f.nome || 'Frame'}
+                </p>
+                <div class="space-y-1.5">
+                  ${f.createdSpecs.map((s, si) => `
+                    <div class="flex items-start gap-2 p-2.5 bg-indigo-50/40 dark:bg-indigo-950/10 border border-indigo-100/60 dark:border-indigo-900/30 rounded-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 mt-0.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                          ${s.link ? `<a href="${s.link}" target="_blank" class="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 truncate hover:underline">${s.name || s.label || 'Spec'}</a>` : `<span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">${s.name || s.label || 'Spec'}</span>`}
+                          ${s.category ? `<span class="shrink-0" style="${_getCatStyleHTML(s.category)}">${s.categoryLabel || s.category}</span>` : ''}
+                        </div>
+                        ${s.note ? `<p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">${s.note}</p>` : ''}
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        accordionsHTML += buildAccordionHTML("acc-annot-specs", `Especificações Anotadas · ${totalAnnot}`, "tag", annotContent, false);
       }
 
       // 8. Fluxos de Tela

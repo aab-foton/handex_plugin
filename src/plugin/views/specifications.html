@@ -9,9 +9,15 @@
             </button>
             <h2 class="text-[#1E293B] dark:text-white font-bold text-[18px]">Anotar Specs</h2>
           </div>
-          <button id="specs-header-action-form" onclick="openSpecFormModal()" class="fab-inline" title="Criar especificação" aria-label="Criar especificação">
-            <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
-          </button>
+          <div class="flex items-center gap-1.5">
+            <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('specs-scroll-container'))" title="Recolher/expandir todos" aria-label="Recolher ou expandir todos os accordions"
+              class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors text-slate-500 dark:text-dark-muted">
+              <i data-lucide="chevrons-up-down" class="w-4 h-4" aria-hidden="true"></i>
+            </button>
+            <button id="specs-header-action-form" onclick="openSpecFormModal()" class="fab-inline" title="Criar especificação" aria-label="Criar especificação">
+              <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
+            </button>
+          </div>
         </div>
       </div>
 

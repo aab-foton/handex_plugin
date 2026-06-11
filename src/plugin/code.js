@@ -10,8 +10,6 @@ function _nodeOnCurrentPage(node) {
   return n != null && n.id === figma.currentPage.id;
 }
 
-// Tracks the lowest occupied Y per column (keyed by rounded X) — avoids traversing the Figma tree
-const specColumnTracker = {};
 
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -507,6 +505,7 @@ figma.ui.onmessage = async (msg) => {
       const _handoffBase = `Handex | Ficha de Projeto | ${_titulo}`;
 
       // Nome sempre inclui data (primeira versão ou atualização)
+      const _isUpdate = false;
       const _now = new Date();
       const _ts = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')} ${String(_now.getHours()).padStart(2,'0')}:${String(_now.getMinutes()).padStart(2,'0')}`;
       const _containerName = `${_handoffBase} | ${_ts}`;
@@ -522,8 +521,8 @@ figma.ui.onmessage = async (msg) => {
       const fichaTecnica = createFrame("VERTICAL", 0, 0, { r: 1, g: 1, b: 1 });
       fichaTecnica.name = `${_handoffBase} | ${_ts} / Ficha de Projeto`;
       fichaTecnica.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
-      fichaTecnica.resize(600, 100);
-      fichaTecnica.counterAxisSizingMode = "FIXED"; // Base width 600
+      fichaTecnica.resize(480, 100);
+      fichaTecnica.counterAxisSizingMode = "FIXED"; // Base width 480
       fichaTecnica.primaryAxisSizingMode = "AUTO";  // Hug height
 
       // HEADER (CAIXA)
@@ -565,23 +564,9 @@ figma.ui.onmessage = async (msg) => {
       fichaTecnica.appendChild(content);
       setFillAndHug(content);
 
-      // Row: Info Básicas + Equipe (esq) | Briefing Estratégico (dir)
-      const topInfoRow = createFrame("HORIZONTAL", 0, 16);
-      topInfoRow.name = '[Row] Info e Briefing';
-      topInfoRow.counterAxisAlignItems = "MIN";
-      topInfoRow.fills = [];
-      content.appendChild(topInfoRow);
-      setFillAndHug(topInfoRow);
-
-      const leftInfoCol = createFrame("VERTICAL", 0, 16);
-      leftInfoCol.name = '[Col] Info e Equipe';
-      leftInfoCol.fills = [];
-      topInfoRow.appendChild(leftInfoCol);
-      setFillAndHug(leftInfoCol);
-
       // 1.1 INFORMAÇÕES BÁSICAS
       if (!data.setup || data.setup.ficha !== false) {
-        const infoSection = createSection(leftInfoCol, "Informações Básicas");
+        const infoSection = createSection(content, "Informações Básicas");
         createRow(infoSection, "Título do Projeto", data.step1.titulo);
         if (data.step1.jornada) createRow(infoSection, "Jornada", data.step1.jornada);
         if (data.step1.feature) createRow(infoSection, "Feature", data.step1.feature);
@@ -618,7 +603,7 @@ figma.ui.onmessage = async (msg) => {
 
       // 1.2 EQUIPE E RESPONSÁVEIS
       if (data.step1.equipe && data.step1.equipe.length > 0) {
-        const teamSection = createSection(leftInfoCol, "Equipe e Responsáveis");
+        const teamSection = createSection(content, "Equipe e Responsáveis");
         data.step1.equipe.forEach(m => {
           const mRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
           teamSection.appendChild(mRow);
@@ -647,27 +632,10 @@ figma.ui.onmessage = async (msg) => {
         });
       }
 
-      // 1.3 BRIEFING ESTRATÉGICO — coluna direita do topInfoRow
+      // 1.3 BRIEFING ESTRATÉGICO — coletado aqui, mas gerado no card2 separado
       const _briefingQs = (data.step2 && data.step2.briefingQuestions)
         ? data.step2.briefingQuestions.filter(q => q.answer && q.answer.trim())
         : [];
-      if (_briefingQs.length > 0) {
-        const briefingSection = createSection(topInfoRow, "Briefing Estratégico");
-        _briefingQs.forEach((q, idx) => {
-          const qRow = createFrame("VERTICAL", 0, 4);
-          qRow.name = `[Briefing] Pergunta ${idx + 1}`;
-          briefingSection.appendChild(qRow);
-          setFillAndHug(qRow);
-
-          const qText = createText(`${idx + 1}. ${q.question || ''}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
-          qRow.appendChild(qText);
-          setFillAndHug(qText);
-
-          const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
-          qRow.appendChild(aText);
-          setFillAndHug(aText);
-        });
-      }
 
       // 1.4 REGRAS DE NEGÓCIO E HUs
       const _regras = (data.step2 && data.step2.regras) ? data.step2.regras : [];
@@ -770,67 +738,93 @@ figma.ui.onmessage = async (msg) => {
       // 1.6b ESPECIFICAÇÕES VISUAIS (specs globais)
       const _globalSpecs = (data.specs || []).filter(s => s.visible !== false);
       if (_globalSpecs.length > 0) {
-        const specsSection = createSection(content, "Especificações Visuais");
-        _globalSpecs.forEach(s => {
-          const sRow = figma.createFrame();
-          sRow.name = `[Spec/${s.letter || 'A'}] ${s.name || ''}`;
-          sRow.layoutMode = "VERTICAL";
-          sRow.itemSpacing = 4;
-          sRow.paddingLeft = 10; sRow.paddingRight = 10;
-          sRow.paddingTop = 8; sRow.paddingBottom = 8;
-          sRow.cornerRadius = 8;
-          sRow.fills = [{ type: "SOLID", color: { r: 0.98, g: 0.98, b: 1 } }];
-          sRow.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.92, b: 0.96 } }];
-          sRow.primaryAxisSizingMode = "AUTO";
-          sRow.counterAxisSizingMode = "AUTO";
-          specsSection.appendChild(sRow);
-          setFillAndHug(sRow);
+        const SPEC_CARD_W = 240;
 
+        // Build a single spec card with fixed width + hug height
+        function buildSpecCard(s) {
+          const tc = s.color
+            ? { r: parseInt(s.color.slice(1,3),16)/255, g: parseInt(s.color.slice(3,5),16)/255, b: parseInt(s.color.slice(5,7),16)/255 }
+            : themeColor;
+
+          const card = figma.createFrame();
+          card.name = `[Spec/${s.letter || 'A'}] ${s.name || ''}`;
+          card.layoutMode = "VERTICAL";
+          card.itemSpacing = 4;
+          card.paddingLeft = 10; card.paddingRight = 10;
+          card.paddingTop = 8; card.paddingBottom = 8;
+          card.cornerRadius = 8;
+          card.fills = [{ type: "SOLID", color: { r: 0.98, g: 0.98, b: 1 } }];
+          card.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.92, b: 0.96 } }];
+          card.primaryAxisSizingMode = "AUTO";    // hug height
+          card.counterAxisSizingMode = "FIXED";   // fixed width → text wraps
+          card.resize(SPEC_CARD_W, 10);
+
+          // Header: badge + name
           const sHeader = figma.createFrame();
           sHeader.layoutMode = "HORIZONTAL";
           sHeader.itemSpacing = 8;
           sHeader.fills = [];
           sHeader.counterAxisAlignItems = "CENTER";
-          sHeader.primaryAxisSizingMode = "AUTO";
+          sHeader.primaryAxisSizingMode = "FIXED";
           sHeader.counterAxisSizingMode = "AUTO";
-          sRow.appendChild(sHeader);
+          sHeader.layoutAlign = "STRETCH";
+          card.appendChild(sHeader);
 
-          const tag = figma.createFrame();
-          tag.layoutMode = "HORIZONTAL";
-          tag.resize(20, 20);
-          tag.cornerRadius = 4;
-          const tc = s.color ? { r: parseInt(s.color.slice(1,3),16)/255, g: parseInt(s.color.slice(3,5),16)/255, b: parseInt(s.color.slice(5,7),16)/255 } : themeColor;
-          tag.fills = [{ type: "SOLID", color: tc }];
-          tag.primaryAxisAlignItems = "CENTER"; tag.counterAxisAlignItems = "CENTER";
-          const tagT = figma.createText();
-          tagT.fontName = { family: "Inter", style: "Bold" }; tagT.fontSize = 9;
-          tagT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
-          tagT.characters = s.letter || 'A'; tagT.textAutoResize = "WIDTH_AND_HEIGHT";
-          tag.appendChild(tagT); sHeader.appendChild(tag);
+          const badge = figma.createFrame();
+          badge.layoutMode = "HORIZONTAL";
+          badge.resize(20, 20);
+          badge.cornerRadius = 4;
+          badge.fills = [{ type: "SOLID", color: tc }];
+          badge.primaryAxisAlignItems = "CENTER"; badge.counterAxisAlignItems = "CENTER";
+          const badgeT = figma.createText();
+          badgeT.fontName = { family: "Inter", style: "Bold" }; badgeT.fontSize = 9;
+          badgeT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+          badgeT.characters = s.letter || 'A'; badgeT.textAutoResize = "WIDTH_AND_HEIGHT";
+          badge.appendChild(badgeT);
+          sHeader.appendChild(badge);
 
           const sName = figma.createText();
           sName.fontName = { family: "Inter", style: "Bold" }; sName.fontSize = 11;
           sName.fills = [{ type: "SOLID", color: { r: 0.12, g: 0.16, b: 0.23 } }];
-          sName.characters = s.name || ''; sName.textAutoResize = "WIDTH_AND_HEIGHT";
+          sName.characters = s.name || '';
+          sName.textAutoResize = "HEIGHT";  // wrap within fixed card width
+          sName.layoutGrow = 1;
           sHeader.appendChild(sName);
 
           if (s.note) {
             const sNote = figma.createText();
             sNote.fontName = { family: "Inter", style: "Regular" }; sNote.fontSize = 10;
             sNote.fills = [{ type: "SOLID", color: { r: 0.4, g: 0.4, b: 0.4 } }];
-            sNote.characters = s.note; sNote.textAutoResize = "WIDTH_AND_HEIGHT";
-            sRow.appendChild(sNote);
+            sNote.characters = s.note;
+            sNote.textAutoResize = "HEIGHT";
+            sNote.layoutAlign = "STRETCH";
+            card.appendChild(sNote);
           }
 
+          // Link
+          if (s.link) {
+            const lText = figma.createText();
+            lText.fontName = { family: "Inter", style: "Regular" }; lText.fontSize = 9;
+            lText.fills = [{ type: "SOLID", color: { r: 0, g: 0.35, b: 0.79 } }];
+            lText.characters = s.link;
+            lText.textDecoration = "UNDERLINE";
+            lText.hyperlink = { type: "URL", value: s.link };
+            lText.textAutoResize = "HEIGHT";  // wrap long URLs
+            lText.layoutAlign = "STRETCH";
+            card.appendChild(lText);
+          }
+
+          // Exceptions
           const sExcs = s.excecoes || [];
           if (sExcs.length > 0) {
             const _excRgb = { 'Erro': { r: 0.80, g: 0.15, b: 0.15 }, 'Alerta': { r: 0.80, g: 0.50, b: 0.00 }, 'Sucesso': { r: 0.10, g: 0.55, b: 0.25 }, 'Confirmação': { r: 0.05, g: 0.35, b: 0.80 } };
             sExcs.forEach(exc => {
               const eRow = figma.createFrame();
               eRow.layoutMode = "HORIZONTAL"; eRow.itemSpacing = 6; eRow.fills = [];
-              eRow.primaryAxisSizingMode = "AUTO"; eRow.counterAxisSizingMode = "AUTO";
+              eRow.primaryAxisSizingMode = "FIXED"; eRow.counterAxisSizingMode = "AUTO";
+              eRow.layoutAlign = "STRETCH";
               eRow.counterAxisAlignItems = "CENTER";
-              sRow.appendChild(eRow);
+              card.appendChild(eRow);
               const eType = figma.createText();
               eType.fontName = { family: "Inter", style: "Bold" }; eType.fontSize = 9;
               eType.fills = [{ type: "SOLID", color: _excRgb[exc.tipo] || { r: 0.4, g: 0.4, b: 0.4 } }];
@@ -838,11 +832,60 @@ figma.ui.onmessage = async (msg) => {
               const eTitle = figma.createText();
               eTitle.fontName = { family: "Inter", style: "Regular" }; eTitle.fontSize = 10;
               eTitle.fills = [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2 } }];
-              eTitle.characters = exc.titulo || ''; eTitle.textAutoResize = "WIDTH_AND_HEIGHT";
+              eTitle.characters = exc.titulo || '';
+              eTitle.textAutoResize = "HEIGHT";
+              eTitle.layoutGrow = 1;
               eRow.appendChild(eType); eRow.appendChild(eTitle);
             });
           }
+
+          return card;
+        }
+
+        // Group specs by tag
+        const _specsByTag = {};
+        _globalSpecs.forEach(s => {
+          const tag = s.categoryLabel || s.category || 'Geral';
+          if (!_specsByTag[tag]) _specsByTag[tag] = [];
+          _specsByTag[tag].push(s);
         });
+
+        const specsSection = createSection(content, "Especificações Visuais");
+
+        // Outer row: different tags side by side
+        const specsTagRow = figma.createFrame();
+        specsTagRow.name = '[Row] Especificações por Tag';
+        specsTagRow.layoutMode = "HORIZONTAL";
+        specsTagRow.layoutWrap = "WRAP";
+        specsTagRow.itemSpacing = 16;
+        specsTagRow.counterAxisSpacing = 16;
+        specsTagRow.fills = [];
+        specsTagRow.primaryAxisSizingMode = "AUTO";
+        specsTagRow.counterAxisSizingMode = "AUTO";
+        specsTagRow.counterAxisAlignItems = "MIN";
+        specsSection.appendChild(specsTagRow);
+        setFillAndHug(specsTagRow);
+
+        Object.entries(_specsByTag).forEach(([tag, tagSpecs]) => {
+          if (tagSpecs.length === 1) {
+            // Single spec: no group wrapper
+            specsTagRow.appendChild(buildSpecCard(tagSpecs[0]));
+          } else {
+            // 2+ specs with same tag: vertical group
+            const group = figma.createFrame();
+            group.name = `[Specs/${tag}] Especificações Visuais`;
+            group.layoutMode = "VERTICAL";
+            group.itemSpacing = 8;
+            group.fills = [];
+            group.primaryAxisSizingMode = "AUTO";
+            group.counterAxisSizingMode = "AUTO";
+            group.counterAxisAlignItems = "MIN";
+            tagSpecs.forEach(s => group.appendChild(buildSpecCard(s)));
+            specsTagRow.appendChild(group);
+            setFillAndHug(group);
+          }
+        });
+
         content.appendChild(specsSection);
         setFillAndHug(specsSection);
       }
@@ -868,76 +911,141 @@ figma.ui.onmessage = async (msg) => {
           fName.layoutGrow = 1;
           fHeader.appendChild(fName);
           if (f.isNewComponent) {
-            const badge = createFrame("HORIZONTAL", 6, 3, { r: 0.38, g: 0.40, b: 0.95 });
-            badge.cornerRadius = 4;
-            badge.appendChild(createText("Novo componente", 9, "Bold", { r: 1, g: 1, b: 1 }));
+            const badge = createFrame("HORIZONTAL", 8, 3, { r: 0.94, g: 0.92, b: 1.0 });
+            badge.cornerRadius = 999;
+            badge.strokes = [{ type: "SOLID", color: { r: 0.70, g: 0.60, b: 0.96 } }];
+            badge.strokeWeight = 1;
+            badge.appendChild(createText("Novo componente", 9, "Medium", { r: 0.38, g: 0.18, b: 0.78 }));
             fHeader.appendChild(badge);
           }
           if (f.audit && f.audit.status) {
             createRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? ' — ' + f.audit.justificativa : ''));
-          }
-          // Medidas
-          const fMeasurements = f.measurements || [];
-          if (fMeasurements.length > 0) {
-            const mLabel = createText(`Medidas (${fMeasurements.length})`, 10, "Bold", { r: 0.4, g: 0.45, b: 0.55 });
-            fRow.appendChild(mLabel);
-            setFillAndHug(mLabel);
-            fMeasurements.forEach(m => {
-              const details = Array.isArray(m.details) ? m.details.join(' | ') : (m.details || '');
-              createRow(fRow, m.name || 'Medida', details);
-            });
-          }
-          // Specs criadas
-          const fSpecs = f.createdSpecs || [];
-          if (fSpecs.length > 0) {
-            const sLabel = createText(`Especificações (${fSpecs.length})`, 10, "Bold", { r: 0.4, g: 0.45, b: 0.55 });
-            fRow.appendChild(sLabel);
-            setFillAndHug(sLabel);
-            fSpecs.forEach(s => {
-              const sVal = `[${s.category || s.categoryLabel || 'Geral'}]${s.note ? ' ' + s.note : ''}`;
-              const sRow = createFrame("HORIZONTAL", 8, 6, { r: 0.97, g: 0.97, b: 1 });
-              sRow.cornerRadius = 6;
-              sRow.counterAxisAlignItems = "CENTER";
-              fRow.appendChild(sRow);
-              setFillAndHug(sRow);
-              const sName = createText(s.name || s.label || 'Spec', 11, "Bold");
-              sName.layoutGrow = 1;
-              sRow.appendChild(sName);
-              const sCat = createText(sVal, 10, "Regular", { r: 0.5, g: 0.5, b: 0.6 });
-              sRow.appendChild(sCat);
-              setFillAndHug(sCat);
-              if (s.link) {
-                sName.textDecoration = "UNDERLINE";
-                sName.hyperlink = { type: "URL", value: s.link };
-              }
-            });
           }
         });
         content.appendChild(framesSection);
         setFillAndHug(framesSection);
       }
 
-      // 1.8 FLUXOS DE TELA
+      // 1.8 MEDIDAS (seção independente, agrupada por frame)
+      const _framesWithMeasures = (_frames || []).filter(f => (f.measurements || []).length > 0);
+      if (_framesWithMeasures.length > 0) {
+        const measSection = createSection(content, "Medidas");
+        _framesWithMeasures.forEach(f => {
+          // Sub-cabeçalho do frame
+          const fGroup = createFrame("VERTICAL", 0, 6);
+          fGroup.name = `[Medidas] ${f.nome || 'Frame'}`;
+          measSection.appendChild(fGroup);
+          setFillAndHug(fGroup);
+          const fLabel = createText(f.nome || 'Frame', 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
+          fGroup.appendChild(fLabel);
+          setFillAndHug(fLabel);
+          f.measurements.forEach(m => {
+            const details = Array.isArray(m.details) ? m.details.join(' | ') : (m.details || '');
+            const mRow = createFrame("HORIZONTAL", 10, 7, { r: 0.94, g: 0.97, b: 1 });
+            mRow.name = `[Medida] ${m.name || 'Medida'}`;
+            mRow.cornerRadius = 6;
+            mRow.counterAxisAlignItems = "CENTER";
+            fGroup.appendChild(mRow);
+            setFillAndHug(mRow);
+            const mName = createText(m.name || 'Medida', 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+            mName.layoutGrow = 1;
+            mRow.appendChild(mName);
+            const mVal = createText(details, 10, "Regular", { r: 0.27, g: 0.45, b: 0.78 });
+            mRow.appendChild(mVal);
+            setFillAndHug(mVal);
+          });
+        });
+        content.appendChild(measSection);
+        setFillAndHug(measSection);
+      }
+
+      // 1.9 ESPECIFICAÇÕES ANOTADAS (seção independente, agrupada por frame)
+      const _framesWithSpecs = (_frames || []).filter(f => (f.createdSpecs || []).length > 0);
+      if (_framesWithSpecs.length > 0) {
+        const annotSection = createSection(content, "Especificações Anotadas");
+        _framesWithSpecs.forEach(f => {
+          const fGroup = createFrame("VERTICAL", 0, 6);
+          fGroup.name = `[Specs] ${f.nome || 'Frame'}`;
+          annotSection.appendChild(fGroup);
+          setFillAndHug(fGroup);
+          const fLabel = createText(f.nome || 'Frame', 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
+          fGroup.appendChild(fLabel);
+          setFillAndHug(fLabel);
+          f.createdSpecs.forEach(s => {
+            const catLabel = s.category || s.categoryLabel || 'Geral';
+            const sRow = createFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.97, b: 1 });
+            sRow.name = `[Spec] ${s.name || s.label || 'Spec'}`;
+            sRow.cornerRadius = 8;
+            sRow.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.88, b: 0.96 } }];
+            fGroup.appendChild(sRow);
+            setFillAndHug(sRow);
+            // Linha topo: nome + categoria
+            const sTop = createFrame("HORIZONTAL", 0, 4);
+            sTop.counterAxisAlignItems = "CENTER";
+            sRow.appendChild(sTop);
+            setFillAndHug(sTop);
+            const sName = createText(s.name || s.label || 'Spec', 12, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+            sName.layoutGrow = 1;
+            sTop.appendChild(sName);
+            if (s.link) {
+              sName.textDecoration = "UNDERLINE";
+              sName.hyperlink = { type: "URL", value: s.link };
+            }
+            const sCatTag = createFrame("HORIZONTAL", 6, 3, { r: 0.93, g: 0.93, b: 1 });
+            sCatTag.cornerRadius = 999;
+            sTop.appendChild(sCatTag);
+            setFillAndHug(sCatTag);
+            sCatTag.appendChild(createText(catLabel, 9, "Medium", { r: 0.38, g: 0.35, b: 0.75 }));
+            // Nota (se tiver)
+            if (s.note) {
+              const sNote = createText(s.note, 10, "Regular", { r: 0.4, g: 0.45, b: 0.55 });
+              sRow.appendChild(sNote);
+              setFillAndHug(sNote);
+            }
+          });
+        });
+        content.appendChild(annotSection);
+        setFillAndHug(annotSection);
+      }
+
+      // 1.10 FLUXOS DE TELA
       const _flows = data.createdFlows || [];
       if (_flows.length > 0) {
-        const flowsSection = createSection(content, "Fluxos de Tela");
         const flowTypeLabel = { line_solid: 'Linha sólida', line_dashed: 'Linha tracejada', diamond: 'Decisão', diamond_dashed: 'Decisão tracejada', event_start: 'Início', event_end: 'Fim', gateway_parallel: 'Paralelo' };
+        const flowsSection = createSection(content, "Fluxos de Tela");
         _flows.forEach((flow, fi) => {
-          const fRow = createFrame("HORIZONTAL", 12, 8, { r: 0.97, g: 0.96, b: 1 });
+          const fRow = createFrame("VERTICAL", 12, 10, { r: 0.97, g: 0.96, b: 1 });
           fRow.name = `[Fluxo] ${flow.name || 'Fluxo ' + (fi + 1)}`;
           fRow.cornerRadius = 8;
           fRow.strokes = [{ type: "SOLID", color: { r: 0.86, g: 0.84, b: 0.96 } }];
-          fRow.counterAxisAlignItems = "CENTER";
           flowsSection.appendChild(fRow);
           setFillAndHug(fRow);
-          const fName = createText(flow.name || 'Fluxo', 12, "Bold");
+          // Topo: nome + tipo
+          const fTop = createFrame("HORIZONTAL", 0, 4);
+          fTop.counterAxisAlignItems = "CENTER";
+          fRow.appendChild(fTop);
+          setFillAndHug(fTop);
+          const fName = createText(flow.name || 'Fluxo', 12, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
           fName.layoutGrow = 1;
-          fRow.appendChild(fName);
-          const fType = createText(flowTypeLabel[flow.type] || flow.type || '', 10, "Regular", { r: 0.45, g: 0.35, b: 0.75 });
-          fRow.appendChild(fType);
-          setFillAndHug(fType);
+          fTop.appendChild(fName);
+          const typeStr = flowTypeLabel[flow.type] || flow.type || '';
+          if (typeStr) {
+            const fTypeTag = createFrame("HORIZONTAL", 6, 3, { r: 0.93, g: 0.90, b: 1 });
+            fTypeTag.cornerRadius = 999;
+            fTop.appendChild(fTypeTag);
+            setFillAndHug(fTypeTag);
+            fTypeTag.appendChild(createText(typeStr, 9, "Medium", { r: 0.45, g: 0.35, b: 0.75 }));
+          }
+          // Conexão origem → destino
+          if (flow.fromName || flow.toName) {
+            const connStr = `${flow.fromName || '?'} → ${flow.toName || '?'}`;
+            const fConn = createText(connStr, 10, "Regular", { r: 0.45, g: 0.50, b: 0.60 });
+            fRow.appendChild(fConn);
+            setFillAndHug(fConn);
+          }
+          // Texto de decisão
           if (flow.decisionText) {
-            const dText = createText(`"${flow.decisionText}"`, 10, "Regular", { r: 0.5, g: 0.5, b: 0.6 });
+            const dText = createText(`"${flow.decisionText}"`, 10, "Regular", { r: 0.5, g: 0.45, b: 0.70 });
             fRow.appendChild(dText);
             setFillAndHug(dText);
           }
@@ -949,15 +1057,49 @@ figma.ui.onmessage = async (msg) => {
       fichaTecnica.appendChild(content);
       mainContainer.appendChild(fichaTecnica);
 
-      // 2. USER INTERFACE
+      // CARD 2 — BRIEFING ESTRATÉGICO (card separado, só criado se houver respostas)
+      if (_briefingQs.length > 0) {
+        const card2 = createFrame("VERTICAL", 0, 0, { r: 1, g: 1, b: 1 });
+        card2.name = `${_handoffBase} | ${_ts} / Briefing`;
+        card2.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
+        card2.resize(440, 100);
+        card2.counterAxisSizingMode = "FIXED";
+        card2.primaryAxisSizingMode = "AUTO";
+        card2.cornerRadius = 16;
+
+        const bContent = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
+        card2.appendChild(bContent);
+        setFillAndHug(bContent);
+
+        const briefingSection = createSection(bContent, "Briefing Estratégico");
+        _briefingQs.forEach((q, idx) => {
+          const qRow = createFrame("VERTICAL", 0, 4);
+          qRow.name = `[Briefing] Pergunta ${idx + 1}`;
+          briefingSection.appendChild(qRow);
+          setFillAndHug(qRow);
+
+          const qText = createText(`${idx + 1}. ${q.question || ''}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+          qRow.appendChild(qText);
+          setFillAndHug(qText);
+
+          const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+          aText.textAutoResize = "HEIGHT";
+          aText.resize(392, 20);
+          qRow.appendChild(aText);
+          setFillAndHug(aText);
+        });
+        setFillAndHug(briefingSection);
+        mainContainer.appendChild(card2);
+      }
+
+      // CARD 3 — USER INTERFACE
       if (!data.setup || data.setup.componentes !== false) {
         const uiBoard = createFrame("VERTICAL", 32, 24, { r: 1, g: 1, b: 1 });
         uiBoard.name = `${_handoffBase} / Interface`;
         uiBoard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
         uiBoard.cornerRadius = 16;
-        uiBoard.resize(800, 100);
-        uiBoard.counterAxisSizingMode = "FIXED"; // Base width 800
-        uiBoard.primaryAxisSizingMode = "AUTO";  // Hug height
+        uiBoard.primaryAxisSizingMode = "AUTO";   // Hug height
+        uiBoard.counterAxisSizingMode = "AUTO";   // Hug width — se expande para todas as colunas
         uiBoard.layoutAlign = "INHERIT"; // Don't stretch height in horizontal parent
 
         const uiTitle = createText("User Interface", 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
@@ -966,7 +1108,11 @@ figma.ui.onmessage = async (msg) => {
         // Helper para specs list (Colunas Verticais)
         function createSpecList(title, items, type) {
           if (!items || items.length === 0) return null;
-          
+          // Só mostra items com token aplicado (isDS !== false) e que tenham ao menos uma prop com token
+          const tokenItems = items.filter(item => item.isDS !== false);
+          if (tokenItems.length === 0) return null;
+          items = tokenItems;
+
           const sec = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
           sec.name = `[Scan] ${title}`;
           sec.cornerRadius = 16;
@@ -1038,13 +1184,14 @@ figma.ui.onmessage = async (msg) => {
               headerRow.appendChild(badge);
             }
 
-            // Properties
-            if (item.properties && item.properties.length > 0) {
+            // Properties — só exibe props com token aplicado
+            const _tokenProps = (item.properties || []).filter(p => p.isDS === true || p.isDS === "warning" || p.token);
+            if (_tokenProps.length > 0) {
               const propsContainer = createFrame("VERTICAL", 0, 6);
               elCard.appendChild(propsContainer);
               setFillAndHug(propsContainer);
 
-              item.properties.forEach(prop => {
+              _tokenProps.forEach(prop => {
                 const pRow = createFrame("HORIZONTAL", 0, 8);
                 pRow.counterAxisAlignItems = "CENTER";
                 propsContainer.appendChild(pRow);
@@ -1089,28 +1236,6 @@ figma.ui.onmessage = async (msg) => {
           return sec;
         }
 
-        // Briefing Estratégico Section
-        const _bqs2 = (data.step2 && data.step2.briefingQuestions)
-          ? data.step2.briefingQuestions.filter(q => q.answer && q.answer.trim())
-          : [];
-        if (_bqs2.length > 0) {
-           const briefingSection = createSection(fichaTecnica, "Briefing Estratégico");
-           _bqs2.forEach((q, idx) => {
-              const qRow = createFrame("VERTICAL", 0, 4);
-              qRow.name = `[Briefing] Pergunta ${idx + 1}`;
-              briefingSection.appendChild(qRow);
-              setFillAndHug(qRow);
-
-              const qText = createText(`${idx + 1}. ${q.question || ''}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
-              qRow.appendChild(qText);
-              setFillAndHug(qText);
-
-              const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
-              qRow.appendChild(aText);
-              setFillAndHug(aText);
-           });
-        }
-
         // Agrega specs de todos os frames + fallback para global
         const _allFrameSpecs = (data.frames || []).map(f => f.specs).filter(Boolean);
         const _globalSpecs = data.step2 && data.step2.specs ? data.step2.specs : null;
@@ -1124,10 +1249,9 @@ figma.ui.onmessage = async (msg) => {
         };
 
         const specsRow = figma.createFrame();
+        specsRow.name = '[Row] Colunas UI';
         specsRow.layoutMode = "HORIZONTAL";
-        specsRow.layoutWrap = "WRAP";
-        specsRow.itemSpacing = 16;
-        specsRow.counterAxisSpacing = 16;
+        specsRow.itemSpacing = 24;
         specsRow.paddingLeft = 0;
         specsRow.paddingRight = 0;
         specsRow.paddingTop = 0;
@@ -1135,35 +1259,19 @@ figma.ui.onmessage = async (msg) => {
         specsRow.fills = [];
         specsRow.primaryAxisSizingMode = "AUTO";
         specsRow.counterAxisSizingMode = "AUTO";
+        specsRow.counterAxisAlignItems = "MIN";
 
-        // Componentes — coluna individual
-        const secComponents = createSpecList("Componentes", specsData.components, "components");
-        if (secComponents) specsRow.appendChild(secComponents);
-
-        // Ícones + Vetores — coluna vertical dupla
-        const secIcons   = createSpecList("Ícones",   specsData.icons,   "icons");
-        const secVectors = createSpecList("Vetores",  specsData.vectors, "vectors");
-        if (secIcons || secVectors) {
-          const iconsVectorsCol = figma.createFrame();
-          iconsVectorsCol.name = '[Col] Ícones e Vetores';
-          iconsVectorsCol.layoutMode = "VERTICAL";
-          iconsVectorsCol.itemSpacing = 16;
-          iconsVectorsCol.paddingLeft = 0; iconsVectorsCol.paddingRight = 0;
-          iconsVectorsCol.paddingTop = 0;  iconsVectorsCol.paddingBottom = 0;
-          iconsVectorsCol.fills = [];
-          iconsVectorsCol.primaryAxisSizingMode = "AUTO";
-          iconsVectorsCol.counterAxisSizingMode = "AUTO";
-          iconsVectorsCol.counterAxisAlignItems = "MIN";
-          if (secIcons)   iconsVectorsCol.appendChild(secIcons);
-          if (secVectors) iconsVectorsCol.appendChild(secVectors);
-          specsRow.appendChild(iconsVectorsCol);
-        }
-
-        // Tipografia e Frames — colunas individuais
-        const secTypo   = createSpecList("Tipografia",      specsData.typography, "typography");
-        const secFrames = createSpecList("Frames e Layouts", specsData.frames,     "frames");
-        if (secTypo)   specsRow.appendChild(secTypo);
-        if (secFrames) specsRow.appendChild(secFrames);
+        // Uma coluna por categoria, lado a lado
+        [
+          { title: "Componentes",     items: specsData.components, type: "components" },
+          { title: "Ícones",          items: specsData.icons,      type: "icons"      },
+          { title: "Tipografia",      items: specsData.typography, type: "typography" },
+          { title: "Vetores",         items: specsData.vectors,    type: "vectors"    },
+          { title: "Frames e Layouts",items: specsData.frames,     type: "frames"     },
+        ].forEach(cat => {
+          const sec = createSpecList(cat.title, cat.items, cat.type);
+          if (sec) specsRow.appendChild(sec);
+        });
 
         if (specsRow.children.length > 0) {
           uiBoard.appendChild(specsRow);
@@ -1300,29 +1408,73 @@ figma.ui.onmessage = async (msg) => {
         mainContainer.appendChild(auditBoard);
       }
 
-      // Posiciona: à direita do primeiro frame mapeado (ou fallback: última ficha existente / centro)
-      mainContainer.locked = true;
+      // Append ao canvas primeiro para que as dimensões AUTO sejam calculadas pelo Figma
+      mainContainer.locked = false;
       figma.currentPage.appendChild(mainContainer);
+      // Inicializar fora da tela para evitar flash de sobreposição enquanto calcula posição
+      mainContainer.x = -99999;
+      mainContainer.y = -99999;
+
+      // Calcula gap considerando a largura real da ficha já renderizada
+      const _fichaGap = 200;
 
       let _positioned = false;
-      // 1ª prioridade: ao lado do primeiro frame mapeado
-      const _mainFrames = data.frames || [];
-      for (const _f of _mainFrames) {
-        if (!_f.figmaId) continue;
-        const _fNode = figma.getNodeById(_f.figmaId);
-        if (!_fNode) continue;
-        const _fBb = _fNode.absoluteBoundingBox;
-        if (_fBb) {
-          mainContainer.x = Math.round(_fBb.x + _fBb.width + 80);
-          mainContainer.y = Math.round(_fBb.y);
+
+      // 1ª prioridade: ao lado de ficha já existente no canvas (evita sobreposição entre fichas)
+      const _existingFichas = figma.currentPage.children.filter(n =>
+        n.type === 'FRAME' && n.name.startsWith('Handex | Ficha') && n !== mainContainer
+      );
+      if (_existingFichas.length > 0) {
+        const _rightmostFicha = _existingFichas.reduce((max, f) => {
+          const bb = f.absoluteBoundingBox;
+          if (!bb) return max;
+          return (bb.x + bb.width) > max.right ? { right: bb.x + bb.width, y: bb.y } : max;
+        }, { right: -Infinity, y: 0 });
+        if (_rightmostFicha.right > -Infinity) {
+          mainContainer.x = Math.round(_rightmostFicha.right + _fichaGap);
+          mainContainer.y = Math.round(_rightmostFicha.y);
           _positioned = true;
-          break;
         }
       }
-      // Fallback: centro do viewport
+
+      // 2ª prioridade: ao lado do primeiro frame registrado por figmaId
       if (!_positioned) {
-        mainContainer.x = Math.round(figma.viewport.center.x);
-        mainContainer.y = Math.round(figma.viewport.center.y);
+        const _mainFrames = data.frames || [];
+        for (const _f of _mainFrames) {
+          if (!_f.figmaId) continue;
+          const _fNode = figma.getNodeById(_f.figmaId);
+          if (!_fNode) continue;
+          const _fBb = _fNode.absoluteBoundingBox;
+          if (_fBb) {
+            mainContainer.x = Math.round(_fBb.x + _fBb.width + _fichaGap);
+            mainContainer.y = Math.round(_fBb.y);
+            _positioned = true;
+            break;
+          }
+        }
+      }
+
+      // 3ª prioridade: ao lado da seleção atual no canvas
+      if (!_positioned) {
+        const _sel = figma.currentPage.selection.filter(n => n !== mainContainer);
+        if (_sel.length > 0) {
+          const _rightmost = _sel.reduce((max, n) => {
+            const bb = n.absoluteBoundingBox;
+            return bb && (bb.x + bb.width) > max.edge ? { edge: bb.x + bb.width, x: bb.x + bb.width, y: bb.y } : max;
+          }, { edge: -Infinity, x: 0, y: 0 });
+          if (_rightmost.edge > -Infinity) {
+            mainContainer.x = Math.round(_rightmost.x + _fichaGap);
+            mainContainer.y = Math.round(_rightmost.y);
+            _positioned = true;
+          }
+        }
+      }
+
+      // 4ª prioridade (fallback): à direita da borda visível do viewport
+      if (!_positioned) {
+        const _vb = figma.viewport.bounds;
+        mainContainer.x = Math.round(_vb.x + _vb.width + _fichaGap);
+        mainContainer.y = Math.round(_vb.y + (_vb.height / 2) - (mainContainer.height / 2));
       }
 
       figma.currentPage.selection = [mainContainer];
@@ -2144,6 +2296,79 @@ figma.ui.onmessage = async (msg) => {
     }
   }
 
+  if (msg.type === "reapply-measurements") {
+    const { frameId, measurements } = msg;
+    const frameNode = figma.getNodeById(frameId);
+    if (!frameNode) {
+      figma.notify("Frame não encontrado no canvas.");
+      return;
+    }
+    (async () => {
+      try { await figma.loadFontAsync({ family: "Inter", style: "Regular" }); } catch (e) {}
+
+      function _makeMeasLine(x1, y1, x2, y2, value, type, color) {
+        const els = [];
+        const line = figma.createLine();
+        line.strokes = [{ type: "SOLID", color }];
+        line.strokeWeight = 1;
+        line.x = x1; line.y = y1;
+        if (type === 'h') {
+          line.resize(Math.max(0.01, x2 - x1), 0);
+          const t1 = figma.createLine(); t1.strokes = [{ type: "SOLID", color }]; t1.x = x1; t1.y = y1 - 4; t1.resize(8, 0); t1.rotation = -90;
+          const t2 = figma.createLine(); t2.strokes = [{ type: "SOLID", color }]; t2.x = x2; t2.y = y1 - 4; t2.resize(8, 0); t2.rotation = -90;
+          els.push(line, t1, t2);
+        } else {
+          line.rotation = -90;
+          line.resize(Math.max(0.01, y2 - y1), 0);
+          const t1 = figma.createLine(); t1.strokes = [{ type: "SOLID", color }]; t1.x = x1 - 4; t1.y = y1; t1.resize(8, 0);
+          const t2 = figma.createLine(); t2.strokes = [{ type: "SOLID", color }]; t2.x = x1 - 4; t2.y = y2; t2.resize(8, 0);
+          els.push(line, t1, t2);
+        }
+        const label = figma.createText();
+        label.fontName = { family: "Inter", style: "Regular" };
+        label.characters = String(Math.round(value));
+        label.fontSize = 10;
+        label.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+        const bg = figma.createRectangle();
+        bg.resize(label.width + 8, label.height + 4);
+        bg.fills = [{ type: "SOLID", color }];
+        bg.cornerRadius = 4;
+        const mid = type === 'h' ? { x: (x1 + x2) / 2 - bg.width / 2, y: y1 - bg.height - 4 } : { x: x1 - bg.width - 6, y: (y1 + y2) / 2 - bg.height / 2 };
+        bg.x = mid.x; bg.y = mid.y;
+        label.x = mid.x + 4; label.y = mid.y + 2;
+        els.push(bg, label);
+        return els;
+      }
+
+      const red = { r: 1, g: 0.2, b: 0.2 };
+      let created = 0;
+
+      for (const m of measurements) {
+        let target = null;
+        // Try to find the element by name within the frame (first match)
+        target = frameNode.findOne(n => n.name === m.name && n.type !== 'GROUP');
+        if (!target) target = frameNode; // fallback to frame itself
+
+        const bounds = target.absoluteBoundingBox;
+        if (!bounds) continue;
+
+        const items = [
+          ..._makeMeasLine(bounds.x, bounds.y - 20, bounds.x + bounds.width, bounds.y - 20, bounds.width, 'h', red),
+          ..._makeMeasLine(bounds.x + bounds.width + 10, bounds.y, bounds.x + bounds.width + 10, bounds.y + bounds.height, bounds.height, 'v', red)
+        ];
+
+        if (items.length > 0) {
+          const group = figma.group(items, figma.currentPage);
+          group.name = `[Medida] ${m.name}`;
+          group.locked = true;
+          created++;
+        }
+      }
+
+      figma.notify(`${created} medida(s) reaplicada(s) no canvas!`);
+    })();
+  }
+
   if (msg.type === "request-spec-properties") {
     const properties = [];
     const selection = figma.currentPage.selection;
@@ -2525,54 +2750,69 @@ figma.ui.onmessage = async (msg) => {
 
         groupNodes.push(contour);
 
-        // Append card to page first to calculate its real height
+        // Append card to page first so Figma computes its real dimensions
         figma.currentPage.appendChild(specCard);
 
-        const side = opts.guideSide || "right";
-        const spacing = 100;
-        let targetX = bounds.x + bounds.width + spacing;
-        let targetY = bounds.y;
+        // Posicionamento: sempre à direita — mesma letra empilha, letra nova cria coluna.
+        // Busca nos filhos diretos da página (spec groups são sempre criados na raiz).
+        const _specLetter = opts.letter;
+        const _existingSpecCards = [];
+        figma.currentPage.children.forEach(n => {
+          if (n.type === 'GROUP' && n.name.startsWith('[Spec]')) {
+            const ficha = n.children && n.children.find(c =>
+              c.type === 'FRAME' && c.name.includes('/Ficha') && c !== specCard
+            );
+            if (ficha) _existingSpecCards.push(ficha);
+          } else if (n.type === 'FRAME' && /^\[Spec\/[A-Z]\]/.test(n.name) && n.name.includes('/Ficha') && n !== specCard) {
+            _existingSpecCards.push(n);
+          }
+        });
 
-        if (side === "left") {
-          targetX = bounds.x - specCard.width - spacing;
-        } else if (side === "top") {
-          targetX = bounds.x + (bounds.width / 2) - (specCard.width / 2);
-          targetY = bounds.y - specCard.height - spacing;
-        } else if (side === "bottom") {
-          targetX = bounds.x + (bounds.width / 2) - (specCard.width / 2);
-          targetY = bounds.y + bounds.height + spacing;
-        }
+        // Agrupa por letra: { letter → { x, topY, bottom, right } }
+        const _letterMap = {};
+        _existingSpecCards.forEach(card => {
+          const m = card.name.match(/^\[Spec\/([A-Z])\]/);
+          if (!m) return;
+          const l = m[1];
+          const bb = card.absoluteBoundingBox;
+          if (!bb) return;
+          if (!_letterMap[l]) _letterMap[l] = { x: bb.x, topY: bb.y, bottom: bb.y + bb.height, right: bb.x + bb.width };
+          const bottom = bb.y + bb.height;
+          if (bottom > _letterMap[l].bottom) _letterMap[l].bottom = bottom;
+          if (bb.x + bb.width > _letterMap[l].right) _letterMap[l].right = bb.x + bb.width;
+          if (bb.x < _letterMap[l].x) _letterMap[l].x = bb.x;
+          if (bb.y < _letterMap[l].topY) _letterMap[l].topY = bb.y;
+        });
 
-        // In-memory stacking: use specColumnTracker to find the lowest Y in this column
-        // Key = X position rounded to nearest 50px (same side = same bucket)
-        const colKey = `${side}_${Math.round(targetX / 50) * 50}`;
-        if (specColumnTracker[colKey] !== undefined) {
-          targetY = specColumnTracker[colKey] + 16;
+        const _SPEC_GAP = 40;
+        const _SPEC_COL_GAP = 80;
+        let targetX, targetY;
+
+        if (_letterMap[_specLetter]) {
+          // Mesma letra: empilha abaixo do último card desta coluna
+          targetX = _letterMap[_specLetter].x;
+          targetY = _letterMap[_specLetter].bottom + _SPEC_GAP;
+        } else if (Object.keys(_letterMap).length > 0) {
+          // Nova letra: nova coluna à direita da coluna mais à direita
+          const _rightmost = Object.values(_letterMap).reduce((max, v) => v.right > max.right ? v : max);
+          targetX = _rightmost.right + _SPEC_COL_GAP;
+          targetY = _rightmost.topY;
+        } else {
+          // Primeira spec: sempre à direita do elemento selecionado
+          targetX = bounds.x + bounds.width + 100;
+          targetY = bounds.y;
         }
 
         specCard.x = Math.round(targetX);
         specCard.y = Math.round(targetY);
-
-        // Update tracker after placing
-        specColumnTracker[colKey] = Math.round(targetY) + specCard.height;
         groupNodes.push(specCard);
 
-        // --- Vector Connector (Guia) ---
+        // --- Conector: sempre do lado direito do nó ao lado esquerdo do card ---
         const connector = figma.createVector();
         connector.name = `${_specBase}/Conector`;
 
-        let startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
-        let endPt   = { x: specCard.x, y: specCard.y + 40 };
-        if (side === "left") {
-          startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
-          endPt   = { x: specCard.x + specCard.width, y: specCard.y + 40 };
-        } else if (side === "top") {
-          startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
-          endPt   = { x: specCard.x + specCard.width / 2, y: specCard.y + specCard.height };
-        } else if (side === "bottom") {
-          startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
-          endPt   = { x: specCard.x + specCard.width / 2, y: specCard.y };
-        }
+        const startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+        const endPt   = { x: specCard.x, y: specCard.y + Math.min(40, specCard.height / 2) };
         connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
         connector.strokes = [{ type: "SOLID", color: themeColor }];
         connector.strokeWeight = 1.5;
@@ -2598,6 +2838,7 @@ figma.ui.onmessage = async (msg) => {
         type: "spec-created",
         spec: {
           id: specGroup.id, // Group ID instead of Card ID so hiding hides everything
+          targetNodeId: node.id,
           name: node.name,
           letter: opts.letter,
           color: opts.color,
