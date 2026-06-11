@@ -266,7 +266,9 @@ Object.assign(window, {
   setFrameSemDesvios,
   setFrameAuditObs,
   _restoreStep1Fields,
-  applyImportedDataToCanvas
+  applyImportedDataToCanvas,
+  clearAllData,
+  confirmClearAllData
 });
 
 function clearPluginCache() {

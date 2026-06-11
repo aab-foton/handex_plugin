@@ -233,3 +233,14 @@
     function exportDesignData(format) {
       parent.postMessage({ pluginMessage: { type: 'export-design-data', format } }, '*');
     }
+
+    function clearAllData() {
+      openModal('confirm-clear-modal');
+    }
+
+    function confirmClearAllData() {
+      closeModal('confirm-clear-modal');
+      try { localStorage.removeItem('handex-state'); } catch (e) {}
+      try { localStorage.removeItem('handex-ann-categories-v2'); } catch (e) {}
+      location.reload();
+    }

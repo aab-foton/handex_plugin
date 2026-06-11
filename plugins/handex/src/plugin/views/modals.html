@@ -894,3 +894,28 @@
 
   </div>
 </div>
+
+<!-- ── Modal: Confirmar limpeza de dados ─────────────────────────── -->
+<div id="confirm-clear-modal" class="modal-overlay hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+  <div class="modal-content bg-white dark:bg-dark-surface rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center shrink-0">
+        <i data-lucide="trash-2" class="w-5 h-5 text-red-500"></i>
+      </div>
+      <div>
+        <p class="text-[13px] font-bold text-slate-800 dark:text-white">Limpar todos os dados?</p>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5">Esta ação remove todo o progresso do projeto e não pode ser desfeita.</p>
+      </div>
+    </div>
+    <div class="flex gap-2 pt-1">
+      <button onclick="closeModal('confirm-clear-modal')"
+        class="flex-1 py-2 rounded-xl border border-gray-200 dark:border-dark-line text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+        Cancelar
+      </button>
+      <button onclick="confirmClearAllData()"
+        class="flex-1 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold transition-colors">
+        Sim, limpar tudo
+      </button>
+    </div>
+  </div>
+</div>
