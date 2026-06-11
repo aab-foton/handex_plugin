@@ -439,18 +439,44 @@ figma.ui.onmessage = async (msg) => {
         }
       }
 
-      function getIconSvg(type) {
+      // Returns SVG string for a property type. label is used to distinguish spacing subtypes.
+      function getIconSvg(type, label) {
+        const S = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
+        const E = '</svg>';
+        const l = (label || '').toLowerCase();
+
+        if (type === 'spacing') {
+          if (l.includes('gap'))
+            return S+'<line x1="4" y1="4" x2="4" y2="20"/><line x1="20" y1="4" x2="20" y2="20"/><path d="M9 12H4"/><path d="M15 12H20"/><path d="M9 9l-3 3 3 3"/><path d="M15 9l3 3-3 3"/>'+E;
+          if (l.includes('topo') || l.includes('top'))
+            return S+'<line x1="4" y1="4" x2="20" y2="4"/><line x1="12" y1="8" x2="12" y2="20"/><polyline points="8,14 12,20 16,14"/>'+E;
+          if (l.includes('abaixo') || l.includes('bottom'))
+            return S+'<line x1="4" y1="20" x2="20" y2="20"/><line x1="12" y1="4" x2="12" y2="16"/><polyline points="8,10 12,4 16,10"/>'+E;
+          if (l.includes('esquerda') || l.includes('left'))
+            return S+'<line x1="4" y1="4" x2="4" y2="20"/><line x1="8" y1="12" x2="20" y2="12"/><polyline points="14,8 20,12 14,16"/>'+E;
+          if (l.includes('direita') || l.includes('right'))
+            return S+'<line x1="20" y1="4" x2="20" y2="20"/><line x1="4" y1="12" x2="16" y2="12"/><polyline points="10,8 4,12 10,16"/>'+E;
+          // generic spacing
+          return S+'<path d="M3 12h18"/><path d="M7 8l-4 4 4 4"/><path d="M17 8l4 4-4 4"/>'+E;
+        }
+
+        if (type === 'layout') {
+          if (l.includes('w') || l.includes('width') || l.includes('larg'))
+            return S+'<path d="M3 12h18"/><path d="M7 8l-4 4 4 4"/><path d="M17 8l4 4-4 4"/>'+E;
+          if (l.includes('h') || l.includes('height') || l.includes('alt'))
+            return S+'<path d="M12 3v18"/><path d="M8 7l4-4 4 4"/><path d="M8 17l4 4 4-4"/>'+E;
+          return S+'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>'+E;
+        }
+
         const icons = {
-          color: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a9 9 0 1 1 0-18c4.97 0 9 3.582 9 8 0 1.035-.84 1.875-1.875 1.875H16.5c-1.035 0-1.875.84-1.875 1.875v.375c0 1.035.84 1.875 1.875 1.875H18a3 3 0 0 0 3-3"/></svg>',
-          typography: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
-          spacing: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M10 12h12"/><path d="m19 15 3-3-3-3"/></svg>',
-          radius: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 18-4-4 4-4"/><path d="M20 14c-4.4 0-8-3.6-8-8"/></svg>',
-          layout: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>',
-          variant: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>',
-          effect: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>',
-          stroke: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/></svg>'
+          typography:   S+'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>'+E,
+          radius:       S+'<path d="m14 18-4-4 4-4"/><path d="M20 14c-4.4 0-8-3.6-8-8"/>'+E,
+          strokeWeight: S+'<line x1="3" y1="6" x2="21" y2="6" stroke-width="1"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2.5"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="4"/>'+E,
+          stroke:       S+'<rect width="18" height="18" x="3" y="3" rx="2" stroke-width="2.5"/>'+E,
+          variant:      S+'<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>'+E,
+          effect:       S+'<path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>'+E,
         };
-        return icons[type] || icons['layout'];
+        return icons[type] || (S+'<rect width="18" height="18" x="3" y="3" rx="2"/>'+E);
       }
 
 
@@ -1290,26 +1316,43 @@ figma.ui.onmessage = async (msg) => {
                 propsContainer.appendChild(pRow);
                 setFillAndHug(pRow);
 
-                // Property Icon
-                try {
-                  const iconSvg = getIconSvg(prop.type);
-                  const iconNode = figma.createNodeFromSvg(iconSvg);
-                  iconNode.resize(12, 12);
-                  const iconColor = prop.isDS === true ? { r: 0.1, g: 0.6, b: 0.3 } : (prop.isDS === "warning" ? { r: 0.8, g: 0.5, b: 0 } : { r: 0.9, g: 0.3, b: 0.3 });
-                  
-                  function setSvgColor(node, color) {
-                    if ('fills' in node) node.fills = [{ type: "SOLID", color }];
-                    if ('strokes' in node) node.strokes = [{ type: "SOLID", color }];
-                    if ('children' in node) node.children.forEach(c => setSvgColor(c, color));
+                // Property icon — semantic type indicator (neutral gray) or color swatch for fill/stroke
+                if (prop.type === 'color' || prop.type === 'stroke') {
+                  // Show actual color as a swatch — faster than SVG and more informative
+                  const swatch = figma.createRectangle();
+                  swatch.resize(10, 10);
+                  swatch.cornerRadius = 2;
+                  const swatchRgb = hexToRgb(prop.rawValue || prop.value);
+                  swatch.fills = [{ type: 'SOLID', color: swatchRgb || { r: 0.8, g: 0.8, b: 0.8 } }];
+                  swatch.strokes = [{ type: 'SOLID', color: { r: 0.7, g: 0.72, b: 0.75 } }];
+                  swatch.strokeWeight = 0.5;
+                  pRow.appendChild(swatch);
+                } else {
+                  try {
+                    const iconSvg = getIconSvg(prop.type, prop.label);
+                    const iconNode = figma.createNodeFromSvg(iconSvg);
+                    iconNode.resize(12, 12);
+                    const neutral = { r: 0.55, g: 0.58, b: 0.62 };
+                    function setSvgColor(node, color) {
+                      if ('fills' in node && node.fills.length) node.fills = [{ type: 'SOLID', color }];
+                      if ('strokes' in node && node.strokes.length) node.strokes = [{ type: 'SOLID', color }];
+                      if ('children' in node) node.children.forEach(c => setSvgColor(c, color));
+                    }
+                    setSvgColor(iconNode, neutral);
+                    pRow.appendChild(iconNode);
+                  } catch(e) {
+                    const dot = figma.createEllipse();
+                    dot.resize(6, 6);
+                    dot.fills = [{ type: 'SOLID', color: { r: 0.55, g: 0.58, b: 0.62 } }];
+                    pRow.appendChild(dot);
                   }
-                  setSvgColor(iconNode, iconColor);
-                  pRow.appendChild(iconNode);
-                } catch(e) {
-                  const dot = figma.createEllipse();
-                  dot.resize(6, 6);
-                  dot.fills = [{ type: "SOLID", color: prop.isDS === true ? { r: 0.2, g: 0.8, b: 0.4 } : { r: 0.9, g: 0.3, b: 0.3 } }];
-                  pRow.appendChild(dot);
                 }
+                // Conformance dot — small, at the end of the row
+                const _dColor = prop.isDS === true ? { r: 0.13, g: 0.7, b: 0.38 } : (prop.isDS === 'warning' ? { r: 0.85, g: 0.55, b: 0.1 } : { r: 0.88, g: 0.28, b: 0.28 });
+                const cDot = figma.createEllipse();
+                cDot.resize(5, 5);
+                cDot.fills = [{ type: 'SOLID', color: _dColor }];
+                cDot.name = 'status';
 
                 const pLabel = createText(`${prop.label || prop.type}:`, 10, "Medium", { r: 0.4, g: 0.45, b: 0.5 });
                 pRow.appendChild(pLabel);
@@ -1322,6 +1365,7 @@ figma.ui.onmessage = async (msg) => {
                    const tBadge = createText(prop.token, 8, "Regular", { r: 0, g: 0.44, b: 0.69 });
                    pRow.appendChild(tBadge);
                 }
+                pRow.appendChild(cDot);
               });
             }
           });
