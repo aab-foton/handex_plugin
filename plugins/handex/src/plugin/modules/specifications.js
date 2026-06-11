@@ -78,6 +78,7 @@
           container.appendChild(createAccordionSection(section));
         }
       });
+
       _refreshIcons();
       // Atualiza subtítulo de conformidade após scan (itens desvinculados podem mudar o estado)
       if (frameId && typeof _updateFrameAuditSubtitle === 'function') {
@@ -1005,7 +1006,6 @@
     }
     window.toggleStatusFilter = toggleStatusFilter;
 
-
     function createSpecItem(item, type) {
       let preview = "";
       if (item.preview) {
@@ -1081,7 +1081,10 @@
             ? `<span class="flex items-center gap-0.5 flex-wrap leading-tight">${chainHtml}</span>`
             : `<span class="font-bold text-slate-700 dark:text-gray-200">${p.value}</span>`;
 
-          html += `<div class="flex items-center justify-between gap-1 text-[9px] text-gray-600 dark:text-gray-400" title="${tooltipText}">
+          const clickAttr = item.nodeId
+            ? `onclick="focusNode('${item.nodeId}')" title="${tooltipText}\n\nClique para localizar no Figma" style="cursor:pointer"`
+            : `title="${tooltipText}"`;
+          html += `<div class="flex items-center justify-between gap-1 text-[9px] text-gray-600 dark:text-gray-400 rounded hover:bg-gray-50 dark:hover:bg-dark-bg/50 px-0.5 -mx-0.5 transition-colors" ${clickAttr}>
             <div class="flex items-center gap-1.5 min-w-0">
               <div class="w-3 h-3 flex items-center justify-center shrink-0">${colorPrev}</div>
               <span class="flex items-center gap-1 flex-wrap min-w-0">

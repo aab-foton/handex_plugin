@@ -364,6 +364,12 @@
         return;
       }
 
+      if (msg.type === 'handoff-error') {
+        if (typeof hideHandoffLoading === 'function') hideHandoffLoading();
+        showToast('Erro ao gerar ficha: ' + (msg.message || 'Verifique o console do plugin.'), 'error');
+        return;
+      }
+
       if (msg.type === 'briefing-data-pulled') {
         const pulled = msg.data || [];
         if (pulled.length === 0) {
