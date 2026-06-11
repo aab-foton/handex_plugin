@@ -813,3 +813,84 @@
     }
 
   </script>
+
+<!-- MODAL: APLICAR DADOS IMPORTADOS NO CANVAS -->
+<div id="import-apply-modal" role="dialog" aria-modal="true" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+  <div class="bg-white dark:bg-dark-bg w-full max-w-[400px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line overflow-hidden">
+
+    <!-- Header -->
+    <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-line flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-[#0070af]/10 flex items-center justify-center shrink-0">
+        <i data-lucide="file-check" class="w-5 h-5 text-[#0070af]"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h3 class="text-[14px] font-extrabold text-slate-800 dark:text-white leading-tight">Dados importados!</h3>
+        <p id="import-modal-subtitle" class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5 leading-tight">Versão importada com sucesso.</p>
+      </div>
+      <button onclick="closeModal('import-apply-modal')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-400 shrink-0">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="px-5 py-3 grid grid-cols-4 gap-2">
+      <div class="bg-sky-50 dark:bg-sky-900/20 rounded-xl p-2.5 text-center">
+        <p id="import-count-frames" class="text-[18px] font-extrabold text-sky-600 dark:text-sky-400 leading-none">0</p>
+        <p class="text-[9px] text-slate-500 dark:text-dark-muted mt-0.5 uppercase tracking-wide">Frames</p>
+      </div>
+      <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-2.5 text-center">
+        <p id="import-count-specs" class="text-[18px] font-extrabold text-indigo-600 dark:text-indigo-400 leading-none">0</p>
+        <p class="text-[9px] text-slate-500 dark:text-dark-muted mt-0.5 uppercase tracking-wide">Specs</p>
+      </div>
+      <div class="bg-cyan-50 dark:bg-cyan-900/20 rounded-xl p-2.5 text-center">
+        <p id="import-count-measures" class="text-[18px] font-extrabold text-cyan-600 dark:text-cyan-400 leading-none">0</p>
+        <p class="text-[9px] text-slate-500 dark:text-dark-muted mt-0.5 uppercase tracking-wide">Medidas</p>
+      </div>
+      <div class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-2.5 text-center">
+        <p id="import-count-flows" class="text-[18px] font-extrabold text-purple-600 dark:text-purple-400 leading-none">0</p>
+        <p class="text-[9px] text-slate-500 dark:text-dark-muted mt-0.5 uppercase tracking-wide">Fluxos</p>
+      </div>
+    </div>
+
+    <!-- Canvas actions -->
+    <div class="px-5 pb-2 space-y-2">
+      <p class="text-[11px] font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wide">Aplicar no canvas</p>
+
+      <label class="flex items-start gap-3 p-3 border-2 border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:border-[#0070af]/40 transition-colors has-[:checked]:border-[#0070af] has-[:checked]:bg-[#0070af]/5">
+        <input type="checkbox" id="import-opt-ficha" class="mt-0.5 w-4 h-4 accent-[#0070af] shrink-0" checked>
+        <div>
+          <p class="text-[12px] font-bold text-slate-800 dark:text-white leading-tight">Gerar Ficha Técnica</p>
+          <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug mt-0.5">Cria o documento completo no canvas do Figma com todos os dados importados.</p>
+        </div>
+      </label>
+
+      <label id="import-opt-specs-label" class="flex items-start gap-3 p-3 border-2 border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:border-indigo-300/60 transition-colors has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50/50 dark:has-[:checked]:bg-indigo-900/10">
+        <input type="checkbox" id="import-opt-specs" class="mt-0.5 w-4 h-4 accent-indigo-600 shrink-0">
+        <div class="flex-1">
+          <p class="text-[12px] font-bold text-slate-800 dark:text-white leading-tight">Recriar Cards de Especificação</p>
+          <p id="import-specs-hint" class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug mt-0.5">Recria os cards de spec no canvas para os frames que possuem especificações.</p>
+        </div>
+      </label>
+
+      <label id="import-opt-measures-label" class="flex items-start gap-3 p-3 border-2 border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:border-cyan-300/60 transition-colors has-[:checked]:border-cyan-500 has-[:checked]:bg-cyan-50/50 dark:has-[:checked]:bg-cyan-900/10">
+        <input type="checkbox" id="import-opt-measures" class="mt-0.5 w-4 h-4 accent-cyan-600 shrink-0">
+        <div class="flex-1">
+          <p class="text-[12px] font-bold text-slate-800 dark:text-white leading-tight">Reaplicar Medidas</p>
+          <p id="import-measures-hint" class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug mt-0.5">Recria as anotações de medida no canvas para os frames que as possuem.</p>
+        </div>
+      </label>
+    </div>
+
+    <!-- Footer -->
+    <div class="px-5 py-4 flex gap-2.5 border-t border-gray-100 dark:border-dark-line mt-2">
+      <button onclick="closeModal('import-apply-modal')" class="flex-1 px-4 py-2.5 border border-gray-200 dark:border-dark-line text-slate-600 dark:text-dark-muted text-[12px] font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+        Apenas restaurar
+      </button>
+      <button onclick="applyImportedDataToCanvas()" class="flex-1 px-4 py-2.5 bg-[#0070af] text-white text-[12px] font-bold rounded-xl hover:bg-[#005a8e] transition-colors flex items-center justify-center gap-2">
+        <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+        Aplicar no canvas
+      </button>
+    </div>
+
+  </div>
+</div>

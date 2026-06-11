@@ -175,6 +175,7 @@ Object.assign(window, {
   exportMeasurements,
   switchSpecTab,
   toggleAccordion,
+  collapseAllAccordions,
   toggleAllSpecsVisibility,
   exportSpecsToMd,
   toggleBriefingSection,
@@ -264,7 +265,8 @@ Object.assign(window, {
   setFrameCheckDone,
   setFrameSemDesvios,
   setFrameAuditObs,
-  _restoreStep1Fields
+  _restoreStep1Fields,
+  applyImportedDataToCanvas
 });
 
 function clearPluginCache() {
@@ -1539,9 +1541,12 @@ function openDadosProjetoModal() {
 function navigate(viewId) {
   document.querySelectorAll(".view").forEach((el) => el.classList.remove("active"));
   const targetView = document.getElementById(viewId);
-  if (targetView) targetView.classList.add("active");
-  const containers = document.querySelectorAll('.overflow-y-auto');
-  containers.forEach(c => c.scrollTop = 0);
+  if (targetView) {
+    // Reset scroll while still hidden — prevents any flash of stale scroll position
+    targetView.scrollTop = 0;
+    targetView.querySelectorAll('.overflow-y-auto').forEach(c => { c.scrollTop = 0; });
+    targetView.classList.add("active");
+  }
   const btnTop = document.getElementById('btn-top');
   if (btnTop) {
     btnTop.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
@@ -1618,7 +1623,7 @@ function updateHandoffSummary() {
   const titulo  = handoffData.step1?.titulo || '—';
   const versao  = handoffData.step1?.versao || '—';
   const status  = handoffData.step1?.status || '—';
-  const designer = (handoffData.step1?.equipe || []).find(m => m.papel === 'designer');
+  const designer = (handoffData.step1?.equipe || []).find(m => (m.papel || '').toLowerCase() === 'designer');
 
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   set('hs-titulo', titulo);
@@ -1730,6 +1735,34 @@ function toggleAccordion(btn, nodeId = null) {
   btn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
   if (icon) icon.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
   if (nodeId) focusNode(nodeId);
+}
+
+function collapseAllAccordions(containerEl) {
+  const root = containerEl || document;
+  const allContent = root.querySelectorAll('.accordion-content, [data-accordion-content]');
+  let anyOpen = false;
+  allContent.forEach(c => { if (!c.classList.contains('hidden')) anyOpen = true; });
+  // If any open → collapse all; if all closed → expand all
+  allContent.forEach(c => {
+    const isHidden = c.classList.contains('hidden');
+    if (anyOpen ? !isHidden : isHidden) {
+      // Find toggle button
+      const parent = c.closest('.border, .rounded-xl, .mb-3');
+      const btn = parent ? parent.querySelector('[onclick*="toggleAccordion"]') : null;
+      c.classList.toggle('hidden');
+      if (btn) {
+        btn.setAttribute('aria-expanded', anyOpen ? 'false' : 'true');
+        const icon = btn.querySelector('[data-lucide="chevron-down"]');
+        if (icon) icon.style.transform = anyOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+      }
+    }
+  });
+  // Update toggle button icon
+  const toggleBtn = root.querySelector ? root.querySelector('[data-collapse-toggle]') : null;
+  if (toggleBtn) {
+    const icon = toggleBtn.querySelector('i[data-lucide]');
+    if (icon) { icon.setAttribute('data-lucide', anyOpen ? 'chevrons-down' : 'chevrons-up'); if (typeof _refreshIcons === 'function') _refreshIcons(); }
+  }
 }
 
 // ── File Handling (Anexos - Step 2) ───────────────────────────────────

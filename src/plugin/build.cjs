@@ -118,7 +118,7 @@ ${css}
 
 <body class="h-screen flex flex-col overflow-hidden bg-light-bg text-slate-900 dark:bg-dark-bg dark:text-dark-text">
   <header
-    class="flex items-center justify-between px-4 py-2 border-b border-light-line dark:border-dark-line shrink-0 bg-light-surface dark:bg-dark-bg z-50">
+    class="relative flex items-center justify-between px-4 py-2 border-b border-light-line dark:border-dark-line shrink-0 bg-light-surface dark:bg-dark-bg z-50">
     <!-- Home Header -->
     <div id="header-home" class="flex items-center justify-between w-full">
       <div class="flex items-center gap-2">
@@ -140,7 +140,7 @@ ${css}
         <h1 class="font-bold text-[#1E293B] dark:text-white text-[12px] tracking-[0.15em] uppercase">
           HANDEX
         </h1>
-        <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v4.1.3</span>
+        <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v4.1.4</span>
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <button onclick="ensureExpanded(); openDadosProjetoModal()" title="Dados do Projeto" aria-label="Dados do Projeto"
@@ -170,7 +170,7 @@ ${css}
 
   </header>
 
-  <div class="flex-1 overflow-hidden relative">
+  <div class="flex-1 overflow-hidden relative min-h-0">
 ${viewHome}
 ${viewMeasure}
 ${viewGuide}
