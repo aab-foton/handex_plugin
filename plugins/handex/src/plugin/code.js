@@ -1228,28 +1228,6 @@ figma.ui.onmessage = async (msg) => {
         uiTitle.layoutGrow = 1;
         uiHeaderRow.appendChild(uiTitle);
 
-        // Legenda dos dots de conformidade
-        const legendItems = [
-          { color: { r: 0.13, g: 0.7, b: 0.38 },  label: "Conforme" },
-          { color: { r: 0.85, g: 0.55, b: 0.1  },  label: "Atenção"  },
-          { color: { r: 0.88, g: 0.28, b: 0.28 },  label: "Fora"     },
-        ];
-        const legendRow = createFrame("HORIZONTAL", 0, 10);
-        legendRow.counterAxisAlignItems = "CENTER";
-        legendItems.forEach(li => {
-          const legendItem = createFrame("HORIZONTAL", 0, 4);
-          legendItem.counterAxisAlignItems = "CENTER";
-
-          const dot = figma.createEllipse();
-          dot.resize(7, 7);
-          dot.fills = [{ type: 'SOLID', color: li.color }];
-          legendItem.appendChild(dot);
-
-          const lbl = createText(li.label, 10, "Regular", { r: 0.4, g: 0.45, b: 0.52 });
-          legendItem.appendChild(lbl);
-          legendRow.appendChild(legendItem);
-        });
-        uiHeaderRow.appendChild(legendRow);
 
         // Helper para specs list (Colunas Verticais)
         function createSpecList(title, items, type) {
@@ -1385,25 +1363,17 @@ figma.ui.onmessage = async (msg) => {
                     pRow.appendChild(dot);
                   }
                 }
-                // Conformance dot — small, at the end of the row
-                const _dColor = prop.isDS === true ? { r: 0.13, g: 0.7, b: 0.38 } : (prop.isDS === 'warning' ? { r: 0.85, g: 0.55, b: 0.1 } : { r: 0.88, g: 0.28, b: 0.28 });
-                const cDot = figma.createEllipse();
-                cDot.resize(5, 5);
-                cDot.fills = [{ type: 'SOLID', color: _dColor }];
-                cDot.name = 'status';
-
                 const pLabel = createText(`${prop.label || prop.type}:`, 10, "Medium", { r: 0.4, g: 0.45, b: 0.5 });
                 pRow.appendChild(pLabel);
 
                 const pVal = createText(prop.value, 10, "Bold", { r: 0.2, g: 0.25, b: 0.3 });
                 pVal.layoutGrow = 1;
                 pRow.appendChild(pVal);
-                
-                if (prop.isDS === true && prop.token) {
-                   const tBadge = createText(prop.token, 8, "Regular", { r: 0, g: 0.44, b: 0.69 });
-                   pRow.appendChild(tBadge);
+
+                if (prop.token) {
+                  const tBadge = createText(prop.token, 8, "Regular", { r: 0, g: 0.44, b: 0.69 });
+                  pRow.appendChild(tBadge);
                 }
-                pRow.appendChild(cDot);
               });
             }
           });
