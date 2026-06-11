@@ -140,7 +140,7 @@ ${css}
         <h1 class="font-bold text-[#1E293B] dark:text-white text-[12px] tracking-[0.15em] uppercase">
           HANDEX
         </h1>
-        <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v4.1.1</span>
+        <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v4.1.3</span>
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <button onclick="ensureExpanded(); openDadosProjetoModal()" title="Dados do Projeto" aria-label="Dados do Projeto"
@@ -229,7 +229,7 @@ ${modHandoff}
 
   <!-- Back-to-top button (ghost at rest, highlighted on hover) -->
   <button id="btn-top" onclick="scrollToTop()" title="Voltar ao topo" aria-label="Voltar ao topo"
-    class="fixed bottom-6 right-6 w-10 h-10 rounded-full flex items-center justify-center opacity-0 pointer-events-none translate-y-10 z-[100]">
+    class="fixed bottom-6 right-6 w-10 h-10 rounded-full flex items-center justify-center opacity-0 pointer-events-none translate-y-10 z-[100] bg-slate-900/20 dark:bg-white/10 backdrop-blur-sm border border-slate-900/20 dark:border-white/15 text-slate-700 dark:text-white hover:bg-[#0070af] hover:border-[#0070af] hover:text-white transition-colors duration-200">
     <i data-lucide="chevron-up" class="w-5 h-5"></i>
   </button>
 

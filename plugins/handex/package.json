@@ -1,7 +1,7 @@
 {
   "name": "handex-handoff-express",
   "private": true,
-  "version": "4.1.2",
+  "version": "4.1.3",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
@@ -13,7 +13,7 @@
     "refs:rebuild": "npm run refs:fetch && node src/plugin/refs/build-skeleton.cjs",
     "refs:update": "npm run refs:rebuild && npm run bundle:ui && npm run bundle:code",
     "bundle:refs": "node src/plugin/refs/build-skeleton.cjs",
-    "bundle:css": "tailwindcss --config src/plugin/styles/tailwind.config.cjs -i src/plugin/styles/tailwind-input.css -o src/plugin/styles/tailwind-compiled.css --minify",
+    "bundle:css": "node node_modules/tw3/lib/cli.js --config src/plugin/styles/tailwind.config.cjs -i src/plugin/styles/tailwind-input.css -o src/plugin/styles/tailwind-compiled.css --minify",
     "bundle:ui": "npm run bundle:css && npm run bundle:refs && node src/plugin/build.cjs",
     "bundle:code": "node scripts/bundle-code.cjs",
     "version:patch": "npm version patch --no-git-tag-version",
