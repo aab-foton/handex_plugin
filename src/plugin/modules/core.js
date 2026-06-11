@@ -1140,7 +1140,7 @@ function addTeamMember(papel = "Designer", nome = "", email = "", skipScroll = f
           <option value="Outro"    ${papel === "Outro"    ? "selected" : ""}>Outro</option>
         </select>
         <button type="button" onclick="_csToggle('cs-role-${id}', event)"
-          class="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg text-[11px] font-bold text-slate-700 dark:text-white cursor-pointer hover:border-gray-300 focus:ring-1 focus:ring-[#0070af]/30 outline-none transition-all">
+          class="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl text-[11px] font-bold text-slate-700 dark:text-white cursor-pointer hover:border-gray-300 focus:ring-1 focus:ring-[#0070af]/30 outline-none transition-all">
           <span data-cs-label>${papel}</span>
           <i data-lucide="chevron-down" data-cs-chev class="w-3 h-3 text-gray-400 transition-transform"></i>
         </button>
