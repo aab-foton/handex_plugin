@@ -148,10 +148,34 @@ ${(() => {
 ${(() => {
   const framesWithSpecs = framesList.filter(f => (f.createdSpecs || []).length > 0);
   if (framesWithSpecs.length === 0) return 'Nenhuma especificação anotada.';
-  return framesWithSpecs.map(f =>
-    `### ${f.nome}\n` +
-    f.createdSpecs.map(s => `- **${s.name || s.label || 'Spec'}** [${s.category || s.categoryLabel || 'Geral'}]${s.note ? ': ' + s.note : ''}${s.link ? ' — [DSC](' + s.link + ')' : ''}`).join('\n')
-  ).join('\n\n');
+  return framesWithSpecs.map(f => {
+    const groupNames = f.specGroupNames || {};
+    const groupVisible = f.specGroupVisible || {};
+    const byLetter = {};
+    const letterOrder = [];
+    (f.createdSpecs || []).forEach(s => {
+      const l = s.letter || 'A';
+      if (!byLetter[l]) { byLetter[l] = []; letterOrder.push(l); }
+      byLetter[l].push(s);
+    });
+    const groups = letterOrder.map(letter => {
+      if (groupVisible[letter] === false) return '';
+      const groupName = groupNames[letter] ? ` — ${groupNames[letter]}` : '';
+      const specLines = byLetter[letter].map(s => {
+        const cat = s.type || s.categoryLabel || s.category || 'Geral';
+        const nodeRef = s.targetNodeId ? ` _(Node: \`${s.targetNodeId}\`)_` : '';
+        const props = (s.properties || []).length > 0
+          ? '\n' + s.properties.map(p => `  - **${p.label}**${p.token ? ` \`${p.token}\`` : ''}${p.value ? ` → ${p.value}` : ''}`).join('\n')
+          : '';
+        const excs = (s.excecoes || []).length > 0
+          ? '\n' + s.excecoes.map(e => `  - [${e.tipo || 'Geral'}] **${e.titulo || ''}**${e.obs ? ': ' + e.obs : ''}`).join('\n')
+          : '';
+        return `- **${s.name || 'Spec'}** [${cat}]${s.note ? ': ' + s.note : ''}${s.link ? ` — [DSC](${s.link})` : ''}${nodeRef}${props}${excs}`;
+      });
+      return `#### Grupo ${letter}${groupName}\n${specLines.join('\n')}`;
+    }).filter(Boolean);
+    return `### ${f.nome}\n${groups.join('\n\n')}`;
+  }).join('\n\n');
 })()}
 
 ## Fluxos de Tela (${(handoffData.createdFlows || []).length})
@@ -159,22 +183,10 @@ ${(handoffData.createdFlows || []).length === 0
   ? 'Nenhum fluxo mapeado.'
   : (handoffData.createdFlows || []).map(flow => `- **${flow.name || 'Fluxo'}** — ${flow.type || ''}${flow.decisionText ? ' ("' + flow.decisionText + '")' : ''}`).join('\n')}
 
-## Especificações Visuais (${(handoffData.specs || []).filter(s => s.visible !== false).length} visíveis)
-${(handoffData.specs || []).length === 0 ? 'Nenhuma especificação registrada.' :
-  (handoffData.specs || []).map(s => {
-    const vis = s.visible !== false ? '' : ' *(oculta)*';
-    const cat = s.category || s.categoryLabel || 'Geral';
-    const excs = (s.excecoes || []).length > 0
-      ? '\n' + s.excecoes.map(e => `  - [${e.tipo || 'Geral'}] **${e.titulo || ''}**${e.obs ? ': ' + e.obs : ''}`).join('\n')
-      : '';
-    return `- **${s.letter || 'A'} — ${s.name || ''}** [${cat}]${vis}${s.note ? ': ' + s.note : ''}${excs}`;
-  }).join('\n')
-}
-
 ## Documentação
-- Protótipo: ${handoffData.docs.proto.link || 'N/A'}
-- Acessibilidade: ${handoffData.docs.a11y.link || 'N/A'}
-- UX Research: ${handoffData.docs.research.link || 'N/A'}
+- Protótipo: ${(handoffData.docs && handoffData.docs.proto && handoffData.docs.proto.link) || 'N/A'}
+- Acessibilidade: ${(handoffData.docs && handoffData.docs.a11y && handoffData.docs.a11y.link) || 'N/A'}
+- UX Research: ${(handoffData.docs && handoffData.docs.research && handoffData.docs.research.link) || 'N/A'}
 `;
       handoffData.mdContent = mdContent;
     }
@@ -966,17 +978,25 @@ ${(handoffData.specs || []).length === 0 ? 'Nenhuma especificação registrada.'
                     </button>
                   </div>
                   <div id="specs-${fi}" class="space-y-1.5">
-                    ${fCreatedSpecs.map((s, si) => `
-                      <div id="html-spec-${fi}-${si}" data-toggle-item data-hidden="0" class="flex items-center gap-2 p-2 bg-indigo-50/40 dark:bg-indigo-950/10 border border-indigo-100/60 dark:border-indigo-900/30 rounded-lg transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                        <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${s.name || s.label || 'Spec'}</span>
-                        ${s.category ? `<span class="shrink-0" style="${_getCatStyleHTML(s.category)}">${s.categoryLabel || s.category}</span>` : ''}
-                        ${(s.excecoes && s.excecoes.length > 0) ? `<span class="text-[9px] font-bold text-amber-600 dark:text-amber-400 shrink-0">${s.excecoes.length} exc.</span>` : ''}
-                        <button data-toggle-btn onclick="toggleHTMLItem('html-spec-${fi}-${si}', this)" title="Ocultar" class="ml-1 shrink-0 opacity-40 hover:opacity-100 transition-opacity">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                        </button>
-                      </div>
-                    `).join('')}
+                    ${fCreatedSpecs.map((s, si) => {
+                      const _sc = s.type || s.categoryLabel || s.category || '';
+                      return `
+                      <div id="html-spec-${fi}-${si}" data-toggle-item data-hidden="0" class="bg-indigo-50/40 dark:bg-indigo-950/10 border border-indigo-100/60 dark:border-indigo-900/30 rounded-lg transition-all overflow-hidden" data-node-id="${s.targetNodeId || ''}">
+                        <div class="flex items-center gap-2 p-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                          <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${s.name || s.label || 'Spec'}</span>
+                          ${_sc ? `<span class="shrink-0" style="${_getCatStyleHTML(s.category || _sc)}">${_sc}</span>` : ''}
+                          ${(s.excecoes && s.excecoes.length > 0) ? `<span class="text-[9px] font-bold text-amber-600 dark:text-amber-400 shrink-0">${s.excecoes.length} exc.</span>` : ''}
+                          <button data-toggle-btn onclick="toggleHTMLItem('html-spec-${fi}-${si}', this)" title="Ocultar" class="ml-1 shrink-0 opacity-40 hover:opacity-100 transition-opacity">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                          </button>
+                        </div>
+                        ${(s.properties || []).length > 0 ? `
+                        <div class="border-t border-indigo-100/60 dark:border-indigo-900/30 px-2 py-1.5 space-y-0.5">
+                          ${s.properties.map(p => `<div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-slate-600 dark:text-slate-300 w-20 shrink-0 truncate">${p.label || ''}</span>${p.token ? `<code class="bg-slate-100 dark:bg-slate-800 text-slate-500 px-1 rounded text-[9px] font-mono">${p.token}</code>` : ''}${p.value ? `<span class="text-slate-400 truncate">→ ${p.value}</span>` : ''}</div>`).join('')}
+                        </div>` : ''}
+                      </div>`;
+                    }).join('')}
                   </div>
                 </div>` : '';
 
@@ -1102,33 +1122,84 @@ ${(handoffData.specs || []).length === 0 ? 'Nenhuma especificação registrada.'
         accordionsHTML += buildAccordionHTML("acc-medidas", `Medidas · ${totalMeas}`, "ruler", measContent, false);
       }
 
-      // 7.2 Especificações Anotadas (seção independente, agrupada por frame)
+      // 7.2 Especificações Anotadas (seção independente, agrupada por frame e grupo)
       const _framesWithAnnot = (_allFrames).filter(f => (f.createdSpecs || []).length > 0);
       if (_framesWithAnnot.length > 0) {
         const totalAnnot = _framesWithAnnot.reduce((n, f) => n + f.createdSpecs.length, 0);
         const annotContent = `
           <div class="space-y-4 text-left">
-            ${_framesWithAnnot.map((f, fi) => `
+            ${_framesWithAnnot.map((f, fi) => {
+              const _gNames = f.specGroupNames || {};
+              const _gVisible = f.specGroupVisible || {};
+              const _byLetter = {};
+              const _letterOrder = [];
+              (f.createdSpecs || []).forEach(s => {
+                const l = s.letter || 'A';
+                if (!_byLetter[l]) { _byLetter[l] = []; _letterOrder.push(l); }
+                _byLetter[l].push(s);
+              });
+              return `
               <div>
-                <p class="text-[9px] font-black uppercase tracking-widest text-[#0070af] dark:text-blue-400 mb-1.5 flex items-center gap-1.5">
+                <p class="text-[9px] font-black uppercase tracking-widest text-[#0070af] dark:text-blue-400 mb-2 flex items-center gap-1.5">
                   <i data-lucide="layers" class="w-3 h-3"></i> ${f.nome || 'Frame'}
                 </p>
-                <div class="space-y-1.5">
-                  ${f.createdSpecs.map((s, si) => `
-                    <div class="flex items-start gap-2 p-2.5 bg-indigo-50/40 dark:bg-indigo-950/10 border border-indigo-100/60 dark:border-indigo-900/30 rounded-lg">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 mt-0.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                      <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2">
-                          ${s.link ? `<a href="${s.link}" target="_blank" class="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 truncate hover:underline">${s.name || s.label || 'Spec'}</a>` : `<span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">${s.name || s.label || 'Spec'}</span>`}
-                          ${s.category ? `<span class="shrink-0" style="${_getCatStyleHTML(s.category)}">${s.categoryLabel || s.category}</span>` : ''}
-                        </div>
-                        ${s.note ? `<p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">${s.note}</p>` : ''}
+                <div class="space-y-3">
+                  ${_letterOrder.map(letter => {
+                    if (_gVisible[letter] === false) return '';
+                    const gLabel = _gNames[letter] ? `<span class="text-slate-500 font-normal"> — ${_gNames[letter]}</span>` : '';
+                    return `
+                    <div>
+                      <p class="text-[9px] font-black uppercase tracking-wider text-indigo-500 dark:text-indigo-400 mb-1.5">Grupo ${letter}${gLabel}</p>
+                      <div class="space-y-1.5">
+                        ${_byLetter[letter].map((s, si) => {
+                          const _sCat = s.type || s.categoryLabel || s.category || '';
+                          const _sProps = (s.properties || []);
+                          const _sExcs = (s.excecoes || []);
+                          const _excColors = { 'Erro': '#dc2626', 'Alerta': '#d97706', 'Sucesso': '#16a34a', 'Confirmação': '#2563eb' };
+                          return `
+                          <div class="bg-indigo-50/40 dark:bg-indigo-950/10 border border-indigo-100/60 dark:border-indigo-900/30 rounded-lg overflow-hidden" data-node-id="${s.targetNodeId || ''}">
+                            <div class="flex items-center gap-2 p-2.5">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                              <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                  ${s.link ? `<a href="${s.link}" target="_blank" class="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 hover:underline">${s.name || 'Spec'}</a>` : `<span class="text-[11px] font-bold text-slate-700 dark:text-slate-300">${s.name || 'Spec'}</span>`}
+                                  ${_sCat ? `<span style="${_getCatStyleHTML(s.category || _sCat)}">${_sCat}</span>` : ''}
+                                </div>
+                                ${s.note ? `<p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">${s.note}</p>` : ''}
+                                ${s.targetNodeId ? `<p class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-mono">Node: ${s.targetNodeId}</p>` : ''}
+                              </div>
+                            </div>
+                            ${_sProps.length > 0 ? `
+                            <div class="border-t border-indigo-100/60 dark:border-indigo-900/30 px-2.5 py-2">
+                              <p class="text-[8px] font-black uppercase tracking-widest text-indigo-400 mb-1.5">Propriedades</p>
+                              <div class="space-y-1">
+                                ${_sProps.map(p => `
+                                <div class="flex items-center gap-2 text-[10px]">
+                                  <span class="font-bold text-slate-600 dark:text-slate-300 w-24 shrink-0 truncate">${p.label || ''}</span>
+                                  ${p.token ? `<code class="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-1.5 rounded text-[9px] font-mono">${p.token}</code>` : ''}
+                                  ${p.value ? `<span class="text-slate-500 dark:text-slate-400 truncate">→ ${p.value}</span>` : ''}
+                                </div>`).join('')}
+                              </div>
+                            </div>` : ''}
+                            ${_sExcs.length > 0 ? `
+                            <div class="border-t border-indigo-100/60 dark:border-indigo-900/30 px-2.5 py-2">
+                              <p class="text-[8px] font-black uppercase tracking-widest text-amber-500 mb-1.5">Exceções · ${_sExcs.length}</p>
+                              <div class="space-y-1">
+                                ${_sExcs.map(e => `
+                                <div class="flex items-center gap-2">
+                                  <span class="text-[9px] font-bold w-20 shrink-0" style="color:${_excColors[e.tipo] || '#64748b'}">${e.tipo || ''}</span>
+                                  <span class="text-[10px] text-slate-600 dark:text-slate-300">${e.titulo || ''}</span>
+                                </div>`).join('')}
+                              </div>
+                            </div>` : ''}
+                          </div>`;
+                        }).join('')}
                       </div>
-                    </div>
-                  `).join('')}
+                    </div>`;
+                  }).filter(Boolean).join('')}
                 </div>
-              </div>
-            `).join('')}
+              </div>`;
+            }).join('')}
           </div>
         `;
         accordionsHTML += buildAccordionHTML("acc-annot-specs", `Especificações Anotadas · ${totalAnnot}`, "tag", annotContent, false);
