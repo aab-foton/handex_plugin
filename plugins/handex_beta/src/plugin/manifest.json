@@ -1,8 +1,0 @@
-{
-  "name": "Handex - Handoff Express",
-  "api": "1.0.0",
-  "main": "code.bundle.js",
-  "ui": "ui.html",
-  "editorType": ["figma", "dev"],
-  "permissions": ["currentuser"]
-}
