@@ -16,6 +16,7 @@
     "bundle:css": "node node_modules/tw3/lib/cli.js --config src/plugin/styles/tailwind.config.cjs -i src/plugin/styles/tailwind-input.css -o src/plugin/styles/tailwind-compiled.css --minify",
     "bundle:ui": "npm run bundle:css && npm run bundle:refs && node src/plugin/build.cjs",
     "bundle:code": "node scripts/bundle-code.cjs",
+    "export:plugin": "cp src/plugin/manifest.json handex-plugin/ && cp src/plugin/code.bundle.js handex-plugin/ && cp src/plugin/ui.html handex-plugin/ && echo '✅ handex-plugin/ atualizada'",
     "version:patch": "npm version patch --no-git-tag-version",
     "version:minor": "npm version minor --no-git-tag-version",
     "version:major": "npm version major --no-git-tag-version"
