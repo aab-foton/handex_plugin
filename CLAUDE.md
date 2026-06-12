@@ -6,7 +6,7 @@ Contexto de projeto para o assistente. Leia este arquivo antes de qualquer taref
 
 ## Quem é o usuário
 
-Designer sênior de UX na CAIXA Econômica Federal, em parceria com a Fóton. Trabalha com sistemas de design (DSC — Design System Corporativo da CAIXA), handoff para desenvolvimento e ferramentas internas para o time de design. Não é desenvolvedor de formação — contexto técnico deve ser direto e sem jargão desnecessário.
+Augusto Brasil, Designer sênior de UX da Fóton, atuando no projeto da CAIXA Econômica Federal. Trabalha com sistemas de design (DSC — Design System Corporativo da CAIXA), handoff para desenvolvimento e ferramentas internas para o time de design. Não é desenvolvedor de formação — contexto técnico deve ser direto e sem jargão desnecessário.
 
 ---
 
