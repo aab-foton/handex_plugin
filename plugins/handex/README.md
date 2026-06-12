@@ -1,6 +1,6 @@
 # Handex — Handoff Express · v4.1.6
 
-Plugin Figma desenvolvido pela equipe de Design da CAIXA em parceria com a Fóton. Automatiza o processo de handoff de design, gerando fichas técnicas no canvas, escaneando tokens de UI, anotando specs e medidas, mapeando fluxos e auditando aderência ao Design System Corporativo (DSC).
+Plugin Figma da Fóton, desenvolvido por Augusto Brasil. Automatiza o processo de handoff de design, gerando fichas técnicas no canvas, escaneando tokens de UI, anotando specs e medidas, mapeando fluxos e auditando aderência ao Design System Corporativo (DSC).
 
 ---
 
@@ -242,4 +242,4 @@ Bundle agregado gerado por `build-skeleton.cjs`. Contém metadados, style keys e
 
 ---
 
-Handex — Handoff Express · v4.1.6 · Desenvolvido por Fóton para CAIXA Design
+Handex — Handoff Express · v4.1.6 · Fóton · Desenvolvido por Augusto Brasil
