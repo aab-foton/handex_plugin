@@ -7,8 +7,8 @@ Branch atual: `feat/instance-based-preview`. Versão: `2.2.0`.
 
 | Arquivo | Papel |
 |---------|-------|
-| `code.ts` | Lógica do plugin (sandbox Figma, ~2895 linhas) |
-| `ui.html` | Interface (iframe sandboxado, ~3039 linhas) |
+| `code.ts` | Lógica do plugin (sandbox Figma, ~3954 linhas) |
+| `ui.html` | Interface (iframe sandboxado, ~2985 linhas) |
 | `FUNCTIONS.md` | Mapa de funções e handlers com números de linha |
 | `Makefile` | `push-github` / `push-gitlab` / `push-all` |
 
@@ -107,10 +107,15 @@ No template fresco (colocado manualmente pelo designer), `table` pode ter `Heade
 - Template antigo detectado por: filho com nome `'keyboard maping'` ou `'keyboard mapping'`
 - `tempSROverlayRefX/Y` — armazena posição do componente no momento de `create-sr-overlay` para calcular `relX`/`relY` correto no `confirm-sr-area`
 - Agrupamentos de leitor de tela: `relX`/`relY` são relativos ao componente ativo; `width`/`height` são as dimensões do frame de agrupamento
-- Badge de área de toque no `run-handoff`: sempre recriado junto com o overlay; posicionado à esquerda do overlay (`x = overlay.x - badge.width`), centralizado verticalmente, `conector: 'direita'` forçado (independente do `badgeProps` salvo — garante que o conector aponte para o overlay)
+- Badge de área de toque no `run-handoff`: sempre recriado junto com o overlay; usa `badgeOffsetX`/`badgeOffsetY` confirmados pela pessoa (posição relativa ao overlay) e `badgeProps` salvos (inclui direção do conector) — idêntico ao comportamento do `activate-variation`
 - Limpeza pós-geração: os frames `[A11Y Variação*]` e `[A11Y Variações]` são removidos em **varredura única** do `currentPage.findAll` (não 4 passagens separadas)
 - Painel "Como usar": botão `i` no header abre `infoOverlay` com passo a passo de seleção, descrição das abas e card de configurações
 - Badge de heading no leitor de tela: quando `tipoVariante === 'nível de título'` e `c.especificacao` está preenchido, o texto do badge é `c.especificacao` (h1/h2/h3) — tanto no preview quanto nas specs
 - `createComponentInstance` para `COMPONENT_SET`: usa `defaultVariant` → `children.find(COMPONENT)` → frame placeholder vazio. **Nunca** clona o set inteiro (evita mostrar todas as variantes no canvas/handoff)
 - Limpeza no início de `run-handoff`: remove `[A11Y Toque]` **e** `[A11Y Leitor]` da página; zera `tempTouchOverlayId` e `tempSROverlayId`
 - `oldSRVarCapture` órfãos: nodes de migração SR que não foram reinseridos no handoff são removidos na limpeza final via `cap.comp.parent === figma.currentPage`
+- `overlayProps` do conector SR: todas as `componentProperties` (com sufixo `#id`) salvas em `confirm-sr-area`; aplicadas via `setProperties(overlayProps)` em `run-handoff`, `activate-sr-variation` e `append-sr-marker`; fallback geométrico por distância de borda para dados sem `overlayProps`
+- `applyWcagBackground`: busca `card background` (sem número = modo claro) e `card background 2` (modo escuro), resolve as cores de cada variável, escolhe a que gera maior contraste contra o componente; sem fill no frame → assume branco como fundo de canvas
+- Spec rows do zoom: dentro de `zoom > specs (FRAME) > element`, visibilidade e numeração dos `element` controladas por `zoomTypes`; apenas rows de tipos selecionados ficam visíveis; os visíveis são renumerados sequencialmente
+- `modelConector`, `modelAgrupamento` e `modelItemNumber` ficam com `visible = false` (nunca `.remove()`) para permanecerem disponíveis como modelos de clonagem
+- imageFrame de toque: bounding-box calculada sobre filhos do tipo `variation-component`, `touch-overlay` e `touch-badge`; frame deslocado e redimensionado para incluir tudo; `clipsContent = false`

@@ -182,6 +182,9 @@
     #tabFormView { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #fff; flex-direction: column; z-index: 10; }
     #tabFormView.open { display: flex; }
     #tabOrderListWrapper { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .tab-form-header { padding: 12px 16px; border-bottom: 1px solid #EEE; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .tab-form-header span { font-size: 13px; font-weight: 700; color: #1a1a1a; }
+    .tab-form-header button { background: none; border: none; font-size: 18px; color: #999; cursor: pointer; }
     .tab-footer { padding: 10px 16px 14px; border-top: 1px solid #F0F0F0; background: #fff; flex-shrink: 0; }
     .tab-add-btn { width: 100%; padding: 10px; background: none; border: 1.5px dashed #BBBFC8; border-radius: 10px; color: #2D4496; font-size: 12px; font-weight: 700; cursor: pointer; }
     .tab-add-btn:hover { border-color: #2D4496; background: #EEF2FF; }
@@ -199,24 +202,9 @@
     .tab-order-btn.remove:hover { color: #FF5252; }
     .tab-order-empty { text-align: center; padding: 32px 16px; color: #BBB; font-size: 12px; border: 2px dashed #EEE; border-radius: 12px; }
 
-    /* === TAB FORM === */
+    /* === TAB FOOTER === */
     .tab-notab-bar { padding: 12px 16px; border-bottom: 1px solid #EEE; background: #fff; flex-shrink: 0; }
-    .tab-form-header { padding: 12px 16px; border-bottom: 1px solid #EEE; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-    .tab-form-header span { font-size: 13px; font-weight: 700; color: #1a1a1a; }
-    .tab-form-header button { background: none; border: none; font-size: 18px; color: #999; cursor: pointer; }
-    .tab-form-section { padding: 16px; border-bottom: 1px solid #EEE; flex-shrink: 0; }
-    .tab-form-hint { font-size: 12px; color: #666; margin: 0 0 12px; }
-
-    .tab-type-row { display: flex; gap: 8px; }
-    .tab-type-btn { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 10px 12px; border: 1.5px solid #EBEBEB; border-radius: 10px; background: #fff; cursor: pointer; text-align: left; transition: border-color 0.15s, background 0.15s; }
-    .tab-type-btn:hover { border-color: #2D4496; background: #EEF2FF; }
-    .tab-type-btn.active { border-color: #2D4496 !important; background: #EEF2FF !important; }
-    .tab-btn-label { font-size: 10px; font-weight: 600; color: #999; }
-    .tab-btn-value { font-size: 13px; font-weight: 700; color: #2D4496; }
-    .tab-form-temp-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #FAFAFA; border: 1px solid #EEE; border-radius: 8px; font-size: 12px; }
-    .tab-form-temp-index { font-size: 10px; font-weight: 800; color: #2D4496; background: #EEF2FF; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .tab-form-temp-name { flex: 1; color: #1a1a1a; font-weight: 600; }
-    .tab-form-temp-layer { color: #AAA; font-size: 11px; }
+    .tab-canvas-hint { font-size: 12px; color: #666; line-height: 1.6; padding: 14px 16px; background: #EEF0FA; border-radius: 8px; }
 
   </style>
 </head>
@@ -467,34 +455,17 @@
           </div>
         </div>
 
-        <!-- FORM FOCO DE TABULAÇÃO (overlay absoluto) -->
+        <!-- FORM ADICIONAR TABULAÇÃO (overlay absoluto z-index:10) -->
         <div id="tabFormView">
           <div class="tab-form-header">
-            <span>Adicionar Tabulação</span>
+            <span>Adicionar foco de tabulação</span>
             <button onclick="closeTabForm()">×</button>
           </div>
-          <div class="tab-form-section">
-            <p class="tab-form-hint">Escolha o tipo de foco:</p>
-            <div class="tab-type-row">
-              <button class="tab-type-btn" id="tabTypeSelection" onclick="selectTabFormType('selection')">
-                <span class="tab-btn-label">Seleção</span>
-                <span class="tab-btn-value">Camadas no canvas</span>
-              </button>
-              <button class="tab-type-btn" id="tabTypeComponent" onclick="selectTabFormType('component')">
-                <span class="tab-btn-label">Componente</span>
-                <span class="tab-btn-value">Foco único</span>
-              </button>
-            </div>
+          <div style="flex:1; display:flex; align-items:flex-start; padding:16px;">
+            <div class="tab-canvas-hint">Selecione no Figma o que quiser — uma camada, várias camadas ou o componente inteiro — e clique em Confirmar.</div>
           </div>
-          <div id="tabFormActions" style="display:none; padding:0 16px 12px; flex-shrink:0;">
-            <div style="background:#EEF2FF; border-radius:8px; padding:12px; text-align:center;">
-              <div id="tabFormTitle" style="font-size:12px; font-weight:700; color:#2D4496; margin-bottom:4px;"></div>
-              <p id="tabFormInstruction" style="font-size:11px; color:#666; margin:0;"></p>
-            </div>
-          </div>
-          <div id="tabFormTempList" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:8px;"></div>
           <div class="touch-actions" style="padding:12px 16px; border-top:1px solid #EEE;">
-            <button class="touch-btn-primary" id="btnTabFormSave" onclick="saveTabForm()" disabled>Salvar</button>
+            <button class="touch-btn-primary" onclick="onTabConfirm()">Confirmar</button>
             <button onclick="closeTabForm()" style="background:none;border:none;font-size:12px;font-weight:700;color:#2D4496;cursor:pointer;padding:4px 0;">Cancelar</button>
           </div>
         </div>
@@ -1335,7 +1306,6 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           clearTimeout(sb._loadingTimer);
           sb._loadingTimer = setTimeout(() => { sb.classList.remove('loading'); sb.textContent = ''; }, 15000);
         } else {
-          if (tabFormPendingSave) tabFormPendingSave = false; // reset se canvas vazio
           sb.textContent = msg.message;
           el('btnRun').disabled = false; el('btnRun').style.opacity = ''; el('btnRun').style.cursor = '';
           setTimeout(() => { sb.classList.remove('loading', 'success', 'error'); }, 5000);
@@ -1349,60 +1319,24 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
         el('mainContainer').style.display = 'none';
       }
       if (msg.type === 'tab-items-ready') {
-        if (tabFormPendingSave) { // Check for pending save
-          tabFormPendingSave = false;
-          const startIndex = tabOrderData.length;
-          msg.items.forEach((item, i) => {
-            tabOrderData.push({
-              nome: 'Tab ' + (startIndex + i + 1),
-              layerName: item.layerName,
-              nodeId: item.nodeId,
-              relX: item.relX,
-              relY: item.relY,
-              width: item.width,
-              height: item.height,
-            });
+        const startIndex = tabOrderData.length;
+        msg.items.forEach((item, i) => {
+          tabOrderData.push({
+            nome: 'Tab ' + (startIndex + i + 1),
+            layerName: item.layerName,
+            nodeId: item.nodeId,
+            relX: item.relX,
+            relY: item.relY,
+            width: item.width,
+            height: item.height,
           });
-          closeTabForm();
-          renderTabOrderList();
-          updateSummaryCards();
-          saveTouchTabData();
-          // Redesenha markers no canvas com a lista atualizada
-          const _activeTabVar = tabVariationsData.find(v => v.id === currentTabVariationId);
-          if (_activeTabVar && currentTabVariationId) {
-            parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', variationId: currentTabVariationId, variationIndex: tabVariationsData.findIndex(v => v.id === currentTabVariationId), instanceNodeId: _activeTabVar.instanceNodeId, propriedades: _activeTabVar.propriedades || {}, tab_order: tabOrderData } }, '*');
-          }
-        } else if (el('tabFormView').classList.contains('open')) { // If form is open but not pending save
-          const before = tabFormTempItems.length;
-          msg.items.forEach((item, i) => {
-            tabFormTempItems.push({
-              nome: 'Tab ' + (before + i + 1),
-              layerName: item.layerName,
-              nodeId: item.nodeId,
-              relX: item.relX,
-              relY: item.relY,
-              width: item.width,
-              height: item.height,
-            });
-          });
-          renderTabFormTempList();
-          el('btnTabFormSave').disabled = tabFormTempItems.length === 0;
-        } else { // If form is not open
-          const startIndex = tabOrderData.length;
-          msg.items.forEach((item, i) => {
-            tabOrderData.push({
-              nome: 'Tab ' + (startIndex + i + 1),
-              layerName: item.layerName,
-              nodeId: item.nodeId,
-              relX: item.relX,
-              relY: item.relY,
-              width: item.width,
-              height: item.height,
-            });
-          });
-          renderTabOrderList();
-          updateSummaryCards();
-          saveTouchTabData();
+        });
+        renderTabOrderList();
+        updateSummaryCards();
+        saveTouchTabData();
+        const _activeTabVar = tabVariationsData.find(v => v.id === currentTabVariationId);
+        if (_activeTabVar && currentTabVariationId) {
+          parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', variationId: currentTabVariationId, variationIndex: tabVariationsData.findIndex(v => v.id === currentTabVariationId), instanceNodeId: _activeTabVar.instanceNodeId, propriedades: _activeTabVar.propriedades || {}, tab_order: tabOrderData } }, '*');
         }
       }
 
@@ -1522,10 +1456,9 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
           if (window._pendingAddTab) {
             window._pendingAddTab = false;
             el('btnAddTab').disabled = false;
-            el('btnAddTab').textContent = '+ Adicionar foco de tabulação';
+            el('btnAddTab').textContent = '+ Adicionar seleção';
             const vTab = tabVariationsData.find(v => v.id === currentTabVariationId);
             if (vTab) parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', variationId: vTab.id, variationIndex: tabVariationsData.findIndex(v => v.id === vTab.id), instanceNodeId: vTab.instanceNodeId, propriedades: vTab.propriedades || {}, tab_order: vTab.tab_order || [] } }, '*');
-            openTabForm();
           } else {
             // Criação via form ou editTabVariation — sempre ativa a variação
             closeTabVariationForm();
@@ -1621,9 +1554,6 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
   let currentSRVariationId = 'default';
   const leitorState = { rolesList: [], conectores: [], semLeitor: false, pendingSROrigem: null };
   let tabOrderData = []; // tab_order da variação de tabulação ativa
-    let tabFormTempItems = [];
-    let tabFormType = null; // 'selection' | 'component'
-    let tabFormPendingSave = false;
     let semTabulacao = false;
   let currentVariationId = null; // 'default' | uuid string
   let currentTabVariationId = null; // 'default' | uuid string
@@ -1704,76 +1634,6 @@ parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-s
     el('touchMainView').classList.toggle('hidden', viewId !== 'main');
     // touchVariationFormView é overlay absolute, não usa hidden
   }
-
-    function openTabForm() {
-      tabFormTempItems = [];
-      tabFormType = null;
-      el('tabFormTempList').innerHTML = '';
-      el('tabFormActions').style.display = 'none';
-      el('btnTabFormSave').disabled = true;
-      el('tabTypeSelection').classList.remove('active');
-      el('tabTypeComponent').classList.remove('active');
-      el('tabFormView').classList.add('open');
-    }
-
-    function closeTabForm() {
-      tabFormTempItems = [];
-      tabFormType = null;
-      tabFormPendingSave = false;
-      el('tabFormView').classList.remove('open');
-    }
-
-    function saveTabForm() {
-      if (tabFormType === 'selection') {
-        tabFormPendingSave = true;
-        parent.postMessage({ pluginMessage: { type: 'get-tab-selection' } }, '*');
-        return;
-      }
-      const startIndex = tabOrderData.length;
-      tabFormTempItems.forEach((item, i) => {
-        tabOrderData.push({
-          nome: item.nome || 'Tab ' + (startIndex + i + 1),
-          layerName: item.layerName,
-          nodeId: item.nodeId,
-          relX: item.relX,
-          relY: item.relY,
-          width: item.width,
-          height: item.height,
-        });
-      });
-      closeTabForm();
-      renderTabOrderList();
-      updateSummaryCards();
-      saveTouchTabData();
-      const _activeTabVar = tabVariationsData.find(v => v.id === currentTabVariationId);
-      if (_activeTabVar && currentTabVariationId) {
-        parent.postMessage({ pluginMessage: { type: 'activate-tab-variation', variationId: currentTabVariationId, variationIndex: tabVariationsData.findIndex(v => v.id === currentTabVariationId), instanceNodeId: _activeTabVar.instanceNodeId, propriedades: _activeTabVar.propriedades || {}, tab_order: tabOrderData } }, '*');
-      }
-    }
-
-    function selectTabFormType(type) {
-      tabFormType = type;
-      el('tabTypeSelection').classList.toggle('active', type === 'selection');
-      el('tabTypeComponent').classList.toggle('active', type === 'component');
-      el('tabFormActions').style.display = 'block';
-      if (type === 'selection') {
-        el('tabFormTitle').textContent = 'Selecione no canvas';
-        el('tabFormInstruction').textContent = 'Escolha as camadas e clique em Salvar.';
-        el('btnTabFormSave').disabled = false;
-      } else {
-        el('tabFormTitle').textContent = 'Componente ativo';
-        el('tabFormInstruction').textContent = 'O componente será adicionado como foco único.';
-        parent.postMessage({ pluginMessage: { type: 'get-component-as-tab' } }, '*');
-      }
-    }
-
-
-
-    function renderTabFormTempList() {
-      const container = el('tabFormTempList');
-      if (!container) return;
-      container.innerHTML = tabFormTempItems.map((item, i) => '<div class="tab-form-temp-item"><div class="tab-form-temp-index">' + (i + 1) + '</div><div><div class="tab-form-temp-name">' + item.layerName + '</div></div></div>').join('');
-    }
 
     function onSemTabulacaoChange() {
       semTabulacao = el('chkSemTabulacao').checked;
@@ -2351,7 +2211,16 @@ function closeTouchForm() {
 el("btnAddVariation").onclick = () => { openVariationForm(); };
 
   function onAddTabClick() {
-    openTabForm();
+    el('tabFormView').classList.add('open');
+  }
+
+  function closeTabForm() {
+    el('tabFormView').classList.remove('open');
+  }
+
+  function onTabConfirm() {
+    closeTabForm();
+    parent.postMessage({ pluginMessage: { type: 'get-tab-selection' } }, '*');
   }
 
   function onAddSRClick() {

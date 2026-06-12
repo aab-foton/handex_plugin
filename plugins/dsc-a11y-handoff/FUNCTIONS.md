@@ -4,7 +4,7 @@ Guia de navegação rápida. Números de linha referem-se ao estado atual do arq
 
 ---
 
-## code.ts (~3714 linhas)
+## code.ts (~3954 linhas)
 
 ### Variáveis globais (17–29)
 
@@ -23,92 +23,92 @@ Guia de navegação rápida. Números de linha referem-se ao estado atual do arq
 | 29 | `componenteSRVariacaoAtivo` | Nó da variação de leitor de tela ativa |
 | 30 | `isHandoffGenerated` | `boolean` — true após o primeiro `run-handoff` bem-sucedido; lido da chave `a11y-handoff-generated` no pluginData do frame |
 
-### Utilitários (39–360)
+### Utilitários (40–430)
 
 | Linha | Função | Resumo |
 |-------|--------|--------|
-| 39 | `resolveDataNode(node)` | Sobe na hierarquia para encontrar `COMPONENT_SET` ou `COMPONENT` pai |
-| 53 | `getCachedPluginDataNode()` | Retorna o `[dsc-h] Plugin Data A11y` do handoff ativo (com cache) |
-| 65 | `getTouchDimensions(preset)` | Converte string de preset (`'aprimorado'` etc.) em `{ hStr, wStr }` |
-| 73 | `updateText(node, value)` | Escreve em TextNode lidando com fontes mistas (`getRangeFontName` fallback) |
-| 90 | `applyWcagBackground(imageFrame, comp, vars)` | Aplica cor de fundo com contraste WCAG calculado via variáveis Figma |
-| 148 | `computeLetrasTS(conectores)` | Gera array de letras/números para labels de conectores de leitor de tela |
-| 167 | `createComponentInstance(comp)` | Cria instância de COMPONENT/COMPONENT_SET com fallback para clone |
-| 190 | `ensureHandoffDetached()` | Detacha `handoffAtivo` se for INSTANCE; renomeia; atualiza a variável global |
-| 200 | `renumberTouchBadges(imageFrame)` | Renumera badges de toque por variação; usa `Map` pré-indexado para O(1) lookup (sem JSON.parse repetido) |
-| 252 | `getTouchImageFrame()` | Encontra o frame `image` (target area) no handoff; detacha se necessário |
-| 273 | `getTabImageFrame()` | Análogo para `focus order > image` |
-| 293 | `getSRImageFrame()` | Análogo para `screen reader > image`; detacha INSTANCE |
-| 259 | `clearVariationMarkers(varFrame)` | Remove todos os nós com `a11y-marker ≠ ''` de um frame |
-| 264 | `drawVariationMarkers(varFrame, markers, color, type, offsetX, offsetY)` | Desenha retângulos de marcação (toque/tab) com offset |
-| 275 | `getOrCreateVariacoesContainer(comp, handoff, parent)` | Garante existência do frame `[A11Y Variações]` no canvas |
+| 40 | `resolveDataNode(node)` | Sobe na hierarquia para encontrar `COMPONENT_SET` ou `COMPONENT` pai |
+| 54 | `getCachedPluginDataNode()` | Retorna o `[dsc-h] Plugin Data A11y` do handoff ativo (com cache) |
+| 66 | `getTouchDimensions(preset)` | Converte string de preset (`'aprimorado'` etc.) em `{ hStr, wStr }` |
+| 74 | `updateText(node, value)` | Escreve em TextNode lidando com fontes mistas (`getRangeFontName` fallback) |
+| 91 | `applyWcagBackground(imageFrame, comp, vars)` | Aplica cor de fundo com contraste WCAG calculado via variáveis Figma; escolhe entre `card background` e `card background 2` pela maior razão de contraste contra a cor do componente; assume branco quando o frame não tem fill |
+| 181 | `computeLetrasTS(conectores)` | Gera array de letras/números para labels de conectores de leitor de tela |
+| 200 | `createComponentInstance(comp)` | Cria instância de COMPONENT/COMPONENT_SET com fallback para clone |
+| 223 | `ensureHandoffDetached()` | Detacha `handoffAtivo` se for INSTANCE; renomeia; atualiza a variável global |
+| 232 | `renumberTouchBadges(imageFrame)` | Renumera badges de toque por variação; usa `Map` pré-indexado para O(1) lookup |
+| 283 | `getTouchImageFrame()` | Encontra o frame `image` (target area) no handoff; detacha se necessário; reseta contexto se nó não existe mais |
+| 306 | `getTabImageFrame()` | Análogo para `focus order > image` |
+| 328 | `getSRImageFrame()` | Análogo para `screen reader > image`; detacha INSTANCE |
+| 350 | `clearVariationMarkers(varFrame)` | Remove todos os nós com `a11y-marker ≠ ''` de um frame |
+| 413 | `getOrCreateVariacoesContainer(comp, handoff, parent)` | Garante existência do frame `[A11Y Variações]` no canvas |
 
-### Handler principal — `figma.ui.onmessage` (311–2208)
+### Handler principal — `figma.ui.onmessage` (494–3190)
 
 | Linha | Mensagem | O que faz |
 |-------|----------|-----------|
-| 356 | `run-handoff` / `update-handoff` | **Ponto de entrada do Gerar/Atualizar Handoff** |
-| 378 | *(isOldHandoff)* | Detecta handoff antigo pelo **nome** (`startsWith('[dsc] A11Y Handoff:')`) — não usa `findOne` |
-| 391 | *(swap antigo→novo)* | Clona seções desmarcadas (`oldSnapshots`) → `importComponentByKeyAsync` → substitui nó |
-| 512 | *(restaura oldSnapshots)* | Insere clones nas posições corretas do novo template, remove seções vazias |
-| 541 | *(Título)* | Preenche `Component Name` se `runTitulo !== false` |
-| 551 | `fillTable` *(inline)* | Clona Row/`[dsc doc] Doc Table` com `Table Cell` para cada mapeamento; suporta 3 estruturas de template |
-| 628 | *(Área de Toque — specs)* | Preenche frame `specs` de `target area` com todas as áreas achatadas de `msg.variacoes`; numeração global (`i + 1`) |
-| 688 | *(Área de Toque — visual/preview)* | Oculta modelos, aplica WCAG, renumera badges globalmente, redimensiona imageFrame pelas instâncias presentes |
-| 751 | *(Focus Order — visual)* | Preenche frame `focus order` com tab order por variação; badge em cima sem conector |
-| 884 | *(Leitor de Tela — preview)* | Monta conectores/agrupamentos no frame `screen reader` por variação |
-| 1149 | *(Leitor de Tela — specs)* | Preenche tabela de specs do leitor de tela por variação |
-| 1313 | *(Zoom WCAG)* | Aplica zoom e contraste WCAG no frame `zoom` |
-| 1410 | *(limpeza pós-geração)* | Remove frames `[A11Y Tab Variação*]`, `[A11Y LT Variação*]` e `[A11Y Variações]` do canvas (toque fica no imageFrame) |
-| 1511 | `create-touch-overlay` | Cria overlay (`[dsc-h] Handoff areas`) + badge (`[dsc-h] Item Number`) DENTRO do imageFrame; índice global entre todas as variações; idempotente por variationId |
-| 1598 | `confirm-touch-area` | Lê posição/dimensão do overlay no imageFrame + `componentProperties` do badge (conector); envia `touch-area-confirmed` com `badgeProps` |
-| 1637 | `cancel-touch-area` | Remove overlay + badge do imageFrame pelo `tempTouchOverlayId` e index |
-| 1657 | `remove-touch-overlay` | Remove overlay + badge do imageFrame por `variationId + nome` |
-| 1671 | `highlight-touch-area` | Seleciona e zoom no overlay do imageFrame por `variationId + nome` |
-| 1683 | `get-component-properties` | Retorna propriedades do componente ativo para uso no form de variações |
-| 1725 | `create-variation-frame` | Cria instância da variação DENTRO do imageFrame; posição acumulada; idempotente |
-| 1799 | `activate-variation` | Seleciona + zoom na instância da variação no imageFrame |
-| 1807 | `deactivate-variation` | Zera `componenteVariacaoAtivo` |
-| 1811 | `get-tab-selection` | Retorna nó selecionado para adicionar ao tab order |
-| 1858 | `delete-variation-frame` | Remove instância por `instanceNodeId` + overlays/badges por `variationId` do imageFrame |
-| 2021 | `create-sr-variation-frame` | Cria instância SR no srImageFrame (idempotente por pluginData); oculta modelos |
-| 2060 | `create-tab-variation-frame` | Cria instância tab no tabImageFrame (idempotente) |
-| 2100 | `activate-tab-variation` | Recria/busca instância tab; desenha markers com offset; envia `tab-variation-instance-recreated` |
-| 2148 | `delete-tab-variation-frame` | Remove instância tab por `variationId` |
-| 2168 | `save-leitor-tela` | Salva conectores/variações SR; usa `handoffAtivo` como fallback |
-| 2188 | `import-old-section` | Chama o parser correto e responde com `old-section-data` |
-| 2213 | `save-partial-data` | Salva chave específica no `a11y-component-data` |
-| 2230 | `get-sr-selection` | Retorna nó selecionado para leitor de tela (compatibilidade legado) |
-| 2263 | `activate-sr-variation` | Busca/cria instância SR; padrão create-then-remove (sem flicker); desenha badge + conectores reais |
-| 2436 | `deactivate-sr-variation` | Zera `componenteSRVariacaoAtivo` |
-| 2440 | `append-sr-marker` | Adiciona só o marker do conector recém-adicionado, sem tocar nos existentes |
-| 2533 | `delete-sr-variation-frame` | Remove instância SR por `variationId` + clearVariationMarkers |
-| 2644 | `create-sr-overlay` | Clona `[a11y] Conectores` ou `[a11y] Agrupamento` dentro do srImageFrame para posicionamento; armazena `tempSROverlayRefX/Y` e `tempSROverlayTipo` |
-| 2705 | `confirm-sr-area` | Lê posição/dimensão do clone relativo à instância; adiciona `positioned: true`; remove clone |
-| 2726 | `cancel-sr-area` | Remove clone pendente do srImageFrame |
+| 494 | `run-handoff` / `update-handoff` | **Ponto de entrada do Gerar/Atualizar Handoff** |
+| ~510 | *(isOldHandoff)* | Detecta handoff antigo pelo **nome** (`startsWith('[dsc] A11Y Handoff:')`) — não usa `findOne` |
+| ~523 | *(swap antigo→novo)* | Clona seções desmarcadas (`oldSnapshots`) → `importComponentByKeyAsync` → substitui nó |
+| ~641 | *(Título)* | Preenche `Component Name` se `runTitulo !== false` |
+| ~651 | `fillTable` *(inline)* | Clona Row/`[dsc doc] Doc Table` com `Table Cell` para cada mapeamento; suporta 3 estruturas de template |
+| ~628 | *(Área de Toque — specs)* | Preenche frame `specs` de `target area` com todas as áreas achatadas de `msg.variacoes`; numeração global (`i + 1`) |
+| ~688 | *(Área de Toque — visual/preview)* | Oculta modelos (`visible=false`), aplica WCAG, renumera badges globalmente; bounding-box sobre todos os filhos relevantes (variation-component/touch-overlay/touch-badge); `clipsContent = false` |
+| ~751 | *(Focus Order — visual)* | Preenche frame `focus order` com tab order por variação; badge em cima sem conector |
+| ~884 | *(Leitor de Tela — preview)* | Monta conectores/agrupamentos no frame `screen reader` por variação; aplica `setProperties(overlayProps)` para orientação/tipo (fallback geométrico para dados antigos) |
+| ~1149 | *(Leitor de Tela — specs)* | Preenche tabela de specs do leitor de tela por variação |
+| ~1627 | *(Zoom WCAG)* | Aplica zoom e contraste WCAG no frame `zoom` |
+| ~1727 | *(Zoom spec rows)* | Oculta/mostra `element` dentro de `specs` no `zoom` conforme `zoomTypes`; renumera os visíveis |
+| 1839 | `create-touch-overlay` | Cria overlay (`[dsc-h] Handoff areas`) + badge (`[dsc-h] Item Number`) DENTRO do imageFrame; índice global entre todas as variações; idempotente por variationId |
+| 1933 | `confirm-touch-area` | Lê posição/dimensão do overlay no imageFrame + `componentProperties` do badge (conector); envia `touch-area-confirmed` com `badgeProps` |
+| 1980 | `cancel-touch-area` | Remove overlay + badge do imageFrame pelo `tempTouchOverlayId` e index |
+| 2000 | `remove-touch-overlay` | Remove overlay + badge do imageFrame por `variationId + nome` |
+| 2015 | `highlight-touch-area` | Seleciona e zoom no overlay do imageFrame por `variationId + nome` |
+| 2027 | `get-component-properties` | Retorna propriedades do componente ativo para uso no form de variações |
+| 2069 | `create-variation-frame` | Cria instância da variação DENTRO do imageFrame; posição acumulada; idempotente |
+| 2145 | `activate-variation` | Seleciona + zoom na instância da variação no imageFrame; redimensiona imageFrame com bounding-box |
+| 2275 | `deactivate-variation` | Zera `componenteVariacaoAtivo` |
+| 2279 | `get-tab-selection` | Retorna nó selecionado para adicionar ao tab order |
+| 2316 | `get-component-as-tab` | Usa componente ativo como item de tab order |
+| 2335 | `delete-variation-frame` | Remove instância por `instanceNodeId` + overlays/badges por `variationId` do imageFrame |
+| 2355 | `create-sr-variation-frame` | Cria instância SR no srImageFrame (idempotente por pluginData); oculta modelos (`visible=false`) |
+| 2405 | `create-tab-variation-frame` | Cria instância tab no tabImageFrame (idempotente) |
+| 2454 | `activate-tab-variation` | Recria/busca instância tab; desenha markers com offset; envia `tab-variation-instance-recreated` |
+| 2579 | `deactivate-tab-variation` | Zera `componenteTabVariacaoAtivo` |
+| 2583 | `delete-tab-variation-frame` | Remove instância tab por `variationId` |
+| 2597 | `activate-sr-variation` | Busca/cria instância SR; aplica `setProperties(overlayProps)` em agrupamentos e conectores; fallback geométrico para dados antigos |
+| 2816 | `deactivate-sr-variation` | Zera `componenteSRVariacaoAtivo` |
+| 2820 | `append-sr-marker` | Adiciona só o marker do conector recém-adicionado; aplica `setProperties(overlayProps)` na orientação/tipo |
+| 2949 | `delete-sr-variation-frame` | Remove instância SR por `variationId` + clearVariationMarkers |
+| 2968 | `save-leitor-tela` | Salva conectores/variações SR; usa `handoffAtivo` como fallback |
+| 2988 | `import-old-section` | Chama o parser correto e responde com `old-section-data` |
+| 3013 | `save-partial-data` | Salva chave específica no `a11y-component-data` |
+| 3030 | `get-sr-selection` | Retorna nó selecionado para leitor de tela (compatibilidade legado) |
+| 3060 | `create-sr-overlay` | Clona `[a11y] Conectores` ou `[a11y] Agrupamento` dentro do srImageFrame para posicionamento; armazena `tempSROverlayRefX/Y` e `tempSROverlayTipo` |
+| 3138 | `confirm-sr-area` | Lê posição/dimensão do clone relativo à instância; salva todas as `componentProperties` como `overlayProps` (chaves com sufixo `#id`); remove clone |
+| 3168 | `cancel-sr-area` | Remove clone pendente do srImageFrame |
 
-### Funções de suporte (2210–2341)
-
-| Linha | Função | Resumo |
-|-------|--------|--------|
-| 2210 | `tentarTravarContexto(selection)` | Valida seleção (1 componente + 1 handoff); trava contexto; chama `carregarDadosEEnviarParaUI` |
-| 2268 | `parseMasterList(dbInstance)` | Lê tabela `"Mapeamento de Teclado e Gestos do Plugin"` do nó data; retorna `{ mapeamento, descricao, utilizacao }[]` |
-| 2303 | `parseRolesList(dbInstance)` | Lê tabela de roles/especificações ARIA do nó data |
-
-### Parsers de migração (2343–2965)
+### Funções de suporte (3192–3320)
 
 | Linha | Função | Resumo |
 |-------|--------|--------|
-| 2343 | `parseOldSRData(handoff)` | Extrai dados de leitor de tela do handoff antigo → `{ variacoes[] }` |
-| 2519 | `parseOldTabOrder(handoff)` | Extrai tab order do frame `focus order` → `{ variacoes: TabVariacao[] }` |
-| 2614 | `toTouchPreset(h, w)` | Converte dimensões numéricas para string de preset de toque |
-| 2622 | `parseOldTouchAreas(handoff)` | Extrai áreas de toque do frame `target area` → `{ variacoes: TouchVariacao[] }` |
-| 2805 | `parseOldGeralData(handoff)` | Extrai plataformas, zoom e mapeamentos de teclado/gesto do handoff antigo |
-| 2909 | `carregarDadosEEnviarParaUI(handoff)` | Detecta `isOldFormat`, carrega pluginData (para ambos os formatos), envia `setup-ui` para a UI |
+| 3192 | `tentarTravarContexto(selection)` | Valida seleção (1 componente + 1 handoff); trava contexto; chama `carregarDadosEEnviarParaUI` |
+| 3250 | `parseMasterList(dbInstance)` | Lê tabela `"Mapeamento de Teclado e Gestos do Plugin"` do nó data; retorna `{ mapeamento, descricao, utilizacao }[]` |
+| 3285 | `parseRolesList(dbInstance)` | Lê tabela de roles/especificações ARIA do nó data |
+
+### Parsers de migração (3325–3890)
+
+| Linha | Função | Resumo |
+|-------|--------|--------|
+| 3325 | `parseOldSRData(handoff)` | Extrai dados de leitor de tela do handoff antigo → `{ variacoes[] }` |
+| 3501 | `parseOldTabOrder(handoff)` | Extrai tab order do frame `focus order` → `{ variacoes: TabVariacao[] }` |
+| 3596 | `toTouchPreset(h, w)` | Converte dimensões numéricas para string de preset de toque |
+| 3604 | `parseOldTouchAreas(handoff)` | Extrai áreas de toque do frame `target area` → `{ variacoes: TouchVariacao[] }` |
+| 3787 | `parseOldGeralData(handoff)` | Extrai plataformas, zoom e mapeamentos de teclado/gesto do handoff antigo |
+| 3891 | `carregarDadosEEnviarParaUI(handoff)` | Detecta `isOldFormat`, carrega pluginData (para ambos os formatos), envia `setup-ui` para a UI |
 
 ---
 
-## ui.html — Script (~3116 linhas)
+## ui.html — Script (~2985 linhas)
 
 ### Variáveis globais principais
 
@@ -118,42 +118,42 @@ Guia de navegação rápida. Números de linha referem-se ao estado atual do arq
 | 701 | `masterList` | `{ mapeamento, descricao, utilizacao }[]` — lido do template via `setup-ui` |
 | 701 | `currentData` | Mapeamentos selecionados para o componente atual |
 | 701 | `touchData` | Áreas de toque da variação ativa (`TouchAreaItem[]` com `badgeProps` opcional) |
-| 1570 | `variationsData` | `Variacao[]` — variações de toque (inclui sempre a `'default'`) |
-| 1571 | `tabVariationsData` | `TabVar[]` — variações de tabulação |
-| 1572 | `isOldFormat` | `boolean` — handoff antigo detectado |
-| 1573 | `srVariationsData` | `SRVar[]` — variações de leitor de tela |
-| 1581 | `currentVariationId` | `string | null` — variação de toque ativa (`'default'` ou UUID) |
+| ~1570 | `variationsData` | `Variacao[]` — variações de toque (inclui sempre a `'default'`) |
+| ~1571 | `tabVariationsData` | `TabVar[]` — variações de tabulação |
+| ~1572 | `isOldFormat` | `boolean` — handoff antigo detectado |
+| ~1573 | `srVariationsData` | `SRVar[]` — variações de leitor de tela |
+| ~1581 | `currentVariationId` | `string | null` — variação de toque ativa (`'default'` ou UUID) |
 
 ### Funções principais
 
 | Linha | Função | Resumo |
 |-------|--------|--------|
-| 742 | `setupSearch(inputId, resId, filterType)` | Registra listeners de busca; chamado **1× por tipo** fora do `onmessage`; dropdown usa `position: fixed` + `getBoundingClientRect` para não ser clipado pelo scroll container |
-| 773 | `addItem(item)` | Adiciona mapeamento a `currentData`; sem duplicatas |
-| 785 | `renderLists()` | Renderiza cards de teclado/gesto; atualiza badges |
-| 820 | `updateSummaryCards()` | Atualiza contadores nos cards de resumo de todas as abas |
-| 1497 | `updatePZCount()` | Atualiza badge de plataformas/zoom selecionados |
-| 1541 | `openInfo() / closeInfo()` | Abre/fecha painel "Como usar" (infoOverlay) |
-| 1548 | `reloadTemplateData()` | Força recarga do masterList do template (usado em sync) |
-| 1573 | `renderTouchList()` | Renderiza lista de áreas de toque da variação ativa |
-| 1592 | `removeTouchArea(i)` | Remove área de toque pelo índice |
-| 1604 | `getTouchPreset()` | Deriva preset string de `touchSelectedSize × touchSelectedForma` |
-| 1635 | `showView(viewId)` | Alterna entre views de variação e main view (toque) |
-| 1675 | `openTabForm()` | Abre form de adição de foco de tabulação (overlay) |
-| 1686 | `closeTabForm()` | Fecha form de tabulação; zera `tabFormPendingSave` |
-| 1693 | `saveTabForm()` | Salva itens do form: se 'selection' → `get-tab-selection`; se 'component' → push + `saveTouchTabData()` + `activate-tab-variation` |
-| 1721 | `selectTabFormType(type)` | Seleciona tipo 'selection' ou 'component'; 'component' aciona `get-component-as-tab` imediatamente |
-| 1757 | `renderTabOrderList()` | Renderiza lista de tab order da variação ativa |
-| 1774 | `showSRView(viewId)` | Alterna entre views de variação e main view (leitor de tela) |
-| 1781 | `renderSRVariationList()` | Renderiza lista de variações de leitor de tela |
-| 1953 | `editTabVariation(id)` | Carrega variação de tabulação |
-| 2076 | `editVariation(id)` | Carrega variação de toque; sincroniza `touchData` com a variação ativa |
-| 1820 | `selectSRVariation(id)` | Carrega variação de leitor de tela |
-| 2133 | `renderImportBanners()` | Exibe banner de migração (apenas se `isOldFormat && componentData vazio`) |
-| 2140 | `importAllSections(evt)` | Dispara `import-old-section` para cada seção |
-| 2153 | `saveGeralData(debounce)` | Envia `save-partial-data` para plataformas, zoom e mapeamentos |
-| 2161 | `saveTouchTabData()` | Envia `save-partial-data` para `variacoes` e `variacoes_tabulacao` |
-| 2533 | `saveLeitorTela()` | Envia `save-leitor-tela` com conectores e variações de SR |
+| ~742 | `setupSearch(inputId, resId, filterType)` | Registra listeners de busca; chamado **1× por tipo** fora do `onmessage`; dropdown usa `position: fixed` + `getBoundingClientRect` |
+| ~773 | `addItem(item)` | Adiciona mapeamento a `currentData`; sem duplicatas |
+| ~785 | `renderLists()` | Renderiza cards de teclado/gesto; atualiza badges |
+| ~820 | `updateSummaryCards()` | Atualiza contadores nos cards de resumo de todas as abas |
+| ~1497 | `updatePZCount()` | Atualiza badge de plataformas/zoom selecionados |
+| ~1541 | `openInfo() / closeInfo()` | Abre/fecha painel "Como usar" (infoOverlay) |
+| ~1548 | `reloadTemplateData()` | Força recarga do masterList do template (usado em sync) |
+| ~1573 | `renderTouchList()` | Renderiza lista de áreas de toque da variação ativa |
+| ~1592 | `removeTouchArea(i)` | Remove área de toque pelo índice |
+| ~1604 | `getTouchPreset()` | Deriva preset string de `touchSelectedSize × touchSelectedForma` |
+| ~1635 | `showView(viewId)` | Alterna entre views de variação e main view (toque) |
+| ~1675 | `openTabForm()` | Abre overlay "Adicionar foco de tabulação" |
+| ~1686 | `closeTabForm()` | Fecha form de tabulação |
+| ~1693 | `saveTabForm()` | Salva itens do form: se 'selection' → `get-tab-selection`; se 'component' → push + `saveTouchTabData()` + `activate-tab-variation` |
+| ~1721 | `selectTabFormType(type)` | Seleciona tipo 'selection' ou 'component' |
+| ~1757 | `renderTabOrderList()` | Renderiza lista de tab order da variação ativa |
+| ~1774 | `showSRView(viewId)` | Alterna entre views de variação e main view (leitor de tela) |
+| ~1781 | `renderSRVariationList()` | Renderiza lista de variações de leitor de tela |
+| ~1953 | `editTabVariation(id)` | Carrega variação de tabulação |
+| ~2076 | `editVariation(id)` | Carrega variação de toque; sincroniza `touchData` com a variação ativa |
+| ~1820 | `selectSRVariation(id)` | Carrega variação de leitor de tela |
+| ~2133 | `renderImportBanners()` | Exibe banner de migração (apenas se `isOldFormat && componentData vazio`) |
+| ~2140 | `importAllSections(evt)` | Dispara `import-old-section` para cada seção |
+| ~2153 | `saveGeralData(debounce)` | Envia `save-partial-data` para plataformas, zoom e mapeamentos |
+| ~2161 | `saveTouchTabData()` | Envia `save-partial-data` para `variacoes` e `variacoes_tabulacao` |
+| ~2533 | `saveLeitorTela()` | Envia `save-leitor-tela` com conectores e variações de SR |
 
 ### Handlers de mensagem recebida (`window.onmessage`)
 
