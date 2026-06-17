@@ -98,22 +98,46 @@ async function fetchLibrary(libMeta) {
     out.meta.warnings.push(`styles fetch error: ${e.message}`);
   }
 
-  // 2. Variables (Figma Variables API — requer acesso de editor ao arquivo)
+  // 2. Variables with resolved values (COLOR → hex, FLOAT → number)
   try {
     const varsResp = await figmaGet(`/v1/files/${libMeta.fileKey}/variables/local`);
-    const variables = (varsResp && varsResp.meta && varsResp.meta.variables) || (varsResp && varsResp.variables) || {};
-    const varList = Array.isArray(variables) ? variables : Object.values(variables);
-    for (const v of varList) {
-      if (!v || !v.key) continue;
+    const meta = (varsResp && varsResp.meta) || varsResp || {};
+    const variablesObj  = meta.variables           || {};
+    const collectionsObj = meta.variableCollections || {};
+
+    // Map collection ID → default mode ID
+    const defaultModes = {};
+    for (const [colId, col] of Object.entries(collectionsObj)) {
+      defaultModes[colId] = col.defaultModeId;
+    }
+
+    const toHex = (n) => Math.round(n * 255).toString(16).padStart(2, '0');
+
+    for (const v of Object.values(variablesObj)) {
+      if (!v || !v.key || v.hiddenFromPublishing) continue;
+
+      const defaultModeId = defaultModes[v.variableCollectionId];
+      const rawValue = defaultModeId && v.valuesByMode && v.valuesByMode[defaultModeId];
+
+      let value = null;
+      if (v.resolvedType === 'COLOR' && rawValue && typeof rawValue === 'object' && 'r' in rawValue) {
+        value = `#${toHex(rawValue.r)}${toHex(rawValue.g)}${toHex(rawValue.b)}`;
+      } else if (v.resolvedType === 'FLOAT' && typeof rawValue === 'number') {
+        value = rawValue;
+      } else if (typeof rawValue === 'string' || typeof rawValue === 'boolean') {
+        value = rawValue;
+      }
+
       out.designTokens.variables.push({
-        key: v.key,
-        name: clean(v.name || ''),
-        resolvedType: v.resolvedType || v.type || null
+        key:            v.key,
+        name:           clean(v.name || ''),
+        resolvedType:   v.resolvedType || null,
+        collection:     clean((collectionsObj[v.variableCollectionId] || {}).name || ''),
+        value
       });
     }
-    console.log(`    variables: ${out.designTokens.variables.length}`);
+    console.log(`    variables: ${out.designTokens.variables.length} (${out.designTokens.variables.filter(v=>v.resolvedType==='COLOR').length} colors · ${out.designTokens.variables.filter(v=>v.resolvedType==='FLOAT').length} numbers)`);
   } catch (e) {
-    // Variables endpoint requires editor access — silently skip if unavailable
     console.warn(`    ⚠  variables skipped: ${e.message.slice(0, 80)}`);
     out.meta.warnings.push(`variables fetch skipped: ${e.message.slice(0, 120)}`);
   }
