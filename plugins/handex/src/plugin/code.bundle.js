@@ -2839,17 +2839,19 @@
           specCard.x = Math.round(targetX);
           specCard.y = Math.round(targetY);
           groupNodes.push(specCard);
-          const connector = figma.createVector();
-          connector.name = `${_specBase}/Conector`;
-          const startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
-          const endPt = { x: specCard.x, y: specCard.y + Math.min(40, specCard.height / 2) };
-          connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
-          connector.strokes = [{ type: "SOLID", color: themeColor2 }];
-          connector.strokeWeight = 1.5;
-          connector.dashPattern = [4, 4];
-          connector.strokeCap = "ROUND";
-          figma.currentPage.appendChild(connector);
-          groupNodes.push(connector);
+          if (opts.drawConnection !== false) {
+            const connector = figma.createVector();
+            connector.name = `${_specBase}/Conector`;
+            const startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+            const endPt = { x: specCard.x, y: specCard.y + Math.min(40, specCard.height / 2) };
+            connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
+            connector.strokes = [{ type: "SOLID", color: themeColor2 }];
+            connector.strokeWeight = 1.5;
+            connector.dashPattern = [4, 4];
+            connector.strokeCap = "ROUND";
+            figma.currentPage.appendChild(connector);
+            groupNodes.push(connector);
+          }
         } else {
           figma.currentPage.appendChild(specCard);
           specCard.x = figma.viewport.center.x;

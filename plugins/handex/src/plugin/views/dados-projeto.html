@@ -194,16 +194,16 @@
         </div>
       </div>
 
-      <!-- Docs e Anexos -->
+      <!-- Links de Referência -->
       <div class="bg-white dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line overflow-hidden">
         <button onclick="toggleAccordion(this)" aria-expanded="false"
           class="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-dark-line/10 transition-colors">
           <div class="flex items-center gap-3">
             <div class="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-purple-600">
-              <i data-lucide="file-plus" class="w-4 h-4"></i>
+              <i data-lucide="link" class="w-4 h-4"></i>
             </div>
             <div class="text-left">
-              <p class="text-[13px] font-bold text-slate-800 dark:text-white">Docs e Anexos</p>
+              <p class="text-[13px] font-bold text-slate-800 dark:text-white">Links de Referência</p>
               <p class="text-[10px] text-gray-400">Protótipo, acessibilidade, pesquisa...</p>
             </div>
           </div>
@@ -254,19 +254,17 @@
               </div>
             </div>
 
-            <div class="pt-3 border-t border-gray-50 dark:border-dark-line">
-              <p class="text-[10px] font-bold text-gray-400 uppercase mb-2">Outros Anexos</p>
-              <div id="checklist-file-list" class="space-y-2 mb-3"></div>
-              <div class="border-2 border-dashed border-gray-100 dark:border-dark-line rounded-lg p-4 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/10 transition-all group"
-                onclick="document.getElementById('file-checklist-upload').click()">
-                <i data-lucide="upload-cloud" class="w-6 h-6 mx-auto mb-1 text-gray-300 group-hover:text-blue-500 transition-colors"></i>
-                <p class="text-[11px] font-bold text-gray-400 group-hover:text-blue-500">Anexar documentos</p>
-                <input type="file" id="file-checklist-upload" class="hidden" multiple onchange="handleChecklistFile(this)">
-              </div>
-            </div>
-
           </div>
         </div>
+      </div>
+
+      <!-- Salvar e Voltar -->
+      <div class="pt-4 pb-4 px-4">
+        <button onclick="saveToStorage(); navigate('view-home'); showToast('Informações salvas!')"
+          class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
+          <i data-lucide="arrow-left" class="w-4 h-4" aria-hidden="true"></i>
+          Salvar e Voltar
+        </button>
       </div>
 
     </div>

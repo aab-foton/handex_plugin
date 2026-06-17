@@ -308,7 +308,9 @@ function toggleCollapse() {
     if (mainContent) mainContent.classList.remove('hidden');
     if (collapseBtn) collapseBtn.innerHTML = '<i data-lucide="minimize-2" class="w-4 h-4" aria-hidden="true"></i>';
   }
-  parent.postMessage({ pluginMessage: { type: 'resize-ui', width: FULL_W, height: isCollapsed ? MINI_H : FULL_H } }, '*');
+  const _scale = window.currentUiScale || 1;
+  const _collapsedH = Math.round(MINI_H * _scale);
+  parent.postMessage({ pluginMessage: { type: 'resize-ui', width: FULL_W, height: isCollapsed ? _collapsedH : FULL_H } }, '*');
   _refreshIcons();
 }
 
@@ -2104,19 +2106,34 @@ function setUiScale(scale) {
   document.documentElement.style.setProperty('--ui-scale', scale);
   document.body.classList.toggle('scale-high', scale > 1.1);
   if (typeof handoffData !== 'undefined') { handoffData.uiScale = scale; saveToStorage(); }
+  const btnOut = document.getElementById('btn-zoom-out');
+  const btnIn  = document.getElementById('btn-zoom-in');
+  if (btnOut) btnOut.classList.toggle('hidden', scale <= 1);
+  if (btnIn)  btnIn.classList.toggle('hidden', scale >= 1.3);
 }
 
-function toggleUiScale() {
-  const scales = [1, 1.15, 1.3, 0.9];
-  let idx = scales.indexOf(window.currentUiScale);
-  if (idx === -1) idx = 0;
-  idx = (idx + 1) % scales.length;
-  setUiScale(scales[idx]);
-  showToast(`Escala da UI: ${Math.round(scales[idx] * 100)}%`);
+const _ZOOM_STEPS = [1, 1.15, 1.3];
+
+function zoomIn() {
+  const idx = _ZOOM_STEPS.indexOf(window.currentUiScale);
+  const next = idx === -1 ? _ZOOM_STEPS[0] : (_ZOOM_STEPS[idx + 1] || _ZOOM_STEPS[_ZOOM_STEPS.length - 1]);
+  setUiScale(next);
+  showToast(`Escala da UI: ${Math.round(next * 100)}%`);
 }
+
+function zoomOut() {
+  const idx = _ZOOM_STEPS.indexOf(window.currentUiScale);
+  const prev = idx <= 0 ? _ZOOM_STEPS[0] : _ZOOM_STEPS[idx - 1];
+  setUiScale(prev);
+  showToast(`Escala da UI: ${Math.round(prev * 100)}%`);
+}
+
+function toggleUiScale() { zoomIn(); }
 
 window.toggleUiScale = toggleUiScale;
 window.setUiScale = setUiScale;
+window.zoomIn = zoomIn;
+window.zoomOut = zoomOut;
 window.initResizable = initResizable;
 window.updateRegraField = updateRegraField;
 window.removeAnexo = removeAnexo;
