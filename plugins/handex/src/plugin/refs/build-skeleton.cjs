@@ -57,6 +57,7 @@ for (const libMeta of manifest.libraries) {
     name: clean(libMeta.name),
     fileKey: libMeta.fileKey,
     styleTokens: { colors: [], typography: [], effects: [] },
+    variables: { colors: [], numbers: [] },
     componentKeys: []
   };
 
@@ -69,6 +70,18 @@ for (const libMeta of manifest.libraries) {
         .map(s => ({ key: s.key, name: clean(s.name || '') }));
     }
   }
+
+  // Variables with resolved values
+  const vars = (lib.designTokens && Array.isArray(lib.designTokens.variables))
+    ? lib.designTokens.variables : [];
+
+  entry.variables.colors = vars
+    .filter(v => v.resolvedType === 'COLOR' && v.value)
+    .map(v => ({ key: v.key, name: clean(v.name), value: v.value, collection: clean(v.collection || '') }));
+
+  entry.variables.numbers = vars
+    .filter(v => v.resolvedType === 'FLOAT' && v.value !== null && v.value !== undefined)
+    .map(v => ({ key: v.key, name: clean(v.name), value: v.value, collection: clean(v.collection || '') }));
 
   if (Array.isArray(lib.components)) {
     entry.componentKeys = lib.components
@@ -83,9 +96,14 @@ const json = JSON.stringify(skeleton);
 fs.writeFileSync(OUT, json, 'utf8');
 
 const sizeKB = (json.length / 1024).toFixed(1);
-const totalStyles = skeleton.libraries.reduce((a, l) => a + l.styleTokens.colors.length + l.styleTokens.typography.length + l.styleTokens.effects.length, 0);
+const totalStyles     = skeleton.libraries.reduce((a, l) => a + l.styleTokens.colors.length + l.styleTokens.typography.length + l.styleTokens.effects.length, 0);
 const totalComponents = skeleton.libraries.reduce((a, l) => a + l.componentKeys.length, 0);
+const totalVarColors  = skeleton.libraries.reduce((a, l) => a + l.variables.colors.length, 0);
+const totalVarNumbers = skeleton.libraries.reduce((a, l) => a + l.variables.numbers.length, 0);
 
 console.log(`✅ _skeleton.json (${sizeKB} KB)`);
 console.log(`   ${skeleton.libraries.length} libraries`);
 console.log(`   ${totalStyles} styles • ${totalComponents} component keys`);
+if (totalVarColors || totalVarNumbers) {
+  console.log(`   ${totalVarColors} color variables • ${totalVarNumbers} number variables`);
+}
