@@ -260,7 +260,7 @@
 
       <!-- Salvar e Voltar -->
       <div class="pt-4 pb-4 px-4">
-        <button onclick="saveToStorage(); navigate('view-home'); showToast('Informações salvas!')"
+        <button onclick="saveAndGoHome(!!((handoffData.step1||{}).titulo||'').trim(), 'Informações salvas!')"
           class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
           <i data-lucide="arrow-left" class="w-4 h-4" aria-hidden="true"></i>
           Salvar e Voltar
