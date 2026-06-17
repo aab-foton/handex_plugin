@@ -2,6 +2,44 @@
 
 ---
 
+## v4.2.2 — 2026-06-17
+
+### Resumo
+Correções de segurança: sanitização de conteúdo do canvas antes de inserção no DOM (proteção contra XSS via nomes de layer/token crafteados em arquivos Figma maliciosos).
+
+---
+
+### Segurança — Sanitização de Dados do Canvas
+
+**Vetor corrigido: XSS via nomes de layer ou tokens crafteados**
+- Um arquivo Figma com um layer cujo nome contenha HTML/JS (ex: `<img src=x onerror="...">`) poderia executar código arbitrário no contexto do plugin ao ser escaneado.
+- Adicionada função utilitária `escapeHtml(str)` em `core.js`, exposta globalmente via `window.escapeHtml`.
+- Aplicada em todos os pontos onde dados do canvas ou do usuário são inseridos via `innerHTML`.
+
+**Pontos corrigidos:**
+
+| Local | Dado protegido | Técnica |
+|---|---|---|
+| `specifications.js` — nota da spec | `spec.note` | `escapeHtml()` |
+| `specifications.js` — propriedades técnicas | `p.label`, `p.token`, `p.value` | `escapeHtml()` |
+| `core.js` — label do seletor de categoria | `sel.text` | `escapeHtml()` |
+| `core.js` — toast de notificação | `message` | `createTextNode()` (sem innerHTML) |
+| `messages.js` — erro de scan | `msg.error` | `textContent` (sem innerHTML) |
+
+**O que NÃO muda para o usuário:** nenhuma alteração visual. Labels, notas e valores continuam sendo exibidos normalmente — caracteres como `<`, `>`, `&` são renderizados como texto literal, não interpretados como HTML.
+
+---
+
+### Arquivos Modificados
+
+| Arquivo | Mudança |
+|---|---|
+| `src/plugin/modules/core.js` | Função `escapeHtml`; toast usa `createTextNode`; label do seletor escapado |
+| `src/plugin/modules/specifications.js` | `spec.note`, `p.label`, `p.token`, `p.value` escapados |
+| `src/plugin/modules/messages.js` | Erro de scan renderizado via `textContent` |
+
+---
+
 ## v4.2.1 — 2026-06-17
 
 ### Resumo

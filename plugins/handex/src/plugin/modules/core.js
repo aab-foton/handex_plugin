@@ -1,4 +1,15 @@
-﻿// --- PERFORMANCE: debounced icon refresh (must be first — called at top-level during init) ---
+﻿// --- SECURITY: escape user/canvas data before inserting into innerHTML ---
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+window.escapeHtml = escapeHtml;
+
+// --- PERFORMANCE: debounced icon refresh (must be first — called at top-level during init) ---
 let _lucideTimer = null;
 function _refreshIcons(container) {
   if (!window.lucide) return;
@@ -972,7 +983,7 @@ function _csSyncLabel(wid) {
   if (!sel) return;
   if (wid === 'cs-ann-cat' && sel.value) {
     const color = typeof getCategoryColor === 'function' ? getCategoryColor(sel.value) : '#005ca9';
-    labelEl.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${color};margin-right:6px;vertical-align:middle;flex-shrink:0"></span>${sel.text}`;
+    labelEl.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${color};margin-right:6px;vertical-align:middle;flex-shrink:0"></span>${escapeHtml(sel.text)}`;
   } else {
     labelEl.textContent = sel.text;
   }
@@ -1518,7 +1529,9 @@ function showToast(message) {
   if (!container) return;
   const toast = document.createElement('div');
   toast.className = 'bg-slate-800 text-white px-4 py-2 rounded-lg shadow-xl text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-300 flex items-center gap-2';
-  toast.innerHTML = `<i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-400"></i> ${message}`;
+  toast.innerHTML = `<i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-400"></i>`;
+  const _tn = document.createTextNode(' ' + message);
+  toast.appendChild(_tn);
   container.appendChild(toast);
   try { _refreshIcons(); } catch(e) {}
   setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 3000);

@@ -102,7 +102,7 @@
         if (msg.error) {
           if (targetFrameId) {
             const res = document.getElementById(`scan-results-${targetFrameId}`);
-            if (res) res.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-xl text-xs">${msg.error}</div>`;
+            if (res) { const _ed = document.createElement('div'); _ed.className = 'p-4 bg-red-50 text-red-600 rounded-xl text-xs'; _ed.textContent = msg.error; res.innerHTML = ''; res.appendChild(_ed); }
             const spinner = document.getElementById(`sub-spinner-tokens-${targetFrameId}`);
             if (spinner) { spinner.classList.add('hidden'); _refreshIcons() }
           }
