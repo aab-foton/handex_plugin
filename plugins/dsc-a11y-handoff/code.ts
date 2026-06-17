@@ -109,39 +109,71 @@ async function applyWcagBackground(imageFrame: FrameNode, componentNode: SceneNo
   const rootFills = Array.isArray((fillSource as FrameNode).fills) ? (fillSource as FrameNode).fills as Paint[] : [];
   const rootFill  = rootFills.find(f => f.type === 'SOLID') as SolidPaint | undefined;
 
-  // Se o componente não tem fill de fundo, procura a cor de conteúdo (texto ou ícone)
-  // para garantir que textos/ícones brancos sobre fundo branco não passem despercebidos
-  let effectiveCompColor: RGB;
-  if (rootFill) {
-    effectiveCompColor = rootFill.color;
-  } else {
-    const CONTENT_TYPES = new Set(['TEXT', 'VECTOR', 'ELLIPSE', 'RECTANGLE', 'POLYGON', 'STAR', 'BOOLEAN_OPERATION']);
-    const contentNodes = (fillSource as any).findAll((n: SceneNode) => CONTENT_TYPES.has(n.type)) as SceneNode[];
-    let contentColor: RGB | null = null;
-    for (const n of contentNodes) {
-      const nFills = Array.isArray((n as any).fills) ? (n as any).fills as Paint[] : [];
-      const solid  = nFills.find((f: Paint) => f.type === 'SOLID' && (f as SolidPaint).opacity !== 0) as SolidPaint | undefined;
-      if (solid) { contentColor = solid.color; break; }
-    }
-    // Último fallback: branco (componente totalmente transparente sem conteúdo visível detectado)
-    effectiveCompColor = contentColor ?? { r: 1, g: 1, b: 1 };
+  // Sempre busca cor de conteúdo (texto/ícone) — é o que realmente precisa ter contraste
+  const CONTENT_TYPES = new Set(['TEXT', 'VECTOR', 'ELLIPSE', 'RECTANGLE', 'POLYGON', 'STAR', 'BOOLEAN_OPERATION']);
+  const contentNodes = (fillSource as any).findAll((n: SceneNode) => CONTENT_TYPES.has(n.type)) as SceneNode[];
+  let contentColor: RGB | null = null;
+  for (const n of contentNodes) {
+    const nFills = Array.isArray((n as any).fills) ? (n as any).fills as Paint[] : [];
+    const solid  = nFills.find((f: Paint) => f.type === 'SOLID' && (f as SolidPaint).opacity !== 0) as SolidPaint | undefined;
+    if (solid) { contentColor = solid.color; break; }
   }
 
-  let needsSwap = false;
-  if (bgFill) {
-    const bgL   = relativeLuminance(bgFill.color.r,   bgFill.color.g,   bgFill.color.b);
-    const compL = relativeLuminance(effectiveCompColor.r, effectiveCompColor.g, effectiveCompColor.b);
-    needsSwap = wcagContrast(bgL, compL) < 3;
-  }
+  // Sem bgFill → usa cor de conteúdo (texto/ícone) para detectar o que precisa ser visível
+  // Com bgFill → usa fill do componente (ou conteúdo como fallback se não houver fill)
+  const effectiveCompColor: RGB = !bgFill
+    ? (contentColor ?? rootFill?.color ?? { r: 1, g: 1, b: 1 })
+    : (rootFill?.color ?? contentColor ?? { r: 1, g: 1, b: 1 });
+
+  // Sem fill sólido no frame → assume branco (fundo padrão do canvas) para o cálculo
+  const bgColor = bgFill ? bgFill.color : { r: 1, g: 1, b: 1 };
+  const bgL   = relativeLuminance(bgColor.r, bgColor.g, bgColor.b);
+  const compL = relativeLuminance(effectiveCompColor.r, effectiveCompColor.g, effectiveCompColor.b);
+  const needsSwap = wcagContrast(bgL, compL) < 3;
   if (needsSwap) {
     const figmaVars = (figma as any).variables;
     const cardBg2Var = allVars.find((v: any) => v.name.toLowerCase().includes('card background 2'));
-    if (cardBg2Var && figmaVars) {
+    const cardBg1Var = allVars.find((v: any) => {
+      const n = v.name.toLowerCase();
+      return n.includes('card background') && !n.includes('card background 2');
+    });
+
+    // Resolve a cor de uma variável Figma para calcular qual tem mais contraste
+    const resolveVarColor = (v: any): RGB | null => {
+      try {
+        const modeId = Object.keys(v.valuesByMode)[0];
+        const val = v.valuesByMode[modeId];
+        if (val && typeof val === 'object' && 'r' in val) return val as RGB;
+        const res = v.resolvedValuesByMode?.[modeId]?.resolvedValue;
+        if (res && 'r' in res) return res as RGB;
+      } catch {}
+      return null;
+    };
+
+    // Escolhe a variável com maior contraste contra o componente
+    let chosenVar: any = cardBg2Var ?? cardBg1Var;
+    let chosenColor: RGB = { r: 0.16, g: 0.20, b: 0.29 };
+    if (cardBg1Var || cardBg2Var) {
+      const c1 = cardBg1Var ? resolveVarColor(cardBg1Var) : null;
+      const c2 = cardBg2Var ? resolveVarColor(cardBg2Var) : null;
+      if (c1 && c2) {
+        const ratio1 = wcagContrast(relativeLuminance(c1.r, c1.g, c1.b), compL);
+        const ratio2 = wcagContrast(relativeLuminance(c2.r, c2.g, c2.b), compL);
+        chosenVar   = ratio1 >= ratio2 ? cardBg1Var : cardBg2Var;
+        chosenColor = ratio1 >= ratio2 ? c1 : c2;
+      } else if (c2) {
+        chosenColor = c2;
+      } else if (c1) {
+        chosenVar = cardBg1Var; chosenColor = c1;
+      }
+    }
+
+    if (chosenVar && figmaVars) {
       imageFrame.fills = [figmaVars.setBoundVariableForPaint(
-        { type: 'SOLID', color: { r: 0, g: 0, b: 0 } }, 'color', cardBg2Var
+        { type: 'SOLID', color: chosenColor }, 'color', chosenVar
       )];
     } else {
-      imageFrame.fills = [{ type: 'SOLID', color: { r: 0.16, g: 0.20, b: 0.29 } }];
+      imageFrame.fills = [{ type: 'SOLID', color: chosenColor }];
     }
   }
 }
@@ -254,7 +286,9 @@ async function getTouchImageFrame(): Promise<FrameNode | null> {
   const stillExists = await figma.getNodeByIdAsync(handoffAtivo.id);
   if (!stillExists || !handoffAtivo) {
     handoffAtivo = null;
-    figma.ui.postMessage({ type: 'feedback', message: '⚠️ O template foi removido. Selecione novamente o componente e o template.' });
+    componentePrincipalAtivo = null;
+    contextoTravado = false;
+    figma.ui.postMessage({ type: 'waiting-selection' });
     return null;
   }
   const handoff = ensureHandoffDetached();
@@ -274,7 +308,9 @@ async function getTabImageFrame(): Promise<FrameNode | null> {
   const stillExists = await figma.getNodeByIdAsync(handoffAtivo.id);
   if (!stillExists || !handoffAtivo) {
     handoffAtivo = null;
-    figma.ui.postMessage({ type: 'feedback', message: '⚠️ O template foi removido. Selecione novamente o componente e o template.' });
+    componentePrincipalAtivo = null;
+    contextoTravado = false;
+    figma.ui.postMessage({ type: 'waiting-selection' });
     return null;
   }
   const handoff = ensureHandoffDetached();
@@ -294,7 +330,9 @@ async function getSRImageFrame(): Promise<FrameNode | null> {
   const stillExists = await figma.getNodeByIdAsync(handoffAtivo.id);
   if (!stillExists || !handoffAtivo) {
     handoffAtivo = null;
-    figma.ui.postMessage({ type: 'feedback', message: '⚠️ O template foi removido. Selecione novamente o componente e o template.' });
+    componentePrincipalAtivo = null;
+    contextoTravado = false;
+    figma.ui.postMessage({ type: 'waiting-selection' });
     return null;
   }
   const handoff = ensureHandoffDetached();
@@ -898,18 +936,17 @@ figma.ui.onmessage = async (msg) => {
                 if (modelItemNumber) {
                   const numClone = (modelItemNumber as InstanceNode).clone();
                   numClone.visible = true;
-                  // Badge sempre à esquerda do overlay com conector apontando para direita.
-                  // Ignora badgeOffsetX salvo — pode estar incorreto se instâncias foram movidas.
+                  // Usa posição e connector confirmados pela pessoa (igual ao activate-variation).
                   if (area.badgeProps && Object.keys(area.badgeProps).length > 0) {
-                    try { (numClone as any).setProperties({ ...area.badgeProps, 'conector': 'direita' }); } catch(_e) {}
+                    try { (numClone as any).setProperties(area.badgeProps); } catch(_e) {}
                   } else {
-                    try { (numClone as any).setProperties({ 'conector': 'direita' }); } catch(_e) {}
+                    try { (numClone as any).setProperties({ 'conector': 'desativado' }); } catch(_e) {}
                   }
                   if (area.badgeWidth > 0 && area.badgeHeight > 0) {
                     try { numClone.resize(area.badgeWidth, area.badgeHeight); } catch(_e) {}
                   }
-                  numClone.x = areaClone.x - (numClone as any).width;
-                  numClone.y = areaClone.y + Math.round(area.height / 2) - Math.round((numClone as any).height / 2);
+                  numClone.x = areaClone.x + (area.badgeOffsetX ?? 0);
+                  numClone.y = areaClone.y + (area.badgeOffsetY ?? -((numClone as any).height + 4));
                   imageFrame.appendChild(numClone);
                   numClone.setPluginData('a11y-meta', JSON.stringify({ type: 'touch-badge', variationId: varId, nome: area.nome, index: areaIdx, variationPrefix: recrPrefix }));
                   const numTexts = (numClone as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
@@ -942,18 +979,34 @@ figma.ui.onmessage = async (msg) => {
               }
             }
 
-            // Redimensionar imageFrame com base nas instâncias presentes
-            const allVarInstances = Array.from(imageFrame.children).filter(n => {
-              try { return JSON.parse(n.getPluginData('a11y-meta') || '{}').type === 'variation-component'; } catch { return false; }
+            // Redimensionar imageFrame englobando TODOS os elementos visíveis
+            // (componentes, overlays e badges que podem extrapolar os limites da instância)
+            const _rhRelevant = Array.from(imageFrame.children).filter(n => {
+              try {
+                const d = JSON.parse(n.getPluginData('a11y-meta') || '{}');
+                return ['variation-component', 'touch-overlay', 'touch-badge'].includes(d.type);
+              } catch { return false; }
             }) as SceneNode[];
-            if (allVarInstances.length > 0) {
-              const maxRight  = Math.max(...allVarInstances.map(n => (n as any).x + (n as any).width));
-              const maxBottom = Math.max(...allVarInstances.map(n => (n as any).y + (n as any).height));
+            if (_rhRelevant.length > 0) {
+              const _minX = Math.min(..._rhRelevant.map(n => (n as any).x));
+              const _minY = Math.min(..._rhRelevant.map(n => (n as any).y));
+              const _maxR = Math.max(..._rhRelevant.map(n => (n as any).x + (n as any).width));
+              const _maxB = Math.max(..._rhRelevant.map(n => (n as any).y + (n as any).height));
+              // Garante padding mínimo no topo/esquerda — desloca tudo se algum elemento saiu dos limites
+              const _shX = _minX < PAD_LEFT_RH ? PAD_LEFT_RH - _minX : 0;
+              const _shY = _minY < 24 ? 24 - _minY : 0;
+              if (_shX > 0 || _shY > 0) {
+                for (const _n of Array.from(imageFrame.children)) {
+                  if (_shX > 0) (_n as any).x += _shX;
+                  if (_shY > 0) (_n as any).y += _shY;
+                }
+              }
               imageFrame.resize(
-                Math.max((imageFrame as FrameNode).width, maxRight + 24),
-                Math.max(maxBottom + 24, 80)
+                Math.max((imageFrame as FrameNode).width, _maxR + _shX + 24),
+                Math.max(_maxB + _shY + 24, 80)
               );
             }
+            imageFrame.clipsContent = false;
           }
         }
 
@@ -1256,24 +1309,32 @@ figma.ui.onmessage = async (msg) => {
                     srImageFrame.appendChild(agClone);
                     agClone.x = currentX + agRelX;
                     agClone.y = currentY + agRelY;
-                    let orientacao: string = (c as any).orientacao || '';
-                    if (!orientacao) {
-                      const _agRHRX   = (c.relX || 0) + (c.width  || 80);
-                      const _agRHBot  = (c.relY || 0) + (c.height || 40);
-                      const _agRHRGap = compW - _agRHRX;
-                      const _agRHVGap = compH - _agRHBot;
-                      if      (_agRHRGap < (c.width  || 80) * 0.15) orientacao = 'direita';
-                      else if (_agRHVGap < (c.height || 40) * 0.15) orientacao = 'inferior';
-                      else orientacao = (_agRHRX - (c.width || 80) / 2) < compW / 2 ? 'esquerda' : 'direita';
-                    }
+                    const _agOvProps = (c as any).overlayProps as Record<string,any> | undefined;
                     const _agT = (c.tipo || c.tipoConnector || '').toLowerCase();
                     let _agTipo = 'função valor rótulos';
                     if (_agT.includes('decorat'))                                                                        _agTipo = 'elementos decorativos';
                     else if (_agT.includes('marco') || _agT.includes('naveg'))                                           _agTipo = 'marcos de navegação';
                     else if (_agT.includes('título') || _agT.includes('titulo') || _agT.includes('nível') || _agT.includes('nivel')) _agTipo = 'nível de título';
                     else if (_agT.includes('infor') || _agT.includes('adicional'))                                       _agTipo = 'informações adicionais';
-                    try { agClone.setProperties({ 'tipo': _agTipo, 'orientação': orientacao }); } catch(e) {
-                      figma.ui.postMessage({ type: 'feedback', message: '⚠️ Agrupamento props não aplicadas: ' + String(e) });
+                    if (_agOvProps && Object.keys(_agOvProps).length > 0) {
+                      // Usa props salvas diretamente — as chaves têm sufixo #id, setProperties resolve corretamente
+                      try { agClone.setProperties(_agOvProps); } catch(e) {
+                        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Agrupamento props não aplicadas: ' + String(e) });
+                      }
+                    } else {
+                      let orientacao: string = (c as any).orientacao || '';
+                      if (!orientacao) {
+                        const _agRHRX   = (c.relX || 0) + (c.width  || 80);
+                        const _agRHBot  = (c.relY || 0) + (c.height || 40);
+                        const _agRHRGap = compW - _agRHRX;
+                        const _agRHVGap = compH - _agRHBot;
+                        if      (_agRHRGap < (c.width  || 80) * 0.15) orientacao = 'direita';
+                        else if (_agRHVGap < (c.height || 40) * 0.15) orientacao = 'inferior';
+                        else orientacao = (_agRHRX - (c.width || 80) / 2) < compW / 2 ? 'esquerda' : 'direita';
+                      }
+                      try { agClone.setProperties({ 'tipo': _agTipo, 'orientação': orientacao }); } catch(e) {
+                        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Agrupamento props não aplicadas: ' + String(e) });
+                      }
                     }
                     if (_agTipo === 'nível de título' && c.especificacao) {
                       const _agRHKeys = Object.keys(agClone.componentProperties || {});
@@ -1307,18 +1368,30 @@ figma.ui.onmessage = async (msg) => {
                       const relX = c.relX || 0, relY = c.relY || 0;
                       const savedW = (c as any).width || conClone.width;
                       const savedH = (c as any).height || conClone.height;
-                      let lado: string;
-                      if      (relX + savedW <= 0)  lado = 'esquerda';
-                      else if (relX >= compW)        lado = 'direita';
-                      else if (relY + savedH <= 0)   lado = 'superior';
-                      else if (relY >= compH)         lado = 'inferior';
-                      else {
-                        const dL = Math.abs(relX), dR = Math.abs(compW - relX - savedW);
-                        const dT = Math.abs(relY), dB = Math.abs(compH - relY - savedH);
-                        const minD = Math.min(dL, dR, dT, dB);
-                        lado = minD === dL ? 'esquerda' : minD === dR ? 'direita' : minD === dT ? 'superior' : 'inferior';
+                      // Usa props salvas do overlay (igual ao badgeProps do toque)
+                      const _ovProps = (c as any).overlayProps as Record<string,any> | undefined;
+                      if (_ovProps && Object.keys(_ovProps).length > 0) {
+                        try { (conClone as InstanceNode).setProperties(_ovProps); } catch(_e) {}
+                      } else {
+                        // Fallback p/ dados antigos: reconstrói tipo + lado por geometria de centro
+                        const _storedLado = (c as any).lado;
+                        let lado: string;
+                        if (_storedLado && ['esquerda','direita','superior','inferior'].includes(_storedLado)) {
+                          lado = _storedLado;
+                        } else {
+                          const _cx = relX + savedW / 2, _cy = relY + savedH / 2;
+                          if      (_cx <= 0)      lado = 'esquerda';
+                          else if (_cx >= compW)  lado = 'direita';
+                          else if (_cy <= 0)      lado = 'superior';
+                          else if (_cy >= compH)  lado = 'inferior';
+                          else {
+                            const dL = _cx, dR = compW - _cx, dT = _cy, dB = compH - _cy;
+                            const minD = Math.min(dL, dR, dT, dB);
+                            lado = minD === dL ? 'esquerda' : minD === dR ? 'direita' : minD === dT ? 'superior' : 'inferior';
+                          }
+                        }
+                        try { (conClone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': lado }); } catch(_e) {}
                       }
-                      try { (conClone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': lado }); } catch(e) {}
                       try { conClone.resize(savedW, savedH); } catch(e) {}
                       conClone.x = currentX + relX;
                       conClone.y = currentY + relY;
@@ -1375,10 +1448,10 @@ figma.ui.onmessage = async (msg) => {
                 totalHeight + SR_PAD_SIDE
               );
 
-              if (modelConector)    modelConector.remove();
-              const agToRemove = agrupamentoAncestor ?? modelAgrupamento;
-              if (agToRemove) agToRemove.remove();
-              if (modelItemNumber)  modelItemNumber.remove();
+              if (modelConector)    modelConector.visible = false;
+              const agToHide = agrupamentoAncestor ?? modelAgrupamento;
+              if (agToHide) (agToHide as SceneNode).visible = false;
+              if (modelItemNumber)  modelItemNumber.visible = false;
             }
           }
         }
@@ -1650,31 +1723,30 @@ figma.ui.onmessage = async (msg) => {
         }
       }
 
-      // Sync 'screen size' spec rows: hide rows whose zoom type is not selected, renumber visible ones
-      // Fixed positional order matches the template: row0=texto/reflow, row1=componente 200% mobile, row2=componente 400%
+      // Spec rows dentro do zoom: oculta rows não selecionadas e renumera as visíveis
       const ZOOM_ROW_TYPES = [
         '200% Texto (reflow)',
         '200% Componente (scaling)',
         '400% Componente (scaling)',
       ];
-      let screenSizeSection = workingFrame.findOne((n: SceneNode) => n.name === 'screen size') as FrameNode | null;
-      if (screenSizeSection) {
-        if ((screenSizeSection as any).type === 'INSTANCE') {
-          screenSizeSection = (screenSizeSection as any as InstanceNode).detachInstance() as unknown as FrameNode;
-        }
-        const specsHolder = (screenSizeSection.findOne((n: SceneNode) => n.name === 'specs') ?? screenSizeSection) as FrameNode;
-        const specRows = Array.from(specsHolder.children)
-          .filter(n => n.name !== 'element' && n.name !== 'tag' && n.name !== 'header' && n.name !== 'title') as SceneNode[];
-        let visNum = 0;
-        for (let ri = 0; ri < ZOOM_ROW_TYPES.length && ri < specRows.length; ri++) {
-          const row = specRows[ri];
-          const isSelected = zoomTypes.includes(ZOOM_ROW_TYPES[ri]);
-          (row as any).visible = isSelected;
-          if (isSelected) {
-            visNum++;
-            const numTexts = (row as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
-            const numText = numTexts.find((n: TextNode) => /^\d+$/.test(n.characters.trim()));
-            if (numText) await updateText(numText as TextNode, String(visNum));
+      if (zoomContainer) {
+        const _specs = zoomContainer.findOne((n: SceneNode) => n.name === 'specs') as SceneNode | null;
+        if (_specs) {
+          const _specsId = (_specs as any).id as string;
+          const elements = (_specs as any).findAll((n: any) => n.parent?.id === _specsId) as SceneNode[];
+          let visNum = 0;
+          for (let ri = 0; ri < ZOOM_ROW_TYPES.length && ri < elements.length; ri++) {
+            const el = elements[ri];
+            const isSelected = zoomTypes.includes(ZOOM_ROW_TYPES[ri]);
+            (el as any).visible = isSelected;
+            if (isSelected) {
+              visNum++;
+              if (typeof (el as any).findAll === 'function') {
+                const numTexts = (el as any).findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
+                const numText = numTexts.find((n: TextNode) => /^\d+$/.test(n.characters.trim()));
+                if (numText) await updateText(numText as TextNode, String(visNum));
+              }
+            }
           }
         }
       }
@@ -2163,6 +2235,33 @@ figma.ui.onmessage = async (msg) => {
           }
         }
 
+        // Resize final considerando badges que podem extrapolar os limites da instância
+        const _avRelevant = Array.from(imageFrame.children).filter(n => {
+          try {
+            const d = JSON.parse(n.getPluginData('a11y-meta') || '{}');
+            return ['variation-component', 'touch-overlay', 'touch-badge'].includes(d.type);
+          } catch { return false; }
+        }) as SceneNode[];
+        if (_avRelevant.length > 0) {
+          const _avMinX = Math.min(..._avRelevant.map(n => (n as any).x));
+          const _avMinY = Math.min(..._avRelevant.map(n => (n as any).y));
+          const _avMaxR = Math.max(..._avRelevant.map(n => (n as any).x + (n as any).width));
+          const _avMaxB = Math.max(..._avRelevant.map(n => (n as any).y + (n as any).height));
+          const _avShX = _avMinX < 160 ? 160 - _avMinX : 0;
+          const _avShY = _avMinY < 24  ? 24  - _avMinY : 0;
+          if (_avShX > 0 || _avShY > 0) {
+            for (const _n of Array.from(imageFrame.children)) {
+              if (_avShX > 0) (_n as any).x += _avShX;
+              if (_avShY > 0) (_n as any).y += _avShY;
+            }
+          }
+          imageFrame.resize(
+            Math.max((imageFrame as FrameNode).width, _avMaxR + _avShX + 24),
+            Math.max(_avMaxB + _avShY + 24, 80)
+          );
+        }
+        imageFrame.clipsContent = false;
+
         instance = newInst;
         figma.ui.postMessage({ type: 'variation-instance-recreated', variationId, instanceNodeId: instance.id });
       }
@@ -2588,23 +2687,28 @@ figma.ui.onmessage = async (msg) => {
           srImageFrame.appendChild(agClone);
           agClone.x = instX + (c.relX || 0);
           agClone.y = instY + (c.relY || 0);
-          let orientacao: string = (c as any).orientacao || '';
-          if (!orientacao) {
-            const _agActRX  = (c.relX || 0) + (c.width || 80);
-            const _agActBot = (c.relY || 0) + (c.height || 40);
-            const _agActRGap = instW - _agActRX;
-            const _agActVGap = instH - _agActBot;
-            if      (_agActRGap < (c.width || 80) * 0.15) orientacao = 'direita';
-            else if (_agActVGap < (c.height || 40) * 0.15) orientacao = 'inferior';
-            else orientacao = (_agActRX - (c.width || 80) / 2) < instW / 2 ? 'esquerda' : 'direita';
-          }
+          const _agActOvProps = (c as any).overlayProps as Record<string,any> | undefined;
           const _agActT = (c.tipo || c.tipoConnector || '').toLowerCase();
           let _agActTipo = 'função valor rótulos';
           if (_agActT.includes('decorat'))                                                                              _agActTipo = 'elementos decorativos';
           else if (_agActT.includes('marco') || _agActT.includes('naveg'))                                             _agActTipo = 'marcos de navegação';
           else if (_agActT.includes('título') || _agActT.includes('titulo') || _agActT.includes('nível') || _agActT.includes('nivel')) _agActTipo = 'nível de título';
           else if (_agActT.includes('infor') || _agActT.includes('adicional'))                                         _agActTipo = 'informações adicionais';
-          try { (agClone as InstanceNode).setProperties({ 'tipo': _agActTipo, 'orientação': orientacao }); } catch(_e) {}
+          if (_agActOvProps && Object.keys(_agActOvProps).length > 0) {
+            try { (agClone as InstanceNode).setProperties(_agActOvProps); } catch(_e) {}
+          } else {
+            let orientacao: string = (c as any).orientacao || '';
+            if (!orientacao) {
+              const _agActRX  = (c.relX || 0) + (c.width || 80);
+              const _agActBot = (c.relY || 0) + (c.height || 40);
+              const _agActRGap = instW - _agActRX;
+              const _agActVGap = instH - _agActBot;
+              if      (_agActRGap < (c.width || 80) * 0.15) orientacao = 'direita';
+              else if (_agActVGap < (c.height || 40) * 0.15) orientacao = 'inferior';
+              else orientacao = (_agActRX - (c.width || 80) / 2) < instW / 2 ? 'esquerda' : 'direita';
+            }
+            try { (agClone as InstanceNode).setProperties({ 'tipo': _agActTipo, 'orientação': orientacao }); } catch(_e) {}
+          }
           if (_agActTipo === 'nível de título' && c.especificacao) {
             const _agActKeys = Object.keys((agClone as any).componentProperties || {});
             const _agActHKey = _agActKeys.find(k => k.toLowerCase().includes('nível') || k.toLowerCase().includes('nivel') || k.toLowerCase().includes('título') || k.toLowerCase().includes('titulo') || k.toLowerCase().includes('heading'));
@@ -2635,18 +2739,30 @@ figma.ui.onmessage = async (msg) => {
             const relX = c.relX || 0, relY = c.relY || 0;
             const savedW = (c as any).width || conClone.width;
             const savedH = (c as any).height || conClone.height;
-            let lado: string;
-            if      (relX + savedW <= 0)  lado = 'esquerda';
-            else if (relX >= instW)       lado = 'direita';
-            else if (relY + savedH <= 0)  lado = 'superior';
-            else if (relY >= instH)       lado = 'inferior';
-            else {
-              const dL = Math.abs(relX), dR = Math.abs(instW - relX - savedW);
-              const dT = Math.abs(relY), dB = Math.abs(instH - relY - savedH);
-              const minD = Math.min(dL, dR, dT, dB);
-              lado = minD === dL ? 'esquerda' : minD === dR ? 'direita' : minD === dT ? 'superior' : 'inferior';
+            // Usa props salvas do overlay (igual ao badgeProps do toque)
+            const _ovProps = (c as any).overlayProps as Record<string,any> | undefined;
+            if (_ovProps && Object.keys(_ovProps).length > 0) {
+              try { (conClone as InstanceNode).setProperties(_ovProps); } catch(_e) {}
+            } else {
+              // Fallback p/ dados antigos: reconstrói tipo + lado por geometria de centro
+              const _storedLado = (c as any).lado;
+              let lado: string;
+              if (_storedLado && ['esquerda','direita','superior','inferior'].includes(_storedLado)) {
+                lado = _storedLado;
+              } else {
+                const _cx = relX + savedW / 2, _cy = relY + savedH / 2;
+                if      (_cx <= 0)      lado = 'esquerda';
+                else if (_cx >= instW)  lado = 'direita';
+                else if (_cy <= 0)      lado = 'superior';
+                else if (_cy >= instH)  lado = 'inferior';
+                else {
+                  const dL = _cx, dR = instW - _cx, dT = _cy, dB = instH - _cy;
+                  const minD = Math.min(dL, dR, dT, dB);
+                  lado = minD === dL ? 'esquerda' : minD === dR ? 'direita' : minD === dT ? 'superior' : 'inferior';
+                }
+              }
+              try { (conClone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': lado }); } catch(_e) {}
             }
-            try { (conClone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': lado }); } catch(_e) {}
             try { conClone.resize(savedW, savedH); } catch(_e) {}
             conClone.x = instX + relX;
             conClone.y = instY + relY;
@@ -2726,23 +2842,28 @@ figma.ui.onmessage = async (msg) => {
         srImageFrame.appendChild(agClone);
         agClone.x = instX + (c.relX || 0);
         agClone.y = instY + (c.relY || 0);
-        let orientacao: string = (c as any).orientacao || '';
-        if (!orientacao) {
-          const _agAppRX   = (c.relX || 0) + (c.width  || 80);
-          const _agAppBot  = (c.relY || 0) + (c.height || 40);
-          const _agAppRGap = instW - _agAppRX;
-          const _agAppVGap = instH - _agAppBot;
-          if      (_agAppRGap < (c.width  || 80) * 0.15) orientacao = 'direita';
-          else if (_agAppVGap < (c.height || 40) * 0.15) orientacao = 'inferior';
-          else orientacao = (_agAppRX - (c.width || 80) / 2) < instW / 2 ? 'esquerda' : 'direita';
-        }
+        const _agAppOvProps = (c as any).overlayProps as Record<string,any> | undefined;
         const _agAppT = (c.tipo || c.tipoConnector || '').toLowerCase();
         let _agAppTipo = 'função valor rótulos';
         if (_agAppT.includes('decorat'))                                                                              _agAppTipo = 'elementos decorativos';
         else if (_agAppT.includes('marco') || _agAppT.includes('naveg'))                                             _agAppTipo = 'marcos de navegação';
         else if (_agAppT.includes('título') || _agAppT.includes('titulo') || _agAppT.includes('nível') || _agAppT.includes('nivel')) _agAppTipo = 'nível de título';
         else if (_agAppT.includes('infor') || _agAppT.includes('adicional'))                                         _agAppTipo = 'informações adicionais';
-        try { (agClone as InstanceNode).setProperties({ 'tipo': _agAppTipo, 'orientação': orientacao }); } catch(_e) {}
+        if (_agAppOvProps && Object.keys(_agAppOvProps).length > 0) {
+          try { (agClone as InstanceNode).setProperties(_agAppOvProps); } catch(_e) {}
+        } else {
+          let orientacao: string = (c as any).orientacao || '';
+          if (!orientacao) {
+            const _agAppRX   = (c.relX || 0) + (c.width  || 80);
+            const _agAppBot  = (c.relY || 0) + (c.height || 40);
+            const _agAppRGap = instW - _agAppRX;
+            const _agAppVGap = instH - _agAppBot;
+            if      (_agAppRGap < (c.width  || 80) * 0.15) orientacao = 'direita';
+            else if (_agAppVGap < (c.height || 40) * 0.15) orientacao = 'inferior';
+            else orientacao = (_agAppRX - (c.width || 80) / 2) < instW / 2 ? 'esquerda' : 'direita';
+          }
+          try { (agClone as InstanceNode).setProperties({ 'tipo': _agAppTipo, 'orientação': orientacao }); } catch(_e) {}
+        }
         if (_agAppTipo === 'nível de título' && c.especificacao) {
           const _agAppKeys = Object.keys((agClone as any).componentProperties || {});
           const _agAppHKey = _agAppKeys.find(k => k.toLowerCase().includes('nível') || k.toLowerCase().includes('nivel') || k.toLowerCase().includes('título') || k.toLowerCase().includes('titulo') || k.toLowerCase().includes('heading'));
@@ -3022,12 +3143,13 @@ figma.ui.onmessage = async (msg) => {
     }
     const overlay = await figma.getNodeByIdAsync(tempSROverlayId) as SceneNode | null;
     if (!overlay) { tempSROverlayId = null; return; }
-    // Lê orientação diretamente da propriedade do componente — o que o usuário viu é o que fica
-    let _ciOrient = 'esquerda';
+    // Salva todas as componentProperties do overlay — igual ao badgeProps do toque
+    const _overlayProps: Record<string, any> = {};
     try {
       const _props = (overlay as InstanceNode).componentProperties;
-      const _orientKey = Object.keys(_props).find(k => k.toLowerCase().includes('orienta'));
-      if (_orientKey) _ciOrient = String((_props[_orientKey] as any).value || 'esquerda');
+      for (const [k, v] of Object.entries(_props)) {
+        _overlayProps[k] = (v as any).value;
+      }
     } catch(_e) {}
     const item = {
       tipo: tempSROverlayTipo,
@@ -3036,7 +3158,7 @@ figma.ui.onmessage = async (msg) => {
       width: Math.round((overlay as any).width),
       height: Math.round((overlay as any).height),
       positioned: true,
-      orientacao: _ciOrient,
+      overlayProps: _overlayProps,
     };
     overlay.remove();
     tempSROverlayId = null;
