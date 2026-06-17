@@ -226,6 +226,83 @@ ${(handoffData.createdFlows || []).length === 0
       showHandoffLoading();
     }
 
+    function openHandoffInjectModal() {
+      collectHandoffData();
+
+      const hasInfo = !!(
+        (handoffData.step1.titulo || '').trim() ||
+        (handoffData.step1.equipe || []).some(m => (m.nome || '').trim())
+      );
+      const totalSpecs = (handoffData.frames || []).reduce((n, f) => n + (f.createdSpecs || []).length, 0)
+                       + ((typeof createdSpecs !== 'undefined' ? createdSpecs : []).length);
+      const totalMeasures = (handoffData.frames || []).reduce((n, f) => n + (f.measurements || []).length, 0);
+      const totalFlows = (handoffData.createdFlows || []).length;
+
+      const sections = [
+        { key: 'info',     has: hasInfo,            count: null },
+        { key: 'specs',    has: totalSpecs > 0,     count: totalSpecs },
+        { key: 'measures', has: totalMeasures > 0,  count: totalMeasures },
+        { key: 'flows',    has: totalFlows > 0,     count: totalFlows },
+      ];
+      const filled = sections.filter(s => s.has);
+
+      // Update section rows visibility and counts
+      const rowInfo = document.getElementById('inject-chk-info-row');
+      const rowSpecs = document.getElementById('inject-chk-specs-row');
+      const rowMeasures = document.getElementById('inject-chk-measures-row');
+      const rowFlows = document.getElementById('inject-chk-flows-row');
+      if (rowInfo) rowInfo.classList.toggle('hidden', !hasInfo);
+      if (rowSpecs) rowSpecs.classList.toggle('hidden', !sections[1].has);
+      if (rowMeasures) rowMeasures.classList.toggle('hidden', !sections[2].has);
+      if (rowFlows) rowFlows.classList.toggle('hidden', !sections[3].has);
+
+      const infoCount = document.getElementById('inject-info-count');
+      const specsCount = document.getElementById('inject-specs-count');
+      const measuresCount = document.getElementById('inject-measures-count');
+      const flowsCount = document.getElementById('inject-flows-count');
+      if (infoCount) infoCount.textContent = hasInfo ? 'Título, equipe e status preenchidos' : '';
+      if (specsCount) specsCount.textContent = totalSpecs + (totalSpecs === 1 ? ' especificação' : ' especificações');
+      if (measuresCount) measuresCount.textContent = totalMeasures + (totalMeasures === 1 ? ' medida' : ' medidas');
+      if (flowsCount) flowsCount.textContent = totalFlows + (totalFlows === 1 ? ' fluxo' : ' fluxos');
+
+      // Show the right state
+      const stateEmpty  = document.getElementById('inject-state-empty');
+      const stateSingle = document.getElementById('inject-state-single');
+      const stateMulti  = document.getElementById('inject-state-multi');
+      [stateEmpty, stateSingle, stateMulti].forEach(el => { if (el) el.classList.add('hidden'); });
+
+      if (filled.length === 0) {
+        if (stateEmpty) stateEmpty.classList.remove('hidden');
+      } else if (filled.length === 1) {
+        const labels = { info: 'Informações do Projeto', specs: 'Especificações', measures: 'Medidas', flows: 'Fluxos de Tela' };
+        const msgEl = document.getElementById('inject-single-msg');
+        if (msgEl) msgEl.textContent = `Você preencheu apenas ${labels[filled[0].key]}. Deseja gerar a ficha com o que tem, ou continuar documentando?`;
+        if (stateSingle) stateSingle.classList.remove('hidden');
+      } else {
+        if (stateMulti) stateMulti.classList.remove('hidden');
+      }
+
+      if (typeof openModal === 'function') openModal('handoff-inject-modal');
+      if (typeof _refreshIcons === 'function') _refreshIcons();
+    }
+    window.openHandoffInjectModal = openHandoffInjectModal;
+
+    function _confirmHandoffInject() {
+      const chkInfo = document.getElementById('inject-chk-info');
+      const chkSpecs = document.getElementById('inject-chk-specs');
+      const chkMeasures = document.getElementById('inject-chk-measures');
+      const chkFlows = document.getElementById('inject-chk-flows');
+      window._handoffInjectFilter = {
+        info:     !chkInfo     || chkInfo.checked,
+        specs:    !chkSpecs    || chkSpecs.checked,
+        measures: !chkMeasures || chkMeasures.checked,
+        flows:    !chkFlows    || chkFlows.checked,
+      };
+      if (typeof closeModal === 'function') closeModal('handoff-inject-modal');
+      createHandoffOnCanvas();
+    }
+    window._confirmHandoffInject = _confirmHandoffInject;
+
     function _openVersioningModal() {
       const current = handoffData.step1.versao || 'v1.0';
       // Preenche previews de cada tipo

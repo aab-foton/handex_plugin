@@ -1219,8 +1219,8 @@
     const CATEGORY_COLORS = {
       'comportamento':  '#9333EA',
       'regra':          '#0D9488',
-      'info':           '#16A34A',
-      'api':            '#CA8A04',
+      'info':           '#64748B',
+      'api':            '#65A30D',
       'layout':         '#2563EB',
       'componente':     '#4F46E5',
       'interacao':      '#DB2777',
@@ -1427,6 +1427,7 @@
         link: g('spec-link-input') ? g('spec-link-input').value : "",
         note: g('ann-note') ? g('ann-note').value : "",
         guideSide: guideSideEl ? guideSideEl.value : "right",
+        drawConnection: g('chk-draw-connection') ? g('chk-draw-connection').checked : true,
         properties: []
       };
 

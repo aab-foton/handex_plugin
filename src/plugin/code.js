@@ -2981,19 +2981,21 @@ figma.ui.onmessage = async (msg) => {
         specCard.y = Math.round(targetY);
         groupNodes.push(specCard);
 
-        // --- Conector: sempre do lado direito do nó ao lado esquerdo do card ---
-        const connector = figma.createVector();
-        connector.name = `${_specBase}/Conector`;
+        // --- Conector (opcional: desativado se drawConnection === false) ---
+        if (opts.drawConnection !== false) {
+          const connector = figma.createVector();
+          connector.name = `${_specBase}/Conector`;
 
-        const startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
-        const endPt   = { x: specCard.x, y: specCard.y + Math.min(40, specCard.height / 2) };
-        connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
-        connector.strokes = [{ type: "SOLID", color: themeColor }];
-        connector.strokeWeight = 1.5;
-        connector.dashPattern = [4, 4];
-        connector.strokeCap = "ROUND";
-        figma.currentPage.appendChild(connector);
-        groupNodes.push(connector);
+          const startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+          const endPt   = { x: specCard.x, y: specCard.y + Math.min(40, specCard.height / 2) };
+          connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
+          connector.strokes = [{ type: "SOLID", color: themeColor }];
+          connector.strokeWeight = 1.5;
+          connector.dashPattern = [4, 4];
+          connector.strokeCap = "ROUND";
+          figma.currentPage.appendChild(connector);
+          groupNodes.push(connector);
+        }
 
       } else {
         figma.currentPage.appendChild(specCard);

@@ -2,6 +2,149 @@
 
 ---
 
+## v4.2.1 — 2026-06-17
+
+### Resumo
+Refinamentos no controle de escala da UI: substituição do botão de zoom único por dois botões independentes (zoom-in / zoom-out) com visibilidade contextual, e ajuste dinâmico da altura ao minimizar o plugin para que o header não seja cortado em nenhum nível de escala.
+
+---
+
+### Header — Botões de Zoom Separados
+
+**Dois botões independentes substituem o toggle único**
+- Antes: um único botão alternava entre ícone de zoom-in e zoom-out conforme a escala atual; o comportamento era direcional mas o ícone gerava ambiguidade (exibia zoom-out em 115%, mas o clique ainda avançava para 130%).
+- Agora: dois botões fixos — `btn-zoom-in` (`zoom-in`) e `btn-zoom-out` (`zoom-out`) — com semântica clara.
+- `btn-zoom-out` fica **oculto (`hidden`)** quando a escala está em 100% (não há nível menor disponível).
+- `btn-zoom-in` fica **oculto** quando a escala está no máximo (130%).
+- Ambos chamam `ensureExpanded()` antes de ajustar a escala, garantindo que o plugin não permaneça minimizado durante a operação.
+
+**Escalonamento em três passos: 100% → 115% → 130%**
+- Definido no array `_ZOOM_STEPS = [1, 1.15, 1.3]` em `core.js`.
+- `zoomIn()` avança um passo; `zoomOut()` recua um passo. Ambos exibem toast com a porcentagem atual.
+
+---
+
+### Minimizar — Altura Adaptada ao Zoom
+
+**`toggleCollapse()` calcula a altura colapsada dinamicamente**
+- Antes: `resize-ui` enviava `height: MINI_H` (44px fixo) ao minimizar.
+- Ao zoom 115%, o header visual ocupa ~50px; ao zoom 130%, ~57px — o valor fixo cortava o header.
+- Agora: `height: Math.round(MINI_H * window.currentUiScale)` garante que o plugin minimizado sempre acomode o header por completo, sem cortes.
+
+---
+
+### Arquivos Modificados
+
+| Arquivo | Mudança |
+|---|---|
+| `src/plugin/build.cjs` | Dois botões (`btn-zoom-in`, `btn-zoom-out`) substituem o botão único de zoom |
+| `src/plugin/modules/core.js` | `setUiScale` atualiza visibilidade dos botões; `zoomIn/zoomOut` com `_ZOOM_STEPS`; `toggleCollapse` com altura dinâmica |
+
+---
+
+## v4.2.0 — 2026-06-17
+
+### Resumo
+Conjunto de melhorias de UX e produto: controle manual de linhas de conexão nas specs, paleta de cores do toolkit alinhada ao guia de referência, correção de scroll com zoom, destaque do botão de geração de ficha (header e view de handoff), botão "Salvar e Voltar" em todas as funcionalidades, modal inteligente de seleção de conteúdo para injetar na ficha, e renomeação de "Docs e Anexos" para "Links de Referência" com remoção do upload de arquivos.
+
+---
+
+### Especificações — Checkbox de Linhas de Conexão
+
+**Novo checkbox "Inserir linhas de conexão no canvas"**
+- Exibido no modal de criação de spec, marcado por padrão.
+- Quando desmarcado, apenas o card e o destaque pontilhado ao redor do elemento são criados — sem a linha ligando os dois.
+- Útil quando o designer quer posicionar o card manualmente ou quando a linha cruzaria outros elementos no canvas.
+
+---
+
+### Especificações — Cores do Toolkit
+
+**Paleta `CATEGORY_COLORS` alinhada ao guia de referência**
+- `info` (Informação extra): atualizado de `#16A34A` (verde) para `#64748B` (cinza-slate), refletindo o visual neutro da categoria no toolkit.
+- `api` (Dados da API): atualizado de `#CA8A04` (âmbar) para `#65A30D` (verde-oliva), refletindo o visual do toolkit.
+- As demais categorias (`comportamento`, `regra`, `layout`, `componente`, `interacao`, `tipografia`, `cor`, `acessibilidade`, `conteudo`) permanecem inalteradas.
+- O sistema de cores é aplicado consistentemente: tag do card, borda do card, pill de categoria e linha de conexão no canvas usam sempre a mesma cor derivada da categoria.
+
+---
+
+### Zoom — Correção de Scroll Cortado
+
+**`body` usa altura compensada pelo zoom**
+- Antes: `height: 100vh` com `zoom: var(--ui-scale)` causava corte visual do conteúdo inferior em escalas > 1.
+- Agora: `height: calc(100vh / var(--ui-scale))` garante que o corpo não ultrapasse o viewport após o zoom, e o scroll alcança todos os itens ao final das views.
+
+---
+
+### Header — Botão Gerar Ficha em Destaque
+
+**Reposicionamento e destaque do botão principal**
+- O botão "Gerar Ficha" (ícone `send`) foi movido para a **primeira posição da direita** no header.
+- Recebeu fundo azul sólido (`bg-[#0070af]`), border e shadow — diferenciando visualmente dos demais ícones (tema, zoom, minimizar).
+- Chama `openHandoffInjectModal()` em vez de navegar diretamente para a view de handoff.
+- O botão "Dados do Projeto" (clipboard) passou para segunda posição.
+
+---
+
+### View Handoff — Botão Gerar Ficha no Header
+
+**Ação principal migrada para o header da view**
+- Antes: botão "Gerar Ficha no Canvas" era o último item da lista de exportação (rolagem necessária).
+- Agora: botão destacado com label "Gerar Ficha" e ícone `sparkles` fica ao lado do título "Handoff" no sub-header, mesmo padrão das demais funcionalidades (specs, medidas, fluxos).
+- Ícone atualizado de `layout-dashboard` para `sparkles`, comunicando geração/criação de conteúdo.
+- O CTA grande no final do scroll foi removido para evitar duplicidade.
+
+---
+
+### Navegação — Botão "Salvar e Voltar"
+
+**Botão de continuidade adicionado ao final de cada funcionalidade**
+- Views afetadas: Anotar Specs, Anotar Medidas, Fluxos de Tela, Escanear Tokens, Informações do Projeto.
+- O botão persiste os dados via `saveToStorage()`, exibe um toast de confirmação e navega de volta para a home.
+- Reforça a noção de que cada etapa é opcional e pode ser retomada — sem bloquear o fluxo.
+
+---
+
+### Gerar Ficha — Modal de Seleção de Conteúdo
+
+**`openHandoffInjectModal()` — pré-voo inteligente antes de gerar**
+- Antes de gerar a ficha no canvas, o plugin verifica o que foi documentado e exibe um modal contextual com três estados:
+  - **Vazio:** instruções de quais etapas preencher + atalho para "Informações do Projeto".
+  - **Item único:** alerta indicando a etapa preenchida + opção de "Continuar documentando" ou "Gerar assim mesmo".
+  - **Múltiplos itens:** checkboxes para cada seção disponível (Informações do Projeto, Specs, Medidas, Fluxos) com contador de itens; designer escolhe o que incluir.
+- A seleção é armazenada em `window._handoffInjectFilter` e respeitada ao chamar `createHandoffOnCanvas()`.
+
+---
+
+### Informações do Projeto — Links de Referência
+
+**Renomeação e simplificação da seção "Docs e Anexos"**
+- Seção renomeada para **"Links de Referência"** — título mais preciso e direto.
+- Ícone atualizado de `file-plus` para `link`.
+- **Upload de arquivos removido:** a área de arrastar/soltar e o campo "Outros Anexos" foram excluídos. Arquivos sobrecarregam a ficha gerada e não são injetados no canvas — a funcionalidade não agregava valor no fluxo atual.
+- Os campos de URL permanecem: Protótipo Navegável, Handoff de Acessibilidade e Pesquisa de UX.
+
+---
+
+### Arquivos Modificados
+
+| Arquivo | Mudança |
+|---|---|
+| `src/plugin/views/modals.html` | Checkbox de linhas de conexão no modal de spec; novo modal `handoff-inject-modal` |
+| `src/plugin/modules/specifications.js` | `confirmSpecProperties` passa `drawConnection`; `CATEGORY_COLORS` atualizado (`info`, `api`) |
+| `src/plugin/code.js` | Conector condicional via `opts.drawConnection` |
+| `src/plugin/styles/plugin.css` | `body` com altura compensada pelo zoom |
+| `src/plugin/build.cjs` | Header: botão Gerar Ficha em destaque + reordenação |
+| `src/plugin/modules/handoff.js` | `openHandoffInjectModal()` e `_confirmHandoffInject()` |
+| `src/plugin/views/handoff-summary.html` | Botão "Gerar Ficha" no sub-header com ícone `sparkles`; CTA de scroll removido |
+| `src/plugin/views/specifications.html` | Botão "Salvar e Voltar" |
+| `src/plugin/views/measurement.html` | Botão "Salvar e Voltar" |
+| `src/plugin/views/flows.html` | Botão "Salvar e Voltar" |
+| `src/plugin/views/handoff.html` | Botão "Salvar e Voltar" |
+| `src/plugin/views/dados-projeto.html` | Botão "Salvar e Voltar"; seção renomeada; upload removido |
+
+---
+
 ## v4.1.6 — 2026-06-11
 
 ### Resumo

@@ -140,19 +140,23 @@ ${css}
         <h1 class="font-bold text-[#1E293B] dark:text-white text-[12px] tracking-[0.15em] uppercase">
           HANDEX
         </h1>
-        <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v4.1.4</span>
+        <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v4.2.1</span>
       </div>
       <div class="flex items-center gap-2 shrink-0">
+        <button onclick="ensureExpanded(); openHandoffInjectModal()" title="Gerar Ficha no Canvas" aria-label="Gerar Ficha"
+          class="p-1.5 bg-[#0070af] hover:bg-[#005ca9] rounded-lg transition-colors cursor-pointer text-white border border-[#0070af]/60 shadow-sm shadow-[#0070af]/20">
+          <i data-lucide="send" class="w-4 h-4" aria-hidden="true"></i>
+        </button>
         <button onclick="ensureExpanded(); openDadosProjetoModal()" title="Dados do Projeto" aria-label="Dados do Projeto"
           class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
           <i data-lucide="clipboard-list" class="w-4 h-4" aria-hidden="true"></i>
         </button>
-        <button onclick="ensureExpanded(); navigate('view-handoff-summary')" title="Gerar Ficha no Canvas" aria-label="Gerar Ficha"
-          class="p-1.5 hover:bg-[#0070af]/10 rounded-md transition-colors cursor-pointer text-[#0070af]">
-          <i data-lucide="send" class="w-4 h-4" aria-hidden="true"></i>
+        <button id="btn-zoom-out" onclick="ensureExpanded(); zoomOut()" title="Diminuir escala" aria-label="Diminuir escala da interface"
+          class="hidden p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
+          <i data-lucide="zoom-out" class="w-5 h-5" aria-hidden="true"></i>
         </button>
-        <button onclick="ensureExpanded(); toggleUiScale()" data-tooltip="Ajustar escala da interface" aria-label="Ajustar escala da interface"
-          class="tooltip-left p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
+        <button id="btn-zoom-in" onclick="ensureExpanded(); zoomIn()" title="Aumentar escala" aria-label="Aumentar escala da interface"
+          class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
           <i data-lucide="zoom-in" class="w-5 h-5" aria-hidden="true"></i>
         </button>
         <button onclick="toggleTheme()" title="Alternar tema" aria-label="Alternar tema claro/escuro"

@@ -13,8 +13,11 @@
         <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-none mt-0.5">Resumo e exportação da entrega</p>
       </div>
     </div>
-    <button onclick="createHandoffOnCanvas()" class="fab-inline" title="Gerar Ficha no Canvas" aria-label="Gerar Ficha no Canvas">
-      <i data-lucide="layout-dashboard" class="w-4 h-4 shrink-0"></i>
+    <button onclick="createHandoffOnCanvas()"
+      title="Gerar Ficha no Canvas" aria-label="Gerar Ficha no Canvas"
+      class="flex items-center gap-1.5 px-3 py-1.5 bg-[#0070af] hover:bg-[#005ca9] border border-[#005ca9]/60 text-white text-[11px] font-bold rounded-2xl transition-all cursor-pointer shrink-0 shadow-sm shadow-[#0070af]/25 active:scale-95">
+      <i data-lucide="sparkles" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
+      <span>Gerar Ficha</span>
     </button>
   </div>
 
@@ -104,19 +107,6 @@
             <p class="text-[10px] text-slate-500 mt-0.5">Backup completo dos dados do projeto</p>
           </div>
           <i data-lucide="download" class="w-4 h-4 text-slate-500 shrink-0"></i>
-        </button>
-
-        <!-- Gerar Ficha no Canvas -->
-        <button onclick="createHandoffOnCanvas()"
-          class="w-full flex items-center gap-3 px-4 py-3 bg-[#0070af]/8 hover:bg-[#0070af]/15 border border-[#0070af]/25 rounded-2xl transition-colors text-left">
-          <div class="w-8 h-8 flex items-center justify-center bg-[#0070af]/15 rounded-lg shrink-0">
-            <i data-lucide="layout-dashboard" class="w-4 h-4 text-[#0070af] dark:text-blue-400"></i>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-[12px] font-bold text-[#0070af] dark:text-blue-400">Gerar Ficha no Canvas</p>
-            <p class="text-[10px] text-[#0070af]/60 dark:text-blue-400/60 mt-0.5">Cria o documento visual no Figma</p>
-          </div>
-          <i data-lucide="external-link" class="w-4 h-4 text-[#0070af]/60 dark:text-blue-400/60 shrink-0"></i>
         </button>
 
         <!-- Publicar no Sharepoint (oculto — integração em discussão técnica) -->
