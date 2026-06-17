@@ -271,10 +271,7 @@ ${(handoffData.createdFlows || []).length === 0
       const stateMulti  = document.getElementById('inject-state-multi');
       [stateEmpty, stateSingle, stateMulti].forEach(el => { if (el) el.classList.add('hidden'); });
 
-      const hasBasicInfo = !!(
-        (handoffData.step1.titulo || '').trim() ||
-        (handoffData.step1.equipe || []).some(m => (m.nome || '').trim())
-      );
+      const hasBasicInfo = (handoffData.step1.equipe || []).some(m => (m.nome || '').trim());
 
       if (!hasBasicInfo) {
         if (stateEmpty) stateEmpty.classList.remove('hidden');
