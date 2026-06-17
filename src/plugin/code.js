@@ -1421,11 +1421,11 @@ figma.ui.onmessage = async (msg) => {
         if (specsRow.children.length > 0) {
           uiBoard.appendChild(specsRow);
           setFillAndHug(specsRow);
+          mainContainer.appendChild(uiBoard);
         } else {
           specsRow.remove();
+          uiBoard.remove();
         }
-
-        mainContainer.appendChild(uiBoard);
       }
 
       // 3. ANATOMIA / MEDIDAS

@@ -315,7 +315,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "4.1.4" : "dev";
+  var PLUGIN_VERSION = true ? "4.2.2" : "dev";
   function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
     const NS = "handex";
@@ -1537,10 +1537,11 @@
           if (specsRow.children.length > 0) {
             uiBoard.appendChild(specsRow);
             setFillAndHug(specsRow);
+            mainContainer.appendChild(uiBoard);
           } else {
             specsRow.remove();
+            uiBoard.remove();
           }
-          mainContainer.appendChild(uiBoard);
         }
         const selection = figma.currentPage.selection;
         if (selection.length > 0 && data.setup && (data.setup.espacamentos || data.setup.anatomia || data.setup.instancias)) {
