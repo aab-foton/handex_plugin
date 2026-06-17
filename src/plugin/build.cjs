@@ -140,7 +140,7 @@ ${css}
         <h1 class="font-bold text-[#1E293B] dark:text-white text-[12px] tracking-[0.15em] uppercase">
           HANDEX
         </h1>
-        <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v4.2.1</span>
+        <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v4.2.2</span>
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <button onclick="ensureExpanded(); openHandoffInjectModal()" title="Gerar Ficha no Canvas" aria-label="Gerar Ficha"

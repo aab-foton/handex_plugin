@@ -1736,19 +1736,19 @@
           content.className = "hidden p-3 border-t border-gray-50 dark:border-dark-line bg-gray-50/30 dark:bg-slate-900/50 space-y-2";
           
           if (spec.note) {
-            content.innerHTML += `<div class="text-[10px] text-slate-600 dark:text-dark-text p-2 bg-white dark:bg-dark-bg rounded border border-gray-100 dark:border-dark-line italic">${spec.note}</div>`;
+            content.innerHTML += `<div class="text-[10px] text-slate-600 dark:text-dark-text p-2 bg-white dark:bg-dark-bg rounded border border-gray-100 dark:border-dark-line italic">${escapeHtml(spec.note)}</div>`;
           }
 
           if (spec.properties && spec.properties.length > 0) {
             spec.properties.forEach(p => {
               const detEl = document.createElement("div");
               detEl.className = "flex justify-between text-[10px] bg-white dark:bg-dark-bg p-1.5 rounded border border-gray-100 dark:border-dark-line";
-              const valStr = p.token ? `<span class="text-[8px] text-[#0070af] dark:text-blue-400 font-medium mr-1 px-1 bg-blue-50 dark:bg-blue-900/20 rounded-sm border border-blue-100 dark:border-blue-800">${p.token}</span>${p.value}` : p.value;
+              const valStr = p.token ? `<span class="text-[8px] text-[#0070af] dark:text-blue-400 font-medium mr-1 px-1 bg-blue-50 dark:bg-blue-900/20 rounded-sm border border-blue-100 dark:border-blue-800">${escapeHtml(p.token)}</span>${escapeHtml(p.value)}` : escapeHtml(p.value);
               const displayVal = p.token || p.value;
               const valStr2 = p.token
-                ? `<span class="text-[9px] text-[#0070af] dark:text-blue-400 font-medium px-1 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-100 dark:border-blue-800">${p.token}</span>`
-                : `<span class="font-mono">${p.value}</span>`;
-              detEl.innerHTML = `<span class="text-slate-500">${p.label}</span><span class="font-bold text-slate-700 dark:text-white flex items-center">${valStr2}</span>`;
+                ? `<span class="text-[9px] text-[#0070af] dark:text-blue-400 font-medium px-1 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-100 dark:border-blue-800">${escapeHtml(p.token)}</span>`
+                : `<span class="font-mono">${escapeHtml(p.value)}</span>`;
+              detEl.innerHTML = `<span class="text-slate-500">${escapeHtml(p.label)}</span><span class="font-bold text-slate-700 dark:text-white flex items-center">${valStr2}</span>`;
               content.appendChild(detEl);
             });
           }
