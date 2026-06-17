@@ -271,7 +271,12 @@ ${(handoffData.createdFlows || []).length === 0
       const stateMulti  = document.getElementById('inject-state-multi');
       [stateEmpty, stateSingle, stateMulti].forEach(el => { if (el) el.classList.add('hidden'); });
 
-      if (filled.length === 0) {
+      const hasBasicInfo = !!(
+        (handoffData.step1.titulo || '').trim() ||
+        (handoffData.step1.equipe || []).some(m => (m.nome || '').trim())
+      );
+
+      if (!hasBasicInfo) {
         if (stateEmpty) stateEmpty.classList.remove('hidden');
       } else if (filled.length === 1) {
         const labels = { info: 'Informações do Projeto', specs: 'Especificações', measures: 'Medidas', flows: 'Fluxos de Tela' };
