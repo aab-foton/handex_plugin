@@ -946,27 +946,17 @@
       </button>
     </div>
 
-    <!-- Estado: vazio -->
+    <!-- Estado: sem informações básicas -->
     <div id="inject-state-empty" class="hidden px-5 py-5 space-y-4">
       <div class="flex items-start gap-3 p-3.5 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-800/30">
         <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5"></i>
-        <p class="text-[12px] text-amber-700 dark:text-amber-300 leading-snug">Ainda não há conteúdo documentado. Preencha pelo menos as informações do projeto antes de gerar a ficha.</p>
+        <p class="text-[12px] text-amber-700 dark:text-amber-300 leading-snug">Você ainda não preencheu as informações básicas para gerar a ficha.</p>
       </div>
-      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Para uma ficha completa, documente:</p>
-      <ul class="space-y-1.5 pl-1">
-        <li class="flex items-center gap-2 text-[11px] text-slate-500 dark:text-dark-muted"><i data-lucide="circle" class="w-3 h-3 shrink-0"></i>Informações do Projeto (título, equipe, status)</li>
-        <li class="flex items-center gap-2 text-[11px] text-slate-500 dark:text-dark-muted"><i data-lucide="circle" class="w-3 h-3 shrink-0"></i>Specs anotadas nos frames</li>
-        <li class="flex items-center gap-2 text-[11px] text-slate-500 dark:text-dark-muted"><i data-lucide="circle" class="w-3 h-3 shrink-0"></i>Medidas inseridas no canvas</li>
-        <li class="flex items-center gap-2 text-[11px] text-slate-500 dark:text-dark-muted"><i data-lucide="circle" class="w-3 h-3 shrink-0"></i>Fluxos de tela mapeados</li>
-      </ul>
-      <div class="flex gap-2 pt-1">
-        <button onclick="closeModal('handoff-inject-modal')"
-          class="flex-1 py-2.5 border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-500 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
-          Fechar
-        </button>
-        <button onclick="closeModal('handoff-inject-modal'); openDadosProjetoModal()"
-          class="flex-1 py-2.5 bg-[#0070af] hover:bg-[#005ca9] text-white text-[12px] font-bold rounded-2xl transition-colors">
-          Informações do Projeto
+      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Comece pelo título do projeto e o designer responsável para que a ficha seja identificada corretamente.</p>
+      <div class="pt-1">
+        <button onclick="closeModal('handoff-inject-modal'); navigate('view-dados-projeto')"
+          class="w-full py-2.5 bg-[#0070af] hover:bg-[#005ca9] text-white text-[12px] font-bold rounded-2xl transition-colors">
+          Continuar documentando
         </button>
       </div>
     </div>
@@ -985,7 +975,7 @@
         </button>
         <button onclick="closeModal('handoff-inject-modal'); createHandoffOnCanvas()"
           class="flex-1 py-2.5 bg-[#0070af] hover:bg-[#005ca9] text-white text-[12px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-1.5">
-          <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
           Gerar assim mesmo
         </button>
       </div>
