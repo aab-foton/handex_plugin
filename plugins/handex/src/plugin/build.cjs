@@ -145,7 +145,7 @@ ${css}
       <div class="flex items-center gap-2 shrink-0">
         <button onclick="ensureExpanded(); openHandoffInjectModal()" title="Gerar Ficha no Canvas" aria-label="Gerar Ficha"
           class="p-1.5 bg-[#0070af] hover:bg-[#005ca9] rounded-lg transition-colors cursor-pointer text-white border border-[#0070af]/60 shadow-sm shadow-[#0070af]/20">
-          <i data-lucide="send" class="w-4 h-4" aria-hidden="true"></i>
+          <i data-lucide="sparkles" class="w-4 h-4" aria-hidden="true"></i>
         </button>
         <button onclick="ensureExpanded(); openDadosProjetoModal()" title="Dados do Projeto" aria-label="Dados do Projeto"
           class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">

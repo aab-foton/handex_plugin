@@ -1524,6 +1524,13 @@ function updateData(step, key, value) {
   saveToStorage();
 }
 
+function saveAndGoHome(check, msg) {
+  saveToStorage();
+  navigate('view-home');
+  if (check) showToast(msg);
+}
+window.saveAndGoHome = saveAndGoHome;
+
 function showToast(message) {
   const container = document.getElementById('toast-container');
   if (!container) return;
