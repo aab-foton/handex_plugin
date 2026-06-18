@@ -1225,11 +1225,11 @@
               groupSpecs.forEach((s) => {
                 const catLabel = s.type || s.categoryLabel || s.category || "Geral";
                 const sc = s.color ? hexToRgb2(s.color) : { r: 0.38, g: 0.35, b: 0.75 };
-                const scBg = { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
-                const sRow = createFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.97, b: 1 });
+                const scBg = s.fillColor ? hexToRgb2(s.fillColor) : { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
+                const sRow = createFrame("VERTICAL", 10, 8, scBg);
                 sRow.name = `[Spec/${s.letter || "A"}] ${s.name || s.label || "Spec"}`;
                 sRow.cornerRadius = 8;
-                sRow.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.88, b: 0.96 } }];
+                sRow.strokes = [{ type: "SOLID", color: sc }];
                 gSpecs.appendChild(sRow);
                 setFillAndHug(sRow);
                 const sTop = createFrame("HORIZONTAL", 0, 6);
@@ -2575,11 +2575,8 @@
           await figma.loadFontAsync({ family: "Inter", style: "Bold" });
         } catch (e) {
         }
-        const hex = opts.color.replace("#", "");
-        const cr = parseInt(hex.substring(0, 2), 16) / 255;
-        const cg = parseInt(hex.substring(2, 4), 16) / 255;
-        const cb = parseInt(hex.substring(4, 6), 16) / 255;
-        const themeColor2 = { r: cr, g: cg, b: cb };
+        const themeColor2 = hexToRgb2(opts.color || "#005ca9");
+        const themeFill = hexToRgb2(opts.fillColor || opts.color || "#EBF4FB");
         const _specBase = `[Spec/${opts.letter}] ${node.name}`;
         const specCard = figma.createFrame();
         specCard.name = `${_specBase}/Ficha`;
@@ -2590,7 +2587,7 @@
         specCard.paddingBottom = 16;
         specCard.itemSpacing = 12;
         specCard.cornerRadius = 8;
-        specCard.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+        specCard.fills = [{ type: "SOLID", color: themeFill }];
         specCard.strokes = [{ type: "SOLID", color: themeColor2 }];
         specCard.strokeWeight = 1.5;
         specCard.primaryAxisSizingMode = "AUTO";
@@ -2637,7 +2634,7 @@
           pill.cornerRadius = 12;
           pill.primaryAxisSizingMode = "AUTO";
           pill.counterAxisSizingMode = "AUTO";
-          pill.fills = [];
+          pill.fills = [{ type: "SOLID", color: themeFill }];
           pill.strokes = [{ type: "SOLID", color: themeColor2 }];
           const pillText = figma.createText();
           pillText.fontName = { family: "Inter", style: "Medium" };
@@ -2841,10 +2838,10 @@
           specCard.y = Math.round(targetY);
           groupNodes.push(specCard);
           if (opts.drawConnection !== false) {
-            const connector = figma.createVector();
-            connector.name = `${_specBase}/Conector`;
             const startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
             const endPt = { x: specCard.x, y: specCard.y + Math.min(40, specCard.height / 2) };
+            const connector = figma.createVector();
+            connector.name = `${_specBase}/Conector`;
             connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
             connector.strokes = [{ type: "SOLID", color: themeColor2 }];
             connector.strokeWeight = 1.5;
@@ -2852,6 +2849,25 @@
             connector.strokeCap = "ROUND";
             figma.currentPage.appendChild(connector);
             groupNodes.push(connector);
+            const _DOT_R = 4;
+            const startDot = figma.createEllipse();
+            startDot.name = `${_specBase}/Conector/DotInicio`;
+            startDot.resize(_DOT_R * 2, _DOT_R * 2);
+            startDot.fills = [{ type: "SOLID", color: themeColor2 }];
+            startDot.strokes = [];
+            figma.currentPage.appendChild(startDot);
+            startDot.x = startPt.x - _DOT_R;
+            startDot.y = startPt.y - _DOT_R;
+            groupNodes.push(startDot);
+            const endDot = figma.createEllipse();
+            endDot.name = `${_specBase}/Conector/DotFim`;
+            endDot.resize(_DOT_R * 2, _DOT_R * 2);
+            endDot.fills = [{ type: "SOLID", color: themeColor2 }];
+            endDot.strokes = [];
+            figma.currentPage.appendChild(endDot);
+            endDot.x = endPt.x - _DOT_R;
+            endDot.y = endPt.y - _DOT_R;
+            groupNodes.push(endDot);
           }
         } else {
           figma.currentPage.appendChild(specCard);
@@ -2871,6 +2887,8 @@
             name: node.name,
             letter: opts.letter,
             color: opts.color,
+            fillColor: opts.fillColor || null,
+            category: opts.category || "",
             type: opts.categoryLabel || "Sem categoria",
             note: opts.note,
             properties: opts.properties

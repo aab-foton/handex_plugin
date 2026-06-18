@@ -1054,11 +1054,11 @@ figma.ui.onmessage = async (msg) => {
             groupSpecs.forEach(s => {
               const catLabel = s.type || s.categoryLabel || s.category || 'Geral';
               const sc = s.color ? hexToRgb(s.color) : { r: 0.38, g: 0.35, b: 0.75 };
-              const scBg = { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
-              const sRow = createFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.97, b: 1 });
+              const scBg = s.fillColor ? hexToRgb(s.fillColor) : { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
+              const sRow = createFrame("VERTICAL", 10, 8, scBg);
               sRow.name = `[Spec/${s.letter || 'A'}] ${s.name || s.label || 'Spec'}`;
               sRow.cornerRadius = 8;
-              sRow.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.88, b: 0.96 } }];
+              sRow.strokes = [{ type: "SOLID", color: sc }];
               gSpecs.appendChild(sRow);
               setFillAndHug(sRow);
               // Linha topo: nome + categoria (badge da letra no grupo já identifica)
@@ -2669,12 +2669,9 @@ figma.ui.onmessage = async (msg) => {
       try { await figma.loadFontAsync({ family: "Inter", style: "Medium" }); } catch (e) { }
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
 
-      // Convert hex color to rgb
-      const hex = opts.color.replace("#", "");
-      const cr = parseInt(hex.substring(0, 2), 16) / 255;
-      const cg = parseInt(hex.substring(2, 4), 16) / 255;
-      const cb = parseInt(hex.substring(4, 6), 16) / 255;
-      const themeColor = { r: cr, g: cg, b: cb };
+      // Convert hex color to rgb (stroke = themeColor, fill = themeFill)
+      const themeColor = hexToRgb(opts.color || '#005ca9');
+      const themeFill  = hexToRgb(opts.fillColor || opts.color || '#EBF4FB');
 
       // Semantic name prefix used throughout all nodes of this spec
       const _specBase = `[Spec/${opts.letter}] ${node.name}`;
@@ -2689,7 +2686,7 @@ figma.ui.onmessage = async (msg) => {
       specCard.paddingBottom = 16;
       specCard.itemSpacing = 12;
       specCard.cornerRadius = 8;
-      specCard.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+      specCard.fills = [{ type: "SOLID", color: themeFill }];
       specCard.strokes = [{ type: "SOLID", color: themeColor }];
       specCard.strokeWeight = 1.5;
       specCard.primaryAxisSizingMode = "AUTO";
@@ -2740,7 +2737,7 @@ figma.ui.onmessage = async (msg) => {
         pill.cornerRadius = 12;
         pill.primaryAxisSizingMode = "AUTO";
         pill.counterAxisSizingMode = "AUTO";
-        pill.fills = [];
+        pill.fills = [{ type: "SOLID", color: themeFill }];
         pill.strokes = [{ type: "SOLID", color: themeColor }];
         const pillText = figma.createText();
         pillText.fontName = { family: "Inter", style: "Medium" };
@@ -2983,11 +2980,11 @@ figma.ui.onmessage = async (msg) => {
 
         // --- Conector (opcional: desativado se drawConnection === false) ---
         if (opts.drawConnection !== false) {
-          const connector = figma.createVector();
-          connector.name = `${_specBase}/Conector`;
-
           const startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
           const endPt   = { x: specCard.x, y: specCard.y + Math.min(40, specCard.height / 2) };
+
+          const connector = figma.createVector();
+          connector.name = `${_specBase}/Conector`;
           connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
           connector.strokes = [{ type: "SOLID", color: themeColor }];
           connector.strokeWeight = 1.5;
@@ -2995,6 +2992,27 @@ figma.ui.onmessage = async (msg) => {
           connector.strokeCap = "ROUND";
           figma.currentPage.appendChild(connector);
           groupNodes.push(connector);
+
+          const _DOT_R = 4;
+          const startDot = figma.createEllipse();
+          startDot.name = `${_specBase}/Conector/DotInicio`;
+          startDot.resize(_DOT_R * 2, _DOT_R * 2);
+          startDot.fills = [{ type: "SOLID", color: themeColor }];
+          startDot.strokes = [];
+          figma.currentPage.appendChild(startDot);
+          startDot.x = startPt.x - _DOT_R;
+          startDot.y = startPt.y - _DOT_R;
+          groupNodes.push(startDot);
+
+          const endDot = figma.createEllipse();
+          endDot.name = `${_specBase}/Conector/DotFim`;
+          endDot.resize(_DOT_R * 2, _DOT_R * 2);
+          endDot.fills = [{ type: "SOLID", color: themeColor }];
+          endDot.strokes = [];
+          figma.currentPage.appendChild(endDot);
+          endDot.x = endPt.x - _DOT_R;
+          endDot.y = endPt.y - _DOT_R;
+          groupNodes.push(endDot);
         }
 
       } else {
@@ -3018,6 +3036,8 @@ figma.ui.onmessage = async (msg) => {
           name: node.name,
           letter: opts.letter,
           color: opts.color,
+          fillColor: opts.fillColor || null,
+          category: opts.category || "",
           type: opts.categoryLabel || "Sem categoria",
           note: opts.note,
           properties: opts.properties

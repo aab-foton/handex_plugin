@@ -407,20 +407,20 @@
 
     // ── Cores por categoria de spec ─────────────────────────────────
     const _CAT_COLORS = {
-      'info':          { bg: 'bg-slate-100 dark:bg-slate-700',      text: 'text-slate-600 dark:text-slate-400',      border: 'border-slate-200 dark:border-slate-600'      },
-      'comportamento': { bg: 'bg-pink-50 dark:bg-pink-900/30',      text: 'text-pink-600 dark:text-pink-400',        border: 'border-pink-200 dark:border-pink-800/40'      },
-      'regra':         { bg: 'bg-blue-50 dark:bg-blue-900/30',      text: 'text-blue-600 dark:text-blue-400',        border: 'border-blue-200 dark:border-blue-800/40'      },
-      'api':           { bg: 'bg-lime-50 dark:bg-lime-900/20',      text: 'text-lime-700 dark:text-lime-400',        border: 'border-lime-200 dark:border-lime-800/40'      },
-      'layout':        { bg: 'bg-indigo-50 dark:bg-indigo-900/20',  text: 'text-indigo-600 dark:text-indigo-400',    border: 'border-indigo-200 dark:border-indigo-800/40'  },
-      'componente':    { bg: 'bg-rose-50 dark:bg-rose-900/20',      text: 'text-rose-600 dark:text-rose-400',        border: 'border-rose-200 dark:border-rose-800/40'      },
-      'interacao':     { bg: 'bg-emerald-50 dark:bg-emerald-900/20',text: 'text-emerald-700 dark:text-emerald-400',  border: 'border-emerald-200 dark:border-emerald-800/40'},
-      'tipografia':    { bg: 'bg-yellow-50 dark:bg-yellow-900/20',  text: 'text-yellow-700 dark:text-yellow-500',    border: 'border-yellow-200 dark:border-yellow-800/40'  },
-      'cor':           { bg: 'bg-teal-50 dark:bg-teal-900/20',      text: 'text-teal-600 dark:text-teal-400',        border: 'border-teal-200 dark:border-teal-800/40'      },
-      'acessibilidade':{ bg: 'bg-purple-50 dark:bg-purple-900/20',  text: 'text-purple-600 dark:text-purple-400',    border: 'border-purple-200 dark:border-purple-800/40'  },
-      'conteudo':      { bg: 'bg-cyan-50 dark:bg-cyan-900/20',      text: 'text-cyan-700 dark:text-cyan-400',        border: 'border-cyan-200 dark:border-cyan-800/40'      },
+      'info':          { fill: '#EBF1F2', stroke: '#64747A' },
+      'comportamento': { fill: '#F8EAF3', stroke: '#93537D' },
+      'regra':         { fill: '#E5F5F8', stroke: '#008CB2' },
+      'api':           { fill: '#F5FEC1', stroke: '#6D8000' },
+      'layout':        { fill: '#EBF0FF', stroke: '#2563EB' },
+      'componente':    { fill: '#EDEAFD', stroke: '#4F46E5' },
+      'interacao':     { fill: '#FDE9F3', stroke: '#DB2777' },
+      'tipografia':    { fill: '#FEF3C7', stroke: '#D97706' },
+      'cor':           { fill: '#FEE2E2', stroke: '#DC2626' },
+      'acessibilidade':{ fill: '#E0F5FA', stroke: '#0891B2' },
+      'conteudo':      { fill: '#FFEFD6', stroke: '#A65E00' },
     };
     function _getCatColor(value) {
-      return _CAT_COLORS[value] || { bg: 'bg-gray-50 dark:bg-slate-800', text: 'text-slate-500 dark:text-slate-400', border: 'border-gray-200 dark:border-slate-700' };
+      return _CAT_COLORS[value] || { fill: '#F1F5F9', stroke: '#94A3B8' };
     }
 
     // ── Cores por tipo de exceção ─────────────────────────────────────
@@ -520,7 +520,7 @@
           const _ccPill = _getCatColor(spec.category);
           const categoryPill = spec.category ? `
             <div class="mb-2.5">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-full border ${_ccPill.border} text-[10px] font-bold ${_ccPill.text} ${_ccPill.bg}">${spec.categoryLabel || spec.category}</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold" style="background-color:${_ccPill.fill};border-color:${_ccPill.stroke};color:${_ccPill.stroke};">${spec.categoryLabel || spec.category}</span>
             </div>` : '';
 
           // Build properties rows HTML
@@ -1217,17 +1217,17 @@
 
     // ── Category Colors ──────────────────────────────────────────────────
     const CATEGORY_COLORS = {
-      'comportamento':  '#9333EA',
-      'regra':          '#0D9488',
-      'info':           '#64748B',
-      'api':            '#65A30D',
-      'layout':         '#2563EB',
-      'componente':     '#4F46E5',
-      'interacao':      '#DB2777',
-      'tipografia':     '#D97706',
-      'cor':            '#DC2626',
-      'acessibilidade': '#0891B2',
-      'conteudo':       '#EA580C',
+      'comportamento':  { fill: '#F8EAF3', stroke: '#93537D' },
+      'regra':          { fill: '#E5F5F8', stroke: '#008CB2' },
+      'info':           { fill: '#EBF1F2', stroke: '#64747A' },
+      'api':            { fill: '#F5FEC1', stroke: '#6D8000' },
+      'layout':         { fill: '#EBF0FF', stroke: '#2563EB' },
+      'componente':     { fill: '#EDEAFD', stroke: '#4F46E5' },
+      'interacao':      { fill: '#FDE9F3', stroke: '#DB2777' },
+      'tipografia':     { fill: '#FEF3C7', stroke: '#D97706' },
+      'cor':            { fill: '#FEE2E2', stroke: '#DC2626' },
+      'acessibilidade': { fill: '#E0F5FA', stroke: '#0891B2' },
+      'conteudo':       { fill: '#FFEFD6', stroke: '#A65E00' },
     };
     const _CAT_FALLBACK_PALETTE = [
       '#7C3AED','#0891B2','#059669','#D97706','#DC2626',
@@ -1236,10 +1236,22 @@
 
     function getCategoryColor(value) {
       if (!value) return '#005ca9';
-      if (CATEGORY_COLORS[value]) return CATEGORY_COLORS[value];
-      // Para categorias customizadas: cor baseada no índice da lista
+      const pair = CATEGORY_COLORS[value];
+      if (pair) return pair.stroke;
       const idx = annCategories.findIndex(c => c.value === value);
       return _CAT_FALLBACK_PALETTE[idx >= 0 ? idx % _CAT_FALLBACK_PALETTE.length : 0];
+    }
+
+    function getCategoryFill(value) {
+      if (!value) return '#EBF4FB';
+      const pair = CATEGORY_COLORS[value];
+      if (pair) return pair.fill;
+      const stroke = getCategoryColor(value);
+      const h = stroke.replace('#', '');
+      const lr = Math.round(parseInt(h.slice(0,2),16)*0.10 + 255*0.90).toString(16).padStart(2,'0');
+      const lg = Math.round(parseInt(h.slice(2,4),16)*0.10 + 255*0.90).toString(16).padStart(2,'0');
+      const lb = Math.round(parseInt(h.slice(4,6),16)*0.10 + 255*0.90).toString(16).padStart(2,'0');
+      return `#${lr}${lg}${lb}`;
     }
 
     function syncSpecColorFromCategory() {
@@ -1250,7 +1262,8 @@
       if (colorIn) colorIn.value = color;
       if (swatch)  swatch.style.backgroundColor = color;
     }
-    window.getCategoryColor        = getCategoryColor;
+    window.getCategoryColor          = getCategoryColor;
+    window.getCategoryFill           = getCategoryFill;
     window.syncSpecColorFromCategory = syncSpecColorFromCategory;
 
     // ── Category Management ──────────────────────────────────────────────
@@ -1424,6 +1437,7 @@
         categoryLabel: selCat && selCat.options[selCat.selectedIndex] ? selCat.options[selCat.selectedIndex].text : "",
         letter: g('spec-letter-input') ? g('spec-letter-input').value.toUpperCase() : "A",
         color: g('spec-color-input') ? g('spec-color-input').value : "#005ca9",
+        fillColor: getCategoryFill(selCat ? selCat.value : ""),
         link: g('spec-link-input') ? g('spec-link-input').value : "",
         note: g('ann-note') ? g('ann-note').value : "",
         guideSide: guideSideEl ? guideSideEl.value : "right",
@@ -1660,7 +1674,7 @@
               <div class="flex flex-col overflow-hidden min-w-0 text-left gap-0.5">
                 <div class="flex items-center gap-1.5 flex-wrap">
                   <span class="text-[12px] font-bold text-slate-800 dark:text-white truncate" title="${spec.name}">${spec.name}</span>
-                  ${spec.category && _ccSpec ? `<span class="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${_ccSpec.border} ${_ccSpec.bg} ${_ccSpec.text}">${spec.categoryLabel || spec.category}</span>` : ''}
+                  ${spec.category && _ccSpec ? `<span class="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full border" style="background-color:${_ccSpec.fill};border-color:${_ccSpec.stroke};color:${_ccSpec.stroke};">${spec.categoryLabel || spec.category}</span>` : ''}
                 </div>
                 <span class="text-[10px] text-slate-500 truncate">${spec.type || ''}</span>
               </div>
