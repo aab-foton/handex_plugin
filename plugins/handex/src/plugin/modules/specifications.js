@@ -1432,6 +1432,11 @@
       
       const guideSideEl = document.querySelector('input[name="guide-side"]:checked');
       
+      const _curFrame = activeFrameId ? getFrame(activeFrameId) : null;
+      const _existingSpecs = (_curFrame ? _curFrame.createdSpecs || [] : [])
+        .filter(s => s && s.cardX !== undefined && s.cardY !== undefined)
+        .map(s => ({ letter: s.letter, x: s.cardX, y: s.cardY, w: s.cardW || 260, h: s.cardH || 200, side: s.guideSide || 'right' }));
+
       const opts = {
         category: selCat ? selCat.value : "",
         categoryLabel: selCat && selCat.options[selCat.selectedIndex] ? selCat.options[selCat.selectedIndex].text : "",
@@ -1442,6 +1447,7 @@
         note: g('ann-note') ? g('ann-note').value : "",
         guideSide: guideSideEl ? guideSideEl.value : "right",
         drawConnection: g('chk-draw-connection') ? g('chk-draw-connection').checked : true,
+        existingSpecs: _existingSpecs,
         properties: []
       };
 

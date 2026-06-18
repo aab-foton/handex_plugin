@@ -2921,36 +2921,22 @@ figma.ui.onmessage = async (msg) => {
         figma.currentPage.appendChild(specCard);
 
         const side = opts.guideSide || 'right'; // 'right' | 'left' | 'top' | 'bottom'
-        const _isVertSide = side === 'right' || side === 'left'; // empilha verticalmente
-
-        // Busca spec cards existentes nos filhos diretos da página
+        const _isVertSide = side === 'right' || side === 'left';
         const _specLetter = opts.letter;
-        const _existingSpecCards = [];
-        figma.currentPage.children.forEach(n => {
-          if (n.type === 'GROUP' && n.name.startsWith('[Spec]')) {
-            const ficha = n.children && n.children.find(c =>
-              c.type === 'FRAME' && c.name.includes('/Ficha') && c !== specCard
-            );
-            if (ficha) _existingSpecCards.push(ficha);
-          } else if (n.type === 'FRAME' && /^\[Spec\/[A-Z]\]/.test(n.name) && n.name.includes('/Ficha') && n !== specCard) {
-            _existingSpecCards.push(n);
-          }
-        });
 
-        // Agrupa por letra: { letter → { x, topY, bottom, right } }
+        // Usa posições salvas do frontend (só specs do mesmo lado)
         const _letterMap = {};
-        _existingSpecCards.forEach(card => {
-          const m = card.name.match(/^\[Spec\/([A-Z])\]/);
-          if (!m) return;
-          const l = m[1];
-          const bb = card.absoluteBoundingBox;
-          if (!bb) return;
-          if (!_letterMap[l]) _letterMap[l] = { x: bb.x, topY: bb.y, bottom: bb.y + bb.height, right: bb.x + bb.width };
-          if (bb.y + bb.height > _letterMap[l].bottom) _letterMap[l].bottom = bb.y + bb.height;
-          if (bb.x + bb.width > _letterMap[l].right) _letterMap[l].right = bb.x + bb.width;
-          if (bb.x < _letterMap[l].x) _letterMap[l].x = bb.x;
-          if (bb.y < _letterMap[l].topY) _letterMap[l].topY = bb.y;
-        });
+        (opts.existingSpecs || [])
+          .filter(s => (s.side || 'right') === side)
+          .forEach(s => {
+            const l = s.letter;
+            const x = s.x, y = s.y, w = s.w || 260, h = s.h || 200;
+            if (!_letterMap[l]) _letterMap[l] = { x, topY: y, bottom: y + h, right: x + w };
+            if (y + h > _letterMap[l].bottom) _letterMap[l].bottom = y + h;
+            if (x + w > _letterMap[l].right) _letterMap[l].right = x + w;
+            if (x < _letterMap[l].x) _letterMap[l].x = x;
+            if (y < _letterMap[l].topY) _letterMap[l].topY = y;
+          });
 
         const _SPEC_GAP = 32;
         const _SPEC_COL_GAP = 64;
@@ -3083,7 +3069,7 @@ figma.ui.onmessage = async (msg) => {
       figma.ui.postMessage({
         type: "spec-created",
         spec: {
-          id: specGroup.id, // Group ID instead of Card ID so hiding hides everything
+          id: specGroup.id,
           targetNodeId: node.id,
           name: node.name,
           letter: opts.letter,
@@ -3092,7 +3078,12 @@ figma.ui.onmessage = async (msg) => {
           category: opts.category || "",
           type: opts.categoryLabel || "Sem categoria",
           note: opts.note,
-          properties: opts.properties
+          properties: opts.properties,
+          guideSide: opts.guideSide || 'right',
+          cardX: specCard.x,
+          cardY: specCard.y,
+          cardW: Math.round(specCard.width),
+          cardH: Math.round(specCard.height),
         }
       });
 
