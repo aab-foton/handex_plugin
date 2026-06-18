@@ -2604,7 +2604,7 @@
         tagCircle.counterAxisSizingMode = "FIXED";
         tagCircle.resize(42, 42);
         tagCircle.cornerRadius = 8;
-        tagCircle.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+        tagCircle.fills = [{ type: "SOLID", color: themeFill }];
         tagCircle.strokes = [{ type: "SOLID", color: themeColor2 }];
         tagCircle.strokeWeight = 1.5;
         tagCircle.primaryAxisAlignItems = "CENTER";
@@ -2776,7 +2776,7 @@
           chip.counterAxisSizingMode = "FIXED";
           chip.resize(42, 42);
           chip.cornerRadius = 8;
-          chip.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+          chip.fills = [{ type: "SOLID", color: themeFill }];
           chip.strokes = [{ type: "SOLID", color: themeColor2 }];
           chip.strokeWeight = 1.5;
           chip.primaryAxisAlignItems = "CENTER";
