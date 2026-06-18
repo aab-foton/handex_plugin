@@ -2,6 +2,73 @@
 
 ---
 
+## v4.2.3 — 2026-06-17
+
+### Resumo
+Sistema de cores das specs refatorado: cada categoria passa a ter um par `fill/stroke` distinto, aplicado de forma consistente nos chips da UI do plugin, nos cards da ficha técnica no canvas e nos cards individuais criados pelo botão "Anotar Spec". Linhas conectoras ganham dots visíveis nas pontas.
+
+---
+
+### Cores das Specs — Pares Fill/Stroke por Categoria
+
+**Mapeamento adotado:**
+
+| Categoria | Fill | Stroke |
+|---|---|---|
+| Informação extra | `#EBF1F2` | `#64747A` |
+| Comportamento | `#F8EAF3` | `#93537D` |
+| Regra de Negócio | `#E5F5F8` | `#008CB2` |
+| Dados da API | `#F5FEC1` | `#6D8000` |
+| Layout | `#EBF0FF` | `#2563EB` |
+| Componente | `#EDEAFD` | `#4F46E5` |
+| Interação | `#FDE9F3` | `#DB2777` |
+| Tipografia | `#FEF3C7` | `#D97706` |
+| Cor | `#FEE2E2` | `#DC2626` |
+| Acessibilidade | `#E0F5FA` | `#0891B2` |
+| Conteúdo | `#FFEFD6` | `#A65E00` |
+
+**Chips na UI do plugin (`_CAT_COLORS`):**
+- Antes: classes Tailwind estáticas (aproximações de cor).
+- Agora: `background-color`, `border-color` e `color` aplicados via `style` inline com os hexadecimais exatos.
+- Atualizado em `renderSpecsListForFrame` e no render de botão de spec.
+
+**Cards individuais de spec no canvas (`create-unified-spec`):**
+- Fundo do card: `themeFill` (fill suave da categoria) — antes era branco puro.
+- Badge da letra e contorno do elemento: `themeColor` (stroke = cor sólida) — mantido.
+- Pill da categoria: fill suave + borda stroke — antes era pill sem fundo.
+- Conector (linha tracejada): `themeColor` — mantido.
+
+**Ficha técnica no canvas (seção 1.9):**
+- `sRow.fills`: usa `s.fillColor` quando disponível; antes derivava um fill computado.
+- `sRow.strokes`: usa `sc` (stroke da categoria); antes era cinza fixo `#E0E0F5`.
+- `sCatTag` (chip de categoria dentro da ficha): fill + stroke corretos — já usava `scBg/sc`, agora alinhado com os pares exatos.
+
+---
+
+### Conector de Spec — Dots nas Pontas
+
+- Adicionados dois `figma.createEllipse()` (r=4px) nas coordenadas de início e fim de cada linha de conector.
+- Fill dos dots = `themeColor` (stroke da categoria), sem borda.
+- Groupados com o conector e o card na mesma `specGroup`.
+
+---
+
+### Dados Persistidos
+
+- `spec-created` agora inclui `fillColor` e `category` no objeto salvo em `handoffData.frames[].createdSpecs[]`.
+- Specs existentes sem `fillColor` continuam funcionando com o fallback derivado.
+
+---
+
+### Arquivos Modificados
+
+| Arquivo | Mudança |
+|---|---|
+| `src/plugin/modules/specifications.js` | `_CAT_COLORS` → pares `{fill, stroke}`; `_getCatColor` simplificado; `CATEGORY_COLORS` → pares; `getCategoryFill()` adicionada; chips via `style` inline; `confirmSpecProperties` passa `fillColor` |
+| `src/plugin/code.js` | `create-unified-spec`: `themeFill` derivado de `opts.fillColor`; dots no conector; `spec-created` inclui `fillColor` e `category`; seção 1.9: `sRow` usa `scBg/sc` corretos |
+
+---
+
 ## v4.2.2 — 2026-06-17
 
 ### Resumo
