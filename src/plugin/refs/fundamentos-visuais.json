@@ -2,10 +2,11 @@
   "meta": {
     "libraryName": "Fundamentos Visuais",
     "figmaFileKey": "nbv8CUA2nbukjSkhK44kgQ",
-    "exportedAt": "2026-06-10T14:05:07.970Z",
+    "exportedAt": "2026-06-17T20:41:26.031Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
-      "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
+      "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API",
+      "variables fetch skipped: GET /v1/files/nbv8CUA2nbukjSkhK44kgQ/variables/local → HTTP 403: {\"status\":403,\"error\":true,\"message\":\"File not exportab"
     ]
   },
   "designTokens": {
