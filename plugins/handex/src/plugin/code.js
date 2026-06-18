@@ -956,7 +956,7 @@ figma.ui.onmessage = async (msg) => {
         _framesWithMeasures.forEach(f => {
           // Sub-cabeçalho do frame
           const fGroup = createFrame("VERTICAL", 0, 6);
-          fGroup.name = `[Medidas] ${f.nome || 'Frame'}`;
+          fGroup.name = `[Medidas | ${f.figmaId || f.id}] ${f.nome || 'Frame'}`;
           measSection.appendChild(fGroup);
           setFillAndHug(fGroup);
           const fLabel = createText(f.nome || 'Frame', 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
@@ -2672,12 +2672,11 @@ figma.ui.onmessage = async (msg) => {
       const themeColor = hexToRgb(opts.color || '#005ca9');
       const themeFill  = hexToRgb(opts.fillColor || opts.color || '#EBF4FB');
 
-      // Semantic name prefix used throughout all nodes of this spec
-      const _specBase = `[Spec/${opts.letter}] ${node.name}`;
+      const _specSide = opts.guideSide || 'right';
 
       // Create Spec Card
       const specCard = figma.createFrame();
-      specCard.name = `${_specBase}/Ficha`;
+      specCard.name = 'Ficha';
       specCard.layoutMode = "VERTICAL";
       specCard.paddingLeft = 16;
       specCard.paddingRight = 16;
@@ -2700,7 +2699,7 @@ figma.ui.onmessage = async (msg) => {
       headerRow.counterAxisSizingMode = "AUTO";
 
       const tagCircle = figma.createFrame();
-      tagCircle.name = `${_specBase}/Tag`;
+      tagCircle.name = 'Tag';
       tagCircle.layoutMode = "HORIZONTAL";
       tagCircle.primaryAxisSizingMode = "FIXED";
       tagCircle.counterAxisSizingMode = "FIXED";
@@ -2731,7 +2730,7 @@ figma.ui.onmessage = async (msg) => {
 
       if (opts.categoryLabel) {
         const pill = figma.createFrame();
-        pill.name = `${_specBase}/Categoria/${opts.categoryLabel}`;
+        pill.name = `Categoria/${opts.categoryLabel}`;
         pill.layoutMode = "HORIZONTAL";
         pill.paddingLeft = 8; pill.paddingRight = 8;
         pill.paddingTop = 4; pill.paddingBottom = 4;
@@ -2768,12 +2767,12 @@ figma.ui.onmessage = async (msg) => {
         propsFrame.fills = [];
         propsFrame.primaryAxisSizingMode = "AUTO";
         propsFrame.counterAxisSizingMode = "AUTO";
-        propsFrame.name = `${_specBase}/Propriedades`;
+        propsFrame.name = 'Propriedades';
         propsFrame.layoutAlign = "INHERIT";
 
         opts.properties.forEach(p => {
           const row = figma.createFrame();
-          row.name = `${_specBase}/Prop/${p.label}`;
+          row.name = `Prop/${p.label}`;
           row.layoutMode = "HORIZONTAL";
           row.itemSpacing = 12;
           row.fills = [];
@@ -2873,13 +2872,14 @@ figma.ui.onmessage = async (msg) => {
 
       // Group variables
       let groupNodes = [];
+      let _absCardX = 0, _absCardY = 0, _absCardW = 0, _absCardH = 0;
 
       // Positioning
       const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
       if (bounds) {
         // Draw a dotted highlight frame around the node
         const contour = figma.createFrame();
-        contour.name = `${_specBase}/Destaque`;
+        contour.name = 'Destaque';
         contour.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
 
         // Append first, then set absolute coordinates to avoid origin issues
@@ -2895,6 +2895,7 @@ figma.ui.onmessage = async (msg) => {
 
         // Tag chip on contour
         const chip = figma.createFrame();
+        chip.name = 'Chip';
         chip.layoutMode = "HORIZONTAL";
         chip.primaryAxisSizingMode = "FIXED";
         chip.counterAxisSizingMode = "FIXED";
@@ -2924,26 +2925,6 @@ figma.ui.onmessage = async (msg) => {
         const _isVertSide = side === 'right' || side === 'left';
         const _specLetter = opts.letter;
 
-        // Usa posições salvas do frontend (só specs do mesmo lado)
-        const _letterMap = {};
-        (opts.existingSpecs || [])
-          .filter(s => (s.side || 'right') === side)
-          .forEach(s => {
-            const l = s.letter;
-            const x = s.x, y = s.y, w = s.w || 260, h = s.h || 200;
-            if (!_letterMap[l]) _letterMap[l] = { x, topY: y, bottom: y + h, right: x + w };
-            if (y + h > _letterMap[l].bottom) _letterMap[l].bottom = y + h;
-            if (x + w > _letterMap[l].right) _letterMap[l].right = x + w;
-            if (x < _letterMap[l].x) _letterMap[l].x = x;
-            if (y < _letterMap[l].topY) _letterMap[l].topY = y;
-          });
-
-        const _SPEC_GAP = 32;
-        const _SPEC_COL_GAP = 64;
-        const cardW = specCard.width;
-        const cardH = specCard.height;
-        let targetX, targetY;
-
         // Âncora: frame de nível de página que contém o elemento
         let _anchorNode = node;
         while (_anchorNode.parent && _anchorNode.parent.type !== 'PAGE') {
@@ -2951,37 +2932,64 @@ figma.ui.onmessage = async (msg) => {
         }
         const _anchorBounds = _anchorNode.absoluteBoundingBox || bounds;
 
+        // Escaneia o canvas — novo formato: [Spec | A | right] NodeName
+        // Legado: [Spec] NodeName com ficha filha "[Spec/A] .../Ficha:side"
+        const _letterMap = {};
+        const _updateLetterMap = (l, bb) => {
+          if (!_letterMap[l]) _letterMap[l] = { x: bb.x, topY: bb.y, bottom: bb.y + bb.height, right: bb.x + bb.width };
+          if (bb.y + bb.height > _letterMap[l].bottom) _letterMap[l].bottom = bb.y + bb.height;
+          if (bb.x + bb.width > _letterMap[l].right) _letterMap[l].right = bb.x + bb.width;
+          if (bb.x < _letterMap[l].x) _letterMap[l].x = bb.x;
+          if (bb.y < _letterMap[l].topY) _letterMap[l].topY = bb.y;
+        };
+        figma.currentPage.children.forEach(n => {
+          if (n.type !== 'GROUP') return;
+          // Novo formato semântico
+          const newFmt = n.name.match(/^\[Spec \| ([A-Z]) \| ([a-z]+)\] /);
+          if (newFmt) {
+            if (newFmt[2] !== side) return;
+            const ficha = n.children && n.children.find(c => c.type === 'FRAME' && c.name === 'Ficha' && c !== specCard);
+            if (!ficha) return;
+            const bb = ficha.absoluteBoundingBox || ficha.absoluteRenderBounds;
+            if (bb) _updateLetterMap(newFmt[1], bb);
+            return;
+          }
+          // Formato legado: [Spec] NodeName
+          if (!n.name.startsWith('[Spec]')) return;
+          const ficha = n.children && n.children.find(c => c.type === 'FRAME' && c.name.includes('/Ficha') && c !== specCard);
+          if (!ficha) return;
+          const lm = ficha.name.match(/\[Spec\/([A-Z])\]/);
+          const sm = ficha.name.match(/\/Ficha:([a-z]+)/);
+          if (!lm) return;
+          if ((sm ? sm[1] : 'right') !== side) return;
+          const bb = ficha.absoluteBoundingBox || ficha.absoluteRenderBounds;
+          if (bb) _updateLetterMap(lm[1], bb);
+        });
+
+        const _SPEC_GAP = 32;
+        const _SPEC_COL_GAP = 64;
+        const cardW = specCard.width;
+        const cardH = specCard.height;
+        let targetX, targetY;
+
         if (_letterMap[_specLetter]) {
-          if (_isVertSide) {
-            // Mesma letra → empilha abaixo (mesma coluna)
-            targetX = _letterMap[_specLetter].x;
-            targetY = _letterMap[_specLetter].bottom + _SPEC_GAP;
+          // Mesma letra → empilha na direção do lado
+          targetX = _letterMap[_specLetter].x;
+          if (side === 'top') {
+            targetY = _letterMap[_specLetter].topY - cardH - _SPEC_GAP;
           } else {
-            // Mesma letra → empilha à direita (mesma linha)
-            targetX = _letterMap[_specLetter].right + _SPEC_GAP;
-            targetY = _letterMap[_specLetter].topY;
+            targetY = _letterMap[_specLetter].bottom + _SPEC_GAP;
           }
         } else if (Object.keys(_letterMap).length > 0) {
-          if (_isVertSide) {
-            if (side === 'right') {
-              const _rightmost = Object.values(_letterMap).reduce((a, v) => v.right > a.right ? v : a);
-              targetX = _rightmost.right + _SPEC_COL_GAP;
-              targetY = _rightmost.topY;
-            } else {
-              const _leftmost = Object.values(_letterMap).reduce((a, v) => v.x < a.x ? v : a);
-              targetX = _leftmost.x - cardW - _SPEC_COL_GAP;
-              targetY = _leftmost.topY;
-            }
+          // Letra diferente → posiciona ao lado (à direita do mais à direita, exceto lado=esquerda)
+          if (side === 'left') {
+            const _leftmost = Object.values(_letterMap).reduce((a, v) => v.x < a.x ? v : a);
+            targetX = _leftmost.x - cardW - _SPEC_COL_GAP;
+            targetY = _leftmost.topY;
           } else {
-            if (side === 'bottom') {
-              const _bottommost = Object.values(_letterMap).reduce((a, v) => v.bottom > a.bottom ? v : a);
-              targetX = _bottommost.x;
-              targetY = _bottommost.bottom + _SPEC_COL_GAP;
-            } else {
-              const _topmost = Object.values(_letterMap).reduce((a, v) => v.topY < a.topY ? v : a);
-              targetX = _topmost.x;
-              targetY = _topmost.topY - cardH - _SPEC_COL_GAP;
-            }
+            const _rightmost = Object.values(_letterMap).reduce((a, v) => v.right > a.right ? v : a);
+            targetX = _rightmost.right + _SPEC_COL_GAP;
+            targetY = _rightmost.topY;
           }
         } else {
           // Primeira spec: posiciona ao lado do anchor, nunca sobre o frame
@@ -3000,8 +3008,12 @@ figma.ui.onmessage = async (msg) => {
           }
         }
 
-        specCard.x = Math.round(targetX);
-        specCard.y = Math.round(targetY);
+        _absCardX = Math.round(targetX);
+        _absCardY = Math.round(targetY);
+        _absCardW = Math.round(specCard.width);
+        _absCardH = Math.round(specCard.height);
+        specCard.x = _absCardX;
+        specCard.y = _absCardY;
         groupNodes.push(specCard);
 
         // --- Conector (opcional: desativado se drawConnection === false) ---
@@ -3022,7 +3034,7 @@ figma.ui.onmessage = async (msg) => {
           }
 
           const connector = figma.createVector();
-          connector.name = `${_specBase}/Conector`;
+          connector.name = 'Conector';
           connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
           connector.strokes = [{ type: "SOLID", color: themeColor }];
           connector.strokeWeight = 1.5;
@@ -3033,7 +3045,7 @@ figma.ui.onmessage = async (msg) => {
 
           const _DOT_R = 4;
           const startDot = figma.createEllipse();
-          startDot.name = `${_specBase}/Conector/DotInicio`;
+          startDot.name = 'DotInicio';
           startDot.resize(_DOT_R * 2, _DOT_R * 2);
           startDot.fills = [{ type: "SOLID", color: themeColor }];
           startDot.strokes = [];
@@ -3043,7 +3055,7 @@ figma.ui.onmessage = async (msg) => {
           groupNodes.push(startDot);
 
           const endDot = figma.createEllipse();
-          endDot.name = `${_specBase}/Conector/DotFim`;
+          endDot.name = 'DotFim';
           endDot.resize(_DOT_R * 2, _DOT_R * 2);
           endDot.fills = [{ type: "SOLID", color: themeColor }];
           endDot.strokes = [];
@@ -3055,15 +3067,19 @@ figma.ui.onmessage = async (msg) => {
 
       } else {
         figma.currentPage.appendChild(specCard);
-        specCard.x = figma.viewport.center.x;
-        specCard.y = figma.viewport.center.y;
+        _absCardX = Math.round(figma.viewport.center.x);
+        _absCardY = Math.round(figma.viewport.center.y);
+        _absCardW = Math.round(specCard.width);
+        _absCardH = Math.round(specCard.height);
+        specCard.x = _absCardX;
+        specCard.y = _absCardY;
         groupNodes.push(specCard);
       }
 
       // Always create group at the Page level to avoid nesting in selected components
       const specGroup = figma.group(groupNodes, figma.currentPage);
-      specGroup.name = `[Spec] ${node.name}`;
-      specGroup.locked = true; 
+      specGroup.name = `[Spec | ${opts.letter} | ${_specSide}] ${node.name}`;
+      specGroup.locked = true;
 
 
       figma.ui.postMessage({
@@ -3080,10 +3096,10 @@ figma.ui.onmessage = async (msg) => {
           note: opts.note,
           properties: opts.properties,
           guideSide: opts.guideSide || 'right',
-          cardX: specCard.x,
-          cardY: specCard.y,
-          cardW: Math.round(specCard.width),
-          cardH: Math.round(specCard.height),
+          cardX: _absCardX,
+          cardY: _absCardY,
+          cardW: _absCardW,
+          cardH: _absCardH,
         }
       });
 
@@ -3327,7 +3343,7 @@ figma.ui.onmessage = async (msg) => {
 
     const strokeColor = { r: 0.12, g: 0.16, b: 0.23 };
     const line = figma.createVector();
-    line.name = `Handex/Fluxo/Linha`;
+    line.name = `Linha`;
     figma.currentPage.appendChild(line);
     line.x = 0; line.y = 0;
     line.strokes = [{ type: "SOLID", color: strokeColor }];
@@ -3378,7 +3394,7 @@ figma.ui.onmessage = async (msg) => {
           symbol.x = midX - symbol.width / 2; symbol.y = midY - symbol.height / 2;
           nodesToGroup.push(shape, symbol);
           const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-          finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Decisão"}`;
+          finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | decisao] ${msg.flowName || "Decisão"}`;
           finalGroup.locked = true;
           figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
         } catch (e) { console.error(e); }
@@ -3406,7 +3422,7 @@ figma.ui.onmessage = async (msg) => {
           label.y = circle.y + circle.height / 2 - label.height / 2;
           nodesToGroup.push(circle, label);
           const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-          finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || (isStart ? "Início" : "Fim")}`;
+          finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | ${isStart ? 'inicio' : 'fim'}] ${msg.flowName || (isStart ? "Início" : "Fim")}`;
           finalGroup.locked = true;
           figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
         } catch (e) { console.error(e); }
@@ -3436,14 +3452,14 @@ figma.ui.onmessage = async (msg) => {
           textNode.x = chipBg.x + paddingH; textNode.y = chipBg.y + paddingV;
           nodesToGroup.push(chipBg, textNode);
           const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-          finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Conexão"}`;
+          finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conexão"}`;
           finalGroup.locked = true;
           figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
         } catch (e) { console.error(e); }
       })();
     } else {
       const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-      finalGroup.name = `Handex/Fluxo/${msg.nextFlowNumber || 1}/${msg.flowName || "Conexão"}`;
+      finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conexão"}`;
       finalGroup.locked = true;
       figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
     }
@@ -3457,7 +3473,7 @@ figma.ui.onmessage = async (msg) => {
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
 
       const legendFrame = figma.createFrame();
-      legendFrame.name = "Handex/Fluxo/Legendas";
+      legendFrame.name = "[Fluxo | legenda] Legendas dos Fluxos";
       legendFrame.layoutMode = "VERTICAL";
       legendFrame.paddingLeft = 20;
       legendFrame.paddingRight = 20;
