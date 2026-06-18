@@ -2,15 +2,1751 @@
   "meta": {
     "libraryName": "Fundamentos Visuais",
     "figmaFileKey": "nbv8CUA2nbukjSkhK44kgQ",
-    "exportedAt": "2026-06-17T20:41:26.031Z",
+    "exportedAt": "2026-06-18T16:11:59.727Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
-      "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API",
-      "variables fetch skipped: GET /v1/files/nbv8CUA2nbukjSkhK44kgQ/variables/local → HTTP 403: {\"status\":403,\"error\":true,\"message\":\"File not exportab"
+      "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
     ]
   },
   "designTokens": {
-    "variables": []
+    "variables": [
+      {
+        "key": "5d40584ba46e2dc205f5b122c4aa57d9f5ac4760",
+        "name": "color/bg/highlight/7 (primary 130)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#002747"
+      },
+      {
+        "key": "ffd14bac2c57a9f27b13be6650d37cc359ab3f22",
+        "name": "color/bg/highlight/6 (primary 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#00437a"
+      },
+      {
+        "key": "d7addb36752c9cc4b8c1cd5e7bd902c7ea4eee60",
+        "name": "color/bg/highlight/5 (azul cx - primary 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#005ca9"
+      },
+      {
+        "key": "0a655d0bacb2114028725ff76ed34e39a669055f",
+        "name": "color/bg/highlight/4 (primary 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#2d8ad8"
+      },
+      {
+        "key": "bbeba31a32ce3cc26d7b5a98c734fbd09cbce73f",
+        "name": "color/bg/highlight/3 (primary 50)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#6dbafa"
+      },
+      {
+        "key": "b683a4aa6f5b949498b752db7bc65b157f5cddca",
+        "name": "color/bg/accent/7 (secondary 130)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#663a00"
+      },
+      {
+        "key": "eede77940504af24e4aef4460842421597206e1b",
+        "name": "color/bg/highlight/2 (primary 30)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#a0d2fc"
+      },
+      {
+        "key": "ba19747c6d360cc5350ea33236c9dbbcf03c9430",
+        "name": "color/bg/highlight/1 (primary 10)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#e5f2fc"
+      },
+      {
+        "key": "4ba04e30cbb519fd60f78e5381e39f797a05398f",
+        "name": "color/bg/accent/6 (secondary 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#a65e00"
+      },
+      {
+        "key": "880572adeda4c06ca57b1703bac3a77a84121845",
+        "name": "color/bg/accent/5 (secondary 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#d87b00"
+      },
+      {
+        "key": "b37f4530aa36d17e907cb0f8547a30d9ca63f234",
+        "name": "color/bg/accent/4 (laranja cx - secondary 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#f39200"
+      },
+      {
+        "key": "e6f25db547de013a4099278219fd958b1775b721",
+        "name": "color/bg/accent/3 (secondary 50)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#fdb548"
+      },
+      {
+        "key": "ef5adecfe8892e6b93d18b7f208857b328a142f7",
+        "name": "color/bg/accent/2 (secondary 30)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ffd392"
+      },
+      {
+        "key": "94d482bde87c5b7a71a38cb9ed9ecc0fbb837e0f",
+        "name": "color/bg/accent/1 (secondary 10)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ffefd6"
+      },
+      {
+        "key": "9def94d37152141c5607d044d7a9aaf2e1e8b7af",
+        "name": "color/bg/decorative/5 (tertiary 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#359485"
+      },
+      {
+        "key": "8d35eb354bdf51e3af689a5118f860d8dc6a2381",
+        "name": "color/bg/decorative/4 (turquesa cx - tertiary 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#54bbab"
+      },
+      {
+        "key": "48c4fc2d72725fd5ca5d895dceaf55a2acd16362",
+        "name": "color/bg/decorative/3 (tertiary 50)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#81d6c9"
+      },
+      {
+        "key": "76cc23e33af4ce8163ef6cfb40d5e53e9c15e884",
+        "name": "color/bg/decorative/2 (tertiary 30)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#b9ebe3"
+      },
+      {
+        "key": "25f15985022b5cf4e85622e910fcb692eca366a6",
+        "name": "color/bg/decorative/1 (tertiary 10)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#e4f7f4"
+      },
+      {
+        "key": "2cc678fd8e0fc82ec68515656543b69672417279",
+        "name": "color/bg/neutral/7 (grayscale 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#404b52"
+      },
+      {
+        "key": "b5f44aac715592754554727b62047c1d000c394b",
+        "name": "color/bg/neutral/6 (grayscale 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#64747a"
+      },
+      {
+        "key": "333c9cb58054fce8dcc6d870647ff67796fca6eb",
+        "name": "color/bg/neutral/5 (grayscale 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#9eb2b8"
+      },
+      {
+        "key": "897523ab801b11f9a94172a3334de26e2b300a88",
+        "name": "color/bg/neutral/4 (cinza cx - grayscale 50)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#d0e0e3"
+      },
+      {
+        "key": "dc37f7d2f4ef3a28768c351e8f9996ed1347834b",
+        "name": "color/bg/neutral/3 (grayscale 30)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ebf1f2"
+      },
+      {
+        "key": "bc37810396f74ed1ff240af381ff75cfef1e530b",
+        "name": "color/bg/neutral/2 (grayscale 10)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#f7fafa"
+      },
+      {
+        "key": "919a23da1279730c2ddea27d7d3096a6fc85b65a",
+        "name": "color/bg/neutral/1 (grayscale white)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ffffff"
+      },
+      {
+        "key": "e20c7ebafd8981e6b9896db61b0ff595eb51a31f",
+        "name": "color/bg/success/5 (positive 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#0d581d"
+      },
+      {
+        "key": "73a9957b4e27fa5078d315f76a3d05b4ec88baca",
+        "name": "color/bg/success/4 (positive 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#127527"
+      },
+      {
+        "key": "2995e4e5efd9f5ede03e0fb58bd326e75fad5fdf",
+        "name": "color/bg/success/6 (positive 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#179231"
+      },
+      {
+        "key": "7d90b3bb3e0884054a83460cf42e719a62f54801",
+        "name": "color/bg/success/3 (positive 50)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#5cb26e"
+      },
+      {
+        "key": "7bc07d06990016a0420ec35b0f93819845a4f5f6",
+        "name": "color/bg/success/2 (positive 30)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#a2d3ad"
+      },
+      {
+        "key": "921620e1ef6d9072406a7599997a22e8ab0bfb43",
+        "name": "color/bg/success/1 (positive 10)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#e7f4ea"
+      },
+      {
+        "key": "d5b9a964c61f35bcb1cd57e5d94919d9277c3426",
+        "name": "color/bg/warning/5 (attention 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#977203"
+      },
+      {
+        "key": "72e18eeefb3218d34e41ccb4dc882b9cb340f425",
+        "name": "color/bg/warning/4 (attention 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ca9804"
+      },
+      {
+        "key": "97fda18ea769d40ba55c5126428e24b6f5636b9e",
+        "name": "color/bg/warning/6 (attention 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#fcbe05"
+      },
+      {
+        "key": "3712f892f76bd040903eb7a36176e08501d6658f",
+        "name": "color/bg/warning/3 (attention 50)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#fdd150"
+      },
+      {
+        "key": "def697c26bdba0f6b0fa44438ff9da500833ed3e",
+        "name": "color/bg/warning/2 (attention 30)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#fee59b"
+      },
+      {
+        "key": "74fc03a219cda7150d6e88275e66dfa7c958b937",
+        "name": "color/bg/warning/1 (attention 10)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#fff9e6"
+      },
+      {
+        "key": "3d6175b03a605056c3df41d8d1f61bb64b9dc1c8",
+        "name": "color/bg/danger/5 (negative 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#8c2424"
+      },
+      {
+        "key": "ff17e2d7e5534943720596617ba6744384288ceb",
+        "name": "color/bg/danger/4 (negative 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#b22c2c"
+      },
+      {
+        "key": "438917b9411aea16051edc78dc81975013ecc148",
+        "name": "color/bg/danger/6 (negative 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#d93636"
+      },
+      {
+        "key": "b64bb8cde2c6ccbe06c34f8f7e47a029460241ef",
+        "name": "color/bg/danger/3 (negative 50)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#e47272"
+      },
+      {
+        "key": "6475a003bfc16e86a6ed5319b5f491d9a468eddf",
+        "name": "color/bg/danger/2 (negative 30)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#f0afaf"
+      },
+      {
+        "key": "e9c2354608cde621caf9b741955ab9d477550042",
+        "name": "color/bg/danger/1 (negative 10)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#fbebeb"
+      },
+      {
+        "key": "bd67e3841554bbd588a949406dd9bb97451b72a7",
+        "name": "color/bg/information/5 (informative 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#026273"
+      },
+      {
+        "key": "2b16c8d8d9fa55912897c9f0eef5f4e496e133b0",
+        "name": "color/bg/information/4 (informative 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#038299"
+      },
+      {
+        "key": "3f45558867f7816616df493b14cf6d481529d929",
+        "name": "color/bg/information/6 (informative 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#04a2bf"
+      },
+      {
+        "key": "a2d10234302a04976c9a86f8a885bb91d5625814",
+        "name": "color/bg/information/3 (informative 50)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#4fbed2"
+      },
+      {
+        "key": "c7c4853b85406c88b4a4938532627129f2b46f99",
+        "name": "color/content/highlight/2 (primary 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#00437a"
+      },
+      {
+        "key": "031c2c3f5320821cf85264c09d222d9c12ad7d9d",
+        "name": "color/bg/information/2 (informative 30)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#9bdae5"
+      },
+      {
+        "key": "efcc594aa6a398b8eebc4f49d3450f24afd86764",
+        "name": "color/content/highlight/1 (azul cx - primary 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#005ca9"
+      },
+      {
+        "key": "89977aaaec7fb1a8b7b58c297f0ee77321027a33",
+        "name": "color/bg/information/1 (informative 10)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#e5f5f8"
+      },
+      {
+        "key": "f2e4cfdfa15eafe472098b2644fc7d43739a848a",
+        "name": "color/content/accent/3 (secondary 130)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#663a00"
+      },
+      {
+        "key": "69430f1d5f1bb3f22667c9548808762b55007e52",
+        "name": "color/content/accent/2 (secondary 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#d87b00"
+      },
+      {
+        "key": "ca76be9b7c6856566922d3d20ed4965c95918450",
+        "name": "color/content/accent/1 (laranja cx - secondary 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#f39200"
+      },
+      {
+        "key": "95bbbeb16871c60e674d1a4b6a8136f38d3db723",
+        "name": "color/content/decorative/2 (tertiary 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#216e62"
+      },
+      {
+        "key": "21e621196b8a850d255025b81d9c4a391044a824",
+        "name": "color/content/decorative/1 (tertiary 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#359485"
+      },
+      {
+        "key": "0bfecd90e80a2b06fe34d8cbc9cc247ef3a559ff",
+        "name": "color/content/neutral/5 (grayscale 130)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#22292e"
+      },
+      {
+        "key": "a100422d5c9560ec01aeaa1c0adf505eec4fdd1e",
+        "name": "color/content/neutral/4 (grayscale 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#404b52"
+      },
+      {
+        "key": "6bb798f51b021c38186b67a994a8a9456ccf5950",
+        "name": "color/content/neutral/3 (grayscale 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#64747a"
+      },
+      {
+        "key": "ceedc74a5597b0ccb7720cdeba09b0d55d6002a4",
+        "name": "color/content/neutral/2 (grayscale 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#9eb2b8"
+      },
+      {
+        "key": "3d4e6b60d67c869cb29d64fe3fca333e93c2545b",
+        "name": "color/content/neutral/1 (grayscale white)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ffffff"
+      },
+      {
+        "key": "abda600e4e10356947c358f6e45fdefc74c8636f",
+        "name": "color/content/success/3 (positive 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#0d581d"
+      },
+      {
+        "key": "a6a89c8ad4608be56eabc4c92d544307008460d8",
+        "name": "color/content/success/2 (positive 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#127527"
+      },
+      {
+        "key": "edf6e6b0d2470490c2ea661a8e90fc9cd44eaa72",
+        "name": "color/content/success/1 (positive 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#179231"
+      },
+      {
+        "key": "f2c4767ebe61729b7e285b481e2c84188c463f83",
+        "name": "color/content/warning/3 (attention 130)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#654c02"
+      },
+      {
+        "key": "2b1ac8401da88f4bd37912adf1b2ec643b6151c2",
+        "name": "color/content/warning/2 (attention 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#977203"
+      },
+      {
+        "key": "6ddc64a0a810e88d51110f46d972d7067267c188",
+        "name": "color/content/warning/1 (attention 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ca9804"
+      },
+      {
+        "key": "d9945adfa5839162bcb3fa66fa0a7237522b3cd4",
+        "name": "color/content/danger/3 (negative 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#8c2424"
+      },
+      {
+        "key": "efaa52125d56032b797e2c790f40d9bd22f6dc2f",
+        "name": "color/content/danger/2 (negative 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#b22c2c"
+      },
+      {
+        "key": "41326929fad8dbbfc2a249868dae35b9aa1933ad",
+        "name": "color/content/danger/1 (negative 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#d93636"
+      },
+      {
+        "key": "a58010a6cb41c3f5243a9af80a9448a71b83f7d6",
+        "name": "color/content/information/3 (informative 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#026273"
+      },
+      {
+        "key": "2605391d7f5631be94c010b8438b99b9b844aed7",
+        "name": "color/content/information/2 (informative 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#038299"
+      },
+      {
+        "key": "acf9ef2eadd74278eeac4c3b72633babe4e7a6d7",
+        "name": "color/content/information/1 (informative 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#04a2bf"
+      },
+      {
+        "key": "7e6bb5846f97dd2e1648778101e82f0d27f55ed2",
+        "name": "color/border/highlight/1 (azul cx - primary 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#005ca9"
+      },
+      {
+        "key": "f00c0cf88f5fb23ad26af8535cd3ab33ea546d2e",
+        "name": "color/border/accent/2 (secondary 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#a65e00"
+      },
+      {
+        "key": "4d7216a0228df205f8c1bc3a576b58f1897433c4",
+        "name": "color/border/decorative/2 (tertiary 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#216e62"
+      },
+      {
+        "key": "d3a6cb119bdfe5c89a656e67f35444e88a303061",
+        "name": "color/border/accent/1 (laranja cx - secondary 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#f39200"
+      },
+      {
+        "key": "0f39f9d91de6f71c425154e698608c597e2af30d",
+        "name": "color/border/decorative/1 (turquesa cx - tertiary 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#54bbab"
+      },
+      {
+        "key": "92eca0a12e96b260d8629660b7f7fc0b8768a7a1",
+        "name": "color/border/neutral/7 (grayscale 130)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#22292e"
+      },
+      {
+        "key": "2a58ede4cab68e804cbff1c0a85456c2927a9da3",
+        "name": "color/border/neutral/6 (grayscale 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#404b52"
+      },
+      {
+        "key": "85115d4931f4f4035500f9f187d2a49d99d8d046",
+        "name": "color/border/neutral/5 (grayscale 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#64747a"
+      },
+      {
+        "key": "f5cbb9fd3ac2d21045269b917e17b9f461c0d4a4",
+        "name": "color/border/neutral/4 (grayscale 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#9eb2b8"
+      },
+      {
+        "key": "521fa4f87102f90b7730f8a812d45ed49a101d8f",
+        "name": "color/border/neutral/3 (cinza cx - grayscale 50)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#d0e0e3"
+      },
+      {
+        "key": "20f0d25fa3a78f1c5b3b3ef27fe073e8323f6452",
+        "name": "color/border/neutral/2 (grayscale 30)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ebf1f2"
+      },
+      {
+        "key": "eb65c55cad8d0ebb2504ed360bb90b64e24f3061",
+        "name": "color/border/neutral/1 (grayscale white)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ffffff"
+      },
+      {
+        "key": "cea130a8d6225db87ad3c323b11188bdee0a14c3",
+        "name": "color/border/warning/2 (attention 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#977203"
+      },
+      {
+        "key": "424e823e97ce3eb7469469703519980987fedcbd",
+        "name": "color/border/success/1 (positive 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#127527"
+      },
+      {
+        "key": "c0554ea64846bfc3d3be3de64520287c06bfdcb4",
+        "name": "color/border/warning/1 (attention 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ca9804"
+      },
+      {
+        "key": "a5942e938a31e6242abd8174afaeda2c3f2c49be",
+        "name": "color/border/danger/1 (negative 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#b22c2c"
+      },
+      {
+        "key": "5e7e2173b59879036b7e03bb5d28115d76b1793c",
+        "name": "color/border/information/1 (informative 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#038299"
+      },
+      {
+        "key": "0c14de4000fea551b15f405dc8eee72248b8f3dd",
+        "name": "color/ceu/130",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#003c4d"
+      },
+      {
+        "key": "cb751200c0395616e1d3622bc7a351a11360909e",
+        "name": "color/ceu/110",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#006480"
+      },
+      {
+        "key": "65998a801a25b6123a216b8b14ae6191ec9a1fd6",
+        "name": "color/ceu/90",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#008cb2"
+      },
+      {
+        "key": "fa4fe73663305b287592bea01cbfcf6ff1b4acc6",
+        "name": "color/ceu/70 (ceu cx)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#00b4e6"
+      },
+      {
+        "key": "dd4702b5b58c3fc8627c529b049d1fa1553d9719",
+        "name": "color/ceu/50",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#2ec8f3"
+      },
+      {
+        "key": "c89c03eb1c81c0f79fb071b92d7a53f45253183e",
+        "name": "color/ceu/30",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#6edbfa"
+      },
+      {
+        "key": "1ccd63806fd1f141109696afb0ded06946c27681",
+        "name": "color/ceu/10",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#d0f5ff"
+      },
+      {
+        "key": "f01cc27ae7f7fa5be69883972524231f3fcc750e",
+        "name": "color/uva/130",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#4f213f"
+      },
+      {
+        "key": "e0c81040ee1e93b6a8f37783f8443e90a04614fa",
+        "name": "color/uva/110",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#753c61"
+      },
+      {
+        "key": "600a4aa68f2cdacb9c0afa0c5f75facc2751af64",
+        "name": "color/uva/90",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#93537d"
+      },
+      {
+        "key": "d36fe986a7a757eb14fe7d3e730bc858685f7bdc",
+        "name": "color/uva/70 (uva cx)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#b26f9b"
+      },
+      {
+        "key": "af310cef88fea133df6204b44391a4d87ad62fcc",
+        "name": "color/uva/50",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ce97bb"
+      },
+      {
+        "key": "073029fcf05240c27280fb5b044bcf9544ff0b59",
+        "name": "color/uva/30",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#eac9de"
+      },
+      {
+        "key": "6e7bc65920b3b563a86a801c25093fcb0dacc117",
+        "name": "color/uva/10",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#f8eaf3"
+      },
+      {
+        "key": "7e46f05c86032b219e33b7e98f5196ea293a4c45",
+        "name": "color/limao/130",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#465200"
+      },
+      {
+        "key": "4562ade4d83fb21cbb1b6506ff1944dac0f3c90e",
+        "name": "color/limao/110",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#7d9100"
+      },
+      {
+        "key": "274138d2cfa53f9ba8115670ea21999216e45f48",
+        "name": "color/limao/90",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#99b103"
+      },
+      {
+        "key": "a1199a4b21718d94249ac439197e5607fc72a338",
+        "name": "color/limao/70 (limao cx)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#afca0b"
+      },
+      {
+        "key": "8059f42b8822e49e8358db732ad30d6a388457f5",
+        "name": "color/limao/50",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#c5de31"
+      },
+      {
+        "key": "94ffe92223f8eac55296029ab142faf531b18eff",
+        "name": "color/limao/30",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#def06d"
+      },
+      {
+        "key": "51949cc6c7e2e9c24cb391c633b44125b7bdb2b5",
+        "name": "color/limao/10",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#f5fec1"
+      },
+      {
+        "key": "d7546aa77e2c5d9f420bd2927cf44140acfc3aff",
+        "name": "color/tangerina/130",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#664800"
+      },
+      {
+        "key": "c5aaa1718f47835d87b7a511e893c91b3d5b464f",
+        "name": "color/tangerina/110",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#996c00"
+      },
+      {
+        "key": "516f877089e1f5d134b726e91f97717b74687c2e",
+        "name": "color/tangerina/90",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#d19400"
+      },
+      {
+        "key": "1eccb5ac12b78d9abfc6129e7337ebd81b6e4dfe",
+        "name": "color/tangerina/70 (tangerina cx)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#f9b000"
+      },
+      {
+        "key": "a29d963e52abb6655c5cd7e906bfe4dc81b0079a",
+        "name": "color/tangerina/50",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#fac546"
+      },
+      {
+        "key": "aa420d7612bff13bb7f4501000a3a0a0c0627e70",
+        "name": "color/tangerina/30",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#fcdd92"
+      },
+      {
+        "key": "f296000b4ef880aef64e807313fb038b2a3ed8ea",
+        "name": "color/tangerina/10",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#fff3d6"
+      },
+      {
+        "key": "812cd712448e1a7f390796400cf247e5931d9994",
+        "name": "color/goiaba/130",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#801905"
+      },
+      {
+        "key": "32506981b92aa625ff2d1e196437421faa2c8a47",
+        "name": "color/state/bg/highlight/hover",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#005ca9"
+      },
+      {
+        "key": "3fa97f6cf95f6eda103c6ac0d5a6a99fba70e1bb",
+        "name": "color/state/bg/highlight/active-pressed",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#005ca9"
+      },
+      {
+        "key": "1243d8fa820bdacb76f2258f80280c157a39d713",
+        "name": "color/state/bg/highlight/focus",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#005ca9"
+      },
+      {
+        "key": "f7ddeaed6482f730045c222f7ebfce3a7a7a2f35",
+        "name": "color/state/bg/highlight/selected",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#005ca9"
+      },
+      {
+        "key": "8e65bf48a42ad74a41e0813db9720bad77fba561",
+        "name": "color/state/bg/highlight/dragged",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#005ca9"
+      },
+      {
+        "key": "cf2c213139bbb26901110fa4c0b1d10564c6bca8",
+        "name": "color/state/bg/accent/hover",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#d87b00"
+      },
+      {
+        "key": "01036010e0497172837fb84ed340059e45a29dc4",
+        "name": "color/state/bg/accent/active-pressed",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#d87b00"
+      },
+      {
+        "key": "0566f16c3e0cf2bcc6bade42504947f07689063d",
+        "name": "color/state/bg/accent/focus",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#d87b00"
+      },
+      {
+        "key": "a8be4f38adf89708b3486fd80dc366427de671ad",
+        "name": "color/state/bg/neutral/hover on light",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#404b52"
+      },
+      {
+        "key": "c57600abfc1f375ca89b82a8faf46a779c9ed364",
+        "name": "color/state/bg/neutral/hover on dark",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ffffff"
+      },
+      {
+        "key": "9de587cd9c71605b6999aaffe6db3ad048dc95fb",
+        "name": "color/state/bg/neutral/active-pressed on light",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#404b52"
+      },
+      {
+        "key": "b0a364ac2ee61decc9a9ac065487fe104744d7a2",
+        "name": "color/state/bg/neutral/active-pressed on dark",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ffffff"
+      },
+      {
+        "key": "d18dd82b2d6bc2e2c0073cf018585fc6cbdb5a0c",
+        "name": "color/state/bg/neutral/focus on light",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#404b52"
+      },
+      {
+        "key": "74df314abcf9e4aee3b21ee716316e1e5584d50c",
+        "name": "color/state/bg/neutral/focus on dark",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ffffff"
+      },
+      {
+        "key": "f632d4d0c9a7ff43a3e1c03b5d59d7593e667c1a",
+        "name": "color/state/bg/danger/hover",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#b22c2c"
+      },
+      {
+        "key": "67337158ba360903d8560d51bc48ed42e8c42721",
+        "name": "color/state/bg/danger/active-pressed",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#b22c2c"
+      },
+      {
+        "key": "9abcbe652a198a2e6495ad2bab564e30efefab5d",
+        "name": "color/state/bg/danger/focus",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#b22c2c"
+      },
+      {
+        "key": "d1a1f16b58ca1d9ddcf2960264351968f642645e",
+        "name": "color/state/bg/disabled/5",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#9eb2b8"
+      },
+      {
+        "key": "a37fd011c29c09511da1c8d00603591be7f5373e",
+        "name": "color/state/bg/disabled/4",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#d0e0e3"
+      },
+      {
+        "key": "de6f58c4bd4f1c898fad8ac0f488635ee99bde77",
+        "name": "color/state/bg/disabled/3",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ebf1f2"
+      },
+      {
+        "key": "a47dd5e62586b0a1138d0378259a759571be4e70",
+        "name": "color/state/bg/disabled/2",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#f7fafa"
+      },
+      {
+        "key": "d3f9a8f990406ffc73b65179594c095627fb9994",
+        "name": "color/state/bg/disabled/1",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ffffff"
+      },
+      {
+        "key": "ea4550d6e2287b0a37cd4273e373f9df56a94b84",
+        "name": "color/state/bg/readonly/2",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#9eb2b8"
+      },
+      {
+        "key": "71c076f1792027e542c6fb770fc1b1bb0bc6b6ad",
+        "name": "color/state/bg/readonly/1",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#f7fafa"
+      },
+      {
+        "key": "45f8a676de2d87b0a652ac783e872168e0eafce7",
+        "name": "color/state/content/disabled/2",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#64747a"
+      },
+      {
+        "key": "91c96fe8507ff0408a94772a7be31201eea96855",
+        "name": "color/state/content/disabled/1",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#9eb2b8"
+      },
+      {
+        "key": "30fd885f88c0e2ef5c0d9e613e604e4ea4c8aec0",
+        "name": "color/state/content/readonly/1",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#64747a"
+      },
+      {
+        "key": "2ab814ad5d59d5359a8ec2a5009ed738f540f9c9",
+        "name": "color/state/border/focus/dark",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#22292e"
+      },
+      {
+        "key": "2aa37fe9d1ac2478027217314f355595ac26fbae",
+        "name": "color/state/border/focus/light",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ffffff"
+      },
+      {
+        "key": "de01261a567a510425c622afe56a5a869da43795",
+        "name": "color/state/border/disabled/1",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#9eb2b8"
+      },
+      {
+        "key": "9696be34957c46624175c6a070ae6f9d63aa9d35",
+        "name": "color/state/border/readonly/1",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#9eb2b8"
+      },
+      {
+        "key": "485cd2f3094d302f7843d2f8bb6555d8e96a74bb",
+        "name": "color/goiaba/110",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#b23820"
+      },
+      {
+        "key": "dda2c47602f30fabc99d14f4e1eccd5fadddc732",
+        "name": "color/goiaba/90",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#d8583f"
+      },
+      {
+        "key": "16e88055f2a329a0a6dfd82d893e14ca6a6750fa",
+        "name": "color/goiaba/70 (goiaba cx)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ef765e"
+      },
+      {
+        "key": "655aa12a80d954b5acd2766df7df9294a337cd2c",
+        "name": "color/goiaba/50",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#f79481"
+      },
+      {
+        "key": "78b3941a9027aee06ded5303fadfe7a183e81a68",
+        "name": "color/goiaba/30",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#fcbdb0"
+      },
+      {
+        "key": "30032aa90b540a68adbf98cd8178e0b013022900",
+        "name": "color/goiaba/10",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ffeae5"
+      },
+      {
+        "key": "a2d11557d8c09ec4f2e17c745d03d208534d73d5",
+        "name": "color/adaptive/bg/highlight/1",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#005ca9"
+      },
+      {
+        "key": "4014a000bc469092aa00e7e08e1b9e373b4d19b1",
+        "name": "color/fixed/content/neutral/1",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ffffff"
+      },
+      {
+        "key": "c7636cb491252cd2b15e966b565fffd00f20501d",
+        "name": "color/adaptive/bg/highlight/2",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#00437a"
+      },
+      {
+        "key": "6099bbbae595d30ad63ef41af4100764a7b7082a",
+        "name": "color/fixed/content/neutral/2",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#22292e"
+      },
+      {
+        "key": "1f5d400c8fa25e99b664d1a1e843ae18472088ac",
+        "name": "font/family/1",
+        "resolvedType": "STRING",
+        "collection": "DSC",
+        "value": "CAIXA Std"
+      },
+      {
+        "key": "1ed60f8d383053662d6b36131209f7a6b7910f96",
+        "name": "font/size/quark",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 12
+      },
+      {
+        "key": "70845d12f94975c816f985b9af2e41dcd248bf61",
+        "name": "font/size/nano",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 14
+      },
+      {
+        "key": "4e91f6e4e2531f19033040393022eb4bbfb1acd1",
+        "name": "font/size/micro",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 16
+      },
+      {
+        "key": "5af5969c86e20809817aae7df5c9d6857e56956e",
+        "name": "font/size/tiny",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 18
+      },
+      {
+        "key": "ece4dfdf23b4885a7868b4431a172512425efa77",
+        "name": "font/size/smaller",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 20
+      },
+      {
+        "key": "16d065e4d209406f2c333fbdc2f815981d324aea",
+        "name": "font/size/small",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 24
+      },
+      {
+        "key": "38272bfcc75856bab7e6206c52043333a1fac593",
+        "name": "font/size/medium",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 28
+      },
+      {
+        "key": "087abac607f7f3ec5e90aacfc0d3c8e376ea3950",
+        "name": "font/size/large",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 32
+      },
+      {
+        "key": "973d5d4ae619182ff78fbdd59f982b3f32d4a305",
+        "name": "font/size/larger",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 36
+      },
+      {
+        "key": "72a341748f17abc8776dd4ab7d4d0aedb7062226",
+        "name": "font/size/big",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 40
+      },
+      {
+        "key": "aebdb1021f32ea3f3965389698d453850b1ddb3c",
+        "name": "font/size/bigger",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 44
+      },
+      {
+        "key": "fc81709242dc866ed1df1bb08ab512bdb7445ca6",
+        "name": "font/size/huge",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 52
+      },
+      {
+        "key": "2c104209c0a1217854609774f6a3b6870386f62a",
+        "name": "font/size/giant",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 60
+      },
+      {
+        "key": "d72b6af34d3e2011b7c4bede5c0e089638ad94a2",
+        "name": "font/weight/400 (regular)",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 400
+      },
+      {
+        "key": "0ec9e56987dd72d98b9e92326f77d21397b18958",
+        "name": "font/weight/600 (semibold)",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 600
+      },
+      {
+        "key": "f2712d19e1f3f8d125bba21753e76da29d30d9f8",
+        "name": "font/weight/700 (bold)",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 700
+      },
+      {
+        "key": "90f43b72f0d865d50a38b706257a376982251473",
+        "name": "border/width/none",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": null
+      },
+      {
+        "key": "eebfb76d42eb8a7264e8f1be61d395028b7906e2",
+        "name": "border/width/hairline",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 1
+      },
+      {
+        "key": "86aeacfc4d60bddef2d53469cdce98427d8cda94",
+        "name": "border/width/thin",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 2
+      },
+      {
+        "key": "983ded98ae2ef636d8adb1e3d53fbb4af9da84d5",
+        "name": "border/radius/none",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": null
+      },
+      {
+        "key": "d705b6181c584aedf4e6cc8d2f7d695d87a1e48a",
+        "name": "border/radius/quark",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 2
+      },
+      {
+        "key": "cc58e108667306d447e4a907306085f928d45729",
+        "name": "border/radius/nano",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 4
+      },
+      {
+        "key": "31b76e534cfc7ebe5729c5055ac581774f1f77bd",
+        "name": "border/radius/small",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 8
+      },
+      {
+        "key": "14865d2d35489c15ab21215e6e4ee5943bb13685",
+        "name": "border/radius/medium",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 12
+      },
+      {
+        "key": "2179b5faf7600617dee70cf6a2d496f2e7f33c1e",
+        "name": "border/radius/large",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 16
+      },
+      {
+        "key": "0d2cd11a103b235e99005f71ed70420357a14a91",
+        "name": "border/radius/big",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 24
+      },
+      {
+        "key": "6fc8965f4b58051d2127101a13109d29e47c677c",
+        "name": "border/radius/pill",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 1000
+      },
+      {
+        "key": "cc243dc937208da177e63f3628b5c498fdb1538a",
+        "name": "border/width/thick",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 4
+      },
+      {
+        "key": "9df1a62b54def1153c64b44fcbe091ddbdb665e8",
+        "name": "border/width/heavy",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 8
+      },
+      {
+        "key": "2c5b6777f3c328e56aa292e48dd8151e93b09cfe",
+        "name": "border/width/strong",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 12
+      },
+      {
+        "key": "bbe33647caa20b3e9fd652eceeee46af4cd2ca80",
+        "name": "spacing/none",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": null
+      },
+      {
+        "key": "f64c6e191c30b5c2de7aa355d8c02c771bf48b39",
+        "name": "spacing/quark",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 4
+      },
+      {
+        "key": "94bef6b4cca26ddfdeacefa6844f2d7299071fdf",
+        "name": "spacing/nano",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 8
+      },
+      {
+        "key": "97553cef9b3fde9890b205c6090d6fe7bcdf653e",
+        "name": "spacing/micro",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 12
+      },
+      {
+        "key": "00d785308c21ed7ec77b32ed98543347bb0d0112",
+        "name": "spacing/tiny",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 16
+      },
+      {
+        "key": "36698d2d6b6d73c183eaa3ea4877c667f074801d",
+        "name": "spacing/smaller",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 24
+      },
+      {
+        "key": "b7449fab0b8e1a2c131f31f82834dfc78289b836",
+        "name": "spacing/small",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 32
+      },
+      {
+        "key": "ba4df57ff47873c4b9792f1b4f3ddfed29af2b6d",
+        "name": "spacing/medium",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 40
+      },
+      {
+        "key": "be0ad314b5ca2303720dbc461eb1c9775c1c5b21",
+        "name": "spacing/large",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 48
+      },
+      {
+        "key": "c0f5dc5f78c5501b058c3fc80e238fa816a78f42",
+        "name": "spacing/larger",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 56
+      },
+      {
+        "key": "2762ad145be62622bd9c65ac4654a791fd28de41",
+        "name": "spacing/big",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 64
+      },
+      {
+        "key": "5e122e684320b8ee4fea9f4dc8d8a38381ba69d3",
+        "name": "spacing/bigger",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 72
+      },
+      {
+        "key": "b8311142c7e10d2fe4cce62c61e6849f8d9d80cd",
+        "name": "spacing/huge",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 80
+      },
+      {
+        "key": "dca4be570051ae6f22f0a12b36512db900477081",
+        "name": "spacing/giant",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 120
+      },
+      {
+        "key": "99afef5b8c186346428a7655579cb909fee0bf16",
+        "name": "spacing/enormous",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 160
+      },
+      {
+        "key": "863dc92ec055ffc5dac120cf093301b6f569d1c5",
+        "name": "icon/size/quark",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 12
+      },
+      {
+        "key": "4daebd758c610fee1c9caea31ec7f16e09871c16",
+        "name": "icon/size/nano",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 16
+      },
+      {
+        "key": "064653ad19b512ebc92a6b30a898304ca8483d64",
+        "name": "icon/size/small",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 20
+      },
+      {
+        "key": "340f0024afe32d91c91b1faab7d734da47e24c36",
+        "name": "icon/size/medium",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 24
+      },
+      {
+        "key": "a6690d51e5291b57fba049171528ba2417ed3b88",
+        "name": "icon/size/large",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 32
+      },
+      {
+        "key": "a7dea01fd2a1653c0321be0a0e5d3d81182e09af",
+        "name": "icon/size/big",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 40
+      },
+      {
+        "key": "cc73d5f71503f9a6268123a2b8d5ea5182c8d827",
+        "name": "icon/size/huge",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 48
+      },
+      {
+        "key": "f72fc9c2df5bc30e5646326faf60e6f977c8bc76",
+        "name": "opacity/8%",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 8
+      },
+      {
+        "key": "123143965798495b394d7dd7abeba7e7174b2334",
+        "name": "opacity/16%",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 16
+      },
+      {
+        "key": "2cf9f596424dddf5bc5ce2f22d6a884533128d05",
+        "name": "opacity/24%",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 24
+      },
+      {
+        "key": "8efbab95b92c506a2962fe18c444ff92058a3608",
+        "name": "opacity/32%",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 32
+      },
+      {
+        "key": "6d842677f46b4bd86c191db358f9d172636b9e27",
+        "name": "opacity/40%",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 40
+      },
+      {
+        "key": "12b7cd63d911113438b12bb9d3c394dcea99f10c",
+        "name": "opacity/48%",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 48
+      },
+      {
+        "key": "c50a624dff19d6ff50ca0a04a9f71e21f4b66480",
+        "name": "opacity/56%",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 56
+      },
+      {
+        "key": "4d9441acc287a5ba7040b5c8178b1bbb32ea60be",
+        "name": "shadow/x/0",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": null
+      },
+      {
+        "key": "d7e048e4bb69385080cc3fe861afef4026ee6afb",
+        "name": "opacity/64%",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 64
+      },
+      {
+        "key": "1732ec74322f89d7c2f2761cec03db041e3c8d00",
+        "name": "shadow/spread/0",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": null
+      },
+      {
+        "key": "a0599faf9b6f8f9efb53961f1d64f08a01c9e32b",
+        "name": "shadow/blur/2",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 2
+      },
+      {
+        "key": "7a1e2f35d0e3622d37c9f4abe1d94dea296ff9f8",
+        "name": "shadow/y/1",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 1
+      },
+      {
+        "key": "5990db89bc4ec9867de67eb0edd7545f0b1ce774",
+        "name": "shadow/blur/3",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 3
+      },
+      {
+        "key": "5d9bcb90c2ba8eeae632e0739ea0cee516fdc39c",
+        "name": "shadow/y/2",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 2
+      },
+      {
+        "key": "c523a3149018f48d4af8b9b5fe2ae767c203c1f9",
+        "name": "shadow/spread/1",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 1
+      },
+      {
+        "key": "9be3095c2f46715738b4132395219aa60bcff10c",
+        "name": "shadow/blur/4",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 4
+      },
+      {
+        "key": "3d6fa4838ce2ed9593edc2e5e3f419a1acb69b8c",
+        "name": "shadow/y/4",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 4
+      },
+      {
+        "key": "d0da4c6ae627384f2258b7c113640281e1f1cd12",
+        "name": "shadow/spread/2",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 2
+      },
+      {
+        "key": "bb76b42ec94a5e7df76b40961a3f57e15248ffe5",
+        "name": "shadow/blur/6",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 6
+      },
+      {
+        "key": "0105d8240f26342b4b055bf0907a85b2ec1ab86d",
+        "name": "shadow/y/6",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 6
+      },
+      {
+        "key": "c02abd137e7c6cb857be42f405f9e90c882adf1f",
+        "name": "shadow/spread/3",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 3
+      },
+      {
+        "key": "50dd310e9c69e36606fbd2e92480c937247edea5",
+        "name": "shadow/y/8",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 8
+      },
+      {
+        "key": "0bf2c0c6be4ba5c8968c3f851d713022cd786f7e",
+        "name": "shadow/spread/4",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 4
+      },
+      {
+        "key": "22168fecd6aef0e1cb4f111179615bf5fe02f6d7",
+        "name": "shadow/blur/8",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 8
+      },
+      {
+        "key": "bdb442b5c42a2d37b6b321f79582c778c76667b0",
+        "name": "shadow/blur/10",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 10
+      },
+      {
+        "key": "b61447cd71fd390a84e10b419bbb66a80e180d50",
+        "name": "shadow/spread/6",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 6
+      },
+      {
+        "key": "6362258161d52e9dadbaabe7859e779fea9e154e",
+        "name": "shadow/blur/12",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 12
+      },
+      {
+        "key": "9b5e3bc43a88fc595f2f3d843d89aa5716ca7920",
+        "name": "opacity/state/hover 1",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 8
+      },
+      {
+        "key": "22066966573d5eeb5dc7bf34962c5a764ccdade3",
+        "name": "opacity/state/active-pressed 1",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 16
+      },
+      {
+        "key": "5d9266e7716bf0431d4608b75db9e0beefecdf98",
+        "name": "opacity/state/focus 1",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 24
+      },
+      {
+        "key": "7fd356663f32a612b55236e7f9a96264bdef0cde",
+        "name": "opacity/state/dragged 1",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 16
+      },
+      {
+        "key": "4080a07c3390043854bdcf3a066cfd632dc89319",
+        "name": "opacity/state/selected 1",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 16
+      },
+      {
+        "key": "f4f9b32141bf7ca8f371052da9a5e88142794356",
+        "name": "opacity/state/disabled 1",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 64
+      },
+      {
+        "key": "fd09ba416ff038f1bef9413bbd542450eda62819",
+        "name": "color/fixed/border/neutral/1",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#ffffff"
+      }
+    ]
   },
   "styleTokens": {
     "colors": [

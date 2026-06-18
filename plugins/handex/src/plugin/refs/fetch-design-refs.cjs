@@ -111,13 +111,31 @@ async function fetchLibrary(libMeta) {
       defaultModes[colId] = col.defaultModeId;
     }
 
+    // Map variable ID → variable (for alias resolution)
+    const varsById = {};
+    for (const v of Object.values(variablesObj)) {
+      if (v && v.id) varsById[v.id] = v;
+    }
+
     const toHex = (n) => Math.round(n * 255).toString(16).padStart(2, '0');
+
+    // Resolve VARIABLE_ALIAS chains up to 8 hops
+    function resolveRaw(v, depth = 0) {
+      if (depth > 8) return null;
+      const modeId = defaultModes[v.variableCollectionId];
+      const raw = modeId && v.valuesByMode && v.valuesByMode[modeId];
+      if (!raw) return null;
+      if (raw && typeof raw === 'object' && raw.type === 'VARIABLE_ALIAS') {
+        const ref = varsById[raw.id];
+        return ref ? resolveRaw(ref, depth + 1) : null;
+      }
+      return raw;
+    }
 
     for (const v of Object.values(variablesObj)) {
       if (!v || !v.key || v.hiddenFromPublishing) continue;
 
-      const defaultModeId = defaultModes[v.variableCollectionId];
-      const rawValue = defaultModeId && v.valuesByMode && v.valuesByMode[defaultModeId];
+      const rawValue = resolveRaw(v);
 
       let value = null;
       if (v.resolvedType === 'COLOR' && rawValue && typeof rawValue === 'object' && 'r' in rawValue) {
