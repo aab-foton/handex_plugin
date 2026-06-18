@@ -2,6 +2,60 @@
 
 ---
 
+## v4.2.4 — 2026-06-18
+
+### Resumo
+Funcionalidade de specs finalizada com ajustes visuais e correção de comportamento: modal de ajuda com cores fiéis ao canvas e seção de instrução de agrupamento por tags; correção do toggle de visibilidade por grupo (botão só ocultava, nunca reexibia).
+
+---
+
+### Modal de Tipos de Especificação — Revisão Visual e de Conteúdo
+
+- Cada tipo de spec agora exibe um card com **fill + stroke exatos** usados no canvas (antes: pill com borda colorida apenas, cor diferente da real).
+- Adicionada seção **"Como funcionam as Tags"** no topo do modal, explicando:
+  - Mesma tag → specs se empilham na direção do lado (topo: para cima; demais: para baixo).
+  - Tags diferentes → grupos aparecem lado a lado no canvas.
+  - Instrução para renomear grupos via ícone de lápis na lista.
+
+### Correção — Toggle de Visibilidade por Grupo
+
+**Bug:** o botão olho no cabeçalho do grupo ocultava todas as specs do grupo, mas clicar novamente não as reexibia — ficava sempre em modo "ocultar".
+
+**Causa:** na função `renderSpecsList`, cada spec era clonada via `Object.assign({}, spec)` (cópia rasa). O handler `onclick` do botão avaliava `specs.some(s => s.visible !== false)` usando as cópias. Ao ocultar, `createdSpecs[i].visible` era atualizado, mas `s.visible` da cópia permanecia `undefined` — que satisfaz `!== false` — então `targetState` sempre recalculava como `false` (ocultar).
+
+**Correção:** adicionado `s.visible = targetState` na iteração do handler, mantendo a cópia sincronizada com o estado real.
+
+---
+
+### Nomenclatura Semântica — Fluxos e Medidas no Canvas
+
+Implementado o padrão de nomenclatura `[Tipo | meta1 | meta2] Descrição` para os artefatos de fluxo criados no canvas:
+
+| Antes | Depois |
+|---|---|
+| `Handex/Fluxo/1/Decisão` | `[Fluxo \| 1 \| decisao] Decisão` |
+| `Handex/Fluxo/1/Início` | `[Fluxo \| 1 \| inicio] Início` |
+| `Handex/Fluxo/1/Fim` | `[Fluxo \| 1 \| fim] Fim` |
+| `Handex/Fluxo/1/Conexão` | `[Fluxo \| 1 \| conexao] Conexão` |
+| `Handex/Fluxo/Legendas` | `[Fluxo \| legenda] Legendas dos Fluxos` |
+| `Handex/Fluxo/Linha` (filho) | `Linha` (escopado pelo grupo-pai) |
+| `[Medidas] Frame` (na ficha) | `[Medidas \| {figmaId}] Frame` |
+
+Documentado em `DATA_MODEL.md` — novo arquivo de referência do modelo de dados cobrindo todos os artefatos de canvas, schema de persistência e roadmap HTML/SharePoint.
+
+---
+
+### Arquivos Modificados
+
+| Arquivo | Mudança |
+|---|---|
+| `src/plugin/modules/specifications.js` | Correção do toggle de grupo: `s.visible = targetState` adicionado no handler `groupVisBtn.onclick` |
+| `src/plugin/views/modals.html` | Modal `spec-types-help-modal` reescrito: cards com fill/stroke reais + seção de instrução de tags |
+| `src/plugin/code.js` | Nomes dos artefatos de fluxo migrados para `[Fluxo \| n \| tipo] nome`; agrupador de medidas na ficha inclui `figmaId` |
+| `DATA_MODEL.md` | Novo arquivo — modelo de dados completo do plugin |
+
+---
+
 ## v4.2.3 — 2026-06-17
 
 ### Resumo
