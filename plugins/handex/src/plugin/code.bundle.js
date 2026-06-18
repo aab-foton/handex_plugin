@@ -1225,8 +1225,7 @@
               groupSpecs.forEach((s) => {
                 const catLabel = s.type || s.categoryLabel || s.category || "Geral";
                 const sc = s.color ? hexToRgb2(s.color) : { r: 0.38, g: 0.35, b: 0.75 };
-                const scBg = s.fillColor ? hexToRgb2(s.fillColor) : { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
-                const sRow = createFrame("VERTICAL", 10, 8, scBg);
+                const sRow = createFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.97, b: 1 });
                 sRow.name = `[Spec/${s.letter || "A"}] ${s.name || s.label || "Spec"}`;
                 sRow.cornerRadius = 8;
                 sRow.strokes = [{ type: "SOLID", color: sc }];
@@ -2587,7 +2586,7 @@
         specCard.paddingBottom = 16;
         specCard.itemSpacing = 12;
         specCard.cornerRadius = 8;
-        specCard.fills = [{ type: "SOLID", color: themeFill }];
+        specCard.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
         specCard.strokes = [{ type: "SOLID", color: themeColor2 }];
         specCard.strokeWeight = 1.5;
         specCard.primaryAxisSizingMode = "AUTO";
@@ -2605,13 +2604,15 @@
         tagCircle.counterAxisSizingMode = "FIXED";
         tagCircle.resize(42, 42);
         tagCircle.cornerRadius = 8;
-        tagCircle.fills = [{ type: "SOLID", color: themeColor2 }];
+        tagCircle.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+        tagCircle.strokes = [{ type: "SOLID", color: themeColor2 }];
+        tagCircle.strokeWeight = 1.5;
         tagCircle.primaryAxisAlignItems = "CENTER";
         tagCircle.counterAxisAlignItems = "CENTER";
         const tagText = figma.createText();
         tagText.fontName = { family: "Inter", style: "Bold" };
         tagText.fontSize = 18;
-        tagText.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+        tagText.fills = [{ type: "SOLID", color: themeColor2 }];
         tagText.characters = opts.letter;
         tagCircle.appendChild(tagText);
         headerRow.appendChild(tagCircle);
@@ -2775,13 +2776,15 @@
           chip.counterAxisSizingMode = "FIXED";
           chip.resize(42, 42);
           chip.cornerRadius = 8;
-          chip.fills = [{ type: "SOLID", color: themeColor2 }];
+          chip.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+          chip.strokes = [{ type: "SOLID", color: themeColor2 }];
+          chip.strokeWeight = 1.5;
           chip.primaryAxisAlignItems = "CENTER";
           chip.counterAxisAlignItems = "CENTER";
           const chipText = figma.createText();
           chipText.fontName = { family: "Inter", style: "Bold" };
           chipText.fontSize = 18;
-          chipText.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+          chipText.fills = [{ type: "SOLID", color: themeColor2 }];
           chipText.characters = opts.letter;
           chip.appendChild(chipText);
           contour.appendChild(chip);
@@ -2789,6 +2792,8 @@
           chip.y = 0;
           groupNodes.push(contour);
           figma.currentPage.appendChild(specCard);
+          const side = opts.guideSide || "right";
+          const _isVertSide = side === "right" || side === "left";
           const _specLetter = opts.letter;
           const _existingSpecCards = [];
           figma.currentPage.children.forEach((n) => {
@@ -2809,37 +2814,84 @@
             const bb = card.absoluteBoundingBox;
             if (!bb) return;
             if (!_letterMap[l]) _letterMap[l] = { x: bb.x, topY: bb.y, bottom: bb.y + bb.height, right: bb.x + bb.width };
-            const bottom = bb.y + bb.height;
-            if (bottom > _letterMap[l].bottom) _letterMap[l].bottom = bottom;
+            if (bb.y + bb.height > _letterMap[l].bottom) _letterMap[l].bottom = bb.y + bb.height;
             if (bb.x + bb.width > _letterMap[l].right) _letterMap[l].right = bb.x + bb.width;
             if (bb.x < _letterMap[l].x) _letterMap[l].x = bb.x;
             if (bb.y < _letterMap[l].topY) _letterMap[l].topY = bb.y;
           });
-          const _SPEC_GAP = 40;
-          const _SPEC_COL_GAP = 80;
+          const _SPEC_GAP = 32;
+          const _SPEC_COL_GAP = 64;
+          const cardW = specCard.width;
+          const cardH = specCard.height;
           let targetX, targetY;
+          let _anchorNode = node;
+          while (_anchorNode.parent && _anchorNode.parent.type !== "PAGE") {
+            _anchorNode = _anchorNode.parent;
+          }
+          const _anchorBounds = _anchorNode.absoluteBoundingBox || bounds;
           if (_letterMap[_specLetter]) {
-            targetX = _letterMap[_specLetter].x;
-            targetY = _letterMap[_specLetter].bottom + _SPEC_GAP;
-          } else if (Object.keys(_letterMap).length > 0) {
-            const _rightmost = Object.values(_letterMap).reduce((max, v) => v.right > max.right ? v : max);
-            targetX = _rightmost.right + _SPEC_COL_GAP;
-            targetY = _rightmost.topY;
-          } else {
-            let _anchorNode = node;
-            while (_anchorNode.parent && _anchorNode.parent.type !== "PAGE") {
-              _anchorNode = _anchorNode.parent;
+            if (_isVertSide) {
+              targetX = _letterMap[_specLetter].x;
+              targetY = _letterMap[_specLetter].bottom + _SPEC_GAP;
+            } else {
+              targetX = _letterMap[_specLetter].right + _SPEC_GAP;
+              targetY = _letterMap[_specLetter].topY;
             }
-            const _anchorBounds = _anchorNode.absoluteBoundingBox || bounds;
-            targetX = _anchorBounds.x + _anchorBounds.width + 100;
-            targetY = _anchorBounds.y;
+          } else if (Object.keys(_letterMap).length > 0) {
+            if (_isVertSide) {
+              if (side === "right") {
+                const _rightmost = Object.values(_letterMap).reduce((a, v) => v.right > a.right ? v : a);
+                targetX = _rightmost.right + _SPEC_COL_GAP;
+                targetY = _rightmost.topY;
+              } else {
+                const _leftmost = Object.values(_letterMap).reduce((a, v) => v.x < a.x ? v : a);
+                targetX = _leftmost.x - cardW - _SPEC_COL_GAP;
+                targetY = _leftmost.topY;
+              }
+            } else {
+              if (side === "bottom") {
+                const _bottommost = Object.values(_letterMap).reduce((a, v) => v.bottom > a.bottom ? v : a);
+                targetX = _bottommost.x;
+                targetY = _bottommost.bottom + _SPEC_COL_GAP;
+              } else {
+                const _topmost = Object.values(_letterMap).reduce((a, v) => v.topY < a.topY ? v : a);
+                targetX = _topmost.x;
+                targetY = _topmost.topY - cardH - _SPEC_COL_GAP;
+              }
+            }
+          } else {
+            if (side === "right") {
+              targetX = _anchorBounds.x + _anchorBounds.width + 100;
+              targetY = _anchorBounds.y;
+            } else if (side === "left") {
+              targetX = _anchorBounds.x - cardW - 100;
+              targetY = _anchorBounds.y;
+            } else if (side === "bottom") {
+              targetX = _anchorBounds.x;
+              targetY = _anchorBounds.y + _anchorBounds.height + 100;
+            } else {
+              targetX = _anchorBounds.x;
+              targetY = _anchorBounds.y - cardH - 100;
+            }
           }
           specCard.x = Math.round(targetX);
           specCard.y = Math.round(targetY);
           groupNodes.push(specCard);
           if (opts.drawConnection !== false) {
-            const startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
-            const endPt = { x: specCard.x, y: specCard.y + Math.min(40, specCard.height / 2) };
+            let startPt, endPt;
+            if (side === "right") {
+              startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+              endPt = { x: specCard.x, y: specCard.y + specCard.height / 2 };
+            } else if (side === "left") {
+              startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
+              endPt = { x: specCard.x + specCard.width, y: specCard.y + specCard.height / 2 };
+            } else if (side === "bottom") {
+              startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
+              endPt = { x: specCard.x + specCard.width / 2, y: specCard.y };
+            } else {
+              startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
+              endPt = { x: specCard.x + specCard.width / 2, y: specCard.y + specCard.height };
+            }
             const connector = figma.createVector();
             connector.name = `${_specBase}/Conector`;
             connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];

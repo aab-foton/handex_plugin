@@ -1054,8 +1054,7 @@ figma.ui.onmessage = async (msg) => {
             groupSpecs.forEach(s => {
               const catLabel = s.type || s.categoryLabel || s.category || 'Geral';
               const sc = s.color ? hexToRgb(s.color) : { r: 0.38, g: 0.35, b: 0.75 };
-              const scBg = s.fillColor ? hexToRgb(s.fillColor) : { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
-              const sRow = createFrame("VERTICAL", 10, 8, scBg);
+              const sRow = createFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.97, b: 1 });
               sRow.name = `[Spec/${s.letter || 'A'}] ${s.name || s.label || 'Spec'}`;
               sRow.cornerRadius = 8;
               sRow.strokes = [{ type: "SOLID", color: sc }];
@@ -2686,7 +2685,7 @@ figma.ui.onmessage = async (msg) => {
       specCard.paddingBottom = 16;
       specCard.itemSpacing = 12;
       specCard.cornerRadius = 8;
-      specCard.fills = [{ type: "SOLID", color: themeFill }];
+      specCard.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
       specCard.strokes = [{ type: "SOLID", color: themeColor }];
       specCard.strokeWeight = 1.5;
       specCard.primaryAxisSizingMode = "AUTO";
@@ -2707,13 +2706,15 @@ figma.ui.onmessage = async (msg) => {
       tagCircle.counterAxisSizingMode = "FIXED";
       tagCircle.resize(42, 42);
       tagCircle.cornerRadius = 8;
-      tagCircle.fills = [{ type: "SOLID", color: themeColor }];
+      tagCircle.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+      tagCircle.strokes = [{ type: "SOLID", color: themeColor }];
+      tagCircle.strokeWeight = 1.5;
       tagCircle.primaryAxisAlignItems = "CENTER";
       tagCircle.counterAxisAlignItems = "CENTER";
       const tagText = figma.createText();
       tagText.fontName = { family: "Inter", style: "Bold" };
       tagText.fontSize = 18;
-      tagText.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+      tagText.fills = [{ type: "SOLID", color: themeColor }];
       tagText.characters = opts.letter;
       tagCircle.appendChild(tagText);
       headerRow.appendChild(tagCircle);
@@ -2899,13 +2900,15 @@ figma.ui.onmessage = async (msg) => {
         chip.counterAxisSizingMode = "FIXED";
         chip.resize(42, 42);
         chip.cornerRadius = 8;
-        chip.fills = [{ type: "SOLID", color: themeColor }];
+        chip.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+        chip.strokes = [{ type: "SOLID", color: themeColor }];
+        chip.strokeWeight = 1.5;
         chip.primaryAxisAlignItems = "CENTER";
         chip.counterAxisAlignItems = "CENTER";
         const chipText = figma.createText();
         chipText.fontName = { family: "Inter", style: "Bold" };
         chipText.fontSize = 18;
-        chipText.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+        chipText.fills = [{ type: "SOLID", color: themeColor }];
         chipText.characters = opts.letter;
         chip.appendChild(chipText);
         contour.appendChild(chip);
@@ -2917,8 +2920,10 @@ figma.ui.onmessage = async (msg) => {
         // Append card to page first so Figma computes its real dimensions
         figma.currentPage.appendChild(specCard);
 
-        // Posicionamento: sempre à direita — mesma letra empilha, letra nova cria coluna.
-        // Busca nos filhos diretos da página (spec groups são sempre criados na raiz).
+        const side = opts.guideSide || 'right'; // 'right' | 'left' | 'top' | 'bottom'
+        const _isVertSide = side === 'right' || side === 'left'; // empilha verticalmente
+
+        // Busca spec cards existentes nos filhos diretos da página
         const _specLetter = opts.letter;
         const _existingSpecCards = [];
         figma.currentPage.children.forEach(n => {
@@ -2941,37 +2946,72 @@ figma.ui.onmessage = async (msg) => {
           const bb = card.absoluteBoundingBox;
           if (!bb) return;
           if (!_letterMap[l]) _letterMap[l] = { x: bb.x, topY: bb.y, bottom: bb.y + bb.height, right: bb.x + bb.width };
-          const bottom = bb.y + bb.height;
-          if (bottom > _letterMap[l].bottom) _letterMap[l].bottom = bottom;
+          if (bb.y + bb.height > _letterMap[l].bottom) _letterMap[l].bottom = bb.y + bb.height;
           if (bb.x + bb.width > _letterMap[l].right) _letterMap[l].right = bb.x + bb.width;
           if (bb.x < _letterMap[l].x) _letterMap[l].x = bb.x;
           if (bb.y < _letterMap[l].topY) _letterMap[l].topY = bb.y;
         });
 
-        const _SPEC_GAP = 40;
-        const _SPEC_COL_GAP = 80;
+        const _SPEC_GAP = 32;
+        const _SPEC_COL_GAP = 64;
+        const cardW = specCard.width;
+        const cardH = specCard.height;
         let targetX, targetY;
 
+        // Âncora: frame de nível de página que contém o elemento
+        let _anchorNode = node;
+        while (_anchorNode.parent && _anchorNode.parent.type !== 'PAGE') {
+          _anchorNode = _anchorNode.parent;
+        }
+        const _anchorBounds = _anchorNode.absoluteBoundingBox || bounds;
+
         if (_letterMap[_specLetter]) {
-          // Mesma letra: empilha abaixo do último card desta coluna
-          targetX = _letterMap[_specLetter].x;
-          targetY = _letterMap[_specLetter].bottom + _SPEC_GAP;
-        } else if (Object.keys(_letterMap).length > 0) {
-          // Nova letra: nova coluna à direita da coluna mais à direita
-          const _rightmost = Object.values(_letterMap).reduce((max, v) => v.right > max.right ? v : max);
-          targetX = _rightmost.right + _SPEC_COL_GAP;
-          targetY = _rightmost.topY;
-        } else {
-          // Primeira spec: à direita do frame de nível de página que contém o elemento.
-          // Isso evita que a spec caia dentro de um frame grande quando o alvo é um
-          // elemento interno (ex.: componente dentro de um frame de 1920px).
-          let _anchorNode = node;
-          while (_anchorNode.parent && _anchorNode.parent.type !== 'PAGE') {
-            _anchorNode = _anchorNode.parent;
+          if (_isVertSide) {
+            // Mesma letra → empilha abaixo (mesma coluna)
+            targetX = _letterMap[_specLetter].x;
+            targetY = _letterMap[_specLetter].bottom + _SPEC_GAP;
+          } else {
+            // Mesma letra → empilha à direita (mesma linha)
+            targetX = _letterMap[_specLetter].right + _SPEC_GAP;
+            targetY = _letterMap[_specLetter].topY;
           }
-          const _anchorBounds = _anchorNode.absoluteBoundingBox || bounds;
-          targetX = _anchorBounds.x + _anchorBounds.width + 100;
-          targetY = _anchorBounds.y;
+        } else if (Object.keys(_letterMap).length > 0) {
+          if (_isVertSide) {
+            if (side === 'right') {
+              const _rightmost = Object.values(_letterMap).reduce((a, v) => v.right > a.right ? v : a);
+              targetX = _rightmost.right + _SPEC_COL_GAP;
+              targetY = _rightmost.topY;
+            } else {
+              const _leftmost = Object.values(_letterMap).reduce((a, v) => v.x < a.x ? v : a);
+              targetX = _leftmost.x - cardW - _SPEC_COL_GAP;
+              targetY = _leftmost.topY;
+            }
+          } else {
+            if (side === 'bottom') {
+              const _bottommost = Object.values(_letterMap).reduce((a, v) => v.bottom > a.bottom ? v : a);
+              targetX = _bottommost.x;
+              targetY = _bottommost.bottom + _SPEC_COL_GAP;
+            } else {
+              const _topmost = Object.values(_letterMap).reduce((a, v) => v.topY < a.topY ? v : a);
+              targetX = _topmost.x;
+              targetY = _topmost.topY - cardH - _SPEC_COL_GAP;
+            }
+          }
+        } else {
+          // Primeira spec: posiciona ao lado do anchor, nunca sobre o frame
+          if (side === 'right') {
+            targetX = _anchorBounds.x + _anchorBounds.width + 100;
+            targetY = _anchorBounds.y;
+          } else if (side === 'left') {
+            targetX = _anchorBounds.x - cardW - 100;
+            targetY = _anchorBounds.y;
+          } else if (side === 'bottom') {
+            targetX = _anchorBounds.x;
+            targetY = _anchorBounds.y + _anchorBounds.height + 100;
+          } else { // top
+            targetX = _anchorBounds.x;
+            targetY = _anchorBounds.y - cardH - 100;
+          }
         }
 
         specCard.x = Math.round(targetX);
@@ -2980,8 +3020,20 @@ figma.ui.onmessage = async (msg) => {
 
         // --- Conector (opcional: desativado se drawConnection === false) ---
         if (opts.drawConnection !== false) {
-          const startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
-          const endPt   = { x: specCard.x, y: specCard.y + Math.min(40, specCard.height / 2) };
+          let startPt, endPt;
+          if (side === 'right') {
+            startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+            endPt   = { x: specCard.x, y: specCard.y + specCard.height / 2 };
+          } else if (side === 'left') {
+            startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
+            endPt   = { x: specCard.x + specCard.width, y: specCard.y + specCard.height / 2 };
+          } else if (side === 'bottom') {
+            startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
+            endPt   = { x: specCard.x + specCard.width / 2, y: specCard.y };
+          } else { // top
+            startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
+            endPt   = { x: specCard.x + specCard.width / 2, y: specCard.y + specCard.height };
+          }
 
           const connector = figma.createVector();
           connector.name = `${_specBase}/Conector`;
