@@ -160,11 +160,21 @@ async function avaliarSelecao(): Promise<void> {
     })
     .map(k => limparNomePropriedade(k));
 
+  // Coletar props do Component Set para o seletor de eixos do formatador
+  const propsCsf = ehComponentSet(componentSet)
+    ? Object.keys((componentSet as ComponentSetNode).variantGroupProperties)
+    : [];
+  const csfEixoXPadrao = propsCsf.find(k =>
+    k.toLowerCase().includes('state') || k.toLowerCase().includes('status')
+  ) || propsCsf[0] || null;
+
   figma.ui.postMessage({
     type: 'selection-ready',
     componentName: nomeFormatado,
     isUpdate,
     propsEixoY,
+    propsCsf,
+    csfEixoXPadrao,
   });
 }
 
@@ -3072,11 +3082,17 @@ async function gerarSecaoAnatomia(
     // Extrair e classificar elementos
     elementos = await extrairElementosAnatomia(instanciaTemp, componentSet);
     if (elementos.length === 0) {
-      instanciaTemp.remove();
-      // Remover a seção inteira para não deixar anatomia vazia/quebrada
-      secaoAnatomia.remove();
-      console.warn("Anatomia: nenhum elemento encontrado — seção removida.");
-      return;
+      const tiposForma = new Set(["RECTANGLE", "ELLIPSE", "LINE", "VECTOR", "STAR", "POLYGON"]);
+      const ehComponenteForma = "children" in instanciaTemp
+        && (instanciaTemp as any).children.length > 0
+        && (instanciaTemp as any).children.every((f: SceneNode) => tiposForma.has(f.type));
+      if (!ehComponenteForma) {
+        instanciaTemp.remove();
+        secaoAnatomia.remove();
+        console.warn("Anatomia: nenhum elemento encontrado — seção removida.");
+        return;
+      }
+      // Componente puramente geométrico (ex: Divider) — mantém seção com preview sem badges
     }
     classificarElementos(elementos, instanciaTemp.width, instanciaTemp.height);
 
@@ -3779,7 +3795,11 @@ function preencherDescricaoComponente(componentSet: ComponenteDocumentavel): voi
  * Reorganiza os variants por estado (colunas) × demais propriedades (linhas),
  * cria um frame com título, labels laterais e cabeçalho de colunas.
  */
-async function formatarComponenteSet(componentSet: ComponenteDocumentavel): Promise<void> {
+async function formatarComponenteSet(
+  componentSet: ComponenteDocumentavel,
+  csfEixoX?: string | null,
+  csfEixosY?: string[]
+): Promise<void> {
   const isComponentSet = componentSet.type === 'COMPONENT_SET';
   const target = componentSet as ComponentSetNode | ComponentNode;
 
@@ -3866,9 +3886,15 @@ async function formatarComponenteSet(componentSet: ComponenteDocumentavel): Prom
   if (isComponentSet) {
     const allProps = (target as ComponentSetNode).variantGroupProperties;
     const propKeys = Object.keys(allProps);
-    colProp = propKeys.find(k => k.toLowerCase().includes('state') || k.toLowerCase().includes('status')) || propKeys[0];
-    const rowPropsKeys = propKeys.filter(k => k !== colProp);
-    colValues = allProps[colProp].values;
+    const colPropAuto = propKeys.find(k => k.toLowerCase().includes('state') || k.toLowerCase().includes('status')) || propKeys[0];
+    colProp = csfEixoX === null
+      ? null
+      : (csfEixoX && propKeys.includes(csfEixoX)) ? csfEixoX : colPropAuto;
+    const rowPropsKeysFull = propKeys.filter(k => k !== colProp);
+    const rowPropsKeys = (csfEixosY && csfEixosY.length > 0)
+      ? rowPropsKeysFull.filter(k => csfEixosY.includes(k))
+      : rowPropsKeysFull;
+    colValues = colProp ? allProps[colProp].values : ["default"];
     const rowPropsObj: Record<string, string[]> = {};
     for (const rk of rowPropsKeys) rowPropsObj[rk] = allProps[rk].values;
     rowCombinations = produtoCartesiano(rowPropsObj);
@@ -4007,15 +4033,17 @@ async function formatarComponenteSet(componentSet: ComponenteDocumentavel): Prom
   bodyContainer.appendChild(sideLabels);
   sideLabels.layoutSizingHorizontal = 'HUG';
 
-  const headerHeight = 60;
+  const headerHeight = colProp ? 60 : 0;
 
-  const spacer = figma.createFrame();
-  spacer.name = "Spacer";
-  spacer.fills = [];
-  sideLabels.appendChild(spacer);
-  spacer.resize(250, headerHeight);
-  spacer.layoutSizingHorizontal = 'FILL';
-  spacer.layoutSizingVertical = 'FIXED';
+  if (headerHeight > 0) {
+    const spacer = figma.createFrame();
+    spacer.name = "Spacer";
+    spacer.fills = [];
+    sideLabels.appendChild(spacer);
+    spacer.resize(250, headerHeight);
+    spacer.layoutSizingHorizontal = 'FILL';
+    spacer.layoutSizingVertical = 'FIXED';
+  }
 
   for (let i = 0; i < rowCombinations.length; i++) {
     const wrapper = figma.createFrame();
@@ -4043,30 +4071,32 @@ async function formatarComponenteSet(componentSet: ComponenteDocumentavel): Prom
   mainContent.counterAxisSizingMode = 'AUTO';
   bodyContainer.appendChild(mainContent);
 
-  const headerRow = figma.createFrame();
-  headerRow.name = "Header Row";
-  headerRow.layoutMode = 'HORIZONTAL';
-  headerRow.itemSpacing = 0;
-  headerRow.fills = [];
-  headerRow.resize(setWidth, headerHeight);
-  mainContent.appendChild(headerRow);
+  if (headerHeight > 0) {
+    const headerRow = figma.createFrame();
+    headerRow.name = "Header Row";
+    headerRow.layoutMode = 'HORIZONTAL';
+    headerRow.itemSpacing = 0;
+    headerRow.fills = [];
+    headerRow.resize(setWidth, headerHeight);
+    mainContent.appendChild(headerRow);
 
-  for (let i = 0; i < colValues.length; i++) {
-    const hWrapper = figma.createFrame();
-    hWrapper.name = "Col Wrapper";
-    hWrapper.fills = [];
-    hWrapper.layoutMode = 'HORIZONTAL';
-    hWrapper.primaryAxisAlignItems = 'CENTER';
-    hWrapper.counterAxisAlignItems = 'CENTER';
-    headerRow.appendChild(hWrapper);
-    hWrapper.resize(colWidths[i], headerHeight);
-    hWrapper.layoutSizingHorizontal = 'FILL';
+    for (let i = 0; i < colValues.length; i++) {
+      const hWrapper = figma.createFrame();
+      hWrapper.name = "Col Wrapper";
+      hWrapper.fills = [];
+      hWrapper.layoutMode = 'HORIZONTAL';
+      hWrapper.primaryAxisAlignItems = 'CENTER';
+      hWrapper.counterAxisAlignItems = 'CENTER';
+      headerRow.appendChild(hWrapper);
+      hWrapper.resize(colWidths[i], headerHeight);
+      hWrapper.layoutSizingHorizontal = 'FILL';
 
-    const hLabel = figma.createText();
-    hLabel.characters = colValues[i];
-    await aplicarEstilo(hLabel, labelStyle, CSF_ID_VARIAVEL_LABEL, { family: "Roboto", style: "Bold" }, 14);
-    hLabel.textAlignHorizontal = 'CENTER';
-    hWrapper.appendChild(hLabel);
+      const hLabel = figma.createText();
+      hLabel.characters = colValues[i];
+      await aplicarEstilo(hLabel, labelStyle, CSF_ID_VARIAVEL_LABEL, { family: "Roboto", style: "Bold" }, 14);
+      hLabel.textAlignHorizontal = 'CENTER';
+      hWrapper.appendChild(hLabel);
+    }
   }
 
   const setWrapper = figma.createFrame();
@@ -4136,7 +4166,7 @@ figma.ui.onmessage = async (msg) => {
 
       // Formatar Component Set antes de qualquer trabalho no handoff
       if (msg.incluirComponente) {
-        await formatarComponenteSet(componentSet);
+        await formatarComponenteSet(componentSet, msg.csfEixoX as string | null | undefined, msg.csfEixosY as string[] | undefined);
       }
 
       // Capturar key do template selecionado para uso em resolverTemplate
@@ -4197,7 +4227,7 @@ figma.ui.onmessage = async (msg) => {
         // tornando as posições antigas inválidas; a anatomia vai recalcular posições corretas
         const handoffParaLimpar = buscarHandoffExistente(componentSet);
         if (handoffParaLimpar) handoffParaLimpar.setPluginData("posicoesBadges", "");
-        await formatarComponenteSet(componentSet);
+        await formatarComponenteSet(componentSet, msg.csfEixoX as string | null | undefined, msg.csfEixosY as string[] | undefined);
       }
 
       const handoffExistente = buscarHandoffExistente(componentSet);

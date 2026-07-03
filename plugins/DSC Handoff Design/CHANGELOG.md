@@ -1,5 +1,26 @@
 # Changelog
 
+## v2.2.0 — 2026-07-03
+
+### Novidades
+
+- **Seletor de eixos X e Y para o Formatar Component Set** — ao marcar "Formatar Component Set na página", o plugin exibe chips interativos para escolher qual propriedade vai nas colunas (eixo X) e quais vão nas linhas (eixo Y). A seleção padrão usa a propriedade "state"/"status" como X e as demais como Y.
+- **Layout vertical para componentes com 1 propriedade** — quando o Component Set tem apenas uma prop, é possível movê-la para o eixo Y (clicando no chip que está desabilitado no eixo Y), gerando um layout em coluna em vez de linha.
+- **Accordions na UI** — as seções "Component Set" e "Seções a atualizar" agora são accordions colapsáveis, deixando a interface mais compacta e organizada.
+- **Target `release` no Makefile** — `make release VERSION=x.y.z` compila, commita e envia para GitHub e GitLab em um único comando.
+
+### Melhorias de UX
+
+- Chips do eixo X e Y do Component Set são totalmente interativos nos dois sentidos: clicar no X troca o prop e libera o anterior no Y; clicar num chip "off" no Y faz swap automático com o X atual.
+- Removido o estado "disabled" visual dos chips do Y — props bloqueadas pelo X aparecem apenas como não selecionadas (cinza normal), sem aparência acinzentada diferente.
+- Fallback defensivo no seletor de eixos: se o padrão de X não for detectado, o primeiro prop disponível é selecionado automaticamente.
+
+### Correções
+
+- **Bug: X ficava vazio com múltiplas props** — clicar no chip desabilitado do Y com 2+ props deselecionava o X indevidamente. Corrigido para fazer swap apenas quando há exatamente 1 prop.
+
+---
+
 ## v2.1.0 — 2026-06-03
 
 ### Novidades
