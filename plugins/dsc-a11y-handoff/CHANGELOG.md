@@ -1,5 +1,25 @@
 # Changelog — DSC A11Y Handoff
 
+## v2.3.0 — 2026-07-08
+
+### Novidades
+
+**Nome do template de handoff configurável**
+
+O template de handoff foi renomeado (`[dsc-h] Template Handoff` → `[dsc-hub] Handoff Acessibility`) e migrado para uma biblioteca interna nova. Para essa mudança não quebrar handoffs antigos nem exigir alteração de código na próxima vez que o nome mudar, a detecção de seleção (`tentarTravarContexto`) agora usa uma lista de nomes aceitos (`templateHandoffNames`), com nome antigo e novo por padrão. A lista é editável em Configurações > "Nome do template" (textarea, um nome por linha), persistida em `figma.clientStorage`. Adicionar um nome novo não remove o reconhecimento dos antigos — handoffs já existentes continuam funcionando.
+
+O template novo é um componente individual, sem propriedade de variante — a validação de variante em `tentarTravarContexto` já lida com isso automaticamente (só dispara quando existe uma prop `VARIANT`, exclusiva dos handoffs antigos).
+
+A key usada no swap de migração (`run-handoff` → substituição de handoff antigo pelo novo template) foi atualizada para apontar para o `[dsc-hub] Handoff Acessibility` na biblioteca nova.
+
+### Bugfixes
+
+**Setting de sincronização de template nunca era persistido**
+
+A checkbox "Atualizar template ao gerar handoff" enviava `save-setting` para o `code.ts`, mas não havia handler para essa mensagem — o valor nunca era salvo nem restaurado ao reabrir o plugin. Adicionado handler genérico de `save-setting` que persiste em `figma.clientStorage` e restaura o valor via `setup-ui`.
+
+---
+
 ## v2.2.0 — 2026-06-12
 
 ### Novidades

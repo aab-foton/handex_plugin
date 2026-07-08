@@ -29,6 +29,14 @@ let componenteTabVariacaoAtivo: SceneNode | null = null;
 let componenteSRVariacaoAtivo: SceneNode | null = null;
 let isHandoffGenerated = false;
 
+// Nomes de componente/instância reconhecidos como Template de Handoff.
+// Editável em Configurações > Nome do template (sem precisar alterar código a cada rename).
+const DEFAULT_TEMPLATE_HANDOFF_NAMES = ['[dsc-h] Template Handoff', '[dsc-hub] Handoff Acessibility'];
+let templateHandoffNames: string[] = DEFAULT_TEMPLATE_HANDOFF_NAMES;
+figma.clientStorage.getAsync('a11y-template-names').then((saved) => {
+  if (Array.isArray(saved) && saved.length > 0) templateHandoffNames = saved;
+});
+
 // ==========================================
 // 2. FUNÇÕES AUXILIARES
 // ==========================================
@@ -530,7 +538,7 @@ figma.ui.onmessage = async (msg) => {
       figma.ui.postMessage({ type: 'feedback', message: '⏳ Substituindo template antigo...' });
       let novaInstancia: InstanceNode | null = null;
       try {
-        const novoComp = await figma.importComponentByKeyAsync('4ebd8a017a86b29ca60427416ed4b76af05e4a67');
+        const novoComp = await figma.importComponentByKeyAsync('d95d06ed0e31131a29a6f7c87c3fcc0f2eee6950');
         novaInstancia = novoComp.createInstance();
         novaInstancia.x = handoffAtivo.x;
         novaInstancia.y = handoffAtivo.y;
@@ -3010,6 +3018,13 @@ figma.ui.onmessage = async (msg) => {
     }
   }
 
+  else if (msg.type === 'save-setting') {
+    await figma.clientStorage.setAsync(msg.key, msg.value);
+    if (msg.key === 'a11y-template-names' && Array.isArray(msg.value) && msg.value.length > 0) {
+      templateHandoffNames = msg.value;
+    }
+  }
+
   else if (msg.type === 'save-partial-data') {
     if (!handoffAtivo) return;
     const dbInstance = await getCachedPluginDataNode();
@@ -3191,7 +3206,7 @@ figma.on('selectionchange', () => {
 
 function tentarTravarContexto(selection: readonly SceneNode[], skipUISetup = false) {
   const handoffs = selection.filter(n =>
-    n.name.includes("[dsc-h] Template Handoff") ||
+    templateHandoffNames.some(name => n.name.includes(name)) ||
     n.name.startsWith('[A11Y Handoff]')
   );
   const components = selection.filter(n =>
@@ -3220,7 +3235,9 @@ function tentarTravarContexto(selection: readonly SceneNode[], skipUISetup = fal
   const handoff = generatedHandoff ?? handoffs[0];
   const component = components[0];
 
-  // Validação de variante para o template de handoff
+  // Validação de variante para o template de handoff (só se aplica a handoffs antigos,
+  // que ainda são variante de um component set; o template novo é componente individual
+  // e não tem prop VARIANT, então o loop abaixo não encontra nada e passa direto)
   if (handoff.type === 'INSTANCE') {
     const props = handoff.componentProperties;
     for (const propName in props) {
@@ -3942,6 +3959,7 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
   }
 
   const settingSync = await figma.clientStorage.getAsync('a11y-setting-sync') ?? true;
+  const settingTemplateNames = await figma.clientStorage.getAsync('a11y-template-names') ?? DEFAULT_TEMPLATE_HANDOFF_NAMES;
   figma.ui.postMessage({ type: 'setup-ui', isOldFormat,
     masterList,
     rolesList,
@@ -3950,6 +3968,6 @@ async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
       || (activeHandoff.name.startsWith('[A11Y Handoff]') ? activeHandoff.name.slice('[A11Y Handoff]'.length).trim() : null)
       || "Componente",
     isGenerated: activeHandoff.type !== "INSTANCE",
-    settings: { syncTemplate: settingSync }
+    settings: { syncTemplate: settingSync, templateNames: settingTemplateNames }
   });
 }

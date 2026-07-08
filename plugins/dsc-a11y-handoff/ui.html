@@ -654,7 +654,7 @@
 
     <div class="footer-bar">
       <button class="footer-nav-btn" id="btnNavPrev" onclick="navigateTab(-1)">‹ Anterior</button>
-      <span class="version-text">DSC A11Y Handoff v2.2.0</span>
+      <span class="version-text">DSC A11Y Handoff v2.3.0</span>
       <button class="footer-nav-btn" id="btnNavNext" onclick="navigateTab(1)">Próximo ›</button>
     </div>
   </div>
@@ -664,6 +664,7 @@
     const escapeHtml = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     let masterList = [];
     let _settingSync = true;
+    let _templateNames = [];
     let currentData = [];
     let isGenerated = false;
 
@@ -938,6 +939,10 @@
         masterList = msg.masterList || [];
         currentData = msg.componentData?.mapeamentos || [];
         isGenerated = msg.isGenerated || false; // Atualiza o estado global
+        _settingSync = msg.settings?.syncTemplate ?? _settingSync;
+        if (Array.isArray(msg.settings?.templateNames) && msg.settings.templateNames.length > 0) {
+          _templateNames = msg.settings.templateNames;
+        }
         isOldFormat = msg.isOldFormat || false;
         if (isOldFormat) {
           const _cd = msg.componentData || {};
@@ -1492,6 +1497,7 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
       function openSettings() {
     // Restaura setting salvo (aqui o elemento já existe no DOM)
     el('settingSyncTemplate').checked = _settingSync;
+    el('settingTemplateNames').value = _templateNames.join('\n');
 
     const count = masterList.length;
     el('settingsMasterCount').textContent = count > 0
@@ -1527,7 +1533,13 @@ el('btnAddTouch').style.display = semToque ? 'none' : 'block';
   function closeSettings() {
     el('settingsOverlay').classList.remove('open');
     _settingSync = el('settingSyncTemplate').checked;
-parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-sync', value: _settingSync } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-setting-sync', value: _settingSync } }, '*');
+
+    const names = el('settingTemplateNames').value.split('\n').map(s => s.trim()).filter(Boolean);
+    if (names.length > 0) {
+      _templateNames = names;
+      parent.postMessage({ pluginMessage: { type: 'save-setting', key: 'a11y-template-names', value: names } }, '*');
+    }
   }
 
   function openInfo() {
@@ -2930,6 +2942,17 @@ const select = el('srSelectTipoConector');
             <span>Atualizar template ao gerar handoff</span>
           </label>
           <p style='font-size:11px;color:#999;margin-top:4px;margin-left:26px;'>Sincroniza a estrutura visual com o template original.</p>
+        </div>
+      </div>
+
+      <div class='card'>
+        <div class='card-body'>
+          <div style='display:flex;align-items:center;gap:8px;margin-bottom:16px;'>
+            <span style='font-size:18px;'>🏷</span>
+            <span style='font-size:14px;font-weight:600;'>Nome do template</span>
+          </div>
+          <p style='font-size:11px;color:#999;margin-bottom:8px;'>Nomes de componente/instância reconhecidos como Template de Handoff (um por linha). Se o template for renomeado, adicione o nome novo aqui — não é preciso remover o antigo, handoffs já gerados continuam funcionando.</p>
+          <textarea id='settingTemplateNames' rows='3' style='width:100%;font-size:12px;padding:8px;border:1px solid #E5E5E5;border-radius:6px;resize:vertical;font-family:inherit;box-sizing:border-box;'></textarea>
         </div>
       </div>
 
