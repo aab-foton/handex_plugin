@@ -455,11 +455,17 @@
         if (wrap) wrap.classList.add('hidden');
       }
     }
+    function lockSpecPositioning(frameId, index, specId) {
+      const frame = getFrame(frameId);
+      if (!frame || !frame.createdSpecs[index]) return;
+      parent.postMessage({ pluginMessage: { type: 'lock-spec', specId } }, '*');
+    }
     window.updateSpecTitle = updateSpecTitle;
     window.toggleSpecVisibility = toggleSpecVisibility;
     window.toggleSpecObs = toggleSpecObs;
     window.updateSpecObs = updateSpecObs;
     window.deleteSpecFromFrame = deleteSpecFromFrame;
+    window.lockSpecPositioning = lockSpecPositioning;
 
     // ── Cores por categoria de spec ─────────────────────────────────
     const _CAT_COLORS = {
@@ -536,6 +542,10 @@
         const groupVisible = frame.specGroupVisible || {};
         const isGroupHidden = groupVisible[letter] === false;
         const groupName = groupNames[letter] || '';
+        const linesVisible = frame.specLinesVisible || {};
+        const isLinesHidden = linesVisible[letter] === false;
+        const groupLocked = frame.specGroupLocked || {};
+        const isGroupUnlocked = groupLocked[letter] === false;
 
         // Group header with editable name and visibility toggle
         const groupHeader = document.createElement('div');
@@ -549,11 +559,28 @@
             onchange="updateSpecGroupName('${frameId}', '${letter}', this.value)"
             onclick="event.stopPropagation()" />
           <span class="text-[10px] text-slate-500 dark:text-dark-muted shrink-0">${specs.length} esp.</span>
+          ${isGroupUnlocked ? `
+          <span title="Grupo destravado — fora do estado padrão protegido"
+            class="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[8px] font-bold uppercase tracking-wide shrink-0">
+            <i data-lucide="lock-open" class="w-2.5 h-2.5"></i>destravado
+          </span>` : ''}
+          <button type="button" title="${isLinesHidden ? 'Exibir linhas' : 'Ocultar linhas'}"
+            aria-label="${isLinesHidden ? 'Exibir linhas' : 'Ocultar linhas'}"
+            onclick="event.stopPropagation(); toggleSpecLinesVisibility('${frameId}', '${letter}')"
+            class="w-5 h-5 flex items-center justify-center ${isLinesHidden ? 'text-gray-400' : 'text-slate-500'} hover:text-[#0070af] transition-colors shrink-0">
+            <i data-lucide="spline" class="w-3 h-3"></i>
+          </button>
           <button type="button" title="${isGroupHidden ? 'Exibir grupo' : 'Ocultar grupo'}"
             aria-label="${isGroupHidden ? 'Exibir grupo' : 'Ocultar grupo'}"
             onclick="event.stopPropagation(); toggleSpecGroupVisibility('${frameId}', '${letter}')"
             class="w-5 h-5 flex items-center justify-center ${isGroupHidden ? 'text-gray-400' : 'text-slate-500'} hover:text-[#0070af] transition-colors shrink-0">
             <i data-lucide="${isGroupHidden ? 'eye-off' : 'eye'}" class="w-3 h-3"></i>
+          </button>
+          <button type="button" title="${isGroupUnlocked ? 'Travar grupo' : 'Destravar grupo'}"
+            aria-label="${isGroupUnlocked ? 'Travar grupo' : 'Destravar grupo'}"
+            onclick="event.stopPropagation(); toggleSpecGroupLock('${frameId}', '${letter}')"
+            class="w-5 h-5 flex items-center justify-center ${isGroupUnlocked ? 'text-amber-500' : 'text-slate-500'} hover:text-[#0070af] transition-colors shrink-0">
+            <i data-lucide="${isGroupUnlocked ? 'lock-open' : 'lock'}" class="w-3 h-3"></i>
           </button>`;
         groupEl.appendChild(groupHeader);
 
@@ -604,11 +631,24 @@
             _renderExcItem(exc, `deleteSpecException('${frameId}', ${spec._idx}, ${ei})`)
           ).join('');
 
+          const isPending = spec.pendingConfirmation === true;
+
+          const pendingBarHtml = isPending ? `
+            <div class="flex items-center gap-1.5 px-2 py-1.5 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-100 dark:border-amber-800/30">
+              <i data-lucide="move" class="w-3 h-3 text-amber-500 shrink-0"></i>
+              <span class="flex-1 min-w-0 text-[9px] font-bold text-amber-600 dark:text-amber-400 truncate">Posicionando…</span>
+              <button type="button" onclick="event.stopPropagation(); lockSpecPositioning('${frameId}', ${spec._idx}, '${spec.id}')"
+                class="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-800/30 border border-amber-200 dark:border-amber-700/40 rounded-md hover:bg-amber-200 transition-colors shrink-0">
+                <i data-lucide="check" class="w-2.5 h-2.5"></i> Concluir posicionamento
+              </button>
+            </div>` : '';
+
           const item = document.createElement('div');
-          item.className = `relative bg-white dark:bg-dark-surface rounded-xl border ${isHidden ? 'border-gray-100 opacity-50' : 'border-gray-100 dark:border-dark-line'} overflow-hidden transition-all`;
+          item.className = `relative bg-white dark:bg-dark-surface rounded-xl border ${isPending ? 'border-amber-200 dark:border-amber-800/40' : isHidden ? 'border-gray-100 opacity-50' : 'border-gray-100 dark:border-dark-line'} overflow-hidden transition-all`;
 
           item.innerHTML = `
             <div class="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-dark-surface" style="background-color:${color}"></div>
+            ${pendingBarHtml}
             <div class="flex items-center px-2 py-1.5 gap-1.5 cursor-pointer select-none" onclick="toggleSpecDetails('${detailsId}')">
               <div class="w-4 h-4 rounded flex items-center justify-center text-[8px] font-extrabold text-white shrink-0" style="background-color:${color}">${letter}</div>
               <div class="flex-1 min-w-0">
@@ -820,6 +860,52 @@
       renderSpecsListForFrame(frameId);
     }
     window.toggleSpecGroupVisibility = toggleSpecGroupVisibility;
+
+    function toggleSpecLinesVisibility(frameId, letter) {
+      const frame = getFrame(frameId);
+      if (!frame) return;
+      if (!frame.specLinesVisible) frame.specLinesVisible = {};
+      const isNowHidden = !(frame.specLinesVisible[letter] === false);
+      frame.specLinesVisible[letter] = isNowHidden ? false : true;
+      const specIds = (frame.createdSpecs || [])
+        .filter(spec => (spec.letter || '?') === letter && spec.id)
+        .map(spec => spec.id);
+      parent.postMessage({ pluginMessage: { type: 'hide-spec-lines', specIds, forceState: !isNowHidden } }, '*');
+      saveToStorage();
+      renderSpecsListForFrame(frameId);
+    }
+    window.toggleSpecLinesVisibility = toggleSpecLinesVisibility;
+
+    function toggleSpecGroupLock(frameId, letter) {
+      const frame = getFrame(frameId);
+      if (!frame) return;
+      if (!frame.specGroupLocked) frame.specGroupLocked = {};
+      const isNowUnlocked = !(frame.specGroupLocked[letter] === false);
+      frame.specGroupLocked[letter] = isNowUnlocked ? false : true;
+      const willLock = !isNowUnlocked; // isNowUnlocked=true significa que esta ação DESTRAVOU o grupo
+      const groupSpecs = (frame.createdSpecs || []).filter(spec => (spec.letter || '?') === letter && spec.id);
+      // Travar via grupo nunca deve pegar specs ainda pendentes de posicionamento inicial —
+      // essas só podem ser travadas via "Concluir posicionamento" (lock-spec), para a UI
+      // não ficar mostrando "Posicionando…" com o nó já travado no canvas.
+      const specIds = groupSpecs
+        .filter(spec => !willLock || !spec.pendingConfirmation)
+        .map(spec => spec.id);
+      if (specIds.length > 0) {
+        parent.postMessage({ pluginMessage: { type: 'unlock-spec-group', specIds, locked: !isNowUnlocked } }, '*');
+      } else if (willLock) {
+        // Nenhuma spec foi de fato travada (todas pendentes) — não fingir que o grupo travou.
+        frame.specGroupLocked[letter] = false;
+      }
+      saveToStorage();
+      renderSpecsListForFrame(frameId);
+      const skippedPending = willLock && groupSpecs.some(spec => spec.pendingConfirmation);
+      showToast(isNowUnlocked
+        ? `Grupo ${letter} destravado — edite com cuidado e trave novamente ao concluir.`
+        : (skippedPending
+          ? `Grupo ${letter} travado — specs ainda pendentes de posicionamento não foram travadas.`
+          : `Grupo ${letter} travado novamente.`));
+    }
+    window.toggleSpecGroupLock = toggleSpecGroupLock;
 
     // Global stores already defined at top: lastMeasurements, createdSpecs
 

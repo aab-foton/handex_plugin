@@ -220,11 +220,12 @@
       }
 
       if (msg.type === "spec-created") {
+        const newSpec = Object.assign({ pendingConfirmation: true }, msg.spec || msg.data);
         if (activeFrameId) {
           const frame = getFrame(activeFrameId);
           if (frame) {
             if (!frame.createdSpecs) frame.createdSpecs = [];
-            frame.createdSpecs.push(msg.spec || msg.data);
+            frame.createdSpecs.push(newSpec);
             renderSpecsListForFrame(activeFrameId);
             if (typeof syncAndRenderSpecs === 'function') syncAndRenderSpecs();
             if (typeof showFrameSection === 'function') showFrameSection(activeFrameId, 'specs');
@@ -235,11 +236,35 @@
             }, 100);
           }
         } else {
-          createdSpecs.push(msg.spec || msg.data);
+          createdSpecs.push(newSpec);
           renderSpecsList();
         }
         saveSpecsToStorage();
         if (window._toastSaved) _toastSaved();
+        showToast('Especificação criada — arraste para posicionar e conclua o posicionamento.');
+      }
+
+      if (msg.type === "spec-locked") {
+        let found = false;
+        (handoffData.frames || []).forEach(frame => {
+          (frame.createdSpecs || []).forEach(spec => {
+            if (spec && spec.id === msg.specId) {
+              spec.pendingConfirmation = false;
+              found = true;
+            }
+          });
+        });
+        createdSpecs.forEach(spec => {
+          if (spec && spec.id === msg.specId) {
+            spec.pendingConfirmation = false;
+            found = true;
+          }
+        });
+        if (found) {
+          if (activeFrameId && typeof renderSpecsListForFrame === 'function') renderSpecsListForFrame(activeFrameId);
+          if (typeof renderSpecsList === 'function') renderSpecsList();
+          saveSpecsToStorage();
+        }
       }
 
       if (msg.type === "flow-created") {

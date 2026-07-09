@@ -387,6 +387,24 @@ figma.ui.onmessage = async (msg) => {
 
       const data = msg.data;
 
+      // Fallback de segurança: trava specs pendentes de confirmação de posicionamento
+      // antes de gerar a ficha, para não deixar grupos editáveis esquecidos no canvas.
+      let _pendingSpecsLocked = 0;
+      (data.frames || []).forEach(frame => {
+        (frame.createdSpecs || []).forEach(spec => {
+          if (!spec || !spec.pendingConfirmation) return;
+          const specNode = figma.getNodeById(spec.id);
+          if (specNode && specNode.name && specNode.name.startsWith('[Spec | ')) {
+            specNode.locked = true;
+          }
+          spec.pendingConfirmation = false;
+          _pendingSpecsLocked++;
+        });
+      });
+      if (_pendingSpecsLocked > 0) {
+        figma.notify(`${_pendingSpecsLocked} especificação(ões) pendente(s) foram travadas automaticamente ao gerar a ficha.`);
+      }
+
       // Helpers
       function createText(text, size = 14, weight = "Regular", color = { r: 0.12, g: 0.16, b: 0.23 }) {
         const t = figma.createText();
@@ -3136,7 +3154,7 @@ figma.ui.onmessage = async (msg) => {
       // Always create group at the Page level to avoid nesting in selected components
       const specGroup = figma.group(groupNodes, figma.currentPage);
       specGroup.name = `[Spec | ${opts.letter} | ${_specSide}] ${node.name}`;
-      specGroup.locked = true;
+      specGroup.locked = false;
 
 
       figma.ui.postMessage({
@@ -3160,8 +3178,16 @@ figma.ui.onmessage = async (msg) => {
         }
       });
 
-      figma.notify("Especificação criada com sucesso!");
+      figma.notify("Especificação criada — arraste para posicionar. Clique em Concluir quando pronto.");
     })();
+  }
+
+  if (msg.type === "lock-spec") {
+    const specNode = figma.getNodeById(msg.specId);
+    if (specNode && specNode.name && specNode.name.startsWith('[Spec | ')) {
+      specNode.locked = true;
+      figma.ui.postMessage({ type: "spec-locked", specId: msg.specId });
+    }
   }
 
   if (msg.type === "highlight-node") {
@@ -3229,6 +3255,25 @@ figma.ui.onmessage = async (msg) => {
   if (msg.type === "show-node") {
     const node = figma.getNodeById(msg.id);
     if (node) node.visible = true;
+  }
+
+  if (msg.type === "hide-spec-lines") {
+    const targetVisible = msg.forceState !== undefined ? msg.forceState : false;
+    (msg.specIds || []).forEach(specId => {
+      const specGroup = figma.getNodeById(specId);
+      if (!specGroup || !('findChildren' in specGroup)) return;
+      const lineNodes = specGroup.findChildren(n => n.name === 'Conector' || n.name === 'DotInicio' || n.name === 'DotFim');
+      lineNodes.forEach(n => { n.visible = targetVisible; });
+    });
+  }
+
+  if (msg.type === "unlock-spec-group") {
+    const targetLocked = msg.locked !== undefined ? msg.locked : false;
+    (msg.specIds || []).forEach(specId => {
+      const specGroup = figma.getNodeById(specId);
+      if (!specGroup) return;
+      specGroup.locked = targetLocked;
+    });
   }
 
   if (msg.type === 'rename-node') {
