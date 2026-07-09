@@ -1852,6 +1852,8 @@
           const bg = figma.createRectangle();
           bg.resize(label.width + 8, label.height + 4);
           bg.fills = [{ type: "SOLID", color: redColor }];
+          bg.strokes = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+          bg.strokeWeight = 1;
           bg.cornerRadius = 4;
           figma.currentPage.appendChild(label);
           if (type === "horizontal") {
@@ -2826,9 +2828,11 @@
           linkTxt.fontName = { family: "Inter", style: "Regular" };
           linkTxt.fontSize = 11;
           linkTxt.fills = [{ type: "SOLID", color: { r: 0, g: 0.4, b: 0.8 } }];
-          linkTxt.characters = "Link: " + opts.link;
+          linkTxt.characters = opts.link;
+          linkTxt.textDecoration = "UNDERLINE";
+          linkTxt.hyperlink = { type: "URL", value: opts.link };
           linkTxt.textAutoResize = "HEIGHT";
-          linkTxt.resize(220, 20);
+          linkTxt.layoutAlign = "STRETCH";
           specCard.appendChild(linkTxt);
         }
         let groupNodes = [];
@@ -3402,9 +3406,9 @@
         const isStart = msg.flowType === "event_start";
         const circle = figma.createEllipse();
         figma.currentPage.appendChild(circle);
-        circle.resize(68, 68);
-        circle.x = bestB.x - 34;
-        circle.y = bestB.y - 34;
+        circle.resize(96, 96);
+        circle.x = bestB.x - 48;
+        circle.y = bestB.y - 48;
         circle.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
         circle.strokes = [{ type: "SOLID", color: isStart ? { r: 0.13, g: 0.6, b: 0.3 } : { r: 0.86, g: 0.1, b: 0.1 } }];
         circle.strokeWeight = isStart ? 3 : 5;
