@@ -735,7 +735,7 @@ ${(handoffData.createdFlows || []).length === 0
       // 3. Cenários de Exceção & Erro (agrupados por tipo)
       let excecoesContent = "";
       if (excecoes.length === 0) {
-        excecoesContent = '<p class="text-xs text-slate-500 dark:text-slate-500 font-medium">Nenhum cenário de exceção cadastrado.</p>';
+        excecoesContent = '<p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Nenhum cenário de exceção cadastrado.</p>';
       } else {
         const groups = {};
         excecoes.forEach(e => {
@@ -766,11 +766,11 @@ ${(handoffData.createdFlows || []).length === 0
           `).join('');
           return `
             <div>
-              <div class="flex items-center gap-2 mb-2 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500">
+              <div class="flex items-center gap-2 mb-2 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
                 <i data-lucide="${map.icon}" class="w-3.5 h-3.5"></i>
                 <span>${map.label}</span>
                 <span class="text-slate-500">·</span>
-                <span class="text-slate-500 dark:text-slate-500 font-bold">${items.length}</span>
+                <span class="text-slate-500 dark:text-slate-400 font-bold">${items.length}</span>
               </div>
               <div class="space-y-2">${cards}</div>
             </div>
@@ -783,7 +783,7 @@ ${(handoffData.createdFlows || []).length === 0
       const regrasContent = `
         <div class="space-y-3 text-left">
           ${regras.length === 0
-            ? '<p class="text-xs text-slate-500 dark:text-slate-500 font-medium">Nenhuma regra de negócio cadastrada.</p>'
+            ? '<p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Nenhuma regra de negócio cadastrada.</p>'
             : regras.map(r => `
               <div class="p-4 bg-blue-50/10 dark:bg-blue-950/5 border border-blue-100/50 dark:border-blue-900/20 rounded-xl">
                 <h4 class="text-xs font-black text-blue-800 dark:text-blue-400 flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-[#0070af] rounded-full"></span>${r.titulo || 'Regra de Negócio'}</h4>
@@ -828,7 +828,7 @@ ${(handoffData.createdFlows || []).length === 0
                       <span class="text-[11px] font-black text-slate-800 dark:text-white">${entry.name}</span>
                       <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">${entry.category}</span>
                     </div>
-                    ${changesText ? `<p class="text-[10px] text-slate-600 dark:text-slate-500 mt-1 leading-snug font-mono">${changesText}</p>` : ''}
+                    ${changesText ? `<p class="text-[10px] text-slate-600 dark:text-slate-400 mt-1 leading-snug font-mono">${changesText}</p>` : ''}
                   </div>
                 </div>
               </div>
@@ -843,26 +843,26 @@ ${(handoffData.createdFlows || []).length === 0
 
           const diffContent = `
             <div class="text-left space-y-4">
-              <div class="p-3 bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60 rounded-xl text-[10px] text-slate-500 dark:text-slate-500">
+              <div class="p-3 bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60 rounded-xl text-[10px] text-slate-500 dark:text-slate-400">
                 <span class="font-bold text-slate-700 dark:text-slate-300">Comparando com versão ${prevVer}</span> · exportada em ${prevFmt}
               </div>
               <div class="grid grid-cols-3 gap-2">
                 <div class="bg-green-50/40 dark:bg-green-950/10 border border-green-100 dark:border-green-900/30 p-2 rounded-lg text-center">
                   <p class="text-base font-black text-green-700 dark:text-green-400">${computedDiff.added.length}</p>
-                  <p class="text-[8px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-500">Adicionados</p>
+                  <p class="text-[8px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Adicionados</p>
                 </div>
                 <div class="bg-amber-50/40 dark:bg-amber-950/10 border border-amber-100 dark:border-amber-900/30 p-2 rounded-lg text-center">
                   <p class="text-base font-black text-amber-700 dark:text-amber-400">${computedDiff.modified.length}</p>
-                  <p class="text-[8px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-500">Modificados</p>
+                  <p class="text-[8px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Modificados</p>
                 </div>
                 <div class="bg-red-50/40 dark:bg-red-950/10 border border-red-100 dark:border-red-900/30 p-2 rounded-lg text-center">
                   <p class="text-base font-black text-red-700 dark:text-red-400">${computedDiff.removed.length}</p>
-                  <p class="text-[8px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-500">Removidos</p>
+                  <p class="text-[8px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Removidos</p>
                 </div>
               </div>
               ${diffSections.map(sec => `
                 <div>
-                  <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">${sec.title} · ${sec.items.length}</p>
+                  <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">${sec.title} · ${sec.items.length}</p>
                   <div class="space-y-2">${sec.items.map(it => renderItem(it, sec.kind)).join('')}</div>
                 </div>
               `).join('')}
@@ -891,14 +891,14 @@ ${(handoffData.createdFlows || []).length === 0
         if (statesArr.length > 0) {
           statesHTML = `
             <div>
-              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">Estados Interativos · ${statesArr.length}</p>
+              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Estados Interativos · ${statesArr.length}</p>
               <div class="grid sm:grid-cols-2 gap-3">
                 ${statesArr.map(s => `
                   <div class="p-3 border ${stateColorMap[s.color] || stateColorMap.slate} rounded-xl">
                     <div class="flex items-center gap-2 mb-1.5">
                       <i data-lucide="${s.icon || 'circle'}" class="w-3.5 h-3.5"></i>
                       <span class="text-[11px] font-black">${s.state}</span>
-                      ${s.target ? `<span class="ml-auto text-[10px] font-bold text-slate-500 dark:text-slate-500 truncate" title="${s.target}">${s.target}</span>` : ''}
+                      ${s.target ? `<span class="ml-auto text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate" title="${s.target}">${s.target}</span>` : ''}
                     </div>
                     ${s.description ? `<p class="text-[11px] text-slate-600 dark:text-slate-300 leading-snug mb-1.5">${s.description.replace(/\n/g, '<br>')}</p>` : ''}
                     ${s.link ? `<a href="${s.link}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline">Ver no Figma <i data-lucide="external-link" class="w-2.5 h-2.5"></i></a>` : ''}
@@ -913,7 +913,7 @@ ${(handoffData.createdFlows || []).length === 0
         if (motionArr.length > 0) {
           motionHTML = `
             <div>
-              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2 mt-${statesArr.length > 0 ? '4' : '0'}">Motion / Transições · ${motionArr.length}</p>
+              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2 mt-${statesArr.length > 0 ? '4' : '0'}">Motion / Transições · ${motionArr.length}</p>
               <div class="space-y-2">
                 ${motionArr.map(m => `
                   <div class="p-3 bg-pink-50/40 dark:bg-pink-950/10 border border-pink-100/60 dark:border-pink-900/30 rounded-xl">
@@ -943,7 +943,7 @@ ${(handoffData.createdFlows || []).length === 0
       const hasAttachedFiles = uploadedFileNames.length > 0;
       let anexosContent = "";
       if (!hasExternalDocs && !hasAttachedFiles) {
-        anexosContent = '<p class="text-xs text-slate-500 dark:text-slate-500 font-medium">Nenhum anexo ou link adicionado.</p>';
+        anexosContent = '<p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Nenhum anexo ou link adicionado.</p>';
       } else {
         let externalHTML = "";
         if (hasExternalDocs) {
@@ -959,14 +959,14 @@ ${(handoffData.createdFlows || []).length === 0
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-xs font-black text-slate-800 dark:text-white truncate">${d.label}</p>
-                <p class="text-[10px] text-slate-500 dark:text-slate-500 truncate">${docs[d.key].link}</p>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${docs[d.key].link}</p>
               </div>
               <i data-lucide="external-link" class="w-3.5 h-3.5 text-slate-500 shrink-0"></i>
             </a>
           `).join('');
           externalHTML = `
             <div>
-              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">Links externos</p>
+              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Links externos</p>
               <div class="space-y-2">${docRows}</div>
             </div>
           `;
@@ -989,7 +989,7 @@ ${(handoffData.createdFlows || []).length === 0
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-xs font-black text-slate-800 dark:text-white truncate">${name}</p>
-                  <p class="text-[10px] text-slate-500 dark:text-slate-500 truncate">./Anexos/${name}</p>
+                  <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">./Anexos/${name}</p>
                 </div>
                 <i data-lucide="download" class="w-3.5 h-3.5 text-slate-500 shrink-0"></i>
               </a>
@@ -997,7 +997,7 @@ ${(handoffData.createdFlows || []).length === 0
           }).join('');
           filesHTML = `
             <div>
-              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2 mt-${hasExternalDocs ? '4' : '0'}">Arquivos anexados (pasta ./Anexos)</p>
+              <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2 mt-${hasExternalDocs ? '4' : '0'}">Arquivos anexados (pasta ./Anexos)</p>
               <div class="space-y-2">${fileRows}</div>
             </div>
           `;
@@ -1016,11 +1016,11 @@ ${(handoffData.createdFlows || []).length === 0
                 <div class="min-w-0 flex-1">
                   <h4 class="text-xs font-black text-slate-800 dark:text-white truncate">${m.nome || "Sem Nome"}</h4>
                   <p class="text-[9px] font-bold text-[#0070af] dark:text-blue-400 uppercase tracking-wide mt-0.5">${m.papel || "Membro"}</p>
-                  ${m.email ? `<p class="text-[10px] text-slate-500 dark:text-slate-500 truncate mt-0.5">${m.email}</p>` : ''}
+                  ${m.email ? `<p class="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">${m.email}</p>` : ''}
                 </div>
               </div>
             `).join('')
-            : '<p class="col-span-2 text-xs text-slate-500 dark:text-slate-500 font-medium text-center py-4">Nenhum membro da equipe adicionado.</p>'
+            : '<p class="col-span-2 text-xs text-slate-500 dark:text-slate-400 font-medium text-center py-4">Nenhum membro da equipe adicionado.</p>'
           }
         </div>
       `;
@@ -1066,7 +1066,7 @@ ${(handoffData.createdFlows || []).length === 0
                           <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${s.name || s.label || 'Spec'}</span>
                           ${_sc ? `<span class="shrink-0" style="${_getCatStyleHTML(s.category || _sc)}">${_sc}</span>` : ''}
                           ${(s.excecoes && s.excecoes.length > 0) ? `<span class="text-[9px] font-bold text-amber-600 dark:text-amber-400 shrink-0">${s.excecoes.length} exc.</span>` : ''}
-                          <button data-toggle-btn onclick="toggleHTMLItem('html-spec-${fi}-${si}', this)" title="Ocultar" class="ml-1 shrink-0 opacity-40 hover:opacity-100 transition-opacity">
+                          <button data-toggle-btn onclick="toggleHTMLItem('html-spec-${fi}-${si}', this)" title="Ocultar" aria-label="Ocultar especificação" class="ml-1 shrink-0 opacity-40 hover:opacity-100 transition-opacity">
                             <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                           </button>
                         </div>
@@ -1094,7 +1094,7 @@ ${(handoffData.createdFlows || []).length === 0
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21.3 8.7 8.7 21.3c-1 1-2.5 1-3.4 0l-2.6-2.6c-1-1-1-2.5 0-3.4L15.3 2.7c1-1 2.5-1 3.4 0l2.6 2.6c1 1 1 2.5 0 3.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>
                         <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${m.name || m.label || 'Medida'}</span>
                         ${m.details ? `<span class="text-[10px] text-slate-500 font-mono shrink-0">${m.details}</span>` : ''}
-                        <button data-toggle-btn onclick="toggleHTMLItem('html-meas-${fi}-${mi}', this)" title="Ocultar" class="ml-1 shrink-0 opacity-40 hover:opacity-100 transition-opacity">
+                        <button data-toggle-btn onclick="toggleHTMLItem('html-meas-${fi}-${mi}', this)" title="Ocultar" aria-label="Ocultar medida" class="ml-1 shrink-0 opacity-40 hover:opacity-100 transition-opacity">
                           <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
                       </div>
@@ -1158,7 +1158,7 @@ ${(handoffData.createdFlows || []).length === 0
                     ${fRessalvas.map(r => `
                       <div class="flex items-center gap-2 p-2 bg-amber-50/60 dark:bg-amber-950/15 border border-amber-100 dark:border-amber-800/30 rounded-lg">
                         <i data-lucide="${r.status === 'error' ? 'x-circle' : 'alert-triangle'}" class="w-3 h-3 ${r.status === 'error' ? 'text-red-400' : 'text-amber-400'} shrink-0"></i>
-                        <span class="text-[9px] text-slate-400 shrink-0">${r.label}</span>
+                        <span class="text-[9px] text-slate-400 dark:text-slate-400 shrink-0">${r.label}</span>
                         <span class="text-[10px] font-medium text-slate-700 dark:text-slate-300 truncate flex-1">${r.name}</span>
                         ${r.nodeId ? `<span class="text-[8px] font-mono text-slate-300 dark:text-slate-600 shrink-0 truncate max-w-[60px]" title="Node ID: ${r.nodeId}">${r.nodeId.substring(0,8)}…</span>` : ''}
                       </div>
@@ -1245,7 +1245,7 @@ ${(handoffData.createdFlows || []).length === 0
                                   ${_sCat ? `<span style="${_getCatStyleHTML(s.category || _sCat)}">${_sCat}</span>` : ''}
                                 </div>
                                 ${s.note ? `<p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">${s.note}</p>` : ''}
-                                ${s.targetNodeId ? `<p class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-mono">Node: ${s.targetNodeId}</p>` : ''}
+                                ${s.targetNodeId ? `<p class="text-[9px] text-slate-400 dark:text-slate-400 mt-0.5 font-mono">Node: ${s.targetNodeId}</p>` : ''}
                               </div>
                             </div>
                             ${_sProps.length > 0 ? `
@@ -1295,7 +1295,7 @@ ${(handoffData.createdFlows || []).length === 0
                 <div class="w-6 h-6 rounded-md bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0 text-[10px] font-black">${fi + 1}</div>
                 <div class="flex-1 min-w-0">
                   <span class="text-[11px] font-black text-slate-800 dark:text-white">${flow.name || 'Fluxo'}</span>
-                  ${flow.decisionText ? `<span class="ml-2 text-[10px] text-slate-500 dark:text-dark-muted">"${flow.decisionText}"</span>` : ''}
+                  ${flow.decisionText ? `<span class="ml-2 text-[10px] text-slate-500 dark:text-slate-400">"${flow.decisionText}"</span>` : ''}
                 </div>
                 <span class="text-[9px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider shrink-0">${flowTypeLabel[flow.type] || flow.type || ''}</span>
               </div>
@@ -1320,7 +1320,7 @@ ${(handoffData.createdFlows || []).length === 0
                   <div class="flex items-center gap-2 mb-1">
                     <div class="w-5 h-5 rounded flex items-center justify-center text-[9px] font-black text-white shrink-0" style="background:${s.color || '#005ca9'}">${s.letter || 'A'}</div>
                     <span class="text-[11px] font-bold text-slate-800 dark:text-white flex-1">${s.name || ''}</span>
-                    ${isHidden ? '<span class="text-[9px] text-slate-400 italic">oculta</span>' : ''}
+                    ${isHidden ? '<span class="text-[9px] text-slate-400 dark:text-slate-400 italic">oculta</span>' : ''}
                     ${cat ? `<span style="${_getCatStyleHTML(s.category)}">${cat}</span>` : ''}
                   </div>
                   ${s.note ? `<p class="text-[10px] text-slate-500 dark:text-slate-400 mb-1.5 ml-7">${s.note}</p>` : ''}
@@ -1359,7 +1359,7 @@ ${(handoffData.createdFlows || []).length === 0
       } else {
         assetsHTML = `
           <div class="text-center py-12 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800/80">
-            <p class="text-sm font-bold text-slate-500 dark:text-slate-500">Nenhuma imagem de preview do frame disponível.</p>
+            <p class="text-sm font-bold text-slate-500 dark:text-slate-400">Nenhuma imagem de preview do frame disponível.</p>
           </div>
         `;
       }
@@ -1381,7 +1381,7 @@ ${(handoffData.createdFlows || []).length === 0
       if (!hasScannedItems) {
         scannedHTML = `
           <div class="text-center py-12 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800/80">
-            <p class="text-sm font-bold text-slate-500 dark:text-slate-500">Nenhum item escaneado ou auditado neste frame.</p>
+            <p class="text-sm font-bold text-slate-500 dark:text-slate-400">Nenhum item escaneado ou auditado neste frame.</p>
           </div>
         `;
       } else {
@@ -1405,13 +1405,13 @@ ${(handoffData.createdFlows || []).length === 0
                 <span class="text-blue-400 dark:text-blue-500">(${count})</span>
               </span>
             `).join('')
-          : '<span class="text-[10px] text-slate-500 dark:text-slate-500">nenhuma biblioteca DSC detectada</span>';
+          : '<span class="text-[10px] text-slate-500 dark:text-slate-400">nenhuma biblioteca DSC detectada</span>';
 
         const frameSummaryHTML = `
           <div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80 mb-4 text-left">
             <div class="flex items-center justify-between mb-3">
-              <h4 class="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500">Resumo do Frame</h4>
-              <span class="text-[10px] font-bold text-slate-500 dark:text-slate-500">${scannedItemsCount} elementos</span>
+              <h4 class="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Resumo do Frame</h4>
+              <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400">${scannedItemsCount} elementos</span>
             </div>
             <div class="grid grid-cols-5 gap-2 mb-3">
               <div class="bg-white dark:bg-slate-900 p-2 rounded-lg text-center">
@@ -1460,62 +1460,62 @@ ${(handoffData.createdFlows || []).length === 0
               <div class="flex items-center justify-between mb-4">
                 <div>
                   <h4 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Relatório de Auditoria DSC</h4>
-                  <p class="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-wide">Análise automática de conformidade com design tokens corporativos</p>
+                  <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Análise automática de conformidade com design tokens corporativos</p>
                 </div>
                 <div class="text-right">
                   <span class="text-3xl font-black ${statusColor}">${adoption}%</span>
-                  <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-500">Aderência (props)</p>
+                  <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Aderência (props)</p>
                 </div>
               </div>
 
               <!-- Property-level: granular -->
-              <p class="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">Propriedades · ${total}</p>
+              <p class="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Propriedades · ${total}</p>
               <div class="grid grid-cols-3 gap-3 mb-4">
                 <div class="bg-white/60 dark:bg-black/20 p-2.5 rounded-xl">
-                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">Em conformidade</p>
+                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Em conformidade</p>
                   <p class="text-base font-black text-[#10b981]">${auditSummary.dsCount}</p>
                 </div>
                 <div class="bg-white/60 dark:bg-black/20 p-2.5 rounded-xl">
-                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">Necessita revisão</p>
+                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Necessita revisão</p>
                   <p class="text-base font-black text-amber-500">${adjustments.length}</p>
                 </div>
                 <div class="bg-white/60 dark:bg-black/20 p-2.5 rounded-xl">
-                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">Fora do padrão</p>
+                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Fora do padrão</p>
                   <p class="text-base font-black text-red-500">${issues.length}</p>
                 </div>
               </div>
 
               <!-- Element-level: worst-of rule -->
-              <p class="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">Elementos · ${auditSummary.elementsTotal} <span class="text-slate-500 dark:text-slate-500 font-bold normal-case tracking-normal ml-1">(classificação pelo pior caso)</span></p>
+              <p class="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Elementos · ${auditSummary.elementsTotal} <span class="text-slate-500 dark:text-slate-400 font-bold normal-case tracking-normal ml-1">(classificação pelo pior caso)</span></p>
               <div class="grid grid-cols-3 gap-3 mb-4">
                 <div class="bg-white/60 dark:bg-black/20 p-2.5 rounded-xl">
-                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">100% conformes</p>
+                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">100% conformes</p>
                   <p class="text-base font-black text-[#10b981]">${auditSummary.elementsOk}</p>
                 </div>
                 <div class="bg-white/60 dark:bg-black/20 p-2.5 rounded-xl">
-                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">Com revisões</p>
+                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Com revisões</p>
                   <p class="text-base font-black text-amber-500">${auditSummary.elementsWarning}</p>
                 </div>
                 <div class="bg-white/60 dark:bg-black/20 p-2.5 rounded-xl">
-                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-500 uppercase">Com violações</p>
+                  <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Com violações</p>
                   <p class="text-base font-black text-red-500">${auditSummary.elementsError}</p>
                 </div>
               </div>
 
               <div class="bg-white/40 dark:bg-black/10 p-3 rounded-xl">
-                <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">Como o elemento é classificado</p>
+                <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Como o elemento é classificado</p>
                 <div class="space-y-1.5">
                   <div class="flex items-start gap-2 text-[10px]">
                     <span class="shrink-0 px-2 py-0.5 rounded-md bg-green-50 dark:bg-green-950/40 text-[#10b981] font-bold text-[8px] uppercase tracking-wide">Em conformidade</span>
-                    <span class="text-slate-500 dark:text-slate-500 leading-snug"><strong class="text-slate-700 dark:text-slate-300">Todas</strong> as propriedades têm vínculo direto com tokens da DSC.</span>
+                    <span class="text-slate-500 dark:text-slate-400 leading-snug"><strong class="text-slate-700 dark:text-slate-300">Todas</strong> as propriedades têm vínculo direto com tokens da DSC.</span>
                   </div>
                   <div class="flex items-start gap-2 text-[10px]">
                     <span class="shrink-0 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-500 font-bold text-[8px] uppercase tracking-wide">Necessita revisão</span>
-                    <span class="text-slate-500 dark:text-slate-500 leading-snug font-medium">Pelo menos 1 prop bate por valor/nome (não pela key) — token foi reproduzido manualmente.</span>
+                    <span class="text-slate-500 dark:text-slate-400 leading-snug font-medium">Pelo menos 1 prop bate por valor/nome (não pela key) — token foi reproduzido manualmente.</span>
                   </div>
                   <div class="flex items-start gap-2 text-[10px]">
                     <span class="shrink-0 px-2 py-0.5 rounded-md bg-red-50 dark:bg-red-950/40 text-red-500 font-bold text-[8px] uppercase tracking-wide">Fora do padrão</span>
-                    <span class="text-slate-500 dark:text-slate-500 leading-snug">Pelo menos 1 prop <strong class="text-slate-700 dark:text-slate-300">não corresponde</strong> a nenhum token da DSC.</span>
+                    <span class="text-slate-500 dark:text-slate-400 leading-snug">Pelo menos 1 prop <strong class="text-slate-700 dark:text-slate-300">não corresponde</strong> a nenhum token da DSC.</span>
                   </div>
                 </div>
               </div>
@@ -1569,8 +1569,8 @@ ${(handoffData.createdFlows || []).length === 0
               const status = computeItemAuditStatus(item);
               const b = getItemAuditBreakdown(item);
               const breakdownChips = b.total > 0
-                ? `<span class="inline-flex items-center gap-1.5 text-[8px] font-bold text-slate-500 dark:text-slate-500 normal-case tracking-normal ml-1.5">
-                    <span class="text-slate-500 dark:text-slate-500">${b.total} props</span>
+                ? `<span class="inline-flex items-center gap-1.5 text-[8px] font-bold text-slate-500 dark:text-slate-400 normal-case tracking-normal ml-1.5">
+                    <span class="text-slate-500 dark:text-slate-400">${b.total} props</span>
                     ${b.ok > 0 ? `<span class="inline-flex items-center gap-0.5 text-[#10b981]"><i data-lucide="check" class="w-2.5 h-2.5"></i>${b.ok}</span>` : ''}
                     ${b.warning > 0 ? `<span class="inline-flex items-center gap-0.5 text-amber-500"><i data-lucide="alert-triangle" class="w-2.5 h-2.5"></i>${b.warning}</span>` : ''}
                     ${b.error > 0 ? `<span class="inline-flex items-center gap-0.5 text-red-500"><i data-lucide="x" class="w-2.5 h-2.5"></i>${b.error}</span>` : ''}
@@ -1594,7 +1594,7 @@ ${(handoffData.createdFlows || []).length === 0
             let figmaLinkHTML = "";
             if (figmaLink) {
               figmaLinkHTML = `
-                <a href="${figmaLink}" target="_blank" title="Focar este elemento no Figma" class="text-slate-500 hover:text-blue-500 transition-colors p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 cursor-pointer ml-auto flex items-center justify-center">
+                <a href="${figmaLink}" target="_blank" title="Focar este elemento no Figma" aria-label="Focar este elemento no Figma" class="text-slate-500 hover:text-blue-500 transition-colors p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 cursor-pointer ml-auto flex items-center justify-center">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
                 </a>
               `;
@@ -1607,7 +1607,7 @@ ${(handoffData.createdFlows || []).length === 0
                 <div class="flex flex-wrap gap-1 mt-1.5 mb-1">
                   ${item.variants.map(v => `
                     <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[9px] font-bold text-slate-600 dark:text-slate-300">
-                      <span class="text-slate-500 dark:text-slate-500">${v.name}:</span>
+                      <span class="text-slate-500 dark:text-slate-400">${v.name}:</span>
                       <span>${v.value}</span>
                     </span>
                   `).join('')}
@@ -1684,7 +1684,7 @@ ${(handoffData.createdFlows || []).length === 0
                     <div class="flex items-center gap-1 text-[9px] text-blue-600 dark:text-blue-400 font-bold mt-0.5 ml-5.5">
                       <i data-lucide="link-2" class="w-2.5 h-2.5"></i>
                       <span class="truncate" title="Token: ${p.matchedTokenName}${p.matchedIn ? ' · ' + p.matchedIn : ''}">
-                        ${p.matchedTokenName}${p.matchedIn ? ` <span class="text-slate-500 dark:text-slate-500">· ${p.matchedIn}</span>` : ''}
+                        ${p.matchedTokenName}${p.matchedIn ? ` <span class="text-slate-500 dark:text-slate-400">· ${p.matchedIn}</span>` : ''}
                       </span>
                     </div>
                   `;
@@ -1699,15 +1699,15 @@ ${(handoffData.createdFlows || []).length === 0
                       <i data-lucide="lightbulb" class="w-2.5 h-2.5"></i>
                       <span class="truncate" title="Sugestão de match mais próximo">
                         Mais próximo: ${cm.tokenName || cm.value}
-                        ${cm.similarity !== undefined ? ` <span class="text-slate-500 dark:text-slate-500">(${cm.similarity}%)</span>` : ''}
-                        ${cm.library ? ` <span class="text-slate-500 dark:text-slate-500">· ${cm.library}</span>` : ''}
+                        ${cm.similarity !== undefined ? ` <span class="text-slate-500 dark:text-slate-400">(${cm.similarity}%)</span>` : ''}
+                        ${cm.library ? ` <span class="text-slate-500 dark:text-slate-400">· ${cm.library}</span>` : ''}
                       </span>
                     </div>
                   `;
                 }
 
                 return `
-                  <div class="text-[11px] text-slate-500 dark:text-slate-500">
+                  <div class="text-[11px] text-slate-500 dark:text-slate-400">
                     <div class="flex items-center justify-between gap-2">
                       <div class="flex items-center gap-2 truncate min-w-0" title="${p.name}">
                         <div class="w-3.5 h-3.5 flex items-center justify-center shrink-0">${pColorPreview}</div>
@@ -1724,7 +1724,7 @@ ${(handoffData.createdFlows || []).length === 0
               propertiesHTML = `<div class="mt-3 border-t border-slate-100 dark:border-slate-800 pt-2.5 text-left space-y-3">`
                 + groups.map(g => `
                   <div>
-                    <div class="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-1.5">
+                    <div class="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1.5">
                       <i data-lucide="${g.icon}" class="w-3 h-3"></i>
                       <span>${g.title}</span>
                       <span class="text-slate-300 dark:text-slate-600">·</span>
@@ -1769,7 +1769,7 @@ ${(handoffData.createdFlows || []).length === 0
                   </div>
                   <div>
                     <span class="font-black">${sec.title}</span>
-                    <span class="section-count-span text-[9px] font-bold text-slate-500 dark:text-slate-500 ml-1.5 uppercase tracking-wide">(${count} elementos)</span>
+                    <span class="section-count-span text-[9px] font-bold text-slate-500 dark:text-slate-400 ml-1.5 uppercase tracking-wide">(${count} elementos)</span>
                   </div>
                 </div>
                 <i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 transition-transform"></i>
@@ -1854,7 +1854,7 @@ ${(handoffData.createdFlows || []).length === 0
       const searchBarHTML = `
         <div class="mb-6">
           <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 dark:text-slate-500">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
               <i data-lucide="search" class="w-4 h-4"></i>
             </div>
             <input type="text" id="scanned-search" oninput="filterElements(this.value)" placeholder="Buscar elemento escaneado..." class="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-xl text-xs focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder:text-slate-500 dark:placeholder:text-slate-500 shadow-sm" />
@@ -1926,7 +1926,7 @@ ${(handoffData.createdFlows || []).length === 0
     </div>
     
     <div class="flex items-center gap-3">
-      <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-extrabold text-slate-500 dark:text-slate-500 uppercase tracking-wider">${versao}</span>
+      <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">${versao}</span>
       <span class="px-2.5 py-1 bg-blue-50 dark:bg-blue-900/20 text-[#0070af] dark:text-blue-400 border border-blue-100 dark:border-blue-900/30 rounded-full text-[10px] font-extrabold uppercase tracking-wider">${status}</span>
       
       <button onclick="downloadJSON()" title="Baixa o JSON estruturado do scan (sem previews) para uso em pipeline de dev" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all cursor-pointer">
@@ -2003,10 +2003,10 @@ ${(handoffData.createdFlows || []).length === 0
         <button onclick="switchTab('tab-document')" id="btn-tab-document" class="tab-btn px-1 pb-3 text-sm font-black border-b-2 border-blue-500 text-blue-500 focus:outline-none transition-all uppercase tracking-wider whitespace-nowrap shrink-0">
           📑 Ficha de Projeto
         </button>
-        <button onclick="switchTab('tab-assets')" id="btn-tab-assets" class="tab-btn px-1 pb-3 text-sm font-extrabold text-slate-500 dark:text-slate-500 border-b-2 border-transparent hover:text-slate-700 dark:hover:text-slate-300 focus:outline-none transition-all uppercase tracking-wider whitespace-nowrap shrink-0">
+        <button onclick="switchTab('tab-assets')" id="btn-tab-assets" class="tab-btn px-1 pb-3 text-sm font-extrabold text-slate-500 dark:text-slate-400 border-b-2 border-transparent hover:text-slate-700 dark:hover:text-slate-300 focus:outline-none transition-all uppercase tracking-wider whitespace-nowrap shrink-0">
           🖼️ Frame & Elementos
         </button>
-        <button onclick="switchTab('tab-scanned')" id="btn-tab-scanned" class="tab-btn px-1 pb-3 text-sm font-extrabold text-slate-500 dark:text-slate-500 border-b-2 border-transparent hover:text-slate-700 dark:hover:text-slate-300 focus:outline-none transition-all uppercase tracking-wider whitespace-nowrap shrink-0">
+        <button onclick="switchTab('tab-scanned')" id="btn-tab-scanned" class="tab-btn px-1 pb-3 text-sm font-extrabold text-slate-500 dark:text-slate-400 border-b-2 border-transparent hover:text-slate-700 dark:hover:text-slate-300 focus:outline-none transition-all uppercase tracking-wider whitespace-nowrap shrink-0">
           🔍 Elementos Escaneados (${scannedItemsCount})
         </button>
       </div>
@@ -2071,12 +2071,12 @@ ${(handoffData.createdFlows || []).length === 0
 
       document.querySelectorAll('.tab-btn').forEach(function(btn) {
         btn.classList.remove('text-blue-500', 'border-blue-500', 'font-black');
-        btn.classList.add('text-slate-500', 'dark:text-slate-500', 'border-transparent', 'font-extrabold');
+        btn.classList.add('text-slate-500', 'dark:text-slate-400', 'border-transparent', 'font-extrabold');
       });
 
       var activeBtn = document.getElementById('btn-' + tabId);
       if (activeBtn) {
-        activeBtn.classList.remove('text-slate-500', 'dark:text-slate-500', 'border-transparent', 'font-extrabold');
+        activeBtn.classList.remove('text-slate-500', 'dark:text-slate-400', 'border-transparent', 'font-extrabold');
         activeBtn.classList.add('text-blue-500', 'border-blue-500', 'font-black');
       }
     }

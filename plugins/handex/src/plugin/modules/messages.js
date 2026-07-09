@@ -285,7 +285,7 @@
               list.innerHTML += `
                 <label class="flex items-center justify-between p-3 hover:bg-slate-50 dark:hover:bg-dark-surface/50 rounded-2xl cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-800 transition-all group">
                   <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-dark-bg flex items-center justify-center text-slate-500 group-hover:text-[#0070af] transition-colors">
+                    <div class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-dark-bg flex items-center justify-center text-slate-500 dark:text-dark-muted group-hover:text-[#0070af] transition-colors">
                       <i data-lucide="${iconName}" class="w-4 h-4"></i>
                     </div>
                     <div>
@@ -293,7 +293,7 @@
                         <span class="text-[12px] font-bold text-slate-700 dark:text-white uppercase tracking-tight">${prop.label}</span>
                         ${tokenBadge}
                       </div>
-                      ${!prop.token ? `<span class="block text-[11px] text-slate-500 font-mono">${prop.value}</span>` : ''}
+                      ${!prop.token ? `<span class="block text-[11px] text-slate-500 dark:text-dark-muted font-mono">${prop.value}</span>` : ''}
                     </div>
                   </div>
                   <input type="checkbox" id="${id}" value="${prop.key}" checked class="w-5 h-5 rounded-lg border-gray-200 text-[#0070af] focus:ring-[#0070af] transition-all cursor-pointer" />

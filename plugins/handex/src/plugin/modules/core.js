@@ -87,7 +87,7 @@ function _updateFrameAuditSubtitle(frameId) {
   }
 
   if (!frame.audit || !frame.audit.checkDone) {
-    subtitle.className = 'text-[10px] text-slate-400 font-medium';
+    subtitle.className = 'text-[10px] text-slate-500 dark:text-dark-muted font-medium';
     subtitle.textContent = 'Pendente';
     return;
   }
@@ -224,6 +224,7 @@ Object.assign(window, {
   closeMeasureModal,
   selectMeasurement,
   executeMeasurement,
+  toggleMeasureTypesHelp,
   selectFlowType,
   confirmFlowConnection,
   toggleUiScale,
@@ -246,6 +247,8 @@ Object.assign(window, {
   getFrame,
   toggleNewComponent,
   toggleFrameAccordion,
+  toggleFrameStatusHelp,
+  toggleFlowsHelp,
   validateStep1,
   addTeamMember,
   removeTeamMember,
@@ -413,7 +416,7 @@ function initBriefingSuggestions() {
           <i data-lucide="${cat.icon}" class="w-4 h-4 ${cat.color}"></i>
           ${cat.name}
         </span>
-        <i data-lucide="chevron-down" id="arrow-${cat.id}" class="w-4 h-4 text-gray-400 transition-transform"></i>
+        <i data-lucide="chevron-down" id="arrow-${cat.id}" class="w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform"></i>
       </button>
       <div id="cat-${cat.id}" class="hidden p-3 bg-white dark:bg-dark-bg/10 border-t border-gray-100 dark:border-dark-line">
         <div class="flex flex-wrap gap-2" id="chips-${cat.id}"></div>
@@ -452,7 +455,7 @@ function addBriefingQuestion(questionText = "", category = "Customizada") {
   card.id = `briefing-card-${id}`;
   card.className = "bg-white dark:bg-dark-bg p-5 rounded-xl border border-gray-100 dark:border-dark-line shadow-sm relative animate-in slide-in-from-top-4 duration-300";
   card.innerHTML = `
-    <button onclick="removeBriefingQuestion('${id}')" title="Excluir Pergunta" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50">
+    <button onclick="removeBriefingQuestion('${id}')" title="Excluir Pergunta" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50">
       <i data-lucide="trash-2" class="w-4 h-4"></i>
     </button>
     <div class="flex items-center gap-3 mb-4">
@@ -546,7 +549,7 @@ function addRegra() {
         <i data-lucide="file-text" class="w-3.5 h-3.5 text-indigo-500"></i>
         <span class="text-[12px] font-bold text-slate-700 dark:text-white">Regra / HU</span>
       </div>
-      <button onclick="removeRegra('${id}')" title="Remover" class="text-gray-300 hover:text-red-500 transition-colors">
+      <button onclick="removeRegra('${id}')" title="Remover" class="text-gray-400 hover:text-red-500 transition-colors">
         <i data-lucide="trash-2" class="w-3 h-3"></i>
       </button>
     </div>
@@ -554,7 +557,7 @@ function addRegra() {
       <input type="text" placeholder="Título da Regra/HU" class="w-full px-3 py-1.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg text-[11px] outline-none font-bold"
         onchange="updateRegraField('${id}','titulo',this.value)">
       <div class="relative">
-        <i data-lucide="link" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400"></i>
+        <i data-lucide="link" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500"></i>
         <input type="text" placeholder="Link da HU/Regra (Jira, Confluence...)" class="w-full pl-7 pr-3 py-1.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg text-[11px] outline-none"
           onchange="updateRegraField('${id}','link',this.value)" onblur="validateUrl(this)">
       </div>
@@ -610,10 +613,10 @@ function addExcecaoForFrame(frameId, tipo, icon, color, vinc = '', anchor = '', 
         <i data-lucide="${icon}" class="w-3.5 h-3.5 ${color} shrink-0"></i>
         <div class="min-w-0">
           <span class="text-[11px] font-bold text-slate-700 dark:text-white block truncate">${tituloDisplay}</span>
-          ${vinc ? `<span class="text-[10px] text-slate-500 truncate block">→ ${vinc}</span>` : ''}
+          ${vinc ? `<span class="text-[10px] text-slate-500 dark:text-dark-muted truncate block">→ ${vinc}</span>` : ''}
         </div>
       </div>
-      <button onclick="removeExcecaoForFrame('${frameId}','${id}')" title="Remover" class="text-gray-300 hover:text-red-500 transition-colors shrink-0">
+      <button onclick="removeExcecaoForFrame('${frameId}','${id}')" title="Remover" class="text-gray-400 hover:text-red-500 transition-colors shrink-0">
         <i data-lucide="trash-2" class="w-3 h-3"></i>
       </button>
     </div>
@@ -903,7 +906,10 @@ function toggleFrameAccordion(frameId) {
 function updateEmptyFramesState() {
   const empty = document.getElementById('frames-empty-state');
   if (!empty) return;
-  empty.classList.toggle('hidden', handoffData.frames.length > 0);
+  const hasFrames = handoffData.frames.length > 0;
+  empty.classList.toggle('hidden', hasFrames);
+  const collapseBtn = document.querySelector('#view-frames [data-collapse-toggle]');
+  if (collapseBtn) collapseBtn.classList.toggle('hidden', !hasFrames);
 }
 
 function importTitleFromSelection() {
@@ -1108,23 +1114,26 @@ function selectStatus(value) {
 }
 
 // ── Validação Step 1 ───────────────────────────────────────────────────
+function _hasValidTeamMember(equipe) {
+  return (equipe || []).some(m => (m.nome || '').trim().length > 0);
+}
+
 function validateStep1() {
   const titulo = (document.getElementById('s1-titulo')?.value || '').trim();
   handoffData.step1.titulo = titulo;
   clearTimeout(validateStep1._t);
   validateStep1._t = setTimeout(saveToStorage, 600);
   const equipe = handoffData.step1.equipe || [];
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const hasValidEmail = equipe.some(m => emailRegex.test((m.email || '').trim()));
-  const ok = titulo.length > 0 && hasValidEmail;
+  const hasTeamMember = _hasValidTeamMember(equipe);
+  const ok = titulo.length > 0 && hasTeamMember;
 
   const hint = document.getElementById('step1-validation-hint');
   if (hint) {
     if (!titulo) {
       hint.textContent = 'Preencha o título do projeto para avançar.';
       hint.classList.remove('hidden');
-    } else if (!hasValidEmail) {
-      hint.textContent = 'Adicione ao menos um membro da equipe com e-mail válido.';
+    } else if (!hasTeamMember) {
+      hint.textContent = 'Adicione ao menos um membro da equipe com nome preenchido.';
       hint.classList.remove('hidden');
     } else {
       hint.classList.add('hidden');
@@ -1159,22 +1168,24 @@ function addTeamMember(papel = "Designer", nome = "", email = "", skipScroll = f
         <button type="button" onclick="_csToggle('cs-role-${id}', event)"
           class="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl text-[11px] font-bold text-slate-700 dark:text-white cursor-pointer hover:border-gray-300 focus:ring-1 focus:ring-[#0070af]/30 outline-none transition-all">
           <span data-cs-label>${papel}</span>
-          <i data-lucide="chevron-down" data-cs-chev class="w-3 h-3 text-gray-400 transition-transform"></i>
+          <i data-lucide="chevron-down" data-cs-chev class="w-3 h-3 text-gray-500 dark:text-dark-muted transition-transform"></i>
         </button>
         <div data-cs-panel class="hidden absolute top-full left-0 mt-1 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg shadow-lg z-50 overflow-hidden py-1 min-w-[110px]">
           ${['Designer','DEV','PO','QA','Outro'].map(r => `<button type="button" onclick="_csSelect('cs-role-${id}','${r}')" data-cs-opt="${r}" class="w-full text-left px-3 py-2 text-[11px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors${papel === r ? ' bg-blue-50 dark:bg-blue-900/20 text-[#0070af] font-bold' : ''}">${r}</button>`).join('')}
         </div>
       </div>
-      <button onclick="removeTeamMember('${id}')" title="Remover membro" class="text-gray-300 hover:text-red-500 transition-colors">
+      <button onclick="removeTeamMember('${id}')" title="Remover membro" class="text-gray-400 hover:text-red-500 transition-colors">
         <i data-lucide="trash-2" class="w-3 h-3"></i>
       </button>
     </div>
     <div class="flex items-center gap-2">
-      <input type="text" placeholder="Nome" value="${nome}" class="flex-1 min-w-0 px-3 py-1.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg text-[11px] outline-none"
-        onchange="updateTeamMember('${id}','nome',this.value)">
-      <input type="email" placeholder="E-mail*" value="${email}" class="flex-1 min-w-0 px-3 py-1.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg text-[11px] outline-none"
-        onchange="updateTeamMember('${id}','email',this.value)" onblur="validateEmail(this);validateStep1()">
+      <input type="text" placeholder="Nome Completo" value="${nome}" class="flex-1 min-w-0 px-3 py-1.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg text-[11px] outline-none"
+        onchange="updateTeamMember('${id}','nome',this.value)" aria-label="Nome completo do membro da equipe">
+      <input type="email" placeholder="Email Institucional" value="${email}" class="flex-1 min-w-0 px-3 py-1.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg text-[11px] outline-none"
+        onchange="updateTeamMember('${id}','email',this.value)" onblur="validateEmail(this);validateStep1()"
+        aria-label="Email institucional do membro da equipe (opcional)" aria-describedby="email-hint-${id}" aria-invalid="false">
     </div>
+    <p id="email-hint-${id}" class="hidden text-[10px] text-red-500 dark:text-red-400 mt-1" role="alert"></p>
   `;
   list.appendChild(item);
   _refreshIcons();
@@ -1202,23 +1213,22 @@ function updateTeamMember(id, field, value) {
 function _buildChecklistData() {
   const titulo = (handoffData.step1.titulo || '').trim();
   const equipe = handoffData.step1.equipe || [];
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const frames = handoffData.frames || [];
   const flows = handoffData.createdFlows || [];
   const briefingQs = handoffData.step2.briefingQuestions || [];
   const regras = handoffData.step2.regras || [];
-  return { titulo, equipe, emailRegex, frames, flows, briefingQs, regras };
+  return { titulo, equipe, frames, flows, briefingQs, regras };
 }
 
 function exportChecklistMd() {
-  const { titulo, equipe, emailRegex, frames, flows, briefingQs, regras } = _buildChecklistData();
+  const { titulo, equipe, frames, flows, briefingQs, regras } = _buildChecklistData();
   const ok = (b) => b ? '✅' : '❌';
   let md = `# Checklist do Handoff — ${titulo || 'Sem título'}\n\n`;
   md += `**Data:** ${new Date().toLocaleDateString('pt-BR')}\n\n`;
   md += `## Configuração\n`;
   md += `- ${ok(!!titulo)} Título: ${titulo || '—'}\n`;
-  const responsaveis = equipe.filter(m => emailRegex.test((m.email || '').trim()));
-  md += `- ${ok(responsaveis.length > 0)} Equipe: ${equipe.length} membro(s)${responsaveis.length > 0 ? ` — ${responsaveis.map(m => `${m.nome || m.papel} <${m.email}>`).join(', ')}` : ''}\n\n`;
+  const responsaveis = equipe.filter(m => (m.nome || '').trim().length > 0);
+  md += `- ${ok(responsaveis.length > 0)} Equipe: ${equipe.length} membro(s)${responsaveis.length > 0 ? ` — ${responsaveis.map(m => m.email ? `${m.nome || m.papel} <${m.email}>` : (m.nome || m.papel)).join(', ')}` : ''}\n\n`;
   md += `## Frames Documentados (${frames.length})\n`;
   if (frames.length > 0) {
     frames.forEach(f => {
@@ -1258,7 +1268,7 @@ function exportChecklistMd() {
 }
 
 function exportChecklistJson() {
-  const { titulo, equipe, emailRegex, frames, flows, briefingQs, regras } = _buildChecklistData();
+  const { titulo, equipe, frames, flows, briefingQs, regras } = _buildChecklistData();
   const payload = {
     exportedAt: new Date().toISOString(),
     titulo,
@@ -1296,8 +1306,7 @@ function renderValidationChecklist() {
 
   const titulo = (handoffData.step1.titulo || '').trim();
   const equipe = handoffData.step1.equipe || [];
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const hasEmail = equipe.some(m => emailRegex.test((m.email || '').trim()));
+  const hasTeamMember = _hasValidTeamMember(equipe);
   const frames = handoffData.frames || [];
   const frameCount = frames.length;
   const flowCount = (handoffData.createdFlows || []).length;
@@ -1309,7 +1318,7 @@ function renderValidationChecklist() {
 
   const items = [
     { ok: !!titulo, label: titulo ? `Título: <strong>${titulo}</strong>` : 'Título do projeto não preenchido' },
-    { ok: hasEmail, label: hasEmail ? `${equipe.length} ${equipe.length === 1 ? 'responsável' : 'responsáveis'} na equipe` : 'Nenhum e-mail de responsável cadastrado' },
+    { ok: hasTeamMember, label: hasTeamMember ? `${equipe.length} ${equipe.length === 1 ? 'responsável' : 'responsáveis'} na equipe` : 'Nenhum membro da equipe cadastrado' },
     { ok: frameCount > 0, label: frameCount > 0 ? `${frameCount} ${frameCount === 1 ? 'frame documentado' : 'frames documentados'}` : 'Nenhum frame registrado' },
     {
       ok: allConformanceDeclared && regularFrames.length > 0,
@@ -1364,7 +1373,7 @@ function renderValidationChecklist() {
   }
 
   // Bloqueia o botão "Gerar Ficha" se requisitos obrigatórios não estiverem OK
-  const allOk = !!titulo && hasEmail && frameCount > 0 && allConformanceDeclared;
+  const allOk = !!titulo && hasTeamMember && frameCount > 0 && allConformanceDeclared;
   const btnGenerate = document.getElementById('btn-create-handoff');
   if (btnGenerate) {
     btnGenerate.disabled = !allOk;
@@ -1425,7 +1434,7 @@ function updateFABVisibility() {
 
 function nextStep() {
   if (currentStep === 1 && !validateStep1()) {
-    showToast('Preencha o título e ao menos um e-mail de responsável para avançar.');
+    showToast('Preencha o título e ao menos um membro da equipe para avançar.');
     return;
   }
   // Step 3 → Step 4: exibe instrução de Check Designs na primeira vez
@@ -1436,7 +1445,7 @@ function nextStep() {
     if (_storageHit) {
       const modal = document.getElementById('check-designs-modal');
       if (modal) {
-        modal.classList.remove('hidden');
+        openModal('check-designs-modal');
         _refreshIcons();
         return;
       }
@@ -1544,17 +1553,48 @@ function showToast(message) {
   setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 3000);
 }
 
+const FOCUSABLE_SELECTOR = 'input, button, select, textarea, a[href], [tabindex]:not([tabindex="-1"])';
+const _modalReturnFocus = {};
+
 function openModal(id) {
   const el = document.getElementById(id);
-  if (el) el.classList.remove("hidden");
+  if (!el) return;
+  _modalReturnFocus[id] = document.activeElement;
+  el.classList.remove("hidden");
   updateFABVisibility(true);
+  const focusTarget = el.querySelector(FOCUSABLE_SELECTOR);
+  if (focusTarget) {
+    focusTarget.focus();
+  } else {
+    if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
+    el.focus();
+  }
 }
 
 function closeModal(id) {
   const el = document.getElementById(id);
   if (el) el.classList.add("hidden");
   updateFABVisibility(false);
+  const returnEl = _modalReturnFocus[id];
+  if (returnEl && document.contains(returnEl)) returnEl.focus();
+  delete _modalReturnFocus[id];
 }
+
+// Fecha o modal visível com maior z-index ao pressionar Escape (topo em caso de sobreposição).
+// Focus trap completo (ciclagem via Tab) não foi implementado nesta correção — apenas foco
+// inicial, devolução de foco e Escape, por limitação de tempo.
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape') return;
+  const visibleModals = Array.from(document.querySelectorAll('[id$="-modal"]:not(.hidden)'));
+  if (!visibleModals.length) return;
+  let topModal = visibleModals[0];
+  let topZ = parseInt(getComputedStyle(topModal).zIndex, 10) || 0;
+  for (const m of visibleModals) {
+    const z = parseInt(getComputedStyle(m).zIndex, 10) || 0;
+    if (z >= topZ) { topZ = z; topModal = m; }
+  }
+  closeModal(topModal.id);
+});
 
 function startHandoff() {
   navigate("view-frames");
@@ -1714,10 +1754,10 @@ function renderExcecoesView() {
           <i data-lucide="${icon}" class="w-3.5 h-3.5 ${color} shrink-0"></i>
           <div class="min-w-0">
             <span class="text-[11px] font-bold text-slate-700 dark:text-white block truncate">${exc.titulo || exc.tipo}</span>
-            <span class="text-[10px] text-slate-500 truncate block">${exc._frameName ? '→ ' + exc._frameName : ''}</span>
+            <span class="text-[10px] text-slate-500 dark:text-dark-muted truncate block">${exc._frameName ? '→ ' + exc._frameName : ''}</span>
           </div>
         </div>
-        <button onclick="removeExcecaoForFrame('${exc._frameId}','${exc.id}')" class="text-gray-300 hover:text-red-500 transition-colors shrink-0">
+        <button onclick="removeExcecaoForFrame('${exc._frameId}','${exc.id}')" class="text-gray-400 hover:text-red-500 transition-colors shrink-0">
           <i data-lucide="trash-2" class="w-3 h-3"></i>
         </button>
       </div>
@@ -1759,10 +1799,36 @@ function toggleAccordion(btn, nodeId = null) {
   if (!content) return;
   const icon = btn.querySelector('[data-lucide="chevron-down"]');
   const isHidden = content.classList.contains("hidden");
+
+  // Accordions com nodeId (medidas) são exclusivos: abrir um fecha os irmãos,
+  // mantendo o item expandido na lista sempre sincronizado com o highlight no canvas.
+  if (nodeId && isHidden) {
+    const list = btn.closest('ul, [data-accordion-list]');
+    if (list) {
+      list.querySelectorAll('[data-accordion-toggle]').forEach(otherBtn => {
+        if (otherBtn === btn) return;
+        const otherParent = otherBtn.closest('.border, .rounded-xl, .mb-3');
+        const otherContent = otherParent ? otherParent.querySelector('.accordion-content, [data-accordion-content]') : null;
+        if (otherContent && !otherContent.classList.contains('hidden')) {
+          otherContent.classList.add('hidden');
+          otherBtn.setAttribute('aria-expanded', 'false');
+          const otherIcon = otherBtn.querySelector('[data-lucide="chevron-down"]');
+          if (otherIcon) otherIcon.style.transform = "rotate(0deg)";
+        }
+      });
+    }
+  }
+
   content.classList.toggle("hidden");
   btn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
   if (icon) icon.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
-  if (nodeId) focusNode(nodeId);
+  if (nodeId) {
+    if (isHidden) {
+      focusNode(nodeId);
+    } else {
+      parent.postMessage({ pluginMessage: { type: 'clear-highlight' } }, '*');
+    }
+  }
 }
 
 function collapseAllAccordions(containerEl) {
@@ -1856,17 +1922,36 @@ function validateUrl(input) {
 function validateEmail(inputOrValue) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (typeof inputOrValue === 'string') return emailRegex.test(inputOrValue.trim());
-  if (!inputOrValue || !inputOrValue.value) return false;
+  if (!inputOrValue || !inputOrValue.value) {
+    // Campo vazio: e-mail é opcional, não é erro — limpa qualquer estado de validação anterior.
+    if (inputOrValue) {
+      inputOrValue.classList.remove('border-red-500', 'ring-2', 'ring-red-100', 'border-green-500');
+      inputOrValue.setAttribute('aria-invalid', 'false');
+      const hintEl = inputOrValue.getAttribute('aria-describedby') && document.getElementById(inputOrValue.getAttribute('aria-describedby'));
+      if (hintEl) { hintEl.textContent = ''; hintEl.classList.add('hidden'); }
+    }
+    return false;
+  }
   const val = inputOrValue.value.trim();
   const valid = emailRegex.test(val);
-  if (val) {
-    inputOrValue.classList.toggle('border-red-500', !valid);
-    inputOrValue.classList.toggle('ring-2', !valid);
-    inputOrValue.classList.toggle('ring-red-100', !valid);
+  const hintId = inputOrValue.getAttribute('aria-describedby');
+  const hintEl = hintId && document.getElementById(hintId);
+  inputOrValue.classList.toggle('border-red-500', !valid);
+  inputOrValue.classList.toggle('ring-2', !valid);
+  inputOrValue.classList.toggle('ring-red-100', !valid);
+  inputOrValue.setAttribute('aria-invalid', valid ? 'false' : 'true');
+  if (hintEl) {
     if (valid) {
-      inputOrValue.classList.add('border-green-500');
-      setTimeout(() => inputOrValue.classList.remove('border-green-500'), 2000);
+      hintEl.textContent = '';
+      hintEl.classList.add('hidden');
+    } else {
+      hintEl.textContent = 'E-mail em formato inválido';
+      hintEl.classList.remove('hidden');
     }
+  }
+  if (valid) {
+    inputOrValue.classList.add('border-green-500');
+    setTimeout(() => inputOrValue.classList.remove('border-green-500'), 2000);
   }
   return valid;
 }
@@ -2018,7 +2103,7 @@ function restoreUIFromState() {
       card.id = `briefing-card-${q.id}`;
       card.className = "bg-white dark:bg-dark-bg p-5 rounded-xl border border-gray-100 dark:border-dark-line shadow-sm relative";
       card.innerHTML = `
-        <button onclick="removeBriefingQuestion('${q.id}')" title="Excluir" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50">
+        <button onclick="removeBriefingQuestion('${q.id}')" title="Excluir" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50">
           <i data-lucide="trash-2" class="w-4 h-4"></i>
         </button>
         <div class="flex items-center gap-3 mb-4">

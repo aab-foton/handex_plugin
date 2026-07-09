@@ -3,7 +3,7 @@
 //
 // Inclui:
 //   - exportHandoffData / importHandoffData — backup full do estado
-//   - exportProgress / importProgress — backup leve (sem specs pesadas)
+//   - exportProgress — backup leve (sem specs pesadas)
 //   - exportDesignData — pede ao backend Figma para exportar (CSV/JSON design data)
 //
 // Depende de: handoffData, createdSpecs, saveToStorage, restoreUIFromState,
@@ -168,26 +168,6 @@
         });
         if (count > 0) showToast(`${count} medida(s) sendo reaplicadas no canvas...`);
       }
-    }
-
-    function importProgress(input) {
-      const file = input.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = JSON.parse(e.target.result);
-          Object.assign(handoffData, data);
-          alert("Progresso recuperado!");
-          startHandoff();
-          // Populate UI fields Seeder if possible
-          if (handoffData.step1.titulo) {
-            const el = document.getElementById("s1-titulo");
-            if (el) el.value = handoffData.step1.titulo;
-          }
-        } catch (err) { alert("Erro ao importar JSON"); }
-      };
-      reader.readAsText(file);
     }
 
     function exportProgress() {

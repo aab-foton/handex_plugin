@@ -3,15 +3,20 @@
       <!-- Header -->
       <div class="px-4 pt-0 pb-3 border-b border-gray-100 dark:border-dark-line flex flex-col shrink-0">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial" class="p-2 bg-gray-100 dark:bg-slate-800 rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">
+          <div class="flex items-center gap-2 min-w-0">
+            <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial" class="p-2 bg-gray-100 dark:bg-slate-800 rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors shrink-0">
               <i data-lucide="arrow-left" class="w-4 h-4 text-gray-600 dark:text-gray-300" aria-hidden="true"></i>
             </button>
-            <h2 class="text-[#1E293B] dark:text-white font-bold text-[18px]">Anotar Specs</h2>
+            <h2 class="text-[#1E293B] dark:text-white font-bold text-[18px] truncate min-w-0">Anotar Specs</h2>
+            <button type="button" onclick="openHelp()"
+              class="w-4 h-4 flex items-center justify-center text-slate-400 hover:text-[#0070af] transition-colors shrink-0"
+              title="Ver guia de categorias" aria-label="Ver guia de categorias de especificação">
+              <i data-lucide="circle-help" class="w-3.5 h-3.5"></i>
+            </button>
           </div>
-          <div class="flex items-center gap-1.5">
+          <div class="flex items-center gap-1.5 shrink-0">
             <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('specs-scroll-container'))" title="Recolher/expandir todos" aria-label="Recolher ou expandir todos os accordions"
-              class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors text-slate-500 dark:text-dark-muted">
+              class="hidden p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors text-slate-500 dark:text-dark-muted">
               <i data-lucide="chevrons-up-down" class="w-4 h-4" aria-hidden="true"></i>
             </button>
             <button id="specs-header-action-form" onclick="openSpecFormModal()" class="fab-inline" title="Criar especificação" aria-label="Criar especificação">
@@ -28,8 +33,8 @@
           <!-- Frame Selector -->
           <div data-frame-selector-card>
             <div class="flex items-center gap-2 mb-2.5">
-              <i data-lucide="scan-line" class="w-3.5 h-3.5 text-slate-500 shrink-0"></i>
-              <h4 class="text-[11px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-wider">Frames Mapeados</h4>
+              <i data-lucide="scan-line" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0"></i>
+              <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Frames Mapeados</h4>
             </div>
             <select id="spec-frame-selector" onchange="setMeasureActiveFrame(this.value)"
               class="w-full text-[12px] bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-slate-700 dark:text-white outline-none focus:border-[#0070af]/50 transition-colors">
@@ -44,15 +49,7 @@
 
             <div>
               <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-1.5">
-                  <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-[0.15em]">Especificações Criadas</h4>
-                  <!-- Hint popover: categorias -->
-                  <button type="button" onclick="openHelp()"
-                    class="w-4 h-4 flex items-center justify-center text-slate-300 hover:text-[#0070af] transition-colors"
-                    title="Ver guia de categorias">
-                    <i data-lucide="circle-help" class="w-3.5 h-3.5"></i>
-                  </button>
-                </div>
+                <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-[0.15em]">Especificações Criadas</h4>
                 <div class="flex items-center gap-3">
                   <button id="btn-hide-all-specs" onclick="toggleAllSpecsVisibility()"
                     class="hidden text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors flex items-center gap-1">
@@ -62,22 +59,17 @@
               </div>
               
               <!-- Instrução discreta -->
-              <div id="hint-specs" class="mb-5 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-2">
+              <div id="hint-specs" class="mb-5 min-h-[76px] p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-2">
                 <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5"></i>
                 <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-tight">
-                  Selecione um elemento no canvas e toque no botão <strong>+</strong> abaixo.
-                </p>
-              </div>
-              <div class="mb-5 p-3 bg-blue-50 dark:bg-blue-900/40 rounded-xl border border-blue-200 dark:border-dark-line flex gap-2">
-                <i data-lucide="info" class="w-4 h-4 text-blue-500 shrink-0 mt-0.5"></i>
-                <p class="text-[10px] text-blue-500 dark:text-blue-300 leading-tight italic">
-                  <strong>Dica de Uso:</strong> O destaque e o scroll automático no Figma ocorrem apenas ao clicar para expandir um item da lista.
+                  Selecione um elemento no canvas e toque no botão <strong>+</strong> no topo para criar uma especificação.
+                  <span class="block mt-1 text-blue-700/80 dark:text-blue-300/80 italic">Toque no ícone de mira em cada spec para localizar e destacar o elemento correspondente no Figma.</span>
                 </p>
               </div>
               
-              <div id="specs-results" class="flex flex-col gap-2 min-h-[50px]">
+              <ul id="specs-results" class="flex flex-col gap-2 min-h-[50px]">
                 <!-- List of accordions will be rendered here -->
-              </div>
+              </ul>
             </div>
           </div>
 

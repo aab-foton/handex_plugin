@@ -34,7 +34,7 @@
     status: 'rascunho',   // rascunho | em-revisao | pronto-para-dev | finalizado
     jornada: '',          // opcional, auto-fill via frame selecionado
     feature: '',          // opcional, auto-fill via frame selecionado
-    equipe: []            // min 1 membro com email válido para gerar ficha
+    equipe: []            // min 1 membro com nome preenchido para gerar ficha; email é opcional, mas validado por formato se preenchido
   },
   step2: {
     briefingEnabled: false,
@@ -105,12 +105,12 @@
 | Status | Não | Enum fixo | Default `rascunho` |
 | Jornada | Não | Texto livre | Auto-fill do frame selecionado |
 | Feature | Não | Texto livre | Auto-fill do frame selecionado |
-| Equipe | Sim (1 email) | Regex de email | Min 1 membro com email válido |
+| Equipe | Sim (1 nome) | Nome não vazio | Min 1 membro com nome preenchido |
 
-**Papéis de equipe disponíveis:** Designer · DEV · PO · QA · Outro
+**Papéis de equipe disponíveis:** Designer · DEV · PO · QA · Outro (papel não é obrigatório para nenhum membro específico)
 
-**Validação de email:** `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`
-- Feedback visual: borda verde + ring-green-100 ao passar
+**Validação de email (opcional):** `/^[^\s@]+@[^\s@]+\.[^\s@]+$/` — aplicada apenas quando o campo é preenchido, não bloqueia avanço/geração de ficha se vazio.
+- Feedback visual: borda vermelha se formato inválido, verde temporária se válido
 - Validação dispara ao blur do campo email
 
 **Auto-fill de título:** ao abrir o plugin, tenta preencher `s1-titulo` com `figma.root.name` se o campo estiver vazio.
@@ -338,8 +338,7 @@ Razão da regra: a conformidade não se aplica ao contêiner, mas ao que está d
 **Pré-requisitos obrigatórios:**
 1. `step1.titulo` não vazio
 2. `step1.objetivo` não vazio
-3. Pelo menos 1 membro de equipe com email válido
-4. Papel `Designer` presente na equipe
+3. Pelo menos 1 membro de equipe com nome preenchido (e-mail e papel não são obrigatórios)
 
 **Nomeação automática do frame:**
 ```
@@ -435,8 +434,7 @@ Desabilitado (`opacity-50`, `cursor-not-allowed`) enquanto qualquer condição n
 |---|---|
 | `step1.titulo` vazio | `validateStep1()` |
 | `step1.objetivo` vazio | `validateStep1()` |
-| Nenhum email válido na equipe | `validateStep1()` |
-| Nenhum Designer na equipe | `validateStep1()` |
+| Nenhum membro da equipe com nome preenchido | `validateStep1()` / `_hasValidTeamMember()` |
 
 ### 3.2 Botão "Confirmar Exceção"
 
@@ -453,7 +451,7 @@ O checklist exibe status em tempo real:
 | Item | Status |
 |---|---|
 | Título preenchido | ✓ / ✗ |
-| Responsável com email | ✓ / ✗ |
+| Responsável com nome preenchido | ✓ / ✗ |
 | Frames documentados (≥1) | ✓ / ✗ |
 | Conformidade declarada | ✓ / ✗ |
 | Fluxos mapeados | ◇ (opcional) |
@@ -479,7 +477,7 @@ Ao tentar focar/selecionar um nó no canvas, o plugin verifica se o nó pertence
 |---|---|
 | Abre o plugin | Tenta preencher `s1-titulo` com o nome do arquivo Figma |
 | Marca checkbox "Jornada" ou "Feature" | Requisita nome do frame selecionado e preenche o campo |
-| Adiciona membro com email | Revalida o botão "Gerar Ficha" |
+| Adiciona membro à equipe | Revalida o botão "Gerar Ficha" |
 | Remove membro da equipe | Revalida o botão "Gerar Ficha" |
 | Altera qualquer campo | Salva automaticamente via `saveToStorage()` |
 | Cria spec, medida ou fluxo | Salva e renderiza na lista imediatamente |
@@ -500,7 +498,7 @@ Ao tentar focar/selecionar um nó no canvas, o plugin verifica se o nó pertence
 | Contexto | Mensagem |
 |---|---|
 | Salvo automaticamente | "Salvo automaticamente" (ícone verde) |
-| Step 1 inválido ao avançar | "Preencha o título e ao menos um e-mail de responsável para avançar." |
+| Step 1 inválido ao avançar | "Preencha o título e ao menos um membro da equipe para avançar." |
 | Frame já escaneado | "Frame "{nome}" já escaneado. Atualizando..." |
 | Cache limpo | "Cache limpo. Plugin reiniciado." |
 | Exportação bem-sucedida | "Dados exportados com sucesso!" |

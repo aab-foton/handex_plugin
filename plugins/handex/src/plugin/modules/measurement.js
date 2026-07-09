@@ -27,25 +27,28 @@
         }
         const exportBtn = document.getElementById('btn-export-measures');
         const hideAllBtn = document.getElementById('btn-hide-all-measures');
+        const collapseBtn = document.querySelector('#view-measurement [data-collapse-toggle]');
         if (data && data.length > 0) {
           if (exportBtn) exportBtn.classList.remove('hidden');
           if (hideAllBtn) hideAllBtn.classList.remove('hidden');
+          if (collapseBtn) collapseBtn.classList.remove('hidden');
         } else {
           if (exportBtn) exportBtn.classList.add('hidden');
           if (hideAllBtn) hideAllBtn.classList.add('hidden');
+          if (collapseBtn) collapseBtn.classList.add('hidden');
         }
       }
 
       if (!data || data.length === 0) {
         if (!frameId) {
           container.innerHTML = `
-            <div class="flex flex-col items-center justify-center py-12 animate-in fade-in duration-500">
+            <li class="flex flex-col items-center justify-center py-12 animate-in fade-in duration-500 list-none">
               <div class="relative mb-4">
                 <i data-lucide="ruler" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
               </div>
-              <p class="text-[12px] font-bold text-slate-500 dark:text-slate-500 text-center px-4 mb-1">Nenhuma medida criada ainda</p>
-              <p class="text-[10px] text-slate-300 dark:text-slate-600 text-center px-6">Selecione elementos no canvas e toque no botão <strong>+</strong></p>
-            </div>
+              <p class="text-[12px] font-bold text-slate-500 dark:text-dark-muted text-center px-4 mb-1">Nenhuma medida criada ainda</p>
+              <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6">Selecione elementos no canvas e toque no botão <strong>+</strong></p>
+            </li>
           `;
           _refreshIcons();
         }
@@ -68,7 +71,7 @@
           <span class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wide">${data.length} medida${data.length !== 1 ? 's' : ''}</span>
           <button type="button" title="${isGroupVisible ? 'Ocultar todas as medidas' : 'Exibir todas as medidas'}"
             onclick="toggleMeasurementsGroup('${frameId}')"
-            class="flex items-center gap-1 px-2 py-0.5 rounded-xl text-[10px] font-bold ${isGroupVisible ? 'text-[#0070af]' : 'text-gray-300'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+            class="flex items-center gap-1 px-2 py-0.5 rounded-xl text-[10px] font-bold ${isGroupVisible ? 'text-[#0070af]' : 'text-gray-500'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
             <i data-lucide="${isGroupVisible ? 'eye' : 'eye-off'}" class="w-3 h-3"></i>
             ${isGroupVisible ? 'Ocultar todas' : 'Exibir todas'}
           </button>`;
@@ -76,7 +79,7 @@
       }
 
       data.forEach((item, index) => {
-        const section = document.createElement("div");
+        const section = document.createElement("li");
         section.className = "border border-gray-200 dark:border-dark-line rounded-xl overflow-hidden bg-white dark:bg-dark-surface shadow-sm";
         if (item.nodeId) {
           section.setAttribute('data-node-id', item.nodeId);
@@ -98,14 +101,13 @@
           <div class="flex-1 min-w-0 text-left">
             <span class="text-[12px] font-bold text-[#1E293B] dark:text-white truncate block" title="${item.name}">${item.name}</span>
           </div>
-          <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 transition-transform ${chevronClass} shrink-0"></i>
+          <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform ${chevronClass} shrink-0"></i>
         `;
 
         // Visibility Toggle
         const visBtn = document.createElement("button");
         visBtn.type = "button";
         visBtn.title = "Exibir/Ocultar no canvas";
-        visBtn.ariaLabel = "Ocultar medida";
         visBtn.className = "px-3 py-3 hover:bg-blue-100 dark:hover:bg-slate-600 transition-colors shrink-0 border-l border-gray-100 dark:border-dark-line";
         visBtn.setAttribute('data-vis-btn', '');
 
@@ -116,17 +118,19 @@
         const isVisible = item.visible !== false;
         visBtn.innerHTML = isVisible ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
         visBtn.classList.toggle("text-[#005ca9]", isVisible);
-        visBtn.classList.toggle("text-gray-300", !isVisible);
+        visBtn.classList.toggle("text-gray-400", !isVisible);
+        visBtn.setAttribute('aria-label', isVisible ? 'Ocultar medida no canvas' : 'Exibir medida no canvas');
 
         visBtn.onclick = (e) => {
           e.stopPropagation();
           const nowVisible = !(item.visible !== false);
           item.visible = nowVisible;
-          
+
           visBtn.innerHTML = nowVisible ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
           visBtn.classList.toggle("text-[#005ca9]", nowVisible);
-          visBtn.classList.toggle("text-gray-300", !nowVisible);
-          
+          visBtn.classList.toggle("text-gray-400", !nowVisible);
+          visBtn.setAttribute('aria-label', nowVisible ? 'Ocultar medida no canvas' : 'Exibir medida no canvas');
+
           if (item.nodeId) {
             parent.postMessage({ pluginMessage: { type: 'hide-node', id: item.nodeId, forceState: nowVisible } }, '*');
           }
@@ -138,8 +142,8 @@
         const delBtn = document.createElement("button");
         delBtn.type = "button";
         delBtn.title = "Remover medida";
-        delBtn.ariaLabel = "Remover medida";
-        delBtn.className = "px-3 py-3 text-gray-400 hover:text-red-500 transition-colors shrink-0 border-l border-gray-100 dark:border-dark-line";
+        delBtn.setAttribute('aria-label', 'Remover medida');
+        delBtn.className = "px-3 py-3 text-gray-500 dark:text-dark-muted hover:text-red-500 transition-colors shrink-0 border-l border-gray-100 dark:border-dark-line";
         delBtn.innerHTML = `<i data-lucide="trash-2" class="w-4 h-4"></i>`;
         delBtn.onclick = (e) => {
           e.stopPropagation();
@@ -176,6 +180,14 @@
         section.appendChild(content);
         container.appendChild(section);
       });
+
+      // Primeiro item vem expandido por padrão — sincroniza o highlight no canvas com esse
+      // estado, sem forçar scroll/zoom (o usuário só abriu a lista, não clicou em nada).
+      const _firstItem = data[0];
+      if (_firstItem && _firstItem.nodeId) {
+        parent.postMessage({ pluginMessage: { type: 'highlight-node', id: _firstItem.nodeId, highlight: true, shouldScroll: false, selectNode: false, color: '#0070af' } }, '*');
+      }
+
       _refreshIcons();
       if (!frameId) {
         const currentCount = (data || []).length;
@@ -255,7 +267,7 @@
       document.querySelectorAll('[data-node-id] [data-vis-btn]').forEach(visBtn => {
         visBtn.innerHTML = targetState ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
         visBtn.classList.toggle("text-[#005ca9]", targetState);
-        visBtn.classList.toggle("text-gray-300", !targetState);
+        visBtn.classList.toggle("text-gray-400", !targetState);
       });
 
       const btn = document.getElementById('btn-hide-all-measures');
@@ -272,13 +284,31 @@
 
     function openMeasureModal(frameId) {
       if (frameId) activeFrameId = frameId;
+      resetMeasureSelection();
       openModal('measure-form-modal');
     }
     function closeMeasureModal() {
       closeModal('measure-form-modal');
     }
 
-    let currentMeasureTypes = ['wh'];
+    let currentMeasureTypes = [];
+    function resetMeasureSelection() {
+      currentMeasureTypes = [];
+      document.querySelectorAll('.measure-btn').forEach(btn => {
+        btn.classList.remove('border-[#0070af]', 'bg-blue-50', 'dark:bg-blue-900/20', 'outline', 'outline-2', 'outline-offset-2', 'outline-[#0070af]');
+        btn.classList.add('border-gray-100', 'dark:border-dark-line', 'hover:bg-gray-50', 'dark:hover:bg-slate-700');
+        const icon = btn.querySelector('.measure-icon');
+        if (icon) {
+          icon.classList.remove('text-[#0070af]', 'dark:text-blue-400');
+          icon.classList.add('text-slate-500');
+        }
+        const label = btn.querySelector('.measure-label');
+        if (label) {
+          label.classList.remove('text-[#0070af]', 'dark:text-blue-400', 'font-bold');
+          label.classList.add('text-slate-500', 'dark:text-dark-text');
+        }
+      });
+    }
     function selectMeasurement(type) {
       if (currentMeasureTypes.includes(type)) {
         if (currentMeasureTypes.length > 1) {
@@ -293,8 +323,8 @@
         const isActive = currentMeasureTypes.includes(btnType);
 
         if (isActive) {
-          btn.classList.remove('border-gray-100', 'dark:border-dark-line');
-          btn.classList.add('border-[#0070af]', 'bg-blue-50', 'dark:bg-blue-900/20');
+          btn.classList.remove('border-gray-100', 'dark:border-dark-line', 'hover:bg-gray-50', 'dark:hover:bg-slate-700');
+          btn.classList.add('border-[#0070af]', 'bg-blue-50', 'dark:bg-blue-900/20', 'outline', 'outline-2', 'outline-offset-2', 'outline-[#0070af]');
           const icon = btn.querySelector('.measure-icon');
           if (icon) {
             icon.classList.remove('text-slate-500');
@@ -306,8 +336,8 @@
             label.classList.add('text-[#0070af]', 'dark:text-blue-400', 'font-bold');
           }
         } else {
-          btn.classList.remove('border-[#0070af]', 'bg-blue-50', 'dark:bg-blue-900/20');
-          btn.classList.add('border-gray-100', 'dark:border-dark-line');
+          btn.classList.remove('border-[#0070af]', 'bg-blue-50', 'dark:bg-blue-900/20', 'outline', 'outline-2', 'outline-offset-2', 'outline-[#0070af]');
+          btn.classList.add('border-gray-100', 'dark:border-dark-line', 'hover:bg-gray-50', 'dark:hover:bg-slate-700');
           const icon = btn.querySelector('.measure-icon');
           if (icon) {
             icon.classList.remove('text-[#0070af]', 'dark:text-blue-400');
@@ -323,6 +353,10 @@
     }
 
     function executeMeasurement() {
+      if (!currentMeasureTypes.length) {
+        showToast('Selecione ao menos um tipo de medida');
+        return;
+      }
       const storeInParent = document.getElementById('chk-store-parent').checked;
       const frame = activeFrameId ? getFrame(activeFrameId) : null;
       const startNum = frame ? (frame.nextMeasurementNumber || 1) : nextMeasurementNumber;
@@ -362,4 +396,37 @@
       a.download = `handex-medidas-${Date.now()}.md`;
       a.click();
       URL.revokeObjectURL(url);
+    }
+
+    // ── Popover: tipos de medida disponíveis (Anotar Medidas) ────────────
+    function toggleMeasureTypesHelp(e) {
+      if (e) e.stopPropagation();
+      const wrap = document.getElementById('measure-types-help');
+      if (!wrap) return;
+      const panel = wrap.querySelector('[data-measure-types-panel]');
+      if (!panel) return;
+      const isOpen = !panel.classList.contains('hidden');
+      if (isOpen) {
+        panel.classList.add('hidden');
+        return;
+      }
+      panel.classList.remove('hidden');
+      const close = (ev) => {
+        if (!wrap.contains(ev.target)) {
+          panel.classList.add('hidden');
+          document.removeEventListener('click', close, true);
+          document.removeEventListener('keydown', onEsc, true);
+        }
+      };
+      const onEsc = (ev) => {
+        if (ev.key === 'Escape') {
+          panel.classList.add('hidden');
+          document.removeEventListener('click', close, true);
+          document.removeEventListener('keydown', onEsc, true);
+        }
+      };
+      setTimeout(() => {
+        document.addEventListener('click', close, true);
+        document.addEventListener('keydown', onEsc, true);
+      }, 0);
     }
