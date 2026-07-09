@@ -318,6 +318,41 @@
     while (n && n.type !== "PAGE") n = n.parent;
     return n != null && n.id === figma.currentPage.id;
   }
+  function _parseSpecTag(tag) {
+    const m = tag.match(/^([A-Z])(.*)$/);
+    if (!m) return [tag];
+    const letter = m[1];
+    const nums = m[2].split(".").filter(Boolean).map(Number);
+    return [letter, ...nums];
+  }
+  function _compareSpecTags(tagA, tagB) {
+    const a = _parseSpecTag(tagA);
+    const b = _parseSpecTag(tagB);
+    const len = Math.max(a.length, b.length);
+    for (let i = 0; i < len; i++) {
+      const av = a[i];
+      const bv = b[i];
+      if (av === void 0) return -1;
+      if (bv === void 0) return 1;
+      if (av === bv) continue;
+      if (typeof av === "number" && typeof bv === "number") return av - bv;
+      return String(av) < String(bv) ? -1 : 1;
+    }
+    return 0;
+  }
+  function _reorderSpecGroupByTag(specGroup, tag) {
+    const siblings = figma.currentPage.children.filter((n) => n !== specGroup && n.type === "GROUP");
+    let insertIndex = figma.currentPage.children.length;
+    for (let i = 0; i < siblings.length; i++) {
+      const m = siblings[i].name.match(/^\[Spec \| ([A-Z]\d*(?:\.\d+)*) \| [a-z]+\] /);
+      if (!m) continue;
+      if (_compareSpecTags(tag, m[1]) < 0) {
+        const idx = figma.currentPage.children.indexOf(siblings[i]);
+        insertIndex = Math.min(insertIndex, idx);
+      }
+    }
+    figma.currentPage.insertChild(insertIndex, specGroup);
+  }
   function hexToRgb2(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? {
@@ -2981,6 +3016,7 @@
         const specGroup = figma.group(groupNodes, figma.currentPage);
         specGroup.name = `[Spec | ${opts.letter} | ${_specSide}] ${node.name}`;
         specGroup.locked = false;
+        _reorderSpecGroupByTag(specGroup, opts.letter);
         figma.ui.postMessage({
           type: "spec-created",
           spec: {
