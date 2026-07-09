@@ -24,6 +24,53 @@ function _nodeOnCurrentPage(node) {
   return n != null && n.id === figma.currentPage.id;
 }
 
+// "A1.10" deve ordenar depois de "A1.2" — comparação puramente alfabética
+// trataria "10" < "2" como string. Parseia em [letra, ...números] e compara
+// parte a parte numericamente para obter a ordem hierárquica real (A < A1 < A1.1 < A1.2 < A2 < B).
+function _parseSpecTag(tag) {
+  const m = tag.match(/^([A-Z])(.*)$/);
+  if (!m) return [tag];
+  const letter = m[1];
+  const nums = m[2].split('.').filter(Boolean).map(Number);
+  return [letter, ...nums];
+}
+
+function _compareSpecTags(tagA, tagB) {
+  const a = _parseSpecTag(tagA);
+  const b = _parseSpecTag(tagB);
+  const len = Math.max(a.length, b.length);
+  for (let i = 0; i < len; i++) {
+    const av = a[i];
+    const bv = b[i];
+    if (av === undefined) return -1;
+    if (bv === undefined) return 1;
+    if (av === bv) continue;
+    if (typeof av === 'number' && typeof bv === 'number') return av - bv;
+    return String(av) < String(bv) ? -1 : 1;
+  }
+  return 0;
+}
+
+// Reordena o specGroup recém-criado entre os demais grupos de spec da página
+// para que a profundidade (z-order) siga a ordem hierárquica das tags, não a
+// ordem de criação. Não afeta X/Y — só o índice na lista de filhos da página.
+function _reorderSpecGroupByTag(specGroup, tag) {
+  const siblings = figma.currentPage.children.filter(n => n !== specGroup && n.type === 'GROUP');
+  // Fallback = ficar no topo (equivalente ao appendChild padrão), não a contagem de
+  // grupos — misturar essa contagem com índices reais de children (abaixo) empurraria
+  // a spec para trás de conteúdo não-spec da página quando não há tag posterior.
+  let insertIndex = figma.currentPage.children.length;
+  for (let i = 0; i < siblings.length; i++) {
+    const m = siblings[i].name.match(/^\[Spec \| ([A-Z]\d*(?:\.\d+)*) \| [a-z]+\] /);
+    if (!m) continue;
+    if (_compareSpecTags(tag, m[1]) < 0) {
+      const idx = figma.currentPage.children.indexOf(siblings[i]);
+      insertIndex = Math.min(insertIndex, idx);
+    }
+  }
+  figma.currentPage.insertChild(insertIndex, specGroup);
+}
+
 
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -3147,6 +3194,7 @@ figma.ui.onmessage = async (msg) => {
       const specGroup = figma.group(groupNodes, figma.currentPage);
       specGroup.name = `[Spec | ${opts.letter} | ${_specSide}] ${node.name}`;
       specGroup.locked = false;
+      _reorderSpecGroupByTag(specGroup, opts.letter);
 
 
       figma.ui.postMessage({
