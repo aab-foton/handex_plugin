@@ -103,7 +103,7 @@ ${framesList.map(f => {
     ? ` (declarado por ${f.audit.declaradoPor || '—'} em ${f.audit.declaradoEm ? new Date(f.audit.declaradoEm).toLocaleDateString('pt-BR') : '—'})`
     : '';
   const auditMD = _auditStatus
-    ? `\n- **Conformidade DSC:** ${_auditStatus}${_seloMD}${f.audit.obs ? ' — ' + f.audit.obs : ''}`
+    ? `\n- **Conformidade DSC:** ${_auditStatus}${_seloMD}${f.audit.observacoes ? ' — ' + f.audit.observacoes : ''}`
     : '';
   const ressalvas = (f.audit && f.audit.ressalvas) || [];
   const ressalvasMD = ressalvas.length === 0 ? '' :
@@ -600,6 +600,11 @@ ${(handoffData.createdFlows || []).length === 0
     function getInteractiveHTMLContent() {
       const rawName = handoffData.step1.titulo || "handoff";
       const safeName = rawName.replace(/[\\/:*?"<>|]+/g, "_").replace(/\s+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, "");
+      if (!handoffData._projectId) {
+        handoffData._projectId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        saveToStorage();
+      }
+      const projectId = handoffData._projectId;
       const status = handoffData.step1.status || "Pendente";
       const versao = handoffData.step1.versao || "v1.0.0";
       // Equipe — derivar autor (designer) e validador (PO) da equipe v2
@@ -1210,7 +1215,7 @@ ${(handoffData.createdFlows || []).length === 0
                       </div>
                     `).join('')}
                   </div>
-                  ${f.audit && f.audit.obs ? `<p class="text-[10px] text-amber-700 dark:text-amber-300 mt-2 italic">"${f.audit.obs}"</p>` : ''}
+                  ${f.audit && f.audit.observacoes ? `<p class="text-[10px] text-amber-700 dark:text-amber-300 mt-2 italic">"${f.audit.observacoes}"</p>` : ''}
                 </div>` : ''}
                 ${(f.audit && f.audit.semDesvios && (f.audit.declaradoPor || f.audit.declaradoEm)) ? `
                 <div class="mt-3 flex items-center gap-1.5 text-[9px] text-slate-500 dark:text-slate-400">
@@ -2368,10 +2373,10 @@ ${(handoffData.createdFlows || []).length === 0
     }
 
     // ── Item 5: campo de dúvida/comentário — rascunho 100% local do navegador
-    // (localStorage), sem round-trip com o plugin/Figma. Namespaced pelo nome
-    // do projeto pra não colidir se o dev tiver várias fichas exportadas
-    // abertas no mesmo navegador.
-    var HANDEX_COMMENTS_KEY = "handex-comments-${safeName}";
+    // (localStorage), sem round-trip com o plugin/Figma. Namespaced por um ID
+    // de projeto gerado uma única vez (não pelo título) pra não colidir se
+    // dois projetos exportados tiverem o mesmo nome no mesmo navegador.
+    var HANDEX_COMMENTS_KEY = "handex-comments-${projectId}";
     function _loadHandexComments() {
       try {
         var raw = localStorage.getItem(HANDEX_COMMENTS_KEY);
