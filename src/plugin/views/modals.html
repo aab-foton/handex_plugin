@@ -250,6 +250,35 @@
     </div>
 
     <!-- MODAL: SPEC TYPES HELP -->
+    <div id="frame-status-modal" role="dialog" aria-modal="true" aria-labelledby="frame-status-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div class="bg-white dark:bg-dark-bg w-full max-w-[400px] max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-dark-line flex flex-col animate-in fade-in zoom-in duration-200">
+        <div class="p-6 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
+          <h3 id="frame-status-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[18px]">Status do frame</h3>
+          <button onclick="closeModal('frame-status-modal')" aria-label="Fechar modal" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
+            <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6 space-y-3.5" onscroll="handleScroll(this)">
+          <div>
+            <span class="text-[11px] font-bold text-violet-500">Novo Componente</span>
+            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">Frame marcado como um componente inédito, ainda fora do DSC.</p>
+          </div>
+          <div>
+            <span class="text-[11px] font-bold text-slate-500 dark:text-dark-muted">Pendente</span>
+            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">Frame registrado, mas o Check Design ainda não foi feito.</p>
+          </div>
+          <div>
+            <span class="text-[11px] font-bold text-green-600">Conforme</span>
+            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">Check Design feito, sem desvios e sem tokens não vinculados ao DSC.</p>
+          </div>
+          <div>
+            <span class="text-[11px] font-bold text-red-500">Não Conforme</span>
+            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">Check Design feito, mas há desvios declarados ou tokens sem vínculo.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="spec-types-help-modal" role="dialog" aria-modal="true" aria-labelledby="help-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div class="bg-white dark:bg-dark-bg w-full max-w-[500px] max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-dark-line flex flex-col animate-in fade-in zoom-in duration-200">
         <div class="p-6 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">

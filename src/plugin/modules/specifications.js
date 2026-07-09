@@ -163,39 +163,6 @@
       if (typeof _refreshIcons === 'function') _refreshIcons();
     }
 
-    // ── Popover: legenda dos status do frame (Hub por Frame) ────────────
-    function toggleFrameStatusHelp(e) {
-      if (e) e.stopPropagation();
-      const wrap = document.getElementById('frame-status-help');
-      if (!wrap) return;
-      const panel = wrap.querySelector('[data-frame-status-panel]');
-      if (!panel) return;
-      const isOpen = !panel.classList.contains('hidden');
-      if (isOpen) {
-        panel.classList.add('hidden');
-        return;
-      }
-      panel.classList.remove('hidden');
-      const close = (ev) => {
-        if (!wrap.contains(ev.target)) {
-          panel.classList.add('hidden');
-          document.removeEventListener('click', close, true);
-          document.removeEventListener('keydown', onEsc, true);
-        }
-      };
-      const onEsc = (ev) => {
-        if (ev.key === 'Escape') {
-          panel.classList.add('hidden');
-          document.removeEventListener('click', close, true);
-          document.removeEventListener('keydown', onEsc, true);
-        }
-      };
-      setTimeout(() => {
-        document.addEventListener('click', close, true);
-        document.addEventListener('keydown', onEsc, true);
-      }, 0);
-    }
-
     // ── Accordion card por frame (Step 3 — Documentação & Specs) ────────
     function renderFrameCard(frame) {
       const list = document.getElementById('list-frames');

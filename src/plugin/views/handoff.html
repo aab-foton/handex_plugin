@@ -9,33 +9,11 @@
       </button>
       <h2 class="text-white font-bold text-[18px] truncate min-w-0">Escanear Tokens</h2>
       <div id="frame-status-help" class="relative shrink-0">
-        <button type="button" onclick="toggleFrameStatusHelp(event)"
+        <button type="button" onclick="openModal('frame-status-modal')"
           class="w-4 h-4 flex items-center justify-center text-white/70 hover:text-white transition-colors"
           title="O que significa cada status?" aria-label="O que significa cada status do frame">
           <i data-lucide="circle-help" class="w-3.5 h-3.5"></i>
         </button>
-        <div data-frame-status-panel
-          class="hidden absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-2rem)] z-50 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-xl p-3.5 space-y-3">
-          <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Status do frame</p>
-          <div class="space-y-2.5">
-            <div>
-              <span class="text-[10px] font-bold text-violet-500">Novo Componente</span>
-              <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight mt-0.5">Frame marcado como um componente inédito, ainda fora do DSC.</p>
-            </div>
-            <div>
-              <span class="text-[10px] font-bold text-slate-500 dark:text-dark-muted">Pendente</span>
-              <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight mt-0.5">Frame registrado, mas o Check Design ainda não foi feito.</p>
-            </div>
-            <div>
-              <span class="text-[10px] font-bold text-green-600">Conforme</span>
-              <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight mt-0.5">Check Design feito, sem desvios e sem tokens não vinculados ao DSC.</p>
-            </div>
-            <div>
-              <span class="text-[10px] font-bold text-red-500">Não Conforme</span>
-              <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight mt-0.5">Check Design feito, mas há desvios declarados ou tokens sem vínculo.</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
     <div class="flex items-center gap-1.5 shrink-0">
