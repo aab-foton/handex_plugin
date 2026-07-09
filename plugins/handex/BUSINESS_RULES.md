@@ -233,7 +233,7 @@ Razão da regra: a conformidade não se aplica ao contêiner, mas ao que está d
 ```
 
 **Validações do formulário:**
-- Tag (letter): máx 2 caracteres, obrigatório, convertido para uppercase
+- Tag (letter): formato `[A-Z]\d*(\.\d+)*` (ex: A, B, A1, A2, A1.1, A1.2), máx 8 caracteres, obrigatório, convertido para uppercase
 - Categoria: pode ser "Sem categoria"
 - Link: opcional; validado como URL ao blur
 - Propriedades: seleção múltipla via modal `spec-properties-modal`
@@ -737,7 +737,7 @@ HOME → Importar JSON (botão utilitário)
 
 | Limite | Valor |
 |---|---|
-| Caracteres da tag de spec (letter) | 2 |
+| Caracteres da tag de spec (letter) | 8 (formato `[A-Z]\d*(\.\d+)*`) |
 | Snapshots históricos por arquivo | 5 |
 | Itens por seção de scan até exibir busca | 10 |
 | Tokens listados por categoria na ficha | 10 (+ contagem de excedente) |

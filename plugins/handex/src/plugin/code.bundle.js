@@ -2836,7 +2836,7 @@
           };
           figma.currentPage.children.forEach((n) => {
             if (n.type !== "GROUP") return;
-            const newFmt = n.name.match(/^\[Spec \| ([A-Z]) \| ([a-z]+)\] /);
+            const newFmt = n.name.match(/^\[Spec \| ([A-Z]\d*(?:\.\d+)*) \| ([a-z]+)\] /);
             if (newFmt) {
               if (newFmt[2] !== side) return;
               const ficha2 = n.children && n.children.find((c) => c.type === "FRAME" && c.name === "Ficha" && c !== specCard);
@@ -2848,7 +2848,7 @@
             if (!n.name.startsWith("[Spec]")) return;
             const ficha = n.children && n.children.find((c) => c.type === "FRAME" && c.name.includes("/Ficha") && c !== specCard);
             if (!ficha) return;
-            const lm = ficha.name.match(/\[Spec\/([A-Z])\]/);
+            const lm = ficha.name.match(/\[Spec\/([A-Z]\d*(?:\.\d+)*)\]/);
             const sm = ficha.name.match(/\/Ficha:([a-z]+)/);
             if (!lm) return;
             if ((sm ? sm[1] : "right") !== side) return;

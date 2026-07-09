@@ -1480,6 +1480,7 @@
     }
 
     function requestSpecProperties() {
+      if (!validateSpecLetterInput()) return;
       parent.postMessage({ pluginMessage: { type: 'request-spec-properties' } }, '*');
     }
 
@@ -2216,6 +2217,7 @@ function toggleLinkInput(show) {
       document.getElementById('spec-form-modal').dataset.editIdx = '';
       document.getElementById('spec-letter-input').value = 'A';
       document.getElementById('spec-color-input').value = '#005ca9';
+      validateSpecLetterInput();
       document.getElementById('ann-category').value = '';
       if (typeof _csSyncLabel === 'function') _csSyncLabel('cs-ann-cat');
       if (typeof syncSpecColorFromCategory === 'function') syncSpecColorFromCategory();
@@ -2260,6 +2262,7 @@ function toggleLinkInput(show) {
 
       document.getElementById('spec-letter-input').value = source.letter || 'A';
       document.getElementById('spec-color-input').value = source.color || '#005ca9';
+      validateSpecLetterInput();
       document.getElementById('ann-category').value = source.category || '';
       if (typeof _csSyncLabel === 'function') _csSyncLabel('cs-ann-cat');
       if (typeof syncSpecColorFromCategory === 'function') syncSpecColorFromCategory();

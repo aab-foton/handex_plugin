@@ -395,11 +395,13 @@
           <div class="col-span-1">
             <label for="spec-letter-input" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Tag</label>
             <div class="relative flex items-center">
-              <input type="text" id="spec-letter-input" maxlength="2" value="A" 
+              <input type="text" id="spec-letter-input" maxlength="8" value="A" placeholder="A, A1, A1.1..."
+                oninput="validateSpecLetterInput()"
                 class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl pl-3 pr-8 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-100 outline-none transition-all uppercase" />
               <span id="spec-color-swatch" class="absolute right-2 w-5 h-5 rounded-full border border-white/30 shrink-0" style="background-color:#005ca9" title="Cor definida pela categoria"></span>
               <input type="hidden" id="spec-color-input" value="#005ca9" />
             </div>
+            <p id="spec-letter-error" class="hidden text-[10px] text-red-500 mt-1 ml-1">Formato: A, B, A1, A2, A1.1, A1.2...</p>
           </div>
           <div class="col-span-3">
             <div class="flex items-center gap-1.5 mb-1.5 px-1">
@@ -490,6 +492,22 @@
   </div>
 
   <script>
+    function validateSpecLetterInput() {
+      const input = document.getElementById('spec-letter-input');
+      const error = document.getElementById('spec-letter-error');
+      const confirmBtn = document.getElementById('btn-spec-form-confirm');
+      if (!input) return true;
+      const value = input.value.toUpperCase();
+      const isValid = /^[A-Z]\d*(\.\d+)*$/.test(value);
+      if (error) error.classList.toggle('hidden', isValid);
+      if (confirmBtn) {
+        confirmBtn.disabled = !isValid;
+        confirmBtn.classList.toggle('opacity-50', !isValid);
+        confirmBtn.classList.toggle('cursor-not-allowed', !isValid);
+      }
+      return isValid;
+    }
+
     function toggleLinkInput(show) {
       const container = document.getElementById('spec-link-container');
       container.classList.toggle('hidden', !show);
@@ -502,6 +520,7 @@
       document.getElementById('spec-form-modal').dataset.editIdx = '';
       document.getElementById('spec-letter-input').value = 'A';
       document.getElementById('spec-color-input').value = '#005ca9';
+      validateSpecLetterInput();
       const _sw = document.getElementById('spec-color-swatch');
       if (_sw) _sw.style.backgroundColor = '#005ca9';
       document.getElementById('ann-category').value = '';
