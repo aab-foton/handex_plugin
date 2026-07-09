@@ -1,5 +1,20 @@
 # Changelog
 
+## v2.3.0 — 2026-07-09
+
+### Novidades
+
+- **Nomes de template configuráveis** — campo "Nome do template" no painel de Configurações permite cadastrar múltiplos nomes reconhecidos como Template de Handoff (um por linha). Se o template for renomeado no arquivo, basta adicionar o nome novo ali; não precisa remover o antigo, e handoffs já gerados continuam funcionando.
+- **Varredura de nomes do template (dev, temporário)** — card em Configurações que confere se os nomes literais que o `code.ts` procura dentro do template (Property Table Row, Cell 01/02/03, Subtitle, Slot nativo, badge de item number, etc.) ainda existem no template atual, sem depender de seleção.
+- **Chave de fábrica do template** — fallback de biblioteca (`CHAVE_TEMPLATE_PADRAO`) usado quando ainda não há nada em memória/clientStorage, útil na primeira execução em um arquivo novo.
+
+### Correções
+
+- **Template renomeado quebrava a detecção** — o plugin dependia de um nome fixo (`[dsc-h] Template Handoff`) e de uma chave de componente que ficou obsoleta após o template ser renomeado para `[dsc-hub] Handoff de Design`, causando erro 404 ao importar da biblioteca. Agora a chave é atualizada automaticamente assim que o template é resolvido por nome.
+- **Componentes internos do template renomeados** — `Property Name/Value/Description` → `Cell 01/02/03`, `Subtitle Variants` → `Subtitle`, `[base] Swap Slot` → `Slot nativo`, `[dsc-h] Item Number` → `[dsc-hub] Item Number`. Leitura de handoffs já existentes (gerados com os nomes antigos) mantém fallback de compatibilidade.
+- **Badges de numeração perdiam a instância** — a proteção contra "achatamento" de instâncias (`desvincularTodasInstancias`) e a montagem do badge na anatomia dependiam do prefixo `[dsc-h]`, que não cobre `[dsc-hub]`. Ambos os prefixos agora são reconhecidos.
+- **Contraste no dark mode não trocava o fundo do card** — regressão do commit `c03d5ae` (23/03): a checagem que troca o fundo para "card background 2" quando o componente fica escuro-demais no fundo escuro da matriz/variações tinha sido removida ao separar `aplicarModeHandoff` em duas funções. Reintegrada em `criarCardVariacao` e `popularMatrizEstados`.
+
 ## v2.2.0 — 2026-07-03
 
 ### Novidades

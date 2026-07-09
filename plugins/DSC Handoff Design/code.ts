@@ -65,6 +65,66 @@ let _templateCompKey = "";
 /** Evita chamar loadAllPagesAsync múltiplas vezes por operação */
 let _estrategia3Tentada = false;
 
+/**
+ * Nomes de componente/instância reconhecidos como Template de Handoff (padrão de fábrica).
+ * Configurável em tempo de execução via UI — ver `_nomesTemplateReconhecidos`.
+ */
+const NOMES_TEMPLATE_PADRAO = ["[dsc-h] Template Handoff", "[dsc-hub] Handoff de Design"];
+
+/**
+ * Chave do componente master do template atual na biblioteca — fallback de fábrica
+ * usado quando ainda não há chave em memória/clientStorage (ex: primeira execução
+ * em um arquivo novo, sem instância do template na página).
+ */
+const CHAVE_TEMPLATE_PADRAO = "893c2104564ce88e90941a0c768f6a956af2f194";
+
+/** Lista efetiva de nomes reconhecidos (carregada do clientStorage na inicialização) */
+let _nomesTemplateReconhecidos: string[] = [...NOMES_TEMPLATE_PADRAO];
+
+/**
+ * Verifica se um nome de nó corresponde a algum dos nomes de template reconhecidos.
+ * Substitui a antiga checagem fixa em "[dsc-h] template handoff", permitindo múltiplos
+ * nomes (útil quando o template é renomeado sem quebrar handoffs já gerados).
+ */
+function ehNomeTemplateReconhecido(nome: string): boolean {
+  const alvo = nome.toLowerCase();
+  return _nomesTemplateReconhecidos.some(n => n.trim() && alvo.includes(n.trim().toLowerCase()));
+}
+
+/**
+ * Catálogo dos nomes literais de componentes internos que o code.ts procura dentro do
+ * template (via `buscarFilho`). Usado apenas pela ferramenta de dev "Varredura de nomes
+ * do template" para conferir se o template novo ainda contém essas estruturas.
+ */
+const NOMES_ESPERADOS_TEMPLATE = [
+  "table", "anatomy", "variants", "states",
+  "Property Table Row", "Cell 01", "Cell 02", "Cell 03",
+  "image", "specs", "element", "Element name", "Description",
+  "variant content", "variant card", "Subtitle",
+  "state names", "variant + card", "STATE", "NAME", "VALUE", "state matrix", "dark mode",
+  "Slot nativo", "Component Name",
+];
+
+/**
+ * Nomes procurados por substring (case-insensitive), diferente de `NOMES_ESPERADOS_TEMPLATE`
+ * que é conferido por nome exato via `buscarFilho`.
+ */
+const NOMES_ESPERADOS_TEMPLATE_SUBSTRING = ["[dsc-hub] Item Number"];
+
+/**
+ * Nomes reconhecidos para o badge de numeração da anatomia — o nome mudou de
+ * "[dsc-h] Item Number" para "[dsc-hub] Item Number" numa renomeação do template.
+ * Usado apenas ao ler handoffs JÁ EXISTENTES (gerados antes da troca); conteúdo fresco
+ * do template atual usa direto "[dsc-hub] item number".
+ */
+const NOMES_LEGADO_ITEM_NUMBER = ["[dsc-hub] item number", "[dsc-h] item number"];
+
+/** Verifica se um nome de nó corresponde ao badge de item number (nome atual ou legado) */
+function ehBadgeItemNumero(nome: string): boolean {
+  const alvo = nome.toLowerCase();
+  return NOMES_LEGADO_ITEM_NUMBER.some(n => alvo.includes(n));
+}
+
 /** Domínios de cada seção — usado para filtrar quais seções atualizar */
 const DOMINIO_SECOES: Record<string, string> = {
   table: "design",
@@ -108,9 +168,22 @@ figma.showUI(__html__, { width: UI_LARGURA, height: UI_ALTURA, title: "DSC Hando
 
 let _desbloqueado = false;
 
-// Avaliar seleção inicial e registrar listener de mudança
-avaliarSelecao();
-figma.on('selectionchange', () => { avaliarSelecao(); });
+/** Carrega os nomes de template reconhecidos salvos no clientStorage (se houver) e avisa a UI */
+async function carregarNomesTemplate(): Promise<void> {
+  const salvo = await figma.clientStorage.getAsync("dsc-handoff-nomesTemplate") as string | undefined;
+  if (salvo) {
+    const nomes = salvo.split("\n").map(s => s.trim()).filter(Boolean);
+    if (nomes.length) _nomesTemplateReconhecidos = nomes;
+  }
+  figma.ui.postMessage({ type: 'nomes-template-carregados', texto: _nomesTemplateReconhecidos.join("\n") });
+}
+
+// Carregar configurações, avaliar seleção inicial e registrar listener de mudança
+(async () => {
+  await carregarNomesTemplate();
+  avaliarSelecao();
+  figma.on('selectionchange', () => { avaliarSelecao(); });
+})();
 
 async function avaliarSelecao(): Promise<void> {
   const selecao = figma.currentPage.selection;
@@ -119,7 +192,7 @@ async function avaliarSelecao(): Promise<void> {
     return;
   }
   const noComponente = selecao.find(n =>
-    !(n.type === 'INSTANCE' && n.name.toLowerCase().includes('[dsc-h] template handoff'))
+    !(n.type === 'INSTANCE' && ehNomeTemplateReconhecido(n.name))
   );
   if (!noComponente) {
     if (!_desbloqueado) figma.ui.postMessage({ type: 'waiting-selection' });
@@ -131,7 +204,7 @@ async function avaliarSelecao(): Promise<void> {
     return;
   }
   const temTemplateOuHandoff = selecao.some(n =>
-    (n.type === 'INSTANCE' && n.name.toLowerCase().includes('[dsc-h] template handoff')) ||
+    (n.type === 'INSTANCE' && ehNomeTemplateReconhecido(n.name)) ||
     (n.type === 'FRAME' && n.name.toLowerCase().startsWith('[dsc] handoff:'))
   );
   if (!temTemplateOuHandoff) {
@@ -249,6 +322,23 @@ function buscarFilho(raiz: SceneNode, nome: string): SceneNode | null {
 }
 
 /**
+ * Busca recursiva por substring no nome (case-insensitive), usada pela varredura de dev
+ * para nós cujo nome real varia (ex: "[dsc-h] Item Number" + sufixo).
+ */
+function buscarFilhoSubstring(raiz: SceneNode, substring: string): SceneNode | null {
+  if (!raiz || raiz.removed) return null;
+  const alvo = substring.toLowerCase().trim();
+  if (raiz.name.toLowerCase().includes(alvo)) return raiz;
+  if ("children" in raiz) {
+    for (const filho of (raiz as any).children) {
+      const encontrado = buscarFilhoSubstring(filho, substring);
+      if (encontrado) return encontrado;
+    }
+  }
+  return null;
+}
+
+/**
  * Encontra o primeiro TextNode dentro de um nó (busca em profundidade).
  */
 function buscarPrimeiroTexto(no: SceneNode): TextNode | null {
@@ -359,7 +449,7 @@ function marcarTextoOriginal(noTexto: TextNode, chaveSemantica: string): void {
 
 /**
  * Fallback legado: extrai labels e subtítulos de uma seção de variações (sem pluginData).
- * Busca TextNodes em "Subtitle Variants" e "VALUE" para preservar edições.
+ * Busca TextNodes em "Subtitle Variants" (nome legado; atualmente "Subtitle") e "VALUE" para preservar edições.
  */
 function extrairLegadoVariants(secao: SceneNode, mapa: Map<string, string>): void {
   if (!("children" in secao)) return;
@@ -510,7 +600,7 @@ function tornarContainerVisivel(noTexto: TextNode, raizSecao: SceneNode): void {
 
 /**
  * Fallback: busca por nome da propriedade/elemento dentro da seção e aplica edições.
- * Percorre as linhas/elementos da seção procurando campos "Property Name" ou "Element name"
+ * Percorre as linhas/elementos da seção procurando campos "Cell 01" ou "Element name"
  * que correspondam ao nome semântico extraído da chave de edição.
  */
 async function buscarEAplicarPorNome(
@@ -520,14 +610,14 @@ async function buscarEAplicarPorNome(
 ): Promise<void> {
   if (!("children" in secao)) return;
 
-  // Percorrer recursivamente buscando containers com "Property Name" ou "Element name"
+  // Percorrer recursivamente buscando containers com "Cell 01" ou "Element name"
   async function percorrer(no: SceneNode): Promise<void> {
     if (chavesRestantes.size === 0) return;
     if (!("children" in no)) return;
     const frame = no as FrameNode;
 
     // Verificar se este nó é uma "linha" (tem Property Name ou Element name)
-    const noNome = buscarFilho(frame, "Property Name") || buscarFilho(frame, "Element name");
+    const noNome = buscarFilho(frame, "Cell 01") || buscarFilho(frame, "Element name");
     if (noNome) {
       const textoNome = buscarPrimeiroTexto(noNome);
       if (textoNome) {
@@ -542,10 +632,10 @@ async function buscarEAplicarPorNome(
 
           if (sufixo === "desc") {
             noAlvo = buscarPrimeiroTexto(
-              buscarFilho(frame, "Property Description") || buscarFilho(frame, "Description") || frame
+              buscarFilho(frame, "Cell 03") || buscarFilho(frame, "Description") || frame
             );
           } else if (sufixo === "valor") {
-            noAlvo = buscarPrimeiroTexto(buscarFilho(frame, "Property Value") || frame);
+            noAlvo = buscarPrimeiroTexto(buscarFilho(frame, "Cell 02") || frame);
           }
 
           if (noAlvo && edicoes.has(chaveOrfa)) {
@@ -660,7 +750,7 @@ function extrairPosicoesBadges(secaoAnatomia: SceneNode): PosicaoBadge[] {
     if (!("children" in frame)) return;
     for (const filho of (frame as any).children) {
       const no = filho as SceneNode;
-      if (no.type === "INSTANCE" && no.name.toLowerCase().includes("[dsc-h] item number")) {
+      if (no.type === "INSTANCE" && ehBadgeItemNumero(no.name)) {
         extrairDeBadge(no as InstanceNode, nomeFrame);
       }
     }
@@ -675,7 +765,7 @@ function extrairPosicoesBadges(secaoAnatomia: SceneNode): PosicaoBadge[] {
       const no = filho as SceneNode;
       if (no.name.startsWith("preview-") && "children" in no) {
         percorrerFrame(no, no.name);
-      } else if (no.type === "INSTANCE" && no.name.toLowerCase().includes("[dsc-h] item number")) {
+      } else if (no.type === "INSTANCE" && ehBadgeItemNumero(no.name)) {
         extrairDeBadge(no as InstanceNode, "image");
       }
     }
@@ -723,7 +813,7 @@ function reaplicarPosicoesBadges(secaoAnatomia: SceneNode, posicoesSalvas: Posic
     if (!("children" in frame)) return;
     for (const filho of (frame as any).children) {
       const no = filho as SceneNode;
-      if (no.type === "INSTANCE" && no.name.toLowerCase().includes("[dsc-h] item number")) {
+      if (no.type === "INSTANCE" && no.name.toLowerCase().includes("[dsc-hub] item number")) {
         badgesAtuais.push({ badge: no as InstanceNode, framePai: nomeFrame });
       } else if (no.name.startsWith("preview-") && "children" in no) {
         coletarBadges(no, no.name);
@@ -848,7 +938,7 @@ function desvincularInstancia(no: SceneNode): FrameNode {
  */
 function desvincularTodasInstancias(no: SceneNode): SceneNode {
   const nomeLower = no.name.toLowerCase();
-  if (nomeLower.includes("[dsc] alert") || nomeLower.includes("[dsc-h]")) return no;
+  if (nomeLower.includes("[dsc] alert") || nomeLower.includes("[dsc-h]") || nomeLower.includes("[dsc-hub]")) return no;
 
   const desvinculado = no.type === "INSTANCE"
     ? (no as InstanceNode).detachInstance()
@@ -1690,9 +1780,9 @@ async function criarLinhaTabela(
   }
 
   // Busca resiliente de TextNodes (por nome → por posição → fallback recursivo)
-  let textoNome = buscarPrimeiroTexto(buscarFilho(linha, "Property Name") || (linha as any).children[0]);
-  let textoValor = buscarPrimeiroTexto(buscarFilho(linha, "Property Value") || (linha as any).children[1]);
-  let textoDesc = buscarPrimeiroTexto(buscarFilho(linha, "Property Description") || (linha as any).children[2]);
+  let textoNome = buscarPrimeiroTexto(buscarFilho(linha, "Cell 01") || (linha as any).children[0]);
+  let textoValor = buscarPrimeiroTexto(buscarFilho(linha, "Cell 02") || (linha as any).children[1]);
+  let textoDesc = buscarPrimeiroTexto(buscarFilho(linha, "Cell 03") || (linha as any).children[2]);
 
   if (!textoNome || !textoValor || !textoDesc) {
     const todosTextos = coletarTextos(linha);
@@ -1758,7 +1848,7 @@ async function criarCardVariacao(
   }
 
   // Remover placeholder de swap slot
-  const swapSlot = buscarFilho(card, "[base] Swap Slot");
+  const swapSlot = buscarFilho(card, "Slot nativo");
   if (swapSlot) swapSlot.remove();
 
   // Criar instância com props — VARIANT props via busca direta no ComponentSet,
@@ -1803,6 +1893,13 @@ async function criarCardVariacao(
 
     // Setar dark mode da collection do handoff no card
     await aplicarDarkModeHandoff(card);
+
+    // Contraste WCAG — dark mode: componente escuro some no fundo escuro
+    try {
+      if (precisaFundoClaro(instancia)) {
+        await aplicarFundoEscuroCard(card, label);
+      }
+    } catch {}
   } else {
     // Light mode: verificar se componente claro some no fundo claro
     try {
@@ -2216,8 +2313,8 @@ function extrairDescricoesTabela(secaoTabela: SceneNode): Map<string, string> {
   for (const filho of tabela.children) {
     if (filho.name.toLowerCase().includes("header")) continue;
 
-    const noNome = buscarFilho(filho, "Property Name");
-    const noDesc = buscarFilho(filho, "Property Description");
+    const noNome = buscarFilho(filho, "Cell 01") || buscarFilho(filho, "Property Name");
+    const noDesc = buscarFilho(filho, "Cell 03") || buscarFilho(filho, "Property Description");
     if (!noNome || !noDesc) continue;
 
     const textoNome = buscarPrimeiroTexto(noNome);
@@ -2264,8 +2361,8 @@ async function reinjetarDescricoesTabela(secaoTabela: SceneNode, dados: Map<stri
   for (const filho of tabela.children) {
     if (filho.name.toLowerCase().includes("header")) continue;
 
-    const noNome = buscarFilho(filho, "Property Name");
-    const noDesc = buscarFilho(filho, "Property Description");
+    const noNome = buscarFilho(filho, "Cell 01");
+    const noDesc = buscarFilho(filho, "Cell 03");
     if (!noNome || !noDesc) continue;
 
     const textoNome = buscarPrimeiroTexto(noNome);
@@ -2512,7 +2609,7 @@ async function gerarSecaoVariacoes(
     secaoVariacoes.appendChild(secaoBruta);
     const secao = desvincularTodasInstancias(secaoBruta) as FrameNode;
 
-    const frameSubtitulo = buscarFilho(secao, "Subtitle Variants");
+    const frameSubtitulo = buscarFilho(secao, "Subtitle");
     const textoSubtitulo = frameSubtitulo ? buscarPrimeiroTexto(frameSubtitulo) : null;
     const nomeExibicao = capitalizar(grupo.nomeBase.replace(/^(show|has|display)\s+/i, ''));
     secao.name = `variant-section-${grupo.nomeBase}`;
@@ -2545,7 +2642,7 @@ async function gerarSecaoVariacoes(
     const secao = desvincularTodasInstancias(secaoBruta) as FrameNode;
     secao.name = `variant-section-${limparNomePropriedade(nomeProp)}`;
 
-    const frameSubtitulo = buscarFilho(secao, "Subtitle Variants");
+    const frameSubtitulo = buscarFilho(secao, "Subtitle");
     const textoSubtitulo = frameSubtitulo ? buscarPrimeiroTexto(frameSubtitulo) : null;
     if (textoSubtitulo) {
       const nomeExibicaoIndiv = capitalizar(limparNomePropriedade(nomeProp));
@@ -2799,7 +2896,7 @@ async function extrairElementosAnatomia(
 }
 
 /**
- * Configura um badge [dsc-h] Item Number: seta o número e o toggle de opcional.
+ * Configura um badge [dsc-hub] Item Number: seta o número e o toggle de opcional.
  * Se connectorOff = true, desativa o conector do badge.
  */
 async function configurarBadge(
@@ -3052,7 +3149,7 @@ async function gerarSecaoAnatomia(
   const alvoAnatomia = buscarFilho(container, "anatomy");
   if (!alvoAnatomia) return;
 
-  // Badges [dsc-h] são protegidos pelo desvincularTodasInstancias — permanecem instâncias
+  // Badges [dsc-h]/[dsc-hub] são protegidos pelo desvincularTodasInstancias — permanecem instâncias
   const secaoAnatomia = desvincularTodasInstancias(alvoAnatomia) as FrameNode;
 
   // --- Preview com badges ---
@@ -3065,7 +3162,7 @@ async function gerarSecaoAnatomia(
     const badgesTemplate: InstanceNode[] = [];
     if ("children" in frameImagem) {
       for (const filho of (frameImagem as any).children) {
-        if ((filho as SceneNode).name.toLowerCase().includes("[dsc-h] item number") && filho.type === "INSTANCE") {
+        if ((filho as SceneNode).name.toLowerCase().includes("[dsc-hub] item number") && filho.type === "INSTANCE") {
           badgesTemplate.push(filho as InstanceNode);
         }
       }
@@ -3222,10 +3319,10 @@ async function gerarSecaoAnatomia(
             const no = filho as SceneNode;
             const nomeLower = no.name.toLowerCase();
 
-            if ((nomeLower.includes("[dsc-h]") || nomeLower === "number") && no.type === "INSTANCE") {
+            if ((nomeLower.includes("[dsc-h]") || nomeLower.includes("[dsc-hub]") || nomeLower === "number") && no.type === "INSTANCE") {
               await configurarBadge(no as InstanceNode, i + 1, elem.ehOpcional, true);
             }
-            else if ((nomeLower.includes("[dsc-h]") || nomeLower === "number") && no.type !== "INSTANCE" && badgeMainComp) {
+            else if ((nomeLower.includes("[dsc-h]") || nomeLower.includes("[dsc-hub]") || nomeLower === "number") && no.type !== "INSTANCE" && badgeMainComp) {
               const badgeNovo = badgeMainComp.createInstance();
               const idx = (nomeElemento as FrameNode).children.indexOf(no);
               (nomeElemento as FrameNode).insertChild(idx >= 0 ? idx : 0, badgeNovo);
@@ -3342,7 +3439,7 @@ async function popularMatrizEstados(
       card.resize(larguraCelula, card.height);
       card.layoutSizingVertical = "HUG";
 
-      const swapSlot = buscarFilho(card, "[base] Swap Slot");
+      const swapSlot = buscarFilho(card, "Slot nativo");
       if (swapSlot) swapSlot.remove();
 
       // Dark mode: setar mode do handoff no card
@@ -3352,6 +3449,7 @@ async function popularMatrizEstados(
 
       const tamanhosRender = opcoesSize.length > 0 ? opcoesSize : [null];
       let fundoEscuroAplicado = !!modeDark;
+      let fundoClaroAplicado = false;
 
       for (const tamanho of tamanhosRender) {
         const props: Record<string, any> = {
@@ -3405,6 +3503,16 @@ async function popularMatrizEstados(
                 await aplicarFundoEscuroCard(card);
                 fundoEscuroAplicado = true;
               }
+            }
+          } catch {}
+        }
+
+        // Contraste WCAG — dark mode: componente escuro some no fundo escuro
+        if (modeDark && !fundoClaroAplicado) {
+          try {
+            if (precisaFundoClaro(instancia)) {
+              await aplicarFundoEscuroCard(card);
+              fundoClaroAplicado = true;
             }
           } catch {}
         }
@@ -4145,7 +4253,7 @@ figma.ui.onmessage = async (msg) => {
       let templateSelecionado: InstanceNode | undefined;
       let noComponente: SceneNode | undefined;
       for (const no of selecao) {
-        if (no.type === "INSTANCE" && no.name.toLowerCase().includes("[dsc-h] template handoff")) {
+        if (no.type === "INSTANCE" && ehNomeTemplateReconhecido(no.name)) {
           templateSelecionado = no as InstanceNode;
         } else if (!noComponente) {
           noComponente = no;
@@ -4204,7 +4312,7 @@ figma.ui.onmessage = async (msg) => {
       let templateSelecionado: InstanceNode | undefined;
       let noComponente: SceneNode | undefined;
       for (const no of selecao) {
-        if (no.type === "INSTANCE" && no.name.toLowerCase().includes("[dsc-h] template handoff")) {
+        if (no.type === "INSTANCE" && ehNomeTemplateReconhecido(no.name)) {
           templateSelecionado = no as InstanceNode;
         } else if (!noComponente) {
           noComponente = no;
@@ -4391,6 +4499,20 @@ figma.ui.onmessage = async (msg) => {
       selecao: sectionsSelecao.some(s => s.getPluginData('dschNomeOriginal') !== ''),
     });
   }
+
+  /** Salva a lista de nomes de template reconhecidos configurada na UI */
+  if (msg.type === 'salvar-nomes-template') {
+    const nomes = (Array.isArray(msg.nomes) ? msg.nomes as string[] : [])
+      .map(n => n.trim()).filter(Boolean);
+    _nomesTemplateReconhecidos = nomes.length ? nomes : [...NOMES_TEMPLATE_PADRAO];
+    await figma.clientStorage.setAsync("dsc-handoff-nomesTemplate", _nomesTemplateReconhecidos.join("\n"));
+  }
+
+  /** DEV (TEMPORÁRIO) — roda a varredura de nomes do template e devolve o resultado pra UI */
+  if (msg.type === 'rodar-varredura-template') {
+    const resultado = await varrerNomesTemplate();
+    figma.ui.postMessage({ type: 'varredura-template-resultado', ...resultado });
+  }
 };
 
 /**
@@ -4435,17 +4557,57 @@ async function resolverTemplate(templateCompId: string, templateCompKey = ""): P
     }
   }
 
+  // Estratégia 1d: chave padrão de fábrica (primeira execução, sem nada em memória/clientStorage)
+  if (!chave) {
+    try {
+      const comp = await figma.importComponentByKeyAsync(CHAVE_TEMPLATE_PADRAO);
+      const inst = comp.createInstance();
+      inst.visible = false;
+      _templateCompKey = CHAVE_TEMPLATE_PADRAO;
+      figma.clientStorage.setAsync("dsc-handoff-templateCompKey", CHAVE_TEMPLATE_PADRAO);
+      return inst;
+    } catch (_e) { /* continua */ }
+  }
+
   // Estratégia 2: buscar instância na página atual (percorre Sections)
   const instanciaPagina = buscarNaPagina(n =>
-    n.type === "INSTANCE" && n.name.toLowerCase().includes("[dsc-h] template handoff")
+    n.type === "INSTANCE" && ehNomeTemplateReconhecido(n.name)
   ) as InstanceNode | null;
   if (instanciaPagina) {
     const clone = (instanciaPagina as InstanceNode).clone();
     clone.visible = false;
+    // Chave em memória/clientStorage estava desatualizada (ex: template renomeado na biblioteca).
+    // Atualiza com a chave fresca pra parar de tentar importar a chave morta nas próximas vezes.
+    const compAtualizado = await clone.getMainComponentAsync();
+    if (compAtualizado?.key && compAtualizado.key !== chave) {
+      _templateCompKey = compAtualizado.key;
+      figma.clientStorage.setAsync("dsc-handoff-templateCompKey", compAtualizado.key);
+    }
     return clone;
   }
 
   return null;
+}
+
+/**
+ * DEV (TEMPORÁRIO) — Varre o template resolvido e confere se os nomes literais que o
+ * code.ts procura (`NOMES_ESPERADOS_TEMPLATE` / `NOMES_ESPERADOS_TEMPLATE_SUBSTRING`)
+ * ainda existem nele. Não depende de seleção — usa as mesmas estratégias de `resolverTemplate`.
+ */
+async function varrerNomesTemplate(): Promise<{ ok: boolean; mensagem?: string; resultado?: { nome: string; encontrado: boolean }[] }> {
+  const instancia = await resolverTemplate("");
+  if (!instancia) {
+    return { ok: false, mensagem: "Nenhum template encontrado (verifique os nomes reconhecidos em Configurações ou coloque uma instância na página)." };
+  }
+  try {
+    const resultado = [
+      ...NOMES_ESPERADOS_TEMPLATE.map(nome => ({ nome, encontrado: !!buscarFilho(instancia, nome) })),
+      ...NOMES_ESPERADOS_TEMPLATE_SUBSTRING.map(nome => ({ nome, encontrado: !!buscarFilhoSubstring(instancia, nome) })),
+    ];
+    return { ok: true, resultado };
+  } finally {
+    instancia.remove();
+  }
 }
 
 // === FUNÇÃO PRINCIPAL ===
@@ -4473,11 +4635,11 @@ async function gerarDocumentoHandoff(
 
   // --- Localizar e preparar o template ---
   const instanciaTemplate = templateOverride || buscarNaPagina(n =>
-    n.type === "INSTANCE" && n.name.toLowerCase().includes("[dsc-h] template handoff")
+    n.type === "INSTANCE" && ehNomeTemplateReconhecido(n.name)
   ) as InstanceNode;
 
   if (!instanciaTemplate) {
-    figma.ui.postMessage({ type: 'status', status: 'error', message: "Coloque uma instância do template '[dsc-h] Template Handoff' na página." });
+    figma.ui.postMessage({ type: 'status', status: 'error', message: "Coloque uma instância do Template Handoff na página (veja os nomes reconhecidos em Configurações)." });
     return false;
   }
 
