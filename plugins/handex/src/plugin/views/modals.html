@@ -299,7 +299,7 @@
             <div class="space-y-2">
               <div class="flex items-start gap-2">
                 <span class="mt-0.5 w-5 h-5 rounded flex items-center justify-center text-[9px] font-bold text-white shrink-0" style="background:#005ca9">A</span>
-                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Mesma tag</strong> — specs se empilham no canvas, na direção do lado escolhido (topo empilha para cima; demais lados empilham para baixo).</p>
+                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Mesma tag</strong> — ao criar, a spec fica solta no canvas para você arrastar para onde quiser. Ao clicar em <strong>Concluir posicionamento</strong>, ela se junta ao grupo da tag, na direção do lado escolhido (topo empilha para cima; demais lados empilham para baixo).</p>
               </div>
               <div class="flex items-start gap-2">
                 <div class="flex gap-0.5 shrink-0 mt-0.5">
@@ -311,6 +311,29 @@
               <div class="flex items-start gap-2">
                 <i data-lucide="pencil" class="w-4 h-4 shrink-0 mt-0.5 text-slate-500 dark:text-dark-muted"></i>
                 <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Renomear grupo</strong> — clique no ícone de lápis ao lado do nome do grupo na lista de specs para personalizar o rótulo.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Controles do grupo -->
+          <div class="rounded-xl p-4 space-y-3 bg-[#EBF4FB] dark:bg-blue-900/20 border border-[#b3d4ea] dark:border-blue-800/40">
+            <div class="flex items-center gap-2">
+              <i data-lucide="sliders-horizontal" class="w-4 h-4 shrink-0 text-[#005ca9] dark:text-blue-300"></i>
+              <span class="text-[13px] font-bold text-[#005ca9] dark:text-blue-300">Controles do grupo</span>
+            </div>
+            <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Na lista de specs, o cabeçalho de cada grupo (tag) tem botões para organizar o que aparece no canvas.</p>
+            <div class="space-y-2">
+              <div class="flex items-start gap-2">
+                <i data-lucide="spline" class="w-4 h-4 shrink-0 mt-0.5 text-slate-500 dark:text-dark-muted"></i>
+                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Ocultar linhas</strong> — esconde os conectores entre o grupo e o elemento no canvas, sem esconder as specs.</p>
+              </div>
+              <div class="flex items-start gap-2">
+                <i data-lucide="eye" class="w-4 h-4 shrink-0 mt-0.5 text-slate-500 dark:text-dark-muted"></i>
+                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Ocultar grupo</strong> — esconde todas as specs daquela tag no canvas, sem apagar nada.</p>
+              </div>
+              <div class="flex items-start gap-2">
+                <i data-lucide="lock" class="w-4 h-4 shrink-0 mt-0.5 text-slate-500 dark:text-dark-muted"></i>
+                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Cadeado</strong> — trava a posição de uma spec (ou do grupo inteiro) no canvas, para não mover sem querer.</p>
               </div>
             </div>
           </div>
