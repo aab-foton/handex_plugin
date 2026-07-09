@@ -368,7 +368,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "4.2.2" : "dev";
+  var PLUGIN_VERSION = true ? "5.0.0" : "dev";
   function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
     const NS = "handex";

@@ -1,4 +1,4 @@
-# Handex — Handoff Express · v4.1.6
+# Handex — Handoff Express · v5.0.0
 
 Plugin Figma da Fóton, desenvolvido por Augusto Brasil. Automatiza o processo de handoff de design, gerando fichas técnicas no canvas, escaneando tokens de UI, anotando specs e medidas, mapeando fluxos e auditando aderência ao Design System Corporativo (DSC).
 
@@ -146,10 +146,9 @@ plugins/handex/
         │   ├── core.js            # Estado global, navegação, persistência, tema
         │   ├── messages.js        # Dispatcher único de window.onmessage
         │   ├── handoff.js         # Coleta de dados e geração da ficha no canvas
-        │   ├── specifications.js  # Scan, render de specs, props e conformidade
-        │   ├── audit.js           # Auditoria DSC na UI
+        │   ├── specifications.js  # Scan, specs, conformidade DSC e controle de grupos por tag
         │   ├── measurement.js     # Medidas e anotações no canvas
-        │   └── design-data.js     # Dados de design e Code Connect
+        │   └── design-data.js     # Import/export de handoffData e integração com Code Connect
         │
         ├── views/             # Fragmentos HTML do frontend
         │   ├── home.html          # Tela inicial — 6 cards de ferramentas
@@ -223,10 +222,7 @@ Módulo central. Inicializa `handoffData` (estado global, schema v2), expõe tod
 Coleta dados dos formulários (`collectHandoffData`) e dispara `createHandoffOnCanvas()` para gerar a ficha técnica no canvas com governança, equipe, tokens, specs, medidas e fluxos.
 
 ### `src/plugin/modules/specifications.js`
-Escaneamento e exibição de tokens. `scanFrame()` envia a seleção ao backend. `renderSpecs()` exibe resultados por categoria. `renderFrameCard()` monta o accordion por frame com todas as ferramentas scopadas.
-
-### `src/plugin/modules/audit.js` *(UI)*
-Gerencia o toggle de conformidade DSC por frame: `checkDone`, `semDesvios`, snapshot de ressalvas e exibição do alerta de itens para revisar.
+Escaneamento e exibição de tokens. `scanFrame()` envia a seleção ao backend. `renderSpecs()` exibe resultados por categoria. `renderFrameCard()` monta o accordion por frame com todas as ferramentas scopadas. Também concentra o toggle de conformidade DSC por frame (`checkDone`, `semDesvios`, snapshot de ressalvas, selo de auditoria assinável) e o controle de grupos de spec por tag (ocultar linhas, destravar grupo, ordenação de camadas).
 
 ### `src/plugin/refs/_manifest.json`
 **Fonte de verdade das bibliotecas DSC.** Lista cada lib com `slug`, `name`, `fileKey` e contagens. Toda adição ou remoção de biblioteca começa aqui.
@@ -242,4 +238,4 @@ Bundle agregado gerado por `build-skeleton.cjs`. Contém metadados, style keys e
 
 ---
 
-Handex — Handoff Express · v4.1.6 · Fóton · Desenvolvido por Augusto Brasil
+Handex — Handoff Express · v5.0.0 · Fóton · Desenvolvido por Augusto Brasil

@@ -19,7 +19,7 @@ Plugin Figma que automatiza o handoff de design. Permite ao designer:
 - Mapear fluxos de tela
 - Gerar uma ficha técnica completa no canvas do Figma
 
-**Versão atual:** v4.1.6  
+**Versão atual:** v5.0.0  
 **Documentação:** `BUSINESS_RULES.md` (regras de negócio) · `CHANGELOG.md` (histórico)
 
 ---
@@ -176,5 +176,11 @@ A pasta `handex-plugin/` (gitignored) contém os 3 arquivos para distribuição:
 ## Observações de processo
 
 - Documentação técnica: `BUSINESS_RULES.md` + `CHANGELOG.md` — atualizar a cada versão
-- Versão no `package.json` deve refletir a versão real do plugin
 - O `_skeleton.json` das libs DSC precisa ser atualizado periodicamente via `npm run refs:update` (requer `FIGMA_TOKEN` no `.env`)
+
+### Versionamento (obrigatório a cada commit extenso)
+
+- **Minor a cada entrega grande** (conjunto de features/fixes que muda comportamento perceptível do produto): `5.0.0 → 5.1.0 → 5.2.0`. Patch (`5.0.x`) fica reservado só para ajustes pequenos isolados.
+- Bump em `package.json` (`npm version <x.y.z> --no-git-tag-version`) e em `CLAUDE.md` ("Versão atual") **antes** de commitar, não depois — nunca deixar a versão do código dessincronizada do relatório de atividades.
+- Beta e estável versionam de forma independente: a beta usa sufixo `-beta.N` (ex: `5.1.0-beta.1`) enquanto está em teste; ao promover pra `main`, o sufixo é removido.
+- `code.bundle.js` já lê a versão do `package.json` automaticamente via `scripts/bundle-code.cjs` — rodar `npm run bundle:code` depois do bump para propagar.
