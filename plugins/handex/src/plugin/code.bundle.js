@@ -455,7 +455,7 @@
         return;
       }
       const children = grpNode.type === "GROUP" ? grpNode.children : [grpNode];
-      const cardFrame = children.find((n) => n.name && n.name.endsWith("/Ficha"));
+      const cardFrame = children.find((n) => n.name && (n.name === "Spec Notes" || n.name === "Ficha" || n.name.endsWith("/Ficha")));
       if (!cardFrame || cardFrame.type !== "FRAME") {
         figma.ui.postMessage({ type: "toast", message: "Card n\xE3o encontrado no grupo.", kind: "error" });
         return;
@@ -512,13 +512,14 @@
         }
         const node = sel[0];
         let cardFrame = null;
-        if (node.name && node.name.endsWith("/Ficha") && node.type === "FRAME") {
+        const _isSpecCardName = (name) => name === "Spec Notes" || name === "Ficha" || name.endsWith("/Ficha");
+        if (node.name && _isSpecCardName(node.name) && node.type === "FRAME") {
           cardFrame = node;
         } else if ((node.type === "GROUP" || node.type === "FRAME") && node.children) {
-          cardFrame = node.children.find((n) => n.name && n.name.endsWith("/Ficha"));
+          cardFrame = node.children.find((n) => n.name && _isSpecCardName(n.name));
         }
         if (!cardFrame && node.parent && (node.parent.type === "GROUP" || node.parent.type === "FRAME")) {
-          cardFrame = node.parent.children.find((n) => n.name && n.name.endsWith("/Ficha"));
+          cardFrame = node.parent.children.find((n) => n.name && _isSpecCardName(n.name));
         }
         if (!cardFrame) {
           figma.notify("Card de especifica\xE7\xE3o n\xE3o encontrado. Selecione o card no canvas.");
@@ -2646,7 +2647,7 @@
         const themeFill = hexToRgb2(opts.fillColor || opts.color || "#EBF4FB");
         const _specSide = opts.guideSide || "right";
         const specCard = figma.createFrame();
-        specCard.name = "Ficha";
+        specCard.name = "Spec Notes";
         specCard.layoutMode = "VERTICAL";
         specCard.paddingLeft = 16;
         specCard.paddingRight = 16;
@@ -2883,9 +2884,9 @@
             const newFmt = n.name.match(/^\[Spec \| ([A-Z]\d*(?:\.\d+)*) \| ([a-z]+)\] /);
             if (newFmt) {
               if (newFmt[2] !== side) return;
-              const ficha2 = n.children && n.children.find((c) => c.type === "FRAME" && c.name === "Ficha" && c !== specCard);
-              if (!ficha2) return;
-              const bb2 = ficha2.absoluteBoundingBox || ficha2.absoluteRenderBounds;
+              const specNotes = n.children && n.children.find((c) => c.type === "FRAME" && (c.name === "Spec Notes" || c.name === "Ficha") && c !== specCard);
+              if (!specNotes) return;
+              const bb2 = specNotes.absoluteBoundingBox || specNotes.absoluteRenderBounds;
               if (bb2) _updateLetterMap(newFmt[1], bb2);
               return;
             }
