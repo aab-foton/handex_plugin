@@ -1,7 +1,7 @@
 # DSC A11Y Handoff — Plugin Figma
 
 Plugin para preencher templates de handoff de acessibilidade no Figma.
-Branch atual: `feat/instance-based-preview`. Versão: `2.2.0`.
+Branch atual: `feat/instance-based-preview`. Versão: `2.3.0`.
 
 ## Arquivos
 
@@ -40,7 +40,7 @@ Seleção com handoff antigo (tem filho 'keyboard maping/mapping')
   → Usuário clica "Atualizar Handoff"
   → run-handoff detecta isOldHandoff → swap do template:
       → clona seções desmarcadas (oldSnapshots) antes de deletar o antigo
-      → importComponentByKeyAsync('4ebd8a017a86b29ca60427416ed4b76af05e4a67')  ← variant=Acessibility
+      → importComponentByKeyAsync('d95d06ed0e31131a29a6f7c87c3fcc0f2eee6950')  ← [dsc-hub] Handoff Acessibility (lib nova, ainda não liberada geral)
       → createInstance() posicionada onde o antigo estava
       → transfere pluginData, deleta o antigo
       → restaura oldSnapshots nas seções correspondentes do novo template
@@ -55,7 +55,9 @@ Colunas em ordem: `mapeamento` → `descricao` → `utilizacao` (`"teclado"` ou 
 
 ## Regras de seleção
 
-- **Handoff**: nome contém `[dsc-h] Template Handoff` ou começa com `[dsc] A11Y Handoff:`
+- **Handoff**: nome contém algum item de `templateHandoffNames` (code.ts:~31) ou começa com `[dsc] A11Y Handoff:`
+  - Default: `['[dsc-h] Template Handoff', '[dsc-hub] Handoff Acessibility']` — lista editável em Configurações > "Nome do template" (persistida em `figma.clientStorage['a11y-template-names']`), para sobreviver a renomeações futuras sem precisar editar código. Handoffs antigos continuam reconhecidos mesmo depois de adicionar o nome novo — a lista é aditiva, não substitutiva.
+  - O template novo (`[dsc-hub] Handoff Acessibility`) é um componente individual, sem propriedade de variante — a validação de variante em `tentarTravarContexto` só se aplica (e só dispara erro) quando o nó selecionado tiver uma prop `VARIANT`, o que é exclusivo dos handoffs antigos ainda vinculados ao component set `[dsc-h] Template Handoff`.
 - **Componente**: `COMPONENT | COMPONENT_SET | INSTANCE | FRAME` que não seja o handoff
 - Precisa exatamente **1 de cada**
 
