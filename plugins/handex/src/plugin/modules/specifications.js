@@ -1772,7 +1772,7 @@
         groupLinesBtn.type = 'button';
         const isLinesHidden = handoffData.specLinesVisible && handoffData.specLinesVisible[letter] === false;
         groupLinesBtn.title = isLinesHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo';
-        groupLinesBtn.ariaLabel = groupLinesBtn.title;
+        groupLinesBtn.setAttribute('aria-label', groupLinesBtn.title);
         groupLinesBtn.className = `p-2 hover:bg-white/50 dark:hover:bg-slate-700 rounded-lg transition-colors shrink-0 ${isLinesHidden ? 'text-gray-400' : 'text-gray-500'}`;
         groupLinesBtn.innerHTML = '<i data-lucide="spline" class="w-4 h-4"></i>';
 
@@ -1785,7 +1785,7 @@
           parent.postMessage({ pluginMessage: { type: 'hide-spec-lines', specIds, forceState: !nowHidden } }, '*');
           saveSpecsToStorage();
           groupLinesBtn.title = nowHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo';
-          groupLinesBtn.ariaLabel = groupLinesBtn.title;
+          groupLinesBtn.setAttribute('aria-label', groupLinesBtn.title);
           groupLinesBtn.classList.toggle('text-gray-400', nowHidden);
           groupLinesBtn.classList.toggle('text-gray-500', !nowHidden);
           _refreshIcons();
@@ -1794,7 +1794,7 @@
         const groupVisBtn = document.createElement('button');
         groupVisBtn.type = 'button';
         groupVisBtn.title = "Ocultar/Exibir Grupo";
-        groupVisBtn.ariaLabel = "Ocultar grupo";
+        groupVisBtn.setAttribute('aria-label', "Ocultar grupo");
         groupVisBtn.className = "p-2 hover:bg-white/50 dark:hover:bg-slate-700 rounded-lg transition-colors shrink-0";
         groupVisBtn.setAttribute('data-group-vis-btn', letter);
 
@@ -1857,7 +1857,7 @@
           const btn = document.createElement("button");
           btn.type = "button";
           btn.title = "Expandir/recolher e focar no elemento no Figma";
-          btn.ariaLabel = "Expandir/recolher e focar no elemento no Figma";
+          btn.setAttribute('aria-label', "Expandir/recolher e focar no elemento no Figma");
           btn.className = "flex-1 flex items-center justify-between text-left p-2.5 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors";
           btn.onclick = () => {
             const contentEl = document.getElementById('content-' + spec.id);
@@ -1889,7 +1889,7 @@
           const visBtn = document.createElement("button");
           visBtn.type = "button";
           visBtn.title = "Ocultar/Exibir no canvas";
-          visBtn.ariaLabel = "Ocultar";
+          visBtn.setAttribute('aria-label', "Ocultar");
           visBtn.className = "p-2.5 hover:bg-blue-50 dark:hover:bg-slate-600 transition-colors shrink-0";
           visBtn.setAttribute('data-spec-vis-btn', '');
 
@@ -1931,7 +1931,7 @@
 
           const isUnlocked = spec.locked === false;
           lockBtn.title = isUnlocked ? "Travar especificação" : "Destravar especificação";
-          lockBtn.ariaLabel = lockBtn.title;
+          lockBtn.setAttribute('aria-label', lockBtn.title);
           lockBtn.innerHTML = isUnlocked ? '<i data-lucide="lock-open" class="w-3.5 h-3.5"></i>' : '<i data-lucide="lock" class="w-3.5 h-3.5"></i>';
           lockBtn.classList.toggle("text-amber-500", isUnlocked);
           lockBtn.classList.toggle("text-gray-400", !isUnlocked);
