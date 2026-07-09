@@ -99,8 +99,11 @@ ${framesList.map(f => {
     if (f.audit.semDesvios) return 'Conforme';
     return 'Não Conforme';
   })();
+  const _seloMD = (f.audit && f.audit.semDesvios && (f.audit.declaradoPor || f.audit.declaradoEm))
+    ? ` (declarado por ${f.audit.declaradoPor || '—'} em ${f.audit.declaradoEm ? new Date(f.audit.declaradoEm).toLocaleDateString('pt-BR') : '—'})`
+    : '';
   const auditMD = _auditStatus
-    ? `\n- **Conformidade DSC:** ${_auditStatus}${f.audit.obs ? ' — ' + f.audit.obs : ''}`
+    ? `\n- **Conformidade DSC:** ${_auditStatus}${_seloMD}${f.audit.obs ? ' — ' + f.audit.obs : ''}`
     : '';
   const ressalvas = (f.audit && f.audit.ressalvas) || [];
   const ressalvasMD = ressalvas.length === 0 ? '' :
@@ -675,6 +678,48 @@ ${(handoffData.createdFlows || []).length === 0
         orange: { dot: "bg-orange-500", title: "text-orange-700 dark:text-orange-300", bg: "bg-orange-50/40 dark:bg-orange-950/10", border: "border-orange-100 dark:border-orange-900/30", badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" }
       };
 
+      // Item 3: "Copiar como CSS" — mesma tabela de mapeamento label→propriedade
+      // CSS usada no <script> client-side embutido no HTML exportado (mantidas
+      // sincronizadas manualmente, já que uma roda aqui no plugin e a outra no
+      // documento standalone sem acesso a este escopo).
+      const _CSS_PROP_LABEL_MAP = {
+        'altura': 'height', 'largura': 'width', 'raio de borda': 'border-radius',
+        'direção': 'flex-direction', 'alinhamento': 'align-items',
+        'espaçamento (gap)': 'gap', 'gap': 'gap', 'padding': 'padding',
+        'padding esquerda': 'padding-left', 'padding direita': 'padding-right',
+        'padding topo': 'padding-top', 'padding base': 'padding-bottom',
+        'preenchimento': 'background-color', 'contorno': 'border-color',
+        'espessura de borda': 'border-width', 'família': 'font-family',
+        'peso': 'font-weight', 'tamanho da fonte': 'font-size',
+        'cor (fill)': 'background-color', 'cor': 'color', 'stroke': 'border-color',
+        'opacidade': 'opacity',
+      };
+      // Item 5: campo de dúvida/comentário — rascunho local do navegador do
+      // dev, salvo em localStorage, sem nenhum round-trip com o plugin/Figma.
+      // elementId precisa ser único e estável dentro do documento exportado.
+      function _commentFieldHTML(elementId, elementLabel) {
+        const safeId = elementId.replace(/"/g, '&quot;');
+        const safeLabel = (elementLabel || '').replace(/"/g, '&quot;');
+        return `
+          <div class="border-t border-dashed border-slate-200 dark:border-slate-700 px-2.5 py-2 mt-0.5">
+            <textarea data-comment-field data-comment-id="${safeId}" data-comment-label="${safeLabel}"
+              oninput="saveHandexComment(this)"
+              placeholder="Rascunho local — dúvida ou observação sobre este item (não sincroniza com o Figma)"
+              rows="1"
+              class="w-full text-[10px] text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700 rounded-lg px-2 py-1.5 resize-none outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-300 transition-all"></textarea>
+          </div>`;
+      }
+      function _cssCopyButtonHTML(label, value) {
+        const key = (label || '').toLowerCase().trim();
+        const cssProp = _CSS_PROP_LABEL_MAP[key];
+        if (!cssProp || !value) return '';
+        const decl = `${cssProp}: ${String(value).trim()};`;
+        const escaped = decl.replace(/"/g, '&quot;');
+        return `<button type="button" onclick="event.stopPropagation(); copyPropAsCSS(this)" data-css="${escaped}" title="Copiar como CSS" aria-label="Copiar como CSS" class="shrink-0 opacity-40 hover:opacity-100 transition-opacity text-slate-500 dark:text-slate-400">
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>`;
+      }
+
       // Accordion HTML builder helper (natively in plugin context)
       function buildAccordionHTML(id, title, icon, content, isExpanded = false) {
         const hiddenClass = isExpanded ? "" : "hidden";
@@ -1059,8 +1104,9 @@ ${(handoffData.createdFlows || []).length === 0
                   <div id="specs-${fi}" class="space-y-1.5">
                     ${fCreatedSpecs.map((s, si) => {
                       const _sc = s.type || s.categoryLabel || s.category || '';
+                      const _searchText = [s.name, s.label, _sc, s.note, s.obs].filter(Boolean).join(' ').toLowerCase();
                       return `
-                      <div id="html-spec-${fi}-${si}" data-toggle-item data-hidden="0" class="bg-indigo-50/40 dark:bg-indigo-950/10 border border-indigo-100/60 dark:border-indigo-900/30 rounded-lg transition-all overflow-hidden" data-node-id="${s.targetNodeId || ''}">
+                      <div id="html-spec-${fi}-${si}" data-toggle-item data-hidden="0" data-search="${_searchText.replace(/"/g, '&quot;')}" class="handex-searchable bg-indigo-50/40 dark:bg-indigo-950/10 border border-indigo-100/60 dark:border-indigo-900/30 rounded-lg transition-all overflow-hidden" data-node-id="${s.targetNodeId || ''}">
                         <div class="flex items-center gap-2 p-2">
                           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
                           <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${s.name || s.label || 'Spec'}</span>
@@ -1072,7 +1118,7 @@ ${(handoffData.createdFlows || []).length === 0
                         </div>
                         ${(s.properties || []).length > 0 ? `
                         <div class="border-t border-indigo-100/60 dark:border-indigo-900/30 px-2 py-1.5 space-y-0.5">
-                          ${s.properties.map(p => `<div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-slate-600 dark:text-slate-300 w-20 shrink-0 truncate">${p.label || ''}</span>${p.token ? `<code class="bg-slate-100 dark:bg-slate-800 text-slate-500 px-1 rounded text-[9px] font-mono">${p.token}</code>` : ''}${p.value ? `<span class="text-slate-400 truncate">→ ${p.value}</span>` : ''}</div>`).join('')}
+                          ${s.properties.map(p => `<div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-slate-600 dark:text-slate-300 w-20 shrink-0 truncate">${p.label || ''}</span>${p.token ? `<code class="bg-slate-100 dark:bg-slate-800 text-slate-500 px-1 rounded text-[9px] font-mono">${p.token}</code>` : ''}${p.value ? `<span class="text-slate-400 truncate">→ ${p.value}</span>` : ''}${_cssCopyButtonHTML(p.label, p.value)}</div>`).join('')}
                         </div>` : ''}
                       </div>`;
                     }).join('')}
@@ -1090,7 +1136,7 @@ ${(handoffData.createdFlows || []).length === 0
                   </div>
                   <div id="meas-${fi}" class="space-y-1.5">
                     ${fMeasurements.map((m, mi) => `
-                      <div id="html-meas-${fi}-${mi}" data-toggle-item data-hidden="0" class="flex items-center gap-2 p-2 bg-cyan-50/40 dark:bg-cyan-950/10 border border-cyan-100/60 dark:border-cyan-900/30 rounded-lg transition-all">
+                      <div id="html-meas-${fi}-${mi}" data-toggle-item data-hidden="0" data-search="${[m.name, m.label, m.details].filter(Boolean).join(' ').toLowerCase().replace(/"/g, '&quot;')}" class="handex-searchable flex items-center gap-2 p-2 bg-cyan-50/40 dark:bg-cyan-950/10 border border-cyan-100/60 dark:border-cyan-900/30 rounded-lg transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21.3 8.7 8.7 21.3c-1 1-2.5 1-3.4 0l-2.6-2.6c-1-1-1-2.5 0-3.4L15.3 2.7c1-1 2.5-1 3.4 0l2.6 2.6c1 1 1 2.5 0 3.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>
                         <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${m.name || m.label || 'Medida'}</span>
                         ${m.details ? `<span class="text-[10px] text-slate-500 font-mono shrink-0">${m.details}</span>` : ''}
@@ -1166,6 +1212,11 @@ ${(handoffData.createdFlows || []).length === 0
                   </div>
                   ${f.audit && f.audit.obs ? `<p class="text-[10px] text-amber-700 dark:text-amber-300 mt-2 italic">"${f.audit.obs}"</p>` : ''}
                 </div>` : ''}
+                ${(f.audit && f.audit.semDesvios && (f.audit.declaradoPor || f.audit.declaradoEm)) ? `
+                <div class="mt-3 flex items-center gap-1.5 text-[9px] text-slate-500 dark:text-slate-400">
+                  <i data-lucide="badge-check" class="w-3 h-3 text-green-600 shrink-0"></i>
+                  <span>Declarado por ${f.audit.declaradoPor || '—'}${f.audit.declaradoEm ? ' em ' + new Date(f.audit.declaradoEm).toLocaleDateString('pt-BR') : ''}</span>
+                </div>` : ''}
                 </div>
               `;
             }).join('')}
@@ -1187,10 +1238,13 @@ ${(handoffData.createdFlows || []).length === 0
                 </p>
                 <div class="space-y-1.5">
                   ${f.measurements.map((m, mi) => `
-                    <div class="flex items-center gap-2 p-2 bg-cyan-50/40 dark:bg-cyan-950/10 border border-cyan-100/60 dark:border-cyan-900/30 rounded-lg">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21.3 8.7 8.7 21.3c-1 1-2.5 1-3.4 0l-2.6-2.6c-1-1-1-2.5 0-3.4L15.3 2.7c1-1 2.5-1 3.4 0l2.6 2.6c1 1 1 2.5 0 3.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>
-                      <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${m.name || m.label || 'Medida'}</span>
-                      ${m.details ? `<span class="text-[10px] font-mono text-cyan-700 dark:text-cyan-400 shrink-0">${Array.isArray(m.details) ? m.details.join(' | ') : m.details}</span>` : ''}
+                    <div id="html-meas-solo-${fi}-${mi}" data-search="${[m.name, m.label, Array.isArray(m.details) ? m.details.join(' ') : m.details].filter(Boolean).join(' ').toLowerCase().replace(/"/g, '&quot;')}" class="handex-searchable bg-cyan-50/40 dark:bg-cyan-950/10 border border-cyan-100/60 dark:border-cyan-900/30 rounded-lg overflow-hidden">
+                      <div class="flex items-center gap-2 p-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21.3 8.7 8.7 21.3c-1 1-2.5 1-3.4 0l-2.6-2.6c-1-1-1-2.5 0-3.4L15.3 2.7c1-1 2.5-1 3.4 0l2.6 2.6c1 1 1 2.5 0 3.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>
+                        <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${m.name || m.label || 'Medida'}</span>
+                        ${m.details ? `<span class="text-[10px] font-mono text-cyan-700 dark:text-cyan-400 shrink-0">${Array.isArray(m.details) ? m.details.join(' | ') : m.details}</span>` : ''}
+                      </div>
+                      ${_commentFieldHTML('meas-solo-' + fi + '-' + mi, m.name || m.label || 'Medida')}
                     </div>
                   `).join('')}
                 </div>
@@ -1235,8 +1289,9 @@ ${(handoffData.createdFlows || []).length === 0
                           const _sProps = (s.properties || []);
                           const _sExcs = (s.excecoes || []);
                           const _excColors = { 'Erro': '#dc2626', 'Alerta': '#d97706', 'Sucesso': '#16a34a', 'Confirmação': '#2563eb' };
+                          const _annotSearchText = [s.name, _sCat, s.note, ...(_sExcs.map(e => e.titulo))].filter(Boolean).join(' ').toLowerCase();
                           return `
-                          <div class="bg-indigo-50/40 dark:bg-indigo-950/10 border border-indigo-100/60 dark:border-indigo-900/30 rounded-lg overflow-hidden" data-node-id="${s.targetNodeId || ''}">
+                          <div id="html-annot-${fi}-${letter}-${si}" data-search="${_annotSearchText.replace(/"/g, '&quot;')}" class="handex-searchable bg-indigo-50/40 dark:bg-indigo-950/10 border border-indigo-100/60 dark:border-indigo-900/30 rounded-lg overflow-hidden" data-node-id="${s.targetNodeId || ''}">
                             <div class="flex items-center gap-2 p-2.5">
                               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
                               <div class="flex-1 min-w-0">
@@ -1257,6 +1312,7 @@ ${(handoffData.createdFlows || []).length === 0
                                   <span class="font-bold text-slate-600 dark:text-slate-300 w-24 shrink-0 truncate">${p.label || ''}</span>
                                   ${p.token ? `<code class="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-1.5 rounded text-[9px] font-mono">${p.token}</code>` : ''}
                                   ${p.value ? `<span class="text-slate-500 dark:text-slate-400 truncate">→ ${p.value}</span>` : ''}
+                                  ${_cssCopyButtonHTML(p.label, p.value)}
                                 </div>`).join('')}
                               </div>
                             </div>` : ''}
@@ -1271,6 +1327,7 @@ ${(handoffData.createdFlows || []).length === 0
                                 </div>`).join('')}
                               </div>
                             </div>` : ''}
+                            ${_commentFieldHTML('annot-' + fi + '-' + letter + '-' + si, s.name || 'Spec')}
                           </div>`;
                         }).join('')}
                       </div>
@@ -1291,7 +1348,7 @@ ${(handoffData.createdFlows || []).length === 0
         const flowsContent = `
           <div class="space-y-2 text-left">
             ${_allFlows.map((flow, fi) => `
-              <div class="flex items-center gap-3 p-3 bg-purple-50/40 dark:bg-purple-950/10 border border-purple-100/60 dark:border-purple-900/30 rounded-xl">
+              <div data-search="${[flow.name, flow.decisionText, flowTypeLabel[flow.type] || flow.type].filter(Boolean).join(' ').toLowerCase().replace(/"/g, '&quot;')}" class="handex-searchable flex items-center gap-3 p-3 bg-purple-50/40 dark:bg-purple-950/10 border border-purple-100/60 dark:border-purple-900/30 rounded-xl">
                 <div class="w-6 h-6 rounded-md bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0 text-[10px] font-black">${fi + 1}</div>
                 <div class="flex-1 min-w-0">
                   <span class="text-[11px] font-black text-slate-800 dark:text-white">${flow.name || 'Fluxo'}</span>
@@ -1713,7 +1770,10 @@ ${(handoffData.createdFlows || []).length === 0
                         <div class="w-3.5 h-3.5 flex items-center justify-center shrink-0">${pColorPreview}</div>
                         <span class="truncate">${p.label || p.type}: <span class="font-bold text-slate-700 dark:text-slate-200">${p.value}</span></span>
                       </div>
-                      ${pStatusHTML}
+                      <div class="flex items-center gap-1.5 shrink-0">
+                        ${_cssCopyButtonHTML(p.label, p.value)}
+                        ${pStatusHTML}
+                      </div>
                     </div>
                     ${tokenLineHTML}
                     ${closestHTML}
@@ -1857,7 +1917,7 @@ ${(handoffData.createdFlows || []).length === 0
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
               <i data-lucide="search" class="w-4 h-4"></i>
             </div>
-            <input type="text" id="scanned-search" oninput="filterElements(this.value)" placeholder="Buscar elemento escaneado..." class="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-xl text-xs focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder:text-slate-500 dark:placeholder:text-slate-500 shadow-sm" />
+            <input type="text" id="scanned-search" oninput="var g = document.getElementById('global-search'); if (g && g.value !== this.value) g.value = this.value; filterElements(this.value)" placeholder="Buscar elemento escaneado..." class="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-xl text-xs focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder:text-slate-500 dark:placeholder:text-slate-500 shadow-sm" />
           </div>
         </div>
       `;
@@ -1999,6 +2059,18 @@ ${(handoffData.createdFlows || []).length === 0
     </aside>
 
     <main class="md:col-span-3 space-y-6">
+      <div class="flex items-center gap-2">
+        <div class="relative flex-1">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
+            <i data-lucide="search" class="w-4 h-4"></i>
+          </div>
+          <input type="text" id="global-search" oninput="filterAllContent(this.value)" placeholder="Buscar em specs, medidas, fluxos e elementos escaneados..." class="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-xl text-xs focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder:text-slate-500 dark:placeholder:text-slate-500 shadow-sm" />
+        </div>
+        <button onclick="copyPendingComments()" title="Copia um texto pronto com todos os rascunhos de dúvida preenchidos nesta ficha (armazenados só neste navegador)" class="shrink-0 flex items-center gap-1.5 px-3.5 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-xl text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:border-blue-300 hover:text-blue-600 transition-all shadow-sm whitespace-nowrap">
+          <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i> Copiar dúvidas pendentes
+        </button>
+      </div>
+
       <div class="flex border-b border-slate-100 dark:border-slate-800/80 gap-6 overflow-x-auto pb-1">
         <button onclick="switchTab('tab-document')" id="btn-tab-document" class="tab-btn px-1 pb-3 text-sm font-black border-b-2 border-blue-500 text-blue-500 focus:outline-none transition-all uppercase tracking-wider whitespace-nowrap shrink-0">
           📑 Ficha de Projeto
@@ -2166,14 +2238,73 @@ ${(handoffData.createdFlows || []).length === 0
       }
     }
 
+    // Item 4: busca global — estende a busca (que antes só cobria tokens
+    // escaneados) para specs, medidas e fluxos já renderizados no HTML
+    // standalone. Segue o padrão de filterSpecItems do plugin (filtro por
+    // texto indexado em data-search), adaptado ao DOM já pronto do export —
+    // sem acesso a handoffData aqui, é um documento separado.
+    function filterAllContent(query) {
+      var lowerQuery = query.toLowerCase().trim();
+
+      // Mantém o campo de busca da aba "Elementos Escaneados" sincronizado.
+      var scannedInput = document.getElementById('scanned-search');
+      if (scannedInput && scannedInput.value !== query) scannedInput.value = query;
+      filterElements(query);
+
+      // Specs, medidas e fluxos renderizados dentro de accordions da aba
+      // "Ficha de Projeto" — agrupados por accordion, nunca misturados.
+      var accordions = document.querySelectorAll('#tab-document > div');
+      accordions.forEach(function(accordion) {
+        var items = accordion.querySelectorAll('.handex-searchable');
+        if (items.length === 0) return;
+
+        var visibleCount = 0;
+        items.forEach(function(item) {
+          var text = item.getAttribute('data-search') || '';
+          var matches = lowerQuery === '' || text.indexOf(lowerQuery) !== -1;
+          item.classList.toggle('hidden', !matches);
+          if (matches) visibleCount++;
+        });
+
+        // Auto-expande o accordion quando há busca ativa e resultado dentro dele.
+        var content = accordion.querySelector('[id^="acc-"]');
+        var toggleBtn = accordion.querySelector('button[onclick^="toggleHTMLAccordion"]');
+        if (lowerQuery !== '' && content && toggleBtn) {
+          if (visibleCount > 0 && content.classList.contains('hidden')) {
+            toggleHTMLAccordion(content.id, toggleBtn);
+          }
+          accordion.classList.toggle('hidden', visibleCount === 0);
+        } else {
+          accordion.classList.remove('hidden');
+        }
+      });
+
+      // Se a busca tem resultado fora da aba ativa, muda para a aba certa.
+      if (lowerQuery !== '') {
+        var docTab = document.getElementById('tab-document');
+        var docHasVisible = docTab && docTab.querySelector('.handex-searchable:not(.hidden)');
+        var scanTab = document.getElementById('tab-scanned');
+        var scanHasVisible = scanTab && scanTab.querySelector('.scanned-element-card:not(.hidden)');
+        var docActive = docTab && !docTab.classList.contains('hidden');
+        var scanActive = scanTab && !scanTab.classList.contains('hidden');
+
+        if (!docActive && !scanActive) return;
+        if (docActive && !docHasVisible && scanHasVisible) {
+          switchTab('tab-scanned');
+        } else if (scanActive && !scanHasVisible && docHasVisible) {
+          switchTab('tab-document');
+        }
+      }
+    }
+
     function filterElements(query) {
       var lowerQuery = query.toLowerCase().trim();
       var sections = document.querySelectorAll('.scanned-section-container');
-      
+
       sections.forEach(function(sec) {
         var cards = sec.querySelectorAll('.scanned-element-card');
         var visibleCount = 0;
-        
+
         cards.forEach(function(card) {
           var name = card.getAttribute('data-element-name') || '';
           if (name.indexOf(lowerQuery) !== -1) {
@@ -2183,13 +2314,13 @@ ${(handoffData.createdFlows || []).length === 0
             card.classList.add('hidden');
           }
         });
-        
+
         // Update section count header
         var countSpan = sec.querySelector('.section-count-span');
         if (countSpan) {
           countSpan.textContent = '(' + visibleCount + ' elementos)';
         }
-        
+
         // Hide/show the section itself based on count
         if (visibleCount === 0 && lowerQuery !== '') {
           sec.classList.add('hidden');
@@ -2198,6 +2329,94 @@ ${(handoffData.createdFlows || []).length === 0
         }
       });
     }
+
+    // ── Item 3: "Copiar como CSS" — mapeia label/key da propriedade para uma
+    // declaração CSS pronta pra colar. Puramente apresentação sobre dado já
+    // renderizado; não depende de nada do plugin.
+    var CSS_PROP_LABEL_MAP = {
+      'altura': 'height', 'largura': 'width', 'raio de borda': 'border-radius',
+      'direção': 'flex-direction', 'alinhamento': 'align-items',
+      'espaçamento (gap)': 'gap', 'gap': 'gap', 'padding': 'padding',
+      'padding esquerda': 'padding-left', 'padding direita': 'padding-right',
+      'padding topo': 'padding-top', 'padding base': 'padding-bottom',
+      'preenchimento': 'background-color', 'contorno': 'border-color',
+      'espessura de borda': 'border-width', 'família': 'font-family',
+      'peso': 'font-weight', 'tamanho da fonte': 'font-size',
+      'font-size': 'font-size', 'line-height': 'line-height',
+      'letter-spacing': 'letter-spacing', 'cor (fill)': 'background-color',
+      'cor': 'color', 'stroke': 'border-color', 'opacidade': 'opacity',
+    };
+    function cssPropertyFor(label) {
+      if (!label) return null;
+      var key = label.toLowerCase().trim();
+      return CSS_PROP_LABEL_MAP[key] || null;
+    }
+    function buildCssDeclaration(label, value) {
+      var prop = cssPropertyFor(label);
+      if (!prop || !value) return null;
+      var cleanValue = String(value).trim();
+      return prop + ': ' + cleanValue + ';';
+    }
+    function copyPropAsCSS(btn) {
+      var css = btn.getAttribute('data-css');
+      if (!css) return;
+      navigator.clipboard.writeText(css).then(function() {
+        var original = btn.innerHTML;
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+        setTimeout(function() { btn.innerHTML = original; }, 1200);
+      });
+    }
+
+    // ── Item 5: campo de dúvida/comentário — rascunho 100% local do navegador
+    // (localStorage), sem round-trip com o plugin/Figma. Namespaced pelo nome
+    // do projeto pra não colidir se o dev tiver várias fichas exportadas
+    // abertas no mesmo navegador.
+    var HANDEX_COMMENTS_KEY = "handex-comments-${safeName}";
+    function _loadHandexComments() {
+      try {
+        var raw = localStorage.getItem(HANDEX_COMMENTS_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) { return {}; }
+    }
+    function _saveHandexCommentsMap(map) {
+      try { localStorage.setItem(HANDEX_COMMENTS_KEY, JSON.stringify(map)); } catch (e) { }
+    }
+    function saveHandexComment(textarea) {
+      var id = textarea.getAttribute('data-comment-id');
+      var label = textarea.getAttribute('data-comment-label') || '';
+      var text = textarea.value.trim();
+      var map = _loadHandexComments();
+      if (text === '') {
+        delete map[id];
+      } else {
+        map[id] = { label: label, text: text };
+      }
+      _saveHandexCommentsMap(map);
+    }
+    function _restoreHandexComments() {
+      var map = _loadHandexComments();
+      document.querySelectorAll('[data-comment-field]').forEach(function(field) {
+        var id = field.getAttribute('data-comment-id');
+        if (map[id]) field.value = map[id].text;
+      });
+    }
+    function copyPendingComments() {
+      var map = _loadHandexComments();
+      var keys = Object.keys(map);
+      if (keys.length === 0) {
+        alert('Nenhuma dúvida registrada ainda neste navegador.');
+        return;
+      }
+      var lines = keys.map(function(id) {
+        var entry = map[id];
+        return 'Spec: ' + (entry.label || 'Item') + ' — Dúvida: ' + entry.text;
+      });
+      var text = lines.join('\\n');
+      navigator.clipboard.writeText(text).then(function() {
+        alert('Dúvidas pendentes copiadas (' + keys.length + '). Cole onde preferir para compartilhar — isso é só um rascunho local, não sincroniza com o Figma automaticamente.');
+      });
+    }
+    document.addEventListener('DOMContentLoaded', _restoreHandexComments);
 
     document.addEventListener("keydown", function(e) {
       if (e.key === "Escape") {

@@ -100,6 +100,24 @@
     }
     window.showFrameSection = showFrameSection;
 
+    // ── Selo de auditoria assinável ──────────────────────────────────────
+    function _buildAuditSeloHTML(frame) {
+      if (!frame || !frame.audit || !frame.audit.semDesvios) return '';
+      const nome = frame.audit.declaradoPor;
+      const em = frame.audit.declaradoEm;
+      if (!nome && !em) return '';
+      const dataFmt = em ? new Date(em).toLocaleDateString('pt-BR') : null;
+      const label = nome && dataFmt
+        ? `Declarado por ${nome} em ${dataFmt}`
+        : nome
+          ? `Declarado por ${nome}`
+          : `Declarado em ${dataFmt}`;
+      return `<div class="flex items-center gap-1.5 px-3 py-1.5 text-[10px] text-slate-500 dark:text-dark-muted">
+        <i data-lucide="badge-check" class="w-3 h-3 text-green-600 shrink-0"></i>
+        <span>${label}</span>
+      </div>`;
+    }
+
     // ── Conformance alert helpers ────────────────────────────────────────
     function _buildConformanceAlertHTML(frame) {
       if (!frame || !frame.audit || !frame.audit.checkDone) return '';
@@ -160,6 +178,8 @@
       const el = document.getElementById('conformance-alert-' + frameId);
       if (!el) return;
       el.innerHTML = _buildConformanceAlertHTML(frame);
+      const seloEl = document.getElementById('audit-selo-' + frameId);
+      if (seloEl) seloEl.innerHTML = _buildAuditSeloHTML(frame);
       if (typeof _refreshIcons === 'function') _refreshIcons();
     }
 
@@ -366,6 +386,7 @@
                 <p class="text-[11px] text-violet-700 dark:text-violet-300 leading-snug">Componente novo — desvios são esperados. Registre as divergências nas observações abaixo.</p>
               </div>`}
               <div id="conformance-alert-${fid}">${_buildConformanceAlertHTML(frame)}</div>
+              <div id="audit-selo-${fid}">${_buildAuditSeloHTML(frame)}</div>
               <textarea id="audit-obs-${fid}" rows="2"
                 placeholder="Descreva os desvios encontrados ou o motivo da não conformidade com o DSC..."
                 oninput="setFrameAuditObs('${fid}', this.value)"
@@ -604,6 +625,11 @@
                 onclick="event.stopPropagation(); focusNode('${spec.id}')"
                 class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
                 <i data-lucide="locate" class="w-3 h-3"></i>
+              </button>
+              <button type="button" title="Duplicar para outro elemento" aria-label="Duplicar para outro elemento"
+                onclick="event.stopPropagation(); duplicateSpecToNewElement('${frameId}', ${spec._idx})"
+                class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
+                <i data-lucide="copy-plus" class="w-3 h-3"></i>
               </button>
               <button type="button" title="${isHidden ? 'Mostrar' : 'Ocultar'} no canvas"
                 aria-label="${isHidden ? 'Mostrar' : 'Ocultar'} no canvas"
@@ -1464,7 +1490,8 @@
     function confirmSpecProperties() {
       closeSpecPropertiesModal();
       closeSpecFormModal();
-      
+      _duplicateSpecSourceProps = null;
+
       const g = id => document.getElementById(id);
       const selCat = g('ann-category');
       
@@ -2185,6 +2212,7 @@ function toggleLinkInput(show) {
     function openSpecFormModal(frameId) {
       if (frameId) activeFrameId = frameId;
       // Modo criação: limpa campos e reseta estado
+      _duplicateSpecSourceProps = null;
       document.getElementById('spec-form-modal').dataset.editIdx = '';
       document.getElementById('spec-letter-input').value = 'A';
       document.getElementById('spec-color-input').value = '#005ca9';
@@ -2215,6 +2243,47 @@ function toggleLinkInput(show) {
       updateFABVisibility(true);
       _refreshIcons();
     }
+
+    // Duplica uma spec existente como ponto de partida para uma nova, sobre um
+    // elemento diferente. Abre o mesmo modal pré-preenchido (categoria, tag,
+    // cor, nota, link) e reaproveita as propriedades já capturadas na spec de
+    // origem — mas exige que o designer selecione o novo nó no canvas e
+    // confirme normalmente. Não cria nada sozinho: sem seleção nova, sem spec.
+    let _duplicateSpecSourceProps = null;
+    function duplicateSpecToNewElement(frameId, specIdx) {
+      const frame = getFrame(frameId);
+      if (!frame) return;
+      const source = (frame.createdSpecs || [])[specIdx];
+      if (!source) return;
+
+      openSpecFormModal(frameId);
+
+      document.getElementById('spec-letter-input').value = source.letter || 'A';
+      document.getElementById('spec-color-input').value = source.color || '#005ca9';
+      document.getElementById('ann-category').value = source.category || '';
+      if (typeof _csSyncLabel === 'function') _csSyncLabel('cs-ann-cat');
+      if (typeof syncSpecColorFromCategory === 'function') syncSpecColorFromCategory();
+      document.getElementById('ann-note').value = source.obs || '';
+
+      if (source.link) {
+        document.getElementById('chk-has-link').checked = true;
+        document.getElementById('spec-link-input').value = source.link;
+        toggleLinkInput(true);
+      }
+
+      const modalTitle = document.querySelector('#spec-form-modal h3');
+      if (modalTitle) {
+        modalTitle.innerHTML = '<i data-lucide="copy-plus" class="w-4 h-4 text-[#005ca9]"></i> Duplicar Especificação — selecione o novo elemento';
+      }
+
+      // Guarda as propriedades da spec de origem para pré-marcar os checkboxes
+      // assim que o backend escanear o elemento recém-selecionado.
+      _duplicateSpecSourceProps = (source.properties || []).map(p => p.key);
+
+      showToast('Selecione o novo elemento no canvas e clique em avançar');
+      _refreshIcons();
+    }
+    window.duplicateSpecToNewElement = duplicateSpecToNewElement;
 
     function closeSpecFormModal() {
       document.getElementById('spec-form-modal').classList.add('hidden');

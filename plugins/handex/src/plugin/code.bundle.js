@@ -333,7 +333,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "4.2.2" : "dev";
+  var PLUGIN_VERSION = true ? "4.3.0-beta.1" : "dev";
   function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
     const NS = "handex";
@@ -1141,8 +1141,14 @@
               badge.appendChild(createText("Novo componente", 9, "Medium", { r: 0.38, g: 0.18, b: 0.78 }));
               fHeader.appendChild(badge);
             }
-            if (f.audit && f.audit.status) {
-              createRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? " \u2014 " + f.audit.justificativa : ""));
+            if (f.audit && f.audit.checkDone) {
+              const _ressalvas = f.audit.ressalvas || [];
+              const _status = f.audit.semDesvios ? _ressalvas.length > 0 ? "Conforme com ressalvas" : "Conforme" : "N\xE3o Conforme";
+              createRow(fRow, "Auditoria DSC", _status + (f.audit.observacoes ? " \u2014 " + f.audit.observacoes : ""));
+              if (f.audit.semDesvios && (f.audit.declaradoPor || f.audit.declaradoEm)) {
+                const _dataFmt = f.audit.declaradoEm ? new Date(f.audit.declaradoEm).toLocaleDateString("pt-BR") : "\u2014";
+                createRow(fRow, "Declarado por", `${f.audit.declaradoPor || "\u2014"} em ${_dataFmt}`);
+              }
             }
           });
           content.appendChild(framesSection);

@@ -302,6 +302,16 @@
             });
           }
         }
+        // Duplicação de spec: pré-marca apenas as propriedades que existiam na
+        // spec de origem (se o novo elemento não tiver alguma, ela nem aparece
+        // aqui — o find() simplesmente não casa e o checkbox some junto).
+        if (typeof _duplicateSpecSourceProps !== 'undefined' && _duplicateSpecSourceProps) {
+          const keep = new Set(_duplicateSpecSourceProps);
+          document.querySelectorAll('#spec-properties-list input[type="checkbox"]').forEach(cb => {
+            cb.checked = keep.has(cb.value);
+          });
+        }
+
         document.getElementById('spec-properties-modal').classList.remove('hidden');
         _refreshIcons()
       }

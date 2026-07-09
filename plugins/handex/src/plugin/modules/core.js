@@ -151,8 +151,15 @@ function setFrameSemDesvios(frameId, checked) {
       });
     }
     frame.audit.ressalvas = _ressalvas;
+    const _declarante = handoffData.currentUser?.name
+      || (handoffData.step1?.equipe || []).find(m => (m.papel || '').toLowerCase() === 'designer')?.nome
+      || null;
+    frame.audit.declaradoPor = _declarante;
+    frame.audit.declaradoEm = new Date().toISOString();
   } else {
     frame.audit.ressalvas = [];
+    frame.audit.declaradoPor = null;
+    frame.audit.declaradoEm = null;
   }
 
   // Obs fica visível quando sem desvios=false OU há itens desvinculados do DSC
@@ -844,7 +851,7 @@ function addFrame(figmaId, nome) {
     nome,
     isNewComponent: false,
     specs: null,
-    audit: { checkDone: false, semDesvios: false, observacoes: '', ressalvas: [] },
+    audit: { checkDone: false, semDesvios: false, observacoes: '', ressalvas: [], declaradoPor: null, declaradoEm: null },
     newComponentObservations: '',
     specGroupNames: {},
     specGroupVisible: {},

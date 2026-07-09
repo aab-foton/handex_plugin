@@ -282,9 +282,18 @@
 
     let _specsHidden = false;
 
+    // Lembra a última seleção de tipos de medida feita nesta sessão do plugin
+    // (memória em runtime, não persiste em handoffData). Na primeira abertura
+    // da sessão continua vazio — só passa a pré-selecionar a partir da
+    // segunda vez que o modal é aberto.
+    let _lastMeasureTypes = [];
+
     function openMeasureModal(frameId) {
       if (frameId) activeFrameId = frameId;
       resetMeasureSelection();
+      if (_lastMeasureTypes.length > 0) {
+        _lastMeasureTypes.forEach(type => selectMeasurement(type));
+      }
       openModal('measure-form-modal');
     }
     function closeMeasureModal() {
@@ -360,6 +369,7 @@
       const storeInParent = document.getElementById('chk-store-parent').checked;
       const frame = activeFrameId ? getFrame(activeFrameId) : null;
       const startNum = frame ? (frame.nextMeasurementNumber || 1) : nextMeasurementNumber;
+      _lastMeasureTypes = currentMeasureTypes.slice();
       parent.postMessage({
         pluginMessage: {
           type: 'measure-nodes-custom',

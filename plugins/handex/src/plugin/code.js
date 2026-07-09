@@ -955,8 +955,16 @@ figma.ui.onmessage = async (msg) => {
             badge.appendChild(createText("Novo componente", 9, "Medium", { r: 0.38, g: 0.18, b: 0.78 }));
             fHeader.appendChild(badge);
           }
-          if (f.audit && f.audit.status) {
-            createRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? ' — ' + f.audit.justificativa : ''));
+          if (f.audit && f.audit.checkDone) {
+            const _ressalvas = f.audit.ressalvas || [];
+            const _status = f.audit.semDesvios
+              ? (_ressalvas.length > 0 ? 'Conforme com ressalvas' : 'Conforme')
+              : 'Não Conforme';
+            createRow(fRow, "Auditoria DSC", _status + (f.audit.observacoes ? ' — ' + f.audit.observacoes : ''));
+            if (f.audit.semDesvios && (f.audit.declaradoPor || f.audit.declaradoEm)) {
+              const _dataFmt = f.audit.declaradoEm ? new Date(f.audit.declaradoEm).toLocaleDateString('pt-BR') : '—';
+              createRow(fRow, "Declarado por", `${f.audit.declaradoPor || '—'} em ${_dataFmt}`);
+            }
           }
         });
         content.appendChild(framesSection);
