@@ -3,16 +3,45 @@
       <!-- Header -->
       <div class="px-4 pt-0 pb-3 border-b border-gray-100 dark:border-dark-line flex flex-col shrink-0">
         <div class="flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2 min-w-0">
             <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial"
-              class="p-2 bg-gray-100 dark:bg-slate-800 rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">
+              class="p-2 bg-gray-100 dark:bg-slate-800 rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors shrink-0">
               <i data-lucide="arrow-left" class="w-4 h-4 text-gray-600 dark:text-gray-300" aria-hidden="true"></i>
             </button>
-            <h2 class="text-[#1E293B] dark:text-white font-bold text-[18px]">Anotar Medidas</h2>
+            <h2 class="text-[#1E293B] dark:text-white font-bold text-[18px] truncate min-w-0">Anotar Medidas</h2>
+            <div id="measure-types-help" class="relative shrink-0">
+              <button type="button" onclick="toggleMeasureTypesHelp(event)"
+                class="w-4 h-4 flex items-center justify-center text-slate-400 hover:text-[#0070af] transition-colors"
+                title="Quais tipos de medida posso inserir?" aria-label="Quais tipos de medida posso inserir">
+                <i data-lucide="circle-help" class="w-3.5 h-3.5"></i>
+              </button>
+              <div data-measure-types-panel
+                class="hidden absolute left-0 top-full mt-2 w-64 z-50 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-xl p-3.5 space-y-3">
+                <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Tipos de medida</p>
+                <div class="space-y-2.5">
+                  <div class="flex items-start gap-2">
+                    <i data-lucide="scaling" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0 mt-0.5"></i>
+                    <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight"><strong class="text-slate-600 dark:text-dark-text">Altura e Largura:</strong> dimensões do elemento selecionado.</p>
+                  </div>
+                  <div class="flex items-start gap-2">
+                    <i data-lucide="box-select" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0 mt-0.5"></i>
+                    <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight"><strong class="text-slate-600 dark:text-dark-text">Espaçamento Externo:</strong> distância entre o elemento e seus vizinhos.</p>
+                  </div>
+                  <div class="flex items-start gap-2">
+                    <i data-lucide="focus" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0 mt-0.5"></i>
+                    <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight"><strong class="text-slate-600 dark:text-dark-text">Padding Interno:</strong> espaço entre a borda do frame e seu conteúdo.</p>
+                  </div>
+                  <div class="flex items-start gap-2">
+                    <i data-lucide="align-horizontal-space-between" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0 mt-0.5"></i>
+                    <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight"><strong class="text-slate-600 dark:text-dark-text">Padding e Gaps:</strong> espaçamentos internos de um Auto Layout.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="flex items-center gap-1.5">
+          <div class="flex items-center gap-1.5 shrink-0">
             <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('measures-scroll-container'))" title="Recolher/expandir todos" aria-label="Recolher ou expandir todos os accordions"
-              class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors text-slate-500 dark:text-dark-muted">
+              class="hidden p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors text-slate-500 dark:text-dark-muted">
               <i data-lucide="chevrons-up-down" class="w-4 h-4" aria-hidden="true"></i>
             </button>
             <button onclick="openMeasureModal()" class="fab-inline" title="Inserir medida" aria-label="Inserir medida">
@@ -30,8 +59,8 @@
           <!-- Frame Selector -->
           <div data-frame-selector-card>
             <div class="flex items-center gap-2 mb-2.5">
-              <i data-lucide="scan-line" class="w-3.5 h-3.5 text-slate-500 shrink-0"></i>
-              <h4 class="text-[11px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-wider">Frames Mapeados</h4>
+              <i data-lucide="scan-line" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0"></i>
+              <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Frames Mapeados</h4>
             </div>
             <select id="measure-frame-selector" onchange="setMeasureActiveFrame(this.value)"
               class="w-full text-[12px] bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-slate-700 dark:text-white outline-none focus:border-[#0070af]/50 transition-colors">
@@ -58,22 +87,17 @@
               </div>
             </div>
             <!-- Instrução discreta -->
-            <div id="hint-measures" class="mb-5 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-2">
+            <div id="hint-measures" class="mb-5 min-h-[76px] p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-2">
               <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5"></i>
               <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-tight">
-                Selecione os elementos no canvas e toque no botão <strong>+</strong> abaixo.
-              </p>
-            </div>
-            <div class="mb-5 p-3 bg-blue-50 dark:bg-blue-900/40 rounded-xl border border-blue-200 dark:border-dark-line flex gap-2">
-              <i data-lucide="info" class="w-4 h-4 text-blue-500 shrink-0 mt-0.5"></i>
-              <p class="text-[10px] text-blue-500 dark:text-blue-300 leading-tight italic">
-                <strong>Dica de Uso:</strong> O destaque e o scroll automático no Figma ocorrem apenas ao clicar para expandir um item da lista.
+                Selecione os elementos no canvas e toque no botão <strong>+</strong> no topo para inserir uma medida.
+                <span class="block mt-1 text-blue-700/80 dark:text-blue-300/80 italic">O destaque e o scroll automático no Figma ocorrem ao clicar para expandir um item da lista.</span>
               </p>
             </div>
 
-            <div id="measurements-results" class="flex flex-col gap-2 min-h-[50px]">
+            <ul id="measurements-results" class="flex flex-col gap-2 min-h-[50px]">
                <!-- List of created items will appear here -->
-            </div>
+            </ul>
 
           </div>
 

@@ -2,16 +2,45 @@
 <main id="view-frames" class="view flex p-0 flex-col h-full overflow-hidden">
   <!-- Sub-Header -->
   <div class="px-4 pt-0 pb-3 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2 min-w-0">
       <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial"
         class="p-2 bg-gray-100 dark:bg-slate-800 rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors shrink-0">
         <i data-lucide="arrow-left" class="w-4 h-4 text-gray-600 dark:text-gray-300" aria-hidden="true"></i>
       </button>
-      <h2 class="text-[#1E293B] dark:text-white font-bold text-[18px]">Escanear Tokens</h2>
+      <h2 class="text-[#1E293B] dark:text-white font-bold text-[18px] truncate min-w-0">Escanear Tokens</h2>
+      <div id="frame-status-help" class="relative shrink-0">
+        <button type="button" onclick="toggleFrameStatusHelp(event)"
+          class="w-4 h-4 flex items-center justify-center text-slate-400 hover:text-[#0070af] transition-colors"
+          title="O que significa cada status?" aria-label="O que significa cada status do frame">
+          <i data-lucide="circle-help" class="w-3.5 h-3.5"></i>
+        </button>
+        <div data-frame-status-panel
+          class="hidden absolute left-0 top-full mt-2 w-64 z-50 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-xl p-3.5 space-y-3">
+          <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Status do frame</p>
+          <div class="space-y-2.5">
+            <div class="flex items-start gap-2">
+              <span class="mt-0.5 text-[10px] font-medium text-violet-500 shrink-0">Novo Componente</span>
+              <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight">Frame marcado como um componente inédito, ainda fora do DSC.</p>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="mt-0.5 text-[10px] font-medium text-slate-500 dark:text-dark-muted shrink-0">Pendente</span>
+              <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight">Frame registrado, mas o Check Design ainda não foi feito.</p>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="mt-0.5 text-[10px] font-medium text-green-600 shrink-0">Conforme</span>
+              <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight">Check Design feito, sem desvios e sem tokens não vinculados ao DSC.</p>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="mt-0.5 text-[10px] font-medium text-red-500 shrink-0">Não Conforme</span>
+              <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight">Check Design feito, mas há desvios declarados ou tokens sem vínculo.</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="flex items-center gap-1.5">
+    <div class="flex items-center gap-1.5 shrink-0">
       <button data-collapse-toggle onclick="collapseAllAccordions(document.querySelector('#view-frames .overflow-y-auto'))" title="Recolher/expandir todos" aria-label="Recolher ou expandir todos os accordions"
-        class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors text-slate-500 dark:text-dark-muted">
+        class="hidden p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors text-slate-500 dark:text-dark-muted">
         <i data-lucide="chevrons-up-down" class="w-4 h-4" aria-hidden="true"></i>
       </button>
       <button onclick="requestFrameRegistration()" class="fab-inline" title="Registrar Frame" aria-label="Registrar Frame">
@@ -24,24 +53,24 @@
   <!-- Scrollable Content -->
   <div class="flex-1 overflow-y-auto p-4 pb-4 space-y-3" onscroll="handleScroll(this)">
 
-    <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-2.5">
-      <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5"></i>
+    <div class="min-h-[76px] p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex items-center gap-2.5">
+      <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
       <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-tight">
-        Selecione um <strong>Frame</strong> no canvas do Figma e clique em <strong>Registrar Frame</strong> para documentá-lo com tokens, medidas e specs.
+        Selecione um <strong>Frame</strong> no canvas do Figma e clique em <strong>Registrar Frame</strong> para adicioná-lo ao hub. Depois de registrado, ele fica disponível para as outras ferramentas de documentação.
       </p>
     </div>
 
-    <div id="frames-empty-state" class="py-12 text-center">
-      <div class="w-14 h-14 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3">
-        <i data-lucide="layout" class="w-6 h-6 text-slate-300 dark:text-slate-600"></i>
+    <div id="frames-empty-state" class="flex flex-col items-center justify-center py-12 animate-in fade-in duration-500">
+      <div class="relative mb-4">
+        <i data-lucide="layout" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
       </div>
-      <p class="text-[13px] font-bold text-slate-500 dark:text-slate-500">Nenhum frame documentado</p>
-      <p class="text-[11px] text-gray-400 mt-1">Selecione um frame no canvas e toque em <strong>Registrar Frame</strong></p>
+      <p class="text-[12px] font-bold text-slate-500 dark:text-dark-muted text-center px-4 mb-1">Nenhum frame documentado</p>
+      <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6">Selecione um frame no canvas e toque em <strong>Registrar Frame</strong></p>
     </div>
 
-    <div id="list-frames" class="space-y-3">
+    <ul id="list-frames" class="space-y-3">
       <!-- renderFrameCard() insere aqui -->
-    </div>
+    </ul>
 
     <!-- Salvar e Voltar -->
     <div class="pt-2 pb-2">

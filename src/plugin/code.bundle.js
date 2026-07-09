@@ -295,6 +295,24 @@
   // src/plugin/code.js
   figma.showUI(__html__, { width: 480, height: 750 });
   var activeHighlightNode = null;
+  figma.on("close", () => {
+    if (activeHighlightNode) {
+      try {
+        activeHighlightNode.remove();
+      } catch (e) {
+      }
+      activeHighlightNode = null;
+    }
+  });
+  figma.on("currentpagechange", () => {
+    if (activeHighlightNode) {
+      try {
+        activeHighlightNode.remove();
+      } catch (e) {
+      }
+      activeHighlightNode = null;
+    }
+  });
   function _nodeOnCurrentPage(node) {
     let n = node;
     while (n && n.type !== "PAGE") n = n.parent;
@@ -2875,6 +2893,7 @@
           specCard.x = _absCardX;
           specCard.y = _absCardY;
           groupNodes.push(specCard);
+          const USE_NATIVE_CONNECTOR = false;
           if (opts.drawConnection !== false) {
             let startPt, endPt;
             if (side === "right") {
@@ -2890,34 +2909,49 @@
               startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
               endPt = { x: specCard.x + specCard.width / 2, y: specCard.y + specCard.height };
             }
-            const connector = figma.createVector();
-            connector.name = "Conector";
-            connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
-            connector.strokes = [{ type: "SOLID", color: themeColor2 }];
-            connector.strokeWeight = 1.5;
-            connector.dashPattern = [4, 4];
-            connector.strokeCap = "ROUND";
-            figma.currentPage.appendChild(connector);
-            groupNodes.push(connector);
-            const _DOT_R = 4;
-            const startDot = figma.createEllipse();
-            startDot.name = "DotInicio";
-            startDot.resize(_DOT_R * 2, _DOT_R * 2);
-            startDot.fills = [{ type: "SOLID", color: themeColor2 }];
-            startDot.strokes = [];
-            figma.currentPage.appendChild(startDot);
-            startDot.x = startPt.x - _DOT_R;
-            startDot.y = startPt.y - _DOT_R;
-            groupNodes.push(startDot);
-            const endDot = figma.createEllipse();
-            endDot.name = "DotFim";
-            endDot.resize(_DOT_R * 2, _DOT_R * 2);
-            endDot.fills = [{ type: "SOLID", color: themeColor2 }];
-            endDot.strokes = [];
-            figma.currentPage.appendChild(endDot);
-            endDot.x = endPt.x - _DOT_R;
-            endDot.y = endPt.y - _DOT_R;
-            groupNodes.push(endDot);
+            if (USE_NATIVE_CONNECTOR) {
+              const connector = figma.createConnector();
+              connector.name = "Conector";
+              connector.connectorStart = { endpointNodeId: node.id, magnet: "AUTO" };
+              connector.connectorEnd = { endpointNodeId: specCard.id, magnet: "AUTO" };
+              connector.connectorLineType = "STRAIGHT";
+              connector.strokes = [{ type: "SOLID", color: themeColor2 }];
+              connector.strokeWeight = 1.5;
+              connector.dashPattern = [4, 4];
+              connector.connectorStartStrokeCap = "CIRCLE_FILLED";
+              connector.connectorEndStrokeCap = "CIRCLE_FILLED";
+              figma.currentPage.appendChild(connector);
+              groupNodes.push(connector);
+            } else {
+              const connector = figma.createVector();
+              connector.name = "Conector";
+              connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
+              connector.strokes = [{ type: "SOLID", color: themeColor2 }];
+              connector.strokeWeight = 1.5;
+              connector.dashPattern = [4, 4];
+              connector.strokeCap = "ROUND";
+              figma.currentPage.appendChild(connector);
+              groupNodes.push(connector);
+              const _DOT_R = 4;
+              const startDot = figma.createEllipse();
+              startDot.name = "DotInicio";
+              startDot.resize(_DOT_R * 2, _DOT_R * 2);
+              startDot.fills = [{ type: "SOLID", color: themeColor2 }];
+              startDot.strokes = [];
+              figma.currentPage.appendChild(startDot);
+              startDot.x = startPt.x - _DOT_R;
+              startDot.y = startPt.y - _DOT_R;
+              groupNodes.push(startDot);
+              const endDot = figma.createEllipse();
+              endDot.name = "DotFim";
+              endDot.resize(_DOT_R * 2, _DOT_R * 2);
+              endDot.fills = [{ type: "SOLID", color: themeColor2 }];
+              endDot.strokes = [];
+              figma.currentPage.appendChild(endDot);
+              endDot.x = endPt.x - _DOT_R;
+              endDot.y = endPt.y - _DOT_R;
+              groupNodes.push(endDot);
+            }
           }
         } else {
           figma.currentPage.appendChild(specCard);
@@ -2965,10 +2999,46 @@
       }
       const node = figma.getNodeById(msg.id);
       if (node && node.visible && _nodeOnCurrentPage(node)) {
-        figma.currentPage.selection = [node];
+        if (msg.selectNode !== false) {
+          figma.currentPage.selection = [node];
+        }
         if (msg.shouldScroll !== false) {
           figma.viewport.scrollAndZoomIntoView([node]);
         }
+        if (msg.highlight && node.absoluteBoundingBox) {
+          const hexToRgbLocal = (hex) => {
+            const h = (hex || "#0070af").replace("#", "");
+            return {
+              r: parseInt(h.substring(0, 2), 16) / 255,
+              g: parseInt(h.substring(2, 4), 16) / 255,
+              b: parseInt(h.substring(4, 6), 16) / 255
+            };
+          };
+          const strokeColor = hexToRgbLocal(msg.color);
+          const bb = node.absoluteBoundingBox;
+          const strokeRect = figma.createRectangle();
+          strokeRect.name = "[HighlightStroke]";
+          strokeRect.x = bb.x;
+          strokeRect.y = bb.y;
+          strokeRect.resize(Math.max(1, bb.width), Math.max(1, bb.height));
+          strokeRect.fills = [];
+          strokeRect.strokes = [{ type: "SOLID", color: strokeColor }];
+          strokeRect.strokeWeight = 2;
+          strokeRect.strokeAlign = "OUTSIDE";
+          strokeRect.locked = true;
+          strokeRect.cornerRadius = node.cornerRadius && typeof node.cornerRadius === "number" ? node.cornerRadius : 0;
+          figma.currentPage.appendChild(strokeRect);
+          activeHighlightNode = strokeRect;
+        }
+      }
+    }
+    if (msg.type === "clear-highlight") {
+      if (activeHighlightNode) {
+        try {
+          activeHighlightNode.remove();
+        } catch (e) {
+        }
+        activeHighlightNode = null;
       }
     }
     if (msg.type === "hide-node") {
