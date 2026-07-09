@@ -1,22 +1,22 @@
-﻿<!-- VIEW: SPECIFICATIONS -->
+<!-- VIEW: SPECIFICATIONS -->
     <main id="view-specifications" class="view flex p-0 flex-col h-full overflow-hidden">
       <!-- Header -->
-      <div class="px-4 pt-2 pb-2.5 bg-light-surface dark:bg-dark-surface border-b border-light-line dark:border-dark-line shadow-sm flex flex-col shrink-0">
+      <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex flex-col shrink-0">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2 min-w-0">
-            <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial" class="p-2 bg-gray-100 dark:bg-slate-800 rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors shrink-0">
-              <i data-lucide="arrow-left" class="w-4 h-4 text-gray-600 dark:text-gray-300" aria-hidden="true"></i>
+            <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial" class="p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
+              <i data-lucide="arrow-left" class="w-4 h-4 text-white" aria-hidden="true"></i>
             </button>
-            <h2 class="text-[#1E293B] dark:text-white font-bold text-[18px] truncate min-w-0">Anotar Specs</h2>
+            <h2 class="text-white font-bold text-[18px] truncate min-w-0">Anotar Specs</h2>
             <button type="button" onclick="openHelp()"
-              class="w-4 h-4 flex items-center justify-center text-slate-400 hover:text-[#0070af] transition-colors shrink-0"
+              class="w-4 h-4 flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
               title="Ver guia de categorias" aria-label="Ver guia de categorias de especificação">
               <i data-lucide="circle-help" class="w-3.5 h-3.5"></i>
             </button>
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
             <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('specs-scroll-container'))" title="Recolher/expandir todos" aria-label="Recolher ou expandir todos os accordions"
-              class="hidden p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors text-slate-500 dark:text-dark-muted">
+              class="hidden p-1.5 hover:bg-white/20 rounded-md transition-colors text-white/80 hover:text-white">
               <i data-lucide="chevrons-up-down" class="w-4 h-4" aria-hidden="true"></i>
             </button>
             <button id="specs-header-action-form" onclick="openSpecFormModal()" class="fab-inline" title="Criar especificação" aria-label="Criar especificação">

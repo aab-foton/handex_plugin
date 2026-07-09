@@ -1,21 +1,20 @@
-﻿<!-- VIEW: HANDOFF SUMMARY -->
+<!-- VIEW: HANDOFF SUMMARY -->
 <main id="view-handoff-summary" class="view flex p-0 flex-col h-full overflow-hidden">
-
   <!-- Header -->
-  <div class="px-4 pt-2 pb-2.5 bg-light-surface dark:bg-dark-surface border-b border-light-line dark:border-dark-line shadow-sm flex items-center justify-between shrink-0">
+  <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex items-center justify-between shrink-0">
     <div class="flex items-center gap-2">
       <button onclick="navigate('view-home')" aria-label="Voltar"
-        class="p-2 bg-gray-100 dark:bg-slate-800 rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors shrink-0">
-        <i data-lucide="arrow-left" class="w-4 h-4 text-gray-600 dark:text-gray-300" aria-hidden="true"></i>
+        class="p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
+        <i data-lucide="arrow-left" class="w-4 h-4 text-white" aria-hidden="true"></i>
       </button>
       <div>
-        <h2 class="text-[#1E293B] dark:text-white font-bold text-[16px]">Handoff</h2>
-        <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-none mt-0.5">Resumo e exportação da entrega</p>
+        <h2 class="text-white font-bold text-[16px]">Handoff</h2>
+        <p class="text-[10px] text-blue-100 leading-none mt-0.5">Resumo e exportação da entrega</p>
       </div>
     </div>
     <button onclick="openHandoffInjectModal()"
       title="Gerar Ficha no Canvas" aria-label="Gerar Ficha no Canvas"
-      class="flex items-center gap-1.5 px-3 py-1.5 bg-[#0070af] hover:bg-[#005ca9] border border-[#005ca9]/60 text-white text-[11px] font-bold rounded-2xl transition-all cursor-pointer shrink-0 shadow-sm shadow-[#0070af]/25 active:scale-95">
+      class="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-blue-50 border border-white/60 text-[#0070af] text-[11px] font-bold rounded-2xl transition-all cursor-pointer shrink-0 shadow-sm active:scale-95">
       <i data-lucide="sparkles" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
       <span>Gerar Ficha</span>
     </button>

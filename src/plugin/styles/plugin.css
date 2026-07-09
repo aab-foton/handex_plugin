@@ -175,6 +175,18 @@ body {
     .dark .fab-inline { background: rgba(0,112,175,0.18); border-color: rgba(96,165,250,0.35); color: #60a5fa; }
     .dark .fab-inline:hover { background: rgba(0,112,175,0.3); }
 
+    /* Fab-inline sobre header secundário azul — ghost branco para contraste */
+    .subheader-brand .fab-inline,
+    .dark .subheader-brand .fab-inline {
+      background: rgba(255,255,255,0.16);
+      border-color: rgba(255,255,255,0.4);
+      color: #ffffff;
+    }
+    .subheader-brand .fab-inline:hover,
+    .dark .subheader-brand .fab-inline:hover {
+      background: rgba(255,255,255,0.28);
+    }
+
     /* Back-to-top button — ghost at rest, highlighted on hover */
     #btn-top {
       background: rgba(148, 163, 184, 0.08);
