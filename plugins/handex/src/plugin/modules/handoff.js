@@ -100,7 +100,7 @@ ${framesList.map(f => {
     return 'Não Conforme';
   })();
   const auditMD = _auditStatus
-    ? `\n- **Conformidade DSC:** ${_auditStatus}${f.audit.obs ? ' — ' + f.audit.obs : ''}`
+    ? `\n- **Conformidade DSC:** ${_auditStatus}${f.audit.observacoes ? ' — ' + f.audit.observacoes : ''}`
     : '';
   const ressalvas = (f.audit && f.audit.ressalvas) || [];
   const ressalvasMD = ressalvas.length === 0 ? '' :
@@ -1164,7 +1164,7 @@ ${(handoffData.createdFlows || []).length === 0
                       </div>
                     `).join('')}
                   </div>
-                  ${f.audit && f.audit.obs ? `<p class="text-[10px] text-amber-700 dark:text-amber-300 mt-2 italic">"${f.audit.obs}"</p>` : ''}
+                  ${f.audit && f.audit.observacoes ? `<p class="text-[10px] text-amber-700 dark:text-amber-300 mt-2 italic">"${f.audit.observacoes}"</p>` : ''}
                 </div>` : ''}
                 </div>
               `;
