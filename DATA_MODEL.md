@@ -350,6 +350,7 @@ Versão atual: `_schemaVersion: 2`
   currentUser: null | User,
   _fichaGenerated: boolean,
   specs: Spec[],   // specs globais fora de frame
+  specLinesVisible: Record<string, boolean>,  // estado de linhas/conectores ocultos por letra (grupo), specs globais
   docs: {
     proto:    { link: string },
     a11y:     { link: string },
@@ -442,7 +443,9 @@ Versão atual: `_schemaVersion: 2`
   cardX:        number,   // posição absoluta no canvas (px)
   cardY:        number,
   cardW:        number,
-  cardH:        number
+  cardH:        number,
+  visible:      boolean,  // default true — controla visibilidade do card no canvas
+  locked:       boolean   // default true (equivalente a undefined) — false = destravado manualmente pelo designer
 }
 ```
 

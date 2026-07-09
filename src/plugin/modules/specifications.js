@@ -490,6 +490,13 @@
     }
 
     // ── Render da lista de specs criadas por frame ─────────────────────
+    // ÓRFÃ: `specs-list-${frameId}` nunca existe em nenhum HTML do projeto (confirmado por grep
+    // em toda a árvore src/plugin). Toda chamada cai em `if (!list) return;` e o resto da função
+    // (incluindo header de grupo com ocultar linhas/grupo/cadeado) nunca executa, apesar de a
+    // função ser chamada de vários lugares (core.js, messages.js, esta própria função).
+    // A view "Anotar Specs" real é alimentada por `renderSpecsList()` (mais abaixo neste arquivo),
+    // que opera sobre o array global `createdSpecs`/`handoffData.specs`, não sobre `frame.createdSpecs`.
+    // Não implemente features novas aqui — elas nunca vão aparecer na UI. Ver docs/spec-visibility-and-ordering-proposal.md.
     function renderSpecsListForFrame(frameId) {
       const frame = getFrame(frameId);
       if (!frame) return;
@@ -880,6 +887,20 @@
           : `Grupo ${letter} travado novamente.`));
     }
     window.toggleSpecGroupLock = toggleSpecGroupLock;
+
+    function toggleSpecLock(originalIndex) {
+      const spec = createdSpecs[originalIndex];
+      if (!spec || !spec.id) return;
+      const isNowUnlocked = spec.locked !== false;
+      spec.locked = isNowUnlocked ? false : true;
+      parent.postMessage({ pluginMessage: { type: 'unlock-spec-group', specIds: [spec.id], locked: !isNowUnlocked } }, '*');
+      saveSpecsToStorage();
+      renderSpecsList();
+      showToast(isNowUnlocked
+        ? 'Especificação destravada — edite com cuidado e trave novamente ao concluir.'
+        : 'Especificação travada novamente.');
+    }
+    window.toggleSpecLock = toggleSpecLock;
 
     // Global stores already defined at top: lastMeasurements, createdSpecs
 
@@ -1720,6 +1741,29 @@
         const groupActions = document.createElement('div');
         groupActions.className = 'flex items-center gap-1';
 
+        const groupLinesBtn = document.createElement('button');
+        groupLinesBtn.type = 'button';
+        const isLinesHidden = handoffData.specLinesVisible && handoffData.specLinesVisible[letter] === false;
+        groupLinesBtn.title = isLinesHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo';
+        groupLinesBtn.ariaLabel = groupLinesBtn.title;
+        groupLinesBtn.className = `p-2 hover:bg-white/50 dark:hover:bg-slate-700 rounded-lg transition-colors shrink-0 ${isLinesHidden ? 'text-gray-400' : 'text-gray-500'}`;
+        groupLinesBtn.innerHTML = '<i data-lucide="spline" class="w-4 h-4"></i>';
+
+        groupLinesBtn.onclick = (e) => {
+          e.stopPropagation();
+          if (!handoffData.specLinesVisible) handoffData.specLinesVisible = {};
+          const nowHidden = !(handoffData.specLinesVisible[letter] === false);
+          handoffData.specLinesVisible[letter] = nowHidden ? false : true;
+          const specIds = specs.filter(s => s.id).map(s => s.id);
+          parent.postMessage({ pluginMessage: { type: 'hide-spec-lines', specIds, forceState: !nowHidden } }, '*');
+          saveSpecsToStorage();
+          groupLinesBtn.title = nowHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo';
+          groupLinesBtn.ariaLabel = groupLinesBtn.title;
+          groupLinesBtn.classList.toggle('text-gray-400', nowHidden);
+          groupLinesBtn.classList.toggle('text-gray-500', !nowHidden);
+          _refreshIcons();
+        };
+
         const groupVisBtn = document.createElement('button');
         groupVisBtn.type = 'button';
         groupVisBtn.title = "Ocultar/Exibir Grupo";
@@ -1767,6 +1811,7 @@
         groupChevron.setAttribute('data-lucide', 'chevron-down');
         groupChevron.className = 'w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform group-chevron';
 
+        groupActions.appendChild(groupLinesBtn);
         groupActions.appendChild(groupVisBtn);
         groupActions.appendChild(groupChevron);
         groupHeader.appendChild(headerInfo);
@@ -1852,23 +1897,41 @@
             updateHideAllSpecsButtonState();
           };
 
+          const lockBtn = document.createElement("button");
+          lockBtn.type = "button";
+          lockBtn.className = "p-2.5 hover:bg-blue-50 dark:hover:bg-slate-600 transition-colors shrink-0";
+          lockBtn.setAttribute('data-spec-lock-btn', '');
+
+          const isUnlocked = spec.locked === false;
+          lockBtn.title = isUnlocked ? "Travar especificação" : "Destravar especificação";
+          lockBtn.ariaLabel = lockBtn.title;
+          lockBtn.innerHTML = isUnlocked ? '<i data-lucide="lock-open" class="w-3.5 h-3.5"></i>' : '<i data-lucide="lock" class="w-3.5 h-3.5"></i>';
+          lockBtn.classList.toggle("text-amber-500", isUnlocked);
+          lockBtn.classList.toggle("text-gray-400", !isUnlocked);
+
+          lockBtn.onclick = (e) => {
+            e.stopPropagation();
+            toggleSpecLock(spec.originalIndex);
+          };
+
           const delBtn = document.createElement("button");
           delBtn.type = "button";
           delBtn.title = "Excluir Especificação";
           delBtn.setAttribute("aria-label", "Excluir especificação");
           delBtn.className = "p-2.5 text-gray-500 dark:text-dark-muted hover:text-red-500 transition-colors";
           delBtn.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>';
-          delBtn.onclick = (e) => { 
-            e.stopPropagation(); 
+          delBtn.onclick = (e) => {
+            e.stopPropagation();
             if (spec.id) {
               parent.postMessage({ pluginMessage: { type: 'delete-node', id: spec.id } }, '*');
             }
             createdSpecs.splice(spec.originalIndex, 1);
             saveToStorage();
             renderSpecsList();
-          }; 
+          };
 
           actions.appendChild(visBtn);
+          actions.appendChild(lockBtn);
           actions.appendChild(delBtn);
           header.appendChild(btn);
           header.appendChild(actions);
