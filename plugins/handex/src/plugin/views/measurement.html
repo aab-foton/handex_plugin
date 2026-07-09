@@ -1,17 +1,17 @@
-﻿<!-- VIEW: MEASUREMENT -->
+<!-- VIEW: MEASUREMENT -->
     <main id="view-measurement" class="view p-0 flex flex-col h-full overflow-hidden">
       <!-- Header -->
-      <div class="px-4 pt-2 pb-2.5 bg-light-surface dark:bg-dark-surface border-b border-light-line dark:border-dark-line shadow-sm flex flex-col shrink-0">
+      <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex flex-col shrink-0">
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-2 min-w-0">
             <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial"
-              class="p-2 bg-gray-100 dark:bg-slate-800 rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors shrink-0">
-              <i data-lucide="arrow-left" class="w-4 h-4 text-gray-600 dark:text-gray-300" aria-hidden="true"></i>
+              class="p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
+              <i data-lucide="arrow-left" class="w-4 h-4 text-white" aria-hidden="true"></i>
             </button>
-            <h2 class="text-[#1E293B] dark:text-white font-bold text-[18px] truncate min-w-0">Anotar Medidas</h2>
+            <h2 class="text-white font-bold text-[18px] truncate min-w-0">Anotar Medidas</h2>
             <div id="measure-types-help" class="relative shrink-0">
               <button type="button" onclick="toggleMeasureTypesHelp(event)"
-                class="w-4 h-4 flex items-center justify-center text-slate-400 hover:text-[#0070af] transition-colors"
+                class="w-4 h-4 flex items-center justify-center text-white/70 hover:text-white transition-colors"
                 title="Quais tipos de medida posso inserir?" aria-label="Quais tipos de medida posso inserir">
                 <i data-lucide="circle-help" class="w-3.5 h-3.5"></i>
               </button>
@@ -41,7 +41,7 @@
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
             <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('measures-scroll-container'))" title="Recolher/expandir todos" aria-label="Recolher ou expandir todos os accordions"
-              class="hidden p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors text-slate-500 dark:text-dark-muted">
+              class="hidden p-1.5 hover:bg-white/20 rounded-md transition-colors text-white/80 hover:text-white">
               <i data-lucide="chevrons-up-down" class="w-4 h-4" aria-hidden="true"></i>
             </button>
             <button onclick="openMeasureModal()" class="fab-inline" title="Inserir medida" aria-label="Inserir medida">
