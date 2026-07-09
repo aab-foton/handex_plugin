@@ -247,7 +247,6 @@ Object.assign(window, {
   getFrame,
   toggleNewComponent,
   toggleFrameAccordion,
-  toggleFrameStatusHelp,
   toggleFlowsHelp,
   validateStep1,
   addTeamMember,
