@@ -782,6 +782,21 @@
           }
         }
         const data = msg.data;
+        let _pendingSpecsLocked = 0;
+        (data.frames || []).forEach((frame) => {
+          (frame.createdSpecs || []).forEach((spec) => {
+            if (!spec || !spec.pendingConfirmation) return;
+            const specNode = figma.getNodeById(spec.id);
+            if (specNode && specNode.name && specNode.name.startsWith("[Spec | ")) {
+              specNode.locked = true;
+            }
+            spec.pendingConfirmation = false;
+            _pendingSpecsLocked++;
+          });
+        });
+        if (_pendingSpecsLocked > 0) {
+          figma.notify(`${_pendingSpecsLocked} especifica\xE7\xE3o(\xF5es) pendente(s) foram travadas automaticamente ao gerar a ficha.`);
+        }
         const _titulo = (((_a = data.step1) == null ? void 0 : _a.titulo) || "Projeto").replace(/\//g, "-");
         const _handoffBase = `Handex | Ficha de Projeto | ${_titulo}`;
         const _isUpdate = false;
@@ -2965,7 +2980,7 @@
         }
         const specGroup = figma.group(groupNodes, figma.currentPage);
         specGroup.name = `[Spec | ${opts.letter} | ${_specSide}] ${node.name}`;
-        specGroup.locked = true;
+        specGroup.locked = false;
         figma.ui.postMessage({
           type: "spec-created",
           spec: {
@@ -2986,8 +3001,15 @@
             cardH: _absCardH
           }
         });
-        figma.notify("Especifica\xE7\xE3o criada com sucesso!");
+        figma.notify("Especifica\xE7\xE3o criada \u2014 arraste para posicionar. Clique em Concluir quando pronto.");
       })();
+    }
+    if (msg.type === "lock-spec") {
+      const specNode = figma.getNodeById(msg.specId);
+      if (specNode && specNode.name && specNode.name.startsWith("[Spec | ")) {
+        specNode.locked = true;
+        figma.ui.postMessage({ type: "spec-locked", specId: msg.specId });
+      }
     }
     if (msg.type === "highlight-node") {
       if (activeHighlightNode) {
@@ -3054,6 +3076,25 @@
     if (msg.type === "show-node") {
       const node = figma.getNodeById(msg.id);
       if (node) node.visible = true;
+    }
+    if (msg.type === "hide-spec-lines") {
+      const targetVisible = msg.forceState !== void 0 ? msg.forceState : false;
+      (msg.specIds || []).forEach((specId) => {
+        const specGroup = figma.getNodeById(specId);
+        if (!specGroup || !("findChildren" in specGroup)) return;
+        const lineNodes = specGroup.findChildren((n) => n.name === "Conector" || n.name === "DotInicio" || n.name === "DotFim");
+        lineNodes.forEach((n) => {
+          n.visible = targetVisible;
+        });
+      });
+    }
+    if (msg.type === "unlock-spec-group") {
+      const targetLocked = msg.locked !== void 0 ? msg.locked : false;
+      (msg.specIds || []).forEach((specId) => {
+        const specGroup = figma.getNodeById(specId);
+        if (!specGroup) return;
+        specGroup.locked = targetLocked;
+      });
     }
     if (msg.type === "rename-node") {
       const node = figma.getNodeById(msg.id);
