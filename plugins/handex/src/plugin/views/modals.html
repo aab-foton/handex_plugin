@@ -132,42 +132,42 @@
               *Para Início/Fim, selecione apenas 1 elemento. Para os demais, selecione 2.
             </p>
             <div class="grid grid-cols-2 gap-3">
-              <button onclick="selectFlowType('event_start')" id="form-flow-event_start" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center">
+              <button onclick="selectFlowType('event_start')" id="form-flow-event_start" title="Marca onde o fluxo começa — selecione 1 elemento" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center">
                 <div class="w-10 h-10 bg-white dark:bg-dark-surface rounded-xl flex items-center justify-center shrink-0 shadow-sm">
                   <div class="w-5 h-5 rounded-full border-2 border-green-500 bg-green-50/50 dark:bg-green-900/20"></div>
                 </div>
                 <span class="text-[10px] font-bold text-slate-700 dark:text-white uppercase">Início</span>
               </button>
 
-              <button onclick="selectFlowType('line_solid')" id="form-flow-line_solid" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center group">
+              <button onclick="selectFlowType('line_solid')" id="form-flow-line_solid" title="Conecta duas telas em sequência direta — selecione 2 elementos" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center group">
                 <div class="w-10 h-10 bg-white dark:bg-dark-surface rounded-xl flex items-center justify-center shrink-0 shadow-sm">
                   <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 dark:text-dark-muted group-hover:text-[#0070af]"></i>
                 </div>
                 <span class="text-[10px] font-bold text-slate-700 dark:text-white uppercase tracking-wider">Sequência</span>
               </button>
-              
-              <button onclick="selectFlowType('line_dashed')" id="form-flow-line_dashed" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center group">
+
+              <button onclick="selectFlowType('line_dashed')" id="form-flow-line_dashed" title="Indica uma troca assíncrona (ex: notificação, e-mail) entre as telas — selecione 2 elementos" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center group">
                 <div class="w-10 h-10 bg-white dark:bg-dark-surface rounded-xl flex items-center justify-center shrink-0 shadow-sm">
                   <i data-lucide="move-right" class="w-5 h-5 text-slate-500 dark:text-dark-muted group-hover:text-[#0070af]"></i>
                 </div>
                 <span class="text-[10px] font-bold text-slate-700 dark:text-white uppercase tracking-wider">Mensagem</span>
               </button>
-              
-              <button onclick="selectFlowType('diamond')" id="form-flow-diamond" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center group">
+
+              <button onclick="selectFlowType('diamond')" id="form-flow-diamond" title="Marca um ponto de decisão do usuário (ex: Sim/Não) — selecione 2 elementos" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center group">
                 <div class="w-10 h-10 bg-white dark:bg-dark-surface rounded-xl flex items-center justify-center shrink-0 shadow-sm">
                   <div class="w-5 h-5 rotate-45 border-2 border-slate-400 dark:border-slate-500 group-hover:border-[#0070af]"></div>
                 </div>
                 <span class="text-[10px] font-bold text-slate-700 dark:text-white uppercase tracking-wider">Decisão</span>
               </button>
 
-              <button onclick="selectFlowType('diamond_dashed')" id="form-flow-diamond_dashed" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center group">
+              <button onclick="selectFlowType('diamond_dashed')" id="form-flow-diamond_dashed" title="Marca uma decisão condicional/opcional, não obrigatória no fluxo principal — selecione 2 elementos" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center group">
                 <div class="w-10 h-10 bg-white dark:bg-dark-surface rounded-xl flex items-center justify-center shrink-0 shadow-sm">
                   <div class="w-5 h-5 rotate-45 border-2 border-dashed border-slate-400 dark:border-slate-500 group-hover:border-[#0070af]"></div>
                 </div>
                 <span class="text-[10px] font-bold text-slate-700 dark:text-white uppercase">Decisão (Opcional)</span>
               </button>
 
-              <button onclick="selectFlowType('event_end')" id="form-flow-event_end" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center">
+              <button onclick="selectFlowType('event_end')" id="form-flow-event_end" title="Marca onde o fluxo termina — selecione 1 elemento" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center">
                 <div class="w-10 h-10 bg-white dark:bg-dark-surface rounded-xl flex items-center justify-center shrink-0 shadow-sm">
                   <div class="w-5 h-5 rounded-full border-[3px] border-red-500"></div>
                 </div>
