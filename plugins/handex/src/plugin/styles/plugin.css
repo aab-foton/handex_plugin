@@ -187,28 +187,6 @@ body {
       background: rgba(255,255,255,0.28);
     }
 
-    /* Botões de ação do header principal: mostram o label até a primeira
-       interação do usuário (body.header-actions-collapsed), depois colapsam
-       para ícone-só permanentemente (ver ensureExpanded/collapseHeaderActionLabels em core.js). */
-    .header-action-btn {
-      transition: padding 0.18s ease, gap 0.18s ease;
-    }
-    .header-action-label {
-      max-width: 140px;
-      overflow: hidden;
-      transition: max-width 0.18s ease, opacity 0.18s ease, margin 0.18s ease;
-    }
-    html.header-actions-collapsed .header-action-btn {
-      padding-left: 6px;
-      padding-right: 6px;
-      gap: 0;
-    }
-    html.header-actions-collapsed .header-action-label {
-      max-width: 0;
-      opacity: 0;
-      margin: 0;
-    }
-
     /* Back-to-top button — ghost at rest, highlighted on hover */
     #btn-top {
       background: rgba(148, 163, 184, 0.08);

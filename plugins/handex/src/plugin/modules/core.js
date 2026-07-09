@@ -308,25 +308,7 @@ let nextMeasurementNumber = 1;
 
 document.addEventListener('DOMContentLoaded', () => {
   _refreshIcons();
-  initHeaderActionLabels();
 });
-
-// ── Header: botões de ação mostram o label até a primeira interação ────
-// A classe inicial (se já visto) é aplicada em <html> por um script inline
-// no <head> do build.cjs, antes do body renderizar (evita flash do label).
-const HEADER_ACTIONS_SEEN_KEY = 'handex-header-actions-seen-v1';
-
-function initHeaderActionLabels() {
-  if (document.documentElement.classList.contains('header-actions-collapsed')) return;
-  document.querySelectorAll('.header-action-btn').forEach((btn) => {
-    btn.addEventListener('click', collapseHeaderActionLabels, { once: true });
-  });
-}
-
-function collapseHeaderActionLabels() {
-  document.documentElement.classList.add('header-actions-collapsed');
-  try { localStorage.setItem(HEADER_ACTIONS_SEEN_KEY, '1'); } catch (e) { }
-}
 
 // ── Plugin Collapse / Expand ──────────────────────────────────────────
 let isCollapsed = false;

@@ -87,16 +87,6 @@ const html = `<!doctype html>
 
 <head>
   <meta charset="UTF-8">
-  <script>
-    // Aplica a classe de header colapsado antes do body renderizar, evitando
-    // o "flash" do label expandido em toda abertura para quem já viu (ver
-    // initHeaderActionLabels/collapseHeaderActionLabels em core.js).
-    try {
-      if (localStorage.getItem('handex-header-actions-seen-v1')) {
-        document.documentElement.classList.add('header-actions-collapsed');
-      }
-    } catch (e) { }
-  </script>
   <script src="https://unpkg.com/lucide@latest" defer></script>
   <script>
     // Shim síncrono: garante que window.lucide existe antes dos módulos rodarem
@@ -153,15 +143,13 @@ ${css}
         <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v4.2.2</span>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <button id="btn-header-ficha" onclick="ensureExpanded(); openHandoffInjectModal()" title="Gerar Ficha no Canvas" aria-label="Gerar Ficha"
-          class="header-action-btn flex items-center gap-1.5 px-1.5 py-1.5 bg-[#0070af] hover:bg-[#005ca9] rounded-lg transition-colors cursor-pointer text-white border border-[#0070af]/60 shadow-sm shadow-[#0070af]/20">
-          <i data-lucide="sparkles" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
-          <span class="header-action-label text-[11px] font-bold whitespace-nowrap">Gerar Ficha</span>
+        <button onclick="ensureExpanded(); openHandoffInjectModal()" title="Gerar Ficha no Canvas" aria-label="Gerar Ficha"
+          class="p-1.5 bg-[#0070af] hover:bg-[#005ca9] rounded-lg transition-colors cursor-pointer text-white border border-[#0070af]/60 shadow-sm shadow-[#0070af]/20">
+          <i data-lucide="sparkles" class="w-4 h-4" aria-hidden="true"></i>
         </button>
-        <button id="btn-header-dados-projeto" onclick="ensureExpanded(); openDadosProjetoModal()" title="Dados do Projeto" aria-label="Dados do Projeto"
-          class="header-action-btn flex items-center gap-1.5 px-1.5 py-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
-          <i data-lucide="clipboard-list" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
-          <span class="header-action-label text-[11px] font-bold whitespace-nowrap">Dados do Projeto</span>
+        <button onclick="ensureExpanded(); openDadosProjetoModal()" title="Dados do Projeto" aria-label="Dados do Projeto"
+          class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
+          <i data-lucide="clipboard-list" class="w-4 h-4" aria-hidden="true"></i>
         </button>
         <button id="btn-zoom-out" onclick="ensureExpanded(); zoomOut()" title="Diminuir escala" aria-label="Diminuir escala da interface"
           class="hidden p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
