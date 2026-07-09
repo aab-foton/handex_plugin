@@ -1,7 +1,7 @@
 {
   "name": "handex-handoff-express",
   "private": true,
-  "version": "4.2.2",
+  "version": "4.3.0-beta.1",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
@@ -17,6 +17,7 @@
     "bundle:ui": "npm run bundle:css && npm run bundle:refs && node src/plugin/build.cjs",
     "bundle:code": "node scripts/bundle-code.cjs",
     "export:plugin": "cp src/plugin/manifest.json handex-plugin/ && cp src/plugin/code.bundle.js handex-plugin/ && cp src/plugin/ui.html handex-plugin/ && echo 'âœ… handex-plugin/ atualizada'",
+    "export:plugin:beta": "mkdir -p handex-plugin-beta && cp src/plugin/manifest.json handex-plugin-beta/ && cp src/plugin/code.bundle.js handex-plugin-beta/ && cp src/plugin/ui.html handex-plugin-beta/ && echo 'âœ… handex-plugin-beta/ atualizada'",
     "version:patch": "npm version patch --no-git-tag-version",
     "version:minor": "npm version minor --no-git-tag-version",
     "version:major": "npm version major --no-git-tag-version"
