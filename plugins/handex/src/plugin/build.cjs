@@ -87,6 +87,16 @@ const html = `<!doctype html>
 
 <head>
   <meta charset="UTF-8">
+  <script>
+    // Aplica a classe de fab-inline colapsado antes do body renderizar,
+    // evitando o "flash" do label expandido em toda abertura para quem já
+    // interagiu (ver initFabInlineLabels/collapseFabInlineLabels em core.js).
+    try {
+      if (localStorage.getItem('handex-fab-actions-seen-v1')) {
+        document.documentElement.classList.add('fab-actions-collapsed');
+      }
+    } catch (e) { }
+  </script>
   <script src="https://unpkg.com/lucide@latest" defer></script>
   <script>
     // Shim síncrono: garante que window.lucide existe antes dos módulos rodarem
