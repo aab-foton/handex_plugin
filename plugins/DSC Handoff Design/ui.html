@@ -489,6 +489,29 @@
     .btn-extra:hover { background: #0D47A1; color: #fff; }
     .btn-extra.ghost { border-color: #bbb; color: #888; }
     .btn-extra.ghost:hover { border-color: #555; color: #555; background: none; }
+    .btn-extra.full { width: 100%; padding: 8px 10px; text-align: center; }
+
+    /* Template — textarea de nomes reconhecidos */
+    .settings-help-text { font-size: 11px; color: #999; line-height: 1.5; margin: -2px 0 2px; }
+    .settings-textarea {
+      width: 100%; font-family: 'Inter', sans-serif; font-size: 12px; color: #333;
+      padding: 8px 10px; border: 1px solid #d0d0d0; border-radius: 8px;
+      resize: vertical; min-height: 60px;
+    }
+    .settings-textarea:focus { outline: none; border-color: #0D47A1; }
+
+    /* DEV (temporário) */
+    .dev-label {
+      font-size: 11px; font-weight: 700; color: #E65100;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      margin: 4px 0 2px;
+    }
+    .varredura-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 3px 0; font-size: 11px; font-family: 'Menlo', monospace;
+    }
+    .varredura-item.ok { color: #2E7D32; }
+    .varredura-item.falha { color: #C62828; }
 
     /* Accordions */
     .accordion { border-bottom: 1px solid #e8e8e8; }
@@ -621,6 +644,29 @@
             <span>Manter alterações manuais</span>
           </label>
         </div>
+
+        <div class="settings-divider"></div>
+
+        <div class="settings-group">
+          <div class="settings-group-title">Nome do template</div>
+          <p class="settings-help-text">Nomes de componente/instância reconhecidos como Template de Handoff (um por linha). Se o template for renomeado, adicione o nome novo aqui — não é preciso remover o antigo, handoffs já gerados continuam funcionando.</p>
+          <textarea id="settingNomesTemplate" class="settings-textarea" rows="3">[dsc-h] Template Handoff
+[dsc-hub] Handoff de Design</textarea>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <div class="settings-group">
+          <div class="dev-label">Dev (temporário)</div>
+          <div class="extras-card">
+            <div class="extras-card-title">🔍 Varredura de nomes do template</div>
+            <div style="padding:10px 12px;">
+              <p class="settings-help-text">Confere se os nomes literais que o code.ts procura (ex: [dsc-h] Item Number) existem no template novo. Não depende de seleção.</p>
+              <button class="btn-extra full" id="btnVarreduraTemplate">Rodar varredura</button>
+              <div id="varreduraResultado" style="display:none; margin-top:8px;"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -746,7 +792,7 @@
     </div>
   </div>
 
-  <div class="footer" id="mainFooter" style="display:none;">DSC Handoff v2.2.0</div>
+  <div class="footer" id="mainFooter" style="display:none;">DSC Handoff v2.3.0</div>
 
   <script>
     const waitingState = document.getElementById('waitingState');
@@ -983,6 +1029,34 @@
     btnToggleSelecao.onclick = () =>
       parent.postMessage({ pluginMessage: { type: 'toggle-nomes-sections', escopo: 'selecao' } }, '*');
 
+    const nomesTemplateEl = document.getElementById('settingNomesTemplate');
+    nomesTemplateEl.addEventListener('change', () => {
+      const nomes = nomesTemplateEl.value.split('\n').map(s => s.trim()).filter(Boolean);
+      parent.postMessage({ pluginMessage: { type: 'salvar-nomes-template', nomes } }, '*');
+    });
+
+    const btnVarreduraTemplate = document.getElementById('btnVarreduraTemplate');
+    const varreduraResultado = document.getElementById('varreduraResultado');
+    btnVarreduraTemplate.onclick = () => {
+      btnVarreduraTemplate.disabled = true;
+      btnVarreduraTemplate.textContent = 'Varrendo...';
+      parent.postMessage({ pluginMessage: { type: 'rodar-varredura-template' } }, '*');
+    };
+
+    function renderVarreduraResultado(msg) {
+      btnVarreduraTemplate.disabled = false;
+      btnVarreduraTemplate.textContent = 'Rodar varredura';
+      varreduraResultado.style.display = 'block';
+      if (!msg.ok) {
+        varreduraResultado.innerHTML = '<div class="varredura-item falha">✗ ' + msg.mensagem + '</div>';
+        return;
+      }
+      varreduraResultado.innerHTML = msg.resultado.map(function(item) {
+        const classe = item.encontrado ? 'ok' : 'falha';
+        const icone = item.encontrado ? '✓' : '✗';
+        return '<div class="varredura-item ' + classe + '">' + icone + ' ' + item.nome + '</div>';
+      }).join('');
+    }
 
     window.onmessage = (event) => {
       const msg = event.data.pluginMessage;
@@ -1008,6 +1082,14 @@
       if (msg.type === 'estado-sections-inicial') {
         atualizarBtnExtra(btnTogglePagina, msg.pagina);
         atualizarBtnExtra(btnToggleSelecao, msg.selecao);
+        return;
+      }
+      if (msg.type === 'nomes-template-carregados') {
+        nomesTemplateEl.value = msg.texto || '';
+        return;
+      }
+      if (msg.type === 'varredura-template-resultado') {
+        renderVarreduraResultado(msg);
         return;
       }
       if (msg.type === 'progress') {
