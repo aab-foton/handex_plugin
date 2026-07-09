@@ -79,10 +79,10 @@ body {
     }
 
     /* Global overrides for buttons matching the Design System */
-    button:not(.rounded-full) {
-      border-radius: 8px !important; /* rounded-lg equivalent */
+    button:not(.rounded-full):not([class*="rounded-"]) {
+      border-radius: 8px !important; /* rounded-lg equivalent — fallback apenas para botões sem classe de raio explícita */
     }
-    
+
     button.bg-\[\#0070af\], button.bg-blue-600, button.bg-blue-500 {
       background-color: #005ca9 !important;
       color: #ffffff !important;

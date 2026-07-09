@@ -3588,11 +3588,11 @@ figma.ui.onmessage = async (msg) => {
       const isStart = msg.flowType === "event_start";
       const circle = figma.createEllipse();
       figma.currentPage.appendChild(circle);
-      circle.resize(48, 48);
-      circle.x = bestB.x - 24; circle.y = bestB.y - 24;
+      circle.resize(68, 68);
+      circle.x = bestB.x - 34; circle.y = bestB.y - 34;
       circle.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
       circle.strokes = [{ type: "SOLID", color: isStart ? { r: 0.13, g: 0.6, b: 0.3 } : { r: 0.86, g: 0.1, b: 0.1 } }];
-      circle.strokeWeight = isStart ? 2 : 4;
+      circle.strokeWeight = isStart ? 3 : 5;
       (async () => {
         try {
           await figma.loadFontAsync({ family: "Inter", style: "Bold" });
@@ -3600,7 +3600,7 @@ figma.ui.onmessage = async (msg) => {
           figma.currentPage.appendChild(label);
           label.fontName = { family: "Inter", style: "Bold" };
           label.characters = isStart ? "INÍCIO" : "FIM";
-          label.fontSize = 8;
+          label.fontSize = 11;
           label.textAlignHorizontal = "CENTER"; label.textAlignVertical = "CENTER";
           label.fills = circle.strokes;
           label.x = circle.x + circle.width / 2 - label.width / 2;
