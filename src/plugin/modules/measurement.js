@@ -91,6 +91,8 @@
 
         const btn = document.createElement("button");
         btn.type = "button";
+        btn.title = "Expandir/recolher e focar no elemento no Figma";
+        btn.setAttribute('aria-label', "Expandir/recolher e focar no elemento no Figma");
         btn.className = "flex-1 flex items-center gap-3 px-3 py-3 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-left";
         btn.setAttribute('data-accordion-toggle', '');
         btn.onclick = () => toggleAccordion(btn, item.nodeId, item.number || (index + 1));
