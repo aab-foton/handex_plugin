@@ -153,7 +153,7 @@
         const icon = it.status === 'error' ? 'x-circle' : 'alert-triangle';
         const cls  = it.status === 'error' ? 'text-red-400' : 'text-amber-500';
         const clickable = it.nodeId
-          ? `onclick="focusNode('${it.nodeId}')" title="Localizar no canvas" class="flex items-center gap-1.5 min-w-0 w-full cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30 rounded px-1 py-0.5 transition-colors group"`
+          ? `onclick="focusNode('${it.nodeId}')" title="Focar no elemento no Figma" class="flex items-center gap-1.5 min-w-0 w-full cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30 rounded px-1 py-0.5 transition-colors group"`
           : `class="flex items-center gap-1.5 min-w-0 w-full px-1 py-0.5"`;
         return `<li ${clickable}>
           <i data-lucide="${icon}" class="w-3 h-3 ${cls} shrink-0"></i>
@@ -265,8 +265,8 @@
           onmouseleave="clearHighlight()">
           <button type="button"
             onclick="event.stopPropagation(); focusNode('${frame.figmaId}')"
-            title="Localizar no canvas"
-            aria-label="Localizar no canvas"
+            title="Focar no elemento no canvas"
+            aria-label="Focar no elemento no canvas"
             class="w-7 h-7 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/30 text-[#0070af] hover:bg-blue-100 transition-colors shrink-0">
             <i data-lucide="locate" class="w-3.5 h-3.5"></i>
           </button>
@@ -668,7 +668,7 @@
               </div>
               ${hasRawTokenWarning ? `<span title="Valores sem token — use Check Design" class="w-4 h-4 flex items-center justify-center text-amber-400 shrink-0"><i data-lucide="alert-triangle" class="w-3 h-3"></i></span>` : ''}
               <span id="exc-badge-${frameId}-${specIdx}" class="px-1 py-0.5 rounded bg-orange-50 text-[9px] font-bold text-orange-500 shrink-0 ${excCount > 0 ? '' : 'hidden'}">${excCount} exc</span>
-              <button type="button" title="Localizar no canvas" aria-label="Localizar no canvas"
+              <button type="button" title="Focar no elemento no canvas" aria-label="Focar no elemento no canvas"
                 onclick="event.stopPropagation(); focusNode('${spec.id}')"
                 class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
                 <i data-lucide="locate" class="w-3 h-3"></i>
@@ -1253,7 +1253,7 @@
             : `<span class="font-bold text-slate-700 dark:text-gray-200">${p.value}</span>`;
 
           const clickAttr = item.nodeId
-            ? `onclick="focusNode('${item.nodeId}')" title="${tooltipText}\n\nClique para localizar no Figma" style="cursor:pointer"`
+            ? `onclick="focusNode('${item.nodeId}')" title="${tooltipText}\n\nClique para focar no elemento no Figma" style="cursor:pointer"`
             : `title="${tooltipText}"`;
           html += `<div class="flex items-center justify-between gap-1 text-[9px] text-gray-600 dark:text-gray-300 rounded hover:bg-gray-50 dark:hover:bg-dark-bg/50 px-0.5 -mx-0.5 transition-colors" ${clickAttr}>
             <div class="flex items-center gap-1.5 min-w-0">
@@ -1311,7 +1311,7 @@
         : '';
 
       return `
-        <div class="col-span-2 p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#0070af] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" title="Localizar no Figma">
+        <div class="col-span-2 p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#0070af] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" title="Focar no elemento no Figma">
           <div class="flex items-center gap-2 mb-1 pointer-events-none">
             ${preview}
             <div class="flex-1 min-w-0">
@@ -1856,8 +1856,8 @@
           
           const btn = document.createElement("button");
           btn.type = "button";
-          btn.title = "Expandir/Recolher";
-          btn.ariaLabel = "Expandir";
+          btn.title = "Expandir/recolher e focar no elemento no Figma";
+          btn.ariaLabel = "Expandir/recolher e focar no elemento no Figma";
           btn.className = "flex-1 flex items-center justify-between text-left p-2.5 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors";
           btn.onclick = () => {
             const contentEl = document.getElementById('content-' + spec.id);

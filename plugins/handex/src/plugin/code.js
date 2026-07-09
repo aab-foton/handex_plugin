@@ -191,9 +191,9 @@ figma.ui.onmessage = async (msg) => {
   if (msg.type === 'refresh-spec-card') {
     const grpNode = figma.getNodeById(msg.nodeId);
     if (!grpNode) { figma.ui.postMessage({ type: 'toast', message: 'Card não encontrado no canvas.', kind: 'error' }); return; }
-    // Find the spec card frame inside the group (name ends with /Ficha)
+    // Find the spec card frame inside the group (nome atual 'Spec Notes', legado 'Ficha' ou '.../Ficha')
     const children = grpNode.type === 'GROUP' ? grpNode.children : [grpNode];
-    const cardFrame = children.find(n => n.name && n.name.endsWith('/Ficha'));
+    const cardFrame = children.find(n => n.name && (n.name === 'Spec Notes' || n.name === 'Ficha' || n.name.endsWith('/Ficha')));
     if (!cardFrame || cardFrame.type !== 'FRAME') { figma.ui.postMessage({ type: 'toast', message: 'Card não encontrado no grupo.', kind: 'error' }); return; }
     // Remove existing exception frame if any (named /Exceções)
     const existing = cardFrame.children.find(n => n.name === '[Spec] Exceções');
@@ -247,13 +247,14 @@ figma.ui.onmessage = async (msg) => {
       }
       const node = sel[0];
       let cardFrame = null;
-      if (node.name && node.name.endsWith('/Ficha') && node.type === 'FRAME') {
+      const _isSpecCardName = (name) => name === 'Spec Notes' || name === 'Ficha' || name.endsWith('/Ficha');
+      if (node.name && _isSpecCardName(node.name) && node.type === 'FRAME') {
         cardFrame = node;
       } else if ((node.type === 'GROUP' || node.type === 'FRAME') && node.children) {
-        cardFrame = node.children.find(n => n.name && n.name.endsWith('/Ficha'));
+        cardFrame = node.children.find(n => n.name && _isSpecCardName(n.name));
       }
       if (!cardFrame && node.parent && (node.parent.type === 'GROUP' || node.parent.type === 'FRAME')) {
-        cardFrame = node.parent.children.find(n => n.name && n.name.endsWith('/Ficha'));
+        cardFrame = node.parent.children.find(n => n.name && _isSpecCardName(n.name));
       }
       if (!cardFrame) {
         figma.notify('Card de especificação não encontrado. Selecione o card no canvas.');
@@ -2763,7 +2764,7 @@ figma.ui.onmessage = async (msg) => {
 
       // Create Spec Card
       const specCard = figma.createFrame();
-      specCard.name = 'Ficha';
+      specCard.name = 'Spec Notes';
       specCard.layoutMode = "VERTICAL";
       specCard.paddingLeft = 16;
       specCard.paddingRight = 16;
@@ -3035,9 +3036,9 @@ figma.ui.onmessage = async (msg) => {
           const newFmt = n.name.match(/^\[Spec \| ([A-Z]\d*(?:\.\d+)*) \| ([a-z]+)\] /);
           if (newFmt) {
             if (newFmt[2] !== side) return;
-            const ficha = n.children && n.children.find(c => c.type === 'FRAME' && c.name === 'Ficha' && c !== specCard);
-            if (!ficha) return;
-            const bb = ficha.absoluteBoundingBox || ficha.absoluteRenderBounds;
+            const specNotes = n.children && n.children.find(c => c.type === 'FRAME' && (c.name === 'Spec Notes' || c.name === 'Ficha') && c !== specCard);
+            if (!specNotes) return;
+            const bb = specNotes.absoluteBoundingBox || specNotes.absoluteRenderBounds;
             if (bb) _updateLetterMap(newFmt[1], bb);
             return;
           }
