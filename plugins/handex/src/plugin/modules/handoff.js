@@ -2415,7 +2415,7 @@ ${(handoffData.createdFlows || []).length === 0
     // (localStorage), sem round-trip com o plugin/Figma. Namespaced por um ID
     // de projeto gerado uma única vez (não pelo título) pra não colidir se
     // dois projetos exportados tiverem o mesmo nome no mesmo navegador.
-    var HANDEX_COMMENTS_KEY = "handex-comments-${projectId}";
+    var HANDEX_COMMENTS_KEY = "handex-comments-" + ${JSON.stringify(projectId)};
     function _loadHandexComments() {
       try {
         var raw = localStorage.getItem(HANDEX_COMMENTS_KEY);
