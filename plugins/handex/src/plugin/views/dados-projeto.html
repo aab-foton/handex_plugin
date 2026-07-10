@@ -257,8 +257,14 @@
         </div>
       </div>
 
-      <!-- Salvar e Voltar -->
-      <div class="pt-4 pb-4 px-4">
+      <!-- Gerar Ficha + Salvar e Voltar -->
+      <div class="pt-4 pb-4 px-4 space-y-2">
+        <button onclick="openHandoffInjectModal()"
+          title="Gerar Ficha no Canvas" aria-label="Gerar Ficha no Canvas"
+          class="w-full flex items-center justify-center gap-2 py-3 bg-[#0070af] hover:bg-[#005ca9] rounded-2xl text-[12px] font-bold text-white transition-all shadow-sm">
+          <i data-lucide="sparkles" class="w-4 h-4" aria-hidden="true"></i>
+          Gerar Ficha
+        </button>
         <button onclick="saveAndGoHome(!!((handoffData.step1||{}).titulo||'').trim(), 'Informações salvas!')"
           class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
           <i data-lucide="arrow-left" class="w-4 h-4" aria-hidden="true"></i>
