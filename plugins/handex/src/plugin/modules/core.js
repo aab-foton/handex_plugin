@@ -45,7 +45,8 @@ let handoffData = {
     status: 'rascunho',
     jornada: '',
     feature: '',
-    equipe: []
+    equipe: [],
+    _autoTeamAdded: false
   },
   step2: {
     briefingEnabled: false,

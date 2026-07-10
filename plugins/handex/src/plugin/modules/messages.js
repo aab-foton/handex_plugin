@@ -87,6 +87,19 @@
           }
         }
 
+        // Adiciona automaticamente quem está documentando como primeiro membro da
+        // equipe (papel Designer), uma única vez por arquivo — a flag garante que,
+        // se o usuário remover esse membro de propósito depois, ele não "ressuscita"
+        // sozinho na próxima abertura do plugin.
+        if (msg.currentUser && msg.currentUser.name &&
+            !handoffData.step1._autoTeamAdded &&
+            (!handoffData.step1.equipe || handoffData.step1.equipe.length === 0) &&
+            typeof addTeamMember === 'function') {
+          addTeamMember('Designer', msg.currentUser.name, '', true);
+          handoffData.step1._autoTeamAdded = true;
+          if (typeof saveToStorage === 'function') saveToStorage();
+        }
+
         // snapshot-load e scan-cache-load são solicitados sob demanda (na navegação para as views que precisam)
         // Onboarding é disparado pelo próprio modals.html via DOMContentLoaded
         return;
