@@ -2,14 +2,64 @@
   "meta": {
     "libraryName": "Web Angular & React",
     "figmaFileKey": "8QvOeTODSBi3PquJT5CISP",
-    "exportedAt": "2026-06-10T14:05:18.965Z",
+    "exportedAt": "2026-07-10T02:18:17.352Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
     ]
   },
   "designTokens": {
-    "variables": []
+    "variables": [
+      {
+        "key": "228eec814eeee773574f7d0d79c78f650013dacd",
+        "name": "configuration/grid 🔒",
+        "resolvedType": "STRING",
+        "collection": "properties glossary",
+        "value": "grid"
+      },
+      {
+        "key": "45abd1a64a705a04dc96802ba8ecc06039a36195",
+        "name": "configuration/horizontal 🔒",
+        "resolvedType": "STRING",
+        "collection": "properties glossary",
+        "value": "horizontal"
+      },
+      {
+        "key": "26aa5eb2f46b3709b7208f2e4c935ee79af1a78d",
+        "name": "size/standard🔒",
+        "resolvedType": "STRING",
+        "collection": "properties glossary",
+        "value": "standard"
+      },
+      {
+        "key": "147220d06ee597219979e7cbd7cf7b49653c5f0a",
+        "name": "size/small🔒",
+        "resolvedType": "STRING",
+        "collection": "properties glossary",
+        "value": "small"
+      },
+      {
+        "key": "31a8e1cb40a564bd2161fcf11a257e6b385d0647",
+        "name": "size/large🔒",
+        "resolvedType": "STRING",
+        "collection": "properties glossary",
+        "value": "large"
+      },
+      {
+        "key": "1f59900243dfa8185caa963cef67fd1fca213794",
+        "name": "state/readonly🔒",
+        "resolvedType": "STRING",
+        "collection": "properties glossary",
+        "value": "readonly"
+      },
+      {
+        "key": "66b83afccaf3d3f80c399cf5fd931961776dea9c",
+        "name": "content/label only🔒",
+        "resolvedType": "STRING",
+        "collection": "properties glossary",
+        "value": "label only"
+      }
+    ]
   },
   "styleTokens": {
     "colors": [],
@@ -654,40 +704,16 @@
       "containingFrame": "[dsc] Card"
     },
     {
-      "key": "40e2d9a46c1bf09ef1d97f2a8265c429334cccd4",
-      "name": "variant=secondary, size=large, state=default",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
       "key": "54dd907079c9ae669885fa5dd40e463457717b6b",
       "name": "state=focus, border=shadow, media position=bellow, media only=off",
       "description": "",
       "containingFrame": "[dsc] Card"
     },
     {
-      "key": "597dd3dd3af237fd52cac8f444c79255df863a22",
-      "name": "variant=danger, size=small, state=disabled",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
       "key": "66f40c6b4dd4efce563da5e8270b414546bdab39",
       "name": "state=hover, border=shadow, media position=bellow, media only=on",
       "description": "",
       "containingFrame": "[dsc] Card"
-    },
-    {
-      "key": "8b95a094453c5832106c334f1f5f780a45faf988",
-      "name": "variant=primary, size=large, state=default",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "c5a0d0d12eb57e76bb724b57a627658423286044",
-      "name": "variant=secondary, size=large, state=disabled",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
     },
     {
       "key": "041c5219e68d6d0c8af9c06e4ac08998ef9df52a",
@@ -4296,6 +4322,600 @@
       "containingFrame": "[dsc] Tag"
     },
     {
+      "key": "06327938064bad4b149efe02f8dd402a9037ebe6",
+      "name": "variant=default",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "3c7acbc4e99ceb08c059f003fd16ed918da559dd",
+      "name": "variant=empty",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "037c74f69ae02457a05c532446431b5ce309538d",
+      "name": "variant=no results, size=small",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "09527629ea509b2a8ae40feb8053489b804d20b3",
+      "name": "background=gray, size=medium",
+      "description": "",
+      "containingFrame": "Atómos, moléculas e organismos"
+    },
+    {
+      "key": "0f7a012220ce5193b81a7d77649a4a8cdede1bd3",
+      "name": "background=white, size=small",
+      "description": "",
+      "containingFrame": "Atómos, moléculas e organismos"
+    },
+    {
+      "key": "11d8d61cdd04eebc5bdb29198300c74fbecf4de9",
+      "name": "variant=error, size=small",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "4315bd3d4079a080dadd8d91a4a67059acdc3016",
+      "name": "variant=no data, size=large",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "484235f73a7f26e420ecee6efa08c3d42bfff550",
+      "name": "variant=no results, size=large",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "6e66422e3ca421a78f6254e494165c437a04d659",
+      "name": "variant=custom, size=small",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "723ea8a5704e89344abe7e093cf0c85213812c24",
+      "name": "variant=custom, size=standart",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "9042ed0879d5efd3bf78c5361829cc9030f85f51",
+      "name": "background=gray, size=extra small",
+      "description": "",
+      "containingFrame": "Atómos, moléculas e organismos"
+    },
+    {
+      "key": "960077aef27abb9114276a099849956eb0e3e0bc",
+      "name": "variant=error, size=large",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "a6a049560de590289b71b2d086da2c7a0ad27f8e",
+      "name": "variant=no results, size=standart",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "d509c014d44a7518ec26cf86e622da5321c7d600",
+      "name": "background=gray, size=large",
+      "description": "",
+      "containingFrame": "Atómos, moléculas e organismos"
+    },
+    {
+      "key": "d94c629f98d602e8da5f9202e80ba2f5d71d48c4",
+      "name": "background=white, size=medium",
+      "description": "",
+      "containingFrame": "Atómos, moléculas e organismos"
+    },
+    {
+      "key": "dac469450916c067c2ac50df779321c10f08bb47",
+      "name": "background=gray, size=small",
+      "description": "",
+      "containingFrame": "Atómos, moléculas e organismos"
+    },
+    {
+      "key": "e5968dbdbea18b7deec1583a0229629b183bd404",
+      "name": "variant=no data, size=standart",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "e9b221d0d101ee1201c8cf804f667d573f348a44",
+      "name": "variant=error, size=standart",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "ff22eab190dfcbf909f6198016c9a1b45e99164a",
+      "name": "background=white, size=large",
+      "description": "",
+      "containingFrame": "Atómos, moléculas e organismos"
+    },
+    {
+      "key": "6b7735f490cc5995c7aaae65b1267bf25d6ed671",
+      "name": "size=small, state=readonly + focus, filled=true, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "6ef37832405c4fef2fc692b5ff286b8f8bb67a09",
+      "name": "item size=large, empty=false",
+      "description": "",
+      "containingFrame": "[dsc] Dropdown Select with Chips"
+    },
+    {
+      "key": "71821f3fb13e5fd38a661b7ff2d76396d5a1ac01",
+      "name": "size=large, state=hover, filled=false, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "72478391b68898830fb87068eb7ff3cfadfbe8fd",
+      "name": "size=small, state=hover, filled=true, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "75003470c4016acca3b64bfb7a06185a6861a008",
+      "name": "size=small, state=default, filled=false, feedback=true, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "7f8612d75aa9c47d82ce4b49fc9ff57c7e52a2a1",
+      "name": "size=standard, state=focus, filled=false, feedback=true, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "8248aad5c5bf1f4ed96d35dce2eb9dc6b21f3706",
+      "name": "size=small, state=default, filled=true, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "82fab5b4fb5cf88cfa7d1b25d0286402459cc332",
+      "name": "size=large, state=focus, filled=false, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "88c7262c63e4d25a885027d5c1bfa4a42c6f3443",
+      "name": "size=standard, state=readonly + focus, filled=true, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "8f8ac9e2d6b5e0c14a232f2846fae8aa6b508b30",
+      "name": "size=large, state=disabled, filled=false, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "90321e7d2a6b9ce571ccb24d9300c9f5233800ad",
+      "name": "size=large, state=readonly, filled=true, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "90bf0f648d7d914fcc87b3321881dabfe9ffa784",
+      "name": "size=large, state=readonly, filled=true, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "961f2c51bf09ee3797a2eeab1b8f24a8eb5a6f25",
+      "name": "size=standard, state=default, filled=true, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "98557099af033994ee7678a44baf942c3faf7169",
+      "name": "size=small, state=focus, filled=false, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "9b00e472132c80eca2a9052f6fe78945885d0753",
+      "name": "size=standard, state=focus, filled=true, feedback=true, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "9eeca484c82dae4fd007f4d3ea925de797328ccb",
+      "name": "size=standard, state=hover, filled=true, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "a3757d3ce1060fcb89c9b0649212b1fa42e1d045",
+      "name": "size=standard, state=focus, filled=false, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "a3a7f0565c5ac6ee1c3bcb6876d8c3d3668d2f2b",
+      "name": "size=small, state=default, filled=true, feedback=true, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "ab995a6d93a6670b2ab169602feaed1128c9b25c",
+      "name": "size=large, state=focus, filled=true, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "adb922a7f101594687cef24090c38921c459869f",
+      "name": "size=standard, state=focus, filled=true, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "b01ce61ba20f5911a4f9c7996847ebee85ccd6fe",
+      "name": "size=standard, state=hover, filled=false, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "b337dda4228bcd05cae27a23af36b6ed4deeb96f",
+      "name": "size=standard, state=focus, filled=true, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "b595b50c23d516d1d4f1139342b5c21e398f8eb8",
+      "name": "size=small, state=default, filled=false, feedback=true, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "b6a25a4022be8b450ac66b02dc6174a0e70b4290",
+      "name": "size=standard, state=focus, filled=false, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "b7b9576215b52d9800e3413849fa4878a3da3c57",
+      "name": "size=large, state=default, filled=false, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "b7ebc26d35e183a30f424737515f52096faf7719",
+      "name": "size=large, state=default, filled=true, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "bd8effef8fd94f9b24641deb0b6c59e3e7f66886",
+      "name": "item size=large, empty=true",
+      "description": "",
+      "containingFrame": "[dsc] Dropdown Select with Chips"
+    },
+    {
+      "key": "c4817c58b261e3ee3ff984ae8bfae151cc02d898",
+      "name": "item size=standard, empty=true",
+      "description": "",
+      "containingFrame": "[dsc] Dropdown Select with Chips"
+    },
+    {
+      "key": "c7b27a4f5a514ad341b89ff23f0b4c64efa8e15d",
+      "name": "size=large, state=hover, filled=true, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "c8144a4b1141f30e03a648362d77387dec80b378",
+      "name": "size=standard, state=default, filled=true, feedback=true, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "cbace188948a29871d922b9bf79259887374fec7",
+      "name": "size=large, state=default, filled=true, feedback=true, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "cf2eccd609c1df27cc3d00a89720837a09cd4f28",
+      "name": "size=small, state=default, filled=false, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "d4733ad11c19e5121fd9adecbe6a8c3a126369c7",
+      "name": "size=small, state=focus, filled=false, feedback=true, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "e0358756d10ba955f2a22558f5d5ef036b84a5eb",
+      "name": "item size=small, empty=false",
+      "description": "",
+      "containingFrame": "[dsc] Dropdown Select with Chips"
+    },
+    {
+      "key": "e0679dc7831b7727fbb25754edbd5231a191580c",
+      "name": "item size=standard, empty=false",
+      "description": "",
+      "containingFrame": "[dsc] Dropdown Select with Chips"
+    },
+    {
+      "key": "e1c7f19bf51a1b6220830c5523a07f927de380cc",
+      "name": "item size=small, empty=true",
+      "description": "",
+      "containingFrame": "[dsc] Dropdown Select with Chips"
+    },
+    {
+      "key": "e432bd9a33a8a2b1383d2a668bb671f1e31e74fc",
+      "name": "size=standard, state=focus, filled=false, feedback=true, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "e45a401f2f4a90bda1d033fd62c630842f23128f",
+      "name": "size=standard, state=default, filled=true, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "e5b0761005c7368396b76102760018e113747f59",
+      "name": "size=large, state=hover, filled=true, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "e5fb5a2bdc131d77d0e61f7128208136e12b092b",
+      "name": "size=small, state=readonly + focus, filled=true, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "ea40a31f4485482e0a8dafb5b90a59b18841decd",
+      "name": "size=standard, state=readonly, filled=true, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "fec674961476b0dc902e8021949cc9dbff081308",
+      "name": "size=small, state=readonly, filled=true, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "0037e80387e415284bedff09c8555482875655fb",
+      "name": "size=standard, state=default, filled=false, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "028006968808436a34b08559d15f7db175b452ef",
+      "name": "size=standard, state=focus, filled=true, feedback=true, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "0296b8c7680527b5595a0332827c27248e0a4d38",
+      "name": "size=large, state=default, filled=true, feedback=true, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "02c8f07861b8e94d542440f7b69845a845b20ec9",
+      "name": "size=large, state=focus, filled=true, feedback=true, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "02da8eef08e0a6ec74ec8627f4907619c928cbbc",
+      "name": "size=standard, state=default, filled=false, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "072ec08eb23fde888a82e36b55d41c83e7dac548",
+      "name": "size=large, state=readonly + focus, filled=true, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "0c0561cd31e4742d540a73bfe60052d8349dfaf5",
+      "name": "size=standard, state=hover, filled=true, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "0fe7cf6d63b1837f5a46b3c2e24d77bc79ee107d",
+      "name": "size=small, state=hover, filled=false, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "13862b4a1a7d8dbd48dd69371f6d283ee6f79c39",
+      "name": "size=standard, state=hover, filled=false, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "1563e85964f54bdc9a3d05a3489f223b3f65bfc9",
+      "name": "size=standard, state=disabled, filled=false, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "15c4ca3aefcdc5c9b24b04237b573c1175c2c050",
+      "name": "size=standard, state=readonly, filled=true, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "1a3ac1c9ab965090194f7d7524fd5a08980ee187",
+      "name": "size=large, state=default, filled=true, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "1c0d9855dc2fa37175b3305325d3ce47775b83b1",
+      "name": "size=small, state=focus, filled=true, feedback=true, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "1c39af73873f085fc21b2bf4b807e6e45b5d2b6a",
+      "name": "size=small, state=hover, filled=false, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "1e32693092959109d9c540da6d9bb86f60e9be1f",
+      "name": "size=small, state=default, filled=true, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "21078b8802317c16cd6816ab5c63b0ff37360d6d",
+      "name": "size=standard, state=readonly + focus, filled=true, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "231d9a5ce08ce5de16eb5aae7b6ead213438e321",
+      "name": "size=large, state=focus, filled=true, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "23eaaa307e4e09b708de469eac0be0b4da29029d",
+      "name": "size=large, state=disabled, filled=false, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "253e6c69efe6cc746325474e024108914a2d15a4",
+      "name": "size=large, state=focus, filled=false, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "28c766760ad1c88303d34c252433f0c160d07531",
+      "name": "size=large, state=default, filled=false, feedback=true, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "297107709278555f0af7ce6cb9f7cd2946ea747a",
+      "name": "size=small, state=focus, filled=true, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "357182b9ce1aae56995fa265290bab964f552e7e",
+      "name": "size=small, state=readonly, filled=true, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "3f3a13bbd0c59a6d50cd3778d0474b1c6531a4f2",
+      "name": "size=standard, state=default, filled=false, feedback=true, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "401d24afa9826c2d8817a0bf866990c094cce5f5",
+      "name": "size=small, state=disabled, filled=false, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "445b45f3d62f3405773c82126e18cc740df18b1d",
+      "name": "size=large, state=focus, filled=true, feedback=true, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "4570427e27cf56482f0e1f61b9164425773bf602",
+      "name": "size=large, state=default, filled=false, feedback=true, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "45c50645d79643d42daa62dcf805b7c5e415426a",
+      "name": "size=large, state=focus, filled=false, feedback=true, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "4683563d181ad87517831020bbab049170f2974f",
+      "name": "size=small, state=focus, filled=true, feedback=true, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "48519498011b1015c75f45db1f35a9454bb77ede",
+      "name": "size=small, state=hover, filled=true, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "4cc184b05fac4dc94fdf2cc15cba382b886420e9",
+      "name": "size=large, state=focus, filled=false, feedback=true, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "4dc47de6b9da2f4e54960887a4e78cd89a2cae6f",
+      "name": "size=small, state=default, filled=true, feedback=true, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "4e23695e656450f2b7b4c9876ea9ef6b48656540",
+      "name": "size=large, state=hover, filled=false, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "516ee8f3bd0caa50d97d10c0ced8427b5f622c4c",
+      "name": "size=small, state=default, filled=false, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "5253a26a02771d547c3fc8315778ecdb30f30aa3",
+      "name": "size=large, state=default, filled=false, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "56401b6bd1405e4483c703990b5ea1efaae0a9df",
+      "name": "size=small, state=focus, filled=true, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "57dd8e75f0530cb702a96c6f4e8fa4fede542420",
+      "name": "size=small, state=focus, filled=false, feedback=true, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "5c89ac097edcceeb27b23b020d4fcd6e15a19755",
+      "name": "size=standard, state=default, filled=false, feedback=true, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
+      "key": "691962bed22671612b8b0e85c2359abad578e2ac",
+      "name": "size=small, state=disabled, filled=false, feedback=false, flexible height=false",
+      "description": "",
+      "containingFrame": "[dsc] Select with Chips"
+    },
+    {
       "key": "2ef7e171b22d9b2ea9b3dd495bedbf976425b57b",
       "name": "mobile version=false, items selector=false",
       "description": "",
@@ -4354,12 +4974,6 @@
       "name": "variant=text, state=default, sorting=ascending, label alignment=left",
       "description": "",
       "containingFrame": "[dsc] Table Header"
-    },
-    {
-      "key": "4ae6ed7bd9642b88913809c7ca6560744023be5a",
-      "name": "example=3",
-      "description": "",
-      "containingFrame": "[dsc-tc] Table Template "
     },
     {
       "key": "4a3d742d021f0b1272debf1cf695039f76828481",
@@ -5220,30 +5834,6 @@
       "containingFrame": "[dsc] Select with Chips"
     },
     {
-      "key": "bd8effef8fd94f9b24641deb0b6c59e3e7f66886",
-      "name": "item size=large, empty=true",
-      "description": "",
-      "containingFrame": "[dsc] Dropdown Select with Chips"
-    },
-    {
-      "key": "e0358756d10ba955f2a22558f5d5ef036b84a5eb",
-      "name": "item size=small, empty=false",
-      "description": "",
-      "containingFrame": "[dsc] Dropdown Select with Chips"
-    },
-    {
-      "key": "6ef37832405c4fef2fc692b5ff286b8f8bb67a09",
-      "name": "item size=large, empty=false",
-      "description": "",
-      "containingFrame": "[dsc] Dropdown Select with Chips"
-    },
-    {
-      "key": "c4817c58b261e3ee3ff984ae8bfae151cc02d898",
-      "name": "item size=standard, empty=true",
-      "description": "",
-      "containingFrame": "[dsc] Dropdown Select with Chips"
-    },
-    {
       "key": "00df9c38ab2f37c57d30705bb847979d71d5ad92",
       "name": "variant=limao, application=on light, size=small",
       "description": "",
@@ -5550,46 +6140,10 @@
       "containingFrame": "[dsc] Tag"
     },
     {
-      "key": "6d15df23c399ea865c5ee7fb83a72a738af5fd94",
-      "name": "variant=primary, size=standard, state=hover",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "508fb6b94ba96dcb7d44fd66471647902338f6e2",
-      "name": "variant=secondary, size=standard, state=active",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "510054b6e6ac8eb8af42644fc97b885f1ca6b5ac",
-      "name": "variant=highlight auxiliary, size=standard, state=active",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "53247687deb29588a541e58a1eaca88392ce21ca",
-      "name": "variant=auxiliary, size=large, state=active",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
       "key": "54c42e3f02ca95da3ef02b67b8117e9639f3c6b1",
       "name": "size=small, state=hover, selected option=false, feedback=false",
       "description": "",
       "containingFrame": "[dsc] Select"
-    },
-    {
-      "key": "5675078067b829263881945fcbb00c75535672da",
-      "name": "size=small, multiselect=false",
-      "description": "",
-      "containingFrame": "D"
-    },
-    {
-      "key": "6d333ecd5ab5f08fb2cc0892db2ad1ba2c1b4212",
-      "name": "variant=danger, size=large, state=default",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
     },
     {
       "key": "5b1e1e03ccd2a973aded85bceca94bc7c7208da7",
@@ -5598,40 +6152,10 @@
       "containingFrame": "[dsc] Snackbar"
     },
     {
-      "key": "5c52191c13e2aefa5a2317cb7c689d2513aaff56",
-      "name": "variant=highlight auxiliary, size=small, state=active",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
       "key": "5db7257c6a16f7596c317b8680306ffaac0b8f17",
       "name": "size=standard, state=focus, selected option=true, feedback=false",
       "description": "",
       "containingFrame": "[dsc] Select"
-    },
-    {
-      "key": "5e769d3238337ada8a68dc84111d6e3ed9b286c5",
-      "name": "variant=secondary, size=large, state=active",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "5f51c29b278524bd1cf24b7a2cb50ed395df0fcb",
-      "name": "variant=highlight auxiliary, size=small, state=default",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "6e3dfc3be8877bb7747eaf87cf6468429583254f",
-      "name": "variant=auxiliary, size=standard, state=disabled",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "753d4a5e5e413e9307cbe7b728aa69eedca18d47",
-      "name": "variant=auxiliary, size=standard, state=default",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
     },
     {
       "key": "756ced32078448f42fd62c7c23e07140586b7dbf",
@@ -5644,18 +6168,6 @@
       "name": "size=small, state=focus, selected option=false, feedback=true",
       "description": "",
       "containingFrame": "[dsc] Select"
-    },
-    {
-      "key": "60cc20714c7126334127447c3a69626271c5e99e",
-      "name": "variant=primary, size=standard, state=default",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "62662a3154e2e9f43e18b5af00fc54e499e614d2",
-      "name": "variant=auxiliary, size=small, state=hover",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
     },
     {
       "key": "64f1ea7cbf1f109989818167d2a2b2f32d195018",
@@ -5676,52 +6188,16 @@
       "containingFrame": "[dsc] Select"
     },
     {
-      "key": "0121c3d1440d1b1ac4597a6cec1305c7f20bfe79",
-      "name": "size=large, multiselect=false",
-      "description": "",
-      "containingFrame": "D"
-    },
-    {
-      "key": "024f6a5da267691942e4732a76f1fa2ea51f6970",
-      "name": "variant=primary, size=large, state=active",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
       "key": "0598b63bc77a46f6f0fffdcdd157364e26d11617",
       "name": "size=large, state=default, selected option=true, feedback=true",
       "description": "",
       "containingFrame": "[dsc] Select"
     },
     {
-      "key": "0a5ea878c875d14c85591458ead48a12038e72fc",
-      "name": "variant=auxiliary, size=large, state=focus",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "0a7a1f47875b1377fa072de9c5df3f2c1fa1175b",
-      "name": "variant=secondary, size=standard, state=focus",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "0b4f42b8dc643c9c4e2d704279b4fc2af71a8402",
-      "name": "variant=danger, size=standard, state=default",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
       "key": "1030ac37516809dd22b2b0ae3bdb77b8abd3e541",
       "name": "size=standard, state=disabled, selected option=false, feedback=false",
       "description": "",
       "containingFrame": "[dsc] Select"
-    },
-    {
-      "key": "11cad09ac1914b0191dac7c8e52937a48c9eebce",
-      "name": "variant=highlight auxiliary, size=standard, state=hover",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
     },
     {
       "key": "12bd71dbdcdbe9a64bcea49ea88ab2c3cdf8f55d",
@@ -5742,46 +6218,10 @@
       "containingFrame": "[dsc] Select"
     },
     {
-      "key": "19a0c0d9602a66ca5fbf2800cc06e37db9ed8c79",
-      "name": "variant=secondary, size=large, state=focus",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "19bd1f7cc6bb7db356b9059da57372f0c4ab2c90",
-      "name": "variant=danger, size=large, state=disabled",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "19f74eb17607116aa47fe1b925f6dd8b78cbf151",
-      "name": "size=large, multiselect=true",
-      "description": "",
-      "containingFrame": "D"
-    },
-    {
-      "key": "1ed8d004f8233eaca9d83fcf6bc4210a461d41a5",
-      "name": "variant=auxiliary, size=small, state=default",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
       "key": "1f2f30971a809f97fd8f7ff103575cfc266aba6d",
       "name": "variant=highlight",
       "description": "",
       "containingFrame": "[dsc] Header"
-    },
-    {
-      "key": "240b1a069dc553784b5487eb1a7e40f49ad3ef27",
-      "name": "variant=primary, size=standard, state=focus",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "263d435c784d11d95d6def115eae1697851fd83f",
-      "name": "variant=highlight auxiliary, size=small, state=hover",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
     },
     {
       "key": "2798f23d3fd5a8f5069b48a2c31243f0245dfa5a",
@@ -5802,28 +6242,10 @@
       "containingFrame": "[dsc] Select"
     },
     {
-      "key": "2d4fbb652d060043e6025c1a2afb1bd28a21685d",
-      "name": "variant=auxiliary, size=standard, state=active",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "316bc0db13fe04d18528222136a0a2bb64531f98",
-      "name": "variant=highlight auxiliary, size=large, state=default",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
       "key": "32196265ce07d8b9b8e6d3b3b7ea67f2661a7ea3",
       "name": "size=standard, state=hover, selected option=true, feedback=false",
       "description": "",
       "containingFrame": "[dsc] Select"
-    },
-    {
-      "key": "33089ece693a07d1e2e903abcbe800b3eafbb6fa",
-      "name": "variant=primary, size=standard, state=active",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
     },
     {
       "key": "38ed8ffa6a9c4d709c819fc1f4dfb7ad7853004d",
@@ -5832,34 +6254,10 @@
       "containingFrame": "[dsc] Select"
     },
     {
-      "key": "3ad5b204448738d7b1ac263260c193ade927e35d",
-      "name": "variant=primary, size=standard, state=disabled",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
       "key": "409b185bb22ff9d87b574c9d3fa871fa19515733",
       "name": "size=large, state=readonly+focus, selected option=true, feedback=false",
       "description": "",
       "containingFrame": "[dsc] Select"
-    },
-    {
-      "key": "41ae2ffee20aa7121782785e09430d05a8f5bcb0",
-      "name": "variant=danger, size=small, state=default",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "41e581bc62490240146bf205fbd8bc1e852efffd",
-      "name": "variant=secondary, size=large, state=hover",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "4390b25a8cb6fa9506521ce13ed2639987093811",
-      "name": "variant=auxiliary, size=small, state=disabled",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
     },
     {
       "key": "45722a7689dfa552614a7f82a314da7531766303",
@@ -5868,70 +6266,10 @@
       "containingFrame": "[dsc] Select"
     },
     {
-      "key": "45d0f80b6dfe8ccb2e8f84140a48ab191c0ac0c9",
-      "name": "variant=secondary, size=small, state=hover",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "4b1ae3d95db204cd1594e25ad72ba03ecdb6cb9a",
-      "name": "variant=highlight auxiliary, size=standard, state=default",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "4b6c50b04fd74d09f40d0ee7d3833ba9b4cd80fe",
-      "name": "variant=danger, size=standard, state=active",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "4c9cb4fc1f33ce22e212f93085fe9539b464f6fc",
-      "name": "variant=highlight auxiliary, size=large, state=active",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
       "key": "4ccfd02129e30e0a9e775ac536093fb8b7d9ca1c",
       "name": "size=small, state=focus, selected option=false, feedback=false",
       "description": "",
       "containingFrame": "[dsc] Select"
-    },
-    {
-      "key": "4d5d4d98aa0c016d3b32f5081e80905fea4b119f",
-      "name": "variant=primary, size=small, state=disabled",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "4e7a4891fcadd1710611affc35fd3a8b5a24456e",
-      "name": "variant=auxiliary, size=large, state=hover",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "4eb8c880e6456486c05f575cbb2c2c1fa35a48ae",
-      "name": "variant=auxiliary, size=standard, state=hover",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "6b1f15184f81192e5791e360a5e64aade9fc4d87",
-      "name": "variant=danger, size=standard, state=focus",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "78a4529f0e0b5d3a32a5479f954bc78912bab6fe",
-      "name": "variant=danger, size=small, state=hover",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "7b8b70ce40b083ff095529a57f2438a04a019ab1",
-      "name": "size=standard, multiselect=false",
-      "description": "",
-      "containingFrame": "D"
     },
     {
       "key": "7c75dd06e1be38fd3da0d3a54d62404481b03c31",
@@ -5940,58 +6278,10 @@
       "containingFrame": "[dsc] Select"
     },
     {
-      "key": "811b6352e18265b62a88d9e6e3b7493db695f28f",
-      "name": "variant=danger, size=large, state=focus",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "81cc1b6de0521b209debe87305706570b69fa6bd",
-      "name": "variant=primary, size=large, state=disabled",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "82dfeb32d09049a322196a7bb9a4098d0a9d2790",
-      "name": "variant=highlight auxiliary, size=small, state=disabled",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "83d1bb0b2b82d66297ad90f096b123dfd89a879b",
-      "name": "variant=secondary, size=small, state=active",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "864a2ae1d8f19f987a82ac1c0bfc6aea9f8583e9",
-      "name": "variant=primary, size=large, state=hover",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "96a1bd13cdab9bb0fe9761433abe0e539b7bdc9b",
-      "name": "variant=highlight auxiliary, size=large, state=disabled",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
       "key": "995c9e652ff912711d30a6f441dcda2623b76a89",
       "name": "size=large, state=default, selected option=false, feedback=true",
       "description": "",
       "containingFrame": "[dsc] Select"
-    },
-    {
-      "key": "9afda5281781fe1e59bbc288b82ad365cc83fa33",
-      "name": "variant=secondary, size=standard, state=disabled",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "9b3cbae8057f44416440b22c07cdc243d40ec34d",
-      "name": "variant=danger, size=standard, state=hover",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
     },
     {
       "key": "9bb2e79cc8ceed0fee7ca1c80f0696c65fb50ad5",
@@ -6000,22 +6290,10 @@
       "containingFrame": "[dsc] Select"
     },
     {
-      "key": "9e6cdd6150c5b3f70f7a36e825f58fdce290878c",
-      "name": "variant=danger, size=standard, state=disabled",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
       "key": "9fea1c9d87d34ecb23895cd11fe1dc214227bf7b",
       "name": "size=large, state=disabled, selected option=false, feedback=false",
       "description": "",
       "containingFrame": "[dsc] Select"
-    },
-    {
-      "key": "a0c31d4c105c83a99464f126dbc845ff01459bc7",
-      "name": "size=standard, multiselect=true",
-      "description": "",
-      "containingFrame": "D"
     },
     {
       "key": "a146e900f1dab3c0db79a4e8388252103bb2210e",
@@ -6024,40 +6302,10 @@
       "containingFrame": "[dsc] Select"
     },
     {
-      "key": "a22869a9c0482b62e8a323b0291f0b83d29dbd1a",
-      "name": "variant=primary, size=small, state=hover",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "a5096c01df047a4583e6128f8238884560c93994",
-      "name": "variant=danger, size=small, state=focus",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "a7066575895fe9551e5d9a3e35b4e6f83212be88",
-      "name": "variant=secondary, size=standard, state=hover",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
       "key": "a71fe1de142a1f29aad8153ab2127fbfeba98a05",
       "name": "size=small, state=focus, selected option=true, feedback=true",
       "description": "",
       "containingFrame": "[dsc] Select"
-    },
-    {
-      "key": "a7fdf14013120c386ecc61cf1c90de880d50068c",
-      "name": "variant=highlight auxiliary, size=standard, state=focus",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "a8f6aae41767105f395433a5e1b88f837b1209dc",
-      "name": "variant=primary, size=small, state=default",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
     },
     {
       "key": "ae43b5323217fc8c09d72f8fd94fb43a3e23b0dd",
@@ -6076,72 +6324,6 @@
       "name": "size=standard, state=readonly, selected option=true, feedback=false",
       "description": "",
       "containingFrame": "[dsc] Select"
-    },
-    {
-      "key": "b34a83402d45fda4d0ff444f3b4d00c90a4ca292",
-      "name": "variant=secondary, size=small, state=disabled",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "b42ec26a34f63f75980fcb3d07e2ba9b76f39265",
-      "name": "variant=primary, size=small, state=active",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "b5e1ebb915974e83c8ce3123ed8653089182be18",
-      "name": "variant=danger, size=large, state=hover",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "b82a37a627babb09de7df8626734b51f1ba82ee8",
-      "name": "variant=highlight auxiliary, size=large, state=focus",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "b9cb81576862bed4752c0cd0117436412d4fbea9",
-      "name": "variant=auxiliary, size=small, state=active",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "bb4111be3be05e2b13019adadadab173bc44f4d1",
-      "name": "variant=danger, size=large, state=active",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "bd3cb594559bca9b1e2f62086b4ec01d9a155af6",
-      "name": "variant=secondary, size=small, state=default",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "bf882a09ddb796eeb56626a56847a6254f37d10e",
-      "name": "variant=auxiliary, size=large, state=default",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "bfd32c125555f0acbba1a367cb0b625fd270234b",
-      "name": "variant=highlight auxiliary, size=standard, state=disabled",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "c16d08d043d2884307978100f326fe3c1d19b419",
-      "name": "variant=auxiliary, size=standard, state=focus",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "c22c17db0251ecbdc436b27d152301d5ee798934",
-      "name": "variant=danger, size=small, state=active",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
     },
     {
       "key": "c4dbb6f5187e9de215883da533a772f5fbe67cdd",
@@ -6168,12 +6350,6 @@
       "containingFrame": "[dsc] Select"
     },
     {
-      "key": "cbacd3acf53a86615c5511a73be40b051fd736bb",
-      "name": "variant=secondary, size=standard, state=default",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
       "key": "d2699e19b400d6a47323631cc0fcad2c046667f6",
       "name": "size=small, state=readonly+focus, selected option=true, feedback=false",
       "description": "",
@@ -6186,34 +6362,10 @@
       "containingFrame": "[dsc] Select"
     },
     {
-      "key": "d5076e9dd5edd12bd3b0404dc29a0ad8b1db1171",
-      "name": "variant=primary, size=small, state=focus",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "d554643155c40d12a6e04704e0a1a6f2b88ab1c8",
-      "name": "variant=auxiliary, size=large, state=disabled",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
       "key": "d87d210d046317cdc7452d5cc1c8d98740abeb61",
       "name": "size=small, state=disabled, selected option=false, feedback=false",
       "description": "",
       "containingFrame": "[dsc] Select"
-    },
-    {
-      "key": "d94d7f82a4f0f1ac6eae133ce39b6e503b247b57",
-      "name": "variant=highlight auxiliary, size=large, state=hover",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "d98331689bca199ee17acab34bc4715c6d39c7bd",
-      "name": "variant=primary, size=large, state=focus",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
     },
     {
       "key": "da39628e2dd64e039f598c079cd48b64095247d2",
@@ -6232,30 +6384,6 @@
       "name": "variant=danger",
       "description": "",
       "containingFrame": "[dsc] Snackbar"
-    },
-    {
-      "key": "de6c435f59dc8454940cd4ca5ec7b1e1a7ce45e2",
-      "name": "variant=auxiliary, size=small, state=focus",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "e91dafc51e49cee67012b8577cbce4f955712364",
-      "name": "size=small, multiselect=true",
-      "description": "",
-      "containingFrame": "D"
-    },
-    {
-      "key": "f30d4f5d1e867b0d3ea4cb8b970ace5140fdd9f6",
-      "name": "variant=highlight auxiliary, size=small, state=focus",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
-    },
-    {
-      "key": "f8d7b4d1995684aef2836ebf53770108f80ac24f",
-      "name": "variant=secondary, size=small, state=focus",
-      "description": "",
-      "containingFrame": "[deprecated-dsc] Button [Legacy]"
     },
     {
       "key": "f9a2a54ed8222db5af4c66985992c4354d4b2c09",
@@ -6804,220 +6932,10 @@
       "containingFrame": "[dsc] Range Slider"
     },
     {
-      "key": "0037e80387e415284bedff09c8555482875655fb",
-      "name": "size=standard, state=default, filled=false, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "028006968808436a34b08559d15f7db175b452ef",
-      "name": "size=standard, state=focus, filled=true, feedback=true, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "0296b8c7680527b5595a0332827c27248e0a4d38",
-      "name": "size=large, state=default, filled=true, feedback=true, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "02c8f07861b8e94d542440f7b69845a845b20ec9",
-      "name": "size=large, state=focus, filled=true, feedback=true, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "02da8eef08e0a6ec74ec8627f4907619c928cbbc",
-      "name": "size=standard, state=default, filled=false, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "072ec08eb23fde888a82e36b55d41c83e7dac548",
-      "name": "size=large, state=readonly + focus, filled=true, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "0c0561cd31e4742d540a73bfe60052d8349dfaf5",
-      "name": "size=standard, state=hover, filled=true, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "0fe7cf6d63b1837f5a46b3c2e24d77bc79ee107d",
-      "name": "size=small, state=hover, filled=false, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "13862b4a1a7d8dbd48dd69371f6d283ee6f79c39",
-      "name": "size=standard, state=hover, filled=false, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "14e83f2a7d9f3d50457689fc7d34ce173fcf98b7",
-      "name": "example=1",
-      "description": "",
-      "containingFrame": "[dsc-tc] Table Template "
-    },
-    {
-      "key": "1563e85964f54bdc9a3d05a3489f223b3f65bfc9",
-      "name": "size=standard, state=disabled, filled=false, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "15c4ca3aefcdc5c9b24b04237b573c1175c2c050",
-      "name": "size=standard, state=readonly, filled=true, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "1a3ac1c9ab965090194f7d7524fd5a08980ee187",
-      "name": "size=large, state=default, filled=true, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "1c0d9855dc2fa37175b3305325d3ce47775b83b1",
-      "name": "size=small, state=focus, filled=true, feedback=true, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "1c39af73873f085fc21b2bf4b807e6e45b5d2b6a",
-      "name": "size=small, state=hover, filled=false, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "1e32693092959109d9c540da6d9bb86f60e9be1f",
-      "name": "size=small, state=default, filled=true, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "21078b8802317c16cd6816ab5c63b0ff37360d6d",
-      "name": "size=standard, state=readonly + focus, filled=true, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "21db75007d84f0acac46d63e3920791dab5d953e",
-      "name": "example=7",
-      "description": "",
-      "containingFrame": "[dsc-tc] Table Template "
-    },
-    {
-      "key": "231d9a5ce08ce5de16eb5aae7b6ead213438e321",
-      "name": "size=large, state=focus, filled=true, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "23eaaa307e4e09b708de469eac0be0b4da29029d",
-      "name": "size=large, state=disabled, filled=false, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "24fad7f4bb425dd74f87919fa8e906bf66297fb0",
-      "name": "example=2",
-      "description": "",
-      "containingFrame": "[dsc-tc] Table Template "
-    },
-    {
-      "key": "253e6c69efe6cc746325474e024108914a2d15a4",
-      "name": "size=large, state=focus, filled=false, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "28c766760ad1c88303d34c252433f0c160d07531",
-      "name": "size=large, state=default, filled=false, feedback=true, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "297107709278555f0af7ce6cb9f7cd2946ea747a",
-      "name": "size=small, state=focus, filled=true, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "357182b9ce1aae56995fa265290bab964f552e7e",
-      "name": "size=small, state=readonly, filled=true, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
       "key": "3627a3da4effa0261b9c9de9b80822e3c4776159",
       "name": "direction=horizontal, example=1",
       "description": "",
       "containingFrame": "[dsc-tc] Stepper Template"
-    },
-    {
-      "key": "3f3a13bbd0c59a6d50cd3778d0474b1c6531a4f2",
-      "name": "size=standard, state=default, filled=false, feedback=true, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "401d24afa9826c2d8817a0bf866990c094cce5f5",
-      "name": "size=small, state=disabled, filled=false, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "445b45f3d62f3405773c82126e18cc740df18b1d",
-      "name": "size=large, state=focus, filled=true, feedback=true, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "4570427e27cf56482f0e1f61b9164425773bf602",
-      "name": "size=large, state=default, filled=false, feedback=true, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "45c50645d79643d42daa62dcf805b7c5e415426a",
-      "name": "size=large, state=focus, filled=false, feedback=true, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "4683563d181ad87517831020bbab049170f2974f",
-      "name": "size=small, state=focus, filled=true, feedback=true, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "48519498011b1015c75f45db1f35a9454bb77ede",
-      "name": "size=small, state=hover, filled=true, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "4cc184b05fac4dc94fdf2cc15cba382b886420e9",
-      "name": "size=large, state=focus, filled=false, feedback=true, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "4dc47de6b9da2f4e54960887a4e78cd89a2cae6f",
-      "name": "size=small, state=default, filled=true, feedback=true, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "4e23695e656450f2b7b4c9876ea9ef6b48656540",
-      "name": "size=large, state=hover, filled=false, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
     },
     {
       "key": "4e6f9a18a9180a002d470180f1084e0dd05bc15a",
@@ -7026,280 +6944,16 @@
       "containingFrame": "[dsc-tc] Footer Template"
     },
     {
-      "key": "516ee8f3bd0caa50d97d10c0ced8427b5f622c4c",
-      "name": "size=small, state=default, filled=false, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "5253a26a02771d547c3fc8315778ecdb30f30aa3",
-      "name": "size=large, state=default, filled=false, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "56401b6bd1405e4483c703990b5ea1efaae0a9df",
-      "name": "size=small, state=focus, filled=true, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "57dd8e75f0530cb702a96c6f4e8fa4fede542420",
-      "name": "size=small, state=focus, filled=false, feedback=true, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "5c89ac097edcceeb27b23b020d4fcd6e15a19755",
-      "name": "size=standard, state=default, filled=false, feedback=true, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "61f20f7dd89340a0904a02ef29b6eaf9223f6573",
-      "name": "example=4",
-      "description": "",
-      "containingFrame": "[dsc-tc] Table Template "
-    },
-    {
-      "key": "691962bed22671612b8b0e85c2359abad578e2ac",
-      "name": "size=small, state=disabled, filled=false, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "6b7735f490cc5995c7aaae65b1267bf25d6ed671",
-      "name": "size=small, state=readonly + focus, filled=true, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "71821f3fb13e5fd38a661b7ff2d76396d5a1ac01",
-      "name": "size=large, state=hover, filled=false, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "72478391b68898830fb87068eb7ff3cfadfbe8fd",
-      "name": "size=small, state=hover, filled=true, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "75003470c4016acca3b64bfb7a06185a6861a008",
-      "name": "size=small, state=default, filled=false, feedback=true, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "7f8612d75aa9c47d82ce4b49fc9ff57c7e52a2a1",
-      "name": "size=standard, state=focus, filled=false, feedback=true, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "7fecb622508e0a167e74a07cccd53d11e8d279fd",
-      "name": "example=5",
-      "description": "",
-      "containingFrame": "[dsc-tc] Table Template "
-    },
-    {
-      "key": "8248aad5c5bf1f4ed96d35dce2eb9dc6b21f3706",
-      "name": "size=small, state=default, filled=true, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "82fab5b4fb5cf88cfa7d1b25d0286402459cc332",
-      "name": "size=large, state=focus, filled=false, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "88c7262c63e4d25a885027d5c1bfa4a42c6f3443",
-      "name": "size=standard, state=readonly + focus, filled=true, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "8f8ac9e2d6b5e0c14a232f2846fae8aa6b508b30",
-      "name": "size=large, state=disabled, filled=false, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "90321e7d2a6b9ce571ccb24d9300c9f5233800ad",
-      "name": "size=large, state=readonly, filled=true, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "90bf0f648d7d914fcc87b3321881dabfe9ffa784",
-      "name": "size=large, state=readonly, filled=true, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "961f2c51bf09ee3797a2eeab1b8f24a8eb5a6f25",
-      "name": "size=standard, state=default, filled=true, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "98557099af033994ee7678a44baf942c3faf7169",
-      "name": "size=small, state=focus, filled=false, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "9b00e472132c80eca2a9052f6fe78945885d0753",
-      "name": "size=standard, state=focus, filled=true, feedback=true, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "9eeca484c82dae4fd007f4d3ea925de797328ccb",
-      "name": "size=standard, state=hover, filled=true, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "a3757d3ce1060fcb89c9b0649212b1fa42e1d045",
-      "name": "size=standard, state=focus, filled=false, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "a3a7f0565c5ac6ee1c3bcb6876d8c3d3668d2f2b",
-      "name": "size=small, state=default, filled=true, feedback=true, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "ab995a6d93a6670b2ab169602feaed1128c9b25c",
-      "name": "size=large, state=focus, filled=true, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "adb922a7f101594687cef24090c38921c459869f",
-      "name": "size=standard, state=focus, filled=true, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "b01ce61ba20f5911a4f9c7996847ebee85ccd6fe",
-      "name": "size=standard, state=hover, filled=false, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
       "key": "b2e857e56da45b13ceae0b521b615585fec0659c",
       "name": "direction=vertical, example=2",
       "description": "",
       "containingFrame": "[dsc-tc] Stepper Template"
     },
     {
-      "key": "b337dda4228bcd05cae27a23af36b6ed4deeb96f",
-      "name": "size=standard, state=focus, filled=true, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "b595b50c23d516d1d4f1139342b5c21e398f8eb8",
-      "name": "size=small, state=default, filled=false, feedback=true, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "b6285c2cd29f4efa5bcf53efb50332f2fdced6c2",
-      "name": "example=6",
-      "description": "",
-      "containingFrame": "[dsc-tc] Table Template "
-    },
-    {
-      "key": "b6a25a4022be8b450ac66b02dc6174a0e70b4290",
-      "name": "size=standard, state=focus, filled=false, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "b7b9576215b52d9800e3413849fa4878a3da3c57",
-      "name": "size=large, state=default, filled=false, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "b7ebc26d35e183a30f424737515f52096faf7719",
-      "name": "size=large, state=default, filled=true, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
       "key": "c43722e529371d2481180729ace83dbc7ca48118",
       "name": "direction=vertical, example=1",
       "description": "",
       "containingFrame": "[dsc-tc] Stepper Template"
-    },
-    {
-      "key": "c7b27a4f5a514ad341b89ff23f0b4c64efa8e15d",
-      "name": "size=large, state=hover, filled=true, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "c8144a4b1141f30e03a648362d77387dec80b378",
-      "name": "size=standard, state=default, filled=true, feedback=true, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "cbace188948a29871d922b9bf79259887374fec7",
-      "name": "size=large, state=default, filled=true, feedback=true, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "cf2eccd609c1df27cc3d00a89720837a09cd4f28",
-      "name": "size=small, state=default, filled=false, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "d4733ad11c19e5121fd9adecbe6a8c3a126369c7",
-      "name": "size=small, state=focus, filled=false, feedback=true, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "e432bd9a33a8a2b1383d2a668bb671f1e31e74fc",
-      "name": "size=standard, state=focus, filled=false, feedback=true, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "e45a401f2f4a90bda1d033fd62c630842f23128f",
-      "name": "size=standard, state=default, filled=true, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "e5b0761005c7368396b76102760018e113747f59",
-      "name": "size=large, state=hover, filled=true, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "e5fb5a2bdc131d77d0e61f7128208136e12b092b",
-      "name": "size=small, state=readonly + focus, filled=true, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
-      "key": "ea40a31f4485482e0a8dafb5b90a59b18841decd",
-      "name": "size=standard, state=readonly, filled=true, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
     },
     {
       "key": "ee23a0f4c375bc8b20f837abf145eb48200b3138",
@@ -7320,34 +6974,16 @@
       "containingFrame": "[dsc] Select with Chips"
     },
     {
-      "key": "fec674961476b0dc902e8021949cc9dbff081308",
-      "name": "size=small, state=readonly, filled=true, feedback=false, flexible height=false",
-      "description": "",
-      "containingFrame": "[dsc] Select with Chips"
-    },
-    {
       "key": "012019bc299abad6764788c3a31e5db5ebc7d431",
       "name": "border=shadow, type=file",
       "description": "",
       "containingFrame": "componentes"
     },
     {
-      "key": "037c74f69ae02457a05c532446431b5ce309538d",
-      "name": "variant=no results, size=small",
-      "description": "",
-      "containingFrame": "Componentes"
-    },
-    {
       "key": "049f4f6da02f8f7e7502af57a316744ff9d24c02",
       "name": "size=small, state=focus, filled=false, feedback=false, flexible height=true",
       "description": "",
       "containingFrame": "[dsc] Input with Chips"
-    },
-    {
-      "key": "06a9cb37cb06c57cf65bbc4ecca4955e84ad10cc",
-      "name": "count=5, position=last",
-      "description": "",
-      "containingFrame": "Componentes"
     },
     {
       "key": "0803ce17aa511ed4d460efb8c484f73e2ae1beb3",
@@ -7368,34 +7004,16 @@
       "containingFrame": "[dsc] Input with Chips"
     },
     {
-      "key": "09527629ea509b2a8ae40feb8053489b804d20b3",
-      "name": "background=gray, size=medium",
-      "description": "",
-      "containingFrame": "Atómos, moléculas e organismos"
-    },
-    {
       "key": "0bc69ff9785fa6e0caea90acff5bf09905485ece",
       "name": "size=large, state=focus, filled=false, feedback=true, flexible height=false",
       "description": "",
       "containingFrame": "[dsc] Input with Chips"
     },
     {
-      "key": "0f7a012220ce5193b81a7d77649a4a8cdede1bd3",
-      "name": "background=white, size=small",
-      "description": "",
-      "containingFrame": "Atómos, moléculas e organismos"
-    },
-    {
       "key": "11c47369dd366d0f9d95e6deeb82ef1b95fc9f89",
       "name": "size=small, state=hover, filled=true, feedback=false, flexible height=true",
       "description": "",
       "containingFrame": "[dsc] Input with Chips"
-    },
-    {
-      "key": "11d8d61cdd04eebc5bdb29198300c74fbecf4de9",
-      "name": "variant=error, size=small",
-      "description": "",
-      "containingFrame": "Componentes"
     },
     {
       "key": "1350537f428ea9cbbe3444232118ddf28a32fed7",
@@ -7446,12 +7064,6 @@
       "containingFrame": "[dsc] Input with Chips"
     },
     {
-      "key": "29d67fabe7c4d2dfc33751408c4b76ce6aba706c",
-      "name": "count=3, position=middle",
-      "description": "",
-      "containingFrame": "Componentes"
-    },
-    {
       "key": "2b5c3c678e4b57ed5bb70c147f3965c609325089",
       "name": "size=small, state=focus, filled=true, feedback=false, flexible height=false",
       "description": "",
@@ -7476,12 +7088,6 @@
       "containingFrame": "[dsc] Input with Chips"
     },
     {
-      "key": "34ece2cace60138ca326038f75f7b4cf742826d7",
-      "name": "count=5, position=middle",
-      "description": "",
-      "containingFrame": "Componentes"
-    },
-    {
       "key": "370df44cfda30e0901fa7f211309d18a7e59f55f",
       "name": "size=large, state=readonly + focus, filled=true, feedback=false, flexible height=false",
       "description": "",
@@ -7494,16 +7100,16 @@
       "containingFrame": "[dsc] Input with Chips"
     },
     {
-      "key": "39fd463c41bbf7c0f24545aed2da265e7b164cd1",
-      "name": "size=standard, state=focus, filled=false, feedback=false, flexible height=true",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips"
-    },
-    {
       "key": "3dace2fc8827b88fa291b8542aeddd7407e44d97",
       "name": "variant=no data, size=small",
       "description": "",
       "containingFrame": "Componentes"
+    },
+    {
+      "key": "39fd463c41bbf7c0f24545aed2da265e7b164cd1",
+      "name": "size=standard, state=focus, filled=false, feedback=false, flexible height=true",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips"
     },
     {
       "key": "3e00a8e31f9a872de8433ed5d5070f708e1fb8d7",
@@ -7512,34 +7118,16 @@
       "containingFrame": "[dsc] Input with Chips"
     },
     {
-      "key": "3e2c2b4caa9e41b5bdb92ad6da4d3c02bfb7cd58",
-      "name": "count=3, position=last",
-      "description": "",
-      "containingFrame": "Componentes"
-    },
-    {
       "key": "40af89fd3500140d28173d8769bdd173e7f2fa1b",
       "name": "border=shadow, type=dropzone",
       "description": "",
       "containingFrame": "componentes"
     },
     {
-      "key": "4315bd3d4079a080dadd8d91a4a67059acdc3016",
-      "name": "variant=no data, size=large",
-      "description": "",
-      "containingFrame": "Componentes"
-    },
-    {
       "key": "433cf4bc0132e3c429aef99802d5f495550fa3ca",
       "name": "size=large, state=focus, filled=false, feedback=true, flexible height=true",
       "description": "",
       "containingFrame": "[dsc] Input with Chips"
-    },
-    {
-      "key": "484235f73a7f26e420ecee6efa08c3d42bfff550",
-      "name": "variant=no results, size=large",
-      "description": "",
-      "containingFrame": "Componentes"
     },
     {
       "key": "48aff6747b836ed1d538cb8b6893ec0228e95dc9",
@@ -7552,12 +7140,6 @@
       "name": "size=small, state=default, filled=false, feedback=false, flexible height=true",
       "description": "",
       "containingFrame": "[dsc] Input with Chips"
-    },
-    {
-      "key": "496fd3c249388c31220764b2eaf0ba7f5d5f96fc",
-      "name": "count=6, position=middle",
-      "description": "",
-      "containingFrame": "Componentes"
     },
     {
       "key": "4a28ecdbce6972fcd88d0a220b8aaf08f52d0581",
@@ -7596,22 +7178,10 @@
       "containingFrame": "[dsc] Input with Chips"
     },
     {
-      "key": "5c21cb8db284fe826491a71d707fc8375554e97c",
-      "name": "count=4, position=first",
-      "description": "",
-      "containingFrame": "Componentes"
-    },
-    {
       "key": "5cd6034228f7fddfad63af45171cc7cec67c6365",
       "name": "size=small, state=focus, filled=false, feedback=true, flexible height=true",
       "description": "",
       "containingFrame": "[dsc] Input with Chips"
-    },
-    {
-      "key": "5d719b0a49ad81f8f99481a438d7ed341282a872",
-      "name": "count=6, position=first",
-      "description": "",
-      "containingFrame": "Componentes"
     },
     {
       "key": "616ec20f92b537170e675fbfa7561eb20e1fbfe8",
@@ -7632,18 +7202,6 @@
       "containingFrame": "[dsc] Input with Chips"
     },
     {
-      "key": "6e2e06906e2c676e1c54c658d811bb8b6cbf11de",
-      "name": "count=4, position=last",
-      "description": "",
-      "containingFrame": "Componentes"
-    },
-    {
-      "key": "6e66422e3ca421a78f6254e494165c437a04d659",
-      "name": "variant=custom, size=small",
-      "description": "",
-      "containingFrame": "Componentes"
-    },
-    {
       "key": "6f1cab04115db21a1df71d50d2d64d83a1b9c2f9",
       "name": "size=small, state=focus, filled=true, feedback=false, flexible height=true",
       "description": "",
@@ -7656,22 +7214,10 @@
       "containingFrame": "[dsc] Input with Chips"
     },
     {
-      "key": "723ea8a5704e89344abe7e093cf0c85213812c24",
-      "name": "variant=custom, size=standart",
-      "description": "",
-      "containingFrame": "Componentes"
-    },
-    {
       "key": "7414d6b99c9554b570c31aca91390dfbd9372ca8",
       "name": "size=large, state=readonly, filled=true, feedback=false, flexible height=true",
       "description": "",
       "containingFrame": "[dsc] Input with Chips"
-    },
-    {
-      "key": "7476df2bf3f8d9885f22e4b47446de6ca44ea37d",
-      "name": "count=2, position=last",
-      "description": "",
-      "containingFrame": "Componentes"
     },
     {
       "key": "7566d1de8767ad32ebb1b3e7a77388158dc14704",
@@ -7690,12 +7236,6 @@
       "name": "background=white, size=extra small",
       "description": "",
       "containingFrame": "Atómos, moléculas e organismos"
-    },
-    {
-      "key": "81347e024b8cebb3002c1c4c72099d6cdbd9ed48",
-      "name": "count=6, position=last",
-      "description": "",
-      "containingFrame": "Componentes"
     },
     {
       "key": "89c6171321f878c4eb6daf79da3fed0eafa7511d",
@@ -7722,12 +7262,6 @@
       "containingFrame": "[dsc] Input with Chips"
     },
     {
-      "key": "9042ed0879d5efd3bf78c5361829cc9030f85f51",
-      "name": "background=gray, size=extra small",
-      "description": "",
-      "containingFrame": "Atómos, moléculas e organismos"
-    },
-    {
       "key": "90825789442d814bb0216d8c16af43f5e32df694",
       "name": "size=standard, state=default, filled=false, feedback=false, flexible height=true",
       "description": "",
@@ -7738,24 +7272,6 @@
       "name": "size=small, state=readonly, filled=true, feedback=false, flexible height=true",
       "description": "",
       "containingFrame": "[dsc] Input with Chips"
-    },
-    {
-      "key": "960077aef27abb9114276a099849956eb0e3e0bc",
-      "name": "variant=error, size=large",
-      "description": "",
-      "containingFrame": "Componentes"
-    },
-    {
-      "key": "980dd3add700662df0a612ee743e776bed06da55",
-      "name": "count=3, position=first",
-      "description": "",
-      "containingFrame": "Componentes"
-    },
-    {
-      "key": "99d5d39b5dc3932daa28e061ba44a77df92e64d2",
-      "name": "count=2, position=first",
-      "description": "",
-      "containingFrame": "Componentes"
     },
     {
       "key": "9a908fc38980cd8e7fda7e7e3fd2b7cf7819099c",
@@ -7774,12 +7290,6 @@
       "name": "size=large, state=disabled, filled=false, feedback=false, flexible height=false",
       "description": "",
       "containingFrame": "[dsc] Input with Chips"
-    },
-    {
-      "key": "a6a049560de590289b71b2d086da2c7a0ad27f8e",
-      "name": "variant=no results, size=standart",
-      "description": "",
-      "containingFrame": "Componentes"
     },
     {
       "key": "a756ab66a8e936936ce49c2d88ea5a27259cbb0d",
@@ -7854,18 +7364,6 @@
       "containingFrame": "Componentes"
     },
     {
-      "key": "c48f73337d1ee3cf637200fdb83e8c6410719460",
-      "name": "count=5, position=first",
-      "description": "",
-      "containingFrame": "Componentes"
-    },
-    {
-      "key": "cc9612f063927b67e22e60cf5aa5a0939a59af34",
-      "name": "count=4, position=middle",
-      "description": "",
-      "containingFrame": "Componentes"
-    },
-    {
       "key": "ce51b96dd2e6b38af59203512db409500deb644a",
       "name": "size=standard, state=default, filled=false, feedback=true, flexible height=true",
       "description": "",
@@ -7884,12 +7382,6 @@
       "containingFrame": "[dsc] Input with Chips"
     },
     {
-      "key": "d509c014d44a7518ec26cf86e622da5321c7d600",
-      "name": "background=gray, size=large",
-      "description": "",
-      "containingFrame": "Atómos, moléculas e organismos"
-    },
-    {
       "key": "d64759ae87f862a2665a1cdab647dc4144bdc937",
       "name": "size=standard, state=hover, filled=false, feedback=false, flexible height=false",
       "description": "",
@@ -7900,18 +7392,6 @@
       "name": "size=small, state=readonly, filled=true, feedback=false, flexible height=false",
       "description": "",
       "containingFrame": "[dsc] Input with Chips"
-    },
-    {
-      "key": "d94c629f98d602e8da5f9202e80ba2f5d71d48c4",
-      "name": "background=white, size=medium",
-      "description": "",
-      "containingFrame": "Atómos, moléculas e organismos"
-    },
-    {
-      "key": "dac469450916c067c2ac50df779321c10f08bb47",
-      "name": "background=gray, size=small",
-      "description": "",
-      "containingFrame": "Atómos, moléculas e organismos"
     },
     {
       "key": "dc0319ee5cb1c34a968539932eb29fd265ecde5b",
@@ -7950,12 +7430,6 @@
       "containingFrame": "[dsc] Input with Chips"
     },
     {
-      "key": "e5968dbdbea18b7deec1583a0229629b183bd404",
-      "name": "variant=no data, size=standart",
-      "description": "",
-      "containingFrame": "Componentes"
-    },
-    {
       "key": "e794cb2b26ed11b6e46d5202b74870c3707b9811",
       "name": "size=standard, state=focus, filled=false, feedback=true, flexible height=false",
       "description": "",
@@ -7966,12 +7440,6 @@
       "name": "size=large, state=focus, filled=true, feedback=false, flexible height=true",
       "description": "",
       "containingFrame": "[dsc] Input with Chips"
-    },
-    {
-      "key": "e9b221d0d101ee1201c8cf804f667d573f348a44",
-      "name": "variant=error, size=standart",
-      "description": "",
-      "containingFrame": "Componentes"
     },
     {
       "key": "eb2a11611dc2474bb57094cb32488bd3b29e937d",
@@ -8038,12 +7506,6 @@
       "name": "size=standard, state=focus, filled=false, feedback=false, flexible height=false",
       "description": "",
       "containingFrame": "[dsc] Input with Chips"
-    },
-    {
-      "key": "ff22eab190dfcbf909f6198016c9a1b45e99164a",
-      "name": "background=white, size=large",
-      "description": "",
-      "containingFrame": "Atómos, moléculas e organismos"
     },
     {
       "key": "ff66546ccea3aa7ade44d9c61043c7a5830cc81c",
@@ -10950,18 +10412,6 @@
       "containingFrame": "[dsc] Table Header"
     },
     {
-      "key": "e0679dc7831b7727fbb25754edbd5231a191580c",
-      "name": "item size=standard, empty=false",
-      "description": "",
-      "containingFrame": "[dsc] Dropdown Select with Chips"
-    },
-    {
-      "key": "e1c7f19bf51a1b6220830c5523a07f927de380cc",
-      "name": "item size=small, empty=true",
-      "description": "",
-      "containingFrame": "[dsc] Dropdown Select with Chips"
-    },
-    {
       "key": "e2ba5408aacce75d3050901fc0b73139f762b562",
       "name": "variant=text, state=hover, sorting=descending, label alignment=right",
       "description": "",
@@ -11050,6 +10500,690 @@
       "name": "[dsc-tc] Card List Template",
       "description": "O Card List Template ajuda a pessoa usuária a navegar, comparar e explorar conjuntos de informações de forma visual por meio de listas em grid ou verticalmente alinhadas.",
       "containingFrame": "Componentes"
+    },
+    {
+      "key": "e3b448d4e25f668d1f9deaaa3600264ba3aaa957",
+      "name": "size=large",
+      "description": "",
+      "containingFrame": "Subcomponentes e template"
+    },
+    {
+      "key": "74661562624752d259c41eba8e76a48e512c5540",
+      "name": "size=medium",
+      "description": "",
+      "containingFrame": "Subcomponentes e template"
+    },
+    {
+      "key": "aabca7cb60750622fc25a15844e45382ec970c1f",
+      "name": "size=small",
+      "description": "",
+      "containingFrame": "Subcomponentes e template"
+    },
+    {
+      "key": "89871c1949f3feddef841749dcb7705df28269fa",
+      "name": "size=extra small",
+      "description": "",
+      "containingFrame": "Subcomponentes e template"
+    },
+    {
+      "key": "9fc563f5bde6ed841a9c95c8998a9357101a519b",
+      "name": "align=right, examples=custom",
+      "description": "",
+      "containingFrame": "Subcomponentes e template"
+    },
+    {
+      "key": "e66a26f61b199995bb329a4d89fc3e21a295bd4d",
+      "name": "align=left, examples=custom",
+      "description": "",
+      "containingFrame": "Subcomponentes e template"
+    },
+    {
+      "key": "5c026337c2dbbab564d9b532c7be2e2cfc457aeb",
+      "name": "align=right, examples=dados pessoais",
+      "description": "",
+      "containingFrame": "Subcomponentes e template"
+    },
+    {
+      "key": "e974f06bbe182ddb794f75e285e098efd3989674",
+      "name": "align=left, examples=endereço",
+      "description": "",
+      "containingFrame": "Subcomponentes e template"
+    },
+    {
+      "key": "1deb9c75b5c88355af11961fdafee99591d81975",
+      "name": "variant=short, size=standard",
+      "description": "",
+      "containingFrame": "Subcomponentes e template"
+    },
+    {
+      "key": "2fb44d1f250d134afec3b0d05e9b9cb4db4ca7a6",
+      "name": "variant=short, size=large",
+      "description": "",
+      "containingFrame": "Subcomponentes e template"
+    },
+    {
+      "key": "203a244f491847bcaefd5cc4215bfb2adaf14502",
+      "name": "variant=long, size=standard",
+      "description": "",
+      "containingFrame": "Subcomponentes e template"
+    },
+    {
+      "key": "02d4ac8f2b5ce0e069542bb50ab622ab2db0224e",
+      "name": "variant=long, size=large",
+      "description": "",
+      "containingFrame": "Subcomponentes e template"
+    },
+    {
+      "key": "12f1f0f0500d4e1fc338a30a470c4d376e7f8be2",
+      "name": "background=white, size=large",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "42b41da8896ebd0bcfca86e9c18647f285185d88",
+      "name": "background=gray, size=large",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "3e51c33bce6321d60d555f755337c46b966d8dc3",
+      "name": "background=white, size=medium",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "460f016d7d1ff7cc315f76e14a9186f616e0bb09",
+      "name": "background=gray, size=medium",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "9a7fc5554561e125ab9519e6b42ea4b252706b82",
+      "name": "background=white, size=small",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "e517dce6b6c34aa3d5314c6d358b3a31d0e5251a",
+      "name": "background=gray, size=small",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "6b43fa35f0aff6840290f4054bec55404b688d42",
+      "name": "background=white, size=extra small",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "d50701549bc0e69383d5d346738bb3fa65db0734",
+      "name": "background=gray, size=extra small",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "99d5d39b5dc3932daa28e061ba44a77df92e64d2",
+      "name": "variant=default",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "053d3bd90b538944a715dd494981855713fe2107",
+      "name": "variant=single select, item=label only, item size=small",
+      "description": "",
+      "containingFrame": "Dropdown"
+    },
+    {
+      "key": "1d5f74f48b642bf2e5952bf4091ea35633b0fda7",
+      "name": "variant=no results, item=label + icon, item size=standard",
+      "description": "",
+      "containingFrame": "Dropdown"
+    },
+    {
+      "key": "2fe781c1c6d585cdab0114eff43f0adfb94a7e7d",
+      "name": "variant=single select, item=label + icon, item size=large",
+      "description": "",
+      "containingFrame": "Dropdown"
+    },
+    {
+      "key": "7256d44ac3283c7d88e3a31e7d17ef36d0efe8f7",
+      "name": "variant=single select, item=label only, item size=standard",
+      "description": "",
+      "containingFrame": "Dropdown"
+    },
+    {
+      "key": "7a5d2b6eb887fe4f164e99389d071dddb1c851c2",
+      "name": "variant=multi select, item=checkbox, item size=standard",
+      "description": "",
+      "containingFrame": "Dropdown"
+    },
+    {
+      "key": "7f80b16f03e79b059d4c12f5ff79b88064d13bed",
+      "name": "variant=single select, item=label + icon, item size=small",
+      "description": "",
+      "containingFrame": "Dropdown"
+    },
+    {
+      "key": "87385e1503d9fd509527d7be50771ce16cc8d2e9",
+      "name": "variant=no results, item=label + icon, item size=small",
+      "description": "",
+      "containingFrame": "Dropdown"
+    },
+    {
+      "key": "88a07c5078771ebb0d32e41027759ca49a93209e",
+      "name": "variant=single select, item=label + icon, item size=standard",
+      "description": "",
+      "containingFrame": "Dropdown"
+    },
+    {
+      "key": "9a77dc69aaff7b5337f2ed2541911fd6233c4523",
+      "name": "variant=multi select, item=checkbox, item size=small",
+      "description": "",
+      "containingFrame": "Dropdown"
+    },
+    {
+      "key": "dda1f3aa9e706994534c0c810f476cabb4f6b303",
+      "name": "variant=multi select, item=checkbox, item size=large",
+      "description": "",
+      "containingFrame": "Dropdown"
+    },
+    {
+      "key": "e31c6581c96a449dee8fad69ae54b2aedad85689",
+      "name": "variant=no results, item=label + icon, item size=large",
+      "description": "",
+      "containingFrame": "Dropdown"
+    },
+    {
+      "key": "f8eb5e58e1e19f7953476cd51fa1555ecf8d1d10",
+      "name": "variant=single select, item=label only, item size=large",
+      "description": "",
+      "containingFrame": "Dropdown"
+    },
+    {
+      "key": "d6c50cf2d070a8a37fa56e8b230ea892e594b499",
+      "name": "size=standard, state=hover, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "bfcb1973390f6d3b318ff4847660a065f200254c",
+      "name": "size=standard, state=default, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "2e161e3ffaf403ce92c819f0d1645cf135e986d9",
+      "name": "size=small, state=focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "fd749567336a46229115204184ae5558503268a1",
+      "name": "size=standard, state=hover, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "dd917e1f7f9737739ae26e2d709729493d9292e8",
+      "name": "size=standard, state=focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "20e1ebefbb5f282b34efed4f3ceb3fd2b7819654",
+      "name": "size=large, state=readonly, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "02d91c58e79e03ddab181c381912493111444d03",
+      "name": "size=standard, state=disabled, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "0c9982fa80d68fc52de0a28b1d4dce444a48fcb1",
+      "name": "size=small, state=hover, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "77f17a00e59aa6ef8337bc806ecf16bbd48cb511",
+      "name": "size=small, state=focus, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "69c18627b5d750be3ff661f802471d57b4982580",
+      "name": "size=large, state=default, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "2e44216d11a932cb1db4506862cfa118257036da",
+      "name": "size=small, state=default, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "7f09b20e8a8d79febaf532e3a20444dd231dc9e9",
+      "name": "size=standard, state=focus, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "4c8ed232154fd840635555cd7d0ad885f063459a",
+      "name": "size=small, state=default, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "d27d4b3701a36c88ce717ac1bb4119d29fe1145a",
+      "name": "size=large, state=hover, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "30c652f2d62adb2e1c3e86d397617d79cf3f3b9e",
+      "name": "size=standard, state=default, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "52580980b5eb868cf6ed7c5777fd090687cae3aa",
+      "name": "size=standard, state=default, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "090f3f4827934a54783e9f0b01645b0ce7227e50",
+      "name": "size=standard, state=readonly, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "5c17db39185ab60d319c20abafb69703847ea9f9",
+      "name": "size=standard, state=readonly+focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "12db37001e69ebf007918d8e6aa1722f6f18c4fe",
+      "name": "size=small, state=hover, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "08c7a86e3f6e9096f69acfb9eeb526577f096eeb",
+      "name": "size=small, state=readonly, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "7688ca9db4abf08a35712004e961dc49cb20c649",
+      "name": "size=small, state=focus, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "3e33f054af2289a6123e237eeea1528d9986b07d",
+      "name": "size=large, state=default, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "b474c05f0ae2544b156acddbbd78e0c8fe0694d2",
+      "name": "size=small, state=focus, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "4512a52010ddb3cbf3856208b6a1e44154ce2600",
+      "name": "size=small, state=readonly+focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "84339880334e8cf083d6076fd886357b3ff61754",
+      "name": "size=small, state=disabled, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "e7d70a8c179f7fe93d3deada0626173779df849b",
+      "name": "size=large, state=focus, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "3871d35970807af730b9dd7036c1fc101963fa96",
+      "name": "size=standard, state=default, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "04eeeb705ecd3256f9d23b0e5ffbe2bf38c60bab",
+      "name": "size=large, state=default, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "c099ec6bb4b061d4c7e674006d76d17a21ceede5",
+      "name": "size=large, state=default, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "1fa04f92728e5b5499ece7f4c7ca067991d57e2a",
+      "name": "size=large, state=disabled, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "515be31e92655df68c903ac2c62c34f9b5c8e719",
+      "name": "size=standard, state=focus, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "834dd30f1f2e70344bcdf9907aa1665192f70ae5",
+      "name": "size=small, state=default, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "03597ed04ec2500def644ee1af0b2ea8bb811829",
+      "name": "size=large, state=hover, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "db9d53ce6e00fdcc46e46876d3b96471a76c7f1f",
+      "name": "size=large, state=focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "f0f219da9e8746a4e685dc2b9e68375daf4c5b98",
+      "name": "size=large, state=readonly+focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "9029efcd5f2140525c27f4f3e8ecf6dbaef6b088",
+      "name": "size=standard, state=focus, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "f9740a3fc71a37d771c08b6792a76bfc268a8637",
+      "name": "size=small, state=default, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "28592576e46702dd5d0b6b8e5e8fb5ec77212bd8",
+      "name": "size=large, state=focus, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "f397fb1e28d3075fd7300ea9300600abeb4be9d7",
+      "name": "size=large, state=focus, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "be3cb4e1cc1254f68d67df02a19c34a53a19eb8d",
+      "name": "size=standard, state=focus, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "5b34ef30afaa1477e3210c6a61a9a5ef8733666e",
+      "name": "size=large, state=readonly+focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "fb6f20f2c8c3f429e6113575b51ebeb93fe1100a",
+      "name": "size=standard, state=readonly+focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "5a43c2e727dde419e07001b2d0529ffb54cd80de",
+      "name": "size=large, state=disabled, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "1e2c6228a2dd9f6a3c1a1af06ba5b09fd81fc6bf",
+      "name": "size=small, state=focus, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "3c3b6be00756fd3d66146177764c45ed8ba27ddf",
+      "name": "size=large, state=default, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "980ed500ce7237034d5f2e061074a3b043a0c8da",
+      "name": "size=small, state=disabled, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "6b613b1b9b29468959c140e527c8c409616d3e9d",
+      "name": "size=standard, state=default, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "5b655a6fde36bd4de2f32ffb8d5de6c046ee60b9",
+      "name": "size=small, state=readonly+focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "ecd83b89a10f75088507fc60f0770dc76839450c",
+      "name": "size=standard, state=focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "28cb29f68c7c0e2de9c1ec56c6eedff1086d684b",
+      "name": "size=standard, state=disabled, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "18117bd8bf50308247848457160fda5b9bca7927",
+      "name": "size=small, state=default, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "0f501d844b2fb94f64d9056637528d14acff1412",
+      "name": "size=small, state=focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "998a14281425ebd1c657e0af3e85255284806b1b",
+      "name": "size=standard, state=default, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "9f9aa1fed6fad9ed28691b0afa6841db94871371",
+      "name": "size=small, state=focus, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "4cc6179b209fd899a397c829677a7fe1f714d47c",
+      "name": "size=standard, state=readonly, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "232c4f64b074d41f1426310fe9d310aa708f5d6c",
+      "name": "size=small, state=hover, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "6e785a3dd0063fc27aebf6fc52264e462df61f5b",
+      "name": "size=small, state=default, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "71c14227e8f352bed21605e29c2cf0250c3be4b9",
+      "name": "size=standard, state=hover, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "255e856e14e1c8fd65f0e4f59fea0d4e91bd097a",
+      "name": "size=large, state=default, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "4d70c12b4af2f680fc591e21f481f49ac01bfbfa",
+      "name": "size=standard, state=focus, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "76f18ebd5fdbf3ef9084efd232a84af8d39108f9",
+      "name": "size=small, state=focus, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "22f4352762d7788053695c6a87311cb0d62d5968",
+      "name": "size=standard, state=hover, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "de67023152efd63c8af350b28f0781851f556829",
+      "name": "size=small, state=default, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "d89d3a90d1d090bee4be3ee566fcd5f17c012983",
+      "name": "size=small, state=readonly, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "26df433eab163ddbd8a895af2fd53a1ce62ac0b7",
+      "name": "size=large, state=hover, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "f074f1101f482029f0e8799501ef7569587b6157",
+      "name": "size=standard, state=default, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "b51303eb9f5c5b8e38a220405ea11f8d97364af2",
+      "name": "size=large, state=default, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "72bb1d9c9427657b042d9889a102904962a2edac",
+      "name": "size=standard, state=default, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "3b65eda3cfb49f11486b8363f6072db457480b3a",
+      "name": "size=large, state=hover, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "8d451cc45ba7cc3e037c04185214bb0117843858",
+      "name": "size=large, state=focus, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "f751fca8cf6b00af14c115d3d7602a3516fb449c",
+      "name": "size=small, state=hover, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "2847c85bb2382c8a8edc8497fe80ca099b4774f9",
+      "name": "size=large, state=focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "40a1e1a3518a6c8761c8f3f3950aa4d3e7a68023",
+      "name": "size=large, state=readonly, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "a8decad3db64cc3eeac9d6cdcca4d700b695c2f5",
+      "name": "size=small, state=default, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "2892da6b7491da63b01ba485a812b9d03a4e52f3",
+      "name": "size=standard, state=focus, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "8c4dab179945df4bed59d212473af54ffb90d411",
+      "name": "size=large, state=default, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "b83db83377953cb5b97cb58d158713e73c7e9260",
+      "name": "size=large, state=focus, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "38bff68f1e1d33afad3b39865c497005e813cc69",
+      "name": "size=large, state=focus, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Datepicker Range"
+    },
+    {
+      "key": "ac1c9ff8b54951de70708a56a8df34b538c493a7",
+      "name": "selector type=range",
+      "description": "❖ [dsc] Datepicker calendar range\n<N/A>",
+      "containingFrame": "[dsc doc] Component Building"
+    },
+    {
+      "key": "df969cd2d6ca281ad29f4c99175e070e8757f2cf",
+      "name": "selector type=month",
+      "description": "",
+      "containingFrame": "[dsc doc] Component Building"
+    },
+    {
+      "key": "4f4d6cdf23c26e1f42ff353c275e0c05cee05ebc",
+      "name": "selector type=year",
+      "description": "",
+      "containingFrame": "[dsc doc] Component Building"
     }
   ],
   "spacing": [],

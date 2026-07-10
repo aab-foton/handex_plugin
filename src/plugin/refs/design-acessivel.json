@@ -2,14 +2,988 @@
   "meta": {
     "libraryName": "Design Acessível",
     "figmaFileKey": "Wy0IhXRVZMSOOr8E609UqI",
-    "exportedAt": "2026-06-10T14:05:34.578Z",
+    "exportedAt": "2026-07-10T02:20:38.030Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
     ]
   },
   "designTokens": {
-    "variables": []
+    "variables": [
+      {
+        "key": "b29c8407423a480d8ce7c55b34c74bab6d8c8b7f",
+        "name": "itens interativos/botão/desabilitado/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como button e ler o seu rótulo visível em tela."
+      },
+      {
+        "key": "8df4818629881b6fe82353704f72af79606ced1e",
+        "name": "itens interativos/botão/desabilitado/nota de codigo",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "O Leitor de Tela deve identificar o status do botão como desabilitado com o atributo aria-disabled=\"true\" em HTML."
+      },
+      {
+        "key": "2d733dc4bc68af5e1bf4fe71f9da526b60671fe5",
+        "name": "itens interativos/botão/com expansao/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como button e ler o seu rótulo visível em tela."
+      },
+      {
+        "key": "d9f7fdf081e2280dba9fd939b828adc0a647b6cc",
+        "name": "itens interativos/botão/com expansao/nota de codigo",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, considerar o status do painel como expandindo ou recolhido com o atributo aria-expanded."
+      },
+      {
+        "key": "878ba03678ea62f48229b1759abd9d4e9491fb6a",
+        "name": "itens interativos/botão/default/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como button e ler o seu rótulo visível em tela."
+      },
+      {
+        "key": "ba98434b9beaacce5215c3f6ed39eb7d5ee2311f",
+        "name": "itens interativos/botão/agrupado/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Agrupar e identificar como button, deve ler todo o conteúdo visível em tela seguido da sua função."
+      },
+      {
+        "key": "5ef6ee16ed4a5359edfbc71e49e1e3c7cc5a037d",
+        "name": "itens interativos/botão/de icone/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como button."
+      },
+      {
+        "key": "936ea71b1b812e5bfa7243906e0211956a77d18a",
+        "name": "itens interativos/botão/de icone/nota de codigo",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, utilizar atributo aria-label para acrescentar o nome acessível a ser lido pelo Leitor de Tela. Considerar também o status do botão como expandindo ou recolhido com o atributo aria-expanded."
+      },
+      {
+        "key": "ff7459e50422b93b8847e8e1a4d7ad02d8970478",
+        "name": "itens interativos/botão/de icone com expansao/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como button."
+      },
+      {
+        "key": "febf1dba165cbca6bb8019b3b4a35f6dc269747d",
+        "name": "itens interativos/botão/de icone com expansao/nota de codigo",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML utilizar atributo aria-label para acrescentar o nome acessível, considerar também o status do botão como expandindo e recolhido com o atributo aria-expanded."
+      },
+      {
+        "key": "d5a9d79eea7282352a15fd6e1ddbbf614359ccfe",
+        "name": "itens interativos/botão/com nome acessivel/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como button."
+      },
+      {
+        "key": "e91dc401781c7422ce0add1c1e40a13657260a76",
+        "name": "itens interativos/botão/com nome acessivel/nota de codigo",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, utilizar o atributo aria-label para desconsiderar o seu rótulo visível e acrescentar o nome acessível a ser lido pelo Leitor de Tela."
+      },
+      {
+        "key": "b975ab4caddb55c3373ef31210f96e19a23a4202",
+        "name": "itens interativos/link/default/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como link e ler o seu rótulo visível em tela."
+      },
+      {
+        "key": "d21fd98080d49a8e7754513a6ea7f951a4c74ce5",
+        "name": "itens interativos/link/nova janela/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como link e ler o seu rótulo visível em tela."
+      },
+      {
+        "key": "21a0dfce3fb889a75fc25e70f306a41557da3778",
+        "name": "itens interativos/link/nova janela/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, utilizar o atributo aria-label para acrescentar o nome acessível a ser lido pelo Leitor de Tela. Também anunciar que o link abre uma nova janela e direciona o foco para ela."
+      },
+      {
+        "key": "2f9584055791ad97d00219f27aa45242c57a1ef1",
+        "name": "itens interativos/link/com nome acessível/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como link."
+      },
+      {
+        "key": "1e277012d15f62e1ea02a8e2e39369d329833ae7",
+        "name": "itens interativos/link/com nome acessível/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, utilizar o atributo aria-label para desconsiderar o seu rótulo visível e acrescentar o nome acessível a ser lido pelo Leitor de Tela."
+      },
+      {
+        "key": "1e7c6bf33f6a4a6ccaca0da8e12e0e808197f03c",
+        "name": "itens interativos/link/agrupado/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Agrupar e identificar como link, deve ler todo o conteúdo visível em tela seguido da sua função."
+      },
+      {
+        "key": "3b399d8c99ddf9c6d434191dfc8788f5cf83ce29",
+        "name": "itens interativos/link/mailto/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Agrupar e identificar como link, deve ler todo o conteúdo visível em tela seguido da sua função."
+      },
+      {
+        "key": "eff989e6ec6352cbab46d634880de3afce90cbbf",
+        "name": "itens interativos/link/mailto/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, utilizar o atributo aria-label para desconsiderar o seu rótulo visível e acrescentar o nome acessível a ser lido pelo Leitor de Tela. Acrescente o protocolo mailto: à href da tag <a> para criar um link que irá abrir o programa de e-mail padrão do dispositivo. "
+      },
+      {
+        "key": "3058628c0d07eea516374e6b095549728d4f43b9",
+        "name": "itens interativos/breadcrumb/inicio/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Agrupar e identificar como link, deve ler o seu rótulo visível em tela."
+      },
+      {
+        "key": "d95996ea85d3e78a6d716e5fdd32ba8de732b945",
+        "name": "itens interativos/breadcrumb/secundário/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como link e ler o seu rótulo visível em tela."
+      },
+      {
+        "key": "2d24ef575f5e2a20933fe6e7ac3517c85cd9976c",
+        "name": "itens interativos/breadcrumb/texto truncado/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como button."
+      },
+      {
+        "key": "473141480d4c6c29bb008b08ae819ac99e8bf678",
+        "name": "itens interativos/breadcrumb/texto truncado/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, utilizar atributo aria-label para acrescentar o nome acessível a ser lido pelo Leitor de Tela. Considerar também o status do botão como expandindo ou recolhido com o atributo aria-expanded."
+      },
+      {
+        "key": "e4e41a30a08ed4485f54a90d65e664259a22ba2b",
+        "name": "itens interativos/breadcrumb/página atual/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como link e o seu rótulo visível em tela."
+      },
+      {
+        "key": "627d6048a22d9dcea5fd33a2bd68a8c8139d0530",
+        "name": "itens interativos/breadcrumb/página atual/observação",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Se o elemento que representa a página atual não for um link, aria-current não faz-se necessário."
+      },
+      {
+        "key": "53f5441ea1828921c39a376fab7be0386e96e21c",
+        "name": "itens interativos/breadcrumb/página atual/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, configurar o link da página atual com aria-current=\"page\" para defini-la como página atual."
+      },
+      {
+        "key": "5c9bb7d568cdf50ba688395ad0b027a03c5724c9",
+        "name": "itens interativos/radiobutton/selecionado/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como radio button."
+      },
+      {
+        "key": "14044f7fa28c15b97d32f8c0e2f0104bf8616e0e",
+        "name": "itens interativos/radiobutton/selecionado/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML identificar o status do componente como marcado com o atributo aria-checked=“true”,  deve-se também inserir aria-label para adicionar um nome acessível ao elemento."
+      },
+      {
+        "key": "2b9e69c47f04ab589ebfbb24d835aef9fc6441b1",
+        "name": "itens interativos/radiobutton/Somente radio/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como radio button."
+      },
+      {
+        "key": "c47f84c9e314f5f7d89f75ec8eb1500062550322",
+        "name": "itens interativos/radiobutton/Somente radio/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar o status do componente como marcado ou desmarcado com o atributo aria-checked=\"true\" ou \"false\". Deve-se também, inserir aria-label para adicionar um nome acessível ao elemento."
+      },
+      {
+        "key": "5926581779c428182e779b5a384a9c1130a39b49",
+        "name": "itens interativos/radiobutton/radio e rótulo/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como radio button e ler o seu rótulo visível em tela."
+      },
+      {
+        "key": "c75cffdcb70fecf3675f62ddf51d22c6bee7f0ba",
+        "name": "itens interativos/dialog/default/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como dialog e anunciar o título seguido do conteúdo assim que o componente for apresentado em tela."
+      },
+      {
+        "key": "0c1355017ed1075f98d7f6e5ec0909c5bde64109",
+        "name": "itens interativos/dialog/default/observação",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "As tecnologias assistivas devem ser informadas que as janelas cobertas pelo dialog não estarão disponíveis para interação."
+      },
+      {
+        "key": "fe390c23fe80065b194b5fb921b6b64b37a6b156",
+        "name": "itens interativos/dialog/default/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML é necessário atrelar os seguintes atributos ao componente: aria-labelledby, aria-describedby e aria-modal."
+      },
+      {
+        "key": "abebf8d3f92b3f810ad5289fdc274b3034f094b8",
+        "name": "itens interativos/paginator/listagem/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como listbox e ler a quantidade de itens na lista, a  localização e a seleção atual."
+      },
+      {
+        "key": "9f6f046753115941a86cbfbac692b70b9c749e85",
+        "name": "itens interativos/paginator/listagem/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, o estado de seleção de cada opção selecionável deve ser indicado usando aria-selected=\"true\"."
+      },
+      {
+        "key": "70dea1e62bed4c23b310c22b8478cb2fdc9f236c",
+        "name": "itens interativos/paginator/caixa de seleção/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como combobox e ler a  quantidade de itens por página, seleção atual e o status do componente como recolhido ou expandido."
+      },
+      {
+        "key": "4378373508dcc8de45e9ba8daa4b0a384b613bd1",
+        "name": "itens interativos/paginator/caixa de seleção/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, identificar o status do componente como expandido ou recolhido com aria-expanded. Utilizar aria-labelledby para indicar o elemento que rotula a caixa de combinação e aria-controls para definir que o componente funciona como um pop-up."
+      },
+      {
+        "key": "7bc66f388a16e7adf0296f2c0b7a6e7dd386599b",
+        "name": "itens interativos/snackbar/notificação imediata/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como alert, deve interromper outros processos e anunciar o conteúdo da notificação sem mover o foco para ele."
+      },
+      {
+        "key": "2a680aa73494097abc672bd8f34244cceec6fbf8",
+        "name": "itens interativos/snackbar/notificação imediata/observação",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em caso de aplicação do snackbar com o action, o foco desse elemento deve ser o último em toda interface."
+      },
+      {
+        "key": "592d75d489031ba26ac60fd08f2fa57eccecb025",
+        "name": "itens interativos/snackbar/notificação imediata/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, o atributo aria-live=\"assertive\" está implícito na função de alerta."
+      },
+      {
+        "key": "d26dcbeee8fc2ed89755de3479e69b83e79a0f7b",
+        "name": "itens interativos/tab group/tabs/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Agrupar e identificar como tab. Deve-se ler o seu rótulo visível junto de sua localização no grupo. A exemplo: “1 de 3”. Também considerar o status do componente quando estiver \"selecionado\". "
+      },
+      {
+        "key": "374be38ed27fcdf87cda4a9b3829f20dd5e996b6",
+        "name": "itens interativos/tab group/tabs/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, deve ser fornecido a role=\"tablist\" por padrão, role=\"tab\" quando selecionado e role=\"tabpanel\" quando expadindo. O atributo aria-selected é definido automaticamente com base na alteração da seleção. "
+      },
+      {
+        "key": "24b041475189ae4ad671e505671a6e8ae98c74de",
+        "name": "itens interativos/inputs/default/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Agrupar e identificar como textbox. "
+      },
+      {
+        "key": "5020f4bebee7b9751fa555b32bf054a3e35ff09c",
+        "name": "itens interativos/inputs/default/observação",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "A exibição no Leitor de Tela deve seguir  a sequência lógica dos elementos - da esquerda pra direita e de cima para baixo. Caso o campo seja obrigatório, essa informação deve ser anunciada junto."
+      },
+      {
+        "key": "b3991f991ac43a5229ea8935f762869e65a0079b",
+        "name": "itens interativos/inputs/info e tooltip/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como button, anunciar um nome acessível e o texto da tooltip pelo Leitor de Tela."
+      },
+      {
+        "key": "e79976cb6b53bb8f3b43efc426628c85bf7d65c5",
+        "name": "itens interativos/inputs/info e tooltip/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HMTL utilize o atributo aria-label para inserir um nome acessível no button e aria-describedby para descrever a tooltip."
+      },
+      {
+        "key": "379a41acef12dc00f2ebd2c31d9ddde1059efcf5",
+        "name": "itens interativos/inputs/botão visualizar senha/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como button."
+      },
+      {
+        "key": "232d8ca11f2ba2007752ff4c3ca8291ef3b44b83",
+        "name": "itens interativos/inputs/botão visualizar senha/observação",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Insira seu texto da observação."
+      },
+      {
+        "key": "1afcc6cac8be1fa56bbdc27444982ccdc66ba7e8",
+        "name": "itens interativos/inputs/botão visualizar senha/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Inserir em HMTL o atributo aria-label para adicionar um nome acessível ao elemento e e aria-pressed para indicar o estado (ativo = senha visível) do icon (olho)."
+      },
+      {
+        "key": "40ffa86bec7ee26de7d3de973ddaa6dbeaa99f5c",
+        "name": "itens interativos/inputs/somente leitura/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Agrupar e identificar como textbox readonly."
+      },
+      {
+        "key": "fd12c65edb48abf62fd990e0c7320257c312dcb4",
+        "name": "itens interativos/inputs/somente leitura/observação",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "A exibição no Leitor de Tela deve seguir  a sequência lógica dos elementos - da esquerda pra direita e de cima para baixo. "
+      },
+      {
+        "key": "1a0cc51927e2b5652460dad0a2746d1011679e76",
+        "name": "itens interativos/inputs/somente leitura/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Utilizar o atributo aria-readonly=\"true\" para que o Leitor de Tela identifique que o campo de texto é somente leitura."
+      },
+      {
+        "key": "bc1971900929c642a9fe6bf296be15e6101a3ed7",
+        "name": "itens interativos/inputs/tipo senha/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como textbox do tipo senha. Os dados reais preenchidos não devem ser exibidos e o Leitor de Tela deve anunciar “asterisco” ou algo similar para cada caractere da senha digitada."
+      },
+      {
+        "key": "e355795ed67b75175b876477199040bca4887e53",
+        "name": "itens interativos/inputs/tipo senha/observação",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "A exibição no Leitor de Tela deve seguir  a sequência lógica dos elementos - da esquerda pra direita e de cima para baixo. Caso o campo seja obrigatório, essa informação deve ser anunciada junto."
+      },
+      {
+        "key": "16a15ad33192557cb29e464e0f72a15950bb1797",
+        "name": "itens interativos/inputs/tipo senha/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, use type=\"password\" no elemento <input>. Se for mascarar manualmente a senha (ex.: *), use aria-hidden=\"true\" nos caracteres exibidos."
+      },
+      {
+        "key": "ec5a16afa838316af3808caaf7605b8ed0eec420",
+        "name": "itens interativos/inputs/tipo número/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Agrupar e identificar como textbox tipo número e não deve receber letras ou caracteres especiais."
+      },
+      {
+        "key": "682dd9adcbb5db2742bbe22db0a287a232b2baf3",
+        "name": "itens interativos/inputs/tipo número/observação",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "A exibição no Leitor de Tela deve seguir  a sequência lógica dos elementos, da esquerda pra direita e de cima para baixo, caso o campo seja obrigatório, essa informação deve ser anunciada junto."
+      },
+      {
+        "key": "64240213430b656439e552844af6fe1fa72140aa",
+        "name": "itens interativos/inputs/tipo número/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML use inputmode=\"numeric\" no elemento <input>."
+      },
+      {
+        "key": "2df78c350794b90ddfd90fb3979a81e1227daabe",
+        "name": "itens interativos/inputs/tipo seleção/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Agrupar e identificar como button. Ler o rótulo visível e em seguida o status do componente, em caso de “expandido” ou “recolhido”. "
+      },
+      {
+        "key": "197b249a5c2ff883c1ab01d3fd3c8fa225252c5c",
+        "name": "itens interativos/inputs/tipo seleção/observação",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "A exibição no Leitor de Tela deve seguir  a sequência lógica dos elementos, da esquerda pra direita e de cima para baixo, caso o campo seja obrigatório, essa informação deve ser anunciada junto."
+      },
+      {
+        "key": "0d88d78c92d82f9a5921d597fa12a3f2bc56b8c8",
+        "name": "itens interativos/inputs/tipo seleção/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML utilize o aria-expanded para considerar o status de expansão do componente. considerar também o status do painel como expandindo ou recolhido com o atributo aria-expanded."
+      },
+      {
+        "key": "958476164238b07aac258526aac643e22db66c32",
+        "name": "itens interativos/inputs/tipo data/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Agrupar e identificar como textbox tipo data e e não deve receber letras ou caracteres especiais.entificar como textbox tipo data e e não deve receber letras ou caracteres especiais."
+      },
+      {
+        "key": "4b872f6b15953f81a118e383e90a614d81cdc758",
+        "name": "itens interativos/inputs/tipo data/observação",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "A exibição no Leitor de Tela deve seguir  a sequência lógica dos elementos, da esquerda pra direita e de cima para baixo, caso o campo seja obrigatório, essa informação deve ser anunciada junto."
+      },
+      {
+        "key": "8b209a2a4216faf18cb51acb22b813baad58a886",
+        "name": "itens interativos/inputs/tipo data/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML use type=\"date\" no elemento <input>."
+      },
+      {
+        "key": "f44ec11e88f83685fc5f400fef01848ec3c16432",
+        "name": "itens interativos/table/estruturada/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como table e ler a sua estrutra com a quantidade de linhas e colunas."
+      },
+      {
+        "key": "ce0c3fcc2d0829621acf9a9c41bc909923b9326c",
+        "name": "itens interativos/table/estruturada/observação",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "A leitura da célula deve estar atrelada ao cabeçalho da coluna ou da linha, seguindo a ordem: conteúdo do cabeçalho + conteúdo da célula."
+      },
+      {
+        "key": "372a9c51c5903da55af61eb03c9bb410b4beac79",
+        "name": "itens interativos/table/estruturada/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Inserir o atributo aria-label em HTML para adicionar um nome acessível e aria-describedby=\"IDREF\" referindo-se a legenda para a tabela."
+      },
+      {
+        "key": "a63ec530ad8e239a4b6dd17506e6a1110d82ff66",
+        "name": "itens interativos/table/cabeçalho/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como table header e ler o seu conteúdo visível em tela."
+      },
+      {
+        "key": "25ba629ec1e0eba5d6800d61e0d16ac452fc20db",
+        "name": "itens interativos/table/célula/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como cell e ler o seu conteúdo visível em tela."
+      },
+      {
+        "key": "844cab95507035e8e17c46e0cc8e5b6285bbab5c",
+        "name": "itens interativos/table/botão de ordenação/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Agrupar rótulo e ícone identificando como button sorting. Deve ler o seu rótulo visível em tela e identificar o status de ordenação como “crescente”, “decrescente” ou “não ordenado”. "
+      },
+      {
+        "key": "c05502db90cc0ae307f3222f6a37872a36e33030",
+        "name": "itens interativos/table/botão de ordenação/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Inserir o atributo aria-sort=\"value\"em HTML."
+      },
+      {
+        "key": "dda176a3f095370702f2c4816a2e24db92cf6344",
+        "name": "itens interativos/stepper/atual/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Agrupar e identificar como tab. Deve-se ler o seu rótulo visível junto de sua localização no grupo. A exemplo: “1 de 3”. Também considerar o status do elemento como “selecionado”."
+      },
+      {
+        "key": "b39d722b31fd56f65b21054430587ab0d243ddaa",
+        "name": "itens interativos/stepper/atual/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, deve ser fornecido a role=\"tablist\" por padrão, role=\"tab\" quando selecionado e role=\"tabpanel\" quando expadindo. O atributo aria-selected é definido automaticamente com base na alteração da seleção."
+      },
+      {
+        "key": "dfc9043ed7fef813475dbe2e6d388ddb0a0db75a",
+        "name": "itens interativos/stepper/editável/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Agrupar e identificar como tab. Deve-se ler o seu rótulo visível junto de sua localização no grupo. A exemplo: “1 de 3”. Também considerar o status do elemento como “editável\"."
+      },
+      {
+        "key": "dd2ce1ceb6eec128c269a6012b0f3141293879bc",
+        "name": "itens interativos/stepper/editável/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, deve ser fornecido a role=\"tablist\" por padrão, role=\"tab\" quando selecionado e role=\"tabpanel\" quando expadindo. O atributo aria-selected  é definido automaticamente com base na alteração da seleção."
+      },
+      {
+        "key": "266e0d6f705daba30ca9f5c7b444be4084b7022e",
+        "name": "itens interativos/stepper/inativo/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Agrupar e identificar como tab. Deve-se ler o seu rótulo visível junto de sua localização no grupo. A exemplo: “1 de 3”. Também considerar o status do elemento como “Indisponível\"."
+      },
+      {
+        "key": "0285c714cbe598f9d66e49dce8a87bea570c64b2",
+        "name": "itens interativos/stepper/inativo/observacoes",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Se a etapa anterior não for obrigatória, o componente será  ativado automaticamente."
+      },
+      {
+        "key": "8b18c1dfe1de37cc1928b38f0342af4b1350a5ae",
+        "name": "itens interativos/stepper/inativo/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, deve ser fornecido a role=\"tablist\" por padrão, role=\"tab\" quando selecionado e role=\"tabpanel\" quando expadindo. O atributo aria-selected  é definido automaticamente com base na alteração da seleção."
+      },
+      {
+        "key": "0fae9db2e8e3a558a39a627eed754a4eca8d4685",
+        "name": "itens interativos/stepper/preenchido/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Agrupar e identificar como tab. Deve-se ler o seu rótulo visível junto de sua localização no grupo. A exemplo: “1 de 3”. Também considerar o status do elemento como “Preenchido\"."
+      },
+      {
+        "key": "6432b770d59bc194c57cac0c16ded453955a30bf",
+        "name": "itens interativos/stepper/preenchido/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, deve ser fornecido a role=\"tablist\" por padrão, role=\"tab\" quando selecionado e role=\"tabpanel\" quando expadindo. O atributo aria-selected  é definido automaticamente com base na alteração da seleção."
+      },
+      {
+        "key": "a9b2089f9e898714c2323ea679d282cf76ba82b8",
+        "name": "itens interativos/switch/selecionado/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como switch."
+      },
+      {
+        "key": "6eb52503a5a55dde0e8c3e3859b02a5a20435b3b",
+        "name": "itens interativos/switch/selecionado/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML identificar o status do componente como marcado com o atributo aria-checked=“true”,  deve-se também inserir aria-label para adicionar um nome acessível ao elemento."
+      },
+      {
+        "key": "0c9358e5e3413d205e557d24bc150c7599bcdd0b",
+        "name": "itens interativos/switch/switch e rótulo/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como switch e ler o seu rótulo visível em tela."
+      },
+      {
+        "key": "b054229334103d0156e2e228b8cdc656ca21c74d",
+        "name": "itens interativos/switch/Somente switch/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como switch."
+      },
+      {
+        "key": "2078c0a309027a0042713b7b43989adf9ea979f7",
+        "name": "itens interativos/switch/Somente switch/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar o status do componente como marcado ou desmarcado com o atributo aria-checked=\"true\" ou \"false\". Deve-se também, inserir aria-label para adicionar um nome acessível ao elemento."
+      },
+      {
+        "key": "a981b3e34b9340fa27975e404e561d8d066c2fec",
+        "name": "itens interativos/checkbox/indeterminada em grupo/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como checkbox."
+      },
+      {
+        "key": "2896ce1692b3b2ef326e770d095ccfa50f2bbd8d",
+        "name": "itens interativos/checkbox/indeterminada em grupo/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar o status do componente como mixed com o atributo aria-checked=\"mixed\" e com o atributo aria-controls=\"[IDREFS]\" para identificar que um conjunto de checkboxes está sendo controlado pela caixa mista, deve-se também inserir aria-label para adicionar um nome acessível ao elemento."
+      },
+      {
+        "key": "4d38c3988ff295b26518200b78f6cd73bf8f3582",
+        "name": "itens interativos/checkbox/Somente caixa/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como checkbox."
+      },
+      {
+        "key": "584aa461cc55515eba160972923da84423f28ee6",
+        "name": "itens interativos/checkbox/Somente caixa/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML, identificar o status do componente como desmarcado com o atributo aria-checked=\"false\". Deve-se também inserir aria-label para adicionar um nome acessível ao elemento."
+      },
+      {
+        "key": "c2ef3e9e7b62b78f31229681acde538cc844b9e2",
+        "name": "itens interativos/checkbox/caixa selecionada/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como checkbox."
+      },
+      {
+        "key": "11477072960f994d55e4067c797adc9ee4701cfe",
+        "name": "itens interativos/checkbox/caixa selecionada/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML identificar o status do componente como marcado com o atributo aria-checked=“true”,  deve-se também inserir aria-label para adicionar um nome acessível ao elemento."
+      },
+      {
+        "key": "624a4bf19710eb43d67086688c7bbd1dd7961f05",
+        "name": "itens interativos/checkbox/caixa e rótulo/descrição",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como checkbox e ler o seu rótulo visível em tela."
+      },
+      {
+        "key": "4b74694441ee7137458660c3aa653201a65dc3db",
+        "name": "itens interativos/accordion/header/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como button e ler o seu rótulo visível em tela."
+      },
+      {
+        "key": "651efb4dc5163e6eb1d0af0389c30881c0864cc4",
+        "name": "itens interativos/accordion/header/nota de código",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "O título de cada cabeçalho do accordion deve ser atrelado em um elemento com a role=\"button”, considerar também o status do painel como expandindo ou recolhido com o atributo aria-expanded."
+      },
+      {
+        "key": "a95fab25cd95a9b2df744b8ad030478d0c9ddf8a",
+        "name": "itens interativos/badge/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Deve ser identificado como tab e ter um rótulo acessível associado"
+      },
+      {
+        "key": "023c7cdc79633bdf5f01a7496d523b46292997a2",
+        "name": "itens interativos/badge/observacoes",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "A label acessível da badge será lido após seu destino de navegação.  O badge é usado para indicar uma notificação não lida, ele fica oculto após ser selecionado."
+      },
+      {
+        "key": "b0509891ef832b4187467bb4bb53543e070f204c",
+        "name": "itens interativos/badge/notas",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Dentro de um role=\"tab\", o badge vira parte do nome da aba. É preciso inserir um aria-label para dar o significado completo, ex.: “3 novas mensagens”."
+      },
+      {
+        "key": "663a2403509d8ce575c1aeb5f788c1993af60bf6",
+        "name": "titulos/h1/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como título de nível 1."
+      },
+      {
+        "key": "11ff1763c7bc13611de6de700752ed0b4ef570f0",
+        "name": "titulos/h1/observacoes",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Geralmente só é utilizado um <h1> por página."
+      },
+      {
+        "key": "87e2f2467905d6bd10efe16fc8b296dd989ab6cf",
+        "name": "titulos/h2/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como título de nível 2."
+      },
+      {
+        "key": "9c7c6702542aeace262318562d1dd020c378afd8",
+        "name": "titulos/h2/observacoes",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "É um sub-assunto da <h1>."
+      },
+      {
+        "key": "28711105b683a6811245ae8010e32e9aaf9cc04c",
+        "name": "titulos/h3/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como título de nível 3."
+      },
+      {
+        "key": "605b6169e3966dd7a7857dd6d70561d27f751a85",
+        "name": "titulos/h3/observacoes",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "É um sub-assunto da <h2>."
+      },
+      {
+        "key": "9207e1619855997cffd3dc01e40ad63515a13dbc",
+        "name": "titulos/h4/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como título de nível 4."
+      },
+      {
+        "key": "e7501f71a969d1ca8f58538834164fe7ad5b3515",
+        "name": "titulos/h4/observacoes",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "É um sub-assunto da <h3>."
+      },
+      {
+        "key": "ff8f902ebd6a12e5330c29e2897e26a9c9432b98",
+        "name": "titulos/h5/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como título de nível 5."
+      },
+      {
+        "key": "f770320dc25f21b9214a2db1eeae556288bf0c97",
+        "name": "titulos/h5/observacoes",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "É um sub-assunto da <h4>."
+      },
+      {
+        "key": "bb3bddc88cde72ceecdbb8a728576ac6d1dd3e8d",
+        "name": "titulos/h6/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Identificar como título de nível 6."
+      },
+      {
+        "key": "dfb69e223db4abfb870d7e9a6f399beb0afa14d5",
+        "name": "titulos/h6/observacoes",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "É um sub-assunto da <h5>."
+      },
+      {
+        "key": "c4e4053d054287b344d13172419365e4f429c7ec",
+        "name": "decorativo/ignorar LT elemento/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Não deve ser anunciado pelo Leitor de Tela."
+      },
+      {
+        "key": "fb69d74c2ece84eabc3597af1116dca8d1c5ba5c",
+        "name": "decorativo/ignorar LT img/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Não deve ser anunciado pelo Leitor de Tela."
+      },
+      {
+        "key": "8d04413031fdae9cc6679303db0943b9d00d6a53",
+        "name": "decorativo/ignorar LT img/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML utilize o atributo alt=\"\" com o valor vazio."
+      },
+      {
+        "key": "e42169aff8e3b33a018a78ee54c8c68dc9314c61",
+        "name": "estruturais/marcos/main/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Indicar o conteúdo como principal da página."
+      },
+      {
+        "key": "be5c7d4362a9c7c3faa09da87975f965437074f1",
+        "name": "estruturais/marcos/main/observacoes",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "O elemento <main> deve ser o conteúdo mais importante e exclusivo da página."
+      },
+      {
+        "key": "019e2a0593bf25a0aa188e7d0121d75c59b30ba3",
+        "name": "estruturais/marcos/main/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML <main> não deve ser usado dentro de elementos como <article>, <aside>, <footer>, <header> ou <nav>. "
+      },
+      {
+        "key": "8a1bf20e8555df7f5846648e2ff53434c98ad7e5",
+        "name": "estruturais/marcos/nav/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Indicar como navegação."
+      },
+      {
+        "key": "84b9b42372dbc159069d429688e319332f44efb4",
+        "name": "estruturais/marcos/nav/observacoes",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Com a tag <nav> os Leitores de Tela anunciam que a seção é uma navegação para que a pessoa usuária identifique que é uma sequência de links."
+      },
+      {
+        "key": "68ed3cf40ec028ac4d238ee52900658ccf472ae5",
+        "name": "estruturais/marcos/nav/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML use a tag <nav> para agrupar os link."
+      },
+      {
+        "key": "5f390c667745c8069f8406a0d5f6a6bc25423496",
+        "name": "estruturais/marcos/aside/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Indicar como seção."
+      },
+      {
+        "key": "8da3211ced84ec5e9cda4245c25c6bd423469b6f",
+        "name": "estruturais/marcos/aside/observacoes",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "O conteúdo da <aside> enriquece a experiência com o Leitor de Tela e são complementares à navegação principal. "
+      },
+      {
+        "key": "a3924ac21232e907db7a2e63061370177684de5b",
+        "name": "estruturais/marcos/aside/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML <aside> possui um significado semântico, indicando que o conteúdo é \"à parte\",  mas relacionado. "
+      },
+      {
+        "key": "9fb826cb3106b524ea3b7c24bc34e86d23d1f268",
+        "name": "itens interativos/lista/ordenada/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Construir como lista ordenada."
+      },
+      {
+        "key": "6549fe3b3f19153b25001fb272dd6bb3a20c611b",
+        "name": "estruturais/marcos/header/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Indicar como cabeçalho. "
+      },
+      {
+        "key": "dcc66b5accd20fd977ad8adddf8573fe938fba64",
+        "name": "estruturais/marcos/header/observacoes",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "É um elemento que ajuda a organizar o conteúdo da página, fornecendo uma estrutura clara e semântica."
+      },
+      {
+        "key": "96643391afeaee052a0c1892d2e60c7040eeac1c",
+        "name": "itens interativos/lista/ordenada/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML utilize a tag <ol>."
+      },
+      {
+        "key": "3c17610e4228bf785764215fc58d4406848f1ff9",
+        "name": "estruturais/marcos/header/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML use a tag <header> para um cabeçalho de uma seção ou página."
+      },
+      {
+        "key": "6506ef617dbb027d6c7714f609a07b82d41338c8",
+        "name": "itens interativos/lista/nao ordenada/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Construir como lista não ordenada."
+      },
+      {
+        "key": "6e4aed443c5b6cfe318c637887897d3cce78b139",
+        "name": "estruturais/marcos/footer/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Indicar como rodapé. "
+      },
+      {
+        "key": "e1710a4ac8687bb89799d8f5e46f9f74b7a1d263",
+        "name": "itens interativos/lista/nao ordenada/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML utilize a tag <ul>."
+      },
+      {
+        "key": "dc0385fb306fc9c6e13c48bc6d6f6939457545ba",
+        "name": "estruturais/marcos/footer/observacoes",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "É um elemento que oferece um local centralizado para informações importantes para serem acessadas facilmente."
+      },
+      {
+        "key": "0c5e36755c9ffeace223ac70479e3cc06a33c013",
+        "name": "itens interativos/lista/de definição/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Construir como lista de definição."
+      },
+      {
+        "key": "f4cffb7e6b130dc20dee93887059f7fc68264134",
+        "name": "itens interativos/lista/de definição/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML utilize a tag <dl>."
+      },
+      {
+        "key": "2cacfd2766356cba69327f85d9b015f7d33bd399",
+        "name": "estruturais/marcos/footer/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": " Em HTML use a tag <footer> para agrupar informações relacionadas à parte inferior de uma página ou seção."
+      },
+      {
+        "key": "0dbec947265d6d739987db9fedca81d9d42fed2b",
+        "name": "estruturais/titulo da pagina/observacao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "É necessário garantir que cada página tenha um título descritivo, o título da interface é diferente do H1."
+      },
+      {
+        "key": "fdebeeceb5e9cea6946af0cfe496e983d7e611da",
+        "name": "estruturais/idioma/da pagina/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML Insira o atributo lang e defina o idioma principal da página, por exemplo: Para português do Brasil: <html lang=\"pt-br\">. Para inglês: <html lang=\"en\">. Para espanhol: <html lang=\"es\">. "
+      },
+      {
+        "key": "556eeae63eda70c8b5a04b86efb9789a04a8dc76",
+        "name": "estruturais/idioma/das partes/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": " Indicar a(s) palavras(s) em um idioma."
+      },
+      {
+        "key": "9e9c627d80d9c28b3e87f31e6ea2a0d17e384b6b",
+        "name": "estruturais/idioma/das partes/observacoes",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Elementos que contenham texto num idioma diferente do idioma principal da página devem estar declarados no HTML."
+      }
+    ]
   },
   "styleTokens": {
     "colors": [],
