@@ -577,6 +577,11 @@ figma.ui.onmessage = async (msg) => {
         return section;
       }
 
+      // ATENÇÃO: o handler 'pull-ficha-version-from-canvas' (mais abaixo neste
+      // arquivo) lê de volta o campo "Versão" navegando por nome do frame
+      // ('[Campo] Versão') e por posição do nó TEXT (label=[0], valor=[1]).
+      // Mudar o label "Versão" ou a ordem dos filhos aqui quebra essa leitura
+      // silenciosamente (degrada para null, não lança erro).
       function createRow(parent, label, value, isLink = false, url = "") {
         const row = createFrame("VERTICAL", 0, 4);
         row.name = `[Campo] ${label}`;
@@ -3753,6 +3758,36 @@ figma.ui.onmessage = async (msg) => {
     }
 
     figma.ui.postMessage({ type: 'briefing-data-pulled', data });
+    return;
+  }
+
+  // Resgata a versao da ficha de handoff mais recente ja gerada na pagina
+  // atual (busca por nome, ignora titulo -- assume 1 handoff por pagina).
+  // Usado ao abrir o modal "Gerar Ficha" para o resumo/versionamento
+  // partirem do que de fato esta no canvas, nao so do que ficou salvo
+  // no estado do plugin (que pode estar desatualizado).
+  if (msg.type === 'pull-ficha-version-from-canvas') {
+    // Try/catch cobre toda a leitura: o frontend depende de sempre receber
+    // uma resposta para não travar o botão "Gerar Ficha" (ver timeout de
+    // segurança em openHandoffInjectModal, modules/handoff.js).
+    try {
+      const fichas = figma.currentPage.children.filter(
+        n => n.type === 'FRAME' && n.name.startsWith('Handex | Ficha de Projeto')
+      );
+      if (fichas.length === 0) {
+        figma.ui.postMessage({ type: 'ficha-version-pulled', versao: null });
+        return;
+      }
+      // Nome inclui timestamp "YYYY-MM-DD HH:MM" no final -- ordenação de string já resolve "mais recente"
+      fichas.sort((a, b) => a.name.localeCompare(b.name));
+      const latest = fichas[fichas.length - 1];
+      const campoVersao = latest.findOne(n => n.type === 'FRAME' && n.name === '[Campo] Versão');
+      const versaoText = campoVersao ? campoVersao.findAll(n => n.type === 'TEXT')[1] : null;
+      const versao = versaoText ? versaoText.characters.trim() : null;
+      figma.ui.postMessage({ type: 'ficha-version-pulled', versao: (versao && versao !== '-') ? versao : null });
+    } catch (e) {
+      figma.ui.postMessage({ type: 'ficha-version-pulled', versao: null });
+    }
     return;
   }
 
