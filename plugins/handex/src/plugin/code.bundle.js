@@ -3566,6 +3566,26 @@
       figma.ui.postMessage({ type: "briefing-data-pulled", data });
       return;
     }
+    if (msg.type === "pull-ficha-version-from-canvas") {
+      try {
+        const fichas = figma.currentPage.children.filter(
+          (n) => n.type === "FRAME" && n.name.startsWith("Handex | Ficha de Projeto")
+        );
+        if (fichas.length === 0) {
+          figma.ui.postMessage({ type: "ficha-version-pulled", versao: null });
+          return;
+        }
+        fichas.sort((a, b) => a.name.localeCompare(b.name));
+        const latest = fichas[fichas.length - 1];
+        const campoVersao = latest.findOne((n) => n.type === "FRAME" && n.name === "[Campo] Vers\xE3o");
+        const versaoText = campoVersao ? campoVersao.findAll((n) => n.type === "TEXT")[1] : null;
+        const versao = versaoText ? versaoText.characters.trim() : null;
+        figma.ui.postMessage({ type: "ficha-version-pulled", versao: versao && versao !== "-" ? versao : null });
+      } catch (e) {
+        figma.ui.postMessage({ type: "ficha-version-pulled", versao: null });
+      }
+      return;
+    }
     if (msg.type === "inject-framework") {
       (async () => {
         for (const font of [
