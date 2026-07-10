@@ -1065,10 +1065,10 @@ function _csSyncPanel(wid) {
 
 // ── Dropdown customizado de Status (Step 1) ────────────────────────────
 const _STATUS_CONFIG = {
-  'rascunho':        { label: 'Rascunho',        dot: 'bg-gray-400' },
-  'em-revisao':      { label: 'Em Revisão',       dot: 'bg-amber-400' },
-  'pronto-para-dev': { label: 'Pronto para Dev',  dot: 'bg-blue-500' },
-  'finalizado':      { label: 'Finalizado',       dot: 'bg-green-500' }
+  'rascunho':        { label: 'Rascunho',        dot: 'bg-gray-400',  chipBg: 'bg-gray-100 dark:bg-slate-700',        chipText: 'text-slate-600 dark:text-dark-muted' },
+  'em-revisao':      { label: 'Em Revisão',       dot: 'bg-amber-400', chipBg: 'bg-amber-50 dark:bg-amber-900/20',    chipText: 'text-amber-700 dark:text-amber-300' },
+  'pronto-para-dev': { label: 'Pronto para Dev',  dot: 'bg-blue-500',  chipBg: 'bg-blue-50 dark:bg-blue-900/20',      chipText: 'text-blue-700 dark:text-blue-300' },
+  'finalizado':      { label: 'Finalizado',       dot: 'bg-green-500', chipBg: 'bg-green-50 dark:bg-green-900/20',    chipText: 'text-green-700 dark:text-green-300' }
 };
 
 function _syncStatusUI(value) {
@@ -1715,8 +1715,19 @@ function updateHandoffSummary() {
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   set('hs-titulo', titulo);
   set('hs-versao', versao);
-  set('hs-status', status);
   set('hs-designer', designer?.nome || '—');
+
+  const statusChip = document.getElementById('hs-status');
+  const statusDot  = document.getElementById('hs-status-dot');
+  const statusText = document.getElementById('hs-status-text');
+  const statusCfg  = _STATUS_CONFIG[status] || null;
+  if (statusChip) {
+    statusChip.className = statusCfg
+      ? `inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold ${statusCfg.chipBg} ${statusCfg.chipText}`
+      : 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-gray-100 dark:bg-slate-700 text-slate-600 dark:text-dark-muted';
+  }
+  if (statusDot) statusDot.className = `w-1.5 h-1.5 rounded-full shrink-0 ${statusCfg ? statusCfg.dot : 'bg-gray-400'}`;
+  if (statusText) statusText.textContent = statusCfg ? statusCfg.label : status;
 
   const jornada = handoffData.step1?.jornada || '';
   const feature = handoffData.step1?.feature || '';
