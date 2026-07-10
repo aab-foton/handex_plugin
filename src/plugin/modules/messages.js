@@ -189,6 +189,11 @@
         showToast(`Anotações criadas`);
       }
 
+      if (msg.type === 'toast') {
+        // showToast() ainda não trata msg.kind (error/success/warning) — sempre exibe ícone de sucesso.
+        showToast(msg.message);
+      }
+
       if (msg.type === 'snapshot-history') {
         handoffData._history = Array.isArray(msg.history) ? msg.history : [];
         handoffData.previousSnapshot = handoffData._history[0] || null;

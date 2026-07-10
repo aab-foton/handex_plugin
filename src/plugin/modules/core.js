@@ -302,26 +302,7 @@ let nextMeasurementNumber = 1;
 
 document.addEventListener('DOMContentLoaded', () => {
   _refreshIcons();
-  initFabInlineLabels();
 });
-
-// ── Botões .fab-inline (header secundário) mostram o label até a primeira
-// interação. A classe inicial (se já visto) é aplicada em <html> por um
-// script inline no <head> do build.cjs, antes do body renderizar (evita
-// flash do label).
-const FAB_ACTIONS_SEEN_KEY = 'handex-fab-actions-seen-v1';
-
-function initFabInlineLabels() {
-  if (document.documentElement.classList.contains('fab-actions-collapsed')) return;
-  document.querySelectorAll('.fab-inline').forEach((btn) => {
-    btn.addEventListener('click', collapseFabInlineLabels, { once: true });
-  });
-}
-
-function collapseFabInlineLabels() {
-  document.documentElement.classList.add('fab-actions-collapsed');
-  try { localStorage.setItem(FAB_ACTIONS_SEEN_KEY, '1'); } catch (e) { }
-}
 
 // ── Plugin Collapse / Expand ──────────────────────────────────────────
 let isCollapsed = false;
