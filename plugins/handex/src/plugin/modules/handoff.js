@@ -232,6 +232,20 @@ ${(handoffData.createdFlows || []).length === 0
     function openHandoffInjectModal() {
       collectHandoffData();
 
+      // Mesma checagem de obrigatórios usada em createHandoffOnCanvas — precisa
+      // bloquear "Gerar assim mesmo" aqui dentro, não só na hora de gerar de fato.
+      const _titulo   = (handoffData.step1.titulo  || '').trim();
+      const _versao   = (handoffData.step1.versao  || '').trim();
+      const _objetivo = (handoffData.step1.objetivo || '').trim();
+      const _designer = (handoffData.step1.equipe  || []).find(
+        m => (m.papel || '').toLowerCase() === 'designer' && (m.nome || '').trim()
+      );
+      const missingRequired = [];
+      if (!_titulo)   missingRequired.push('nome do projeto');
+      if (!_designer) missingRequired.push('nome do designer');
+      if (!_versao)   missingRequired.push('versão');
+      if (!_objetivo) missingRequired.push('objetivo da entrega');
+
       const hasInfo = !!(
         (handoffData.step1.titulo || '').trim() ||
         (handoffData.step1.equipe || []).some(m => (m.nome || '').trim())
@@ -274,9 +288,13 @@ ${(handoffData.createdFlows || []).length === 0
       const stateMulti  = document.getElementById('inject-state-multi');
       [stateEmpty, stateSingle, stateMulti].forEach(el => { if (el) el.classList.add('hidden'); });
 
-      const hasBasicInfo = (handoffData.step1.equipe || []).some(m => (m.nome || '').trim());
-
-      if (!hasBasicInfo) {
+      if (missingRequired.length > 0) {
+        const emptyMsgEl = document.getElementById('inject-empty-msg');
+        if (emptyMsgEl) {
+          emptyMsgEl.textContent = missingRequired.length === 1
+            ? `Falta preencher: ${missingRequired[0]}.`
+            : `Faltam preencher: ${missingRequired.join(', ')}.`;
+        }
         if (stateEmpty) stateEmpty.classList.remove('hidden');
       } else if (filled.length === 1) {
         const labels = { info: 'Informações do Projeto', specs: 'Especificações', measures: 'Medidas', flows: 'Fluxos de Tela' };
