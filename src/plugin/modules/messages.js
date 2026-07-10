@@ -140,6 +140,24 @@
         saveToStorage();
       }
 
+      if (msg.type === 'ficha-version-pulled') {
+        // Sincroniza handoffData com a versão real da ficha já gerada no
+        // canvas (se houver), antes de abrir o modal "Gerar Ficha" — evita
+        // que o resumo/versionamento partam de um estado desatualizado.
+        if (msg.versao) {
+          handoffData.step1.versao = msg.versao;
+          handoffData._fichaGenerated = true;
+          const s1Versao = document.getElementById('s1-versao');
+          if (s1Versao) s1Versao.value = msg.versao;
+          saveToStorage();
+        }
+        clearTimeout(window._pullVersionTimeout);
+        if (window._pendingOpenInjectModal && typeof _continueOpenHandoffInjectModal === 'function') {
+          _continueOpenHandoffInjectModal();
+        }
+        window._pendingOpenInjectModal = false;
+      }
+
       if (msg.type === "selection-link") {
         if (msg.targetId === 'exc-modal-vinc') {
           const vinc = document.getElementById('exc-modal-vinc');

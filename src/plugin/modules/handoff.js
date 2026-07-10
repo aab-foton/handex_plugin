@@ -227,6 +227,27 @@ ${(handoffData.createdFlows || []).length === 0
     }
 
     function openHandoffInjectModal() {
+      // Antes de decidir o estado do modal, resgata do canvas a versão da
+      // ficha mais recente já gerada (se houver) — o handoffData salvo no
+      // plugin pode estar desatualizado em relação ao que está no board.
+      parent.postMessage({ pluginMessage: { type: 'pull-ficha-version-from-canvas' } }, '*');
+      window._pendingOpenInjectModal = true;
+      // Rede de segurança: se a resposta não chegar (backend desatualizado,
+      // falha inesperada na leitura do canvas), não deixa o botão travado —
+      // segue com o que já está salvo localmente.
+      clearTimeout(window._pullVersionTimeout);
+      window._pullVersionTimeout = setTimeout(() => {
+        if (window._pendingOpenInjectModal) {
+          window._pendingOpenInjectModal = false;
+          _continueOpenHandoffInjectModal();
+        }
+      }, 1500);
+    }
+    window.openHandoffInjectModal = openHandoffInjectModal;
+
+    // Chamada pelo handler de 'ficha-version-pulled' em messages.js, depois
+    // de sincronizar handoffData.step1.versao com o que está no canvas.
+    function _continueOpenHandoffInjectModal() {
       collectHandoffData();
 
       // Mesma checagem de obrigatórios usada em createHandoffOnCanvas — precisa
@@ -305,7 +326,7 @@ ${(handoffData.createdFlows || []).length === 0
       if (typeof openModal === 'function') openModal('handoff-inject-modal');
       if (typeof _refreshIcons === 'function') _refreshIcons();
     }
-    window.openHandoffInjectModal = openHandoffInjectModal;
+    window._continueOpenHandoffInjectModal = _continueOpenHandoffInjectModal;
 
     function _confirmHandoffInject() {
       const chkInfo = document.getElementById('inject-chk-info');
