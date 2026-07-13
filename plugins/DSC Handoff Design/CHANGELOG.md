@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.3.1 — 2026-07-13
+
+### Correções
+
+- **Nome do componente perdia o case original** — o título do handoff sempre forçava o nome para minúsculas com só a primeira letra maiúscula (ex: "FAQ" virava "Faq"). Agora o nome é usado exatamente como escrito no Component Set.
+- **Token de texto não trocava no dark mode dos cards de preview** — nos cards de variação com fundo escuro, só o fundo (`card background`) trocava de token; o label (ex: "TRUE - Dark") continuava vinculado ao token de texto do modo claro, ficando com baixo contraste. Agora `card text` também é aplicado ao label.
+
+### Manutenção
+
+- Limpeza de lint: removidas 5 funções mortas e 1 variável não usada, `no-empty` liberado para `catch {}` (padrão intencional do plugin), 3 funções internas movidas para a raiz do escopo, e removidos 3 fallbacks deprecados de `setExplicitVariableModeForCollection`.
+
 ## v2.3.0 — 2026-07-09
 
 ### Novidades

@@ -1,6 +1,6 @@
 {
   "name": "DSC-Handoff",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Your Figma Plugin",
   "main": "code.js",
   "scripts": {
@@ -38,6 +38,10 @@
           "varsIgnorePattern": "^_",
           "caughtErrorsIgnorePattern": "^_"
         }
+      ],
+      "no-empty": [
+        "error",
+        { "allowEmptyCatch": true }
       ]
     }
   }
