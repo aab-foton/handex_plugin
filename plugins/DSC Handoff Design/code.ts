@@ -629,9 +629,12 @@ async function buscarEAplicarPorNome(
           let noAlvo: TextNode | null = null;
 
           if (sufixo === "desc") {
-            noAlvo = buscarPrimeiroTexto(
-              buscarFilho(frame, "Cell 03") || buscarFilho(frame, "Description") || frame
-            );
+            // Template atual (anatomy): descrição vive dentro da instância "[dsc-hub] Card Alert"
+            // (ver gerarSecaoAnatomia). "Cell 03"/"Description" são o formato legado (tabela/anatomy antigos).
+            const cardAlertRow = buscarFilhoSubstring(frame, "card alert") as InstanceNode | null;
+            noAlvo = cardAlertRow
+              ? coletarTextos(cardAlertRow).find(t => t.visible && t.name.toLowerCase() !== "title") || null
+              : buscarPrimeiroTexto(buscarFilho(frame, "Cell 03") || buscarFilho(frame, "Description") || frame);
           } else if (sufixo === "valor") {
             noAlvo = buscarPrimeiroTexto(buscarFilho(frame, "Cell 02") || frame);
           }
@@ -1196,12 +1199,29 @@ async function aplicarDarkModeHandoff(card: FrameNode, label?: TextNode | null):
 /** Cache de variables de cor (locais + importadas) */
 let _cacheVariablesPorNome: Map<string, Variable> | null = null;
 
+/** Nomes de variable já avisados como não encontrados nesta geração (evita notify duplicado) */
+let _avisosVariableFaltando: Set<string> = new Set();
+
+/**
+ * Notifica (uma vez por geração) que uma variable de cor esperada não foi encontrada.
+ * Motivo mais comum: a library de cores tem a variable, mas ainda não foi publicada
+ * (ou o arquivo atual não puxou a atualização da library ainda).
+ */
+function avisarVariableFaltando(nomeVariable: string): void {
+  if (_avisosVariableFaltando.has(nomeVariable)) return;
+  _avisosVariableFaltando.add(nomeVariable);
+  try {
+    figma.notify(`Variable "${nomeVariable}" não encontrada — publique a library de cores ou verifique o nome.`, { timeout: 6000 });
+  } catch {}
+}
+
 /**
  * Constrói cache de variables buscando locais e importadas (via collections de bound variables).
  * Recebe um nó de referência (ex: template) para descobrir collections importadas.
  */
 async function construirCacheVariables(noReferencia?: SceneNode): Promise<void> {
   if (_cacheVariablesPorNome) return;
+  _avisosVariableFaltando = new Set();
   _cacheVariablesPorNome = new Map();
 
   try {
@@ -1282,6 +1302,7 @@ async function aplicarCorTextoComVariable(textNode: TextNode, nomeVariable: stri
       paint = figma.variables.setBoundVariableForPaint(paint, 'color', variable);
       textNode.fills = [paint];
     } else {
+      avisarVariableFaltando(nomeVariable);
       textNode.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
     }
   } catch {
@@ -1297,6 +1318,7 @@ async function aplicarFundoComVariable(card: FrameNode, nomeVariable: string): P
       paint = figma.variables.setBoundVariableForPaint(paint, 'color', variable);
       card.fills = [paint];
     } else {
+      avisarVariableFaltando(nomeVariable);
       card.fills = [{ type: 'SOLID', color: { r: 0.15, g: 0.15, b: 0.15 } }];
     }
   } catch {
@@ -3177,17 +3199,45 @@ async function gerarSecaoAnatomia(
           }
         }
 
-        const descricao = buscarFilho(elementoItem, "Description");
-        if (descricao) {
-          const textoDesc = buscarPrimeiroTexto(descricao);
+        // Container de descrição: template legado usava um frame "Description" com um
+        // TextNode solto dentro. O template atual usa a instância "[dsc-hub] Card Alert"
+        // (protegida por desvincularTodasInstancias), com o texto visível em
+        // "Text Container" > "Text" (há também um "Title" oculto, não usado aqui).
+        const descricaoLegado = buscarFilho(elementoItem, "Description");
+        const cardAlert = !descricaoLegado
+          ? buscarFilhoSubstring(elementoItem, "card alert") as InstanceNode | null
+          : null;
+
+        if (descricaoLegado) {
+          const textoDesc = buscarPrimeiroTexto(descricaoLegado);
           if (textoDesc) {
-            await carregarFontes(descricao);
+            await carregarFontes(descricaoLegado);
             const nomeElementoLimpo = limparNomeElementoAnatomia(elem.nome);
             if (elem.dependeDe) {
               textoDesc.characters = `Nested Component: ${elem.dependeDe}`;
             } else {
               textoDesc.characters = " ";
-              if ("visible" in descricao) (descricao as any).visible = false;
+              if ("visible" in descricaoLegado) (descricaoLegado as any).visible = false;
+            }
+            marcarTextoOriginal(textoDesc, `anatomy::${nomeElementoLimpo}::desc`);
+          }
+        } else if (cardAlert) {
+          const textoDesc = coletarTextos(cardAlert).find(t => t.visible && t.name.toLowerCase() !== "title");
+          if (textoDesc) {
+            await carregarFontes(cardAlert);
+            const nomeElementoLimpo = limparNomeElementoAnatomia(elem.nome);
+            if (elem.dependeDe) {
+              const textoFinal = `Nested Component: ${elem.dependeDe}`;
+              const chaveTexto = (textoDesc as any).componentPropertyReferences?.characters as string | undefined;
+              if (chaveTexto) {
+                try { cardAlert.setProperties({ [chaveTexto]: textoFinal }); }
+                catch { textoDesc.characters = textoFinal; }
+              } else {
+                textoDesc.characters = textoFinal;
+              }
+              cardAlert.visible = true;
+            } else {
+              cardAlert.visible = false;
             }
             marcarTextoOriginal(textoDesc, `anatomy::${nomeElementoLimpo}::desc`);
           }
@@ -4341,6 +4391,36 @@ figma.ui.onmessage = async (msg) => {
   if (msg.type === 'rodar-varredura-template') {
     const resultado = await varrerNomesTemplate();
     figma.ui.postMessage({ type: 'varredura-template-resultado', ...resultado });
+  }
+
+  /**
+   * DEV (TEMPORÁRIO) — limpa o backup de edições manuais preservadas (persistido via pluginData
+   * em `edicoesManuais::<secao>`) do handoff selecionado. Usado para corrigir handoffs com
+   * conteúdo travado por edições antigas incorretas (ex: bug de pareamento nome/descrição na
+   * anatomia) que ficam sendo reinjetadas a cada atualização mesmo após o bug ser corrigido.
+   * Requer selecionar o FRAME "[dsc] handoff: ..." (não o componente).
+   */
+  if (msg.type === 'limpar-edicoes-preservadas') {
+    const selecao = figma.currentPage.selection;
+    const handoffFrame = selecao.find(n =>
+      n.type === 'FRAME' && n.name.toLowerCase().startsWith('[dsc] handoff:')
+    ) as FrameNode | undefined;
+    if (!handoffFrame) {
+      figma.ui.postMessage({
+        type: 'limpar-edicoes-resultado',
+        ok: false,
+        mensagem: 'Selecione o FRAME "[dsc] handoff: ..." (o handoff gerado, não o componente original).',
+      });
+      return;
+    }
+    for (const secao of SECOES_GERAVEIS) {
+      handoffFrame.setPluginData(`edicoesManuais::${secao}`, "");
+    }
+    figma.ui.postMessage({
+      type: 'limpar-edicoes-resultado',
+      ok: true,
+      mensagem: `Backup de edições preservadas limpo em "${handoffFrame.name}". Rode "Atualizar" nesse handoff pra ver o conteúdo fresco.`,
+    });
   }
 };
 

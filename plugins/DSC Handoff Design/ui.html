@@ -656,7 +656,7 @@
 
         <div class="settings-divider"></div>
 
-        <div class="settings-group">
+        <div class="settings-group" style="display:none;">
           <div class="dev-label">Dev (temporário)</div>
           <div class="extras-card">
             <div class="extras-card-title">🔍 Varredura de nomes do template</div>
@@ -664,6 +664,14 @@
               <p class="settings-help-text">Confere se os nomes literais que o code.ts procura (ex: [dsc-h] Item Number) existem no template novo. Não depende de seleção.</p>
               <button class="btn-extra full" id="btnVarreduraTemplate">Rodar varredura</button>
               <div id="varreduraResultado" style="display:none; margin-top:8px;"></div>
+            </div>
+          </div>
+          <div class="extras-card">
+            <div class="extras-card-title">🧹 Limpar edições preservadas</div>
+            <div style="padding:10px 12px;">
+              <p class="settings-help-text">Apaga o backup de edições manuais salvo no handoff selecionado (table/anatomy/variants/states). Use se um texto errado antigo continuar voltando depois de atualizar. Selecione o FRAME "[dsc] handoff: ..." antes de rodar.</p>
+              <button class="btn-extra full" id="btnLimparEdicoes">Limpar edições do handoff selecionado</button>
+              <div id="limparEdicoesResultado" style="display:none; margin-top:8px;"></div>
             </div>
           </div>
         </div>
@@ -792,7 +800,7 @@
     </div>
   </div>
 
-  <div class="footer" id="mainFooter" style="display:none;">DSC Handoff v2.3.1</div>
+  <div class="footer" id="mainFooter" style="display:none;">DSC Handoff v2.3.2</div>
 
   <script>
     const waitingState = document.getElementById('waitingState');
@@ -1058,6 +1066,23 @@
       }).join('');
     }
 
+    const btnLimparEdicoes = document.getElementById('btnLimparEdicoes');
+    const limparEdicoesResultado = document.getElementById('limparEdicoesResultado');
+    btnLimparEdicoes.onclick = () => {
+      btnLimparEdicoes.disabled = true;
+      btnLimparEdicoes.textContent = 'Limpando...';
+      parent.postMessage({ pluginMessage: { type: 'limpar-edicoes-preservadas' } }, '*');
+    };
+
+    function renderLimparEdicoesResultado(msg) {
+      btnLimparEdicoes.disabled = false;
+      btnLimparEdicoes.textContent = 'Limpar edições do handoff selecionado';
+      limparEdicoesResultado.style.display = 'block';
+      const classe = msg.ok ? 'ok' : 'falha';
+      const icone = msg.ok ? '✓' : '✗';
+      limparEdicoesResultado.innerHTML = '<div class="varredura-item ' + classe + '">' + icone + ' ' + msg.mensagem + '</div>';
+    }
+
     window.onmessage = (event) => {
       const msg = event.data.pluginMessage;
       if (!msg) return;
@@ -1090,6 +1115,10 @@
       }
       if (msg.type === 'varredura-template-resultado') {
         renderVarreduraResultado(msg);
+        return;
+      }
+      if (msg.type === 'limpar-edicoes-resultado') {
+        renderLimparEdicoesResultado(msg);
         return;
       }
       if (msg.type === 'progress') {

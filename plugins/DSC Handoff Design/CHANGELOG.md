@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.3.2 — 2026-07-15
+
+### Correções
+
+- **Description da anatomia não era escrita para elementos aninhados** — o template trocou o container "Description" pela instância `[dsc-hub] Card Alert`, mas o código ainda procurava pelo container antigo (nome exato "Description"), então o texto "Nested Component: X" nunca substituía o placeholder do template. Corrigido tanto na geração quanto no fallback de reinjeção de edições manuais (`buscarEAplicarPorNome`), que tinha o mesmo problema.
+- **Edições manuais antigas incorretas ficavam presas em handoffs já gerados** — um backup de "edições preservadas" contaminado por um bug anterior de pareamento nome/descrição na anatomia era reinjetado a cada atualização, sobrescrevendo o conteúdo correto recém-gerado. Adicionada ferramenta de dev (Extras, oculta por padrão) pra limpar esse backup por handoff sem precisar descartar todas as edições manuais dele.
+
 ## v2.3.1 — 2026-07-13
 
 ### Correções
