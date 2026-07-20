@@ -1,7 +1,7 @@
 # DSC A11Y Handoff — Plugin Figma
 
 Plugin para preencher templates de handoff de acessibilidade no Figma.
-Branch atual: `feat/instance-based-preview`. Versão: `2.3.0`.
+Branch atual: `feat/instance-based-preview`. Versão: `2.3.2`.
 
 ## Arquivos
 
@@ -40,7 +40,7 @@ Seleção com handoff antigo (tem filho 'keyboard maping/mapping')
   → Usuário clica "Atualizar Handoff"
   → run-handoff detecta isOldHandoff → swap do template:
       → clona seções desmarcadas (oldSnapshots) antes de deletar o antigo
-      → importComponentByKeyAsync('d95d06ed0e31131a29a6f7c87c3fcc0f2eee6950')  ← [dsc-hub] Handoff Acessibility (lib nova, ainda não liberada geral)
+      → importComponentByKeyAsync('d95d06ed0e31131a29a6f7c87c3fcc0f2eee6950')  ← [dsc-hub] Handoff de Acessibilidade (lib nova, ainda não liberada geral)
       → createInstance() posicionada onde o antigo estava
       → transfere pluginData, deleta o antigo
       → restaura oldSnapshots nas seções correspondentes do novo template
@@ -56,8 +56,9 @@ Colunas em ordem: `mapeamento` → `descricao` → `utilizacao` (`"teclado"` ou 
 ## Regras de seleção
 
 - **Handoff**: nome contém algum item de `templateHandoffNames` (code.ts:~31) ou começa com `[dsc] A11Y Handoff:`
-  - Default: `['[dsc-h] Template Handoff', '[dsc-hub] Handoff Acessibility']` — lista editável em Configurações > "Nome do template" (persistida em `figma.clientStorage['a11y-template-names']`), para sobreviver a renomeações futuras sem precisar editar código. Handoffs antigos continuam reconhecidos mesmo depois de adicionar o nome novo — a lista é aditiva, não substitutiva.
-  - O template novo (`[dsc-hub] Handoff Acessibility`) é um componente individual, sem propriedade de variante — a validação de variante em `tentarTravarContexto` só se aplica (e só dispara erro) quando o nó selecionado tiver uma prop `VARIANT`, o que é exclusivo dos handoffs antigos ainda vinculados ao component set `[dsc-h] Template Handoff`.
+  - Default: `['[dsc-h] Template Handoff', '[dsc-hub] Handoff de Acessibilidade']`
+  - ⚠️ O nome real no Figma é "Handoff **de** Acessibilidade" (não "Handoff Acessibility") — já houve regressão por esse typo no default (2026-07-09), verificar sempre contra o nome real do node antes de editar. — lista editável em Configurações > "Nome do template" (persistida em `figma.clientStorage['a11y-template-names']`), para sobreviver a renomeações futuras sem precisar editar código. Handoffs antigos continuam reconhecidos mesmo depois de adicionar o nome novo — a lista é aditiva, não substitutiva.
+  - O template novo (`[dsc-hub] Handoff de Acessibilidade`) é um componente individual, sem propriedade de variante — a validação de variante em `tentarTravarContexto` só se aplica (e só dispara erro) quando o nó selecionado tiver uma prop `VARIANT`, o que é exclusivo dos handoffs antigos ainda vinculados ao component set `[dsc-h] Template Handoff`.
 - **Componente**: `COMPONENT | COMPONENT_SET | INSTANCE | FRAME` que não seja o handoff
 - Precisa exatamente **1 de cada**
 
@@ -121,3 +122,4 @@ No template fresco (colocado manualmente pelo designer), `table` pode ter `Heade
 - Spec rows do zoom: dentro de `zoom > specs (FRAME) > element`, visibilidade e numeração dos `element` controladas por `zoomTypes`; apenas rows de tipos selecionados ficam visíveis; os visíveis são renumerados sequencialmente
 - `modelConector`, `modelAgrupamento` e `modelItemNumber` ficam com `visible = false` (nunca `.remove()`) para permanecerem disponíveis como modelos de clonagem
 - imageFrame de toque: bounding-box calculada sobre filhos do tipo `variation-component`, `touch-overlay` e `touch-badge`; frame deslocado e redimensionado para incluir tudo; `clipsContent = false`
+- Modelo de box das specs de leitor de tela (dentro de `screen reader > all boxes`): nome antigo `'box specs screem reader'`, template novo renomeou para `'[a11y] Box specs LT'`. Lookup em `code.ts` (`isBoxSpecsModel`, ~1514) aceita o nome antigo OU qualquer nome contendo `'box specs'` — se `model` não é encontrado, o bloco inteiro de specs vira no-op silencioso (sem erro no console), só o preview no canvas continua funcionando. Achado em 2026-07-20 pelo mesmo padrão de bug dos outros renames do template novo.

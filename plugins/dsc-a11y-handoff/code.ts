@@ -31,7 +31,7 @@ let isHandoffGenerated = false;
 
 // Nomes de componente/instância reconhecidos como Template de Handoff.
 // Editável em Configurações > Nome do template (sem precisar alterar código a cada rename).
-const DEFAULT_TEMPLATE_HANDOFF_NAMES = ['[dsc-h] Template Handoff', '[dsc-hub] Handoff Acessibility'];
+const DEFAULT_TEMPLATE_HANDOFF_NAMES = ['[dsc-h] Template Handoff', '[dsc-hub] Handoff de Acessibilidade'];
 let templateHandoffNames: string[] = DEFAULT_TEMPLATE_HANDOFF_NAMES;
 figma.clientStorage.getAsync('a11y-template-names').then((saved) => {
   if (Array.isArray(saved) && saved.length > 0) templateHandoffNames = saved;
@@ -66,7 +66,7 @@ async function getCachedPluginDataNode(): Promise<InstanceNode | null> {
     pluginDataNodeId = null;
   }
   if (!handoffAtivo) return null;
-  const found = (handoffAtivo as any).findOne((n: SceneNode) => n.name === '[dsc-h] Plugin Data A11y') as InstanceNode | null;
+  const found = (handoffAtivo as any).findOne((n: SceneNode) => n.name === '[dsc-hub] Plugin Data A11y' || n.name === '[dsc-h] Plugin Data A11y') as InstanceNode | null;
   if (found) pluginDataNodeId = found.id;
   return found;
 }
@@ -822,7 +822,7 @@ figma.ui.onmessage = async (msg) => {
               const row = rowModel.clone();
               row.visible = true;
               specs.appendChild(row);
-              const nameInst = row.findOne((n: SceneNode) => n.name === 'Element name') as InstanceNode | null;
+              const nameInst = row.findOne((n: SceneNode) => n.name.toLowerCase() === 'element name') as InstanceNode | null;
               if (nameInst) {
                 const allTexts = nameInst.findAll((n: SceneNode) => n.type === 'TEXT') as TextNode[];
                 const badgeLabel = `${area._varPrefix ?? 1}.${area._localIdx ?? (i + 1)}`;
@@ -837,6 +837,8 @@ figma.ui.onmessage = async (msg) => {
                 ? { hStr: `${area.height}px`, wStr: `${area.width}px` }
                 : getTouchDimensions(area.preset);
               if (codes[0]) {
+                const labelText0 = codes[0].findOne((n: SceneNode) => n.name === 'code property:' && n.type === 'TEXT') as TextNode | null;
+                if (labelText0) await updateText(labelText0, 'height:');
                 const valueInst0 = codes[0].findOne((n: SceneNode) => n.name === 'value') as InstanceNode | null;
                 if (valueInst0) {
                   const v = valueInst0.findOne((n: SceneNode) => n.type === 'TEXT') as TextNode | null;
@@ -844,6 +846,8 @@ figma.ui.onmessage = async (msg) => {
                 }
               }
               if (codes[1]) {
+                const labelText1 = codes[1].findOne((n: SceneNode) => n.name === 'code property:' && n.type === 'TEXT') as TextNode | null;
+                if (labelText1) await updateText(labelText1, 'width:');
                 const valueInst1 = codes[1].findOne((n: SceneNode) => n.name === 'value') as InstanceNode | null;
                 if (valueInst1) {
                   const v = valueInst1.findOne((n: SceneNode) => n.type === 'TEXT') as TextNode | null;
@@ -872,10 +876,10 @@ figma.ui.onmessage = async (msg) => {
           if (imageFrame && componentePrincipalAtivo) {
             if (imageFrame.type === 'INSTANCE') imageFrame = imageFrame.detachInstance();
 
-            const modelHandoffAreas = (Array.from(imageFrame.children).find(n => n.name === '[a11y] Touch areas')
-              ?? (imageFrame as FrameNode).findOne(n => n.name === '[a11y] Touch areas')) as InstanceNode | undefined;
-            const modelItemNumber = (Array.from(imageFrame.children).find(n => n.name === '[a11y] Touch Area Connector')
-              ?? (imageFrame as FrameNode).findOne(n => n.name === '[a11y] Touch Area Connector')) as InstanceNode | undefined;
+            const modelHandoffAreas = (Array.from(imageFrame.children).find(n => n.name === '[dsc-hub] Touch areas')
+              ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-hub] Touch areas')) as InstanceNode | undefined;
+            const modelItemNumber = (Array.from(imageFrame.children).find(n => n.name === '[dsc-hub] Touch Area Connector')
+              ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-hub] Touch Area Connector')) as InstanceNode | undefined;
             if (modelHandoffAreas) modelHandoffAreas.visible = false;
             if (modelItemNumber) modelItemNumber.visible = false;
 
@@ -1029,8 +1033,8 @@ figma.ui.onmessage = async (msg) => {
         // Busca apenas filhos diretos do focusOrderContainer para evitar 'image' aninhado em [a11y] Legenda
         const tabImageFrame = Array.from(focusOrderContainer.children).find(n => n.name === 'image') as FrameNode | null;
         if (tabImageFrame) {
-          const modelOrder      = Array.from(tabImageFrame.children).find(n => n.name === '[a11y] Order')        as InstanceNode | undefined;
-          const modelItemNumber = Array.from(tabImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
+          const modelOrder      = Array.from(tabImageFrame.children).find(n => n.name === '[dsc-hub] Order')        as InstanceNode | undefined;
+          const modelItemNumber = Array.from(tabImageFrame.children).find(n => n.name === '[dsc-hub] Item Number') as InstanceNode | undefined;
 
           // Mantém modelos, tag e instâncias de variação; remove badges e markers antigos
           const tagNodeTab = Array.from(tabImageFrame.children).find(n => n.name === 'tag');
@@ -1086,7 +1090,7 @@ figma.ui.onmessage = async (msg) => {
             compClone.x = currentX;
             compClone.y = currentY;
 
-            // [dsc-h] Item Number: 1 por instância do componente (global), connector 'off'
+            // [dsc-hub] Item Number: 1 por instância do componente (global), connector 'off'
             globalItemCounter++;
             if (modelItemNumber) {
               const numClone = modelItemNumber.clone();
@@ -1102,7 +1106,7 @@ figma.ui.onmessage = async (msg) => {
               }
             }
 
-            // [a11y] Order: por item de tabulação, reinicia em 1 para cada variação
+            // [dsc-hub] Order: por item de tabulação, reinicia em 1 para cada variação
             const tabItems: any[] = variacao.tab_order || [];
             for (let i = 0; i < tabItems.length; i++) {
               const item = tabItems[i];
@@ -1150,9 +1154,9 @@ figma.ui.onmessage = async (msg) => {
           if (srSection) {
             const srImageFrame = Array.from(srSection.children).find((n: SceneNode) => n.name === 'image') as FrameNode | null;
             if (srImageFrame) {
-              const modelConector    = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Screen Reader Conector')   as InstanceNode | undefined;
-              const modelAgrupamento = srImageFrame.findOne(n => n.name === '[a11y] Screen Reader Gruping')  as InstanceNode | undefined;
-              const modelItemNumber  = Array.from(srImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
+              const modelConector    = Array.from(srImageFrame.children).find(n => n.name === '[dsc-hub] Screen Reader Conector')   as InstanceNode | undefined;
+              const modelAgrupamento = srImageFrame.findOne(n => n.name === '[dsc-hub] Screen Reader Gruping')  as InstanceNode | undefined;
+              const modelItemNumber  = Array.from(srImageFrame.children).find(n => n.name === '[dsc-hub] Item Number') as InstanceNode | undefined;
               const tagSR            = Array.from(srImageFrame.children).find(n => n.name === 'tag');
 
               // Helper: encontrar o filho direto de srImageFrame que contém o node
@@ -1193,6 +1197,17 @@ figma.ui.onmessage = async (msg) => {
               let totalWidth = SR_PAD_LEFT;
               let totalHeight = SR_PAD_TOP;
               let migrVarIdx = 0; // índice na oldSRVarCapture para variações de migração
+
+              // Bounding-box real: badges/conectores podem extrapolar os limites do componente
+              // (ex: conector "inferior" abaixo da instância) — rastreado à parte de rowHeight/totalWidth.
+              let _srBoundMinX = Infinity, _srBoundMinY = Infinity, _srBoundMaxX = -Infinity, _srBoundMaxY = -Infinity;
+              const _srTrackBound = (n: SceneNode) => {
+                const nx = (n as any).x, ny = (n as any).y, nw = (n as any).width, nh = (n as any).height;
+                if (nx < _srBoundMinX) _srBoundMinX = nx;
+                if (ny < _srBoundMinY) _srBoundMinY = ny;
+                if (nx + nw > _srBoundMaxX) _srBoundMaxX = nx + nw;
+                if (ny + nh > _srBoundMaxY) _srBoundMaxY = ny + nh;
+              };
 
               for (const variacao of variacoesLTComItems) {
                 const conectoresVar = variacao.conectores_leitor || [];
@@ -1272,8 +1287,9 @@ figma.ui.onmessage = async (msg) => {
 
                 compClone.x = currentX;
                 compClone.y = currentY;
+                _srTrackBound(compClone);
 
-                // [dsc-h] Item Number: 1 por instância do componente (global), connector 'off'
+                // [dsc-hub] Item Number: 1 por instância do componente (global), connector 'off'
                 globalItemCounter++;
                 if (modelItemNumber) {
                   const numClone = modelItemNumber.clone();
@@ -1284,6 +1300,7 @@ figma.ui.onmessage = async (msg) => {
                   numClone.x = currentX;
                   numClone.y = currentY - numClone.height - 4;
                   srImageFrame.appendChild(numClone);
+                  _srTrackBound(numClone);
                   if (numClone.type === 'INSTANCE') {
                     try { (numClone as InstanceNode).setProperties({ 'connector': 'Off' }); } catch (e) {}
                   }
@@ -1317,6 +1334,7 @@ figma.ui.onmessage = async (msg) => {
                     srImageFrame.appendChild(agClone);
                     agClone.x = currentX + agRelX;
                     agClone.y = currentY + agRelY;
+                    _srTrackBound(agClone);
                     const _agOvProps = (c as any).overlayProps as Record<string,any> | undefined;
                     const _agT = (c.tipo || c.tipoConnector || '').toLowerCase();
                     let _agTipo = 'função valor rótulos';
@@ -1434,6 +1452,7 @@ figma.ui.onmessage = async (msg) => {
                         conClone.y = currentY + relY + elH;
                       }
                     }
+                    _srTrackBound(conClone);
                     if (tipoVariante === 'nível de título' && c.especificacao) {
                       const _rhKeys = Object.keys((conClone as any).componentProperties || {});
                       const _rhHKey = _rhKeys.find(k => k.toLowerCase().includes('nível') || k.toLowerCase().includes('nivel') || k.toLowerCase().includes('título') || k.toLowerCase().includes('titulo') || k.toLowerCase().includes('heading'));
@@ -1451,10 +1470,28 @@ figma.ui.onmessage = async (msg) => {
               }
 
               totalHeight = currentY + rowHeight;
-              srImageFrame.resize(
-                Math.max(srImageFrame.width, totalWidth + SR_PAD_SIDE),
-                totalHeight + SR_PAD_SIDE
-              );
+
+              // Bounding-box real (componentes + badges/conectores que extrapolam) — garante
+              // padding mínimo e desloca tudo se algum elemento saiu dos limites à esquerda/topo.
+              if (_srBoundMaxX > -Infinity) {
+                const _srShiftX = _srBoundMinX < SR_PAD_LEFT ? SR_PAD_LEFT - _srBoundMinX : 0;
+                const _srShiftY = _srBoundMinY < 24 ? 24 - _srBoundMinY : 0;
+                if (_srShiftX > 0 || _srShiftY > 0) {
+                  for (const _n of Array.from(srImageFrame.children)) {
+                    if (_srShiftX > 0) (_n as any).x += _srShiftX;
+                    if (_srShiftY > 0) (_n as any).y += _srShiftY;
+                  }
+                }
+                srImageFrame.resize(
+                  Math.max(srImageFrame.width, totalWidth + SR_PAD_SIDE, _srBoundMaxX + _srShiftX + SR_PAD_SIDE),
+                  Math.max(totalHeight + SR_PAD_SIDE, _srBoundMaxY + _srShiftY + SR_PAD_SIDE)
+                );
+              } else {
+                srImageFrame.resize(
+                  Math.max(srImageFrame.width, totalWidth + SR_PAD_SIDE),
+                  totalHeight + SR_PAD_SIDE
+                );
+              }
 
               if (modelConector)    modelConector.visible = false;
               const agToHide = agrupamentoAncestor ?? modelAgrupamento;
@@ -1474,7 +1511,10 @@ figma.ui.onmessage = async (msg) => {
           if (srSection) {
             const allBoxes = srSection.findOne((n: SceneNode) => n.name === 'all boxes') as FrameNode | null;
             if (allBoxes) {
-              const model = Array.from(allBoxes.children).find(n => n.name === '[a11y] Box specs LT') as FrameNode | undefined;
+              // Nome exato do template antigo: 'box specs screem reader'. Template novo renomeou
+              // para '[a11y] Box specs LT' — fallback por substring pega qualquer variação futura.
+              const isBoxSpecsModel = (n: SceneNode) => n.name === 'box specs screem reader' || n.name.toLowerCase().includes('box specs');
+              const model = Array.from(allBoxes.children).find(isBoxSpecsModel) as FrameNode | undefined;
               if (model) {
                 const isWeb    = (msg.plataformas as string[])?.includes('Web') ?? false;
                 const isMobile = (msg.plataformas as string[])?.some((p: string) => ['Mobile iOS','Mobile Android','Mobile Cross-Platform'].includes(p)) ?? false;
@@ -1499,11 +1539,21 @@ figma.ui.onmessage = async (msg) => {
                     frame = cloneNode.findOne((n: SceneNode) => normalize(n.name) === normTarget) as FrameNode | null;
                   }
                   if (!frame) {
-
+                    console.warn(`[fillField] frame não encontrado: ${fieldName}`);
                     return;
                   }
-                  const txt = frame.findOne((n: SceneNode) => n.name === 'Text' && n.type === 'TEXT') as TextNode | null;
-                  if (!txt) return;
+                  let txt = frame.findOne((n: SceneNode) => n.name === 'Text' && n.type === 'TEXT') as TextNode | null;
+                  if (!txt) {
+                    txt = frame.findOne((n: SceneNode) => n.type === 'TEXT' && normalize(n.name) === 'text') as TextNode | null;
+                  }
+                  if (!txt) {
+                    // fallback: template novo pode ter renomeado o node de valor (placeholder "Texto")
+                    txt = frame.findOne((n: SceneNode) => n.type === 'TEXT' && n.characters.trim() === 'Texto') as TextNode | null;
+                  }
+                  if (!txt) {
+                    console.warn(`[fillField] text node não encontrado dentro de: ${fieldName}`);
+                    return;
+                  }
                   await updateText(txt, value);
                 };
 
@@ -1532,7 +1582,7 @@ figma.ui.onmessage = async (msg) => {
                     specsFrame.appendChild(contentClone);
                     curContentFrame = contentClone;
                     curAllBoxes = contentClone.findOne((n: SceneNode) => n.name === 'all boxes') as FrameNode || curAllBoxes;
-                    curModel = Array.from(curAllBoxes.children).find(n => n.name === '[a11y] Box specs LT') as FrameNode | undefined || curModel;
+                    curModel = Array.from(curAllBoxes.children).find(isBoxSpecsModel) as FrameNode | undefined || curModel;
                   }
 
                   // Limpa boxes existentes (mantém modelo)
@@ -1570,7 +1620,7 @@ figma.ui.onmessage = async (msg) => {
                     const isHeadingSpec = tSpec.includes('título') || tSpec.includes('titulo') || tSpec.includes('heading') || tSpec.includes('nível') || tSpec.includes('nivel');
                     const badgeLabel = isHeadingSpec && c.especificacao ? c.especificacao : letra;
 
-                    const conectorNode = clone.findOne((n: SceneNode) => n.name === '[a11y] Screen Reader Conector') as SceneNode | null;
+                    const conectorNode = clone.findOne((n: SceneNode) => n.name === '[dsc-hub] Screen Reader Conector') as SceneNode | null;
 
                     // setProperties ANTES dos updateText para evitar reset de overrides
                     if (conectorNode && conectorNode.type === 'INSTANCE') {
@@ -1583,7 +1633,7 @@ figma.ui.onmessage = async (msg) => {
                       try { (conectorNode as InstanceNode).setProperties({ 'tipo': tipoVariante }); } catch(_e) {}
                     }
 
-                    // Atualiza letra do role dentro do [a11y] Screen Reader Conector
+                    // Atualiza letra do role dentro do [dsc-hub] Screen Reader Conector
                     const innerNumTxt = conectorNode && 'findOne' in conectorNode
                       ? (conectorNode as FrameNode).findOne((n: SceneNode) => n.name === 'Number' && n.type === 'TEXT') as TextNode | null
                       : null;
@@ -1641,7 +1691,7 @@ figma.ui.onmessage = async (msg) => {
         if (zoomImageFrame) {
           
           const zoomTag = Array.from(zoomImageFrame.children).find(n => n.name === 'tag');
-          const modelItemNumber = Array.from(zoomImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
+          const modelItemNumber = Array.from(zoomImageFrame.children).find(n => n.name === '[dsc-hub] Item Number') as InstanceNode | undefined;
 
           const keepZoom = new Set<BaseNode>([zoomTag, modelItemNumber].filter(Boolean) as BaseNode[]);
           Array.from(zoomImageFrame.children).filter(n => !keepZoom.has(n)).forEach(n => n.remove());
@@ -1786,7 +1836,7 @@ figma.ui.onmessage = async (msg) => {
       }
     }
     figma.ui.postMessage({ type: 'feedback', message: '⏳ Salvando dados...' });
-    const dbInstance = workingFrame.findOne((node: SceneNode) => node.name === "[dsc-h] Plugin Data A11y") as InstanceNode;
+    const dbInstance = workingFrame.findOne((node: SceneNode) => node.name === "[dsc-hub] Plugin Data A11y" || node.name === "[dsc-h] Plugin Data A11y") as InstanceNode;
     if (dbInstance) {
       const dataToSave = JSON.stringify({
         plataformas: msg.plataformas,
@@ -1879,13 +1929,13 @@ figma.ui.onmessage = async (msg) => {
         try { await applyWcagBackground(imageFrame as FrameNode, componentePrincipalAtivo, []); } catch(_e) {}
       }
 
-      const modelHandoffAreas = (Array.from(imageFrame.children).find(n => n.name === '[a11y] Touch areas')
-        ?? (imageFrame as FrameNode).findOne(n => n.name === '[a11y] Touch areas')) as InstanceNode | undefined;
-      const modelItemNumber = (Array.from(imageFrame.children).find(n => n.name === '[a11y] Touch Area Connector')
-        ?? (imageFrame as FrameNode).findOne(n => n.name === '[a11y] Touch Area Connector')) as InstanceNode | undefined;
+      const modelHandoffAreas = (Array.from(imageFrame.children).find(n => n.name === '[dsc-hub] Touch areas')
+        ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-hub] Touch areas')) as InstanceNode | undefined;
+      const modelItemNumber = (Array.from(imageFrame.children).find(n => n.name === '[dsc-hub] Touch Area Connector')
+        ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-hub] Touch Area Connector')) as InstanceNode | undefined;
 
       if (!modelHandoffAreas) {
-        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Modelo [a11y] Touch areas não encontrado. Gere o handoff primeiro.' });
+        figma.ui.postMessage({ type: 'feedback', message: '⚠️ Modelo [dsc-hub] Touch areas não encontrado. Gere o handoff primeiro.' });
         figma.ui.postMessage({ type: 'touch-overlay-failed' });
         return;
       }
@@ -2101,10 +2151,10 @@ figma.ui.onmessage = async (msg) => {
       }
 
       // Ocultar modelos do template que ficam visíveis por padrão
-      const _mHA = (Array.from(imageFrame.children).find(n => n.name === '[a11y] Touch areas')
-        ?? (imageFrame as FrameNode).findOne(n => n.name === '[a11y] Touch areas')) as InstanceNode | undefined;
-      const _mIN = (Array.from(imageFrame.children).find(n => n.name === '[a11y] Touch Area Connector')
-        ?? (imageFrame as FrameNode).findOne(n => n.name === '[a11y] Touch Area Connector')) as InstanceNode | undefined;
+      const _mHA = (Array.from(imageFrame.children).find(n => n.name === '[dsc-hub] Touch areas')
+        ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-hub] Touch areas')) as InstanceNode | undefined;
+      const _mIN = (Array.from(imageFrame.children).find(n => n.name === '[dsc-hub] Touch Area Connector')
+        ?? (imageFrame as FrameNode).findOne(n => n.name === '[dsc-hub] Touch Area Connector')) as InstanceNode | undefined;
       if (_mHA) _mHA.visible = false;
       if (_mIN) _mIN.visible = false;
 
@@ -2197,12 +2247,12 @@ figma.ui.onmessage = async (msg) => {
         try { await applyWcagBackground(imageFrame as FrameNode, componentePrincipalAtivo, []); } catch(_e) {}
 
         const modelHandoffAreas = (
-          Array.from(imageFrame.children).find(n => n.name === '[a11y] Touch areas')
-          ?? (imageFrame as FrameNode).findOne((n: SceneNode) => n.name === '[a11y] Touch areas')
+          Array.from(imageFrame.children).find(n => n.name === '[dsc-hub] Touch areas')
+          ?? (imageFrame as FrameNode).findOne((n: SceneNode) => n.name === '[dsc-hub] Touch areas')
         ) as InstanceNode | undefined;
         const modelItemNumber = (
-          Array.from(imageFrame.children).find(n => n.name === '[a11y] Touch Area Connector')
-          ?? (imageFrame as FrameNode).findOne((n: SceneNode) => n.name === '[a11y] Touch Area Connector')
+          Array.from(imageFrame.children).find(n => n.name === '[dsc-hub] Touch Area Connector')
+          ?? (imageFrame as FrameNode).findOne((n: SceneNode) => n.name === '[dsc-hub] Touch Area Connector')
         ) as InstanceNode | undefined;
         if (modelHandoffAreas) modelHandoffAreas.visible = false;
         if (modelItemNumber) modelItemNumber.visible = false;
@@ -2372,9 +2422,9 @@ figma.ui.onmessage = async (msg) => {
         return;
       }
       const variationId: string = msg.variationId ?? msg.id ?? ('sr_' + Date.now());
-      const _modelC = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Screen Reader Conector') as InstanceNode | undefined;
-      const _modelN = Array.from(srImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
-      const _modelA = srImageFrame.findOne(n => n.name === '[a11y] Screen Reader Gruping') as InstanceNode | undefined;
+      const _modelC = Array.from(srImageFrame.children).find(n => n.name === '[dsc-hub] Screen Reader Conector') as InstanceNode | undefined;
+      const _modelN = Array.from(srImageFrame.children).find(n => n.name === '[dsc-hub] Item Number') as InstanceNode | undefined;
+      const _modelA = srImageFrame.findOne(n => n.name === '[dsc-hub] Screen Reader Gruping') as InstanceNode | undefined;
       if (_modelC) _modelC.visible = false;
       if (_modelN) _modelN.visible = false;
       if (_modelA) _modelA.visible = false;
@@ -2423,8 +2473,8 @@ figma.ui.onmessage = async (msg) => {
       }
       const variationId: string = msg.variationId ?? msg.id ?? ('var_' + Date.now());
       // Esconde modelos que mostram "0" por padrão
-      const _modelO = Array.from(tabImageFrame.children).find(n => n.name === '[a11y] Order') as InstanceNode | undefined;
-      const _modelN = Array.from(tabImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
+      const _modelO = Array.from(tabImageFrame.children).find(n => n.name === '[dsc-hub] Order') as InstanceNode | undefined;
+      const _modelN = Array.from(tabImageFrame.children).find(n => n.name === '[dsc-hub] Item Number') as InstanceNode | undefined;
       if (_modelO) _modelO.visible = false;
       if (_modelN) _modelN.visible = false;
       let inst = Array.from(tabImageFrame.children).find(n => {
@@ -2469,8 +2519,8 @@ figma.ui.onmessage = async (msg) => {
       }
       const variationId: string = msg.variationId ?? 'default';
 
-      const modelOrder      = Array.from(tabImageFrame.children).find(n => n.name === '[a11y] Order')        as InstanceNode | undefined;
-      const modelItemNumber = Array.from(tabImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
+      const modelOrder      = Array.from(tabImageFrame.children).find(n => n.name === '[dsc-hub] Order')        as InstanceNode | undefined;
+      const modelItemNumber = Array.from(tabImageFrame.children).find(n => n.name === '[dsc-hub] Item Number') as InstanceNode | undefined;
       if (modelOrder)      modelOrder.visible      = false;
       if (modelItemNumber) modelItemNumber.visible = false;
 
@@ -2543,7 +2593,7 @@ figma.ui.onmessage = async (msg) => {
         currentMarkers.forEach(n => n.remove());
       }
 
-      // [dsc-h] Item Number acima da instância
+      // [dsc-hub] Item Number acima da instância
       if (modelItemNumber) {
         const numClone = modelItemNumber.clone();
         numClone.setPluginData('a11y-marker', variationId);
@@ -2559,7 +2609,7 @@ figma.ui.onmessage = async (msg) => {
         }
       }
 
-      // [a11y] Order em cada item de tabulação
+      // [dsc-hub] Order em cada item de tabulação
       if (modelOrder && tabOrder.length > 0) {
         for (let i = 0; i < tabOrder.length; i++) {
           const item = tabOrder[i];
@@ -2612,9 +2662,9 @@ figma.ui.onmessage = async (msg) => {
       }
       const variationId: string = msg.variationId ?? 'default';
       const variationNumber = typeof msg.variationIndex === 'number' ? msg.variationIndex + 1 : 1;
-      const modelConector    = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Screen Reader Conector')   as InstanceNode | undefined;
-      const modelItemNumber  = Array.from(srImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
-      const modelAgrupamento = srImageFrame.findOne(n => n.name === '[a11y] Screen Reader Gruping') as InstanceNode | undefined;
+      const modelConector    = Array.from(srImageFrame.children).find(n => n.name === '[dsc-hub] Screen Reader Conector')   as InstanceNode | undefined;
+      const modelItemNumber  = Array.from(srImageFrame.children).find(n => n.name === '[dsc-hub] Item Number') as InstanceNode | undefined;
+      const modelAgrupamento = srImageFrame.findOne(n => n.name === '[dsc-hub] Screen Reader Gruping') as InstanceNode | undefined;
       if (modelConector)    modelConector.visible    = false;
       if (modelItemNumber)  modelItemNumber.visible  = false;
       if (modelAgrupamento) modelAgrupamento.visible = false;
@@ -2838,9 +2888,9 @@ figma.ui.onmessage = async (msg) => {
       const instY = (inst as any).y as number;
       const instW = (inst as any).width  as number;
       const instH = (inst as any).height as number;
-      const modelConector    = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Screen Reader Conector')   as InstanceNode | undefined;
-      const modelAgrupamento = srImageFrame.findOne(n => n.name === '[a11y] Screen Reader Gruping') as InstanceNode | undefined;
-      const modelItemNumber  = Array.from(srImageFrame.children).find(n => n.name === '[dsc-h] Item Number') as InstanceNode | undefined;
+      const modelConector    = Array.from(srImageFrame.children).find(n => n.name === '[dsc-hub] Screen Reader Conector')   as InstanceNode | undefined;
+      const modelAgrupamento = srImageFrame.findOne(n => n.name === '[dsc-hub] Screen Reader Gruping') as InstanceNode | undefined;
+      const modelItemNumber  = Array.from(srImageFrame.children).find(n => n.name === '[dsc-hub] Item Number') as InstanceNode | undefined;
       const itemNumH = modelItemNumber ? (modelItemNumber as any).height : 36;
       if (c.tipoAnotacao === 'agrupamento' && modelAgrupamento) {
         const agClone = modelAgrupamento.clone();
@@ -2901,18 +2951,30 @@ figma.ui.onmessage = async (msg) => {
         if ((c as any).positioned) {
           const relX = c.relX || 0, relY = c.relY || 0;
           const savedW = (c as any).width || conClone.width, savedH = (c as any).height || conClone.height;
-          let lado: string;
-          if      (relX + savedW <= 0)  lado = 'esquerda';
-          else if (relX >= instW)       lado = 'direita';
-          else if (relY + savedH <= 0)  lado = 'superior';
-          else if (relY >= instH)       lado = 'inferior';
-          else {
-            const dL = Math.abs(relX), dR = Math.abs(instW - relX - savedW);
-            const dT = Math.abs(relY), dB = Math.abs(instH - relY - savedH);
-            const minD = Math.min(dL, dR, dT, dB);
-            lado = minD === dL ? 'esquerda' : minD === dR ? 'direita' : minD === dT ? 'superior' : 'inferior';
+          // Usa props salvas do overlay (igual ao activate-sr-variation/run-handoff)
+          const _appOvProps = (c as any).overlayProps as Record<string,any> | undefined;
+          if (_appOvProps && Object.keys(_appOvProps).length > 0) {
+            try { (conClone as InstanceNode).setProperties(_appOvProps); } catch(_e) {}
+          } else {
+            // Fallback p/ dados antigos: reconstrói tipo + lado por geometria de centro
+            const _storedLado = (c as any).lado;
+            let lado: string;
+            if (_storedLado && ['esquerda','direita','superior','inferior'].includes(_storedLado)) {
+              lado = _storedLado;
+            } else {
+              const _cx = relX + savedW / 2, _cy = relY + savedH / 2;
+              if      (_cx <= 0)      lado = 'esquerda';
+              else if (_cx >= instW)  lado = 'direita';
+              else if (_cy <= 0)      lado = 'superior';
+              else if (_cy >= instH)  lado = 'inferior';
+              else {
+                const dL = _cx, dR = instW - _cx, dT = _cy, dB = instH - _cy;
+                const minD = Math.min(dL, dR, dT, dB);
+                lado = minD === dL ? 'esquerda' : minD === dR ? 'direita' : minD === dT ? 'superior' : 'inferior';
+              }
+            }
+            try { (conClone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': lado }); } catch(_e) {}
           }
-          try { (conClone as InstanceNode).setProperties({ 'tipo': tipoVariante, 'conector': lado }); } catch(_e) {}
           try { conClone.resize(savedW, savedH); } catch(_e) {}
           conClone.x = instX + relX;
           conClone.y = instY + relY;
@@ -2975,7 +3037,7 @@ figma.ui.onmessage = async (msg) => {
 
   else if (msg.type === 'save-leitor-tela') {
     if (!handoffAtivo) return;
-    const dbInstance = (handoffAtivo as any).findOne((n: SceneNode) => n.name === '[dsc-h] Plugin Data A11y') as InstanceNode | null;
+    const dbInstance = (handoffAtivo as any).findOne((n: SceneNode) => n.name === '[dsc-hub] Plugin Data A11y' || n.name === '[dsc-h] Plugin Data A11y') as InstanceNode | null;
     const baseRaw = dbInstance
       ? dbInstance.getPluginData('a11y-component-data')
       : (handoffAtivo as any).getPluginData('a11y-component-data');
@@ -3095,9 +3157,9 @@ figma.ui.onmessage = async (msg) => {
 
       let modelNode: InstanceNode | undefined;
       if (tipoAnotacao === 'agrupamento') {
-        modelNode = srImageFrame.findOne(n => n.name === '[a11y] Screen Reader Gruping') as InstanceNode | undefined;
+        modelNode = srImageFrame.findOne(n => n.name === '[dsc-hub] Screen Reader Gruping') as InstanceNode | undefined;
       } else {
-        modelNode = Array.from(srImageFrame.children).find(n => n.name === '[a11y] Screen Reader Conector') as InstanceNode | undefined;
+        modelNode = Array.from(srImageFrame.children).find(n => n.name === '[dsc-hub] Screen Reader Conector') as InstanceNode | undefined;
       }
       if (!modelNode) {
         figma.ui.postMessage({ type: 'feedback', message: '⚠️ Modelo de conector não encontrado. Gere o handoff primeiro.' });
@@ -3906,7 +3968,7 @@ async function parseOldGeralData(
 }
 
 async function carregarDadosEEnviarParaUI(handoff: SceneNode) {
-  const dbInstance = (handoff as any).findOne((n: SceneNode) => n.name === "[dsc-h] Plugin Data A11y") as InstanceNode;
+  const dbInstance = (handoff as any).findOne((n: SceneNode) => n.name === "[dsc-hub] Plugin Data A11y" || n.name === "[dsc-h] Plugin Data A11y") as InstanceNode;
 
   let masterList: { mapeamento: string; descricao: string; utilizacao: string }[] = [];
   let rolesList: ReturnType<typeof parseRolesList> = [];

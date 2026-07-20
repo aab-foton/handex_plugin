@@ -181,5 +181,5 @@ Antes de enviar `run-handoff` (~linha 2461), o código sincroniza:
 |-----------|------|-----|
 | `[dsc-h] Template Handoff` (set) — descontinuado, só referência p/ handoffs antigos ainda não migrados | COMPONENT_SET | `b9dd10fb8aa3b49af1b37206fb2d32e44828618b` |
 | `[dsc-h] Template Handoff` variant=Acessibility — descontinuado | COMPONENT | `4ebd8a017a86b29ca60427416ed4b76af05e4a67` |
-| `[dsc-hub] Handoff Acessibility` — template atual, usado no swap de migração (code.ts:541) | COMPONENT | `d95d06ed0e31131a29a6f7c87c3fcc0f2eee6950` |
+| `[dsc-hub] Handoff de Acessibilidade` — template atual, usado no swap de migração (code.ts:541) | COMPONENT | `d95d06ed0e31131a29a6f7c87c3fcc0f2eee6950` |
 | `[dsc-h] Template Handoff` variant=Design | COMPONENT | `b7edcc2f70402c3173bf36815867ea17e5cfdf26` |
