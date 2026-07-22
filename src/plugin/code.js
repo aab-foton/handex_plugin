@@ -372,6 +372,48 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
+  if (msg.type === 'delete-canvas-content') {
+    // Todo conteúdo criado pelo Handex é agrupado num único nó de topo de página
+    // no momento da criação (mainContainer da ficha, specGroup, grupo de medida,
+    // finalGroup/legendFrame de fluxo) -- não sobram nós-irmãos soltos. Por isso
+    // basta varrer figma.currentPage.children (nível de topo).
+    // handexCategory (pluginData) é a fonte de verdade; prefixo de nome é fallback
+    // para conteúdo criado antes desta marcação existir.
+    const wanted = {
+      ficha: !!msg.ficha,
+      spec: !!msg.specs,
+      medida: !!msg.medidas,
+      fluxo: !!msg.fluxos,
+    };
+
+    const matchCategory = (node) => {
+      const tag = node.getPluginData('handexCategory');
+      if (tag) return wanted[tag] ? tag : null;
+      if (!node.name) return null;
+      if (wanted.ficha && node.name.startsWith('Handex | Ficha de Projeto')) return 'ficha';
+      if (wanted.spec && (node.name.startsWith('[Spec | ') || node.name.startsWith('[Spec]'))) return 'spec';
+      if (wanted.medida && node.name.startsWith('[Medida]')) return 'medida';
+      if (wanted.fluxo && node.name.startsWith('[Fluxo')) return 'fluxo';
+      return null;
+    };
+
+    const counts = { ficha: 0, spec: 0, medida: 0, fluxo: 0 };
+    const toRemove = [];
+
+    figma.currentPage.children.forEach(node => {
+      const cat = matchCategory(node);
+      if (cat) {
+        toRemove.push(node);
+        counts[cat]++;
+      }
+    });
+
+    toRemove.forEach(node => { try { node.remove(); } catch (e) {} });
+
+    figma.ui.postMessage({ type: 'canvas-content-deleted', counts });
+    return;
+  }
+
   if (msg.type === 'scan-cache-save') {
     figma.clientStorage.setAsync('handex-scan-cache-v1', msg.data).catch(e =>
       console.warn("scan-cache-save failed:", e)
@@ -1644,6 +1686,7 @@ figma.ui.onmessage = async (msg) => {
 
       // Append ao canvas primeiro para que as dimensões AUTO sejam calculadas pelo Figma
       mainContainer.locked = false;
+      mainContainer.setPluginData('handexCategory', 'ficha');
       figma.currentPage.appendChild(mainContainer);
       // Inicializar fora da tela para evitar flash de sobreposição enquanto calcula posição
       mainContainer.x = -99999;
@@ -1962,6 +2005,7 @@ figma.ui.onmessage = async (msg) => {
           const group = figma.group(items, figma.currentPage);
           group.name = `[Medida] ${node.name}`;
           group.locked = true;
+          group.setPluginData('handexCategory', 'medida');
           appliedMeasuresList.push({ name: node.name, nodeId: group.id, details: appliedDetails });
         }
 
@@ -2675,6 +2719,7 @@ figma.ui.onmessage = async (msg) => {
           const group = figma.group(items, figma.currentPage);
           group.name = `[Medida] ${m.name}`;
           group.locked = true;
+          group.setPluginData('handexCategory', 'medida');
           created++;
         }
       }
@@ -3265,6 +3310,7 @@ figma.ui.onmessage = async (msg) => {
       const specGroup = figma.group(groupNodes, figma.currentPage);
       specGroup.name = `[Spec | ${opts.letter} | ${_specSide}] ${node.name}`;
       specGroup.locked = false;
+      specGroup.setPluginData('handexCategory', 'spec');
       _reorderSpecGroupByTag(specGroup, opts.letter);
 
 
@@ -3644,6 +3690,7 @@ figma.ui.onmessage = async (msg) => {
           const finalGroup = figma.group(nodesToGroup, figma.currentPage);
           finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | decisao] ${msg.flowName || "Decisão"}`;
           finalGroup.locked = true;
+          finalGroup.setPluginData('handexCategory', 'fluxo');
           figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
         } catch (e) { console.error(e); }
       })();
@@ -3672,6 +3719,7 @@ figma.ui.onmessage = async (msg) => {
           const finalGroup = figma.group(nodesToGroup, figma.currentPage);
           finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | ${isStart ? 'inicio' : 'fim'}] ${msg.flowName || (isStart ? "Início" : "Fim")}`;
           finalGroup.locked = true;
+          finalGroup.setPluginData('handexCategory', 'fluxo');
           figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
         } catch (e) { console.error(e); }
       })();
@@ -3702,6 +3750,7 @@ figma.ui.onmessage = async (msg) => {
           const finalGroup = figma.group(nodesToGroup, figma.currentPage);
           finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conexão"}`;
           finalGroup.locked = true;
+          finalGroup.setPluginData('handexCategory', 'fluxo');
           figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
         } catch (e) { console.error(e); }
       })();
@@ -3709,6 +3758,7 @@ figma.ui.onmessage = async (msg) => {
       const finalGroup = figma.group(nodesToGroup, figma.currentPage);
       finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conexão"}`;
       finalGroup.locked = true;
+      finalGroup.setPluginData('handexCategory', 'fluxo');
       figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
     }
     figma.notify("Fluxo criado!");
@@ -3779,6 +3829,7 @@ figma.ui.onmessage = async (msg) => {
       legendFrame.x = figma.viewport.center.x - 120;
       legendFrame.y = figma.viewport.center.y - 100;
       legendFrame.locked = true;
+      legendFrame.setPluginData('handexCategory', 'fluxo');
       figma.currentPage.appendChild(legendFrame);
       figma.currentPage.selection = [legendFrame];
       figma.viewport.scrollAndZoomIntoView([legendFrame]);

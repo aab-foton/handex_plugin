@@ -240,5 +240,33 @@
       // continua com os dados antigos e eles voltam ao reabrir o plugin.
       saveToStorage();
       navigate('view-home');
-      showToast('Todos os dados foram removidos.');
+      showToast('Dados do plugin removidos.');
+    }
+
+    function toggleSelectAllCanvasDelete() {
+      const ids = ['clear-canvas-ficha', 'clear-canvas-specs', 'clear-canvas-medidas', 'clear-canvas-fluxos'];
+      const boxes = ids.map(id => document.getElementById(id)).filter(Boolean);
+      const allChecked = boxes.every(b => b.checked);
+      boxes.forEach(b => { b.checked = !allChecked; });
+      updateClearCanvasButtonState();
+    }
+
+    function updateClearCanvasButtonState() {
+      const ids = ['clear-canvas-ficha', 'clear-canvas-specs', 'clear-canvas-medidas', 'clear-canvas-fluxos'];
+      const anyChecked = ids.some(id => document.getElementById(id)?.checked);
+      const btn = document.getElementById('clear-canvas-submit-btn');
+      if (btn) btn.disabled = !anyChecked;
+    }
+
+    function confirmDeleteCanvasContent() {
+      const ficha = !!document.getElementById('clear-canvas-ficha')?.checked;
+      const specs = !!document.getElementById('clear-canvas-specs')?.checked;
+      const medidas = !!document.getElementById('clear-canvas-medidas')?.checked;
+      const fluxos = !!document.getElementById('clear-canvas-fluxos')?.checked;
+
+      if (!ficha && !specs && !medidas && !fluxos) return;
+
+      parent.postMessage({
+        pluginMessage: { type: 'delete-canvas-content', ficha, specs, medidas, fluxos }
+      }, '*');
     }
