@@ -204,7 +204,7 @@ A comunicação entre backend (`code.js`) e frontend (`ui.html`) é feita exclus
 ## Guia por arquivo
 
 ### `src/plugin/manifest.json`
-Configuração obrigatória do Figma. Define `main` (backend), `ui` (frontend), `editorType` e `permissions`. Inclui `"currentuser"` para identificar o designer logado automaticamente.
+Configuração obrigatória do Figma. Define `id` (identificador fixo do plugin na Figma Community), `main` (backend), `ui` (frontend), `editorType` e `permissions` (`"currentuser"`, para identificar o designer logado automaticamente). Também declara `documentAccess: "dynamic-page"` e `networkAccess.allowedDomains` — domínios externos que o plugin carrega em runtime (`unpkg.com` para os ícones Lucide, `cdnjs.cloudflare.com` para jsPDF/JSZip usados na exportação em PDF).
 
 ### `src/plugin/code.js`
 Backend do plugin. Roda no contexto privilegiado do Figma com acesso total ao canvas. Principais handlers: `scan-frame`, `create-handoff`, `apply-measurements`, `create-spec`, `create-flow`, `focus-node`. **Não é distribuído diretamente — gera `code.bundle.js`.**
