@@ -54,7 +54,10 @@ jobs:
           npm run lint
           npm run bundle:code
           npm run bundle:ui
-          npm run export:plugin
+        # export:plugin nao roda aqui: copia para handex-plugin/, pasta
+        # gitignored que nao existe num checkout limpo de CI (so existe nas
+        # maquinas locais de quem builda manualmente) e cujo conteudo nunca
+        # e commitado por este workflow de qualquer forma.
 
       - name: Abre PR
         if: steps.diff.outputs.changed == 'true'
