@@ -2,6 +2,31 @@
 
 ---
 
+## v5.0.1 — 2026-07-21
+
+### Resumo
+Preparação para publicação na Figma Community: novos campos obrigatórios no manifest e correção de um risco real de compatibilidade que eles introduzem.
+
+---
+
+### Manifest — Campos exigidos pela submissão no Figma
+
+- Adicionado `id` fixo do plugin.
+- Adicionado `networkAccess.allowedDomains` (`unpkg.com`, `cdnjs.cloudflare.com`) — os dois únicos domínios que o plugin contata em runtime (ícones Lucide; jsPDF/JSZip na exportação em PDF).
+- Adicionado `documentAccess: "dynamic-page"` — faz o Figma carregar em memória só a página atualmente aberta, em vez do documento inteiro.
+
+### Correção — `getNodeById` síncrono sob `dynamic-page`
+
+**Bug potencial:** `frame.figmaId` (persistido em `handoffData.frames`, podendo estar em qualquer página de um arquivo com múltiplas páginas) era resolvido via `figma.getNodeById(...)` síncrono em ~20 pontos de `code.js`. Sob `dynamic-page`, isso retorna `null` silenciosamente para nós de páginas não carregadas — um frame documentado "desapareceria" do handoff sem erro visível.
+
+**Correção:** todas as ocorrências migradas para `await figma.getNodeByIdAsync(...)`, que carrega a página do nó automaticamente se necessário. Cadeias de `.forEach` que precisavam de `await` no corpo foram convertidas para `for...of`.
+
+### Limpeza — dependência não utilizada
+
+Removida `@google/genai` do `package.json` — instalada mas sem nenhuma chamada no código-fonte.
+
+---
+
 ## v4.2.4 — 2026-06-18
 
 ### Resumo
