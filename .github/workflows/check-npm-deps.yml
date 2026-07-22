@@ -1,0 +1,75 @@
+# Espelha o job check-npm-deps do .gitlab-ci.yml (repo principal), mas roda
+# aqui no GitHub sem precisar de nenhuma configuração fora do repositório --
+# GitHub Actions le o agendamento (cron) direto deste arquivo, e o token
+# GITHUB_TOKEN é gerado automaticamente pelo runner, sem precisar cadastrar
+# nenhum secret manualmente.
+#
+# Atualiza dependencias do Handex so dentro dos ranges semver ja declarados
+# em package.json (nunca bump de major sozinho) e abre um PR para revisao
+# humana -- nunca faz push direto em main.
+name: check-npm-deps
+
+on:
+  schedule:
+    - cron: "0 6 1 * *" # dia 1 de cada mes, 06:00 UTC
+  workflow_dispatch: {} # permite rodar manualmente pela aba Actions
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-npm-deps:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: plugins/handex
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Atualiza dependencias dentro dos ranges declarados
+        run: |
+          npm install --no-audit --no-fund
+          npm update --no-audit --no-fund
+
+      - name: Lista pacotes com major disponivel (nao aplicado, so informativo)
+        run: npm outdated || true
+
+      - name: Verifica se algo mudou
+        id: diff
+        run: |
+          if git diff --quiet -- package-lock.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Reconstroi artefatos e valida
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          npm run lint
+          npm run bundle:code
+          npm run bundle:ui
+          npm run export:plugin
+
+      - name: Abre PR
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.email "handex-bot@users.noreply.github.com"
+          git config user.name "Handex Deps Bot"
+          BRANCH="bot/npm-deps-$(date -u +%Y%m%d-%H%M)"
+          git checkout -b "$BRANCH"
+          git add package.json package-lock.json src/plugin/code.bundle.js src/plugin/ui.html src/plugin/refs/_skeleton.json
+          git commit -m "chore(handex/deps): atualiza dependencias dentro dos ranges declarados ($(date -u +%Y-%m-%d))"
+          git push origin "$BRANCH"
+          gh pr create \
+            --title "chore(handex/deps): atualização de dependências — $(date -u +%Y-%m-%d)" \
+            --body "Atualização automática de dependências do Handex, dentro dos ranges semver já declarados em \`package.json\` (sem bump de major). Ver o log deste workflow (\"Lista pacotes com major disponivel\") para o que precisa de decisão manual. Revisar (\`npm run lint\` já rodou aqui) e aprovar se OK." \
+            --base main \
+            --head "$BRANCH"
