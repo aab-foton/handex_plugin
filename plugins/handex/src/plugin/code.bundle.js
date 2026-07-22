@@ -1293,6 +1293,7 @@
               for (const s of groupSpecs) {
                 const catLabel = s.type || s.categoryLabel || s.category || "Geral";
                 const sc = s.color ? hexToRgb2(s.color) : { r: 0.38, g: 0.35, b: 0.75 };
+                const scBg = s.fillColor ? hexToRgb2(s.fillColor) : { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
                 const sRow = createFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.97, b: 1 });
                 sRow.name = `[Spec/${s.letter || "A"}] ${s.name || s.label || "Spec"}`;
                 sRow.cornerRadius = 8;
