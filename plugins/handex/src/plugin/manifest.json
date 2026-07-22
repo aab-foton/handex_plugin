@@ -1,8 +1,13 @@
 {
   "name": "Handex - Handoff Express",
+  "id": "1661544299880459562",
   "api": "1.0.0",
   "main": "code.bundle.js",
   "ui": "ui.html",
   "editorType": ["figma", "dev"],
-  "permissions": ["currentuser"]
+  "permissions": ["currentuser"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["https://unpkg.com", "https://cdnjs.cloudflare.com"]
+  }
 }
