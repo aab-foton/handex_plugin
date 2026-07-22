@@ -18,12 +18,38 @@
 # =============================================================================
 
 stages:
+  - lint
   - dsc-sync
   - deps-check
 
 variables:
   GIT_DEPTH: "5"
   HANDEX_DIR: "plugins/handex"
+
+# ─── Job: handex-lint ───────────────────────────────────────────────────────
+# Unico job que roda em TODO push/merge request (os outros dois sao so
+# agendados/manuais). tsc --noEmit + check-figma-api-usage.cjs -- este ultimo
+# existe porque restricoes de runtime do Figma sob documentAccess: dynamic-page
+# (ex: figma.getVariableById sincrono) nao aparecem no tsc, so quebram dentro
+# do Figma. Ja causou um incidente de producao real (21/07/2026, ver
+# docs/architecture-state.md secao 8) -- este gate existe para pegar
+# regressoes desse tipo antes do merge, nao so quando alguem testa manualmente.
+handex-lint:
+  stage: lint
+  image: node:20-alpine
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - "plugins/handex/src/**/*"
+        - "plugins/handex/package.json"
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - "plugins/handex/src/**/*"
+        - "plugins/handex/package.json"
+  script:
+    - cd "${HANDEX_DIR}"
+    - npm ci --prefer-offline --no-audit --no-fund
+    - npm run lint
 
 # ─── Job: refresh-dsc-skeleton ──────────────────────────────────────────────
 refresh-dsc-skeleton:
