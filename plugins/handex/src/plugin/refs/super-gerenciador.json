@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Super Gerenciador",
     "figmaFileKey": "erkqbRKIbaFWbkHe51BeiZ",
-    "exportedAt": "2026-07-10T02:18:42.010Z",
+    "exportedAt": "2026-07-22T15:28:12.241Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -10,6 +10,636 @@
   },
   "designTokens": {
     "variables": [
+      {
+        "key": "7575b7496a872b28dd5cd49e487ea79cb71edfa1",
+        "name": "Abrir/Abrir",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Abrir"
+      },
+      {
+        "key": "cde27af1b5e54c0918683e5f7432fe4cdaa38f43",
+        "name": "Abrir/Abrir comprovante",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Abrir comprovante"
+      },
+      {
+        "key": "f2551aa30f6bedcadb1f706f8fe0fad5f20c074a",
+        "name": "Abrir/Abrir conta digital",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Abrir conta digital"
+      },
+      {
+        "key": "841ba3235377973744e4296dcf8f22d49d853cdb",
+        "name": "Adicionar/Adicionar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Adicionar"
+      },
+      {
+        "key": "3a460f5d71452ecd32fb40e39801b2cb8d29274a",
+        "name": "Adicionar/Adicionar cartão",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Adicionar cartão"
+      },
+      {
+        "key": "5afbc4b887956edcf7410167ac08db8dd1767805",
+        "name": "Adicionar/Adicionar contato",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Adicionar contato"
+      },
+      {
+        "key": "d4f45f82e793ce512f0daee05794a30f682a1d43",
+        "name": "Adicionar/Adicionar widget",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Adicionar widget"
+      },
+      {
+        "key": "6364dd374ac04e7c37bc51dfc3ce05fecc312488",
+        "name": "Antecipar/Antecipar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Antecipar"
+      },
+      {
+        "key": "1f626b1ea958c3cff19043252ab4515ffc156e41",
+        "name": "Acessar/Acessar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Acessar"
+      },
+      {
+        "key": "ca631f5dd50edc1f34b8062f02cd815fe1a2b915",
+        "name": "Atualizar/Atualizar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Atualizar"
+      },
+      {
+        "key": "c34542120aa329d53ca919c2714f742f3f62129d",
+        "name": "Ativar/Ativar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar"
+      },
+      {
+        "key": "4d1b648579e088b4c7d612504b8c7b5c72c88e38",
+        "name": "Ativar/Ativar biometria",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar biometria"
+      },
+      {
+        "key": "3764cf061a4595fb021e1960651f767bf4e04f93",
+        "name": "Ativar/Ativar DDA",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar DDA"
+      },
+      {
+        "key": "fdbd3af7d049a6007435307af4083e975b541a77",
+        "name": "Ativar/Ativar lembrete",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar lembrete"
+      },
+      {
+        "key": "49ea23b990358ded15d568e48c25c37199ef5c6c",
+        "name": "Cadastrar/Cadastrar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar"
+      },
+      {
+        "key": "7fac299247a56db25032e6a422f7286becef9844",
+        "name": "Cadastrar/Cadastrar chave Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar chave Pix"
+      },
+      {
+        "key": "acd7909315fd4f29735888d894a3c1b8c210ef11",
+        "name": "Cadastrar/Cadastrar débito automático",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar débito automático"
+      },
+      {
+        "key": "0c6c08504a879089142e528cd4863754a6eedf8f",
+        "name": "Cadastrar/Cadastrar Pix automático",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar Pix automático"
+      },
+      {
+        "key": "970d71d36e262fd535652d573684251ae3143b04",
+        "name": "Cancelar/Cancelar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar"
+      },
+      {
+        "key": "621e2b0db4a437f1ca8d9285bbb50deedf12c1b0",
+        "name": "Cancelar/Cancelar autorização",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar autorização"
+      },
+      {
+        "key": "7deeb0d4286e256a68eb93f8dbf6ef2d0ef5d329",
+        "name": "Cancelar/Cancelar débito automático",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar débito automático"
+      },
+      {
+        "key": "2e7a7754da5e81f1da07871a1cdd4b9da66dacc9",
+        "name": "Cancelar/Cancelar portabilidade",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar portabilidade"
+      },
+      {
+        "key": "4a8bf755fc84e90a95a1767a6973177ade329a3f",
+        "name": "Compartilhar/Compartilhar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar"
+      },
+      {
+        "key": "73b073957657a304a242f6920f20b252e9400284",
+        "name": "Compartilhar/Compartilhar chave Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar chave Pix"
+      },
+      {
+        "key": "7962242626b005fa3299855a13692a1ca7a8bc66",
+        "name": "Compartilhar/Compartilhar dados da conta",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar dados da conta"
+      },
+      {
+        "key": "85fa2d12fce79977a0de3e7a86ef70e0a294cf9c",
+        "name": "Compartilhar/Compartilhar comprovante",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar comprovante"
+      },
+      {
+        "key": "36c00e537434f816d153a1e471ef6e12174fab87",
+        "name": "Compartilhar/Compartilhar QR Code",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar QR Code"
+      },
+      {
+        "key": "2b63e8cc3f77f2c4dbfa92f3662b2c984e8bf5fe",
+        "name": "Confirmar/Confirmar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Confirmar"
+      },
+      {
+        "key": "7fb9169ea3b7d86dc115bd432d95ae9465ad05e6",
+        "name": "Confirmar/Confirmar celular",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Confirmar celular"
+      },
+      {
+        "key": "07bc4eb81799184c3b955e900c040a58545ae3a3",
+        "name": "Continuar/Continuar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Continuar"
+      },
+      {
+        "key": "35f93d55fc39cb2fd9dc6671cf71a50a0dd3ee7e",
+        "name": "Criar/Criar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Criar"
+      },
+      {
+        "key": "a3730b5ac30a5f2166cf4d1b8119a8080fc500fe",
+        "name": "Criar/Criar lembrete",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Criar lembrete"
+      },
+      {
+        "key": "827deac4fe985e312bed38bef9f9f28f7b6875f9",
+        "name": "Entender/Ok, entendi",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ok, entendi"
+      },
+      {
+        "key": "ace67ea43afcd5e4cafb12bd7af456a385ad72ac",
+        "name": "Excluir/Excluir",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Excluir"
+      },
+      {
+        "key": "d1204cecc7dfe7b41205f67289046ab0bbda9f2b",
+        "name": "Excluir/Excluir Pix Programado",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Excluir Pix Programado"
+      },
+      {
+        "key": "c05e128d55440a8faed9d55edebce93dfb23ba88",
+        "name": "Excluir/Excluir chave Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Excluir chave Pix"
+      },
+      {
+        "key": "86a64e9abcf1277020a948bb3ceecd456492c023",
+        "name": "Fazer/Fazer Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer Pix"
+      },
+      {
+        "key": "808c1b50f1b72495b2b72eaa494a11096d126eb1",
+        "name": "Fazer/Fazer novo Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer novo Pix"
+      },
+      {
+        "key": "99023cb295dd079ccd2f895e825cba3cb2789dc5",
+        "name": "Fazer/Fazer pagamento",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer pagamento"
+      },
+      {
+        "key": "7f9d7e6059748df354e2db2b3320f6d4248d1698",
+        "name": "Fazer/Fazer novo pagamento",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer novo pagamento"
+      },
+      {
+        "key": "98523099a0acd722c6250466525152ac48325923",
+        "name": "Gerar/Gerar QR Code",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Gerar QR Code"
+      },
+      {
+        "key": "a665d506d7e0acf95f9ae5ec3b57f2169744abc0",
+        "name": "Gerar/Gerar 2ª via do boleto",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Gerar 2ª via do boleto"
+      },
+      {
+        "key": "1ddb9fccfa883bd08a645884626aef1580577efc",
+        "name": "Ir e Voltar/Ir para início",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ir para início"
+      },
+      {
+        "key": "13d175095ec0382bb513437dd97954b3de22b8fb",
+        "name": "Ir e Voltar/Ir para Empréstimos",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ir para Empréstimos"
+      },
+      {
+        "key": "3e964c68c9cb918232247ac32e60997a1ccef787",
+        "name": "Ir e Voltar/Voltar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Voltar"
+      },
+      {
+        "key": "b8508791173ad7b1e647230164b01bb60f4a7632",
+        "name": "Ir e Voltar/Voltar para início",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Voltar para início"
+      },
+      {
+        "key": "b3b06d3635a9b3ef2a73a2d9c4ec081cd5782fb5",
+        "name": "Mostrar/Mostrar senha",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Mostrar senha"
+      },
+      {
+        "key": "674e8982242af99721abede69ce8d194c0aeaf94",
+        "name": "Mostrar/Mostrar saldo",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Mostrar saldo"
+      },
+      {
+        "key": "e0cf2ecf4b11acef318c0913ee58ca8083f3e277",
+        "name": "Mostrar/Mostrar todos",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Mostrar todos"
+      },
+      {
+        "key": "70af83b4b8cd6cda2067315aaedb862f2169899a",
+        "name": "Pagar/Pagar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar"
+      },
+      {
+        "key": "0d7cfa101ba0db407065ad8b558e71db0e844640",
+        "name": "Pagar/Pagar boleto",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar boleto"
+      },
+      {
+        "key": "c6e218c7eff2040eba53654f5606a962e00809b8",
+        "name": "Pagar/Pagar parcela",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar parcela"
+      },
+      {
+        "key": "700ede1712ede7e130cf23ea255f40892b8e0ae4",
+        "name": "Pagar/Pagar prestação",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar prestação"
+      },
+      {
+        "key": "3fdeb05fc282d9ab9808abd2b19bcb39ec623a73",
+        "name": "Salvar/Salvar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Salvar"
+      },
+      {
+        "key": "44e5a292aa3dbcfe1a1918f9f6fb8c4838e89d31",
+        "name": "Salvar/Salvar contato",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Salvar contato"
+      },
+      {
+        "key": "da2b36841fe792593a33dcc6fd26ffb387122f5f",
+        "name": "Salvar/Salvar mensagem",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Salvar mensagem"
+      },
+      {
+        "key": "4d74e16cae3b66fffd414709461528d166e27de9",
+        "name": "Usar/Usar chave Pix na CAIXA",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Usar chave Pix na CAIXA"
+      },
+      {
+        "key": "91581239c63c4f3270eb5eb4c3f01192d99ac6c8",
+        "name": "Usar/Usar em outro banco",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Usar em outro banco"
+      },
+      {
+        "key": "e683b329fedb23d423b5daf08762ceb825932b17",
+        "name": "breakpoint 🔒",
+        "resolvedType": "STRING",
+        "collection": "responsive",
+        "value": "extra large"
+      },
+      {
+        "key": "5a252b9f4d10a79cb6a71f922d7c0d359e08b671",
+        "name": "device 🔒",
+        "resolvedType": "STRING",
+        "collection": "responsive",
+        "value": "desktop"
+      },
+      {
+        "key": "342dc2e8338a4bf48cf67858012acaac8f51b0dd",
+        "name": "device/width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
+      },
+      {
+        "key": "0c58f7f1c8bdee1fae04b483016807839d8bbeef",
+        "name": "device/min-width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
+      },
+      {
+        "key": "15b13fffa9bd485c000a60cf7352aeec864ac5cd",
+        "name": "device/max-width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1920
+      },
+      {
+        "key": "8c1c494e3d2189c0cda1a8b246a222679d4e7188",
+        "name": "device/min-height",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 900
+      },
+      {
+        "key": "b6fa6d7ea224162fc26bcd4feb3593a071c72aef",
+        "name": "grid/grid-column",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 12
+      },
+      {
+        "key": "b357d9876a6487bc6585ff05d6d34049168a686b",
+        "name": "show/device/desktop",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "f1fa37adfa4cfe8c8e83b226e2c309d2756590a8",
+        "name": "show/device/mobile",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "c656eb4c5adbf1f4d10d36ecc529a62d6ba847cb",
+        "name": "show/breakpoint/extra large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "eb8218a3b520b76e4c9c5394b34a28e90b9381be",
+        "name": "show/breakpoint/large +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "de2f0274cba20369986d7eba540f66fed2f66cda",
+        "name": "show/breakpoint/large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "f62abf263d76b9cb8859e065b36df4f4a092440d",
+        "name": "show/breakpoint/medium +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "55341000b43c6871ba95e3e9612136dbbd2a06ed",
+        "name": "show/breakpoint/medium",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "2a1182e3ade1087d17e5a4ed3202d0c3a77b2588",
+        "name": "show/breakpoint/small +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "0f238f4ba74855b4056b568dfee5c2f3a114445c",
+        "name": "show/breakpoint/small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "3cf82aef55e2701ed26738822a1848886287a5ae",
+        "name": "show/breakpoint/extra small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "d349b296f58c9f5cc80e92c1043cc59a4a3b79f2",
+        "name": "grid/grid-margin",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 48
+      },
+      {
+        "key": "e2c5440e36fc09559af6d652fa8bd67db3e11dbd",
+        "name": "grid/grid-gap",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 24
+      },
+      {
+        "key": "d5f0eddd47d5e547747cbd2f6b83c1170cfe6c7f",
+        "name": "hide/device/desktop",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "bbb5487ef1c40e5ddf426a45dc9a79c1c61a08f4",
+        "name": "components/container/width-compact",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 720
+      },
+      {
+        "key": "ba362c47468f7ffc3f4bacadc489386abdd3eaff",
+        "name": "components/container/width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1080
+      },
+      {
+        "key": "d5f604b4641b0f25ed4f4e86454f9c1597343fbc",
+        "name": "components/container/width-wide",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
+      },
+      {
+        "key": "353f9e9a3a815706dcc7bf54d116db9f23285fe2",
+        "name": "hide/device/mobile",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "5cdf1997b0429ef16bd6c1be5bab9a2b12eda469",
+        "name": "hide/breakpoint/extra large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "4f95e11f7498f15bd862c964ea6d213f77eacb04",
+        "name": "hide/breakpoint/large +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "2568ea599dbb0f5c54ba2e241554507f75f26411",
+        "name": "hide/breakpoint/large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "759e7e9fc237cc7cf071ed04b65b5d280e884f26",
+        "name": "hide/breakpoint/medium +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "d3676bfcd938342e798fe2301907f26fe42fc5a0",
+        "name": "hide/breakpoint/medium",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "d18bfc2be43c65657374a7518a55295ea586102c",
+        "name": "hide/breakpoint/small +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "080f2ce8fe0de800c7174126adaeaac75e322b54",
+        "name": "hide/breakpoint/small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "1b813038bcb7e2224d055ba5952e55add8faec73",
+        "name": "hide/breakpoint/extra small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
       {
         "key": "b42d6ae94dee2ecfacfc5ab2c263bb7e03cae243",
         "name": "color/highlight/highlight [Azul CX]",
@@ -1444,636 +2074,6 @@
         "resolvedType": "FLOAT",
         "collection": "dsc",
         "value": 160
-      },
-      {
-        "key": "7575b7496a872b28dd5cd49e487ea79cb71edfa1",
-        "name": "Abrir/Abrir",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir"
-      },
-      {
-        "key": "cde27af1b5e54c0918683e5f7432fe4cdaa38f43",
-        "name": "Abrir/Abrir comprovante",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir comprovante"
-      },
-      {
-        "key": "f2551aa30f6bedcadb1f706f8fe0fad5f20c074a",
-        "name": "Abrir/Abrir conta digital",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir conta digital"
-      },
-      {
-        "key": "841ba3235377973744e4296dcf8f22d49d853cdb",
-        "name": "Adicionar/Adicionar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar"
-      },
-      {
-        "key": "3a460f5d71452ecd32fb40e39801b2cb8d29274a",
-        "name": "Adicionar/Adicionar cartão",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar cartão"
-      },
-      {
-        "key": "5afbc4b887956edcf7410167ac08db8dd1767805",
-        "name": "Adicionar/Adicionar contato",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar contato"
-      },
-      {
-        "key": "d4f45f82e793ce512f0daee05794a30f682a1d43",
-        "name": "Adicionar/Adicionar widget",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar widget"
-      },
-      {
-        "key": "6364dd374ac04e7c37bc51dfc3ce05fecc312488",
-        "name": "Antecipar/Antecipar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Antecipar"
-      },
-      {
-        "key": "1f626b1ea958c3cff19043252ab4515ffc156e41",
-        "name": "Acessar/Acessar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Acessar"
-      },
-      {
-        "key": "ca631f5dd50edc1f34b8062f02cd815fe1a2b915",
-        "name": "Atualizar/Atualizar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Atualizar"
-      },
-      {
-        "key": "c34542120aa329d53ca919c2714f742f3f62129d",
-        "name": "Ativar/Ativar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar"
-      },
-      {
-        "key": "4d1b648579e088b4c7d612504b8c7b5c72c88e38",
-        "name": "Ativar/Ativar biometria",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar biometria"
-      },
-      {
-        "key": "3764cf061a4595fb021e1960651f767bf4e04f93",
-        "name": "Ativar/Ativar DDA",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar DDA"
-      },
-      {
-        "key": "fdbd3af7d049a6007435307af4083e975b541a77",
-        "name": "Ativar/Ativar lembrete",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar lembrete"
-      },
-      {
-        "key": "49ea23b990358ded15d568e48c25c37199ef5c6c",
-        "name": "Cadastrar/Cadastrar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar"
-      },
-      {
-        "key": "7fac299247a56db25032e6a422f7286becef9844",
-        "name": "Cadastrar/Cadastrar chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar chave Pix"
-      },
-      {
-        "key": "acd7909315fd4f29735888d894a3c1b8c210ef11",
-        "name": "Cadastrar/Cadastrar débito automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar débito automático"
-      },
-      {
-        "key": "0c6c08504a879089142e528cd4863754a6eedf8f",
-        "name": "Cadastrar/Cadastrar Pix automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar Pix automático"
-      },
-      {
-        "key": "970d71d36e262fd535652d573684251ae3143b04",
-        "name": "Cancelar/Cancelar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar"
-      },
-      {
-        "key": "621e2b0db4a437f1ca8d9285bbb50deedf12c1b0",
-        "name": "Cancelar/Cancelar autorização",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar autorização"
-      },
-      {
-        "key": "7deeb0d4286e256a68eb93f8dbf6ef2d0ef5d329",
-        "name": "Cancelar/Cancelar débito automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar débito automático"
-      },
-      {
-        "key": "2e7a7754da5e81f1da07871a1cdd4b9da66dacc9",
-        "name": "Cancelar/Cancelar portabilidade",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar portabilidade"
-      },
-      {
-        "key": "4a8bf755fc84e90a95a1767a6973177ade329a3f",
-        "name": "Compartilhar/Compartilhar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar"
-      },
-      {
-        "key": "73b073957657a304a242f6920f20b252e9400284",
-        "name": "Compartilhar/Compartilhar chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar chave Pix"
-      },
-      {
-        "key": "7962242626b005fa3299855a13692a1ca7a8bc66",
-        "name": "Compartilhar/Compartilhar dados da conta",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar dados da conta"
-      },
-      {
-        "key": "85fa2d12fce79977a0de3e7a86ef70e0a294cf9c",
-        "name": "Compartilhar/Compartilhar comprovante",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar comprovante"
-      },
-      {
-        "key": "36c00e537434f816d153a1e471ef6e12174fab87",
-        "name": "Compartilhar/Compartilhar QR Code",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar QR Code"
-      },
-      {
-        "key": "2b63e8cc3f77f2c4dbfa92f3662b2c984e8bf5fe",
-        "name": "Confirmar/Confirmar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Confirmar"
-      },
-      {
-        "key": "7fb9169ea3b7d86dc115bd432d95ae9465ad05e6",
-        "name": "Confirmar/Confirmar celular",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Confirmar celular"
-      },
-      {
-        "key": "07bc4eb81799184c3b955e900c040a58545ae3a3",
-        "name": "Continuar/Continuar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Continuar"
-      },
-      {
-        "key": "35f93d55fc39cb2fd9dc6671cf71a50a0dd3ee7e",
-        "name": "Criar/Criar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Criar"
-      },
-      {
-        "key": "a3730b5ac30a5f2166cf4d1b8119a8080fc500fe",
-        "name": "Criar/Criar lembrete",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Criar lembrete"
-      },
-      {
-        "key": "827deac4fe985e312bed38bef9f9f28f7b6875f9",
-        "name": "Entender/Ok, entendi",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ok, entendi"
-      },
-      {
-        "key": "ace67ea43afcd5e4cafb12bd7af456a385ad72ac",
-        "name": "Excluir/Excluir",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir"
-      },
-      {
-        "key": "d1204cecc7dfe7b41205f67289046ab0bbda9f2b",
-        "name": "Excluir/Excluir Pix Programado",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir Pix Programado"
-      },
-      {
-        "key": "c05e128d55440a8faed9d55edebce93dfb23ba88",
-        "name": "Excluir/Excluir chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir chave Pix"
-      },
-      {
-        "key": "86a64e9abcf1277020a948bb3ceecd456492c023",
-        "name": "Fazer/Fazer Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer Pix"
-      },
-      {
-        "key": "808c1b50f1b72495b2b72eaa494a11096d126eb1",
-        "name": "Fazer/Fazer novo Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer novo Pix"
-      },
-      {
-        "key": "99023cb295dd079ccd2f895e825cba3cb2789dc5",
-        "name": "Fazer/Fazer pagamento",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer pagamento"
-      },
-      {
-        "key": "7f9d7e6059748df354e2db2b3320f6d4248d1698",
-        "name": "Fazer/Fazer novo pagamento",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer novo pagamento"
-      },
-      {
-        "key": "98523099a0acd722c6250466525152ac48325923",
-        "name": "Gerar/Gerar QR Code",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Gerar QR Code"
-      },
-      {
-        "key": "a665d506d7e0acf95f9ae5ec3b57f2169744abc0",
-        "name": "Gerar/Gerar 2ª via do boleto",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Gerar 2ª via do boleto"
-      },
-      {
-        "key": "1ddb9fccfa883bd08a645884626aef1580577efc",
-        "name": "Ir e Voltar/Ir para início",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ir para início"
-      },
-      {
-        "key": "13d175095ec0382bb513437dd97954b3de22b8fb",
-        "name": "Ir e Voltar/Ir para Empréstimos",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ir para Empréstimos"
-      },
-      {
-        "key": "3e964c68c9cb918232247ac32e60997a1ccef787",
-        "name": "Ir e Voltar/Voltar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Voltar"
-      },
-      {
-        "key": "b8508791173ad7b1e647230164b01bb60f4a7632",
-        "name": "Ir e Voltar/Voltar para início",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Voltar para início"
-      },
-      {
-        "key": "b3b06d3635a9b3ef2a73a2d9c4ec081cd5782fb5",
-        "name": "Mostrar/Mostrar senha",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar senha"
-      },
-      {
-        "key": "674e8982242af99721abede69ce8d194c0aeaf94",
-        "name": "Mostrar/Mostrar saldo",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar saldo"
-      },
-      {
-        "key": "e0cf2ecf4b11acef318c0913ee58ca8083f3e277",
-        "name": "Mostrar/Mostrar todos",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar todos"
-      },
-      {
-        "key": "70af83b4b8cd6cda2067315aaedb862f2169899a",
-        "name": "Pagar/Pagar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar"
-      },
-      {
-        "key": "0d7cfa101ba0db407065ad8b558e71db0e844640",
-        "name": "Pagar/Pagar boleto",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar boleto"
-      },
-      {
-        "key": "c6e218c7eff2040eba53654f5606a962e00809b8",
-        "name": "Pagar/Pagar parcela",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar parcela"
-      },
-      {
-        "key": "700ede1712ede7e130cf23ea255f40892b8e0ae4",
-        "name": "Pagar/Pagar prestação",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar prestação"
-      },
-      {
-        "key": "3fdeb05fc282d9ab9808abd2b19bcb39ec623a73",
-        "name": "Salvar/Salvar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar"
-      },
-      {
-        "key": "44e5a292aa3dbcfe1a1918f9f6fb8c4838e89d31",
-        "name": "Salvar/Salvar contato",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar contato"
-      },
-      {
-        "key": "da2b36841fe792593a33dcc6fd26ffb387122f5f",
-        "name": "Salvar/Salvar mensagem",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar mensagem"
-      },
-      {
-        "key": "4d74e16cae3b66fffd414709461528d166e27de9",
-        "name": "Usar/Usar chave Pix na CAIXA",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Usar chave Pix na CAIXA"
-      },
-      {
-        "key": "91581239c63c4f3270eb5eb4c3f01192d99ac6c8",
-        "name": "Usar/Usar em outro banco",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Usar em outro banco"
-      },
-      {
-        "key": "e683b329fedb23d423b5daf08762ceb825932b17",
-        "name": "breakpoint 🔒",
-        "resolvedType": "STRING",
-        "collection": "responsive",
-        "value": "extra large"
-      },
-      {
-        "key": "5a252b9f4d10a79cb6a71f922d7c0d359e08b671",
-        "name": "device 🔒",
-        "resolvedType": "STRING",
-        "collection": "responsive",
-        "value": "desktop"
-      },
-      {
-        "key": "342dc2e8338a4bf48cf67858012acaac8f51b0dd",
-        "name": "device/width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "0c58f7f1c8bdee1fae04b483016807839d8bbeef",
-        "name": "device/min-width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "15b13fffa9bd485c000a60cf7352aeec864ac5cd",
-        "name": "device/max-width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1920
-      },
-      {
-        "key": "8c1c494e3d2189c0cda1a8b246a222679d4e7188",
-        "name": "device/min-height",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 900
-      },
-      {
-        "key": "b6fa6d7ea224162fc26bcd4feb3593a071c72aef",
-        "name": "grid/grid-column",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 12
-      },
-      {
-        "key": "b357d9876a6487bc6585ff05d6d34049168a686b",
-        "name": "show/device/desktop",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "f1fa37adfa4cfe8c8e83b226e2c309d2756590a8",
-        "name": "show/device/mobile",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "c656eb4c5adbf1f4d10d36ecc529a62d6ba847cb",
-        "name": "show/breakpoint/extra large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "eb8218a3b520b76e4c9c5394b34a28e90b9381be",
-        "name": "show/breakpoint/large +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "de2f0274cba20369986d7eba540f66fed2f66cda",
-        "name": "show/breakpoint/large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "f62abf263d76b9cb8859e065b36df4f4a092440d",
-        "name": "show/breakpoint/medium +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "55341000b43c6871ba95e3e9612136dbbd2a06ed",
-        "name": "show/breakpoint/medium",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "2a1182e3ade1087d17e5a4ed3202d0c3a77b2588",
-        "name": "show/breakpoint/small +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "0f238f4ba74855b4056b568dfee5c2f3a114445c",
-        "name": "show/breakpoint/small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "3cf82aef55e2701ed26738822a1848886287a5ae",
-        "name": "show/breakpoint/extra small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "d349b296f58c9f5cc80e92c1043cc59a4a3b79f2",
-        "name": "grid/grid-margin",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 48
-      },
-      {
-        "key": "e2c5440e36fc09559af6d652fa8bd67db3e11dbd",
-        "name": "grid/grid-gap",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 24
-      },
-      {
-        "key": "d5f0eddd47d5e547747cbd2f6b83c1170cfe6c7f",
-        "name": "hide/device/desktop",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "bbb5487ef1c40e5ddf426a45dc9a79c1c61a08f4",
-        "name": "components/container/width-compact",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 720
-      },
-      {
-        "key": "ba362c47468f7ffc3f4bacadc489386abdd3eaff",
-        "name": "components/container/width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1080
-      },
-      {
-        "key": "d5f604b4641b0f25ed4f4e86454f9c1597343fbc",
-        "name": "components/container/width-wide",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "353f9e9a3a815706dcc7bf54d116db9f23285fe2",
-        "name": "hide/device/mobile",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "5cdf1997b0429ef16bd6c1be5bab9a2b12eda469",
-        "name": "hide/breakpoint/extra large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "4f95e11f7498f15bd862c964ea6d213f77eacb04",
-        "name": "hide/breakpoint/large +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "2568ea599dbb0f5c54ba2e241554507f75f26411",
-        "name": "hide/breakpoint/large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "759e7e9fc237cc7cf071ed04b65b5d280e884f26",
-        "name": "hide/breakpoint/medium +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "d3676bfcd938342e798fe2301907f26fe42fc5a0",
-        "name": "hide/breakpoint/medium",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "d18bfc2be43c65657374a7518a55295ea586102c",
-        "name": "hide/breakpoint/small +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "080f2ce8fe0de800c7174126adaeaac75e322b54",
-        "name": "hide/breakpoint/small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "1b813038bcb7e2224d055ba5952e55add8faec73",
-        "name": "hide/breakpoint/extra small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
       },
       {
         "key": "9c7fc4880bebc37c156e9bdf87c2ef6354bc2a6e",
@@ -12779,26 +12779,8 @@
       "containingFrame": ""
     },
     {
-      "key": "a289b5b357783cc13dd47aafb1540b3dea35f109",
-      "name": "variant=suggestions",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "bfe42a4eb2a7a7019671c257b620bce738b3ab57",
-      "name": "variant=standard",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "e08b0d5661c59456a30686bb25dd7b12d860fe72",
       "name": "device=desktop, level=sub-menu, compact=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e1aeca57ec1c0419c3b35880f50f042f43d50bcf",
-      "name": "variant=no results",
       "description": "",
       "containingFrame": ""
     },
@@ -12847,30 +12829,6 @@
     {
       "key": "e7b3628bb129ed44e8c147617f12d2c543a96df5",
       "name": "arrow=left, content=slot",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "324af3a5c8bfe3358cc48e389c0f29623d9354f2",
-      "name": "state=default, size=small, selected=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "63ef83af78365eb46b22f9c6a34f199bfcb38606",
-      "name": "state=hover, size=small, selected=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0a723b0d287bb86e11d4765c39f614b32198c79f",
-      "name": "state=disabled, size=default, selected=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1d4bfc0bf350730ed514aa990287ea87c72ba003",
-      "name": "state=pressed, size=default, selected=false",
       "description": "",
       "containingFrame": ""
     },
@@ -13069,108 +13027,6 @@
     {
       "key": "ac8b7921e3982085f2d609aae0a7c8bc724b8403",
       "name": "level=child, state=focus, selected=false, compact=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d048f0b5e331479065721ec1c5abc46b7bb2917b",
-      "name": "state=focus - collapsed chip, status=default, filled=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0ebedc660ee2e2de2c1b1d90f8bdb6a59de702c5",
-      "name": "state=disabled, status=error, filled=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0f3438d1eb5212003ce791cb8316ac48a0f92eb7",
-      "name": "state=disabled, status=default, filled=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "249e30c0ad5ef9203c62abea8a4663a60601443b",
-      "name": "state=focus, status=error, filled=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3193cedf99ef72698bd8c42d01f2bb47fd0754a0",
-      "name": "state=read-only, status=error, filled=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "35f0e4ce657a7530bf565b4d42e0c66150201916",
-      "name": "state=focus, status=error, filled=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "449c317d7cd906f201a6c59cd5ce9e0ce749b494",
-      "name": "state=disabled, status=error, filled=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "63cd9ee12b1f2b4dbc5f694e25ab07c4f461becd",
-      "name": "state=hover, status=error, filled=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "75a743e1ec5456b9382828291321c068c4d489e0",
-      "name": "state=read-only, status=default, filled=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "947f03b36dd6d3844c1c6b98a276246d07300b2e",
-      "name": "state=default, status=default, filled=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a1c85e9bf82cf483e193aeb7dd5c0ba2b813a67f",
-      "name": "state=default, status=default, filled=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "aa506896c23ded18588d0820d7ed3e1b3ed6c5be",
-      "name": "state=default, status=error, filled=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c80a705b10bb1d8005bbac2e26db1d8d493aa7c7",
-      "name": "state=default, status=error, filled=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "dc7dfb1b655f3538d916d407fd4b49bf16c36018",
-      "name": "state=hover, status=default, filled=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e008d7099b6bd95f1c89879cd931ae6de9ba34db",
-      "name": "state=focus, status=default, filled=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e809098fbc988a8d5a946c2a85fa96ade0d639f4",
-      "name": "state=disabled, status=default, filled=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f58141d235abfb276497b4371294038a30d8dd0a",
-      "name": "state=read-only, status=default, filled=true",
       "description": "",
       "containingFrame": ""
     },
@@ -21179,50 +21035,14 @@
       "containingFrame": ""
     },
     {
-      "key": "4bf484c40bbdea60317baaa73a3846a2711fca44",
-      "name": "variant=inline, configuration=radio button, state=focus, status=checked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "4c5ac5f598c24ca08e173f1476f29723dba142a2",
-      "name": "variant=inline, configuration=radio button, state=default, status=checked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "4d45cda815f483fec804096e5c0ef8eab08a744b",
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "arrow-down-left-circle"
     },
     {
-      "key": "552e36bdf74c3ebd4df5dddf90df2faca4075468",
-      "name": "variant=default, configuration=button, state=disabled, status=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "55c031e6db1ef06af46efa7d6e44da9a943d1988",
       "name": "variant=danger, size=large, animation=step 4",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "5656638d6ffa8cef416b7ebb2f4d56c9633780ee",
-      "name": "variant=default, configuration=radio button, state=default, status=checked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "56a1b6fbe3f71541983d6c17f5465fe824708af9",
-      "name": "variant=default, configuration=button, state=pressed, status=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "57a516ab87fb6b916ddbe9c8aa21c6588878cd8f",
-      "name": "variant=inline, configuration=radio button, state=focus, status=unchecked",
       "description": "",
       "containingFrame": ""
     },
@@ -21245,32 +21065,8 @@
       "containingFrame": "[dsc] Device / Status Bar"
     },
     {
-      "key": "64c92042cf7ec100a4bfe97773ed19156ffff834",
-      "name": "variant=default, configuration=radio button, state=pressed, status=checked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "65a3ea271a62353f8bf3645abf24f58ed64d38c1",
-      "name": "variant=default, configuration=button, state=default, status=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "66590d8be8584efc6de0e02b61b0cb73d3b1102b",
-      "name": "variant=default, configuration=radio button, state=disabled, status=unchecked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "6aac4c6e9a9dd5bc7c91c4716f7c643c9190705e",
       "name": "variant=highlight, size=small, animation=step 2",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "71c5310c146e431e709b155c0cc3812ca7744fb1",
-      "name": "variant=default, configuration=checkbox, state=hover, status=unchecked",
       "description": "",
       "containingFrame": ""
     },
@@ -21279,18 +21075,6 @@
       "name": "system=iOS, inverted=false",
       "description": "",
       "containingFrame": "[dsc] Device / Status Bar"
-    },
-    {
-      "key": "789863f34f3af67fbf46bce704d5535fe5cb635a",
-      "name": "variant=inline, configuration=checkbox, state=focus, status=unchecked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "7b5b803e78e0209a9863c1cf57e4199a376e17c7",
-      "name": "variant=inline, configuration=checkbox, state=hover, status=unchecked",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "7de2bbb117f0e2f9a69fb95994842fb801567658",
@@ -21317,12 +21101,6 @@
       "containingFrame": "arrow-down-left-circle"
     },
     {
-      "key": "9123e75ca62a475418cee2bfe47c9596795d46ca",
-      "name": "variant=default, configuration=checkbox, state=focus, status=unchecked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "947e9a2d7346cf90a3af5e38551af47d632212d7",
       "name": "variant=danger, size=small, animation=step 4",
       "description": "",
@@ -21335,38 +21113,8 @@
       "containingFrame": "copy"
     },
     {
-      "key": "9c6f57544a2cd6100bb7086a1e516d6600b54e45",
-      "name": "variant=default, configuration=radio button, state=default, status=unchecked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "9f04b04a689e4dd70ce11e817af736e0f3b94adb",
       "name": "variant=neutral, size=large, animation=step 2",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9ffcf56b8677be2d47734643ed3bb1042699f7bc",
-      "name": "variant=inline, configuration=checkbox, state=default, status=unchecked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a8d807ee262891ef27e3810eee57601cfeded626",
-      "name": "variant=inline, configuration=button, state=focus, status=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ab90f98dfb02dcd84b03182955ccb326f4d20fbf",
-      "name": "variant=inline, configuration=static, state=default, status=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "b31429c59efa4c58ab84974a69af4a23c652a781",
-      "name": "variant=default, configuration=checkbox, state=pressed, status=checked",
       "description": "",
       "containingFrame": ""
     },
@@ -21407,12 +21155,6 @@
       "containingFrame": "graduation-cap"
     },
     {
-      "key": "c5e127bb0c820b94f590efa6483ff452407700b7",
-      "name": "variant=inline, configuration=radio button, state=pressed, status=checked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "c7ac51a3230ec303e561d45a7d827e8c3bd49972",
       "name": "variant=highlight, size=small, animation=step 4",
       "description": "",
@@ -21431,12 +21173,6 @@
       "containingFrame": ""
     },
     {
-      "key": "ca1603c9010da5339a8c96922ef441c13b059ffe",
-      "name": "variant=default, configuration=checkbox, state=focus, status=checked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "cb5d3526ac167de9aa02aa4da2be07b4d46df169",
       "name": "variant=highlight, size=small, animation=step 1",
       "description": "",
@@ -21449,32 +21185,8 @@
       "containingFrame": ""
     },
     {
-      "key": "cf1813a0ca1e6356282b98f10cd9410f1c1373fc",
-      "name": "variant=inline, configuration=button, state=default, status=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d340219e8977501716274b643a57eb2d3101f5ce",
-      "name": "variant=inline, configuration=checkbox, state=hover, status=checked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "d47398d030afe9cb14e1183142257392f23aaa6b",
       "name": "variant=Brasil",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d79e7fe217c172fc0f2e3425fe0e7f7d0c3065c3",
-      "name": "variant=inline, configuration=radio button, state=default, status=unchecked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d88946a1f88cefdf1ae39cb071fe23fee605f2c2",
-      "name": "variant=default, configuration=checkbox, state=disabled, status=checked",
       "description": "",
       "containingFrame": ""
     },
@@ -21485,22 +21197,10 @@
       "containingFrame": ""
     },
     {
-      "key": "da9aef42eda11e4271908ba69a9d2c9b31120cb2",
-      "name": "variant=default, configuration=radio button, state=hover, status=unchecked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "de90879d7b23becbbbe05492b080e31c25a9bfbd",
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "copy"
-    },
-    {
-      "key": "e30098c645357964500f5ca927e9ba8c4d9c91ac",
-      "name": "variant=inline, configuration=checkbox, state=disabled, status=unchecked",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "e34534e205dae79374e2c70361d05f4262c40064",
@@ -21533,52 +21233,10 @@
       "containingFrame": ""
     },
     {
-      "key": "ec3b404a4ff315862e5681a76295e5ddad596185",
-      "name": "variant=inline, configuration=radio button, state=disabled, status=unchecked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ecbef4eb5cf8a608bf3e858957fba0668005b449",
-      "name": "variant=inline, configuration=checkbox, state=disabled, status=checked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "edcefa697dbd3447f829ad32ff94e748a4fcfebd",
-      "name": "variant=inline, configuration=radio button, state=disabled, status=checked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "03d8eb958f96634b086ae4c9ae3a8ab434f30792",
       "name": "system=Android, inverted=false",
       "description": "",
       "containingFrame": "[dsc] Device / Status Bar"
-    },
-    {
-      "key": "0449cc1beb9da8f5aafb5a93cba7728888185f7e",
-      "name": "variant=default, configuration=checkbox, state=disabled, status=unchecked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "05c18d60c246b35bf3b04304ac8774ef65a8bfd1",
-      "name": "variant=inline, configuration=button, state=disabled, status=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "07be44fdee11ebd6005d7d1cfbe42a8ee5b84932",
-      "name": "variant=default, configuration=button, state=focus, status=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0ab219eaa8718626e738a7067e298468e9a6a8f9",
-      "name": "variant=default, configuration=radio button, state=pressed, status=unchecked",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "0c8ae111850cecd300129a54c94e2f999621c60a",
@@ -21587,32 +21245,8 @@
       "containingFrame": "[dsc] Device / Status Bar"
     },
     {
-      "key": "0db81ae0cf6aa37773dac75ca36421b9f6feb249",
-      "name": "variant=inline, configuration=button, state=hover, status=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "0f193e3f74a0e531bf28c973bd61875e8d223431",
       "name": "variant=highlight, size=large, animation=step 4",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "0f51802909bdc5e17fa2d1e9024f0e6b480c0aab",
-      "name": "variant=inline, configuration=checkbox, state=pressed, status=checked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "10a0fae7753c2e1922ea592ffc1ad83baf1a3df0",
-      "name": "variant=inline, configuration=radio button, state=pressed, status=unchecked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "11a339c54148cb508f248a85828acbce5b6acdf1",
-      "name": "variant=default, configuration=static, state=default, status=none",
       "description": "",
       "containingFrame": ""
     },
@@ -21623,38 +21257,8 @@
       "containingFrame": ""
     },
     {
-      "key": "1f48a42ecb92ae3e72efc6605dbaece808805d22",
-      "name": "variant=default, configuration=radio button, state=disabled, status=checked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1feaabb7316af94ff7e31a629aa9f5c3379079eb",
-      "name": "variant=inline, configuration=radio button, state=hover, status=checked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "204239f1e44a6be20a7b956971670e89089633d0",
-      "name": "variant=default, configuration=radio button, state=focus, status=unchecked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "20ce316b19cc5859a545c9328a48eeafeccd58ca",
       "name": "variant=neutral, size=small, animation=step 4",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "2526950668148c4cb40de5527fbf404cb3d2c301",
-      "name": "variant=inline, configuration=checkbox, state=pressed, status=unchecked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "298bcbf1b812e8a2fe2b92a2179c6b1ea09eb76d",
-      "name": "variant=default, configuration=checkbox, state=hover, status=checked",
       "description": "",
       "containingFrame": ""
     },
@@ -21671,18 +21275,6 @@
       "containingFrame": ""
     },
     {
-      "key": "33d02f72fcef125a1450de9492e4dbc756fd647e",
-      "name": "variant=inline, configuration=checkbox, state=focus, status=checked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "34285503b5dbe36bc130310f6fe27d3cef7fa6f4",
-      "name": "variant=default, configuration=checkbox, state=pressed, status=unchecked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "359f79dd3b50ffaea5a70eee8204f6454e2a6717",
       "name": "variant=EUA",
       "description": "",
@@ -21695,56 +21287,14 @@
       "containingFrame": ""
     },
     {
-      "key": "39869d82a3a54b914d51448858b6d9161b70c08b",
-      "name": "variant=inline, configuration=button, state=pressed, status=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "39cab6a23a2800e33bcbe1546d5154504e71afae",
-      "name": "variant=default, configuration=button, state=hover, status=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3aa6702619d7bc15895cef126cb461fb92d268ba",
-      "name": "variant=inline, configuration=radio button, state=hover, status=unchecked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "3cdecb34086785edc37ff08ec3867dd05af8442c",
       "name": "variant=highlight, size=large, animation=step 3",
       "description": "",
       "containingFrame": ""
     },
     {
-      "key": "3f3603d13e432a1c8ebb12e1bbb972f93317dd0e",
-      "name": "variant=default, configuration=radio button, state=hover, status=checked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "42b5bf9150b98b667f7540ee03028b0a1de2747c",
-      "name": "variant=default, configuration=radio button, state=focus, status=checked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ef19301e7af1f0289a715cbaf2a47928413fc6e0",
-      "name": "variant=default, configuration=checkbox, state=default, status=checked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "f6cbdaabbfb67ed1f8c551ca3e1d24cc536d2e6f",
       "name": "variant=danger, size=large, animation=step 1",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "fad21f3e1e4808568313c8b0d04dcf37f99c8806",
-      "name": "variant=inline, configuration=checkbox, state=default, status=checked",
       "description": "",
       "containingFrame": ""
     },
@@ -22145,12 +21695,6 @@
       "containingFrame": "cash"
     },
     {
-      "key": "931ca70a3a3ff3842f14aeecd9737adabf1eb913",
-      "name": "state=focus, status=default, filled=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "972d034b77ed0aad86625887fffcd27b9b2a612d",
       "name": "Weight=Dynamic",
       "description": "",
@@ -22271,12 +21815,6 @@
       "containingFrame": "[dsc] Device / Home Indicator"
     },
     {
-      "key": "09e6837103c8ad1a36afd13852f1022dac7fc97f",
-      "name": "state=disabled, size=small, selected=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "09f886f359b388336c8d4f2be56c02093474fc05",
       "name": "Weight=Solid",
       "description": "",
@@ -22287,12 +21825,6 @@
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "pen-tablet-connect-usb"
-    },
-    {
-      "key": "122a864109388144db8451d8af05eb8e6285b4cd",
-      "name": "state=hover, size=small, selected=true",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "16cf2943c04b2a34e1df38b02874cdb871bd41c1",
@@ -22331,12 +21863,6 @@
       "containingFrame": "consumable"
     },
     {
-      "key": "231b34611a30a5238492b7a0fae0143e5e498256",
-      "name": "state=focus, size=default, selected=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "24531272a61d04883dd67c9faaa1f09f81d693d6",
       "name": "Weight=Dynamic",
       "description": "",
@@ -22351,12 +21877,6 @@
     {
       "key": "2c13c1a02c3c831ff141c9f695c926efe87d3ed6",
       "name": "corner radius=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3024dceb36028a18deea661fa068faace80f79ce",
-      "name": "state=read-only, size=small, selected=true",
       "description": "",
       "containingFrame": ""
     },
@@ -22397,12 +21917,6 @@
       "containingFrame": "pen-tablet-connect-usb"
     },
     {
-      "key": "50a015538a3e915374f6143b45d41c29dc84ef82",
-      "name": "state=focus, size=small, selected=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "54d44d4344886141c2cb27033f9ae815d3b212b2",
       "name": "system=Android, inverted=false",
       "description": "",
@@ -22413,12 +21927,6 @@
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "percentage-circle"
-    },
-    {
-      "key": "59fff4e20923610bf17bf56a8f450a655a49896c",
-      "name": "state=default, size=small, selected=false",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "5c5004551fe6501832b87d7791abcfaf07052dd4",
@@ -22443,24 +21951,6 @@
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "church-side"
-    },
-    {
-      "key": "6aef93df445e5b788fdcda83e2af202714843955",
-      "name": "state=pressed, size=small, selected=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6c6360710877d54b6a5c1bd89e2e84d33e493c42",
-      "name": "state=default, size=default, selected=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6ed01eb90979af536af1c9eb92053cedf25b6cce",
-      "name": "state=disabled, size=default, selected=true",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "7a2781cdb6089d78b2bf73370f66f620e8569c49",
@@ -22505,12 +21995,6 @@
       "containingFrame": ""
     },
     {
-      "key": "8808d6f7ef5d2bac415bf76e274de06171c0028c",
-      "name": "state=disabled, size=small, selected=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "88513e79b1f3c4cbefb8c7c6dd730531f15d5822",
       "name": "Weight=Dynamic",
       "description": "",
@@ -22529,12 +22013,6 @@
       "containingFrame": ""
     },
     {
-      "key": "91846171ca769cc3f3c0739cfb255a6f374a0fa1",
-      "name": "state=focus, size=small, selected=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "932784918889b74151ef81c3bbc025d8cb82365f",
       "name": "Weight=Solid",
       "description": "",
@@ -22545,12 +22023,6 @@
       "name": "Weight=Solid",
       "description": "",
       "containingFrame": "cigarette-slash"
-    },
-    {
-      "key": "9880e7f46f5e6c83183996aa76057ee4cc0e023d",
-      "name": "state=focus, size=default, selected=false",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "989a2a3daaa6cdc765613497f62ec45b313190a2",
@@ -22571,12 +22043,6 @@
       "containingFrame": ""
     },
     {
-      "key": "a2c5804364a1f2f49432638e7b39d2c56a16ca13",
-      "name": "state=read-only, size=default, selected=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "a5438b90af778d88788f1ff3764afed7671474a9",
       "name": "Weight=Dynamic",
       "description": "",
@@ -22593,12 +22059,6 @@
       "name": "Weight=Solid",
       "description": "",
       "containingFrame": "download-circle"
-    },
-    {
-      "key": "a8223f326eef6ffd76bab3589b6f4273189b0009",
-      "name": "state=hover, size=default, selected=true",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "a87924d7d0e1ae95170421805e0c0d9a259567a5",
@@ -22637,38 +22097,14 @@
       "containingFrame": "area-search"
     },
     {
-      "key": "bf6673517c1bf9a49c0ac816612510837723b172",
-      "name": "state=pressed, size=small, selected=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "c04729a671f0a57cceb1479a2369165b6254301f",
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "scarf"
     },
     {
-      "key": "c28a39b5ef0ac921a295efff70db93fc9c961af1",
-      "name": "state=pressed, size=default, selected=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "c2d4678469523b0bacc9ef5b996d3f15583e37e1",
       "name": "corner radius=small",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c332fc27ae3650fcbb95c962c5824197720a39b5",
-      "name": "state=hover, size=default, selected=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c50969dc359a57fc4a5cd90b6ba6f31d1c9426d0",
-      "name": "state=read-only, size=small, selected=false",
       "description": "",
       "containingFrame": ""
     },
@@ -22769,20 +22205,8 @@
       "containingFrame": "custom-package-check"
     },
     {
-      "key": "f6c0eea760d29d28151aad4d1ba97b9f3250b162",
-      "name": "state=read-only, size=default, selected=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "fc5fcd1f548dc0366e33f65c8704355d95b5319a",
       "name": "status=no value, type=display",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "fd8ecd0135e742155790250bde1c8d16429714f9",
-      "name": "state=default, size=default, selected=true",
       "description": "",
       "containingFrame": ""
     },
@@ -24269,24 +23693,6 @@
       "containingFrame": ""
     },
     {
-      "key": "19dfdf9bba2538139a3c5406b1a8d109f71e30d0",
-      "name": "state=read-only, status=error, filled=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ca8b01f62168244a29a712e069ca81fd7a5930ca",
-      "name": "state=hover, status=default, filled=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e336ccaee484ae434edb9fa3b512c00c0731fb06",
-      "name": "state=hover, status=error, filled=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "0c6ffb1c398d80c3e3369627925ad2b9b5c94fb7",
       "name": "status=default, state=default, filed=false",
       "description": "",
@@ -24649,12 +24055,6 @@
     {
       "key": "f3b5eab66c3261d80451ad922ab799841c4742b4",
       "name": "variant=on gray bg, state=focus, status=empty",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1618751f8ce6979214f40ddc774806fc00f007f0",
-      "name": "variant=default, configuration=checkbox, state=default, status=unchecked",
       "description": "",
       "containingFrame": ""
     },
@@ -26093,12 +25493,6 @@
       "containingFrame": ""
     },
     {
-      "key": "956a0639a7e5b210df0bd0944b372abf279f6fc7",
-      "name": "pattern=search - standard, wide=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "9798084cdfc80024d19f4fbdb99424bda484bc58",
       "name": "pattern=actions, pattern state=none",
       "description": "",
@@ -26553,6 +25947,1932 @@
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "custom-edit-pencil"
+    },
+    {
+      "key": "1acc3ab850204c9fd2ab268467bde1342ca22d9a",
+      "name": "size=large, type=outline, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2c5371f9b93ec4ce896fc30b9080a9f1c13d013e",
+      "name": "size=large, type=outline, state=default, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ead076fc5974547cc1cc60c670203565c1eb658e",
+      "name": "size=small, type=chromeless, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "5dc1f337dc90e005998cd20383e1e7a0368159d1",
+      "name": "size=large, type=outline, state=hover, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9082c48302cf1bd81057b44f87180cf84ef68888",
+      "name": "size=small, type=chromeless, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "723c747972e6787e46b05f46663770c3d919d3bc",
+      "name": "size=large, type=outline, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d9c123a8d66d312f1828f4cd9b413c74d028615d",
+      "name": "size=small, type=chromeless, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ad3503dcd43d5a8d23ddcf7124c04ecfdfae999d",
+      "name": "size=large, type=outline, state=focus, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "39131c87c54e9b808b1a64df9154e6b771be6aa3",
+      "name": "size=small, type=chromeless, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c8803ddcdc1d80e8d485ddc05e2f43fe15aec1cb",
+      "name": "size=large, type=outline, state=loading, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "91e36b7fa348eb773534a6ec986c2ceab4fbd2da",
+      "name": "size=small, type=chromeless, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1faf0a9af136454720e7705e2a831b2f1f51c972",
+      "name": "size=small, type=outline, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "323ab7c84096d6b43f41f0be833489b848c85d02",
+      "name": "size=small, type=chromeless, state=loading, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ed486406eee06ed54a719b57ae9531ed159df21d",
+      "name": "size=small, type=chromeless, state=default, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "eb2dcd22346fcbef4b3a31a9bda9066e2fbc8411",
+      "name": "size=small, type=chromeless, state=hover, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "008ec228581a3b4ed5d4fd29ebcbd3413c402266",
+      "name": "size=small, type=chromeless, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0ecb8b1f518d7c694dd8a4f75e144fe5baf77eb6",
+      "name": "size=small, type=chromeless, state=focus, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "91c0b90a2000bb337244be14860e8df1f24fd9d3",
+      "name": "size=small, type=chromeless, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "da1ce96c566ba8fddb277dfebfe4e4f5272368ff",
+      "name": "size=small, type=outline, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d9a4b5efe4f6e9760913ca10c23d5127903457b4",
+      "name": "size=small, type=outline, state=default, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2b4e87b213686dbd33116a69651ce3d4295938fa",
+      "name": "size=small, type=outline, state=hover, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d9af67f18038583f34d51e7af7cbba8095d84c1b",
+      "name": "size=small, type=outline, state=focus, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6b25933fa02064b24e27f4d89aeec57f83399a5e",
+      "name": "size=small, type=outline, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ec0c197aaca8962173257b6beb7daf15c3331b4d",
+      "name": "size=standard, type=chromeless, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4e3b4b452fc6876b62fd5fbb79fba65107392b96",
+      "name": "size=standard, type=outline, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "430cfa646bccdd0a1c2086dd4c1aba97cf342825",
+      "name": "size=small, type=outline, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "095376203bdede1f7729fbf9350dac61a010e0b2",
+      "name": "size=tiny, type=outline, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4e457b7e6817efb224a3a2e12d0a9fc8bd767fb4",
+      "name": "size=standard, type=chromeless, state=focus, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2cbb6f69fe8309e035f36c04bc29467a7b52c094",
+      "name": "size=small, type=outline, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1c3e18341ddb6d029ab8dd1d2bea3fc67c42c989",
+      "name": "size=tiny, type=chromeless, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ead1deeb5518995631c2ebf82d8b492ad86415b7",
+      "name": "size=standard, type=outline, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "26609a71c0e249bde74820e9f11bcd2e88508cb9",
+      "name": "size=tiny, type=chromeless, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "fcf640236926a639bc189d70dca6a33810067694",
+      "name": "size=tiny, type=outline, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9b43a85a7dae76d98cc14edf3a18422f7160b381",
+      "name": "size=large, type=outline, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9d36e4f71d74d4aa745cb37fedeafa68676cede8",
+      "name": "size=small, type=chromeless, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4eee3034554d9a4913ffffc46e59a48c37ba8a92",
+      "name": "size=standard, type=chromeless, state=default, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "eccd82fae8c6a65771f4a4946eb95d8160e14795",
+      "name": "size=large, type=chromeless, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "07ee5c13bc2dadb700f4acf6cd2458469b550fde",
+      "name": "size=standard, type=chromeless, state=hover, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "70ac3820b5172f90c0cddf253afc38b972455aaf",
+      "name": "size=tiny, type=chromeless, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2260a6b1244d3b44c866bd2cfb15d0cb96986214",
+      "name": "size=standard, type=chromeless, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b9f6af44f94e758543a6b21d54b9a6f166101e22",
+      "name": "size=standard, type=chromeless, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f804c113c1f49675a6dbd867b603909152d6c966",
+      "name": "size=tiny, type=outline, state=default, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "5306d60f5444cddc870e27baaf6258c169c5238d",
+      "name": "size=large, type=outline, state=hover, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b6e0db99d7161863d3a3f81e0f3040b9e6d25501",
+      "name": "size=standard, type=chromeless, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2c024dcee38072449445eba631fe84250549bf2d",
+      "name": "size=tiny, type=chromeless, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "935931c00b8efe6714977f40961cc3e402d4e0ac",
+      "name": "size=standard, type=chromeless, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "74096ab782d59f3b29ee0855e65b1fa145a11635",
+      "name": "size=large, type=chromeless, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c5d0fadb9048fae97970e922cdf769835deb2226",
+      "name": "size=tiny, type=outline, state=focus, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "490d9000d1a98130b1d077e985e7a4ae6142e164",
+      "name": "size=large, type=chromeless, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1aa27acd284df328f8324c60fbc34248837a7a2e",
+      "name": "size=small, type=chromeless, state=hover, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ad0577a536eb683a2c18240154f1e3fedc1fb0b0",
+      "name": "size=standard, type=outline, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1db7e05b5d5830b425f0b35818dfc3a647cc6343",
+      "name": "size=large, type=chromeless, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "18b348263dfc861d871ca749f48bc106b1e531c7",
+      "name": "size=large, type=chromeless, state=hover, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "00bb6c5e80c7bfca7e06c2e264d20075bbb856eb",
+      "name": "size=standard, type=outline, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "02036d2c8686d176b7510c2fc7b9aad83d4f738e",
+      "name": "size=small, type=outline, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "10059c5ba21c3ddcaf70a4d9c9e270025c32ef56",
+      "name": "size=standard, type=outline, state=loading, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e32e5e03232248b70956df98f48df357a6c58fdc",
+      "name": "size=standard, type=outline, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "26012f1a54be7541824b308ed2a1068a8ab69a96",
+      "name": "size=tiny, type=chromeless, state=loading, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "cecf7ebcf8d5ea5d68fae7c50ba769e2a8dc8d78",
+      "name": "size=large, type=chromeless, state=default, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "bd857852a041dcf5a2eab43ee19f2063f4d70d76",
+      "name": "size=standard, type=chromeless, state=loading, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c548de9e528afa8877d2ab3a254f242792c9ef48",
+      "name": "size=standard, type=outline, state=loading, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "831647bdcb6b3b74b78c8e2cf29acce3de5c87cf",
+      "name": "size=small, type=outline, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "adce9672a472ffaab48bd31a5bacc6c9c0dd633f",
+      "name": "size=standard, type=outline, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4b6289d0c149e53370d60734af1953375eef5924",
+      "name": "size=tiny, type=outline, state=hover, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b0c8fb0aa49e9c3ec84f930199473f04daf0a6a9",
+      "name": "size=standard, type=chromeless, state=loading, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3c1e50c242fbcd05b4c45273fa4a1ce6cf6a96cd",
+      "name": "size=standard, type=chromeless, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "848a27f438335f0ef34ec7ca01626d71767f3628",
+      "name": "size=standard, type=outline, state=default, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "bfd4085124a756a1fc0ca56346c7dedeb61de7d3",
+      "name": "size=tiny, type=outline, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "788f2f6c39c4b92e8a231b24a0ee4a03753b0447",
+      "name": "size=standard, type=outline, state=hover, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c38e7914d36641938b92343a22a76ff336b34fbf",
+      "name": "size=tiny, type=outline, state=loading, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2474fb849c935a7888248b6021d5715df2861578",
+      "name": "size=standard, type=outline, state=focus, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "65d8181e5bd96a2b6e81060a5cab496de64e3814",
+      "name": "size=tiny, type=outline, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8cc69eca8d910cc1e787945b67e0984a3c1f032e",
+      "name": "size=standard, type=chromeless, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7dd0256614bc0afba30f2cf3d0f76341ffdc4cd2",
+      "name": "size=large, type=outline, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "bfc9e6664cd424173460c42e79965b97044c6d5b",
+      "name": "size=standard, type=outline, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2be044b36672c5bf8675e45b0c0c8b7bf15f627a",
+      "name": "size=large, type=chromeless, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "16afaae604b6f5699d1a6a416fe091e2353dbf9b",
+      "name": "size=large, type=chromeless, state=focus, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a7d52182e2afdce9de02d6b0d7551435b0352123",
+      "name": "size=large, type=outline, state=loading, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3167427e18e4e8368499c09c0f1d979a254b12c5",
+      "name": "size=large, type=outline, state=focus, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "5bc2cd95f2be351f549f10e99c207a472d78abad",
+      "name": "size=large, type=chromeless, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1ae1295e43a8fc634090ba0cccf8e1c19846a6dc",
+      "name": "size=large, type=chromeless, state=loading, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8634d1fcf33e59ee68d12df8f1db3db499302a0b",
+      "name": "size=large, type=outline, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "18f19e5849249a6ad41d96a60e5379b23a1e0651",
+      "name": "size=large, type=chromeless, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8478206cfb1641995f037448ef899a8a2c5175fb",
+      "name": "size=small, type=chromeless, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e38ab20514d4f3ed20698f4a52142e36ee0d3498",
+      "name": "size=large, type=chromeless, state=loading, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "5b9e1b877a19812a98175590447414bd1a43509b",
+      "name": "size=large, type=outline, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0d2bc86f4fc1ec3ec8f523cde08330d1c33c7142",
+      "name": "size=small, type=chromeless, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0d36e7d3e3ea167b7ff90eb37e2690bddd009cdd",
+      "name": "size=large, type=outline, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4c349752486e6d9c439cb106e60d8c9975831a09",
+      "name": "size=small, type=chromeless, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8f7822f6648d7d62daf62f75125e94b9b8965f8e",
+      "name": "size=large, type=outline, state=loading, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "267c1230f9d9d718353d67a3ea96684d9031ec20",
+      "name": "size=small, type=chromeless, state=focus, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9f1ed6ab409ae4a325c057fdfa80798fbd9ef230",
+      "name": "size=large, type=outline, state=default, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c6d64760d07c8f53b1d22d554aa30db137aa85fd",
+      "name": "size=small, type=chromeless, state=default, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "61d99e77d878d079f34b31b9ff85f5565a350153",
+      "name": "size=large, type=outline, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "90d25abfcd0d8cc682a506f61c3d6b34cff7fa92",
+      "name": "size=small, type=chromeless, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "03ce27b45cf66af25f50a3390407bf18c8dd76ae",
+      "name": "size=large, type=outline, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "910afc522f46ce7641427298ed80e1c01edd04fe",
+      "name": "size=small, type=chromeless, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "584a23beae0cc3d8b5dd62f673d0303e1e1f081f",
+      "name": "size=small, type=chromeless, state=loading, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "fb5ae6d1d2a525e760573af057e659a37714b710",
+      "name": "size=small, type=chromeless, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e13d6b3a4ecdeba7f7fb999e681d9e968a61800c",
+      "name": "size=small, type=chromeless, state=loading, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a95f9804b2814880d6897912dde14314660ac825",
+      "name": "size=small, type=outline, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "267ee48c59f747896b957c49bb2e194408a7ca62",
+      "name": "size=small, type=outline, state=loading, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "957c734694848c07029fdf9786a806bb05a34e7f",
+      "name": "size=small, type=outline, state=default, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8279e77bde51d10e64ce8e1aa6450254e46ed017",
+      "name": "size=small, type=outline, state=hover, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "286c3c92b05a393db4f7a12baff42c9114c5f104",
+      "name": "size=small, type=outline, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1431f70feb15fcd37a3268bd569a4c30ff829a6c",
+      "name": "size=small, type=outline, state=focus, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "616610444c6e42a1354f7dd788d791d33ad8cd07",
+      "name": "size=small, type=outline, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "542a2bda4ff876986bd230520170d6f75a7e1f3e",
+      "name": "size=small, type=outline, state=loading, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2104828632a03d9613f2923e49e784b655b5aadf",
+      "name": "size=tiny, type=chromeless, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2368db07cfc460f99fc48edd0c788cf4daaa5283",
+      "name": "size=tiny, type=chromeless, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "088f6e11f442f237025912ada3734d94819a7a98",
+      "name": "size=tiny, type=chromeless, state=default, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "511f5d77fd74d704bf0bd3c91501ee285e1c8a84",
+      "name": "size=tiny, type=chromeless, state=hover, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7d8cadf1d71b6dcc402049ec427090daf0a3c72e",
+      "name": "size=tiny, type=chromeless, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "648e3e4e216282a88049c18450c37f17d90deb8a",
+      "name": "size=tiny, type=chromeless, state=focus, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "fe43179dea247de1249ca6f5e0986eb9a6723a76",
+      "name": "size=tiny, type=chromeless, state=loading, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "5313786d43fb0fdbc944345f0c18ff501b88e104",
+      "name": "size=tiny, type=outline, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "afd5d9841bd01f6484e2228ad84a77908125ac12",
+      "name": "size=tiny, type=outline, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c95917e577d27cb59365954fd8b5b04c5d49723f",
+      "name": "size=tiny, type=outline, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0b2a12b028ff59c66914d04952216524ef67c4ee",
+      "name": "size=tiny, type=outline, state=loading, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "249e30c0ad5ef9203c62abea8a4663a60601443b",
+      "name": "state=focus, status=error, filled=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a289b5b357783cc13dd47aafb1540b3dea35f109",
+      "name": "variant=suggestions",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "aa506896c23ded18588d0820d7ed3e1b3ed6c5be",
+      "name": "state=default, status=error, filled=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "bfe42a4eb2a7a7019671c257b620bce738b3ab57",
+      "name": "variant=standard",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d048f0b5e331479065721ec1c5abc46b7bb2917b",
+      "name": "state=focus - collapsed chip, status=default, filled=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e008d7099b6bd95f1c89879cd931ae6de9ba34db",
+      "name": "state=focus, status=default, filled=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e1aeca57ec1c0419c3b35880f50f042f43d50bcf",
+      "name": "variant=no results",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e336ccaee484ae434edb9fa3b512c00c0731fb06",
+      "name": "state=hover, status=error, filled=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e809098fbc988a8d5a946c2a85fa96ade0d639f4",
+      "name": "state=disabled, status=default, filled=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6b840e76ed7176f4f21890cd9072eabf94b5f1c9",
+      "name": "size=standard, type=chromeless, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "66489dfba7b4fee18ee5f9b67ef287801e498935",
+      "name": "size=standard, type=chromeless, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1b7b3c4bede7ab68fb1c29000cf5bdb1c6f46ceb",
+      "name": "size=standard, type=chromeless, state=default, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3cbd6f18069042f99d14d150a489a94cc7e1acfc",
+      "name": "size=standard, type=outline, state=default, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "cbb9bd8bfdc8e2d50dac38ca5adbb6608be5b2f2",
+      "name": "size=standard, type=chromeless, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "bafd95d68905d9d73b7c4afdea6376f44453f081",
+      "name": "size=standard, type=outline, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "30814e19e6e94a3220902fdb18155fffd9827dff",
+      "name": "size=standard, type=outline, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "51e2fd4ab5791dc8b42c27fc39a61dffe794d666",
+      "name": "size=standard, type=outline, state=loading, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "69d5335ad42c9c4c04667c977d4a6f7af0e7a995",
+      "name": "size=standard, type=chromeless, state=loading, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f1ab8796ab22396d6bb16eeb29110d286650b555",
+      "name": "size=small, type=chromeless, state=loading, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "64b05936a4dc2da05822c6820f3e736044f7408d",
+      "name": "size=standard, type=outline, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e9fceda538a941a6339ed9414c177b86448ea119",
+      "name": "size=standard, type=chromeless, state=loading, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e924e17edb410cbed180b9efc2a93c8513624ead",
+      "name": "size=standard, type=chromeless, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c2c4c6f062d55851cf8be37ee1c1db76de81ab20",
+      "name": "size=standard, type=outline, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ffb6d453d827926cdb4c530ebde4b79748fc2f1c",
+      "name": "size=standard, type=outline, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9a5ee8bc2b1d6cc1e45468ea1c0d26d2d8defb0f",
+      "name": "size=standard, type=outline, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "30d91361063f3ce34cfb857f5943ca6bbd6379e9",
+      "name": "size=small, type=outline, state=loading, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6dbc8506d483681ef6d0fb99283d084308f2b201",
+      "name": "size=large, type=chromeless, state=focus, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ce746309600a7643ccc334c5ed743c5be015cdb6",
+      "name": "size=large, type=outline, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b0a2539734eb04380bb31c8953e7671ae8d786bc",
+      "name": "size=small, type=outline, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a9571fce47073f8c3618ce2e56b4a31a44503be4",
+      "name": "size=standard, type=outline, state=hover, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0dbe513330c94b8a671593336f2a38c898ed2ca5",
+      "name": "size=standard, type=chromeless, state=hover, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a611172969e871a0d2b954000dcaa801018935b7",
+      "name": "size=standard, type=chromeless, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "5e5e0e69d2bc36288f2dd7bea42df2adbbd06b4b",
+      "name": "size=standard, type=chromeless, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "839cb916cd6b00a47ae5026d244df39aec1083db",
+      "name": "size=small, type=outline, state=loading, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "08dd72607281f2c125094c0609de1b5cf1c705f3",
+      "name": "size=standard, type=outline, state=focus, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8e30a44d657537eaf167eabe9b7c7c35918ed4d9",
+      "name": "size=standard, type=outline, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "dfd7fbc3c126079c613d03a49c7f49af60310485",
+      "name": "size=standard, type=chromeless, state=focus, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "44df37f08066e6f49268cddd23c46dd430bbb44d",
+      "name": "size=standard, type=chromeless, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "793092e8520bcbd74136d867b165bdef21d664c6",
+      "name": "size=large, type=chromeless, state=loading, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2b81aea35bb3f373b530a0c824c2d383cf0307f5",
+      "name": "size=small, type=outline, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9ad5ee96e1d41cb187019631e022772dbbb4820b",
+      "name": "size=standard, type=outline, state=loading, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "052731090b7115f0a93a629d96e46b5a2ed1b7c6",
+      "name": "size=large, type=chromeless, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "76bf00cb551c6595afca1ab378027bb3785cce93",
+      "name": "size=large, type=chromeless, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2b1c47f56bbe1e45ea6ef2b4e71f700378b101d3",
+      "name": "size=large, type=outline, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f1e492925e672bb1d51f24d45a95672fdef79c1c",
+      "name": "size=large, type=chromeless, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "97219dd8c507033c1a9adb42b7782f3c20fbd4cd",
+      "name": "size=large, type=outline, state=loading, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6712cafd0ee0135e3d1d03fa8a2d251ffc39c5fc",
+      "name": "size=small, type=outline, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f0ae06da613748503a57a022729db462b8943a03",
+      "name": "size=large, type=chromeless, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8cadfcff78b7f7d33084edf16932ea9edbb88551",
+      "name": "size=large, type=outline, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ca081d651a41332e55d399a73c9c9c0ce94c7228",
+      "name": "size=large, type=chromeless, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "31c871ddd9e4a44b00b0bfd04ade9502140802da",
+      "name": "size=large, type=chromeless, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3f5f030f906970b4b0d3b63121c9f305281f0df8",
+      "name": "size=large, type=chromeless, state=default, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "97b4d3dcaf7b408c09d3aa826f7512ab910324b2",
+      "name": "size=large, type=chromeless, state=hover, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "5fcd40c81c802c2b6ae276da487c74bb24828ef9",
+      "name": "size=large, type=chromeless, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a2f262e5bdd315dd4290d164787b48fc2f3682c5",
+      "name": "size=large, type=outline, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "cc705ce6b33f82039fddaf0eadfa67c712cdfca2",
+      "name": "size=small, type=outline, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d230821040b1ac929d73154a91d54e26663964e6",
+      "name": "size=large, type=chromeless, state=loading, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "97addf7321eb406c01d0b334f7c330e21117e4f4",
+      "name": "size=large, type=outline, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "01b800ce517368ca13484915112529a55eee84f6",
+      "name": "type=button, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0449cc1beb9da8f5aafb5a93cba7728888185f7e",
+      "name": "variant=default, configuration=checkbox, state=disabled, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "05c18d60c246b35bf3b04304ac8774ef65a8bfd1",
+      "name": "variant=inline, configuration=button, state=disabled, status=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "07be44fdee11ebd6005d7d1cfbe42a8ee5b84932",
+      "name": "variant=default, configuration=button, state=focus, status=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0ab219eaa8718626e738a7067e298468e9a6a8f9",
+      "name": "variant=default, configuration=radio button, state=pressed, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0db81ae0cf6aa37773dac75ca36421b9f6feb249",
+      "name": "variant=inline, configuration=button, state=hover, status=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0f51802909bdc5e17fa2d1e9024f0e6b480c0aab",
+      "name": "variant=inline, configuration=checkbox, state=pressed, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "10a0fae7753c2e1922ea592ffc1ad83baf1a3df0",
+      "name": "variant=inline, configuration=radio button, state=pressed, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "11a339c54148cb508f248a85828acbce5b6acdf1",
+      "name": "variant=default, configuration=static, state=default, status=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "13a2851594c3fa8c9b8db0bebfa6931c247607dd",
+      "name": "type=selectable, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "153cb0a4dcfb830d1da894cfa325f0017cc7b576",
+      "name": "pattern=search - suggestions, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1618751f8ce6979214f40ddc774806fc00f007f0",
+      "name": "variant=default, configuration=checkbox, state=default, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1686a555c4420c7a90d95293ca67ed3393f1a19c",
+      "name": "type=selectable, state=read-only, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1b5a08bad90d17147a64b3cbfebf32191b1136ae",
+      "name": "type=removable, state=read-only, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1f058c262c80bd8ed2e233758da6538424adff90",
+      "name": "pattern=user profile, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1f48a42ecb92ae3e72efc6605dbaece808805d22",
+      "name": "variant=default, configuration=radio button, state=disabled, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1feaabb7316af94ff7e31a629aa9f5c3379079eb",
+      "name": "variant=inline, configuration=radio button, state=hover, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "204239f1e44a6be20a7b956971670e89089633d0",
+      "name": "variant=default, configuration=radio button, state=focus, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2526950668148c4cb40de5527fbf404cb3d2c301",
+      "name": "variant=inline, configuration=checkbox, state=pressed, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "27975cc624be39c1d1a0852d171879ae9fd5db44",
+      "name": "type=removable, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "27f9422d281582335d1a596d014a163824acff33",
+      "name": "pattern=feedback - danger, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "28f8675f261ef38f05823037473148ec7ae9618c",
+      "name": "configuration=wide, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "298bcbf1b812e8a2fe2b92a2179c6b1ea09eb76d",
+      "name": "variant=default, configuration=checkbox, state=hover, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2c159bcda58fe6e8f6812d72deb45a936466111b",
+      "name": "type=dropdown, state=hover, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "31bdb468ac4f5a38fc86f44538d2ec9f56763248",
+      "name": "type=dropdown, state=default, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "33176a1d6fab6553451c8e1464dfa93b0e37c98a",
+      "name": "pattern=search - no results, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "33d02f72fcef125a1450de9492e4dbc756fd647e",
+      "name": "variant=inline, configuration=checkbox, state=focus, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "34285503b5dbe36bc130310f6fe27d3cef7fa6f4",
+      "name": "variant=default, configuration=checkbox, state=pressed, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "36693d1009b4b6b12b05bf437750a0a48ffa2d00",
+      "name": "type=selectable, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "39869d82a3a54b914d51448858b6d9161b70c08b",
+      "name": "variant=inline, configuration=button, state=pressed, status=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "39cab6a23a2800e33bcbe1546d5154504e71afae",
+      "name": "variant=default, configuration=button, state=hover, status=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3aa6702619d7bc15895cef126cb461fb92d268ba",
+      "name": "variant=inline, configuration=radio button, state=hover, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3f3603d13e432a1c8ebb12e1bbb972f93317dd0e",
+      "name": "variant=default, configuration=radio button, state=hover, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "410f9e2eae38e49611af1861813655b953c5ccaa",
+      "name": "type=dropdown, state=read-only, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "42b5bf9150b98b667f7540ee03028b0a1de2747c",
+      "name": "variant=default, configuration=radio button, state=focus, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4a1cf070e1660109fec89c466e7a9c1c454b7369",
+      "name": "type=button, state=focus, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4a8c4f56c2a96497a916d2bd1f81631450a458f2",
+      "name": "type=button, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4bf484c40bbdea60317baaa73a3846a2711fca44",
+      "name": "variant=inline, configuration=radio button, state=focus, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4c5ac5f598c24ca08e173f1476f29723dba142a2",
+      "name": "variant=inline, configuration=radio button, state=default, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4d6e876762be122c037f4ae49b6bc3ea2ad2c1f7",
+      "name": "type=dropdown, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "53f17b61729ee27cd128bd0b6321c8b566763d83",
+      "name": "pattern=detail, wide=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "552e36bdf74c3ebd4df5dddf90df2faca4075468",
+      "name": "variant=default, configuration=button, state=disabled, status=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "5656638d6ffa8cef416b7ebb2f4d56c9633780ee",
+      "name": "variant=default, configuration=radio button, state=default, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "56a1b6fbe3f71541983d6c17f5465fe824708af9",
+      "name": "variant=default, configuration=button, state=pressed, status=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "56ec60915b795a1611a4d582d42d0d6c40891034",
+      "name": "type=input chip, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "57a516ab87fb6b916ddbe9c8aa21c6588878cd8f",
+      "name": "variant=inline, configuration=radio button, state=focus, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "591df2d34d00954e2197d56915484bbbec9c3b8c",
+      "name": "type=button, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "59f278f7c4e863873da6adb12cb8044f1b4ec29c",
+      "name": "pattern=feedback - success, wide=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "5ac735979873b9266c5f38e8d41746e722d2f857",
+      "name": "configuration=default, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "5dbd31c23f1dfbf0aaf5df46c9a3227eaa61e1e0",
+      "name": "type=dropdown, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "61a1f1d97697f98c71c9c2e27de2617aba43b1bd",
+      "name": "type=removable, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6366bec3504dbdaccc30470959a3555ece3349fc",
+      "name": "pattern=filter, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "637478a98ccc3d4cbc49e3c1c22bd6bc6251c41d",
+      "name": "type=button, state=hover, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "649c4ce385ee0f31c02a2a756cc6fa4168c61db7",
+      "name": "type=input chip, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "64c92042cf7ec100a4bfe97773ed19156ffff834",
+      "name": "variant=default, configuration=radio button, state=pressed, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "65357f2ba8f811c2a20e00f44c97792a7e2f84e4",
+      "name": "type=button, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "65a3ea271a62353f8bf3645abf24f58ed64d38c1",
+      "name": "variant=default, configuration=button, state=default, status=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6633e54915045895bec533e699450bc8a21081a1",
+      "name": "type=dropdown, state=read-only, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "66590d8be8584efc6de0e02b61b0cb73d3b1102b",
+      "name": "variant=default, configuration=radio button, state=disabled, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "69eb6632b8698d91105d0860476ae68439358b58",
+      "name": "type=selectable, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6fd21fa795ac3a0125199dc358dc8e8c1caf3466",
+      "name": "type=button, state=default, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "71c5310c146e431e709b155c0cc3812ca7744fb1",
+      "name": "variant=default, configuration=checkbox, state=hover, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "71f01def406521896b99928616e2f7c0475935c0",
+      "name": "type=removable, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7252e8887fafa3b3eab3adf7943084baabf40429",
+      "name": "type=selectable, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "77f85116931c63c88883cbd163f0d31bf6880742",
+      "name": "type=dropdown, state=focus, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "789863f34f3af67fbf46bce704d5535fe5cb635a",
+      "name": "variant=inline, configuration=checkbox, state=focus, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "78dc68b7511f4a778c05781ecf8ac21dfca8e056",
+      "name": "type=input chip, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7b5b803e78e0209a9863c1cf57e4199a376e17c7",
+      "name": "variant=inline, configuration=checkbox, state=hover, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7bcad894e7ef131c35859bd24dbd6a86898d6529",
+      "name": "type=dropdown, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7d646e4bd052e362b29ed35080822d3b198ca85e",
+      "name": "type=removable, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "87504aa0ef417923f2e53324bbc2becf0b7ec952",
+      "name": "type=selectable, state=hover, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8e7c35a6877ac2eabe8fc1ad4de2a94b01f68efb",
+      "name": "type=dropdown, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8e9edb948a6587339e3f6e3f38491fa7c7b1b27b",
+      "name": "type=button, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8f2e12dcdded56e53ced66da1992f459155d7efb",
+      "name": "type=selectable, state=default, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9123e75ca62a475418cee2bfe47c9596795d46ca",
+      "name": "variant=default, configuration=checkbox, state=focus, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "92633748aa15cbbf5a9d9ac339e0a395962549da",
+      "name": "type=input chip, state=read-only, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "93287fa0ed9e4eeaafc7b87216aacad677e0bdaf",
+      "name": "type=input chip, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "937c8de364bc6bef7a611aa0e03ba86270feef51",
+      "name": "type=button, state=read-only, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "956a0639a7e5b210df0bd0944b372abf279f6fc7",
+      "name": "pattern=search - standard, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9c6f57544a2cd6100bb7086a1e516d6600b54e45",
+      "name": "variant=default, configuration=radio button, state=default, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9ffcf56b8677be2d47734643ed3bb1042699f7bc",
+      "name": "variant=inline, configuration=checkbox, state=default, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a5e87e8985b2e18d5a9295f62e3d0bb455aa5d92",
+      "name": "configuration=wide, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a8d807ee262891ef27e3810eee57601cfeded626",
+      "name": "variant=inline, configuration=button, state=focus, status=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a9862c97e3aee2f174afdd43e2cc59757a2cfee3",
+      "name": "type=button, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ab90f98dfb02dcd84b03182955ccb326f4d20fbf",
+      "name": "variant=inline, configuration=static, state=default, status=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b0a0629e270fa37a80ddc1632e7e4f05eead5d76",
+      "name": "configuration=default, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b31429c59efa4c58ab84974a69af4a23c652a781",
+      "name": "variant=default, configuration=checkbox, state=pressed, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b9a10d4d1749928ac179ad6bb54a4905bf1fbe62",
+      "name": "type=dropdown, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "bba7178bdb76e88366d8b8d849240f7c782f30a9",
+      "name": "pattern=feedback - informative, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c2d3503040e3b535e25bbd358f02a52d5c7c0115",
+      "name": "pattern=form, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c40cc89236ceb3d2abeb4fcaff7c7dd72ca02cb1",
+      "name": "type=selectable, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c5bf411f7448de70ce9695a015c066cf4844b434",
+      "name": "pattern=feedback - success, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c5e127bb0c820b94f590efa6483ff452407700b7",
+      "name": "variant=inline, configuration=radio button, state=pressed, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ca1603c9010da5339a8c96922ef441c13b059ffe",
+      "name": "variant=default, configuration=checkbox, state=focus, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "cf1813a0ca1e6356282b98f10cd9410f1c1373fc",
+      "name": "variant=inline, configuration=button, state=default, status=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d340219e8977501716274b643a57eb2d3101f5ce",
+      "name": "variant=inline, configuration=checkbox, state=hover, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d79e7fe217c172fc0f2e3425fe0e7f7d0c3065c3",
+      "name": "variant=inline, configuration=radio button, state=default, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d7c0a571bfd75d7ff7006c95e81e024b233edd1b",
+      "name": "pattern=feedback - informative, wide=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d88946a1f88cefdf1ae39cb071fe23fee605f2c2",
+      "name": "variant=default, configuration=checkbox, state=disabled, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "da9aef42eda11e4271908ba69a9d2c9b31120cb2",
+      "name": "variant=default, configuration=radio button, state=hover, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e30098c645357964500f5ca927e9ba8c4d9c91ac",
+      "name": "variant=inline, configuration=checkbox, state=disabled, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e3da4a99806afc99878a14f88c9e9afc94a73d54",
+      "name": "pattern=detail, wide=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "eb5c9622fcc8a82e497ce468507da306f1085c4e",
+      "name": "pattern=error, wide=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ec3b404a4ff315862e5681a76295e5ddad596185",
+      "name": "variant=inline, configuration=radio button, state=disabled, status=unchecked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ecbef4eb5cf8a608bf3e858957fba0668005b449",
+      "name": "variant=inline, configuration=checkbox, state=disabled, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ece07945c4f8ed81c24e9ef5516b253dbc96b353",
+      "name": "type=dropdown, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "edcefa697dbd3447f829ad32ff94e748a4fcfebd",
+      "name": "variant=inline, configuration=radio button, state=disabled, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ee34da8445fc8e21945acd2742721bcbdb768b6e",
+      "name": "type=selectable, state=hover, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ef19301e7af1f0289a715cbaf2a47928413fc6e0",
+      "name": "variant=default, configuration=checkbox, state=default, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f5bf1687c1337510de5f0f454d98dd76cf6476da",
+      "name": "type=dropdown, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f83f6b8b425376d2024dbdfa4539b76e32c53046",
+      "name": "type=selectable, state=read-only, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f99185260d6d3ac52ac631498ede289606eb633e",
+      "name": "type=button, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "fad21f3e1e4808568313c8b0d04dcf37f99c8806",
+      "name": "variant=inline, configuration=checkbox, state=default, status=checked",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a67bab4c86b067bf2a76fcac46d4c0ce8342b097",
+      "name": "Weight=Dynamic",
+      "description": "",
+      "containingFrame": "custom-dots-grid-2x3"
+    },
+    {
+      "key": "63bcc1229e3d6bba3c7965be57fd7a05e2aeed35",
+      "name": "Weight=Solid",
+      "description": "",
+      "containingFrame": "custom-dots-grid-2x3"
+    },
+    {
+      "key": "07328840606a913f6f1a9339b522c71907372438",
+      "name": "state=focus - button",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "4fa5aa629116a0b97336c4ed7d629764d59391e2",
+      "name": "state=disabled",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "72ab5df555799659e14e8645d9f01732ce177e51",
+      "name": "state=pressed - button",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9474b4f8cdac93e3ff9bb24bf824635ef48b695e",
+      "name": "state=hover - button",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "aa7c467a622e3ec12dd0811c6a796de492369dbc",
+      "name": "state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ba7d2b605c53005ca340711432dfe32c573ca471",
+      "name": "state=hover - drag",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c05dca70a7f45c35b5a3cef4f38853e6856b52fc",
+      "name": "state=focus - drag",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c80a705b10bb1d8005bbac2e26db1d8d493aa7c7",
+      "name": "state=default, status=error, filled=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c58fddf280417daf18560a90d9bd4787a36422b0",
+      "name": "state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f58141d235abfb276497b4371294038a30d8dd0a",
+      "name": "state=read-only, status=default, filled=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "fe67daa4774790584bcc4745928aece3f599f8af",
+      "name": "state=pressed - drag",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0ebedc660ee2e2de2c1b1d90f8bdb6a59de702c5",
+      "name": "state=disabled, status=error, filled=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0f3438d1eb5212003ce791cb8316ac48a0f92eb7",
+      "name": "state=disabled, status=default, filled=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "19dfdf9bba2538139a3c5406b1a8d109f71e30d0",
+      "name": "state=read-only, status=error, filled=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3193cedf99ef72698bd8c42d01f2bb47fd0754a0",
+      "name": "state=read-only, status=error, filled=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "35f0e4ce657a7530bf565b4d42e0c66150201916",
+      "name": "state=focus, status=error, filled=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "449c317d7cd906f201a6c59cd5ce9e0ce749b494",
+      "name": "state=disabled, status=error, filled=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "63cd9ee12b1f2b4dbc5f694e25ab07c4f461becd",
+      "name": "state=hover, status=error, filled=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "75a743e1ec5456b9382828291321c068c4d489e0",
+      "name": "state=read-only, status=default, filled=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "931ca70a3a3ff3842f14aeecd9737adabf1eb913",
+      "name": "state=focus, status=default, filled=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "947f03b36dd6d3844c1c6b98a276246d07300b2e",
+      "name": "state=default, status=default, filled=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a1c85e9bf82cf483e193aeb7dd5c0ba2b813a67f",
+      "name": "state=default, status=default, filled=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ca8b01f62168244a29a712e069ca81fd7a5930ca",
+      "name": "state=hover, status=default, filled=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "dc7dfb1b655f3538d916d407fd4b49bf16c36018",
+      "name": "state=hover, status=default, filled=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "dccb2c0c1d339f4a2b63a8fca806012108507a99",
+      "name": "type=button, state=read-only, selected=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0755edb14c836de66145f843560d1b7fe547cc73",
+      "name": "type=removable, state=focus, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "15ca829149af6980f72df6c30bafcff37579c6e0",
+      "name": "type=selectable, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1cc9c21678ecb3f0d3fdeae0cc7bfa444e6cfc8d",
+      "name": "type=input chip, state=default, selected=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ecc489f5e1034809c4f3da2065809f88be8f3ab8",
+      "name": "type=selectable, state=focus, selected=true",
+      "description": "",
+      "containingFrame": ""
     },
     {
       "key": "8c90b79c2410ae9d3f7b2de1e9d111fc00d6113a",
@@ -29339,60 +30659,6 @@
       "containingFrame": ""
     },
     {
-      "key": "fe67daa4774790584bcc4745928aece3f599f8af",
-      "name": "state=pressed - drag",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "72ab5df555799659e14e8645d9f01732ce177e51",
-      "name": "state=pressed - button",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c58fddf280417daf18560a90d9bd4787a36422b0",
-      "name": "state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c05dca70a7f45c35b5a3cef4f38853e6856b52fc",
-      "name": "state=focus - drag",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ba7d2b605c53005ca340711432dfe32c573ca471",
-      "name": "state=hover - drag",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "9474b4f8cdac93e3ff9bb24bf824635ef48b695e",
-      "name": "state=hover - button",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "07328840606a913f6f1a9339b522c71907372438",
-      "name": "state=focus - button",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "4fa5aa629116a0b97336c4ed7d629764d59391e2",
-      "name": "state=disabled",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "aa7c467a622e3ec12dd0811c6a796de492369dbc",
-      "name": "state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "045ac7820543a8cdc0c9232fc7d70e3ba818bdb6",
       "name": "steps=1, current step=1",
       "description": "",
@@ -29507,74 +30773,20 @@
       "containingFrame": ""
     },
     {
-      "key": "0bef2df173162e6609fadcaa84a74f55986f0ed8",
-      "name": "pattern=form, wide=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "153cb0a4dcfb830d1da894cfa325f0017cc7b576",
-      "name": "pattern=search - suggestions, wide=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1f058c262c80bd8ed2e233758da6538424adff90",
-      "name": "pattern=user profile, wide=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "213813775ce71e056499fbfd688331d7b53b382e",
       "name": "variant=error, configuration=icon",
       "description": "",
       "containingFrame": ""
     },
     {
-      "key": "27f9422d281582335d1a596d014a163824acff33",
-      "name": "pattern=feedback - danger, wide=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "28f8675f261ef38f05823037473148ec7ae9618c",
-      "name": "configuration=wide, show overlay=false",
+      "key": "0bef2df173162e6609fadcaa84a74f55986f0ed8",
+      "name": "pattern=form, wide=true",
       "description": "",
       "containingFrame": ""
     },
     {
       "key": "2c76a242fe789ca71e5e5748fdf5551278c1ac80",
       "name": "pattern=error, wide=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "33176a1d6fab6553451c8e1464dfa93b0e37c98a",
-      "name": "pattern=search - no results, wide=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "53f17b61729ee27cd128bd0b6321c8b566763d83",
-      "name": "pattern=detail, wide=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "59f278f7c4e863873da6adb12cb8044f1b4ec29c",
-      "name": "pattern=feedback - success, wide=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "5ac735979873b9266c5f38e8d41746e722d2f857",
-      "name": "configuration=default, show overlay=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6366bec3504dbdaccc30470959a3555ece3349fc",
-      "name": "pattern=filter, wide=false",
       "description": "",
       "containingFrame": ""
     },
@@ -29591,26 +30803,8 @@
       "containingFrame": ""
     },
     {
-      "key": "a5e87e8985b2e18d5a9295f62e3d0bb455aa5d92",
-      "name": "configuration=wide, show overlay=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "aca364e5b799fe6da53b15f87a0981582ba90c57",
       "name": "variant=custom, configuration=illustration",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "b0a0629e270fa37a80ddc1632e7e4f05eead5d76",
-      "name": "configuration=default, show overlay=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "bba7178bdb76e88366d8b8d849240f7c782f30a9",
-      "name": "pattern=feedback - informative, wide=false",
       "description": "",
       "containingFrame": ""
     },
@@ -29621,38 +30815,8 @@
       "containingFrame": ""
     },
     {
-      "key": "c2d3503040e3b535e25bbd358f02a52d5c7c0115",
-      "name": "pattern=form, wide=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c5bf411f7448de70ce9695a015c066cf4844b434",
-      "name": "pattern=feedback - success, wide=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "cbb8f156617f27fb29e82df53cfd93f1298f854e",
       "name": "pattern=feedback - danger, wide=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d7c0a571bfd75d7ff7006c95e81e024b233edd1b",
-      "name": "pattern=feedback - informative, wide=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "e3da4a99806afc99878a14f88c9e9afc94a73d54",
-      "name": "pattern=detail, wide=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "eb5c9622fcc8a82e497ce468507da306f1085c4e",
-      "name": "pattern=error, wide=true",
       "description": "",
       "containingFrame": ""
     },
