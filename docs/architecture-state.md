@@ -1,8 +1,8 @@
 # Estado da Arquitetura — Handex
 
 Documento vivo. Atualizar a cada minor version (bump `5.x.0`) ou quando um agente de
-feature fizer mudança que toque mais de um módulo. Última atualização: **2026-07-10**
-(branch `beta/v4.3-melhorias-operacionais`, v5.1.0-beta.1; `main` em v5.0.0).
+feature fizer mudança que toque mais de um módulo. Última atualização: **2026-07-21**
+(branch `main`, v5.0.0; beta segue em v5.1.0-beta.1).
 
 ---
 
@@ -197,7 +197,61 @@ em algum ponto que o grep léxico não capturou; merece checagem futura antes de
   durante verificação mas revertidos por não terem mudança de conteúdo relevante (só
   timestamp de refs).
 
-## 8. Verificado e sem problema (não precisou de ação)
+## 8. Preparação para publicação na Figma Community (21/07)
+
+**Manifest (`src/plugin/manifest.json`) ganhou 3 campos exigidos pelo fluxo de submissão
+do Figma:**
+- `id` fixo do plugin.
+- `networkAccess.allowedDomains: ["https://unpkg.com", "https://cdnjs.cloudflare.com"]`
+  — os únicos dois domínios que o plugin de fato contata em runtime dentro do iframe
+  (Lucide sempre; jsPDF/JSZip via cdnjs, sob demanda na exportação em PDF). Confirmado
+  por dois agentes independentes que nenhum outro domínio referenciado em `ui.html`
+  (Google Fonts, Tailwind CDN, links `designsystem.caixa.gov.br`) é carregado dentro do
+  sandbox do plugin — são texto de uma template string (`fullHTML`, ficha standalone
+  exportada) ou `window.open()` de navegação, não requisições do iframe.
+- `documentAccess: "dynamic-page"` — obrigatório para novos plugins, mas com risco real
+  de compatibilidade: **este campo faz o Figma carregar em memória só a página
+  atualmente aberta**, não o documento inteiro.
+
+**Risco identificado e corrigido nesta sessão**: `src/plugin/code.js` resolvia
+`frame.figmaId` (persistido em `handoffData.frames`, podendo estar em qualquer página
+de um arquivo com múltiplas páginas — cenário real de handoff de projetos com várias
+telas) via `figma.getNodeById(...)` **síncrono**, em ~20 pontos. Sob `dynamic-page`,
+isso retorna `null` silenciosamente para nós de páginas não carregadas — o frame
+"desaparece" do handoff sem erro visível. Migrado todo o arquivo para
+`await figma.getNodeByIdAsync(...)`, que carrega a página do nó automaticamente se
+necessário. Detalhe da migração:
+- `_writeSharedPluginData(data)` virou `async` (único caller, em `save-storage`, já
+  ganhou `await`).
+- 5 cadeias de `.forEach` viraram `for...of` (`forEach` não suporta `await` no corpo):
+  frames/createdSpecs pendentes de lock em `create-handoff`, a seção "Especificações"
+  (3 níveis aninhados, resolve `s.id` pra montar hyperlink de nó), `hide-spec-lines` e
+  `unlock-spec-group`.
+- `figma.currentPage.selection` / `.findOne` / `.findAll` / `.findChildren` **não foram
+  tocados** — operam só em nós já resolvidos da página atual, sem o mesmo risco.
+- Validado por dois agentes independentes (o que fez a migração + uma segunda revisão):
+  0 `getNodeById` síncrono restante, 21 usos de `getNodeByIdAsync`, `tsc --noEmit`
+  limpo, nenhum `forEach` remanescente com `await` no corpo (checado
+  programaticamente), nenhum handler virou fire-and-forget incorretamente.
+
+**Risco residual, não verificável por análise estática**: o cenário que motivou a
+migração (nó de página não carregada) só se manifesta de fato dentro do Figma desktop.
+Roteiro de teste manual recomendado antes de publicar: abrir arquivo multi-página,
+garantir que a página de um frame documentado não foi visitada na sessão, e testar
+`Gerar Ficha`, `lock-spec`, `hide-spec-lines`, `unlock-spec-group`,
+`reapply-measurements`, `delete-node`/`rename-node`/`focus-node`, e `save-storage`
+nesse frame — confirmando que o node é resolvido corretamente em vez de falhar
+silenciosamente.
+
+**Limpeza relacionada**: removida a dependência `@google/genai` do `package.json`
+(instalada mas sem nenhuma chamada no código-fonte, confirmado por grep). Referências
+a ela em documentação (`docs/plugin-capabilities/06-pipeline-seguranca.md` e três
+arquivos de agente em `.claude/agents/`, este último não versionado) foram corrigidas
+para não apontar um agente futuro a investigar uma dependência que não existe mais.
+
+---
+
+## 9. Verificado e sem problema (não precisou de ação)
 
 - BOM em `views/*.html`: nenhum arquivo de view tem BOM hoje — o incidente do "vão
   fantasma" (documentado em `frontend-ui.md`/`design-ux.md`) não regrediu.
