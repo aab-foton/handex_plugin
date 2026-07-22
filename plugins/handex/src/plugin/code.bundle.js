@@ -415,7 +415,7 @@
     }
   }
   figma.ui.onmessage = async (msg) => {
-    var _a, _b;
+    var _a, _b, _c;
     if (msg.type === "ui-ready") {
       const currentUser = figma.currentUser ? { id: figma.currentUser.id, name: figma.currentUser.name, photoUrl: figma.currentUser.photoUrl } : null;
       const theme = figma.ui.theme || "light";
@@ -838,7 +838,8 @@
         const _isUpdate = false;
         const _now = /* @__PURE__ */ new Date();
         const _ts = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}-${String(_now.getDate()).padStart(2, "0")} ${String(_now.getHours()).padStart(2, "0")}:${String(_now.getMinutes()).padStart(2, "0")}`;
-        const _containerName = `${_handoffBase} | ${_ts}`;
+        const _versaoLabel = (((_b = data.step1) == null ? void 0 : _b.versao) || "").trim();
+        const _containerName = `${_handoffBase} | ${_ts}${_versaoLabel ? " | " + _versaoLabel : ""}`;
         const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb2("#026173"));
         mainContainer.name = _containerName;
         mainContainer.counterAxisAlignItems = "MIN";
@@ -1255,7 +1256,7 @@
             for (const letter of letterOrder) {
               if (groupVisible[letter] === false) continue;
               const groupSpecs = specsByLetter[letter];
-              const groupColor = ((_b = groupSpecs[0]) == null ? void 0 : _b.color) ? hexToRgb2(groupSpecs[0].color) : { r: 0.38, g: 0.35, b: 0.75 };
+              const groupColor = ((_c = groupSpecs[0]) == null ? void 0 : _c.color) ? hexToRgb2(groupSpecs[0].color) : { r: 0.38, g: 0.35, b: 0.75 };
               const groupNameText = groupNames[letter] || "";
               const gBox = createFrame("VERTICAL", 0, 6);
               gBox.name = `[Grupo/${letter}] ${groupNameText || letter}`;
@@ -3613,8 +3614,10 @@
     }
     if (msg.type === "pull-ficha-version-from-canvas") {
       try {
+        const _titulo = (msg.titulo || "").trim();
+        const _prefix = _titulo ? `Handex | Ficha de Projeto | ${_titulo}` : "Handex | Ficha de Projeto";
         const fichas = figma.currentPage.children.filter(
-          (n) => n.type === "FRAME" && n.name.startsWith("Handex | Ficha de Projeto")
+          (n) => n.type === "FRAME" && n.name.startsWith(_prefix)
         );
         if (fichas.length === 0) {
           figma.ui.postMessage({ type: "ficha-version-pulled", versao: null });

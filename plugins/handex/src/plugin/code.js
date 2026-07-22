@@ -619,7 +619,11 @@ figma.ui.onmessage = async (msg) => {
       const _isUpdate = false;
       const _now = new Date();
       const _ts = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')} ${String(_now.getHours()).padStart(2,'0')}:${String(_now.getMinutes()).padStart(2,'0')}`;
-      const _containerName = `${_handoffBase} | ${_ts}`;
+      // Timestamp antes da versão no nome: garante que a ordenação alfabética
+      // usada em pull-ficha-version-from-canvas continue resolvendo "mais
+      // recente" pela data de criação, não pela string da versão.
+      const _versaoLabel = (data.step1?.versao || '').trim();
+      const _containerName = `${_handoffBase} | ${_ts}${_versaoLabel ? ' | ' + _versaoLabel : ''}`;
 
       // MAIN CONTAINER
       const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb("#026173"));
@@ -3820,8 +3824,13 @@ figma.ui.onmessage = async (msg) => {
     // uma resposta para não travar o botão "Gerar Ficha" (ver timeout de
     // segurança em openHandoffInjectModal, modules/handoff.js).
     try {
+      // Escopa pelo título do projeto atual quando disponível -- sem isso,
+      // fichas de OUTROS projetos na mesma página (mesmo prefixo de nome)
+      // podiam ser lidas como "a mais recente" e sugerir a versão errada.
+      const _titulo = (msg.titulo || '').trim();
+      const _prefix = _titulo ? `Handex | Ficha de Projeto | ${_titulo}` : 'Handex | Ficha de Projeto';
       const fichas = figma.currentPage.children.filter(
-        n => n.type === 'FRAME' && n.name.startsWith('Handex | Ficha de Projeto')
+        n => n.type === 'FRAME' && n.name.startsWith(_prefix)
       );
       if (fichas.length === 0) {
         figma.ui.postMessage({ type: 'ficha-version-pulled', versao: null });
