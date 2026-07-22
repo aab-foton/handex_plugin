@@ -1652,6 +1652,7 @@ figma.ui.onmessage = async (msg) => {
       const _nearbyRadius = 4000;
 
       let _positioned = false;
+      let _existingFichas = [];
 
       // Todo o cálculo de posição é protegido: qualquer erro (ex: figmaId inválido
       // apontando para um node que não existe mais nesta cópia do arquivo) não pode
@@ -1686,7 +1687,7 @@ figma.ui.onmessage = async (msg) => {
         // 2ª prioridade: ao lado de ficha já existente no canvas, mas só se ela estiver
         // perto do frame mapeado (evita sobrepor outra ficha do mesmo projeto). Sem
         // âncora, mantém o comportamento antigo de olhar qualquer ficha no canvas.
-        const _existingFichas = figma.currentPage.children.filter(n => {
+        _existingFichas = figma.currentPage.children.filter(n => {
           if (n.type !== 'FRAME' || !n.name.startsWith('Handex | Ficha') || n === mainContainer) return false;
           if (!_anchorBb) return true;
           const bb = n.absoluteBoundingBox;
@@ -1731,6 +1732,33 @@ figma.ui.onmessage = async (msg) => {
         const _vb = figma.viewport.bounds;
         mainContainer.x = Math.round(_vb.x + _vb.width + _fichaGap);
         mainContainer.y = Math.round(_vb.y + (_vb.height / 2) - (mainContainer.height / 2));
+      }
+
+      // Rede de segurança contra colisão: a posição escolhida acima já segue a lógica
+      // de prioridade (âncora → ficha existente → seleção → viewport), mas nada nela
+      // olha para o resto do conteúdo da página. Aqui empurramos a ficha para a direita
+      // até não sobrepor nenhum outro nó de topo (frames de design, specs do Handex etc.).
+      try {
+        const _pageNodes = figma.currentPage.children.filter(n => n !== mainContainer && !_existingFichas.includes(n));
+        let _collisionIterations = 0;
+        let _hasCollision = true;
+        while (_hasCollision && _collisionIterations < 50) {
+          _hasCollision = false;
+          for (const _node of _pageNodes) {
+            const _nBb = _node.absoluteBoundingBox;
+            if (!_nBb) continue;
+            const _overlaps = mainContainer.x < _nBb.x + _nBb.width && mainContainer.x + mainContainer.width > _nBb.x &&
+              mainContainer.y < _nBb.y + _nBb.height && mainContainer.y + mainContainer.height > _nBb.y;
+            if (_overlaps) {
+              mainContainer.x = Math.round(_nBb.x + _nBb.width + _fichaGap);
+              _hasCollision = true;
+              _collisionIterations++;
+              break;
+            }
+          }
+        }
+      } catch (collisionErr) {
+        console.error("Handoff collision check error:", collisionErr);
       }
 
       figma.currentPage.selection = [mainContainer];
