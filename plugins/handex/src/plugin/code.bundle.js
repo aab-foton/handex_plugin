@@ -1723,6 +1723,7 @@
         const _fichaGap = 200;
         const _nearbyRadius = 4e3;
         let _positioned = false;
+        let _existingFichas = [];
         try {
           let _anchorBb = null;
           const _mainFrames = data.frames || [];
@@ -1746,7 +1747,7 @@
             mainContainer.y = Math.round(_anchorBb.y);
             _positioned = true;
           }
-          const _existingFichas = figma.currentPage.children.filter((n) => {
+          _existingFichas = figma.currentPage.children.filter((n) => {
             if (n.type !== "FRAME" || !n.name.startsWith("Handex | Ficha") || n === mainContainer) return false;
             if (!_anchorBb) return true;
             const bb = n.absoluteBoundingBox;
@@ -1787,6 +1788,27 @@
           const _vb = figma.viewport.bounds;
           mainContainer.x = Math.round(_vb.x + _vb.width + _fichaGap);
           mainContainer.y = Math.round(_vb.y + _vb.height / 2 - mainContainer.height / 2);
+        }
+        try {
+          const _pageNodes = figma.currentPage.children.filter((n) => n !== mainContainer && !_existingFichas.includes(n));
+          let _collisionIterations = 0;
+          let _hasCollision = true;
+          while (_hasCollision && _collisionIterations < 50) {
+            _hasCollision = false;
+            for (const _node of _pageNodes) {
+              const _nBb = _node.absoluteBoundingBox;
+              if (!_nBb) continue;
+              const _overlaps = mainContainer.x < _nBb.x + _nBb.width && mainContainer.x + mainContainer.width > _nBb.x && mainContainer.y < _nBb.y + _nBb.height && mainContainer.y + mainContainer.height > _nBb.y;
+              if (_overlaps) {
+                mainContainer.x = Math.round(_nBb.x + _nBb.width + _fichaGap);
+                _hasCollision = true;
+                _collisionIterations++;
+                break;
+              }
+            }
+          }
+        } catch (collisionErr) {
+          console.error("Handoff collision check error:", collisionErr);
         }
         figma.currentPage.selection = [mainContainer];
         figma.viewport.scrollAndZoomIntoView([mainContainer]);
