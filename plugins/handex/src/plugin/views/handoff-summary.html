@@ -111,6 +111,19 @@
           <i data-lucide="download" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0"></i>
         </button>
 
+        <!-- Exportar Handoff (ZIP: HTML interativo + MD + PDF) -->
+        <button id="btn-final-export" onclick="exportHandoff()"
+          class="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-2xl transition-colors text-left">
+          <div class="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-lg shrink-0">
+            <i data-lucide="package" class="w-4 h-4 text-slate-600 dark:text-slate-300"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-[12px] font-bold text-slate-800 dark:text-white">Exportar Handoff (ZIP)</p>
+            <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5">HTML interativo (com campos de dúvida) + Markdown + PDF</p>
+          </div>
+          <i data-lucide="download" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0"></i>
+        </button>
+
         <!-- Publicar no Sharepoint (oculto — integração em discussão técnica) -->
 
       </div>
