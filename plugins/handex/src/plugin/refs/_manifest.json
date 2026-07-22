@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-10T02:20:43.591Z",
+  "generatedAt": "2026-07-22T15:30:03.384Z",
   "libraries": [
     {
       "slug": "fundamentos-visuais",
@@ -11,7 +11,7 @@
         "colors": 12,
         "typography": 39,
         "effects": 5,
-        "components": 10333
+        "components": 10338
       }
     },
     {
@@ -24,7 +24,7 @@
         "colors": 0,
         "typography": 0,
         "effects": 0,
-        "components": 1853
+        "components": 1885
       }
     },
     {
@@ -37,7 +37,7 @@
         "colors": 0,
         "typography": 36,
         "effects": 2,
-        "components": 4442
+        "components": 4636
       }
     },
     {
@@ -50,7 +50,7 @@
         "colors": 0,
         "typography": 36,
         "effects": 2,
-        "components": 4340
+        "components": 4391
       }
     },
     {
