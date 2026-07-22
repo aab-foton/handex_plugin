@@ -236,6 +236,9 @@
       });
       if (typeof createdSpecs !== 'undefined') createdSpecs.length = 0;
       restoreUIFromState();
+      // Sem isso, o reset só vive na sessão atual -- o figma.clientStorage
+      // continua com os dados antigos e eles voltam ao reabrir o plugin.
+      saveToStorage();
       navigate('view-home');
       showToast('Todos os dados foram removidos.');
     }
