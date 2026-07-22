@@ -637,6 +637,41 @@
       }
       return;
     }
+    if (msg.type === "delete-canvas-content") {
+      const wanted = {
+        ficha: !!msg.ficha,
+        spec: !!msg.specs,
+        medida: !!msg.medidas,
+        fluxo: !!msg.fluxos
+      };
+      const matchCategory = (node) => {
+        const tag = node.getPluginData("handexCategory");
+        if (tag) return wanted[tag] ? tag : null;
+        if (!node.name) return null;
+        if (wanted.ficha && node.name.startsWith("Handex | Ficha de Projeto")) return "ficha";
+        if (wanted.spec && (node.name.startsWith("[Spec | ") || node.name.startsWith("[Spec]"))) return "spec";
+        if (wanted.medida && node.name.startsWith("[Medida]")) return "medida";
+        if (wanted.fluxo && node.name.startsWith("[Fluxo")) return "fluxo";
+        return null;
+      };
+      const counts = { ficha: 0, spec: 0, medida: 0, fluxo: 0 };
+      const toRemove = [];
+      figma.currentPage.children.forEach((node) => {
+        const cat = matchCategory(node);
+        if (cat) {
+          toRemove.push(node);
+          counts[cat]++;
+        }
+      });
+      toRemove.forEach((node) => {
+        try {
+          node.remove();
+        } catch (e) {
+        }
+      });
+      figma.ui.postMessage({ type: "canvas-content-deleted", counts });
+      return;
+    }
     if (msg.type === "scan-cache-save") {
       figma.clientStorage.setAsync("handex-scan-cache-v1", msg.data).catch(
         (e) => console.warn("scan-cache-save failed:", e)
@@ -1718,6 +1753,7 @@
           mainContainer.appendChild(auditBoard);
         }
         mainContainer.locked = false;
+        mainContainer.setPluginData("handexCategory", "ficha");
         figma.currentPage.appendChild(mainContainer);
         mainContainer.x = -99999;
         mainContainer.y = -99999;
@@ -2019,6 +2055,7 @@
             const group = figma.group(items, figma.currentPage);
             group.name = `[Medida] ${node.name}`;
             group.locked = true;
+            group.setPluginData("handexCategory", "medida");
             appliedMeasuresList.push({ name: node.name, nodeId: group.id, details: appliedDetails });
           }
         }
@@ -2565,6 +2602,7 @@
             const group = figma.group(items, figma.currentPage);
             group.name = `[Medida] ${m.name}`;
             group.locked = true;
+            group.setPluginData("handexCategory", "medida");
             created++;
           }
         }
@@ -3067,6 +3105,7 @@
         const specGroup = figma.group(groupNodes, figma.currentPage);
         specGroup.name = `[Spec | ${opts.letter} | ${_specSide}] ${node.name}`;
         specGroup.locked = false;
+        specGroup.setPluginData("handexCategory", "spec");
         _reorderSpecGroupByTag(specGroup, opts.letter);
         figma.ui.postMessage({
           type: "spec-created",
@@ -3437,6 +3476,7 @@
             const finalGroup = figma.group(nodesToGroup, figma.currentPage);
             finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | decisao] ${msg.flowName || "Decis\xE3o"}`;
             finalGroup.locked = true;
+            finalGroup.setPluginData("handexCategory", "fluxo");
             figma.ui.postMessage({ type: "flow-created", flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
           } catch (e) {
             console.error(e);
@@ -3469,6 +3509,7 @@
             const finalGroup = figma.group(nodesToGroup, figma.currentPage);
             finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | ${isStart ? "inicio" : "fim"}] ${msg.flowName || (isStart ? "In\xEDcio" : "Fim")}`;
             finalGroup.locked = true;
+            finalGroup.setPluginData("handexCategory", "fluxo");
             figma.ui.postMessage({ type: "flow-created", flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
           } catch (e) {
             console.error(e);
@@ -3505,6 +3546,7 @@
             const finalGroup = figma.group(nodesToGroup, figma.currentPage);
             finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conex\xE3o"}`;
             finalGroup.locked = true;
+            finalGroup.setPluginData("handexCategory", "fluxo");
             figma.ui.postMessage({ type: "flow-created", flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
           } catch (e) {
             console.error(e);
@@ -3514,6 +3556,7 @@
         const finalGroup = figma.group(nodesToGroup, figma.currentPage);
         finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conex\xE3o"}`;
         finalGroup.locked = true;
+        finalGroup.setPluginData("handexCategory", "fluxo");
         figma.ui.postMessage({ type: "flow-created", flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
       }
       figma.notify("Fluxo criado!");
@@ -3583,6 +3626,7 @@
         legendFrame.x = figma.viewport.center.x - 120;
         legendFrame.y = figma.viewport.center.y - 100;
         legendFrame.locked = true;
+        legendFrame.setPluginData("handexCategory", "fluxo");
         figma.currentPage.appendChild(legendFrame);
         figma.currentPage.selection = [legendFrame];
         figma.viewport.scrollAndZoomIntoView([legendFrame]);

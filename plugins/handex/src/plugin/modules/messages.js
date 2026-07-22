@@ -219,6 +219,18 @@
         return;
       }
 
+      if (msg.type === 'canvas-content-deleted') {
+        closeModal('confirm-clear-modal');
+        const c = msg.counts || {};
+        const parts = [];
+        if (c.ficha) parts.push(`${c.ficha} ficha${c.ficha > 1 ? 's' : ''}`);
+        if (c.spec) parts.push(`${c.spec} spec${c.spec > 1 ? 's' : ''}`);
+        if (c.medida) parts.push(`${c.medida} medida${c.medida > 1 ? 's' : ''}`);
+        if (c.fluxo) parts.push(`${c.fluxo} fluxo${c.fluxo > 1 ? 's' : ''}`);
+        showToast(parts.length ? `${parts.join(', ')} removido(s) do canvas.` : 'Nenhum elemento correspondente encontrado no canvas.');
+        return;
+      }
+
       if (msg.type === 'scan-cache-loaded') {
         if (msg.data && msg.data.specs) {
           handoffData.step2.specs = msg.data.specs;
