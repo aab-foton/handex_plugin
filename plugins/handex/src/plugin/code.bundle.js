@@ -1720,50 +1720,67 @@
         mainContainer.x = -99999;
         mainContainer.y = -99999;
         const _fichaGap = 200;
+        const _nearbyRadius = 4e3;
         let _positioned = false;
-        const _existingFichas = figma.currentPage.children.filter(
-          (n) => n.type === "FRAME" && n.name.startsWith("Handex | Ficha") && n !== mainContainer
-        );
-        if (_existingFichas.length > 0) {
-          const _rightmostFicha = _existingFichas.reduce((max, f) => {
-            const bb = f.absoluteBoundingBox;
-            if (!bb) return max;
-            return bb.x + bb.width > max.right ? { right: bb.x + bb.width, y: bb.y } : max;
-          }, { right: -Infinity, y: 0 });
-          if (_rightmostFicha.right > -Infinity) {
-            mainContainer.x = Math.round(_rightmostFicha.right + _fichaGap);
-            mainContainer.y = Math.round(_rightmostFicha.y);
-            _positioned = true;
-          }
-        }
-        if (!_positioned) {
+        try {
+          let _anchorBb = null;
           const _mainFrames = data.frames || [];
           for (const _f of _mainFrames) {
             if (!_f.figmaId) continue;
-            const _fNode = await figma.getNodeByIdAsync(_f.figmaId);
+            let _fNode = null;
+            try {
+              _fNode = await figma.getNodeByIdAsync(_f.figmaId);
+            } catch (e) {
+              _fNode = null;
+            }
             if (!_fNode) continue;
             const _fBb = _fNode.absoluteBoundingBox;
             if (_fBb) {
-              mainContainer.x = Math.round(_fBb.x + _fBb.width + _fichaGap);
-              mainContainer.y = Math.round(_fBb.y);
-              _positioned = true;
+              _anchorBb = _fBb;
               break;
             }
           }
-        }
-        if (!_positioned) {
-          const _sel = figma.currentPage.selection.filter((n) => n !== mainContainer);
-          if (_sel.length > 0) {
-            const _rightmost = _sel.reduce((max, n) => {
-              const bb = n.absoluteBoundingBox;
-              return bb && bb.x + bb.width > max.edge ? { edge: bb.x + bb.width, x: bb.x + bb.width, y: bb.y } : max;
-            }, { edge: -Infinity, x: 0, y: 0 });
-            if (_rightmost.edge > -Infinity) {
-              mainContainer.x = Math.round(_rightmost.x + _fichaGap);
-              mainContainer.y = Math.round(_rightmost.y);
+          if (_anchorBb) {
+            mainContainer.x = Math.round(_anchorBb.x + _anchorBb.width + _fichaGap);
+            mainContainer.y = Math.round(_anchorBb.y);
+            _positioned = true;
+          }
+          const _existingFichas = figma.currentPage.children.filter((n) => {
+            if (n.type !== "FRAME" || !n.name.startsWith("Handex | Ficha") || n === mainContainer) return false;
+            if (!_anchorBb) return true;
+            const bb = n.absoluteBoundingBox;
+            if (!bb) return false;
+            return Math.abs(bb.x - _anchorBb.x) < _nearbyRadius && Math.abs(bb.y - _anchorBb.y) < _nearbyRadius;
+          });
+          if (_existingFichas.length > 0) {
+            const _rightmostFicha = _existingFichas.reduce((max, f) => {
+              const bb = f.absoluteBoundingBox;
+              if (!bb) return max;
+              return bb.x + bb.width > max.right ? { right: bb.x + bb.width, y: bb.y } : max;
+            }, { right: -Infinity, y: 0 });
+            if (_rightmostFicha.right > -Infinity) {
+              mainContainer.x = Math.round(_rightmostFicha.right + _fichaGap);
+              mainContainer.y = Math.round(_rightmostFicha.y);
               _positioned = true;
             }
           }
+          if (!_positioned) {
+            const _sel = figma.currentPage.selection.filter((n) => n !== mainContainer);
+            if (_sel.length > 0) {
+              const _rightmost = _sel.reduce((max, n) => {
+                const bb = n.absoluteBoundingBox;
+                return bb && bb.x + bb.width > max.edge ? { edge: bb.x + bb.width, x: bb.x + bb.width, y: bb.y } : max;
+              }, { edge: -Infinity, x: 0, y: 0 });
+              if (_rightmost.edge > -Infinity) {
+                mainContainer.x = Math.round(_rightmost.x + _fichaGap);
+                mainContainer.y = Math.round(_rightmost.y);
+                _positioned = true;
+              }
+            }
+          }
+        } catch (posErr) {
+          console.error("Handoff positioning error:", posErr);
+          _positioned = false;
         }
         if (!_positioned) {
           const _vb = figma.viewport.bounds;
