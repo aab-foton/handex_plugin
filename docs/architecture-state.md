@@ -259,3 +259,75 @@ para não apontar um agente futuro a investigar uma dependência que não existe
   crase): grep amplo em todos os módulos + `code.js` não encontrou outra ocorrência.
 - Acoplamento `handoff.js` ↔ `specifications.js`: baixíssimo (0 e 2 chamadas) — não há
   sinal de dependência cruzada escondida entre esses dois módulos grandes.
+
+---
+
+## 10. Bug real em produção que passou por dois agentes + `tsc` limpo — `dynamic-page` (21/07)
+
+**O que quebrou**: a migração de `documentAccess: "dynamic-page"` (seção 8) cobriu só
+`figma.getNodeById` → `getNodeByIdAsync` (~20 pontos). O usuário testou no Figma real
+depois de dois agentes revisarem o diff e o QA dar veredito "pronto pra publicação", e a
+ferramenta mais usada do plugin — **Escanear Tokens** — travava indefinidamente.
+
+**Causa raiz**: sob `dynamic-page`, três outras famílias de API síncrona que resolvem
+IDs também são bloqueadas e **não foram migradas na primeira leva**:
+`figma.variables.getVariableById`, `figma.getStyleById` (fill/text/stroke/effect style),
+e a *property* `node.mainComponent` (precisa virar `await node.getMainComponentAsync()`).
+Essas chamadas vivem dentro de `extractSpecs`/`extractNodeProperties`, função recursiva
+que percorre a árvore de nós do frame escaneado — e a extração de propriedades do nó
+acontecia **antes** da recursão nos filhos, no mesmo bloco `try/catch`. Um erro lançado
+ali abortava silenciosamente a extração do nó inteiro **e de toda a sua subárvore**.
+Como praticamente todo frame real tem alguma variável ou estilo aplicado, o scan quebrava
+quase sempre — não era um caso de borda, era o caminho comum.
+
+**Por que passou pelos dois agentes e pelo `tsc --noEmit`**: a restrição de
+`documentAccess: dynamic-page` sobre essas APIs é uma **restrição de runtime do Figma**,
+não uma mudança de tipo. `getVariableById`, `getStyleById` e `.mainComponent` continuam
+existindo normalmente nos typings do Figma — compilam limpo, e uma leitura de código
+não revela nada de errado, porque o código é sintaticamente e semanticamente válido.
+A API só lança exceção quando **de fato executada** dentro de um plugin com
+`dynamic-page` ativo, rodando no Figma desktop, sobre um nó cuja página não foi
+pré-carregada. Nenhuma ferramenta estática (tsc, lint, revisão de diff) detecta isso —
+só execução real pega.
+
+**Correção aplicada (main, 21/07)**: `getVariableById`→`getVariableByIdAsync`,
+`getStyleById`→`getStyleByIdAsync`, `.mainComponent`→`await node.getMainComponentAsync()`
+em todos os pontos de `src/plugin/code.js` (dentro de `extractNodeProperties`,
+`addElement`, `extractSpecs` — que viraram todas `async` — mais os handlers
+`getVariableInfo`, `measure-nodes-custom`, `create-handoff` e
+`request-spec-properties`). `tsc` limpo, bundles reconstruídos.
+
+**Lição prática**: "`tsc` limpo + revisão de agente(s)" **não é suficiente** como sinal
+de "pronto pra publicação" para qualquer mudança que toque `documentAccess` ou código
+que resolve IDs do Figma (nodes, variables, styles, componentes). Essa classe de mudança
+exige teste manual real no Figma desktop, com um arquivo de verdade, antes de ser
+considerada pronta — não só a leitura estática do diff. Recomendação prática:
+- Antes de declarar "pronto" qualquer mudança em `documentAccess` ou em código que chama
+  `getNodeById`/`getVariableById`/`getStyleById`/`.mainComponent`/`.mainComponentAsync`
+  (ou qualquer API do Figma cuja doc mencione resolução de ID entre páginas), rodar
+  **Escanear Tokens** em um frame real dentro do Figma desktop como critério mínimo de
+  aceite — não presumir que a migração está completa só porque o grep do primeiro termo
+  buscado (`getNodeById`) deu zero resultados.
+- Ao migrar uma família de API síncrona → assíncrona por causa de `dynamic-page`, grep
+  por **todas as APIs do Figma que resolvem ID** na mesma leva, não uma de cada vez:
+  `getNodeById`, `variables.getVariableById`, `getStyleById`, `.mainComponent` (property),
+  `.detachedMainComponent`, e qualquer outra propriedade/getter documentada como
+  bloqueada por `dynamic-page`. Tratar como uma família única de risco, não migrações
+  independentes.
+- Em funções recursivas que percorrem a árvore de nós (como `extractSpecs`), considerar
+  se um erro em uma chamada de resolução de ID deveria abortar só a extração daquela
+  propriedade, ou toda a subárvore — hoje aborta a subárvore inteira silenciosamente,
+  o que amplifica qualquer bug de API bloqueada de "uma propriedade não aparece" para
+  "o scan não retorna nada".
+
+**Risco confirmado em `beta/v4.3-melhorias-operacionais`**: a branch beta já tem
+`documentAccess: "dynamic-page"` no manifest (herdado antes da separação main/beta), mas
+**não recebeu a correção de variables/styles/mainComponent**. Confirmado via
+`git show beta/v4.3-melhorias-operacionais:./src/plugin/code.js` — ainda usa
+`figma.variables.getVariableById` (linhas 1744, 2116, 2649), `figma.getStyleById`
+(fillStyleId/textStyleId/strokeStyleId/effectStyleId, linhas 2129–2234) e
+`node.mainComponent` síncrono (linhas 2314–2335, 2733), todos sem `Async`. **Beta está
+com o mesmo bug quebrado em produção hoje** — Escanear Tokens deve travar da mesma forma
+se testado no Figma desktop com `dynamic-page` ativo. Precisa da mesma correção
+replicada lá, seguindo o padrão de cherry-pick manual documentado na seção 3 (é
+correção de bug real, não feature exclusiva de beta — deve ir para os dois lados).
