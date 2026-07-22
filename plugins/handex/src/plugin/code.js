@@ -1571,7 +1571,7 @@ figma.ui.onmessage = async (msg) => {
               const sf = node.fills.find(f => f.type === "SOLID");
               if (sf) {
                 const hex = rgbToHex(sf.color.r, sf.color.g, sf.color.b).toUpperCase();
-                const token = getVariableInfo(node, 'fills');
+                const token = await getVariableInfo(node, 'fills');
                 createRow(grid, "Fills", token ? token : hex);
               }
             }
@@ -1579,7 +1579,7 @@ figma.ui.onmessage = async (msg) => {
               const ss = node.strokes.find(s => s.type === "SOLID");
               if (ss) {
                 const hex = rgbToHex(ss.color.r, ss.color.g, ss.color.b).toUpperCase();
-                const token = getVariableInfo(node, 'strokes');
+                const token = await getVariableInfo(node, 'strokes');
                 createRow(grid, "Strokes", `${token ? token : hex} (${node.strokeWeight}px)`);
               }
             }
@@ -1735,13 +1735,13 @@ figma.ui.onmessage = async (msg) => {
 
     const { measureTypes } = msg;
 
-    function getVariableInfo(node, prop) {
+    async function getVariableInfo(node, prop) {
       if (!node.boundVariables) return null;
       const boundVar = node.boundVariables[prop];
       if (!boundVar) return null;
       const varId = Array.isArray(boundVar) ? (boundVar[0] && boundVar[0].id) : boundVar.id;
       if (!varId) return null;
-      const v = figma.variables.getVariableById(varId);
+      const v = await figma.variables.getVariableByIdAsync(varId);
       return v ? v.name : null;
     }
 
@@ -1832,8 +1832,8 @@ figma.ui.onmessage = async (msg) => {
         let appliedDetails = [];
 
         if (measureTypes && measureTypes.includes('wh')) {
-          const wToken = getVariableInfo(node, 'width');
-          const hToken = getVariableInfo(node, 'height');
+          const wToken = await getVariableInfo(node, 'width');
+          const hToken = await getVariableInfo(node, 'height');
           items.push(...createMeasurementLine(bounds.x, bounds.y - 20, bounds.x + bounds.width, bounds.y - 20, bounds.width, 'horizontal', { r: 1, g: 0.2, b: 0.2 }, wToken));
           items.push(...createMeasurementLine(bounds.x - 20, bounds.y, bounds.x - 20, bounds.y + bounds.height, bounds.height, 'vertical', { r: 1, g: 0.2, b: 0.2 }, hToken));
 
@@ -1846,10 +1846,10 @@ figma.ui.onmessage = async (msg) => {
           const shiftX = bounds.x + bounds.width / 2 - 12;
           const shiftY = bounds.y + bounds.height / 2 - 12;
           let pads = [];
-          const tT = getVariableInfo(node, 'paddingTop');
-          const tB = getVariableInfo(node, 'paddingBottom');
-          const tL = getVariableInfo(node, 'paddingLeft');
-          const tR = getVariableInfo(node, 'paddingRight');
+          const tT = await getVariableInfo(node, 'paddingTop');
+          const tB = await getVariableInfo(node, 'paddingBottom');
+          const tL = await getVariableInfo(node, 'paddingLeft');
+          const tR = await getVariableInfo(node, 'paddingRight');
 
           if (node.paddingTop > 0) { items.push(...createMeasurementLine(shiftX, bounds.y, shiftX, bounds.y + node.paddingTop, node.paddingTop, 'vertical', { r: 0, g: 0.5, b: 1 }, tT)); pads.push(`Top: ${node.paddingTop}${tT ? ' [' + tT + ']' : ''}`); }
           if (node.paddingBottom > 0) { items.push(...createMeasurementLine(shiftX, bounds.y + bounds.height - node.paddingBottom, shiftX, bounds.y + bounds.height, node.paddingBottom, 'vertical', { r: 0, g: 0.5, b: 1 }, tB)); pads.push(`Bottom: ${node.paddingBottom}${tB ? ' [' + tB + ']' : ''}`); }
@@ -1860,7 +1860,7 @@ figma.ui.onmessage = async (msg) => {
 
         if (measureTypes && measureTypes.includes('spacing') && 'layoutMode' in node && node.layoutMode !== "NONE" && node.children.length > 1) {
           let spaceCount = 0;
-          const gapToken = getVariableInfo(node, 'itemSpacing');
+          const gapToken = await getVariableInfo(node, 'itemSpacing');
           for (let i = 0; i < node.children.length - 1; i++) {
             const child1 = node.children[i];
             const child2 = node.children[i + 1];
@@ -2107,17 +2107,17 @@ figma.ui.onmessage = async (msg) => {
       return "#" + toHex(r) + toHex(g) + toHex(b);
     }
 
-    function getVar(n, p) {
+    async function getVar(n, p) {
       if (!n.boundVariables) return null;
       const v = n.boundVariables[p];
       if (!v) return null;
       const id = Array.isArray(v) ? (v[0] && v[0].id) : v.id;
       if (!id) return null;
-      const variable = figma.variables.getVariableById(id);
+      const variable = await figma.variables.getVariableByIdAsync(id);
       return variable ? { name: variable.name, key: variable.key, remote: variable.remote === true } : null;
     }
 
-    function extractNodeProperties(n) {
+    async function extractNodeProperties(n) {
       const props = [];
       
       // Colors (Fills)
@@ -2126,7 +2126,7 @@ figma.ui.onmessage = async (msg) => {
         let styleKey = null;
         let fillStyleRemote = false;
         if ('fillStyleId' in n && typeof n.fillStyleId === "string" && n.fillStyleId) {
-          const style = figma.getStyleById(n.fillStyleId);
+          const style = await figma.getStyleByIdAsync(n.fillStyleId);
           if (style) { styleName = style.name; styleKey = style.key; fillStyleRemote = style.remote === true; }
         }
         for (const fill of n.fills) {
@@ -2135,7 +2135,7 @@ figma.ui.onmessage = async (msg) => {
 
           if (fill.type === "SOLID" && fill.color) {
             const hex = rgbToHex(fill.color.r, fill.color.g, fill.color.b).toUpperCase();
-            const vInfo = getVar(n, "fills");
+            const vInfo = await getVar(n, "fills");
             const name = (vInfo && vInfo.name) || styleName || hex;
             const key = (vInfo && vInfo.key) || styleKey;
             const _isRemote = (vInfo && vInfo.remote) || fillStyleRemote;
@@ -2150,7 +2150,7 @@ figma.ui.onmessage = async (msg) => {
         let styleKey = null;
         let textStyleRemote = false;
         if ('textStyleId' in n && typeof n.textStyleId === "string" && n.textStyleId !== figma.mixed && n.textStyleId) {
-          const style = figma.getStyleById(n.textStyleId);
+          const style = await figma.getStyleByIdAsync(n.textStyleId);
           if (style) { styleName = style.name; styleKey = style.key; textStyleRemote = style.remote === true; }
         }
         const family = (n.fontName && n.fontName !== figma.mixed) ? n.fontName.family : "Mixed";
@@ -2164,7 +2164,7 @@ figma.ui.onmessage = async (msg) => {
       // Spacing, Alignment
       if ('layoutMode' in n && n.layoutMode !== "NONE") {
         if (n.itemSpacing !== figma.mixed && n.itemSpacing > 0) {
-          const vInfo = getVar(n, "itemSpacing");
+          const vInfo = await getVar(n, "itemSpacing");
           const val = `${n.itemSpacing}px`;
           const name = (vInfo && vInfo.name) || val;
           const propKey = vInfo ? vInfo.key : null;
@@ -2174,15 +2174,15 @@ figma.ui.onmessage = async (msg) => {
           { prop: 'paddingTop', label: 'Top' }, { prop: 'paddingRight', label: 'Right' },
           { prop: 'paddingBottom', label: 'Bottom' }, { prop: 'paddingLeft', label: 'Left' }
         ];
-        paddings.forEach(p => {
+        for (const p of paddings) {
           if (n[p.prop] > 0) {
-            const vInfo = getVar(n, p.prop);
+            const vInfo = await getVar(n, p.prop);
             const val = `${n[p.prop]}px`;
             const name = (vInfo && vInfo.name) || val;
             const propKey = vInfo ? vInfo.key : null;
             props.push({ type: "spacing", name, value: val, rawValue: n[p.prop], key: propKey, variableKey: propKey, label: `Padding ${p.label}`, ...audit("spacing", val, propKey, name, vInfo && vInfo.remote) });
           }
-        });
+        }
       }
 
       // Borders
@@ -2191,7 +2191,7 @@ figma.ui.onmessage = async (msg) => {
         const visibleStroke = n.strokes.find(s => s.visible !== false && (s.opacity === undefined || s.opacity > 0));
         
         if (visibleStroke && 'strokeWeight' in n && n.strokeWeight !== figma.mixed && n.strokeWeight > 0) {
-          const vInfo = getVar(n, "strokeWeight");
+          const vInfo = await getVar(n, "strokeWeight");
           const val = `${n.strokeWeight}px`;
           const name = (vInfo && vInfo.name) || val;
           const propKey = vInfo ? vInfo.key : null;
@@ -2208,10 +2208,10 @@ figma.ui.onmessage = async (msg) => {
             const hex = rgbToHex(visibleStroke.color.r, visibleStroke.color.g, visibleStroke.color.b).toUpperCase();
             let styleName = null; let styleKey = null; let strokeStyleRemote = false;
             if ('strokeStyleId' in n && n.strokeStyleId) {
-              const st = figma.getStyleById(n.strokeStyleId);
+              const st = await figma.getStyleByIdAsync(n.strokeStyleId);
               if (st) { styleName = st.name; styleKey = st.key; strokeStyleRemote = st.remote === true; }
             }
-            const sVar = getVar(n, "strokes");
+            const sVar = await getVar(n, "strokes");
             const strokeKey = (sVar && sVar.key) || styleKey;
             const strokeName = (sVar && sVar.name) || styleName || hex;
             props.push({ type: "stroke", name: strokeName, value: hex, rawValue: hex, key: strokeKey, variableKey: sVar ? sVar.key : null, styleKey, label: "Border Color", ...audit("colors", hex, strokeKey, strokeName, (sVar && sVar.remote) || strokeStyleRemote) });
@@ -2220,7 +2220,7 @@ figma.ui.onmessage = async (msg) => {
       }
 
       if ('cornerRadius' in n && n.cornerRadius !== figma.mixed && n.cornerRadius > 0) {
-        const vInfo = getVar(n, "cornerRadius");
+        const vInfo = await getVar(n, "cornerRadius");
         const val = `${n.cornerRadius}px`;
         const name = (vInfo && vInfo.name) || val;
         const propKey = vInfo ? vInfo.key : null;
@@ -2231,7 +2231,7 @@ figma.ui.onmessage = async (msg) => {
       if ('effects' in n && Array.isArray(n.effects)) {
         let styleName = null; let styleKey = null; let effectStyleRemote = false;
         if ('effectStyleId' in n && n.effectStyleId) {
-          const style = figma.getStyleById(n.effectStyleId);
+          const style = await figma.getStyleByIdAsync(n.effectStyleId);
           if (style) { styleName = style.name; styleKey = style.key; effectStyleRemote = style.remote === true; }
         }
         for (const effect of n.effects) {
@@ -2276,7 +2276,7 @@ figma.ui.onmessage = async (msg) => {
       return props;
     }
 
-    function addElement(category, node, props) {
+    async function addElement(category, node, props) {
       // FILTRAGEM POR CATEGORIA (apenas se não for auditoria)
       if (!isAudit && allowedCategories && allowedCategories.length > 0) {
         let isAllowed = false;
@@ -2311,8 +2311,10 @@ figma.ui.onmessage = async (msg) => {
       const name = node.name;
 
       let componentKey = null;
-      if (node.type === "INSTANCE" && node.mainComponent) {
-        componentKey = node.mainComponent.key;
+      let mainComp = null;
+      if (node.type === "INSTANCE") {
+        mainComp = await node.getMainComponentAsync();
+        if (mainComp) componentKey = mainComp.key;
       } else if (node.type === "COMPONENT" || node.type === "COMPONENT_SET") {
         componentKey = node.key;
       }
@@ -2332,7 +2334,7 @@ figma.ui.onmessage = async (msg) => {
         // Convenção [dsc] no nome confirma conformidade (fallback quando chave não está no skeleton)
         if (dsElement !== true && /^\[dsc\]/i.test(name)) dsElement = true;
         // Instância de biblioteca publicada (remote=true) → conforme ao DSC por definição
-        if (dsElement !== true && node.type === 'INSTANCE' && node.mainComponent && node.mainComponent.remote) {
+        if (dsElement !== true && node.type === 'INSTANCE' && mainComp && mainComp.remote) {
           dsElement = true;
         }
       }
@@ -2409,13 +2411,13 @@ figma.ui.onmessage = async (msg) => {
       }
     }
 
-    function extractSpecs(n, depth) {
+    async function extractSpecs(n, depth) {
       if ((depth || 0) > 8) return;
       // SKIP HIDDEN NODES
       if (n.visible === false) return;
 
       try {
-        const props = extractNodeProperties(n);
+        const props = await extractNodeProperties(n);
         let category = "frames";
 
         const nameLower = n.name.toLowerCase();
@@ -2432,11 +2434,11 @@ figma.ui.onmessage = async (msg) => {
           category = "frames";
         }
 
-        addElement(category, n, props);
+        await addElement(category, n, props);
 
         if ('children' in n && n.children) {
           for (const child of n.children) {
-            extractSpecs(child, (depth || 0) + 1);
+            await extractSpecs(child, (depth || 0) + 1);
           }
         }
       } catch (err) {
@@ -2447,7 +2449,7 @@ figma.ui.onmessage = async (msg) => {
     }
 
     for (const node of selection) {
-      extractSpecs(node);
+      await extractSpecs(node);
     }
 
     let framePreview = null;
@@ -2640,29 +2642,29 @@ figma.ui.onmessage = async (msg) => {
     }
 
     const node = selection[0];
-    const getVar = (p) => {
+    const getVar = async (p) => {
       if (!node.boundVariables) return null;
       const v = node.boundVariables[p];
       if (!v) return null;
       const id = Array.isArray(v) ? (v[0] && v[0].id) : v.id;
       if (!id) return null;
-      const variable = figma.variables.getVariableById(id);
+      const variable = await figma.variables.getVariableByIdAsync(id);
       return variable ? variable.name : null;
     };
 
     // 1. Dimensions
     if ("height" in node) {
-      const token = getVar("height");
+      const token = await getVar("height");
       properties.push({ key: "height", label: "Altura", value: Math.round(node.height) + "px", token });
     }
     if ("width" in node) {
-      const token = getVar("width");
+      const token = await getVar("width");
       properties.push({ key: "width", label: "Largura", value: Math.round(node.width) + "px", token });
     }
 
     // 2. Corner Radius
     if ("cornerRadius" in node && node.cornerRadius !== figma.mixed && node.cornerRadius > 0) {
-      const token = getVar("cornerRadius");
+      const token = await getVar("cornerRadius");
       properties.push({ key: "radius", label: "Raio de borda", value: node.cornerRadius + "px", token });
     }
 
@@ -2674,13 +2676,13 @@ figma.ui.onmessage = async (msg) => {
       properties.push({ key: "alignment", label: "Alinhamento", value: align });
 
       if (node.itemSpacing !== figma.mixed && node.itemSpacing > 0) {
-        const token = getVar("itemSpacing");
+        const token = await getVar("itemSpacing");
         properties.push({ key: "gap", label: "Espaçamento (Gap)", value: node.itemSpacing + "px", token });
       }
 
       const pt = node.paddingTop || 0, pr = node.paddingRight || 0, pb = node.paddingBottom || 0, pl = node.paddingLeft || 0;
       if (pt + pr + pb + pl > 0) {
-        const tT = getVar("paddingTop"), tR = getVar("paddingRight"), tB = getVar("paddingBottom"), tL = getVar("paddingLeft");
+        const tT = await getVar("paddingTop"), tR = await getVar("paddingRight"), tB = await getVar("paddingBottom"), tL = await getVar("paddingLeft");
         const vT = tT || `${pt}px`, vR = tR || `${pr}px`, vB = tB || `${pb}px`, vL = tL || `${pl}px`;
         let val, token;
         if (vT === vR && vR === vB && vB === vL) {
@@ -2700,7 +2702,7 @@ figma.ui.onmessage = async (msg) => {
     if ("fills" in node && Array.isArray(node.fills) && node.fills.length > 0) {
       const sf = node.fills.find(f => f.type === "SOLID");
       if (sf) {
-        const token = getVar("fills");
+        const token = await getVar("fills");
         const hexFill = rgbToHex(sf.color.r, sf.color.g, sf.color.b).toUpperCase();
         properties.push({ key: "fill", label: "Preenchimento", value: token || hexFill, token });
       }
@@ -2708,7 +2710,7 @@ figma.ui.onmessage = async (msg) => {
     if ("strokes" in node && Array.isArray(node.strokes) && node.strokes.length > 0) {
       const ss = node.strokes.find(s => s.type === "SOLID");
       if (ss) {
-        const token = getVar("strokes");
+        const token = await getVar("strokes");
         const hexStroke = rgbToHex(ss.color.r, ss.color.g, ss.color.b).toUpperCase();
         properties.push({ key: "stroke", label: "Contorno", value: token || hexStroke, token });
       }
@@ -2724,13 +2726,13 @@ figma.ui.onmessage = async (msg) => {
         properties.push({ key: "fontWeight", label: "Peso", value: node.fontName.style });
       }
       if (node.fontSize !== figma.mixed) {
-        const token = getVar("fontSize");
+        const token = await getVar("fontSize");
         properties.push({ key: "fontSize", label: "Tamanho da fonte", value: node.fontSize + "px", token });
       }
     }
 
     // 6. Component Properties
-    if (node.type === "INSTANCE" && node.mainComponent) {
+    if (node.type === "INSTANCE" && await node.getMainComponentAsync()) {
       const variantProps = node.variantProperties;
       if (variantProps) {
         for (const [key, val] of Object.entries(variantProps)) {
