@@ -219,6 +219,11 @@
         return;
       }
 
+      if (msg.type === 'flow-recreate-failed') {
+        showToast(`Fluxo "${msg.flowName || 'sem nome'}" não recriado -- elemento(s) de origem/destino não encontrados neste arquivo.`);
+        return;
+      }
+
       if (msg.type === 'canvas-content-deleted') {
         closeModal('confirm-clear-modal');
         const c = msg.counts || {};

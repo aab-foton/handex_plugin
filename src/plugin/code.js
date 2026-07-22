@@ -151,6 +151,210 @@ async function _writeSharedPluginData(data) {
   }
 }
 
+// Corpo compartilhado da criação de fluxo — usado tanto pela criação normal
+// (create-flow-connection, nodeA/nodeB vêm da seleção ativa) quanto pela
+// recriação a partir de backup (recreate-flow-connection, nodeA/nodeB vêm
+// de IDs salvos em handoffData.createdFlows). Ambos os handlers resolvem os
+// nós antes de chamar esta função; ela cuida do desenho e do agrupamento.
+async function _buildFlowConnection(nodeA, nodeB, msg) {
+  const isEvent = msg.flowType === "event_start" || msg.flowType === "event_end";
+  let boundsA = nodeA.absoluteBoundingBox || nodeA.absoluteRenderBounds;
+  let boundsB = nodeB ? (nodeB.absoluteBoundingBox || nodeB.absoluteRenderBounds) : null;
+  if (!boundsA) { figma.notify("Elemento de origem sem dimensões válidas."); return; }
+
+  if (!isEvent && boundsB && (!msg.flowSide || msg.flowSide === 'auto')) {
+    const cAx = boundsA.x + boundsA.width / 2, cAy = boundsA.y + boundsA.height / 2;
+    const cBx = boundsB.x + boundsB.width / 2, cBy = boundsB.y + boundsB.height / 2;
+    const adx = Math.abs(cBx - cAx), ady = Math.abs(cBy - cAy);
+    const shouldSwap = adx >= ady ? (cBx < cAx) : (cBy < cAy);
+    if (shouldSwap) { [nodeA, nodeB] = [nodeB, nodeA]; [boundsA, boundsB] = [boundsB, boundsA]; }
+  }
+
+  const getEdgePoints = (b) => ({
+    top:    { x: b.x + b.width / 2,  y: b.y,              side: 'top'    },
+    bottom: { x: b.x + b.width / 2,  y: b.y + b.height,   side: 'bottom' },
+    left:   { x: b.x,                y: b.y + b.height / 2, side: 'left'  },
+    right:  { x: b.x + b.width,      y: b.y + b.height / 2, side: 'right' }
+  });
+
+  const pointsA = getEdgePoints(boundsA);
+  let bestA, bestB;
+
+  if (msg.flowType === "event_start")      bestA = pointsA.left;
+  else if (msg.flowType === "event_end")   bestA = pointsA.right;
+  else if (msg.flowSide && msg.flowSide !== 'auto' && pointsA[msg.flowSide]) bestA = pointsA[msg.flowSide];
+
+  if (nodeB && boundsB) {
+    const pointsB = getEdgePoints(boundsB);
+    if (!bestA) {
+      const cAx = boundsA.x + boundsA.width / 2, cAy = boundsA.y + boundsA.height / 2;
+      const cBx = boundsB.x + boundsB.width / 2, cBy = boundsB.y + boundsB.height / 2;
+      const dx = cBx - cAx, dy = cBy - cAy;
+
+      const noOverlapH = boundsA.x + boundsA.width <= boundsB.x || boundsB.x + boundsB.width <= boundsA.x;
+      const noOverlapV = boundsA.y + boundsA.height <= boundsB.y || boundsB.y + boundsB.height <= boundsA.y;
+
+      if (noOverlapH) {
+        bestA = dx >= 0 ? pointsA.right  : pointsA.left;
+        bestB = dx >= 0 ? pointsB.left   : pointsB.right;
+      } else if (noOverlapV) {
+        bestA = dy >= 0 ? pointsA.bottom : pointsA.top;
+        bestB = dy >= 0 ? pointsB.top    : pointsB.bottom;
+      } else {
+        if (Math.abs(dx) >= Math.abs(dy)) { bestA = dx >= 0 ? pointsA.right : pointsA.left; bestB = dx >= 0 ? pointsB.left : pointsB.right; }
+        else                              { bestA = dy >= 0 ? pointsA.bottom : pointsA.top;  bestB = dy >= 0 ? pointsB.top : pointsB.bottom; }
+      }
+    } else {
+      let minDist = Infinity;
+      for (const pB of Object.values(pointsB)) {
+        const d = Math.sqrt(Math.pow(bestA.x - pB.x, 2) + Math.pow(bestA.y - pB.y, 2));
+        if (d < minDist) { minDist = d; bestB = pB; }
+      }
+    }
+  } else {
+    if (msg.flowType === "event_start")     { bestA = pointsA.left;  bestB = { x: bestA.x - 60, y: bestA.y }; }
+    else if (msg.flowType === "event_end")  { bestA = pointsA.right; bestB = { x: bestA.x + 60, y: bestA.y }; }
+    else {
+      bestA = bestA || pointsA.right;
+      const offset = 40;
+      bestB = { x: bestA.x, y: bestA.y };
+      if (bestA.side === 'top') bestB.y -= offset;
+      else if (bestA.side === 'bottom') bestB.y += offset;
+      else if (bestA.side === 'left')   bestB.x -= offset;
+      else bestB.x += offset;
+    }
+  }
+
+  const strokeColor = { r: 0.12, g: 0.16, b: 0.23 };
+  const line = figma.createVector();
+  line.name = `Linha`;
+  figma.currentPage.appendChild(line);
+  line.x = 0; line.y = 0;
+  line.strokes = [{ type: "SOLID", color: strokeColor }];
+  line.strokeWeight = 2;
+  if (msg.flowType === "line_dashed" || msg.flowType === "diamond_dashed") line.dashPattern = [6, 4];
+  line.vectorPaths = [{ windingRule: "NONZERO", data: `M ${bestA.x} ${bestA.y} L ${bestB.x} ${bestB.y}` }];
+
+  let nodesToGroup = [line];
+
+  if (msg.flowType !== "event_start") {
+    const angle = Math.atan2(bestB.y - bestA.y, bestB.x - bestA.x);
+    const arrowSize = 8;
+    const arrow = figma.createVector();
+    figma.currentPage.appendChild(arrow);
+    arrow.x = 0; arrow.y = 0;
+    arrow.strokes = [{ type: "SOLID", color: strokeColor }];
+    arrow.strokeWeight = 2; arrow.strokeCap = "ROUND"; arrow.strokeJoin = "ROUND";
+    const x1 = bestB.x - arrowSize * Math.cos(angle - Math.PI / 6);
+    const y1 = bestB.y - arrowSize * Math.sin(angle - Math.PI / 6);
+    const x2 = bestB.x - arrowSize * Math.cos(angle + Math.PI / 6);
+    const y2 = bestB.y - arrowSize * Math.sin(angle + Math.PI / 6);
+    arrow.vectorPaths = [{ windingRule: "NONZERO", data: `M ${x1} ${y1} L ${bestB.x} ${bestB.y} L ${x2} ${y2}` }];
+    nodesToGroup.push(arrow);
+  }
+
+  const _flowExtra = {
+    sourceId: nodeA.id,
+    targetId: nodeB ? nodeB.id : null,
+    decisionText: msg.decisionText || null,
+    flowSide: msg.flowSide || 'auto'
+  };
+
+  if (msg.flowType === "diamond" || msg.flowType === "diamond_dashed") {
+    const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
+    const size = 64, halfSize = size / 2;
+    const shape = figma.createVector();
+    figma.currentPage.appendChild(shape);
+    shape.x = 0; shape.y = 0;
+    shape.vectorPaths = [{ windingRule: "NONZERO", data: `M ${midX} ${midY - halfSize} L ${midX + halfSize} ${midY} L ${midX} ${midY + halfSize} L ${midX - halfSize} ${midY} Z` }];
+    shape.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+    shape.strokes = [{ type: "SOLID", color: strokeColor }];
+    shape.strokeWeight = 2;
+    if (msg.flowType === "diamond_dashed") shape.dashPattern = [6, 4];
+    try {
+      await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+      const symbol = figma.createText();
+      figma.currentPage.appendChild(symbol);
+      symbol.fontName = { family: "Inter", style: "Bold" };
+      symbol.characters = msg.decisionText || "IF";
+      symbol.fontSize = 11;
+      symbol.textAlignHorizontal = "CENTER"; symbol.textAlignVertical = "CENTER";
+      symbol.fills = [{ type: "SOLID", color: strokeColor }];
+      symbol.resize(size * 0.8, symbol.height);
+      symbol.x = midX - symbol.width / 2; symbol.y = midY - symbol.height / 2;
+      nodesToGroup.push(shape, symbol);
+      const finalGroup = figma.group(nodesToGroup, figma.currentPage);
+      finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | decisao] ${msg.flowName || "Decisão"}`;
+      finalGroup.locked = true;
+      finalGroup.setPluginData('handexCategory', 'fluxo');
+      figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
+    } catch (e) { console.error(e); }
+  } else if (isEvent) {
+    const isStart = msg.flowType === "event_start";
+    const circle = figma.createEllipse();
+    figma.currentPage.appendChild(circle);
+    circle.resize(96, 96);
+    circle.x = bestB.x - 48; circle.y = bestB.y - 48;
+    circle.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+    circle.strokes = [{ type: "SOLID", color: isStart ? { r: 0.13, g: 0.6, b: 0.3 } : { r: 0.86, g: 0.1, b: 0.1 } }];
+    circle.strokeWeight = isStart ? 3 : 5;
+    try {
+      await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+      const label = figma.createText();
+      figma.currentPage.appendChild(label);
+      label.fontName = { family: "Inter", style: "Bold" };
+      label.characters = isStart ? "INÍCIO" : "FIM";
+      label.fontSize = 11;
+      label.textAlignHorizontal = "CENTER"; label.textAlignVertical = "CENTER";
+      label.fills = circle.strokes;
+      label.x = circle.x + circle.width / 2 - label.width / 2;
+      label.y = circle.y + circle.height / 2 - label.height / 2;
+      nodesToGroup.push(circle, label);
+      const finalGroup = figma.group(nodesToGroup, figma.currentPage);
+      finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | ${isStart ? 'inicio' : 'fim'}] ${msg.flowName || (isStart ? "Início" : "Fim")}`;
+      finalGroup.locked = true;
+      finalGroup.setPluginData('handexCategory', 'fluxo');
+      figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
+    } catch (e) { console.error(e); }
+  } else if (msg.decisionText && (msg.flowType === "line_solid" || msg.flowType === "line_dashed")) {
+    const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
+    try {
+      await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+      const textNode = figma.createText();
+      textNode.name = "Texto";
+      textNode.fontName = { family: "Inter", style: "Bold" };
+      textNode.characters = msg.decisionText;
+      textNode.fontSize = 10;
+      textNode.textAlignHorizontal = "CENTER"; textNode.textAlignVertical = "CENTER";
+      textNode.fills = [{ type: "SOLID", color: strokeColor }];
+      const paddingH = 8, paddingV = 4;
+      const chipBg = figma.createRectangle();
+      figma.currentPage.appendChild(chipBg);
+      chipBg.name = "Fundo";
+      chipBg.resize(textNode.width + paddingH * 2, textNode.height + paddingV * 2);
+      chipBg.cornerRadius = 6;
+      chipBg.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+      chipBg.strokes = [{ type: "SOLID", color: strokeColor }]; chipBg.strokeWeight = 1;
+      chipBg.x = midX - chipBg.width / 2; chipBg.y = midY - chipBg.height / 2;
+      figma.currentPage.appendChild(textNode);
+      textNode.x = chipBg.x + paddingH; textNode.y = chipBg.y + paddingV;
+      nodesToGroup.push(chipBg, textNode);
+      const finalGroup = figma.group(nodesToGroup, figma.currentPage);
+      finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conexão"}`;
+      finalGroup.locked = true;
+      finalGroup.setPluginData('handexCategory', 'fluxo');
+      figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
+    } catch (e) { console.error(e); }
+  } else {
+    const finalGroup = figma.group(nodesToGroup, figma.currentPage);
+    finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conexão"}`;
+    finalGroup.locked = true;
+    finalGroup.setPluginData('handexCategory', 'fluxo');
+    figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
+  }
+  figma.notify("Fluxo criado!");
+}
+
 figma.ui.onmessage = async (msg) => {
   if (msg.type === 'ui-ready') {
     const currentUser = figma.currentUser
@@ -3562,206 +3766,28 @@ figma.ui.onmessage = async (msg) => {
       return;
     }
 
-    let nodeA = selection[0];
-    let nodeB = selection[1] || null;
-    let boundsA = nodeA.absoluteBoundingBox || nodeA.absoluteRenderBounds;
-    let boundsB = nodeB ? (nodeB.absoluteBoundingBox || nodeB.absoluteRenderBounds) : null;
+    const nodeA = selection[0];
+    const nodeB = selection[1] || null;
+    await _buildFlowConnection(nodeA, nodeB, msg);
+  }
 
-    if (!isEvent && boundsB && (!msg.flowSide || msg.flowSide === 'auto')) {
-      const cAx = boundsA.x + boundsA.width / 2, cAy = boundsA.y + boundsA.height / 2;
-      const cBx = boundsB.x + boundsB.width / 2, cBy = boundsB.y + boundsB.height / 2;
-      const adx = Math.abs(cBx - cAx), ady = Math.abs(cBy - cAy);
-      const shouldSwap = adx >= ady ? (cBx < cAx) : (cBy < cAy);
-      if (shouldSwap) { [nodeA, nodeB] = [nodeB, nodeA]; [boundsA, boundsB] = [boundsB, boundsA]; }
+  // Recria um fluxo salvo em handoffData.createdFlows (import de backup JSON).
+  // Diferente de create-flow-connection, não depende de seleção ativa --
+  // resolve os nós de origem/destino pelos IDs salvos no momento da criação
+  // original (sourceId/targetId, ver flow-created em _buildFlowConnection).
+  // Fluxos criados antes dessa marcação existir não têm esses IDs e são
+  // sinalizados como não recriáveis pela UI antes mesmo de chegar aqui.
+  if (msg.type === "recreate-flow-connection") {
+    const isEvent = msg.flowType === "event_start" || msg.flowType === "event_end";
+    const nodeA = msg.sourceId ? await figma.getNodeByIdAsync(msg.sourceId) : null;
+    const nodeB = msg.targetId ? await figma.getNodeByIdAsync(msg.targetId) : null;
+
+    if (!nodeA || (!isEvent && msg.targetId && !nodeB)) {
+      figma.ui.postMessage({ type: 'flow-recreate-failed', flowName: msg.flowName || '' });
+      return;
     }
 
-    const getEdgePoints = (b) => ({
-      top:    { x: b.x + b.width / 2,  y: b.y,              side: 'top'    },
-      bottom: { x: b.x + b.width / 2,  y: b.y + b.height,   side: 'bottom' },
-      left:   { x: b.x,                y: b.y + b.height / 2, side: 'left'  },
-      right:  { x: b.x + b.width,      y: b.y + b.height / 2, side: 'right' }
-    });
-
-    const pointsA = getEdgePoints(boundsA);
-    let bestA, bestB;
-
-    if (msg.flowType === "event_start")      bestA = pointsA.left;
-    else if (msg.flowType === "event_end")   bestA = pointsA.right;
-    else if (msg.flowSide && msg.flowSide !== 'auto' && pointsA[msg.flowSide]) bestA = pointsA[msg.flowSide];
-
-    if (nodeB && boundsB) {
-      const pointsB = getEdgePoints(boundsB);
-      if (!bestA) {
-        const cAx = boundsA.x + boundsA.width / 2, cAy = boundsA.y + boundsA.height / 2;
-        const cBx = boundsB.x + boundsB.width / 2, cBy = boundsB.y + boundsB.height / 2;
-        const dx = cBx - cAx, dy = cBy - cAy;
-
-        // Se os frames não se sobrepõem horizontalmente â†’ estão lado a lado â†’ rightâ†”left
-        const noOverlapH = boundsA.x + boundsA.width <= boundsB.x || boundsB.x + boundsB.width <= boundsA.x;
-        // Se os frames não se sobrepõem verticalmente â†’ estão empilhados â†’ bottomâ†”top
-        const noOverlapV = boundsA.y + boundsA.height <= boundsB.y || boundsB.y + boundsB.height <= boundsA.y;
-
-        if (noOverlapH) {
-          // Lado a lado: sempre horizontal, independente da distância dos centros
-          bestA = dx >= 0 ? pointsA.right  : pointsA.left;
-          bestB = dx >= 0 ? pointsB.left   : pointsB.right;
-        } else if (noOverlapV) {
-          // Empilhados: sempre vertical
-          bestA = dy >= 0 ? pointsA.bottom : pointsA.top;
-          bestB = dy >= 0 ? pointsB.top    : pointsB.bottom;
-        } else {
-          // Sobreposição em ambos os eixos: usar direção dominante dos centros
-          if (Math.abs(dx) >= Math.abs(dy)) { bestA = dx >= 0 ? pointsA.right : pointsA.left; bestB = dx >= 0 ? pointsB.left : pointsB.right; }
-          else                              { bestA = dy >= 0 ? pointsA.bottom : pointsA.top;  bestB = dy >= 0 ? pointsB.top : pointsB.bottom; }
-        }
-      } else {
-        let minDist = Infinity;
-        for (const pB of Object.values(pointsB)) {
-          const d = Math.sqrt(Math.pow(bestA.x - pB.x, 2) + Math.pow(bestA.y - pB.y, 2));
-          if (d < minDist) { minDist = d; bestB = pB; }
-        }
-      }
-    } else {
-      if (msg.flowType === "event_start")     { bestA = pointsA.left;  bestB = { x: bestA.x - 60, y: bestA.y }; }
-      else if (msg.flowType === "event_end")  { bestA = pointsA.right; bestB = { x: bestA.x + 60, y: bestA.y }; }
-      else {
-        bestA = bestA || pointsA.right;
-        const offset = 40;
-        bestB = { x: bestA.x, y: bestA.y };
-        if (bestA.side === 'top') bestB.y -= offset;
-        else if (bestA.side === 'bottom') bestB.y += offset;
-        else if (bestA.side === 'left')   bestB.x -= offset;
-        else bestB.x += offset;
-      }
-    }
-
-    const strokeColor = { r: 0.12, g: 0.16, b: 0.23 };
-    const line = figma.createVector();
-    line.name = `Linha`;
-    figma.currentPage.appendChild(line);
-    line.x = 0; line.y = 0;
-    line.strokes = [{ type: "SOLID", color: strokeColor }];
-    line.strokeWeight = 2;
-    if (msg.flowType === "line_dashed" || msg.flowType === "diamond_dashed") line.dashPattern = [6, 4];
-    line.vectorPaths = [{ windingRule: "NONZERO", data: `M ${bestA.x} ${bestA.y} L ${bestB.x} ${bestB.y}` }];
-
-    let nodesToGroup = [line];
-
-    if (msg.flowType !== "event_start") {
-      const angle = Math.atan2(bestB.y - bestA.y, bestB.x - bestA.x);
-      const arrowSize = 8;
-      const arrow = figma.createVector();
-      figma.currentPage.appendChild(arrow);
-      arrow.x = 0; arrow.y = 0;
-      arrow.strokes = [{ type: "SOLID", color: strokeColor }];
-      arrow.strokeWeight = 2; arrow.strokeCap = "ROUND"; arrow.strokeJoin = "ROUND";
-      const x1 = bestB.x - arrowSize * Math.cos(angle - Math.PI / 6);
-      const y1 = bestB.y - arrowSize * Math.sin(angle - Math.PI / 6);
-      const x2 = bestB.x - arrowSize * Math.cos(angle + Math.PI / 6);
-      const y2 = bestB.y - arrowSize * Math.sin(angle + Math.PI / 6);
-      arrow.vectorPaths = [{ windingRule: "NONZERO", data: `M ${x1} ${y1} L ${bestB.x} ${bestB.y} L ${x2} ${y2}` }];
-      nodesToGroup.push(arrow);
-    }
-
-    if (msg.flowType === "diamond" || msg.flowType === "diamond_dashed") {
-      const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
-      const size = 64, halfSize = size / 2;
-      const shape = figma.createVector();
-      figma.currentPage.appendChild(shape);
-      shape.x = 0; shape.y = 0;
-      shape.vectorPaths = [{ windingRule: "NONZERO", data: `M ${midX} ${midY - halfSize} L ${midX + halfSize} ${midY} L ${midX} ${midY + halfSize} L ${midX - halfSize} ${midY} Z` }];
-      shape.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
-      shape.strokes = [{ type: "SOLID", color: strokeColor }];
-      shape.strokeWeight = 2;
-      if (msg.flowType === "diamond_dashed") shape.dashPattern = [6, 4];
-      (async () => {
-        try {
-          await figma.loadFontAsync({ family: "Inter", style: "Bold" });
-          const symbol = figma.createText();
-          figma.currentPage.appendChild(symbol);
-          symbol.fontName = { family: "Inter", style: "Bold" };
-          symbol.characters = msg.decisionText || "IF";
-          symbol.fontSize = 11;
-          symbol.textAlignHorizontal = "CENTER"; symbol.textAlignVertical = "CENTER";
-          symbol.fills = [{ type: "SOLID", color: strokeColor }];
-          symbol.resize(size * 0.8, symbol.height);
-          symbol.x = midX - symbol.width / 2; symbol.y = midY - symbol.height / 2;
-          nodesToGroup.push(shape, symbol);
-          const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-          finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | decisao] ${msg.flowName || "Decisão"}`;
-          finalGroup.locked = true;
-          finalGroup.setPluginData('handexCategory', 'fluxo');
-          figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
-        } catch (e) { console.error(e); }
-      })();
-    } else if (isEvent) {
-      const isStart = msg.flowType === "event_start";
-      const circle = figma.createEllipse();
-      figma.currentPage.appendChild(circle);
-      circle.resize(96, 96);
-      circle.x = bestB.x - 48; circle.y = bestB.y - 48;
-      circle.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
-      circle.strokes = [{ type: "SOLID", color: isStart ? { r: 0.13, g: 0.6, b: 0.3 } : { r: 0.86, g: 0.1, b: 0.1 } }];
-      circle.strokeWeight = isStart ? 3 : 5;
-      (async () => {
-        try {
-          await figma.loadFontAsync({ family: "Inter", style: "Bold" });
-          const label = figma.createText();
-          figma.currentPage.appendChild(label);
-          label.fontName = { family: "Inter", style: "Bold" };
-          label.characters = isStart ? "INÍCIO" : "FIM";
-          label.fontSize = 11;
-          label.textAlignHorizontal = "CENTER"; label.textAlignVertical = "CENTER";
-          label.fills = circle.strokes;
-          label.x = circle.x + circle.width / 2 - label.width / 2;
-          label.y = circle.y + circle.height / 2 - label.height / 2;
-          nodesToGroup.push(circle, label);
-          const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-          finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | ${isStart ? 'inicio' : 'fim'}] ${msg.flowName || (isStart ? "Início" : "Fim")}`;
-          finalGroup.locked = true;
-          finalGroup.setPluginData('handexCategory', 'fluxo');
-          figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
-        } catch (e) { console.error(e); }
-      })();
-    } else if (msg.decisionText && (msg.flowType === "line_solid" || msg.flowType === "line_dashed")) {
-      const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
-      (async () => {
-        try {
-          await figma.loadFontAsync({ family: "Inter", style: "Bold" });
-          const textNode = figma.createText();
-          textNode.name = "Texto";
-          textNode.fontName = { family: "Inter", style: "Bold" };
-          textNode.characters = msg.decisionText;
-          textNode.fontSize = 10;
-          textNode.textAlignHorizontal = "CENTER"; textNode.textAlignVertical = "CENTER";
-          textNode.fills = [{ type: "SOLID", color: strokeColor }];
-          const paddingH = 8, paddingV = 4;
-          const chipBg = figma.createRectangle();
-          figma.currentPage.appendChild(chipBg);
-          chipBg.name = "Fundo";
-          chipBg.resize(textNode.width + paddingH * 2, textNode.height + paddingV * 2);
-          chipBg.cornerRadius = 6;
-          chipBg.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
-          chipBg.strokes = [{ type: "SOLID", color: strokeColor }]; chipBg.strokeWeight = 1;
-          chipBg.x = midX - chipBg.width / 2; chipBg.y = midY - chipBg.height / 2;
-          figma.currentPage.appendChild(textNode);
-          textNode.x = chipBg.x + paddingH; textNode.y = chipBg.y + paddingV;
-          nodesToGroup.push(chipBg, textNode);
-          const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-          finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conexão"}`;
-          finalGroup.locked = true;
-          finalGroup.setPluginData('handexCategory', 'fluxo');
-          figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
-        } catch (e) { console.error(e); }
-      })();
-    } else {
-      const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-      finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conexão"}`;
-      finalGroup.locked = true;
-      finalGroup.setPluginData('handexCategory', 'fluxo');
-      figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType } });
-    }
-    figma.notify("Fluxo criado!");
+    await _buildFlowConnection(nodeA, nodeB, msg);
   }
 
   if (msg.type === "create-legend") {
