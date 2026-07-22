@@ -2,6 +2,13 @@
 
 ---
 
+## v6.0.0 — 2026-07-22
+
+### Resumo
+Bump de major para alinhar o número de versão do repositório com o que será publicado na Figma Community. Sem mudança funcional em relação à v5.1.0 além da atualização de dados de referência do DSC (skeleton) já sincronizada via o novo pipeline no GitHub Actions.
+
+---
+
 ## v5.1.0 — 2026-07-22
 
 ### Resumo
