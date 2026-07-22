@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Web Angular & React",
     "figmaFileKey": "8QvOeTODSBi3PquJT5CISP",
-    "exportedAt": "2026-07-10T02:18:17.352Z",
+    "exportedAt": "2026-07-22T15:27:40.827Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -9344,12 +9344,6 @@
       "containingFrame": "[dsc] Table Cell"
     },
     {
-      "key": "7591cecc9f1b61897ba8e16c4e07c66654c1f039",
-      "name": "variant=truncated s/ inicio",
-      "description": "",
-      "containingFrame": "[dsc] Breadcrumb"
-    },
-    {
       "key": "75a6f67777cd081a2d2114403f81815c9eff331e",
       "name": "variant=radio button, state=default (white)",
       "description": "",
@@ -9440,22 +9434,10 @@
       "containingFrame": "[dsc] Table Cell"
     },
     {
-      "key": "911383cee509706024e018e11e884aff50f1c155",
-      "name": "variant=mobile",
-      "description": "",
-      "containingFrame": "[dsc] Breadcrumb"
-    },
-    {
       "key": "948481dd6347660e79e8ff0aa62399d9c70ebe42",
       "name": "size=standard, state=hover, filled=false, feedback=false",
       "description": "",
       "containingFrame": "[dsc] Input File"
-    },
-    {
-      "key": "94c8996768715e9763b7ca5c300c5b6716762c78",
-      "name": "variant=truncated c/ inicio",
-      "description": "",
-      "containingFrame": "[dsc] Breadcrumb"
     },
     {
       "key": "97d3fc82381bb78c9e01d3c38be1e61d0fcd4e27",
@@ -9486,12 +9468,6 @@
       "name": "variant=currency, state=default (gray)",
       "description": "",
       "containingFrame": "[dsc] Table Cell"
-    },
-    {
-      "key": "a06067f9c1fb628d32e24ee95aec661e7ec2cf19",
-      "name": "variant=default",
-      "description": "",
-      "containingFrame": "[dsc] Breadcrumb"
     },
     {
       "key": "a236b5ad8d29e1dcbd1b4dcf4dbee579ff78bb18",
@@ -9792,12 +9768,6 @@
       "name": "variant=icon, state=default (white)",
       "description": "",
       "containingFrame": "[dsc] Table Cell"
-    },
-    {
-      "key": "eb0f19fd9f4605527a6a41a42c227edd2631486e",
-      "name": "variant=exposed",
-      "description": "",
-      "containingFrame": "[dsc] Breadcrumb"
     },
     {
       "key": "ed4777b53d5e55e33b3b8d87156dac89a8ce1ed8",
@@ -10700,238 +10670,196 @@
       "containingFrame": "Dropdown"
     },
     {
-      "key": "d6c50cf2d070a8a37fa56e8b230ea892e594b499",
-      "name": "size=standard, state=hover, filled=false, feedback=false",
+      "key": "e2f81426d78d8875f76107e2962a2139821fd083",
+      "name": "background=gray, size=large, variant=horizontal step, step=middle",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "bfcb1973390f6d3b318ff4847660a065f200254c",
-      "name": "size=standard, state=default, filled=true, feedback=true",
+      "key": "f46f74d22e9c6b3fa327e8965adda9500ad6ed30",
+      "name": "background=white, size=medium, variant=horizontal step, step=middle",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "2e161e3ffaf403ce92c819f0d1645cf135e986d9",
-      "name": "size=small, state=focus, filled=true, feedback=false",
+      "key": "34fda94f059889cb5a20381e666d8c4c15425550",
+      "name": "background=gray, size=large, variant=vertical step, step=last",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "fd749567336a46229115204184ae5558503268a1",
-      "name": "size=standard, state=hover, filled=true, feedback=false",
+      "key": "0a0795a316f36ae3e69056ab8576a2d0caa98939",
+      "name": "background=white, size=large, variant=horizontal step, step=middle",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "dd917e1f7f9737739ae26e2d709729493d9292e8",
-      "name": "size=standard, state=focus, filled=true, feedback=false",
+      "key": "943fbf396cc847abc1a78aea66c7c869f784d967",
+      "name": "background=white, size=medium, variant=vertical step, step=middle",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "20e1ebefbb5f282b34efed4f3ceb3fd2b7819654",
-      "name": "size=large, state=readonly, filled=true, feedback=false",
+      "key": "4d7d9bbc20dc98ef66efea8444a3bc514de55cbc",
+      "name": "background=gray, size=large, variant=vertical step, step=middle",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "02d91c58e79e03ddab181c381912493111444d03",
-      "name": "size=standard, state=disabled, filled=false, feedback=false",
+      "key": "cbae5d29b50e602424b750e6fcb1ddcb8a0a8fb0",
+      "name": "background=gray, size=medium, variant=horizontal step, step=middle",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "0c9982fa80d68fc52de0a28b1d4dce444a48fcb1",
-      "name": "size=small, state=hover, filled=true, feedback=false",
+      "key": "bccb261a4fa1c5866cb152040e095d87eff41366",
+      "name": "background=gray, size=large, variant=vertical step, step=first",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "77f17a00e59aa6ef8337bc806ecf16bbd48cb511",
-      "name": "size=small, state=focus, filled=true, feedback=true",
+      "key": "9c32eda2b450e89d43a73c0b1799bc7117d898b5",
+      "name": "background=gray, size=medium, variant=vertical step, step=middle",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "69c18627b5d750be3ff661f802471d57b4982580",
-      "name": "size=large, state=default, filled=true, feedback=true",
+      "key": "5d7aa8abec5a1cdad2fa7fa7be16647b153b2722",
+      "name": "background=white, size=large, variant=vertical step, step=last",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "2e44216d11a932cb1db4506862cfa118257036da",
-      "name": "size=small, state=default, filled=false, feedback=false",
+      "key": "06847d3dca2f667b1bdc15dff80831debf4b6d0c",
+      "name": "background=white, size=large, variant=vertical step, step=middle",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "7f09b20e8a8d79febaf532e3a20444dd231dc9e9",
-      "name": "size=standard, state=focus, filled=false, feedback=false",
+      "key": "4f4648205d211698ceb9d568560f2250b145e871",
+      "name": "background=white, size=medium, variant=vertical step, step=last",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "4c8ed232154fd840635555cd7d0ad885f063459a",
-      "name": "size=small, state=default, filled=true, feedback=false",
+      "key": "570e18db6daff8f67d3e06bcc57e222af0369956",
+      "name": "background=gray, size=medium, variant=vertical step, step=last",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "d27d4b3701a36c88ce717ac1bb4119d29fe1145a",
-      "name": "size=large, state=hover, filled=false, feedback=false",
+      "key": "0400928b4ebbdbfda9d12e1c8cab7ba26be7e44e",
+      "name": "background=gray, size=large, variant=horizontal step, step=first",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "30c652f2d62adb2e1c3e86d397617d79cf3f3b9e",
-      "name": "size=standard, state=default, filled=true, feedback=false",
+      "key": "1ff73e98b06060b22c110a191023e02190ad51f4",
+      "name": "background=white, size=large, variant=vertical step, step=first",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "52580980b5eb868cf6ed7c5777fd090687cae3aa",
-      "name": "size=standard, state=default, filled=false, feedback=false",
+      "key": "2cfe238c1a6c877a1fc05647484910b6599d9609",
+      "name": "background=white, size=medium, variant=horizontal step, step=last",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "090f3f4827934a54783e9f0b01645b0ce7227e50",
-      "name": "size=standard, state=readonly, filled=true, feedback=false",
+      "key": "3c40ecd33e255d8668c31a98d034dabcd6097395",
+      "name": "background=white, size=medium, variant=vertical step, step=first",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "5c17db39185ab60d319c20abafb69703847ea9f9",
-      "name": "size=standard, state=readonly+focus, filled=true, feedback=false",
+      "key": "4a6c8d6a862a87eb48edfe04ce7741a16d5ea686",
+      "name": "background=gray, size=large, variant=default",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes"
     },
     {
-      "key": "12db37001e69ebf007918d8e6aa1722f6f18c4fe",
-      "name": "size=small, state=hover, filled=false, feedback=false",
+      "key": "62c6d43b21149355783d69377ccd1c165e46c856",
+      "name": "background=gray, size=medium, variant=horizontal step, step=last",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "08c7a86e3f6e9096f69acfb9eeb526577f096eeb",
-      "name": "size=small, state=readonly, filled=true, feedback=false",
+      "key": "644ea8f60e60a9639b5c4a3e24eb1fc23ff6d311",
+      "name": "background=white, size=medium, variant=horizontal step, step=first",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "7688ca9db4abf08a35712004e961dc49cb20c649",
-      "name": "size=small, state=focus, filled=false, feedback=true",
+      "key": "685c2eed6951a483648b6f07778da65f4a942467",
+      "name": "background=white, size=large, variant=empty state",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes"
     },
     {
-      "key": "3e33f054af2289a6123e237eeea1528d9986b07d",
-      "name": "size=large, state=default, filled=false, feedback=true",
+      "key": "71319273781d6724981f3fea4e66a38c4118b4d0",
+      "name": "background=white, size=large, variant=default",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes"
     },
     {
-      "key": "b474c05f0ae2544b156acddbbd78e0c8fe0694d2",
-      "name": "size=small, state=focus, filled=false, feedback=false",
+      "key": "762519dd6c7284ed1d9a1a431fd0b7d9082bded7",
+      "name": "background=gray, size=medium, variant=empty state",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes"
     },
     {
-      "key": "4512a52010ddb3cbf3856208b6a1e44154ce2600",
-      "name": "size=small, state=readonly+focus, filled=true, feedback=false",
+      "key": "85830a4f44e8f74ac72ecd843cc9a5bd4f212db3",
+      "name": "background=white, size=medium, variant=empty state",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes"
     },
     {
-      "key": "84339880334e8cf083d6076fd886357b3ff61754",
-      "name": "size=small, state=disabled, filled=false, feedback=false",
+      "key": "94f13a25a6832e76f4839824795f89a93311263b",
+      "name": "background=white, size=medium, variant=default",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes"
     },
     {
-      "key": "e7d70a8c179f7fe93d3deada0626173779df849b",
-      "name": "size=large, state=focus, filled=false, feedback=false",
+      "key": "a097fe63411a05a4b53c542d346798fff13b6264",
+      "name": "background=white, size=large, variant=horizontal step, step=last",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "3871d35970807af730b9dd7036c1fc101963fa96",
-      "name": "size=standard, state=default, filled=false, feedback=true",
+      "key": "ce6b1bba876484dc5606118c2627ecd1d1d964c7",
+      "name": "background=gray, size=medium, variant=horizontal step, step=first",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "04eeeb705ecd3256f9d23b0e5ffbe2bf38c60bab",
-      "name": "size=large, state=default, filled=false, feedback=false",
+      "key": "dd89ee51265582e6c8bd612091aa7ca164471bdc",
+      "name": "background=gray, size=large, variant=horizontal step, step=last",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "c099ec6bb4b061d4c7e674006d76d17a21ceede5",
-      "name": "size=large, state=default, filled=true, feedback=false",
+      "key": "e51cbc1e6e2dde1c95f907e6a7fa91d7fe61538e",
+      "name": "background=white, size=large, variant=horizontal step, step=first",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "1fa04f92728e5b5499ece7f4c7ca067991d57e2a",
-      "name": "size=large, state=disabled, filled=false, feedback=false",
+      "key": "ebc6f01017ea07ee756a3becc89b4efa4e7f5db6",
+      "name": "background=gray, size=medium, variant=vertical step, step=first",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes [DSC]"
     },
     {
-      "key": "515be31e92655df68c903ac2c62c34f9b5c8e719",
-      "name": "size=standard, state=focus, filled=false, feedback=true",
+      "key": "effc1ba3538364c99883692e1e184a06a52c926d",
+      "name": "background=gray, size=medium, variant=default",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes"
     },
     {
-      "key": "834dd30f1f2e70344bcdf9907aa1665192f70ae5",
-      "name": "size=small, state=default, filled=false, feedback=true",
+      "key": "ff2772e0316da74c11dcc32f59f13fa5d5d73262",
+      "name": "background=gray, size=large, variant=empty state",
       "description": "",
-      "containingFrame": "[dsc] Timepicker"
-    },
-    {
-      "key": "03597ed04ec2500def644ee1af0b2ea8bb811829",
-      "name": "size=large, state=hover, filled=true, feedback=false",
-      "description": "",
-      "containingFrame": "[dsc] Timepicker"
-    },
-    {
-      "key": "db9d53ce6e00fdcc46e46876d3b96471a76c7f1f",
-      "name": "size=large, state=focus, filled=true, feedback=false",
-      "description": "",
-      "containingFrame": "[dsc] Timepicker"
-    },
-    {
-      "key": "f0f219da9e8746a4e685dc2b9e68375daf4c5b98",
-      "name": "size=large, state=readonly+focus, filled=true, feedback=false",
-      "description": "",
-      "containingFrame": "[dsc] Timepicker"
-    },
-    {
-      "key": "9029efcd5f2140525c27f4f3e8ecf6dbaef6b088",
-      "name": "size=standard, state=focus, filled=true, feedback=true",
-      "description": "",
-      "containingFrame": "[dsc] Timepicker"
-    },
-    {
-      "key": "f9740a3fc71a37d771c08b6792a76bfc268a8637",
-      "name": "size=small, state=default, filled=true, feedback=true",
-      "description": "",
-      "containingFrame": "[dsc] Timepicker"
-    },
-    {
-      "key": "28592576e46702dd5d0b6b8e5e8fb5ec77212bd8",
-      "name": "size=large, state=focus, filled=false, feedback=true",
-      "description": "",
-      "containingFrame": "[dsc] Timepicker"
-    },
-    {
-      "key": "f397fb1e28d3075fd7300ea9300600abeb4be9d7",
-      "name": "size=large, state=focus, filled=true, feedback=true",
-      "description": "",
-      "containingFrame": "[dsc] Timepicker"
+      "containingFrame": "Componentes"
     },
     {
       "key": "be3cb4e1cc1254f68d67df02a19c34a53a19eb8d",
@@ -11184,6 +11112,270 @@
       "name": "selector type=year",
       "description": "",
       "containingFrame": "[dsc doc] Component Building"
+    },
+    {
+      "key": "090f3f4827934a54783e9f0b01645b0ce7227e50",
+      "name": "size=standard, state=readonly, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "02d91c58e79e03ddab181c381912493111444d03",
+      "name": "size=standard, state=disabled, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "03597ed04ec2500def644ee1af0b2ea8bb811829",
+      "name": "size=large, state=hover, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "04eeeb705ecd3256f9d23b0e5ffbe2bf38c60bab",
+      "name": "size=large, state=default, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "08c7a86e3f6e9096f69acfb9eeb526577f096eeb",
+      "name": "size=small, state=readonly, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "0c9982fa80d68fc52de0a28b1d4dce444a48fcb1",
+      "name": "size=small, state=hover, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "12db37001e69ebf007918d8e6aa1722f6f18c4fe",
+      "name": "size=small, state=hover, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "1fa04f92728e5b5499ece7f4c7ca067991d57e2a",
+      "name": "size=large, state=disabled, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "20e1ebefbb5f282b34efed4f3ceb3fd2b7819654",
+      "name": "size=large, state=readonly, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "28592576e46702dd5d0b6b8e5e8fb5ec77212bd8",
+      "name": "size=large, state=focus, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "2e161e3ffaf403ce92c819f0d1645cf135e986d9",
+      "name": "size=small, state=focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "2e44216d11a932cb1db4506862cfa118257036da",
+      "name": "size=small, state=default, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "30c652f2d62adb2e1c3e86d397617d79cf3f3b9e",
+      "name": "size=standard, state=default, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "3871d35970807af730b9dd7036c1fc101963fa96",
+      "name": "size=standard, state=default, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "3e33f054af2289a6123e237eeea1528d9986b07d",
+      "name": "size=large, state=default, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "4512a52010ddb3cbf3856208b6a1e44154ce2600",
+      "name": "size=small, state=readonly+focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "4c8ed232154fd840635555cd7d0ad885f063459a",
+      "name": "size=small, state=default, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "515be31e92655df68c903ac2c62c34f9b5c8e719",
+      "name": "size=standard, state=focus, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "52580980b5eb868cf6ed7c5777fd090687cae3aa",
+      "name": "size=standard, state=default, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "5c17db39185ab60d319c20abafb69703847ea9f9",
+      "name": "size=standard, state=readonly+focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "69c18627b5d750be3ff661f802471d57b4982580",
+      "name": "size=large, state=default, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "7688ca9db4abf08a35712004e961dc49cb20c649",
+      "name": "size=small, state=focus, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "77f17a00e59aa6ef8337bc806ecf16bbd48cb511",
+      "name": "size=small, state=focus, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "7f09b20e8a8d79febaf532e3a20444dd231dc9e9",
+      "name": "size=standard, state=focus, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "834dd30f1f2e70344bcdf9907aa1665192f70ae5",
+      "name": "size=small, state=default, filled=false, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "84339880334e8cf083d6076fd886357b3ff61754",
+      "name": "size=small, state=disabled, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "9029efcd5f2140525c27f4f3e8ecf6dbaef6b088",
+      "name": "size=standard, state=focus, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "b474c05f0ae2544b156acddbbd78e0c8fe0694d2",
+      "name": "size=small, state=focus, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "bfcb1973390f6d3b318ff4847660a065f200254c",
+      "name": "size=standard, state=default, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "c099ec6bb4b061d4c7e674006d76d17a21ceede5",
+      "name": "size=large, state=default, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "d27d4b3701a36c88ce717ac1bb4119d29fe1145a",
+      "name": "size=large, state=hover, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "d6c50cf2d070a8a37fa56e8b230ea892e594b499",
+      "name": "size=standard, state=hover, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "db9d53ce6e00fdcc46e46876d3b96471a76c7f1f",
+      "name": "size=large, state=focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "dd917e1f7f9737739ae26e2d709729493d9292e8",
+      "name": "size=standard, state=focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "e7d70a8c179f7fe93d3deada0626173779df849b",
+      "name": "size=large, state=focus, filled=false, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "f0f219da9e8746a4e685dc2b9e68375daf4c5b98",
+      "name": "size=large, state=readonly+focus, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "f397fb1e28d3075fd7300ea9300600abeb4be9d7",
+      "name": "size=large, state=focus, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "f9740a3fc71a37d771c08b6792a76bfc268a8637",
+      "name": "size=small, state=default, filled=true, feedback=true",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "fd749567336a46229115204184ae5558503268a1",
+      "name": "size=standard, state=hover, filled=true, feedback=false",
+      "description": "",
+      "containingFrame": "[dsc] Timepicker"
+    },
+    {
+      "key": "7591cecc9f1b61897ba8e16c4e07c66654c1f039",
+      "name": "variant=truncated s/ inicio",
+      "description": "",
+      "containingFrame": "[dsc] Breadcrumb"
+    },
+    {
+      "key": "911383cee509706024e018e11e884aff50f1c155",
+      "name": "variant=mobile",
+      "description": "",
+      "containingFrame": "[dsc] Breadcrumb"
+    },
+    {
+      "key": "94c8996768715e9763b7ca5c300c5b6716762c78",
+      "name": "variant=truncated c/ inicio",
+      "description": "",
+      "containingFrame": "[dsc] Breadcrumb"
+    },
+    {
+      "key": "a06067f9c1fb628d32e24ee95aec661e7ec2cf19",
+      "name": "variant=default",
+      "description": "",
+      "containingFrame": "[dsc] Breadcrumb"
+    },
+    {
+      "key": "eb0f19fd9f4605527a6a41a42c227edd2631486e",
+      "name": "variant=exposed",
+      "description": "",
+      "containingFrame": "[dsc] Breadcrumb"
     }
   ],
   "spacing": [],
