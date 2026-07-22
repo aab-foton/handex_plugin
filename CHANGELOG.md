@@ -2,6 +2,55 @@
 
 ---
 
+## v5.1.0 — 2026-07-22
+
+### Resumo
+Sequência de correções descobertas testando a preparação para publicação no Figma real (scan de tokens, geração e posicionamento da ficha, versionamento) + duas features novas: limpeza seletiva do conteúdo do canvas com backup, e recriação de fluxos a partir de um backup JSON importado.
+
+---
+
+### Correção — `getVariableById`/`getStyleById`/`.mainComponent` síncronos sob `dynamic-page`
+
+A migração da v5.0.1 cobriu só `figma.getNodeById`. Faltavam três outras famílias de API síncrona também bloqueadas sob `documentAccess: dynamic-page`: `figma.variables.getVariableById`, `figma.getStyleById` e a property `.mainComponent`. Isso quebrava o **Escanear Tokens** em produção — a extração de propriedades lançava exceção dentro da função recursiva `extractSpecs`, e como a recursão nos filhos ficava no mesmo bloco `try/catch`, a subárvore inteira do nó era descartada silenciosamente. Migrado tudo para as versões assíncronas (`getVariableByIdAsync`, `getStyleByIdAsync`, `getMainComponentAsync`).
+
+### Correção — `ReferenceError: scBg is not defined` ao gerar ficha com specs
+
+Bug de refatoração de 17/06 (commit `1813758`) que ficou dormente: a declaração de `scBg` (tom de fundo do chip de categoria) foi apagada por engano junto com uma mudança no fundo do card da spec, mas o chip de categoria continuava usando a variável. Restaurada a declaração.
+
+### Correção — Ficha de Handoff nascia longe do frame mapeado (às vezes fora da tela)
+
+Quando a resolução de um `figmaId` salvo falhava (arquivo duplicado no Figma muda os IDs internos), a exceção travava a ficha na coordenada temporária off-screen (`-99999,-99999`) sem nunca reposicionar. Corrigido com try/catch em toda a lógica de posicionamento, que agora sempre cai num fallback válido.
+
+### Correção — Ficha podia sobrepor outros itens do canvas
+
+Além de evitar sobrepor a ficha anterior, a ficha agora desvia de qualquer frame, spec ou fluxo que esteja no caminho (checagem de colisão AABB contra os nós de topo da página, com limite de 50 iterações).
+
+### Correção — Modal de versionamento sugeria a versão errada
+
+`pull-ficha-version-from-canvas` buscava qualquer frame `Handex | Ficha de Projeto` da página, sem filtrar por título do projeto atual — com fichas de projetos diferentes na mesma página, podia sugerir a versão de outro projeto. Agora escopado pelo título. O nome da layer da ficha também passou a incluir a versão, não só título e timestamp.
+
+### Correção — "Limpar Tudo" não persistia o reset
+
+`confirmClearAllData()` resetava `handoffData` só na memória da sessão atual — nunca chamava `saveToStorage()`, então os dados antigos voltavam ao reabrir o plugin.
+
+### Novo — Limpeza seletiva do canvas + backup
+
+Modal "Limpar Tudo" reformulado com três ações: baixar backup em JSON, apagar dados do plugin (sem tocar no canvas), ou apagar conteúdo do canvas por categoria (Ficha/Specs/Medidas/Fluxos, seletivo via checkbox). Todo conteúdo criado pelo Handex passa a ser marcado com `setPluginData('handexCategory', ...)` no momento da criação — fonte de verdade para a exclusão seletiva.
+
+### Novo — Recriação de fluxos a partir de backup JSON
+
+A importação de JSON já recriava Ficha/Specs/Medidas no canvas; fluxos eram importados como dado mas nunca desenhados de novo. `handoffData.createdFlows[]` passa a salvar `sourceId`/`targetId`/`decisionText`/`flowSide` no momento da criação, permitindo reconstrução real via um novo handler (`recreate-flow-connection`) que resolve os nós por ID em vez de depender de seleção ativa no canvas. Fluxos de backups anteriores a esta versão não têm esse vínculo salvo e ficam marcados como não recriáveis.
+
+### Interface
+
+Espaçamento insuficiente entre o header azul e o conteúdo em 7 telas (Escanear Tokens, Anotar Medidas, Guia, Informações do Projeto, Anotar Specs, Fluxos de Tela, Resumo do Handoff) — sombra + padding-top aumentado de 16px para 24px.
+
+### Infraestrutura de publicação
+
+Manifest com `id`, `networkAccess`, `documentAccess` para submissão na Figma Community. Job de CI (`handex-lint`) rodando `tsc` + um check novo (`check-figma-api-usage.cjs`) em todo push/MR que toca o Handex, para pegar regressões de API síncrona do Figma antes do merge — motivado pelo próprio incidente desta versão.
+
+---
+
 ## v5.0.1 — 2026-07-21
 
 ### Resumo
