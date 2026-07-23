@@ -23,6 +23,22 @@
               <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
               <span>Nova spec</span>
             </button>
+            <div id="specs-header-action-a11y-wrap" class="hidden relative">
+              <button id="specs-header-action-a11y" type="button" onclick="toggleA11yTypeMenu()" class="fab-inline" title="Criar especificação de acessibilidade" aria-label="Criar especificação de acessibilidade" aria-haspopup="true" aria-expanded="false">
+                <i data-lucide="accessibility" class="w-4 h-4 shrink-0"></i>
+                <span>Nova spec A11y</span>
+              </button>
+              <div id="a11y-type-menu" class="hidden absolute right-0 top-full mt-2 w-52 z-50 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-xl p-1.5">
+                <button type="button" onclick="chooseA11yType('leitor-de-tela')"
+                  class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
+                  <i data-lucide="volume-2" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Leitor de Tela
+                </button>
+                <button type="button" onclick="chooseA11yType('ordem-tabulacao')"
+                  class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
+                  <i data-lucide="list-ordered" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Ordem de Tabulação
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         <!-- Tab switcher: Specs | Acessibilidade -->
@@ -86,26 +102,13 @@
 
           <!-- Aba Acessibilidade — conteúdo renderizado por modules/accessibility.js -->
           <div id="specs-panel-a11y" class="hidden space-y-4">
-            <div class="grid grid-cols-2 gap-2">
-              <button type="button" onclick="openA11yModal('leitor-de-tela')"
-                class="flex flex-col items-center justify-center gap-1.5 py-3 px-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:border-[#0891B2]/50 hover:text-[#0891B2] transition-all">
-                <i data-lucide="volume-2" class="w-4 h-4" aria-hidden="true"></i>
-                Leitor de Tela
-              </button>
-              <button type="button" onclick="openA11yModal('ordem-tabulacao')"
-                class="flex flex-col items-center justify-center gap-1.5 py-3 px-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:border-[#0891B2]/50 hover:text-[#0891B2] transition-all">
-                <i data-lucide="list-ordered" class="w-4 h-4" aria-hidden="true"></i>
-                Ordem de Tabulação
-              </button>
-            </div>
-
             <div>
               <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-[0.15em] mb-3">Especificações de Acessibilidade</h4>
 
               <div id="hint-a11y-specs" class="mb-5 min-h-[76px] p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl border border-cyan-100 dark:border-cyan-800/30 flex gap-2">
                 <i data-lucide="info" class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5"></i>
                 <p class="text-[11px] text-cyan-800 dark:text-cyan-300 leading-tight">
-                  Selecione um elemento no canvas e escolha um dos tipos acima para criar uma especificação de acessibilidade.
+                  Selecione um elemento no canvas e toque em <strong>Nova spec A11y</strong> no topo para escolher o tipo de especificação.
                 </p>
               </div>
 

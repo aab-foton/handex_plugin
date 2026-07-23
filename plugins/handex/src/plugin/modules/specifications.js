@@ -49,6 +49,9 @@
 
       const fabForm = document.getElementById('specs-header-action-form');
       if (fabForm) fabForm.classList.toggle('hidden', isA11y);
+      const fabA11yWrap = document.getElementById('specs-header-action-a11y-wrap');
+      if (fabA11yWrap) fabA11yWrap.classList.toggle('hidden', !isA11y);
+      if (typeof closeA11yTypeMenu === 'function') closeA11yTypeMenu();
 
       if (isA11y && typeof renderA11ySpecsList === 'function') renderA11ySpecsList();
       _refreshIcons();

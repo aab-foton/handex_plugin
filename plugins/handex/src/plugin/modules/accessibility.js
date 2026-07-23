@@ -28,6 +28,57 @@ const A11Y_TYPES = {
 
 // ── Criação ──────────────────────────────────────────────────────────────
 
+// Botão "Nova spec A11y" no header abre este menu com os dois tipos, em vez
+// de criar diretamente — mesmo padrão de popover já usado em
+// toggleMeasureTypesHelp (measurement.js): fecha ao clicar fora ou Esc.
+function toggleA11yTypeMenu(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('a11y-type-menu');
+  const btn = document.getElementById('specs-header-action-a11y');
+  if (!menu) return;
+  const isOpen = !menu.classList.contains('hidden');
+  if (isOpen) {
+    closeA11yTypeMenu();
+    return;
+  }
+  menu.classList.remove('hidden');
+  if (btn) btn.setAttribute('aria-expanded', 'true');
+  const close = (ev) => {
+    const wrap = document.getElementById('specs-header-action-a11y-wrap');
+    if (!wrap || !wrap.contains(ev.target)) closeA11yTypeMenu();
+  };
+  const onEsc = (ev) => {
+    if (ev.key === 'Escape') closeA11yTypeMenu();
+  };
+  _a11yMenuCloseHandlers = { close, onEsc };
+  setTimeout(() => {
+    document.addEventListener('click', close, true);
+    document.addEventListener('keydown', onEsc, true);
+  }, 0);
+}
+window.toggleA11yTypeMenu = toggleA11yTypeMenu;
+
+let _a11yMenuCloseHandlers = null;
+
+function closeA11yTypeMenu() {
+  const menu = document.getElementById('a11y-type-menu');
+  const btn = document.getElementById('specs-header-action-a11y');
+  if (menu) menu.classList.add('hidden');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+  if (_a11yMenuCloseHandlers) {
+    document.removeEventListener('click', _a11yMenuCloseHandlers.close, true);
+    document.removeEventListener('keydown', _a11yMenuCloseHandlers.onEsc, true);
+    _a11yMenuCloseHandlers = null;
+  }
+}
+window.closeA11yTypeMenu = closeA11yTypeMenu;
+
+function chooseA11yType(subtype) {
+  closeA11yTypeMenu();
+  openA11yModal(subtype);
+}
+window.chooseA11yType = chooseA11yType;
+
 function openA11yModal(subtype) {
   const meta = A11Y_TYPES[subtype];
   if (!meta) return;
