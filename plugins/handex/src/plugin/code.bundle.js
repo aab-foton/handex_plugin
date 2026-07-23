@@ -1362,7 +1362,7 @@
           content.appendChild(annotSection);
           setFillAndHug(annotSection);
         }
-        const _A11Y_TYPE_LABEL = { "leitor-de-tela": "Leitor de Tela", "ordem-tabulacao": "Ordem de Tabula\xE7\xE3o" };
+        const _A11Y_TYPE_LABEL = { elemento: "Elementos e Imagens", titulo: "T\xEDtulo", decorativo: "Elemento Decorativo" };
         const _framesWithA11y = (_frames || []).filter((f) => (f.createdSpecs || []).some((s) => s && s.a11yType));
         if (_framesWithA11y.length > 0) {
           const a11ySection = createSection(content, "Especifica\xE7\xF5es de Acessibilidade");
@@ -2729,6 +2729,7 @@
         const themeColor2 = hexToRgb2(opts.color || "#005ca9");
         const themeFill = hexToRgb2(opts.fillColor || opts.color || "#EBF4FB");
         const _specSide = opts.guideSide || "right";
+        const _tagRadius = opts.a11yType ? 21 : 8;
         const specCard = figma.createFrame();
         specCard.name = "Spec Notes";
         specCard.layoutMode = "VERTICAL";
@@ -2755,7 +2756,7 @@
         tagCircle.primaryAxisSizingMode = "FIXED";
         tagCircle.counterAxisSizingMode = "FIXED";
         tagCircle.resize(42, 42);
-        tagCircle.cornerRadius = 8;
+        tagCircle.cornerRadius = _tagRadius;
         tagCircle.fills = [{ type: "SOLID", color: themeFill }];
         tagCircle.strokes = [{ type: "SOLID", color: themeColor2 }];
         tagCircle.strokeWeight = 1.5;
@@ -2931,7 +2932,7 @@
           chip.primaryAxisSizingMode = "FIXED";
           chip.counterAxisSizingMode = "FIXED";
           chip.resize(42, 42);
-          chip.cornerRadius = 8;
+          chip.cornerRadius = _tagRadius;
           chip.fills = [{ type: "SOLID", color: themeFill }];
           chip.strokes = [{ type: "SOLID", color: themeColor2 }];
           chip.strokeWeight = 1.5;
@@ -3202,6 +3203,52 @@
     if (msg.type === "show-node") {
       const node = await figma.getNodeByIdAsync(msg.id);
       if (node) node.visible = true;
+    }
+    if (msg.type === "get-selection-name") {
+      const sel = figma.currentPage.selection;
+      figma.ui.postMessage({ type: "selection-name", name: sel.length > 0 ? sel[0].name : null });
+    }
+    if (msg.type === "reorder-a11y-specs") {
+      (async () => {
+        const resolved = [];
+        for (const s of msg.specs || []) {
+          const node = await figma.getNodeByIdAsync(s.id);
+          if (!node || !node.absoluteBoundingBox) continue;
+          resolved.push({ id: s.id, node, bb: node.absoluteBoundingBox });
+        }
+        if (resolved.length === 0) {
+          figma.ui.postMessage({ type: "a11y-specs-reordered", mapping: [] });
+          return;
+        }
+        resolved.sort((a, b) => {
+          const dy = a.bb.y - b.bb.y;
+          if (Math.abs(dy) > 1) return dy;
+          return a.bb.x - b.bb.x;
+        });
+        try {
+          await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+        } catch (e) {
+        }
+        const mapping = [];
+        resolved.forEach((item, i) => {
+          const letter = String.fromCharCode(65 + i);
+          const specGroup = item.node;
+          const m = specGroup.name.match(/^\[Spec \| [A-Z]\d*(?:\.\d+)* \| ([a-z]+)\] (.*)$/);
+          const side = m ? m[1] : "right";
+          const targetName = m ? m[2] : specGroup.name;
+          specGroup.name = `[Spec | ${letter} | ${side}] ${targetName}`;
+          if ("findAll" in specGroup) {
+            const tagFrames = specGroup.findAll((n) => n.name === "Tag" || n.name === "Chip");
+            tagFrames.forEach((tagFrame) => {
+              const textNode = tagFrame.findOne ? tagFrame.findOne((n) => n.type === "TEXT") : null;
+              if (textNode) textNode.characters = letter;
+            });
+          }
+          mapping.push({ id: item.id, letter });
+        });
+        figma.ui.postMessage({ type: "a11y-specs-reordered", mapping });
+        figma.notify(`Ordem de acessibilidade atualizada (${mapping.length} especifica\xE7${mapping.length === 1 ? "\xE3o" : "\xF5es"}).`);
+      })();
     }
     if (msg.type === "hide-spec-lines") {
       const targetVisible = msg.forceState !== void 0 ? msg.forceState : false;

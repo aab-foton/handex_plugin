@@ -1221,7 +1221,7 @@ figma.ui.onmessage = async (msg) => {
       // 1.9b ESPECIFICAÇÕES DE ACESSIBILIDADE (seção independente — só aparece se
       // houver ao menos uma spec com a11yType em algum frame). Mesma origem de dados
       // (frame.createdSpecs / properties[]) que 1.9, só filtrada e rotulada diferente.
-      const _A11Y_TYPE_LABEL = { 'leitor-de-tela': 'Leitor de Tela', 'ordem-tabulacao': 'Ordem de Tabulação' };
+      const _A11Y_TYPE_LABEL = { elemento: 'Elementos e Imagens', titulo: 'Título', decorativo: 'Elemento Decorativo' };
       const _framesWithA11y = (_frames || []).filter(f => (f.createdSpecs || []).some(s => s && s.a11yType));
       if (_framesWithA11y.length > 0) {
         const a11ySection = createSection(content, "Especificações de Acessibilidade");
@@ -2853,6 +2853,11 @@ figma.ui.onmessage = async (msg) => {
 
       const _specSide = opts.guideSide || 'right';
 
+      // Selos de specs de Acessibilidade são círculos cheios no material de
+      // referência da vertical — quadrado arredondado (radius 8) continua
+      // sendo o padrão das specs normais, não mexer nisso globalmente.
+      const _tagRadius = opts.a11yType ? 21 : 8;
+
       // Create Spec Card
       const specCard = figma.createFrame();
       specCard.name = 'Spec Notes';
@@ -2883,7 +2888,7 @@ figma.ui.onmessage = async (msg) => {
       tagCircle.primaryAxisSizingMode = "FIXED";
       tagCircle.counterAxisSizingMode = "FIXED";
       tagCircle.resize(42, 42);
-      tagCircle.cornerRadius = 8;
+      tagCircle.cornerRadius = _tagRadius;
       tagCircle.fills = [{ type: "SOLID", color: themeFill }];
       tagCircle.strokes = [{ type: "SOLID", color: themeColor }];
       tagCircle.strokeWeight = 1.5;
@@ -3081,7 +3086,7 @@ figma.ui.onmessage = async (msg) => {
         chip.primaryAxisSizingMode = "FIXED";
         chip.counterAxisSizingMode = "FIXED";
         chip.resize(42, 42);
-        chip.cornerRadius = 8;
+        chip.cornerRadius = _tagRadius;
         chip.fills = [{ type: "SOLID", color: themeFill }];
         chip.strokes = [{ type: "SOLID", color: themeColor }];
         chip.strokeWeight = 1.5;
@@ -3401,6 +3406,63 @@ figma.ui.onmessage = async (msg) => {
   if (msg.type === "show-node") {
     const node = await figma.getNodeByIdAsync(msg.id);
     if (node) node.visible = true;
+  }
+
+  if (msg.type === "get-selection-name") {
+    const sel = figma.currentPage.selection;
+    figma.ui.postMessage({ type: "selection-name", name: sel.length > 0 ? sel[0].name : null });
+  }
+
+  // Reordenação automática das specs de Acessibilidade ("Atualizar Ordem",
+  // modules/accessibility.js). Recebe os ids dos specGroups já criados,
+  // ordena pela posição real no canvas (leitura natural: topo→base,
+  // esquerda→direita) e reatribui letras A, B, C... — namespace próprio,
+  // independente das specs normais. specGroups apontando pra nós apagados
+  // do canvas são ignorados sem travar os demais.
+  if (msg.type === "reorder-a11y-specs") {
+    (async () => {
+      const resolved = [];
+      for (const s of (msg.specs || [])) {
+        const node = await figma.getNodeByIdAsync(s.id);
+        if (!node || !node.absoluteBoundingBox) continue;
+        resolved.push({ id: s.id, node, bb: node.absoluteBoundingBox });
+      }
+      if (resolved.length === 0) {
+        figma.ui.postMessage({ type: "a11y-specs-reordered", mapping: [] });
+        return;
+      }
+
+      resolved.sort((a, b) => {
+        const dy = a.bb.y - b.bb.y;
+        if (Math.abs(dy) > 1) return dy;
+        return a.bb.x - b.bb.x;
+      });
+
+      try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
+
+      const mapping = [];
+      resolved.forEach((item, i) => {
+        const letter = String.fromCharCode(65 + i); // reordenação assume < 26 specs de a11y por tela
+        const specGroup = item.node;
+        const m = specGroup.name.match(/^\[Spec \| [A-Z]\d*(?:\.\d+)* \| ([a-z]+)\] (.*)$/);
+        const side = m ? m[1] : 'right';
+        const targetName = m ? m[2] : specGroup.name;
+        specGroup.name = `[Spec | ${letter} | ${side}] ${targetName}`;
+
+        if ('findAll' in specGroup) {
+          const tagFrames = specGroup.findAll(n => n.name === 'Tag' || n.name === 'Chip');
+          tagFrames.forEach(tagFrame => {
+            const textNode = tagFrame.findOne ? tagFrame.findOne(n => n.type === 'TEXT') : null;
+            if (textNode) textNode.characters = letter;
+          });
+        }
+
+        mapping.push({ id: item.id, letter });
+      });
+
+      figma.ui.postMessage({ type: "a11y-specs-reordered", mapping });
+      figma.notify(`Ordem de acessibilidade atualizada (${mapping.length} especificaç${mapping.length === 1 ? 'ão' : 'ões'}).`);
+    })();
   }
 
   if (msg.type === "hide-spec-lines") {

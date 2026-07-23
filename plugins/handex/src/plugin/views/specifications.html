@@ -28,14 +28,18 @@
                 <i data-lucide="accessibility" class="w-4 h-4 shrink-0"></i>
                 <span>Nova spec A11y</span>
               </button>
-              <div id="a11y-type-menu" class="hidden absolute right-0 top-full mt-2 w-52 z-50 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-xl p-1.5">
-                <button type="button" onclick="chooseA11yType('leitor-de-tela')"
+              <div id="a11y-type-menu" class="hidden absolute right-0 top-full mt-2 w-56 z-50 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-xl p-1.5">
+                <button type="button" onclick="chooseA11yType('elemento')"
                   class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
-                  <i data-lucide="volume-2" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Leitor de Tela
+                  <i data-lucide="image" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Elementos e Imagens
                 </button>
-                <button type="button" onclick="chooseA11yType('ordem-tabulacao')"
+                <button type="button" onclick="chooseA11yType('titulo')"
                   class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
-                  <i data-lucide="list-ordered" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Ordem de Tabulação
+                  <i data-lucide="heading" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Título
+                </button>
+                <button type="button" onclick="chooseA11yType('decorativo')"
+                  class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
+                  <i data-lucide="ban" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Elemento Decorativo
                 </button>
               </div>
             </div>
@@ -103,7 +107,14 @@
           <!-- Aba Acessibilidade — conteúdo renderizado por modules/accessibility.js -->
           <div id="specs-panel-a11y" class="hidden space-y-4">
             <div>
-              <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-[0.15em] mb-3">Especificações de Acessibilidade</h4>
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-[0.15em]">Especificações de Acessibilidade</h4>
+                <button id="btn-reorder-a11y-specs" type="button" onclick="reorderA11ySpecs()"
+                  title="Recalcular a ordem de leitura (A, B, C...) pela posição de cada elemento no canvas"
+                  class="hidden text-[11px] font-bold text-slate-500 hover:text-[#0891B2] dark:text-slate-500 dark:hover:text-cyan-300 transition-colors flex items-center gap-1">
+                  <i data-lucide="arrow-down-up" class="w-3.5 h-3.5"></i> Atualizar Ordem
+                </button>
+              </div>
 
               <div id="hint-a11y-specs" class="mb-5 min-h-[76px] p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl border border-cyan-100 dark:border-cyan-800/30 flex gap-2">
                 <i data-lucide="info" class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5"></i>

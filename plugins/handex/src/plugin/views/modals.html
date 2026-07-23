@@ -663,37 +663,69 @@
           Selecione o elemento no canvas antes de confirmar — a especificação será conectada a ele, como qualquer outra spec.
         </p>
 
-        <!-- Leitor de Tela -->
-        <div id="a11y-fields-screenreader" class="hidden space-y-4">
+        <!-- Elementos e Imagens -->
+        <div id="a11y-fields-elemento" class="hidden space-y-4">
           <div>
-            <label for="a11y-sr-label" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Label</label>
-            <input type="text" id="a11y-sr-label" placeholder="Ex: Botão de enviar formulário"
+            <label for="a11y-el-componente" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Componente</label>
+            <input type="text" id="a11y-el-componente" placeholder="Ex: Botão primário"
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
           </div>
           <div>
-            <label for="a11y-sr-role" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Role</label>
-            <input type="text" id="a11y-sr-role" placeholder="Ex: button, checkbox, tab..."
+            <label for="a11y-el-variante" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Variante <span class="normal-case font-medium text-slate-400">(opcional)</span></label>
+            <input type="text" id="a11y-el-variante" placeholder="Ex: Desabilitado, Selecionado..."
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
           </div>
           <div>
-            <label for="a11y-sr-hint" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Hint</label>
-            <input type="text" id="a11y-sr-hint" placeholder="Ex: Envia o formulário preenchido"
+            <label for="a11y-el-label" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Label (accessibilityLabel)</label>
+            <input type="text" id="a11y-el-label" placeholder="Ex: Botão de enviar formulário"
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
           </div>
           <div>
-            <label for="a11y-sr-estado" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Estado</label>
-            <input type="text" id="a11y-sr-estado" placeholder="Ex: desabilitado, selecionado, expandido..."
+            <label for="a11y-el-hint" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Hint (accessibilityHint) <span class="normal-case font-medium text-slate-400">(opcional)</span></label>
+            <input type="text" id="a11y-el-hint" placeholder="Ex: Envia o formulário preenchido"
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+          </div>
+          <div>
+            <label for="a11y-el-obs" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Observações <span class="normal-case font-medium text-slate-400">(opcional)</span></label>
+            <input type="text" id="a11y-el-obs" placeholder="Ex: Deve anunciar o estado ao ser tocado"
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+          </div>
+          <div>
+            <label for="a11y-el-link" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Link do componente <span class="normal-case font-medium text-slate-400">(opcional)</span></label>
+            <input type="text" id="a11y-el-link" placeholder="https://..."
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
           </div>
         </div>
 
-        <!-- Ordem de Tabulação -->
-        <div id="a11y-fields-taborder" class="hidden space-y-4">
+        <!-- Título -->
+        <div id="a11y-fields-titulo" class="hidden space-y-4">
+          <div class="p-3 bg-gray-50 dark:bg-dark-bg rounded-xl border border-gray-200 dark:border-dark-line space-y-2.5">
+            <div>
+              <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição</p>
+              <p id="a11y-fixed-descricao" class="text-[12px] text-slate-700 dark:text-white leading-snug"></p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
+              <p id="a11y-fixed-nota" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
+            </div>
+          </div>
           <div>
-            <label for="a11y-to-ordem" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Ordem</label>
-            <input type="number" id="a11y-to-ordem" min="1" step="1" placeholder="Ex: 1"
+            <label for="a11y-titulo-obs" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Observações <span class="normal-case font-medium text-slate-400">(opcional)</span></label>
+            <input type="text" id="a11y-titulo-obs" placeholder="Ex: Nível de hierarquia H1"
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
-            <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-2 leading-tight">Posição do elemento na sequência de tabulação da tela.</p>
+          </div>
+        </div>
+
+        <!-- Elemento Decorativo -->
+        <div id="a11y-fields-decorativo" class="hidden space-y-4">
+          <div class="p-3 bg-gray-50 dark:bg-dark-bg rounded-xl border border-gray-200 dark:border-dark-line">
+            <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição</p>
+            <p id="a11y-fixed-descricao-dec" class="text-[12px] text-slate-700 dark:text-white leading-snug">Não deve ser anunciado pelo Leitor de Tela.</p>
+          </div>
+          <div>
+            <label for="a11y-decorativo-obs" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Observações <span class="normal-case font-medium text-slate-400">(opcional)</span></label>
+            <input type="text" id="a11y-decorativo-obs" placeholder="Ex: Ícone puramente ilustrativo"
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
           </div>
         </div>
       </div>

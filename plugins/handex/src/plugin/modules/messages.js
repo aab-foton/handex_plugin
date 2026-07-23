@@ -306,6 +306,30 @@
         }
       }
 
+      if (msg.type === "selection-name") {
+        if (typeof prefillA11yComponentName === 'function') prefillA11yComponentName(msg.name);
+      }
+
+      if (msg.type === "a11y-specs-reordered") {
+        const mapping = msg.mapping || [];
+        let found = false;
+        mapping.forEach(({ id, letter }) => {
+          (handoffData.frames || []).forEach(frame => {
+            (frame.createdSpecs || []).forEach(spec => {
+              if (spec && spec.id === id) { spec.letter = letter; found = true; }
+            });
+          });
+          createdSpecs.forEach(spec => {
+            if (spec && spec.id === id) { spec.letter = letter; found = true; }
+          });
+        });
+        if (found) {
+          if (typeof renderA11ySpecsList === 'function') renderA11ySpecsList();
+          saveSpecsToStorage();
+          showToast('Ordem de acessibilidade atualizada.');
+        }
+      }
+
       if (msg.type === "flow-created") {
         if (!handoffData.createdFlows) handoffData.createdFlows = [];
         handoffData.createdFlows.push(msg.flow);
