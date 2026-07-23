@@ -3199,45 +3199,23 @@ async function gerarSecaoAnatomia(
           }
         }
 
-        // Container de descrição: template legado usava um frame "Description" com um
-        // TextNode solto dentro. O template atual usa a instância "[dsc-hub] Card Alert"
-        // (protegida por desvincularTodasInstancias), com o texto visível em
-        // "Text Container" > "Text" (há também um "Title" oculto, não usado aqui).
-        const descricaoLegado = buscarFilho(elementoItem, "Description");
-        const cardAlert = !descricaoLegado
-          ? buscarFilhoSubstring(elementoItem, "card alert") as InstanceNode | null
-          : null;
+        // Container de descrição: TextNode solto "Description", irmão da instância
+        // "[dsc-hub] Card Alert" dentro do item de anatomia. O plugin só controla o
+        // "Description" (texto puro com a referência de nested component, quando existe).
+        // O "Card Alert" é anotação 100% manual do designer — o plugin nunca escreve
+        // nele nem mexe na visibilidade; só precisa garantir que ele acompanha o clone.
+        const descricao = buscarFilho(elementoItem, "Description");
 
-        if (descricaoLegado) {
-          const textoDesc = buscarPrimeiroTexto(descricaoLegado);
+        if (descricao) {
+          const textoDesc = buscarPrimeiroTexto(descricao);
           if (textoDesc) {
-            await carregarFontes(descricaoLegado);
+            await carregarFontes(descricao);
             const nomeElementoLimpo = limparNomeElementoAnatomia(elem.nome);
             if (elem.dependeDe) {
               textoDesc.characters = `Nested Component: ${elem.dependeDe}`;
             } else {
               textoDesc.characters = " ";
-              if ("visible" in descricaoLegado) (descricaoLegado as any).visible = false;
-            }
-            marcarTextoOriginal(textoDesc, `anatomy::${nomeElementoLimpo}::desc`);
-          }
-        } else if (cardAlert) {
-          const textoDesc = coletarTextos(cardAlert).find(t => t.visible && t.name.toLowerCase() !== "title");
-          if (textoDesc) {
-            await carregarFontes(cardAlert);
-            const nomeElementoLimpo = limparNomeElementoAnatomia(elem.nome);
-            if (elem.dependeDe) {
-              const textoFinal = `Nested Component: ${elem.dependeDe}`;
-              const chaveTexto = (textoDesc as any).componentPropertyReferences?.characters as string | undefined;
-              if (chaveTexto) {
-                try { cardAlert.setProperties({ [chaveTexto]: textoFinal }); }
-                catch { textoDesc.characters = textoFinal; }
-              } else {
-                textoDesc.characters = textoFinal;
-              }
-              cardAlert.visible = true;
-            } else {
-              cardAlert.visible = false;
+              if ("visible" in descricao) (descricao as any).visible = false;
             }
             marcarTextoOriginal(textoDesc, `anatomy::${nomeElementoLimpo}::desc`);
           }

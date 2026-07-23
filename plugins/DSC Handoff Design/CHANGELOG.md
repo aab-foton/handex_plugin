@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.3.3 — 2026-07-22
+
+### Correções
+
+- **Nested component aparecia dentro do Card Alert (caixa), invertendo o padrão de anotação da anatomia** — o template atual tem dois nós irmãos por elemento: "Description" (texto puro, controlado pelo plugin) e a instância `[dsc-hub] Card Alert` (anotação 100% manual do designer). Desde a v2.3.2, um branch de fallback passou a escrever `"Nested Component: X"` dentro do Card Alert e a alternar sua visibilidade conforme a propriedade, quando na verdade o Card Alert nunca deveria ser tocado pelo código. Removido esse branch; agora só o "Description" é gerenciado automaticamente, e o Card Alert é sempre clonado intacto com o conteúdo que o designer escreveu.
+
 ## v2.3.2 — 2026-07-15
 
 ### Correções
