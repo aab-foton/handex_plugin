@@ -35,6 +35,12 @@
       "language": "ts",
       "docs": "https://design.caixa/a11y",
       "notes": "Utilitários e wrappers de acessibilidade."
+    },
+    "Design Acessível | Super App (React Native)": {
+      "import": "@dsc/a11y-mobile",
+      "language": "ts",
+      "docs": "https://design.caixa/a11y-mobile",
+      "notes": "Utilitários e wrappers de acessibilidade para React Native (Super App)."
     }
   },
   "componentOverrides": {}
