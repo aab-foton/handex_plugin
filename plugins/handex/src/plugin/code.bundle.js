@@ -369,7 +369,7 @@
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
   var PLUGIN_VERSION = true ? "5.1.0-beta.1" : "dev";
-  function _writeSharedPluginData(data) {
+  async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
     const NS = "handex";
     try {
@@ -396,10 +396,10 @@
     } catch (e) {
       console.warn("[handex] setSharedPluginData(project) failed:", e);
     }
-    (data.frames || []).forEach((frame) => {
+    for (const frame of data.frames || []) {
       try {
-        const node = figma.getNodeById(frame.figmaId);
-        if (!node) return;
+        const node = await figma.getNodeByIdAsync(frame.figmaId);
+        if (!node) continue;
         node.setSharedPluginData(NS, "context", JSON.stringify({
           nome: frame.nome || "",
           isNewComponent: frame.isNewComponent || false,
@@ -412,10 +412,10 @@
         }));
       } catch (e) {
       }
-    });
+    }
   }
   figma.ui.onmessage = async (msg) => {
-    var _a;
+    var _a, _b;
     if (msg.type === "ui-ready") {
       const currentUser = figma.currentUser ? { id: figma.currentUser.id, name: figma.currentUser.name, photoUrl: figma.currentUser.photoUrl } : null;
       const theme = figma.ui.theme || "light";
@@ -449,7 +449,7 @@
       return;
     }
     if (msg.type === "refresh-spec-card") {
-      const grpNode = figma.getNodeById(msg.nodeId);
+      const grpNode = await figma.getNodeByIdAsync(msg.nodeId);
       if (!grpNode) {
         figma.ui.postMessage({ type: "toast", message: "Card n\xE3o encontrado no canvas.", kind: "error" });
         return;
@@ -819,17 +819,17 @@
         }
         const data = msg.data;
         let _pendingSpecsLocked = 0;
-        (data.frames || []).forEach((frame) => {
-          (frame.createdSpecs || []).forEach((spec) => {
-            if (!spec || !spec.pendingConfirmation) return;
-            const specNode = figma.getNodeById(spec.id);
+        for (const frame of data.frames || []) {
+          for (const spec of frame.createdSpecs || []) {
+            if (!spec || !spec.pendingConfirmation) continue;
+            const specNode = await figma.getNodeByIdAsync(spec.id);
             if (specNode && specNode.name && specNode.name.startsWith("[Spec | ")) {
               specNode.locked = true;
             }
             spec.pendingConfirmation = false;
             _pendingSpecsLocked++;
-          });
-        });
+          }
+        }
         if (_pendingSpecsLocked > 0) {
           figma.notify(`${_pendingSpecsLocked} especifica\xE7\xE3o(\xF5es) pendente(s) foram travadas automaticamente ao gerar a ficha.`);
         }
@@ -1238,7 +1238,7 @@
         const _framesWithSpecs = (_frames || []).filter((f) => (f.createdSpecs || []).length > 0);
         if (_framesWithSpecs.length > 0) {
           const annotSection = createSection(content, "Especifica\xE7\xF5es");
-          _framesWithSpecs.forEach((f) => {
+          for (const f of _framesWithSpecs) {
             const fGroup = createFrame("VERTICAL", 0, 10);
             fGroup.name = `[Specs] ${f.nome || "Frame"}`;
             annotSection.appendChild(fGroup);
@@ -1258,11 +1258,10 @@
               }
               specsByLetter[l].push(s);
             });
-            letterOrder.forEach((letter) => {
-              var _a2;
-              if (groupVisible[letter] === false) return;
+            for (const letter of letterOrder) {
+              if (groupVisible[letter] === false) continue;
               const groupSpecs = specsByLetter[letter];
-              const groupColor = ((_a2 = groupSpecs[0]) == null ? void 0 : _a2.color) ? hexToRgb2(groupSpecs[0].color) : { r: 0.38, g: 0.35, b: 0.75 };
+              const groupColor = ((_b = groupSpecs[0]) == null ? void 0 : _b.color) ? hexToRgb2(groupSpecs[0].color) : { r: 0.38, g: 0.35, b: 0.75 };
               const groupNameText = groupNames[letter] || "";
               const gBox = createFrame("VERTICAL", 0, 6);
               gBox.name = `[Grupo/${letter}] ${groupNameText || letter}`;
@@ -1297,7 +1296,7 @@
               gSpecs.fills = [];
               gBox.appendChild(gSpecs);
               setFillAndHug(gSpecs);
-              groupSpecs.forEach((s) => {
+              for (const s of groupSpecs) {
                 const catLabel = s.type || s.categoryLabel || s.category || "Geral";
                 const sc = s.color ? hexToRgb2(s.color) : { r: 0.38, g: 0.35, b: 0.75 };
                 const sRow = createFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.97, b: 1 });
@@ -1316,7 +1315,7 @@
                 if (s.link) {
                   sName.textDecoration = "UNDERLINE";
                   sName.hyperlink = { type: "URL", value: s.link };
-                } else if (s.id && figma.getNodeById(s.id)) {
+                } else if (s.id && await figma.getNodeByIdAsync(s.id)) {
                   sName.textDecoration = "UNDERLINE";
                   sName.hyperlink = { type: "NODE", value: s.id };
                 }
@@ -1357,9 +1356,9 @@
                     pRow.appendChild(pVal);
                   });
                 }
-              });
-            });
-          });
+              }
+            }
+          }
           content.appendChild(annotSection);
           setFillAndHug(annotSection);
         }
@@ -1747,7 +1746,7 @@
           const _mainFrames = data.frames || [];
           for (const _f of _mainFrames) {
             if (!_f.figmaId) continue;
-            const _fNode = figma.getNodeById(_f.figmaId);
+            const _fNode = await figma.getNodeByIdAsync(_f.figmaId);
             if (!_fNode) continue;
             const _fBb = _fNode.absoluteBoundingBox;
             if (_fBb) {
@@ -2020,7 +2019,7 @@
       };
       let selection;
       if (msg.nodeId) {
-        const specificNode = figma.getNodeById(msg.nodeId);
+        const specificNode = await figma.getNodeByIdAsync(msg.nodeId);
         selection = specificNode ? [specificNode] : [];
       } else {
         selection = figma.currentPage.selection;
@@ -2363,7 +2362,7 @@
         const items = Array.from(map.values());
         for (const item of items) {
           if (item.nodeId) {
-            const node = figma.getNodeById(item.nodeId);
+            const node = await figma.getNodeByIdAsync(item.nodeId);
             if (node && "exportAsync" in node) {
               previewPromises.push(
                 node.exportAsync({ format: "PNG", constraint: { type: "SCALE", value: 1 } }).then((bytes) => {
@@ -2433,7 +2432,7 @@
     }
     if (msg.type === "remove-measurement") {
       try {
-        const node = figma.getNodeById(msg.nodeId);
+        const node = await figma.getNodeByIdAsync(msg.nodeId);
         if (node) {
           node.remove();
           figma.notify("Medida removida.");
@@ -2446,7 +2445,7 @@
     }
     if (msg.type === "reapply-measurements") {
       const { frameId, measurements } = msg;
-      const frameNode = figma.getNodeById(frameId);
+      const frameNode = await figma.getNodeByIdAsync(frameId);
       if (!frameNode) {
         figma.notify("Frame n\xE3o encontrado no canvas.");
         return;
@@ -2635,7 +2634,7 @@
         const opts = msg.opts;
         let node = null;
         if (opts.targetNodeId) {
-          node = figma.getNodeById(opts.targetNodeId);
+          node = await figma.getNodeByIdAsync(opts.targetNodeId);
         }
         if (!node) {
           const selection = figma.currentPage.selection;
@@ -3058,7 +3057,7 @@
       })();
     }
     if (msg.type === "lock-spec") {
-      const specNode = figma.getNodeById(msg.specId);
+      const specNode = await figma.getNodeByIdAsync(msg.specId);
       if (specNode && specNode.name && specNode.name.startsWith("[Spec | ")) {
         specNode.locked = true;
         figma.ui.postMessage({ type: "spec-locked", specId: msg.specId });
@@ -3072,7 +3071,7 @@
         }
         activeHighlightNode = null;
       }
-      const node = figma.getNodeById(msg.id);
+      const node = await figma.getNodeByIdAsync(msg.id);
       if (node && node.visible && _nodeOnCurrentPage(node)) {
         if (msg.selectNode !== false) {
           figma.currentPage.selection = [node];
@@ -3117,7 +3116,7 @@
       }
     }
     if (msg.type === "hide-node") {
-      const node = figma.getNodeById(msg.id);
+      const node = await figma.getNodeByIdAsync(msg.id);
       if (node) {
         if (msg.forceState !== void 0) {
           node.visible = msg.forceState;
@@ -3127,30 +3126,30 @@
       }
     }
     if (msg.type === "show-node") {
-      const node = figma.getNodeById(msg.id);
+      const node = await figma.getNodeByIdAsync(msg.id);
       if (node) node.visible = true;
     }
     if (msg.type === "hide-spec-lines") {
       const targetVisible = msg.forceState !== void 0 ? msg.forceState : false;
-      (msg.specIds || []).forEach((specId) => {
-        const specGroup = figma.getNodeById(specId);
-        if (!specGroup || !("findChildren" in specGroup)) return;
+      for (const specId of msg.specIds || []) {
+        const specGroup = await figma.getNodeByIdAsync(specId);
+        if (!specGroup || !("findChildren" in specGroup)) continue;
         const lineNodes = specGroup.findChildren((n) => n.name === "Conector" || n.name === "DotInicio" || n.name === "DotFim");
         lineNodes.forEach((n) => {
           n.visible = targetVisible;
         });
-      });
+      }
     }
     if (msg.type === "unlock-spec-group") {
       const targetLocked = msg.locked !== void 0 ? msg.locked : false;
-      (msg.specIds || []).forEach((specId) => {
-        const specGroup = figma.getNodeById(specId);
-        if (!specGroup) return;
+      for (const specId of msg.specIds || []) {
+        const specGroup = await figma.getNodeByIdAsync(specId);
+        if (!specGroup) continue;
         specGroup.locked = targetLocked;
-      });
+      }
     }
     if (msg.type === "rename-node") {
-      const node = figma.getNodeById(msg.id);
+      const node = await figma.getNodeByIdAsync(msg.id);
       if (node) {
         node.name = msg.name;
         if (node.type === "GROUP" || node.type === "FRAME" || node.type === "COMPONENT" || node.type === "INSTANCE") {
@@ -3178,7 +3177,7 @@
         try {
           await figma.loadFontAsync({ family: "Inter", style: "Regular" });
           await figma.loadFontAsync({ family: "Inter", style: "Bold" });
-          const specNode = figma.getNodeById(msg.specNodeId);
+          const specNode = await figma.getNodeByIdAsync(msg.specNodeId);
           if (!specNode) {
             figma.notify("Frame de spec n\xE3o encontrado", { error: true });
             return;
@@ -3220,7 +3219,7 @@
       })();
     }
     if (msg.type === "delete-node") {
-      const node = figma.getNodeById(msg.id);
+      const node = await figma.getNodeByIdAsync(msg.id);
       if (node) {
         node.remove();
         figma.notify("Item exclu\xEDdo com sucesso");
@@ -3237,10 +3236,10 @@
       figma.clientStorage.setAsync("handoffData", msg.data).catch((err) => {
         console.warn("Storage save failed (possibly missing plugin ID in manifest):", err);
       });
-      _writeSharedPluginData(msg.data);
+      await _writeSharedPluginData(msg.data);
     }
     if (msg.type === "focus-node") {
-      const node = figma.getNodeById(msg.id);
+      const node = await figma.getNodeByIdAsync(msg.id);
       if (node && _nodeOnCurrentPage(node)) {
         figma.currentPage.selection = [node];
         figma.viewport.scrollAndZoomIntoView([node]);

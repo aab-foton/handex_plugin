@@ -102,7 +102,7 @@ const PLUGIN_VERSION = (typeof __HANDEX_VERSION__ !== 'undefined') ? __HANDEX_VE
 // Usa setSharedPluginData (namespace 'handex') para que agentes externos
 // (MCP, REST API) consigam ler o contexto de negócio embutido nos nodes.
 // setPluginData seria sandboxed ao plugin ID — inacessível externamente.
-function _writeSharedPluginData(data) {
+async function _writeSharedPluginData(data) {
   const NS = 'handex';
   try {
     // Contexto do projeto na página atual
@@ -130,11 +130,11 @@ function _writeSharedPluginData(data) {
     console.warn('[handex] setSharedPluginData(project) failed:', e);
   }
 
-  // Contexto por frame — getNodeById é O(1), não percorre a árvore
-  (data.frames || []).forEach(frame => {
+  // Contexto por frame — getNodeByIdAsync é O(1), não percorre a árvore
+  for (const frame of (data.frames || [])) {
     try {
-      const node = figma.getNodeById(frame.figmaId);
-      if (!node) return;
+      const node = await figma.getNodeByIdAsync(frame.figmaId);
+      if (!node) continue;
       node.setSharedPluginData(NS, 'context', JSON.stringify({
         nome:           frame.nome           || '',
         isNewComponent: frame.isNewComponent || false,
@@ -148,7 +148,7 @@ function _writeSharedPluginData(data) {
     } catch (e) {
       // Node pode ter sido deletado — ignorar silenciosamente
     }
-  });
+  }
 }
 
 figma.ui.onmessage = async (msg) => {
@@ -189,7 +189,7 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === 'refresh-spec-card') {
-    const grpNode = figma.getNodeById(msg.nodeId);
+    const grpNode = await figma.getNodeByIdAsync(msg.nodeId);
     if (!grpNode) { figma.ui.postMessage({ type: 'toast', message: 'Card não encontrado no canvas.', kind: 'error' }); return; }
     // Find the spec card frame inside the group (nome atual 'Spec Notes', legado 'Ficha' ou '.../Ficha')
     const children = grpNode.type === 'GROUP' ? grpNode.children : [grpNode];
@@ -438,17 +438,17 @@ figma.ui.onmessage = async (msg) => {
       // Fallback de segurança: trava specs pendentes de confirmação de posicionamento
       // antes de gerar a ficha, para não deixar grupos editáveis esquecidos no canvas.
       let _pendingSpecsLocked = 0;
-      (data.frames || []).forEach(frame => {
-        (frame.createdSpecs || []).forEach(spec => {
-          if (!spec || !spec.pendingConfirmation) return;
-          const specNode = figma.getNodeById(spec.id);
+      for (const frame of (data.frames || [])) {
+        for (const spec of (frame.createdSpecs || [])) {
+          if (!spec || !spec.pendingConfirmation) continue;
+          const specNode = await figma.getNodeByIdAsync(spec.id);
           if (specNode && specNode.name && specNode.name.startsWith('[Spec | ')) {
             specNode.locked = true;
           }
           spec.pendingConfirmation = false;
           _pendingSpecsLocked++;
-        });
-      });
+        }
+      }
       if (_pendingSpecsLocked > 0) {
         figma.notify(`${_pendingSpecsLocked} especificação(ões) pendente(s) foram travadas automaticamente ao gerar a ficha.`);
       }
@@ -1079,7 +1079,7 @@ figma.ui.onmessage = async (msg) => {
       const _framesWithSpecs = (_frames || []).filter(f => (f.createdSpecs || []).length > 0);
       if (_framesWithSpecs.length > 0) {
         const annotSection = createSection(content, "Especificações");
-        _framesWithSpecs.forEach(f => {
+        for (const f of _framesWithSpecs) {
           const fGroup = createFrame("VERTICAL", 0, 10);
           fGroup.name = `[Specs] ${f.nome || 'Frame'}`;
           annotSection.appendChild(fGroup);
@@ -1099,8 +1099,8 @@ figma.ui.onmessage = async (msg) => {
             specsByLetter[l].push(s);
           });
 
-          letterOrder.forEach(letter => {
-            if (groupVisible[letter] === false) return; // grupo oculto
+          for (const letter of letterOrder) {
+            if (groupVisible[letter] === false) continue; // grupo oculto
             const groupSpecs = specsByLetter[letter];
             const groupColor = groupSpecs[0]?.color ? hexToRgb(groupSpecs[0].color) : { r: 0.38, g: 0.35, b: 0.75 };
             const groupNameText = groupNames[letter] || '';
@@ -1144,7 +1144,7 @@ figma.ui.onmessage = async (msg) => {
             gBox.appendChild(gSpecs);
             setFillAndHug(gSpecs);
 
-            groupSpecs.forEach(s => {
+            for (const s of groupSpecs) {
               const catLabel = s.type || s.categoryLabel || s.category || 'Geral';
               const sc = s.color ? hexToRgb(s.color) : { r: 0.38, g: 0.35, b: 0.75 };
               const sRow = createFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.97, b: 1 });
@@ -1165,7 +1165,7 @@ figma.ui.onmessage = async (msg) => {
               if (s.link) {
                 sName.textDecoration = "UNDERLINE";
                 sName.hyperlink = { type: "URL", value: s.link };
-              } else if (s.id && figma.getNodeById(s.id)) {
+              } else if (s.id && await figma.getNodeByIdAsync(s.id)) {
                 sName.textDecoration = "UNDERLINE";
                 sName.hyperlink = { type: "NODE", value: s.id };
               }
@@ -1209,9 +1209,9 @@ figma.ui.onmessage = async (msg) => {
                   pRow.appendChild(pVal);
                 });
               }
-            });
-          });
-        });
+            }
+          }
+        }
         content.appendChild(annotSection);
         setFillAndHug(annotSection);
       }
@@ -1679,7 +1679,7 @@ figma.ui.onmessage = async (msg) => {
         const _mainFrames = data.frames || [];
         for (const _f of _mainFrames) {
           if (!_f.figmaId) continue;
-          const _fNode = figma.getNodeById(_f.figmaId);
+          const _fNode = await figma.getNodeByIdAsync(_f.figmaId);
           if (!_fNode) continue;
           const _fBb = _fNode.absoluteBoundingBox;
           if (_fBb) {
@@ -2036,7 +2036,7 @@ figma.ui.onmessage = async (msg) => {
     // Se veio um nodeId específico, usa ele; senão usa a seleção atual do canvas
     let selection;
     if (msg.nodeId) {
-      const specificNode = figma.getNodeById(msg.nodeId);
+      const specificNode = await figma.getNodeByIdAsync(msg.nodeId);
       selection = specificNode ? [specificNode] : [];
     } else {
       selection = figma.currentPage.selection;
@@ -2466,7 +2466,7 @@ figma.ui.onmessage = async (msg) => {
       const items = Array.from(map.values());
       for (const item of items) {
         if (item.nodeId) {
-          const node = figma.getNodeById(item.nodeId);
+          const node = await figma.getNodeByIdAsync(item.nodeId);
           if (node && 'exportAsync' in node) {
             previewPromises.push(
               node.exportAsync({ format: 'PNG', constraint: { type: 'SCALE', value: 1 } })
@@ -2543,7 +2543,7 @@ figma.ui.onmessage = async (msg) => {
 
   if (msg.type === "remove-measurement") {
     try {
-      const node = figma.getNodeById(msg.nodeId);
+      const node = await figma.getNodeByIdAsync(msg.nodeId);
       if (node) {
         node.remove();
         figma.notify("Medida removida.");
@@ -2557,7 +2557,7 @@ figma.ui.onmessage = async (msg) => {
 
   if (msg.type === "reapply-measurements") {
     const { frameId, measurements } = msg;
-    const frameNode = figma.getNodeById(frameId);
+    const frameNode = await figma.getNodeByIdAsync(frameId);
     if (!frameNode) {
       figma.notify("Frame não encontrado no canvas.");
       return;
@@ -2750,7 +2750,7 @@ figma.ui.onmessage = async (msg) => {
       // Suporte a targetNodeId (spec gerada a partir de exceção de frame)
       let node = null;
       if (opts.targetNodeId) {
-        node = figma.getNodeById(opts.targetNodeId);
+        node = await figma.getNodeByIdAsync(opts.targetNodeId);
       }
       if (!node) {
         const selection = figma.currentPage.selection;
@@ -3243,7 +3243,7 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === "lock-spec") {
-    const specNode = figma.getNodeById(msg.specId);
+    const specNode = await figma.getNodeByIdAsync(msg.specId);
     if (specNode && specNode.name && specNode.name.startsWith('[Spec | ')) {
       specNode.locked = true;
       figma.ui.postMessage({ type: "spec-locked", specId: msg.specId });
@@ -3257,7 +3257,7 @@ figma.ui.onmessage = async (msg) => {
       activeHighlightNode = null;
     }
 
-    const node = figma.getNodeById(msg.id);
+    const node = await figma.getNodeByIdAsync(msg.id);
     if (node && node.visible && _nodeOnCurrentPage(node)) {
       if (msg.selectNode !== false) {
         figma.currentPage.selection = [node];
@@ -3302,7 +3302,7 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === "hide-node") {
-    const node = figma.getNodeById(msg.id);
+    const node = await figma.getNodeByIdAsync(msg.id);
     if (node) {
       if (msg.forceState !== undefined) {
         node.visible = msg.forceState;
@@ -3313,31 +3313,31 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === "show-node") {
-    const node = figma.getNodeById(msg.id);
+    const node = await figma.getNodeByIdAsync(msg.id);
     if (node) node.visible = true;
   }
 
   if (msg.type === "hide-spec-lines") {
     const targetVisible = msg.forceState !== undefined ? msg.forceState : false;
-    (msg.specIds || []).forEach(specId => {
-      const specGroup = figma.getNodeById(specId);
-      if (!specGroup || !('findChildren' in specGroup)) return;
+    for (const specId of (msg.specIds || [])) {
+      const specGroup = await figma.getNodeByIdAsync(specId);
+      if (!specGroup || !('findChildren' in specGroup)) continue;
       const lineNodes = specGroup.findChildren(n => n.name === 'Conector' || n.name === 'DotInicio' || n.name === 'DotFim');
       lineNodes.forEach(n => { n.visible = targetVisible; });
-    });
+    }
   }
 
   if (msg.type === "unlock-spec-group") {
     const targetLocked = msg.locked !== undefined ? msg.locked : false;
-    (msg.specIds || []).forEach(specId => {
-      const specGroup = figma.getNodeById(specId);
-      if (!specGroup) return;
+    for (const specId of (msg.specIds || [])) {
+      const specGroup = await figma.getNodeByIdAsync(specId);
+      if (!specGroup) continue;
       specGroup.locked = targetLocked;
-    });
+    }
   }
 
   if (msg.type === 'rename-node') {
-    const node = figma.getNodeById(msg.id);
+    const node = await figma.getNodeByIdAsync(msg.id);
     if (node) {
       node.name = msg.name;
       // Se for um grupo ou frame, tenta encontrar um texto interno para atualizar também
@@ -3368,7 +3368,7 @@ figma.ui.onmessage = async (msg) => {
       try {
         await figma.loadFontAsync({ family: "Inter", style: "Regular" });
         await figma.loadFontAsync({ family: "Inter", style: "Bold" });
-        const specNode = figma.getNodeById(msg.specNodeId);
+        const specNode = await figma.getNodeByIdAsync(msg.specNodeId);
         if (!specNode) { figma.notify("Frame de spec não encontrado", { error: true }); return; }
 
         const obsFrame = figma.createFrame();
@@ -3410,7 +3410,7 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === "delete-node") {
-    const node = figma.getNodeById(msg.id);
+    const node = await figma.getNodeByIdAsync(msg.id);
     if (node) {
       node.remove();
       figma.notify("Item excluído com sucesso");
@@ -3426,11 +3426,11 @@ figma.ui.onmessage = async (msg) => {
     figma.clientStorage.setAsync('handoffData', msg.data).catch(err => {
       console.warn("Storage save failed (possibly missing plugin ID in manifest):", err);
     });
-    _writeSharedPluginData(msg.data);
+    await _writeSharedPluginData(msg.data);
   }
 
   if (msg.type === 'focus-node') {
-    const node = figma.getNodeById(msg.id);
+    const node = await figma.getNodeByIdAsync(msg.id);
     if (node && _nodeOnCurrentPage(node)) {
       figma.currentPage.selection = [node];
       figma.viewport.scrollAndZoomIntoView([node]);
