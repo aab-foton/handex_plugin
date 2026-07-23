@@ -1235,7 +1235,7 @@
           content.appendChild(measSection);
           setFillAndHug(measSection);
         }
-        const _framesWithSpecs = (_frames || []).filter((f) => (f.createdSpecs || []).length > 0);
+        const _framesWithSpecs = (_frames || []).filter((f) => (f.createdSpecs || []).some((s) => s && !s.a11yType));
         if (_framesWithSpecs.length > 0) {
           const annotSection = createSection(content, "Especifica\xE7\xF5es");
           for (const f of _framesWithSpecs) {
@@ -1250,7 +1250,7 @@
             const groupVisible = f.specGroupVisible || {};
             const letterOrder = [];
             const specsByLetter = {};
-            (f.createdSpecs || []).forEach((s) => {
+            (f.createdSpecs || []).filter((s) => s && !s.a11yType).forEach((s) => {
               const l = s.letter || "A";
               if (!specsByLetter[l]) {
                 specsByLetter[l] = [];
@@ -1361,6 +1361,76 @@
           }
           content.appendChild(annotSection);
           setFillAndHug(annotSection);
+        }
+        const _A11Y_TYPE_LABEL = { "leitor-de-tela": "Leitor de Tela", "ordem-tabulacao": "Ordem de Tabula\xE7\xE3o" };
+        const _framesWithA11y = (_frames || []).filter((f) => (f.createdSpecs || []).some((s) => s && s.a11yType));
+        if (_framesWithA11y.length > 0) {
+          const a11ySection = createSection(content, "Especifica\xE7\xF5es de Acessibilidade");
+          for (const f of _framesWithA11y) {
+            const fGroup = createFrame("VERTICAL", 0, 10);
+            fGroup.name = `[A11y] ${f.nome || "Frame"}`;
+            a11ySection.appendChild(fGroup);
+            setFillAndHug(fGroup);
+            const fLabel = createText(f.nome || "Frame", 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
+            fGroup.appendChild(fLabel);
+            setFillAndHug(fLabel);
+            const a11ySpecs = (f.createdSpecs || []).filter((s) => s && s.a11yType);
+            const aSpecs = createFrame("VERTICAL", 0, 6);
+            aSpecs.fills = [];
+            fGroup.appendChild(aSpecs);
+            setFillAndHug(aSpecs);
+            for (const s of a11ySpecs) {
+              const subtypeLabel = _A11Y_TYPE_LABEL[s.a11yType] || "Acessibilidade";
+              const sc = s.color ? hexToRgb2(s.color) : { r: 0.03, g: 0.57, b: 0.7 };
+              const scBg2 = s.fillColor ? hexToRgb2(s.fillColor) : { r: 0.88, g: 0.96, b: 0.98 };
+              const sRow = createFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.99, b: 0.99 });
+              sRow.name = `[A11y/${s.letter || "A"}] ${s.name || "Spec"}`;
+              sRow.cornerRadius = 8;
+              sRow.strokes = [{ type: "SOLID", color: sc }];
+              aSpecs.appendChild(sRow);
+              setFillAndHug(sRow);
+              const sTop = createFrame("HORIZONTAL", 0, 6);
+              sTop.counterAxisAlignItems = "CENTER";
+              sRow.appendChild(sTop);
+              setFillAndHug(sTop);
+              const sName = createText(s.name || "Spec", 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+              sName.layoutGrow = 1;
+              sTop.appendChild(sName);
+              if (s.id && await figma.getNodeByIdAsync(s.id)) {
+                sName.textDecoration = "UNDERLINE";
+                sName.hyperlink = { type: "NODE", value: s.id };
+              }
+              const sTypeTag = createFrame("HORIZONTAL", 6, 3, scBg2);
+              sTypeTag.cornerRadius = 999;
+              sTypeTag.strokes = [{ type: "SOLID", color: sc }];
+              sTypeTag.strokeWeight = 1;
+              sTop.appendChild(sTypeTag);
+              setFillAndHug(sTypeTag);
+              sTypeTag.appendChild(createText(subtypeLabel, 9, "Medium", sc));
+              const _props = s.properties || [];
+              if (_props.length > 0) {
+                const propsFrame = createFrame("VERTICAL", 0, 3);
+                propsFrame.fills = [];
+                setFillAndHug(propsFrame);
+                sRow.appendChild(propsFrame);
+                _props.forEach((prop) => {
+                  const pRow = createFrame("HORIZONTAL", 8, 4, { r: 0.93, g: 0.97, b: 0.98 });
+                  pRow.cornerRadius = 4;
+                  pRow.counterAxisAlignItems = "CENTER";
+                  setFillAndHug(pRow);
+                  propsFrame.appendChild(pRow);
+                  const pKey = createText(prop.label || prop.key || "", 9, "Regular", { r: 0.35, g: 0.4, b: 0.5 });
+                  pKey.layoutGrow = 1;
+                  pRow.appendChild(pKey);
+                  const pVal = createText(String(prop.value || ""), 9, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+                  setFillAndHug(pVal);
+                  pRow.appendChild(pVal);
+                });
+              }
+            }
+          }
+          content.appendChild(a11ySection);
+          setFillAndHug(a11ySection);
         }
         const _flows = data.createdFlows || [];
         if (_flows.length > 0) {
@@ -3050,7 +3120,11 @@
             cardX: _absCardX,
             cardY: _absCardY,
             cardW: _absCardW,
-            cardH: _absCardH
+            cardH: _absCardH,
+            // --- Acessibilidade --- diferencia "Leitor de Tela" / "Ordem de Tabulação"
+            // (aba Acessibilidade em Anotar Specs, modules/accessibility.js). Passthrough
+            // simples: nenhum schema paralelo, reaproveita a mesma spec/properties[].
+            a11yType: opts.a11yType || null
           }
         });
         figma.notify("Especifica\xE7\xE3o criada \u2014 arraste para posicionar. Clique em Concluir quando pronto.");

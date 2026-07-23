@@ -21,6 +21,40 @@
       return false;
     }
 
+    // ── Switcher de aba: Specs | Acessibilidade ──────────────────────────
+    // Conteúdo da aba Acessibilidade é renderizado por modules/accessibility.js
+    // (renderA11ySpecsList, openA11yModal etc.) — este switcher só troca a
+    // visibilidade dos painéis e delega a renderização.
+    function switchSpecsMainTab(tab) {
+      const isA11y = tab === 'acessibilidade';
+      const panelMain = document.getElementById('specs-form');
+      const panelA11y = document.getElementById('specs-panel-a11y');
+      if (panelMain) panelMain.classList.toggle('hidden', isA11y);
+      if (panelA11y) panelA11y.classList.toggle('hidden', !isA11y);
+
+      const btnSpecs = document.getElementById('specs-maintab-specs');
+      const btnA11y = document.getElementById('specs-maintab-a11y');
+      if (btnSpecs) {
+        btnSpecs.classList.toggle('bg-white/20', !isA11y);
+        btnSpecs.classList.toggle('text-white', !isA11y);
+        btnSpecs.classList.toggle('text-white/70', isA11y);
+        btnSpecs.setAttribute('aria-selected', String(!isA11y));
+      }
+      if (btnA11y) {
+        btnA11y.classList.toggle('bg-white/20', isA11y);
+        btnA11y.classList.toggle('text-white', isA11y);
+        btnA11y.classList.toggle('text-white/70', !isA11y);
+        btnA11y.setAttribute('aria-selected', String(isA11y));
+      }
+
+      const fabForm = document.getElementById('specs-header-action-form');
+      if (fabForm) fabForm.classList.toggle('hidden', isA11y);
+
+      if (isA11y && typeof renderA11ySpecsList === 'function') renderA11ySpecsList();
+      _refreshIcons();
+    }
+    window.switchSpecsMainTab = switchSpecsMainTab;
+
     function scanFrame(frameId, categories = null, selectedLibSlugs = null) {
       if (frameId) activeFrameId = frameId;
 
@@ -500,7 +534,7 @@
 
       const grouped = {};
       specsData.forEach((spec, idx) => {
-        if (!spec) return;
+        if (!spec || spec.a11yType) return; // specs de Acessibilidade têm painel próprio (ver accessibility.js)
         const letter = spec.letter || '?';
         if (!grouped[letter]) grouped[letter] = [];
         grouped[letter].push({ ...spec, _idx: idx });

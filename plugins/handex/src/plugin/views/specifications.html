@@ -25,6 +25,17 @@
             </button>
           </div>
         </div>
+        <!-- Tab switcher: Specs | Acessibilidade -->
+        <div class="flex items-center gap-1 mt-2.5 bg-white/10 rounded-xl p-1" role="tablist" aria-label="Tipo de especificação">
+          <button type="button" id="specs-maintab-specs" onclick="switchSpecsMainTab('specs')" role="tab" aria-selected="true" aria-controls="specs-form"
+            class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors bg-white/20 text-white">
+            <i data-lucide="file-text" class="w-3.5 h-3.5" aria-hidden="true"></i> Specs
+          </button>
+          <button type="button" id="specs-maintab-a11y" onclick="switchSpecsMainTab('acessibilidade')" role="tab" aria-selected="false" aria-controls="specs-panel-a11y"
+            class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors text-white/70 hover:text-white">
+            <i data-lucide="accessibility" class="w-3.5 h-3.5" aria-hidden="true"></i> Acessibilidade
+          </button>
+        </div>
       </div>
 
       <!-- Scrollable content -->
@@ -58,7 +69,7 @@
                   </button>
                 </div>
               </div>
-              
+
               <!-- Instrução discreta -->
               <div id="hint-specs" class="mb-5 min-h-[76px] p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-2">
                 <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5"></i>
@@ -66,9 +77,40 @@
                   Selecione um elemento no canvas e toque no botão <strong>+</strong> no topo para criar uma especificação.
                 </p>
               </div>
-              
+
               <ul id="specs-results" class="flex flex-col gap-2 min-h-[50px]">
                 <!-- List of accordions will be rendered here -->
+              </ul>
+            </div>
+          </div>
+
+          <!-- Aba Acessibilidade — conteúdo renderizado por modules/accessibility.js -->
+          <div id="specs-panel-a11y" class="hidden space-y-4">
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" onclick="openA11yModal('leitor-de-tela')"
+                class="flex flex-col items-center justify-center gap-1.5 py-3 px-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:border-[#0891B2]/50 hover:text-[#0891B2] transition-all">
+                <i data-lucide="volume-2" class="w-4 h-4" aria-hidden="true"></i>
+                Leitor de Tela
+              </button>
+              <button type="button" onclick="openA11yModal('ordem-tabulacao')"
+                class="flex flex-col items-center justify-center gap-1.5 py-3 px-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:border-[#0891B2]/50 hover:text-[#0891B2] transition-all">
+                <i data-lucide="list-ordered" class="w-4 h-4" aria-hidden="true"></i>
+                Ordem de Tabulação
+              </button>
+            </div>
+
+            <div>
+              <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-[0.15em] mb-3">Especificações de Acessibilidade</h4>
+
+              <div id="hint-a11y-specs" class="mb-5 min-h-[76px] p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl border border-cyan-100 dark:border-cyan-800/30 flex gap-2">
+                <i data-lucide="info" class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5"></i>
+                <p class="text-[11px] text-cyan-800 dark:text-cyan-300 leading-tight">
+                  Selecione um elemento no canvas e escolha um dos tipos acima para criar uma especificação de acessibilidade.
+                </p>
+              </div>
+
+              <ul id="a11y-specs-results" class="flex flex-col gap-2 min-h-[50px]">
+                <!-- Preenchido por renderA11ySpecsList() em modules/accessibility.js -->
               </ul>
             </div>
           </div>

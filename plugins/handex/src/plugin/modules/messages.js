@@ -275,6 +275,8 @@
           createdSpecs.push(newSpec);
           renderSpecsList();
         }
+        // --- Acessibilidade --- specs de a11y têm painel próprio na aba "Acessibilidade"
+        if (typeof renderA11ySpecsList === 'function') renderA11ySpecsList();
         saveSpecsToStorage();
         if (window._toastSaved) _toastSaved();
         showToast('Especificação criada — arraste para posicionar e conclua o posicionamento.');
@@ -299,6 +301,7 @@
         if (found) {
           if (activeFrameId && typeof renderSpecsListForFrame === 'function') renderSpecsListForFrame(activeFrameId);
           if (typeof renderSpecsList === 'function') renderSpecsList();
+          if (typeof renderA11ySpecsList === 'function') renderA11ySpecsList();
           saveSpecsToStorage();
         }
       }

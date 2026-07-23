@@ -643,6 +643,67 @@
       </div>
     </div>
   </div>
+
+  <!-- MODAL: ACESSIBILIDADE (Leitor de Tela / Ordem de Tabulação) -->
+  <!-- Controlado por modules/accessibility.js: openA11yModal, closeA11yModal, confirmA11ySpec -->
+  <div id="a11y-spec-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeA11yModal()" aria-hidden="true"></div>
+    <div class="relative w-full max-w-sm bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line">
+        <h3 id="a11y-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
+          <i data-lucide="accessibility" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i>
+          <span id="a11y-modal-title-text">Especificação de Acessibilidade</span>
+        </h3>
+        <button onclick="closeA11yModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto max-h-[80vh]" onscroll="handleScroll(this)">
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted mb-5 leading-relaxed">
+          Selecione o elemento no canvas antes de confirmar — a especificação será conectada a ele, como qualquer outra spec.
+        </p>
+
+        <!-- Leitor de Tela -->
+        <div id="a11y-fields-screenreader" class="hidden space-y-4">
+          <div>
+            <label for="a11y-sr-label" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Label</label>
+            <input type="text" id="a11y-sr-label" placeholder="Ex: Botão de enviar formulário"
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+          </div>
+          <div>
+            <label for="a11y-sr-role" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Role</label>
+            <input type="text" id="a11y-sr-role" placeholder="Ex: button, checkbox, tab..."
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+          </div>
+          <div>
+            <label for="a11y-sr-hint" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Hint</label>
+            <input type="text" id="a11y-sr-hint" placeholder="Ex: Envia o formulário preenchido"
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+          </div>
+          <div>
+            <label for="a11y-sr-estado" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Estado</label>
+            <input type="text" id="a11y-sr-estado" placeholder="Ex: desabilitado, selecionado, expandido..."
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+          </div>
+        </div>
+
+        <!-- Ordem de Tabulação -->
+        <div id="a11y-fields-taborder" class="hidden space-y-4">
+          <div>
+            <label for="a11y-to-ordem" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Ordem</label>
+            <input type="number" id="a11y-to-ordem" min="1" step="1" placeholder="Ex: 1"
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+            <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-2 leading-tight">Posição do elemento na sequência de tabulação da tela.</p>
+          </div>
+        </div>
+      </div>
+      <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
+        <button onclick="closeA11yModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Cancelar</button>
+        <button onclick="confirmA11ySpec()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 rounded-2xl transition-colors shadow-lg shadow-cyan-500/20">Criar Especificação</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: MEASUREMENT FORM -->
   <div id="measure-form-modal" role="dialog" aria-modal="true" aria-labelledby="measure-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
     <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeMeasureModal()" aria-hidden="true"></div>

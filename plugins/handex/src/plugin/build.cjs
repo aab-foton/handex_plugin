@@ -30,6 +30,7 @@ const modCore    = read('modules/core.js');
 const modHandoff = read('modules/handoff.js');
 const modMeasure = read('modules/measurement.js');
 const modSpecs   = read('modules/specifications.js');
+const modA11y    = read('modules/accessibility.js');
 const modData    = read('modules/design-data.js');
 const modMsgs    = read('modules/messages.js');
 
@@ -215,6 +216,11 @@ ${modMeasure}
 // MODULE: specifications.js
 // ============================================================
 ${modSpecs}
+
+// ============================================================
+// MODULE: accessibility.js
+// ============================================================
+${modA11y}
 
 // ============================================================
 // MODULE: design-data.js
