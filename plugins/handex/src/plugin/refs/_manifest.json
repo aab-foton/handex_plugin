@@ -65,6 +65,19 @@
         "effects": 0,
         "components": 293
       }
+    },
+    {
+      "slug": "design-acessivel-mobile",
+      "name": "Design Acessível | Super App (React Native)",
+      "fileKey": "3zdtN13YvPlCGPdXeL0Y2i",
+      "file": "design-acessivel-mobile.json",
+      "counts": {
+        "variables": 0,
+        "colors": 0,
+        "typography": 0,
+        "effects": 0,
+        "components": 0
+      }
     }
   ]
 }
