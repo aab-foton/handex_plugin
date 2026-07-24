@@ -292,6 +292,116 @@
     return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
   }
 
+  // src/plugin/refs/design-acessivel-content.json
+  var design_acessivel_content_default = {
+    _meta: {
+      description: "Conte\xFAdo real extra\xEDdo do arquivo Figma da biblioteca 'Design Acess\xEDvel' (fileKey Wy0IhXRVZMSOOr8E609UqI) via REST API \u2014 n\xE3o \xE9 gerado por fetch-design-refs.cjs porque esse script s\xF3 pega name/key/description do endpoint /components (achatado, sem \xE1rvore de n\xF3s). Este arquivo cobre o conte\xFAdo INTERNO dos componentes completos ('[a11y] Box specs LT', se\xE7\xE3o 'Specs - Estrutura [Handoff]') e dos cat\xE1logos de sub-variantes usados dentro deles. Extra\xEDdo em 2026-07-23. Se a lib for reestruturada no Figma, os node-ids/keys abaixo podem quebrar \u2014 revalidar via REST API antes de confiar cegamente.",
+      fileKey: "Wy0IhXRVZMSOOr8E609UqI",
+      extractedAt: "2026-07-23"
+    },
+    categories: {
+      elemento: {
+        label: "Elementos interativos e imagens",
+        color: "#FCBE05",
+        badge: "letter-manual",
+        wrapperComponentKey: "f1bf785a343f191cff72e702d68a27a3a97f0ee9",
+        wrapperNodeId: "31:545",
+        note: "O wrapper cont\xE9m uma instance filha (property 'componente') do component set [N\xC3O UTILIZAR][a11y base] em 'Specs - Componentes, \xEDcones e imagens[Handoff]' (node 51:1282). Trocar o tipo de componente documentado = nestedInstance.setProperties({componente: '<valor>'}).",
+        componentes: {
+          accordion: { descricao: "Identificar como button e ler o seu r\xF3tulo vis\xEDvel em tela.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: 'O t\xEDtulo de cada cabe\xE7alho do accordion deve ser atrelado em um elemento com a role="button\u201D, considerar tamb\xE9m o status do painel como expandindo ou recolhido com o atributo aria-expanded.' },
+          breadcrumb: { descricao: "Agrupar e identificar como link, deve ler o seu r\xF3tulo vis\xEDvel em tela.", observacoes: "Insira seu texto da observa\xE7\xE3o." },
+          button: { descricao: "Identificar como button e ler o seu r\xF3tulo vis\xEDvel em tela.", observacoes: "Insira seu texto da observa\xE7\xE3o." },
+          checkbox: { descricao: "Identificar como checkbox.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: 'Em HTML, identificar o status do componente como desmarcado com o atributo aria-checked="false". Deve-se tamb\xE9m inserir aria-label para adicionar um nome acess\xEDvel ao elemento.', nomeAcessivel: "Inserir o seguinte nome acess\xEDvel no elemento: [insira aqui o nome acess\xEDvel]." },
+          dialog: { descricao: "Identificar como dialog e anunciar o t\xEDtulo seguido do conte\xFAdo assim que o componente for apresentado em tela.", observacoes: "As tecnologias assistivas devem ser informadas que as janelas cobertas pelo dialog n\xE3o estar\xE3o dispon\xEDveis para intera\xE7\xE3o.", notasCodigo: "Em HTML \xE9 necess\xE1rio atrelar os seguintes atributos ao componente: aria-labelledby, aria-describedby e aria-modal." },
+          inputs: { descricao: "Agrupar e identificar como textbox.", observacoes: "A exibi\xE7\xE3o no Leitor de Tela deve seguir a sequ\xEAncia l\xF3gica dos elementos - da esquerda pra direita e de cima para baixo. Caso o campo seja obrigat\xF3rio, essa informa\xE7\xE3o deve ser anunciada junto." },
+          link: { descricao: "Identificar como link e ler o seu r\xF3tulo vis\xEDvel em tela.", observacoes: "Insira seu texto da observa\xE7\xE3o." },
+          listas: { descricao: "Construir como lista ordenada.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: "Em HTML utilize a tag <ol>." },
+          paginator: { descricao: "Identificar como combobox e ler a quantidade de itens por p\xE1gina, sele\xE7\xE3o atual e o status do componente como recolhido ou expandido.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: "Em HTML, identificar o status do componente como \u201Cexpandido\u201D ou \u201Crecolhido\u201D com aria-expanded. Utilizar aria-labelledby para indicar o elemento que rotula a caixa de combina\xE7\xE3o e aria-controls para definir que o componente funciona como um pop-up.", nomeAcessivel: "Inserir o seguinte nome acess\xEDvel no elemento: [insira aqui o nome acess\xEDvel]." },
+          "radio button": { descricao: "Identificar como radio button.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: 'Identificar o status do componente como marcado ou desmarcado com o atributo aria-checked="true" ou "false". Deve-se tamb\xE9m, inserir aria-label para adicionar um nome acess\xEDvel ao elemento.', nomeAcessivel: "Inserir o seguinte nome acess\xEDvel no elemento: [insira aqui o nome acess\xEDvel]." },
+          snackbar: { descricao: "Identificar como alert, deve interromper outros processos e anunciar o conte\xFAdo da notifica\xE7\xE3o sem mover o foco para ele.", observacoes: "Em caso de aplica\xE7\xE3o do snackbar com o action, o foco desse elemento deve ser o \xFAltimo em toda interface.", notasCodigo: 'Em HTML, o atributo aria-live="assertive" est\xE1 impl\xEDcito na fun\xE7\xE3o de alerta.' },
+          stepper: { descricao: "Agrupar e identificar como tab. Deve-se ler o seu r\xF3tulo vis\xEDvel junto de sua localiza\xE7\xE3o no grupo. A exemplo: \u201C1 de 3\u201D. Tamb\xE9m considerar o status do elemento como \u201Cselecionado\u201D.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: 'Em HTML, deve ser fornecido a role="tablist" por padr\xE3o, role="tab" quando selecionado e role="tabpanel" quando expandindo. O atributo aria-selected \xE9 definido automaticamente com base na altera\xE7\xE3o da sele\xE7\xE3o.' },
+          switch: { descricao: "Identificar como switch.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: 'Identificar o status do componente como marcado ou desmarcado com o atributo aria-checked="true" ou "false". Deve-se tamb\xE9m, inserir aria-label para adicionar um nome acess\xEDvel ao elemento.', nomeAcessivel: "Inserir o seguinte nome acess\xEDvel no elemento: [insira aqui o nome acess\xEDvel]." },
+          table: { descricao: "Identificar como table e ler a sua estrutura com a quantidade de linhas e colunas.", observacoes: "A leitura da c\xE9lula deve estar atrelada ao cabe\xE7alho da coluna ou da linha, seguindo a ordem: conte\xFAdo do cabe\xE7alho + conte\xFAdo da c\xE9lula.", notasCodigo: 'Inserir o atributo aria-label em HTML para adicionar um nome acess\xEDvel e aria-describedby="IDREF" referindo-se a legenda para a tabela.' },
+          "tab group": { descricao: 'Agrupar e identificar como tab. Deve-se ler o seu r\xF3tulo vis\xEDvel junto de sua localiza\xE7\xE3o no grupo. A exemplo: \u201C1 de 3\u201D. Tamb\xE9m considerar o status do componente quando estiver "selecionado".', observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: 'Em HTML, deve ser fornecido a role="tablist" por padr\xE3o, role="tab" quando selecionado e role="tabpanel" quando expandindo. O atributo aria-selected \xE9 definido automaticamente com base na altera\xE7\xE3o da sele\xE7\xE3o.' },
+          imagem: { descricao: "Inserir o seguinte texto alternativo no elemento: [insira aqui o texto alternativo].", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: "Insira seu texto com as anota\xE7\xF5es necess\xE1rias para o pessoal de desenvolvimento." }
+        }
+      },
+      estrutura: {
+        label: "Estrutura da p\xE1gina",
+        color: "#EF765E",
+        badge: "letter-manual + \xEDcone de estrela",
+        wrapperComponentKey: "4caf7476f773df94921ebfb0f264789adaff5958",
+        wrapperNodeId: "31:547",
+        note: "Mais aninhado: o wrapper referencia um combo com property 'variacao' (idiomas / marco de navegacao / titulo da pagina); 'marco de navegacao' por sua vez tem outro n\xEDvel com property 'tipo' (header/nav/main/aside/footer/customiz\xE1vel).",
+        subtipos: {
+          idiomas: {
+            "da pagina": { descricao: "Indicar o idioma predominante da p\xE1gina como: [insira aqui o idioma].", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: 'Em HTML Insira o atributo lang e defina o idioma principal da p\xE1gina, por exemplo: Para portugu\xEAs do Brasil: <html lang="pt-br">. Para ingl\xEAs: <html lang="en">. Para espanhol: <html lang="es">.' },
+            "das partes": { descricao: "Indicar a(s) palavras(s) em um idioma.", observacoes: "Elementos que contenham texto num idioma diferente do idioma principal da p\xE1gina devem estar declarados no HTML.", notasCodigo: 'Em HTML, use o atributo lang para declarar o conte\xFAdo circundante como links ou outras partes do texto. Exemplos: \n<p>Este \xE9 um par\xE1grafo em portugu\xEAs.</p> <a href="https://example.com" lang="en">Link em ingl\xEAs</a> \n<p>Aqui temos um exemplo de <span lang="fr">bonjour</span>, que significa "ol\xE1" em franc\xEAs.</p>' }
+          },
+          "marco de navegacao": {
+            header: { descricao: "Indicar como cabe\xE7alho.", observacoes: "\xC9 um elemento que ajuda a organizar o conte\xFAdo da p\xE1gina, fornecendo uma estrutura clara e sem\xE2ntica.", notasCodigo: "Em HTML use a tag <header> para um cabe\xE7alho de uma se\xE7\xE3o ou p\xE1gina." },
+            nav: { descricao: "Indicar como navega\xE7\xE3o.", observacoes: "Com a tag <nav> os Leitores de Tela anunciam que a se\xE7\xE3o \xE9 uma navega\xE7\xE3o para que a pessoa usu\xE1ria identifique que \xE9 uma sequ\xEAncia de links.", notasCodigo: "Em HTML use a tag <nav> para agrupar os link." },
+            main: { descricao: "Indicar o conte\xFAdo como principal da p\xE1gina.", observacoes: "O elemento <main> deve ser o conte\xFAdo mais importante e exclusivo da p\xE1gina.", notasCodigo: "Em HTML <main> n\xE3o deve ser usado dentro de elementos como <article>, <aside>, <footer>, <header> ou <nav>." },
+            aside: { descricao: "Indicar como se\xE7\xE3o.", observacoes: "O conte\xFAdo da <aside> enriquece a experi\xEAncia com o Leitor de Tela e s\xE3o complementares \xE0 navega\xE7\xE3o principal.", notasCodigo: 'Em HTML <aside> possui um significado sem\xE2ntico, indicando que o conte\xFAdo \xE9 "\xE0 parte", mas relacionado.' },
+            footer: { descricao: "Indicar como rodap\xE9.", observacoes: "\xC9 um elemento que oferece um local centralizado para informa\xE7\xF5es importantes para serem acessadas facilmente.", notasCodigo: "Em HTML use a tag <footer> para agrupar informa\xE7\xF5es relacionadas \xE0 parte inferior de uma p\xE1gina ou se\xE7\xE3o." }
+          },
+          "titulo da pagina": {
+            descricao: "Definir o t\xEDtulo p\xE1gina como: [insira aqui o t\xEDtulo].",
+            observacoes: "\xC9 necess\xE1rio garantir que cada p\xE1gina tenha um t\xEDtulo descritivo, o t\xEDtulo da interface \xE9 diferente do H1.",
+            notasCodigo: 'Definir usando a tag <title> no HTML.\nex: <!DOCTYPE html>\n<html lang="pt-BR">\n<head>\n  <meta charset="UTF-8">\n  <title>T\xEDtulo da p\xE1gina</title>\n</head>\n<body>\n  <h1>N\xEDvel de t\xEDtulo</h1>\n  <!-- conte\xFAdo da p\xE1gina -->\n</body>\n</html>'
+          },
+          customizavel: { descricao: "Insira seu texto da descri\xE7\xE3o.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: "Insira seu texto com as anota\xE7\xF5es necess\xE1rias para o pessoal de desenvolvimento." }
+        }
+      },
+      titulo: {
+        label: "N\xEDvel de t\xEDtulo",
+        color: "#AFCA0B",
+        badge: "H1-H6 (n\xE3o sequencial, um selo fixo por n\xEDvel escolhido)",
+        wrapperComponentKey: "777297433b69f67325878b4398ed510b379b8bac",
+        wrapperNodeId: "31:551",
+        note: "O wrapper cont\xE9m uma instance filha (property 'nivel': h1..h6) do component set [N\xC3O UTILIZAR][a11y base] 'niveis de titulo'. Mobile (React Native) n\xE3o distingue n\xEDveis \u2014 usa s\xF3 'H' fixo, sem swap de property; Web usa H1-H6 reais com este cat\xE1logo.",
+        niveis: {
+          h1: { descricao: "Identificar como t\xEDtulo de n\xEDvel 1.", observacoes: "Geralmente s\xF3 \xE9 utilizado um <h1> por p\xE1gina." },
+          h2: { descricao: "Identificar como t\xEDtulo de n\xEDvel 2.", observacoes: "\xC9 um sub-assunto da <h1>." },
+          h3: { descricao: "Identificar como t\xEDtulo de n\xEDvel 3.", observacoes: "\xC9 um sub-assunto da <h2>." },
+          h4: { descricao: "Identificar como t\xEDtulo de n\xEDvel 4.", observacoes: "\xC9 um sub-assunto da <h3>." },
+          h5: { descricao: "Identificar como t\xEDtulo de n\xEDvel 5.", observacoes: "\xC9 um sub-assunto da <h4>." },
+          h6: { descricao: "Identificar como t\xEDtulo de n\xEDvel 6.", observacoes: "\xC9 um sub-assunto da <h5>." }
+        },
+        mobile: {
+          badgeFixo: "H",
+          descricao: "Identificar como t\xEDtulo.",
+          notaCodigo: 'accessibilityRole="header"'
+        }
+      },
+      decorativo: {
+        label: "Elemento decorativo",
+        color: "#D93636",
+        badge: "\xEDcone vetor (n\xE3o \xE9 letra)",
+        wrapperComponentKey: "9ee625ccf363ab5cd28bb89d443aeb1c6317a869",
+        wrapperNodeId: "31:553",
+        note: "Dois sub-conjuntos: 'ED gerais' (variacao=gerais) e 'ED imagem' (variacao=imagem) \u2014 praticamente a mesma Descri\xE7\xE3o, Notas de C\xF3digo diferentes.",
+        subtipos: {
+          gerais: { descricao: "N\xE3o deve ser anunciado pelo Leitor de Tela.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: "Insira seu texto com as anota\xE7\xF5es necess\xE1rias para o pessoal de desenvolvimento." },
+          imagem: { descricao: "N\xE3o deve ser anunciado pelo Leitor de Tela.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: 'Em HTML utilize o atributo alt="" com o valor vazio.' }
+        }
+      },
+      informacoes: {
+        label: "Informa\xE7\xF5es adicionais",
+        color: "#F39200",
+        badge: "letter-manual",
+        wrapperComponentKey: "80b43b74348e2db8cd1f28dda241cac7ed220b2f",
+        wrapperNodeId: "31:555",
+        note: "Sem 'Notas de C\xF3digo' \u2014 s\xF3 Descri\xE7\xE3o + Observa\xE7\xF5es.",
+        subtipos: {
+          handoffs: { descricao: "Especificado no handoff: [insira aqui o link ou nome do handoff].", observacoes: "Insira seu texto da observa\xE7\xE3o." },
+          "conteudo extra": { descricao: "Saiba mais em: [insira aqui o link ou nome do conte\xFAdo].", observacoes: "Insira seu texto da observa\xE7\xE3o." },
+          customizavel: { descricao: "Insira seu texto da descri\xE7\xE3o.", observacoes: "Insira seu texto da observa\xE7\xE3o." }
+        }
+      }
+    }
+  };
+
   // src/plugin/code.js
   figma.showUI(__html__, { width: 480, height: 750 });
   var activeHighlightNode = null;
@@ -340,11 +450,229 @@
     }
     return 0;
   }
+  function _findNestedInstanceWithAnyProp(root, propNameCandidates) {
+    if (root.type === "INSTANCE" && root.componentProperties) {
+      for (const candidate of propNameCandidates) {
+        const key = Object.keys(root.componentProperties).find(
+          (k) => k.split("#")[0].toLowerCase() === candidate.toLowerCase()
+        );
+        if (key) return { instance: root, key };
+      }
+    }
+    if ("children" in root) {
+      for (const child of root.children) {
+        const found = _findNestedInstanceWithAnyProp(child, propNameCandidates);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+  function _findTextNodeByCurrentValue(root, value) {
+    if (root.type === "TEXT" && root.characters === value) return root;
+    if ("children" in root) {
+      for (const child of root.children) {
+        const found = _findTextNodeByCurrentValue(child, value);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+  function _bestEffortSyncA11yBadgeLetter(root, letter) {
+    try {
+      const byName = root.findOne ? root.findOne((n) => n.type === "TEXT" && /tag|selo|letra/i.test(n.name)) : null;
+      const target = byName || root.findOne((n) => n.type === "TEXT" && /^[A-Z]\d*(\.\d+)*$/.test(n.characters));
+      if (target) {
+        figma.loadFontAsync(target.fontName).then(() => {
+          target.characters = letter;
+        }).catch(() => {
+        });
+      }
+    } catch (e) {
+    }
+  }
+  async function _tryImportA11yComponent(opts) {
+    const type = opts.a11yType;
+    const catData = design_acessivel_content_default.categories[type];
+    if (!catData || !catData.wrapperComponentKey) throw new Error("a11y-sem-wrapper-key: " + type);
+    const sub = opts.a11ySubtype || {};
+    let defaultEntry = null;
+    let propCandidates = null;
+    let propValue = null;
+    if (type === "elemento") {
+      if (sub.isOutro || !sub.componente) throw new Error("a11y-elemento-outro-sem-componente-real");
+      defaultEntry = catData.componentes[sub.componente];
+      if (!defaultEntry) throw new Error("a11y-elemento-componente-desconhecido: " + sub.componente);
+      propCandidates = ["componente"];
+      propValue = sub.componente;
+    } else if (type === "titulo") {
+      if (sub.nivel === "mobile") throw new Error("a11y-titulo-mobile-sem-variante-real");
+      defaultEntry = catData.niveis && catData.niveis[sub.nivel];
+      if (!defaultEntry) throw new Error("a11y-titulo-nivel-desconhecido: " + sub.nivel);
+      propCandidates = ["nivel"];
+      propValue = sub.nivel;
+    } else if (type === "decorativo") {
+      defaultEntry = catData.subtipos && catData.subtipos[sub.tipo];
+      if (!defaultEntry) throw new Error("a11y-decorativo-subtipo-desconhecido: " + sub.tipo);
+      propCandidates = ["variacao", "tipo"];
+      propValue = sub.tipo;
+    } else if (type === "informacoes") {
+      if (sub.subtipo === "customizavel") throw new Error("a11y-informacoes-customizavel-sem-variante-real");
+      defaultEntry = catData.subtipos && catData.subtipos[sub.subtipo];
+      if (!defaultEntry) throw new Error("a11y-informacoes-subtipo-desconhecido: " + sub.subtipo);
+      propCandidates = ["tipo", "subtipo", "variacao"];
+      propValue = sub.subtipo;
+    } else if (type === "estrutura") {
+      if (sub.variacao !== "idiomas" && sub.variacao !== "marco de navegacao" && sub.variacao !== "titulo da pagina") {
+        throw new Error("a11y-estrutura-variacao-sem-import-real: " + sub.variacao);
+      }
+      propCandidates = ["variacao"];
+      propValue = sub.variacao;
+      if (sub.variacao === "idiomas") {
+        defaultEntry = catData.subtipos.idiomas && catData.subtipos.idiomas[sub.idioma];
+        if (!defaultEntry) throw new Error("a11y-estrutura-idioma-desconhecido: " + sub.idioma);
+      } else if (sub.variacao === "marco de navegacao") {
+        if (sub.tipo === "customizavel") throw new Error("a11y-estrutura-marco-customizavel-sem-conteudo-catalogado");
+        defaultEntry = catData.subtipos["marco de navegacao"] && catData.subtipos["marco de navegacao"][sub.tipo];
+        if (!defaultEntry) throw new Error("a11y-estrutura-marco-desconhecido: " + sub.tipo);
+      } else {
+        defaultEntry = catData.subtipos["titulo da pagina"];
+      }
+    } else {
+      throw new Error("a11y-tipo-sem-import-real: " + type);
+    }
+    const wrapperComponent = await figma.importComponentByKeyAsync(catData.wrapperComponentKey);
+    const instance = wrapperComponent.createInstance();
+    const found = _findNestedInstanceWithAnyProp(instance, propCandidates);
+    if (!found) {
+      instance.remove();
+      throw new Error("a11y-instancia-aninhada-nao-encontrada: prop~=" + propCandidates.join("|"));
+    }
+    console.log("[a11y-import] propriedade encontrada:", found.key, JSON.stringify(instance.componentProperties));
+    try {
+      found.instance.setProperties({ [found.key]: propValue });
+    } catch (e) {
+      instance.remove();
+      throw new Error("a11y-set-properties-falhou: " + (e && e.message ? e.message : e));
+    }
+    if (type === "estrutura" && sub.variacao !== "titulo da pagina") {
+      const nestedValue = sub.variacao === "idiomas" ? sub.idioma : sub.tipo;
+      const nestedFound = _findNestedInstanceWithAnyProp(found.instance, ["tipo"]);
+      if (!nestedFound) {
+        instance.remove();
+        throw new Error("a11y-estrutura-instancia-tipo-nao-encontrada");
+      }
+      try {
+        nestedFound.instance.setProperties({ [nestedFound.key]: nestedValue });
+      } catch (e) {
+        instance.remove();
+        throw new Error("a11y-estrutura-set-tipo-falhou: " + (e && e.message ? e.message : e));
+      }
+    }
+    if (type === "estrutura" && opts.letter) {
+      const letterFound = _findNestedInstanceWithAnyProp(instance, ["letter"]);
+      if (letterFound) {
+        try {
+          letterFound.instance.setProperties({ [letterFound.key]: opts.letter });
+        } catch (e) {
+        }
+      }
+    }
+    const _infoLines = (opts.properties || []).filter((p) => p && p.value && p.key !== "descricao" && p.key !== "notasCodigo").map((p) => `${p.label}: ${p.value}`).join("\n");
+    if (_infoLines && defaultEntry.observacoes) {
+      const obsNode = _findTextNodeByCurrentValue(instance, defaultEntry.observacoes);
+      if (obsNode) {
+        try {
+          await figma.loadFontAsync(obsNode.fontName);
+          obsNode.characters = _infoLines;
+        } catch (e) {
+        }
+      }
+    }
+    if ((type === "elemento" || type === "informacoes") && opts.letter) {
+      _bestEffortSyncA11yBadgeLetter(instance, opts.letter);
+    }
+    return instance;
+  }
+  var A11Y_AGRUPAMENTO_KEYS = {
+    elemento: {
+      direita: "1a32480d314943f85d5bf48e97beda44be37233b",
+      esquerda: "918dc37577a8ba0b0b9b421bbfa4c0e831696b7a",
+      superior: "e58a10ad987b3cc2feb7c7acf4b77e4e132c0b62",
+      inferior: "f70dae1493341f9839a3a2e11b93855ddb78192b"
+    },
+    decorativo: {
+      direita: "db8057dd5440ba35593fed4823b6b0746d2a5d3a",
+      esquerda: "a638d41c126fc85074ecfb6b5c013ded77a7ca30",
+      superior: "625a28708db4453614eb3d18f2163f53a01738fc",
+      inferior: "a8abbf67336b205d944ec2a97a62879c7f8a378e"
+    },
+    estrutura: {
+      direita: "2f62f4c09d769578d3c5f9f7c42de94ea4b5a559",
+      esquerda: "0736255a49a164a93dbe5913925e8cd94474c102",
+      superior: "cb88b4fe2d7a34fa5db191e1e29e99a462eaa88e",
+      inferior: "d1de84d4afe1d169d51471b049e3b55191319b72"
+    },
+    titulo: {
+      direita: "4df3d05e26dd4168c7d7de71fe689515c9b1895c",
+      esquerda: "5b759c2904110d3c60891be859e24f64d15833e9",
+      superior: "75e44fd1fc2f346fdaa7c6c59a9af09356bb045f",
+      inferior: "f18bae60d1e9109c2ecd1b3c5e49bacdb3c6267a"
+    },
+    informacoes: {
+      direita: "42eafe50b7b07e5cdacbbc1845c05af877768337",
+      esquerda: "b1155ae94b549e7de188458b1289b8ba476af73d",
+      superior: "060a2f17dff2dc489fcb1620404eda5269b5e182",
+      inferior: "faa943c3ccdec90b2fb06e6e58aaaa9ba0cbb867"
+    }
+  };
+  var _A11Y_SIDE_TO_ORIENTACAO = { left: "esquerda", right: "direita", top: "superior", bottom: "inferior" };
+  async function _tryImportA11yAgrupamento(opts) {
+    const orientacao = _A11Y_SIDE_TO_ORIENTACAO[opts.guideSide || "right"];
+    const typeKeys = A11Y_AGRUPAMENTO_KEYS[opts.a11yType];
+    if (!typeKeys) throw new Error("a11y-agrupamento-tipo-desconhecido: " + opts.a11yType);
+    const key = typeKeys[orientacao];
+    if (!key) throw new Error("a11y-agrupamento-orientacao-desconhecida: " + orientacao);
+    const component = await figma.importComponentByKeyAsync(key);
+    const instance = component.createInstance();
+    instance.name = "Agrupamento";
+    if (opts.letter) {
+      try {
+        instance.setProperties({ "letra#3925:32": opts.letter });
+      } catch (e) {
+      }
+    }
+    return instance;
+  }
+  var A11Y_SECTION_NAME = "Especifica\xE7\xF5es de Acessibilidade";
+  function _getOrCreateA11ySection() {
+    let section = figma.currentPage.children.find(
+      (n) => n.type === "SECTION" && n.name === A11Y_SECTION_NAME
+    );
+    if (!section) {
+      section = figma.createSection();
+      section.name = A11Y_SECTION_NAME;
+      section.x = 0;
+      section.y = 0;
+      section.resizeWithoutConstraints(200, 200);
+    }
+    return section;
+  }
+  function _reparentIntoA11ySection(node) {
+    try {
+      const _origX = node.x;
+      const _origY = node.y;
+      const section = _getOrCreateA11ySection();
+      section.appendChild(node);
+      node.x = Math.round(_origX - section.x);
+      node.y = Math.round(_origY - section.y);
+    } catch (e) {
+    }
+  }
   function _reorderSpecGroupByTag(specGroup, tag) {
     const siblings = figma.currentPage.children.filter((n) => n !== specGroup && n.type === "GROUP");
     let insertIndex = figma.currentPage.children.length;
     for (let i = 0; i < siblings.length; i++) {
-      const m = siblings[i].name.match(/^\[Spec \| ([A-Z]\d*(?:\.\d+)*) \| [a-z]+\] /);
+      const m = siblings[i].name.match(/^\[Spec(?:A11y)? \| ([A-Z]\d*(?:\.\d+)*) \| [a-z]+\] /);
       if (!m) continue;
       if (_compareSpecTags(tag, m[1]) < 0) {
         const idx = figma.currentPage.children.indexOf(siblings[i]);
@@ -368,7 +696,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "5.1.0-beta.2" : "dev";
+  var PLUGIN_VERSION = true ? "5.1.0-beta.3" : "dev";
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
     const NS = "handex";
@@ -823,7 +1151,16 @@
           for (const spec of frame.createdSpecs || []) {
             if (!spec || !spec.pendingConfirmation) continue;
             const specNode = await figma.getNodeByIdAsync(spec.id);
-            if (specNode && specNode.name && specNode.name.startsWith("[Spec | ")) {
+            if (specNode && specNode.name && /^\[Spec(A11y)? \| /.test(specNode.name)) {
+              specNode.locked = true;
+            }
+            spec.pendingConfirmation = false;
+            _pendingSpecsLocked++;
+          }
+          for (const spec of frame.a11ySpecs || []) {
+            if (!spec || !spec.pendingConfirmation) continue;
+            const specNode = await figma.getNodeByIdAsync(spec.id);
+            if (specNode && specNode.name && /^\[Spec(A11y)? \| /.test(specNode.name)) {
               specNode.locked = true;
             }
             spec.pendingConfirmation = false;
@@ -1362,8 +1699,8 @@
           content.appendChild(annotSection);
           setFillAndHug(annotSection);
         }
-        const _A11Y_TYPE_LABEL = { elemento: "Elementos e Imagens", titulo: "T\xEDtulo", decorativo: "Elemento Decorativo" };
-        const _framesWithA11y = (_frames || []).filter((f) => (f.createdSpecs || []).some((s) => s && s.a11yType));
+        const _A11Y_TYPE_LABEL = { elemento: "Elementos e Imagens", estrutura: "Estrutura da P\xE1gina", titulo: "N\xEDvel de T\xEDtulo", decorativo: "Elemento Decorativo", informacoes: "Informa\xE7\xF5es Adicionais" };
+        const _framesWithA11y = (_frames || []).filter((f) => (f.a11ySpecs || []).length > 0);
         if (_framesWithA11y.length > 0) {
           const a11ySection = createSection(content, "Especifica\xE7\xF5es de Acessibilidade");
           for (const f of _framesWithA11y) {
@@ -1374,7 +1711,7 @@
             const fLabel = createText(f.nome || "Frame", 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
             fGroup.appendChild(fLabel);
             setFillAndHug(fLabel);
-            const a11ySpecs = (f.createdSpecs || []).filter((s) => s && s.a11yType);
+            const a11ySpecs = (f.a11ySpecs || []).filter(Boolean);
             const aSpecs = createFrame("VERTICAL", 0, 6);
             aSpecs.fills = [];
             fGroup.appendChild(aSpecs);
@@ -2730,224 +3067,275 @@
         const themeFill = hexToRgb2(opts.fillColor || opts.color || "#EBF4FB");
         const _specSide = opts.guideSide || "right";
         const _tagRadius = opts.a11yType ? 21 : 8;
-        const specCard = figma.createFrame();
-        specCard.name = "Spec Notes";
-        specCard.layoutMode = "VERTICAL";
-        specCard.paddingLeft = 16;
-        specCard.paddingRight = 16;
-        specCard.paddingTop = 16;
-        specCard.paddingBottom = 16;
-        specCard.itemSpacing = 12;
-        specCard.cornerRadius = 8;
-        specCard.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
-        specCard.strokes = [{ type: "SOLID", color: themeColor2 }];
-        specCard.strokeWeight = 1.5;
-        specCard.primaryAxisSizingMode = "AUTO";
-        specCard.counterAxisSizingMode = "AUTO";
-        const headerRow = figma.createFrame();
-        headerRow.layoutMode = "HORIZONTAL";
-        headerRow.itemSpacing = 8;
-        headerRow.fills = [];
-        headerRow.primaryAxisSizingMode = "AUTO";
-        headerRow.counterAxisSizingMode = "AUTO";
-        const tagCircle = figma.createFrame();
-        tagCircle.name = "Tag";
-        tagCircle.layoutMode = "HORIZONTAL";
-        tagCircle.primaryAxisSizingMode = "FIXED";
-        tagCircle.counterAxisSizingMode = "FIXED";
-        tagCircle.resize(42, 42);
-        tagCircle.cornerRadius = _tagRadius;
-        tagCircle.fills = [{ type: "SOLID", color: themeFill }];
-        tagCircle.strokes = [{ type: "SOLID", color: themeColor2 }];
-        tagCircle.strokeWeight = 1.5;
-        tagCircle.primaryAxisAlignItems = "CENTER";
-        tagCircle.counterAxisAlignItems = "CENTER";
-        const tagText = figma.createText();
-        tagText.fontName = { family: "Inter", style: "Bold" };
-        tagText.fontSize = 18;
-        tagText.fills = [{ type: "SOLID", color: themeColor2 }];
-        tagText.characters = opts.letter;
-        tagCircle.appendChild(tagText);
-        headerRow.appendChild(tagCircle);
-        headerRow.counterAxisAlignItems = "CENTER";
-        const title = figma.createText();
-        title.fontName = { family: "Inter", style: "Bold" };
-        title.fontSize = 12;
-        title.fills = [{ type: "SOLID", color: { r: 0.1, g: 0.1, b: 0.1 } }];
-        title.characters = node.name;
-        headerRow.appendChild(title);
-        specCard.appendChild(headerRow);
-        if (opts.categoryLabel) {
-          const pill = figma.createFrame();
-          pill.name = `Categoria/${opts.categoryLabel}`;
-          pill.layoutMode = "HORIZONTAL";
-          pill.paddingLeft = 8;
-          pill.paddingRight = 8;
-          pill.paddingTop = 4;
-          pill.paddingBottom = 4;
-          pill.cornerRadius = 12;
-          pill.primaryAxisSizingMode = "AUTO";
-          pill.counterAxisSizingMode = "AUTO";
-          pill.fills = [{ type: "SOLID", color: themeFill }];
-          pill.strokes = [{ type: "SOLID", color: themeColor2 }];
-          const pillText = figma.createText();
-          pillText.fontName = { family: "Inter", style: "Medium" };
-          pillText.fontSize = 10;
-          pillText.fills = [{ type: "SOLID", color: themeColor2 }];
-          pillText.characters = opts.categoryLabel;
-          pill.appendChild(pillText);
-          specCard.appendChild(pill);
+        const _layerTag = opts.a11yType ? "SpecA11y" : "Spec";
+        let specCard = null;
+        let _a11yImportFailReason = null;
+        let _markerFailReason = null;
+        if (opts.a11yType) {
+          try {
+            specCard = await _tryImportA11yComponent(opts);
+            specCard.name = "Spec Notes";
+            try {
+              specCard.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+            } catch (e) {
+            }
+            try {
+              if ("paddingLeft" in specCard) {
+                specCard.paddingLeft = 12;
+                specCard.paddingRight = 12;
+                specCard.paddingTop = 12;
+                specCard.paddingBottom = 12;
+              }
+            } catch (e) {
+            }
+          } catch (e) {
+            specCard = null;
+            _a11yImportFailReason = e && e.message ? e.message : String(e);
+          }
         }
-        if (opts.note) {
-          const desc = figma.createText();
-          desc.fontName = { family: "Inter", style: "Regular" };
-          desc.fontSize = 11;
-          desc.fills = [{ type: "SOLID", color: { r: 0.4, g: 0.4, b: 0.4 } }];
-          desc.characters = opts.note;
-          desc.textAutoResize = "WIDTH_AND_HEIGHT";
-          specCard.appendChild(desc);
-        }
-        if (opts.properties && opts.properties.length > 0) {
-          const propsFrame = figma.createFrame();
-          propsFrame.layoutMode = "VERTICAL";
-          propsFrame.itemSpacing = 4;
-          propsFrame.fills = [];
-          propsFrame.primaryAxisSizingMode = "AUTO";
-          propsFrame.counterAxisSizingMode = "AUTO";
-          propsFrame.name = "Propriedades";
-          propsFrame.layoutAlign = "INHERIT";
-          opts.properties.forEach((p) => {
-            const row = figma.createFrame();
-            row.name = `Prop/${p.label}`;
-            row.layoutMode = "HORIZONTAL";
-            row.itemSpacing = 12;
-            row.fills = [];
-            row.primaryAxisSizingMode = "AUTO";
-            row.counterAxisSizingMode = "AUTO";
-            row.layoutAlign = "INHERIT";
-            row.counterAxisAlignItems = "CENTER";
-            const pLabel = figma.createText();
-            pLabel.fontName = { family: "Inter", style: "Medium" };
-            pLabel.fontSize = 10;
-            pLabel.fills = [{ type: "SOLID", color: { r: 0.5, g: 0.5, b: 0.5 } }];
-            pLabel.characters = p.label.toUpperCase();
-            pLabel.textAutoResize = "WIDTH_AND_HEIGHT";
-            const pVal = figma.createText();
-            pVal.fontName = { family: "Inter", style: "Bold" };
-            pVal.fontSize = 11;
-            pVal.fills = [{ type: "SOLID", color: p.token ? themeColor2 : { r: 0.1, g: 0.1, b: 0.1 } }];
-            pVal.characters = p.token || String(p.value);
-            pVal.textAutoResize = "WIDTH_AND_HEIGHT";
-            row.appendChild(pLabel);
-            row.appendChild(pVal);
-            propsFrame.appendChild(row);
-          });
-          specCard.appendChild(propsFrame);
-        }
-        const specExcecoes = opts.excecoes || [];
-        if (specExcecoes.length > 0) {
-          await figma.loadFontAsync({ family: "Inter", style: "Bold" });
-          await figma.loadFontAsync({ family: "Inter", style: "Regular" });
-          const excFrame = figma.createFrame();
-          excFrame.layoutMode = "VERTICAL";
-          excFrame.itemSpacing = 6;
-          excFrame.fills = [{ type: "SOLID", color: { r: 1, g: 0.95, b: 0.93 } }];
-          excFrame.paddingLeft = 10;
-          excFrame.paddingRight = 10;
-          excFrame.paddingTop = 8;
-          excFrame.paddingBottom = 8;
-          excFrame.cornerRadius = 6;
-          excFrame.primaryAxisSizingMode = "AUTO";
-          excFrame.counterAxisSizingMode = "AUTO";
-          const excTitle = figma.createText();
-          excTitle.fontName = { family: "Inter", style: "Bold" };
-          excTitle.fontSize = 9;
-          excTitle.fills = [{ type: "SOLID", color: { r: 0.8, g: 0.3, b: 0.1 } }];
-          excTitle.characters = `CEN\xC1RIOS DE EXCE\xC7\xC3O (${specExcecoes.length})`;
-          excTitle.textAutoResize = "WIDTH_AND_HEIGHT";
-          excFrame.appendChild(excTitle);
-          const _excTypeRgb = {
-            "Erro": { r: 0.8, g: 0.15, b: 0.15 },
-            "Alerta": { r: 0.8, g: 0.5, b: 0 },
-            "Sucesso": { r: 0.1, g: 0.55, b: 0.25 },
-            "Confirma\xE7\xE3o": { r: 0.05, g: 0.35, b: 0.8 }
-          };
-          specExcecoes.forEach((exc) => {
-            const excRow = figma.createFrame();
-            excRow.layoutMode = "HORIZONTAL";
-            excRow.itemSpacing = 6;
-            excRow.fills = [];
-            excRow.primaryAxisSizingMode = "AUTO";
-            excRow.counterAxisSizingMode = "AUTO";
-            excRow.counterAxisAlignItems = "CENTER";
-            const typeColor = _excTypeRgb[exc.tipo] || { r: 0.4, g: 0.4, b: 0.4 };
-            const typeLabel = figma.createText();
-            typeLabel.fontName = { family: "Inter", style: "Bold" };
-            typeLabel.fontSize = 9;
-            typeLabel.fills = [{ type: "SOLID", color: typeColor }];
-            typeLabel.characters = (exc.tipo || "GERAL").toUpperCase();
-            typeLabel.textAutoResize = "WIDTH_AND_HEIGHT";
-            const titleLabel = figma.createText();
-            titleLabel.fontName = { family: "Inter", style: "Regular" };
-            titleLabel.fontSize = 10;
-            titleLabel.fills = [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2 } }];
-            titleLabel.characters = `${exc.titulo || ""}${exc.notas ? " \u2014 " + exc.notas : ""}`;
-            titleLabel.textAutoResize = "WIDTH_AND_HEIGHT";
-            excRow.appendChild(typeLabel);
-            excRow.appendChild(titleLabel);
-            excFrame.appendChild(excRow);
-          });
-          specCard.appendChild(excFrame);
-        }
-        if (opts.link) {
-          const linkTxt = figma.createText();
-          linkTxt.fontName = { family: "Inter", style: "Regular" };
-          linkTxt.fontSize = 11;
-          linkTxt.fills = [{ type: "SOLID", color: { r: 0, g: 0.4, b: 0.8 } }];
-          linkTxt.characters = opts.link;
-          linkTxt.textDecoration = "UNDERLINE";
-          linkTxt.hyperlink = { type: "URL", value: opts.link };
-          linkTxt.textAutoResize = "HEIGHT";
-          linkTxt.layoutAlign = "STRETCH";
-          specCard.appendChild(linkTxt);
+        if (!specCard) {
+          specCard = figma.createFrame();
+          specCard.name = "Spec Notes";
+          specCard.layoutMode = "VERTICAL";
+          const _cardPadding = opts.a11yType ? 12 : 16;
+          specCard.paddingLeft = _cardPadding;
+          specCard.paddingRight = _cardPadding;
+          specCard.paddingTop = _cardPadding;
+          specCard.paddingBottom = _cardPadding;
+          specCard.itemSpacing = 12;
+          specCard.cornerRadius = 8;
+          specCard.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+          specCard.strokes = [{ type: "SOLID", color: themeColor2 }];
+          specCard.strokeWeight = 1.5;
+          specCard.primaryAxisSizingMode = "AUTO";
+          specCard.counterAxisSizingMode = "AUTO";
+          const headerRow = figma.createFrame();
+          headerRow.layoutMode = "HORIZONTAL";
+          headerRow.itemSpacing = 8;
+          headerRow.fills = [];
+          headerRow.primaryAxisSizingMode = "AUTO";
+          headerRow.counterAxisSizingMode = "AUTO";
+          const tagCircle = figma.createFrame();
+          tagCircle.name = "Tag";
+          tagCircle.layoutMode = "HORIZONTAL";
+          tagCircle.primaryAxisSizingMode = "FIXED";
+          tagCircle.counterAxisSizingMode = "FIXED";
+          tagCircle.resize(42, 42);
+          tagCircle.cornerRadius = _tagRadius;
+          tagCircle.fills = [{ type: "SOLID", color: themeFill }];
+          tagCircle.strokes = [{ type: "SOLID", color: themeColor2 }];
+          tagCircle.strokeWeight = 1.5;
+          tagCircle.primaryAxisAlignItems = "CENTER";
+          tagCircle.counterAxisAlignItems = "CENTER";
+          const tagText = figma.createText();
+          tagText.fontName = { family: "Inter", style: "Bold" };
+          tagText.fontSize = 18;
+          tagText.fills = [{ type: "SOLID", color: themeColor2 }];
+          tagText.characters = opts.letter;
+          tagCircle.appendChild(tagText);
+          headerRow.appendChild(tagCircle);
+          headerRow.counterAxisAlignItems = "CENTER";
+          const title = figma.createText();
+          title.fontName = { family: "Inter", style: "Bold" };
+          title.fontSize = 12;
+          title.fills = [{ type: "SOLID", color: { r: 0.1, g: 0.1, b: 0.1 } }];
+          title.characters = node.name;
+          headerRow.appendChild(title);
+          specCard.appendChild(headerRow);
+          if (opts.categoryLabel) {
+            const pill = figma.createFrame();
+            pill.name = `Categoria/${opts.categoryLabel}`;
+            pill.layoutMode = "HORIZONTAL";
+            pill.paddingLeft = 8;
+            pill.paddingRight = 8;
+            pill.paddingTop = 4;
+            pill.paddingBottom = 4;
+            pill.cornerRadius = 12;
+            pill.primaryAxisSizingMode = "AUTO";
+            pill.counterAxisSizingMode = "AUTO";
+            pill.fills = [{ type: "SOLID", color: themeFill }];
+            pill.strokes = [{ type: "SOLID", color: themeColor2 }];
+            const pillText = figma.createText();
+            pillText.fontName = { family: "Inter", style: "Medium" };
+            pillText.fontSize = 10;
+            pillText.fills = [{ type: "SOLID", color: themeColor2 }];
+            pillText.characters = opts.categoryLabel;
+            pill.appendChild(pillText);
+            specCard.appendChild(pill);
+          }
+          if (opts.note) {
+            const desc = figma.createText();
+            desc.fontName = { family: "Inter", style: "Regular" };
+            desc.fontSize = 11;
+            desc.fills = [{ type: "SOLID", color: { r: 0.4, g: 0.4, b: 0.4 } }];
+            desc.characters = opts.note;
+            desc.textAutoResize = "WIDTH_AND_HEIGHT";
+            specCard.appendChild(desc);
+          }
+          if (opts.properties && opts.properties.length > 0) {
+            const propsFrame = figma.createFrame();
+            propsFrame.layoutMode = "VERTICAL";
+            propsFrame.itemSpacing = 4;
+            propsFrame.fills = [];
+            propsFrame.primaryAxisSizingMode = "AUTO";
+            propsFrame.counterAxisSizingMode = "AUTO";
+            propsFrame.name = "Propriedades";
+            propsFrame.layoutAlign = "INHERIT";
+            opts.properties.forEach((p) => {
+              const row = figma.createFrame();
+              row.name = `Prop/${p.label}`;
+              row.layoutMode = "HORIZONTAL";
+              row.itemSpacing = 12;
+              row.fills = [];
+              row.primaryAxisSizingMode = "AUTO";
+              row.counterAxisSizingMode = "AUTO";
+              row.layoutAlign = "INHERIT";
+              row.counterAxisAlignItems = "CENTER";
+              const pLabel = figma.createText();
+              pLabel.fontName = { family: "Inter", style: "Medium" };
+              pLabel.fontSize = 10;
+              pLabel.fills = [{ type: "SOLID", color: { r: 0.5, g: 0.5, b: 0.5 } }];
+              pLabel.characters = p.label.toUpperCase();
+              pLabel.textAutoResize = "WIDTH_AND_HEIGHT";
+              const pVal = figma.createText();
+              pVal.fontName = { family: "Inter", style: "Bold" };
+              pVal.fontSize = 11;
+              pVal.fills = [{ type: "SOLID", color: p.token ? themeColor2 : { r: 0.1, g: 0.1, b: 0.1 } }];
+              pVal.characters = p.token || String(p.value);
+              pVal.textAutoResize = "WIDTH_AND_HEIGHT";
+              row.appendChild(pLabel);
+              row.appendChild(pVal);
+              propsFrame.appendChild(row);
+            });
+            specCard.appendChild(propsFrame);
+          }
+          const specExcecoes = opts.excecoes || [];
+          if (specExcecoes.length > 0) {
+            await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+            await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+            const excFrame = figma.createFrame();
+            excFrame.layoutMode = "VERTICAL";
+            excFrame.itemSpacing = 6;
+            excFrame.fills = [{ type: "SOLID", color: { r: 1, g: 0.95, b: 0.93 } }];
+            excFrame.paddingLeft = 10;
+            excFrame.paddingRight = 10;
+            excFrame.paddingTop = 8;
+            excFrame.paddingBottom = 8;
+            excFrame.cornerRadius = 6;
+            excFrame.primaryAxisSizingMode = "AUTO";
+            excFrame.counterAxisSizingMode = "AUTO";
+            const excTitle = figma.createText();
+            excTitle.fontName = { family: "Inter", style: "Bold" };
+            excTitle.fontSize = 9;
+            excTitle.fills = [{ type: "SOLID", color: { r: 0.8, g: 0.3, b: 0.1 } }];
+            excTitle.characters = `CEN\xC1RIOS DE EXCE\xC7\xC3O (${specExcecoes.length})`;
+            excTitle.textAutoResize = "WIDTH_AND_HEIGHT";
+            excFrame.appendChild(excTitle);
+            const _excTypeRgb = {
+              "Erro": { r: 0.8, g: 0.15, b: 0.15 },
+              "Alerta": { r: 0.8, g: 0.5, b: 0 },
+              "Sucesso": { r: 0.1, g: 0.55, b: 0.25 },
+              "Confirma\xE7\xE3o": { r: 0.05, g: 0.35, b: 0.8 }
+            };
+            specExcecoes.forEach((exc) => {
+              const excRow = figma.createFrame();
+              excRow.layoutMode = "HORIZONTAL";
+              excRow.itemSpacing = 6;
+              excRow.fills = [];
+              excRow.primaryAxisSizingMode = "AUTO";
+              excRow.counterAxisSizingMode = "AUTO";
+              excRow.counterAxisAlignItems = "CENTER";
+              const typeColor = _excTypeRgb[exc.tipo] || { r: 0.4, g: 0.4, b: 0.4 };
+              const typeLabel = figma.createText();
+              typeLabel.fontName = { family: "Inter", style: "Bold" };
+              typeLabel.fontSize = 9;
+              typeLabel.fills = [{ type: "SOLID", color: typeColor }];
+              typeLabel.characters = (exc.tipo || "GERAL").toUpperCase();
+              typeLabel.textAutoResize = "WIDTH_AND_HEIGHT";
+              const titleLabel = figma.createText();
+              titleLabel.fontName = { family: "Inter", style: "Regular" };
+              titleLabel.fontSize = 10;
+              titleLabel.fills = [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2 } }];
+              titleLabel.characters = `${exc.titulo || ""}${exc.notas ? " \u2014 " + exc.notas : ""}`;
+              titleLabel.textAutoResize = "WIDTH_AND_HEIGHT";
+              excRow.appendChild(typeLabel);
+              excRow.appendChild(titleLabel);
+              excFrame.appendChild(excRow);
+            });
+            specCard.appendChild(excFrame);
+          }
+          if (opts.link) {
+            const linkTxt = figma.createText();
+            linkTxt.fontName = { family: "Inter", style: "Regular" };
+            linkTxt.fontSize = 11;
+            linkTxt.fills = [{ type: "SOLID", color: { r: 0, g: 0.4, b: 0.8 } }];
+            linkTxt.characters = opts.link;
+            linkTxt.textDecoration = "UNDERLINE";
+            linkTxt.hyperlink = { type: "URL", value: opts.link };
+            linkTxt.textAutoResize = "HEIGHT";
+            linkTxt.layoutAlign = "STRETCH";
+            specCard.appendChild(linkTxt);
+          }
         }
         let groupNodes = [];
         let _absCardX = 0, _absCardY = 0, _absCardW = 0, _absCardH = 0;
         const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
         if (bounds) {
-          const contour = figma.createFrame();
-          contour.name = "Destaque";
-          contour.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
-          figma.currentPage.appendChild(contour);
-          contour.x = bounds.x - 16;
-          contour.y = bounds.y - 16;
-          contour.fills = [];
-          contour.strokes = [{ type: "SOLID", color: themeColor2 }];
-          contour.strokeWeight = 2;
-          contour.dashPattern = [4, 4];
-          contour.locked = true;
-          const chip = figma.createFrame();
-          chip.name = "Chip";
-          chip.layoutMode = "HORIZONTAL";
-          chip.primaryAxisSizingMode = "FIXED";
-          chip.counterAxisSizingMode = "FIXED";
-          chip.resize(42, 42);
-          chip.cornerRadius = _tagRadius;
-          chip.fills = [{ type: "SOLID", color: themeFill }];
-          chip.strokes = [{ type: "SOLID", color: themeColor2 }];
-          chip.strokeWeight = 1.5;
-          chip.primaryAxisAlignItems = "CENTER";
-          chip.counterAxisAlignItems = "CENTER";
-          const chipText = figma.createText();
-          chipText.fontName = { family: "Inter", style: "Bold" };
-          chipText.fontSize = 18;
-          chipText.fills = [{ type: "SOLID", color: themeColor2 }];
-          chipText.characters = opts.letter;
-          chip.appendChild(chipText);
-          contour.appendChild(chip);
-          chip.x = 0;
-          chip.y = 0;
-          groupNodes.push(contour);
+          let marker = null;
+          if (opts.a11yType) {
+            try {
+              marker = await _tryImportA11yAgrupamento(opts);
+            } catch (e) {
+              marker = null;
+              _markerFailReason = e && e.message ? e.message : String(e);
+            }
+          }
+          let _markerAnchorBounds = bounds;
+          if (marker) {
+            figma.currentPage.appendChild(marker);
+            try {
+              marker.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
+            } catch (e) {
+            }
+            marker.x = Math.round(bounds.x - 16);
+            marker.y = Math.round(bounds.y - 16);
+            groupNodes.push(marker);
+            _markerAnchorBounds = marker.absoluteBoundingBox || _markerAnchorBounds;
+          } else {
+            const contour = figma.createFrame();
+            contour.name = "Destaque";
+            contour.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
+            figma.currentPage.appendChild(contour);
+            contour.x = bounds.x - 16;
+            contour.y = bounds.y - 16;
+            contour.fills = [];
+            contour.strokes = [{ type: "SOLID", color: themeColor2 }];
+            contour.strokeWeight = 2;
+            contour.dashPattern = [4, 4];
+            contour.locked = true;
+            const chip = figma.createFrame();
+            chip.name = "Chip";
+            chip.layoutMode = "HORIZONTAL";
+            chip.primaryAxisSizingMode = "FIXED";
+            chip.counterAxisSizingMode = "FIXED";
+            chip.resize(42, 42);
+            chip.cornerRadius = _tagRadius;
+            chip.fills = [{ type: "SOLID", color: themeFill }];
+            chip.strokes = [{ type: "SOLID", color: themeColor2 }];
+            chip.strokeWeight = 1.5;
+            chip.primaryAxisAlignItems = "CENTER";
+            chip.counterAxisAlignItems = "CENTER";
+            const chipText = figma.createText();
+            chipText.fontName = { family: "Inter", style: "Bold" };
+            chipText.fontSize = 18;
+            chipText.fills = [{ type: "SOLID", color: themeColor2 }];
+            chipText.characters = opts.letter;
+            chip.appendChild(chipText);
+            contour.appendChild(chip);
+            chip.x = 0;
+            chip.y = 0;
+            groupNodes.push(contour);
+          }
           figma.currentPage.appendChild(specCard);
           const side = opts.guideSide || "right";
           const _isVertSide = side === "right" || side === "left";
@@ -2965,18 +3353,19 @@
             if (bb.x < _letterMap[l].x) _letterMap[l].x = bb.x;
             if (bb.y < _letterMap[l].topY) _letterMap[l].topY = bb.y;
           };
-          figma.currentPage.children.forEach((n) => {
+          const _stackScanNodes = opts.a11yType ? _getOrCreateA11ySection().children || [] : figma.currentPage.children;
+          if (opts.a11yType !== "titulo") _stackScanNodes.forEach((n) => {
             if (n.type !== "GROUP") return;
-            const newFmt = n.name.match(/^\[Spec \| ([A-Z]\d*(?:\.\d+)*) \| ([a-z]+)\] /);
+            const newFmt = n.name.match(new RegExp("^\\[" + _layerTag + " \\| ([A-Z]\\d*(?:\\.\\d+)*) \\| ([a-z]+)\\] "));
             if (newFmt) {
               if (newFmt[2] !== side) return;
-              const specNotes = n.children && n.children.find((c) => c.type === "FRAME" && (c.name === "Spec Notes" || c.name === "Ficha") && c !== specCard);
+              const specNotes = n.children && n.children.find((c) => (c.type === "FRAME" || c.type === "INSTANCE") && (c.name === "Spec Notes" || c.name === "Ficha") && c !== specCard);
               if (!specNotes) return;
               const bb2 = specNotes.absoluteBoundingBox || specNotes.absoluteRenderBounds;
               if (bb2) _updateLetterMap(newFmt[1], bb2);
               return;
             }
-            if (!n.name.startsWith("[Spec]")) return;
+            if (opts.a11yType || !n.name.startsWith("[Spec]")) return;
             const ficha = n.children && n.children.find((c) => c.type === "FRAME" && c.name.includes("/Ficha") && c !== specCard);
             if (!ficha) return;
             const lm = ficha.name.match(/\[Spec\/([A-Z]\d*(?:\.\d+)*)\]/);
@@ -2991,7 +3380,10 @@
           const cardW = specCard.width;
           const cardH = specCard.height;
           let targetX, targetY;
-          if (_letterMap[_specLetter]) {
+          if (opts.pinnedPosition) {
+            targetX = opts.pinnedPosition.x;
+            targetY = opts.pinnedPosition.y;
+          } else if (_letterMap[_specLetter]) {
             targetX = _letterMap[_specLetter].x;
             if (side === "top") {
               targetY = _letterMap[_specLetter].topY - cardH - _SPEC_GAP;
@@ -3032,18 +3424,19 @@
           groupNodes.push(specCard);
           const USE_NATIVE_CONNECTOR = false;
           if (opts.drawConnection !== false) {
+            const _anchorB = _markerAnchorBounds;
             let startPt, endPt;
             if (side === "right") {
-              startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+              startPt = { x: _anchorB.x + _anchorB.width, y: _anchorB.y + _anchorB.height / 2 };
               endPt = { x: specCard.x, y: specCard.y + specCard.height / 2 };
             } else if (side === "left") {
-              startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
+              startPt = { x: _anchorB.x, y: _anchorB.y + _anchorB.height / 2 };
               endPt = { x: specCard.x + specCard.width, y: specCard.y + specCard.height / 2 };
             } else if (side === "bottom") {
-              startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
+              startPt = { x: _anchorB.x + _anchorB.width / 2, y: _anchorB.y + _anchorB.height };
               endPt = { x: specCard.x + specCard.width / 2, y: specCard.y };
             } else {
-              startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
+              startPt = { x: _anchorB.x + _anchorB.width / 2, y: _anchorB.y };
               endPt = { x: specCard.x + specCard.width / 2, y: specCard.y + specCard.height };
             }
             if (USE_NATIVE_CONNECTOR) {
@@ -3101,9 +3494,13 @@
           groupNodes.push(specCard);
         }
         const specGroup = figma.group(groupNodes, figma.currentPage);
-        specGroup.name = `[Spec | ${opts.letter} | ${_specSide}] ${node.name}`;
-        specGroup.locked = false;
-        _reorderSpecGroupByTag(specGroup, opts.letter);
+        specGroup.name = `[${_layerTag} | ${opts.letter} | ${_specSide}] ${node.name}`;
+        specGroup.locked = !!opts.a11yType;
+        if (opts.a11yType) {
+          _reparentIntoA11ySection(specGroup);
+        } else {
+          _reorderSpecGroupByTag(specGroup, opts.letter);
+        }
         figma.ui.postMessage({
           type: "spec-created",
           spec: {
@@ -3125,15 +3522,34 @@
             // --- Acessibilidade --- diferencia "Leitor de Tela" / "Ordem de Tabulação"
             // (aba Acessibilidade em Anotar Specs, modules/accessibility.js). Passthrough
             // simples: nenhum schema paralelo, reaproveita a mesma spec/properties[].
-            a11yType: opts.a11yType || null
+            a11yType: opts.a11yType || null,
+            // Ecoa de volta a chave crua da subvariante e a Área Marcada de origem —
+            // messages.js monta o objeto salvo localmente a partir desta resposta
+            // (spec-created), não a partir de opts, então tudo que a listagem/geração
+            // de ficha precisa depois precisa vir aqui também.
+            a11ySubtype: opts.a11ySubtype || null,
+            a11yAreaId: opts.a11yAreaId || null
           }
         });
-        figma.notify("Especifica\xE7\xE3o criada \u2014 arraste para posicionar. Clique em Concluir quando pronto.");
+        const _A11Y_EXPECTED_FALLBACK_PREFIXES = [
+          "a11y-elemento-outro-sem-componente-real",
+          "a11y-titulo-mobile-sem-variante-real",
+          "a11y-informacoes-customizavel-sem-variante-real",
+          "a11y-estrutura-variacao-sem-import-real",
+          "a11y-estrutura-marco-customizavel-sem-conteudo-catalogado"
+        ];
+        const _isExpectedFallback = _a11yImportFailReason && _A11Y_EXPECTED_FALLBACK_PREFIXES.some((p) => _a11yImportFailReason.startsWith(p));
+        if (opts.a11yType && (_a11yImportFailReason && !_isExpectedFallback || _markerFailReason)) {
+          const _reason = _markerFailReason || _a11yImportFailReason;
+          figma.notify(`N\xE3o foi poss\xEDvel usar o componente real da lib "Design Acess\xEDvel" (${_reason}) \u2014 spec criada no modo desenhado. Arraste para posicionar.`);
+        } else {
+          figma.notify("Especifica\xE7\xE3o criada \u2014 arraste para posicionar. Clique em Concluir quando pronto.");
+        }
       })();
     }
     if (msg.type === "lock-spec") {
       const specNode = await figma.getNodeByIdAsync(msg.specId);
-      if (specNode && specNode.name && specNode.name.startsWith("[Spec | ")) {
+      if (specNode && specNode.name && /^\[Spec(A11y)? \| /.test(specNode.name)) {
         specNode.locked = true;
         figma.ui.postMessage({ type: "spec-locked", specId: msg.specId });
       }
@@ -3208,46 +3624,91 @@
       const sel = figma.currentPage.selection;
       figma.ui.postMessage({ type: "selection-name", name: sel.length > 0 ? sel[0].name : null });
     }
-    if (msg.type === "reorder-a11y-specs") {
+    if (msg.type === "get-a11y-selection-info") {
+      const sel = figma.currentPage.selection;
+      figma.ui.postMessage({
+        type: "a11y-selection-info",
+        id: sel.length > 0 ? sel[0].id : null,
+        name: sel.length > 0 ? sel[0].name : null
+      });
+    }
+    if (msg.type === "create-a11y-area") {
       (async () => {
-        const resolved = [];
-        for (const s of msg.specs || []) {
-          const node = await figma.getNodeByIdAsync(s.id);
-          if (!node || !node.absoluteBoundingBox) continue;
-          resolved.push({ id: s.id, node, bb: node.absoluteBoundingBox });
-        }
-        if (resolved.length === 0) {
-          figma.ui.postMessage({ type: "a11y-specs-reordered", mapping: [] });
+        const node = await figma.getNodeByIdAsync(msg.targetNodeId);
+        if (!node || !node.absoluteBoundingBox) {
+          figma.notify("Elemento n\xE3o encontrado no canvas \u2014 selecione novamente.");
           return;
         }
-        resolved.sort((a, b) => {
-          const dy = a.bb.y - b.bb.y;
-          if (Math.abs(dy) > 1) return dy;
-          return a.bb.x - b.bb.x;
-        });
         try {
           await figma.loadFontAsync({ family: "Inter", style: "Bold" });
         } catch (e) {
         }
-        const mapping = [];
-        resolved.forEach((item, i) => {
-          const letter = String.fromCharCode(65 + i);
-          const specGroup = item.node;
-          const m = specGroup.name.match(/^\[Spec \| [A-Z]\d*(?:\.\d+)* \| ([a-z]+)\] (.*)$/);
-          const side = m ? m[1] : "right";
-          const targetName = m ? m[2] : specGroup.name;
-          specGroup.name = `[Spec | ${letter} | ${side}] ${targetName}`;
-          if ("findAll" in specGroup) {
-            const tagFrames = specGroup.findAll((n) => n.name === "Tag" || n.name === "Chip");
-            tagFrames.forEach((tagFrame) => {
-              const textNode = tagFrame.findOne ? tagFrame.findOne((n) => n.type === "TEXT") : null;
-              if (textNode) textNode.characters = letter;
-            });
+        const ITEM_NUMBER_KEY_SUPERIOR = "ff43b15ac0c078b35219984bf035c4c0f0089cf1";
+        let badge = null;
+        let usedRealComponent = true;
+        try {
+          const comp = await figma.importComponentByKeyAsync(ITEM_NUMBER_KEY_SUPERIOR);
+          badge = comp.createInstance();
+          badge.setProperties({
+            "number#1478:0": String(msg.number),
+            "label#733:6": msg.label,
+            "show label#733:0": true
+          });
+        } catch (e) {
+          usedRealComponent = false;
+          badge = figma.createEllipse();
+          badge.name = "Selo de \xC1rea";
+          badge.resize(32, 32);
+          badge.fills = [{ type: "SOLID", color: hexToRgb2("#0070AF") }];
+        }
+        const bb = node.absoluteBoundingBox;
+        figma.currentPage.appendChild(badge);
+        const _A11Y_AREA_GAP = 24;
+        const targetCenterX = bb.x + bb.width / 2;
+        badge.x = Math.round(targetCenterX - badge.width / 2);
+        badge.y = Math.round(bb.y - badge.height - _A11Y_AREA_GAP);
+        let group = badge;
+        if (!usedRealComponent) {
+          const labelText = figma.createText();
+          labelText.name = "Label";
+          labelText.fontName = { family: "Inter", style: "Bold" };
+          labelText.fontSize = 12;
+          labelText.fills = [{ type: "SOLID", color: hexToRgb2("#0070AF") }];
+          labelText.characters = msg.label;
+          figma.currentPage.appendChild(labelText);
+          labelText.x = Math.round(badge.x + badge.width + 8);
+          labelText.y = Math.round(badge.y + badge.height / 2 - labelText.height / 2);
+          group = figma.group([badge, labelText], figma.currentPage);
+        }
+        group.name = `[A11yArea | ${msg.number}] ${msg.label}`;
+        group.locked = false;
+        _reparentIntoA11ySection(group);
+        figma.currentPage.selection = [group];
+        figma.viewport.scrollAndZoomIntoView([group]);
+        figma.ui.postMessage({
+          type: "a11y-area-created",
+          area: {
+            id: group.id,
+            number: msg.number,
+            label: msg.label,
+            targetNodeId: node.id,
+            targetNodeName: node.name
           }
-          mapping.push({ id: item.id, letter });
         });
-        figma.ui.postMessage({ type: "a11y-specs-reordered", mapping });
-        figma.notify(`Ordem de acessibilidade atualizada (${mapping.length} especifica\xE7${mapping.length === 1 ? "\xE3o" : "\xF5es"}).`);
+        figma.notify(usedRealComponent ? "\xC1rea marcada." : '\xC1rea marcada \u2014 n\xE3o foi poss\xEDvel usar o selo real da lib "Design Acess\xEDvel" (modo simplificado).');
+      })();
+    }
+    if (msg.type === "check-a11y-library") {
+      (async () => {
+        const A11Y_LIBRARY_CANARY_KEY = "f1bf785a343f191cff72e702d68a27a3a97f0ee9";
+        let linked = false;
+        try {
+          await figma.importComponentByKeyAsync(A11Y_LIBRARY_CANARY_KEY);
+          linked = true;
+        } catch (e) {
+          linked = false;
+        }
+        figma.ui.postMessage({ type: "a11y-library-status", linked, token: msg.token || null });
       })();
     }
     if (msg.type === "hide-spec-lines") {

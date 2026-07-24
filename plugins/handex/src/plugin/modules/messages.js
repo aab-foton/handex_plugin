@@ -73,6 +73,9 @@
           mergedState.currentUser = handoffData.currentUser;
           handoffData = mergedState;
           createdSpecs = handoffData.specs || [];
+          a11ySpecs = handoffData.a11ySpecs || [];
+          a11yAreas = handoffData.a11yAreas || [];
+          if (typeof _migrateA11ySpecsFromCreatedSpecs === 'function') _migrateA11ySpecsFromCreatedSpecs();
           // Restaura apenas step1 no boot — frames/flows/specs são lazy-loaded na navegação
           if (typeof _restoreStep1Fields === 'function') _restoreStep1Fields();
         }
@@ -212,6 +215,8 @@
           currentUser: handoffData.currentUser
         };
         createdSpecs = [];
+        a11ySpecs = [];
+        a11yAreas = [];
         restoreUIFromState();
         const scanResults = document.getElementById('scan-results');
         if (scanResults) scanResults.innerHTML = '';
@@ -257,19 +262,54 @@
 
       if (msg.type === "spec-created") {
         const newSpec = Object.assign({ pendingConfirmation: true }, msg.spec || msg.data);
+        // --- Acessibilidade --- specs de A11y vão para o array dedicado
+        // (a11ySpecs/frame.a11ySpecs), nunca para createdSpecs/frame.createdSpecs.
+        const isA11y = !!newSpec.a11yType;
+        // Specs de A11y nascem BLOQUEADAS, não soltas pra arrastar — o
+        // marcador (Agrupamento) já é calculado pra contornar o elemento
+        // certo, não faz sentido reposicionar manualmente. Sem fluxo de
+        // "Concluir posicionamento"; um cadeado na listagem destrava se
+        // precisar mexer em algo.
+        if (isA11y) {
+          newSpec.pendingConfirmation = false;
+          newSpec.locked = true;
+        }
+        // Edição de spec de A11y (delete+recreate, ver confirmA11ySpec em
+        // accessibility.js): reinsere no índice original em vez de só
+        // empilhar no fim — a ordenação visual por letra é estável, então
+        // duas specs com a mesma letra desempatam pela ordem no array.
+        const _a11yReinsertAt = window._a11yEditingReinsertIndex;
+        window._a11yEditingReinsertIndex = undefined;
         if (activeFrameId) {
           const frame = getFrame(activeFrameId);
           if (frame) {
-            if (!frame.createdSpecs) frame.createdSpecs = [];
-            frame.createdSpecs.push(newSpec);
-            renderSpecsListForFrame(activeFrameId);
+            if (isA11y) {
+              if (!frame.a11ySpecs) frame.a11ySpecs = [];
+              if (_a11yReinsertAt !== undefined && _a11yReinsertAt <= frame.a11ySpecs.length) {
+                frame.a11ySpecs.splice(_a11yReinsertAt, 0, newSpec);
+              } else {
+                frame.a11ySpecs.push(newSpec);
+              }
+            } else {
+              if (!frame.createdSpecs) frame.createdSpecs = [];
+              frame.createdSpecs.push(newSpec);
+              renderSpecsListForFrame(activeFrameId);
+            }
             if (typeof syncAndRenderSpecs === 'function') syncAndRenderSpecs();
-            if (typeof showFrameSection === 'function') showFrameSection(activeFrameId, 'specs');
-            setTimeout(() => {
-              const list = document.getElementById(`specs-list-${activeFrameId}`);
-              const last = list && list.lastElementChild;
-              if (last) autoScrollToNewItem('handoff-scroll-container', last);
-            }, 100);
+            if (!isA11y) {
+              if (typeof showFrameSection === 'function') showFrameSection(activeFrameId, 'specs');
+              setTimeout(() => {
+                const list = document.getElementById(`specs-list-${activeFrameId}`);
+                const last = list && list.lastElementChild;
+                if (last) autoScrollToNewItem('handoff-scroll-container', last);
+              }, 100);
+            }
+          }
+        } else if (isA11y) {
+          if (_a11yReinsertAt !== undefined && _a11yReinsertAt <= a11ySpecs.length) {
+            a11ySpecs.splice(_a11yReinsertAt, 0, newSpec);
+          } else {
+            a11ySpecs.push(newSpec);
           }
         } else {
           createdSpecs.push(newSpec);
@@ -279,7 +319,9 @@
         if (typeof renderA11ySpecsList === 'function') renderA11ySpecsList();
         saveSpecsToStorage();
         if (window._toastSaved) _toastSaved();
-        showToast('Especificação criada — arraste para posicionar e conclua o posicionamento.');
+        showToast(isA11y
+          ? 'Especificação criada e posicionada — travada por padrão, use o cadeado pra ajustar.'
+          : 'Especificação criada — arraste para posicionar e conclua o posicionamento.');
       }
 
       if (msg.type === "spec-locked") {
@@ -291,8 +333,20 @@
               found = true;
             }
           });
+          (frame.a11ySpecs || []).forEach(spec => {
+            if (spec && spec.id === msg.specId) {
+              spec.pendingConfirmation = false;
+              found = true;
+            }
+          });
         });
         createdSpecs.forEach(spec => {
+          if (spec && spec.id === msg.specId) {
+            spec.pendingConfirmation = false;
+            found = true;
+          }
+        });
+        a11ySpecs.forEach(spec => {
           if (spec && spec.id === msg.specId) {
             spec.pendingConfirmation = false;
             found = true;
@@ -310,23 +364,61 @@
         if (typeof prefillA11yComponentName === 'function') prefillA11yComponentName(msg.name);
       }
 
-      if (msg.type === "a11y-specs-reordered") {
-        const mapping = msg.mapping || [];
-        let found = false;
-        mapping.forEach(({ id, letter }) => {
-          (handoffData.frames || []).forEach(frame => {
-            (frame.createdSpecs || []).forEach(spec => {
-              if (spec && spec.id === id) { spec.letter = letter; found = true; }
-            });
-          });
-          createdSpecs.forEach(spec => {
-            if (spec && spec.id === id) { spec.letter = letter; found = true; }
-          });
-        });
-        if (found) {
-          if (typeof renderA11ySpecsList === 'function') renderA11ySpecsList();
+      // Resposta de 'get-a11y-selection-info' — resolve o Promise pendente aberto
+      // por _getA11ySelectionInfo() (accessibility.js), usado tanto para
+      // confirmar uma spec de A11y (mapeamento puro) quanto para "Marcar Área".
+      // Tipo de mensagem exclusivo do fluxo de A11y — não reaproveitar
+      // 'selection-info' (já usado pelo fluxo de Escanear Tokens abaixo).
+      if (msg.type === "a11y-selection-info") {
+        if (typeof window._a11ySelectionInfoResolve === 'function') {
+          const resolve = window._a11ySelectionInfoResolve;
+          window._a11ySelectionInfoResolve = null;
+          resolve(msg.id ? { id: msg.id, name: msg.name } : null);
+        }
+      }
+
+      if (msg.type === "a11y-area-created") {
+        const area = msg.area;
+        if (area) {
+          if (activeFrameId) {
+            const frame = getFrame(activeFrameId);
+            if (frame) {
+              if (!frame.a11yAreas) frame.a11yAreas = [];
+              frame.a11yAreas.push(area);
+              if (typeof syncAndRenderSpecs === 'function') syncAndRenderSpecs();
+            }
+          } else {
+            a11yAreas.push(area);
+          }
+          // Área recém-marcada abre expandida — designer já vê o botão "+" pra
+          // criar a primeira spec nela sem precisar procurar o accordion certo.
+          window._a11yExpandedAreaIds = window._a11yExpandedAreaIds || new Set();
+          window._a11yExpandedAreaIds.add(area.id);
+          if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
           saveSpecsToStorage();
-          showToast('Ordem de acessibilidade atualizada.');
+          if (window._toastSaved) _toastSaved();
+        }
+      }
+
+      // Fase 3 — o antigo popover de categoria (#a11y-type-menu) virou o modal
+      // #a11y-category-picker-modal (accessibility.js). A checagem de vínculo
+      // da lib continua rodando antes de abrir esse modal.
+      if (msg.type === "a11y-library-status") {
+        // Ignora respostas atrasadas de uma checagem que não é mais a mais
+        // recente (designer clicou "+" em outra área antes desta responder)
+        // — sem isso, uma resposta velha podia reabrir o seletor de
+        // categoria por cima de um formulário que já estava sendo preenchido.
+        if (msg.token && window._a11yLibCheckToken && msg.token !== window._a11yLibCheckToken) {
+          // não faz nada
+        } else if (msg.linked) {
+          const specModal = document.getElementById('a11y-spec-modal');
+          const alreadyFillingForm = specModal && !specModal.classList.contains('hidden');
+          if (!alreadyFillingForm) {
+            closeModal('a11y-library-required-modal');
+            if (typeof _openA11yCategoryPickerModalNow === 'function') _openA11yCategoryPickerModalNow();
+          }
+        } else {
+          openModal('a11y-library-required-modal');
         }
       }
 

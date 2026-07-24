@@ -10,8 +10,13 @@
 //     acordeões da ficha, aba "Frame & Elementos", lightbox, scan grouped por tipo,
 //     Code Connect chips, suggest closest match, etc.
 //
-// Depende de: handoffData, createdSpecs, getAuditSummary, computeItemAuditStatus,
+// Depende de: handoffData, createdSpecs, a11ySpecs, getAuditSummary, computeItemAuditStatus,
 // getItemAuditBreakdown, saveToStorage, showToast
+//
+// --- Acessibilidade --- as seções "Especificações Anotadas"/"Frames
+// Documentados" deste arquivo iteram só frame.createdSpecs (specs normais);
+// como a11ySpecs agora é array estruturalmente separado, elas nunca incluem
+// specs de A11y aqui — não é necessário (nem correto) filtrar a11yType.
 // (escopo global compartilhado)
 // ============================================================
 
@@ -25,6 +30,8 @@
     function collectHandoffData() {
       // Sincroniza specs globais antes de exportar
       if (typeof createdSpecs !== 'undefined') handoffData.specs = createdSpecs;
+      // --- Acessibilidade --- array dedicado, nunca mistura com handoffData.specs
+      if (typeof a11ySpecs !== 'undefined') handoffData.a11ySpecs = a11ySpecs;
 
       // Step 1
       const s1Titulo = document.getElementById('s1-titulo');
@@ -1896,6 +1903,153 @@ ${(handoffData.createdFlows || []).length === 0
         `;
       }
 
+      // --- Acessibilidade --- aba "♿ Especificações de Acessibilidade" do
+      // export HTML — substitui a antiga "Gerar Ficha de Acessibilidade" (que
+      // desenhava um frame separado no canvas via generate-a11y-ficha,
+      // removido). Mesmo padrão visual da aba "🔍 Elementos Escaneados"
+      // (accordion + grid de cards), um accordion por Área Marcada, ordenado
+      // por area.number, com um bucket "Sem área" ao final — espelha a regra
+      // de agrupamento de renderA11yGroupedList (accessibility.js). Junta as
+      // specs/áreas avulsas (handoffData.a11ySpecs/a11yAreas) com as
+      // vinculadas a frame (f.a11ySpecs/f.a11yAreas), igual generateA11yFicha
+      // fazia antes de ser removida.
+      const _allA11ySpecs = [
+        ...(handoffData.a11ySpecs || []),
+        ...(_allFrames.flatMap(f => f.a11ySpecs || [])),
+      ].filter(Boolean);
+      const _allA11yAreas = [
+        ...(handoffData.a11yAreas || []),
+        ...(_allFrames.flatMap(f => f.a11yAreas || [])),
+      ].filter(Boolean)
+       .sort((a, b) => (a.number || 0) - (b.number || 0));
+
+      const a11ySpecsCount = _allA11ySpecs.length;
+      let a11yTabHTML = "";
+
+      if (a11ySpecsCount === 0) {
+        a11yTabHTML = `
+          <div class="text-center py-12 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800/80">
+            <p class="text-sm font-bold text-slate-500 dark:text-slate-400">Nenhuma especificação de acessibilidade mapeada.</p>
+          </div>
+        `;
+      } else {
+        const _a11ySpecCardHTML = (spec, cardIndex) => {
+          const meta = A11Y_CATEGORIES[spec.a11yType] || { label: 'Acessibilidade', icon: 'accessibility', color: '#0891B2', fill: '#E0F5FA' };
+          const color = spec.color || meta.color;
+          const fill = spec.fillColor || meta.fill;
+          const badgeLabel = meta.badge || spec.letter || 'A';
+          const props = (spec.properties || []).filter(p => p && p.value);
+          const targetName = spec.targetNodeName || spec.name || 'Elemento';
+
+          const figmaLink = (fileKey && spec.targetNodeId)
+            ? `https://www.figma.com/design/${fileKey}/?node-id=${spec.targetNodeId.replace(/:/g, '-')}`
+            : "";
+          const figmaLinkHTML = figmaLink ? `
+            <a href="${figmaLink}" target="_blank" title="Focar este elemento no Figma" aria-label="Focar este elemento no Figma" class="text-slate-500 hover:text-blue-500 transition-colors p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 cursor-pointer ml-auto flex items-center justify-center">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+            </a>` : "";
+
+          const propsHTML = props.length > 0 ? `
+            <div class="mt-3 border-t border-slate-100 dark:border-slate-800 pt-2.5 space-y-1.5 text-left">
+              ${props.map(p => `
+                <div class="flex items-start justify-between gap-2 text-[11px]">
+                  <span class="font-bold text-slate-500 dark:text-slate-400 shrink-0 w-24">${escapeHtml(p.label || '')}</span>
+                  <span class="text-slate-700 dark:text-slate-200 text-right flex-1">${escapeHtml(String(p.value))}</span>
+                </div>
+              `).join('')}
+            </div>` : "";
+
+          const searchText = [targetName, meta.label, ...props.map(p => `${p.label} ${p.value}`)].filter(Boolean).join(' ').toLowerCase().replace(/"/g, '&quot;');
+
+          return `
+            <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-xl shadow-sm p-4 hover:shadow-md transition-all a11y-spec-card text-left" data-search="${searchText}">
+              <div class="flex items-start gap-3 text-left">
+                <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-extrabold text-white shrink-0" style="background-color:${color}">${escapeHtml(String(badgeLabel))}</div>
+                <div class="flex-1 min-w-0">
+                  <span class="font-extrabold text-slate-800 dark:text-white text-xs truncate block" title="${escapeHtml(targetName)}">${escapeHtml(targetName)}</span>
+                  <span class="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded-full border text-[9px] font-bold" style="background-color:${fill};border-color:${color};color:${color};">
+                    <i data-lucide="${meta.icon}" class="w-2.5 h-2.5"></i> ${meta.label}
+                  </span>
+                </div>
+                ${figmaLinkHTML}
+              </div>
+              ${propsHTML}
+            </div>
+          `;
+        };
+
+        const _a11yAreaAccordionHTML = (area, areaSpecs, idx) => {
+          const gridId = `grid-a11y-${idx}`;
+          const count = areaSpecs.length;
+          const itemsHTML = areaSpecs.map((s, si) => _a11ySpecCardHTML(s, si)).join('');
+          return `
+            <div class="a11y-section-container bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl shadow-sm mb-6 overflow-hidden">
+              <button onclick="toggleHTMLAccordion('${gridId}', this)" class="w-full px-5 py-4 bg-slate-50/50 dark:bg-slate-950/20 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors flex items-center justify-between font-black text-slate-800 dark:text-white text-xs uppercase tracking-wider select-none text-left">
+                <div class="flex items-center gap-3">
+                  <div class="w-7 h-7 rounded-full bg-[#0070AF] flex items-center justify-center text-[10px] font-extrabold text-white shrink-0">${escapeHtml(String(area.number != null ? area.number : '·'))}</div>
+                  <div>
+                    <span class="font-black">${escapeHtml(area.label || 'Área')}</span>
+                    <span class="section-count-span text-[9px] font-bold text-slate-500 dark:text-slate-400 ml-1.5 uppercase tracking-wide">(${count} especificaç${count === 1 ? 'ão' : 'ões'})</span>
+                  </div>
+                </div>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 transition-transform"></i>
+              </button>
+              <div id="${gridId}" class="hidden p-5 border-t border-slate-100 dark:border-slate-800/80">
+                <div class="grid sm:grid-cols-2 gap-4">
+                  ${itemsHTML || `<p class="text-[11px] text-slate-500 dark:text-slate-400 text-center py-3 col-span-2">Nenhuma especificação nesta área.</p>`}
+                </div>
+              </div>
+            </div>
+          `;
+        };
+
+        const _a11ySemAreaAccordionHTML = (specs, idx) => {
+          const gridId = `grid-a11y-sem-area`;
+          const count = specs.length;
+          const itemsHTML = specs.map((s, si) => _a11ySpecCardHTML(s, si)).join('');
+          return `
+            <div class="a11y-section-container bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800/40 rounded-2xl shadow-sm mb-6 overflow-hidden">
+              <button onclick="toggleHTMLAccordion('${gridId}', this)" class="w-full px-5 py-4 bg-amber-50/50 dark:bg-amber-950/10 hover:bg-amber-100 dark:hover:bg-amber-900/20 transition-colors flex items-center justify-between font-black text-slate-800 dark:text-white text-xs uppercase tracking-wider select-none text-left">
+                <div class="flex items-center gap-3">
+                  <div class="w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-500 flex items-center justify-center shrink-0">
+                    <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
+                  </div>
+                  <div>
+                    <span class="font-black">Sem área</span>
+                    <span class="section-count-span text-[9px] font-bold text-slate-500 dark:text-slate-400 ml-1.5 uppercase tracking-wide">(${count} especificaç${count === 1 ? 'ão' : 'ões'})</span>
+                  </div>
+                </div>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 transition-transform"></i>
+              </button>
+              <div id="${gridId}" class="hidden p-5 border-t border-slate-100 dark:border-slate-800/80">
+                <div class="grid sm:grid-cols-2 gap-4">${itemsHTML}</div>
+              </div>
+            </div>
+          `;
+        };
+
+        const a11yAreasBlocksHTML = _allA11yAreas.map((area, idx) => {
+          const areaSpecs = _allA11ySpecs.filter(s => s.a11yAreaId === area.id);
+          return _a11yAreaAccordionHTML(area, areaSpecs, idx);
+        }).join('');
+
+        const a11ySemArea = _allA11ySpecs.filter(s => !s.a11yAreaId || !_allA11yAreas.some(a => a.id === s.a11yAreaId));
+        const a11ySemAreaHTML = a11ySemArea.length > 0 ? _a11ySemAreaAccordionHTML(a11ySemArea, _allA11yAreas.length) : "";
+
+        a11yTabHTML = `
+          <div class="space-y-4">
+            <div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80 mb-2 text-left">
+              <div class="flex items-center justify-between">
+                <h4 class="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Resumo de Acessibilidade</h4>
+                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400">${_allA11yAreas.length} área${_allA11yAreas.length === 1 ? '' : 's'} · ${a11ySpecsCount} especificaç${a11ySpecsCount === 1 ? 'ão' : 'ões'}</span>
+              </div>
+            </div>
+            ${a11yAreasBlocksHTML}
+            ${a11ySemAreaHTML}
+          </div>
+        `;
+      }
+
       // Structured payload for "Exportar JSON" — stripped of preview base64
       // so devs can consume the audit data in their pipeline without dragging
       // 30 MB of inline PNGs.
@@ -1962,6 +2116,17 @@ ${(handoffData.createdFlows || []).length === 0
               <i data-lucide="search" class="w-4 h-4"></i>
             </div>
             <input type="text" id="scanned-search" oninput="var g = document.getElementById('global-search'); if (g && g.value !== this.value) g.value = this.value; filterElements(this.value)" placeholder="Buscar elemento escaneado..." class="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-xl text-xs focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder:text-slate-500 dark:placeholder:text-slate-500 shadow-sm" />
+          </div>
+        </div>
+      `;
+
+      const a11ySearchBarHTML = `
+        <div class="mb-6">
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
+              <i data-lucide="search" class="w-4 h-4"></i>
+            </div>
+            <input type="text" id="a11y-search" oninput="var g = document.getElementById('global-search'); if (g && g.value !== this.value) g.value = this.value; filterA11yElements(this.value)" placeholder="Buscar especificação de acessibilidade..." class="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-xl text-xs focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder:text-slate-500 dark:placeholder:text-slate-500 shadow-sm" />
           </div>
         </div>
       `;
@@ -2036,11 +2201,6 @@ ${(handoffData.createdFlows || []).length === 0
       <button onclick="downloadJSON()" title="Baixa o JSON estruturado do scan (sem previews) para uso em pipeline de dev" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all cursor-pointer">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3M13 15h3M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" /></svg>
         <span>Exportar JSON</span>
-      </button>
-
-      <button onclick="downloadSelf()" class="flex items-center gap-1.5 px-3 py-1.5 bg-[#0070af] hover:bg-blue-700 text-white rounded-2xl text-xs font-bold transition-all shadow-md cursor-pointer">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-        <span>Gerar Ficha de Projeto</span>
       </button>
 
       <button onclick="toggleTheme()" class="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl transition-colors cursor-pointer">
@@ -2125,6 +2285,9 @@ ${(handoffData.createdFlows || []).length === 0
         <button onclick="switchTab('tab-scanned')" id="btn-tab-scanned" class="tab-btn px-1 pb-3 text-sm font-extrabold text-slate-500 dark:text-slate-400 border-b-2 border-transparent hover:text-slate-700 dark:hover:text-slate-300 focus:outline-none transition-all uppercase tracking-wider whitespace-nowrap shrink-0">
           🔍 Elementos Escaneados (${scannedItemsCount})
         </button>
+        <button onclick="switchTab('tab-a11y')" id="btn-tab-a11y" class="tab-btn px-1 pb-3 text-sm font-extrabold text-slate-500 dark:text-slate-400 border-b-2 border-transparent hover:text-slate-700 dark:hover:text-slate-300 focus:outline-none transition-all uppercase tracking-wider whitespace-nowrap shrink-0">
+          ♿ Acessibilidade (${a11ySpecsCount})
+        </button>
       </div>
 
       <div id="tab-document" class="tab-panel animate-in fade-in duration-300 space-y-4">
@@ -2138,6 +2301,11 @@ ${(handoffData.createdFlows || []).length === 0
       <div id="tab-scanned" class="tab-panel hidden animate-in fade-in duration-300">
         ${searchBarHTML}
         ${scannedHTML}
+      </div>
+
+      <div id="tab-a11y" class="tab-panel hidden animate-in fade-in duration-300">
+        ${a11ySpecsCount > 0 ? a11ySearchBarHTML : ""}
+        ${a11yTabHTML}
       </div>
     </main>
   </div>
@@ -2295,6 +2463,11 @@ ${(handoffData.createdFlows || []).length === 0
       if (scannedInput && scannedInput.value !== query) scannedInput.value = query;
       filterElements(query);
 
+      // Mantém o campo de busca da aba "Acessibilidade" sincronizado.
+      var a11yInput = document.getElementById('a11y-search');
+      if (a11yInput && a11yInput.value !== query) a11yInput.value = query;
+      filterA11yElements(query);
+
       // Specs, medidas e fluxos renderizados dentro de accordions da aba
       // "Ficha de Projeto" — agrupados por accordion, nunca misturados.
       var accordions = document.querySelectorAll('#tab-document > div');
@@ -2329,14 +2502,19 @@ ${(handoffData.createdFlows || []).length === 0
         var docHasVisible = docTab && docTab.querySelector('.handex-searchable:not(.hidden)');
         var scanTab = document.getElementById('tab-scanned');
         var scanHasVisible = scanTab && scanTab.querySelector('.scanned-element-card:not(.hidden)');
+        var a11yTab = document.getElementById('tab-a11y');
+        var a11yHasVisible = a11yTab && a11yTab.querySelector('.a11y-spec-card:not(.hidden)');
         var docActive = docTab && !docTab.classList.contains('hidden');
         var scanActive = scanTab && !scanTab.classList.contains('hidden');
+        var a11yActive = a11yTab && !a11yTab.classList.contains('hidden');
 
-        if (!docActive && !scanActive) return;
-        if (docActive && !docHasVisible && scanHasVisible) {
-          switchTab('tab-scanned');
-        } else if (scanActive && !scanHasVisible && docHasVisible) {
-          switchTab('tab-document');
+        if (!docActive && !scanActive && !a11yActive) return;
+        if (docActive && !docHasVisible && (scanHasVisible || a11yHasVisible)) {
+          switchTab(scanHasVisible ? 'tab-scanned' : 'tab-a11y');
+        } else if (scanActive && !scanHasVisible && (docHasVisible || a11yHasVisible)) {
+          switchTab(docHasVisible ? 'tab-document' : 'tab-a11y');
+        } else if (a11yActive && !a11yHasVisible && (docHasVisible || scanHasVisible)) {
+          switchTab(docHasVisible ? 'tab-document' : 'tab-scanned');
         }
       }
     }
@@ -2366,6 +2544,40 @@ ${(handoffData.createdFlows || []).length === 0
         }
 
         // Hide/show the section itself based on count
+        if (visibleCount === 0 && lowerQuery !== '') {
+          sec.classList.add('hidden');
+        } else {
+          sec.classList.remove('hidden');
+        }
+      });
+    }
+
+    // Mesmo padrão de filterElements, mas para a aba "♿ Acessibilidade"
+    // (accordions por Área Marcada, cards de spec) — filtra por
+    // data-search (nome do elemento-alvo + categoria + propriedades).
+    function filterA11yElements(query) {
+      var lowerQuery = query.toLowerCase().trim();
+      var sections = document.querySelectorAll('.a11y-section-container');
+
+      sections.forEach(function(sec) {
+        var cards = sec.querySelectorAll('.a11y-spec-card');
+        var visibleCount = 0;
+
+        cards.forEach(function(card) {
+          var text = card.getAttribute('data-search') || '';
+          if (text.indexOf(lowerQuery) !== -1) {
+            card.classList.remove('hidden');
+            visibleCount++;
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+
+        var countSpan = sec.querySelector('.section-count-span');
+        if (countSpan) {
+          countSpan.textContent = '(' + visibleCount + ' especificaç' + (visibleCount === 1 ? 'ão' : 'ões') + ')';
+        }
+
         if (visibleCount === 0 && lowerQuery !== '') {
           sec.classList.add('hidden');
         } else {
@@ -2467,22 +2679,6 @@ ${(handoffData.createdFlows || []).length === 0
         closePreviewModal();
       }
     });
-
-    function downloadSelf() {
-      const baseName = "${safeName}";
-      const htmlContent = "<!DOCTYPE html>\\n" + document.documentElement.outerHTML;
-      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "handoff_" + baseName + "_visualizador.html";
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(function() {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 100);
-    }
 
     // Structured scan data (sem previews base64) — pronto para pipeline de dev.
     window.__HANDEX_SCAN_PAYLOAD__ = ${scanPayloadLiteral};

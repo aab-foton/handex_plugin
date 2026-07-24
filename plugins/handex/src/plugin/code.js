@@ -1,4 +1,5 @@
 ﻿import { auditProperty, AUDIT_SCORE, AUDIT_THRESHOLDS, frameJsonTemplate, suggestClosestMatch } from './audit.js';
+import A11Y_CONTENT from './refs/design-acessivel-content.json';
 
 figma.showUI(__html__, { width: 480, height: 750 });
 
@@ -51,6 +52,343 @@ function _compareSpecTags(tagA, tagB) {
   return 0;
 }
 
+// ============================================================
+// Fase 2c — import real dos componentes da lib "Design Acessível" em vez de
+// desenhar o card procedural. Ver .claude/agents/accessibility-specialist.md
+// ("Mecânica de variantes aninhadas") e refs/design-acessivel-content.json.
+// ============================================================
+
+// Procura, em profundidade, a primeira INSTANCE descendente (inclusive a
+// própria raiz) que tenha uma componentProperty cujo nome (sem o sufixo
+// "#id" que o Figma às vezes adiciona) bata com um dos candidatos, na ordem
+// dada. Candidatos múltiplos existem porque nem todo nome de property foi
+// confirmado ao vivo no Figma (ver comentários de cada categoria abaixo) —
+// se o nome real divergir de todos os candidatos, retorna null e o chamador
+// trata como falha (cai no fallback procedural).
+function _findNestedInstanceWithAnyProp(root, propNameCandidates) {
+  if (root.type === 'INSTANCE' && root.componentProperties) {
+    for (const candidate of propNameCandidates) {
+      const key = Object.keys(root.componentProperties).find(
+        k => k.split('#')[0].toLowerCase() === candidate.toLowerCase()
+      );
+      if (key) return { instance: root, key };
+    }
+  }
+  if ('children' in root) {
+    for (const child of root.children) {
+      const found = _findNestedInstanceWithAnyProp(child, propNameCandidates);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+// Localiza um TEXT node descendente cujo conteúdo atual bate exatamente com
+// `value` — usado para achar o campo "Observações" (ou "Descrição", quando
+// customizável) dentro do componente real importado, sem depender do nome
+// da camada (que não foi catalogado). O valor padrão vem do próprio
+// design-acessivel-content.json, então o match tende a ser exato logo após
+// o import (antes de qualquer edição).
+function _findTextNodeByCurrentValue(root, value) {
+  if (root.type === 'TEXT' && root.characters === value) return root;
+  if ('children' in root) {
+    for (const child of root.children) {
+      const found = _findTextNodeByCurrentValue(child, value);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+// Best-effort: tenta achar o selo/tag de letra manual (A, B, A1...) dentro
+// do componente importado para sincronizar com o texto digitado no
+// formulário. Não catalogamos o nome exato dessa camada ainda — procura por
+// nome de camada plausível (Tag/Selo/Letra) e, como último recurso, por um
+// TEXT node cujo conteúdo atual seja uma letra maiúscula curta (o "molde"
+// que a vertical deixou no componente publicado, ex: "A"). Nunca lança erro:
+// se não achar, a spec real ainda é criada, só sem o selo sincronizado —
+// precisa validação ao vivo no Figma (ver resumo da tarefa).
+function _bestEffortSyncA11yBadgeLetter(root, letter) {
+  try {
+    const byName = root.findOne
+      ? root.findOne(n => n.type === 'TEXT' && /tag|selo|letra/i.test(n.name))
+      : null;
+    const target = byName || root.findOne(n => n.type === 'TEXT' && /^[A-Z]\d*(\.\d+)*$/.test(n.characters));
+    if (target) {
+      figma.loadFontAsync(target.fontName).then(() => { target.characters = letter; }).catch(() => {});
+    }
+  } catch (e) { /* best-effort — nunca bloqueia a criação da spec */ }
+}
+
+// Tenta reaproveitar o componente REAL da lib "Design Acessível" em vez de
+// desenhar o card do zero. Lança (throw) em qualquer ponto de incerteza —
+// quem chama trata a exceção como "não deu, volta pro card procedural" (ver
+// create-unified-spec). "Estrutura da página" tem dois níveis de instância
+// aninhada (variacao → tipo/idioma) — mecânica confirmada via REST API em
+// 2026-07-23 (nodes 31:535 "[a11y base] estrutura da página", 31:408 "EE
+// marco de navegacao", 31:383 "EE idiomas"; ver
+// .claude/agents/accessibility-specialist.md). "titulo da pagina" não tem
+// segundo nível (conteúdo fixo); variação "customizavel" (nível 1) e
+// "customizavel" dentro de marco de navegação não têm conteúdo catalogado —
+// caem no fallback procedural.
+async function _tryImportA11yComponent(opts) {
+  const type = opts.a11yType;
+
+  const catData = A11Y_CONTENT.categories[type];
+  if (!catData || !catData.wrapperComponentKey) throw new Error('a11y-sem-wrapper-key: ' + type);
+
+  const sub = opts.a11ySubtype || {};
+  let defaultEntry = null;
+  let propCandidates = null;
+  let propValue = null;
+
+  if (type === 'elemento') {
+    if (sub.isOutro || !sub.componente) throw new Error('a11y-elemento-outro-sem-componente-real');
+    defaultEntry = catData.componentes[sub.componente];
+    if (!defaultEntry) throw new Error('a11y-elemento-componente-desconhecido: ' + sub.componente);
+    // Nome confirmado no material da vertical (ver accessibility-specialist.md).
+    propCandidates = ['componente'];
+    propValue = sub.componente;
+  } else if (type === 'titulo') {
+    if (sub.nivel === 'mobile') throw new Error('a11y-titulo-mobile-sem-variante-real');
+    defaultEntry = catData.niveis && catData.niveis[sub.nivel];
+    if (!defaultEntry) throw new Error('a11y-titulo-nivel-desconhecido: ' + sub.nivel);
+    // Nome confirmado no material da vertical.
+    propCandidates = ['nivel'];
+    propValue = sub.nivel;
+  } else if (type === 'decorativo') {
+    defaultEntry = catData.subtipos && catData.subtipos[sub.tipo];
+    if (!defaultEntry) throw new Error('a11y-decorativo-subtipo-desconhecido: ' + sub.tipo);
+    // Nome citado como "variacao" no material da vertical ("variacao=gerais" /
+    // "variacao=imagem"), mas não confirmado via REST API node a node — por
+    // isso também tenta "tipo" como segundo candidato.
+    propCandidates = ['variacao', 'tipo'];
+    propValue = sub.tipo;
+  } else if (type === 'informacoes') {
+    if (sub.subtipo === 'customizavel') throw new Error('a11y-informacoes-customizavel-sem-variante-real');
+    defaultEntry = catData.subtipos && catData.subtipos[sub.subtipo];
+    if (!defaultEntry) throw new Error('a11y-informacoes-subtipo-desconhecido: ' + sub.subtipo);
+    // Nome da property não catalogado no material da vertical — tenta os
+    // candidatos mais prováveis. Precisa confirmar ao vivo no Figma.
+    propCandidates = ['tipo', 'subtipo', 'variacao'];
+    propValue = sub.subtipo;
+  } else if (type === 'estrutura') {
+    // Nível 1: property "variacao" no set 31:535, valores reais confirmados
+    // (idiomas / marco de navegacao / titulo da pagina) — "customizavel" (o
+    // 4º valor que o formulário oferece) não existe como variante real.
+    if (sub.variacao !== 'idiomas' && sub.variacao !== 'marco de navegacao' && sub.variacao !== 'titulo da pagina') {
+      throw new Error('a11y-estrutura-variacao-sem-import-real: ' + sub.variacao);
+    }
+    propCandidates = ['variacao'];
+    propValue = sub.variacao;
+    if (sub.variacao === 'idiomas') {
+      defaultEntry = catData.subtipos.idiomas && catData.subtipos.idiomas[sub.idioma];
+      if (!defaultEntry) throw new Error('a11y-estrutura-idioma-desconhecido: ' + sub.idioma);
+    } else if (sub.variacao === 'marco de navegacao') {
+      // "customizavel" existe como variante real do sub-set (valor
+      // "customizável", com acento) mas não temos Descrição/Notas
+      // catalogadas pra ele — cai no fallback procedural.
+      if (sub.tipo === 'customizavel') throw new Error('a11y-estrutura-marco-customizavel-sem-conteudo-catalogado');
+      defaultEntry = catData.subtipos['marco de navegacao'] && catData.subtipos['marco de navegacao'][sub.tipo];
+      if (!defaultEntry) throw new Error('a11y-estrutura-marco-desconhecido: ' + sub.tipo);
+    } else {
+      defaultEntry = catData.subtipos['titulo da pagina'];
+    }
+  } else {
+    throw new Error('a11y-tipo-sem-import-real: ' + type);
+  }
+
+  const wrapperComponent = await figma.importComponentByKeyAsync(catData.wrapperComponentKey);
+  const instance = wrapperComponent.createInstance();
+
+  const found = _findNestedInstanceWithAnyProp(instance, propCandidates);
+  if (!found) {
+    instance.remove();
+    throw new Error('a11y-instancia-aninhada-nao-encontrada: prop~=' + propCandidates.join('|'));
+  }
+
+  // Validação combinada com o pedido da tarefa: loga a property completa uma
+  // vez por import pra facilitar conferir ao vivo no Figma (nome exato,
+  // sufixo #id, opções aceitas) sem precisar de outro ciclo de debug.
+  console.log('[a11y-import] propriedade encontrada:', found.key, JSON.stringify(instance.componentProperties));
+
+  try {
+    found.instance.setProperties({ [found.key]: propValue });
+  } catch (e) {
+    instance.remove();
+    throw new Error('a11y-set-properties-falhou: ' + (e && e.message ? e.message : e));
+  }
+
+  // Estrutura da página tem um SEGUNDO nível de instância aninhada dentro do
+  // primeiro (variacao) — "idiomas" e "marco de navegacao" abrem um
+  // sub-componente próprio com a property "tipo" (idioma ou marco
+  // específico); "titulo da pagina" não tem esse segundo nível (conteúdo
+  // fixo). Precisa buscar DEPOIS de setProperties acima, porque é a troca de
+  // variacao que revela a subárvore certa.
+  if (type === 'estrutura' && sub.variacao !== 'titulo da pagina') {
+    const nestedValue = sub.variacao === 'idiomas' ? sub.idioma : sub.tipo;
+    const nestedFound = _findNestedInstanceWithAnyProp(found.instance, ['tipo']);
+    if (!nestedFound) {
+      instance.remove();
+      throw new Error('a11y-estrutura-instancia-tipo-nao-encontrada');
+    }
+    try {
+      nestedFound.instance.setProperties({ [nestedFound.key]: nestedValue });
+    } catch (e) {
+      instance.remove();
+      throw new Error('a11y-estrutura-set-tipo-falhou: ' + (e && e.message ? e.message : e));
+    }
+  }
+
+  // Tag manual de Estrutura — o "Conector" (selo/estrela visível no elemento)
+  // tem sua própria property "letter#..." num nível irmão de "Elementos
+  // estruturais", fora da árvore de variacao/tipo — setProperties direto em
+  // vez do texto heurístico usado pra elemento/informacoes (mais confiável,
+  // confirmado via REST API).
+  if (type === 'estrutura' && opts.letter) {
+    const letterFound = _findNestedInstanceWithAnyProp(instance, ['letter']);
+    if (letterFound) {
+      try { letterFound.instance.setProperties({ [letterFound.key]: opts.letter }); } catch (e) { /* best-effort */ }
+    }
+  }
+
+  // O componente real só tem campos de Descrição/Observações/Notas de Código
+  // — não tem onde encaixar Componente/Variante/Label/Hint separadamente.
+  // Em vez de perder esse dado (ou duplicar num card paralelo), injeta tudo
+  // que foi capturado no formulário (exceto Descrição/Notas, que já vêm
+  // certas pela variante escolhida) dentro do campo Observações, uma linha
+  // por propriedade. Só cai no texto padrão do componente se não houver
+  // nenhum dado capturado pra mostrar.
+  const _infoLines = (opts.properties || [])
+    .filter(p => p && p.value && p.key !== 'descricao' && p.key !== 'notasCodigo')
+    .map(p => `${p.label}: ${p.value}`)
+    .join('\n');
+  if (_infoLines && defaultEntry.observacoes) {
+    const obsNode = _findTextNodeByCurrentValue(instance, defaultEntry.observacoes);
+    if (obsNode) {
+      try {
+        await figma.loadFontAsync(obsNode.fontName);
+        obsNode.characters = _infoLines;
+      } catch (e) { /* não bloqueia — observação fica com o texto padrão do componente */ }
+    }
+  }
+
+  // Tag manual (A, B, A1...) — só faz sentido pras categorias com tag manual.
+  if ((type === 'elemento' || type === 'informacoes') && opts.letter) {
+    _bestEffortSyncA11yBadgeLetter(instance, opts.letter);
+  }
+
+  return instance;
+}
+
+// Keys publicadas do component set "[a11y] Agrupamento" — o selo/marcador
+// PEQUENO (badge + moldura, ~40×40) que a vertical usa pra indicar QUAL
+// elemento a spec documenta, com uma "orientação" que já embute a direção do
+// conector (esquerda/direita/superior/inferior). Diferente do "Box specs LT"
+// (_tryImportA11yComponent, o card de detalhamento) — este é o marcador que
+// fica junto do elemento no canvas. Confirmado via REST API em 2026-07-24
+// (component set com properties "tipo"/"orientação"/"variação", variação
+// sempre "unitário" — por isso já indexamos direto por tipo+orientação em vez
+// de importar uma key e trocar variantProperties).
+const A11Y_AGRUPAMENTO_KEYS = {
+  elemento: {
+    direita:  '1a32480d314943f85d5bf48e97beda44be37233b',
+    esquerda: '918dc37577a8ba0b0b9b421bbfa4c0e831696b7a',
+    superior: 'e58a10ad987b3cc2feb7c7acf4b77e4e132c0b62',
+    inferior: 'f70dae1493341f9839a3a2e11b93855ddb78192b',
+  },
+  decorativo: {
+    direita:  'db8057dd5440ba35593fed4823b6b0746d2a5d3a',
+    esquerda: 'a638d41c126fc85074ecfb6b5c013ded77a7ca30',
+    superior: '625a28708db4453614eb3d18f2163f53a01738fc',
+    inferior: 'a8abbf67336b205d944ec2a97a62879c7f8a378e',
+  },
+  estrutura: {
+    direita:  '2f62f4c09d769578d3c5f9f7c42de94ea4b5a559',
+    esquerda: '0736255a49a164a93dbe5913925e8cd94474c102',
+    superior: 'cb88b4fe2d7a34fa5db191e1e29e99a462eaa88e',
+    inferior: 'd1de84d4afe1d169d51471b049e3b55191319b72',
+  },
+  titulo: {
+    direita:  '4df3d05e26dd4168c7d7de71fe689515c9b1895c',
+    esquerda: '5b759c2904110d3c60891be859e24f64d15833e9',
+    superior: '75e44fd1fc2f346fdaa7c6c59a9af09356bb045f',
+    inferior: 'f18bae60d1e9109c2ecd1b3c5e49bacdb3c6267a',
+  },
+  informacoes: {
+    direita:  '42eafe50b7b07e5cdacbbc1845c05af877768337',
+    esquerda: 'b1155ae94b549e7de188458b1289b8ba476af73d',
+    superior: '060a2f17dff2dc489fcb1620404eda5269b5e182',
+    inferior: 'faa943c3ccdec90b2fb06e6e58aaaa9ba0cbb867',
+  },
+};
+const _A11Y_SIDE_TO_ORIENTACAO = { left: 'esquerda', right: 'direita', top: 'superior', bottom: 'inferior' };
+
+// Tenta importar o marcador real (ver A11Y_AGRUPAMENTO_KEYS) em vez de
+// desenhar o contorno tracejado + chip procedural. Lança em qualquer ponto de
+// incerteza — quem chama trata a exceção como "cai no marcador desenhado" (ver
+// create-unified-spec), mesma filosofia de _tryImportA11yComponent.
+async function _tryImportA11yAgrupamento(opts) {
+  const orientacao = _A11Y_SIDE_TO_ORIENTACAO[opts.guideSide || 'right'];
+  const typeKeys = A11Y_AGRUPAMENTO_KEYS[opts.a11yType];
+  if (!typeKeys) throw new Error('a11y-agrupamento-tipo-desconhecido: ' + opts.a11yType);
+  const key = typeKeys[orientacao];
+  if (!key) throw new Error('a11y-agrupamento-orientacao-desconhecida: ' + orientacao);
+
+  const component = await figma.importComponentByKeyAsync(key);
+  const instance = component.createInstance();
+  instance.name = 'Agrupamento';
+
+  if (opts.letter) {
+    try {
+      instance.setProperties({ 'letra#3925:32': opts.letter });
+    } catch (e) { /* best-effort — nunca bloqueia a criação da spec */ }
+  }
+
+  return instance;
+}
+
+// Organização de canvas para specs/áreas de Acessibilidade — todo nó criado
+// pela vertical de a11y é agrupado dentro de uma única SECTION na página,
+// em vez de ficar solto ao nível da página. Section (não Frame) porque não
+// recorta conteúdo que ultrapasse seus limites — as specs continuam
+// espalhadas pela tela perto de cada elemento documentado, a Section só as
+// organiza no painel de Layers.
+const A11Y_SECTION_NAME = 'Especificações de Acessibilidade';
+
+function _getOrCreateA11ySection() {
+  let section = figma.currentPage.children.find(
+    n => n.type === 'SECTION' && n.name === A11Y_SECTION_NAME
+  );
+  if (!section) {
+    section = figma.createSection();
+    section.name = A11Y_SECTION_NAME;
+    section.x = 0;
+    section.y = 0;
+    section.resizeWithoutConstraints(200, 200);
+  }
+  return section;
+}
+
+// Reparenta `node` (hoje filho direto de figma.currentPage, com x/y já
+// absolutos da página) para dentro da Section organizadora de Acessibilidade,
+// preservando a posição visual. Section só existe como filha direta da
+// página (sem transform próprio além de x/y), então x/y do nó relativo à
+// Section = x/y absolutos atuais − x/y da Section. Best-effort: qualquer
+// falha aqui não deve invalidar a spec/área já criada normalmente na página.
+function _reparentIntoA11ySection(node) {
+  try {
+    const _origX = node.x;
+    const _origY = node.y;
+    const section = _getOrCreateA11ySection();
+    section.appendChild(node);
+    node.x = Math.round(_origX - section.x);
+    node.y = Math.round(_origY - section.y);
+  } catch (e) {
+    // organização é só cosmética — a spec/área segue existindo normalmente
+  }
+}
+
 // Reordena o specGroup recém-criado entre os demais grupos de spec da página
 // para que a profundidade (z-order) siga a ordem hierárquica das tags, não a
 // ordem de criação. Não afeta X/Y — só o índice na lista de filhos da página.
@@ -61,7 +399,7 @@ function _reorderSpecGroupByTag(specGroup, tag) {
   // a spec para trás de conteúdo não-spec da página quando não há tag posterior.
   let insertIndex = figma.currentPage.children.length;
   for (let i = 0; i < siblings.length; i++) {
-    const m = siblings[i].name.match(/^\[Spec \| ([A-Z]\d*(?:\.\d+)*) \| [a-z]+\] /);
+    const m = siblings[i].name.match(/^\[Spec(?:A11y)? \| ([A-Z]\d*(?:\.\d+)*) \| [a-z]+\] /);
     if (!m) continue;
     if (_compareSpecTags(tag, m[1]) < 0) {
       const idx = figma.currentPage.children.indexOf(siblings[i]);
@@ -442,7 +780,17 @@ figma.ui.onmessage = async (msg) => {
         for (const spec of (frame.createdSpecs || [])) {
           if (!spec || !spec.pendingConfirmation) continue;
           const specNode = await figma.getNodeByIdAsync(spec.id);
-          if (specNode && specNode.name && specNode.name.startsWith('[Spec | ')) {
+          if (specNode && specNode.name && /^\[Spec(A11y)? \| /.test(specNode.name)) {
+            specNode.locked = true;
+          }
+          spec.pendingConfirmation = false;
+          _pendingSpecsLocked++;
+        }
+        // --- Acessibilidade --- mesmo auto-lock, agora a partir do array dedicado
+        for (const spec of (frame.a11ySpecs || [])) {
+          if (!spec || !spec.pendingConfirmation) continue;
+          const specNode = await figma.getNodeByIdAsync(spec.id);
+          if (specNode && specNode.name && /^\[Spec(A11y)? \| /.test(specNode.name)) {
             specNode.locked = true;
           }
           spec.pendingConfirmation = false;
@@ -1219,10 +1567,12 @@ figma.ui.onmessage = async (msg) => {
       }
 
       // 1.9b ESPECIFICAÇÕES DE ACESSIBILIDADE (seção independente — só aparece se
-      // houver ao menos uma spec com a11yType em algum frame). Mesma origem de dados
-      // (frame.createdSpecs / properties[]) que 1.9, só filtrada e rotulada diferente.
-      const _A11Y_TYPE_LABEL = { elemento: 'Elementos e Imagens', titulo: 'Título', decorativo: 'Elemento Decorativo' };
-      const _framesWithA11y = (_frames || []).filter(f => (f.createdSpecs || []).some(s => s && s.a11yType));
+      // houver ao menos uma spec em algum frame.a11ySpecs). Array estruturalmente
+      // separado de frame.createdSpecs (ver core.js/_migrateA11ySpecsFromCreatedSpecs
+      // para dados salvos antes dessa separação) — mesmo formato de properties[]
+      // que 1.9, só de origem e rótulo diferentes.
+      const _A11Y_TYPE_LABEL = { elemento: 'Elementos e Imagens', estrutura: 'Estrutura da Página', titulo: 'Nível de Título', decorativo: 'Elemento Decorativo', informacoes: 'Informações Adicionais' };
+      const _framesWithA11y = (_frames || []).filter(f => (f.a11ySpecs || []).length > 0);
       if (_framesWithA11y.length > 0) {
         const a11ySection = createSection(content, "Especificações de Acessibilidade");
         for (const f of _framesWithA11y) {
@@ -1234,7 +1584,7 @@ figma.ui.onmessage = async (msg) => {
           fGroup.appendChild(fLabel);
           setFillAndHug(fLabel);
 
-          const a11ySpecs = (f.createdSpecs || []).filter(s => s && s.a11yType);
+          const a11ySpecs = (f.a11ySpecs || []).filter(Boolean);
           const aSpecs = createFrame("VERTICAL", 0, 6);
           aSpecs.fills = [];
           fGroup.appendChild(aSpecs);
@@ -2858,14 +3208,57 @@ figma.ui.onmessage = async (msg) => {
       // sendo o padrão das specs normais, não mexer nisso globalmente.
       const _tagRadius = opts.a11yType ? 21 : 8;
 
+      // Specs de Acessibilidade recebem layer tag própria ([SpecA11y | ...])
+      // para ficarem identificáveis e filtráveis no painel de layers do Figma,
+      // sem se misturar com as specs normais ([Spec | ...]).
+      const _layerTag = opts.a11yType ? 'SpecA11y' : 'Spec';
+
+      // Fase 2c — pra specs de Acessibilidade, tenta reaproveitar o
+      // componente REAL da lib "Design Acessível" (importComponentByKeyAsync)
+      // no lugar do card desenhado. Qualquer incerteza (lib inacessível, key
+      // inválida, property/instância aninhada não encontrada) cai no
+      // fallback procedural abaixo sem travar a criação da spec — ver
+      // _tryImportA11yComponent.
+      let specCard = null;
+      let _a11yImportFailReason = null;
+      let _markerFailReason = null;
+      if (opts.a11yType) {
+        try {
+          specCard = await _tryImportA11yComponent(opts);
+          specCard.name = 'Spec Notes';
+          // Fundo branco garantido — o componente real já nasce branco na
+          // maioria dos casos, mas força explicitamente pra não depender
+          // disso (evita ficar transparente sobre conteúdo real da tela).
+          try { specCard.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }]; } catch (e) { }
+          // Padding interno garantido em 12 — força explicitamente em vez de
+          // confiar no padding embutido da variante importada, que pode
+          // variar entre as 5 categorias/subtipos.
+          try {
+            if ('paddingLeft' in specCard) {
+              specCard.paddingLeft = 12;
+              specCard.paddingRight = 12;
+              specCard.paddingTop = 12;
+              specCard.paddingBottom = 12;
+            }
+          } catch (e) { }
+        } catch (e) {
+          specCard = null;
+          _a11yImportFailReason = e && e.message ? e.message : String(e);
+        }
+      }
+
+      if (!specCard) {
       // Create Spec Card
-      const specCard = figma.createFrame();
+      specCard = figma.createFrame();
       specCard.name = 'Spec Notes';
       specCard.layoutMode = "VERTICAL";
-      specCard.paddingLeft = 16;
-      specCard.paddingRight = 16;
-      specCard.paddingTop = 16;
-      specCard.paddingBottom = 16;
+      // Specs de A11y usam 12px, igual ao padding padrão do "Box specs LT"
+      // real da lib — specs normais mantêm 16px (não mexer nisso).
+      const _cardPadding = opts.a11yType ? 12 : 16;
+      specCard.paddingLeft = _cardPadding;
+      specCard.paddingRight = _cardPadding;
+      specCard.paddingTop = _cardPadding;
+      specCard.paddingBottom = _cardPadding;
       specCard.itemSpacing = 12;
       specCard.cornerRadius = 8;
       specCard.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
@@ -3055,6 +3448,7 @@ figma.ui.onmessage = async (msg) => {
         linkTxt.layoutAlign = "STRETCH";
         specCard.appendChild(linkTxt);
       }
+      } // fim do fallback procedural (if (!specCard))
 
       // Group variables
       let groupNodes = [];
@@ -3063,6 +3457,41 @@ figma.ui.onmessage = async (msg) => {
       // Positioning
       const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
       if (bounds) {
+        // Fase 2d — pra specs de Acessibilidade, tenta reaproveitar o
+        // marcador REAL "[a11y] Agrupamento" da lib no lugar do contorno
+        // tracejado + chip desenhados. Qualquer incerteza (lib inacessível,
+        // key inválida, orientação sem mapa) cai no marcador procedural
+        // abaixo sem travar a criação da spec — ver _tryImportA11yAgrupamento.
+        let marker = null;
+        if (opts.a11yType) {
+          try {
+            marker = await _tryImportA11yAgrupamento(opts);
+          } catch (e) {
+            marker = null;
+            _markerFailReason = e && e.message ? e.message : String(e);
+          }
+        }
+
+        // Âncora usada pelo conector mais abaixo — bounds do elemento por
+        // padrão (specs normais e fallback procedural), ou do marcador real
+        // quando ele existe (o conector nasce dele, não do elemento em si).
+        let _markerAnchorBounds = bounds;
+
+        if (marker) {
+          // Redimensiona o marcador real pra envolver o elemento inteiro —
+          // mesma folga (16px por lado) que o contorno tracejado procedural
+          // usava, mantendo o mesmo enquadramento visual. O componente
+          // "Agrupamento" foi feito pra isso (moldura + selo num canto,
+          // conforme a orientação escolhida), não é só um badge pequeno.
+          figma.currentPage.appendChild(marker);
+          try {
+            marker.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
+          } catch (e) { /* variante sem resize livre — segue com o tamanho padrão */ }
+          marker.x = Math.round(bounds.x - 16);
+          marker.y = Math.round(bounds.y - 16);
+          groupNodes.push(marker);
+          _markerAnchorBounds = marker.absoluteBoundingBox || _markerAnchorBounds;
+        } else {
         // Draw a dotted highlight frame around the node
         const contour = figma.createFrame();
         contour.name = 'Destaque';
@@ -3103,6 +3532,7 @@ figma.ui.onmessage = async (msg) => {
         chip.y = 0;
 
         groupNodes.push(contour);
+        } // fim do fallback procedural do marcador (else de `if (marker)`)
 
         // Append card to page first so Figma computes its real dimensions
         figma.currentPage.appendChild(specCard);
@@ -3128,20 +3558,39 @@ figma.ui.onmessage = async (msg) => {
           if (bb.x < _letterMap[l].x) _letterMap[l].x = bb.x;
           if (bb.y < _letterMap[l].topY) _letterMap[l].topY = bb.y;
         };
-        figma.currentPage.children.forEach(n => {
+        // Título usa selo FIXO "H" repetido em elementos diferentes — não é um
+        // identificador único como as tags normais/de Elementos e Imagens, então
+        // não pode alimentar o agrupamento por "mesma tag" (empilharia specs de
+        // títulos diferentes uma sobre a outra). Cada spec de Título posiciona
+        // de forma independente, sempre relativa ao próprio elemento-alvo.
+        // Specs de A11y são reparentadas pra dentro da Section organizadora
+        // logo após criadas (_reparentIntoA11ySection) — por isso deixam de
+        // ser filhas diretas da página, e escanear só figma.currentPage.children
+        // não encontra mais as specs anteriores (empilhamento silenciosamente
+        // parava de funcionar, causando sobreposição). Specs normais continuam
+        // soltas na página, sem mudança.
+        const _stackScanNodes = opts.a11yType
+          ? (_getOrCreateA11ySection().children || [])
+          : figma.currentPage.children;
+        if (opts.a11yType !== 'titulo') _stackScanNodes.forEach(n => {
           if (n.type !== 'GROUP') return;
-          // Novo formato semântico
-          const newFmt = n.name.match(/^\[Spec \| ([A-Z]\d*(?:\.\d+)*) \| ([a-z]+)\] /);
+          // Novo formato semântico — compara apenas contra o mesmo tipo de layer
+          // (Spec normal x SpecA11y têm namespaces de letra independentes, não
+          // devem se empilhar uma sobre a outra ao posicionar).
+          const newFmt = n.name.match(new RegExp('^\\[' + _layerTag + ' \\| ([A-Z]\\d*(?:\\.\\d+)*) \\| ([a-z]+)\\] '));
           if (newFmt) {
             if (newFmt[2] !== side) return;
-            const specNotes = n.children && n.children.find(c => c.type === 'FRAME' && (c.name === 'Spec Notes' || c.name === 'Ficha') && c !== specCard);
+            // 'Spec Notes' pode ser um FRAME desenhado (fallback procedural) ou
+            // uma INSTANCE do componente real importado da lib (Fase 2c) — o
+            // agrupamento por tag precisa reconhecer ambos.
+            const specNotes = n.children && n.children.find(c => (c.type === 'FRAME' || c.type === 'INSTANCE') && (c.name === 'Spec Notes' || c.name === 'Ficha') && c !== specCard);
             if (!specNotes) return;
             const bb = specNotes.absoluteBoundingBox || specNotes.absoluteRenderBounds;
             if (bb) _updateLetterMap(newFmt[1], bb);
             return;
           }
-          // Formato legado: [Spec] NodeName
-          if (!n.name.startsWith('[Spec]')) return;
+          // Formato legado: [Spec] NodeName (specs normais anteriores à separação A11y)
+          if (opts.a11yType || !n.name.startsWith('[Spec]')) return;
           const ficha = n.children && n.children.find(c => c.type === 'FRAME' && c.name.includes('/Ficha') && c !== specCard);
           if (!ficha) return;
           const lm = ficha.name.match(/\[Spec\/([A-Z]\d*(?:\.\d+)*)\]/);
@@ -3158,7 +3607,16 @@ figma.ui.onmessage = async (msg) => {
         const cardH = specCard.height;
         let targetX, targetY;
 
-        if (_letterMap[_specLetter]) {
+        if (opts.pinnedPosition) {
+          // Edição de spec (delete+recreate): mantém a spec exatamente onde
+          // estava, sem reempilhar — o scan de "mesma tag" acima não
+          // encontra mais a spec antiga (já foi apagada antes desta
+          // chamada), então sem isso ela seria posicionada como se fosse
+          // uma spec nova (empilhada no fim do grupo ou ao lado das
+          // últimas), "descendo" na tela sem motivo pro designer.
+          targetX = opts.pinnedPosition.x;
+          targetY = opts.pinnedPosition.y;
+        } else if (_letterMap[_specLetter]) {
           // Mesma letra → empilha na direção do lado
           targetX = _letterMap[_specLetter].x;
           if (side === 'top') {
@@ -3214,18 +3672,21 @@ figma.ui.onmessage = async (msg) => {
         const USE_NATIVE_CONNECTOR = false;
 
         if (opts.drawConnection !== false) {
+          // Âncora do lado do elemento: bounds do marcador real quando ele
+          // existe (Fase 2d), senão os bounds do elemento/contorno como antes.
+          const _anchorB = _markerAnchorBounds;
           let startPt, endPt;
           if (side === 'right') {
-            startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+            startPt = { x: _anchorB.x + _anchorB.width, y: _anchorB.y + _anchorB.height / 2 };
             endPt   = { x: specCard.x, y: specCard.y + specCard.height / 2 };
           } else if (side === 'left') {
-            startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
+            startPt = { x: _anchorB.x, y: _anchorB.y + _anchorB.height / 2 };
             endPt   = { x: specCard.x + specCard.width, y: specCard.y + specCard.height / 2 };
           } else if (side === 'bottom') {
-            startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
+            startPt = { x: _anchorB.x + _anchorB.width / 2, y: _anchorB.y + _anchorB.height };
             endPt   = { x: specCard.x + specCard.width / 2, y: specCard.y };
           } else { // top
-            startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
+            startPt = { x: _anchorB.x + _anchorB.width / 2, y: _anchorB.y };
             endPt   = { x: specCard.x + specCard.width / 2, y: specCard.y + specCard.height };
           }
 
@@ -3299,10 +3760,22 @@ figma.ui.onmessage = async (msg) => {
 
       // Always create group at the Page level to avoid nesting in selected components
       const specGroup = figma.group(groupNodes, figma.currentPage);
-      specGroup.name = `[Spec | ${opts.letter} | ${_specSide}] ${node.name}`;
-      specGroup.locked = false;
-      _reorderSpecGroupByTag(specGroup, opts.letter);
+      specGroup.name = `[${_layerTag} | ${opts.letter} | ${_specSide}] ${node.name}`;
+      // Specs de A11y nascem travadas — o marcador já é calculado pra
+      // contornar o elemento certo, não é pra arrastar/reposicionar como as
+      // specs normais. Um cadeado na listagem destrava se precisar.
+      specGroup.locked = !!opts.a11yType;
 
+      // Organização de canvas — specs de Acessibilidade vão para dentro da
+      // Section dedicada (não afeta specs normais nem a posição visual).
+      // Pula o reordenamento por tag nesse caso: o z-order calculado seria
+      // descartado de qualquer forma assim que o grupo reparenta pra dentro
+      // da Section (a ordem passa a ser só a de criação dentro dela).
+      if (opts.a11yType) {
+        _reparentIntoA11ySection(specGroup);
+      } else {
+        _reorderSpecGroupByTag(specGroup, opts.letter);
+      }
 
       figma.ui.postMessage({
         type: "spec-created",
@@ -3326,16 +3799,44 @@ figma.ui.onmessage = async (msg) => {
           // (aba Acessibilidade em Anotar Specs, modules/accessibility.js). Passthrough
           // simples: nenhum schema paralelo, reaproveita a mesma spec/properties[].
           a11yType: opts.a11yType || null,
+          // Ecoa de volta a chave crua da subvariante e a Área Marcada de origem —
+          // messages.js monta o objeto salvo localmente a partir desta resposta
+          // (spec-created), não a partir de opts, então tudo que a listagem/geração
+          // de ficha precisa depois precisa vir aqui também.
+          a11ySubtype: opts.a11ySubtype || null,
+          a11yAreaId: opts.a11yAreaId || null,
         }
       });
 
-      figma.notify("Especificação criada — arraste para posicionar. Clique em Concluir quando pronto.");
+      // Prefixos de fallback ESPERADO — o designer escolheu de propósito uma
+      // opção sem componente real catalogado (Outro, Customizável, H mobile).
+      // Cair no card desenhado nesses casos é o comportamento certo, não um
+      // erro; só notifica quando o import falha por algo inesperado (key
+      // errada, property/instância não encontrada etc — sinal de que algo
+      // pode estar desalinhado com a estrutura real da lib).
+      const _A11Y_EXPECTED_FALLBACK_PREFIXES = [
+        'a11y-elemento-outro-sem-componente-real',
+        'a11y-titulo-mobile-sem-variante-real',
+        'a11y-informacoes-customizavel-sem-variante-real',
+        'a11y-estrutura-variacao-sem-import-real',
+        'a11y-estrutura-marco-customizavel-sem-conteudo-catalogado',
+      ];
+      const _isExpectedFallback = _a11yImportFailReason && _A11Y_EXPECTED_FALLBACK_PREFIXES.some(p => _a11yImportFailReason.startsWith(p));
+      // Marcador Agrupamento tem cobertura total (5 categorias × 4 orientações)
+      // — diferente do Spec Notes, não existe fallback ESPERADO pra ele; se
+      // falhou, é sempre sinal de algo desalinhado (lib inacessível, key errada).
+      if (opts.a11yType && ((_a11yImportFailReason && !_isExpectedFallback) || _markerFailReason)) {
+        const _reason = _markerFailReason || _a11yImportFailReason;
+        figma.notify(`Não foi possível usar o componente real da lib "Design Acessível" (${_reason}) — spec criada no modo desenhado. Arraste para posicionar.`);
+      } else {
+        figma.notify("Especificação criada — arraste para posicionar. Clique em Concluir quando pronto.");
+      }
     })();
   }
 
   if (msg.type === "lock-spec") {
     const specNode = await figma.getNodeByIdAsync(msg.specId);
-    if (specNode && specNode.name && specNode.name.startsWith('[Spec | ')) {
+    if (specNode && specNode.name && /^\[Spec(A11y)? \| /.test(specNode.name)) {
       specNode.locked = true;
       figma.ui.postMessage({ type: "spec-locked", specId: msg.specId });
     }
@@ -3413,55 +3914,136 @@ figma.ui.onmessage = async (msg) => {
     figma.ui.postMessage({ type: "selection-name", name: sel.length > 0 ? sel[0].name : null });
   }
 
-  // Reordenação automática das specs de Acessibilidade ("Atualizar Ordem",
-  // modules/accessibility.js). Recebe os ids dos specGroups já criados,
-  // ordena pela posição real no canvas (leitura natural: topo→base,
-  // esquerda→direita) e reatribui letras A, B, C... — namespace próprio,
-  // independente das specs normais. specGroups apontando pra nós apagados
-  // do canvas são ignorados sem travar os demais.
-  if (msg.type === "reorder-a11y-specs") {
+  // --- Acessibilidade --- usado tanto para confirmar uma spec de A11y
+  // (mapeamento puro: só precisamos saber QUAL nó foi selecionado) quanto
+  // pela ferramenta "Marcar Área" — ver accessibility.js, _getA11ySelectionInfo.
+  if (msg.type === "get-a11y-selection-info") {
+    const sel = figma.currentPage.selection;
+    figma.ui.postMessage({
+      type: "a11y-selection-info",
+      id: sel.length > 0 ? sel[0].id : null,
+      name: sel.length > 0 ? sel[0].name : null,
+    });
+  }
+
+  // --- Acessibilidade --- "Marcar Área": cria um selo numerado (componente
+  // REAL [a11y] Item Number, orientação "desativado") perto do elemento
+  // selecionado, com um TEXT procedural ao lado para o rótulo (o componente
+  // só tem o campo "Number" embutido — ver accessibility-specialist.md).
+  if (msg.type === "create-a11y-area") {
     (async () => {
-      const resolved = [];
-      for (const s of (msg.specs || [])) {
-        const node = await figma.getNodeByIdAsync(s.id);
-        if (!node || !node.absoluteBoundingBox) continue;
-        resolved.push({ id: s.id, node, bb: node.absoluteBoundingBox });
-      }
-      if (resolved.length === 0) {
-        figma.ui.postMessage({ type: "a11y-specs-reordered", mapping: [] });
+      const node = await figma.getNodeByIdAsync(msg.targetNodeId);
+      if (!node || !node.absoluteBoundingBox) {
+        figma.notify("Elemento não encontrado no canvas — selecione novamente.");
         return;
       }
-
-      resolved.sort((a, b) => {
-        const dy = a.bb.y - b.bb.y;
-        if (Math.abs(dy) > 1) return dy;
-        return a.bb.x - b.bb.x;
-      });
-
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
 
-      const mapping = [];
-      resolved.forEach((item, i) => {
-        const letter = String.fromCharCode(65 + i); // reordenação assume < 26 specs de a11y por tela
-        const specGroup = item.node;
-        const m = specGroup.name.match(/^\[Spec \| [A-Z]\d*(?:\.\d+)* \| ([a-z]+)\] (.*)$/);
-        const side = m ? m[1] : 'right';
-        const targetName = m ? m[2] : specGroup.name;
-        specGroup.name = `[Spec | ${letter} | ${side}] ${targetName}`;
+      // Padrão: conector "superior" (número + linha + rótulo grande abaixo,
+      // tudo dentro do próprio componente) com "show label" ativo — decisão
+      // do usuário, não é o mesmo conceito de linha spec→elemento que fica
+      // oculta por padrão em outro lugar do plugin.
+      const ITEM_NUMBER_KEY_SUPERIOR = 'ff43b15ac0c078b35219984bf035c4c0f0089cf1';
+      let badge = null;
+      let usedRealComponent = true;
+      try {
+        const comp = await figma.importComponentByKeyAsync(ITEM_NUMBER_KEY_SUPERIOR);
+        badge = comp.createInstance();
+        // Propriedades reais do componente "[a11y] Item Number" (confirmadas
+        // via componentPropertyDefinitions do component set — number#1478:0,
+        // label#733:6, show label#733:0) — o rótulo já vem embutido no
+        // componente, não precisa mais de um text node nosso do lado.
+        badge.setProperties({
+          'number#1478:0': String(msg.number),
+          'label#733:6': msg.label,
+          'show label#733:0': true,
+        });
+      } catch (e) {
+        usedRealComponent = false;
+        badge = figma.createEllipse();
+        badge.name = 'Selo de Área';
+        badge.resize(32, 32);
+        badge.fills = [{ type: "SOLID", color: hexToRgb('#0070AF') }];
+      }
 
-        if ('findAll' in specGroup) {
-          const tagFrames = specGroup.findAll(n => n.name === 'Tag' || n.name === 'Chip');
-          tagFrames.forEach(tagFrame => {
-            const textNode = tagFrame.findOne ? tagFrame.findOne(n => n.type === 'TEXT') : null;
-            if (textNode) textNode.characters = letter;
-          });
+      const bb = node.absoluteBoundingBox;
+      figma.currentPage.appendChild(badge);
+      // Selo inteiro (número + linha + rótulo) fica ACIMA do frame
+      // selecionado, centralizado horizontalmente, com uma folga pra caber
+      // o rótulo sem sobrepor o frame nem cortar o texto.
+      const _A11Y_AREA_GAP = 24;
+      const targetCenterX = bb.x + bb.width / 2;
+      badge.x = Math.round(targetCenterX - badge.width / 2);
+      badge.y = Math.round(bb.y - badge.height - _A11Y_AREA_GAP);
+
+      // Só precisa de um text node procedural + grupo quando o componente
+      // real falha (modo simplificado, sem rótulo embutido).
+      let group = badge;
+      if (!usedRealComponent) {
+        const labelText = figma.createText();
+        labelText.name = 'Label';
+        labelText.fontName = { family: "Inter", style: "Bold" };
+        labelText.fontSize = 12;
+        labelText.fills = [{ type: "SOLID", color: hexToRgb('#0070AF') }];
+        labelText.characters = msg.label;
+        figma.currentPage.appendChild(labelText);
+        labelText.x = Math.round(badge.x + badge.width + 8);
+        labelText.y = Math.round(badge.y + (badge.height / 2) - (labelText.height / 2));
+        group = figma.group([badge, labelText], figma.currentPage);
+      }
+      group.name = `[A11yArea | ${msg.number}] ${msg.label}`;
+      group.locked = false;
+
+      // Organização de canvas — selo de área também vai para a Section
+      // dedicada de Acessibilidade, junto com as specs.
+      _reparentIntoA11ySection(group);
+
+      figma.currentPage.selection = [group];
+      figma.viewport.scrollAndZoomIntoView([group]);
+
+      figma.ui.postMessage({
+        type: "a11y-area-created",
+        area: {
+          id: group.id,
+          number: msg.number,
+          label: msg.label,
+          targetNodeId: node.id,
+          targetNodeName: node.name,
         }
-
-        mapping.push({ id: item.id, letter });
       });
 
-      figma.ui.postMessage({ type: "a11y-specs-reordered", mapping });
-      figma.notify(`Ordem de acessibilidade atualizada (${mapping.length} especificaç${mapping.length === 1 ? 'ão' : 'ões'}).`);
+      figma.notify(usedRealComponent
+        ? "Área marcada."
+        : 'Área marcada — não foi possível usar o selo real da lib "Design Acessível" (modo simplificado).');
+    })();
+  }
+
+  // --- Acessibilidade --- "Gerar Ficha de Acessibilidade" no canvas foi
+  // removida de novo (2026-07-24) — com as specs já organizadas dentro da
+  // Section "Especificações de Acessibilidade" (_getOrCreateA11ySection) e o
+  // resumo consolidado disponível na aba "♿ Acessibilidade" do export HTML
+  // (handoff.js), um terceiro documento redundante no canvas não bate com o
+  // modelo da vertical de acessibilidade (specs vivem junto do design real,
+  // não num documento à parte).
+
+  // Checa se a lib "Design Acessível" está acessível pro reaproveitamento dos
+  // componentes reais nas specs de A11y (fase 1 — ver accessibility.js
+  // openA11yCategoryPickerModal). Usa um componente canário real ("elementos
+  // interativos e imagens", componente completo da seção "Specs - Estrutura")
+  // como teste: se o import funcionar, a lib está acessível pra esse
+  // designer/arquivo; se falhar (lib não habilitada ou sem acesso), orienta
+  // a vinculação em vez de deixar o import de fato falhar na hora de criar a spec.
+  if (msg.type === "check-a11y-library") {
+    (async () => {
+      const A11Y_LIBRARY_CANARY_KEY = 'f1bf785a343f191cff72e702d68a27a3a97f0ee9';
+      let linked = false;
+      try {
+        await figma.importComponentByKeyAsync(A11Y_LIBRARY_CANARY_KEY);
+        linked = true;
+      } catch (e) {
+        linked = false;
+      }
+      figma.ui.postMessage({ type: "a11y-library-status", linked, token: msg.token || null });
     })();
   }
 

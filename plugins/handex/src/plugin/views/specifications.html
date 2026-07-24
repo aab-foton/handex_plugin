@@ -7,8 +7,8 @@
             <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial" class="p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
               <i data-lucide="arrow-left" class="w-4 h-4 text-white" aria-hidden="true"></i>
             </button>
-            <h2 class="text-white font-bold text-[18px] truncate min-w-0">Anotar Specs</h2>
-            <button type="button" onclick="openHelp()"
+            <h2 class="text-white font-bold text-[18px] truncate min-w-0">Especificações</h2>
+            <button type="button" onclick="openSpecsGuideHelp()"
               class="w-4 h-4 flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
               title="Ver guia de categorias" aria-label="Ver guia de categorias de especificação">
               <i data-lucide="circle-help" class="w-3.5 h-3.5"></i>
@@ -21,27 +21,13 @@
             </button>
             <button id="specs-header-action-form" onclick="openSpecFormModal()" class="fab-inline" title="Criar especificação" aria-label="Criar especificação">
               <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
-              <span>Nova spec</span>
+              <span>Criar Especificação</span>
             </button>
-            <div id="specs-header-action-a11y-wrap" class="hidden relative">
-              <button id="specs-header-action-a11y" type="button" onclick="toggleA11yTypeMenu()" class="fab-inline" title="Criar especificação de acessibilidade" aria-label="Criar especificação de acessibilidade" aria-haspopup="true" aria-expanded="false">
-                <i data-lucide="accessibility" class="w-4 h-4 shrink-0"></i>
-                <span>Nova spec A11y</span>
+            <div id="specs-header-action-a11y-area-wrap" class="hidden">
+              <button id="specs-header-action-a11y-area" type="button" onclick="openA11yAreaModal()" class="fab-inline" title="Marcar área da tela" aria-label="Marcar área da tela">
+                <i data-lucide="map-pin" class="w-4 h-4 shrink-0"></i>
+                <span>Marcar Área</span>
               </button>
-              <div id="a11y-type-menu" class="hidden absolute right-0 top-full mt-2 w-56 z-50 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-xl p-1.5">
-                <button type="button" onclick="chooseA11yType('elemento')"
-                  class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
-                  <i data-lucide="image" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Elementos e Imagens
-                </button>
-                <button type="button" onclick="chooseA11yType('titulo')"
-                  class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
-                  <i data-lucide="heading" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Título
-                </button>
-                <button type="button" onclick="chooseA11yType('decorativo')"
-                  class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
-                  <i data-lucide="ban" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Elemento Decorativo
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -106,26 +92,38 @@
 
           <!-- Aba Acessibilidade — conteúdo renderizado por modules/accessibility.js -->
           <div id="specs-panel-a11y" class="hidden space-y-4">
+
+            <!-- Áreas Marcadas viram o agrupamento principal: cada área é um accordion,
+                 e toda spec de A11y nasce dentro da área escolhida (ver renderA11yGroupedList). -->
             <div>
               <div class="flex items-center justify-between mb-3">
-                <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-[0.15em]">Especificações de Acessibilidade</h4>
-                <button id="btn-reorder-a11y-specs" type="button" onclick="reorderA11ySpecs()"
-                  title="Recalcular a ordem de leitura (A, B, C...) pela posição de cada elemento no canvas"
-                  class="hidden text-[11px] font-bold text-slate-500 hover:text-[#0891B2] dark:text-slate-500 dark:hover:text-cyan-300 transition-colors flex items-center gap-1">
-                  <i data-lucide="arrow-down-up" class="w-3.5 h-3.5"></i> Atualizar Ordem
-                </button>
+                <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-[0.15em]">Áreas Marcadas</h4>
               </div>
+              <p class="text-[10px] text-slate-400 dark:text-dark-muted mb-2 leading-tight">
+                Marque uma área da tela (selo numerado) e crie as especificações de acessibilidade dentro dela, usando o botão "+" no cabeçalho de cada área.
+              </p>
 
-              <div id="hint-a11y-specs" class="mb-5 min-h-[76px] p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl border border-cyan-100 dark:border-cyan-800/30 flex gap-2">
-                <i data-lucide="info" class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5"></i>
+              <div id="hint-a11y-areas" class="hidden mb-2 min-h-[76px] p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl border border-cyan-100 dark:border-cyan-800/30 flex gap-2">
+                <i data-lucide="map-pin" class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5"></i>
                 <p class="text-[11px] text-cyan-800 dark:text-cyan-300 leading-tight">
-                  Selecione um elemento no canvas e toque em <strong>Nova spec A11y</strong> no topo para escolher o tipo de especificação.
+                  Toque em <strong>Marcar Área</strong> no topo para identificar a primeira seção/bloco da tela. As especificações de acessibilidade são criadas dentro de cada área.
                 </p>
               </div>
 
-              <ul id="a11y-specs-results" class="flex flex-col gap-2 min-h-[50px]">
-                <!-- Preenchido por renderA11ySpecsList() em modules/accessibility.js -->
+              <ul id="a11y-groups-results" class="flex flex-col gap-2 min-h-[10px] mb-1">
+                <!-- Preenchido por renderA11yGroupedList() em modules/accessibility.js -->
               </ul>
+            </div>
+
+            <div class="pt-2 space-y-2">
+              <p class="text-[10px] text-slate-400 dark:text-dark-muted leading-tight px-0.5">
+                Cada especificação já aplica sozinha no canvas (selo + card real da lib), organizada dentro da section "Especificações de Acessibilidade". O resumo consolidado por área fica pronto na aba <strong>"♿ Acessibilidade"</strong> do Handoff exportado.
+              </p>
+              <button onclick="navigate('view-handoff-summary')"
+                class="w-full flex items-center justify-center gap-2 py-3 bg-[#0070af] hover:bg-blue-700 rounded-2xl text-[12px] font-bold text-white transition-all shadow-sm">
+                <i data-lucide="sparkles" class="w-4 h-4" aria-hidden="true"></i>
+                Exportar Ficha em HTML
+              </button>
             </div>
           </div>
 

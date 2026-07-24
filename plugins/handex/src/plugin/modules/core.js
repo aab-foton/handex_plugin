@@ -32,6 +32,12 @@ const totalSteps = 5;
 window.uploadedFiles = {};
 let lastMeasurements = [];
 let createdSpecs = [];
+let a11ySpecs = [];
+// --- Acessibilidade --- selos numerados de área/seção da tela (ferramenta
+// "Marcar Área"), camada independente das specs de A11y — mesmo padrão de
+// espelhamento global/por-frame de a11ySpecs (ver saveSpecsToStorage,
+// syncAndRenderSpecs, addFrame).
+let a11yAreas = [];
 let currentSpecTab = 'specs-form';
 let lastAuditResults = null;
 let activeFrameId = null; // frame em foco para operações de modal
@@ -59,6 +65,11 @@ let handoffData = {
     auditReferences: []
   },
   frames: [],
+  // --- Acessibilidade --- specs de A11y vivem em array próprio, espelhando
+  // createdSpecs/frame.createdSpecs, para não misturar com specs normais em
+  // nenhuma iteração (ver _migrateA11ySpecsFromCreatedSpecs para dados antigos).
+  a11ySpecs: [],
+  a11yAreas: [],
   createdFlows: [],
   nextFlowNumber: 1,
   currentUser: null,
@@ -105,6 +116,14 @@ function _updateFrameAuditSubtitle(frameId) {
     subtitle.textContent = 'Não Conforme';
   }
   if (typeof _refreshConformanceAlert === 'function') _refreshConformanceAlert(frameId);
+
+  // Campo de declaração dos desvios só é útil quando há algo a justificar —
+  // reavalia dinamicamente a cada mudança de checkDone/semDesvios (a classe
+  // inicial em renderFrameCard não se atualiza sozinha depois do render).
+  const obsField = document.getElementById(`audit-obs-${frameId}`);
+  if (obsField && typeof _shouldShowAuditObs === 'function') {
+    obsField.classList.toggle('hidden', !_shouldShowAuditObs(frame));
+  }
 }
 
 function setFrameCheckDone(frameId, checked) {
@@ -302,8 +321,38 @@ function clearPluginCache() {
 
 function saveSpecsToStorage() {
   handoffData.specs = createdSpecs;
+  handoffData.a11ySpecs = a11ySpecs;
+  handoffData.a11yAreas = a11yAreas;
   saveToStorage();
 }
+
+// --- Acessibilidade --- migração defensiva: dados salvos antes da separação
+// estrutural (createdSpecs/a11ySpecs) podem ter specs de A11y ainda dentro de
+// createdSpecs/frame.createdSpecs (só distinguíveis pelo campo a11yType).
+// Move (não copia) essas entradas para a11ySpecs/frame.a11ySpecs. Idempotente:
+// se não achar nada com a11yType em createdSpecs, não faz nada. Deve rodar
+// toda vez que os dados são carregados (boot, import de JSON, sync de specs).
+function _migrateA11ySpecsFromCreatedSpecs() {
+  let moved = false;
+  (handoffData.frames || []).forEach(frame => {
+    if (!Array.isArray(frame.createdSpecs) || frame.createdSpecs.length === 0) return;
+    const toMove = frame.createdSpecs.filter(s => s && s.a11yType);
+    if (toMove.length === 0) return;
+    frame.createdSpecs = frame.createdSpecs.filter(s => !(s && s.a11yType));
+    frame.a11ySpecs = (frame.a11ySpecs || []).concat(toMove);
+    moved = true;
+  });
+  if (typeof createdSpecs !== 'undefined' && Array.isArray(createdSpecs)) {
+    const globalToMove = createdSpecs.filter(s => s && s.a11yType);
+    if (globalToMove.length > 0) {
+      createdSpecs = createdSpecs.filter(s => !(s && s.a11yType));
+      a11ySpecs = (typeof a11ySpecs !== 'undefined' && Array.isArray(a11ySpecs) ? a11ySpecs : []).concat(globalToMove);
+      moved = true;
+    }
+  }
+  return moved;
+}
+window._migrateA11ySpecsFromCreatedSpecs = _migrateA11ySpecsFromCreatedSpecs;
 
 let nextMeasurementNumber = 1;
 
@@ -685,17 +734,6 @@ function linkCurrentSelectionForExc(id) {
   parent.postMessage({ pluginMessage: { type: 'get-selection-link', targetId: id } }, '*');
 }
 
-// ── Canvas highlight / focus helpers ──────────────────────────────────
-function sendHighlight(figmaId) {
-  if (figmaId) {
-    parent.postMessage({ pluginMessage: { type: 'highlight-node', id: figmaId, shouldScroll: false } }, '*');
-  }
-}
-function clearHighlight() {
-  // deselect via highlight-node with no valid id — code.js handles null gracefully
-  parent.postMessage({ pluginMessage: { type: 'highlight-node', id: '__clear__', shouldScroll: false } }, '*');
-}
-
 // ── Sub-accordion toggle ───────────────────────────────────────────────
 function toggleSubAccordion(key) {
   const body = document.getElementById(`sub-body-${key}`);
@@ -859,6 +897,8 @@ function addFrame(figmaId, nome) {
     measurements: [],
     nextMeasurementNumber: 1,
     createdSpecs: [],
+    a11ySpecs: [],
+    a11yAreas: [],
     excecoes: []
   };
   handoffData.frames.push(frame);
@@ -908,6 +948,12 @@ function toggleFrameAccordion(frameId) {
   const isHidden = body.classList.contains('hidden');
   body.classList.toggle('hidden', !isHidden);
   if (arrow) arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+  // Foco no canvas só ao expandir (clique explícito) — hover não move mais a
+  // seleção/tela, isso ficava confuso passando o mouse pela lista.
+  if (isHidden) {
+    const frame = typeof getFrame === 'function' ? getFrame(frameId) : null;
+    if (frame && frame.figmaId) focusNode(frame.figmaId);
+  }
 }
 
 function updateEmptyFramesState() {
@@ -1240,11 +1286,13 @@ function exportChecklistMd() {
   if (frames.length > 0) {
     frames.forEach(f => {
       const specsCount = (f.createdSpecs || []).length;
+      const a11ySpecsCount = (f.a11ySpecs || []).length;
       const medsCount = (f.measurements || []).length;
       const excsCount = (f.excecoes || []).length;
       md += `### ${f.nome}\n`;
       md += `- Tokens escaneados: ${f.specs ? 'Sim' : 'Não'}\n`;
       md += `- Especificações: ${specsCount}\n`;
+      md += `- Especificações de Acessibilidade: ${a11ySpecsCount}\n`;
       md += `- Medidas: ${medsCount}\n`;
       md += `- Cenários de Exceção: ${excsCount}\n\n`;
     });
@@ -1288,6 +1336,7 @@ function exportChecklistJson() {
       figmaId: f.figmaId,
       tokensEscaneados: !!f.specs,
       especificacoes: (f.createdSpecs || []).length,
+      especificacoesAcessibilidade: (f.a11ySpecs || []).length,
       medidas: (f.measurements || []).length,
       excecoes: (f.excecoes || []).map(e => ({ tipo: e.tipo, titulo: e.titulo, link: e.link, notas: e.notas }))
     })),
@@ -1727,7 +1776,7 @@ function updateHandoffSummary() {
   if (featureRow) featureRow.classList.toggle('hidden', !feature);
 
   set('hs-count-frames', frames.length);
-  set('hs-count-specs', frames.reduce((s, f) => s + (f.createdSpecs?.length || 0), 0));
+  set('hs-count-specs', frames.reduce((s, f) => s + (f.createdSpecs?.length || 0) + (f.a11ySpecs?.length || 0), 0));
   set('hs-count-measures', frames.reduce((s, f) => s + (f.measurements?.length || 0), 0));
   set('hs-count-flows', (handoffData.createdFlows || []).length);
   _refreshIcons();
@@ -1745,7 +1794,17 @@ function renderAllMeasurements() {
 
 function syncAndRenderSpecs() {
   createdSpecs = (handoffData.frames || []).flatMap(f => f.createdSpecs || []);
+  a11ySpecs = (handoffData.frames || []).flatMap(f => f.a11ySpecs || []);
+  a11yAreas = (handoffData.frames || []).flatMap(f => f.a11yAreas || []);
+  if (typeof _migrateA11ySpecsFromCreatedSpecs === 'function' && _migrateA11ySpecsFromCreatedSpecs()) {
+    createdSpecs = (handoffData.frames || []).flatMap(f => f.createdSpecs || []);
+    a11ySpecs = (handoffData.frames || []).flatMap(f => f.a11ySpecs || []);
+  }
   if (typeof renderSpecsList === 'function') renderSpecsList();
+  // renderA11ySpecsList/renderA11yAreasList são wrappers do mesmo
+  // renderA11yGroupedList() — chamar só uma vez evita reconstruir o DOM (e
+  // resetar accordions abertos) duas vezes seguidas à toa.
+  if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
 }
 
 function renderExcecoesView() {
@@ -1842,7 +1901,11 @@ function toggleAccordion(btn, nodeId = null) {
   if (icon) icon.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
   if (nodeId) {
     if (isHidden) {
-      focusNode(nodeId);
+      // Expandir seleciona e rola até o elemento, mas sem o retângulo de
+      // destaque (HighlightStroke) — esse fica reservado só pro hover
+      // (sendHighlight/clearHighlight), pra não persistir no canvas
+      // enquanto o accordion estiver simplesmente aberto.
+      parent.postMessage({ pluginMessage: { type: 'highlight-node', id: nodeId, highlight: false, shouldScroll: true } }, '*');
     } else {
       parent.postMessage({ pluginMessage: { type: 'clear-highlight' } }, '*');
     }
@@ -2054,6 +2117,20 @@ function autoScrollToNewItem(containerId, targetElement = null) {
 
 function focusNode(id) {
   parent.postMessage({ pluginMessage: { type: 'highlight-node', id, highlight: true, shouldScroll: true, color: '#0070af' } }, '*');
+}
+
+// Destaque transitório (retângulo HighlightStroke) pra qualquer lista que
+// queira dar um preview do elemento no canvas ao passar o mouse — não
+// seleciona nem rola a tela (isso fica reservado pra clique explícito), e
+// some assim que o mouse sai (clearHighlight). Padrão reaproveitável por
+// qualquer accordion/lista que precise desse preview (hoje: medidas).
+function sendHighlight(figmaId) {
+  if (figmaId) {
+    parent.postMessage({ pluginMessage: { type: 'highlight-node', id: figmaId, highlight: true, shouldScroll: false, selectNode: false, color: '#0070af' } }, '*');
+  }
+}
+function clearHighlight() {
+  parent.postMessage({ pluginMessage: { type: 'clear-highlight' } }, '*');
 }
 
 // ── Restauração leve no boot (só step1, sem renderizar frames/flows/specs) ──

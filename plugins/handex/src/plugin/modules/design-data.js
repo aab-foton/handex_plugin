@@ -6,8 +6,8 @@
 //   - exportProgress — backup leve (sem specs pesadas)
 //   - exportDesignData — pede ao backend Figma para exportar (CSV/JSON design data)
 //
-// Depende de: handoffData, createdSpecs, saveToStorage, restoreUIFromState,
-// startHandoff, incrementVersion
+// Depende de: handoffData, createdSpecs, a11ySpecs, a11yAreas, saveToStorage,
+// restoreUIFromState, startHandoff, incrementVersion
 // ============================================================
 
     function exportHandoffData() {
@@ -42,12 +42,17 @@
             importedData.step1.versao = newVersion;
 
             Object.assign(handoffData, importedData);
+            // --- Acessibilidade --- JSON importado pode ser de formato antigo,
+            // com specs de A11y ainda dentro de createdSpecs/frame.createdSpecs.
+            if (typeof _migrateA11ySpecsFromCreatedSpecs === 'function') _migrateA11ySpecsFromCreatedSpecs();
             saveToStorage();
             restoreUIFromState();
 
             // Contagens para o modal
             const nFrames = (handoffData.frames || []).length;
-            const nSpecs = (handoffData.frames || []).reduce((s, f) => s + (f.createdSpecs || []).length, 0);
+            const nSpecsNormal = (handoffData.frames || []).reduce((s, f) => s + (f.createdSpecs || []).length, 0);
+            const nA11ySpecs = (handoffData.frames || []).reduce((s, f) => s + (f.a11ySpecs || []).length, 0);
+            const nSpecs = nSpecsNormal + nA11ySpecs;
             const nMeasures = (handoffData.frames || []).reduce((s, f) => s + (f.measurements || []).length, 0);
             const nFlows = (handoffData.createdFlows || []).length;
 
@@ -148,6 +153,11 @@
             }, '*');
             count++;
           });
+          // --- Acessibilidade --- specs de A11y não têm mais nó de canvas
+          // (são só mapeamento — ver accessibility.js, confirmA11ySpec). Já
+          // vieram junto no Object.assign(handoffData, importedData) acima,
+          // então não há nada a recriar aqui; elas só ganham nó quando o
+          // designer clicar em "Gerar Ficha de Acessibilidade".
         });
         if (count > 0) showToast(`${count} spec(s) sendo recriadas no canvas...`);
       }
@@ -186,6 +196,13 @@
         sCopy.preview = null;
         return sCopy;
       });
+      // --- Acessibilidade --- exporta o array dedicado separado das specs normais
+      exportData.a11ySpecs = a11ySpecs.map(s => {
+        const sCopy = JSON.parse(JSON.stringify(s));
+        sCopy.preview = null;
+        return sCopy;
+      });
+      exportData.a11yAreas = JSON.parse(JSON.stringify(a11yAreas || []));
       exportData.step2 = { specs: null };
 
       const jsonStr = JSON.stringify(exportData, null, 2);
@@ -228,6 +245,8 @@
         step1: { titulo: '', versao: 'v1.0', objetivo: '', status: 'rascunho', jornada: '', feature: '', equipe: [] },
         step2: { briefingEnabled: false, briefingQuestions: [], regras: [], anexos: [], auditAutoBundle: null, selectedLibSlugs: [], auditReferences: [] },
         frames: [],
+        a11ySpecs: [],
+        a11yAreas: [],
         createdFlows: [],
         nextFlowNumber: 1,
         currentUser: null,
@@ -235,6 +254,8 @@
         _history: []
       });
       if (typeof createdSpecs !== 'undefined') createdSpecs.length = 0;
+      if (typeof a11ySpecs !== 'undefined') a11ySpecs.length = 0;
+      if (typeof a11yAreas !== 'undefined') a11yAreas.length = 0;
       restoreUIFromState();
       navigate('view-home');
       showToast('Todos os dados foram removidos.');
