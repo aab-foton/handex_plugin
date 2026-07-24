@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Super Gerenciador",
     "figmaFileKey": "erkqbRKIbaFWbkHe51BeiZ",
-    "exportedAt": "2026-07-22T15:28:12.241Z",
+    "exportedAt": "2026-07-24T19:32:29.246Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -11,634 +11,739 @@
   "designTokens": {
     "variables": [
       {
-        "key": "7575b7496a872b28dd5cd49e487ea79cb71edfa1",
-        "name": "Abrir/Abrir",
+        "key": "9c7fc4880bebc37c156e9bdf87c2ef6354bc2a6e",
+        "name": "Texts/ComponentDescription",
         "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir"
+        "collection": "GOSTPlugin",
+        "value": "[EDIT ME] Enter description for the whole component"
       },
       {
-        "key": "cde27af1b5e54c0918683e5f7432fe4cdaa38f43",
-        "name": "Abrir/Abrir comprovante",
+        "key": "7fc18bc572509dc8495c8efdcca42b6503d69f44",
+        "name": "Texts/PropertyDescription",
         "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir comprovante"
+        "collection": "GOSTPlugin",
+        "value": "[EDIT ME] Enter description for the property"
       },
       {
-        "key": "f2551aa30f6bedcadb1f706f8fe0fad5f20c074a",
-        "name": "Abrir/Abrir conta digital",
+        "key": "8d2b8d4fbf6eae0e1228a4f71d8b804c2fcbcada",
+        "name": "Texts/OptionDescription",
         "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir conta digital"
+        "collection": "GOSTPlugin",
+        "value": "[EDIT ME] Enter description for the option"
       },
       {
-        "key": "841ba3235377973744e4296dcf8f22d49d853cdb",
-        "name": "Adicionar/Adicionar",
+        "key": "bdbc2ae83d7da3085e7a779999fd9d59d9b14fb3",
+        "name": "Texts/SectionTitle",
         "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar"
+        "collection": "GOSTPlugin",
+        "value": "[EDIT ME] Section Name"
       },
       {
-        "key": "3a460f5d71452ecd32fb40e39801b2cb8d29274a",
-        "name": "Adicionar/Adicionar cartão",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar cartão"
-      },
-      {
-        "key": "5afbc4b887956edcf7410167ac08db8dd1767805",
-        "name": "Adicionar/Adicionar contato",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar contato"
-      },
-      {
-        "key": "d4f45f82e793ce512f0daee05794a30f682a1d43",
-        "name": "Adicionar/Adicionar widget",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar widget"
-      },
-      {
-        "key": "6364dd374ac04e7c37bc51dfc3ce05fecc312488",
-        "name": "Antecipar/Antecipar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Antecipar"
-      },
-      {
-        "key": "1f626b1ea958c3cff19043252ab4515ffc156e41",
-        "name": "Acessar/Acessar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Acessar"
-      },
-      {
-        "key": "ca631f5dd50edc1f34b8062f02cd815fe1a2b915",
-        "name": "Atualizar/Atualizar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Atualizar"
-      },
-      {
-        "key": "c34542120aa329d53ca919c2714f742f3f62129d",
-        "name": "Ativar/Ativar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar"
-      },
-      {
-        "key": "4d1b648579e088b4c7d612504b8c7b5c72c88e38",
-        "name": "Ativar/Ativar biometria",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar biometria"
-      },
-      {
-        "key": "3764cf061a4595fb021e1960651f767bf4e04f93",
-        "name": "Ativar/Ativar DDA",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar DDA"
-      },
-      {
-        "key": "fdbd3af7d049a6007435307af4083e975b541a77",
-        "name": "Ativar/Ativar lembrete",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar lembrete"
-      },
-      {
-        "key": "49ea23b990358ded15d568e48c25c37199ef5c6c",
-        "name": "Cadastrar/Cadastrar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar"
-      },
-      {
-        "key": "7fac299247a56db25032e6a422f7286becef9844",
-        "name": "Cadastrar/Cadastrar chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar chave Pix"
-      },
-      {
-        "key": "acd7909315fd4f29735888d894a3c1b8c210ef11",
-        "name": "Cadastrar/Cadastrar débito automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar débito automático"
-      },
-      {
-        "key": "0c6c08504a879089142e528cd4863754a6eedf8f",
-        "name": "Cadastrar/Cadastrar Pix automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar Pix automático"
-      },
-      {
-        "key": "970d71d36e262fd535652d573684251ae3143b04",
-        "name": "Cancelar/Cancelar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar"
-      },
-      {
-        "key": "621e2b0db4a437f1ca8d9285bbb50deedf12c1b0",
-        "name": "Cancelar/Cancelar autorização",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar autorização"
-      },
-      {
-        "key": "7deeb0d4286e256a68eb93f8dbf6ef2d0ef5d329",
-        "name": "Cancelar/Cancelar débito automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar débito automático"
-      },
-      {
-        "key": "2e7a7754da5e81f1da07871a1cdd4b9da66dacc9",
-        "name": "Cancelar/Cancelar portabilidade",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar portabilidade"
-      },
-      {
-        "key": "4a8bf755fc84e90a95a1767a6973177ade329a3f",
-        "name": "Compartilhar/Compartilhar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar"
-      },
-      {
-        "key": "73b073957657a304a242f6920f20b252e9400284",
-        "name": "Compartilhar/Compartilhar chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar chave Pix"
-      },
-      {
-        "key": "7962242626b005fa3299855a13692a1ca7a8bc66",
-        "name": "Compartilhar/Compartilhar dados da conta",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar dados da conta"
-      },
-      {
-        "key": "85fa2d12fce79977a0de3e7a86ef70e0a294cf9c",
-        "name": "Compartilhar/Compartilhar comprovante",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar comprovante"
-      },
-      {
-        "key": "36c00e537434f816d153a1e471ef6e12174fab87",
-        "name": "Compartilhar/Compartilhar QR Code",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar QR Code"
-      },
-      {
-        "key": "2b63e8cc3f77f2c4dbfa92f3662b2c984e8bf5fe",
-        "name": "Confirmar/Confirmar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Confirmar"
-      },
-      {
-        "key": "7fb9169ea3b7d86dc115bd432d95ae9465ad05e6",
-        "name": "Confirmar/Confirmar celular",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Confirmar celular"
-      },
-      {
-        "key": "07bc4eb81799184c3b955e900c040a58545ae3a3",
-        "name": "Continuar/Continuar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Continuar"
-      },
-      {
-        "key": "35f93d55fc39cb2fd9dc6671cf71a50a0dd3ee7e",
-        "name": "Criar/Criar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Criar"
-      },
-      {
-        "key": "a3730b5ac30a5f2166cf4d1b8119a8080fc500fe",
-        "name": "Criar/Criar lembrete",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Criar lembrete"
-      },
-      {
-        "key": "827deac4fe985e312bed38bef9f9f28f7b6875f9",
-        "name": "Entender/Ok, entendi",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ok, entendi"
-      },
-      {
-        "key": "ace67ea43afcd5e4cafb12bd7af456a385ad72ac",
-        "name": "Excluir/Excluir",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir"
-      },
-      {
-        "key": "d1204cecc7dfe7b41205f67289046ab0bbda9f2b",
-        "name": "Excluir/Excluir Pix Programado",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir Pix Programado"
-      },
-      {
-        "key": "c05e128d55440a8faed9d55edebce93dfb23ba88",
-        "name": "Excluir/Excluir chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir chave Pix"
-      },
-      {
-        "key": "86a64e9abcf1277020a948bb3ceecd456492c023",
-        "name": "Fazer/Fazer Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer Pix"
-      },
-      {
-        "key": "808c1b50f1b72495b2b72eaa494a11096d126eb1",
-        "name": "Fazer/Fazer novo Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer novo Pix"
-      },
-      {
-        "key": "99023cb295dd079ccd2f895e825cba3cb2789dc5",
-        "name": "Fazer/Fazer pagamento",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer pagamento"
-      },
-      {
-        "key": "7f9d7e6059748df354e2db2b3320f6d4248d1698",
-        "name": "Fazer/Fazer novo pagamento",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer novo pagamento"
-      },
-      {
-        "key": "98523099a0acd722c6250466525152ac48325923",
-        "name": "Gerar/Gerar QR Code",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Gerar QR Code"
-      },
-      {
-        "key": "a665d506d7e0acf95f9ae5ec3b57f2169744abc0",
-        "name": "Gerar/Gerar 2ª via do boleto",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Gerar 2ª via do boleto"
-      },
-      {
-        "key": "1ddb9fccfa883bd08a645884626aef1580577efc",
-        "name": "Ir e Voltar/Ir para início",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ir para início"
-      },
-      {
-        "key": "13d175095ec0382bb513437dd97954b3de22b8fb",
-        "name": "Ir e Voltar/Ir para Empréstimos",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ir para Empréstimos"
-      },
-      {
-        "key": "3e964c68c9cb918232247ac32e60997a1ccef787",
-        "name": "Ir e Voltar/Voltar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Voltar"
-      },
-      {
-        "key": "b8508791173ad7b1e647230164b01bb60f4a7632",
-        "name": "Ir e Voltar/Voltar para início",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Voltar para início"
-      },
-      {
-        "key": "b3b06d3635a9b3ef2a73a2d9c4ec081cd5782fb5",
-        "name": "Mostrar/Mostrar senha",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar senha"
-      },
-      {
-        "key": "674e8982242af99721abede69ce8d194c0aeaf94",
-        "name": "Mostrar/Mostrar saldo",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar saldo"
-      },
-      {
-        "key": "e0cf2ecf4b11acef318c0913ee58ca8083f3e277",
-        "name": "Mostrar/Mostrar todos",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar todos"
-      },
-      {
-        "key": "70af83b4b8cd6cda2067315aaedb862f2169899a",
-        "name": "Pagar/Pagar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar"
-      },
-      {
-        "key": "0d7cfa101ba0db407065ad8b558e71db0e844640",
-        "name": "Pagar/Pagar boleto",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar boleto"
-      },
-      {
-        "key": "c6e218c7eff2040eba53654f5606a962e00809b8",
-        "name": "Pagar/Pagar parcela",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar parcela"
-      },
-      {
-        "key": "700ede1712ede7e130cf23ea255f40892b8e0ae4",
-        "name": "Pagar/Pagar prestação",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar prestação"
-      },
-      {
-        "key": "3fdeb05fc282d9ab9808abd2b19bcb39ec623a73",
-        "name": "Salvar/Salvar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar"
-      },
-      {
-        "key": "44e5a292aa3dbcfe1a1918f9f6fb8c4838e89d31",
-        "name": "Salvar/Salvar contato",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar contato"
-      },
-      {
-        "key": "da2b36841fe792593a33dcc6fd26ffb387122f5f",
-        "name": "Salvar/Salvar mensagem",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar mensagem"
-      },
-      {
-        "key": "4d74e16cae3b66fffd414709461528d166e27de9",
-        "name": "Usar/Usar chave Pix na CAIXA",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Usar chave Pix na CAIXA"
-      },
-      {
-        "key": "91581239c63c4f3270eb5eb4c3f01192d99ac6c8",
-        "name": "Usar/Usar em outro banco",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Usar em outro banco"
-      },
-      {
-        "key": "e683b329fedb23d423b5daf08762ceb825932b17",
-        "name": "breakpoint 🔒",
-        "resolvedType": "STRING",
-        "collection": "responsive",
-        "value": "extra large"
-      },
-      {
-        "key": "5a252b9f4d10a79cb6a71f922d7c0d359e08b671",
-        "name": "device 🔒",
-        "resolvedType": "STRING",
-        "collection": "responsive",
-        "value": "desktop"
-      },
-      {
-        "key": "342dc2e8338a4bf48cf67858012acaac8f51b0dd",
-        "name": "device/width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "0c58f7f1c8bdee1fae04b483016807839d8bbeef",
-        "name": "device/min-width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "15b13fffa9bd485c000a60cf7352aeec864ac5cd",
-        "name": "device/max-width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1920
-      },
-      {
-        "key": "8c1c494e3d2189c0cda1a8b246a222679d4e7188",
-        "name": "device/min-height",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 900
-      },
-      {
-        "key": "b6fa6d7ea224162fc26bcd4feb3593a071c72aef",
-        "name": "grid/grid-column",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 12
-      },
-      {
-        "key": "b357d9876a6487bc6585ff05d6d34049168a686b",
-        "name": "show/device/desktop",
+        "key": "aac02a1ad1e0967823698b50bcddbb10ae9900e8",
+        "name": "Settings/RowsPrimaryAxis",
         "resolvedType": "BOOLEAN",
-        "collection": "responsive",
+        "collection": "GOSTPlugin",
         "value": true
       },
       {
-        "key": "f1fa37adfa4cfe8c8e83b226e2c309d2756590a8",
-        "name": "show/device/mobile",
+        "key": "7d334f88ae246894aa503b96a53d2f429ccca63d",
+        "name": "Settings/BakeDocumentation",
         "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "c656eb4c5adbf1f4d10d36ecc529a62d6ba847cb",
-        "name": "show/breakpoint/extra large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
+        "collection": "GOSTPlugin",
         "value": true
       },
       {
-        "key": "eb8218a3b520b76e4c9c5394b34a28e90b9381be",
-        "name": "show/breakpoint/large +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
+        "key": "9e984d10df356f4bbafcee55e28719f4a0b6c6a0",
+        "name": "Settings/DefaultSection",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Main"
       },
       {
-        "key": "de2f0274cba20369986d7eba540f66fed2f66cda",
-        "name": "show/breakpoint/large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
+        "key": "3f5bd4c2944b19c71ace8b49d66f8cde19e61103",
+        "name": "Settings/DefaultLayoutSection",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Layout"
       },
       {
-        "key": "f62abf263d76b9cb8859e065b36df4f4a092440d",
-        "name": "show/breakpoint/medium +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "55341000b43c6871ba95e3e9612136dbbd2a06ed",
-        "name": "show/breakpoint/medium",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "2a1182e3ade1087d17e5a4ed3202d0c3a77b2588",
-        "name": "show/breakpoint/small +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "0f238f4ba74855b4056b568dfee5c2f3a114445c",
-        "name": "show/breakpoint/small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "3cf82aef55e2701ed26738822a1848886287a5ae",
-        "name": "show/breakpoint/extra small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "d349b296f58c9f5cc80e92c1043cc59a4a3b79f2",
-        "name": "grid/grid-margin",
+        "key": "3985c4977422f90ed476dfe0a433afcd5b75bd9e",
+        "name": "ComponentCard/Style/Radius",
         "resolvedType": "FLOAT",
-        "collection": "responsive",
+        "collection": "GOSTPlugin",
+        "value": null
+      },
+      {
+        "key": "113dbf9e3097d6041fb19ecbf56e74717171a463",
+        "name": "ComponentCard/Style/Padding",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 64
+      },
+      {
+        "key": "decd6d12897cf00fcd4c9f90141c0a1cca0783c4",
+        "name": "ComponentCard/Style/WrapPadding",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 64
+      },
+      {
+        "key": "cc2f75e7b39350623af73747ad30c0fb061e39bf",
+        "name": "ComponentCard/Style/Gap",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 64
+      },
+      {
+        "key": "3b903b117b1997c5ff227be23f2fa3dc7d3b5d01",
+        "name": "ComponentCard/Fonts/Title/Family",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Inter"
+      },
+      {
+        "key": "bbe6606b9270dfa45fb2ba64ebda31535047d75f",
+        "name": "ComponentCard/Fonts/Title/Style",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Bold"
+      },
+      {
+        "key": "6ce542b6db3d19fb9fd7fb6fb50b54d94df1999e",
+        "name": "ComponentCard/Fonts/Title/Size",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
         "value": 48
       },
       {
-        "key": "e2c5440e36fc09559af6d652fa8bd67db3e11dbd",
-        "name": "grid/grid-gap",
+        "key": "f3001166bf15c30016d029d66012c54751ea458d",
+        "name": "ComponentCard/Fonts/Title/LineHeight",
         "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 24
+        "collection": "GOSTPlugin",
+        "value": 56
       },
       {
-        "key": "d5f0eddd47d5e547747cbd2f6b83c1170cfe6c7f",
-        "name": "hide/device/desktop",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
+        "key": "675f0b746aaba0959ef9ac39c6bd6441f846a4ae",
+        "name": "ComponentCard/Fonts/Title/Color",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#000000"
+      },
+      {
+        "key": "796819fdb473443711f10ebdc686412a0ff2aa39",
+        "name": "ComponentCard/Fonts/Title/Margin",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 16
+      },
+      {
+        "key": "95f137610f8b8f915ef0ff01433c4dce90bce1fd",
+        "name": "ComponentCard/Fonts/Description/Family",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Inter"
+      },
+      {
+        "key": "211972e0e74faed08cdad415e366569e1961ae26",
+        "name": "ComponentCard/Fonts/Description/Style",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Regular"
+      },
+      {
+        "key": "d9207c871b0f6a681a7d22731b2ccce03a07e720",
+        "name": "ComponentCard/Fonts/Description/Size",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 14
+      },
+      {
+        "key": "2b8130dbdb5255bc982cd18171008655599f5680",
+        "name": "ComponentCard/Fonts/Description/LineHeight",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 18
+      },
+      {
+        "key": "9a0ff328c369db95131e54421319dc03e8ce5c9d",
+        "name": "ComponentCard/Fonts/Description/Color",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#000000"
+      },
+      {
+        "key": "15aac0d7d8797ce6f3940415bdcbd1875d9a80a1",
+        "name": "ComponentCard/Fonts/Description/Width",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 480
+      },
+      {
+        "key": "b6abf419a08eddcfa3e04f0f15c120bf0d8434fc",
+        "name": "PropertiesCard/Style/Radius",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
         "value": null
       },
       {
-        "key": "bbb5487ef1c40e5ddf426a45dc9a79c1c61a08f4",
-        "name": "components/container/width-compact",
+        "key": "25d69b399f8575b0875fa5a1b91a7aa2a7326efa",
+        "name": "PropertiesCard/Style/Width",
         "resolvedType": "FLOAT",
-        "collection": "responsive",
+        "collection": "GOSTPlugin",
         "value": 720
       },
       {
-        "key": "ba362c47468f7ffc3f4bacadc489386abdd3eaff",
-        "name": "components/container/width",
+        "key": "405283488f000b98e10995bf6cd81dbe05f7906b",
+        "name": "PropertiesCard/Style/Padding",
         "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1080
+        "collection": "GOSTPlugin",
+        "value": 64
       },
       {
-        "key": "d5f604b4641b0f25ed4f4e86454f9c1597343fbc",
-        "name": "components/container/width-wide",
+        "key": "890615ea8bd31755d67a53b9dc85ebca82578e52",
+        "name": "PropertiesCard/Style/Gap",
         "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
+        "collection": "GOSTPlugin",
+        "value": 64
       },
       {
-        "key": "353f9e9a3a815706dcc7bf54d116db9f23285fe2",
-        "name": "hide/device/mobile",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
+        "key": "f8f9dd8dd0b2d5b14022913852dfc815207e1e6a",
+        "name": "PropertiesCard/Style/Fill",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#000000"
       },
       {
-        "key": "5cdf1997b0429ef16bd6c1be5bab9a2b12eda469",
-        "name": "hide/breakpoint/extra large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
+        "key": "93e3e99553d4b74b02afeafa11c04d32b11debb2",
+        "name": "PropertiesCard/Style/PropertyGap",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 32
+      },
+      {
+        "key": "47ad0ebb30d18a48de8e4b48b907eb2bbc05d47a",
+        "name": "PropertiesCard/Style/PropertyPadding",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 32
+      },
+      {
+        "key": "fc4e4a878672bf8fdfc4f0880fc44aa315d0a8ea",
+        "name": "PropertiesCard/Style/PropertyStroke",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#000000"
+      },
+      {
+        "key": "9b6c0aa2b7c2c2d45a05e9adffd3c0cff398e5ee",
+        "name": "PropertiesCard/Style/OptionStroke",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#e6e6e6"
+      },
+      {
+        "key": "b231620f16443788b5fe40744cbdcda55a9f19a5",
+        "name": "PropertiesCard/Fonts/PropertyTitle/Family",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Inter"
+      },
+      {
+        "key": "fb651825004e220079a6847b696556a5cad1a0a5",
+        "name": "PropertiesCard/Fonts/PropertyTitle/Style",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Semi Bold"
+      },
+      {
+        "key": "48e4cf716cfdddcaf8bcf0abe1be80cb46e2352b",
+        "name": "PropertiesCard/Fonts/PropertyTitle/Size",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 20
+      },
+      {
+        "key": "795582c4acc278d458e4949518a41fca4b510615",
+        "name": "PropertiesCard/Fonts/PropertyTitle/LineHeight",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 24
+      },
+      {
+        "key": "f8c806a63fb976c9da78fbf1764b45ac04cec029",
+        "name": "PropertiesCard/Fonts/PropertyTitle/Color",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#000000"
+      },
+      {
+        "key": "a177954e98a6c9b908617c3343b33064c42eb003",
+        "name": "PropertiesCard/Fonts/PropertyTitle/Width",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 192
+      },
+      {
+        "key": "60bb751a09bdc9d6c38d02c9bc8d4d0178fb62a6",
+        "name": "PropertiesCard/Fonts/PropertyTitle/Margin",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 16
+      },
+      {
+        "key": "411200445b75d67c97cc4b1783e6ea4cc38fac21",
+        "name": "PropertiesCard/Fonts/PropertyDescription/Family",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Inter"
+      },
+      {
+        "key": "56e4493da6ff3c097942543fc34e03fd8f306c57",
+        "name": "PropertiesCard/Fonts/PropertyDescription/Style",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Regular"
+      },
+      {
+        "key": "430e4a4163e8e5f1b72d2d19098b4d9bd8456584",
+        "name": "PropertiesCard/Fonts/PropertyDescription/Size",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 14
+      },
+      {
+        "key": "f510fec10178d9aaa163910eb0143b97a1a61bde",
+        "name": "PropertiesCard/Fonts/PropertyDescription/LineHeight",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 18
+      },
+      {
+        "key": "897be6e5f7a762a3ab8f5fbfb238f4ce60b89041",
+        "name": "PropertiesCard/Fonts/PropertyDescription/Color",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#525252"
+      },
+      {
+        "key": "fd9cb01258715d2149877af31beacd208bdafa5a",
+        "name": "PropertiesCard/Fonts/OptionTitle/Family",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Inter"
+      },
+      {
+        "key": "48583f03530a585f1722f65e7487cf68d16332f5",
+        "name": "PropertiesCard/Fonts/OptionTitle/Style",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Medium"
+      },
+      {
+        "key": "4929341baf7f774477b7cba6b5b54f3037805451",
+        "name": "PropertiesCard/Fonts/OptionTitle/Size",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 16
+      },
+      {
+        "key": "8839b14a71a48b94e3786480889523e84528b0d0",
+        "name": "PropertiesCard/Fonts/OptionTitle/LineHeight",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 20
+      },
+      {
+        "key": "f74f7a277b6b23e40ee44823170a7e06740345d1",
+        "name": "PropertiesCard/Fonts/OptionTitle/Color",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#000000"
+      },
+      {
+        "key": "8406b36b2a17e526f519921f42f1a5e454b9dce3",
+        "name": "PropertiesCard/Fonts/OptionTitle/Width",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 128
+      },
+      {
+        "key": "9d575331cb07737aad75484bd59cc16a22a4f689",
+        "name": "PropertiesCard/Fonts/OptionTitle/Margin",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 16
+      },
+      {
+        "key": "0ebd8d7ede1b160cb65de373179e236e95f2a3bb",
+        "name": "PropertiesCard/Fonts/OptionDescription/Family",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Inter"
+      },
+      {
+        "key": "b0df1dc7f8d2700bd9b726123f547811a8176cf5",
+        "name": "PropertiesCard/Fonts/OptionDescription/Style",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Regular"
+      },
+      {
+        "key": "c19c10ac533a5f57f6d5c33ccef7dc822350bc4a",
+        "name": "PropertiesCard/Fonts/OptionDescription/Size",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 14
+      },
+      {
+        "key": "11fd9b7c8a7544c6f8e4bef47540dee3499e1973",
+        "name": "PropertiesCard/Fonts/OptionDescription/LineHeight",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 18
+      },
+      {
+        "key": "f2f8f0b3dc32629669f2e2f06d4a7315c8bb4a73",
+        "name": "PropertiesCard/Fonts/OptionDescription/Color",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#525252"
+      },
+      {
+        "key": "16a0d2c262e6e003e4a2848a583b4f475ede811f",
+        "name": "PropertiesCard/Fonts/OptionDescription/Width",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 192
+      },
+      {
+        "key": "3781b33bb80b1bafbb7a6e51406df30f85986527",
+        "name": "Grid/Style/Gap",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 8
+      },
+      {
+        "key": "ea989f9e010ea67309d4b04da7d416610043e35f",
+        "name": "Grid/Style/MinWidth",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 320
+      },
+      {
+        "key": "782acc702f2378478cbd505ae5c588759169604b",
+        "name": "Grid/Style/MinHeight",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 136
+      },
+      {
+        "key": "417d9003d163e289b5460530663698aed30e6d74",
+        "name": "Grid/Style/Padding",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 32
+      },
+      {
+        "key": "76bb7d5c2062b7d1a63ad5e6491e67bcde786680",
+        "name": "Grid/Style/Stroke",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#e6e6e6"
+      },
+      {
+        "key": "2cc7ff4a26748855108979f90006ece5157b5677",
+        "name": "Grid/Style/Fill",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#ffffff"
+      },
+      {
+        "key": "9e5227fc36377c26684b74294e9cf0a91c7c0e7c",
+        "name": "Grid/Style/FillInverted",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#000000"
+      },
+      {
+        "key": "f1296ab58ec4edbedb1f46ca26d573df9facafd1",
+        "name": "Grid/Fonts/PropertyOption/Family",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Inter"
+      },
+      {
+        "key": "da8995001c67d2fec54626c8df97d24dd4eecae3",
+        "name": "Grid/Fonts/PropertyOption/Style",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Semi Bold"
+      },
+      {
+        "key": "e19aa95ed22d74377245e6fdfc2d8191a402dcad",
+        "name": "Grid/Fonts/PropertyOption/Color",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#000000"
+      },
+      {
+        "key": "7e334a6554612e1de3e646335cf6f45ac0426978",
+        "name": "Grid/Fonts/PropertyOption/Level0/Size",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 32
+      },
+      {
+        "key": "2b71d585d6db053608fcbd45169022ccd2147784",
+        "name": "Grid/Fonts/PropertyOption/Level0/LineHeight",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 36
+      },
+      {
+        "key": "53d052885b32551168a13043d38d59d44e95d22d",
+        "name": "Grid/Fonts/PropertyOption/Level1/Size",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 28
+      },
+      {
+        "key": "f89d5f2cf1bb315079f15e4ed1925cb669eaf0ff",
+        "name": "Grid/Fonts/PropertyOption/Level1/LineHeight",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 32
+      },
+      {
+        "key": "f8ecbd4cec08ff8fa8637c0a1d20c9554b41ba16",
+        "name": "Grid/Fonts/PropertyOption/Level2/Size",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 24
+      },
+      {
+        "key": "a6d7414ddd320e19b62eccb9b8517ad65d7e1fc0",
+        "name": "Grid/Fonts/PropertyOption/Level2/LineHeight",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 28
+      },
+      {
+        "key": "8bf2cb18df9d0c0337d37af67f3f37244be80014",
+        "name": "Grid/Fonts/PropertyTitle/Family",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Inter"
+      },
+      {
+        "key": "4901c979f7fcff93d23d74a064742b7ad37fa271",
+        "name": "Grid/Fonts/PropertyTitle/Style",
+        "resolvedType": "STRING",
+        "collection": "GOSTPlugin",
+        "value": "Medium"
+      },
+      {
+        "key": "67a458759948021427117721c71b487fa616da7e",
+        "name": "Grid/Fonts/PropertyTitle/Color",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#000000"
+      },
+      {
+        "key": "739728164d13ca4c602dc1f2b6a29b8d06361d1e",
+        "name": "Grid/Fonts/PropertyTitle/Level0/Size",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 24
+      },
+      {
+        "key": "6cb6fdec863454b8a06736afac1f1d7570ca2d90",
+        "name": "Grid/Fonts/PropertyTitle/Level0/LineHeight",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 28
+      },
+      {
+        "key": "0566c1fc774233c43e7cc5f951e8585906f2b81b",
+        "name": "Grid/Fonts/PropertyTitle/Level1/Size",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 22
+      },
+      {
+        "key": "2a0b2867f08dc279731184f4febffd24f987fb95",
+        "name": "Grid/Fonts/PropertyTitle/Level1/LineHeight",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 26
+      },
+      {
+        "key": "f1c19f6e49adb9fd91a4261a8ed2eb6ddb8b3e28",
+        "name": "Grid/Fonts/PropertyTitle/Level2/Size",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 20
+      },
+      {
+        "key": "464499009ffa00b4141a0b08ad7334c88f3255c7",
+        "name": "Grid/Fonts/PropertyTitle/Level2/LineHeight",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 24
+      },
+      {
+        "key": "6a85becc7d81ec3c07de5506c61013942a0dc517",
+        "name": "Sections/Main/Radius",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
         "value": null
       },
       {
-        "key": "4f95e11f7498f15bd862c964ea6d213f77eacb04",
-        "name": "hide/breakpoint/large +",
+        "key": "3a55efa123e95fc28644fe975cf15880e200cc20",
+        "name": "Sections/Main/Padding",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 256
+      },
+      {
+        "key": "d75efebf4e3da67ac0c823beac89518bfc8d5ad0",
+        "name": "Sections/Main/Gap",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 128
+      },
+      {
+        "key": "e01d693c3553cc0d7144dadc3896d36c4c4a5203",
+        "name": "Sections/Main/Fill",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#000000"
+      },
+      {
+        "key": "065c43e6f401d716341957b9088ca10de534c072",
+        "name": "Sections/Main/Stroke",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#000000"
+      },
+      {
+        "key": "30cae2bad115923a037d5dfebed6d156eecb0296",
+        "name": "Sections/Main/Sort",
         "resolvedType": "BOOLEAN",
-        "collection": "responsive",
+        "collection": "GOSTPlugin",
+        "value": true
+      },
+      {
+        "key": "ccc418b764344b5e6f2bd7c677449f647a6ca8a0",
+        "name": "Sections/Alternative/Radius",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
         "value": null
       },
       {
-        "key": "2568ea599dbb0f5c54ba2e241554507f75f26411",
-        "name": "hide/breakpoint/large",
+        "key": "d5303bdde899fd36011f3d76f67cad6819385a36",
+        "name": "Sections/Alternative/Padding",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 128
+      },
+      {
+        "key": "09529974433a8ad0c642729e754b422944d9cef6",
+        "name": "Sections/Alternative/Gap",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 64
+      },
+      {
+        "key": "b67670e1053908128c7a3aa39063d00b8db22b84",
+        "name": "Sections/Alternative/Fill",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#000000"
+      },
+      {
+        "key": "1542968e8edee06573f1dfc1b4d72ec584a43adb",
+        "name": "Sections/Alternative/Stroke",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#000000"
+      },
+      {
+        "key": "0368a678854b199abebf20e61131ef5c414d867d",
+        "name": "Sections/Alternative/Sort",
         "resolvedType": "BOOLEAN",
-        "collection": "responsive",
+        "collection": "GOSTPlugin",
         "value": true
       },
       {
-        "key": "759e7e9fc237cc7cf071ed04b65b5d280e884f26",
-        "name": "hide/breakpoint/medium +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
+        "key": "ca895bbc338ff2f54aa38e8eec9cc78fb823a5f4",
+        "name": "Sections/Layout/Radius",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
         "value": null
       },
       {
-        "key": "d3676bfcd938342e798fe2301907f26fe42fc5a0",
-        "name": "hide/breakpoint/medium",
+        "key": "04d411c7b157d367f31345d8a0e22b4d578915c3",
+        "name": "Sections/Layout/Padding",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 128
+      },
+      {
+        "key": "8929182f5487075ee30b291d404921ad0aea9e1c",
+        "name": "Sections/Layout/Gap",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 64
+      },
+      {
+        "key": "c58345b5ff009899639b0ea3acd275fb02e7f4e3",
+        "name": "Sections/Layout/Fill",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#000000"
+      },
+      {
+        "key": "e92a5d8a6527918bb348af107d1c0d80c3f84eda",
+        "name": "Sections/Layout/Stroke",
+        "resolvedType": "COLOR",
+        "collection": "GOSTPlugin",
+        "value": "#000000"
+      },
+      {
+        "key": "4e01ca4aa7562d96c6febb4433a2b1d4cffb5147",
+        "name": "Sections/Layout/Sort",
         "resolvedType": "BOOLEAN",
-        "collection": "responsive",
+        "collection": "GOSTPlugin",
         "value": true
       },
       {
-        "key": "d18bfc2be43c65657374a7518a55295ea586102c",
-        "name": "hide/breakpoint/small +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
+        "key": "5c38c861d1219a834aa965ef38c36ca3dba87447",
+        "name": "Layouts/Gap/Min",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 32
       },
       {
-        "key": "080f2ce8fe0de800c7174126adaeaac75e322b54",
-        "name": "hide/breakpoint/small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
+        "key": "bbaf6dd236b629bda71e674f6399c0918b7ba412",
+        "name": "Layouts/Gap/Max",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 192
       },
       {
-        "key": "1b813038bcb7e2224d055ba5952e55add8faec73",
-        "name": "hide/breakpoint/extra small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
+        "key": "55a9040219f1b8438f8434812500a852976660f2",
+        "name": "Layouts/Gap/Step",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 32
+      },
+      {
+        "key": "607a24cf8691b7bed2c266bc926897201e12f4b7",
+        "name": "Layouts/SectionGap",
+        "resolvedType": "FLOAT",
+        "collection": "GOSTPlugin",
+        "value": 256
       },
       {
         "key": "b42d6ae94dee2ecfacfc5ab2c263bb7e03cae243",
@@ -1411,15 +1516,15 @@
         "value": "#ffffff"
       },
       {
-        "key": "e6b75fec7f7bd7659b054937dc29c9923f44c2f5",
-        "name": "icon/color/highlight 1 [color 9]",
+        "key": "7a79b9c773da353bc342e9e3d26f1390d18ef748",
+        "name": "color/state/highlight/hover2",
         "resolvedType": "COLOR",
         "collection": "dsc",
         "value": "#005194"
       },
       {
-        "key": "7a79b9c773da353bc342e9e3d26f1390d18ef748",
-        "name": "color/state/highlight/hover2",
+        "key": "e6b75fec7f7bd7659b054937dc29c9923f44c2f5",
+        "name": "icon/color/highlight 1 [color 9]",
         "resolvedType": "COLOR",
         "collection": "dsc",
         "value": "#005194"
@@ -1775,18 +1880,18 @@
         "value": 0.25
       },
       {
-        "key": "52f9ce01da92ed6befa569191d0cf84b8f2cf295",
-        "name": "icon/size/quark",
-        "resolvedType": "FLOAT",
-        "collection": "dsc",
-        "value": 12
-      },
-      {
         "key": "2ffdb9fca2840a717b2d00de1e185ccbf36a5cba",
         "name": "font/letter-spacing/extended",
         "resolvedType": "FLOAT",
         "collection": "dsc",
         "value": 0.5
+      },
+      {
+        "key": "52f9ce01da92ed6befa569191d0cf84b8f2cf295",
+        "name": "icon/size/quark",
+        "resolvedType": "FLOAT",
+        "collection": "dsc",
+        "value": 12
       },
       {
         "key": "a72bcb9cc5273853555e67a07ff2c7c9068a2892",
@@ -2076,739 +2181,634 @@
         "value": 160
       },
       {
-        "key": "9c7fc4880bebc37c156e9bdf87c2ef6354bc2a6e",
-        "name": "Texts/ComponentDescription",
+        "key": "7575b7496a872b28dd5cd49e487ea79cb71edfa1",
+        "name": "Abrir/Abrir",
         "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "[EDIT ME] Enter description for the whole component"
+        "collection": "Terms dictionary",
+        "value": "Abrir"
       },
       {
-        "key": "7fc18bc572509dc8495c8efdcca42b6503d69f44",
-        "name": "Texts/PropertyDescription",
+        "key": "cde27af1b5e54c0918683e5f7432fe4cdaa38f43",
+        "name": "Abrir/Abrir comprovante",
         "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "[EDIT ME] Enter description for the property"
+        "collection": "Terms dictionary",
+        "value": "Abrir comprovante"
       },
       {
-        "key": "8d2b8d4fbf6eae0e1228a4f71d8b804c2fcbcada",
-        "name": "Texts/OptionDescription",
+        "key": "f2551aa30f6bedcadb1f706f8fe0fad5f20c074a",
+        "name": "Abrir/Abrir conta digital",
         "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "[EDIT ME] Enter description for the option"
+        "collection": "Terms dictionary",
+        "value": "Abrir conta digital"
       },
       {
-        "key": "bdbc2ae83d7da3085e7a779999fd9d59d9b14fb3",
-        "name": "Texts/SectionTitle",
+        "key": "841ba3235377973744e4296dcf8f22d49d853cdb",
+        "name": "Adicionar/Adicionar",
         "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "[EDIT ME] Section Name"
+        "collection": "Terms dictionary",
+        "value": "Adicionar"
       },
       {
-        "key": "aac02a1ad1e0967823698b50bcddbb10ae9900e8",
-        "name": "Settings/RowsPrimaryAxis",
-        "resolvedType": "BOOLEAN",
-        "collection": "GOSTPlugin",
-        "value": true
-      },
-      {
-        "key": "7d334f88ae246894aa503b96a53d2f429ccca63d",
-        "name": "Settings/BakeDocumentation",
-        "resolvedType": "BOOLEAN",
-        "collection": "GOSTPlugin",
-        "value": true
-      },
-      {
-        "key": "9e984d10df356f4bbafcee55e28719f4a0b6c6a0",
-        "name": "Settings/DefaultSection",
+        "key": "3a460f5d71452ecd32fb40e39801b2cb8d29274a",
+        "name": "Adicionar/Adicionar cartão",
         "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Main"
+        "collection": "Terms dictionary",
+        "value": "Adicionar cartão"
       },
       {
-        "key": "3f5bd4c2944b19c71ace8b49d66f8cde19e61103",
-        "name": "Settings/DefaultLayoutSection",
+        "key": "5afbc4b887956edcf7410167ac08db8dd1767805",
+        "name": "Adicionar/Adicionar contato",
         "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Layout"
+        "collection": "Terms dictionary",
+        "value": "Adicionar contato"
       },
       {
-        "key": "3985c4977422f90ed476dfe0a433afcd5b75bd9e",
-        "name": "ComponentCard/Style/Radius",
+        "key": "d4f45f82e793ce512f0daee05794a30f682a1d43",
+        "name": "Adicionar/Adicionar widget",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Adicionar widget"
+      },
+      {
+        "key": "6364dd374ac04e7c37bc51dfc3ce05fecc312488",
+        "name": "Antecipar/Antecipar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Antecipar"
+      },
+      {
+        "key": "1f626b1ea958c3cff19043252ab4515ffc156e41",
+        "name": "Acessar/Acessar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Acessar"
+      },
+      {
+        "key": "ca631f5dd50edc1f34b8062f02cd815fe1a2b915",
+        "name": "Atualizar/Atualizar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Atualizar"
+      },
+      {
+        "key": "c34542120aa329d53ca919c2714f742f3f62129d",
+        "name": "Ativar/Ativar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar"
+      },
+      {
+        "key": "4d1b648579e088b4c7d612504b8c7b5c72c88e38",
+        "name": "Ativar/Ativar biometria",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar biometria"
+      },
+      {
+        "key": "3764cf061a4595fb021e1960651f767bf4e04f93",
+        "name": "Ativar/Ativar DDA",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar DDA"
+      },
+      {
+        "key": "fdbd3af7d049a6007435307af4083e975b541a77",
+        "name": "Ativar/Ativar lembrete",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar lembrete"
+      },
+      {
+        "key": "49ea23b990358ded15d568e48c25c37199ef5c6c",
+        "name": "Cadastrar/Cadastrar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar"
+      },
+      {
+        "key": "7fac299247a56db25032e6a422f7286becef9844",
+        "name": "Cadastrar/Cadastrar chave Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar chave Pix"
+      },
+      {
+        "key": "acd7909315fd4f29735888d894a3c1b8c210ef11",
+        "name": "Cadastrar/Cadastrar débito automático",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar débito automático"
+      },
+      {
+        "key": "0c6c08504a879089142e528cd4863754a6eedf8f",
+        "name": "Cadastrar/Cadastrar Pix automático",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar Pix automático"
+      },
+      {
+        "key": "970d71d36e262fd535652d573684251ae3143b04",
+        "name": "Cancelar/Cancelar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar"
+      },
+      {
+        "key": "621e2b0db4a437f1ca8d9285bbb50deedf12c1b0",
+        "name": "Cancelar/Cancelar autorização",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar autorização"
+      },
+      {
+        "key": "7deeb0d4286e256a68eb93f8dbf6ef2d0ef5d329",
+        "name": "Cancelar/Cancelar débito automático",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar débito automático"
+      },
+      {
+        "key": "2e7a7754da5e81f1da07871a1cdd4b9da66dacc9",
+        "name": "Cancelar/Cancelar portabilidade",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar portabilidade"
+      },
+      {
+        "key": "4a8bf755fc84e90a95a1767a6973177ade329a3f",
+        "name": "Compartilhar/Compartilhar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar"
+      },
+      {
+        "key": "73b073957657a304a242f6920f20b252e9400284",
+        "name": "Compartilhar/Compartilhar chave Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar chave Pix"
+      },
+      {
+        "key": "7962242626b005fa3299855a13692a1ca7a8bc66",
+        "name": "Compartilhar/Compartilhar dados da conta",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar dados da conta"
+      },
+      {
+        "key": "85fa2d12fce79977a0de3e7a86ef70e0a294cf9c",
+        "name": "Compartilhar/Compartilhar comprovante",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar comprovante"
+      },
+      {
+        "key": "36c00e537434f816d153a1e471ef6e12174fab87",
+        "name": "Compartilhar/Compartilhar QR Code",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar QR Code"
+      },
+      {
+        "key": "2b63e8cc3f77f2c4dbfa92f3662b2c984e8bf5fe",
+        "name": "Confirmar/Confirmar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Confirmar"
+      },
+      {
+        "key": "7fb9169ea3b7d86dc115bd432d95ae9465ad05e6",
+        "name": "Confirmar/Confirmar celular",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Confirmar celular"
+      },
+      {
+        "key": "07bc4eb81799184c3b955e900c040a58545ae3a3",
+        "name": "Continuar/Continuar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Continuar"
+      },
+      {
+        "key": "35f93d55fc39cb2fd9dc6671cf71a50a0dd3ee7e",
+        "name": "Criar/Criar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Criar"
+      },
+      {
+        "key": "a3730b5ac30a5f2166cf4d1b8119a8080fc500fe",
+        "name": "Criar/Criar lembrete",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Criar lembrete"
+      },
+      {
+        "key": "827deac4fe985e312bed38bef9f9f28f7b6875f9",
+        "name": "Entender/Ok, entendi",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ok, entendi"
+      },
+      {
+        "key": "ace67ea43afcd5e4cafb12bd7af456a385ad72ac",
+        "name": "Excluir/Excluir",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Excluir"
+      },
+      {
+        "key": "d1204cecc7dfe7b41205f67289046ab0bbda9f2b",
+        "name": "Excluir/Excluir Pix Programado",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Excluir Pix Programado"
+      },
+      {
+        "key": "c05e128d55440a8faed9d55edebce93dfb23ba88",
+        "name": "Excluir/Excluir chave Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Excluir chave Pix"
+      },
+      {
+        "key": "86a64e9abcf1277020a948bb3ceecd456492c023",
+        "name": "Fazer/Fazer Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer Pix"
+      },
+      {
+        "key": "808c1b50f1b72495b2b72eaa494a11096d126eb1",
+        "name": "Fazer/Fazer novo Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer novo Pix"
+      },
+      {
+        "key": "99023cb295dd079ccd2f895e825cba3cb2789dc5",
+        "name": "Fazer/Fazer pagamento",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer pagamento"
+      },
+      {
+        "key": "7f9d7e6059748df354e2db2b3320f6d4248d1698",
+        "name": "Fazer/Fazer novo pagamento",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer novo pagamento"
+      },
+      {
+        "key": "98523099a0acd722c6250466525152ac48325923",
+        "name": "Gerar/Gerar QR Code",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Gerar QR Code"
+      },
+      {
+        "key": "a665d506d7e0acf95f9ae5ec3b57f2169744abc0",
+        "name": "Gerar/Gerar 2ª via do boleto",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Gerar 2ª via do boleto"
+      },
+      {
+        "key": "1ddb9fccfa883bd08a645884626aef1580577efc",
+        "name": "Ir e Voltar/Ir para início",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ir para início"
+      },
+      {
+        "key": "13d175095ec0382bb513437dd97954b3de22b8fb",
+        "name": "Ir e Voltar/Ir para Empréstimos",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ir para Empréstimos"
+      },
+      {
+        "key": "3e964c68c9cb918232247ac32e60997a1ccef787",
+        "name": "Ir e Voltar/Voltar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Voltar"
+      },
+      {
+        "key": "b8508791173ad7b1e647230164b01bb60f4a7632",
+        "name": "Ir e Voltar/Voltar para início",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Voltar para início"
+      },
+      {
+        "key": "b3b06d3635a9b3ef2a73a2d9c4ec081cd5782fb5",
+        "name": "Mostrar/Mostrar senha",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Mostrar senha"
+      },
+      {
+        "key": "674e8982242af99721abede69ce8d194c0aeaf94",
+        "name": "Mostrar/Mostrar saldo",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Mostrar saldo"
+      },
+      {
+        "key": "e0cf2ecf4b11acef318c0913ee58ca8083f3e277",
+        "name": "Mostrar/Mostrar todos",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Mostrar todos"
+      },
+      {
+        "key": "70af83b4b8cd6cda2067315aaedb862f2169899a",
+        "name": "Pagar/Pagar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar"
+      },
+      {
+        "key": "0d7cfa101ba0db407065ad8b558e71db0e844640",
+        "name": "Pagar/Pagar boleto",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar boleto"
+      },
+      {
+        "key": "c6e218c7eff2040eba53654f5606a962e00809b8",
+        "name": "Pagar/Pagar parcela",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar parcela"
+      },
+      {
+        "key": "700ede1712ede7e130cf23ea255f40892b8e0ae4",
+        "name": "Pagar/Pagar prestação",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar prestação"
+      },
+      {
+        "key": "3fdeb05fc282d9ab9808abd2b19bcb39ec623a73",
+        "name": "Salvar/Salvar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Salvar"
+      },
+      {
+        "key": "44e5a292aa3dbcfe1a1918f9f6fb8c4838e89d31",
+        "name": "Salvar/Salvar contato",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Salvar contato"
+      },
+      {
+        "key": "da2b36841fe792593a33dcc6fd26ffb387122f5f",
+        "name": "Salvar/Salvar mensagem",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Salvar mensagem"
+      },
+      {
+        "key": "4d74e16cae3b66fffd414709461528d166e27de9",
+        "name": "Usar/Usar chave Pix na CAIXA",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Usar chave Pix na CAIXA"
+      },
+      {
+        "key": "91581239c63c4f3270eb5eb4c3f01192d99ac6c8",
+        "name": "Usar/Usar em outro banco",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Usar em outro banco"
+      },
+      {
+        "key": "e683b329fedb23d423b5daf08762ceb825932b17",
+        "name": "breakpoint 🔒",
+        "resolvedType": "STRING",
+        "collection": "responsive",
+        "value": "extra large"
+      },
+      {
+        "key": "5a252b9f4d10a79cb6a71f922d7c0d359e08b671",
+        "name": "device 🔒",
+        "resolvedType": "STRING",
+        "collection": "responsive",
+        "value": "desktop"
+      },
+      {
+        "key": "342dc2e8338a4bf48cf67858012acaac8f51b0dd",
+        "name": "device/width",
         "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
+        "collection": "responsive",
+        "value": 1440
+      },
+      {
+        "key": "0c58f7f1c8bdee1fae04b483016807839d8bbeef",
+        "name": "device/min-width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
+      },
+      {
+        "key": "15b13fffa9bd485c000a60cf7352aeec864ac5cd",
+        "name": "device/max-width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1920
+      },
+      {
+        "key": "8c1c494e3d2189c0cda1a8b246a222679d4e7188",
+        "name": "device/min-height",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 900
+      },
+      {
+        "key": "b6fa6d7ea224162fc26bcd4feb3593a071c72aef",
+        "name": "grid/grid-column",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 12
+      },
+      {
+        "key": "b357d9876a6487bc6585ff05d6d34049168a686b",
+        "name": "show/device/desktop",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "f1fa37adfa4cfe8c8e83b226e2c309d2756590a8",
+        "name": "show/device/mobile",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
         "value": null
       },
       {
-        "key": "113dbf9e3097d6041fb19ecbf56e74717171a463",
-        "name": "ComponentCard/Style/Padding",
+        "key": "c656eb4c5adbf1f4d10d36ecc529a62d6ba847cb",
+        "name": "show/breakpoint/extra large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "eb8218a3b520b76e4c9c5394b34a28e90b9381be",
+        "name": "show/breakpoint/large +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "de2f0274cba20369986d7eba540f66fed2f66cda",
+        "name": "show/breakpoint/large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "f62abf263d76b9cb8859e065b36df4f4a092440d",
+        "name": "show/breakpoint/medium +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "55341000b43c6871ba95e3e9612136dbbd2a06ed",
+        "name": "show/breakpoint/medium",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "2a1182e3ade1087d17e5a4ed3202d0c3a77b2588",
+        "name": "show/breakpoint/small +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "0f238f4ba74855b4056b568dfee5c2f3a114445c",
+        "name": "show/breakpoint/small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "3cf82aef55e2701ed26738822a1848886287a5ae",
+        "name": "show/breakpoint/extra small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "d349b296f58c9f5cc80e92c1043cc59a4a3b79f2",
+        "name": "grid/grid-margin",
         "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 64
-      },
-      {
-        "key": "decd6d12897cf00fcd4c9f90141c0a1cca0783c4",
-        "name": "ComponentCard/Style/WrapPadding",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 64
-      },
-      {
-        "key": "cc2f75e7b39350623af73747ad30c0fb061e39bf",
-        "name": "ComponentCard/Style/Gap",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 64
-      },
-      {
-        "key": "3b903b117b1997c5ff227be23f2fa3dc7d3b5d01",
-        "name": "ComponentCard/Fonts/Title/Family",
-        "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Inter"
-      },
-      {
-        "key": "bbe6606b9270dfa45fb2ba64ebda31535047d75f",
-        "name": "ComponentCard/Fonts/Title/Style",
-        "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Bold"
-      },
-      {
-        "key": "6ce542b6db3d19fb9fd7fb6fb50b54d94df1999e",
-        "name": "ComponentCard/Fonts/Title/Size",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
+        "collection": "responsive",
         "value": 48
       },
       {
-        "key": "f3001166bf15c30016d029d66012c54751ea458d",
-        "name": "ComponentCard/Fonts/Title/LineHeight",
+        "key": "e2c5440e36fc09559af6d652fa8bd67db3e11dbd",
+        "name": "grid/grid-gap",
         "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 56
+        "collection": "responsive",
+        "value": 24
       },
       {
-        "key": "675f0b746aaba0959ef9ac39c6bd6441f846a4ae",
-        "name": "ComponentCard/Fonts/Title/Color",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#000000"
-      },
-      {
-        "key": "796819fdb473443711f10ebdc686412a0ff2aa39",
-        "name": "ComponentCard/Fonts/Title/Margin",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 16
-      },
-      {
-        "key": "95f137610f8b8f915ef0ff01433c4dce90bce1fd",
-        "name": "ComponentCard/Fonts/Description/Family",
-        "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Inter"
-      },
-      {
-        "key": "211972e0e74faed08cdad415e366569e1961ae26",
-        "name": "ComponentCard/Fonts/Description/Style",
-        "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Regular"
-      },
-      {
-        "key": "d9207c871b0f6a681a7d22731b2ccce03a07e720",
-        "name": "ComponentCard/Fonts/Description/Size",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 14
-      },
-      {
-        "key": "2b8130dbdb5255bc982cd18171008655599f5680",
-        "name": "ComponentCard/Fonts/Description/LineHeight",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 18
-      },
-      {
-        "key": "9a0ff328c369db95131e54421319dc03e8ce5c9d",
-        "name": "ComponentCard/Fonts/Description/Color",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#000000"
-      },
-      {
-        "key": "15aac0d7d8797ce6f3940415bdcbd1875d9a80a1",
-        "name": "ComponentCard/Fonts/Description/Width",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 480
-      },
-      {
-        "key": "b6abf419a08eddcfa3e04f0f15c120bf0d8434fc",
-        "name": "PropertiesCard/Style/Radius",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
+        "key": "d5f0eddd47d5e547747cbd2f6b83c1170cfe6c7f",
+        "name": "hide/device/desktop",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
         "value": null
       },
       {
-        "key": "25d69b399f8575b0875fa5a1b91a7aa2a7326efa",
-        "name": "PropertiesCard/Style/Width",
+        "key": "bbb5487ef1c40e5ddf426a45dc9a79c1c61a08f4",
+        "name": "components/container/width-compact",
         "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
+        "collection": "responsive",
         "value": 720
       },
       {
-        "key": "405283488f000b98e10995bf6cd81dbe05f7906b",
-        "name": "PropertiesCard/Style/Padding",
+        "key": "ba362c47468f7ffc3f4bacadc489386abdd3eaff",
+        "name": "components/container/width",
         "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 64
+        "collection": "responsive",
+        "value": 1080
       },
       {
-        "key": "890615ea8bd31755d67a53b9dc85ebca82578e52",
-        "name": "PropertiesCard/Style/Gap",
+        "key": "d5f604b4641b0f25ed4f4e86454f9c1597343fbc",
+        "name": "components/container/width-wide",
         "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 64
+        "collection": "responsive",
+        "value": 1440
       },
       {
-        "key": "f8f9dd8dd0b2d5b14022913852dfc815207e1e6a",
-        "name": "PropertiesCard/Style/Fill",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#000000"
-      },
-      {
-        "key": "93e3e99553d4b74b02afeafa11c04d32b11debb2",
-        "name": "PropertiesCard/Style/PropertyGap",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 32
-      },
-      {
-        "key": "47ad0ebb30d18a48de8e4b48b907eb2bbc05d47a",
-        "name": "PropertiesCard/Style/PropertyPadding",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 32
-      },
-      {
-        "key": "fc4e4a878672bf8fdfc4f0880fc44aa315d0a8ea",
-        "name": "PropertiesCard/Style/PropertyStroke",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#000000"
-      },
-      {
-        "key": "9b6c0aa2b7c2c2d45a05e9adffd3c0cff398e5ee",
-        "name": "PropertiesCard/Style/OptionStroke",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#e6e6e6"
-      },
-      {
-        "key": "b231620f16443788b5fe40744cbdcda55a9f19a5",
-        "name": "PropertiesCard/Fonts/PropertyTitle/Family",
-        "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Inter"
-      },
-      {
-        "key": "fb651825004e220079a6847b696556a5cad1a0a5",
-        "name": "PropertiesCard/Fonts/PropertyTitle/Style",
-        "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Semi Bold"
-      },
-      {
-        "key": "48e4cf716cfdddcaf8bcf0abe1be80cb46e2352b",
-        "name": "PropertiesCard/Fonts/PropertyTitle/Size",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 20
-      },
-      {
-        "key": "795582c4acc278d458e4949518a41fca4b510615",
-        "name": "PropertiesCard/Fonts/PropertyTitle/LineHeight",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 24
-      },
-      {
-        "key": "f8c806a63fb976c9da78fbf1764b45ac04cec029",
-        "name": "PropertiesCard/Fonts/PropertyTitle/Color",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#000000"
-      },
-      {
-        "key": "a177954e98a6c9b908617c3343b33064c42eb003",
-        "name": "PropertiesCard/Fonts/PropertyTitle/Width",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 192
-      },
-      {
-        "key": "60bb751a09bdc9d6c38d02c9bc8d4d0178fb62a6",
-        "name": "PropertiesCard/Fonts/PropertyTitle/Margin",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 16
-      },
-      {
-        "key": "411200445b75d67c97cc4b1783e6ea4cc38fac21",
-        "name": "PropertiesCard/Fonts/PropertyDescription/Family",
-        "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Inter"
-      },
-      {
-        "key": "56e4493da6ff3c097942543fc34e03fd8f306c57",
-        "name": "PropertiesCard/Fonts/PropertyDescription/Style",
-        "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Regular"
-      },
-      {
-        "key": "430e4a4163e8e5f1b72d2d19098b4d9bd8456584",
-        "name": "PropertiesCard/Fonts/PropertyDescription/Size",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 14
-      },
-      {
-        "key": "f510fec10178d9aaa163910eb0143b97a1a61bde",
-        "name": "PropertiesCard/Fonts/PropertyDescription/LineHeight",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 18
-      },
-      {
-        "key": "897be6e5f7a762a3ab8f5fbfb238f4ce60b89041",
-        "name": "PropertiesCard/Fonts/PropertyDescription/Color",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#525252"
-      },
-      {
-        "key": "fd9cb01258715d2149877af31beacd208bdafa5a",
-        "name": "PropertiesCard/Fonts/OptionTitle/Family",
-        "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Inter"
-      },
-      {
-        "key": "48583f03530a585f1722f65e7487cf68d16332f5",
-        "name": "PropertiesCard/Fonts/OptionTitle/Style",
-        "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Medium"
-      },
-      {
-        "key": "4929341baf7f774477b7cba6b5b54f3037805451",
-        "name": "PropertiesCard/Fonts/OptionTitle/Size",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 16
-      },
-      {
-        "key": "8839b14a71a48b94e3786480889523e84528b0d0",
-        "name": "PropertiesCard/Fonts/OptionTitle/LineHeight",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 20
-      },
-      {
-        "key": "f74f7a277b6b23e40ee44823170a7e06740345d1",
-        "name": "PropertiesCard/Fonts/OptionTitle/Color",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#000000"
-      },
-      {
-        "key": "8406b36b2a17e526f519921f42f1a5e454b9dce3",
-        "name": "PropertiesCard/Fonts/OptionTitle/Width",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 128
-      },
-      {
-        "key": "9d575331cb07737aad75484bd59cc16a22a4f689",
-        "name": "PropertiesCard/Fonts/OptionTitle/Margin",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 16
-      },
-      {
-        "key": "0ebd8d7ede1b160cb65de373179e236e95f2a3bb",
-        "name": "PropertiesCard/Fonts/OptionDescription/Family",
-        "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Inter"
-      },
-      {
-        "key": "b0df1dc7f8d2700bd9b726123f547811a8176cf5",
-        "name": "PropertiesCard/Fonts/OptionDescription/Style",
-        "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Regular"
-      },
-      {
-        "key": "c19c10ac533a5f57f6d5c33ccef7dc822350bc4a",
-        "name": "PropertiesCard/Fonts/OptionDescription/Size",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 14
-      },
-      {
-        "key": "11fd9b7c8a7544c6f8e4bef47540dee3499e1973",
-        "name": "PropertiesCard/Fonts/OptionDescription/LineHeight",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 18
-      },
-      {
-        "key": "f2f8f0b3dc32629669f2e2f06d4a7315c8bb4a73",
-        "name": "PropertiesCard/Fonts/OptionDescription/Color",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#525252"
-      },
-      {
-        "key": "16a0d2c262e6e003e4a2848a583b4f475ede811f",
-        "name": "PropertiesCard/Fonts/OptionDescription/Width",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 192
-      },
-      {
-        "key": "3781b33bb80b1bafbb7a6e51406df30f85986527",
-        "name": "Grid/Style/Gap",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 8
-      },
-      {
-        "key": "ea989f9e010ea67309d4b04da7d416610043e35f",
-        "name": "Grid/Style/MinWidth",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 320
-      },
-      {
-        "key": "782acc702f2378478cbd505ae5c588759169604b",
-        "name": "Grid/Style/MinHeight",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 136
-      },
-      {
-        "key": "417d9003d163e289b5460530663698aed30e6d74",
-        "name": "Grid/Style/Padding",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 32
-      },
-      {
-        "key": "76bb7d5c2062b7d1a63ad5e6491e67bcde786680",
-        "name": "Grid/Style/Stroke",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#e6e6e6"
-      },
-      {
-        "key": "2cc7ff4a26748855108979f90006ece5157b5677",
-        "name": "Grid/Style/Fill",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#ffffff"
-      },
-      {
-        "key": "9e5227fc36377c26684b74294e9cf0a91c7c0e7c",
-        "name": "Grid/Style/FillInverted",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#000000"
-      },
-      {
-        "key": "f1296ab58ec4edbedb1f46ca26d573df9facafd1",
-        "name": "Grid/Fonts/PropertyOption/Family",
-        "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Inter"
-      },
-      {
-        "key": "da8995001c67d2fec54626c8df97d24dd4eecae3",
-        "name": "Grid/Fonts/PropertyOption/Style",
-        "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Semi Bold"
-      },
-      {
-        "key": "e19aa95ed22d74377245e6fdfc2d8191a402dcad",
-        "name": "Grid/Fonts/PropertyOption/Color",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#000000"
-      },
-      {
-        "key": "7e334a6554612e1de3e646335cf6f45ac0426978",
-        "name": "Grid/Fonts/PropertyOption/Level0/Size",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 32
-      },
-      {
-        "key": "2b71d585d6db053608fcbd45169022ccd2147784",
-        "name": "Grid/Fonts/PropertyOption/Level0/LineHeight",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 36
-      },
-      {
-        "key": "53d052885b32551168a13043d38d59d44e95d22d",
-        "name": "Grid/Fonts/PropertyOption/Level1/Size",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 28
-      },
-      {
-        "key": "f89d5f2cf1bb315079f15e4ed1925cb669eaf0ff",
-        "name": "Grid/Fonts/PropertyOption/Level1/LineHeight",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 32
-      },
-      {
-        "key": "f8ecbd4cec08ff8fa8637c0a1d20c9554b41ba16",
-        "name": "Grid/Fonts/PropertyOption/Level2/Size",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 24
-      },
-      {
-        "key": "a6d7414ddd320e19b62eccb9b8517ad65d7e1fc0",
-        "name": "Grid/Fonts/PropertyOption/Level2/LineHeight",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 28
-      },
-      {
-        "key": "8bf2cb18df9d0c0337d37af67f3f37244be80014",
-        "name": "Grid/Fonts/PropertyTitle/Family",
-        "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Inter"
-      },
-      {
-        "key": "4901c979f7fcff93d23d74a064742b7ad37fa271",
-        "name": "Grid/Fonts/PropertyTitle/Style",
-        "resolvedType": "STRING",
-        "collection": "GOSTPlugin",
-        "value": "Medium"
-      },
-      {
-        "key": "67a458759948021427117721c71b487fa616da7e",
-        "name": "Grid/Fonts/PropertyTitle/Color",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#000000"
-      },
-      {
-        "key": "739728164d13ca4c602dc1f2b6a29b8d06361d1e",
-        "name": "Grid/Fonts/PropertyTitle/Level0/Size",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 24
-      },
-      {
-        "key": "6cb6fdec863454b8a06736afac1f1d7570ca2d90",
-        "name": "Grid/Fonts/PropertyTitle/Level0/LineHeight",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 28
-      },
-      {
-        "key": "0566c1fc774233c43e7cc5f951e8585906f2b81b",
-        "name": "Grid/Fonts/PropertyTitle/Level1/Size",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 22
-      },
-      {
-        "key": "2a0b2867f08dc279731184f4febffd24f987fb95",
-        "name": "Grid/Fonts/PropertyTitle/Level1/LineHeight",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 26
-      },
-      {
-        "key": "f1c19f6e49adb9fd91a4261a8ed2eb6ddb8b3e28",
-        "name": "Grid/Fonts/PropertyTitle/Level2/Size",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 20
-      },
-      {
-        "key": "464499009ffa00b4141a0b08ad7334c88f3255c7",
-        "name": "Grid/Fonts/PropertyTitle/Level2/LineHeight",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 24
-      },
-      {
-        "key": "6a85becc7d81ec3c07de5506c61013942a0dc517",
-        "name": "Sections/Main/Radius",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": null
-      },
-      {
-        "key": "3a55efa123e95fc28644fe975cf15880e200cc20",
-        "name": "Sections/Main/Padding",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 256
-      },
-      {
-        "key": "d75efebf4e3da67ac0c823beac89518bfc8d5ad0",
-        "name": "Sections/Main/Gap",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 128
-      },
-      {
-        "key": "e01d693c3553cc0d7144dadc3896d36c4c4a5203",
-        "name": "Sections/Main/Fill",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#000000"
-      },
-      {
-        "key": "065c43e6f401d716341957b9088ca10de534c072",
-        "name": "Sections/Main/Stroke",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#000000"
-      },
-      {
-        "key": "30cae2bad115923a037d5dfebed6d156eecb0296",
-        "name": "Sections/Main/Sort",
+        "key": "353f9e9a3a815706dcc7bf54d116db9f23285fe2",
+        "name": "hide/device/mobile",
         "resolvedType": "BOOLEAN",
-        "collection": "GOSTPlugin",
+        "collection": "responsive",
         "value": true
       },
       {
-        "key": "ccc418b764344b5e6f2bd7c677449f647a6ca8a0",
-        "name": "Sections/Alternative/Radius",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
+        "key": "5cdf1997b0429ef16bd6c1be5bab9a2b12eda469",
+        "name": "hide/breakpoint/extra large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
         "value": null
       },
       {
-        "key": "d5303bdde899fd36011f3d76f67cad6819385a36",
-        "name": "Sections/Alternative/Padding",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 128
-      },
-      {
-        "key": "09529974433a8ad0c642729e754b422944d9cef6",
-        "name": "Sections/Alternative/Gap",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 64
-      },
-      {
-        "key": "b67670e1053908128c7a3aa39063d00b8db22b84",
-        "name": "Sections/Alternative/Fill",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#000000"
-      },
-      {
-        "key": "1542968e8edee06573f1dfc1b4d72ec584a43adb",
-        "name": "Sections/Alternative/Stroke",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#000000"
-      },
-      {
-        "key": "0368a678854b199abebf20e61131ef5c414d867d",
-        "name": "Sections/Alternative/Sort",
+        "key": "4f95e11f7498f15bd862c964ea6d213f77eacb04",
+        "name": "hide/breakpoint/large +",
         "resolvedType": "BOOLEAN",
-        "collection": "GOSTPlugin",
-        "value": true
-      },
-      {
-        "key": "ca895bbc338ff2f54aa38e8eec9cc78fb823a5f4",
-        "name": "Sections/Layout/Radius",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
+        "collection": "responsive",
         "value": null
       },
       {
-        "key": "04d411c7b157d367f31345d8a0e22b4d578915c3",
-        "name": "Sections/Layout/Padding",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 128
-      },
-      {
-        "key": "8929182f5487075ee30b291d404921ad0aea9e1c",
-        "name": "Sections/Layout/Gap",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 64
-      },
-      {
-        "key": "c58345b5ff009899639b0ea3acd275fb02e7f4e3",
-        "name": "Sections/Layout/Fill",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#000000"
-      },
-      {
-        "key": "e92a5d8a6527918bb348af107d1c0d80c3f84eda",
-        "name": "Sections/Layout/Stroke",
-        "resolvedType": "COLOR",
-        "collection": "GOSTPlugin",
-        "value": "#000000"
-      },
-      {
-        "key": "4e01ca4aa7562d96c6febb4433a2b1d4cffb5147",
-        "name": "Sections/Layout/Sort",
+        "key": "2568ea599dbb0f5c54ba2e241554507f75f26411",
+        "name": "hide/breakpoint/large",
         "resolvedType": "BOOLEAN",
-        "collection": "GOSTPlugin",
+        "collection": "responsive",
         "value": true
       },
       {
-        "key": "5c38c861d1219a834aa965ef38c36ca3dba87447",
-        "name": "Layouts/Gap/Min",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 32
+        "key": "759e7e9fc237cc7cf071ed04b65b5d280e884f26",
+        "name": "hide/breakpoint/medium +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
       },
       {
-        "key": "bbaf6dd236b629bda71e674f6399c0918b7ba412",
-        "name": "Layouts/Gap/Max",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 192
+        "key": "d3676bfcd938342e798fe2301907f26fe42fc5a0",
+        "name": "hide/breakpoint/medium",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
       },
       {
-        "key": "55a9040219f1b8438f8434812500a852976660f2",
-        "name": "Layouts/Gap/Step",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 32
+        "key": "d18bfc2be43c65657374a7518a55295ea586102c",
+        "name": "hide/breakpoint/small +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
       },
       {
-        "key": "607a24cf8691b7bed2c266bc926897201e12f4b7",
-        "name": "Layouts/SectionGap",
-        "resolvedType": "FLOAT",
-        "collection": "GOSTPlugin",
-        "value": 256
+        "key": "080f2ce8fe0de800c7174126adaeaac75e322b54",
+        "name": "hide/breakpoint/small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "1b813038bcb7e2224d055ba5952e55add8faec73",
+        "name": "hide/breakpoint/extra small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
       }
     ]
   },

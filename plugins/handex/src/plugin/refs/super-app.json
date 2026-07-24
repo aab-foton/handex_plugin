@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Super App",
     "figmaFileKey": "epCGtlKQxedDxQVlK3lNcN",
-    "exportedAt": "2026-07-22T15:29:02.337Z",
+    "exportedAt": "2026-07-24T19:33:25.262Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -10,6 +10,426 @@
   },
   "designTokens": {
     "variables": [
+      {
+        "key": "46a7bea58854c19170e7152b4f3ed97718aafb60",
+        "name": "Width - Screen",
+        "resolvedType": "FLOAT",
+        "collection": "Screen size",
+        "value": 360
+      },
+      {
+        "key": "713214ddb27195af0824f84fab30b31526f4eb3e",
+        "name": "Height - Screen",
+        "resolvedType": "FLOAT",
+        "collection": "Screen size",
+        "value": 800
+      },
+      {
+        "key": "441e5c9892c6b8422b58d7fde53fd14a11ac9bb5",
+        "name": "Abrir/Abrir",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Abrir"
+      },
+      {
+        "key": "973c5d708dee0fe93b5bd6cf87e30c24f3031ec6",
+        "name": "Abrir/Abrir comprovante",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Abrir comprovante"
+      },
+      {
+        "key": "3031bd2a85ba9074d647212fff7c0a656d1b00c6",
+        "name": "Abrir/Abrir conta digital",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Abrir conta digital"
+      },
+      {
+        "key": "8783f72835be1f33965fab60e0d99142c20751ed",
+        "name": "Adicionar/Adicionar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Adicionar"
+      },
+      {
+        "key": "479f8acff5694a4cbfdcb5096687a180e6ad5e75",
+        "name": "Adicionar/Adicionar cartão",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Adicionar cartão"
+      },
+      {
+        "key": "b07243dea692ea85ad6f754ae1f9803f0aeeb02f",
+        "name": "Adicionar/Adicionar contato",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Adicionar contato"
+      },
+      {
+        "key": "73ab870b0a2506b2390e80f11aef14f6d6e04d16",
+        "name": "Adicionar/Adicionar widget",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Adicionar widget"
+      },
+      {
+        "key": "e34d2eff03a24fada8fd9f442665fd90f01c37f0",
+        "name": "Antecipar/Antecipar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Antecipar"
+      },
+      {
+        "key": "050a2434f6f33b50ae437aec07c9114c4f2ad852",
+        "name": "Acessar/Acessar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Acessar"
+      },
+      {
+        "key": "c33181eb5cb34da4ff29e24c3086c1b2862e26f2",
+        "name": "Atualizar/Atualizar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Atualizar"
+      },
+      {
+        "key": "2285763ee12226f62a426966b237cd0341416880",
+        "name": "Ativar/Ativar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar"
+      },
+      {
+        "key": "c74151b726f7e120baab0bda75e991d37d2b9dfc",
+        "name": "Ativar/Ativar biometria",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar biometria"
+      },
+      {
+        "key": "0bebeddbc8e8d9ca5c91ad251c0bb2a9aef36532",
+        "name": "Ativar/Ativar DDA",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar DDA"
+      },
+      {
+        "key": "cf1fc3e121316f24f2cf1b1a61966af3bb8dd2aa",
+        "name": "Ativar/Ativar lembrete",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar lembrete"
+      },
+      {
+        "key": "807926aeaa5a2f1a71d7c77beeaf1f4ea34f412f",
+        "name": "Cadastrar/Cadastrar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar"
+      },
+      {
+        "key": "a4b731474ab3d0d8568e2eeac2829a54a9d41836",
+        "name": "Cadastrar/Cadastrar chave Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar chave Pix"
+      },
+      {
+        "key": "d9fe8a33c0c18efdd4283a91006628fc51f7aeae",
+        "name": "Cadastrar/Cadastrar débito automático",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar débito automático"
+      },
+      {
+        "key": "be709143353a6b54cac2d5f7a28e46e7507984e2",
+        "name": "Cadastrar/Cadastrar Pix automático",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar Pix automático"
+      },
+      {
+        "key": "0a8ffc9461d59e0bc65be071e58d9fd40750d342",
+        "name": "Cancelar/Cancelar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar"
+      },
+      {
+        "key": "747d69f50717908631da5bd56e8553fb1f6822e6",
+        "name": "Cancelar/Cancelar autorização",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar autorização"
+      },
+      {
+        "key": "60942840e6be5324256a3b935ec9aedf153e1850",
+        "name": "Cancelar/Cancelar débito automático",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar débito automático"
+      },
+      {
+        "key": "b7d334d3011f93f77107fc16966f0a3e5a7cbfb2",
+        "name": "Cancelar/Cancelar portabilidade",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar portabilidade"
+      },
+      {
+        "key": "f06d3796e4daaa91db550ca59c5049338ad31a9a",
+        "name": "Compartilhar/Compartilhar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar"
+      },
+      {
+        "key": "243dd50d1d061270d0299f8069992a16453a20ed",
+        "name": "Compartilhar/Compartilhar chave Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar chave Pix"
+      },
+      {
+        "key": "09142ba3302388f7b1f16d1109901f3ffe098f9f",
+        "name": "Compartilhar/Compartilhar dados da conta",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar dados da conta"
+      },
+      {
+        "key": "a0bb1c3cafa4aaaab7465d8bfe684c756c7e31d3",
+        "name": "Compartilhar/Compartilhar comprovante",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar comprovante"
+      },
+      {
+        "key": "049b19398c07fadbda78065fc1434224ed30ad19",
+        "name": "Compartilhar/Compartilhar QR Code",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar QR Code"
+      },
+      {
+        "key": "a053b4d249eabb1ab06c83d1a994577c8e98864b",
+        "name": "Confirmar/Confirmar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Confirmar"
+      },
+      {
+        "key": "3e779d84fefcd1dbc6c8b375ec5d0084ea8f5f1e",
+        "name": "Confirmar/Confirmar celular",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Confirmar celular"
+      },
+      {
+        "key": "781bb0ff4be34ba060ca2d13419347b8d42b8494",
+        "name": "Continuar/Continuar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Continuar"
+      },
+      {
+        "key": "8846db41e5418080923b629ae178ad44ae0aec01",
+        "name": "Criar/Criar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Criar"
+      },
+      {
+        "key": "5589967873a34e650c3d9e61a7d57f306b6ac95d",
+        "name": "Criar/Criar lembrete",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Criar lembrete"
+      },
+      {
+        "key": "fc1acecce0ffad831af95832e7e13126a32671df",
+        "name": "Entender/Ok, entendi",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ok, entendi"
+      },
+      {
+        "key": "2aac4f310ca630a79ac4c5536d052c023371d1ff",
+        "name": "Excluir/Excluir",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Excluir"
+      },
+      {
+        "key": "43aaad182bc50f56078e715f717f1f8152cebe55",
+        "name": "Excluir/Excluir Pix Programado",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Excluir Pix Programado"
+      },
+      {
+        "key": "3ec1f3ab3cdbbb9d172969930299cedf1a908096",
+        "name": "Excluir/Excluir chave Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Excluir chave Pix"
+      },
+      {
+        "key": "87edc4b177b0c6120095d60d0e242a2c01c54eae",
+        "name": "Fazer/Fazer Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer Pix"
+      },
+      {
+        "key": "a169a2bffb44cebdc59ad2865727f4db397d1924",
+        "name": "Fazer/Fazer novo Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer novo Pix"
+      },
+      {
+        "key": "33c03b9cb80bfa694d141c4f3cfc6ae71ad7961a",
+        "name": "Fazer/Fazer pagamento",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer pagamento"
+      },
+      {
+        "key": "c28cccbba57d2caf58528cd8a950a17d393e7436",
+        "name": "Fazer/Fazer novo pagamento",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer novo pagamento"
+      },
+      {
+        "key": "ada9082df19c3666017af18e58d86bcef7fc5961",
+        "name": "Gerar/Gerar QR Code",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Gerar QR Code"
+      },
+      {
+        "key": "da6c5d585b6d53379cebaecba91dc85d029fa5d7",
+        "name": "Gerar/Gerar 2ª via do boleto",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Gerar 2ª via do boleto"
+      },
+      {
+        "key": "2db4d9c4287d5df336dfbf947f7aa75710866f66",
+        "name": "Ir e Voltar/Ir para início",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ir para início"
+      },
+      {
+        "key": "834284a3afad8c207bc4b9ebb111d111a35dd5e7",
+        "name": "Ir e Voltar/Ir para Empréstimos",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ir para Empréstimos"
+      },
+      {
+        "key": "d83959d88d0d8935119128552314235f521bffc9",
+        "name": "Ir e Voltar/Voltar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Voltar"
+      },
+      {
+        "key": "e1e068658918f355ff49753a0b44528355a41f66",
+        "name": "Ir e Voltar/Voltar para início",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Voltar para início"
+      },
+      {
+        "key": "6d508d72d8c0d34ffbc1589be61fd4b366da242f",
+        "name": "Mostrar/Mostrar senha",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Mostrar senha"
+      },
+      {
+        "key": "0d66da7feb2d39086e0a2a3e450365d08bd1675c",
+        "name": "Mostrar/Mostrar saldo",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Mostrar saldo"
+      },
+      {
+        "key": "063d9c7eb9324571abbdcb7d1fa512c80ecb5af1",
+        "name": "Mostrar/Mostrar todos",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Mostrar todos"
+      },
+      {
+        "key": "b825eb9403e79735c622e55cee5ef6967c7fbc41",
+        "name": "Pagar/Pagar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar"
+      },
+      {
+        "key": "969a06167ff01a10cfee29df9b9c6d22400c443b",
+        "name": "Pagar/Pagar boleto",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar boleto"
+      },
+      {
+        "key": "212ebd31d9c0aa24af4417ea2369e7bf38dd597a",
+        "name": "Pagar/Pagar parcela",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar parcela"
+      },
+      {
+        "key": "f5bc15280a7437786072ab4fbb5aa753abde90fb",
+        "name": "Pagar/Pagar prestação",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar prestação"
+      },
+      {
+        "key": "1d968f5e32f2182b8f53ee54df5cf2a73e2774ec",
+        "name": "Salvar/Salvar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Salvar"
+      },
+      {
+        "key": "e682795190c59c69b0679e4b728bc62e87c8dc69",
+        "name": "Salvar/Salvar contato",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Salvar contato"
+      },
+      {
+        "key": "4dd7ded241a85c20582df29207559f53b6f34b55",
+        "name": "Salvar/Salvar mensagem",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Salvar mensagem"
+      },
+      {
+        "key": "182a23014cacb0e36d9f52bf91381d6b30007e1c",
+        "name": "Usar/Usar chave Pix na CAIXA",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Usar chave Pix na CAIXA"
+      },
+      {
+        "key": "a06113e15c61a312bf3b1d88cdc30d456925f7dd",
+        "name": "Usar/Usar em outro banco",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Usar em outro banco"
+      },
       {
         "key": "84a507d1b885b05f356cc444daa786a0965f065d",
         "name": "color/highlight/highlight [Azul CX - Color 8]",
@@ -67,18 +487,18 @@
         "value": "#03453b"
       },
       {
-        "key": "1416193b41f620131c30e8d26f42a5150330fd18",
-        "name": "color/decorative/decorativeOutlined [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#d0f2ed"
-      },
-      {
         "key": "f7d0c2ecc99d5ea43afd7a47ac8a4062d4871c3c",
         "name": "color/accent/accentBg [Color 2]",
         "resolvedType": "COLOR",
         "collection": "SuperApp Theme",
         "value": "#ffefd6"
+      },
+      {
+        "key": "1416193b41f620131c30e8d26f42a5150330fd18",
+        "name": "color/decorative/decorativeOutlined [Color 3]",
+        "resolvedType": "COLOR",
+        "collection": "SuperApp Theme",
+        "value": "#d0f2ed"
       },
       {
         "key": "5770cb929fafef3eb752fdb5d3c3b9b2d5b36e47",
@@ -879,15 +1299,15 @@
         "value": "#f0f0f0"
       },
       {
-        "key": "db4eb020cc90fb1f8ace84590a5c41c2b1cbc713",
-        "name": "icon/color/highlight 1 [color 9]",
+        "key": "7e844ccc4bb8c78f5df0a954fa0bc6a94c6621ee",
+        "name": "color/state/highlight/hover2 [Color 9]",
         "resolvedType": "COLOR",
         "collection": "SuperApp Theme",
         "value": "#005194"
       },
       {
-        "key": "7e844ccc4bb8c78f5df0a954fa0bc6a94c6621ee",
-        "name": "color/state/highlight/hover2 [Color 9]",
+        "key": "db4eb020cc90fb1f8ace84590a5c41c2b1cbc713",
+        "name": "icon/color/highlight 1 [color 9]",
         "resolvedType": "COLOR",
         "collection": "SuperApp Theme",
         "value": "#005194"
@@ -1222,18 +1642,18 @@
         "value": "Roboto"
       },
       {
-        "key": "15cf7d2909e31203b9df072f6cadd437a0ce4805",
-        "name": "font/decoration/tashed",
-        "resolvedType": "STRING",
-        "collection": "SuperApp Theme",
-        "value": "Strikethrough"
-      },
-      {
         "key": "87bd2d06f8cc3638a9d6b59d986ddb59760dff8a",
         "name": "font/letter-spacing/standard",
         "resolvedType": "FLOAT",
         "collection": "SuperApp Theme",
         "value": null
+      },
+      {
+        "key": "15cf7d2909e31203b9df072f6cadd437a0ce4805",
+        "name": "font/decoration/tashed",
+        "resolvedType": "STRING",
+        "collection": "SuperApp Theme",
+        "value": "Strikethrough"
       },
       {
         "key": "7811e40bc9c92ae82f5305829ca8daa1cf09d1ff",
@@ -1257,18 +1677,18 @@
         "value": 0.25
       },
       {
-        "key": "6d0401fcfda74d9c436d5990d2a221d5f9a69863",
-        "name": "icon/size/quark",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 12
-      },
-      {
         "key": "cae03ed80cab99d438ac67cb5293a5fbcc9da9bf",
         "name": "font/letter-spacing/extended",
         "resolvedType": "FLOAT",
         "collection": "SuperApp Theme",
         "value": 0.5
+      },
+      {
+        "key": "6d0401fcfda74d9c436d5990d2a221d5f9a69863",
+        "name": "icon/size/quark",
+        "resolvedType": "FLOAT",
+        "collection": "SuperApp Theme",
+        "value": 12
       },
       {
         "key": "06b6fd6d856205c6131d9101e95da6719e48503b",
@@ -1619,426 +2039,6 @@
         "resolvedType": "STRING",
         "collection": "Properties glossary",
         "value": "circle"
-      },
-      {
-        "key": "441e5c9892c6b8422b58d7fde53fd14a11ac9bb5",
-        "name": "Abrir/Abrir",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir"
-      },
-      {
-        "key": "973c5d708dee0fe93b5bd6cf87e30c24f3031ec6",
-        "name": "Abrir/Abrir comprovante",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir comprovante"
-      },
-      {
-        "key": "3031bd2a85ba9074d647212fff7c0a656d1b00c6",
-        "name": "Abrir/Abrir conta digital",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir conta digital"
-      },
-      {
-        "key": "8783f72835be1f33965fab60e0d99142c20751ed",
-        "name": "Adicionar/Adicionar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar"
-      },
-      {
-        "key": "479f8acff5694a4cbfdcb5096687a180e6ad5e75",
-        "name": "Adicionar/Adicionar cartão",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar cartão"
-      },
-      {
-        "key": "b07243dea692ea85ad6f754ae1f9803f0aeeb02f",
-        "name": "Adicionar/Adicionar contato",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar contato"
-      },
-      {
-        "key": "73ab870b0a2506b2390e80f11aef14f6d6e04d16",
-        "name": "Adicionar/Adicionar widget",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar widget"
-      },
-      {
-        "key": "e34d2eff03a24fada8fd9f442665fd90f01c37f0",
-        "name": "Antecipar/Antecipar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Antecipar"
-      },
-      {
-        "key": "050a2434f6f33b50ae437aec07c9114c4f2ad852",
-        "name": "Acessar/Acessar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Acessar"
-      },
-      {
-        "key": "c33181eb5cb34da4ff29e24c3086c1b2862e26f2",
-        "name": "Atualizar/Atualizar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Atualizar"
-      },
-      {
-        "key": "2285763ee12226f62a426966b237cd0341416880",
-        "name": "Ativar/Ativar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar"
-      },
-      {
-        "key": "c74151b726f7e120baab0bda75e991d37d2b9dfc",
-        "name": "Ativar/Ativar biometria",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar biometria"
-      },
-      {
-        "key": "0bebeddbc8e8d9ca5c91ad251c0bb2a9aef36532",
-        "name": "Ativar/Ativar DDA",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar DDA"
-      },
-      {
-        "key": "cf1fc3e121316f24f2cf1b1a61966af3bb8dd2aa",
-        "name": "Ativar/Ativar lembrete",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar lembrete"
-      },
-      {
-        "key": "807926aeaa5a2f1a71d7c77beeaf1f4ea34f412f",
-        "name": "Cadastrar/Cadastrar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar"
-      },
-      {
-        "key": "a4b731474ab3d0d8568e2eeac2829a54a9d41836",
-        "name": "Cadastrar/Cadastrar chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar chave Pix"
-      },
-      {
-        "key": "d9fe8a33c0c18efdd4283a91006628fc51f7aeae",
-        "name": "Cadastrar/Cadastrar débito automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar débito automático"
-      },
-      {
-        "key": "be709143353a6b54cac2d5f7a28e46e7507984e2",
-        "name": "Cadastrar/Cadastrar Pix automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar Pix automático"
-      },
-      {
-        "key": "0a8ffc9461d59e0bc65be071e58d9fd40750d342",
-        "name": "Cancelar/Cancelar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar"
-      },
-      {
-        "key": "747d69f50717908631da5bd56e8553fb1f6822e6",
-        "name": "Cancelar/Cancelar autorização",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar autorização"
-      },
-      {
-        "key": "60942840e6be5324256a3b935ec9aedf153e1850",
-        "name": "Cancelar/Cancelar débito automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar débito automático"
-      },
-      {
-        "key": "b7d334d3011f93f77107fc16966f0a3e5a7cbfb2",
-        "name": "Cancelar/Cancelar portabilidade",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar portabilidade"
-      },
-      {
-        "key": "f06d3796e4daaa91db550ca59c5049338ad31a9a",
-        "name": "Compartilhar/Compartilhar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar"
-      },
-      {
-        "key": "243dd50d1d061270d0299f8069992a16453a20ed",
-        "name": "Compartilhar/Compartilhar chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar chave Pix"
-      },
-      {
-        "key": "09142ba3302388f7b1f16d1109901f3ffe098f9f",
-        "name": "Compartilhar/Compartilhar dados da conta",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar dados da conta"
-      },
-      {
-        "key": "a0bb1c3cafa4aaaab7465d8bfe684c756c7e31d3",
-        "name": "Compartilhar/Compartilhar comprovante",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar comprovante"
-      },
-      {
-        "key": "049b19398c07fadbda78065fc1434224ed30ad19",
-        "name": "Compartilhar/Compartilhar QR Code",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar QR Code"
-      },
-      {
-        "key": "a053b4d249eabb1ab06c83d1a994577c8e98864b",
-        "name": "Confirmar/Confirmar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Confirmar"
-      },
-      {
-        "key": "3e779d84fefcd1dbc6c8b375ec5d0084ea8f5f1e",
-        "name": "Confirmar/Confirmar celular",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Confirmar celular"
-      },
-      {
-        "key": "781bb0ff4be34ba060ca2d13419347b8d42b8494",
-        "name": "Continuar/Continuar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Continuar"
-      },
-      {
-        "key": "8846db41e5418080923b629ae178ad44ae0aec01",
-        "name": "Criar/Criar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Criar"
-      },
-      {
-        "key": "5589967873a34e650c3d9e61a7d57f306b6ac95d",
-        "name": "Criar/Criar lembrete",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Criar lembrete"
-      },
-      {
-        "key": "fc1acecce0ffad831af95832e7e13126a32671df",
-        "name": "Entender/Ok, entendi",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ok, entendi"
-      },
-      {
-        "key": "2aac4f310ca630a79ac4c5536d052c023371d1ff",
-        "name": "Excluir/Excluir",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir"
-      },
-      {
-        "key": "43aaad182bc50f56078e715f717f1f8152cebe55",
-        "name": "Excluir/Excluir Pix Programado",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir Pix Programado"
-      },
-      {
-        "key": "3ec1f3ab3cdbbb9d172969930299cedf1a908096",
-        "name": "Excluir/Excluir chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir chave Pix"
-      },
-      {
-        "key": "87edc4b177b0c6120095d60d0e242a2c01c54eae",
-        "name": "Fazer/Fazer Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer Pix"
-      },
-      {
-        "key": "a169a2bffb44cebdc59ad2865727f4db397d1924",
-        "name": "Fazer/Fazer novo Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer novo Pix"
-      },
-      {
-        "key": "33c03b9cb80bfa694d141c4f3cfc6ae71ad7961a",
-        "name": "Fazer/Fazer pagamento",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer pagamento"
-      },
-      {
-        "key": "c28cccbba57d2caf58528cd8a950a17d393e7436",
-        "name": "Fazer/Fazer novo pagamento",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer novo pagamento"
-      },
-      {
-        "key": "ada9082df19c3666017af18e58d86bcef7fc5961",
-        "name": "Gerar/Gerar QR Code",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Gerar QR Code"
-      },
-      {
-        "key": "da6c5d585b6d53379cebaecba91dc85d029fa5d7",
-        "name": "Gerar/Gerar 2ª via do boleto",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Gerar 2ª via do boleto"
-      },
-      {
-        "key": "2db4d9c4287d5df336dfbf947f7aa75710866f66",
-        "name": "Ir e Voltar/Ir para início",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ir para início"
-      },
-      {
-        "key": "834284a3afad8c207bc4b9ebb111d111a35dd5e7",
-        "name": "Ir e Voltar/Ir para Empréstimos",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ir para Empréstimos"
-      },
-      {
-        "key": "d83959d88d0d8935119128552314235f521bffc9",
-        "name": "Ir e Voltar/Voltar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Voltar"
-      },
-      {
-        "key": "e1e068658918f355ff49753a0b44528355a41f66",
-        "name": "Ir e Voltar/Voltar para início",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Voltar para início"
-      },
-      {
-        "key": "6d508d72d8c0d34ffbc1589be61fd4b366da242f",
-        "name": "Mostrar/Mostrar senha",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar senha"
-      },
-      {
-        "key": "0d66da7feb2d39086e0a2a3e450365d08bd1675c",
-        "name": "Mostrar/Mostrar saldo",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar saldo"
-      },
-      {
-        "key": "063d9c7eb9324571abbdcb7d1fa512c80ecb5af1",
-        "name": "Mostrar/Mostrar todos",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar todos"
-      },
-      {
-        "key": "b825eb9403e79735c622e55cee5ef6967c7fbc41",
-        "name": "Pagar/Pagar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar"
-      },
-      {
-        "key": "969a06167ff01a10cfee29df9b9c6d22400c443b",
-        "name": "Pagar/Pagar boleto",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar boleto"
-      },
-      {
-        "key": "212ebd31d9c0aa24af4417ea2369e7bf38dd597a",
-        "name": "Pagar/Pagar parcela",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar parcela"
-      },
-      {
-        "key": "f5bc15280a7437786072ab4fbb5aa753abde90fb",
-        "name": "Pagar/Pagar prestação",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar prestação"
-      },
-      {
-        "key": "1d968f5e32f2182b8f53ee54df5cf2a73e2774ec",
-        "name": "Salvar/Salvar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar"
-      },
-      {
-        "key": "e682795190c59c69b0679e4b728bc62e87c8dc69",
-        "name": "Salvar/Salvar contato",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar contato"
-      },
-      {
-        "key": "4dd7ded241a85c20582df29207559f53b6f34b55",
-        "name": "Salvar/Salvar mensagem",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar mensagem"
-      },
-      {
-        "key": "182a23014cacb0e36d9f52bf91381d6b30007e1c",
-        "name": "Usar/Usar chave Pix na CAIXA",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Usar chave Pix na CAIXA"
-      },
-      {
-        "key": "a06113e15c61a312bf3b1d88cdc30d456925f7dd",
-        "name": "Usar/Usar em outro banco",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Usar em outro banco"
-      },
-      {
-        "key": "46a7bea58854c19170e7152b4f3ed97718aafb60",
-        "name": "Width - Screen",
-        "resolvedType": "FLOAT",
-        "collection": "Screen size",
-        "value": 360
-      },
-      {
-        "key": "713214ddb27195af0824f84fab30b31526f4eb3e",
-        "name": "Height - Screen",
-        "resolvedType": "FLOAT",
-        "collection": "Screen size",
-        "value": 800
       },
       {
         "key": "eb3ddb00d95838255af587ad1eb890abbb18a35b",
@@ -22228,26 +22228,290 @@
       "containingFrame": ""
     },
     {
-      "key": "0ac588aec149e0681b86f09bd3af5d30d1836b23",
-      "name": "variant=additional comments, type=proactive",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "14dd904abf08e40c8c6af58ff9d63bf80b48378e",
-      "name": "variant=feedback, type=proactive",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "165f8685da1c05f67e8377eed7d555f65b20855d",
-      "name": "variant=high rating, type=proactive",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "014f9916c629046e9b66b6572bb4db3b7e3602e7",
       "name": "variant=range selected",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "03cdefd81b9d9db4f8e031819590003ad5b326e3",
+      "name": "type=screen, input=single input, keyboard open=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "03f9f4834483d689506855cce1decc0f86d900a3",
+      "name": "variant=banking, state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0fda461a79337617bc10e87b3515f9c832cb865e",
+      "name": "Weight=Solid",
+      "description": "",
+      "containingFrame": "share-android"
+    },
+    {
+      "key": "1668d5088fcf02ca814a3da9af779f9ac84bbfe0",
+      "name": "variant=single column",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "177c0497af73149a5ae991c4a8af3ae8f623a819",
+      "name": "Weight=Dynamic",
+      "description": "",
+      "containingFrame": "send-dollars"
+    },
+    {
+      "key": "187634a2867d577e6979a496eb005fa45cb043e0",
+      "name": "height=full, variant=on media bg",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1b616de302f6deb2ff90da0dc8ce41ecfaaa073e",
+      "name": "variant=date selected",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1c0412edfce4106ee080b5344f9e68e6631279cd",
+      "name": "step=feedback, category=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "20230506a91efd14e2c27b21f966cf521baa9015",
+      "name": "state=error",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "24a9daa937af8ba21aea80ab76fe8e51271566e4",
+      "name": "height=auto, variant=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2b98a999653a8de46138ac2e35b611e5aee533d2",
+      "name": "type=sheet, input=pin (token), keyboard open=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "375c67f4fea10a2fae5329d4a4d6f5220e6adfac",
+      "name": "step=rating, category=none",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3d4342cc3847ab2b55b4a0fc3c683d105e81499e",
+      "name": "type=sheet, input=single input, keyboard open=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3ec7ad3f365dc6d4e9e4a70e9a0ea587a6225732",
+      "name": "step=follow-up, category=negative",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "41511a5adaed4e1d8a30d46d48af1b6b3f981bfd",
+      "name": "Weight=Dynamic",
+      "description": "",
+      "containingFrame": "share-android"
+    },
+    {
+      "key": "4bb2bbae39eea62d01a1a091463b64d1df3f719a",
+      "name": "variant=month",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "5dccc90e8c3348d4ce68a24db32606c7d2d32e63",
+      "name": "step=follow-up, category=positive",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6aa98714b2579c788285d015df075c469932f8b2",
+      "name": "Weight=Solid",
+      "description": "",
+      "containingFrame": "send-dollars"
+    },
+    {
+      "key": "6bec1510f69db2da816c5361cbe122958a2641ee",
+      "name": "type=sheet, input=money, keyboard open=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6ca2b8873a2c2e8fe0e2dfe608225f51685f9e23",
+      "name": "height=auto, variant=on media bg",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6d18203d1b93d7f9cae8ce65f0fd00bf02796314",
+      "name": "state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7c4f1941166d08d91fade1d8f7094d5c95446f79",
+      "name": "variant=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7db2956746bc6babaea4d74ce692a1138b1e4fa7",
+      "name": "step=rating, category=positive",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "87c9866210662b33fac6ed63d1651c01562a4654",
+      "name": "type=sheet, input=money, keyboard open=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8a6c1c46c635ee515d5554edbf84e00a2d0723e8",
+      "name": "Weight=Solid",
+      "description": "",
+      "containingFrame": "share-ios"
+    },
+    {
+      "key": "8dc1cb9f77cb1891ba8b35f5c8ccf8bff6ae3187",
+      "name": "height=full, variant=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "91c833d439d1bef39846bf995e53570fb217fcb9",
+      "name": "variant=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "91ec3d502f2736d99040375018a51bf6705282ee",
+      "name": "variant=double column",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "938dc66d64d7d1080fdec1d112ba2029015af582",
+      "name": "Weight=Solid",
+      "description": "",
+      "containingFrame": "receive-dollars"
+    },
+    {
+      "key": "a69cb94fd9396c00c6d4934e7acf4a5ca3ba314b",
+      "name": "variant=dialog",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a795fd6dee3de8f208bd56fa1bbab21277e2df80",
+      "name": "type=screen, input=pin (token), keyboard open=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a922eaefc43bc6ff6df153918c3e4a8a71a1e337",
+      "name": "state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "aeb312d911dd40b33a98e9edac96fa483d898ed0",
+      "name": "Weight=Dynamic",
+      "description": "",
+      "containingFrame": "share-ios"
+    },
+    {
+      "key": "b2e227f22736ecc849d14c525e252340a59482c7",
+      "name": "type=sheet, input=single input, keyboard open=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b63fa17110e46a5d32ff7bb4a64563b427b18d26",
+      "name": "type=screen, input=pin (token), keyboard open=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c30cd233de9b12099435c94a865b2d45a8c0240e",
+      "name": "state=typing",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c33576f0efc4d815b58c89f26497c67d063ca7cc",
+      "name": "step=rating, category=neutral",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "cc4b0610c74546f34eee5917295d0c9aa432da3c",
+      "name": "type=screen, input=stepper, keyboard open=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d552a41bddb4789757d70e6d3ee0f17b47f106de",
+      "name": "type=screen, input=money, keyboard open=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e3a26667f8e46c2b6ddecfe12388735b5fec622a",
+      "name": "Weight=Dynamic",
+      "description": "",
+      "containingFrame": "receive-dollars"
+    },
+    {
+      "key": "e9590df263d25cf2816020490be8ba2a0b78bf06",
+      "name": "type=screen, input=stepper, keyboard open=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ee37d47b6a8b553fa30e52869f950ef5a55f7760",
+      "name": "step=rating, category=negative",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f3ccbbfaa8ef683a9f831030ec1333090916b0f5",
+      "name": "type=sheet, input=stepper, keyboard open=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f3ffbbe9a6270ca298618bd62ed369ae7a048b76",
+      "name": "type=sheet, input=pin (token), keyboard open=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f423f7cb3f3c0fd0416fc4358fbd4587dea30a21",
+      "name": "type=screen, input=single input, keyboard open=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "fa4ace8b8449628b4bcf5f493b0e33d2565bbfbf",
+      "name": "variant=feedback",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "fbc0f15d9817d6a8caa4160af3378a74c7c70c17",
+      "name": "step=follow-up, category=neutral",
       "description": "",
       "containingFrame": ""
     },
@@ -22261,18 +22525,6 @@
       "key": "03b11cd8ec82c3d134293c1749329d2e5578176f",
       "name": "variant=level 2",
       "description": "Representa o segundo nível de ajuda. Dentro de uma Categoria.Use dentro de telas das jornadas. No exemplo do Pix, seria o ícone de ajuda dentro das configurações de chave Pix, ou poderia ser iniciada a partir de um ícone de informação no card de chaves Pix.A busca iniciada nessa tela deve trazer resultados de artigos apenas dentro da categoria.O conteúdo dessa tela será definido pela área de negócios daquele assunto (Pix, cartões, etc)",
-      "containingFrame": ""
-    },
-    {
-      "key": "03cdefd81b9d9db4f8e031819590003ad5b326e3",
-      "name": "type=screen, input=single input, keyboard open=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "03f9f4834483d689506855cce1decc0f86d900a3",
-      "name": "variant=banking, state=default",
-      "description": "",
       "containingFrame": ""
     },
     {
@@ -22290,6 +22542,12 @@
     {
       "key": "091964f7b312d82ed275241a6827de26b6e7332f",
       "name": "type=screen, variant=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0ac588aec149e0681b86f09bd3af5d30d1836b23",
+      "name": "variant=additional comments, type=proactive",
       "description": "",
       "containingFrame": ""
     },
@@ -22316,12 +22574,6 @@
       "name": "variant=swipe left end, state=pressed, force centered text=false",
       "description": "⚠️ Swipe to reveal: \nUse em listas que possam ter ações secundárias.Não crie ações que só possam ser usadas pelo swipe, pois ele não é intuitivo ou acessível para todos os usuários.",
       "containingFrame": ""
-    },
-    {
-      "key": "0fda461a79337617bc10e87b3515f9c832cb865e",
-      "name": "Weight=Solid",
-      "description": "",
-      "containingFrame": "share-android"
     },
     {
       "key": "101cd82a2eb0d8ac53564b20c216fff0e8880dc2",
@@ -22354,8 +22606,14 @@
       "containingFrame": ""
     },
     {
-      "key": "1668d5088fcf02ca814a3da9af779f9ac84bbfe0",
-      "name": "variant=single column",
+      "key": "14dd904abf08e40c8c6af58ff9d63bf80b48378e",
+      "name": "variant=feedback, type=proactive",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "165f8685da1c05f67e8377eed7d555f65b20855d",
+      "name": "variant=high rating, type=proactive",
       "description": "",
       "containingFrame": ""
     },
@@ -22366,44 +22624,14 @@
       "containingFrame": ""
     },
     {
-      "key": "177c0497af73149a5ae991c4a8af3ae8f623a819",
-      "name": "Weight=Dynamic",
-      "description": "",
-      "containingFrame": "send-dollars"
-    },
-    {
       "key": "18577626f3ef8b98e4cdb293f86e1dc48ddbad4a",
       "name": "filter=checkbox",
       "description": "",
       "containingFrame": ""
     },
     {
-      "key": "187634a2867d577e6979a496eb005fa45cb043e0",
-      "name": "height=full, variant=on media bg",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "188b1286e655b542d703356d74012536c4457e41",
       "name": "variant=list, state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1b616de302f6deb2ff90da0dc8ce41ecfaaa073e",
-      "name": "variant=date selected",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1c0412edfce4106ee080b5344f9e68e6631279cd",
-      "name": "step=feedback, category=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "20230506a91efd14e2c27b21f966cf521baa9015",
-      "name": "state=error",
       "description": "",
       "containingFrame": ""
     },
@@ -22420,21 +22648,9 @@
       "containingFrame": ""
     },
     {
-      "key": "24a9daa937af8ba21aea80ab76fe8e51271566e4",
-      "name": "height=auto, variant=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "2b394e45b9293383507fbd97ffcb99129d928383",
       "name": "variant=swipe right, state=disabled, force centered text=false",
       "description": "⚠️ Swipe to reveal: \nUse em listas que possam ter ações secundárias.Não crie ações que só possam ser usadas pelo swipe, pois ele não é intuitivo ou acessível para todos os usuários.",
-      "containingFrame": ""
-    },
-    {
-      "key": "2b98a999653a8de46138ac2e35b611e5aee533d2",
-      "name": "type=sheet, input=pin (token), keyboard open=true",
-      "description": "",
       "containingFrame": ""
     },
     {
@@ -22452,12 +22668,6 @@
     {
       "key": "368575f23f46e861016822b6cbabbdee25fb2e8b",
       "name": "variant=list, state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "375c67f4fea10a2fae5329d4a4d6f5220e6adfac",
-      "name": "step=rating, category=none",
       "description": "",
       "containingFrame": ""
     },
@@ -22492,8 +22702,8 @@
       "containingFrame": ""
     },
     {
-      "key": "3d4342cc3847ab2b55b4a0fc3c683d105e81499e",
-      "name": "type=sheet, input=single input, keyboard open=false",
+      "key": "3cfc76214c7b627b0b8195afa9ac5192278e4bfb",
+      "name": "variant=low rating, type=reactive",
       "description": "",
       "containingFrame": ""
     },
@@ -22504,22 +22714,10 @@
       "containingFrame": ""
     },
     {
-      "key": "3ec7ad3f365dc6d4e9e4a70e9a0ea587a6225732",
-      "name": "step=follow-up, category=negative",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "3ee3d8eed8a3ee003bf3775f7117e73b587af07a",
       "name": "state=default",
       "description": "",
       "containingFrame": ""
-    },
-    {
-      "key": "41511a5adaed4e1d8a30d46d48af1b6b3f981bfd",
-      "name": "Weight=Dynamic",
-      "description": "",
-      "containingFrame": "share-android"
     },
     {
       "key": "419befb3e02d92ae95600a1cf3a7179f0d468f91",
@@ -22549,12 +22747,6 @@
       "key": "4a3cc2366d91c1b5713607cc036a35eeb44dc93c",
       "name": "variant=swipe left end, state=hover, force centered text=false",
       "description": "⚠️ Swipe to reveal: \nUse em listas que possam ter ações secundárias.Não crie ações que só possam ser usadas pelo swipe, pois ele não é intuitivo ou acessível para todos os usuários.",
-      "containingFrame": ""
-    },
-    {
-      "key": "4bb2bbae39eea62d01a1a091463b64d1df3f719a",
-      "name": "variant=month",
-      "description": "",
       "containingFrame": ""
     },
     {
@@ -22596,12 +22788,6 @@
     {
       "key": "5c00f0a27c516fc5d90e4e0ab3e5a429d306bcac",
       "name": "feedback=warning",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "5dccc90e8c3348d4ce68a24db32606c7d2d32e63",
-      "name": "step=follow-up, category=positive",
       "description": "",
       "containingFrame": ""
     },
@@ -22660,14 +22846,14 @@
       "containingFrame": ""
     },
     {
-      "key": "6aa98714b2579c788285d015df075c469932f8b2",
-      "name": "Weight=Solid",
-      "description": "",
-      "containingFrame": "send-dollars"
-    },
-    {
       "key": "6ac32c7199259c219c140222899ae490d9449fdb",
       "name": "state=empty",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "6b198280e8a9b8cd27234ed9e5e7fa4ce61a2657",
+      "name": "variant=feedback, type=reactive",
       "description": "",
       "containingFrame": ""
     },
@@ -22678,26 +22864,14 @@
       "containingFrame": ""
     },
     {
-      "key": "6bec1510f69db2da816c5361cbe122958a2641ee",
-      "name": "type=sheet, input=money, keyboard open=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "6c265dee70e4ae69c0007ef6ac4260fc912a0461",
       "name": "filter=switch",
       "description": "",
       "containingFrame": ""
     },
     {
-      "key": "6ca2b8873a2c2e8fe0e2dfe608225f51685f9e23",
-      "name": "height=auto, variant=on media bg",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6d18203d1b93d7f9cae8ce65f0fd00bf02796314",
-      "name": "state=default",
+      "key": "6eb76168978745d5fb4e710a5aa4a3732a53e03d",
+      "name": "variant=high rating, type=reactive",
       "description": "",
       "containingFrame": ""
     },
@@ -22726,36 +22900,6 @@
       "containingFrame": ""
     },
     {
-      "key": "7c4f1941166d08d91fade1d8f7094d5c95446f79",
-      "name": "variant=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "7db2956746bc6babaea4d74ce692a1138b1e4fa7",
-      "name": "step=rating, category=positive",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "87c9866210662b33fac6ed63d1651c01562a4654",
-      "name": "type=sheet, input=money, keyboard open=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "8a6c1c46c635ee515d5554edbf84e00a2d0723e8",
-      "name": "Weight=Solid",
-      "description": "",
-      "containingFrame": "share-ios"
-    },
-    {
-      "key": "8dc1cb9f77cb1891ba8b35f5c8ccf8bff6ae3187",
-      "name": "height=full, variant=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "905aa6328f011ebf478ce9463d9726714980c922",
       "name": "state=empty",
       "description": "",
@@ -22774,18 +22918,6 @@
       "containingFrame": ""
     },
     {
-      "key": "91c833d439d1bef39846bf995e53570fb217fcb9",
-      "name": "variant=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "91ec3d502f2736d99040375018a51bf6705282ee",
-      "name": "variant=double column",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "927dd4ebac903fb4d42c25726a0b4776c3bd0b93",
       "name": "variant=attachment-preview",
       "description": "",
@@ -22796,12 +22928,6 @@
       "name": "feedback=danger",
       "description": ".",
       "containingFrame": ""
-    },
-    {
-      "key": "938dc66d64d7d1080fdec1d112ba2029015af582",
-      "name": "Weight=Solid",
-      "description": "",
-      "containingFrame": "receive-dollars"
     },
     {
       "key": "9554e5b410ad0b80f40f3f8cad1fc0daca719a51",
@@ -22819,6 +22945,12 @@
       "key": "95d64dca4a84c53ce09f9cac18ca7b125fb24cc4",
       "name": "variant=default, state=disabled, force centered text=true",
       "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "979d291683fefa61f150205bd9a7c56a44654d18",
+      "name": "[dsc-ts] Screen Document Viewer",
+      "description": "❖ [dsc] Screen Document Viewer\n<N/A>\nTemplate de tela destinado à exibição de uma imagem que já foi capturada/enviada pelo usuário, acompanhada da data de quando o arquivo deu entrada no sistema.",
       "containingFrame": ""
     },
     {
@@ -22858,6 +22990,12 @@
       "containingFrame": ""
     },
     {
+      "key": "9fec9a5fbd915944164747f2d381611359c757d6",
+      "name": "variant=additional comments, type=reactive",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
       "key": "a214c8b06c2cea914a8abe5ae1cc61217473f24a",
       "name": "variant=default, state=hover, force centered text=true",
       "description": "",
@@ -22888,18 +23026,6 @@
       "containingFrame": ""
     },
     {
-      "key": "a69cb94fd9396c00c6d4934e7acf4a5ca3ba314b",
-      "name": "variant=dialog",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a795fd6dee3de8f208bd56fa1bbab21277e2df80",
-      "name": "type=screen, input=pin (token), keyboard open=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "a83d127c7e94ef43071975548c848ea918fd01cf",
       "name": "button row=top, type=icon",
       "description": "",
@@ -22910,18 +23036,6 @@
       "name": "type=screen, variant=banking",
       "description": "",
       "containingFrame": ""
-    },
-    {
-      "key": "a922eaefc43bc6ff6df153918c3e4a8a71a1e337",
-      "name": "state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "aeb312d911dd40b33a98e9edac96fa483d898ed0",
-      "name": "Weight=Dynamic",
-      "description": "",
-      "containingFrame": "share-ios"
     },
     {
       "key": "af27d00d2e50ed7a2455c134788c5903886acd43",
@@ -22948,27 +23062,27 @@
       "containingFrame": ""
     },
     {
-      "key": "b2e227f22736ecc849d14c525e252340a59482c7",
-      "name": "type=sheet, input=single input, keyboard open=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "b3bc9abb31b84e4b2aa49bf8106446d35b356eac",
       "name": "variant=selectable, state=focus, force centered text=false",
       "description": "⚠️ Selectable:\nUse apenas em listas que podem receber ação em massa.\nNão use no contexto de seleção de item de formulário. Para isso, use o [template] Select Group - List.",
       "containingFrame": ""
     },
     {
-      "key": "b63fa17110e46a5d32ff7bb4a64563b427b18d26",
-      "name": "type=screen, input=pin (token), keyboard open=true",
+      "key": "b6839e163668a946b287982fe9f5951d6eaf4c58",
+      "name": "button row=top",
       "description": "",
       "containingFrame": ""
     },
     {
-      "key": "b6839e163668a946b287982fe9f5951d6eaf4c58",
-      "name": "button row=top",
+      "key": "b7fd48ead1b19a676f3b8bffa65a5ab55c01e1f6",
+      "name": "variant=start, type=proactive",
       "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b987c67a7a32a4b623fb39b69d266150b390c040",
+      "name": "[dsc-ts] Screen Filter",
+      "description": "❖[template] Screen Filter<ScreenFilter>",
       "containingFrame": ""
     },
     {
@@ -23004,18 +23118,6 @@
     {
       "key": "c2f0b562622765c58cb315d5daed888500392bea",
       "name": "state=loading",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c30cd233de9b12099435c94a865b2d45a8c0240e",
-      "name": "state=typing",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c33576f0efc4d815b58c89f26497c67d063ca7cc",
-      "name": "step=rating, category=neutral",
       "description": "",
       "containingFrame": ""
     },
@@ -23062,12 +23164,6 @@
       "containingFrame": ""
     },
     {
-      "key": "cc4b0610c74546f34eee5917295d0c9aa432da3c",
-      "name": "type=screen, input=stepper, keyboard open=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "ccacec598e1372783ada7e9d6b5eea20ca5f31d9",
       "name": "variant=selectable, state=disabled, force centered text=false",
       "description": "⚠️ Selectable:\nUse apenas em listas que podem receber ação em massa.\nNão use no contexto de seleção de item de formulário. Para isso, use o [template] Select Group - List.",
@@ -23083,12 +23179,6 @@
       "key": "cd6c62ee9175776d91db7669b47494e28e589bb0",
       "name": "variant=draggable, state=disabled, force centered text=false",
       "description": "⚠️ Draggable: Use o draggable list item quando a ordem da lista for uma preferência pessoal que o próprio usuário deve poder ajustar. A reordenação só faz sentido quando não existe um critério \"correto\" de ordenação, é o usuário quem decide o que priorizar.",
-      "containingFrame": ""
-    },
-    {
-      "key": "d552a41bddb4789757d70e6d3ee0f17b47f106de",
-      "name": "type=screen, input=money, keyboard open=false",
-      "description": "",
       "containingFrame": ""
     },
     {
@@ -23122,12 +23212,6 @@
       "containingFrame": ""
     },
     {
-      "key": "e3a26667f8e46c2b6ddecfe12388735b5fec622a",
-      "name": "Weight=Dynamic",
-      "description": "",
-      "containingFrame": "receive-dollars"
-    },
-    {
       "key": "e4095f8eb835bd9499d879fb0b1b3a69f5599cb4",
       "name": "variant=default, state=default, force centered text=false",
       "description": "",
@@ -23140,8 +23224,8 @@
       "containingFrame": ""
     },
     {
-      "key": "e9590df263d25cf2816020490be8ba2a0b78bf06",
-      "name": "type=screen, input=stepper, keyboard open=true",
+      "key": "ea844e82f9f4afdb97b747c3fd7ad45499cc9ce1",
+      "name": "variant=low rating, type=proactive",
       "description": "",
       "containingFrame": ""
     },
@@ -23160,12 +23244,6 @@
     {
       "key": "ed9ae0651aeae948527544e954312cd5ed3f6642",
       "name": "variant=default, state=default, force centered text=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "ee37d47b6a8b553fa30e52869f950ef5a55f7760",
-      "name": "step=rating, category=negative",
       "description": "",
       "containingFrame": ""
     },
@@ -23191,84 +23269,6 @@
       "key": "f1582b4ea59b8a6766cf1de0aa7c116fb269f129",
       "name": "variant=article",
       "description": "Representa o artigo em si. No caso de ajuda: use apenas como exemplo em sua jornada. O conteúdo dessa tela deve vir do servidor e será definido pela área de negócios daquele assunto (Pix, cartões, etc).No caso de informações: iniciada a partir de um ícone de informação em um card ou tela, você pode apresentar um conteúdo de exemplo. O ideal é que o texto dos artigos sempre venham do servidor. Mas se o conteúdo for estático, revise e aprove o texto com todas as áreas envolvidas, inclusive com a vertical de writing.\n\nEditando o conteúdo: O conteúdo será sempre textual. Cada bloco de texto é um sub componente [dsc] Text. Você tem liberdade de trocar a propriedade “style” e “size” para compor o artigo da forma como achar interessante.Para artigos dentro da central de ajuda, use “label standard” para sub títulos nível 1 e “label small” para sub títulos nível 2.\n\nO link ao final do texto é opcional.\n\nO botão de compartilhar na Top App Bar é opcional.\n\nA apresentação a avaliação do conteúdo é obrigatória apenas para artigos dentro da central de ajuda. Para telas de informações essa seção pode ser omitida.",
-      "containingFrame": ""
-    },
-    {
-      "key": "f3ccbbfaa8ef683a9f831030ec1333090916b0f5",
-      "name": "type=sheet, input=stepper, keyboard open=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f3ffbbe9a6270ca298618bd62ed369ae7a048b76",
-      "name": "type=sheet, input=pin (token), keyboard open=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f423f7cb3f3c0fd0416fc4358fbd4587dea30a21",
-      "name": "type=screen, input=single input, keyboard open=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "fa4ace8b8449628b4bcf5f493b0e33d2565bbfbf",
-      "name": "variant=feedback",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "fbc0f15d9817d6a8caa4160af3378a74c7c70c17",
-      "name": "step=follow-up, category=neutral",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3cfc76214c7b627b0b8195afa9ac5192278e4bfb",
-      "name": "variant=low rating, type=reactive",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6b198280e8a9b8cd27234ed9e5e7fa4ce61a2657",
-      "name": "variant=feedback, type=reactive",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6eb76168978745d5fb4e710a5aa4a3732a53e03d",
-      "name": "variant=high rating, type=reactive",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "979d291683fefa61f150205bd9a7c56a44654d18",
-      "name": "[dsc-ts] Screen Document Viewer",
-      "description": "❖ [dsc] Screen Document Viewer\n<N/A>\nTemplate de tela destinado à exibição de uma imagem que já foi capturada/enviada pelo usuário, acompanhada da data de quando o arquivo deu entrada no sistema.",
-      "containingFrame": ""
-    },
-    {
-      "key": "9fec9a5fbd915944164747f2d381611359c757d6",
-      "name": "variant=additional comments, type=reactive",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "b7fd48ead1b19a676f3b8bffa65a5ab55c01e1f6",
-      "name": "variant=start, type=proactive",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "b987c67a7a32a4b623fb39b69d266150b390c040",
-      "name": "[dsc-ts] Screen Filter",
-      "description": "❖[template] Screen Filter<ScreenFilter>",
-      "containingFrame": ""
-    },
-    {
-      "key": "ea844e82f9f4afdb97b747c3fd7ad45499cc9ce1",
-      "name": "variant=low rating, type=proactive",
-      "description": "",
       "containingFrame": ""
     },
     {
