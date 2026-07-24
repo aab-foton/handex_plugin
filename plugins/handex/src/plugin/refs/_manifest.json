@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-22T15:30:03.384Z",
+  "generatedAt": "2026-07-24T20:02:28.791Z",
   "libraries": [
     {
       "slug": "fundamentos-visuais",
@@ -72,11 +72,11 @@
       "fileKey": "3zdtN13YvPlCGPdXeL0Y2i",
       "file": "design-acessivel-mobile.json",
       "counts": {
-        "variables": 0,
+        "variables": 5,
         "colors": 0,
         "typography": 0,
         "effects": 0,
-        "components": 0
+        "components": 39
       }
     }
   ]
