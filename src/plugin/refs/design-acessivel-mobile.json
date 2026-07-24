@@ -1,0 +1,293 @@
+{
+  "meta": {
+    "libraryName": "Design Acessível | Super App (React Native)",
+    "figmaFileKey": "3zdtN13YvPlCGPdXeL0Y2i",
+    "exportedAt": "2026-07-24T20:02:25.549Z",
+    "generator": "fetch-design-refs.cjs",
+    "warnings": [
+      "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
+    ]
+  },
+  "designTokens": {
+    "variables": [
+      {
+        "key": "81bc7fe6cd6410034c0c79c3125ea8cb63f7389b",
+        "name": "títulos/🔒descrição",
+        "resolvedType": "STRING",
+        "collection": "textos de especificação",
+        "value": "Identificar como título."
+      },
+      {
+        "key": "69c8c82282382229c628d0190603d7bf57cebbe9",
+        "name": "títulos/🔒observaçoes",
+        "resolvedType": "STRING",
+        "collection": "textos de especificação",
+        "value": "É um elemento que ajuda a organizar o conteúdo da página, fornecendo uma estrutura clara e semântica."
+      },
+      {
+        "key": "b342211552e88aba1e4e1dbc96bb28dad5742267",
+        "name": "títulos/🔒notas",
+        "resolvedType": "STRING",
+        "collection": "textos de especificação",
+        "value": "Aplicar a propriedade  accessibilityRole=\"header\" no elemento."
+      },
+      {
+        "key": "d29100f56c4981d3f04d46d08fdb76b4bae3d1f1",
+        "name": "elementos e imagens/🔒descrição link",
+        "resolvedType": "STRING",
+        "collection": "textos de especificação",
+        "value": "Identificar como link e anunciar que o link abre uma nova janela e direciona o foco para ela."
+      },
+      {
+        "key": "e1a00087d64ed3dd35f0caf48e52db99c2e463d0",
+        "name": "decorativos/🔒descrição",
+        "resolvedType": "STRING",
+        "collection": "textos de especificação",
+        "value": "Não deve ser anunciado pelo Leitor de Tela."
+      }
+    ]
+  },
+  "styleTokens": {
+    "colors": [],
+    "typography": [],
+    "effects": []
+  },
+  "components": [
+    {
+      "key": "2a3d40deab05f4b8ec67a807fb1536d623ed7eed",
+      "name": "Exemplo de aplicação - Handoff de acessibilidade",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7ecac450a8909e2c4eeeedfee3fb2ecd6233e037",
+      "name": "Handoff de acessibilidade - Ordem de Tabulação e Leitor de Telas [Super App] V1",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "dc9a3b3d903b4d89ca1173bca5eb0537c9afd136",
+      "name": "Conector=Elementos e imagens",
+      "description": "",
+      "containingFrame": "Specs - Estrutura [Handoff]"
+    },
+    {
+      "key": "01acc2917e26866d5b468f8aef3a8bfb99881202",
+      "name": "tipo=elementos interativos e imagens, orientação=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "a74142992e0968ade98fbe97590d45b31fc3f35a",
+      "name": "tipo=estrutura da página, orientação=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "2e2ed48f6e4574a873bbb2d9a4391cc63572a6d2",
+      "name": "Conector=Títulos",
+      "description": "",
+      "containingFrame": "Specs - Estrutura [Handoff]"
+    },
+    {
+      "key": "7d3ccfcea95ea4159d78244f6f6c84963dd54adf",
+      "name": "Conector=Elementos decorativos",
+      "description": "",
+      "containingFrame": "Specs - Estrutura [Handoff]"
+    },
+    {
+      "key": "06c9ac2cae9926e57456ddad6eda7a70ffc9bca0",
+      "name": "tipo=decorativo, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "0bbc4ae77c2ff856d554788abf1f236822cad184",
+      "name": "tamanho=grande",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "1865f8ed37ac6a33cccbcd874f02238c39b0ff39",
+      "name": "tipo=decorativo, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "1bd8c85dbdc47d3bef93ac9b71ad5f6d875d810b",
+      "name": "tipo=títulos, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "1cecb187f29bfed5c7d6648dd227b3f852b4ebb5",
+      "name": "tipo=decorativo, orientação=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "2709c008c084daaba24063ccf42da4a8c1db0745",
+      "name": "tipo=decorativo, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "4b03dd0857a71158da36bab09707538ecf047620",
+      "name": "conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "4c060718da4b3350ee5f290742a3a6cd1db23618",
+      "name": "tipo=elementos e imagens, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "4f478e385d22c92b1df3b53883a9a97abe61be6f",
+      "name": "tipo=decorativo, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "55144e19b4306199ceb1de0dff2abd4f01c01b72",
+      "name": "tipo=elementos interativos e imagens, orientação=superior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "584e699ec0cf98c45ea17d5a9615932f81aa1e8a",
+      "name": "tipo=estrutura da página, orientação=direita",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "638d682d97a2f82bc35cbb76ae9f6b05132a7176",
+      "name": "tipo=decorativo, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "66c4100b5d1b1432ebeb3e9202fca08d173a02be",
+      "name": "tipo=títulos, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "8165d5888c8a03c7affb955a9b5364cec563ee63",
+      "name": "conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "8e397918ad10aeb63b2e747d2834c8105a0aa1d1",
+      "name": "tipo=elementos e imagens, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "90bbec6996ca447f3594497f0a35854544de3021",
+      "name": "tipo=elementos e imagens, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "966f90f2fc56afdb7e2b8025ba83b48a9622a698",
+      "name": "tipo=títulos, conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "978a6433237eefdf540d82bcba40e74e39aeecba",
+      "name": "tipo=elementos e imagens, conector=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "9b25c0b70cb75cc162ad2f2bb9ed34fe52f32f0f",
+      "name": "tipo=estrutura da página, orientação=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "a6c7e7dab90b9b23a06b072331c246fd4392b749",
+      "name": "tipo=elementos e imagens, conector=superior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "a7b50306053bb1a4fb834f26c432dc7613ef9b13",
+      "name": "tamanho=pequeno",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "aebd2221d0238799706e54521cccd7bcee24733d",
+      "name": "conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "b52cb9d60f6ca81eaf82492d4b110b105bc76305",
+      "name": "tipo=títulos, conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "c1c3ba0100e3315569a4ed75cd5ee6922d7150d4",
+      "name": "tipo=decorativo, orientação=direita",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "c266a6bab1277efdac43ecea9171efb60961ed47",
+      "name": "tipo=decorativo, orientação=inferior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "d78117bfb35d40e98dd4071e772413b959d37c3e",
+      "name": "tipo=estrutura da página, orientação=superior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "d88850d40989bbd99cdc98b29a1f2cc516278699",
+      "name": "conector=desativado",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "d93c8cf698d12840af7f3c3ea0bda4b9cd5a0728",
+      "name": "tipo=elementos interativos e imagens, orientação=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "d9d79daa2318b2b6758376123899a40329222b48",
+      "name": "tipo=títulos, conector=esquerda",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "de08af167290b5220aa75ae757603a26b48c6a68",
+      "name": "tipo=elementos interativos e imagens, orientação=direita",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "f7977c26c71f36e05bf2b92e645ecd1d1491d458",
+      "name": "conector=direita",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "f93ce3228aa430bde1858891eae64b78c957b781",
+      "name": "tipo=decorativo, orientação=superior",
+      "description": "",
+      "containingFrame": "Conectores  [Handoff]"
+    }
+  ],
+  "spacing": [],
+  "borders": []
+}
