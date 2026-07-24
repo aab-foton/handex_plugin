@@ -2,6 +2,31 @@
 
 ---
 
+## v6.1.0 — 2026-07-24
+
+### Resumo
+6 ajustes de UX/UI portados da branch beta (onde nasceram durante o desenvolvimento da feature de Acessibilidade) para o hub de frames, conformidade DSC, medidas e specs anotadas.
+
+### Adicionado — Campo de dúvida/comentário no HTML exportado
+Cada card de medida e de spec anotada no Handoff exportado ganhou um campo de rascunho local (textarea, salvo em `localStorage` do navegador do dev, sem round-trip com o Figma) mais um botão "Copiar dúvidas pendentes" no header, que junta todos os rascunhos preenchidos num texto pronto pra compartilhar. Os cards duplicados entre a seção "Frames Documentados" e as seções "Medidas"/"Especificações Anotadas" compartilham o mesmo rascunho (chave por `spec.id`/`measurement.nodeId`, não por posição na lista).
+
+### Removido — Botão "Gerar Ficha de Projeto" do HTML exportado
+Baixava uma cópia estática do HTML atual (`outerHTML` da página); redundante já que o próprio HTML exportado já é a ficha.
+
+### Corrigido — Foco automático no hover dos cards de frame
+Passar o mouse sobre um card de frame em "Escanear Tokens" selecionava o frame no canvas — comportamento inesperado e sem relação com nenhuma ação do designer. Agora o foco (seleção + scroll até o elemento) só acontece ao clicar para expandir o card.
+
+### Corrigido — Campo de declaração de desvios não reagia ao toggle
+Com "Check Designs realizado" e "Sem desvios encontrados" marcados, o campo de observações da Conformidade DSC só escondia se esse fosse o estado no primeiro render — alternar os toggles depois não atualizava a visibilidade. Também: o alerta "Itens para revisar" mudou de vermelho para laranja escuro (mais alinhado a um alerta, não a um erro crítico).
+
+### Corrigido — Retângulo de destaque de medidas ficava preso no canvas
+O primeiro item da lista de medidas (que vem expandido por padrão) desenhava um retângulo de destaque (`[HighlightStroke]`) persistente no canvas a cada render, independente de qualquer ação do designer. Agora o destaque só aparece transitoriamente ao passar o mouse sobre um item da lista, e some ao tirar o mouse.
+
+### Adicionado — Toggle de linhas de conector por especificação individual
+Já existia um toggle para ocultar as linhas de conector de todo um grupo de specs (mesma tag); agora cada spec individual dentro do grupo também tem seu próprio toggle, sincronizado com o de grupo.
+
+---
+
 ## v6.0.0 — 2026-07-22
 
 ### Resumo

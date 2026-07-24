@@ -105,6 +105,14 @@ function _updateFrameAuditSubtitle(frameId) {
     subtitle.textContent = 'Não Conforme';
   }
   if (typeof _refreshConformanceAlert === 'function') _refreshConformanceAlert(frameId);
+
+  // Campo de declaração dos desvios só é útil quando há algo a justificar —
+  // reavalia dinamicamente a cada mudança de checkDone/semDesvios (a classe
+  // inicial em renderFrameCard não se atualiza sozinha depois do render).
+  const obsField = document.getElementById(`audit-obs-${frameId}`);
+  if (obsField && typeof _shouldShowAuditObs === 'function') {
+    obsField.classList.toggle('hidden', !_shouldShowAuditObs(frame));
+  }
 }
 
 function setFrameCheckDone(frameId, checked) {
@@ -678,17 +686,6 @@ function linkCurrentSelectionForExc(id) {
   parent.postMessage({ pluginMessage: { type: 'get-selection-link', targetId: id } }, '*');
 }
 
-// ── Canvas highlight / focus helpers ──────────────────────────────────
-function sendHighlight(figmaId) {
-  if (figmaId) {
-    parent.postMessage({ pluginMessage: { type: 'highlight-node', id: figmaId, shouldScroll: false } }, '*');
-  }
-}
-function clearHighlight() {
-  // deselect via highlight-node with no valid id — code.js handles null gracefully
-  parent.postMessage({ pluginMessage: { type: 'highlight-node', id: '__clear__', shouldScroll: false } }, '*');
-}
-
 // ── Sub-accordion toggle ───────────────────────────────────────────────
 function toggleSubAccordion(key) {
   const body = document.getElementById(`sub-body-${key}`);
@@ -901,6 +898,12 @@ function toggleFrameAccordion(frameId) {
   const isHidden = body.classList.contains('hidden');
   body.classList.toggle('hidden', !isHidden);
   if (arrow) arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+  // Foco no canvas só ao expandir (clique explícito) — hover não move mais a
+  // seleção/tela, isso ficava confuso passando o mouse pela lista.
+  if (isHidden) {
+    const frame = typeof getFrame === 'function' ? getFrame(frameId) : null;
+    if (frame && frame.figmaId) focusNode(frame.figmaId);
+  }
 }
 
 function updateEmptyFramesState() {
@@ -1812,7 +1815,7 @@ function toggleAccordion(btn, nodeId = null) {
   const isHidden = content.classList.contains("hidden");
 
   // Accordions com nodeId (medidas) são exclusivos: abrir um fecha os irmãos,
-  // mantendo o item expandido na lista sempre sincronizado com o highlight no canvas.
+  // mantendo só um item expandido/selecionado por vez na lista.
   if (nodeId && isHidden) {
     const list = btn.closest('ul, [data-accordion-list]');
     if (list) {
@@ -1835,7 +1838,11 @@ function toggleAccordion(btn, nodeId = null) {
   if (icon) icon.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
   if (nodeId) {
     if (isHidden) {
-      focusNode(nodeId);
+      // Expandir seleciona e rola até o elemento, mas sem o retângulo de
+      // destaque (HighlightStroke) — esse fica reservado só pro hover
+      // (sendHighlight/clearHighlight), pra não persistir no canvas
+      // enquanto o accordion estiver simplesmente aberto.
+      parent.postMessage({ pluginMessage: { type: 'highlight-node', id: nodeId, highlight: false, shouldScroll: true } }, '*');
     } else {
       parent.postMessage({ pluginMessage: { type: 'clear-highlight' } }, '*');
     }
@@ -2047,6 +2054,20 @@ function autoScrollToNewItem(containerId, targetElement = null) {
 
 function focusNode(id) {
   parent.postMessage({ pluginMessage: { type: 'highlight-node', id, highlight: true, shouldScroll: true, color: '#0070af' } }, '*');
+}
+
+// Destaque transitório (retângulo HighlightStroke) pra qualquer lista que
+// queira dar um preview do elemento no canvas ao passar o mouse — não
+// seleciona nem rola a tela (isso fica reservado pra clique explícito), e
+// some assim que o mouse sai (clearHighlight). Padrão reaproveitável por
+// qualquer accordion/lista que precise desse preview (hoje: medidas).
+function sendHighlight(figmaId) {
+  if (figmaId) {
+    parent.postMessage({ pluginMessage: { type: 'highlight-node', id: figmaId, highlight: true, shouldScroll: false, selectNode: false, color: '#0070af' } }, '*');
+  }
+}
+function clearHighlight() {
+  parent.postMessage({ pluginMessage: { type: 'clear-highlight' } }, '*');
 }
 
 // ── Restauração leve no boot (só step1, sem renderizar frames/flows/specs) ──
