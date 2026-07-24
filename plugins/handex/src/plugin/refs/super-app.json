@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Super App",
     "figmaFileKey": "epCGtlKQxedDxQVlK3lNcN",
-    "exportedAt": "2026-07-24T19:59:46.422Z",
+    "exportedAt": "2026-07-24T20:10:42.768Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -1551,97 +1551,6 @@
         "value": "#ffffff"
       },
       {
-        "key": "eb3ddb00d95838255af587ad1eb890abbb18a35b",
-        "name": "color blind on",
-        "resolvedType": "BOOLEAN",
-        "collection": "Accessibility",
-        "value": null
-      },
-      {
-        "key": "46a7bea58854c19170e7152b4f3ed97718aafb60",
-        "name": "Width - Screen",
-        "resolvedType": "FLOAT",
-        "collection": "Screen size",
-        "value": 360
-      },
-      {
-        "key": "713214ddb27195af0824f84fab30b31526f4eb3e",
-        "name": "Height - Screen",
-        "resolvedType": "FLOAT",
-        "collection": "Screen size",
-        "value": 800
-      },
-      {
-        "key": "ca24663a9e3759502249fab29b9abb5f005b7581",
-        "name": "variant/tracking progress 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "tracking progress"
-      },
-      {
-        "key": "2b99dea81adec805a8f7200ca90dd8f90ce39139",
-        "name": "Component Set Name",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "Component Set"
-      },
-      {
-        "key": "3f52e4fa38fbdf3c10d707638bb5a5600686fd2b",
-        "name": "Component Set Disclaimer",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "Apresentação dos componentes de design para utilização dos devs e QAs."
-      },
-      {
-        "key": "224dbb4a9aebe089a4ad9b4032ee0e5131882902",
-        "name": "Base Component Alert",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "Base components representam componentes acessórios para compor o componente principal e não devem ser usados fora deste componente principal."
-      },
-      {
-        "key": "5d31d9abfed2ea0171ed1a16b1ca522f4bc3dcf5",
-        "name": "shapes/rounded 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "rounded"
-      },
-      {
-        "key": "651d1dee2e29568bd8675a32d1407dbbc819ab1a",
-        "name": "shapes/hexagon 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "hexagon"
-      },
-      {
-        "key": "634bffa9b81ddec80c681e7982c802f01c0b5be4",
-        "name": "shapes/rosette 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "rosette"
-      },
-      {
-        "key": "cb1b4757a710610ed9f7f115630331aaaf770ea1",
-        "name": "shapes/triangle 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "triangle"
-      },
-      {
-        "key": "47eb21d530faa207a439bfacae8afe92dc12bf3c",
-        "name": "shapes/square 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "square"
-      },
-      {
-        "key": "96e8e5ba683c5fed3f4405b485fec30149d0588f",
-        "name": "shapes/circle 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "circle"
-      },
-      {
         "key": "441e5c9892c6b8422b58d7fde53fd14a11ac9bb5",
         "name": "Abrir/Abrir",
         "resolvedType": "STRING",
@@ -2046,6 +1955,97 @@
         "resolvedType": "STRING",
         "collection": "Terms dictionary",
         "value": "Usar em outro banco"
+      },
+      {
+        "key": "46a7bea58854c19170e7152b4f3ed97718aafb60",
+        "name": "Width - Screen",
+        "resolvedType": "FLOAT",
+        "collection": "Screen size",
+        "value": 360
+      },
+      {
+        "key": "713214ddb27195af0824f84fab30b31526f4eb3e",
+        "name": "Height - Screen",
+        "resolvedType": "FLOAT",
+        "collection": "Screen size",
+        "value": 800
+      },
+      {
+        "key": "ca24663a9e3759502249fab29b9abb5f005b7581",
+        "name": "variant/tracking progress 🔒",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "tracking progress"
+      },
+      {
+        "key": "2b99dea81adec805a8f7200ca90dd8f90ce39139",
+        "name": "Component Set Name",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "Component Set"
+      },
+      {
+        "key": "3f52e4fa38fbdf3c10d707638bb5a5600686fd2b",
+        "name": "Component Set Disclaimer",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "Apresentação dos componentes de design para utilização dos devs e QAs."
+      },
+      {
+        "key": "224dbb4a9aebe089a4ad9b4032ee0e5131882902",
+        "name": "Base Component Alert",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "Base components representam componentes acessórios para compor o componente principal e não devem ser usados fora deste componente principal."
+      },
+      {
+        "key": "5d31d9abfed2ea0171ed1a16b1ca522f4bc3dcf5",
+        "name": "shapes/rounded 🔒",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "rounded"
+      },
+      {
+        "key": "651d1dee2e29568bd8675a32d1407dbbc819ab1a",
+        "name": "shapes/hexagon 🔒",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "hexagon"
+      },
+      {
+        "key": "634bffa9b81ddec80c681e7982c802f01c0b5be4",
+        "name": "shapes/rosette 🔒",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "rosette"
+      },
+      {
+        "key": "cb1b4757a710610ed9f7f115630331aaaf770ea1",
+        "name": "shapes/triangle 🔒",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "triangle"
+      },
+      {
+        "key": "47eb21d530faa207a439bfacae8afe92dc12bf3c",
+        "name": "shapes/square 🔒",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "square"
+      },
+      {
+        "key": "96e8e5ba683c5fed3f4405b485fec30149d0588f",
+        "name": "shapes/circle 🔒",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "circle"
+      },
+      {
+        "key": "eb3ddb00d95838255af587ad1eb890abbb18a35b",
+        "name": "color blind on",
+        "resolvedType": "BOOLEAN",
+        "collection": "Accessibility",
+        "value": null
       }
     ]
   },
