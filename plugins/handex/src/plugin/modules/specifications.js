@@ -101,6 +101,18 @@
     window.showFrameSection = showFrameSection;
 
     // ── Conformance alert helpers ────────────────────────────────────────
+    // Campo de declaração dos desvios (textarea) só faz sentido quando existe
+    // algo a justificar: Check Designs concluído E (é Novo Componente OU o
+    // designer marcou que HÁ desvios OU o scan automatizado achou itens fora
+    // do DS mesmo com "Sem desvios" marcado — contradição que precisa de
+    // explicação). Se checkDone+semDesvios e nenhum achado automatizado, não
+    // há nada a declarar — o campo fica oculto.
+    function _shouldShowAuditObs(frame) {
+      if (!frame || !frame.audit || !frame.audit.checkDone) return false;
+      const hasUnl = typeof _computeFrameHasUnlinked === 'function' ? _computeFrameHasUnlinked(frame) : false;
+      return frame.isNewComponent || !frame.audit.semDesvios || hasUnl;
+    }
+
     function _buildConformanceAlertHTML(frame) {
       if (!frame || !frame.audit || !frame.audit.checkDone) return '';
       const hasUnl = typeof _computeFrameHasUnlinked === 'function' ? _computeFrameHasUnlinked(frame) : false;
@@ -133,22 +145,22 @@
 
       const rows = items.map(it => {
         const icon = it.status === 'error' ? 'x-circle' : 'alert-triangle';
-        const cls  = it.status === 'error' ? 'text-red-400' : 'text-amber-500';
+        const cls  = 'text-amber-600 dark:text-amber-400';
         const clickable = it.nodeId
-          ? `onclick="focusNode('${it.nodeId}')" title="Focar no elemento no Figma" class="flex items-center gap-1.5 min-w-0 w-full cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30 rounded px-1 py-0.5 transition-colors group"`
+          ? `onclick="focusNode('${it.nodeId}')" title="Focar no elemento no Figma" class="flex items-center gap-1.5 min-w-0 w-full cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded px-1 py-0.5 transition-colors group"`
           : `class="flex items-center gap-1.5 min-w-0 w-full px-1 py-0.5"`;
         return `<li ${clickable}>
           <i data-lucide="${icon}" class="w-3 h-3 ${cls} shrink-0"></i>
           <span class="text-[10px] text-slate-500 dark:text-dark-muted shrink-0">${it.label}</span>
           <span class="text-[10px] font-medium text-slate-700 dark:text-white truncate flex-1">${it.name}</span>
-          ${it.nodeId ? `<i data-lucide="locate" class="w-3 h-3 text-slate-400 dark:text-slate-600 group-hover:text-red-400 shrink-0 transition-colors"></i>` : ''}
+          ${it.nodeId ? `<i data-lucide="locate" class="w-3 h-3 text-slate-400 dark:text-slate-600 group-hover:text-amber-500 shrink-0 transition-colors"></i>` : ''}
         </li>`;
       }).join('');
 
-      return `<div class="px-3 py-2.5 bg-red-50 dark:bg-red-900/15 rounded-xl border border-red-100 dark:border-red-800/30 space-y-1.5">
+      return `<div class="px-3 py-2.5 bg-amber-50 dark:bg-amber-900/15 rounded-xl border border-amber-100 dark:border-amber-800/30 space-y-1.5">
         <div class="flex items-center gap-1.5">
-          <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-red-500 shrink-0"></i>
-          <p class="text-[11px] font-bold text-red-600 dark:text-red-400">Itens para revisar:</p>
+          <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-600 shrink-0"></i>
+          <p class="text-[11px] font-bold text-amber-700 dark:text-amber-400">Itens para revisar:</p>
         </div>
         <ul class="space-y-1 pl-0.5">${rows}</ul>
       </div>`;
@@ -207,9 +219,7 @@
         <!-- Cabeçalho -->
         <div id="frame-header-${fid}"
           class="flex items-center gap-2 px-3 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors select-none"
-          onclick="toggleFrameAccordion('${fid}')"
-          onmouseenter="sendHighlight('${frame.figmaId}')"
-          onmouseleave="clearHighlight()">
+          onclick="toggleFrameAccordion('${fid}')">
           <button type="button"
             onclick="event.stopPropagation(); focusNode('${frame.figmaId}')"
             title="Focar no elemento no canvas"
@@ -336,7 +346,7 @@
               <textarea id="audit-obs-${fid}" rows="2"
                 placeholder="Descreva os desvios encontrados ou o motivo da não conformidade com o DSC..."
                 oninput="setFrameAuditObs('${fid}', this.value)"
-                class="${(() => { const _hasUnl = typeof _computeFrameHasUnlinked === 'function' ? _computeFrameHasUnlinked(frame) : false; const _show = frame.audit && frame.audit.checkDone && (frame.isNewComponent || !frame.audit.semDesvios || _hasUnl); return _show ? '' : 'hidden'; })()} w-full bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl px-3 py-2 text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 resize-none focus:ring-2 focus:ring-[#0070af]/20 outline-none transition-all">${frame.audit && frame.audit.observacoes ? frame.audit.observacoes : ''}</textarea>
+                class="${_shouldShowAuditObs(frame) ? '' : 'hidden'} w-full bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl px-3 py-2 text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 resize-none focus:ring-2 focus:ring-[#0070af]/20 outline-none transition-all">${frame.audit && frame.audit.observacoes ? frame.audit.observacoes : ''}</textarea>
             </div>
           </div>
 
@@ -625,6 +635,12 @@
                 class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
                 <i data-lucide="${isHidden ? 'eye-off' : 'eye'}" class="w-3 h-3"></i>
               </button>
+              <button type="button" title="${spec.linesHidden ? 'Exibir linhas' : 'Ocultar linhas'}"
+                aria-label="${spec.linesHidden ? 'Exibir linhas' : 'Ocultar linhas'}"
+                onclick="event.stopPropagation(); toggleSpecItemLines('${frameId}', ${spec._idx})"
+                class="w-5 h-5 flex items-center justify-center ${spec.linesHidden ? 'text-gray-400' : 'text-slate-500'} hover:text-[#0070af] transition-colors shrink-0">
+                <i data-lucide="spline" class="w-3 h-3"></i>
+              </button>
               <i data-lucide="chevron-down" id="chev-${detailsId}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0"></i>
               <button type="button" title="Excluir especificação" aria-label="Excluir especificação"
                 onclick="event.stopPropagation(); deleteSpecFromFrame('${frameId}', ${spec._idx}, '${spec.id}')"
@@ -809,15 +825,34 @@
     }
     window.toggleSpecGroupVisibility = toggleSpecGroupVisibility;
 
+    // Mesma lógica de toggleSpecLinesVisibility, mas por especificação
+    // individual — o toggle do grupo continua existindo pra ocultar tudo de
+    // uma vez, este aqui permite ajustar linha a linha dentro do grupo.
+    function toggleSpecItemLines(frameId, specIdx) {
+      const frame = getFrame(frameId);
+      if (!frame) return;
+      const spec = (frame.createdSpecs || [])[specIdx];
+      if (!spec || !spec.id) return;
+      const isNowHidden = !(spec.linesHidden === true);
+      spec.linesHidden = isNowHidden;
+      parent.postMessage({ pluginMessage: { type: 'hide-spec-lines', specIds: [spec.id], forceState: !isNowHidden } }, '*');
+      saveToStorage();
+      renderSpecsListForFrame(frameId);
+    }
+    window.toggleSpecItemLines = toggleSpecItemLines;
+
     function toggleSpecLinesVisibility(frameId, letter) {
       const frame = getFrame(frameId);
       if (!frame) return;
       if (!frame.specLinesVisible) frame.specLinesVisible = {};
       const isNowHidden = !(frame.specLinesVisible[letter] === false);
       frame.specLinesVisible[letter] = isNowHidden ? false : true;
-      const specIds = (frame.createdSpecs || [])
-        .filter(spec => (spec.letter || '?') === letter && spec.id)
-        .map(spec => spec.id);
+      const groupSpecs = (frame.createdSpecs || []).filter(spec => (spec.letter || '?') === letter && spec.id);
+      // Sincroniza o estado individual de cada spec do grupo — sem isso o
+      // ícone por item ficava dizendo "Ocultar linhas" mesmo com as linhas
+      // já ocultas via toggle de grupo (e vice-versa ao reexibir).
+      groupSpecs.forEach(spec => { spec.linesHidden = isNowHidden; });
+      const specIds = groupSpecs.map(spec => spec.id);
       parent.postMessage({ pluginMessage: { type: 'hide-spec-lines', specIds, forceState: !isNowHidden } }, '*');
       saveToStorage();
       renderSpecsListForFrame(frameId);

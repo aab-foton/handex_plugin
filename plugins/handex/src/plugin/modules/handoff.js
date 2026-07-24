@@ -643,6 +643,10 @@ ${(handoffData.createdFlows || []).length === 0
       const safeName = rawName.replace(/[\\/:*?"<>|]+/g, "_").replace(/\s+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, "");
       const status = handoffData.step1.status || "Pendente";
       const versao = handoffData.step1.versao || "v1.0.0";
+      if (!handoffData._projectId) {
+        handoffData._projectId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      }
+      const projectId = handoffData._projectId;
       // Equipe — derivar autor (designer) e validador (PO) da equipe v2
       const _equipe = handoffData.step1.equipe || [];
       const _designer = _equipe.find(m => (m.papel || '').toLowerCase() === 'designer');
@@ -703,6 +707,22 @@ ${(handoffData.createdFlows || []).length === 0
       function _getCatStyleHTML(value) {
         const c = _catColorMapHTML[value] || { bg: '#f9fafb', text: '#64748b', border: '#e5e7eb' };
         return `background-color:${c.bg};color:${c.text};border:1px solid ${c.border};border-radius:9999px;padding:1px 7px;font-size:9px;font-weight:700;display:inline-block;white-space:nowrap;cursor:default;pointer-events:none;user-select:none`;
+      }
+
+      // Item 5: campo de dúvida/comentário — rascunho local do navegador do
+      // dev, salvo em localStorage, sem nenhum round-trip com o plugin/Figma.
+      // elementId precisa ser único e estável dentro do documento exportado.
+      function _commentFieldHTML(elementId, elementLabel) {
+        const safeId = elementId.replace(/"/g, '&quot;');
+        const safeLabel = (elementLabel || '').replace(/"/g, '&quot;');
+        return `
+          <div class="border-t border-dashed border-slate-200 dark:border-slate-700 px-2.5 py-2 mt-0.5">
+            <textarea data-comment-field data-comment-id="${safeId}" data-comment-label="${safeLabel}"
+              oninput="saveHandexComment(this)"
+              placeholder="Rascunho local — dúvida ou observação sobre este item (não sincroniza com o Figma)"
+              rows="1"
+              class="w-full text-[10px] text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700 rounded-lg px-2 py-1.5 resize-none outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-300 transition-all"></textarea>
+          </div>`;
       }
 
       // Type → visual mapping for Cenários de Exceção
@@ -1118,6 +1138,7 @@ ${(handoffData.createdFlows || []).length === 0
                         <div class="border-t border-indigo-100/60 dark:border-indigo-900/30 px-2 py-1.5 space-y-0.5">
                           ${s.properties.map(p => `<div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-slate-600 dark:text-slate-300 w-20 shrink-0 truncate">${p.label || ''}</span>${p.token ? `<code class="bg-slate-100 dark:bg-slate-800 text-slate-500 px-1 rounded text-[9px] font-mono">${p.token}</code>` : ''}${p.value ? `<span class="text-slate-400 truncate">→ ${p.value}</span>` : ''}</div>`).join('')}
                         </div>` : ''}
+                        ${_commentFieldHTML('annot-' + (s.id || (fi + '-' + si)), s.name || 'Spec')}
                       </div>`;
                     }).join('')}
                   </div>
@@ -1134,13 +1155,16 @@ ${(handoffData.createdFlows || []).length === 0
                   </div>
                   <div id="meas-${fi}" class="space-y-1.5">
                     ${fMeasurements.map((m, mi) => `
-                      <div id="html-meas-${fi}-${mi}" data-toggle-item data-hidden="0" class="flex items-center gap-2 p-2 bg-cyan-50/40 dark:bg-cyan-950/10 border border-cyan-100/60 dark:border-cyan-900/30 rounded-lg transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21.3 8.7 8.7 21.3c-1 1-2.5 1-3.4 0l-2.6-2.6c-1-1-1-2.5 0-3.4L15.3 2.7c1-1 2.5-1 3.4 0l2.6 2.6c1 1 1 2.5 0 3.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>
-                        <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${m.name || m.label || 'Medida'}</span>
-                        ${m.details ? `<span class="text-[10px] text-slate-500 font-mono shrink-0">${m.details}</span>` : ''}
-                        <button data-toggle-btn onclick="toggleHTMLItem('html-meas-${fi}-${mi}', this)" title="Ocultar" aria-label="Ocultar medida" class="ml-1 shrink-0 opacity-40 hover:opacity-100 transition-opacity">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                        </button>
+                      <div id="html-meas-${fi}-${mi}" data-toggle-item data-hidden="0" class="flex flex-col bg-cyan-50/40 dark:bg-cyan-950/10 border border-cyan-100/60 dark:border-cyan-900/30 rounded-lg transition-all overflow-hidden">
+                        <div class="flex items-center gap-2 p-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21.3 8.7 8.7 21.3c-1 1-2.5 1-3.4 0l-2.6-2.6c-1-1-1-2.5 0-3.4L15.3 2.7c1-1 2.5-1 3.4 0l2.6 2.6c1 1 1 2.5 0 3.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>
+                          <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${m.name || m.label || 'Medida'}</span>
+                          ${m.details ? `<span class="text-[10px] text-slate-500 font-mono shrink-0">${m.details}</span>` : ''}
+                          <button data-toggle-btn onclick="toggleHTMLItem('html-meas-${fi}-${mi}', this)" title="Ocultar" aria-label="Ocultar medida" class="ml-1 shrink-0 opacity-40 hover:opacity-100 transition-opacity">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                          </button>
+                        </div>
+                        ${_commentFieldHTML('meas-' + (m.nodeId || (fi + '-' + mi)), m.name || m.label || 'Medida')}
                       </div>
                     `).join('')}
                   </div>
@@ -1231,10 +1255,13 @@ ${(handoffData.createdFlows || []).length === 0
                 </p>
                 <div class="space-y-1.5">
                   ${f.measurements.map((m, mi) => `
-                    <div class="flex items-center gap-2 p-2 bg-cyan-50/40 dark:bg-cyan-950/10 border border-cyan-100/60 dark:border-cyan-900/30 rounded-lg">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21.3 8.7 8.7 21.3c-1 1-2.5 1-3.4 0l-2.6-2.6c-1-1-1-2.5 0-3.4L15.3 2.7c1-1 2.5-1 3.4 0l2.6 2.6c1 1 1 2.5 0 3.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>
-                      <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${m.name || m.label || 'Medida'}</span>
-                      ${m.details ? `<span class="text-[10px] font-mono text-cyan-700 dark:text-cyan-400 shrink-0">${Array.isArray(m.details) ? m.details.join(' | ') : m.details}</span>` : ''}
+                    <div class="flex flex-col bg-cyan-50/40 dark:bg-cyan-950/10 border border-cyan-100/60 dark:border-cyan-900/30 rounded-lg overflow-hidden">
+                      <div class="flex items-center gap-2 p-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21.3 8.7 8.7 21.3c-1 1-2.5 1-3.4 0l-2.6-2.6c-1-1-1-2.5 0-3.4L15.3 2.7c1-1 2.5-1 3.4 0l2.6 2.6c1 1 1 2.5 0 3.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>
+                        <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${m.name || m.label || 'Medida'}</span>
+                        ${m.details ? `<span class="text-[10px] font-mono text-cyan-700 dark:text-cyan-400 shrink-0">${Array.isArray(m.details) ? m.details.join(' | ') : m.details}</span>` : ''}
+                      </div>
+                      ${_commentFieldHTML('meas-' + (m.nodeId || (fi + '-' + mi)), m.name || m.label || 'Medida')}
                     </div>
                   `).join('')}
                 </div>
@@ -1315,6 +1342,7 @@ ${(handoffData.createdFlows || []).length === 0
                                 </div>`).join('')}
                               </div>
                             </div>` : ''}
+                            ${_commentFieldHTML('annot-' + (s.id || (fi + '-' + letter + '-' + si)), s.name || 'Spec')}
                           </div>`;
                         }).join('')}
                       </div>
@@ -1978,9 +2006,9 @@ ${(handoffData.createdFlows || []).length === 0
         <span>Exportar JSON</span>
       </button>
 
-      <button onclick="downloadSelf()" class="flex items-center gap-1.5 px-3 py-1.5 bg-[#0070af] hover:bg-blue-700 text-white rounded-2xl text-xs font-bold transition-all shadow-md cursor-pointer">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-        <span>Gerar Ficha de Projeto</span>
+      <button onclick="copyPendingComments()" title="Copia um texto pronto com todos os rascunhos de dúvida preenchidos nesta ficha (armazenados só neste navegador)" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold transition-all cursor-pointer">
+        <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i>
+        <span>Copiar dúvidas pendentes</span>
       </button>
 
       <button onclick="toggleTheme()" class="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl transition-colors cursor-pointer">
@@ -2249,22 +2277,6 @@ ${(handoffData.createdFlows || []).length === 0
       }
     });
 
-    function downloadSelf() {
-      const baseName = "${safeName}";
-      const htmlContent = "<!DOCTYPE html>\\n" + document.documentElement.outerHTML;
-      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "handoff_" + baseName + "_visualizador.html";
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(function() {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 100);
-    }
-
     // Structured scan data (sem previews base64) — pronto para pipeline de dev.
     window.__HANDEX_SCAN_PAYLOAD__ = ${scanPayloadLiteral};
 
@@ -2283,6 +2295,57 @@ ${(handoffData.createdFlows || []).length === 0
         URL.revokeObjectURL(url);
       }, 100);
     }
+
+    // ── Item 5: campo de dúvida/comentário — rascunho 100% local do navegador
+    // (localStorage), sem round-trip com o plugin/Figma. Namespaced por um ID
+    // de projeto gerado uma única vez (não pelo título) pra não colidir se
+    // dois projetos exportados tiverem o mesmo nome no mesmo navegador.
+    var HANDEX_COMMENTS_KEY = "handex-comments-" + ${JSON.stringify(projectId)};
+    function _loadHandexComments() {
+      try {
+        var raw = localStorage.getItem(HANDEX_COMMENTS_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) { return {}; }
+    }
+    function _saveHandexCommentsMap(map) {
+      try { localStorage.setItem(HANDEX_COMMENTS_KEY, JSON.stringify(map)); } catch (e) { }
+    }
+    function saveHandexComment(textarea) {
+      var id = textarea.getAttribute('data-comment-id');
+      var label = textarea.getAttribute('data-comment-label') || '';
+      var text = textarea.value.trim();
+      var map = _loadHandexComments();
+      if (text === '') {
+        delete map[id];
+      } else {
+        map[id] = { label: label, text: text };
+      }
+      _saveHandexCommentsMap(map);
+    }
+    function _restoreHandexComments() {
+      var map = _loadHandexComments();
+      document.querySelectorAll('[data-comment-field]').forEach(function(field) {
+        var id = field.getAttribute('data-comment-id');
+        if (map[id]) field.value = map[id].text;
+      });
+    }
+    function copyPendingComments() {
+      var map = _loadHandexComments();
+      var keys = Object.keys(map);
+      if (keys.length === 0) {
+        alert('Nenhuma dúvida registrada ainda neste navegador.');
+        return;
+      }
+      var lines = keys.map(function(id) {
+        var entry = map[id];
+        return 'Spec: ' + (entry.label || 'Item') + ' — Dúvida: ' + entry.text;
+      });
+      var text = lines.join('\\n');
+      navigator.clipboard.writeText(text).then(function() {
+        alert('Dúvidas pendentes copiadas (' + keys.length + '). Cole onde preferir para compartilhar — isso é só um rascunho local, não sincroniza com o Figma automaticamente.');
+      });
+    }
+    document.addEventListener('DOMContentLoaded', _restoreHandexComments);
   <\/script>
 </body>
 </html>`;

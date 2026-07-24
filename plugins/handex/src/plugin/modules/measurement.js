@@ -178,17 +178,18 @@
           content.appendChild(detEl);
         });
 
+        // Preview transitório no canvas — só enquanto o mouse está sobre o
+        // item da lista, some ao tirar o mouse (não fica preso ao estado de
+        // expandido/recolhido do accordion).
+        if (item.nodeId) {
+          header.addEventListener('mouseenter', () => sendHighlight(item.nodeId));
+          header.addEventListener('mouseleave', () => clearHighlight());
+        }
+
         section.appendChild(header);
         section.appendChild(content);
         container.appendChild(section);
       });
-
-      // Primeiro item vem expandido por padrão — sincroniza o highlight no canvas com esse
-      // estado, sem forçar scroll/zoom (o usuário só abriu a lista, não clicou em nada).
-      const _firstItem = data[0];
-      if (_firstItem && _firstItem.nodeId) {
-        parent.postMessage({ pluginMessage: { type: 'highlight-node', id: _firstItem.nodeId, highlight: true, shouldScroll: false, selectNode: false, color: '#0070af' } }, '*');
-      }
 
       _refreshIcons();
       if (!frameId) {
