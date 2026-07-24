@@ -489,6 +489,64 @@
     .btn-extra:hover { background: #0D47A1; color: #fff; }
     .btn-extra.ghost { border-color: #bbb; color: #888; }
     .btn-extra.ghost:hover { border-color: #555; color: #555; background: none; }
+    .btn-extra.full { width: 100%; padding: 8px 10px; text-align: center; }
+
+    /* Template — textarea de nomes reconhecidos */
+    .settings-help-text { font-size: 11px; color: #999; line-height: 1.5; margin: -2px 0 2px; }
+    .settings-textarea {
+      width: 100%; font-family: 'Inter', sans-serif; font-size: 12px; color: #333;
+      padding: 8px 10px; border: 1px solid #d0d0d0; border-radius: 8px;
+      resize: vertical; min-height: 60px;
+    }
+    .settings-textarea:focus { outline: none; border-color: #0D47A1; }
+
+    /* DEV (temporário) */
+    .dev-label {
+      font-size: 11px; font-weight: 700; color: #E65100;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      margin: 4px 0 2px;
+    }
+    .varredura-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 3px 0; font-size: 11px; font-family: 'Menlo', monospace;
+    }
+    .varredura-item.ok { color: #2E7D32; }
+    .varredura-item.falha { color: #C62828; }
+
+    /* Accordions */
+    .accordion { border-bottom: 1px solid #e8e8e8; }
+    .accordion:first-of-type { border-top: 1px solid #e8e8e8; }
+    .accordion-header {
+      display: flex;
+      align-items: center;
+      padding: 11px 0;
+      cursor: pointer;
+      user-select: none;
+      gap: 8px;
+    }
+    .accordion-header > .checkbox-field { flex: 1; }
+    .accordion-header > span {
+      flex: 1;
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+    }
+    .accordion-header:hover > span,
+    .accordion-header:hover > .checkbox-field { color: #222; }
+    .accordion-chevron {
+      flex-shrink: 0;
+      color: #ccc;
+      transition: transform 0.2s, color 0.15s;
+    }
+    .accordion-header:hover .accordion-chevron { color: #999; }
+    .accordion.open .accordion-chevron { transform: rotate(180deg); }
+    .accordion-content {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      padding-bottom: 14px;
+    }
+    .accordion.open > .accordion-content { display: flex; }
 
     /* Chips do eixo Y */
     .chips-row {
@@ -516,7 +574,7 @@
       background: #EEF2FF;
       color: #0D47A1;
     }
-    .chip:hover:not(.on) { border-color: #bbb; color: #555; }
+    .chip:hover:not(.on):not(.disabled) { border-color: #bbb; color: #555; }
 
     /* Waiting state */
     .waiting-state {
@@ -586,6 +644,37 @@
             <span>Manter alterações manuais</span>
           </label>
         </div>
+
+        <div class="settings-divider"></div>
+
+        <div class="settings-group">
+          <div class="settings-group-title">Nome do template</div>
+          <p class="settings-help-text">Nomes de componente/instância reconhecidos como Template de Handoff (um por linha). Se o template for renomeado, adicione o nome novo aqui — não é preciso remover o antigo, handoffs já gerados continuam funcionando.</p>
+          <textarea id="settingNomesTemplate" class="settings-textarea" rows="3">[dsc-h] Template Handoff
+[dsc-hub] Handoff de Design</textarea>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <div class="settings-group" style="display:none;">
+          <div class="dev-label">Dev (temporário)</div>
+          <div class="extras-card">
+            <div class="extras-card-title">🔍 Varredura de nomes do template</div>
+            <div style="padding:10px 12px;">
+              <p class="settings-help-text">Confere se os nomes literais que o code.ts procura (ex: [dsc-h] Item Number) existem no template novo. Não depende de seleção.</p>
+              <button class="btn-extra full" id="btnVarreduraTemplate">Rodar varredura</button>
+              <div id="varreduraResultado" style="display:none; margin-top:8px;"></div>
+            </div>
+          </div>
+          <div class="extras-card">
+            <div class="extras-card-title">🧹 Limpar edições preservadas</div>
+            <div style="padding:10px 12px;">
+              <p class="settings-help-text">Apaga o backup de edições manuais salvo no handoff selecionado (table/anatomy/variants/states). Use se um texto errado antigo continuar voltando depois de atualizar. Selecione o FRAME "[dsc] handoff: ..." antes de rodar.</p>
+              <button class="btn-extra full" id="btnLimparEdicoes">Limpar edições do handoff selecionado</button>
+              <div id="limparEdicoesResultado" style="display:none; margin-top:8px;"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -626,44 +715,70 @@
         <span id="componentNameLabel">Componente</span>
       </div>
 
-      <div class="geral-group">
-        <label class="checkbox-field">
-          <input type="checkbox" id="settingIncluirComponente">
-          <span>Formatar Component Set na página</span>
-        </label>
-      </div>
+      <div style="display:flex; flex-direction:column;">
 
-      <div class="divider"></div>
-
-      <div class="geral-group">
-        <div class="section-label">Seções a atualizar</div>
-        <label class="checkbox-field">
-          <input type="checkbox" id="settingSecaoAnatomia" checked>
-          <span>Anatomia</span>
-        </label>
-        <label class="checkbox-field">
-          <input type="checkbox" id="settingSecaoTabela" checked>
-          <span>Tabela de propriedades</span>
-        </label>
-        <label class="checkbox-field">
-          <input type="checkbox" id="settingSecaoVariacoes" checked>
-          <span>Variações</span>
-        </label>
-        <label class="checkbox-field">
-          <input type="checkbox" id="settingSecaoEstados" checked>
-          <span>Matriz de estados</span>
-        </label>
-      </div>
-
-      <div id="eixoYSection" style="display:none;">
-        <div class="divider"></div>
-        <div class="geral-group" style="margin-top:16px;">
-          <div class="section-label">Eixo Y da Matriz de Estados</div>
-          <div id="eixoYChips" class="chips-row"></div>
+        <!-- Accordion: Component Set -->
+        <div class="accordion" id="accordionCSF">
+          <div class="accordion-header" onclick="toggleAccordion('accordionCSF')">
+            <span>Component Set</span>
+            <svg class="accordion-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3 5L7 9L11 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="accordion-content">
+            <label class="checkbox-field">
+              <input type="checkbox" id="settingIncluirComponente">
+              <span>Formatar Component Set na página</span>
+            </label>
+            <div id="csfSection" style="display:none; flex-direction:column; gap:12px;">
+              <p style="font-size:11px;color:#999;margin:0;">O X define as colunas (ex: State); o Y define as linhas — marque as props que formam as combinações de linha.</p>
+              <div>
+                <div class="section-label">Eixo X — Colunas</div>
+                <div id="csfEixoXChips" class="chips-row" style="margin-top:6px;"></div>
+              </div>
+              <div>
+                <div class="section-label">Eixo Y — Linhas</div>
+                <div id="csfEixoYChips" class="chips-row" style="margin-top:6px;"></div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="divider"></div>
+        <!-- Accordion: Seções a atualizar -->
+        <div class="accordion open" id="accordionSecoes">
+          <div class="accordion-header" onclick="toggleAccordion('accordionSecoes')">
+            <span>Seções a atualizar</span>
+            <svg class="accordion-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3 5L7 9L11 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="accordion-content">
+            <div class="geral-group">
+              <label class="checkbox-field">
+                <input type="checkbox" id="settingSecaoAnatomia" checked>
+                <span>Anatomia</span>
+              </label>
+              <label class="checkbox-field">
+                <input type="checkbox" id="settingSecaoTabela" checked>
+                <span>Tabela de propriedades</span>
+              </label>
+              <label class="checkbox-field">
+                <input type="checkbox" id="settingSecaoVariacoes" checked>
+                <span>Variações</span>
+              </label>
+              <label class="checkbox-field">
+                <input type="checkbox" id="settingSecaoEstados" checked>
+                <span>Matriz de estados</span>
+              </label>
+            </div>
+            <div id="eixoYSection" style="display:none; flex-direction:column; gap:6px;">
+              <div class="section-label">Eixo Y da Matriz de Estados</div>
+              <div id="eixoYChips" class="chips-row"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
 
       <button id="action-btn" class="btn-action">Gerar Handoff</button>
 
@@ -685,7 +800,7 @@
     </div>
   </div>
 
-  <div class="footer" id="mainFooter" style="display:none;">DSC Handoff v2.1.0</div>
+  <div class="footer" id="mainFooter" style="display:none;">DSC Handoff v2.3.3</div>
 
   <script>
     const waitingState = document.getElementById('waitingState');
@@ -733,6 +848,83 @@
     const statusBar = document.getElementById('status');
     let _isUpdate = false;
     let _propsEixoY = [];
+    let _propsCsf = [];
+    let _currentCsfX = null;
+
+    function atualizarCsf(props, eixoXPadrao) {
+      _propsCsf = props || [];
+      const section = document.getElementById('csfSection');
+      if (!_propsCsf.length) { section.style.display = 'none'; return; }
+
+      _currentCsfX = eixoXPadrao || _propsCsf[0];
+      const containerX = document.getElementById('csfEixoXChips');
+      const containerY = document.getElementById('csfEixoYChips');
+      containerX.innerHTML = '';
+      containerY.innerHTML = '';
+
+      _propsCsf.forEach(function(nome) {
+        const chipX = document.createElement('span');
+        chipX.className = 'chip' + (nome === _currentCsfX ? ' on' : '');
+        chipX.textContent = nome;
+        chipX.onclick = function() { selecionarEixoX(nome); };
+        containerX.appendChild(chipX);
+      });
+
+      _propsCsf.forEach(function(nome) {
+        const chipY = document.createElement('span');
+        chipY.className = 'chip' + (nome !== _currentCsfX ? ' on' : '');
+        chipY.textContent = nome;
+        chipY.onclick = function() { clicarChipY(nome); };
+        containerY.appendChild(chipY);
+      });
+
+      const cbCsf = document.getElementById('settingIncluirComponente');
+      section.style.display = cbCsf.checked ? 'flex' : 'none';
+    }
+
+    function selecionarEixoX(novoNome) {
+      const antigoX = _currentCsfX;
+      if (novoNome === antigoX) return;
+      _currentCsfX = novoNome;
+      document.querySelectorAll('#csfEixoXChips .chip').forEach(function(c) {
+        c.classList.toggle('on', c.textContent === novoNome);
+      });
+      document.querySelectorAll('#csfEixoYChips .chip').forEach(function(c) {
+        if (c.textContent === novoNome) c.classList.remove('on');
+        if (c.textContent === antigoX) c.classList.add('on');
+      });
+    }
+
+    function clicarChipY(nome) {
+      const chipY = Array.from(document.querySelectorAll('#csfEixoYChips .chip'))
+        .find(function(c) { return c.textContent === nome; });
+      if (!chipY) return;
+
+      if (nome === _currentCsfX) {
+        // Prop está no X — tentar swap com outra prop
+        const outroX = _propsCsf.find(function(p) { return p !== nome; });
+        if (outroX) {
+          selecionarEixoX(outroX); // libera este chip no Y e bloqueia outroX
+        } else {
+          // 1 única prop: inverter para Y (X vazio = layout vertical)
+          _currentCsfX = null;
+          document.querySelectorAll('#csfEixoXChips .chip').forEach(function(c) { c.classList.remove('on'); });
+          chipY.classList.add('on');
+        }
+        return;
+      }
+
+      chipY.classList.toggle('on');
+    }
+
+    function getCsfEixoX() {
+      const chip = document.querySelector('#csfEixoXChips .chip.on');
+      return chip ? chip.textContent : null;
+    }
+
+    function getCsfEixosY() {
+      return Array.from(document.querySelectorAll('#csfEixoYChips .chip.on')).map(function(c) { return c.textContent; });
+    }
 
     function atualizarEixoY(props) {
       _propsEixoY = props || [];
@@ -742,7 +934,7 @@
         section.style.display = 'none';
         return;
       }
-      section.style.display = '';
+      section.style.display = 'flex';
       container.innerHTML = '';
       props.forEach(function(nome, i) {
         const chip = document.createElement('span');
@@ -776,6 +968,15 @@
       }
     }
 
+    function toggleAccordion(id) {
+      document.getElementById(id).classList.toggle('open');
+    }
+
+    document.getElementById('settingIncluirComponente').addEventListener('change', function() {
+      const section = document.getElementById('csfSection');
+      section.style.display = (this.checked && _propsCsf.length) ? 'flex' : 'none';
+    });
+
     actionBtn.onclick = () => {
       const incluirComponente = document.getElementById('settingIncluirComponente').checked;
       const secoesAtualizar = [
@@ -786,6 +987,8 @@
       ].filter(([cb]) => cb.checked).map(([, nome]) => nome);
 
       const propsEixoYSelecionadas = getPropsEixoYSelecionadas();
+      const csfEixoX = incluirComponente ? getCsfEixoX() : null;
+      const csfEixosY = incluirComponente ? getCsfEixosY() : [];
       if (_isUpdate) {
         setLoading('Atualizando handoff...');
         parent.postMessage({ pluginMessage: {
@@ -797,6 +1000,8 @@
           secoesAtualizar,
           truePrimeiro: document.getElementById('settingTruePrimeiro').checked,
           propsEixoYSelecionadas,
+          csfEixoX,
+          csfEixosY,
         } }, '*');
       } else {
         setLoading('Gerando handoff...');
@@ -808,6 +1013,8 @@
           preencherDescricao: document.getElementById('settingPreencherDescricao').checked,
           truePrimeiro: document.getElementById('settingTruePrimeiro').checked,
           propsEixoYSelecionadas,
+          csfEixoX,
+          csfEixosY,
         } }, '*');
       }
     };
@@ -830,6 +1037,51 @@
     btnToggleSelecao.onclick = () =>
       parent.postMessage({ pluginMessage: { type: 'toggle-nomes-sections', escopo: 'selecao' } }, '*');
 
+    const nomesTemplateEl = document.getElementById('settingNomesTemplate');
+    nomesTemplateEl.addEventListener('change', () => {
+      const nomes = nomesTemplateEl.value.split('\n').map(s => s.trim()).filter(Boolean);
+      parent.postMessage({ pluginMessage: { type: 'salvar-nomes-template', nomes } }, '*');
+    });
+
+    const btnVarreduraTemplate = document.getElementById('btnVarreduraTemplate');
+    const varreduraResultado = document.getElementById('varreduraResultado');
+    btnVarreduraTemplate.onclick = () => {
+      btnVarreduraTemplate.disabled = true;
+      btnVarreduraTemplate.textContent = 'Varrendo...';
+      parent.postMessage({ pluginMessage: { type: 'rodar-varredura-template' } }, '*');
+    };
+
+    function renderVarreduraResultado(msg) {
+      btnVarreduraTemplate.disabled = false;
+      btnVarreduraTemplate.textContent = 'Rodar varredura';
+      varreduraResultado.style.display = 'block';
+      if (!msg.ok) {
+        varreduraResultado.innerHTML = '<div class="varredura-item falha">✗ ' + msg.mensagem + '</div>';
+        return;
+      }
+      varreduraResultado.innerHTML = msg.resultado.map(function(item) {
+        const classe = item.encontrado ? 'ok' : 'falha';
+        const icone = item.encontrado ? '✓' : '✗';
+        return '<div class="varredura-item ' + classe + '">' + icone + ' ' + item.nome + '</div>';
+      }).join('');
+    }
+
+    const btnLimparEdicoes = document.getElementById('btnLimparEdicoes');
+    const limparEdicoesResultado = document.getElementById('limparEdicoesResultado');
+    btnLimparEdicoes.onclick = () => {
+      btnLimparEdicoes.disabled = true;
+      btnLimparEdicoes.textContent = 'Limpando...';
+      parent.postMessage({ pluginMessage: { type: 'limpar-edicoes-preservadas' } }, '*');
+    };
+
+    function renderLimparEdicoesResultado(msg) {
+      btnLimparEdicoes.disabled = false;
+      btnLimparEdicoes.textContent = 'Limpar edições do handoff selecionado';
+      limparEdicoesResultado.style.display = 'block';
+      const classe = msg.ok ? 'ok' : 'falha';
+      const icone = msg.ok ? '✓' : '✗';
+      limparEdicoesResultado.innerHTML = '<div class="varredura-item ' + classe + '">' + icone + ' ' + msg.mensagem + '</div>';
+    }
 
     window.onmessage = (event) => {
       const msg = event.data.pluginMessage;
@@ -844,6 +1096,7 @@
         document.getElementById('action-btn').textContent = msg.isUpdate ? 'Atualizar Handoff' : 'Gerar Handoff';
         _isUpdate = msg.isUpdate || false;
         atualizarEixoY(msg.propsEixoY);
+        atualizarCsf(msg.propsCsf, msg.csfEixoXPadrao);
         return;
       }
       if (msg.type === 'estado-sections') {
@@ -854,6 +1107,18 @@
       if (msg.type === 'estado-sections-inicial') {
         atualizarBtnExtra(btnTogglePagina, msg.pagina);
         atualizarBtnExtra(btnToggleSelecao, msg.selecao);
+        return;
+      }
+      if (msg.type === 'nomes-template-carregados') {
+        nomesTemplateEl.value = msg.texto || '';
+        return;
+      }
+      if (msg.type === 'varredura-template-resultado') {
+        renderVarreduraResultado(msg);
+        return;
+      }
+      if (msg.type === 'limpar-edicoes-resultado') {
+        renderLimparEdicoesResultado(msg);
         return;
       }
       if (msg.type === 'progress') {

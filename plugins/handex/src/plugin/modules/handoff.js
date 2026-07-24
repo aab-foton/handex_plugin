@@ -240,7 +240,12 @@ ${(handoffData.createdFlows || []).length === 0
       // Antes de decidir o estado do modal, resgata do canvas a versão da
       // ficha mais recente já gerada (se houver) — o handoffData salvo no
       // plugin pode estar desatualizado em relação ao que está no board.
-      parent.postMessage({ pluginMessage: { type: 'pull-ficha-version-from-canvas' } }, '*');
+      // Envia o título atual para o backend escopar a busca só nas fichas
+      // deste projeto (evita pegar a versão de outro projeto na mesma página).
+      // Lê direto do campo (não de handoffData.step1.titulo) para garantir que
+      // está atualizado mesmo se o usuário editou o título e ainda não saiu do campo.
+      const _titulo = (document.getElementById('s1-titulo')?.value || handoffData.step1.titulo || '').trim();
+      parent.postMessage({ pluginMessage: { type: 'pull-ficha-version-from-canvas', titulo: _titulo } }, '*');
       window._pendingOpenInjectModal = true;
       // Rede de segurança: se a resposta não chegar (backend desatualizado,
       // falha inesperada na leitura do canvas), não deixa o botão travado —

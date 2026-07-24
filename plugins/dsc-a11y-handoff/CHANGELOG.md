@@ -1,5 +1,65 @@
 # Changelog — DSC A11Y Handoff
 
+## v2.3.2 — 2026-07-20
+
+### Bugfixes
+
+**Specs de leitor de tela não preenchiam Descrição/Observações/Nome Acessível/Notas de Código**
+
+O modelo de box das specs (`screen reader > all boxes > ...`) era localizado por nome exato `'box specs screem reader'`, mas o template novo renomeou esse nó para `'[a11y] Box specs LT'`. Como o lookup falhava silenciosamente, o bloco inteiro de preenchimento das specs virava no-op — nenhum campo era atualizado, sem erro no console, mesmo com o preview no canvas funcionando normalmente. Corrigido para aceitar o nome antigo ou qualquer nome contendo `'box specs'`. De brinde, o node de texto interno de cada campo (`fillField`) ganhou fallback por nome normalizado e por conteúdo placeholder (`'Texto'`), caso esse nó também seja renomeado no futuro.
+
+---
+
+## v2.3.1 — 2026-07-10
+
+### Bugfixes
+
+**Seleção travada em "Aguardando seleção" para o template novo**
+
+O default de `templateHandoffNames` (`code.ts`) estava com o nome errado (`[dsc-hub] Handoff Acessibility`, faltando "de" e com "Acessibility" em inglês) — o nome real do componente no Figma é `[dsc-hub] Handoff de Acessibilidade`. A comparação nunca batia, então o plugin não reconhecia nenhum handoff novo selecionado. Corrigido o default; quem já tinha customizado a lista em Configurações não foi afetado.
+
+**Nomes de nós internos do template novo desatualizados**
+
+Nove nomes de nós internos usados para clonar modelos (badges de numeração, conectores de leitor de tela, área de toque, dado de plugin) ainda apontavam para os nomes antigos (`[dsc-h]`/`[a11y]`) usados antes da migração de biblioteca. Como o lookup por nome falhava silenciosamente, os previews de tabulação, leitor de tela e toque paravam de numerar/conectar sem erro visível. Atualizado para os nomes atuais (`[dsc-hub] Item Number`, `[dsc-hub] Order`, `[dsc-hub] Touch areas`, `[dsc-hub] Touch Area Connector`, `[dsc-hub] Screen Reader Conector`, `[dsc-hub] Screen Reader Gruping`, `box specs screem reader`), preservando os nomes antigos no código que lê handoffs ainda não migrados.
+
+**Conector simples de leitor de tela resetava posição ao salvar**
+
+`append-sr-marker` (chamado ao confirmar um conector novo) tinha uma implementação de posicionamento diferente das outras duas funções que fazem a mesma coisa (`activate-sr-variation`, `run-handoff`) — não aplicava o `overlayProps` salvo nem redimensionava pro tamanho configurado, então o conector "pulava" de posição/orientação assim que salvo. Alinhado com a lógica das outras duas.
+
+**Frame de leitor de tela não redimensionava para caber conectores que extrapolam**
+
+O resize do frame de preview do leitor de tela considerava só a altura do componente, não a de conectores posicionados abaixo/fora dele (ex: conector "inferior"). Badges podiam ficar cortados fora do frame. Agora o resize usa a bounding-box real de todos os elementos (componente, badges, conectores, agrupamentos) — mesmo padrão já usado no frame de área de toque.
+
+**Specs de área de toque não preenchiam nome/número do elemento**
+
+O lookup de `Element name` (maiúsculo) dentro de cada linha de spec não batia com o nome real do nó no template novo (`element name`, minúsculo) — nome e número do badge ficavam sempre no placeholder ("0"/"Elemento"), mesmo com as dimensões preenchendo certo. Comparação passou a ser case-insensitive.
+
+**Label fixo "code property:" nas dimensões da spec de toque**
+
+No template antigo esse rótulo vinha de uma variante de componente; no novo virou texto estático, então nunca era substituído. Agora o plugin seta explicitamente `height:` na primeira linha e `width:` na segunda.
+
+---
+
+## v2.3.0 — 2026-07-08
+
+### Novidades
+
+**Nome do template de handoff configurável**
+
+O template de handoff foi renomeado (`[dsc-h] Template Handoff` → `[dsc-hub] Handoff Acessibility`) e migrado para uma biblioteca interna nova. Para essa mudança não quebrar handoffs antigos nem exigir alteração de código na próxima vez que o nome mudar, a detecção de seleção (`tentarTravarContexto`) agora usa uma lista de nomes aceitos (`templateHandoffNames`), com nome antigo e novo por padrão. A lista é editável em Configurações > "Nome do template" (textarea, um nome por linha), persistida em `figma.clientStorage`. Adicionar um nome novo não remove o reconhecimento dos antigos — handoffs já existentes continuam funcionando.
+
+O template novo é um componente individual, sem propriedade de variante — a validação de variante em `tentarTravarContexto` já lida com isso automaticamente (só dispara quando existe uma prop `VARIANT`, exclusiva dos handoffs antigos).
+
+A key usada no swap de migração (`run-handoff` → substituição de handoff antigo pelo novo template) foi atualizada para apontar para o `[dsc-hub] Handoff Acessibility` na biblioteca nova.
+
+### Bugfixes
+
+**Setting de sincronização de template nunca era persistido**
+
+A checkbox "Atualizar template ao gerar handoff" enviava `save-setting` para o `code.ts`, mas não havia handler para essa mensagem — o valor nunca era salvo nem restaurado ao reabrir o plugin. Adicionado handler genérico de `save-setting` que persiste em `figma.clientStorage` e restaura o valor via `setup-ui`.
+
+---
+
 ## v2.2.0 — 2026-06-12
 
 ### Novidades

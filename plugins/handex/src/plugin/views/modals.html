@@ -1566,6 +1566,14 @@
           <p id="import-measures-hint" class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug mt-0.5">Recria as anotações de medida no canvas para os frames que as possuem.</p>
         </div>
       </label>
+
+      <label id="import-opt-flows-label" class="flex items-start gap-3 p-3 border-2 border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:border-purple-300/60 transition-colors has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50/50 dark:has-[:checked]:bg-purple-900/10">
+        <input type="checkbox" id="import-opt-flows" class="mt-0.5 w-4 h-4 accent-purple-600 shrink-0">
+        <div class="flex-1">
+          <p class="text-[12px] font-bold text-slate-800 dark:text-white leading-tight">Recriar Fluxos</p>
+          <p id="import-flows-hint" class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug mt-0.5">Recria as conexões de fluxo no canvas, ligando novamente os elementos de origem e destino.</p>
+        </div>
+      </label>
     </div>
 
     <!-- Footer -->
@@ -1584,26 +1592,71 @@
 
 <!-- ── Modal: Confirmar limpeza de dados ─────────────────────────── -->
 <div id="confirm-clear-modal" role="dialog" aria-modal="true" class="modal-overlay hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-  <div class="modal-content bg-white dark:bg-dark-surface rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+  <div class="modal-content bg-white dark:bg-dark-surface rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center shrink-0">
         <i data-lucide="trash-2" class="w-5 h-5 text-red-500"></i>
       </div>
       <div>
-        <p class="text-[13px] font-bold text-slate-800 dark:text-white">Limpar todos os dados?</p>
-        <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5">Esta ação remove todo o progresso do projeto e não pode ser desfeita.</p>
+        <p class="text-[13px] font-bold text-slate-800 dark:text-white">Limpar dados do projeto</p>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5">Estas ações não podem ser desfeitas. Recomendamos fazer um backup antes.</p>
       </div>
     </div>
-    <div class="flex gap-2 pt-1">
-      <button onclick="closeModal('confirm-clear-modal')"
-        class="flex-1 py-2 rounded-2xl border border-gray-200 dark:border-dark-line text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
-        Cancelar
-      </button>
+
+    <!-- Backup -->
+    <button onclick="exportHandoffData()"
+      class="w-full flex items-center gap-2.5 py-2.5 px-3 rounded-2xl border border-blue-200 dark:border-blue-800/40 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-[11px] font-bold hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+      <i data-lucide="download" class="w-4 h-4 shrink-0"></i>
+      Baixar backup (JSON) antes de apagar
+    </button>
+
+    <!-- Bloco 1: dados internos do plugin -->
+    <div class="border border-gray-200 dark:border-dark-line rounded-2xl p-3.5 flex flex-col gap-2.5">
+      <p class="text-[11px] font-bold text-slate-700 dark:text-white">Apagar dados do plugin</p>
+      <p class="text-[10.5px] text-slate-500 dark:text-dark-muted leading-relaxed">Reseta o progresso salvo no Handex (frames, specs, medidas e fluxos registrados). Não remove nada do canvas do Figma.</p>
       <button onclick="confirmClearAllData()"
-        class="flex-1 py-2 rounded-2xl bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold transition-colors">
-        Sim, limpar tudo
+        class="w-full py-2 rounded-2xl bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold transition-colors">
+        Apagar dados do plugin
       </button>
     </div>
+
+    <!-- Bloco 2: conteúdo real do canvas -->
+    <div class="border border-gray-200 dark:border-dark-line rounded-2xl p-3.5 flex flex-col gap-2.5">
+      <div class="flex items-center justify-between">
+        <p class="text-[11px] font-bold text-slate-700 dark:text-white">Apagar conteúdo do canvas</p>
+        <button onclick="toggleSelectAllCanvasDelete()" class="text-[10px] font-bold text-[#0070af] hover:underline">Selecionar tudo</button>
+      </div>
+      <p class="text-[10.5px] text-slate-500 dark:text-dark-muted leading-relaxed">Remove de verdade os elementos criados pelo Handex no canvas do Figma (esta página). Escolha o que apagar:</p>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="flex items-center gap-2 text-[11px] text-slate-700 dark:text-white cursor-pointer">
+          <input type="checkbox" id="clear-canvas-ficha" onchange="updateClearCanvasButtonState()" class="w-4 h-4 rounded accent-red-500">
+          Ficha de Handoff
+        </label>
+        <label class="flex items-center gap-2 text-[11px] text-slate-700 dark:text-white cursor-pointer">
+          <input type="checkbox" id="clear-canvas-specs" onchange="updateClearCanvasButtonState()" class="w-4 h-4 rounded accent-red-500">
+          Specs
+        </label>
+        <label class="flex items-center gap-2 text-[11px] text-slate-700 dark:text-white cursor-pointer">
+          <input type="checkbox" id="clear-canvas-medidas" onchange="updateClearCanvasButtonState()" class="w-4 h-4 rounded accent-red-500">
+          Medidas
+        </label>
+        <label class="flex items-center gap-2 text-[11px] text-slate-700 dark:text-white cursor-pointer">
+          <input type="checkbox" id="clear-canvas-fluxos" onchange="updateClearCanvasButtonState()" class="w-4 h-4 rounded accent-red-500">
+          Fluxos
+        </label>
+      </div>
+
+      <button id="clear-canvas-submit-btn" onclick="confirmDeleteCanvasContent()" disabled
+        class="w-full py-2 rounded-2xl bg-red-500 hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-500 text-white text-[11px] font-bold transition-colors">
+        Apagar selecionados do canvas
+      </button>
+    </div>
+
+    <button onclick="closeModal('confirm-clear-modal')"
+      class="w-full py-2 rounded-2xl border border-gray-200 dark:border-dark-line text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+      Fechar
+    </button>
   </div>
 </div>
 

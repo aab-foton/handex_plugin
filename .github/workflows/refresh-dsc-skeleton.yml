@@ -1,0 +1,69 @@
+# Espelha o job refresh-dsc-skeleton do .gitlab-ci.yml (repo principal).
+# Migrado pra cá porque o runner de projeto do GitLab ("notebook-augusto-temp")
+# é uma máquina pessoal, marcada "Stale" -- jobs agendados ficavam presos na
+# fila sem executor disponível e estouravam timeout sem nem começar a rodar.
+# Runners hospedados do GitHub não dependem de nenhuma máquina específica.
+#
+# Busca style/component keys das libs DSC via REST API do Figma e regenera
+# o skeleton agregado. Se houver diferença, abre PR para revisão humana --
+# nunca push direto em main.
+name: refresh-dsc-skeleton
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # toda segunda, 09:00 UTC = 06:00 America/Sao_Paulo
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh-dsc-skeleton:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: plugins/handex
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instala dependencias
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: Busca refs da Figma + regenera skeleton
+        env:
+          FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
+        run: |
+          node src/plugin/refs/fetch-design-refs.cjs
+          node src/plugin/refs/build-skeleton.cjs
+
+      - name: Verifica se algo mudou
+        id: diff
+        run: |
+          if git diff --quiet -- src/plugin/refs/; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Abre PR
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.email "handex-bot@users.noreply.github.com"
+          git config user.name "Handex Skeleton Bot"
+          BRANCH="bot/dsc-skeleton-$(date -u +%Y%m%d-%H%M)"
+          git checkout -b "$BRANCH"
+          git add src/plugin/refs/
+          git commit -m "chore(handex/dsc): atualiza skeleton de referência ($(date -u +%Y-%m-%d))"
+          git push origin "$BRANCH"
+          gh pr create \
+            --title "chore(handex/dsc): atualização automática do skeleton — $(date -u +%Y-%m-%d)" \
+            --body "Atualização automática do skeleton de referência da DSC (\`src/plugin/refs/\`), buscado via REST API do Figma. Revisar o diff e aprovar se OK." \
+            --base main \
+            --head "$BRANCH"

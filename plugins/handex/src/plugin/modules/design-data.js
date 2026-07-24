@@ -55,6 +55,7 @@
             const nSpecs = nSpecsNormal + nA11ySpecs;
             const nMeasures = (handoffData.frames || []).reduce((s, f) => s + (f.measurements || []).length, 0);
             const nFlows = (handoffData.createdFlows || []).length;
+            const nFlowsRecreatable = (handoffData.createdFlows || []).filter(f => f.sourceId).length;
 
             const subtitle = document.getElementById('import-modal-subtitle');
             if (subtitle) subtitle.textContent = `${oldVersion} → ${newVersion} importado com sucesso.`;
@@ -98,6 +99,30 @@
               }
             }
 
+            const flowsLabel = document.getElementById('import-opt-flows-label');
+            const flowsInput = document.getElementById('import-opt-flows');
+            if (flowsLabel && flowsInput) {
+              if (nFlowsRecreatable === 0) {
+                flowsInput.disabled = true;
+                flowsLabel.classList.add('opacity-40', 'cursor-not-allowed');
+                const hint = document.getElementById('import-flows-hint');
+                if (hint) {
+                  hint.textContent = nFlows === 0
+                    ? 'Nenhum fluxo encontrado no JSON.'
+                    : `${nFlows} fluxo(s) no JSON, mas nenhum tem o vínculo com os elementos salvo (backup de uma versão anterior) -- não é possível recriar.`;
+                }
+              } else {
+                flowsInput.disabled = false;
+                flowsLabel.classList.remove('opacity-40', 'cursor-not-allowed');
+                const hint = document.getElementById('import-flows-hint');
+                if (hint) {
+                  hint.textContent = nFlowsRecreatable === nFlows
+                    ? `${nFlows} fluxo(s) encontrado(s) — serão recriados no canvas.`
+                    : `${nFlowsRecreatable} de ${nFlows} fluxo(s) podem ser recriados (os demais são de um backup mais antigo, sem vínculo salvo com os elementos).`;
+                }
+              }
+            }
+
             openModal('import-apply-modal');
             if (typeof _refreshIcons === 'function') _refreshIcons();
           } catch (err) {
@@ -116,8 +141,9 @@
       const doFicha = document.getElementById('import-opt-ficha')?.checked;
       const doSpecs = document.getElementById('import-opt-specs')?.checked;
       const doMeasures = document.getElementById('import-opt-measures')?.checked;
+      const doFlows = document.getElementById('import-opt-flows')?.checked;
 
-      if (!doFicha && !doSpecs && !doMeasures) {
+      if (!doFicha && !doSpecs && !doMeasures && !doFlows) {
         showToast('Nenhuma opção selecionada.');
         return;
       }
@@ -177,6 +203,32 @@
           count += frame.measurements.length;
         });
         if (count > 0) showToast(`${count} medida(s) sendo reaplicadas no canvas...`);
+      }
+
+      if (doFlows) {
+        const flows = handoffData.createdFlows || [];
+        let count = 0, skipped = 0;
+        flows.forEach(flow => {
+          // Fluxos sem sourceId vêm de um backup salvo antes desta marcação
+          // existir -- não há como saber quais elementos eles conectavam.
+          if (!flow.sourceId) { skipped++; return; }
+          parent.postMessage({
+            pluginMessage: {
+              type: 'recreate-flow-connection',
+              flowType: flow.type,
+              flowName: flow.name || '',
+              sourceId: flow.sourceId,
+              targetId: flow.targetId || null,
+              decisionText: flow.decisionText || '',
+              flowSide: flow.flowSide || 'auto',
+              nextFlowNumber: handoffData.nextFlowNumber || 1
+            }
+          }, '*');
+          handoffData.nextFlowNumber = (handoffData.nextFlowNumber || 1) + 1;
+          count++;
+        });
+        if (count > 0) showToast(`${count} fluxo(s) sendo recriados no canvas...`);
+        if (skipped > 0) showToast(`${skipped} fluxo(s) não puderam ser recriados (backup antigo, sem vínculo salvo com os elementos).`);
       }
     }
 
@@ -257,6 +309,37 @@
       if (typeof a11ySpecs !== 'undefined') a11ySpecs.length = 0;
       if (typeof a11yAreas !== 'undefined') a11yAreas.length = 0;
       restoreUIFromState();
+      // Sem isso, o reset só vive na sessão atual -- o figma.clientStorage
+      // continua com os dados antigos e eles voltam ao reabrir o plugin.
+      saveToStorage();
       navigate('view-home');
-      showToast('Todos os dados foram removidos.');
+      showToast('Dados do plugin removidos.');
+    }
+
+    function toggleSelectAllCanvasDelete() {
+      const ids = ['clear-canvas-ficha', 'clear-canvas-specs', 'clear-canvas-medidas', 'clear-canvas-fluxos'];
+      const boxes = ids.map(id => document.getElementById(id)).filter(Boolean);
+      const allChecked = boxes.every(b => b.checked);
+      boxes.forEach(b => { b.checked = !allChecked; });
+      updateClearCanvasButtonState();
+    }
+
+    function updateClearCanvasButtonState() {
+      const ids = ['clear-canvas-ficha', 'clear-canvas-specs', 'clear-canvas-medidas', 'clear-canvas-fluxos'];
+      const anyChecked = ids.some(id => document.getElementById(id)?.checked);
+      const btn = document.getElementById('clear-canvas-submit-btn');
+      if (btn) btn.disabled = !anyChecked;
+    }
+
+    function confirmDeleteCanvasContent() {
+      const ficha = !!document.getElementById('clear-canvas-ficha')?.checked;
+      const specs = !!document.getElementById('clear-canvas-specs')?.checked;
+      const medidas = !!document.getElementById('clear-canvas-medidas')?.checked;
+      const fluxos = !!document.getElementById('clear-canvas-fluxos')?.checked;
+
+      if (!ficha && !specs && !medidas && !fluxos) return;
+
+      parent.postMessage({
+        pluginMessage: { type: 'delete-canvas-content', ficha, specs, medidas, fluxos }
+      }, '*');
     }

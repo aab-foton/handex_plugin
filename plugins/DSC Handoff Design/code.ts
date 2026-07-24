@@ -65,6 +65,66 @@ let _templateCompKey = "";
 /** Evita chamar loadAllPagesAsync múltiplas vezes por operação */
 let _estrategia3Tentada = false;
 
+/**
+ * Nomes de componente/instância reconhecidos como Template de Handoff (padrão de fábrica).
+ * Configurável em tempo de execução via UI — ver `_nomesTemplateReconhecidos`.
+ */
+const NOMES_TEMPLATE_PADRAO = ["[dsc-h] Template Handoff", "[dsc-hub] Handoff de Design"];
+
+/**
+ * Chave do componente master do template atual na biblioteca — fallback de fábrica
+ * usado quando ainda não há chave em memória/clientStorage (ex: primeira execução
+ * em um arquivo novo, sem instância do template na página).
+ */
+const CHAVE_TEMPLATE_PADRAO = "893c2104564ce88e90941a0c768f6a956af2f194";
+
+/** Lista efetiva de nomes reconhecidos (carregada do clientStorage na inicialização) */
+let _nomesTemplateReconhecidos: string[] = [...NOMES_TEMPLATE_PADRAO];
+
+/**
+ * Verifica se um nome de nó corresponde a algum dos nomes de template reconhecidos.
+ * Substitui a antiga checagem fixa em "[dsc-h] template handoff", permitindo múltiplos
+ * nomes (útil quando o template é renomeado sem quebrar handoffs já gerados).
+ */
+function ehNomeTemplateReconhecido(nome: string): boolean {
+  const alvo = nome.toLowerCase();
+  return _nomesTemplateReconhecidos.some(n => n.trim() && alvo.includes(n.trim().toLowerCase()));
+}
+
+/**
+ * Catálogo dos nomes literais de componentes internos que o code.ts procura dentro do
+ * template (via `buscarFilho`). Usado apenas pela ferramenta de dev "Varredura de nomes
+ * do template" para conferir se o template novo ainda contém essas estruturas.
+ */
+const NOMES_ESPERADOS_TEMPLATE = [
+  "table", "anatomy", "variants", "states",
+  "Property Table Row", "Cell 01", "Cell 02", "Cell 03",
+  "image", "specs", "element", "Element name", "Description",
+  "variant content", "variant card", "Subtitle",
+  "state names", "variant + card", "STATE", "NAME", "VALUE", "state matrix", "dark mode",
+  "Slot nativo", "Component Name",
+];
+
+/**
+ * Nomes procurados por substring (case-insensitive), diferente de `NOMES_ESPERADOS_TEMPLATE`
+ * que é conferido por nome exato via `buscarFilho`.
+ */
+const NOMES_ESPERADOS_TEMPLATE_SUBSTRING = ["[dsc-hub] Item Number"];
+
+/**
+ * Nomes reconhecidos para o badge de numeração da anatomia — o nome mudou de
+ * "[dsc-h] Item Number" para "[dsc-hub] Item Number" numa renomeação do template.
+ * Usado apenas ao ler handoffs JÁ EXISTENTES (gerados antes da troca); conteúdo fresco
+ * do template atual usa direto "[dsc-hub] item number".
+ */
+const NOMES_LEGADO_ITEM_NUMBER = ["[dsc-hub] item number", "[dsc-h] item number"];
+
+/** Verifica se um nome de nó corresponde ao badge de item number (nome atual ou legado) */
+function ehBadgeItemNumero(nome: string): boolean {
+  const alvo = nome.toLowerCase();
+  return NOMES_LEGADO_ITEM_NUMBER.some(n => alvo.includes(n));
+}
+
 /** Domínios de cada seção — usado para filtrar quais seções atualizar */
 const DOMINIO_SECOES: Record<string, string> = {
   table: "design",
@@ -108,9 +168,22 @@ figma.showUI(__html__, { width: UI_LARGURA, height: UI_ALTURA, title: "DSC Hando
 
 let _desbloqueado = false;
 
-// Avaliar seleção inicial e registrar listener de mudança
-avaliarSelecao();
-figma.on('selectionchange', () => { avaliarSelecao(); });
+/** Carrega os nomes de template reconhecidos salvos no clientStorage (se houver) e avisa a UI */
+async function carregarNomesTemplate(): Promise<void> {
+  const salvo = await figma.clientStorage.getAsync("dsc-handoff-nomesTemplate") as string | undefined;
+  if (salvo) {
+    const nomes = salvo.split("\n").map(s => s.trim()).filter(Boolean);
+    if (nomes.length) _nomesTemplateReconhecidos = nomes;
+  }
+  figma.ui.postMessage({ type: 'nomes-template-carregados', texto: _nomesTemplateReconhecidos.join("\n") });
+}
+
+// Carregar configurações, avaliar seleção inicial e registrar listener de mudança
+(async () => {
+  await carregarNomesTemplate();
+  avaliarSelecao();
+  figma.on('selectionchange', () => { avaliarSelecao(); });
+})();
 
 async function avaliarSelecao(): Promise<void> {
   const selecao = figma.currentPage.selection;
@@ -119,7 +192,7 @@ async function avaliarSelecao(): Promise<void> {
     return;
   }
   const noComponente = selecao.find(n =>
-    !(n.type === 'INSTANCE' && n.name.toLowerCase().includes('[dsc-h] template handoff'))
+    !(n.type === 'INSTANCE' && ehNomeTemplateReconhecido(n.name))
   );
   if (!noComponente) {
     if (!_desbloqueado) figma.ui.postMessage({ type: 'waiting-selection' });
@@ -131,7 +204,7 @@ async function avaliarSelecao(): Promise<void> {
     return;
   }
   const temTemplateOuHandoff = selecao.some(n =>
-    (n.type === 'INSTANCE' && n.name.toLowerCase().includes('[dsc-h] template handoff')) ||
+    (n.type === 'INSTANCE' && ehNomeTemplateReconhecido(n.name)) ||
     (n.type === 'FRAME' && n.name.toLowerCase().startsWith('[dsc] handoff:'))
   );
   if (!temTemplateOuHandoff) {
@@ -160,11 +233,21 @@ async function avaliarSelecao(): Promise<void> {
     })
     .map(k => limparNomePropriedade(k));
 
+  // Coletar props do Component Set para o seletor de eixos do formatador
+  const propsCsf = ehComponentSet(componentSet)
+    ? Object.keys((componentSet as ComponentSetNode).variantGroupProperties)
+    : [];
+  const csfEixoXPadrao = propsCsf.find(k =>
+    k.toLowerCase().includes('state') || k.toLowerCase().includes('status')
+  ) || propsCsf[0] || null;
+
   figma.ui.postMessage({
     type: 'selection-ready',
     componentName: nomeFormatado,
     isUpdate,
     propsEixoY,
+    propsCsf,
+    csfEixoXPadrao,
   });
 }
 
@@ -175,11 +258,9 @@ function enviarProgresso(mensagem: string): void {
   figma.ui.postMessage({ type: 'progress', message: mensagem });
 }
 
-/** Capitaliza a primeira letra de uma string (mantém o resto em minúsculas) */
+/** Retorna o nome do componente sem alterar o case original escrito pelo usuário */
 function capitalizar(texto: string): string {
-  if (!texto) return texto;
-  const lower = texto.toLowerCase();
-  return lower.charAt(0).toUpperCase() + lower.slice(1);
+  return texto;
 }
 
 /**
@@ -232,6 +313,23 @@ function buscarFilho(raiz: SceneNode, nome: string): SceneNode | null {
   if ("children" in raiz) {
     for (const filho of (raiz as any).children) {
       const encontrado = buscarFilho(filho, nome);
+      if (encontrado) return encontrado;
+    }
+  }
+  return null;
+}
+
+/**
+ * Busca recursiva por substring no nome (case-insensitive), usada pela varredura de dev
+ * para nós cujo nome real varia (ex: "[dsc-h] Item Number" + sufixo).
+ */
+function buscarFilhoSubstring(raiz: SceneNode, substring: string): SceneNode | null {
+  if (!raiz || raiz.removed) return null;
+  const alvo = substring.toLowerCase().trim();
+  if (raiz.name.toLowerCase().includes(alvo)) return raiz;
+  if ("children" in raiz) {
+    for (const filho of (raiz as any).children) {
+      const encontrado = buscarFilhoSubstring(filho, substring);
       if (encontrado) return encontrado;
     }
   }
@@ -349,7 +447,7 @@ function marcarTextoOriginal(noTexto: TextNode, chaveSemantica: string): void {
 
 /**
  * Fallback legado: extrai labels e subtítulos de uma seção de variações (sem pluginData).
- * Busca TextNodes em "Subtitle Variants" e "VALUE" para preservar edições.
+ * Busca TextNodes em "Subtitle Variants" (nome legado; atualmente "Subtitle") e "VALUE" para preservar edições.
  */
 function extrairLegadoVariants(secao: SceneNode, mapa: Map<string, string>): void {
   if (!("children" in secao)) return;
@@ -500,7 +598,7 @@ function tornarContainerVisivel(noTexto: TextNode, raizSecao: SceneNode): void {
 
 /**
  * Fallback: busca por nome da propriedade/elemento dentro da seção e aplica edições.
- * Percorre as linhas/elementos da seção procurando campos "Property Name" ou "Element name"
+ * Percorre as linhas/elementos da seção procurando campos "Cell 01" ou "Element name"
  * que correspondam ao nome semântico extraído da chave de edição.
  */
 async function buscarEAplicarPorNome(
@@ -510,14 +608,14 @@ async function buscarEAplicarPorNome(
 ): Promise<void> {
   if (!("children" in secao)) return;
 
-  // Percorrer recursivamente buscando containers com "Property Name" ou "Element name"
+  // Percorrer recursivamente buscando containers com "Cell 01" ou "Element name"
   async function percorrer(no: SceneNode): Promise<void> {
     if (chavesRestantes.size === 0) return;
     if (!("children" in no)) return;
     const frame = no as FrameNode;
 
     // Verificar se este nó é uma "linha" (tem Property Name ou Element name)
-    const noNome = buscarFilho(frame, "Property Name") || buscarFilho(frame, "Element name");
+    const noNome = buscarFilho(frame, "Cell 01") || buscarFilho(frame, "Element name");
     if (noNome) {
       const textoNome = buscarPrimeiroTexto(noNome);
       if (textoNome) {
@@ -531,11 +629,14 @@ async function buscarEAplicarPorNome(
           let noAlvo: TextNode | null = null;
 
           if (sufixo === "desc") {
-            noAlvo = buscarPrimeiroTexto(
-              buscarFilho(frame, "Property Description") || buscarFilho(frame, "Description") || frame
-            );
+            // Template atual (anatomy): descrição vive dentro da instância "[dsc-hub] Card Alert"
+            // (ver gerarSecaoAnatomia). "Cell 03"/"Description" são o formato legado (tabela/anatomy antigos).
+            const cardAlertRow = buscarFilhoSubstring(frame, "card alert") as InstanceNode | null;
+            noAlvo = cardAlertRow
+              ? coletarTextos(cardAlertRow).find(t => t.visible && t.name.toLowerCase() !== "title") || null
+              : buscarPrimeiroTexto(buscarFilho(frame, "Cell 03") || buscarFilho(frame, "Description") || frame);
           } else if (sufixo === "valor") {
-            noAlvo = buscarPrimeiroTexto(buscarFilho(frame, "Property Value") || frame);
+            noAlvo = buscarPrimeiroTexto(buscarFilho(frame, "Cell 02") || frame);
           }
 
           if (noAlvo && edicoes.has(chaveOrfa)) {
@@ -612,7 +713,7 @@ function extrairPosicoesBadges(secaoAnatomia: SceneNode): PosicaoBadge[] {
     let numero = -1;
     try {
       const props = badge.componentProperties;
-      for (const [chave, prop] of Object.entries(props)) {
+      for (const [_chave, prop] of Object.entries(props)) {
         if (prop.type === "TEXT") {
           numero = parseInt(prop.value as string, 10);
           break;
@@ -650,7 +751,7 @@ function extrairPosicoesBadges(secaoAnatomia: SceneNode): PosicaoBadge[] {
     if (!("children" in frame)) return;
     for (const filho of (frame as any).children) {
       const no = filho as SceneNode;
-      if (no.type === "INSTANCE" && no.name.toLowerCase().includes("[dsc-h] item number")) {
+      if (no.type === "INSTANCE" && ehBadgeItemNumero(no.name)) {
         extrairDeBadge(no as InstanceNode, nomeFrame);
       }
     }
@@ -665,7 +766,7 @@ function extrairPosicoesBadges(secaoAnatomia: SceneNode): PosicaoBadge[] {
       const no = filho as SceneNode;
       if (no.name.startsWith("preview-") && "children" in no) {
         percorrerFrame(no, no.name);
-      } else if (no.type === "INSTANCE" && no.name.toLowerCase().includes("[dsc-h] item number")) {
+      } else if (no.type === "INSTANCE" && ehBadgeItemNumero(no.name)) {
         extrairDeBadge(no as InstanceNode, "image");
       }
     }
@@ -683,105 +784,6 @@ function salvarPosicoesBadges(container: FrameNode, posicoes: PosicaoBadge[]): v
     return;
   }
   container.setPluginData("posicoesBadges", JSON.stringify(posicoes));
-}
-
-/**
- * Lê posições de badges persistidas no container do handoff.
- */
-function lerPosicoesBadges(container: FrameNode): PosicaoBadge[] {
-  try {
-    const json = container.getPluginData("posicoesBadges");
-    if (json) return JSON.parse(json) as PosicaoBadge[];
-  } catch {}
-  return [];
-}
-
-/**
- * Reaplica posições salvas de badges na anatomia recém-gerada.
- * Só aplica se o número total de badges não mudou (mesma estrutura).
- */
-function reaplicarPosicoesBadges(secaoAnatomia: SceneNode, posicoesSalvas: PosicaoBadge[]): boolean {
-  if (posicoesSalvas.length === 0) return false;
-
-  const frameImagem = buscarFilho(secaoAnatomia, "image") as FrameNode;
-  if (!frameImagem) return false;
-
-  // Coletar badges atuais com seu frame pai
-  const badgesAtuais: Array<{ badge: InstanceNode; framePai: string }> = [];
-
-  function coletarBadges(frame: SceneNode, nomeFrame: string): void {
-    if (!("children" in frame)) return;
-    for (const filho of (frame as any).children) {
-      const no = filho as SceneNode;
-      if (no.type === "INSTANCE" && no.name.toLowerCase().includes("[dsc-h] item number")) {
-        badgesAtuais.push({ badge: no as InstanceNode, framePai: nomeFrame });
-      } else if (no.name.startsWith("preview-") && "children" in no) {
-        coletarBadges(no, no.name);
-      }
-    }
-  }
-
-  coletarBadges(frameImagem, "image");
-
-  // Verificar se o número de badges é o mesmo
-  if (badgesAtuais.length !== posicoesSalvas.length) return false;
-
-  // Verificar compatibilidade de layout: o número de sub-frames deve ser o mesmo
-  // Ex: layout antigo com 2 sub-frames (preview-externos/internos) vs. novo com 1 (preview-unico)
-  const nomesSubFramesAtual = new Set<string>();
-  if ("children" in frameImagem) {
-    for (const f of (frameImagem as any).children) {
-      if ((f as SceneNode).name.startsWith("preview-")) nomesSubFramesAtual.add((f as SceneNode).name);
-    }
-  }
-  const nomesSubFramesSalvos = new Set(posicoesSalvas.map(p => p.framePai).filter(n => n.startsWith("preview-")));
-  if (nomesSubFramesAtual.size !== nomesSubFramesSalvos.size) return false;
-
-  // Mapear posições salvas por número
-  const mapaPosicoes = new Map<number, PosicaoBadge>();
-  for (const pos of posicoesSalvas) {
-    mapaPosicoes.set(pos.numero, pos);
-  }
-
-  // Aplicar posições
-  for (const { badge } of badgesAtuais) {
-    let numero = -1;
-    try {
-      const props = badge.componentProperties;
-      for (const [chave, prop] of Object.entries(props)) {
-        if (prop.type === "TEXT") {
-          numero = parseInt(prop.value as string, 10);
-          break;
-        }
-      }
-    } catch {}
-    if (numero < 0) {
-      const textoNo = buscarPrimeiroTexto(badge);
-      if (textoNo) numero = parseInt(textoNo.characters, 10);
-    }
-
-    const posSalva = mapaPosicoes.get(numero);
-    if (posSalva) {
-      badge.x = posSalva.x;
-      badge.y = posSalva.y;
-      // Reaplicar connector direction
-      if (posSalva.connector) {
-        try {
-          const props = badge.componentProperties;
-          const chaveConn = Object.keys(props).find(k =>
-            limparNomePropriedade(k).toLowerCase() === "connector"
-          );
-          if (chaveConn) badge.setProperties({ [chaveConn]: posSalva.connector });
-        } catch {}
-      }
-      // Reaplicar tamanho (conectores redimensionados)
-      try {
-        badge.resize(posSalva.largura, posSalva.altura);
-      } catch {}
-    }
-  }
-
-  return true;
 }
 
 // === UTILITÁRIOS DE COMPONENTES ===
@@ -838,7 +840,7 @@ function desvincularInstancia(no: SceneNode): FrameNode {
  */
 function desvincularTodasInstancias(no: SceneNode): SceneNode {
   const nomeLower = no.name.toLowerCase();
-  if (nomeLower.includes("[dsc] alert") || nomeLower.includes("[dsc-h]")) return no;
+  if (nomeLower.includes("[dsc] alert") || nomeLower.includes("[dsc-h]") || nomeLower.includes("[dsc-hub]")) return no;
 
   const desvinculado = no.type === "INSTANCE"
     ? (no as InstanceNode).detachInstance()
@@ -1083,11 +1085,6 @@ function temConteudoBaixoContraste(no: SceneNode): boolean {
   return baixoContraste > resultados.length / 2;
 }
 
-/** @deprecated Alias mantido por compatibilidade — usa temConteudoBaixoContraste */
-function temTextoBaixoContraste(no: SceneNode): boolean {
-  return temConteudoBaixoContraste(no);
-}
-
 /**
  * Retorna true se os fills indicam fundo transparente ou branco (sem background próprio visível).
  */
@@ -1187,23 +1184,36 @@ async function aplicarFundoEscuroCard(card: FrameNode, label?: TextNode | null):
  * Seta o mode dark da collection do handoff no card.
  * Usa "card background" + mode dark — para a seção dark mode da matriz/variações.
  */
-async function aplicarDarkModeHandoff(card: FrameNode): Promise<void> {
+async function aplicarDarkModeHandoff(card: FrameNode, label?: TextNode | null): Promise<void> {
   try {
     await aplicarFundoComVariable(card, 'card background');
+    if (label) await aplicarCorTextoComVariable(label, 'card text');
     const handoffDark = await buscarHandoffDarkMode();
     if (!handoffDark) return;
     try {
       card.setExplicitVariableModeForCollection(handoffDark.colecao, handoffDark.modeId);
-    } catch {
-      try {
-        card.setExplicitVariableModeForCollection(handoffDark.colecao.id, handoffDark.modeId);
-      } catch {}
-    }
+    } catch {}
   } catch {}
 }
 
 /** Cache de variables de cor (locais + importadas) */
 let _cacheVariablesPorNome: Map<string, Variable> | null = null;
+
+/** Nomes de variable já avisados como não encontrados nesta geração (evita notify duplicado) */
+let _avisosVariableFaltando: Set<string> = new Set();
+
+/**
+ * Notifica (uma vez por geração) que uma variable de cor esperada não foi encontrada.
+ * Motivo mais comum: a library de cores tem a variable, mas ainda não foi publicada
+ * (ou o arquivo atual não puxou a atualização da library ainda).
+ */
+function avisarVariableFaltando(nomeVariable: string): void {
+  if (_avisosVariableFaltando.has(nomeVariable)) return;
+  _avisosVariableFaltando.add(nomeVariable);
+  try {
+    figma.notify(`Variable "${nomeVariable}" não encontrada — publique a library de cores ou verifique o nome.`, { timeout: 6000 });
+  } catch {}
+}
 
 /**
  * Constrói cache de variables buscando locais e importadas (via collections de bound variables).
@@ -1211,6 +1221,7 @@ let _cacheVariablesPorNome: Map<string, Variable> | null = null;
  */
 async function construirCacheVariables(noReferencia?: SceneNode): Promise<void> {
   if (_cacheVariablesPorNome) return;
+  _avisosVariableFaltando = new Set();
   _cacheVariablesPorNome = new Map();
 
   try {
@@ -1225,7 +1236,7 @@ async function construirCacheVariables(noReferencia?: SceneNode): Promise<void> 
     // 2. Variables importadas — extrair IDs de bound variables do nó de referência
     if (noReferencia && figma.variables?.getVariableByIdAsync) {
       const varIds = new Set<string>();
-      function extrairVarIds(no: SceneNode): void {
+      const extrairVarIds = (no: SceneNode): void => {
         const bound = (no as any).boundVariables;
         if (bound) {
           for (const prop of Object.values(bound)) {
@@ -1238,7 +1249,7 @@ async function construirCacheVariables(noReferencia?: SceneNode): Promise<void> 
         if ('children' in no) {
           for (const filho of (no as any).children) extrairVarIds(filho as SceneNode);
         }
-      }
+      };
       extrairVarIds(noReferencia);
 
       // A partir das variables encontradas, carregar todas as variables de cada collection
@@ -1291,6 +1302,7 @@ async function aplicarCorTextoComVariable(textNode: TextNode, nomeVariable: stri
       paint = figma.variables.setBoundVariableForPaint(paint, 'color', variable);
       textNode.fills = [paint];
     } else {
+      avisarVariableFaltando(nomeVariable);
       textNode.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
     }
   } catch {
@@ -1306,6 +1318,7 @@ async function aplicarFundoComVariable(card: FrameNode, nomeVariable: string): P
       paint = figma.variables.setBoundVariableForPaint(paint, 'color', variable);
       card.fills = [paint];
     } else {
+      avisarVariableFaltando(nomeVariable);
       card.fills = [{ type: 'SOLID', color: { r: 0.15, g: 0.15, b: 0.15 } }];
     }
   } catch {
@@ -1354,7 +1367,7 @@ async function buscarModeDark(componentSet: ComponenteDocumentavel): Promise<{ c
     if (!figma.variables || !figma.variables.getVariableByIdAsync) return null;
 
     // Buscar um ID de variable nos fills do componente ou filhos
-    function extrairVariableIds(no: SceneNode): string[] {
+    const extrairVariableIds = (no: SceneNode): string[] => {
       const ids: string[] = [];
       const bound = (no as any).boundVariables;
       if (bound) {
@@ -1371,7 +1384,7 @@ async function buscarModeDark(componentSet: ComponenteDocumentavel): Promise<{ c
         }
       }
       return ids;
-    }
+    };
 
     // Tentar com defaultVariant do componentSet
     const varIds = extrairVariableIds(obterVariantePadrao(componentSet));
@@ -1680,9 +1693,9 @@ async function criarLinhaTabela(
   }
 
   // Busca resiliente de TextNodes (por nome → por posição → fallback recursivo)
-  let textoNome = buscarPrimeiroTexto(buscarFilho(linha, "Property Name") || (linha as any).children[0]);
-  let textoValor = buscarPrimeiroTexto(buscarFilho(linha, "Property Value") || (linha as any).children[1]);
-  let textoDesc = buscarPrimeiroTexto(buscarFilho(linha, "Property Description") || (linha as any).children[2]);
+  let textoNome = buscarPrimeiroTexto(buscarFilho(linha, "Cell 01") || (linha as any).children[0]);
+  let textoValor = buscarPrimeiroTexto(buscarFilho(linha, "Cell 02") || (linha as any).children[1]);
+  let textoDesc = buscarPrimeiroTexto(buscarFilho(linha, "Cell 03") || (linha as any).children[2]);
 
   if (!textoNome || !textoValor || !textoDesc) {
     const todosTextos = coletarTextos(linha);
@@ -1748,7 +1761,7 @@ async function criarCardVariacao(
   }
 
   // Remover placeholder de swap slot
-  const swapSlot = buscarFilho(card, "[base] Swap Slot");
+  const swapSlot = buscarFilho(card, "Slot nativo");
   if (swapSlot) swapSlot.remove();
 
   // Criar instância com props — VARIANT props via busca direta no ComponentSet,
@@ -1785,14 +1798,17 @@ async function criarCardVariacao(
     // Setar dark mode do componente na instância
     try {
       card.setExplicitVariableModeForCollection(modeDark.colecao, modeDark.modeId);
-    } catch {
-      try {
-        card.setExplicitVariableModeForCollection(modeDark.collectionId, modeDark.modeId);
-      } catch {}
-    }
+    } catch {}
 
     // Setar dark mode da collection do handoff no card
-    await aplicarDarkModeHandoff(card);
+    await aplicarDarkModeHandoff(card, label);
+
+    // Contraste WCAG — dark mode: componente escuro some no fundo escuro
+    try {
+      if (precisaFundoClaro(instancia)) {
+        await aplicarFundoEscuroCard(card, label);
+      }
+    } catch {}
   } else {
     // Light mode: verificar se componente claro some no fundo claro
     try {
@@ -2206,8 +2222,8 @@ function extrairDescricoesTabela(secaoTabela: SceneNode): Map<string, string> {
   for (const filho of tabela.children) {
     if (filho.name.toLowerCase().includes("header")) continue;
 
-    const noNome = buscarFilho(filho, "Property Name");
-    const noDesc = buscarFilho(filho, "Property Description");
+    const noNome = buscarFilho(filho, "Cell 01") || buscarFilho(filho, "Property Name");
+    const noDesc = buscarFilho(filho, "Cell 03") || buscarFilho(filho, "Property Description");
     if (!noNome || !noDesc) continue;
 
     const textoNome = buscarPrimeiroTexto(noNome);
@@ -2242,59 +2258,6 @@ function extrairDescricoesAnatomia(secaoAnatomia: SceneNode): Map<string, string
     }
   }
   return mapa;
-}
-
-/**
- * Reinjeta descrições manuais preservadas na tabela recém-gerada.
- */
-async function reinjetarDescricoesTabela(secaoTabela: SceneNode, dados: Map<string, string>): Promise<void> {
-  if (dados.size === 0 || !("children" in secaoTabela)) return;
-
-  const tabela = secaoTabela as FrameNode;
-  for (const filho of tabela.children) {
-    if (filho.name.toLowerCase().includes("header")) continue;
-
-    const noNome = buscarFilho(filho, "Property Name");
-    const noDesc = buscarFilho(filho, "Property Description");
-    if (!noNome || !noDesc) continue;
-
-    const textoNome = buscarPrimeiroTexto(noNome);
-    const textoDesc = buscarPrimeiroTexto(noDesc);
-    if (!textoNome || !textoDesc) continue;
-
-    const chave = textoNome.characters.trim();
-    if (dados.has(chave)) {
-      await carregarFontes(noDesc);
-      await aplicarTextoComNegrito(textoDesc, dados.get(chave)!);
-    }
-  }
-}
-
-/**
- * Reinjeta descrições manuais preservadas na anatomia recém-gerada.
- */
-async function reinjetarDescricoesAnatomia(secaoAnatomia: SceneNode, dados: Map<string, string>): Promise<void> {
-  if (dados.size === 0) return;
-
-  const frameSpecs = buscarFilho(secaoAnatomia, "specs") as FrameNode;
-  if (!frameSpecs || !("children" in frameSpecs)) return;
-
-  for (const filho of frameSpecs.children) {
-    const noNome = buscarFilho(filho, "Element name");
-    const noDesc = buscarFilho(filho, "Description");
-    if (!noNome || !noDesc) continue;
-
-    const textoNome = buscarPrimeiroTexto(noNome);
-    const textoDesc = buscarPrimeiroTexto(noDesc);
-    if (!textoNome || !textoDesc) continue;
-
-    const chave = textoNome.characters.trim();
-    if (dados.has(chave)) {
-      await carregarFontes(noDesc);
-      await aplicarTextoComNegrito(textoDesc, dados.get(chave)!);
-      if ("visible" in noDesc) (noDesc as any).visible = true;
-    }
-  }
 }
 
 /**
@@ -2502,7 +2465,7 @@ async function gerarSecaoVariacoes(
     secaoVariacoes.appendChild(secaoBruta);
     const secao = desvincularTodasInstancias(secaoBruta) as FrameNode;
 
-    const frameSubtitulo = buscarFilho(secao, "Subtitle Variants");
+    const frameSubtitulo = buscarFilho(secao, "Subtitle");
     const textoSubtitulo = frameSubtitulo ? buscarPrimeiroTexto(frameSubtitulo) : null;
     const nomeExibicao = capitalizar(grupo.nomeBase.replace(/^(show|has|display)\s+/i, ''));
     secao.name = `variant-section-${grupo.nomeBase}`;
@@ -2535,7 +2498,7 @@ async function gerarSecaoVariacoes(
     const secao = desvincularTodasInstancias(secaoBruta) as FrameNode;
     secao.name = `variant-section-${limparNomePropriedade(nomeProp)}`;
 
-    const frameSubtitulo = buscarFilho(secao, "Subtitle Variants");
+    const frameSubtitulo = buscarFilho(secao, "Subtitle");
     const textoSubtitulo = frameSubtitulo ? buscarPrimeiroTexto(frameSubtitulo) : null;
     if (textoSubtitulo) {
       const nomeExibicaoIndiv = capitalizar(limparNomePropriedade(nomeProp));
@@ -2789,7 +2752,7 @@ async function extrairElementosAnatomia(
 }
 
 /**
- * Configura um badge [dsc-h] Item Number: seta o número e o toggle de opcional.
+ * Configura um badge [dsc-hub] Item Number: seta o número e o toggle de opcional.
  * Se connectorOff = true, desativa o conector do badge.
  */
 async function configurarBadge(
@@ -3042,7 +3005,7 @@ async function gerarSecaoAnatomia(
   const alvoAnatomia = buscarFilho(container, "anatomy");
   if (!alvoAnatomia) return;
 
-  // Badges [dsc-h] são protegidos pelo desvincularTodasInstancias — permanecem instâncias
+  // Badges [dsc-h]/[dsc-hub] são protegidos pelo desvincularTodasInstancias — permanecem instâncias
   const secaoAnatomia = desvincularTodasInstancias(alvoAnatomia) as FrameNode;
 
   // --- Preview com badges ---
@@ -3055,7 +3018,7 @@ async function gerarSecaoAnatomia(
     const badgesTemplate: InstanceNode[] = [];
     if ("children" in frameImagem) {
       for (const filho of (frameImagem as any).children) {
-        if ((filho as SceneNode).name.toLowerCase().includes("[dsc-h] item number") && filho.type === "INSTANCE") {
+        if ((filho as SceneNode).name.toLowerCase().includes("[dsc-hub] item number") && filho.type === "INSTANCE") {
           badgesTemplate.push(filho as InstanceNode);
         }
       }
@@ -3072,11 +3035,17 @@ async function gerarSecaoAnatomia(
     // Extrair e classificar elementos
     elementos = await extrairElementosAnatomia(instanciaTemp, componentSet);
     if (elementos.length === 0) {
-      instanciaTemp.remove();
-      // Remover a seção inteira para não deixar anatomia vazia/quebrada
-      secaoAnatomia.remove();
-      console.warn("Anatomia: nenhum elemento encontrado — seção removida.");
-      return;
+      const tiposForma = new Set(["RECTANGLE", "ELLIPSE", "LINE", "VECTOR", "STAR", "POLYGON"]);
+      const ehComponenteForma = "children" in instanciaTemp
+        && (instanciaTemp as any).children.length > 0
+        && (instanciaTemp as any).children.every((f: SceneNode) => tiposForma.has(f.type));
+      if (!ehComponenteForma) {
+        instanciaTemp.remove();
+        secaoAnatomia.remove();
+        console.warn("Anatomia: nenhum elemento encontrado — seção removida.");
+        return;
+      }
+      // Componente puramente geométrico (ex: Divider) — mantém seção com preview sem badges
     }
     classificarElementos(elementos, instanciaTemp.width, instanciaTemp.height);
 
@@ -3114,7 +3083,7 @@ async function gerarSecaoAnatomia(
 
       if (temDoisGrupos) {
 
-        function criarFramePreview(nome: string, largura: number, altura: number): FrameNode {
+        const criarFramePreview = (nome: string, largura: number, altura: number): FrameNode => {
           const frame = figma.createFrame();
           frame.name = nome;
           frame.fills = [];
@@ -3122,7 +3091,7 @@ async function gerarSecaoAnatomia(
           frame.resize(largura, altura);
           frameImagem.appendChild(frame);
           return frame;
-        }
+        };
 
         if (naoCabeNoSubFrame) {
           // === VERTICAL: componente largo, empilhar previews ===
@@ -3206,10 +3175,10 @@ async function gerarSecaoAnatomia(
             const no = filho as SceneNode;
             const nomeLower = no.name.toLowerCase();
 
-            if ((nomeLower.includes("[dsc-h]") || nomeLower === "number") && no.type === "INSTANCE") {
+            if ((nomeLower.includes("[dsc-h]") || nomeLower.includes("[dsc-hub]") || nomeLower === "number") && no.type === "INSTANCE") {
               await configurarBadge(no as InstanceNode, i + 1, elem.ehOpcional, true);
             }
-            else if ((nomeLower.includes("[dsc-h]") || nomeLower === "number") && no.type !== "INSTANCE" && badgeMainComp) {
+            else if ((nomeLower.includes("[dsc-h]") || nomeLower.includes("[dsc-hub]") || nomeLower === "number") && no.type !== "INSTANCE" && badgeMainComp) {
               const badgeNovo = badgeMainComp.createInstance();
               const idx = (nomeElemento as FrameNode).children.indexOf(no);
               (nomeElemento as FrameNode).insertChild(idx >= 0 ? idx : 0, badgeNovo);
@@ -3230,7 +3199,13 @@ async function gerarSecaoAnatomia(
           }
         }
 
+        // Container de descrição: TextNode solto "Description", irmão da instância
+        // "[dsc-hub] Card Alert" dentro do item de anatomia. O plugin só controla o
+        // "Description" (texto puro com a referência de nested component, quando existe).
+        // O "Card Alert" é anotação 100% manual do designer — o plugin nunca escreve
+        // nele nem mexe na visibilidade; só precisa garantir que ele acompanha o clone.
         const descricao = buscarFilho(elementoItem, "Description");
+
         if (descricao) {
           const textoDesc = buscarPrimeiroTexto(descricao);
           if (textoDesc) {
@@ -3326,7 +3301,7 @@ async function popularMatrizEstados(
       card.resize(larguraCelula, card.height);
       card.layoutSizingVertical = "HUG";
 
-      const swapSlot = buscarFilho(card, "[base] Swap Slot");
+      const swapSlot = buscarFilho(card, "Slot nativo");
       if (swapSlot) swapSlot.remove();
 
       // Dark mode: setar mode do handoff no card
@@ -3336,6 +3311,7 @@ async function popularMatrizEstados(
 
       const tamanhosRender = opcoesSize.length > 0 ? opcoesSize : [null];
       let fundoEscuroAplicado = !!modeDark;
+      let fundoClaroAplicado = false;
 
       for (const tamanho of tamanhosRender) {
         const props: Record<string, any> = {
@@ -3372,11 +3348,7 @@ async function popularMatrizEstados(
         if (modeDark) {
           try {
             instancia.setExplicitVariableModeForCollection(modeDark.colecao, modeDark.modeId);
-          } catch {
-            try {
-              instancia.setExplicitVariableModeForCollection(modeDark.collectionId, modeDark.modeId);
-            } catch {}
-          }
+          } catch {}
         }
 
         // Contraste WCAG — light mode: componente claro some no fundo claro
@@ -3389,6 +3361,16 @@ async function popularMatrizEstados(
                 await aplicarFundoEscuroCard(card);
                 fundoEscuroAplicado = true;
               }
+            }
+          } catch {}
+        }
+
+        // Contraste WCAG — dark mode: componente escuro some no fundo escuro
+        if (modeDark && !fundoClaroAplicado) {
+          try {
+            if (precisaFundoClaro(instancia)) {
+              await aplicarFundoEscuroCard(card);
+              fundoClaroAplicado = true;
             }
           } catch {}
         }
@@ -3779,7 +3761,11 @@ function preencherDescricaoComponente(componentSet: ComponenteDocumentavel): voi
  * Reorganiza os variants por estado (colunas) × demais propriedades (linhas),
  * cria um frame com título, labels laterais e cabeçalho de colunas.
  */
-async function formatarComponenteSet(componentSet: ComponenteDocumentavel): Promise<void> {
+async function formatarComponenteSet(
+  componentSet: ComponenteDocumentavel,
+  csfEixoX?: string | null,
+  csfEixosY?: string[]
+): Promise<void> {
   const isComponentSet = componentSet.type === 'COMPONENT_SET';
   const target = componentSet as ComponentSetNode | ComponentNode;
 
@@ -3866,9 +3852,15 @@ async function formatarComponenteSet(componentSet: ComponenteDocumentavel): Prom
   if (isComponentSet) {
     const allProps = (target as ComponentSetNode).variantGroupProperties;
     const propKeys = Object.keys(allProps);
-    colProp = propKeys.find(k => k.toLowerCase().includes('state') || k.toLowerCase().includes('status')) || propKeys[0];
-    const rowPropsKeys = propKeys.filter(k => k !== colProp);
-    colValues = allProps[colProp].values;
+    const colPropAuto = propKeys.find(k => k.toLowerCase().includes('state') || k.toLowerCase().includes('status')) || propKeys[0];
+    colProp = csfEixoX === null
+      ? null
+      : (csfEixoX && propKeys.includes(csfEixoX)) ? csfEixoX : colPropAuto;
+    const rowPropsKeysFull = propKeys.filter(k => k !== colProp);
+    const rowPropsKeys = (csfEixosY && csfEixosY.length > 0)
+      ? rowPropsKeysFull.filter(k => csfEixosY.includes(k))
+      : rowPropsKeysFull;
+    colValues = colProp ? allProps[colProp].values : ["default"];
     const rowPropsObj: Record<string, string[]> = {};
     for (const rk of rowPropsKeys) rowPropsObj[rk] = allProps[rk].values;
     rowCombinations = produtoCartesiano(rowPropsObj);
@@ -4007,15 +3999,17 @@ async function formatarComponenteSet(componentSet: ComponenteDocumentavel): Prom
   bodyContainer.appendChild(sideLabels);
   sideLabels.layoutSizingHorizontal = 'HUG';
 
-  const headerHeight = 60;
+  const headerHeight = colProp ? 60 : 0;
 
-  const spacer = figma.createFrame();
-  spacer.name = "Spacer";
-  spacer.fills = [];
-  sideLabels.appendChild(spacer);
-  spacer.resize(250, headerHeight);
-  spacer.layoutSizingHorizontal = 'FILL';
-  spacer.layoutSizingVertical = 'FIXED';
+  if (headerHeight > 0) {
+    const spacer = figma.createFrame();
+    spacer.name = "Spacer";
+    spacer.fills = [];
+    sideLabels.appendChild(spacer);
+    spacer.resize(250, headerHeight);
+    spacer.layoutSizingHorizontal = 'FILL';
+    spacer.layoutSizingVertical = 'FIXED';
+  }
 
   for (let i = 0; i < rowCombinations.length; i++) {
     const wrapper = figma.createFrame();
@@ -4043,30 +4037,32 @@ async function formatarComponenteSet(componentSet: ComponenteDocumentavel): Prom
   mainContent.counterAxisSizingMode = 'AUTO';
   bodyContainer.appendChild(mainContent);
 
-  const headerRow = figma.createFrame();
-  headerRow.name = "Header Row";
-  headerRow.layoutMode = 'HORIZONTAL';
-  headerRow.itemSpacing = 0;
-  headerRow.fills = [];
-  headerRow.resize(setWidth, headerHeight);
-  mainContent.appendChild(headerRow);
+  if (headerHeight > 0) {
+    const headerRow = figma.createFrame();
+    headerRow.name = "Header Row";
+    headerRow.layoutMode = 'HORIZONTAL';
+    headerRow.itemSpacing = 0;
+    headerRow.fills = [];
+    headerRow.resize(setWidth, headerHeight);
+    mainContent.appendChild(headerRow);
 
-  for (let i = 0; i < colValues.length; i++) {
-    const hWrapper = figma.createFrame();
-    hWrapper.name = "Col Wrapper";
-    hWrapper.fills = [];
-    hWrapper.layoutMode = 'HORIZONTAL';
-    hWrapper.primaryAxisAlignItems = 'CENTER';
-    hWrapper.counterAxisAlignItems = 'CENTER';
-    headerRow.appendChild(hWrapper);
-    hWrapper.resize(colWidths[i], headerHeight);
-    hWrapper.layoutSizingHorizontal = 'FILL';
+    for (let i = 0; i < colValues.length; i++) {
+      const hWrapper = figma.createFrame();
+      hWrapper.name = "Col Wrapper";
+      hWrapper.fills = [];
+      hWrapper.layoutMode = 'HORIZONTAL';
+      hWrapper.primaryAxisAlignItems = 'CENTER';
+      hWrapper.counterAxisAlignItems = 'CENTER';
+      headerRow.appendChild(hWrapper);
+      hWrapper.resize(colWidths[i], headerHeight);
+      hWrapper.layoutSizingHorizontal = 'FILL';
 
-    const hLabel = figma.createText();
-    hLabel.characters = colValues[i];
-    await aplicarEstilo(hLabel, labelStyle, CSF_ID_VARIAVEL_LABEL, { family: "Roboto", style: "Bold" }, 14);
-    hLabel.textAlignHorizontal = 'CENTER';
-    hWrapper.appendChild(hLabel);
+      const hLabel = figma.createText();
+      hLabel.characters = colValues[i];
+      await aplicarEstilo(hLabel, labelStyle, CSF_ID_VARIAVEL_LABEL, { family: "Roboto", style: "Bold" }, 14);
+      hLabel.textAlignHorizontal = 'CENTER';
+      hWrapper.appendChild(hLabel);
+    }
   }
 
   const setWrapper = figma.createFrame();
@@ -4115,7 +4111,7 @@ figma.ui.onmessage = async (msg) => {
       let templateSelecionado: InstanceNode | undefined;
       let noComponente: SceneNode | undefined;
       for (const no of selecao) {
-        if (no.type === "INSTANCE" && no.name.toLowerCase().includes("[dsc-h] template handoff")) {
+        if (no.type === "INSTANCE" && ehNomeTemplateReconhecido(no.name)) {
           templateSelecionado = no as InstanceNode;
         } else if (!noComponente) {
           noComponente = no;
@@ -4136,7 +4132,7 @@ figma.ui.onmessage = async (msg) => {
 
       // Formatar Component Set antes de qualquer trabalho no handoff
       if (msg.incluirComponente) {
-        await formatarComponenteSet(componentSet);
+        await formatarComponenteSet(componentSet, msg.csfEixoX as string | null | undefined, msg.csfEixosY as string[] | undefined);
       }
 
       // Capturar key do template selecionado para uso em resolverTemplate
@@ -4174,7 +4170,7 @@ figma.ui.onmessage = async (msg) => {
       let templateSelecionado: InstanceNode | undefined;
       let noComponente: SceneNode | undefined;
       for (const no of selecao) {
-        if (no.type === "INSTANCE" && no.name.toLowerCase().includes("[dsc-h] template handoff")) {
+        if (no.type === "INSTANCE" && ehNomeTemplateReconhecido(no.name)) {
           templateSelecionado = no as InstanceNode;
         } else if (!noComponente) {
           noComponente = no;
@@ -4197,7 +4193,7 @@ figma.ui.onmessage = async (msg) => {
         // tornando as posições antigas inválidas; a anatomia vai recalcular posições corretas
         const handoffParaLimpar = buscarHandoffExistente(componentSet);
         if (handoffParaLimpar) handoffParaLimpar.setPluginData("posicoesBadges", "");
-        await formatarComponenteSet(componentSet);
+        await formatarComponenteSet(componentSet, msg.csfEixoX as string | null | undefined, msg.csfEixosY as string[] | undefined);
       }
 
       const handoffExistente = buscarHandoffExistente(componentSet);
@@ -4235,7 +4231,6 @@ figma.ui.onmessage = async (msg) => {
       const testTemplate = await resolverTemplate(templateCompId);
       if (testTemplate) {
         testTemplate.remove();
-      } else {
       }
 
       const modo = msg.mode || 'complete';
@@ -4361,6 +4356,50 @@ figma.ui.onmessage = async (msg) => {
       selecao: sectionsSelecao.some(s => s.getPluginData('dschNomeOriginal') !== ''),
     });
   }
+
+  /** Salva a lista de nomes de template reconhecidos configurada na UI */
+  if (msg.type === 'salvar-nomes-template') {
+    const nomes = (Array.isArray(msg.nomes) ? msg.nomes as string[] : [])
+      .map(n => n.trim()).filter(Boolean);
+    _nomesTemplateReconhecidos = nomes.length ? nomes : [...NOMES_TEMPLATE_PADRAO];
+    await figma.clientStorage.setAsync("dsc-handoff-nomesTemplate", _nomesTemplateReconhecidos.join("\n"));
+  }
+
+  /** DEV (TEMPORÁRIO) — roda a varredura de nomes do template e devolve o resultado pra UI */
+  if (msg.type === 'rodar-varredura-template') {
+    const resultado = await varrerNomesTemplate();
+    figma.ui.postMessage({ type: 'varredura-template-resultado', ...resultado });
+  }
+
+  /**
+   * DEV (TEMPORÁRIO) — limpa o backup de edições manuais preservadas (persistido via pluginData
+   * em `edicoesManuais::<secao>`) do handoff selecionado. Usado para corrigir handoffs com
+   * conteúdo travado por edições antigas incorretas (ex: bug de pareamento nome/descrição na
+   * anatomia) que ficam sendo reinjetadas a cada atualização mesmo após o bug ser corrigido.
+   * Requer selecionar o FRAME "[dsc] handoff: ..." (não o componente).
+   */
+  if (msg.type === 'limpar-edicoes-preservadas') {
+    const selecao = figma.currentPage.selection;
+    const handoffFrame = selecao.find(n =>
+      n.type === 'FRAME' && n.name.toLowerCase().startsWith('[dsc] handoff:')
+    ) as FrameNode | undefined;
+    if (!handoffFrame) {
+      figma.ui.postMessage({
+        type: 'limpar-edicoes-resultado',
+        ok: false,
+        mensagem: 'Selecione o FRAME "[dsc] handoff: ..." (o handoff gerado, não o componente original).',
+      });
+      return;
+    }
+    for (const secao of SECOES_GERAVEIS) {
+      handoffFrame.setPluginData(`edicoesManuais::${secao}`, "");
+    }
+    figma.ui.postMessage({
+      type: 'limpar-edicoes-resultado',
+      ok: true,
+      mensagem: `Backup de edições preservadas limpo em "${handoffFrame.name}". Rode "Atualizar" nesse handoff pra ver o conteúdo fresco.`,
+    });
+  }
 };
 
 /**
@@ -4405,17 +4444,57 @@ async function resolverTemplate(templateCompId: string, templateCompKey = ""): P
     }
   }
 
+  // Estratégia 1d: chave padrão de fábrica (primeira execução, sem nada em memória/clientStorage)
+  if (!chave) {
+    try {
+      const comp = await figma.importComponentByKeyAsync(CHAVE_TEMPLATE_PADRAO);
+      const inst = comp.createInstance();
+      inst.visible = false;
+      _templateCompKey = CHAVE_TEMPLATE_PADRAO;
+      figma.clientStorage.setAsync("dsc-handoff-templateCompKey", CHAVE_TEMPLATE_PADRAO);
+      return inst;
+    } catch (_e) { /* continua */ }
+  }
+
   // Estratégia 2: buscar instância na página atual (percorre Sections)
   const instanciaPagina = buscarNaPagina(n =>
-    n.type === "INSTANCE" && n.name.toLowerCase().includes("[dsc-h] template handoff")
+    n.type === "INSTANCE" && ehNomeTemplateReconhecido(n.name)
   ) as InstanceNode | null;
   if (instanciaPagina) {
     const clone = (instanciaPagina as InstanceNode).clone();
     clone.visible = false;
+    // Chave em memória/clientStorage estava desatualizada (ex: template renomeado na biblioteca).
+    // Atualiza com a chave fresca pra parar de tentar importar a chave morta nas próximas vezes.
+    const compAtualizado = await clone.getMainComponentAsync();
+    if (compAtualizado?.key && compAtualizado.key !== chave) {
+      _templateCompKey = compAtualizado.key;
+      figma.clientStorage.setAsync("dsc-handoff-templateCompKey", compAtualizado.key);
+    }
     return clone;
   }
 
   return null;
+}
+
+/**
+ * DEV (TEMPORÁRIO) — Varre o template resolvido e confere se os nomes literais que o
+ * code.ts procura (`NOMES_ESPERADOS_TEMPLATE` / `NOMES_ESPERADOS_TEMPLATE_SUBSTRING`)
+ * ainda existem nele. Não depende de seleção — usa as mesmas estratégias de `resolverTemplate`.
+ */
+async function varrerNomesTemplate(): Promise<{ ok: boolean; mensagem?: string; resultado?: { nome: string; encontrado: boolean }[] }> {
+  const instancia = await resolverTemplate("");
+  if (!instancia) {
+    return { ok: false, mensagem: "Nenhum template encontrado (verifique os nomes reconhecidos em Configurações ou coloque uma instância na página)." };
+  }
+  try {
+    const resultado = [
+      ...NOMES_ESPERADOS_TEMPLATE.map(nome => ({ nome, encontrado: !!buscarFilho(instancia, nome) })),
+      ...NOMES_ESPERADOS_TEMPLATE_SUBSTRING.map(nome => ({ nome, encontrado: !!buscarFilhoSubstring(instancia, nome) })),
+    ];
+    return { ok: true, resultado };
+  } finally {
+    instancia.remove();
+  }
 }
 
 // === FUNÇÃO PRINCIPAL ===
@@ -4439,15 +4518,13 @@ async function gerarDocumentoHandoff(
   modo: string = 'complete',
   opcoes: { incluirComponente?: boolean; preencherDescricao?: boolean; truePrimeiro?: boolean; propsEixoYSelecionadas?: string[] } = {}
 ): Promise<boolean> {
-  const gerarDesign = modo === 'complete' || modo === 'design';
-
   // --- Localizar e preparar o template ---
   const instanciaTemplate = templateOverride || buscarNaPagina(n =>
-    n.type === "INSTANCE" && n.name.toLowerCase().includes("[dsc-h] template handoff")
+    n.type === "INSTANCE" && ehNomeTemplateReconhecido(n.name)
   ) as InstanceNode;
 
   if (!instanciaTemplate) {
-    figma.ui.postMessage({ type: 'status', status: 'error', message: "Coloque uma instância do template '[dsc-h] Template Handoff' na página." });
+    figma.ui.postMessage({ type: 'status', status: 'error', message: "Coloque uma instância do Template Handoff na página (veja os nomes reconhecidos em Configurações)." });
     return false;
   }
 

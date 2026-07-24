@@ -1,5 +1,65 @@
 # Changelog
 
+## v2.3.3 — 2026-07-22
+
+### Correções
+
+- **Nested component aparecia dentro do Card Alert (caixa), invertendo o padrão de anotação da anatomia** — o template atual tem dois nós irmãos por elemento: "Description" (texto puro, controlado pelo plugin) e a instância `[dsc-hub] Card Alert` (anotação 100% manual do designer). Desde a v2.3.2, um branch de fallback passou a escrever `"Nested Component: X"` dentro do Card Alert e a alternar sua visibilidade conforme a propriedade, quando na verdade o Card Alert nunca deveria ser tocado pelo código. Removido esse branch; agora só o "Description" é gerenciado automaticamente, e o Card Alert é sempre clonado intacto com o conteúdo que o designer escreveu.
+
+## v2.3.2 — 2026-07-15
+
+### Correções
+
+- **Description da anatomia não era escrita para elementos aninhados** — o template trocou o container "Description" pela instância `[dsc-hub] Card Alert`, mas o código ainda procurava pelo container antigo (nome exato "Description"), então o texto "Nested Component: X" nunca substituía o placeholder do template. Corrigido tanto na geração quanto no fallback de reinjeção de edições manuais (`buscarEAplicarPorNome`), que tinha o mesmo problema.
+- **Edições manuais antigas incorretas ficavam presas em handoffs já gerados** — um backup de "edições preservadas" contaminado por um bug anterior de pareamento nome/descrição na anatomia era reinjetado a cada atualização, sobrescrevendo o conteúdo correto recém-gerado. Adicionada ferramenta de dev (Extras, oculta por padrão) pra limpar esse backup por handoff sem precisar descartar todas as edições manuais dele.
+
+## v2.3.1 — 2026-07-13
+
+### Correções
+
+- **Nome do componente perdia o case original** — o título do handoff sempre forçava o nome para minúsculas com só a primeira letra maiúscula (ex: "FAQ" virava "Faq"). Agora o nome é usado exatamente como escrito no Component Set.
+- **Token de texto não trocava no dark mode dos cards de preview** — nos cards de variação com fundo escuro, só o fundo (`card background`) trocava de token; o label (ex: "TRUE - Dark") continuava vinculado ao token de texto do modo claro, ficando com baixo contraste. Agora `card text` também é aplicado ao label.
+
+### Manutenção
+
+- Limpeza de lint: removidas 5 funções mortas e 1 variável não usada, `no-empty` liberado para `catch {}` (padrão intencional do plugin), 3 funções internas movidas para a raiz do escopo, e removidos 3 fallbacks deprecados de `setExplicitVariableModeForCollection`.
+
+## v2.3.0 — 2026-07-09
+
+### Novidades
+
+- **Nomes de template configuráveis** — campo "Nome do template" no painel de Configurações permite cadastrar múltiplos nomes reconhecidos como Template de Handoff (um por linha). Se o template for renomeado no arquivo, basta adicionar o nome novo ali; não precisa remover o antigo, e handoffs já gerados continuam funcionando.
+- **Varredura de nomes do template (dev, temporário)** — card em Configurações que confere se os nomes literais que o `code.ts` procura dentro do template (Property Table Row, Cell 01/02/03, Subtitle, Slot nativo, badge de item number, etc.) ainda existem no template atual, sem depender de seleção.
+- **Chave de fábrica do template** — fallback de biblioteca (`CHAVE_TEMPLATE_PADRAO`) usado quando ainda não há nada em memória/clientStorage, útil na primeira execução em um arquivo novo.
+
+### Correções
+
+- **Template renomeado quebrava a detecção** — o plugin dependia de um nome fixo (`[dsc-h] Template Handoff`) e de uma chave de componente que ficou obsoleta após o template ser renomeado para `[dsc-hub] Handoff de Design`, causando erro 404 ao importar da biblioteca. Agora a chave é atualizada automaticamente assim que o template é resolvido por nome.
+- **Componentes internos do template renomeados** — `Property Name/Value/Description` → `Cell 01/02/03`, `Subtitle Variants` → `Subtitle`, `[base] Swap Slot` → `Slot nativo`, `[dsc-h] Item Number` → `[dsc-hub] Item Number`. Leitura de handoffs já existentes (gerados com os nomes antigos) mantém fallback de compatibilidade.
+- **Badges de numeração perdiam a instância** — a proteção contra "achatamento" de instâncias (`desvincularTodasInstancias`) e a montagem do badge na anatomia dependiam do prefixo `[dsc-h]`, que não cobre `[dsc-hub]`. Ambos os prefixos agora são reconhecidos.
+- **Contraste no dark mode não trocava o fundo do card** — regressão do commit `c03d5ae` (23/03): a checagem que troca o fundo para "card background 2" quando o componente fica escuro-demais no fundo escuro da matriz/variações tinha sido removida ao separar `aplicarModeHandoff` em duas funções. Reintegrada em `criarCardVariacao` e `popularMatrizEstados`.
+
+## v2.2.0 — 2026-07-03
+
+### Novidades
+
+- **Seletor de eixos X e Y para o Formatar Component Set** — ao marcar "Formatar Component Set na página", o plugin exibe chips interativos para escolher qual propriedade vai nas colunas (eixo X) e quais vão nas linhas (eixo Y). A seleção padrão usa a propriedade "state"/"status" como X e as demais como Y.
+- **Layout vertical para componentes com 1 propriedade** — quando o Component Set tem apenas uma prop, é possível movê-la para o eixo Y (clicando no chip que está desabilitado no eixo Y), gerando um layout em coluna em vez de linha.
+- **Accordions na UI** — as seções "Component Set" e "Seções a atualizar" agora são accordions colapsáveis, deixando a interface mais compacta e organizada.
+- **Target `release` no Makefile** — `make release VERSION=x.y.z` compila, commita e envia para GitHub e GitLab em um único comando.
+
+### Melhorias de UX
+
+- Chips do eixo X e Y do Component Set são totalmente interativos nos dois sentidos: clicar no X troca o prop e libera o anterior no Y; clicar num chip "off" no Y faz swap automático com o X atual.
+- Removido o estado "disabled" visual dos chips do Y — props bloqueadas pelo X aparecem apenas como não selecionadas (cinza normal), sem aparência acinzentada diferente.
+- Fallback defensivo no seletor de eixos: se o padrão de X não for detectado, o primeiro prop disponível é selecionado automaticamente.
+
+### Correções
+
+- **Bug: X ficava vazio com múltiplas props** — clicar no chip desabilitado do Y com 2+ props deselecionava o X indevidamente. Corrigido para fazer swap apenas quando há exatamente 1 prop.
+
+---
+
 ## v2.1.0 — 2026-06-03
 
 ### Novidades

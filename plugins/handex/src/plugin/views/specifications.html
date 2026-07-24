@@ -1,13 +1,13 @@
 <!-- VIEW: SPECIFICATIONS -->
     <main id="view-specifications" class="view flex p-0 flex-col h-full overflow-hidden">
       <!-- Header -->
-      <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex flex-col shrink-0">
+      <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex flex-col shrink-0 shadow-md">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2 min-w-0">
             <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial" class="p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
               <i data-lucide="arrow-left" class="w-4 h-4 text-white" aria-hidden="true"></i>
             </button>
-            <h2 class="text-white font-bold text-[18px] truncate min-w-0">Especificações</h2>
+            <h2 class="text-white font-bold text-[18px] truncate min-w-0">Anotar Specs</h2>
             <button type="button" onclick="openSpecsGuideHelp()"
               class="w-4 h-4 flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
               title="Ver guia de categorias" aria-label="Ver guia de categorias de especificação">
@@ -45,7 +45,7 @@
       </div>
 
       <!-- Scrollable content -->
-      <div id="specs-scroll-container" class="flex-1 overflow-y-auto pt-1 px-4 pb-4" onscroll="handleScroll(this)">
+      <div id="specs-scroll-container" class="flex-1 overflow-y-auto pt-6 px-4 pb-4" onscroll="handleScroll(this)">
         <div class="space-y-4 w-full mx-auto">
 
           <!-- Frame Selector -->

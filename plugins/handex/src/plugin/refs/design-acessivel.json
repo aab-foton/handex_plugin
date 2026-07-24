@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Design Acessível",
     "figmaFileKey": "Wy0IhXRVZMSOOr8E609UqI",
-    "exportedAt": "2026-07-10T02:20:38.030Z",
+    "exportedAt": "2026-07-22T15:30:00.850Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -886,13 +886,6 @@
         "value": "Indicar como cabeçalho. "
       },
       {
-        "key": "dcc66b5accd20fd977ad8adddf8573fe938fba64",
-        "name": "estruturais/marcos/header/observacoes",
-        "resolvedType": "STRING",
-        "collection": "[a11y]specification",
-        "value": "É um elemento que ajuda a organizar o conteúdo da página, fornecendo uma estrutura clara e semântica."
-      },
-      {
         "key": "96643391afeaee052a0c1892d2e60c7040eeac1c",
         "name": "itens interativos/lista/ordenada/nota",
         "resolvedType": "STRING",
@@ -900,11 +893,11 @@
         "value": "Em HTML utilize a tag <ol>."
       },
       {
-        "key": "3c17610e4228bf785764215fc58d4406848f1ff9",
-        "name": "estruturais/marcos/header/nota",
+        "key": "dcc66b5accd20fd977ad8adddf8573fe938fba64",
+        "name": "estruturais/marcos/header/observacoes",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
-        "value": "Em HTML use a tag <header> para um cabeçalho de uma seção ou página."
+        "value": "É um elemento que ajuda a organizar o conteúdo da página, fornecendo uma estrutura clara e semântica."
       },
       {
         "key": "6506ef617dbb027d6c7714f609a07b82d41338c8",
@@ -914,11 +907,11 @@
         "value": "Construir como lista não ordenada."
       },
       {
-        "key": "6e4aed443c5b6cfe318c637887897d3cce78b139",
-        "name": "estruturais/marcos/footer/descricao",
+        "key": "3c17610e4228bf785764215fc58d4406848f1ff9",
+        "name": "estruturais/marcos/header/nota",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
-        "value": "Indicar como rodapé. "
+        "value": "Em HTML use a tag <header> para um cabeçalho de uma seção ou página."
       },
       {
         "key": "e1710a4ac8687bb89799d8f5e46f9f74b7a1d263",
@@ -928,11 +921,11 @@
         "value": "Em HTML utilize a tag <ul>."
       },
       {
-        "key": "dc0385fb306fc9c6e13c48bc6d6f6939457545ba",
-        "name": "estruturais/marcos/footer/observacoes",
+        "key": "6e4aed443c5b6cfe318c637887897d3cce78b139",
+        "name": "estruturais/marcos/footer/descricao",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
-        "value": "É um elemento que oferece um local centralizado para informações importantes para serem acessadas facilmente."
+        "value": "Indicar como rodapé. "
       },
       {
         "key": "0c5e36755c9ffeace223ac70479e3cc06a33c013",
@@ -942,11 +935,11 @@
         "value": "Construir como lista de definição."
       },
       {
-        "key": "f4cffb7e6b130dc20dee93887059f7fc68264134",
-        "name": "itens interativos/lista/de definição/nota",
+        "key": "dc0385fb306fc9c6e13c48bc6d6f6939457545ba",
+        "name": "estruturais/marcos/footer/observacoes",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
-        "value": "Em HTML utilize a tag <dl>."
+        "value": "É um elemento que oferece um local centralizado para informações importantes para serem acessadas facilmente."
       },
       {
         "key": "2cacfd2766356cba69327f85d9b015f7d33bd399",
@@ -954,6 +947,13 @@
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
         "value": " Em HTML use a tag <footer> para agrupar informações relacionadas à parte inferior de uma página ou seção."
+      },
+      {
+        "key": "f4cffb7e6b130dc20dee93887059f7fc68264134",
+        "name": "itens interativos/lista/de definição/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML utilize a tag <dl>."
       },
       {
         "key": "0dbec947265d6d739987db9fedca81d9d42fed2b",

@@ -14,8 +14,7 @@
 
 - `FIGMA_TOKEN`: design documentado é nunca embarcar em `ui.html`/`code.bundle.js`/artefato distribuído, vivendo só em `.env` local (gitignored) ou CI variable protected+masked. Verificável localmente apenas para o fetch via `.env`/dotenv — a garantia da pipeline CI não pôde ser confirmada (ver acima).
 - Refs DSC (`_manifest.json`, `{slug}.json`, `_skeleton.json`) contêm apenas keys/nomes/contagens, **nunca valores resolvidos** (hex, fontSize) — resolução ocorre em runtime via Plugin API dentro do Figma. Arquitetura deliberada para manter o pipeline de build livre de segredos/dados de design no cliente.
-- `@google/genai` está declarado em `package.json` (`^1.29.0`) mas **não há nenhuma ocorrência de uso no código-fonte** (`genai`/`GoogleGenAI`/`gemini` não aparecem em `src/`) — dependência instalada mas não integrada a nenhuma feature ativa. Não comunicar capacidades de IA generativa como existentes no produto hoje.
 
 ## Leitura de produto
 
-O pipeline de build e a arquitetura de segurança do skeleton DSC (nunca embarcar valores resolvidos) são pontos fortes reais e documentáveis com confiança. A automação de CI de atualização de refs precisa de confirmação direta antes de ser citada como capacidade ativa — e a dependência de IA (`@google/genai`) não deve ser mencionada como feature existente, é só uma dependência instalada sem uso.
+O pipeline de build e a arquitetura de segurança do skeleton DSC (nunca embarcar valores resolvidos) são pontos fortes reais e documentáveis com confiança. A automação de CI de atualização de refs precisa de confirmação direta antes de ser citada como capacidade ativa. Não há integração de IA generativa no produto hoje.
