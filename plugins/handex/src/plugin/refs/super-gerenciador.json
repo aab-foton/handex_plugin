@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Super Gerenciador",
     "figmaFileKey": "erkqbRKIbaFWbkHe51BeiZ",
-    "exportedAt": "2026-07-24T19:58:50.853Z",
+    "exportedAt": "2026-07-27T12:23:40.845Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -10,6 +10,412 @@
   },
   "designTokens": {
     "variables": [
+      {
+        "key": "7575b7496a872b28dd5cd49e487ea79cb71edfa1",
+        "name": "Abrir/Abrir",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Abrir"
+      },
+      {
+        "key": "cde27af1b5e54c0918683e5f7432fe4cdaa38f43",
+        "name": "Abrir/Abrir comprovante",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Abrir comprovante"
+      },
+      {
+        "key": "f2551aa30f6bedcadb1f706f8fe0fad5f20c074a",
+        "name": "Abrir/Abrir conta digital",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Abrir conta digital"
+      },
+      {
+        "key": "841ba3235377973744e4296dcf8f22d49d853cdb",
+        "name": "Adicionar/Adicionar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Adicionar"
+      },
+      {
+        "key": "3a460f5d71452ecd32fb40e39801b2cb8d29274a",
+        "name": "Adicionar/Adicionar cartão",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Adicionar cartão"
+      },
+      {
+        "key": "5afbc4b887956edcf7410167ac08db8dd1767805",
+        "name": "Adicionar/Adicionar contato",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Adicionar contato"
+      },
+      {
+        "key": "d4f45f82e793ce512f0daee05794a30f682a1d43",
+        "name": "Adicionar/Adicionar widget",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Adicionar widget"
+      },
+      {
+        "key": "6364dd374ac04e7c37bc51dfc3ce05fecc312488",
+        "name": "Antecipar/Antecipar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Antecipar"
+      },
+      {
+        "key": "1f626b1ea958c3cff19043252ab4515ffc156e41",
+        "name": "Acessar/Acessar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Acessar"
+      },
+      {
+        "key": "ca631f5dd50edc1f34b8062f02cd815fe1a2b915",
+        "name": "Atualizar/Atualizar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Atualizar"
+      },
+      {
+        "key": "c34542120aa329d53ca919c2714f742f3f62129d",
+        "name": "Ativar/Ativar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar"
+      },
+      {
+        "key": "4d1b648579e088b4c7d612504b8c7b5c72c88e38",
+        "name": "Ativar/Ativar biometria",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar biometria"
+      },
+      {
+        "key": "3764cf061a4595fb021e1960651f767bf4e04f93",
+        "name": "Ativar/Ativar DDA",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar DDA"
+      },
+      {
+        "key": "fdbd3af7d049a6007435307af4083e975b541a77",
+        "name": "Ativar/Ativar lembrete",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar lembrete"
+      },
+      {
+        "key": "49ea23b990358ded15d568e48c25c37199ef5c6c",
+        "name": "Cadastrar/Cadastrar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar"
+      },
+      {
+        "key": "7fac299247a56db25032e6a422f7286becef9844",
+        "name": "Cadastrar/Cadastrar chave Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar chave Pix"
+      },
+      {
+        "key": "acd7909315fd4f29735888d894a3c1b8c210ef11",
+        "name": "Cadastrar/Cadastrar débito automático",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar débito automático"
+      },
+      {
+        "key": "0c6c08504a879089142e528cd4863754a6eedf8f",
+        "name": "Cadastrar/Cadastrar Pix automático",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar Pix automático"
+      },
+      {
+        "key": "970d71d36e262fd535652d573684251ae3143b04",
+        "name": "Cancelar/Cancelar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar"
+      },
+      {
+        "key": "621e2b0db4a437f1ca8d9285bbb50deedf12c1b0",
+        "name": "Cancelar/Cancelar autorização",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar autorização"
+      },
+      {
+        "key": "7deeb0d4286e256a68eb93f8dbf6ef2d0ef5d329",
+        "name": "Cancelar/Cancelar débito automático",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar débito automático"
+      },
+      {
+        "key": "2e7a7754da5e81f1da07871a1cdd4b9da66dacc9",
+        "name": "Cancelar/Cancelar portabilidade",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar portabilidade"
+      },
+      {
+        "key": "4a8bf755fc84e90a95a1767a6973177ade329a3f",
+        "name": "Compartilhar/Compartilhar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar"
+      },
+      {
+        "key": "73b073957657a304a242f6920f20b252e9400284",
+        "name": "Compartilhar/Compartilhar chave Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar chave Pix"
+      },
+      {
+        "key": "7962242626b005fa3299855a13692a1ca7a8bc66",
+        "name": "Compartilhar/Compartilhar dados da conta",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar dados da conta"
+      },
+      {
+        "key": "85fa2d12fce79977a0de3e7a86ef70e0a294cf9c",
+        "name": "Compartilhar/Compartilhar comprovante",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar comprovante"
+      },
+      {
+        "key": "36c00e537434f816d153a1e471ef6e12174fab87",
+        "name": "Compartilhar/Compartilhar QR Code",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar QR Code"
+      },
+      {
+        "key": "2b63e8cc3f77f2c4dbfa92f3662b2c984e8bf5fe",
+        "name": "Confirmar/Confirmar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Confirmar"
+      },
+      {
+        "key": "7fb9169ea3b7d86dc115bd432d95ae9465ad05e6",
+        "name": "Confirmar/Confirmar celular",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Confirmar celular"
+      },
+      {
+        "key": "07bc4eb81799184c3b955e900c040a58545ae3a3",
+        "name": "Continuar/Continuar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Continuar"
+      },
+      {
+        "key": "35f93d55fc39cb2fd9dc6671cf71a50a0dd3ee7e",
+        "name": "Criar/Criar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Criar"
+      },
+      {
+        "key": "a3730b5ac30a5f2166cf4d1b8119a8080fc500fe",
+        "name": "Criar/Criar lembrete",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Criar lembrete"
+      },
+      {
+        "key": "827deac4fe985e312bed38bef9f9f28f7b6875f9",
+        "name": "Entender/Ok, entendi",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ok, entendi"
+      },
+      {
+        "key": "ace67ea43afcd5e4cafb12bd7af456a385ad72ac",
+        "name": "Excluir/Excluir",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Excluir"
+      },
+      {
+        "key": "d1204cecc7dfe7b41205f67289046ab0bbda9f2b",
+        "name": "Excluir/Excluir Pix Programado",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Excluir Pix Programado"
+      },
+      {
+        "key": "c05e128d55440a8faed9d55edebce93dfb23ba88",
+        "name": "Excluir/Excluir chave Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Excluir chave Pix"
+      },
+      {
+        "key": "86a64e9abcf1277020a948bb3ceecd456492c023",
+        "name": "Fazer/Fazer Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer Pix"
+      },
+      {
+        "key": "808c1b50f1b72495b2b72eaa494a11096d126eb1",
+        "name": "Fazer/Fazer novo Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer novo Pix"
+      },
+      {
+        "key": "99023cb295dd079ccd2f895e825cba3cb2789dc5",
+        "name": "Fazer/Fazer pagamento",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer pagamento"
+      },
+      {
+        "key": "7f9d7e6059748df354e2db2b3320f6d4248d1698",
+        "name": "Fazer/Fazer novo pagamento",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer novo pagamento"
+      },
+      {
+        "key": "98523099a0acd722c6250466525152ac48325923",
+        "name": "Gerar/Gerar QR Code",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Gerar QR Code"
+      },
+      {
+        "key": "a665d506d7e0acf95f9ae5ec3b57f2169744abc0",
+        "name": "Gerar/Gerar 2ª via do boleto",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Gerar 2ª via do boleto"
+      },
+      {
+        "key": "1ddb9fccfa883bd08a645884626aef1580577efc",
+        "name": "Ir e Voltar/Ir para início",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ir para início"
+      },
+      {
+        "key": "13d175095ec0382bb513437dd97954b3de22b8fb",
+        "name": "Ir e Voltar/Ir para Empréstimos",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ir para Empréstimos"
+      },
+      {
+        "key": "3e964c68c9cb918232247ac32e60997a1ccef787",
+        "name": "Ir e Voltar/Voltar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Voltar"
+      },
+      {
+        "key": "b8508791173ad7b1e647230164b01bb60f4a7632",
+        "name": "Ir e Voltar/Voltar para início",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Voltar para início"
+      },
+      {
+        "key": "b3b06d3635a9b3ef2a73a2d9c4ec081cd5782fb5",
+        "name": "Mostrar/Mostrar senha",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Mostrar senha"
+      },
+      {
+        "key": "674e8982242af99721abede69ce8d194c0aeaf94",
+        "name": "Mostrar/Mostrar saldo",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Mostrar saldo"
+      },
+      {
+        "key": "e0cf2ecf4b11acef318c0913ee58ca8083f3e277",
+        "name": "Mostrar/Mostrar todos",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Mostrar todos"
+      },
+      {
+        "key": "70af83b4b8cd6cda2067315aaedb862f2169899a",
+        "name": "Pagar/Pagar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar"
+      },
+      {
+        "key": "0d7cfa101ba0db407065ad8b558e71db0e844640",
+        "name": "Pagar/Pagar boleto",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar boleto"
+      },
+      {
+        "key": "c6e218c7eff2040eba53654f5606a962e00809b8",
+        "name": "Pagar/Pagar parcela",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar parcela"
+      },
+      {
+        "key": "700ede1712ede7e130cf23ea255f40892b8e0ae4",
+        "name": "Pagar/Pagar prestação",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar prestação"
+      },
+      {
+        "key": "3fdeb05fc282d9ab9808abd2b19bcb39ec623a73",
+        "name": "Salvar/Salvar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Salvar"
+      },
+      {
+        "key": "44e5a292aa3dbcfe1a1918f9f6fb8c4838e89d31",
+        "name": "Salvar/Salvar contato",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Salvar contato"
+      },
+      {
+        "key": "da2b36841fe792593a33dcc6fd26ffb387122f5f",
+        "name": "Salvar/Salvar mensagem",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Salvar mensagem"
+      },
+      {
+        "key": "4d74e16cae3b66fffd414709461528d166e27de9",
+        "name": "Usar/Usar chave Pix na CAIXA",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Usar chave Pix na CAIXA"
+      },
+      {
+        "key": "91581239c63c4f3270eb5eb4c3f01192d99ac6c8",
+        "name": "Usar/Usar em outro banco",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Usar em outro banco"
+      },
       {
         "key": "9c7fc4880bebc37c156e9bdf87c2ef6354bc2a6e",
         "name": "Texts/ComponentDescription",
@@ -746,410 +1152,228 @@
         "value": 256
       },
       {
-        "key": "7575b7496a872b28dd5cd49e487ea79cb71edfa1",
-        "name": "Abrir/Abrir",
+        "key": "e683b329fedb23d423b5daf08762ceb825932b17",
+        "name": "breakpoint 🔒",
         "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir"
+        "collection": "responsive",
+        "value": "extra large"
       },
       {
-        "key": "cde27af1b5e54c0918683e5f7432fe4cdaa38f43",
-        "name": "Abrir/Abrir comprovante",
+        "key": "5a252b9f4d10a79cb6a71f922d7c0d359e08b671",
+        "name": "device 🔒",
         "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir comprovante"
+        "collection": "responsive",
+        "value": "desktop"
       },
       {
-        "key": "f2551aa30f6bedcadb1f706f8fe0fad5f20c074a",
-        "name": "Abrir/Abrir conta digital",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir conta digital"
+        "key": "342dc2e8338a4bf48cf67858012acaac8f51b0dd",
+        "name": "device/width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
       },
       {
-        "key": "841ba3235377973744e4296dcf8f22d49d853cdb",
-        "name": "Adicionar/Adicionar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar"
+        "key": "0c58f7f1c8bdee1fae04b483016807839d8bbeef",
+        "name": "device/min-width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
       },
       {
-        "key": "3a460f5d71452ecd32fb40e39801b2cb8d29274a",
-        "name": "Adicionar/Adicionar cartão",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar cartão"
+        "key": "15b13fffa9bd485c000a60cf7352aeec864ac5cd",
+        "name": "device/max-width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1920
       },
       {
-        "key": "5afbc4b887956edcf7410167ac08db8dd1767805",
-        "name": "Adicionar/Adicionar contato",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar contato"
+        "key": "8c1c494e3d2189c0cda1a8b246a222679d4e7188",
+        "name": "device/min-height",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 900
       },
       {
-        "key": "d4f45f82e793ce512f0daee05794a30f682a1d43",
-        "name": "Adicionar/Adicionar widget",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar widget"
+        "key": "b6fa6d7ea224162fc26bcd4feb3593a071c72aef",
+        "name": "grid/grid-column",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 12
       },
       {
-        "key": "6364dd374ac04e7c37bc51dfc3ce05fecc312488",
-        "name": "Antecipar/Antecipar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Antecipar"
+        "key": "b357d9876a6487bc6585ff05d6d34049168a686b",
+        "name": "show/device/desktop",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
       },
       {
-        "key": "1f626b1ea958c3cff19043252ab4515ffc156e41",
-        "name": "Acessar/Acessar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Acessar"
+        "key": "f1fa37adfa4cfe8c8e83b226e2c309d2756590a8",
+        "name": "show/device/mobile",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
       },
       {
-        "key": "ca631f5dd50edc1f34b8062f02cd815fe1a2b915",
-        "name": "Atualizar/Atualizar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Atualizar"
+        "key": "c656eb4c5adbf1f4d10d36ecc529a62d6ba847cb",
+        "name": "show/breakpoint/extra large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
       },
       {
-        "key": "c34542120aa329d53ca919c2714f742f3f62129d",
-        "name": "Ativar/Ativar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar"
+        "key": "eb8218a3b520b76e4c9c5394b34a28e90b9381be",
+        "name": "show/breakpoint/large +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
       },
       {
-        "key": "4d1b648579e088b4c7d612504b8c7b5c72c88e38",
-        "name": "Ativar/Ativar biometria",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar biometria"
+        "key": "de2f0274cba20369986d7eba540f66fed2f66cda",
+        "name": "show/breakpoint/large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
       },
       {
-        "key": "3764cf061a4595fb021e1960651f767bf4e04f93",
-        "name": "Ativar/Ativar DDA",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar DDA"
+        "key": "f62abf263d76b9cb8859e065b36df4f4a092440d",
+        "name": "show/breakpoint/medium +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
       },
       {
-        "key": "fdbd3af7d049a6007435307af4083e975b541a77",
-        "name": "Ativar/Ativar lembrete",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar lembrete"
+        "key": "55341000b43c6871ba95e3e9612136dbbd2a06ed",
+        "name": "show/breakpoint/medium",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
       },
       {
-        "key": "49ea23b990358ded15d568e48c25c37199ef5c6c",
-        "name": "Cadastrar/Cadastrar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar"
+        "key": "2a1182e3ade1087d17e5a4ed3202d0c3a77b2588",
+        "name": "show/breakpoint/small +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
       },
       {
-        "key": "7fac299247a56db25032e6a422f7286becef9844",
-        "name": "Cadastrar/Cadastrar chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar chave Pix"
+        "key": "0f238f4ba74855b4056b568dfee5c2f3a114445c",
+        "name": "show/breakpoint/small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
       },
       {
-        "key": "acd7909315fd4f29735888d894a3c1b8c210ef11",
-        "name": "Cadastrar/Cadastrar débito automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar débito automático"
+        "key": "3cf82aef55e2701ed26738822a1848886287a5ae",
+        "name": "show/breakpoint/extra small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
       },
       {
-        "key": "0c6c08504a879089142e528cd4863754a6eedf8f",
-        "name": "Cadastrar/Cadastrar Pix automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar Pix automático"
+        "key": "d349b296f58c9f5cc80e92c1043cc59a4a3b79f2",
+        "name": "grid/grid-margin",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 48
       },
       {
-        "key": "970d71d36e262fd535652d573684251ae3143b04",
-        "name": "Cancelar/Cancelar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar"
+        "key": "e2c5440e36fc09559af6d652fa8bd67db3e11dbd",
+        "name": "grid/grid-gap",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 24
       },
       {
-        "key": "621e2b0db4a437f1ca8d9285bbb50deedf12c1b0",
-        "name": "Cancelar/Cancelar autorização",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar autorização"
+        "key": "d5f0eddd47d5e547747cbd2f6b83c1170cfe6c7f",
+        "name": "hide/device/desktop",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
       },
       {
-        "key": "7deeb0d4286e256a68eb93f8dbf6ef2d0ef5d329",
-        "name": "Cancelar/Cancelar débito automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar débito automático"
+        "key": "bbb5487ef1c40e5ddf426a45dc9a79c1c61a08f4",
+        "name": "components/container/width-compact",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 720
       },
       {
-        "key": "2e7a7754da5e81f1da07871a1cdd4b9da66dacc9",
-        "name": "Cancelar/Cancelar portabilidade",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar portabilidade"
+        "key": "ba362c47468f7ffc3f4bacadc489386abdd3eaff",
+        "name": "components/container/width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1080
       },
       {
-        "key": "4a8bf755fc84e90a95a1767a6973177ade329a3f",
-        "name": "Compartilhar/Compartilhar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar"
+        "key": "d5f604b4641b0f25ed4f4e86454f9c1597343fbc",
+        "name": "components/container/width-wide",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
       },
       {
-        "key": "73b073957657a304a242f6920f20b252e9400284",
-        "name": "Compartilhar/Compartilhar chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar chave Pix"
+        "key": "353f9e9a3a815706dcc7bf54d116db9f23285fe2",
+        "name": "hide/device/mobile",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
       },
       {
-        "key": "7962242626b005fa3299855a13692a1ca7a8bc66",
-        "name": "Compartilhar/Compartilhar dados da conta",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar dados da conta"
+        "key": "5cdf1997b0429ef16bd6c1be5bab9a2b12eda469",
+        "name": "hide/breakpoint/extra large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
       },
       {
-        "key": "85fa2d12fce79977a0de3e7a86ef70e0a294cf9c",
-        "name": "Compartilhar/Compartilhar comprovante",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar comprovante"
+        "key": "4f95e11f7498f15bd862c964ea6d213f77eacb04",
+        "name": "hide/breakpoint/large +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
       },
       {
-        "key": "36c00e537434f816d153a1e471ef6e12174fab87",
-        "name": "Compartilhar/Compartilhar QR Code",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar QR Code"
+        "key": "2568ea599dbb0f5c54ba2e241554507f75f26411",
+        "name": "hide/breakpoint/large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
       },
       {
-        "key": "2b63e8cc3f77f2c4dbfa92f3662b2c984e8bf5fe",
-        "name": "Confirmar/Confirmar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Confirmar"
+        "key": "759e7e9fc237cc7cf071ed04b65b5d280e884f26",
+        "name": "hide/breakpoint/medium +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
       },
       {
-        "key": "7fb9169ea3b7d86dc115bd432d95ae9465ad05e6",
-        "name": "Confirmar/Confirmar celular",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Confirmar celular"
+        "key": "d3676bfcd938342e798fe2301907f26fe42fc5a0",
+        "name": "hide/breakpoint/medium",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
       },
       {
-        "key": "07bc4eb81799184c3b955e900c040a58545ae3a3",
-        "name": "Continuar/Continuar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Continuar"
+        "key": "d18bfc2be43c65657374a7518a55295ea586102c",
+        "name": "hide/breakpoint/small +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
       },
       {
-        "key": "35f93d55fc39cb2fd9dc6671cf71a50a0dd3ee7e",
-        "name": "Criar/Criar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Criar"
+        "key": "080f2ce8fe0de800c7174126adaeaac75e322b54",
+        "name": "hide/breakpoint/small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
       },
       {
-        "key": "a3730b5ac30a5f2166cf4d1b8119a8080fc500fe",
-        "name": "Criar/Criar lembrete",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Criar lembrete"
-      },
-      {
-        "key": "827deac4fe985e312bed38bef9f9f28f7b6875f9",
-        "name": "Entender/Ok, entendi",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ok, entendi"
-      },
-      {
-        "key": "ace67ea43afcd5e4cafb12bd7af456a385ad72ac",
-        "name": "Excluir/Excluir",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir"
-      },
-      {
-        "key": "d1204cecc7dfe7b41205f67289046ab0bbda9f2b",
-        "name": "Excluir/Excluir Pix Programado",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir Pix Programado"
-      },
-      {
-        "key": "c05e128d55440a8faed9d55edebce93dfb23ba88",
-        "name": "Excluir/Excluir chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir chave Pix"
-      },
-      {
-        "key": "86a64e9abcf1277020a948bb3ceecd456492c023",
-        "name": "Fazer/Fazer Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer Pix"
-      },
-      {
-        "key": "808c1b50f1b72495b2b72eaa494a11096d126eb1",
-        "name": "Fazer/Fazer novo Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer novo Pix"
-      },
-      {
-        "key": "99023cb295dd079ccd2f895e825cba3cb2789dc5",
-        "name": "Fazer/Fazer pagamento",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer pagamento"
-      },
-      {
-        "key": "7f9d7e6059748df354e2db2b3320f6d4248d1698",
-        "name": "Fazer/Fazer novo pagamento",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer novo pagamento"
-      },
-      {
-        "key": "98523099a0acd722c6250466525152ac48325923",
-        "name": "Gerar/Gerar QR Code",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Gerar QR Code"
-      },
-      {
-        "key": "a665d506d7e0acf95f9ae5ec3b57f2169744abc0",
-        "name": "Gerar/Gerar 2ª via do boleto",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Gerar 2ª via do boleto"
-      },
-      {
-        "key": "1ddb9fccfa883bd08a645884626aef1580577efc",
-        "name": "Ir e Voltar/Ir para início",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ir para início"
-      },
-      {
-        "key": "13d175095ec0382bb513437dd97954b3de22b8fb",
-        "name": "Ir e Voltar/Ir para Empréstimos",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ir para Empréstimos"
-      },
-      {
-        "key": "3e964c68c9cb918232247ac32e60997a1ccef787",
-        "name": "Ir e Voltar/Voltar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Voltar"
-      },
-      {
-        "key": "b8508791173ad7b1e647230164b01bb60f4a7632",
-        "name": "Ir e Voltar/Voltar para início",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Voltar para início"
-      },
-      {
-        "key": "b3b06d3635a9b3ef2a73a2d9c4ec081cd5782fb5",
-        "name": "Mostrar/Mostrar senha",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar senha"
-      },
-      {
-        "key": "674e8982242af99721abede69ce8d194c0aeaf94",
-        "name": "Mostrar/Mostrar saldo",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar saldo"
-      },
-      {
-        "key": "e0cf2ecf4b11acef318c0913ee58ca8083f3e277",
-        "name": "Mostrar/Mostrar todos",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar todos"
-      },
-      {
-        "key": "70af83b4b8cd6cda2067315aaedb862f2169899a",
-        "name": "Pagar/Pagar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar"
-      },
-      {
-        "key": "0d7cfa101ba0db407065ad8b558e71db0e844640",
-        "name": "Pagar/Pagar boleto",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar boleto"
-      },
-      {
-        "key": "c6e218c7eff2040eba53654f5606a962e00809b8",
-        "name": "Pagar/Pagar parcela",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar parcela"
-      },
-      {
-        "key": "700ede1712ede7e130cf23ea255f40892b8e0ae4",
-        "name": "Pagar/Pagar prestação",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar prestação"
-      },
-      {
-        "key": "3fdeb05fc282d9ab9808abd2b19bcb39ec623a73",
-        "name": "Salvar/Salvar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar"
-      },
-      {
-        "key": "44e5a292aa3dbcfe1a1918f9f6fb8c4838e89d31",
-        "name": "Salvar/Salvar contato",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar contato"
-      },
-      {
-        "key": "da2b36841fe792593a33dcc6fd26ffb387122f5f",
-        "name": "Salvar/Salvar mensagem",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar mensagem"
-      },
-      {
-        "key": "4d74e16cae3b66fffd414709461528d166e27de9",
-        "name": "Usar/Usar chave Pix na CAIXA",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Usar chave Pix na CAIXA"
-      },
-      {
-        "key": "91581239c63c4f3270eb5eb4c3f01192d99ac6c8",
-        "name": "Usar/Usar em outro banco",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Usar em outro banco"
+        "key": "1b813038bcb7e2224d055ba5952e55add8faec73",
+        "name": "hide/breakpoint/extra small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
       },
       {
         "key": "b42d6ae94dee2ecfacfc5ab2c263bb7e03cae243",
@@ -2286,18 +2510,18 @@
         "value": 0.25
       },
       {
-        "key": "2ffdb9fca2840a717b2d00de1e185ccbf36a5cba",
-        "name": "font/letter-spacing/extended",
-        "resolvedType": "FLOAT",
-        "collection": "dsc",
-        "value": 0.5
-      },
-      {
         "key": "52f9ce01da92ed6befa569191d0cf84b8f2cf295",
         "name": "icon/size/quark",
         "resolvedType": "FLOAT",
         "collection": "dsc",
         "value": 12
+      },
+      {
+        "key": "2ffdb9fca2840a717b2d00de1e185ccbf36a5cba",
+        "name": "font/letter-spacing/extended",
+        "resolvedType": "FLOAT",
+        "collection": "dsc",
+        "value": 0.5
       },
       {
         "key": "a72bcb9cc5273853555e67a07ff2c7c9068a2892",
@@ -2585,230 +2809,6 @@
         "resolvedType": "FLOAT",
         "collection": "dsc",
         "value": 160
-      },
-      {
-        "key": "e683b329fedb23d423b5daf08762ceb825932b17",
-        "name": "breakpoint 🔒",
-        "resolvedType": "STRING",
-        "collection": "responsive",
-        "value": "extra large"
-      },
-      {
-        "key": "5a252b9f4d10a79cb6a71f922d7c0d359e08b671",
-        "name": "device 🔒",
-        "resolvedType": "STRING",
-        "collection": "responsive",
-        "value": "desktop"
-      },
-      {
-        "key": "342dc2e8338a4bf48cf67858012acaac8f51b0dd",
-        "name": "device/width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "0c58f7f1c8bdee1fae04b483016807839d8bbeef",
-        "name": "device/min-width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "15b13fffa9bd485c000a60cf7352aeec864ac5cd",
-        "name": "device/max-width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1920
-      },
-      {
-        "key": "8c1c494e3d2189c0cda1a8b246a222679d4e7188",
-        "name": "device/min-height",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 900
-      },
-      {
-        "key": "b6fa6d7ea224162fc26bcd4feb3593a071c72aef",
-        "name": "grid/grid-column",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 12
-      },
-      {
-        "key": "b357d9876a6487bc6585ff05d6d34049168a686b",
-        "name": "show/device/desktop",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "f1fa37adfa4cfe8c8e83b226e2c309d2756590a8",
-        "name": "show/device/mobile",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "c656eb4c5adbf1f4d10d36ecc529a62d6ba847cb",
-        "name": "show/breakpoint/extra large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "eb8218a3b520b76e4c9c5394b34a28e90b9381be",
-        "name": "show/breakpoint/large +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "de2f0274cba20369986d7eba540f66fed2f66cda",
-        "name": "show/breakpoint/large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "f62abf263d76b9cb8859e065b36df4f4a092440d",
-        "name": "show/breakpoint/medium +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "55341000b43c6871ba95e3e9612136dbbd2a06ed",
-        "name": "show/breakpoint/medium",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "2a1182e3ade1087d17e5a4ed3202d0c3a77b2588",
-        "name": "show/breakpoint/small +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "0f238f4ba74855b4056b568dfee5c2f3a114445c",
-        "name": "show/breakpoint/small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "3cf82aef55e2701ed26738822a1848886287a5ae",
-        "name": "show/breakpoint/extra small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "d349b296f58c9f5cc80e92c1043cc59a4a3b79f2",
-        "name": "grid/grid-margin",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 48
-      },
-      {
-        "key": "e2c5440e36fc09559af6d652fa8bd67db3e11dbd",
-        "name": "grid/grid-gap",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 24
-      },
-      {
-        "key": "d5f0eddd47d5e547747cbd2f6b83c1170cfe6c7f",
-        "name": "hide/device/desktop",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "bbb5487ef1c40e5ddf426a45dc9a79c1c61a08f4",
-        "name": "components/container/width-compact",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 720
-      },
-      {
-        "key": "ba362c47468f7ffc3f4bacadc489386abdd3eaff",
-        "name": "components/container/width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1080
-      },
-      {
-        "key": "d5f604b4641b0f25ed4f4e86454f9c1597343fbc",
-        "name": "components/container/width-wide",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "353f9e9a3a815706dcc7bf54d116db9f23285fe2",
-        "name": "hide/device/mobile",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "5cdf1997b0429ef16bd6c1be5bab9a2b12eda469",
-        "name": "hide/breakpoint/extra large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "4f95e11f7498f15bd862c964ea6d213f77eacb04",
-        "name": "hide/breakpoint/large +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "2568ea599dbb0f5c54ba2e241554507f75f26411",
-        "name": "hide/breakpoint/large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "759e7e9fc237cc7cf071ed04b65b5d280e884f26",
-        "name": "hide/breakpoint/medium +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "d3676bfcd938342e798fe2301907f26fe42fc5a0",
-        "name": "hide/breakpoint/medium",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "d18bfc2be43c65657374a7518a55295ea586102c",
-        "name": "hide/breakpoint/small +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "080f2ce8fe0de800c7174126adaeaac75e322b54",
-        "name": "hide/breakpoint/small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "1b813038bcb7e2224d055ba5952e55add8faec73",
-        "name": "hide/breakpoint/extra small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
       }
     ]
   },
