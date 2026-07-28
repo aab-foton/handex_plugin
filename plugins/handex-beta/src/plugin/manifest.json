@@ -1,0 +1,13 @@
+{
+  "name": "Handex - Handoff Express (Beta)",
+  "id": "9000000000000001",
+  "api": "1.0.0",
+  "main": "code.bundle.js",
+  "ui": "ui.html",
+  "editorType": ["figma", "dev"],
+  "permissions": ["currentuser"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["https://unpkg.com", "https://cdnjs.cloudflare.com"]
+  }
+}

@@ -1,0 +1,4916 @@
+(() => {
+  var __defProp = Object.defineProperty;
+  var __defProps = Object.defineProperties;
+  var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
+  var __getOwnPropSymbols = Object.getOwnPropertySymbols;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __propIsEnum = Object.prototype.propertyIsEnumerable;
+  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+  var __spreadValues = (a, b) => {
+    for (var prop in b || (b = {}))
+      if (__hasOwnProp.call(b, prop))
+        __defNormalProp(a, prop, b[prop]);
+    if (__getOwnPropSymbols)
+      for (var prop of __getOwnPropSymbols(b)) {
+        if (__propIsEnum.call(b, prop))
+          __defNormalProp(a, prop, b[prop]);
+      }
+    return a;
+  };
+  var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
+
+  // src/plugin/audit.js
+  var frameJsonTemplate = () => ({
+    elements: {
+      components: [],
+      icons: [],
+      typography: [],
+      frames: [],
+      vectors: []
+    }
+  });
+  var AUDIT_SCORE = {
+    EXACT: 1,
+    SOFT: 0.5,
+    NONE: 0
+  };
+  var AUDIT_THRESHOLDS = {
+    OURO: 0.98,
+    AJUSTE: 0.11
+  };
+  function emptyResult() {
+    return { score: AUDIT_SCORE.NONE, matchedBy: null, matchedIn: null, matchedTokenName: null };
+  }
+  function auditProperty(name, value, type, figmaKey, referenceTokensInput, isAudit) {
+    if (!referenceTokensInput) return emptyResult();
+    const referenceList = Array.isArray(referenceTokensInput) ? referenceTokensInput : [referenceTokensInput];
+    if (figmaKey) {
+      for (const referenceTokens of referenceList) {
+        if (!referenceTokens) continue;
+        const libName = referenceTokens.meta && referenceTokens.meta.libraryName || referenceTokens.libraryName || null;
+        if (referenceTokens.designTokens && Array.isArray(referenceTokens.designTokens.variables)) {
+          const v = referenceTokens.designTokens.variables.find((t) => t.key === figmaKey || t.$key === figmaKey);
+          if (v) {
+            return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: libName, matchedTokenName: v.name || null };
+          }
+        }
+        if (referenceTokens.styleTokens) {
+          for (const styleType in referenceTokens.styleTokens) {
+            const stylesArray = referenceTokens.styleTokens[styleType];
+            if (Array.isArray(stylesArray)) {
+              const s = stylesArray.find((item) => item.key === figmaKey);
+              if (s) {
+                return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: libName, matchedTokenName: s.name || null };
+              }
+            }
+          }
+        }
+        if (Array.isArray(referenceTokens.components)) {
+          const c = referenceTokens.components.find((item) => item.key === figmaKey);
+          if (c) {
+            return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: libName, matchedTokenName: c.name || null };
+          }
+        }
+        if (Array.isArray(referenceTokens.componentKeys) && referenceTokens.componentKeys.includes(figmaKey)) {
+          return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: libName, matchedTokenName: null };
+        }
+      }
+    }
+    if (!isAudit || !name) return emptyResult();
+    const lowerName = String(name).toLowerCase();
+    const targetValue = String(value || "").toLowerCase();
+    let best = emptyResult();
+    const considerSofterMatch = (libName) => {
+      if (best.score < AUDIT_SCORE.SOFT) {
+        best = { score: AUDIT_SCORE.SOFT, matchedBy: null, matchedIn: libName, matchedTokenName: null };
+      }
+    };
+    for (const referenceTokens of referenceList) {
+      if (!referenceTokens) continue;
+      const libName = referenceTokens.meta && referenceTokens.meta.libraryName || referenceTokens.libraryName || null;
+      const categoryList = referenceTokens[type] || referenceTokens[type.replace(/s$/, "")] || null;
+      const softMatchList = (list) => {
+        if (!Array.isArray(list)) return null;
+        for (const ref of list) {
+          const rName = (typeof ref === "string" ? ref : ref.name || ref.label || "").toLowerCase();
+          const rValue = (typeof ref === "string" ? "" : ref.value || ref.hex || ref.token || "").toLowerCase();
+          const rRaw = typeof ref === "object" && ref && ref.rawValue !== void 0 ? String(ref.rawValue).toLowerCase() : "";
+          const refTokenName = typeof ref === "object" && ref ? ref.name || null : null;
+          if (rValue && targetValue && (rValue === targetValue || targetValue === rValue || targetValue.includes(rValue) || rValue.includes(targetValue))) {
+            return { kind: "value", tokenName: refTokenName };
+          }
+          if (rRaw && targetValue && targetValue.replace(/px$/, "") === rRaw) {
+            return { kind: "value", tokenName: refTokenName };
+          }
+          if (rName && (rName === lowerName || lowerName.includes(rName) || rName.includes(lowerName))) {
+            return { kind: "name", tokenName: refTokenName };
+          }
+          if (type === "typography" && targetValue.includes("px") && rValue) {
+            const sizeMatch = targetValue.match(/\((\d+(\.\d+)?)px\)/);
+            if (sizeMatch && (rValue.includes(sizeMatch[1] + "px") || rName.includes(sizeMatch[1]))) {
+              if (targetValue.includes("caixa std")) return { kind: "name", tokenName: refTokenName };
+            }
+          }
+        }
+        return null;
+      };
+      const direct = softMatchList(categoryList);
+      if (direct) {
+        if (best.score < AUDIT_SCORE.SOFT) best = { score: AUDIT_SCORE.SOFT, matchedBy: direct.kind, matchedIn: libName, matchedTokenName: direct.tokenName };
+        continue;
+      }
+      let globalHit = null;
+      for (const cat in referenceTokens) {
+        const hit = softMatchList(referenceTokens[cat]);
+        if (hit) {
+          globalHit = hit;
+          break;
+        }
+      }
+      if (globalHit) {
+        if (best.score < AUDIT_SCORE.SOFT) best = { score: AUDIT_SCORE.SOFT, matchedBy: globalHit.kind, matchedIn: libName, matchedTokenName: globalHit.tokenName };
+        continue;
+      }
+      if (type === "typography" && lowerName.includes("caixa std")) {
+        considerSofterMatch(libName);
+        continue;
+      }
+      if (lowerName.includes("/") || lowerName.includes("shadow") || lowerName.includes("[") || lowerName.includes("]")) {
+        considerSofterMatch(libName);
+      }
+    }
+    return best;
+  }
+  function suggestClosestMatch(type, value, referenceTokensInput) {
+    if (!value || !referenceTokensInput) return null;
+    const referenceList = Array.isArray(referenceTokensInput) ? referenceTokensInput : [referenceTokensInput];
+    const hexMatch = String(value).match(/#([0-9a-f]{6})/i);
+    if (hexMatch && (type === "colors" || type === "color" || type === "stroke")) {
+      const target = hexToRgb(hexMatch[1]);
+      let best = null;
+      for (const ref of referenceList) {
+        const libName = ref.meta && ref.meta.libraryName || ref.libraryName || null;
+        const styleList = ref.styleTokens && ref.styleTokens.colors || [];
+        for (const item of styleList) {
+          if (!item.value) continue;
+          const h = item.value.match(/#([0-9a-f]{6})/i);
+          if (!h) continue;
+          const rgb = hexToRgb(h[1]);
+          const d = Math.sqrt((target.r - rgb.r) ** 2 + (target.g - rgb.g) ** 2 + (target.b - rgb.b) ** 2);
+          if (!best || d < best.distance) {
+            best = {
+              tokenName: item.name,
+              value: item.value,
+              library: libName,
+              distance: d,
+              kind: "style",
+              styleKey: item.key || null,
+              variableKey: null
+            };
+          }
+        }
+        const vars = ref.designTokens && ref.designTokens.variables || [];
+        for (const v of vars) {
+          if (!v.value || v.resolvedType !== "COLOR") continue;
+          const h = v.value.match(/#([0-9a-f]{6})/i);
+          if (!h) continue;
+          const rgb = hexToRgb(h[1]);
+          const d = Math.sqrt((target.r - rgb.r) ** 2 + (target.g - rgb.g) ** 2 + (target.b - rgb.b) ** 2);
+          if (!best || d < best.distance) {
+            best = {
+              tokenName: v.name,
+              value: v.value,
+              library: libName,
+              distance: d,
+              kind: "variable",
+              styleKey: null,
+              variableKey: v.key || null
+            };
+          }
+        }
+      }
+      if (best && best.distance < 80) {
+        best.similarity = Math.max(0, Math.round((1 - best.distance / 441) * 100));
+        return best;
+      }
+      return null;
+    }
+    if (type === "typography") {
+      let best = null;
+      for (const ref of referenceList) {
+        const libName = ref.meta && ref.meta.libraryName || ref.libraryName || null;
+        const list = ref.styleTokens && ref.styleTokens.typography || [];
+        for (const item of list) {
+          if (!item.key) continue;
+          if (item.name && item.name === value) {
+            return {
+              tokenName: item.name,
+              value: item.value || item.name,
+              library: libName,
+              distance: 0,
+              kind: "style",
+              styleKey: item.key,
+              variableKey: null,
+              similarity: 100
+            };
+          }
+          if (!best) best = {
+            tokenName: item.name,
+            value: item.value || item.name,
+            library: libName,
+            distance: 999,
+            kind: "style",
+            styleKey: item.key,
+            variableKey: null
+          };
+        }
+      }
+      if (best) {
+        best.similarity = 0;
+        return best;
+      }
+      return null;
+    }
+    const numMatch = String(value).match(/(-?\d+(?:\.\d+)?)\s*px?/);
+    if (numMatch) {
+      const target = parseFloat(numMatch[1]);
+      let best = null;
+      for (const ref of referenceList) {
+        const libName = ref.meta && ref.meta.libraryName || ref.libraryName || null;
+        const candidates = collectNumericCandidates(ref, type);
+        for (const c of candidates) {
+          const d = Math.abs(target - c.value);
+          if (!best || d < best.distance) {
+            best = {
+              tokenName: c.name,
+              value: c.value + "px",
+              library: libName,
+              distance: d,
+              kind: "numeric",
+              styleKey: c.styleKey || null,
+              variableKey: c.variableKey || null
+            };
+          }
+        }
+      }
+      if (best && best.distance <= Math.max(4, target * 0.25)) {
+        best.similarity = Math.max(0, Math.round((1 - best.distance / Math.max(target, 1)) * 100));
+        return best;
+      }
+      return null;
+    }
+    return null;
+  }
+  function collectNumericCandidates(ref, type) {
+    const out = [];
+    if (type === "typography" || type === "fontSize") {
+      const list = ref.styleTokens && ref.styleTokens.typography || [];
+      for (const item of list) {
+        if (typeof item.fontSize === "number") {
+          out.push({ name: item.name, value: item.fontSize });
+        }
+      }
+    }
+    const variables = ref.designTokens && ref.designTokens.variables || [];
+    for (const v of variables) {
+      if (typeof v.value === "number") out.push({ name: v.name, value: v.value, variableKey: v.key || null });
+    }
+    for (const cat of ["spacing", "borders", "radii"]) {
+      const list = ref[cat];
+      if (Array.isArray(list)) {
+        for (const it of list) {
+          const num = typeof it === "number" ? it : it && typeof it.value === "number" ? it.value : it && typeof it.rawValue === "number" ? it.rawValue : null;
+          if (num !== null) out.push({ name: it && it.name || String(num), value: num });
+        }
+      }
+    }
+    return out;
+  }
+  function hexToRgb(hex) {
+    const m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+    if (!m) return { r: 0, g: 0, b: 0 };
+    return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
+  }
+
+  // src/plugin/refs/design-acessivel-content.json
+  var design_acessivel_content_default = {
+    _meta: {
+      description: "Conte\xFAdo real extra\xEDdo do arquivo Figma da biblioteca 'Design Acess\xEDvel' (fileKey Wy0IhXRVZMSOOr8E609UqI) via REST API \u2014 n\xE3o \xE9 gerado por fetch-design-refs.cjs porque esse script s\xF3 pega name/key/description do endpoint /components (achatado, sem \xE1rvore de n\xF3s). Este arquivo cobre o conte\xFAdo INTERNO dos componentes completos ('[a11y] Box specs LT', se\xE7\xE3o 'Specs - Estrutura [Handoff]') e dos cat\xE1logos de sub-variantes usados dentro deles. Extra\xEDdo em 2026-07-23. Se a lib for reestruturada no Figma, os node-ids/keys abaixo podem quebrar \u2014 revalidar via REST API antes de confiar cegamente.",
+      fileKey: "Wy0IhXRVZMSOOr8E609UqI",
+      extractedAt: "2026-07-23"
+    },
+    categories: {
+      elemento: {
+        label: "Elementos interativos e imagens",
+        color: "#FCBE05",
+        badge: "letter-manual",
+        wrapperComponentKey: "f1bf785a343f191cff72e702d68a27a3a97f0ee9",
+        wrapperNodeId: "31:545",
+        note: "O wrapper cont\xE9m uma instance filha (property 'componente') do component set [N\xC3O UTILIZAR][a11y base] em 'Specs - Componentes, \xEDcones e imagens[Handoff]' (node 51:1282). Trocar o tipo de componente documentado = nestedInstance.setProperties({componente: '<valor>'}).",
+        componentes: {
+          accordion: { descricao: "Identificar como button e ler o seu r\xF3tulo vis\xEDvel em tela.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: 'O t\xEDtulo de cada cabe\xE7alho do accordion deve ser atrelado em um elemento com a role="button\u201D, considerar tamb\xE9m o status do painel como expandindo ou recolhido com o atributo aria-expanded.' },
+          breadcrumb: { descricao: "Agrupar e identificar como link, deve ler o seu r\xF3tulo vis\xEDvel em tela.", observacoes: "Insira seu texto da observa\xE7\xE3o." },
+          button: { descricao: "Identificar como button e ler o seu r\xF3tulo vis\xEDvel em tela.", observacoes: "Insira seu texto da observa\xE7\xE3o." },
+          checkbox: { descricao: "Identificar como checkbox.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: 'Em HTML, identificar o status do componente como desmarcado com o atributo aria-checked="false". Deve-se tamb\xE9m inserir aria-label para adicionar um nome acess\xEDvel ao elemento.', nomeAcessivel: "Inserir o seguinte nome acess\xEDvel no elemento: [insira aqui o nome acess\xEDvel]." },
+          dialog: { descricao: "Identificar como dialog e anunciar o t\xEDtulo seguido do conte\xFAdo assim que o componente for apresentado em tela.", observacoes: "As tecnologias assistivas devem ser informadas que as janelas cobertas pelo dialog n\xE3o estar\xE3o dispon\xEDveis para intera\xE7\xE3o.", notasCodigo: "Em HTML \xE9 necess\xE1rio atrelar os seguintes atributos ao componente: aria-labelledby, aria-describedby e aria-modal." },
+          inputs: { descricao: "Agrupar e identificar como textbox.", observacoes: "A exibi\xE7\xE3o no Leitor de Tela deve seguir a sequ\xEAncia l\xF3gica dos elementos - da esquerda pra direita e de cima para baixo. Caso o campo seja obrigat\xF3rio, essa informa\xE7\xE3o deve ser anunciada junto." },
+          link: { descricao: "Identificar como link e ler o seu r\xF3tulo vis\xEDvel em tela.", observacoes: "Insira seu texto da observa\xE7\xE3o." },
+          listas: { descricao: "Construir como lista ordenada.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: "Em HTML utilize a tag <ol>." },
+          paginator: { descricao: "Identificar como combobox e ler a quantidade de itens por p\xE1gina, sele\xE7\xE3o atual e o status do componente como recolhido ou expandido.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: "Em HTML, identificar o status do componente como \u201Cexpandido\u201D ou \u201Crecolhido\u201D com aria-expanded. Utilizar aria-labelledby para indicar o elemento que rotula a caixa de combina\xE7\xE3o e aria-controls para definir que o componente funciona como um pop-up.", nomeAcessivel: "Inserir o seguinte nome acess\xEDvel no elemento: [insira aqui o nome acess\xEDvel]." },
+          "radio button": { descricao: "Identificar como radio button.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: 'Identificar o status do componente como marcado ou desmarcado com o atributo aria-checked="true" ou "false". Deve-se tamb\xE9m, inserir aria-label para adicionar um nome acess\xEDvel ao elemento.', nomeAcessivel: "Inserir o seguinte nome acess\xEDvel no elemento: [insira aqui o nome acess\xEDvel]." },
+          snackbar: { descricao: "Identificar como alert, deve interromper outros processos e anunciar o conte\xFAdo da notifica\xE7\xE3o sem mover o foco para ele.", observacoes: "Em caso de aplica\xE7\xE3o do snackbar com o action, o foco desse elemento deve ser o \xFAltimo em toda interface.", notasCodigo: 'Em HTML, o atributo aria-live="assertive" est\xE1 impl\xEDcito na fun\xE7\xE3o de alerta.' },
+          stepper: { descricao: "Agrupar e identificar como tab. Deve-se ler o seu r\xF3tulo vis\xEDvel junto de sua localiza\xE7\xE3o no grupo. A exemplo: \u201C1 de 3\u201D. Tamb\xE9m considerar o status do elemento como \u201Cselecionado\u201D.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: 'Em HTML, deve ser fornecido a role="tablist" por padr\xE3o, role="tab" quando selecionado e role="tabpanel" quando expandindo. O atributo aria-selected \xE9 definido automaticamente com base na altera\xE7\xE3o da sele\xE7\xE3o.' },
+          switch: { descricao: "Identificar como switch.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: 'Identificar o status do componente como marcado ou desmarcado com o atributo aria-checked="true" ou "false". Deve-se tamb\xE9m, inserir aria-label para adicionar um nome acess\xEDvel ao elemento.', nomeAcessivel: "Inserir o seguinte nome acess\xEDvel no elemento: [insira aqui o nome acess\xEDvel]." },
+          table: { descricao: "Identificar como table e ler a sua estrutura com a quantidade de linhas e colunas.", observacoes: "A leitura da c\xE9lula deve estar atrelada ao cabe\xE7alho da coluna ou da linha, seguindo a ordem: conte\xFAdo do cabe\xE7alho + conte\xFAdo da c\xE9lula.", notasCodigo: 'Inserir o atributo aria-label em HTML para adicionar um nome acess\xEDvel e aria-describedby="IDREF" referindo-se a legenda para a tabela.' },
+          "tab group": { descricao: 'Agrupar e identificar como tab. Deve-se ler o seu r\xF3tulo vis\xEDvel junto de sua localiza\xE7\xE3o no grupo. A exemplo: \u201C1 de 3\u201D. Tamb\xE9m considerar o status do componente quando estiver "selecionado".', observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: 'Em HTML, deve ser fornecido a role="tablist" por padr\xE3o, role="tab" quando selecionado e role="tabpanel" quando expandindo. O atributo aria-selected \xE9 definido automaticamente com base na altera\xE7\xE3o da sele\xE7\xE3o.' },
+          imagem: { descricao: "Inserir o seguinte texto alternativo no elemento: [insira aqui o texto alternativo].", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: "Insira seu texto com as anota\xE7\xF5es necess\xE1rias para o pessoal de desenvolvimento." }
+        }
+      },
+      estrutura: {
+        label: "Estrutura da p\xE1gina",
+        color: "#EF765E",
+        badge: "letter-manual + \xEDcone de estrela",
+        wrapperComponentKey: "4caf7476f773df94921ebfb0f264789adaff5958",
+        wrapperNodeId: "31:547",
+        note: "Mais aninhado: o wrapper referencia um combo com property 'variacao' (idiomas / marco de navegacao / titulo da pagina); 'marco de navegacao' por sua vez tem outro n\xEDvel com property 'tipo' (header/nav/main/aside/footer/customiz\xE1vel).",
+        subtipos: {
+          idiomas: {
+            "da pagina": { descricao: "Indicar o idioma predominante da p\xE1gina como: [insira aqui o idioma].", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: 'Em HTML Insira o atributo lang e defina o idioma principal da p\xE1gina, por exemplo: Para portugu\xEAs do Brasil: <html lang="pt-br">. Para ingl\xEAs: <html lang="en">. Para espanhol: <html lang="es">.' },
+            "das partes": { descricao: "Indicar a(s) palavras(s) em um idioma.", observacoes: "Elementos que contenham texto num idioma diferente do idioma principal da p\xE1gina devem estar declarados no HTML.", notasCodigo: 'Em HTML, use o atributo lang para declarar o conte\xFAdo circundante como links ou outras partes do texto. Exemplos: \n<p>Este \xE9 um par\xE1grafo em portugu\xEAs.</p> <a href="https://example.com" lang="en">Link em ingl\xEAs</a> \n<p>Aqui temos um exemplo de <span lang="fr">bonjour</span>, que significa "ol\xE1" em franc\xEAs.</p>' }
+          },
+          "marco de navegacao": {
+            header: { descricao: "Indicar como cabe\xE7alho.", observacoes: "\xC9 um elemento que ajuda a organizar o conte\xFAdo da p\xE1gina, fornecendo uma estrutura clara e sem\xE2ntica.", notasCodigo: "Em HTML use a tag <header> para um cabe\xE7alho de uma se\xE7\xE3o ou p\xE1gina." },
+            nav: { descricao: "Indicar como navega\xE7\xE3o.", observacoes: "Com a tag <nav> os Leitores de Tela anunciam que a se\xE7\xE3o \xE9 uma navega\xE7\xE3o para que a pessoa usu\xE1ria identifique que \xE9 uma sequ\xEAncia de links.", notasCodigo: "Em HTML use a tag <nav> para agrupar os link." },
+            main: { descricao: "Indicar o conte\xFAdo como principal da p\xE1gina.", observacoes: "O elemento <main> deve ser o conte\xFAdo mais importante e exclusivo da p\xE1gina.", notasCodigo: "Em HTML <main> n\xE3o deve ser usado dentro de elementos como <article>, <aside>, <footer>, <header> ou <nav>." },
+            aside: { descricao: "Indicar como se\xE7\xE3o.", observacoes: "O conte\xFAdo da <aside> enriquece a experi\xEAncia com o Leitor de Tela e s\xE3o complementares \xE0 navega\xE7\xE3o principal.", notasCodigo: 'Em HTML <aside> possui um significado sem\xE2ntico, indicando que o conte\xFAdo \xE9 "\xE0 parte", mas relacionado.' },
+            footer: { descricao: "Indicar como rodap\xE9.", observacoes: "\xC9 um elemento que oferece um local centralizado para informa\xE7\xF5es importantes para serem acessadas facilmente.", notasCodigo: "Em HTML use a tag <footer> para agrupar informa\xE7\xF5es relacionadas \xE0 parte inferior de uma p\xE1gina ou se\xE7\xE3o." }
+          },
+          "titulo da pagina": {
+            descricao: "Definir o t\xEDtulo p\xE1gina como: [insira aqui o t\xEDtulo].",
+            observacoes: "\xC9 necess\xE1rio garantir que cada p\xE1gina tenha um t\xEDtulo descritivo, o t\xEDtulo da interface \xE9 diferente do H1.",
+            notasCodigo: 'Definir usando a tag <title> no HTML.\nex: <!DOCTYPE html>\n<html lang="pt-BR">\n<head>\n  <meta charset="UTF-8">\n  <title>T\xEDtulo da p\xE1gina</title>\n</head>\n<body>\n  <h1>N\xEDvel de t\xEDtulo</h1>\n  <!-- conte\xFAdo da p\xE1gina -->\n</body>\n</html>'
+          },
+          customizavel: { descricao: "Insira seu texto da descri\xE7\xE3o.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: "Insira seu texto com as anota\xE7\xF5es necess\xE1rias para o pessoal de desenvolvimento." }
+        }
+      },
+      titulo: {
+        label: "N\xEDvel de t\xEDtulo",
+        color: "#AFCA0B",
+        badge: "H1-H6 (n\xE3o sequencial, um selo fixo por n\xEDvel escolhido)",
+        wrapperComponentKey: "777297433b69f67325878b4398ed510b379b8bac",
+        wrapperNodeId: "31:551",
+        note: "O wrapper cont\xE9m uma instance filha (property 'nivel': h1..h6) do component set [N\xC3O UTILIZAR][a11y base] 'niveis de titulo'. Mobile (React Native) n\xE3o distingue n\xEDveis \u2014 usa s\xF3 'H' fixo, sem swap de property; Web usa H1-H6 reais com este cat\xE1logo.",
+        niveis: {
+          h1: { descricao: "Identificar como t\xEDtulo de n\xEDvel 1.", observacoes: "Geralmente s\xF3 \xE9 utilizado um <h1> por p\xE1gina." },
+          h2: { descricao: "Identificar como t\xEDtulo de n\xEDvel 2.", observacoes: "\xC9 um sub-assunto da <h1>." },
+          h3: { descricao: "Identificar como t\xEDtulo de n\xEDvel 3.", observacoes: "\xC9 um sub-assunto da <h2>." },
+          h4: { descricao: "Identificar como t\xEDtulo de n\xEDvel 4.", observacoes: "\xC9 um sub-assunto da <h3>." },
+          h5: { descricao: "Identificar como t\xEDtulo de n\xEDvel 5.", observacoes: "\xC9 um sub-assunto da <h4>." },
+          h6: { descricao: "Identificar como t\xEDtulo de n\xEDvel 6.", observacoes: "\xC9 um sub-assunto da <h5>." }
+        },
+        mobile: {
+          badgeFixo: "H",
+          descricao: "Identificar como t\xEDtulo.",
+          notaCodigo: 'accessibilityRole="header"'
+        }
+      },
+      decorativo: {
+        label: "Elemento decorativo",
+        color: "#D93636",
+        badge: "\xEDcone vetor (n\xE3o \xE9 letra)",
+        wrapperComponentKey: "9ee625ccf363ab5cd28bb89d443aeb1c6317a869",
+        wrapperNodeId: "31:553",
+        note: "Dois sub-conjuntos: 'ED gerais' (variacao=gerais) e 'ED imagem' (variacao=imagem) \u2014 praticamente a mesma Descri\xE7\xE3o, Notas de C\xF3digo diferentes.",
+        subtipos: {
+          gerais: { descricao: "N\xE3o deve ser anunciado pelo Leitor de Tela.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: "Insira seu texto com as anota\xE7\xF5es necess\xE1rias para o pessoal de desenvolvimento." },
+          imagem: { descricao: "N\xE3o deve ser anunciado pelo Leitor de Tela.", observacoes: "Insira seu texto da observa\xE7\xE3o.", notasCodigo: 'Em HTML utilize o atributo alt="" com o valor vazio.' }
+        }
+      },
+      informacoes: {
+        label: "Informa\xE7\xF5es adicionais",
+        color: "#F39200",
+        badge: "letter-manual",
+        wrapperComponentKey: "80b43b74348e2db8cd1f28dda241cac7ed220b2f",
+        wrapperNodeId: "31:555",
+        note: "Sem 'Notas de C\xF3digo' \u2014 s\xF3 Descri\xE7\xE3o + Observa\xE7\xF5es.",
+        subtipos: {
+          handoffs: { descricao: "Especificado no handoff: [insira aqui o link ou nome do handoff].", observacoes: "Insira seu texto da observa\xE7\xE3o." },
+          "conteudo extra": { descricao: "Saiba mais em: [insira aqui o link ou nome do conte\xFAdo].", observacoes: "Insira seu texto da observa\xE7\xE3o." },
+          customizavel: { descricao: "Insira seu texto da descri\xE7\xE3o.", observacoes: "Insira seu texto da observa\xE7\xE3o." }
+        }
+      }
+    }
+  };
+
+  // src/plugin/code.js
+  figma.showUI(__html__, { width: 480, height: 750 });
+  var activeHighlightNode = null;
+  figma.on("close", () => {
+    if (activeHighlightNode) {
+      try {
+        activeHighlightNode.remove();
+      } catch (e) {
+      }
+      activeHighlightNode = null;
+    }
+  });
+  figma.on("currentpagechange", () => {
+    if (activeHighlightNode) {
+      try {
+        activeHighlightNode.remove();
+      } catch (e) {
+      }
+      activeHighlightNode = null;
+    }
+  });
+  function _nodeOnCurrentPage(node) {
+    let n = node;
+    while (n && n.type !== "PAGE") n = n.parent;
+    return n != null && n.id === figma.currentPage.id;
+  }
+  function _parseSpecTag(tag) {
+    const m = tag.match(/^([A-Z])(.*)$/);
+    if (!m) return [tag];
+    const letter = m[1];
+    const nums = m[2].split(".").filter(Boolean).map(Number);
+    return [letter, ...nums];
+  }
+  function _compareSpecTags(tagA, tagB) {
+    const a = _parseSpecTag(tagA);
+    const b = _parseSpecTag(tagB);
+    const len = Math.max(a.length, b.length);
+    for (let i = 0; i < len; i++) {
+      const av = a[i];
+      const bv = b[i];
+      if (av === void 0) return -1;
+      if (bv === void 0) return 1;
+      if (av === bv) continue;
+      if (typeof av === "number" && typeof bv === "number") return av - bv;
+      return String(av) < String(bv) ? -1 : 1;
+    }
+    return 0;
+  }
+  function _findNestedInstanceWithAnyProp(root, propNameCandidates) {
+    if (root.type === "INSTANCE" && root.componentProperties) {
+      for (const candidate of propNameCandidates) {
+        const key = Object.keys(root.componentProperties).find(
+          (k) => k.split("#")[0].toLowerCase() === candidate.toLowerCase()
+        );
+        if (key) return { instance: root, key };
+      }
+    }
+    if ("children" in root) {
+      for (const child of root.children) {
+        const found = _findNestedInstanceWithAnyProp(child, propNameCandidates);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+  function _findTextNodeByCurrentValue(root, value) {
+    if (root.type === "TEXT" && root.characters === value) return root;
+    if ("children" in root) {
+      for (const child of root.children) {
+        const found = _findTextNodeByCurrentValue(child, value);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+  function _bestEffortSyncA11yBadgeLetter(root, letter) {
+    try {
+      const byName = root.findOne ? root.findOne((n) => n.type === "TEXT" && /tag|selo|letra/i.test(n.name)) : null;
+      const target = byName || root.findOne((n) => n.type === "TEXT" && /^[A-Z]\d*(\.\d+)*$/.test(n.characters));
+      if (target) {
+        figma.loadFontAsync(target.fontName).then(() => {
+          target.characters = letter;
+        }).catch(() => {
+        });
+      }
+    } catch (e) {
+    }
+  }
+  async function _tryImportA11yComponent(opts) {
+    const type = opts.a11yType;
+    const catData = design_acessivel_content_default.categories[type];
+    if (!catData || !catData.wrapperComponentKey) throw new Error("a11y-sem-wrapper-key: " + type);
+    const sub = opts.a11ySubtype || {};
+    let defaultEntry = null;
+    let propCandidates = null;
+    let propValue = null;
+    if (type === "elemento") {
+      if (sub.isOutro || !sub.componente) throw new Error("a11y-elemento-outro-sem-componente-real");
+      defaultEntry = catData.componentes[sub.componente];
+      if (!defaultEntry) throw new Error("a11y-elemento-componente-desconhecido: " + sub.componente);
+      propCandidates = ["componente"];
+      propValue = sub.componente;
+    } else if (type === "titulo") {
+      if (sub.nivel === "mobile") throw new Error("a11y-titulo-mobile-sem-variante-real");
+      defaultEntry = catData.niveis && catData.niveis[sub.nivel];
+      if (!defaultEntry) throw new Error("a11y-titulo-nivel-desconhecido: " + sub.nivel);
+      propCandidates = ["nivel"];
+      propValue = sub.nivel;
+    } else if (type === "decorativo") {
+      defaultEntry = catData.subtipos && catData.subtipos[sub.tipo];
+      if (!defaultEntry) throw new Error("a11y-decorativo-subtipo-desconhecido: " + sub.tipo);
+      propCandidates = ["variacao", "tipo"];
+      propValue = sub.tipo;
+    } else if (type === "informacoes") {
+      if (sub.subtipo === "customizavel") throw new Error("a11y-informacoes-customizavel-sem-variante-real");
+      defaultEntry = catData.subtipos && catData.subtipos[sub.subtipo];
+      if (!defaultEntry) throw new Error("a11y-informacoes-subtipo-desconhecido: " + sub.subtipo);
+      propCandidates = ["tipo", "subtipo", "variacao"];
+      propValue = sub.subtipo;
+    } else if (type === "estrutura") {
+      if (sub.variacao !== "idiomas" && sub.variacao !== "marco de navegacao" && sub.variacao !== "titulo da pagina") {
+        throw new Error("a11y-estrutura-variacao-sem-import-real: " + sub.variacao);
+      }
+      propCandidates = ["variacao"];
+      propValue = sub.variacao;
+      if (sub.variacao === "idiomas") {
+        defaultEntry = catData.subtipos.idiomas && catData.subtipos.idiomas[sub.idioma];
+        if (!defaultEntry) throw new Error("a11y-estrutura-idioma-desconhecido: " + sub.idioma);
+      } else if (sub.variacao === "marco de navegacao") {
+        if (sub.tipo === "customizavel") throw new Error("a11y-estrutura-marco-customizavel-sem-conteudo-catalogado");
+        defaultEntry = catData.subtipos["marco de navegacao"] && catData.subtipos["marco de navegacao"][sub.tipo];
+        if (!defaultEntry) throw new Error("a11y-estrutura-marco-desconhecido: " + sub.tipo);
+      } else {
+        defaultEntry = catData.subtipos["titulo da pagina"];
+      }
+    } else {
+      throw new Error("a11y-tipo-sem-import-real: " + type);
+    }
+    const wrapperComponent = await figma.importComponentByKeyAsync(catData.wrapperComponentKey);
+    const instance = wrapperComponent.createInstance();
+    const found = _findNestedInstanceWithAnyProp(instance, propCandidates);
+    if (!found) {
+      instance.remove();
+      throw new Error("a11y-instancia-aninhada-nao-encontrada: prop~=" + propCandidates.join("|"));
+    }
+    console.log("[a11y-import] propriedade encontrada:", found.key, JSON.stringify(instance.componentProperties));
+    try {
+      found.instance.setProperties({ [found.key]: propValue });
+    } catch (e) {
+      instance.remove();
+      throw new Error("a11y-set-properties-falhou: " + (e && e.message ? e.message : e));
+    }
+    if (type === "estrutura" && sub.variacao !== "titulo da pagina") {
+      const nestedValue = sub.variacao === "idiomas" ? sub.idioma : sub.tipo;
+      const nestedFound = _findNestedInstanceWithAnyProp(found.instance, ["tipo"]);
+      if (!nestedFound) {
+        instance.remove();
+        throw new Error("a11y-estrutura-instancia-tipo-nao-encontrada");
+      }
+      try {
+        nestedFound.instance.setProperties({ [nestedFound.key]: nestedValue });
+      } catch (e) {
+        instance.remove();
+        throw new Error("a11y-estrutura-set-tipo-falhou: " + (e && e.message ? e.message : e));
+      }
+    }
+    if (type === "estrutura" && opts.letter) {
+      const letterFound = _findNestedInstanceWithAnyProp(instance, ["letter"]);
+      if (letterFound) {
+        try {
+          letterFound.instance.setProperties({ [letterFound.key]: opts.letter });
+        } catch (e) {
+        }
+      }
+    }
+    const _infoLines = (opts.properties || []).filter((p) => p && p.value && p.key !== "descricao" && p.key !== "notasCodigo").map((p) => `${p.label}: ${p.value}`).join("\n");
+    if (_infoLines && defaultEntry.observacoes) {
+      const obsNode = _findTextNodeByCurrentValue(instance, defaultEntry.observacoes);
+      if (obsNode) {
+        try {
+          await figma.loadFontAsync(obsNode.fontName);
+          obsNode.characters = _infoLines;
+        } catch (e) {
+        }
+      }
+    }
+    if ((type === "elemento" || type === "informacoes") && opts.letter) {
+      _bestEffortSyncA11yBadgeLetter(instance, opts.letter);
+    }
+    return instance;
+  }
+  var A11Y_AGRUPAMENTO_KEYS = {
+    elemento: {
+      direita: "1a32480d314943f85d5bf48e97beda44be37233b",
+      esquerda: "918dc37577a8ba0b0b9b421bbfa4c0e831696b7a",
+      superior: "e58a10ad987b3cc2feb7c7acf4b77e4e132c0b62",
+      inferior: "f70dae1493341f9839a3a2e11b93855ddb78192b"
+    },
+    decorativo: {
+      direita: "db8057dd5440ba35593fed4823b6b0746d2a5d3a",
+      esquerda: "a638d41c126fc85074ecfb6b5c013ded77a7ca30",
+      superior: "625a28708db4453614eb3d18f2163f53a01738fc",
+      inferior: "a8abbf67336b205d944ec2a97a62879c7f8a378e"
+    },
+    estrutura: {
+      direita: "2f62f4c09d769578d3c5f9f7c42de94ea4b5a559",
+      esquerda: "0736255a49a164a93dbe5913925e8cd94474c102",
+      superior: "cb88b4fe2d7a34fa5db191e1e29e99a462eaa88e",
+      inferior: "d1de84d4afe1d169d51471b049e3b55191319b72"
+    },
+    titulo: {
+      direita: "4df3d05e26dd4168c7d7de71fe689515c9b1895c",
+      esquerda: "5b759c2904110d3c60891be859e24f64d15833e9",
+      superior: "75e44fd1fc2f346fdaa7c6c59a9af09356bb045f",
+      inferior: "f18bae60d1e9109c2ecd1b3c5e49bacdb3c6267a"
+    },
+    informacoes: {
+      direita: "42eafe50b7b07e5cdacbbc1845c05af877768337",
+      esquerda: "b1155ae94b549e7de188458b1289b8ba476af73d",
+      superior: "060a2f17dff2dc489fcb1620404eda5269b5e182",
+      inferior: "faa943c3ccdec90b2fb06e6e58aaaa9ba0cbb867"
+    }
+  };
+  var _A11Y_SIDE_TO_ORIENTACAO = { left: "esquerda", right: "direita", top: "superior", bottom: "inferior" };
+  async function _tryImportA11yAgrupamento(opts) {
+    const orientacao = _A11Y_SIDE_TO_ORIENTACAO[opts.guideSide || "right"];
+    const typeKeys = A11Y_AGRUPAMENTO_KEYS[opts.a11yType];
+    if (!typeKeys) throw new Error("a11y-agrupamento-tipo-desconhecido: " + opts.a11yType);
+    const key = typeKeys[orientacao];
+    if (!key) throw new Error("a11y-agrupamento-orientacao-desconhecida: " + orientacao);
+    const component = await figma.importComponentByKeyAsync(key);
+    const instance = component.createInstance();
+    instance.name = "Agrupamento";
+    if (opts.letter) {
+      try {
+        instance.setProperties({ "letra#3925:32": opts.letter });
+      } catch (e) {
+      }
+    }
+    return instance;
+  }
+  var A11Y_SECTION_NAME = "Especifica\xE7\xF5es de Acessibilidade";
+  function _getOrCreateA11ySection() {
+    let section = figma.currentPage.children.find(
+      (n) => n.type === "SECTION" && n.name === A11Y_SECTION_NAME
+    );
+    if (!section) {
+      section = figma.createSection();
+      section.name = A11Y_SECTION_NAME;
+      section.x = 0;
+      section.y = 0;
+      section.resizeWithoutConstraints(200, 200);
+    }
+    return section;
+  }
+  function _reparentIntoA11ySection(node) {
+    try {
+      const _origX = node.x;
+      const _origY = node.y;
+      const section = _getOrCreateA11ySection();
+      section.appendChild(node);
+      node.x = Math.round(_origX - section.x);
+      node.y = Math.round(_origY - section.y);
+    } catch (e) {
+    }
+  }
+  function _reorderSpecGroupByTag(specGroup, tag) {
+    const siblings = figma.currentPage.children.filter((n) => n !== specGroup && n.type === "GROUP");
+    let insertIndex = figma.currentPage.children.length;
+    for (let i = 0; i < siblings.length; i++) {
+      const m = siblings[i].name.match(/^\[Spec(?:A11y)? \| ([A-Z]\d*(?:\.\d+)*) \| [a-z]+\] /);
+      if (!m) continue;
+      if (_compareSpecTags(tag, m[1]) < 0) {
+        const idx = figma.currentPage.children.indexOf(siblings[i]);
+        insertIndex = Math.min(insertIndex, idx);
+      }
+    }
+    figma.currentPage.insertChild(insertIndex, specGroup);
+  }
+  function hexToRgb2(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16) / 255,
+      g: parseInt(result[2], 16) / 255,
+      b: parseInt(result[3], 16) / 255
+    } : { r: 0.5, g: 0.5, b: 0.5 };
+  }
+  function rgbToHex(r, g, b) {
+    const toHex = (c) => {
+      const hex = Math.round(c * 255).toString(16);
+      return hex.length === 1 ? "0" + hex : hex;
+    };
+    return "#" + toHex(r) + toHex(g) + toHex(b);
+  }
+  var PLUGIN_VERSION = true ? "6.0.0-beta.1" : "dev";
+  async function _writeSharedPluginData(data) {
+    var _a, _b, _c, _d, _e, _f, _g;
+    const NS = "handex";
+    try {
+      const project = {
+        titulo: ((_a = data.step1) == null ? void 0 : _a.titulo) || "",
+        versao: ((_b = data.step1) == null ? void 0 : _b.versao) || "",
+        objetivo: ((_c = data.step1) == null ? void 0 : _c.objetivo) || "",
+        status: ((_d = data.step1) == null ? void 0 : _d.status) || "rascunho",
+        equipe: ((_e = data.step1) == null ? void 0 : _e.equipe) || [],
+        briefing: (((_f = data.step2) == null ? void 0 : _f.briefingQuestions) || []).map((q) => ({
+          categoria: q.category || "",
+          pergunta: q.question || "",
+          resposta: q.answer || ""
+        })),
+        regras: (((_g = data.step2) == null ? void 0 : _g.regras) || []).map((r) => ({
+          titulo: r.titulo || "",
+          notas: r.notas || "",
+          link: r.link || ""
+        })),
+        updatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+        plugin: `handex@${PLUGIN_VERSION}`
+      };
+      figma.currentPage.setSharedPluginData(NS, "project", JSON.stringify(project));
+    } catch (e) {
+      console.warn("[handex] setSharedPluginData(project) failed:", e);
+    }
+    for (const frame of data.frames || []) {
+      try {
+        const node = await figma.getNodeByIdAsync(frame.figmaId);
+        if (!node) continue;
+        node.setSharedPluginData(NS, "context", JSON.stringify({
+          nome: frame.nome || "",
+          isNewComponent: frame.isNewComponent || false,
+          excecoes: (frame.excecoes || []).map((e) => ({
+            tipo: e.tipo || "",
+            titulo: e.titulo || "",
+            notas: e.notas || "",
+            link: e.link || ""
+          }))
+        }));
+      } catch (e) {
+      }
+    }
+  }
+  async function _buildFlowConnection(nodeA, nodeB, msg) {
+    const isEvent = msg.flowType === "event_start" || msg.flowType === "event_end";
+    let boundsA = nodeA.absoluteBoundingBox || nodeA.absoluteRenderBounds;
+    let boundsB = nodeB ? nodeB.absoluteBoundingBox || nodeB.absoluteRenderBounds : null;
+    if (!boundsA) {
+      figma.notify("Elemento de origem sem dimens\xF5es v\xE1lidas.");
+      return;
+    }
+    if (!isEvent && boundsB && (!msg.flowSide || msg.flowSide === "auto")) {
+      const cAx = boundsA.x + boundsA.width / 2, cAy = boundsA.y + boundsA.height / 2;
+      const cBx = boundsB.x + boundsB.width / 2, cBy = boundsB.y + boundsB.height / 2;
+      const adx = Math.abs(cBx - cAx), ady = Math.abs(cBy - cAy);
+      const shouldSwap = adx >= ady ? cBx < cAx : cBy < cAy;
+      if (shouldSwap) {
+        [nodeA, nodeB] = [nodeB, nodeA];
+        [boundsA, boundsB] = [boundsB, boundsA];
+      }
+    }
+    const getEdgePoints = (b) => ({
+      top: { x: b.x + b.width / 2, y: b.y, side: "top" },
+      bottom: { x: b.x + b.width / 2, y: b.y + b.height, side: "bottom" },
+      left: { x: b.x, y: b.y + b.height / 2, side: "left" },
+      right: { x: b.x + b.width, y: b.y + b.height / 2, side: "right" }
+    });
+    const pointsA = getEdgePoints(boundsA);
+    let bestA, bestB;
+    if (msg.flowType === "event_start") bestA = pointsA.left;
+    else if (msg.flowType === "event_end") bestA = pointsA.right;
+    else if (msg.flowSide && msg.flowSide !== "auto" && pointsA[msg.flowSide]) bestA = pointsA[msg.flowSide];
+    if (nodeB && boundsB) {
+      const pointsB = getEdgePoints(boundsB);
+      if (!bestA) {
+        const cAx = boundsA.x + boundsA.width / 2, cAy = boundsA.y + boundsA.height / 2;
+        const cBx = boundsB.x + boundsB.width / 2, cBy = boundsB.y + boundsB.height / 2;
+        const dx = cBx - cAx, dy = cBy - cAy;
+        const noOverlapH = boundsA.x + boundsA.width <= boundsB.x || boundsB.x + boundsB.width <= boundsA.x;
+        const noOverlapV = boundsA.y + boundsA.height <= boundsB.y || boundsB.y + boundsB.height <= boundsA.y;
+        if (noOverlapH) {
+          bestA = dx >= 0 ? pointsA.right : pointsA.left;
+          bestB = dx >= 0 ? pointsB.left : pointsB.right;
+        } else if (noOverlapV) {
+          bestA = dy >= 0 ? pointsA.bottom : pointsA.top;
+          bestB = dy >= 0 ? pointsB.top : pointsB.bottom;
+        } else {
+          if (Math.abs(dx) >= Math.abs(dy)) {
+            bestA = dx >= 0 ? pointsA.right : pointsA.left;
+            bestB = dx >= 0 ? pointsB.left : pointsB.right;
+          } else {
+            bestA = dy >= 0 ? pointsA.bottom : pointsA.top;
+            bestB = dy >= 0 ? pointsB.top : pointsB.bottom;
+          }
+        }
+      } else {
+        let minDist = Infinity;
+        for (const pB of Object.values(pointsB)) {
+          const d = Math.sqrt(Math.pow(bestA.x - pB.x, 2) + Math.pow(bestA.y - pB.y, 2));
+          if (d < minDist) {
+            minDist = d;
+            bestB = pB;
+          }
+        }
+      }
+    } else {
+      if (msg.flowType === "event_start") {
+        bestA = pointsA.left;
+        bestB = { x: bestA.x - 60, y: bestA.y };
+      } else if (msg.flowType === "event_end") {
+        bestA = pointsA.right;
+        bestB = { x: bestA.x + 60, y: bestA.y };
+      } else {
+        bestA = bestA || pointsA.right;
+        const offset = 40;
+        bestB = { x: bestA.x, y: bestA.y };
+        if (bestA.side === "top") bestB.y -= offset;
+        else if (bestA.side === "bottom") bestB.y += offset;
+        else if (bestA.side === "left") bestB.x -= offset;
+        else bestB.x += offset;
+      }
+    }
+    const strokeColor = { r: 0.12, g: 0.16, b: 0.23 };
+    const line = figma.createVector();
+    line.name = `Linha`;
+    figma.currentPage.appendChild(line);
+    line.x = 0;
+    line.y = 0;
+    line.strokes = [{ type: "SOLID", color: strokeColor }];
+    line.strokeWeight = 2;
+    if (msg.flowType === "line_dashed" || msg.flowType === "diamond_dashed") line.dashPattern = [6, 4];
+    line.vectorPaths = [{ windingRule: "NONZERO", data: `M ${bestA.x} ${bestA.y} L ${bestB.x} ${bestB.y}` }];
+    let nodesToGroup = [line];
+    if (msg.flowType !== "event_start") {
+      const angle = Math.atan2(bestB.y - bestA.y, bestB.x - bestA.x);
+      const arrowSize = 8;
+      const arrow = figma.createVector();
+      figma.currentPage.appendChild(arrow);
+      arrow.x = 0;
+      arrow.y = 0;
+      arrow.strokes = [{ type: "SOLID", color: strokeColor }];
+      arrow.strokeWeight = 2;
+      arrow.strokeCap = "ROUND";
+      arrow.strokeJoin = "ROUND";
+      const x1 = bestB.x - arrowSize * Math.cos(angle - Math.PI / 6);
+      const y1 = bestB.y - arrowSize * Math.sin(angle - Math.PI / 6);
+      const x2 = bestB.x - arrowSize * Math.cos(angle + Math.PI / 6);
+      const y2 = bestB.y - arrowSize * Math.sin(angle + Math.PI / 6);
+      arrow.vectorPaths = [{ windingRule: "NONZERO", data: `M ${x1} ${y1} L ${bestB.x} ${bestB.y} L ${x2} ${y2}` }];
+      nodesToGroup.push(arrow);
+    }
+    const _flowExtra = {
+      sourceId: nodeA.id,
+      targetId: nodeB ? nodeB.id : null,
+      decisionText: msg.decisionText || null,
+      flowSide: msg.flowSide || "auto"
+    };
+    if (msg.flowType === "diamond" || msg.flowType === "diamond_dashed") {
+      const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
+      const size = 64, halfSize = size / 2;
+      const shape = figma.createVector();
+      figma.currentPage.appendChild(shape);
+      shape.x = 0;
+      shape.y = 0;
+      shape.vectorPaths = [{ windingRule: "NONZERO", data: `M ${midX} ${midY - halfSize} L ${midX + halfSize} ${midY} L ${midX} ${midY + halfSize} L ${midX - halfSize} ${midY} Z` }];
+      shape.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+      shape.strokes = [{ type: "SOLID", color: strokeColor }];
+      shape.strokeWeight = 2;
+      if (msg.flowType === "diamond_dashed") shape.dashPattern = [6, 4];
+      try {
+        await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+        const symbol = figma.createText();
+        figma.currentPage.appendChild(symbol);
+        symbol.fontName = { family: "Inter", style: "Bold" };
+        symbol.characters = msg.decisionText || "IF";
+        symbol.fontSize = 11;
+        symbol.textAlignHorizontal = "CENTER";
+        symbol.textAlignVertical = "CENTER";
+        symbol.fills = [{ type: "SOLID", color: strokeColor }];
+        symbol.resize(size * 0.8, symbol.height);
+        symbol.x = midX - symbol.width / 2;
+        symbol.y = midY - symbol.height / 2;
+        nodesToGroup.push(shape, symbol);
+        const finalGroup = figma.group(nodesToGroup, figma.currentPage);
+        finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | decisao] ${msg.flowName || "Decis\xE3o"}`;
+        finalGroup.locked = true;
+        finalGroup.setPluginData("handexCategory", "fluxo");
+        figma.ui.postMessage({ type: "flow-created", flow: __spreadValues({ id: finalGroup.id, name: finalGroup.name, type: msg.flowType }, _flowExtra) });
+      } catch (e) {
+        console.error(e);
+      }
+    } else if (isEvent) {
+      const isStart = msg.flowType === "event_start";
+      const circle = figma.createEllipse();
+      figma.currentPage.appendChild(circle);
+      circle.resize(96, 96);
+      circle.x = bestB.x - 48;
+      circle.y = bestB.y - 48;
+      circle.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+      circle.strokes = [{ type: "SOLID", color: isStart ? { r: 0.13, g: 0.6, b: 0.3 } : { r: 0.86, g: 0.1, b: 0.1 } }];
+      circle.strokeWeight = isStart ? 3 : 5;
+      try {
+        await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+        const label = figma.createText();
+        figma.currentPage.appendChild(label);
+        label.fontName = { family: "Inter", style: "Bold" };
+        label.characters = isStart ? "IN\xCDCIO" : "FIM";
+        label.fontSize = 11;
+        label.textAlignHorizontal = "CENTER";
+        label.textAlignVertical = "CENTER";
+        label.fills = circle.strokes;
+        label.x = circle.x + circle.width / 2 - label.width / 2;
+        label.y = circle.y + circle.height / 2 - label.height / 2;
+        nodesToGroup.push(circle, label);
+        const finalGroup = figma.group(nodesToGroup, figma.currentPage);
+        finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | ${isStart ? "inicio" : "fim"}] ${msg.flowName || (isStart ? "In\xEDcio" : "Fim")}`;
+        finalGroup.locked = true;
+        finalGroup.setPluginData("handexCategory", "fluxo");
+        figma.ui.postMessage({ type: "flow-created", flow: __spreadValues({ id: finalGroup.id, name: finalGroup.name, type: msg.flowType }, _flowExtra) });
+      } catch (e) {
+        console.error(e);
+      }
+    } else if (msg.decisionText && (msg.flowType === "line_solid" || msg.flowType === "line_dashed")) {
+      const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
+      try {
+        await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+        const textNode = figma.createText();
+        textNode.name = "Texto";
+        textNode.fontName = { family: "Inter", style: "Bold" };
+        textNode.characters = msg.decisionText;
+        textNode.fontSize = 10;
+        textNode.textAlignHorizontal = "CENTER";
+        textNode.textAlignVertical = "CENTER";
+        textNode.fills = [{ type: "SOLID", color: strokeColor }];
+        const paddingH = 8, paddingV = 4;
+        const chipBg = figma.createRectangle();
+        figma.currentPage.appendChild(chipBg);
+        chipBg.name = "Fundo";
+        chipBg.resize(textNode.width + paddingH * 2, textNode.height + paddingV * 2);
+        chipBg.cornerRadius = 6;
+        chipBg.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+        chipBg.strokes = [{ type: "SOLID", color: strokeColor }];
+        chipBg.strokeWeight = 1;
+        chipBg.x = midX - chipBg.width / 2;
+        chipBg.y = midY - chipBg.height / 2;
+        figma.currentPage.appendChild(textNode);
+        textNode.x = chipBg.x + paddingH;
+        textNode.y = chipBg.y + paddingV;
+        nodesToGroup.push(chipBg, textNode);
+        const finalGroup = figma.group(nodesToGroup, figma.currentPage);
+        finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conex\xE3o"}`;
+        finalGroup.locked = true;
+        finalGroup.setPluginData("handexCategory", "fluxo");
+        figma.ui.postMessage({ type: "flow-created", flow: __spreadValues({ id: finalGroup.id, name: finalGroup.name, type: msg.flowType }, _flowExtra) });
+      } catch (e) {
+        console.error(e);
+      }
+    } else {
+      const finalGroup = figma.group(nodesToGroup, figma.currentPage);
+      finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conex\xE3o"}`;
+      finalGroup.locked = true;
+      finalGroup.setPluginData("handexCategory", "fluxo");
+      figma.ui.postMessage({ type: "flow-created", flow: __spreadValues({ id: finalGroup.id, name: finalGroup.name, type: msg.flowType }, _flowExtra) });
+    }
+    figma.notify("Fluxo criado!");
+  }
+  figma.ui.onmessage = async (msg) => {
+    var _a, _b, _c;
+    if (msg.type === "ui-ready") {
+      const currentUser = figma.currentUser ? { id: figma.currentUser.id, name: figma.currentUser.name, photoUrl: figma.currentUser.photoUrl } : null;
+      const theme = figma.ui.theme || "light";
+      const sel = figma.currentPage.selection;
+      const projectName = figma.root.name || figma.currentPage.name || "";
+      try {
+        const savedState = await figma.clientStorage.getAsync("handoffData");
+        figma.ui.postMessage({
+          type: "init-plugin",
+          version: PLUGIN_VERSION,
+          currentUser,
+          theme,
+          projectName,
+          savedState: savedState || null
+        });
+      } catch (err) {
+        console.error("Initialization error (continuing without saved state):", err);
+        figma.ui.postMessage({
+          type: "init-plugin",
+          version: PLUGIN_VERSION,
+          currentUser,
+          theme,
+          projectName,
+          savedState: null
+        });
+      }
+      return;
+    }
+    if (msg.type === "get-project-name") {
+      figma.ui.postMessage({ type: "project-name", name: figma.root.name || figma.currentPage.name || "" });
+      return;
+    }
+    if (msg.type === "refresh-spec-card") {
+      const grpNode = await figma.getNodeByIdAsync(msg.nodeId);
+      if (!grpNode) {
+        figma.ui.postMessage({ type: "toast", message: "Card n\xE3o encontrado no canvas.", kind: "error" });
+        return;
+      }
+      const children = grpNode.type === "GROUP" ? grpNode.children : [grpNode];
+      const cardFrame = children.find((n) => n.name && (n.name === "Spec Notes" || n.name === "Ficha" || n.name.endsWith("/Ficha")));
+      if (!cardFrame || cardFrame.type !== "FRAME") {
+        figma.ui.postMessage({ type: "toast", message: "Card n\xE3o encontrado no grupo.", kind: "error" });
+        return;
+      }
+      const existing = cardFrame.children.find((n) => n.name === "[Spec] Exce\xE7\xF5es");
+      if (existing) existing.remove();
+      if (msg.excecoes && msg.excecoes.length > 0) {
+        (async () => {
+          await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+          await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+          const excFrame = figma.createFrame();
+          excFrame.name = "[Spec] Exce\xE7\xF5es";
+          excFrame.layoutMode = "VERTICAL";
+          excFrame.itemSpacing = 4;
+          excFrame.fills = [{ type: "SOLID", color: { r: 1, g: 0.95, b: 0.93 } }];
+          excFrame.paddingLeft = 8;
+          excFrame.paddingRight = 8;
+          excFrame.paddingTop = 6;
+          excFrame.paddingBottom = 6;
+          excFrame.cornerRadius = 6;
+          excFrame.primaryAxisSizingMode = "AUTO";
+          excFrame.counterAxisSizingMode = "AUTO";
+          const excTitle = figma.createText();
+          excTitle.fontName = { family: "Inter", style: "Bold" };
+          excTitle.fontSize = 9;
+          excTitle.fills = [{ type: "SOLID", color: { r: 0.8, g: 0.3, b: 0.1 } }];
+          excTitle.characters = `CEN\xC1RIOS (${msg.excecoes.length})`;
+          excTitle.textAutoResize = "WIDTH_AND_HEIGHT";
+          excFrame.appendChild(excTitle);
+          msg.excecoes.forEach((exc) => {
+            const t = figma.createText();
+            t.fontName = { family: "Inter", style: "Regular" };
+            t.fontSize = 10;
+            t.fills = [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2 } }];
+            t.characters = `[${exc.tipo || "Geral"}] ${exc.titulo || ""}`;
+            t.textAutoResize = "WIDTH_AND_HEIGHT";
+            excFrame.appendChild(t);
+          });
+          cardFrame.appendChild(excFrame);
+          figma.ui.postMessage({ type: "toast", message: "Card atualizado com os cen\xE1rios.", kind: "success" });
+        })();
+      } else {
+        figma.ui.postMessage({ type: "toast", message: "Card atualizado.", kind: "success" });
+      }
+      return;
+    }
+    if (msg.type === "inject-exception-to-spec-canvas") {
+      (async () => {
+        const exc = msg.exc || {};
+        const sel = figma.currentPage.selection;
+        if (!sel || sel.length === 0) {
+          figma.notify("Selecione um card de especifica\xE7\xE3o no canvas.");
+          return;
+        }
+        const node = sel[0];
+        let cardFrame = null;
+        const _isSpecCardName = (name) => name === "Spec Notes" || name === "Ficha" || name.endsWith("/Ficha");
+        if (node.name && _isSpecCardName(node.name) && node.type === "FRAME") {
+          cardFrame = node;
+        } else if ((node.type === "GROUP" || node.type === "FRAME") && node.children) {
+          cardFrame = node.children.find((n) => n.name && _isSpecCardName(n.name));
+        }
+        if (!cardFrame && node.parent && (node.parent.type === "GROUP" || node.parent.type === "FRAME")) {
+          cardFrame = node.parent.children.find((n) => n.name && _isSpecCardName(n.name));
+        }
+        if (!cardFrame) {
+          figma.notify("Card de especifica\xE7\xE3o n\xE3o encontrado. Selecione o card no canvas.");
+          return;
+        }
+        await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+        await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+        let excFrame = cardFrame.children.find((n) => n.name === "[Spec] Exce\xE7\xF5es");
+        if (!excFrame) {
+          excFrame = figma.createFrame();
+          excFrame.name = "[Spec] Exce\xE7\xF5es";
+          excFrame.layoutMode = "VERTICAL";
+          excFrame.itemSpacing = 4;
+          excFrame.fills = [{ type: "SOLID", color: { r: 1, g: 0.95, b: 0.93 } }];
+          excFrame.paddingLeft = 8;
+          excFrame.paddingRight = 8;
+          excFrame.paddingTop = 6;
+          excFrame.paddingBottom = 6;
+          excFrame.cornerRadius = 6;
+          excFrame.primaryAxisSizingMode = "AUTO";
+          excFrame.counterAxisSizingMode = "AUTO";
+          const hdr = figma.createText();
+          hdr.fontName = { family: "Inter", style: "Bold" };
+          hdr.fontSize = 9;
+          hdr.fills = [{ type: "SOLID", color: { r: 0.8, g: 0.3, b: 0.1 } }];
+          hdr.characters = "CEN\xC1RIOS (0)";
+          hdr.textAutoResize = "WIDTH_AND_HEIGHT";
+          excFrame.appendChild(hdr);
+          cardFrame.appendChild(excFrame);
+        }
+        const existingCount = excFrame.children.length - 1;
+        const newCount = existingCount + 1;
+        const hdrNode = excFrame.children[0];
+        if (hdrNode && hdrNode.type === "TEXT") {
+          hdrNode.characters = `CEN\xC1RIOS (${newCount})`;
+        }
+        const _excTypeRgb = {
+          "Erro": { r: 0.8, g: 0.15, b: 0.15 },
+          "Alerta": { r: 0.8, g: 0.5, b: 0 },
+          "Sucesso": { r: 0.1, g: 0.55, b: 0.25 },
+          "Confirma\xE7\xE3o": { r: 0.05, g: 0.35, b: 0.8 }
+        };
+        const excRow = figma.createFrame();
+        excRow.layoutMode = "HORIZONTAL";
+        excRow.itemSpacing = 6;
+        excRow.fills = [];
+        excRow.primaryAxisSizingMode = "AUTO";
+        excRow.counterAxisSizingMode = "AUTO";
+        excRow.counterAxisAlignItems = "CENTER";
+        const typeColor = _excTypeRgb[exc.tipo] || { r: 0.4, g: 0.4, b: 0.4 };
+        const typeLabel = figma.createText();
+        typeLabel.fontName = { family: "Inter", style: "Bold" };
+        typeLabel.fontSize = 9;
+        typeLabel.fills = [{ type: "SOLID", color: typeColor }];
+        typeLabel.characters = (exc.tipo || "GERAL").toUpperCase();
+        typeLabel.textAutoResize = "WIDTH_AND_HEIGHT";
+        const titleLabel = figma.createText();
+        titleLabel.fontName = { family: "Inter", style: "Regular" };
+        titleLabel.fontSize = 10;
+        titleLabel.fills = [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2 } }];
+        titleLabel.characters = `${exc.titulo || ""}${exc.obs ? " \u2014 " + exc.obs : ""}`;
+        titleLabel.textAutoResize = "WIDTH_AND_HEIGHT";
+        excRow.appendChild(typeLabel);
+        excRow.appendChild(titleLabel);
+        excFrame.appendChild(excRow);
+        figma.ui.postMessage({ type: "toast", message: "Cen\xE1rio injetado no card de spec.", kind: "success" });
+      })();
+      return;
+    }
+    if (msg.type === "get-context-name") {
+      const sel = figma.currentPage.selection;
+      const name = sel.length > 0 ? sel[0].name : "";
+      figma.ui.postMessage({ type: "context-name", name });
+      return;
+    }
+    if (msg.type === "get-selection-info") {
+      const validTypes = ["FRAME", "COMPONENT", "INSTANCE", "SECTION", "GROUP"];
+      const selection = figma.currentPage.selection.filter((n) => validTypes.includes(n.type));
+      if (selection.length > 0) {
+        figma.ui.postMessage({
+          type: "selection-info",
+          nodes: selection.map((n) => ({ nodeId: n.id, name: n.name }))
+        });
+      } else {
+        figma.ui.postMessage({
+          type: "selection-info",
+          nodes: [],
+          error: "Nenhum frame selecionado no canvas."
+        });
+      }
+      return;
+    }
+    if (msg.type === "resize") {
+      figma.ui.resize(msg.width, msg.height);
+      return;
+    }
+    if (msg.type === "clear-cache") {
+      const fileKey = figma.root && figma.root.id ? figma.root.id : "default";
+      const keys = [
+        "handoffData",
+        "handex-audit-refs-v1",
+        "handex-scan-cache-v1",
+        "handex-history-" + fileKey
+      ];
+      try {
+        await Promise.all(keys.map((k) => figma.clientStorage.setAsync(k, null)));
+        try {
+          figma.currentPage.setSharedPluginData("handex", "project", "");
+        } catch (e) {
+        }
+        figma.ui.postMessage({ type: "cache-cleared" });
+      } catch (e) {
+        console.error("clear-cache failed:", e);
+        figma.notify("Erro ao limpar cache", { error: true });
+      }
+      return;
+    }
+    if (msg.type === "delete-canvas-content") {
+      const wanted = {
+        ficha: !!msg.ficha,
+        spec: !!msg.specs,
+        medida: !!msg.medidas,
+        fluxo: !!msg.fluxos
+      };
+      const matchCategory = (node) => {
+        const tag = node.getPluginData("handexCategory");
+        if (tag) return wanted[tag] ? tag : null;
+        if (!node.name) return null;
+        if (wanted.ficha && node.name.startsWith("Handex | Ficha de Projeto")) return "ficha";
+        if (wanted.spec && (node.name.startsWith("[Spec | ") || node.name.startsWith("[Spec]"))) return "spec";
+        if (wanted.medida && node.name.startsWith("[Medida]")) return "medida";
+        if (wanted.fluxo && node.name.startsWith("[Fluxo")) return "fluxo";
+        return null;
+      };
+      const counts = { ficha: 0, spec: 0, medida: 0, fluxo: 0 };
+      const toRemove = [];
+      figma.currentPage.children.forEach((node) => {
+        const cat = matchCategory(node);
+        if (cat) {
+          toRemove.push(node);
+          counts[cat]++;
+        }
+      });
+      toRemove.forEach((node) => {
+        try {
+          node.remove();
+        } catch (e) {
+        }
+      });
+      figma.ui.postMessage({ type: "canvas-content-deleted", counts });
+      return;
+    }
+    if (msg.type === "scan-cache-save") {
+      figma.clientStorage.setAsync("handex-scan-cache-v1", msg.data).catch(
+        (e) => console.warn("scan-cache-save failed:", e)
+      );
+      return;
+    }
+    if (msg.type === "scan-cache-load") {
+      try {
+        const cached = await figma.clientStorage.getAsync("handex-scan-cache-v1");
+        figma.ui.postMessage({ type: "scan-cache-loaded", data: cached || null });
+      } catch (e) {
+        figma.ui.postMessage({ type: "scan-cache-loaded", data: null });
+      }
+      return;
+    }
+    if (msg.type === "snapshot-load") {
+      try {
+        const fileKey = figma.root && figma.root.id ? figma.root.id : "default";
+        const key = "handex-history-" + fileKey;
+        const history = await figma.clientStorage.getAsync(key);
+        figma.ui.postMessage({ type: "snapshot-history", history: Array.isArray(history) ? history : [] });
+      } catch (e) {
+        figma.ui.postMessage({ type: "snapshot-history", history: [] });
+      }
+      return;
+    }
+    if (msg.type === "snapshot-save") {
+      try {
+        const fileKey = figma.root && figma.root.id ? figma.root.id : "default";
+        const key = "handex-history-" + fileKey;
+        const existing = await figma.clientStorage.getAsync(key) || [];
+        const next = [msg.snapshot].concat(Array.isArray(existing) ? existing : []).slice(0, 5);
+        await figma.clientStorage.setAsync(key, next);
+      } catch (e) {
+        console.error("snapshot-save failed:", e);
+      }
+      return;
+    }
+    if (msg.type === "create-handoff") {
+      try {
+        let createText = function(text, size = 14, weight = "Regular", color = { r: 0.12, g: 0.16, b: 0.23 }) {
+          const t = figma.createText();
+          t.fontName = { family: "Inter", style: weight };
+          t.characters = String(text || "");
+          t.fontSize = size;
+          t.fills = [{ type: "SOLID", color }];
+          return t;
+        }, createFrame = function(direction = "VERTICAL", padding = 0, spacing = 0, fill = null) {
+          const f = figma.createFrame();
+          f.layoutMode = direction;
+          f.paddingLeft = padding;
+          f.paddingRight = padding;
+          f.paddingTop = padding;
+          f.paddingBottom = padding;
+          f.itemSpacing = spacing;
+          f.primaryAxisSizingMode = "AUTO";
+          f.counterAxisSizingMode = "AUTO";
+          f.layoutAlign = "INHERIT";
+          if (fill) {
+            f.fills = [{ type: "SOLID", color: fill }];
+          } else {
+            f.fills = [];
+          }
+          return f;
+        }, setFillAndHug = function(node) {
+          if (!node) return;
+          try {
+            if ("layoutSizingHorizontal" in node) {
+              node.layoutSizingHorizontal = "FILL";
+            }
+            if ("layoutSizingVertical" in node) {
+              node.layoutSizingVertical = "HUG";
+            }
+          } catch (e) {
+          }
+          const parent = node.parent;
+          const pMode = parent && "layoutMode" in parent ? parent.layoutMode : "VERTICAL";
+          if (pMode === "VERTICAL") {
+            node.layoutAlign = "STRETCH";
+            if (node.type === "FRAME") {
+              if (node.layoutMode === "VERTICAL") node.primaryAxisSizingMode = "AUTO";
+              else node.counterAxisSizingMode = "AUTO";
+            } else if (node.type === "TEXT") {
+              node.textAutoResize = "HEIGHT";
+            }
+          } else if (pMode === "HORIZONTAL") {
+            node.layoutGrow = 1;
+            node.layoutAlign = "INHERIT";
+            if (node.type === "FRAME") {
+              if (node.layoutMode === "HORIZONTAL") node.counterAxisSizingMode = "AUTO";
+              else node.primaryAxisSizingMode = "AUTO";
+            } else if (node.type === "TEXT") {
+              node.textAutoResize = "HEIGHT";
+            }
+          }
+        }, getIconSvg = function(type, label) {
+          const S = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
+          const E = "</svg>";
+          const l = (label || "").toLowerCase();
+          if (type === "spacing") {
+            if (l.includes("gap"))
+              return S + '<line x1="4" y1="4" x2="4" y2="20"/><line x1="20" y1="4" x2="20" y2="20"/><path d="M9 12H4"/><path d="M15 12H20"/><path d="M9 9l-3 3 3 3"/><path d="M15 9l3 3-3 3"/>' + E;
+            if (l.includes("topo") || l.includes("top"))
+              return S + '<line x1="4" y1="4" x2="20" y2="4"/><line x1="12" y1="8" x2="12" y2="20"/><polyline points="8,14 12,20 16,14"/>' + E;
+            if (l.includes("abaixo") || l.includes("bottom"))
+              return S + '<line x1="4" y1="20" x2="20" y2="20"/><line x1="12" y1="4" x2="12" y2="16"/><polyline points="8,10 12,4 16,10"/>' + E;
+            if (l.includes("esquerda") || l.includes("left"))
+              return S + '<line x1="4" y1="4" x2="4" y2="20"/><line x1="8" y1="12" x2="20" y2="12"/><polyline points="14,8 20,12 14,16"/>' + E;
+            if (l.includes("direita") || l.includes("right"))
+              return S + '<line x1="20" y1="4" x2="20" y2="20"/><line x1="4" y1="12" x2="16" y2="12"/><polyline points="10,8 4,12 10,16"/>' + E;
+            return S + '<path d="M3 12h18"/><path d="M7 8l-4 4 4 4"/><path d="M17 8l4 4-4 4"/>' + E;
+          }
+          if (type === "layout") {
+            if (l.includes("w") || l.includes("width") || l.includes("larg"))
+              return S + '<path d="M3 12h18"/><path d="M7 8l-4 4 4 4"/><path d="M17 8l4 4-4 4"/>' + E;
+            if (l.includes("h") || l.includes("height") || l.includes("alt"))
+              return S + '<path d="M12 3v18"/><path d="M8 7l4-4 4 4"/><path d="M8 17l4 4 4-4"/>' + E;
+            return S + '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>' + E;
+          }
+          const icons = {
+            typography: S + '<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>' + E,
+            radius: S + '<path d="m14 18-4-4 4-4"/><path d="M20 14c-4.4 0-8-3.6-8-8"/>' + E,
+            strokeWeight: S + '<line x1="3" y1="6" x2="21" y2="6" stroke-width="1"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2.5"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="4"/>' + E,
+            stroke: S + '<rect width="18" height="18" x="3" y="3" rx="2" stroke-width="2.5"/>' + E,
+            variant: S + '<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>' + E,
+            effect: S + '<path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>' + E
+          };
+          return icons[type] || S + '<rect width="18" height="18" x="3" y="3" rx="2"/>' + E;
+        }, createSection = function(parent, titleText) {
+          const section = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
+          section.name = `[Se\xE7\xE3o] ${titleText}`;
+          if (parent) {
+            parent.appendChild(section);
+            setFillAndHug(section);
+          }
+          section.cornerRadius = 8;
+          section.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
+          section.strokeWeight = 1;
+          const title = createText(titleText, 16, "Bold", { r: 0, g: 0.35, b: 0.79 });
+          section.appendChild(title);
+          setFillAndHug(title);
+          return section;
+        }, createRow = function(parent, label, value, isLink = false, url = "") {
+          const row = createFrame("VERTICAL", 0, 4);
+          row.name = `[Campo] ${label}`;
+          if (parent) {
+            parent.appendChild(row);
+            setFillAndHug(row);
+          }
+          const lbl = createText(label, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+          row.appendChild(lbl);
+          setFillAndHug(lbl);
+          const val = createText(value || "-", 14, "Regular", isLink ? { r: 0, g: 0.35, b: 0.79 } : { r: 0.12, g: 0.16, b: 0.23 });
+          row.appendChild(val);
+          setFillAndHug(val);
+          if (isLink && value) {
+            val.textDecoration = "UNDERLINE";
+            if (url && typeof url === "string") {
+              try {
+                val.hyperlink = { type: "URL", value: url.startsWith("http") ? url : "https://" + url };
+              } catch (e) {
+              }
+            }
+          }
+          return row;
+        };
+        const fonts = [
+          { family: "Inter", style: "Regular" },
+          { family: "Inter", style: "Medium" },
+          { family: "Inter", style: "SemiBold" },
+          { family: "Inter", style: "Semi Bold" },
+          { family: "Inter", style: "Bold" }
+        ];
+        for (const font of fonts) {
+          try {
+            await figma.loadFontAsync(font);
+          } catch (e) {
+            console.log("Font not loaded:", font);
+          }
+        }
+        const data = msg.data;
+        let _pendingSpecsLocked = 0;
+        for (const frame of data.frames || []) {
+          for (const spec of frame.createdSpecs || []) {
+            if (!spec || !spec.pendingConfirmation) continue;
+            const specNode = await figma.getNodeByIdAsync(spec.id);
+            if (specNode && specNode.name && /^\[Spec(A11y)? \| /.test(specNode.name)) {
+              specNode.locked = true;
+            }
+            spec.pendingConfirmation = false;
+            _pendingSpecsLocked++;
+          }
+          for (const spec of frame.a11ySpecs || []) {
+            if (!spec || !spec.pendingConfirmation) continue;
+            const specNode = await figma.getNodeByIdAsync(spec.id);
+            if (specNode && specNode.name && /^\[Spec(A11y)? \| /.test(specNode.name)) {
+              specNode.locked = true;
+            }
+            spec.pendingConfirmation = false;
+            _pendingSpecsLocked++;
+          }
+        }
+        if (_pendingSpecsLocked > 0) {
+          figma.notify(`${_pendingSpecsLocked} especifica\xE7\xE3o(\xF5es) pendente(s) foram travadas automaticamente ao gerar a ficha.`);
+        }
+        const _titulo = (((_a = data.step1) == null ? void 0 : _a.titulo) || "Projeto").replace(/\//g, "-");
+        const _handoffBase = `Handex | Ficha de Projeto | ${_titulo}`;
+        const _isUpdate = false;
+        const _now = /* @__PURE__ */ new Date();
+        const _ts = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}-${String(_now.getDate()).padStart(2, "0")} ${String(_now.getHours()).padStart(2, "0")}:${String(_now.getMinutes()).padStart(2, "0")}`;
+        const _versaoLabel = (((_b = data.step1) == null ? void 0 : _b.versao) || "").trim();
+        const _containerName = `${_handoffBase} | ${_ts}${_versaoLabel ? " | " + _versaoLabel : ""}`;
+        const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb2("#026173"));
+        mainContainer.name = _containerName;
+        mainContainer.counterAxisAlignItems = "MIN";
+        mainContainer.primaryAxisSizingMode = "AUTO";
+        mainContainer.counterAxisSizingMode = "AUTO";
+        const fichaTecnica = createFrame("VERTICAL", 0, 0, { r: 1, g: 1, b: 1 });
+        fichaTecnica.name = `${_handoffBase} | ${_ts} / Ficha de Projeto`;
+        fichaTecnica.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
+        fichaTecnica.resize(480, 100);
+        fichaTecnica.counterAxisSizingMode = "FIXED";
+        fichaTecnica.primaryAxisSizingMode = "AUTO";
+        const header = createFrame("HORIZONTAL", 24, 16, { r: 1, g: 1, b: 1 });
+        fichaTecnica.appendChild(header);
+        setFillAndHug(header);
+        header.counterAxisAlignItems = "CENTER";
+        header.primaryAxisAlignItems = "SPACE_BETWEEN";
+        header.paddingTop = 20;
+        header.paddingBottom = 20;
+        const logoSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 205.51265 46.553631">
+        <g transform="translate(-284.78446,-475.51214)">
+          <g transform="matrix(1.25,0,0,-1.25,15.493106,1024.9702)">
+            <g transform="scale(0.24,0.24)">
+              <path d="m 1107.19,1780.04 -17.74,-44.21 24.55,0 -6.73,44.39 -0.08,-0.18 z m -93.98,-101.49 72.77,149.83 55.02,0 30.68,-149.83 -48.3,0 -3.56,19.97 -46.86,0 -10.78,-19.97 -48.97,0 z m 181.34,0 21.08,149.83 48.67,0 -21.07,-149.83 -48.68,0 z m 323.71,101.67 -17.81,-44.39 24.54,0 -6.73,44.39 z m -94.06,-101.67 72.78,149.83 55.01,0 30.69,-149.83 -48.31,0 -3.55,19.97 -46.87,0 -10.78,-19.97 -48.97,0" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1316.6,1748.61 60.99,0 41.79,-69.21 -61,0 -41.78,69.21" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1322.94,1759.24 63.04,0 54.75,68.92 -63.04,0 -54.75,-68.92" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1259.91,1678.98 63.03,0 54.75,69.76 -63.04,0 -54.74,-69.76" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1282.64,1829 58.83,0 40.31,-69.76 -58.84,0 -40.3,69.76" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1014.65,1823.02 -4.68,-44.07 c -17.939,24.75 -59.517,7.67 -62.782,-23.16 -4.149,-39.13 35.867,-48.25 57.642,-25.21 l -4.69,-44.17 c -6.499,-3.19 -12.855,-5.67 -19.128,-7.34 -6.239,-1.68 -12.492,-2.57 -18.696,-2.7 -7.8,-0.17 -14.867,0.65 -21.234,2.44 -6.367,1.76 -12.129,4.56 -17.227,8.34 -9.832,7.19 -16.941,16.33 -21.32,27.45 -4.379,11.16 -5.82,23.75 -4.328,37.82 1.203,11.31 4.051,21.62 8.59,30.97 4.5,9.34 10.734,17.84 18.672,25.54 7.504,7.34 15.676,12.88 24.519,16.64 8.809,3.73 18.422,5.72 28.813,5.94 6.207,0.13 12.297,-0.49 18.207,-1.92 5.942,-1.42 11.802,-3.64 17.642,-6.57" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+            </g>
+          </g>
+        </g>
+      </svg>`;
+        const logoWrapper = figma.createNodeFromSvg(logoSvg);
+        logoWrapper.name = "CAIXA Logo";
+        const ratio = 205.51 / 46.55;
+        logoWrapper.resize(32 * ratio, 32);
+        const headerTitle = createText("Handex - Handoff Expresso", 14, "Medium", { r: 0.39, g: 0.45, b: 0.55 });
+        header.appendChild(logoWrapper);
+        header.appendChild(headerTitle);
+        fichaTecnica.appendChild(header);
+        const content = createFrame("VERTICAL", 24, 24, { r: 1, g: 1, b: 1 });
+        fichaTecnica.appendChild(content);
+        setFillAndHug(content);
+        if (!data.setup || data.setup.ficha !== false) {
+          const infoSection = createSection(content, "Informa\xE7\xF5es B\xE1sicas");
+          createRow(infoSection, "T\xEDtulo do Projeto", data.step1.titulo);
+          if (data.step1.jornada) createRow(infoSection, "Jornada", data.step1.jornada);
+          if (data.step1.feature) createRow(infoSection, "Feature", data.step1.feature);
+          createRow(infoSection, "Objetivo da Entrega", data.step1.objetivo);
+          const subGrid = createFrame("HORIZONTAL", 0, 16);
+          infoSection.appendChild(subGrid);
+          setFillAndHug(subGrid);
+          {
+            const _statusMap = {
+              "rascunho": { label: "Rascunho", bg: { r: 0.94, g: 0.95, b: 0.96 }, text: { r: 0.42, g: 0.47, b: 0.55 } },
+              "em-revisao": { label: "Em Revis\xE3o", bg: { r: 1, g: 0.96, b: 0.84 }, text: { r: 0.72, g: 0.45, b: 0 } },
+              "pronto-para-dev": { label: "Pronto para Dev", bg: { r: 0.86, g: 0.93, b: 1 }, text: { r: 0, g: 0.35, b: 0.79 } },
+              "finalizado": { label: "Finalizado", bg: { r: 0.86, g: 0.97, b: 0.88 }, text: { r: 0.07, g: 0.53, b: 0.18 } }
+            };
+            const _sc = _statusMap[data.step1.status] || _statusMap["rascunho"];
+            const statusCol = createFrame("VERTICAL", 0, 4);
+            statusCol.name = "[Campo] Status";
+            subGrid.appendChild(statusCol);
+            setFillAndHug(statusCol);
+            statusCol.appendChild(createText("Status", 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 }));
+            const chip = createFrame("HORIZONTAL", 8, 4, _sc.bg);
+            chip.cornerRadius = 999;
+            chip.primaryAxisSizingMode = "AUTO";
+            chip.counterAxisSizingMode = "AUTO";
+            chip.counterAxisAlignItems = "CENTER";
+            chip.appendChild(createText(_sc.label, 11, "Bold", _sc.text));
+            statusCol.appendChild(chip);
+          }
+          createRow(subGrid, "Vers\xE3o", data.step1.versao);
+        }
+        if (data.step1.equipe && data.step1.equipe.length > 0) {
+          const teamSection = createSection(content, "Equipe e Respons\xE1veis");
+          data.step1.equipe.forEach((m) => {
+            const mRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
+            teamSection.appendChild(mRow);
+            setFillAndHug(mRow);
+            mRow.counterAxisAlignItems = "CENTER";
+            mRow.cornerRadius = 8;
+            mRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+            const roleTag = createFrame("HORIZONTAL", 8, 3, { r: 0.93, g: 0.96, b: 1 });
+            roleTag.cornerRadius = 999;
+            roleTag.strokes = [{ type: "SOLID", color: { r: 0.7, g: 0.82, b: 0.96 } }];
+            roleTag.strokeWeight = 1;
+            roleTag.appendChild(createText(m.papel || "Membro", 9, "Medium", { r: 0, g: 0.35, b: 0.79 }));
+            mRow.appendChild(roleTag);
+            const nameText = createText(m.nome || "", 12, "Medium");
+            nameText.layoutGrow = 1;
+            mRow.appendChild(nameText);
+            if (m.email) {
+              const contactLink = createText("Contato", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
+              contactLink.textDecoration = "UNDERLINE";
+              contactLink.hyperlink = { type: "URL", value: "mailto:" + m.email };
+              mRow.appendChild(contactLink);
+            }
+          });
+        }
+        const _briefingQs = data.step2 && data.step2.briefingQuestions ? data.step2.briefingQuestions.filter((q) => q.answer && q.answer.trim()) : [];
+        const _regras = data.step2 && data.step2.regras ? data.step2.regras : [];
+        if (_regras.length > 0) {
+          const rulesSection = createSection(content, "Regras de Neg\xF3cio e HUs");
+          _regras.forEach((r) => {
+            const rRow = createFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.98, b: 0.99 });
+            rulesSection.appendChild(rRow);
+            setFillAndHug(rRow);
+            rRow.cornerRadius = 8;
+            rRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+            const rTitle = createText(r.titulo || "", 12, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+            rRow.appendChild(rTitle);
+            setFillAndHug(rTitle);
+            if (r.link && r.link !== "#") {
+              const lText = createText("Acesse o link da HU", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
+              lText.textDecoration = "UNDERLINE";
+              lText.hyperlink = { type: "URL", value: r.link };
+              rRow.appendChild(lText);
+              setFillAndHug(lText);
+            }
+            if (r.notas) {
+              const nText = createText(r.notas, 12, "Regular", { r: 0.4, g: 0.4, b: 0.4 });
+              rRow.appendChild(nText);
+              setFillAndHug(nText);
+            }
+          });
+          content.appendChild(rulesSection);
+          setFillAndHug(rulesSection);
+        }
+        const _allExcecoes = (data.frames || []).flatMap(
+          (f) => (f.excecoes || []).map((e) => __spreadProps(__spreadValues({}, e), { _frame: f.nome }))
+        );
+        if (_allExcecoes.length > 0) {
+          const excSection = createSection(content, "Cen\xE1rios de Exce\xE7\xE3o");
+          _allExcecoes.forEach((e) => {
+            const eRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
+            excSection.appendChild(eRow);
+            setFillAndHug(eRow);
+            eRow.counterAxisAlignItems = "CENTER";
+            eRow.cornerRadius = 8;
+            eRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+            const typeTag = createFrame("HORIZONTAL", 8, 4, { r: 0.9, g: 0.2, b: 0.2 });
+            typeTag.cornerRadius = 4;
+            typeTag.appendChild(createText(e.tipo || "", 10, "Bold", { r: 1, g: 1, b: 1 }));
+            eRow.appendChild(typeTag);
+            const titleText = createText(`${e.titulo || ""}${e._frame ? " (" + e._frame + ")" : ""}`, 12, "Medium");
+            titleText.layoutGrow = 1;
+            eRow.appendChild(titleText);
+            if (e.anchor && e.anchor !== "#") {
+              titleText.textDecoration = "UNDERLINE";
+              titleText.hyperlink = { type: "URL", value: e.anchor };
+            }
+          });
+          content.appendChild(excSection);
+          setFillAndHug(excSection);
+        }
+        if (data.docs) {
+          const docItems = [
+            { key: "proto", label: "Prot\xF3tipo Naveg\xE1vel" },
+            { key: "a11y", label: "Handoff Acessibilidade" },
+            { key: "research", label: "Pesquisa de UX" }
+          ];
+          const validDocItems = docItems.filter((item) => data.docs[item.key] && data.docs[item.key].link);
+          if (validDocItems.length > 0) {
+            const docsSection = createSection(content, "Docs e Anexos");
+            validDocItems.forEach((item) => {
+              const docData = data.docs[item.key];
+              const dRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
+              dRow.layoutAlign = "STRETCH";
+              dRow.counterAxisAlignItems = "CENTER";
+              dRow.cornerRadius = 8;
+              dRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
+              const dLabel = createText(item.label, 12, "Bold");
+              dLabel.layoutGrow = 1;
+              dRow.appendChild(dLabel);
+              const dLink = createText("Acesse o link", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
+              dLink.textDecoration = "UNDERLINE";
+              dLink.hyperlink = { type: "URL", value: docData.link };
+              dRow.appendChild(dLink);
+              docsSection.appendChild(dRow);
+            });
+            setFillAndHug(docsSection);
+          }
+        }
+        if (false) {
+          let buildSpecCard = function(s) {
+            const tc = s.color ? { r: parseInt(s.color.slice(1, 3), 16) / 255, g: parseInt(s.color.slice(3, 5), 16) / 255, b: parseInt(s.color.slice(5, 7), 16) / 255 } : themeColor;
+            const card = figma.createFrame();
+            card.name = `[Spec/${s.letter || "A"}] ${s.name || ""}`;
+            card.layoutMode = "VERTICAL";
+            card.itemSpacing = 4;
+            card.paddingLeft = 10;
+            card.paddingRight = 10;
+            card.paddingTop = 8;
+            card.paddingBottom = 8;
+            card.cornerRadius = 8;
+            card.fills = [{ type: "SOLID", color: { r: 0.98, g: 0.98, b: 1 } }];
+            card.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.92, b: 0.96 } }];
+            card.primaryAxisSizingMode = "AUTO";
+            card.counterAxisSizingMode = "FIXED";
+            card.resize(SPEC_CARD_W, 10);
+            const sHeader = figma.createFrame();
+            sHeader.layoutMode = "HORIZONTAL";
+            sHeader.itemSpacing = 8;
+            sHeader.fills = [];
+            sHeader.counterAxisAlignItems = "CENTER";
+            sHeader.primaryAxisSizingMode = "FIXED";
+            sHeader.counterAxisSizingMode = "AUTO";
+            sHeader.layoutAlign = "STRETCH";
+            card.appendChild(sHeader);
+            const badge = figma.createFrame();
+            badge.layoutMode = "HORIZONTAL";
+            badge.resize(20, 20);
+            badge.cornerRadius = 4;
+            badge.fills = [{ type: "SOLID", color: tc }];
+            badge.primaryAxisAlignItems = "CENTER";
+            badge.counterAxisAlignItems = "CENTER";
+            const badgeT = figma.createText();
+            badgeT.fontName = { family: "Inter", style: "Bold" };
+            badgeT.fontSize = 9;
+            badgeT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+            badgeT.characters = s.letter || "A";
+            badgeT.textAutoResize = "WIDTH_AND_HEIGHT";
+            badge.appendChild(badgeT);
+            sHeader.appendChild(badge);
+            const sName = figma.createText();
+            sName.fontName = { family: "Inter", style: "Bold" };
+            sName.fontSize = 11;
+            sName.fills = [{ type: "SOLID", color: { r: 0.12, g: 0.16, b: 0.23 } }];
+            sName.characters = s.name || "";
+            sName.textAutoResize = "HEIGHT";
+            sName.layoutGrow = 1;
+            sHeader.appendChild(sName);
+            if (s.note) {
+              const sNote = figma.createText();
+              sNote.fontName = { family: "Inter", style: "Regular" };
+              sNote.fontSize = 10;
+              sNote.fills = [{ type: "SOLID", color: { r: 0.4, g: 0.4, b: 0.4 } }];
+              sNote.characters = s.note;
+              sNote.textAutoResize = "HEIGHT";
+              sNote.layoutAlign = "STRETCH";
+              card.appendChild(sNote);
+            }
+            if (s.link) {
+              const lText = figma.createText();
+              lText.fontName = { family: "Inter", style: "Regular" };
+              lText.fontSize = 9;
+              lText.fills = [{ type: "SOLID", color: { r: 0, g: 0.35, b: 0.79 } }];
+              lText.characters = s.link;
+              lText.textDecoration = "UNDERLINE";
+              lText.hyperlink = { type: "URL", value: s.link };
+              lText.textAutoResize = "HEIGHT";
+              lText.layoutAlign = "STRETCH";
+              card.appendChild(lText);
+            }
+            const sExcs = s.excecoes || [];
+            if (sExcs.length > 0) {
+              const _excRgb = { "Erro": { r: 0.8, g: 0.15, b: 0.15 }, "Alerta": { r: 0.8, g: 0.5, b: 0 }, "Sucesso": { r: 0.1, g: 0.55, b: 0.25 }, "Confirma\xE7\xE3o": { r: 0.05, g: 0.35, b: 0.8 } };
+              sExcs.forEach((exc) => {
+                const eRow = figma.createFrame();
+                eRow.layoutMode = "HORIZONTAL";
+                eRow.itemSpacing = 6;
+                eRow.fills = [];
+                eRow.primaryAxisSizingMode = "FIXED";
+                eRow.counterAxisSizingMode = "AUTO";
+                eRow.layoutAlign = "STRETCH";
+                eRow.counterAxisAlignItems = "CENTER";
+                card.appendChild(eRow);
+                const eType = figma.createText();
+                eType.fontName = { family: "Inter", style: "Bold" };
+                eType.fontSize = 9;
+                eType.fills = [{ type: "SOLID", color: _excRgb[exc.tipo] || { r: 0.4, g: 0.4, b: 0.4 } }];
+                eType.characters = (exc.tipo || "GERAL").toUpperCase();
+                eType.textAutoResize = "WIDTH_AND_HEIGHT";
+                const eTitle = figma.createText();
+                eTitle.fontName = { family: "Inter", style: "Regular" };
+                eTitle.fontSize = 10;
+                eTitle.fills = [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2 } }];
+                eTitle.characters = exc.titulo || "";
+                eTitle.textAutoResize = "HEIGHT";
+                eTitle.layoutGrow = 1;
+                eRow.appendChild(eType);
+                eRow.appendChild(eTitle);
+              });
+            }
+            return card;
+          };
+          const SPEC_CARD_W = 240;
+          const _specsByTag = {};
+          _globalSpecs.forEach((s) => {
+            const tag = s.categoryLabel || s.category || "Geral";
+            if (!_specsByTag[tag]) _specsByTag[tag] = [];
+            _specsByTag[tag].push(s);
+          });
+          const specsSection = createSection(content, "Especifica\xE7\xF5es Visuais");
+          const specsTagRow = figma.createFrame();
+          specsTagRow.name = "[Row] Especifica\xE7\xF5es por Tag";
+          specsTagRow.layoutMode = "HORIZONTAL";
+          specsTagRow.layoutWrap = "WRAP";
+          specsTagRow.itemSpacing = 16;
+          specsTagRow.counterAxisSpacing = 16;
+          specsTagRow.fills = [];
+          specsTagRow.primaryAxisSizingMode = "AUTO";
+          specsTagRow.counterAxisSizingMode = "AUTO";
+          specsTagRow.counterAxisAlignItems = "MIN";
+          specsSection.appendChild(specsTagRow);
+          setFillAndHug(specsTagRow);
+          Object.entries(_specsByTag).forEach(([tag, tagSpecs]) => {
+            if (tagSpecs.length === 1) {
+              specsTagRow.appendChild(buildSpecCard(tagSpecs[0]));
+            } else {
+              const group = figma.createFrame();
+              group.name = `[Specs/${tag}] Especifica\xE7\xF5es Visuais`;
+              group.layoutMode = "VERTICAL";
+              group.itemSpacing = 8;
+              group.fills = [];
+              group.primaryAxisSizingMode = "AUTO";
+              group.counterAxisSizingMode = "AUTO";
+              group.counterAxisAlignItems = "MIN";
+              tagSpecs.forEach((s) => group.appendChild(buildSpecCard(s)));
+              specsTagRow.appendChild(group);
+              setFillAndHug(group);
+            }
+          });
+          content.appendChild(specsSection);
+          setFillAndHug(specsSection);
+        }
+        const _frames = data.frames || [];
+        if (_frames.length > 0) {
+          const framesSection = createSection(content, "Frames Documentados");
+          _frames.forEach((f, fi) => {
+            const fRow = createFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.99, b: 1 });
+            fRow.name = `[Frame] ${f.nome || "Frame " + (fi + 1)}`;
+            fRow.cornerRadius = 8;
+            fRow.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.92, b: 0.96 } }];
+            framesSection.appendChild(fRow);
+            setFillAndHug(fRow);
+            const fHeader = createFrame("HORIZONTAL", 0, 8);
+            fHeader.counterAxisAlignItems = "CENTER";
+            fRow.appendChild(fHeader);
+            setFillAndHug(fHeader);
+            const fName = createText(f.nome || "Frame", 12, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+            fName.layoutGrow = 1;
+            fHeader.appendChild(fName);
+            if (f.isNewComponent) {
+              const badge = createFrame("HORIZONTAL", 8, 3, { r: 0.94, g: 0.92, b: 1 });
+              badge.cornerRadius = 999;
+              badge.strokes = [{ type: "SOLID", color: { r: 0.7, g: 0.6, b: 0.96 } }];
+              badge.strokeWeight = 1;
+              badge.appendChild(createText("Novo componente", 9, "Medium", { r: 0.38, g: 0.18, b: 0.78 }));
+              fHeader.appendChild(badge);
+            }
+            if (f.audit && f.audit.checkDone) {
+              const _ressalvas = f.audit.ressalvas || [];
+              const _status = f.audit.semDesvios ? _ressalvas.length > 0 ? "Conforme com ressalvas" : "Conforme" : "N\xE3o Conforme";
+              createRow(fRow, "Auditoria DSC", _status + (f.audit.observacoes ? " \u2014 " + f.audit.observacoes : ""));
+              if (f.audit.semDesvios && (f.audit.declaradoPor || f.audit.declaradoEm)) {
+                const _dataFmt = f.audit.declaradoEm ? new Date(f.audit.declaradoEm).toLocaleDateString("pt-BR") : "\u2014";
+                createRow(fRow, "Declarado por", `${f.audit.declaradoPor || "\u2014"} em ${_dataFmt}`);
+              }
+            }
+          });
+          content.appendChild(framesSection);
+          setFillAndHug(framesSection);
+        }
+        const _framesWithMeasures = (_frames || []).filter((f) => (f.measurements || []).length > 0);
+        if (_framesWithMeasures.length > 0) {
+          const measSection = createSection(content, "Medidas");
+          _framesWithMeasures.forEach((f) => {
+            const fGroup = createFrame("VERTICAL", 0, 6);
+            fGroup.name = `[Medidas | ${f.figmaId || f.id}] ${f.nome || "Frame"}`;
+            measSection.appendChild(fGroup);
+            setFillAndHug(fGroup);
+            const fLabel = createText(f.nome || "Frame", 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
+            fGroup.appendChild(fLabel);
+            setFillAndHug(fLabel);
+            f.measurements.forEach((m) => {
+              const details = Array.isArray(m.details) ? m.details.join(" | ") : m.details || "";
+              const mRow = createFrame("HORIZONTAL", 10, 7, { r: 0.94, g: 0.97, b: 1 });
+              mRow.name = `[Medida] ${m.name || "Medida"}`;
+              mRow.cornerRadius = 6;
+              mRow.counterAxisAlignItems = "CENTER";
+              fGroup.appendChild(mRow);
+              setFillAndHug(mRow);
+              const mName = createText(m.name || "Medida", 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+              mName.layoutGrow = 1;
+              mRow.appendChild(mName);
+              const mVal = createText(details, 10, "Regular", { r: 0.27, g: 0.45, b: 0.78 });
+              mRow.appendChild(mVal);
+              setFillAndHug(mVal);
+            });
+          });
+          content.appendChild(measSection);
+          setFillAndHug(measSection);
+        }
+        const _framesWithSpecs = (_frames || []).filter((f) => (f.createdSpecs || []).some((s) => s && !s.a11yType));
+        if (_framesWithSpecs.length > 0) {
+          const annotSection = createSection(content, "Especifica\xE7\xF5es");
+          for (const f of _framesWithSpecs) {
+            const fGroup = createFrame("VERTICAL", 0, 10);
+            fGroup.name = `[Specs] ${f.nome || "Frame"}`;
+            annotSection.appendChild(fGroup);
+            setFillAndHug(fGroup);
+            const fLabel = createText(f.nome || "Frame", 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
+            fGroup.appendChild(fLabel);
+            setFillAndHug(fLabel);
+            const groupNames = f.specGroupNames || {};
+            const groupVisible = f.specGroupVisible || {};
+            const letterOrder = [];
+            const specsByLetter = {};
+            (f.createdSpecs || []).filter((s) => s && !s.a11yType).forEach((s) => {
+              const l = s.letter || "A";
+              if (!specsByLetter[l]) {
+                specsByLetter[l] = [];
+                letterOrder.push(l);
+              }
+              specsByLetter[l].push(s);
+            });
+            for (const letter of letterOrder) {
+              if (groupVisible[letter] === false) continue;
+              const groupSpecs = specsByLetter[letter];
+              const groupColor = ((_c = groupSpecs[0]) == null ? void 0 : _c.color) ? hexToRgb2(groupSpecs[0].color) : { r: 0.38, g: 0.35, b: 0.75 };
+              const groupNameText = groupNames[letter] || "";
+              const gBox = createFrame("VERTICAL", 0, 6);
+              gBox.name = `[Grupo/${letter}] ${groupNameText || letter}`;
+              fGroup.appendChild(gBox);
+              setFillAndHug(gBox);
+              const gHeader = createFrame("HORIZONTAL", 0, 6);
+              gHeader.counterAxisAlignItems = "CENTER";
+              gBox.appendChild(gHeader);
+              setFillAndHug(gHeader);
+              const gBadge = createFrame("HORIZONTAL", 0, 0, groupColor);
+              gBadge.resize(18, 18);
+              gBadge.cornerRadius = 4;
+              gBadge.primaryAxisAlignItems = "CENTER";
+              gBadge.counterAxisAlignItems = "CENTER";
+              gHeader.appendChild(gBadge);
+              const gBadgeT = figma.createText();
+              gBadgeT.fontName = { family: "Inter", style: "Bold" };
+              gBadgeT.fontSize = 9;
+              gBadgeT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+              gBadgeT.characters = letter;
+              gBadgeT.textAutoResize = "WIDTH_AND_HEIGHT";
+              gBadge.appendChild(gBadgeT);
+              if (groupNameText) {
+                const gName = createText(groupNameText, 10, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+                gHeader.appendChild(gName);
+                setFillAndHug(gName);
+              }
+              const gCount = createText(`${groupSpecs.length} esp.`, 9, "Regular", { r: 0.55, g: 0.6, b: 0.65 });
+              gHeader.appendChild(gCount);
+              setFillAndHug(gCount);
+              const gSpecs = createFrame("VERTICAL", 0, 4);
+              gSpecs.fills = [];
+              gBox.appendChild(gSpecs);
+              setFillAndHug(gSpecs);
+              for (const s of groupSpecs) {
+                const catLabel = s.type || s.categoryLabel || s.category || "Geral";
+                const sc = s.color ? hexToRgb2(s.color) : { r: 0.38, g: 0.35, b: 0.75 };
+                const scBg = s.fillColor ? hexToRgb2(s.fillColor) : { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
+                const sRow = createFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.97, b: 1 });
+                sRow.name = `[Spec/${s.letter || "A"}] ${s.name || s.label || "Spec"}`;
+                sRow.cornerRadius = 8;
+                sRow.strokes = [{ type: "SOLID", color: sc }];
+                gSpecs.appendChild(sRow);
+                setFillAndHug(sRow);
+                const sTop = createFrame("HORIZONTAL", 0, 6);
+                sTop.counterAxisAlignItems = "CENTER";
+                sRow.appendChild(sTop);
+                setFillAndHug(sTop);
+                const sName = createText(s.name || s.label || "Spec", 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+                sName.layoutGrow = 1;
+                sTop.appendChild(sName);
+                if (s.link) {
+                  sName.textDecoration = "UNDERLINE";
+                  sName.hyperlink = { type: "URL", value: s.link };
+                } else if (s.id && await figma.getNodeByIdAsync(s.id)) {
+                  sName.textDecoration = "UNDERLINE";
+                  sName.hyperlink = { type: "NODE", value: s.id };
+                }
+                const sCatTag = createFrame("HORIZONTAL", 6, 3, scBg);
+                sCatTag.cornerRadius = 999;
+                sCatTag.strokes = [{ type: "SOLID", color: sc }];
+                sCatTag.strokeWeight = 1;
+                sTop.appendChild(sCatTag);
+                setFillAndHug(sCatTag);
+                sCatTag.appendChild(createText(catLabel, 9, "Medium", sc));
+                if (s.note) {
+                  const sNote = createText(s.note, 10, "Regular", { r: 0.4, g: 0.45, b: 0.55 });
+                  sRow.appendChild(sNote);
+                  setFillAndHug(sNote);
+                }
+                const _props = s.properties || [];
+                if (_props.length > 0) {
+                  const propsFrame = createFrame("VERTICAL", 0, 3);
+                  propsFrame.fills = [];
+                  setFillAndHug(propsFrame);
+                  sRow.appendChild(propsFrame);
+                  _props.forEach((prop) => {
+                    const pRow = createFrame("HORIZONTAL", 8, 4, { r: 0.93, g: 0.95, b: 1 });
+                    pRow.cornerRadius = 4;
+                    pRow.counterAxisAlignItems = "CENTER";
+                    setFillAndHug(pRow);
+                    propsFrame.appendChild(pRow);
+                    const pKey = createText(prop.label || prop.key || "", 9, "Regular", { r: 0.35, g: 0.4, b: 0.5 });
+                    pKey.layoutGrow = 1;
+                    pRow.appendChild(pKey);
+                    if (prop.token) {
+                      const tBadge = createText(prop.token, 8, "Medium", { r: 0, g: 0.44, b: 0.69 });
+                      setFillAndHug(tBadge);
+                      pRow.appendChild(tBadge);
+                    }
+                    const pVal = createText(String(prop.value || ""), 9, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+                    setFillAndHug(pVal);
+                    pRow.appendChild(pVal);
+                  });
+                }
+              }
+            }
+          }
+          content.appendChild(annotSection);
+          setFillAndHug(annotSection);
+        }
+        const _A11Y_TYPE_LABEL = { elemento: "Elementos e Imagens", estrutura: "Estrutura da P\xE1gina", titulo: "N\xEDvel de T\xEDtulo", decorativo: "Elemento Decorativo", informacoes: "Informa\xE7\xF5es Adicionais" };
+        const _framesWithA11y = (_frames || []).filter((f) => (f.a11ySpecs || []).length > 0);
+        if (_framesWithA11y.length > 0) {
+          const a11ySection = createSection(content, "Especifica\xE7\xF5es de Acessibilidade");
+          for (const f of _framesWithA11y) {
+            const fGroup = createFrame("VERTICAL", 0, 10);
+            fGroup.name = `[A11y] ${f.nome || "Frame"}`;
+            a11ySection.appendChild(fGroup);
+            setFillAndHug(fGroup);
+            const fLabel = createText(f.nome || "Frame", 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
+            fGroup.appendChild(fLabel);
+            setFillAndHug(fLabel);
+            const a11ySpecs = (f.a11ySpecs || []).filter(Boolean);
+            const aSpecs = createFrame("VERTICAL", 0, 6);
+            aSpecs.fills = [];
+            fGroup.appendChild(aSpecs);
+            setFillAndHug(aSpecs);
+            for (const s of a11ySpecs) {
+              const subtypeLabel = _A11Y_TYPE_LABEL[s.a11yType] || "Acessibilidade";
+              const sc = s.color ? hexToRgb2(s.color) : { r: 0.03, g: 0.57, b: 0.7 };
+              const scBg = s.fillColor ? hexToRgb2(s.fillColor) : { r: 0.88, g: 0.96, b: 0.98 };
+              const sRow = createFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.99, b: 0.99 });
+              sRow.name = `[A11y/${s.letter || "A"}] ${s.name || "Spec"}`;
+              sRow.cornerRadius = 8;
+              sRow.strokes = [{ type: "SOLID", color: sc }];
+              aSpecs.appendChild(sRow);
+              setFillAndHug(sRow);
+              const sTop = createFrame("HORIZONTAL", 0, 6);
+              sTop.counterAxisAlignItems = "CENTER";
+              sRow.appendChild(sTop);
+              setFillAndHug(sTop);
+              const sName = createText(s.name || "Spec", 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+              sName.layoutGrow = 1;
+              sTop.appendChild(sName);
+              if (s.id && await figma.getNodeByIdAsync(s.id)) {
+                sName.textDecoration = "UNDERLINE";
+                sName.hyperlink = { type: "NODE", value: s.id };
+              }
+              const sTypeTag = createFrame("HORIZONTAL", 6, 3, scBg);
+              sTypeTag.cornerRadius = 999;
+              sTypeTag.strokes = [{ type: "SOLID", color: sc }];
+              sTypeTag.strokeWeight = 1;
+              sTop.appendChild(sTypeTag);
+              setFillAndHug(sTypeTag);
+              sTypeTag.appendChild(createText(subtypeLabel, 9, "Medium", sc));
+              const _props = s.properties || [];
+              if (_props.length > 0) {
+                const propsFrame = createFrame("VERTICAL", 0, 3);
+                propsFrame.fills = [];
+                setFillAndHug(propsFrame);
+                sRow.appendChild(propsFrame);
+                _props.forEach((prop) => {
+                  const pRow = createFrame("HORIZONTAL", 8, 4, { r: 0.93, g: 0.97, b: 0.98 });
+                  pRow.cornerRadius = 4;
+                  pRow.counterAxisAlignItems = "CENTER";
+                  setFillAndHug(pRow);
+                  propsFrame.appendChild(pRow);
+                  const pKey = createText(prop.label || prop.key || "", 9, "Regular", { r: 0.35, g: 0.4, b: 0.5 });
+                  pKey.layoutGrow = 1;
+                  pRow.appendChild(pKey);
+                  const pVal = createText(String(prop.value || ""), 9, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+                  setFillAndHug(pVal);
+                  pRow.appendChild(pVal);
+                });
+              }
+            }
+          }
+          content.appendChild(a11ySection);
+          setFillAndHug(a11ySection);
+        }
+        const _flows = data.createdFlows || [];
+        if (_flows.length > 0) {
+          const flowTypeLabel = { line_solid: "Linha s\xF3lida", line_dashed: "Linha tracejada", diamond: "Decis\xE3o", diamond_dashed: "Decis\xE3o tracejada", event_start: "In\xEDcio", event_end: "Fim", gateway_parallel: "Paralelo" };
+          const flowsSection = createSection(content, "Fluxos de Tela");
+          _flows.forEach((flow, fi) => {
+            const fRow = createFrame("VERTICAL", 12, 10, { r: 0.97, g: 0.96, b: 1 });
+            fRow.name = `[Fluxo] ${flow.name || "Fluxo " + (fi + 1)}`;
+            fRow.cornerRadius = 8;
+            fRow.strokes = [{ type: "SOLID", color: { r: 0.86, g: 0.84, b: 0.96 } }];
+            flowsSection.appendChild(fRow);
+            setFillAndHug(fRow);
+            const fTop = createFrame("HORIZONTAL", 0, 4);
+            fTop.counterAxisAlignItems = "CENTER";
+            fRow.appendChild(fTop);
+            setFillAndHug(fTop);
+            const fName = createText(flow.name || "Fluxo", 12, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+            fName.layoutGrow = 1;
+            fTop.appendChild(fName);
+            const typeStr = flowTypeLabel[flow.type] || flow.type || "";
+            if (typeStr) {
+              const fTypeTag = createFrame("HORIZONTAL", 6, 3, { r: 0.93, g: 0.9, b: 1 });
+              fTypeTag.cornerRadius = 999;
+              fTop.appendChild(fTypeTag);
+              setFillAndHug(fTypeTag);
+              fTypeTag.appendChild(createText(typeStr, 9, "Medium", { r: 0.45, g: 0.35, b: 0.75 }));
+            }
+            if (flow.fromName || flow.toName) {
+              const connStr = `${flow.fromName || "?"} \u2192 ${flow.toName || "?"}`;
+              const fConn = createText(connStr, 10, "Regular", { r: 0.45, g: 0.5, b: 0.6 });
+              fRow.appendChild(fConn);
+              setFillAndHug(fConn);
+            }
+            if (flow.decisionText) {
+              const dText = createText(`"${flow.decisionText}"`, 10, "Regular", { r: 0.5, g: 0.45, b: 0.7 });
+              fRow.appendChild(dText);
+              setFillAndHug(dText);
+            }
+          });
+          content.appendChild(flowsSection);
+          setFillAndHug(flowsSection);
+        }
+        fichaTecnica.appendChild(content);
+        mainContainer.appendChild(fichaTecnica);
+        if (_briefingQs.length > 0) {
+          const card2 = createFrame("VERTICAL", 0, 0, { r: 1, g: 1, b: 1 });
+          card2.name = `${_handoffBase} | ${_ts} / Briefing`;
+          card2.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
+          card2.resize(440, 100);
+          card2.counterAxisSizingMode = "FIXED";
+          card2.primaryAxisSizingMode = "AUTO";
+          card2.cornerRadius = 16;
+          const bContent = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
+          card2.appendChild(bContent);
+          setFillAndHug(bContent);
+          const briefingSection = createSection(bContent, "Briefing Estrat\xE9gico");
+          _briefingQs.forEach((q, idx) => {
+            const qRow = createFrame("VERTICAL", 0, 4);
+            qRow.name = `[Briefing] Pergunta ${idx + 1}`;
+            briefingSection.appendChild(qRow);
+            setFillAndHug(qRow);
+            const qText = createText(`${idx + 1}. ${q.question || ""}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+            qRow.appendChild(qText);
+            setFillAndHug(qText);
+            const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+            aText.textAutoResize = "HEIGHT";
+            aText.resize(392, 20);
+            qRow.appendChild(aText);
+            setFillAndHug(aText);
+          });
+          setFillAndHug(briefingSection);
+          mainContainer.appendChild(card2);
+        }
+        if (!data.setup || data.setup.componentes !== false) {
+          let createSpecList = function(title, items, type) {
+            if (!items || items.length === 0) return null;
+            const tokenItems = items.filter((item) => item.isDS !== false);
+            if (tokenItems.length === 0) return null;
+            items = tokenItems;
+            const sec = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
+            sec.name = `[Scan] ${title}`;
+            sec.cornerRadius = 16;
+            sec.resize(280, 100);
+            sec.primaryAxisSizingMode = "AUTO";
+            sec.counterAxisSizingMode = "FIXED";
+            const titleNode = createText(title, 18, "Bold", { r: 0, g: 0.35, b: 0.79 });
+            sec.appendChild(titleNode);
+            setFillAndHug(titleNode);
+            const listContainer = createFrame("VERTICAL", 0, 12);
+            sec.appendChild(listContainer);
+            setFillAndHug(listContainer);
+            items.forEach((item) => {
+              const elCard = createFrame("VERTICAL", 16, 12, { r: 0.98, g: 0.99, b: 1 });
+              elCard.name = `[Token] ${item.name}`;
+              elCard.cornerRadius = 12;
+              elCard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.96 } }];
+              elCard.strokeWeight = 1;
+              listContainer.appendChild(elCard);
+              setFillAndHug(elCard);
+              const headerRow = createFrame("HORIZONTAL", 0, 12);
+              headerRow.counterAxisAlignItems = "CENTER";
+              elCard.appendChild(headerRow);
+              setFillAndHug(headerRow);
+              if (item.preview) {
+                try {
+                  const imageHash = figma.createImage(item.preview).hash;
+                  const rect = figma.createRectangle();
+                  rect.resize(32, 32);
+                  rect.fills = [{ type: "IMAGE", imageHash, scaleMode: "FIT" }];
+                  rect.cornerRadius = 4;
+                  headerRow.appendChild(rect);
+                } catch (e) {
+                }
+              }
+              const iName = createText(item.name, 13, "Bold", { r: 0.1, g: 0.15, b: 0.25 });
+              iName.layoutGrow = 1;
+              if (item.nodeId && figma.fileKey) {
+                try {
+                  iName.hyperlink = {
+                    type: "URL",
+                    value: `https://www.figma.com/design/${figma.fileKey}?node-id=${encodeURIComponent(item.nodeId)}`
+                  };
+                  iName.textDecoration = "UNDERLINE";
+                  iName.fills = [{ type: "SOLID", color: { r: 0, g: 0.35, b: 0.79 } }];
+                } catch (e) {
+                }
+              }
+              headerRow.appendChild(iName);
+              const status = item.componentStatus || (item.isDS === true ? "ok" : item.isDS === "warning" ? "warning" : "error");
+              if (data.isAudit) {
+                const statusColors = {
+                  ok: { bg: { r: 0.9, g: 0.98, b: 0.94 }, text: { r: 0.05, g: 0.5, b: 0.3 }, label: "DSC" },
+                  warning: { bg: { r: 1, g: 0.97, b: 0.9 }, text: { r: 0.7, g: 0.4, b: 0 }, label: "AJUSTE" },
+                  error: { bg: { r: 1, g: 0.93, b: 0.93 }, text: { r: 0.8, g: 0.2, b: 0.2 }, label: "FORA" }
+                };
+                const config = statusColors[status] || statusColors.error;
+                const badge = createFrame("HORIZONTAL", 8, 4, config.bg);
+                badge.cornerRadius = 6;
+                badge.appendChild(createText(config.label, 9, "Bold", config.text));
+                headerRow.appendChild(badge);
+              }
+              const _tokenProps = (item.properties || []).filter((p) => p.isDS === true || p.isDS === "warning" || p.token);
+              if (_tokenProps.length > 0) {
+                const propsContainer = createFrame("VERTICAL", 0, 6);
+                elCard.appendChild(propsContainer);
+                setFillAndHug(propsContainer);
+                _tokenProps.forEach((prop) => {
+                  const pRow = createFrame("HORIZONTAL", 0, 8);
+                  pRow.counterAxisAlignItems = "CENTER";
+                  propsContainer.appendChild(pRow);
+                  setFillAndHug(pRow);
+                  if (prop.type === "color" || prop.type === "stroke") {
+                    const swatch = figma.createRectangle();
+                    swatch.resize(10, 10);
+                    swatch.cornerRadius = 2;
+                    const swatchRgb = hexToRgb2(prop.rawValue || prop.value);
+                    swatch.fills = [{ type: "SOLID", color: swatchRgb || { r: 0.8, g: 0.8, b: 0.8 } }];
+                    swatch.strokes = [{ type: "SOLID", color: { r: 0.7, g: 0.72, b: 0.75 } }];
+                    swatch.strokeWeight = 0.5;
+                    pRow.appendChild(swatch);
+                  } else {
+                    try {
+                      let setSvgColor = function(node, color) {
+                        const isContainer = node.type === "FRAME" || node.type === "GROUP" || node.type === "COMPONENT";
+                        if (isContainer) {
+                          if ("fills" in node) node.fills = [];
+                          if ("strokes" in node) node.strokes = [];
+                        } else {
+                          if ("fills" in node && node.fills.length) node.fills = [{ type: "SOLID", color }];
+                          if ("strokes" in node && node.strokes.length) node.strokes = [{ type: "SOLID", color }];
+                        }
+                        if ("children" in node) node.children.forEach((c) => setSvgColor(c, color));
+                      };
+                      const iconSvg = getIconSvg(prop.type, prop.label);
+                      const iconNode = figma.createNodeFromSvg(iconSvg);
+                      iconNode.resize(12, 12);
+                      const neutral = { r: 0.55, g: 0.58, b: 0.62 };
+                      setSvgColor(iconNode, neutral);
+                      pRow.appendChild(iconNode);
+                    } catch (e) {
+                      const dot = figma.createEllipse();
+                      dot.resize(6, 6);
+                      dot.fills = [{ type: "SOLID", color: { r: 0.55, g: 0.58, b: 0.62 } }];
+                      pRow.appendChild(dot);
+                    }
+                  }
+                  const pLabel = createText(`${prop.label || prop.type}:`, 10, "Medium", { r: 0.4, g: 0.45, b: 0.5 });
+                  pRow.appendChild(pLabel);
+                  const pVal = createText(prop.value, 10, "Bold", { r: 0.2, g: 0.25, b: 0.3 });
+                  pVal.layoutGrow = 1;
+                  pRow.appendChild(pVal);
+                  if (prop.token) {
+                    const tBadge = createText(prop.token, 8, "Regular", { r: 0, g: 0.44, b: 0.69 });
+                    pRow.appendChild(tBadge);
+                  }
+                });
+              }
+            });
+            return sec;
+          };
+          const uiBoard = createFrame("VERTICAL", 32, 24, { r: 1, g: 1, b: 1 });
+          uiBoard.name = `${_handoffBase} / Interface`;
+          uiBoard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
+          uiBoard.cornerRadius = 16;
+          uiBoard.primaryAxisSizingMode = "AUTO";
+          uiBoard.counterAxisSizingMode = "AUTO";
+          uiBoard.layoutAlign = "INHERIT";
+          const uiHeaderRow = createFrame("HORIZONTAL", 0, 12);
+          uiHeaderRow.counterAxisAlignItems = "CENTER";
+          setFillAndHug(uiHeaderRow);
+          uiBoard.appendChild(uiHeaderRow);
+          const uiTitle = createText("User Interface", 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+          uiTitle.layoutGrow = 1;
+          uiHeaderRow.appendChild(uiTitle);
+          const _allFrameSpecs = (data.frames || []).map((f) => f.specs).filter(Boolean);
+          const _globalSpecs2 = data.step2 && data.step2.specs ? data.step2.specs : null;
+          const _specsSource = _allFrameSpecs.length > 0 ? _allFrameSpecs : _globalSpecs2 ? [_globalSpecs2] : [];
+          const specsData = {
+            components: _specsSource.flatMap((s) => s.components || []),
+            icons: _specsSource.flatMap((s) => s.icons || []),
+            typography: _specsSource.flatMap((s) => s.typography || []),
+            frames: _specsSource.flatMap((s) => s.frames || []),
+            vectors: _specsSource.flatMap((s) => s.vectors || [])
+          };
+          const specsRow = figma.createFrame();
+          specsRow.name = "[Row] Colunas UI";
+          specsRow.layoutMode = "HORIZONTAL";
+          specsRow.itemSpacing = 24;
+          specsRow.paddingLeft = 0;
+          specsRow.paddingRight = 0;
+          specsRow.paddingTop = 0;
+          specsRow.paddingBottom = 0;
+          specsRow.fills = [];
+          specsRow.primaryAxisSizingMode = "AUTO";
+          specsRow.counterAxisSizingMode = "AUTO";
+          specsRow.counterAxisAlignItems = "MIN";
+          [
+            { title: "Componentes", items: specsData.components, type: "components" },
+            { title: "\xCDcones", items: specsData.icons, type: "icons" },
+            { title: "Tipografia", items: specsData.typography, type: "typography" },
+            { title: "Vetores", items: specsData.vectors, type: "vectors" },
+            { title: "Frames e Layouts", items: specsData.frames, type: "frames" }
+          ].forEach((cat) => {
+            const sec = createSpecList(cat.title, cat.items, cat.type);
+            if (sec) specsRow.appendChild(sec);
+          });
+          if (specsRow.children.length > 0) {
+            uiBoard.appendChild(specsRow);
+            setFillAndHug(specsRow);
+            mainContainer.appendChild(uiBoard);
+          } else {
+            specsRow.remove();
+            uiBoard.remove();
+          }
+        }
+        const selection = figma.currentPage.selection;
+        if (selection.length > 0 && data.setup && (data.setup.espacamentos || data.setup.anatomia || data.setup.instancias)) {
+          for (const node of selection) {
+            if (node === mainContainer) continue;
+            const specsBoard = createFrame("VERTICAL", 32, 24, { r: 1, g: 1, b: 1 });
+            specsBoard.name = `[Design Specs] ${node.name}`;
+            specsBoard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
+            specsBoard.cornerRadius = 16;
+            specsBoard.resize(800, 100);
+            specsBoard.counterAxisSizingMode = "FIXED";
+            specsBoard.primaryAxisSizingMode = "AUTO";
+            specsBoard.layoutAlign = "INHERIT";
+            const specsTitle = createText("Design Specs: " + node.name, 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+            specsBoard.appendChild(specsTitle);
+            setFillAndHug(specsTitle);
+            if (data.setup.anatomia || data.setup.espacamentos) {
+              const layoutSec = createSection(specsBoard, "Layout & Posicionamento");
+              const grid = createFrame("HORIZONTAL", 0, 16);
+              grid.layoutWrap = "WRAP";
+              createRow(grid, "Position", `X: ${Math.round(node.x)}, Y: ${Math.round(node.y)}`);
+              createRow(grid, "Size", `W: ${Math.round(node.width)}, H: ${Math.round(node.height)}`);
+              if ("layoutMode" in node && node.layoutMode !== "NONE") {
+                createRow(grid, "Auto Layout", `Dir: ${node.layoutMode}, Spacing: ${node.itemSpacing}`);
+                createRow(grid, "Padding", `T: ${node.paddingTop}, R: ${node.paddingRight}, B: ${node.paddingBottom}, L: ${node.paddingLeft}`);
+              }
+              if ("cornerRadius" in node && node.cornerRadius !== figma.mixed) {
+                createRow(grid, "Corner Radius", `${node.cornerRadius}px`);
+              }
+              layoutSec.appendChild(grid);
+              setFillAndHug(grid);
+            }
+            if (data.setup.instancias || data.setup.anatomia) {
+              const appearSec = createSection(specsBoard, "Apar\xEAncia");
+              const grid = createFrame("HORIZONTAL", 0, 16);
+              grid.layoutWrap = "WRAP";
+              grid.layoutAlign = "STRETCH";
+              if ("opacity" in node) createRow(grid, "Opacity", `${Math.round(node.opacity * 100)}%`);
+              if ("blendMode" in node && node.blendMode !== "PASS_THROUGH") createRow(grid, "Blend Mode", node.blendMode);
+              if ("fills" in node && Array.isArray(node.fills)) {
+                const sf = node.fills.find((f) => f.type === "SOLID");
+                if (sf) {
+                  const hex = rgbToHex(sf.color.r, sf.color.g, sf.color.b).toUpperCase();
+                  const token = await getVariableInfo(node, "fills");
+                  createRow(grid, "Fills", token ? token : hex);
+                }
+              }
+              if ("strokes" in node && Array.isArray(node.strokes)) {
+                const ss = node.strokes.find((s) => s.type === "SOLID");
+                if (ss) {
+                  const hex = rgbToHex(ss.color.r, ss.color.g, ss.color.b).toUpperCase();
+                  const token = await getVariableInfo(node, "strokes");
+                  createRow(grid, "Strokes", `${token ? token : hex} (${node.strokeWeight}px)`);
+                }
+              }
+              if (grid.children.length > 0) {
+                appearSec.appendChild(grid);
+                setFillAndHug(grid);
+              } else {
+                appearSec.remove();
+              }
+            }
+            specsBoard.layoutAlign = "STRETCH";
+            mainContainer.appendChild(specsBoard);
+          }
+        }
+        if (data.isAudit && data.auditSummary) {
+          const auditBoard = createFrame("VERTICAL", 32, 24, { r: 1, g: 1, b: 1 });
+          auditBoard.name = `${_handoffBase} / Auditoria`;
+          auditBoard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
+          auditBoard.cornerRadius = 16;
+          auditBoard.resize(800, 100);
+          auditBoard.counterAxisSizingMode = "FIXED";
+          auditBoard.primaryAxisSizingMode = "AUTO";
+          const auditTitle = createText("Relat\xF3rio de Auditoria", 24, "Bold", { r: 0, g: 0.35, b: 0.79 });
+          auditBoard.appendChild(auditTitle);
+          setFillAndHug(auditTitle);
+          const summaryText = createText(`Ader\xEAncia ao Design System: ${data.auditSummary.adoption}%`, 18, "Bold", data.auditSummary.adoption > 90 ? { r: 0, g: 0.5, b: 0 } : { r: 0.8, g: 0, b: 0 });
+          auditBoard.appendChild(summaryText);
+          setFillAndHug(summaryText);
+          const statsText = createText(`Resumo: ${data.auditSummary.issues.length} Fora do Padr\xE3o | ${data.auditSummary.adjustments.length} Ajustes`, 14, "Medium", { r: 0.4, g: 0.45, b: 0.5 });
+          auditBoard.appendChild(statsText);
+          setFillAndHug(statsText);
+          if (data.auditSummary.adjustments && data.auditSummary.adjustments.length > 0) {
+            const adjSection = createSection(auditBoard, "Ajustes Recomendados (Minorias)");
+            data.auditSummary.adjustments.slice(0, 10).forEach((adj) => {
+              const aRow = createText(`- [${adj.cat}] ${adj.name}`, 12, "Regular", { r: 0.7, g: 0.4, b: 0 });
+              adjSection.appendChild(aRow);
+              setFillAndHug(aRow);
+            });
+          }
+          if (data.auditSummary.issues && data.auditSummary.issues.length > 0) {
+            const issueList = createSection(auditBoard, "Pend\xEAncias Cr\xEDticas (Fora do Padr\xE3o)");
+            data.auditSummary.issues.slice(0, 20).forEach((issue) => {
+              const iRow = createText(`- [${issue.cat}] ${issue.name}`, 12, "Regular", { r: 0.8, g: 0.2, b: 0.2 });
+              issueList.appendChild(iRow);
+              setFillAndHug(iRow);
+            });
+            if (data.auditSummary.issues.length > 20) {
+              const moreText = createText(`... e mais ${data.auditSummary.issues.length - 20} itens.`, 10, "Regular", { r: 0.5, g: 0.5, b: 0.5 });
+              issueList.appendChild(moreText);
+              setFillAndHug(moreText);
+            }
+          }
+          mainContainer.appendChild(auditBoard);
+        }
+        mainContainer.locked = false;
+        mainContainer.setPluginData("handexCategory", "ficha");
+        figma.currentPage.appendChild(mainContainer);
+        mainContainer.x = -99999;
+        mainContainer.y = -99999;
+        const _fichaGap = 200;
+        const _nearbyRadius = 4e3;
+        let _positioned = false;
+        let _existingFichas = [];
+        try {
+          let _anchorBb = null;
+          const _mainFrames = data.frames || [];
+          for (const _f of _mainFrames) {
+            if (!_f.figmaId) continue;
+            let _fNode = null;
+            try {
+              _fNode = await figma.getNodeByIdAsync(_f.figmaId);
+            } catch (e) {
+              _fNode = null;
+            }
+            if (!_fNode) continue;
+            const _fBb = _fNode.absoluteBoundingBox;
+            if (_fBb) {
+              _anchorBb = _fBb;
+              break;
+            }
+          }
+          if (_anchorBb) {
+            mainContainer.x = Math.round(_anchorBb.x + _anchorBb.width + _fichaGap);
+            mainContainer.y = Math.round(_anchorBb.y);
+            _positioned = true;
+          }
+          _existingFichas = figma.currentPage.children.filter((n) => {
+            if (n.type !== "FRAME" || !n.name.startsWith("Handex | Ficha") || n === mainContainer) return false;
+            if (!_anchorBb) return true;
+            const bb = n.absoluteBoundingBox;
+            if (!bb) return false;
+            return Math.abs(bb.x - _anchorBb.x) < _nearbyRadius && Math.abs(bb.y - _anchorBb.y) < _nearbyRadius;
+          });
+          if (_existingFichas.length > 0) {
+            const _rightmostFicha = _existingFichas.reduce((max, f) => {
+              const bb = f.absoluteBoundingBox;
+              if (!bb) return max;
+              return bb.x + bb.width > max.right ? { right: bb.x + bb.width, y: bb.y } : max;
+            }, { right: -Infinity, y: 0 });
+            if (_rightmostFicha.right > -Infinity) {
+              mainContainer.x = Math.round(_rightmostFicha.right + _fichaGap);
+              mainContainer.y = Math.round(_rightmostFicha.y);
+              _positioned = true;
+            }
+          }
+          if (!_positioned) {
+            const _sel = figma.currentPage.selection.filter((n) => n !== mainContainer);
+            if (_sel.length > 0) {
+              const _rightmost = _sel.reduce((max, n) => {
+                const bb = n.absoluteBoundingBox;
+                return bb && bb.x + bb.width > max.edge ? { edge: bb.x + bb.width, x: bb.x + bb.width, y: bb.y } : max;
+              }, { edge: -Infinity, x: 0, y: 0 });
+              if (_rightmost.edge > -Infinity) {
+                mainContainer.x = Math.round(_rightmost.x + _fichaGap);
+                mainContainer.y = Math.round(_rightmost.y);
+                _positioned = true;
+              }
+            }
+          }
+        } catch (posErr) {
+          console.error("Handoff positioning error:", posErr);
+          _positioned = false;
+        }
+        if (!_positioned) {
+          const _vb = figma.viewport.bounds;
+          mainContainer.x = Math.round(_vb.x + _vb.width + _fichaGap);
+          mainContainer.y = Math.round(_vb.y + _vb.height / 2 - mainContainer.height / 2);
+        }
+        try {
+          const _pageNodes = figma.currentPage.children.filter((n) => n !== mainContainer && !_existingFichas.includes(n));
+          let _collisionIterations = 0;
+          let _hasCollision = true;
+          while (_hasCollision && _collisionIterations < 50) {
+            _hasCollision = false;
+            for (const _node of _pageNodes) {
+              const _nBb = _node.absoluteBoundingBox;
+              if (!_nBb) continue;
+              const _overlaps = mainContainer.x < _nBb.x + _nBb.width && mainContainer.x + mainContainer.width > _nBb.x && mainContainer.y < _nBb.y + _nBb.height && mainContainer.y + mainContainer.height > _nBb.y;
+              if (_overlaps) {
+                mainContainer.x = Math.round(_nBb.x + _nBb.width + _fichaGap);
+                _hasCollision = true;
+                _collisionIterations++;
+                break;
+              }
+            }
+          }
+        } catch (collisionErr) {
+          console.error("Handoff collision check error:", collisionErr);
+        }
+        figma.currentPage.selection = [mainContainer];
+        figma.viewport.scrollAndZoomIntoView([mainContainer]);
+        figma.ui.postMessage({ type: "handoff-complete", isUpdate: _isUpdate, timestamp: _ts });
+      } catch (err) {
+        console.error("Handoff Error:", err);
+        figma.ui.postMessage({ type: "handoff-error", message: err.message });
+      }
+    }
+    if (msg.type === "measure-nodes-custom") {
+      const selection = figma.currentPage.selection;
+      if (selection.length === 0) {
+        figma.notify("Selecione um ou mais itens para mensurar.");
+        return;
+      }
+      const { measureTypes } = msg;
+      async function getVariableInfo2(node, prop) {
+        if (!node.boundVariables) return null;
+        const boundVar = node.boundVariables[prop];
+        if (!boundVar) return null;
+        const varId = Array.isArray(boundVar) ? boundVar[0] && boundVar[0].id : boundVar.id;
+        if (!varId) return null;
+        const v = await figma.variables.getVariableByIdAsync(varId);
+        return v ? v.name : null;
+      }
+      (async () => {
+        try {
+          await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+        } catch (e) {
+        }
+        function createMeasurementLine(x1, y1, x2, y2, value, type = "horizontal", redColor = { r: 1, g: 0.2, b: 0.2 }, tokenName = null) {
+          const elements = [];
+          const mainLine = figma.createLine();
+          mainLine.strokes = [{ type: "SOLID", color: redColor }];
+          mainLine.strokeWeight = 1;
+          mainLine.x = x1;
+          mainLine.y = y1;
+          if (type === "horizontal") {
+            mainLine.resize(Math.max(0.01, x2 - x1), 0);
+            const t1 = figma.createLine();
+            t1.strokes = [{ type: "SOLID", color: redColor }];
+            t1.x = x1;
+            t1.y = y1 - 4;
+            t1.resize(8, 0);
+            t1.rotation = -90;
+            const t2 = figma.createLine();
+            t2.strokes = [{ type: "SOLID", color: redColor }];
+            t2.x = x2;
+            t2.y = y1 - 4;
+            t2.resize(8, 0);
+            t2.rotation = -90;
+            elements.push(mainLine, t1, t2);
+          } else {
+            mainLine.rotation = -90;
+            mainLine.resize(Math.max(0.01, y2 - y1), 0);
+            const t1 = figma.createLine();
+            t1.strokes = [{ type: "SOLID", color: redColor }];
+            t1.x = x1 - 4;
+            t1.y = y1;
+            t1.resize(8, 0);
+            const t2 = figma.createLine();
+            t2.strokes = [{ type: "SOLID", color: redColor }];
+            t2.x = x1 - 4;
+            t2.y = y2;
+            t2.resize(8, 0);
+            elements.push(mainLine, t1, t2);
+          }
+          const label = figma.createText();
+          label.fontName = { family: "Inter", style: "Regular" };
+          const labelVal = Math.round(value);
+          label.characters = tokenName ? `${tokenName} (${labelVal})` : String(labelVal);
+          label.fontSize = 10;
+          label.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+          const bg = figma.createRectangle();
+          bg.resize(label.width + 8, label.height + 4);
+          bg.fills = [{ type: "SOLID", color: redColor }];
+          bg.strokes = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+          bg.strokeWeight = 1;
+          bg.cornerRadius = 4;
+          figma.currentPage.appendChild(label);
+          if (type === "horizontal") {
+            const dist = Math.abs(x2 - x1);
+            const cx = x1 + (x2 - x1) / 2;
+            if (dist < bg.width + 8) {
+              bg.x = x2 + 6;
+              bg.y = y1 - bg.height / 2;
+            } else {
+              bg.x = cx - bg.width / 2;
+              bg.y = y1 - bg.height / 2;
+            }
+          } else {
+            const dist = Math.abs(y2 - y1);
+            const cy = y1 + (y2 - y1) / 2;
+            if (dist < bg.height + 8) {
+              bg.x = x1 - bg.width / 2;
+              bg.y = y2 + 6;
+            } else {
+              bg.x = x1 - bg.width / 2;
+              bg.y = cy - bg.height / 2;
+            }
+          }
+          label.x = bg.x + 4;
+          label.y = bg.y + 2;
+          elements.push(bg, label);
+          return elements;
+        }
+        const appliedMeasuresList = [];
+        for (const node of selection) {
+          const bounds = node.absoluteRenderBounds || node.absoluteBoundingBox;
+          if (!bounds) continue;
+          let items = [];
+          let appliedDetails = [];
+          if (measureTypes && measureTypes.includes("wh")) {
+            const wToken = await getVariableInfo2(node, "width");
+            const hToken = await getVariableInfo2(node, "height");
+            items.push(...createMeasurementLine(bounds.x, bounds.y - 20, bounds.x + bounds.width, bounds.y - 20, bounds.width, "horizontal", { r: 1, g: 0.2, b: 0.2 }, wToken));
+            items.push(...createMeasurementLine(bounds.x - 20, bounds.y, bounds.x - 20, bounds.y + bounds.height, bounds.height, "vertical", { r: 1, g: 0.2, b: 0.2 }, hToken));
+            let whLabel = `Dimens\xF5es: ${Math.round(bounds.width)}x${Math.round(bounds.height)}`;
+            if (wToken || hToken) whLabel += ` [Tokens: ${wToken || "-"} x ${hToken || "-"}]`;
+            appliedDetails.push(whLabel);
+          }
+          if (measureTypes && measureTypes.includes("inner") && "layoutMode" in node && node.layoutMode !== "NONE") {
+            const shiftX = bounds.x + bounds.width / 2 - 12;
+            const shiftY = bounds.y + bounds.height / 2 - 12;
+            let pads = [];
+            const tT = await getVariableInfo2(node, "paddingTop");
+            const tB = await getVariableInfo2(node, "paddingBottom");
+            const tL = await getVariableInfo2(node, "paddingLeft");
+            const tR = await getVariableInfo2(node, "paddingRight");
+            if (node.paddingTop > 0) {
+              items.push(...createMeasurementLine(shiftX, bounds.y, shiftX, bounds.y + node.paddingTop, node.paddingTop, "vertical", { r: 0, g: 0.5, b: 1 }, tT));
+              pads.push(`Top: ${node.paddingTop}${tT ? " [" + tT + "]" : ""}`);
+            }
+            if (node.paddingBottom > 0) {
+              items.push(...createMeasurementLine(shiftX, bounds.y + bounds.height - node.paddingBottom, shiftX, bounds.y + bounds.height, node.paddingBottom, "vertical", { r: 0, g: 0.5, b: 1 }, tB));
+              pads.push(`Bottom: ${node.paddingBottom}${tB ? " [" + tB + "]" : ""}`);
+            }
+            if (node.paddingLeft > 0) {
+              items.push(...createMeasurementLine(bounds.x, shiftY, bounds.x + node.paddingLeft, shiftY, node.paddingLeft, "horizontal", { r: 0, g: 0.5, b: 1 }, tL));
+              pads.push(`Left: ${node.paddingLeft}${tL ? " [" + tL + "]" : ""}`);
+            }
+            if (node.paddingRight > 0) {
+              items.push(...createMeasurementLine(bounds.x + bounds.width - node.paddingRight, shiftY, bounds.x + bounds.width, shiftY, node.paddingRight, "horizontal", { r: 0, g: 0.5, b: 1 }, tR));
+              pads.push(`Right: ${node.paddingRight}${tR ? " [" + tR + "]" : ""}`);
+            }
+            if (pads.length > 0) appliedDetails.push(`Padding Interno: ${pads.join(", ")}`);
+          }
+          if (measureTypes && measureTypes.includes("spacing") && "layoutMode" in node && node.layoutMode !== "NONE" && node.children.length > 1) {
+            let spaceCount = 0;
+            const gapToken = await getVariableInfo2(node, "itemSpacing");
+            for (let i = 0; i < node.children.length - 1; i++) {
+              const child1 = node.children[i];
+              const child2 = node.children[i + 1];
+              const b1 = child1.absoluteRenderBounds || child1.absoluteBoundingBox;
+              const b2 = child2.absoluteRenderBounds || child2.absoluteBoundingBox;
+              if (!b1 || !b2) continue;
+              if (node.layoutMode === "HORIZONTAL") {
+                const startX = b1.x + b1.width;
+                const endX = b2.x;
+                const y = bounds.y + bounds.height / 2;
+                if (endX > startX) {
+                  items.push(...createMeasurementLine(startX, y, endX, y, endX - startX, "horizontal", { r: 0.8, g: 0.2, b: 0.8 }, gapToken));
+                  spaceCount++;
+                }
+              } else if (node.layoutMode === "VERTICAL") {
+                const startY = b1.y + b1.height;
+                const endY = b2.y;
+                const x = bounds.x + bounds.width / 2;
+                if (endY > startY) {
+                  items.push(...createMeasurementLine(x, startY, x, endY, endY - startY, "vertical", { r: 0.8, g: 0.2, b: 0.8 }, gapToken));
+                  spaceCount++;
+                }
+              }
+            }
+            if (spaceCount > 0) appliedDetails.push(`Gaps: ${spaceCount} espa\xE7os de ${node.itemSpacing}px ${gapToken ? "[" + gapToken + "]" : ""}`);
+          }
+          if (measureTypes && measureTypes.includes("outer")) {
+            if (node.parent && node.parent.type !== "PAGE") {
+              const pb = node.parent.absoluteRenderBounds || node.parent.absoluteBoundingBox;
+              if (pb) {
+                const shiftX = bounds.x + bounds.width / 2 + 12;
+                const shiftY = bounds.y + bounds.height / 2 + 12;
+                let outers = [];
+                if (bounds.y > pb.y) {
+                  items.push(...createMeasurementLine(shiftX, pb.y, shiftX, bounds.y, bounds.y - pb.y, "vertical", { r: 1, g: 0.5, b: 0 }));
+                  outers.push(`Top: ${Math.round(bounds.y - pb.y)}`);
+                }
+                if (bounds.x > pb.x) {
+                  items.push(...createMeasurementLine(pb.x, shiftY, bounds.x, shiftY, bounds.x - pb.x, "horizontal", { r: 1, g: 0.5, b: 0 }));
+                  outers.push(`Left: ${Math.round(bounds.x - pb.x)}`);
+                }
+                if (pb.x + pb.width > bounds.x + bounds.width) {
+                  items.push(...createMeasurementLine(bounds.x + bounds.width, shiftY, pb.x + pb.width, shiftY, pb.x + pb.width - (bounds.x + bounds.width), "horizontal", { r: 1, g: 0.5, b: 0 }));
+                  outers.push(`Right: ${Math.round(pb.x + pb.width - (bounds.x + bounds.width))}`);
+                }
+                if (pb.y + pb.height > bounds.y + bounds.height) {
+                  items.push(...createMeasurementLine(shiftX, bounds.y + bounds.height, shiftX, pb.y + pb.height, pb.y + pb.height - (bounds.y + bounds.height), "vertical", { r: 1, g: 0.5, b: 0 }));
+                  outers.push(`Bottom: ${Math.round(pb.y + pb.height - (bounds.y + bounds.height))}`);
+                }
+                if (outers.length > 0) appliedDetails.push(`Espa\xE7amento Externo: ${outers.join(", ")}`);
+              }
+            } else {
+              figma.notify("Outer padding necessita que o node esteja dentro de um frame.");
+            }
+          }
+          if (items.length > 0) {
+            const group = figma.group(items, figma.currentPage);
+            group.name = `[Medida] ${node.name}`;
+            group.locked = true;
+            group.setPluginData("handexCategory", "medida");
+            appliedMeasuresList.push({ name: node.name, nodeId: group.id, details: appliedDetails });
+          }
+        }
+        figma.ui.postMessage({ type: "measurements-applied", data: appliedMeasuresList });
+        figma.notify("Medidas aplicadas com sucesso!");
+      })();
+    }
+    if (msg.type === "scan-frame") {
+      let audit = function(propType, propValue, propKey, propName, isRemote) {
+        if (isRemote) {
+          return { isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "remote", matchedIn: null, matchedTokenName: null, closestMatch: null };
+        }
+        const result = auditProperty(propName, propValue, propType, propKey, referenceTokens, isAudit);
+        const isDS = result.score >= AUDIT_SCORE.EXACT ? true : result.score >= AUDIT_SCORE.SOFT ? "warning" : false;
+        let closestMatch = null;
+        if (isAudit && result.score < AUDIT_THRESHOLDS.AJUSTE) {
+          closestMatch = suggestClosestMatch(propType, propValue, referenceTokens);
+        }
+        return {
+          isDS,
+          score: isAudit ? result.score : null,
+          matchedBy: result.matchedBy,
+          matchedIn: result.matchedIn,
+          matchedTokenName: result.matchedTokenName,
+          closestMatch
+        };
+      }, rgbToHex2 = function(r, g, b) {
+        const toHex = (c) => {
+          const hex = Math.round(c * 255).toString(16);
+          return hex.length === 1 ? "0" + hex : hex;
+        };
+        return "#" + toHex(r) + toHex(g) + toHex(b);
+      };
+      let selection;
+      if (msg.nodeId) {
+        const specificNode = await figma.getNodeByIdAsync(msg.nodeId);
+        selection = specificNode ? [specificNode] : [];
+      } else {
+        selection = figma.currentPage.selection;
+      }
+      const _scanFrameId = msg.frameId || null;
+      if (selection.length === 0) {
+        figma.ui.postMessage({
+          type: "scan-result",
+          frameId: _scanFrameId,
+          error: "Nenhum item selecionado. Por favor, selecione um ou mais frames, se\xE7\xF5es ou grupos no Figma para escanear."
+        });
+        return;
+      }
+      const specs = {
+        components: /* @__PURE__ */ new Map(),
+        icons: /* @__PURE__ */ new Map(),
+        typography: /* @__PURE__ */ new Map(),
+        frames: /* @__PURE__ */ new Map(),
+        vectors: /* @__PURE__ */ new Map()
+      };
+      const frameJson = frameJsonTemplate();
+      const selectedLibSlugs = Array.isArray(msg.selectedLibSlugs) && msg.selectedLibSlugs.length > 0 ? msg.selectedLibSlugs : null;
+      const rawReferenceTokens = msg.referenceTokens || null;
+      const referenceTokens = (() => {
+        if (!rawReferenceTokens || !selectedLibSlugs) return rawReferenceTokens;
+        const list = Array.isArray(rawReferenceTokens) ? rawReferenceTokens : [rawReferenceTokens];
+        const filtered = list.filter((lib) => lib && lib.slug && selectedLibSlugs.includes(lib.slug));
+        return filtered.length > 0 ? filtered : rawReferenceTokens;
+      })();
+      const isAudit = msg.isAudit || false;
+      const allowedCategories = msg.categories || null;
+      async function getVar(n, p) {
+        if (!n.boundVariables) return null;
+        const v = n.boundVariables[p];
+        if (!v) return null;
+        const id = Array.isArray(v) ? v[0] && v[0].id : v.id;
+        if (!id) return null;
+        const variable = await figma.variables.getVariableByIdAsync(id);
+        return variable ? { name: variable.name, key: variable.key, remote: variable.remote === true } : null;
+      }
+      async function extractNodeProperties(n) {
+        const props = [];
+        if ("fills" in n && Array.isArray(n.fills)) {
+          let styleName = null;
+          let styleKey = null;
+          let fillStyleRemote = false;
+          if ("fillStyleId" in n && typeof n.fillStyleId === "string" && n.fillStyleId) {
+            const style = await figma.getStyleByIdAsync(n.fillStyleId);
+            if (style) {
+              styleName = style.name;
+              styleKey = style.key;
+              fillStyleRemote = style.remote === true;
+            }
+          }
+          for (const fill of n.fills) {
+            if (fill.visible === false) continue;
+            if (fill.type === "SOLID" && fill.color) {
+              const hex = rgbToHex2(fill.color.r, fill.color.g, fill.color.b).toUpperCase();
+              const vInfo = await getVar(n, "fills");
+              const name = vInfo && vInfo.name || styleName || hex;
+              const key = vInfo && vInfo.key || styleKey;
+              const _isRemote = vInfo && vInfo.remote || fillStyleRemote;
+              props.push(__spreadValues({ type: "color", name, value: hex, rawValue: hex, key, variableKey: vInfo ? vInfo.key : null, styleKey, label: "Cor (Fill)" }, audit("colors", hex, key, name, _isRemote)));
+            }
+          }
+        }
+        if (n.type === "TEXT") {
+          let styleName = null;
+          let styleKey = null;
+          let textStyleRemote = false;
+          if ("textStyleId" in n && typeof n.textStyleId === "string" && n.textStyleId !== figma.mixed && n.textStyleId) {
+            const style = await figma.getStyleByIdAsync(n.textStyleId);
+            if (style) {
+              styleName = style.name;
+              styleKey = style.key;
+              textStyleRemote = style.remote === true;
+            }
+          }
+          const family = n.fontName && n.fontName !== figma.mixed ? n.fontName.family : "Mixed";
+          const fontStyle = n.fontName && n.fontName !== figma.mixed ? n.fontName.style : "Mixed";
+          const size = n.fontSize && n.fontSize !== figma.mixed ? n.fontSize : "Mixed";
+          const name = styleName || `${family} ${fontStyle} (${size}px)`;
+          const rawSize = typeof size === "number" ? size : null;
+          props.push(__spreadValues({ type: "typography", name, value: name, rawValue: rawSize, key: styleKey, styleKey, label: "Tipografia" }, audit("typography", name, styleKey, name, textStyleRemote)));
+        }
+        if ("layoutMode" in n && n.layoutMode !== "NONE") {
+          if (n.itemSpacing !== figma.mixed && n.itemSpacing > 0) {
+            const vInfo = await getVar(n, "itemSpacing");
+            const val = `${n.itemSpacing}px`;
+            const name = vInfo && vInfo.name || val;
+            const propKey = vInfo ? vInfo.key : null;
+            props.push(__spreadValues({ type: "spacing", name, value: val, rawValue: n.itemSpacing, key: propKey, variableKey: propKey, label: "Gap" }, audit("spacing", val, propKey, name, vInfo && vInfo.remote)));
+          }
+          const paddings = [
+            { prop: "paddingTop", label: "Top" },
+            { prop: "paddingRight", label: "Right" },
+            { prop: "paddingBottom", label: "Bottom" },
+            { prop: "paddingLeft", label: "Left" }
+          ];
+          for (const p of paddings) {
+            if (n[p.prop] > 0) {
+              const vInfo = await getVar(n, p.prop);
+              const val = `${n[p.prop]}px`;
+              const name = vInfo && vInfo.name || val;
+              const propKey = vInfo ? vInfo.key : null;
+              props.push(__spreadValues({ type: "spacing", name, value: val, rawValue: n[p.prop], key: propKey, variableKey: propKey, label: `Padding ${p.label}` }, audit("spacing", val, propKey, name, vInfo && vInfo.remote)));
+            }
+          }
+        }
+        if ("strokes" in n && Array.isArray(n.strokes) && n.strokes.length > 0) {
+          const visibleStroke = n.strokes.find((s) => s.visible !== false && (s.opacity === void 0 || s.opacity > 0));
+          if (visibleStroke && "strokeWeight" in n && n.strokeWeight !== figma.mixed && n.strokeWeight > 0) {
+            const vInfo = await getVar(n, "strokeWeight");
+            const val = `${n.strokeWeight}px`;
+            const name = vInfo && vInfo.name || val;
+            const propKey = vInfo ? vInfo.key : null;
+            const whitelisted = val === "1px" || val === "0px";
+            const auditFields = whitelisted ? { isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "value", matchedIn: null } : audit("borders", val, propKey, name);
+            props.push(__spreadValues({ type: "strokeWeight", name, value: val, rawValue: n.strokeWeight, key: propKey, variableKey: propKey, label: "Border Width" }, auditFields));
+            if (visibleStroke.type === "SOLID") {
+              const hex = rgbToHex2(visibleStroke.color.r, visibleStroke.color.g, visibleStroke.color.b).toUpperCase();
+              let styleName = null;
+              let styleKey = null;
+              let strokeStyleRemote = false;
+              if ("strokeStyleId" in n && n.strokeStyleId) {
+                const st = await figma.getStyleByIdAsync(n.strokeStyleId);
+                if (st) {
+                  styleName = st.name;
+                  styleKey = st.key;
+                  strokeStyleRemote = st.remote === true;
+                }
+              }
+              const sVar = await getVar(n, "strokes");
+              const strokeKey = sVar && sVar.key || styleKey;
+              const strokeName = sVar && sVar.name || styleName || hex;
+              props.push(__spreadValues({ type: "stroke", name: strokeName, value: hex, rawValue: hex, key: strokeKey, variableKey: sVar ? sVar.key : null, styleKey, label: "Border Color" }, audit("colors", hex, strokeKey, strokeName, sVar && sVar.remote || strokeStyleRemote)));
+            }
+          }
+        }
+        if ("cornerRadius" in n && n.cornerRadius !== figma.mixed && n.cornerRadius > 0) {
+          const vInfo = await getVar(n, "cornerRadius");
+          const val = `${n.cornerRadius}px`;
+          const name = vInfo && vInfo.name || val;
+          const propKey = vInfo ? vInfo.key : null;
+          props.push(__spreadValues({ type: "radius", name, value: val, rawValue: n.cornerRadius, key: propKey, variableKey: propKey, label: "Radius" }, audit("borders", val, propKey, name, vInfo && vInfo.remote)));
+        }
+        if ("effects" in n && Array.isArray(n.effects)) {
+          let styleName = null;
+          let styleKey = null;
+          let effectStyleRemote = false;
+          if ("effectStyleId" in n && n.effectStyleId) {
+            const style = await figma.getStyleByIdAsync(n.effectStyleId);
+            if (style) {
+              styleName = style.name;
+              styleKey = style.key;
+              effectStyleRemote = style.remote === true;
+            }
+          }
+          for (const effect of n.effects) {
+            if (effect.visible) {
+              const name = styleName || `${effect.type} (${effect.type.includes("SHADOW") ? "Sombra" : "Blur"})`;
+              props.push(__spreadValues({ type: "effect", name, value: effect.type, key: styleKey, styleKey, label: "Effect" }, audit("effects", effect.type, styleKey, name, effectStyleRemote)));
+            }
+          }
+        }
+        if (n.type !== "PAGE" && n.parent && n.parent.type !== "PAGE") {
+          const parent = n.parent;
+          let wMode = "Fixed";
+          let hMode = "Fixed";
+          if (parent.layoutMode === "HORIZONTAL" && n.layoutGrow === 1) wMode = "Fill Container";
+          else if (parent.layoutMode === "VERTICAL" && n.layoutAlign === "STRETCH") wMode = "Fill Container";
+          else if (n.layoutMode && (n.layoutMode === "HORIZONTAL" && n.primaryAxisSizingMode === "AUTO" || n.layoutMode === "VERTICAL" && n.counterAxisSizingMode === "AUTO")) wMode = "Hug Contents";
+          if (parent.layoutMode === "VERTICAL" && n.layoutGrow === 1) hMode = "Fill Container";
+          else if (parent.layoutMode === "HORIZONTAL" && n.layoutAlign === "STRETCH") hMode = "Fill Container";
+          else if (n.layoutMode && (n.layoutMode === "VERTICAL" && n.primaryAxisSizingMode === "AUTO" || n.layoutMode === "HORIZONTAL" && n.counterAxisSizingMode === "AUTO")) hMode = "Hug Contents";
+          props.push({ type: "layout", name: wMode, value: wMode, isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "intrinsic", matchedIn: null, label: "W Sizing" });
+          props.push({ type: "layout", name: hMode, value: hMode, isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "intrinsic", matchedIn: null, label: "H Sizing" });
+        }
+        if (n.type === "INSTANCE" && n.componentProperties) {
+          Object.entries(n.componentProperties).forEach(([propName, propObj]) => {
+            const cleanName = propName.split("#")[0];
+            const val = String(propObj.value);
+            props.push({ type: "variant", name: cleanName, value: val, isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "intrinsic", matchedIn: null, label: `Prop: ${cleanName}` });
+          });
+        }
+        return props;
+      }
+      async function addElement(category, node, props) {
+        if (!isAudit && allowedCategories && allowedCategories.length > 0) {
+          let isAllowed = false;
+          if (category === "frames" && allowedCategories.includes("containers")) isAllowed = true;
+          else if (category === "vectors" && allowedCategories.includes("shapes")) isAllowed = true;
+          else if (allowedCategories.includes(category)) isAllowed = true;
+          if (!isAllowed) return;
+        }
+        if (props.length === 0 && (category === "frames" || category === "vectors")) return;
+        if (category === "vectors") return;
+        if (category === "frames") {
+          const _hasDSChild = (n) => {
+            if (!n.children) return false;
+            for (const c of n.children) {
+              if (c.type === "INSTANCE" || c.type === "COMPONENT") return true;
+              if (_hasDSChild(c)) return true;
+            }
+            return false;
+          };
+          if (_hasDSChild(node)) return;
+        }
+        const name = node.name;
+        let componentKey = null;
+        let mainComp = null;
+        if (node.type === "INSTANCE") {
+          mainComp = await node.getMainComponentAsync();
+          if (mainComp) componentKey = mainComp.key;
+        } else if (node.type === "COMPONENT" || node.type === "COMPONENT_SET") {
+          componentKey = node.key;
+        }
+        let dsElement = false;
+        let elementScore = null;
+        let elementMatchedBy = null;
+        let elementMatchedIn = null;
+        let elementMatchedTokenName = null;
+        if (category === "components" || category === "icons") {
+          const a = audit(category, name, componentKey, name);
+          dsElement = a.isDS;
+          elementScore = a.score;
+          elementMatchedBy = a.matchedBy;
+          elementMatchedIn = a.matchedIn;
+          elementMatchedTokenName = a.matchedTokenName;
+          if (dsElement !== true && /^\[dsc\]/i.test(name)) dsElement = true;
+          if (dsElement !== true && node.type === "INSTANCE" && mainComp && mainComp.remote) {
+            dsElement = true;
+          }
+        }
+        if (category === "frames") {
+          const _auditableProps = props.filter((p) => p.isDS !== void 0 && p.type !== "variant");
+          if (_auditableProps.length === 0) {
+            dsElement = true;
+          } else {
+            const _allOk = _auditableProps.every((p) => p.isDS === true);
+            const _anyOk = _auditableProps.some((p) => p.isDS === true);
+            dsElement = _allOk ? true : _anyOk ? "warning" : false;
+          }
+        }
+        if (category === "typography") {
+          const _typoProp = props.find((p) => p.type === "typography");
+          if (_typoProp) {
+            dsElement = _typoProp.isDS !== void 0 ? _typoProp.isDS : false;
+            elementScore = _typoProp.score || null;
+            elementMatchedBy = _typoProp.matchedBy || null;
+            elementMatchedIn = _typoProp.matchedIn || null;
+            elementMatchedTokenName = _typoProp.matchedTokenName || null;
+            if (dsElement === false && _typoProp.styleKey) {
+              const _family = node.fontName && node.fontName !== figma.mixed ? node.fontName.family : "";
+              if (/caixa/i.test(_family)) dsElement = true;
+            }
+          }
+        }
+        const variants = props.filter((p) => p.type === "variant").map((p) => ({ name: p.name, value: p.value }));
+        const map = specs[category];
+        if (!map.has(name)) {
+          const itemObj = {
+            name,
+            type: category,
+            nodeType: node.type,
+            componentKey,
+            layerName: name,
+            isDS: dsElement,
+            score: elementScore,
+            matchedBy: elementMatchedBy,
+            matchedIn: elementMatchedIn,
+            matchedTokenName: elementMatchedTokenName,
+            variants,
+            nodeId: node.id,
+            layers: /* @__PURE__ */ new Set([name]),
+            properties: props
+          };
+          map.set(name, itemObj);
+          frameJson.elements[category].push({
+            name,
+            type: category,
+            nodeType: node.type,
+            componentKey,
+            layerName: name,
+            isDS: dsElement,
+            score: elementScore,
+            matchedBy: elementMatchedBy,
+            matchedIn: elementMatchedIn,
+            matchedTokenName: elementMatchedTokenName,
+            variants,
+            properties: props
+          });
+        } else {
+          const item = map.get(name);
+          item.layers.add(name);
+        }
+      }
+      async function extractSpecs(n, depth) {
+        if ((depth || 0) > 8) return;
+        if (n.visible === false) return;
+        try {
+          const props = await extractNodeProperties(n);
+          let category = "frames";
+          const nameLower = n.name.toLowerCase();
+          const isIcon = nameLower.includes("icon") || nameLower.includes("ic-") || n.type === "INSTANCE" && n.width <= 32 && n.height <= 32 && !nameLower.includes("button");
+          if (n.type === "TEXT") {
+            category = isIcon ? "icons" : "typography";
+          } else if (n.type === "INSTANCE" || n.type === "COMPONENT") {
+            category = isIcon ? "icons" : "components";
+          } else if (n.type === "VECTOR" || n.type === "BOOLEAN_OPERATION" || n.type === "ELLIPSE" || n.type === "RECTANGLE") {
+            category = isIcon ? "icons" : "vectors";
+          } else if (n.type === "FRAME" || n.type === "GROUP" || n.type === "SECTION") {
+            category = "frames";
+          }
+          await addElement(category, n, props);
+          if ("children" in n && n.children) {
+            for (const child of n.children) {
+              await extractSpecs(child, (depth || 0) + 1);
+            }
+          }
+        } catch (err) {
+          const msg2 = err && err.message ? err.message : String(err);
+          const stack = err && err.stack ? err.stack : "";
+          console.error("Erro ao extrair specs do node:", n.name, "(type=" + n.type + ", id=" + n.id + ")", msg2, stack);
+        }
+      }
+      for (const node of selection) {
+        await extractSpecs(node);
+      }
+      let framePreview = null;
+      if (selection.length > 0 && "exportAsync" in selection[0]) {
+        try {
+          framePreview = await selection[0].exportAsync({ format: "PNG", constraint: { type: "SCALE", value: 2 } });
+        } catch (err) {
+          console.error("Erro ao exportar preview do frame principal:", err);
+        }
+      }
+      const previewPromises = [];
+      const prepareListWithPreviews = async (map) => {
+        const items = Array.from(map.values());
+        for (const item of items) {
+          if (item.nodeId) {
+            const node = await figma.getNodeByIdAsync(item.nodeId);
+            if (node && "exportAsync" in node) {
+              previewPromises.push(
+                node.exportAsync({ format: "PNG", constraint: { type: "SCALE", value: 1 } }).then((bytes) => {
+                  item.preview = bytes;
+                }).catch(() => {
+                  item.preview = null;
+                })
+              );
+            }
+          }
+        }
+      };
+      await prepareListWithPreviews(specs.components);
+      await prepareListWithPreviews(specs.icons);
+      await prepareListWithPreviews(specs.typography);
+      await prepareListWithPreviews(specs.frames);
+      await prepareListWithPreviews(specs.vectors);
+      await Promise.all(previewPromises);
+      const formatMap = (map) => {
+        return Array.from(map.values()).map((item) => {
+          const newItem = Object.assign({}, item);
+          newItem.layers = Array.from(item.layers);
+          return newItem;
+        }).sort((a, b) => {
+          if (a.isDS && !b.isDS) return -1;
+          if (!a.isDS && b.isDS) return 1;
+          return a.name.localeCompare(b.name);
+        });
+      };
+      figma.ui.postMessage({
+        type: "scan-result",
+        frameId: _scanFrameId,
+        data: {
+          components: formatMap(specs.components),
+          icons: formatMap(specs.icons),
+          typography: formatMap(specs.typography),
+          frames: formatMap(specs.frames),
+          vectors: formatMap(specs.vectors),
+          frameJson,
+          fileKey: figma.fileKey,
+          framePreview
+        }
+      });
+    }
+    if (msg.type === "get-selection-link") {
+      const selection = figma.currentPage.selection;
+      if (selection.length > 0) {
+        const node = selection[0];
+        const fileKey = figma.fileKey;
+        const deeplink = fileKey ? `https://www.figma.com/design/${fileKey}?node-id=${encodeURIComponent(node.id)}` : "";
+        figma.ui.postMessage({
+          type: "selection-link",
+          targetId: msg.targetId,
+          linkName: node.name,
+          nodeId: node.id,
+          deeplink
+        });
+      } else {
+        figma.ui.postMessage({
+          type: "selection-link",
+          targetId: msg.targetId,
+          linkName: figma.root.name,
+          nodeId: null,
+          deeplink: ""
+        });
+      }
+    }
+    if (msg.type === "remove-measurement") {
+      try {
+        const node = await figma.getNodeByIdAsync(msg.nodeId);
+        if (node) {
+          node.remove();
+          figma.notify("Medida removida.");
+        } else {
+          figma.notify("Elemento n\xE3o encontrado (j\xE1 removido?).");
+        }
+      } catch (e) {
+        figma.notify("Erro ao remover: " + e.message);
+      }
+    }
+    if (msg.type === "reapply-measurements") {
+      const { frameId, measurements } = msg;
+      const frameNode = await figma.getNodeByIdAsync(frameId);
+      if (!frameNode) {
+        figma.notify("Frame n\xE3o encontrado no canvas.");
+        return;
+      }
+      (async () => {
+        try {
+          await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+        } catch (e) {
+        }
+        function _measLine(x1, y1, x2, y2, value, type, color) {
+          const elements = [];
+          const mainLine = figma.createLine();
+          mainLine.strokes = [{ type: "SOLID", color }];
+          mainLine.strokeWeight = 1;
+          mainLine.x = x1;
+          mainLine.y = y1;
+          if (type === "horizontal") {
+            mainLine.resize(Math.max(0.01, x2 - x1), 0);
+            const t1 = figma.createLine();
+            t1.strokes = [{ type: "SOLID", color }];
+            t1.x = x1;
+            t1.y = y1 - 4;
+            t1.resize(8, 0);
+            t1.rotation = -90;
+            const t2 = figma.createLine();
+            t2.strokes = [{ type: "SOLID", color }];
+            t2.x = x2;
+            t2.y = y1 - 4;
+            t2.resize(8, 0);
+            t2.rotation = -90;
+            elements.push(mainLine, t1, t2);
+          } else {
+            mainLine.rotation = -90;
+            mainLine.resize(Math.max(0.01, y2 - y1), 0);
+            const t1 = figma.createLine();
+            t1.strokes = [{ type: "SOLID", color }];
+            t1.x = x1 - 4;
+            t1.y = y1;
+            t1.resize(8, 0);
+            const t2 = figma.createLine();
+            t2.strokes = [{ type: "SOLID", color }];
+            t2.x = x1 - 4;
+            t2.y = y2;
+            t2.resize(8, 0);
+            elements.push(mainLine, t1, t2);
+          }
+          const label = figma.createText();
+          label.fontName = { family: "Inter", style: "Regular" };
+          label.characters = String(Math.round(value));
+          label.fontSize = 10;
+          label.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+          const bg = figma.createRectangle();
+          bg.resize(label.width + 8, label.height + 4);
+          bg.fills = [{ type: "SOLID", color }];
+          bg.cornerRadius = 4;
+          figma.currentPage.appendChild(label);
+          if (type === "horizontal") {
+            const cx = x1 + (x2 - x1) / 2;
+            bg.x = cx - bg.width / 2;
+            bg.y = y1 - bg.height / 2;
+          } else {
+            const cy = y1 + (y2 - y1) / 2;
+            bg.x = x1 - bg.width / 2;
+            bg.y = cy - bg.height / 2;
+          }
+          label.x = bg.x + 4;
+          label.y = bg.y + 2;
+          elements.push(bg, label);
+          return elements;
+        }
+        const red = { r: 1, g: 0.2, b: 0.2 };
+        let created = 0;
+        for (const m of measurements) {
+          const target = frameNode.findOne((n) => n.name === m.name && n.type !== "GROUP") || frameNode;
+          const bounds = target.absoluteBoundingBox;
+          if (!bounds) continue;
+          const items = [
+            ..._measLine(bounds.x, bounds.y - 20, bounds.x + bounds.width, bounds.y - 20, bounds.width, "horizontal", red),
+            ..._measLine(bounds.x - 20, bounds.y, bounds.x - 20, bounds.y + bounds.height, bounds.height, "vertical", red)
+          ];
+          if (items.length > 0) {
+            const group = figma.group(items, figma.currentPage);
+            group.name = `[Medida] ${m.name}`;
+            group.locked = true;
+            group.setPluginData("handexCategory", "medida");
+            created++;
+          }
+        }
+        figma.notify(`${created} medida(s) reaplicada(s) no canvas!`);
+      })();
+    }
+    if (msg.type === "request-spec-properties") {
+      const properties = [];
+      const selection = figma.currentPage.selection;
+      if (selection.length === 0) {
+        figma.notify("Selecione um elemento para escane\xE1-lo.");
+        figma.ui.postMessage({ type: "show-spec-properties", properties: [] });
+        return;
+      }
+      const node = selection[0];
+      const getVar = async (p) => {
+        if (!node.boundVariables) return null;
+        const v = node.boundVariables[p];
+        if (!v) return null;
+        const id = Array.isArray(v) ? v[0] && v[0].id : v.id;
+        if (!id) return null;
+        const variable = await figma.variables.getVariableByIdAsync(id);
+        return variable ? variable.name : null;
+      };
+      if ("height" in node) {
+        const token = await getVar("height");
+        properties.push({ key: "height", label: "Altura", value: Math.round(node.height) + "px", token });
+      }
+      if ("width" in node) {
+        const token = await getVar("width");
+        properties.push({ key: "width", label: "Largura", value: Math.round(node.width) + "px", token });
+      }
+      if ("cornerRadius" in node && node.cornerRadius !== figma.mixed && node.cornerRadius > 0) {
+        const token = await getVar("cornerRadius");
+        properties.push({ key: "radius", label: "Raio de borda", value: node.cornerRadius + "px", token });
+      }
+      if ("layoutMode" in node && node.layoutMode !== "NONE") {
+        properties.push({ key: "direction", label: "Dire\xE7\xE3o", value: node.layoutMode === "HORIZONTAL" ? "Horizontal" : "Vertical" });
+        const align = `${node.primaryAxisAlignItems} / ${node.counterAxisAlignItems}`;
+        properties.push({ key: "alignment", label: "Alinhamento", value: align });
+        if (node.itemSpacing !== figma.mixed && node.itemSpacing > 0) {
+          const token = await getVar("itemSpacing");
+          properties.push({ key: "gap", label: "Espa\xE7amento (Gap)", value: node.itemSpacing + "px", token });
+        }
+        const pt = node.paddingTop || 0, pr = node.paddingRight || 0, pb = node.paddingBottom || 0, pl = node.paddingLeft || 0;
+        if (pt + pr + pb + pl > 0) {
+          const tT = await getVar("paddingTop"), tR = await getVar("paddingRight"), tB = await getVar("paddingBottom"), tL = await getVar("paddingLeft");
+          const vT = tT || `${pt}px`, vR = tR || `${pr}px`, vB = tB || `${pb}px`, vL = tL || `${pl}px`;
+          let val, token;
+          if (vT === vR && vR === vB && vB === vL) {
+            val = vT;
+          } else if (vT === vB && vR === vL) {
+            val = `${vT} ${vR}`;
+          } else {
+            val = `${vT} ${vR} ${vB} ${vL}`;
+          }
+          token = tT || tR || tB || tL || null;
+          properties.push({ key: "padding", label: "Padding", value: val, token });
+        }
+      }
+      if ("fills" in node && Array.isArray(node.fills) && node.fills.length > 0) {
+        const sf = node.fills.find((f) => f.type === "SOLID");
+        if (sf) {
+          const token = await getVar("fills");
+          const hexFill = rgbToHex(sf.color.r, sf.color.g, sf.color.b).toUpperCase();
+          properties.push({ key: "fill", label: "Preenchimento", value: token || hexFill, token });
+        }
+      }
+      if ("strokes" in node && Array.isArray(node.strokes) && node.strokes.length > 0) {
+        const ss = node.strokes.find((s) => s.type === "SOLID");
+        if (ss) {
+          const token = await getVar("strokes");
+          const hexStroke = rgbToHex(ss.color.r, ss.color.g, ss.color.b).toUpperCase();
+          properties.push({ key: "stroke", label: "Contorno", value: token || hexStroke, token });
+        }
+        if (node.strokeWeight !== figma.mixed && node.strokeWeight > 0) {
+          properties.push({ key: "strokeWidth", label: "Espessura de borda", value: node.strokeWeight + "px" });
+        }
+      }
+      if (node.type === "TEXT") {
+        if (node.fontName !== figma.mixed) {
+          properties.push({ key: "fontFamily", label: "Fam\xEDlia", value: node.fontName.family });
+          properties.push({ key: "fontWeight", label: "Peso", value: node.fontName.style });
+        }
+        if (node.fontSize !== figma.mixed) {
+          const token = await getVar("fontSize");
+          properties.push({ key: "fontSize", label: "Tamanho da fonte", value: node.fontSize + "px", token });
+        }
+      }
+      if (node.type === "INSTANCE" && await node.getMainComponentAsync()) {
+        const variantProps = node.variantProperties;
+        if (variantProps) {
+          for (const [key, val] of Object.entries(variantProps)) {
+            properties.push({ key: `variant-${key}`, label: `Prop: ${key}`, value: val });
+          }
+        }
+      }
+      figma.ui.postMessage({ type: "show-spec-properties", properties });
+    }
+    if (msg.type === "create-unified-spec") {
+      (async () => {
+        const opts = msg.opts;
+        let node = null;
+        if (opts.targetNodeId) {
+          node = await figma.getNodeByIdAsync(opts.targetNodeId);
+        }
+        if (!node) {
+          const selection = figma.currentPage.selection;
+          if (selection.length === 0) {
+            figma.notify("Selecione um elemento no canvas.");
+            return;
+          }
+          node = selection[0];
+        }
+        try {
+          await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+        } catch (e) {
+        }
+        try {
+          await figma.loadFontAsync({ family: "Inter", style: "Medium" });
+        } catch (e) {
+        }
+        try {
+          await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+        } catch (e) {
+        }
+        const themeColor2 = hexToRgb2(opts.color || "#005ca9");
+        const themeFill = hexToRgb2(opts.fillColor || opts.color || "#EBF4FB");
+        const _specSide = opts.guideSide || "right";
+        const _tagRadius = opts.a11yType ? 21 : 8;
+        const _layerTag = opts.a11yType ? "SpecA11y" : "Spec";
+        let specCard = null;
+        let _a11yImportFailReason = null;
+        let _markerFailReason = null;
+        if (opts.a11yType) {
+          try {
+            specCard = await _tryImportA11yComponent(opts);
+            specCard.name = "Spec Notes";
+            try {
+              specCard.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+            } catch (e) {
+            }
+            try {
+              if ("paddingLeft" in specCard) {
+                specCard.paddingLeft = 12;
+                specCard.paddingRight = 12;
+                specCard.paddingTop = 12;
+                specCard.paddingBottom = 12;
+              }
+            } catch (e) {
+            }
+          } catch (e) {
+            specCard = null;
+            _a11yImportFailReason = e && e.message ? e.message : String(e);
+          }
+        }
+        if (!specCard) {
+          specCard = figma.createFrame();
+          specCard.name = "Spec Notes";
+          specCard.layoutMode = "VERTICAL";
+          const _cardPadding = opts.a11yType ? 12 : 16;
+          specCard.paddingLeft = _cardPadding;
+          specCard.paddingRight = _cardPadding;
+          specCard.paddingTop = _cardPadding;
+          specCard.paddingBottom = _cardPadding;
+          specCard.itemSpacing = 12;
+          specCard.cornerRadius = 8;
+          specCard.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+          specCard.strokes = [{ type: "SOLID", color: themeColor2 }];
+          specCard.strokeWeight = 1.5;
+          specCard.primaryAxisSizingMode = "AUTO";
+          specCard.counterAxisSizingMode = "AUTO";
+          const headerRow = figma.createFrame();
+          headerRow.layoutMode = "HORIZONTAL";
+          headerRow.itemSpacing = 8;
+          headerRow.fills = [];
+          headerRow.primaryAxisSizingMode = "AUTO";
+          headerRow.counterAxisSizingMode = "AUTO";
+          const tagCircle = figma.createFrame();
+          tagCircle.name = "Tag";
+          tagCircle.layoutMode = "HORIZONTAL";
+          tagCircle.primaryAxisSizingMode = "FIXED";
+          tagCircle.counterAxisSizingMode = "FIXED";
+          tagCircle.resize(42, 42);
+          tagCircle.cornerRadius = _tagRadius;
+          tagCircle.fills = [{ type: "SOLID", color: themeFill }];
+          tagCircle.strokes = [{ type: "SOLID", color: themeColor2 }];
+          tagCircle.strokeWeight = 1.5;
+          tagCircle.primaryAxisAlignItems = "CENTER";
+          tagCircle.counterAxisAlignItems = "CENTER";
+          const tagText = figma.createText();
+          tagText.fontName = { family: "Inter", style: "Bold" };
+          tagText.fontSize = 18;
+          tagText.fills = [{ type: "SOLID", color: themeColor2 }];
+          tagText.characters = opts.letter;
+          tagCircle.appendChild(tagText);
+          headerRow.appendChild(tagCircle);
+          headerRow.counterAxisAlignItems = "CENTER";
+          const title = figma.createText();
+          title.fontName = { family: "Inter", style: "Bold" };
+          title.fontSize = 12;
+          title.fills = [{ type: "SOLID", color: { r: 0.1, g: 0.1, b: 0.1 } }];
+          title.characters = node.name;
+          headerRow.appendChild(title);
+          specCard.appendChild(headerRow);
+          if (opts.categoryLabel) {
+            const pill = figma.createFrame();
+            pill.name = `Categoria/${opts.categoryLabel}`;
+            pill.layoutMode = "HORIZONTAL";
+            pill.paddingLeft = 8;
+            pill.paddingRight = 8;
+            pill.paddingTop = 4;
+            pill.paddingBottom = 4;
+            pill.cornerRadius = 12;
+            pill.primaryAxisSizingMode = "AUTO";
+            pill.counterAxisSizingMode = "AUTO";
+            pill.fills = [{ type: "SOLID", color: themeFill }];
+            pill.strokes = [{ type: "SOLID", color: themeColor2 }];
+            const pillText = figma.createText();
+            pillText.fontName = { family: "Inter", style: "Medium" };
+            pillText.fontSize = 10;
+            pillText.fills = [{ type: "SOLID", color: themeColor2 }];
+            pillText.characters = opts.categoryLabel;
+            pill.appendChild(pillText);
+            specCard.appendChild(pill);
+          }
+          if (opts.note) {
+            const desc = figma.createText();
+            desc.fontName = { family: "Inter", style: "Regular" };
+            desc.fontSize = 11;
+            desc.fills = [{ type: "SOLID", color: { r: 0.4, g: 0.4, b: 0.4 } }];
+            desc.characters = opts.note;
+            desc.textAutoResize = "WIDTH_AND_HEIGHT";
+            specCard.appendChild(desc);
+          }
+          if (opts.properties && opts.properties.length > 0) {
+            const propsFrame = figma.createFrame();
+            propsFrame.layoutMode = "VERTICAL";
+            propsFrame.itemSpacing = 4;
+            propsFrame.fills = [];
+            propsFrame.primaryAxisSizingMode = "AUTO";
+            propsFrame.counterAxisSizingMode = "AUTO";
+            propsFrame.name = "Propriedades";
+            propsFrame.layoutAlign = "INHERIT";
+            opts.properties.forEach((p) => {
+              const row = figma.createFrame();
+              row.name = `Prop/${p.label}`;
+              row.layoutMode = "HORIZONTAL";
+              row.itemSpacing = 12;
+              row.fills = [];
+              row.primaryAxisSizingMode = "AUTO";
+              row.counterAxisSizingMode = "AUTO";
+              row.layoutAlign = "INHERIT";
+              row.counterAxisAlignItems = "CENTER";
+              const pLabel = figma.createText();
+              pLabel.fontName = { family: "Inter", style: "Medium" };
+              pLabel.fontSize = 10;
+              pLabel.fills = [{ type: "SOLID", color: { r: 0.5, g: 0.5, b: 0.5 } }];
+              pLabel.characters = p.label.toUpperCase();
+              pLabel.textAutoResize = "WIDTH_AND_HEIGHT";
+              const pVal = figma.createText();
+              pVal.fontName = { family: "Inter", style: "Bold" };
+              pVal.fontSize = 11;
+              pVal.fills = [{ type: "SOLID", color: p.token ? themeColor2 : { r: 0.1, g: 0.1, b: 0.1 } }];
+              pVal.characters = p.token || String(p.value);
+              pVal.textAutoResize = "WIDTH_AND_HEIGHT";
+              row.appendChild(pLabel);
+              row.appendChild(pVal);
+              propsFrame.appendChild(row);
+            });
+            specCard.appendChild(propsFrame);
+          }
+          const specExcecoes = opts.excecoes || [];
+          if (specExcecoes.length > 0) {
+            await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+            await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+            const excFrame = figma.createFrame();
+            excFrame.layoutMode = "VERTICAL";
+            excFrame.itemSpacing = 6;
+            excFrame.fills = [{ type: "SOLID", color: { r: 1, g: 0.95, b: 0.93 } }];
+            excFrame.paddingLeft = 10;
+            excFrame.paddingRight = 10;
+            excFrame.paddingTop = 8;
+            excFrame.paddingBottom = 8;
+            excFrame.cornerRadius = 6;
+            excFrame.primaryAxisSizingMode = "AUTO";
+            excFrame.counterAxisSizingMode = "AUTO";
+            const excTitle = figma.createText();
+            excTitle.fontName = { family: "Inter", style: "Bold" };
+            excTitle.fontSize = 9;
+            excTitle.fills = [{ type: "SOLID", color: { r: 0.8, g: 0.3, b: 0.1 } }];
+            excTitle.characters = `CEN\xC1RIOS DE EXCE\xC7\xC3O (${specExcecoes.length})`;
+            excTitle.textAutoResize = "WIDTH_AND_HEIGHT";
+            excFrame.appendChild(excTitle);
+            const _excTypeRgb = {
+              "Erro": { r: 0.8, g: 0.15, b: 0.15 },
+              "Alerta": { r: 0.8, g: 0.5, b: 0 },
+              "Sucesso": { r: 0.1, g: 0.55, b: 0.25 },
+              "Confirma\xE7\xE3o": { r: 0.05, g: 0.35, b: 0.8 }
+            };
+            specExcecoes.forEach((exc) => {
+              const excRow = figma.createFrame();
+              excRow.layoutMode = "HORIZONTAL";
+              excRow.itemSpacing = 6;
+              excRow.fills = [];
+              excRow.primaryAxisSizingMode = "AUTO";
+              excRow.counterAxisSizingMode = "AUTO";
+              excRow.counterAxisAlignItems = "CENTER";
+              const typeColor = _excTypeRgb[exc.tipo] || { r: 0.4, g: 0.4, b: 0.4 };
+              const typeLabel = figma.createText();
+              typeLabel.fontName = { family: "Inter", style: "Bold" };
+              typeLabel.fontSize = 9;
+              typeLabel.fills = [{ type: "SOLID", color: typeColor }];
+              typeLabel.characters = (exc.tipo || "GERAL").toUpperCase();
+              typeLabel.textAutoResize = "WIDTH_AND_HEIGHT";
+              const titleLabel = figma.createText();
+              titleLabel.fontName = { family: "Inter", style: "Regular" };
+              titleLabel.fontSize = 10;
+              titleLabel.fills = [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2 } }];
+              titleLabel.characters = `${exc.titulo || ""}${exc.notas ? " \u2014 " + exc.notas : ""}`;
+              titleLabel.textAutoResize = "WIDTH_AND_HEIGHT";
+              excRow.appendChild(typeLabel);
+              excRow.appendChild(titleLabel);
+              excFrame.appendChild(excRow);
+            });
+            specCard.appendChild(excFrame);
+          }
+          if (opts.link) {
+            const linkTxt = figma.createText();
+            linkTxt.fontName = { family: "Inter", style: "Regular" };
+            linkTxt.fontSize = 11;
+            linkTxt.fills = [{ type: "SOLID", color: { r: 0, g: 0.4, b: 0.8 } }];
+            linkTxt.characters = opts.link;
+            linkTxt.textDecoration = "UNDERLINE";
+            linkTxt.hyperlink = { type: "URL", value: opts.link };
+            linkTxt.textAutoResize = "HEIGHT";
+            linkTxt.layoutAlign = "STRETCH";
+            specCard.appendChild(linkTxt);
+          }
+        }
+        let groupNodes = [];
+        let _absCardX = 0, _absCardY = 0, _absCardW = 0, _absCardH = 0;
+        const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
+        if (bounds) {
+          let marker = null;
+          if (opts.a11yType) {
+            try {
+              marker = await _tryImportA11yAgrupamento(opts);
+            } catch (e) {
+              marker = null;
+              _markerFailReason = e && e.message ? e.message : String(e);
+            }
+          }
+          let _markerAnchorBounds = bounds;
+          if (marker) {
+            figma.currentPage.appendChild(marker);
+            try {
+              marker.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
+            } catch (e) {
+            }
+            marker.x = Math.round(bounds.x - 16);
+            marker.y = Math.round(bounds.y - 16);
+            groupNodes.push(marker);
+            _markerAnchorBounds = marker.absoluteBoundingBox || _markerAnchorBounds;
+          } else {
+            const contour = figma.createFrame();
+            contour.name = "Destaque";
+            contour.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
+            figma.currentPage.appendChild(contour);
+            contour.x = bounds.x - 16;
+            contour.y = bounds.y - 16;
+            contour.fills = [];
+            contour.strokes = [{ type: "SOLID", color: themeColor2 }];
+            contour.strokeWeight = 2;
+            contour.dashPattern = [4, 4];
+            contour.locked = true;
+            const chip = figma.createFrame();
+            chip.name = "Chip";
+            chip.layoutMode = "HORIZONTAL";
+            chip.primaryAxisSizingMode = "FIXED";
+            chip.counterAxisSizingMode = "FIXED";
+            chip.resize(42, 42);
+            chip.cornerRadius = _tagRadius;
+            chip.fills = [{ type: "SOLID", color: themeFill }];
+            chip.strokes = [{ type: "SOLID", color: themeColor2 }];
+            chip.strokeWeight = 1.5;
+            chip.primaryAxisAlignItems = "CENTER";
+            chip.counterAxisAlignItems = "CENTER";
+            const chipText = figma.createText();
+            chipText.fontName = { family: "Inter", style: "Bold" };
+            chipText.fontSize = 18;
+            chipText.fills = [{ type: "SOLID", color: themeColor2 }];
+            chipText.characters = opts.letter;
+            chip.appendChild(chipText);
+            contour.appendChild(chip);
+            chip.x = 0;
+            chip.y = 0;
+            groupNodes.push(contour);
+          }
+          figma.currentPage.appendChild(specCard);
+          const side = opts.guideSide || "right";
+          const _isVertSide = side === "right" || side === "left";
+          const _specLetter = opts.letter;
+          let _anchorNode = node;
+          while (_anchorNode.parent && _anchorNode.parent.type !== "PAGE") {
+            _anchorNode = _anchorNode.parent;
+          }
+          const _anchorBounds = _anchorNode.absoluteBoundingBox || bounds;
+          const _letterMap = {};
+          const _updateLetterMap = (l, bb) => {
+            if (!_letterMap[l]) _letterMap[l] = { x: bb.x, topY: bb.y, bottom: bb.y + bb.height, right: bb.x + bb.width };
+            if (bb.y + bb.height > _letterMap[l].bottom) _letterMap[l].bottom = bb.y + bb.height;
+            if (bb.x + bb.width > _letterMap[l].right) _letterMap[l].right = bb.x + bb.width;
+            if (bb.x < _letterMap[l].x) _letterMap[l].x = bb.x;
+            if (bb.y < _letterMap[l].topY) _letterMap[l].topY = bb.y;
+          };
+          const _stackScanNodes = opts.a11yType ? _getOrCreateA11ySection().children || [] : figma.currentPage.children;
+          if (opts.a11yType !== "titulo") _stackScanNodes.forEach((n) => {
+            if (n.type !== "GROUP") return;
+            const newFmt = n.name.match(new RegExp("^\\[" + _layerTag + " \\| ([A-Z]\\d*(?:\\.\\d+)*) \\| ([a-z]+)\\] "));
+            if (newFmt) {
+              if (newFmt[2] !== side) return;
+              const specNotes = n.children && n.children.find((c) => (c.type === "FRAME" || c.type === "INSTANCE") && (c.name === "Spec Notes" || c.name === "Ficha") && c !== specCard);
+              if (!specNotes) return;
+              const bb2 = specNotes.absoluteBoundingBox || specNotes.absoluteRenderBounds;
+              if (bb2) _updateLetterMap(newFmt[1], bb2);
+              return;
+            }
+            if (opts.a11yType || !n.name.startsWith("[Spec]")) return;
+            const ficha = n.children && n.children.find((c) => c.type === "FRAME" && c.name.includes("/Ficha") && c !== specCard);
+            if (!ficha) return;
+            const lm = ficha.name.match(/\[Spec\/([A-Z]\d*(?:\.\d+)*)\]/);
+            const sm = ficha.name.match(/\/Ficha:([a-z]+)/);
+            if (!lm) return;
+            if ((sm ? sm[1] : "right") !== side) return;
+            const bb = ficha.absoluteBoundingBox || ficha.absoluteRenderBounds;
+            if (bb) _updateLetterMap(lm[1], bb);
+          });
+          const _SPEC_GAP = 32;
+          const _SPEC_COL_GAP = 64;
+          const cardW = specCard.width;
+          const cardH = specCard.height;
+          let targetX, targetY;
+          if (opts.pinnedPosition) {
+            targetX = opts.pinnedPosition.x;
+            targetY = opts.pinnedPosition.y;
+          } else if (_letterMap[_specLetter]) {
+            targetX = _letterMap[_specLetter].x;
+            if (side === "top") {
+              targetY = _letterMap[_specLetter].topY - cardH - _SPEC_GAP;
+            } else {
+              targetY = _letterMap[_specLetter].bottom + _SPEC_GAP;
+            }
+          } else if (Object.keys(_letterMap).length > 0) {
+            if (side === "left") {
+              const _leftmost = Object.values(_letterMap).reduce((a, v) => v.x < a.x ? v : a);
+              targetX = _leftmost.x - cardW - _SPEC_COL_GAP;
+              targetY = _leftmost.topY;
+            } else {
+              const _rightmost = Object.values(_letterMap).reduce((a, v) => v.right > a.right ? v : a);
+              targetX = _rightmost.right + _SPEC_COL_GAP;
+              targetY = _rightmost.topY;
+            }
+          } else {
+            if (side === "right") {
+              targetX = _anchorBounds.x + _anchorBounds.width + 100;
+              targetY = _anchorBounds.y;
+            } else if (side === "left") {
+              targetX = _anchorBounds.x - cardW - 100;
+              targetY = _anchorBounds.y;
+            } else if (side === "bottom") {
+              targetX = _anchorBounds.x;
+              targetY = _anchorBounds.y + _anchorBounds.height + 100;
+            } else {
+              targetX = _anchorBounds.x;
+              targetY = _anchorBounds.y - cardH - 100;
+            }
+          }
+          _absCardX = Math.round(targetX);
+          _absCardY = Math.round(targetY);
+          _absCardW = Math.round(specCard.width);
+          _absCardH = Math.round(specCard.height);
+          specCard.x = _absCardX;
+          specCard.y = _absCardY;
+          groupNodes.push(specCard);
+          const USE_NATIVE_CONNECTOR = false;
+          if (opts.drawConnection !== false) {
+            const _anchorB = _markerAnchorBounds;
+            let startPt, endPt;
+            if (side === "right") {
+              startPt = { x: _anchorB.x + _anchorB.width, y: _anchorB.y + _anchorB.height / 2 };
+              endPt = { x: specCard.x, y: specCard.y + specCard.height / 2 };
+            } else if (side === "left") {
+              startPt = { x: _anchorB.x, y: _anchorB.y + _anchorB.height / 2 };
+              endPt = { x: specCard.x + specCard.width, y: specCard.y + specCard.height / 2 };
+            } else if (side === "bottom") {
+              startPt = { x: _anchorB.x + _anchorB.width / 2, y: _anchorB.y + _anchorB.height };
+              endPt = { x: specCard.x + specCard.width / 2, y: specCard.y };
+            } else {
+              startPt = { x: _anchorB.x + _anchorB.width / 2, y: _anchorB.y };
+              endPt = { x: specCard.x + specCard.width / 2, y: specCard.y + specCard.height };
+            }
+            if (USE_NATIVE_CONNECTOR) {
+              const connector = figma.createConnector();
+              connector.name = "Conector";
+              connector.connectorStart = { endpointNodeId: node.id, magnet: "AUTO" };
+              connector.connectorEnd = { endpointNodeId: specCard.id, magnet: "AUTO" };
+              connector.connectorLineType = "STRAIGHT";
+              connector.strokes = [{ type: "SOLID", color: themeColor2 }];
+              connector.strokeWeight = 1.5;
+              connector.dashPattern = [4, 4];
+              connector.connectorStartStrokeCap = "CIRCLE_FILLED";
+              connector.connectorEndStrokeCap = "CIRCLE_FILLED";
+              figma.currentPage.appendChild(connector);
+              groupNodes.push(connector);
+            } else {
+              const connector = figma.createVector();
+              connector.name = "Conector";
+              connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
+              connector.strokes = [{ type: "SOLID", color: themeColor2 }];
+              connector.strokeWeight = 1.5;
+              connector.dashPattern = [4, 4];
+              connector.strokeCap = "ROUND";
+              figma.currentPage.appendChild(connector);
+              groupNodes.push(connector);
+              const _DOT_R = 4;
+              const startDot = figma.createEllipse();
+              startDot.name = "DotInicio";
+              startDot.resize(_DOT_R * 2, _DOT_R * 2);
+              startDot.fills = [{ type: "SOLID", color: themeColor2 }];
+              startDot.strokes = [];
+              figma.currentPage.appendChild(startDot);
+              startDot.x = startPt.x - _DOT_R;
+              startDot.y = startPt.y - _DOT_R;
+              groupNodes.push(startDot);
+              const endDot = figma.createEllipse();
+              endDot.name = "DotFim";
+              endDot.resize(_DOT_R * 2, _DOT_R * 2);
+              endDot.fills = [{ type: "SOLID", color: themeColor2 }];
+              endDot.strokes = [];
+              figma.currentPage.appendChild(endDot);
+              endDot.x = endPt.x - _DOT_R;
+              endDot.y = endPt.y - _DOT_R;
+              groupNodes.push(endDot);
+            }
+          }
+        } else {
+          figma.currentPage.appendChild(specCard);
+          _absCardX = Math.round(figma.viewport.center.x);
+          _absCardY = Math.round(figma.viewport.center.y);
+          _absCardW = Math.round(specCard.width);
+          _absCardH = Math.round(specCard.height);
+          specCard.x = _absCardX;
+          specCard.y = _absCardY;
+          groupNodes.push(specCard);
+        }
+        const specGroup = figma.group(groupNodes, figma.currentPage);
+        specGroup.name = `[${_layerTag} | ${opts.letter} | ${_specSide}] ${node.name}`;
+        specGroup.locked = !!opts.a11yType;
+        specGroup.setPluginData("handexCategory", "spec");
+        if (opts.a11yType) {
+          _reparentIntoA11ySection(specGroup);
+        } else {
+          _reorderSpecGroupByTag(specGroup, opts.letter);
+        }
+        figma.ui.postMessage({
+          type: "spec-created",
+          spec: {
+            id: specGroup.id,
+            targetNodeId: node.id,
+            name: node.name,
+            letter: opts.letter,
+            color: opts.color,
+            fillColor: opts.fillColor || null,
+            category: opts.category || "",
+            type: opts.categoryLabel || "Sem categoria",
+            note: opts.note,
+            properties: opts.properties,
+            guideSide: opts.guideSide || "right",
+            cardX: _absCardX,
+            cardY: _absCardY,
+            cardW: _absCardW,
+            cardH: _absCardH,
+            // --- Acessibilidade --- diferencia "Leitor de Tela" / "Ordem de Tabulação"
+            // (aba Acessibilidade em Anotar Specs, modules/accessibility.js). Passthrough
+            // simples: nenhum schema paralelo, reaproveita a mesma spec/properties[].
+            a11yType: opts.a11yType || null,
+            // Ecoa de volta a chave crua da subvariante e a Área Marcada de origem —
+            // messages.js monta o objeto salvo localmente a partir desta resposta
+            // (spec-created), não a partir de opts, então tudo que a listagem/geração
+            // de ficha precisa depois precisa vir aqui também.
+            a11ySubtype: opts.a11ySubtype || null,
+            a11yAreaId: opts.a11yAreaId || null
+          }
+        });
+        const _A11Y_EXPECTED_FALLBACK_PREFIXES = [
+          "a11y-elemento-outro-sem-componente-real",
+          "a11y-titulo-mobile-sem-variante-real",
+          "a11y-informacoes-customizavel-sem-variante-real",
+          "a11y-estrutura-variacao-sem-import-real",
+          "a11y-estrutura-marco-customizavel-sem-conteudo-catalogado"
+        ];
+        const _isExpectedFallback = _a11yImportFailReason && _A11Y_EXPECTED_FALLBACK_PREFIXES.some((p) => _a11yImportFailReason.startsWith(p));
+        if (opts.a11yType && (_a11yImportFailReason && !_isExpectedFallback || _markerFailReason)) {
+          const _reason = _markerFailReason || _a11yImportFailReason;
+          figma.notify(`N\xE3o foi poss\xEDvel usar o componente real da lib "Design Acess\xEDvel" (${_reason}) \u2014 spec criada no modo desenhado. Arraste para posicionar.`);
+        } else {
+          figma.notify("Especifica\xE7\xE3o criada \u2014 arraste para posicionar. Clique em Concluir quando pronto.");
+        }
+      })();
+    }
+    if (msg.type === "lock-spec") {
+      const specNode = await figma.getNodeByIdAsync(msg.specId);
+      if (specNode && specNode.name && /^\[Spec(A11y)? \| /.test(specNode.name)) {
+        specNode.locked = true;
+        figma.ui.postMessage({ type: "spec-locked", specId: msg.specId });
+      }
+    }
+    if (msg.type === "highlight-node") {
+      if (activeHighlightNode) {
+        try {
+          activeHighlightNode.remove();
+        } catch (e) {
+        }
+        activeHighlightNode = null;
+      }
+      const node = await figma.getNodeByIdAsync(msg.id);
+      if (node && node.visible && _nodeOnCurrentPage(node)) {
+        if (msg.selectNode !== false) {
+          figma.currentPage.selection = [node];
+        }
+        if (msg.shouldScroll !== false) {
+          figma.viewport.scrollAndZoomIntoView([node]);
+        }
+        if (msg.highlight && node.absoluteBoundingBox) {
+          const hexToRgbLocal = (hex) => {
+            const h = (hex || "#0070af").replace("#", "");
+            return {
+              r: parseInt(h.substring(0, 2), 16) / 255,
+              g: parseInt(h.substring(2, 4), 16) / 255,
+              b: parseInt(h.substring(4, 6), 16) / 255
+            };
+          };
+          const strokeColor = hexToRgbLocal(msg.color);
+          const bb = node.absoluteBoundingBox;
+          const strokeRect = figma.createRectangle();
+          strokeRect.name = "[HighlightStroke]";
+          strokeRect.x = bb.x;
+          strokeRect.y = bb.y;
+          strokeRect.resize(Math.max(1, bb.width), Math.max(1, bb.height));
+          strokeRect.fills = [];
+          strokeRect.strokes = [{ type: "SOLID", color: strokeColor }];
+          strokeRect.strokeWeight = 2;
+          strokeRect.strokeAlign = "OUTSIDE";
+          strokeRect.locked = true;
+          strokeRect.cornerRadius = node.cornerRadius && typeof node.cornerRadius === "number" ? node.cornerRadius : 0;
+          figma.currentPage.appendChild(strokeRect);
+          activeHighlightNode = strokeRect;
+        }
+      }
+    }
+    if (msg.type === "clear-highlight") {
+      if (activeHighlightNode) {
+        try {
+          activeHighlightNode.remove();
+        } catch (e) {
+        }
+        activeHighlightNode = null;
+      }
+    }
+    if (msg.type === "hide-node") {
+      const node = await figma.getNodeByIdAsync(msg.id);
+      if (node) {
+        if (msg.forceState !== void 0) {
+          node.visible = msg.forceState;
+        } else {
+          node.visible = false;
+        }
+      }
+    }
+    if (msg.type === "show-node") {
+      const node = await figma.getNodeByIdAsync(msg.id);
+      if (node) node.visible = true;
+    }
+    if (msg.type === "get-selection-name") {
+      const sel = figma.currentPage.selection;
+      figma.ui.postMessage({ type: "selection-name", name: sel.length > 0 ? sel[0].name : null });
+    }
+    if (msg.type === "get-a11y-selection-info") {
+      const sel = figma.currentPage.selection;
+      figma.ui.postMessage({
+        type: "a11y-selection-info",
+        id: sel.length > 0 ? sel[0].id : null,
+        name: sel.length > 0 ? sel[0].name : null
+      });
+    }
+    if (msg.type === "create-a11y-area") {
+      (async () => {
+        const node = await figma.getNodeByIdAsync(msg.targetNodeId);
+        if (!node || !node.absoluteBoundingBox) {
+          figma.notify("Elemento n\xE3o encontrado no canvas \u2014 selecione novamente.");
+          return;
+        }
+        try {
+          await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+        } catch (e) {
+        }
+        const ITEM_NUMBER_KEY_SUPERIOR = "ff43b15ac0c078b35219984bf035c4c0f0089cf1";
+        let badge = null;
+        let usedRealComponent = true;
+        try {
+          const comp = await figma.importComponentByKeyAsync(ITEM_NUMBER_KEY_SUPERIOR);
+          badge = comp.createInstance();
+          badge.setProperties({
+            "number#1478:0": String(msg.number),
+            "label#733:6": msg.label,
+            "show label#733:0": true
+          });
+        } catch (e) {
+          usedRealComponent = false;
+          badge = figma.createEllipse();
+          badge.name = "Selo de \xC1rea";
+          badge.resize(32, 32);
+          badge.fills = [{ type: "SOLID", color: hexToRgb2("#0070AF") }];
+        }
+        const bb = node.absoluteBoundingBox;
+        figma.currentPage.appendChild(badge);
+        const _A11Y_AREA_GAP = 24;
+        const targetCenterX = bb.x + bb.width / 2;
+        badge.x = Math.round(targetCenterX - badge.width / 2);
+        badge.y = Math.round(bb.y - badge.height - _A11Y_AREA_GAP);
+        let group = badge;
+        if (!usedRealComponent) {
+          const labelText = figma.createText();
+          labelText.name = "Label";
+          labelText.fontName = { family: "Inter", style: "Bold" };
+          labelText.fontSize = 12;
+          labelText.fills = [{ type: "SOLID", color: hexToRgb2("#0070AF") }];
+          labelText.characters = msg.label;
+          figma.currentPage.appendChild(labelText);
+          labelText.x = Math.round(badge.x + badge.width + 8);
+          labelText.y = Math.round(badge.y + badge.height / 2 - labelText.height / 2);
+          group = figma.group([badge, labelText], figma.currentPage);
+        }
+        group.name = `[A11yArea | ${msg.number}] ${msg.label}`;
+        group.locked = false;
+        _reparentIntoA11ySection(group);
+        figma.currentPage.selection = [group];
+        figma.viewport.scrollAndZoomIntoView([group]);
+        figma.ui.postMessage({
+          type: "a11y-area-created",
+          area: {
+            id: group.id,
+            number: msg.number,
+            label: msg.label,
+            targetNodeId: node.id,
+            targetNodeName: node.name
+          }
+        });
+        figma.notify(usedRealComponent ? "\xC1rea marcada." : '\xC1rea marcada \u2014 n\xE3o foi poss\xEDvel usar o selo real da lib "Design Acess\xEDvel" (modo simplificado).');
+      })();
+    }
+    if (msg.type === "check-a11y-library") {
+      (async () => {
+        const A11Y_LIBRARY_CANARY_KEY = "f1bf785a343f191cff72e702d68a27a3a97f0ee9";
+        let linked = false;
+        try {
+          await figma.importComponentByKeyAsync(A11Y_LIBRARY_CANARY_KEY);
+          linked = true;
+        } catch (e) {
+          linked = false;
+        }
+        figma.ui.postMessage({ type: "a11y-library-status", linked, token: msg.token || null });
+      })();
+    }
+    if (msg.type === "hide-spec-lines") {
+      const targetVisible = msg.forceState !== void 0 ? msg.forceState : false;
+      for (const specId of msg.specIds || []) {
+        const specGroup = await figma.getNodeByIdAsync(specId);
+        if (!specGroup || !("findChildren" in specGroup)) continue;
+        const lineNodes = specGroup.findChildren((n) => n.name === "Conector" || n.name === "DotInicio" || n.name === "DotFim");
+        lineNodes.forEach((n) => {
+          n.visible = targetVisible;
+        });
+      }
+    }
+    if (msg.type === "unlock-spec-group") {
+      const targetLocked = msg.locked !== void 0 ? msg.locked : false;
+      for (const specId of msg.specIds || []) {
+        const specGroup = await figma.getNodeByIdAsync(specId);
+        if (!specGroup) continue;
+        specGroup.locked = targetLocked;
+      }
+    }
+    if (msg.type === "rename-node") {
+      const node = await figma.getNodeByIdAsync(msg.id);
+      if (node) {
+        node.name = msg.name;
+        if (node.type === "GROUP" || node.type === "FRAME" || node.type === "COMPONENT" || node.type === "INSTANCE") {
+          const textNode = node.findOne((n) => n.type === "TEXT");
+          if (textNode) {
+            (async () => {
+              try {
+                await figma.loadFontAsync(textNode.fontName);
+                textNode.characters = msg.name;
+                const bg = node.findOne((n) => n.type === "POLYGON" || n.type === "ELLIPSE" || n.type === "RECTANGLE" || n.type === "STAR" || n.type === "VECTOR");
+                if (bg) {
+                  textNode.x = bg.x + bg.width / 2 - textNode.width / 2;
+                  textNode.y = bg.y + bg.height / 2 - textNode.height / 2;
+                }
+              } catch (err) {
+                console.error("Erro ao carregar fonte para renomear:", err);
+              }
+            })();
+          }
+        }
+      }
+    }
+    if (msg.type === "inject-obs-to-spec") {
+      (async () => {
+        try {
+          await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+          await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+          const specNode = await figma.getNodeByIdAsync(msg.specNodeId);
+          if (!specNode) {
+            figma.notify("Frame de spec n\xE3o encontrado", { error: true });
+            return;
+          }
+          const obsFrame = figma.createFrame();
+          obsFrame.name = `[Obs] ${msg.tipo || "Exce\xE7\xE3o"}`;
+          obsFrame.layoutMode = "VERTICAL";
+          obsFrame.paddingLeft = 10;
+          obsFrame.paddingRight = 10;
+          obsFrame.paddingTop = 8;
+          obsFrame.paddingBottom = 8;
+          obsFrame.itemSpacing = 4;
+          obsFrame.primaryAxisSizingMode = "AUTO";
+          obsFrame.counterAxisSizingMode = "AUTO";
+          obsFrame.fills = [{ type: "SOLID", color: { r: 1, g: 0.97, b: 0.91 } }];
+          obsFrame.strokes = [{ type: "SOLID", color: { r: 0.98, g: 0.7, b: 0.3 } }];
+          obsFrame.strokeWeight = 1;
+          obsFrame.cornerRadius = 8;
+          const labelText = figma.createText();
+          labelText.fontName = { family: "Inter", style: "Bold" };
+          labelText.characters = `Obs \xB7 ${msg.tipo || "Exce\xE7\xE3o"}: ${msg.titulo || ""}`;
+          labelText.fontSize = 10;
+          labelText.fills = [{ type: "SOLID", color: { r: 0.72, g: 0.39, b: 0 } }];
+          obsFrame.appendChild(labelText);
+          const obsText = figma.createText();
+          obsText.fontName = { family: "Inter", style: "Regular" };
+          obsText.characters = msg.obs;
+          obsText.fontSize = 11;
+          obsText.fills = [{ type: "SOLID", color: { r: 0.25, g: 0.25, b: 0.25 } }];
+          obsFrame.appendChild(obsText);
+          const parent = specNode.parent || figma.currentPage;
+          parent.appendChild(obsFrame);
+          obsFrame.x = specNode.x;
+          obsFrame.y = (specNode.y || 0) + (specNode.height || 0) + 8;
+          figma.notify("Observa\xE7\xE3o injetada no canvas");
+        } catch (e) {
+          figma.notify("Erro ao injetar observa\xE7\xE3o: " + e.message, { error: true });
+        }
+      })();
+    }
+    if (msg.type === "delete-node") {
+      const node = await figma.getNodeByIdAsync(msg.id);
+      if (node) {
+        node.remove();
+        figma.notify("Item exclu\xEDdo com sucesso");
+      }
+      if (activeHighlightNode) {
+        try {
+          activeHighlightNode.remove();
+        } catch (e) {
+        }
+        activeHighlightNode = null;
+      }
+    }
+    if (msg.type === "save-storage") {
+      figma.clientStorage.setAsync("handoffData", msg.data).catch((err) => {
+        console.warn("Storage save failed (possibly missing plugin ID in manifest):", err);
+      });
+      await _writeSharedPluginData(msg.data);
+    }
+    if (msg.type === "focus-node") {
+      const node = await figma.getNodeByIdAsync(msg.id);
+      if (node && _nodeOnCurrentPage(node)) {
+        figma.currentPage.selection = [node];
+        figma.viewport.scrollAndZoomIntoView([node]);
+      }
+    }
+    if (msg.type === "resize-ui") {
+      figma.ui.resize(msg.width, msg.height);
+    }
+    if (msg.type === "export-design-data") {
+      const nodes = figma.currentPage.selection.length > 0 ? figma.currentPage.selection : figma.currentPage.children;
+      let data = "Node Name, Type, Width, Height\n";
+      nodes.forEach((n) => {
+        data += `${n.name.replace(/,/g, "")},${n.type},${n.width || 0},${n.height || 0}
+`;
+      });
+      figma.ui.postMessage({ type: "design-data-exported", data, format: msg.format });
+    }
+    if (msg.type === "create-flow-connection") {
+      const selection = figma.currentPage.selection;
+      const isEvent = msg.flowType === "event_start" || msg.flowType === "event_end";
+      if (!isEvent && selection.length !== 2) {
+        figma.notify("Selecione exatamente dois elementos para conectar.");
+        return;
+      }
+      if (isEvent && selection.length === 0) {
+        figma.notify("Selecione pelo menos um elemento.");
+        return;
+      }
+      const nodeA = selection[0];
+      const nodeB = selection[1] || null;
+      await _buildFlowConnection(nodeA, nodeB, msg);
+    }
+    if (msg.type === "recreate-flow-connection") {
+      const isEvent = msg.flowType === "event_start" || msg.flowType === "event_end";
+      const nodeA = msg.sourceId ? await figma.getNodeByIdAsync(msg.sourceId) : null;
+      const nodeB = msg.targetId ? await figma.getNodeByIdAsync(msg.targetId) : null;
+      if (!nodeA || !isEvent && msg.targetId && !nodeB) {
+        figma.ui.postMessage({ type: "flow-recreate-failed", flowName: msg.flowName || "" });
+        return;
+      }
+      await _buildFlowConnection(nodeA, nodeB, msg);
+    }
+    if (msg.type === "create-legend") {
+      (async () => {
+        try {
+          await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+        } catch (e) {
+        }
+        try {
+          await figma.loadFontAsync({ family: "Inter", style: "Medium" });
+        } catch (e) {
+        }
+        try {
+          await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+        } catch (e) {
+        }
+        const legendFrame = figma.createFrame();
+        legendFrame.name = "[Fluxo | legenda] Legendas dos Fluxos";
+        legendFrame.layoutMode = "VERTICAL";
+        legendFrame.paddingLeft = 20;
+        legendFrame.paddingRight = 20;
+        legendFrame.paddingTop = 20;
+        legendFrame.paddingBottom = 20;
+        legendFrame.itemSpacing = 16;
+        legendFrame.cornerRadius = 12;
+        legendFrame.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+        legendFrame.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
+        legendFrame.strokeWeight = 1;
+        legendFrame.primaryAxisSizingMode = "AUTO";
+        legendFrame.counterAxisSizingMode = "AUTO";
+        const legendTitle = figma.createText();
+        legendTitle.fontName = { family: "Inter", style: "Bold" };
+        legendTitle.characters = "Legendas de Especifica\xE7\xE3o";
+        legendTitle.fontSize = 14;
+        legendTitle.fills = [{ type: "SOLID", color: { r: 0.1, g: 0.1, b: 0.1 } }];
+        legendFrame.appendChild(legendTitle);
+        const types = [
+          { name: "Cen\xE1rio de exce\xE7\xE3o", c: { r: 0.97, g: 0.45, b: 0.08 } },
+          { name: "Informa\xE7\xE3o extra", c: { r: 0.05, g: 0.64, b: 0.91 } },
+          { name: "Comportamento", c: { r: 0.92, g: 0.28, b: 0.6 } },
+          { name: "Regra de Neg\xF3cio", c: { r: 0.02, g: 0.71, b: 0.82 } },
+          { name: "Dados da API", c: { r: 0.51, g: 0.8, b: 0.08 } }
+        ];
+        for (const t of types) {
+          const row = figma.createFrame();
+          row.layoutMode = "HORIZONTAL";
+          row.itemSpacing = 12;
+          row.counterAxisAlignItems = "CENTER";
+          row.primaryAxisSizingMode = "AUTO";
+          row.counterAxisSizingMode = "AUTO";
+          row.fills = [];
+          const circle = figma.createEllipse();
+          circle.resize(16, 16);
+          circle.fills = [{ type: "SOLID", color: t.c }];
+          circle.strokes = [];
+          const text = figma.createText();
+          text.fontName = { family: "Inter", style: "Medium" };
+          text.characters = t.name;
+          text.fontSize = 12;
+          text.fills = [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2 } }];
+          row.appendChild(circle);
+          row.appendChild(text);
+          legendFrame.appendChild(row);
+        }
+        legendFrame.x = figma.viewport.center.x - 120;
+        legendFrame.y = figma.viewport.center.y - 100;
+        legendFrame.locked = true;
+        legendFrame.setPluginData("handexCategory", "fluxo");
+        figma.currentPage.appendChild(legendFrame);
+        figma.currentPage.selection = [legendFrame];
+        figma.viewport.scrollAndZoomIntoView([legendFrame]);
+        figma.notify("Legenda criada!");
+      })();
+    }
+    if (msg.type === "pull-briefing-from-canvas") {
+      const briefingFrame = figma.currentPage.findOne((n) => n.type === "FRAME" && n.name === "Briefing Estruturado");
+      if (!briefingFrame) {
+        figma.ui.postMessage({ type: "briefing-data-pulled", data: [] });
+        return;
+      }
+      const data = [];
+      let currentHeader = null;
+      const texts = briefingFrame.findAll((n) => n.type === "TEXT");
+      for (const child of texts) {
+        const style = child.fontName.style || "";
+        if (style.includes("Bold") || style.includes("SemiBold") || style.includes("Black")) {
+          currentHeader = child.characters;
+        } else if (style.includes("Regular") && currentHeader) {
+          if (child.characters.trim().length > 0 && child.characters.trim() !== "Clique para adicionar...") {
+            data.push({ category: "Importado do Canvas", question: currentHeader, answer: child.characters });
+          }
+          currentHeader = null;
+        }
+      }
+      figma.ui.postMessage({ type: "briefing-data-pulled", data });
+      return;
+    }
+    if (msg.type === "pull-ficha-version-from-canvas") {
+      try {
+        const _titulo = (msg.titulo || "").trim();
+        const _prefix = _titulo ? `Handex | Ficha de Projeto | ${_titulo}` : "Handex | Ficha de Projeto";
+        const fichas = figma.currentPage.children.filter(
+          (n) => n.type === "FRAME" && n.name.startsWith(_prefix)
+        );
+        if (fichas.length === 0) {
+          figma.ui.postMessage({ type: "ficha-version-pulled", versao: null });
+          return;
+        }
+        fichas.sort((a, b) => a.name.localeCompare(b.name));
+        const latest = fichas[fichas.length - 1];
+        const campoVersao = latest.findOne((n) => n.type === "FRAME" && n.name === "[Campo] Vers\xE3o");
+        const versaoText = campoVersao ? campoVersao.findAll((n) => n.type === "TEXT")[1] : null;
+        const versao = versaoText ? versaoText.characters.trim() : null;
+        figma.ui.postMessage({ type: "ficha-version-pulled", versao: versao && versao !== "-" ? versao : null });
+      } catch (e) {
+        figma.ui.postMessage({ type: "ficha-version-pulled", versao: null });
+      }
+      return;
+    }
+    if (msg.type === "inject-framework") {
+      (async () => {
+        for (const font of [
+          { family: "Inter", style: "Regular" },
+          { family: "Inter", style: "Medium" },
+          { family: "Inter", style: "Bold" }
+        ]) {
+          try {
+            await figma.loadFontAsync(font);
+          } catch (e) {
+          }
+        }
+        const CAIXA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 205.51265 46.553631"><g transform="translate(-284.78446,-475.51214)"><g transform="matrix(1.25,0,0,-1.25,15.493106,1024.9702)"><g transform="scale(0.24,0.24)"><path d="m 1107.19,1780.04 -17.74,-44.21 24.55,0 -6.73,44.39 -0.08,-0.18 z m -93.98,-101.49 72.77,149.83 55.02,0 30.68,-149.83 -48.3,0 -3.56,19.97 -46.86,0 -10.78,-19.97 -48.97,0 z m 181.34,0 21.08,149.83 48.67,0 -21.07,-149.83 -48.68,0 z m 323.71,101.67 -17.81,-44.39 24.54,0 -6.73,44.39 z m -94.06,-101.67 72.78,149.83 55.01,0 30.69,-149.83 -48.31,0 -3.55,19.97 -46.87,0 -10.78,-19.97 -48.97,0" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1316.6,1748.61 60.99,0 41.79,-69.21 -61,0 -41.78,69.21" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1322.94,1759.24 63.04,0 54.75,68.92 -63.04,0 -54.75,-68.92" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1259.91,1678.98 63.03,0 54.75,69.76 -63.04,0 -54.74,-69.76" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1282.64,1829 58.83,0 40.31,-69.76 -58.84,0 -40.3,69.76" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1014.65,1823.02 -4.68,-44.07 c -17.939,24.75 -59.517,7.67 -62.782,-23.16 -4.149,-39.13 35.867,-48.25 57.642,-25.21 l -4.69,-44.17 c -6.499,-3.19 -12.855,-5.67 -19.128,-7.34 -6.239,-1.68 -12.492,-2.57 -18.696,-2.7 -7.8,-0.17 -14.867,0.65 -21.234,2.44 -6.367,1.76 -12.129,4.56 -17.227,8.34 -9.832,7.19 -16.941,16.33 -21.32,27.45 -4.379,11.16 -5.82,23.75 -4.328,37.82 1.203,11.31 4.051,21.62 8.59,30.97 4.5,9.34 10.734,17.84 18.672,25.54 7.504,7.34 15.676,12.88 24.519,16.64 8.809,3.73 18.422,5.72 28.813,5.94 6.207,0.13 12.297,-0.49 18.207,-1.92 5.942,-1.42 11.802,-3.64 17.642,-6.57" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/></g></g></g></svg>`;
+        const mkLogo = (h) => {
+          try {
+            const n = figma.createNodeFromSvg(CAIXA_SVG);
+            n.name = "CAIXA Logo";
+            n.resize(Math.round(h * 205.51 / 46.55), h);
+            return n;
+          } catch (e) {
+            const t = tx("CAIXA", Math.round(h * 0.6), "Bold", C.blue);
+            return t;
+          }
+        };
+        const mkHeader = (title) => {
+          const bar = figma.createFrame();
+          bar.layoutMode = "HORIZONTAL";
+          bar.paddingLeft = bar.paddingRight = 16;
+          bar.paddingTop = bar.paddingBottom = 14;
+          bar.itemSpacing = 12;
+          bar.primaryAxisSizingMode = "AUTO";
+          bar.counterAxisSizingMode = "AUTO";
+          bar.layoutAlign = "STRETCH";
+          bar.counterAxisAlignItems = "CENTER";
+          bar.fills = [{ type: "SOLID", color: C.bgBlue }];
+          bar.appendChild(mkLogo(20));
+          bar.appendChild(tx("|", 14, "Regular", C.blueDark));
+          bar.appendChild(tx(title, 14, "Bold", C.blueDark));
+          return bar;
+        };
+        const mkCanvas = (h, fill) => {
+          const c = figma.createFrame();
+          c.resize(100, h);
+          c.fills = fill ? [{ type: "SOLID", color: fill }] : [];
+          c.layoutAlign = "STRETCH";
+          return c;
+        };
+        const C = {
+          blue: { r: 0, g: 0.439, b: 0.686 },
+          blueDark: { r: 0, g: 0.247, b: 0.478 },
+          blueLight: { r: 0.91, g: 0.957, b: 0.98 },
+          orange: { r: 0.965, g: 0.51, b: 0.165 },
+          teal: { r: 0.298, g: 0.745, b: 0.714 },
+          tealLight: { r: 0.851, g: 0.961, b: 0.957 },
+          lime: { r: 0.831, g: 0.969, b: 0.188 },
+          yellow: { r: 1, g: 0.949, b: 0.749 },
+          white: { r: 1, g: 1, b: 1 },
+          bg: { r: 0.941, g: 0.953, b: 0.969 },
+          bgBlue: { r: 0.91, g: 0.957, b: 0.98 },
+          line: { r: 0.882, g: 0.894, b: 0.91 },
+          text: { r: 0.118, g: 0.161, b: 0.231 },
+          muted: { r: 0.392, g: 0.455, b: 0.545 },
+          light: { r: 0.651, g: 0.706, b: 0.78 },
+          green: { r: 0.133, g: 0.694, b: 0.298 },
+          greenLight: { r: 0.941, g: 0.992, b: 0.949 },
+          amber: { r: 0.961, g: 0.769, b: 0.188 },
+          red: { r: 0.941, g: 0.263, b: 0.212 }
+        };
+        const tx = (text, size, weight, color) => {
+          const n = figma.createText();
+          n.fontName = { family: "Inter", style: weight || "Regular" };
+          n.characters = String(text || "");
+          n.fontSize = size || 12;
+          n.fills = [{ type: "SOLID", color: color || C.text }];
+          n.textAutoResize = "WIDTH_AND_HEIGHT";
+          return n;
+        };
+        const vb = (w, pad, gap, fill, cr) => {
+          const f = figma.createFrame();
+          f.layoutMode = "VERTICAL";
+          f.paddingLeft = f.paddingRight = pad;
+          f.paddingTop = f.paddingBottom = pad;
+          f.itemSpacing = gap;
+          f.fills = fill ? [{ type: "SOLID", color: fill }] : [];
+          if (cr) f.cornerRadius = cr;
+          if (w !== null) {
+            f.counterAxisSizingMode = "FIXED";
+            f.resize(w, 10);
+          } else {
+            f.counterAxisSizingMode = "AUTO";
+          }
+          f.primaryAxisSizingMode = "AUTO";
+          return f;
+        };
+        const hb = (pad, gap, fill, cr) => {
+          const f = figma.createFrame();
+          f.layoutMode = "HORIZONTAL";
+          f.paddingLeft = f.paddingRight = pad;
+          f.paddingTop = f.paddingBottom = pad;
+          f.itemSpacing = gap;
+          f.primaryAxisSizingMode = "AUTO";
+          f.counterAxisSizingMode = "AUTO";
+          f.counterAxisAlignItems = "CENTER";
+          f.fills = fill ? [{ type: "SOLID", color: fill }] : [];
+          if (cr) f.cornerRadius = cr;
+          return f;
+        };
+        const addT = (parent, text, size, weight, color) => {
+          const n = tx(text, size, weight, color);
+          n.textAutoResize = "HEIGHT";
+          n.layoutAlign = "STRETCH";
+          parent.appendChild(n);
+          return n;
+        };
+        const sp = (h) => {
+          const r = figma.createRectangle();
+          r.resize(4, h);
+          r.opacity = 0;
+          return r;
+        };
+        const rct = (w, h, fill, cr, strokeC, strokeW, dash) => {
+          const r = figma.createRectangle();
+          r.resize(w, h);
+          r.fills = fill ? [{ type: "SOLID", color: fill }] : [];
+          if (cr) r.cornerRadius = cr;
+          if (strokeC) {
+            r.strokes = [{ type: "SOLID", color: strokeC }];
+            r.strokeWeight = strokeW || 1;
+            if (dash) r.dashPattern = dash;
+          }
+          return r;
+        };
+        const ell = (w, h, fill, strokeC, strokeW, dash) => {
+          const e = figma.createEllipse();
+          e.resize(w, h);
+          e.fills = fill ? [{ type: "SOLID", color: fill }] : [];
+          if (strokeC) {
+            e.strokes = [{ type: "SOLID", color: strokeC }];
+            e.strokeWeight = strokeW || 1;
+            if (dash) e.dashPattern = dash;
+          }
+          return e;
+        };
+        const addLogo = (parent, x, y, size) => {
+          size = size || 36;
+          const c = ell(size, size, C.blue);
+          c.x = x;
+          c.y = y;
+          parent.appendChild(c);
+          const lt = tx("UX", Math.round(size * 0.3), "Bold", C.white);
+          lt.x = x + Math.round(size * 0.22);
+          lt.y = y + Math.round(size * 0.33);
+          parent.appendChild(lt);
+        };
+        let mainFrame = null;
+        if (msg.frameworkId === "briefing") {
+          mainFrame = vb(700, 48, 0, C.white, 16);
+          mainFrame.name = "Briefing Estruturado";
+          const hdr = mkHeader("Briefing Estruturado");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          mainFrame.appendChild(sp(20));
+          const fieldRow = (label, val) => {
+            const row = hb(0, 6, null);
+            row.counterAxisAlignItems = "MIN";
+            row.appendChild(tx(label + "  ", 13, "Bold", C.blue));
+            row.appendChild(tx(val, 13, "Regular", C.text));
+            mainFrame.appendChild(row);
+            mainFrame.appendChild(sp(4));
+          };
+          const section = (header, body, sub) => {
+            mainFrame.appendChild(sp(sub ? 4 : 14));
+            addT(mainFrame, header, sub ? 12 : 14, "Bold", sub ? C.orange : C.blue);
+            if (body) {
+              mainFrame.appendChild(sp(4));
+              addT(mainFrame, body, 12, "Regular", C.muted);
+            }
+          };
+          fieldRow("Nome do Projeto:", "Nome do projeto");
+          fieldRow("Data de In\xEDcio:", "00/00/00");
+          mainFrame.appendChild(sp(12));
+          const sep = rct(604, 1, C.line);
+          mainFrame.appendChild(sep);
+          section("Contexto", "Descreva o contexto atual do projeto e por que ele est\xE1 sendo demandado. Se existirem jornadas mapeadas ou algum material, ele deve ser registrado ou linkado nesta sess\xE3o.");
+          section("Resultados-chave e crit\xE9rio de sucesso", "Como o sucesso do projeto ser\xE1 medido?");
+          section("Atores e usu\xE1rios", "Quem \xE9 o p\xFAblico deste projeto? Voc\xEA pode aprofundar, aqui, para um estudo de personas.");
+          section("Stakeholders e equipe", "Anote quem faz parte da(s) equipe(s), quais s\xE3o suas responsabilidades. Importante anotar quem vai validar as decis\xF5es.");
+          section("Escopo");
+          section("Est\xE1 no escopo", "O que precisa ser trabalhado e por que.", true);
+          section("Pode estar no escopo", "O que depende de outros fatores para entrar no escopo.", true);
+          section("N\xE3o est\xE1 no escopo", "Limita\xE7\xF5es t\xE9cnicas ou escopo exclu\xEDdo explicitamente.", true);
+          section("Depend\xEAncias", "Outras \xE1reas que podem ter conhecimento ou dom\xEDnio sobre parte do projeto.");
+          section("Riscos", "Riscos que atrapalhem o sucesso do projeto. O que pode acontecer se n\xE3o atingirmos as metas?");
+          section("Tempo", "Roadmaps, prazos, sprints necess\xE1rias, qualquer fator que tangibilize tempo de projeto.");
+          section("Organiza\xE7\xE3o do trabalho");
+          section("Rotina de trabalho da equipe", "Reuni\xF5es di\xE1rias? Sprint? Retr\xF4?", true);
+          section("Comunica\xE7\xE3o", "Exemplo: reuni\xF5es marcadas por email, feitas pelo Teams.", true);
+          section("Compartilhamento de dados", "Softwares e pastas, meio de compartilhamento, formatos de arquivos.", true);
+          section("Notas adicionais", "Notas aqui.");
+          mainFrame.appendChild(sp(8));
+        } else if (msg.frameworkId === "csd") {
+          mainFrame = vb(940, 0, 0, C.white, 16);
+          mainFrame.name = "Matriz CSD";
+          const hdr = mkHeader("Matriz CSD \u2013 Certezas \xB7 Suposi\xE7\xF5es \xB7 D\xFAvidas");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const csdRow = hb(20, 16, null);
+          csdRow.layoutAlign = "STRETCH";
+          mainFrame.appendChild(csdRow);
+          const csdCols = [
+            { label: "Certezas", sub: "O que sabemos com certeza.", hdr: C.green, bg: C.greenLight },
+            { label: "Suposi\xE7\xF5es", sub: "O que acreditamos, mas n\xE3o validamos.", hdr: C.amber, bg: { r: 1, g: 0.98, b: 0.929 } },
+            { label: "D\xFAvidas", sub: "O que precisamos descobrir.", hdr: C.red, bg: { r: 1, g: 0.949, b: 0.949 } }
+          ];
+          csdCols.forEach((col) => {
+            const card = vb(280, 0, 8, col.bg, 12);
+            card.paddingBottom = 16;
+            const chdr = vb(280, 16, 4, col.hdr, 0);
+            chdr.paddingTop = chdr.paddingBottom = 10;
+            chdr.layoutAlign = "STRETCH";
+            const ct = tx(col.label, 13, "Bold", C.white);
+            ct.layoutAlign = "STRETCH";
+            ct.textAutoResize = "HEIGHT";
+            const cs = tx(col.sub, 10, "Regular", C.white);
+            cs.opacity = 0.85;
+            cs.layoutAlign = "STRETCH";
+            cs.textAutoResize = "HEIGHT";
+            chdr.appendChild(ct);
+            chdr.appendChild(cs);
+            card.appendChild(chdr);
+            for (let i = 0; i < 3; i++) {
+              const itemWrap = vb(248, 12, 0, C.white, 8);
+              itemWrap.paddingTop = itemWrap.paddingBottom = 10;
+              itemWrap.strokes = [{ type: "SOLID", color: C.line }];
+              itemWrap.strokeWeight = 1;
+              itemWrap.layoutAlign = "STRETCH";
+              const ph = tx("Clique para adicionar...", 11, "Regular", C.light);
+              ph.layoutAlign = "STRETCH";
+              ph.textAutoResize = "HEIGHT";
+              itemWrap.appendChild(ph);
+              card.appendChild(itemWrap);
+            }
+            csdRow.appendChild(card);
+          });
+        } else if (msg.frameworkId === "five-whys") {
+          mainFrame = vb(600, 40, 0, C.bgBlue, 20);
+          mainFrame.name = "Os 5 Porqu\xEAs";
+          const hdr = mkHeader("Os 5 porqu\xEA?");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          mainFrame.appendChild(sp(12));
+          mainFrame.appendChild(rct(520, 1, C.line));
+          mainFrame.appendChild(sp(12));
+          const probRow = hb(0, 8, null);
+          probRow.counterAxisAlignItems = "MIN";
+          probRow.appendChild(tx("Problema:  ", 13, "Bold", C.blue));
+          probRow.appendChild(tx("Diga qual o problema encontrado.", 13, "Regular", C.muted));
+          mainFrame.appendChild(probRow);
+          const emojis = ["\xF0\u0178\u02DC\u20AC", "\xF0\u0178\u02DC\u0160", "\xF0\u0178\xA4\u201D", "\xF0\u0178\u02DC\xA2", "\xF0\u0178\xA4\xAF", "\xF0\u0178\u02DC\xB1"];
+          const qLabels = ["Porqu\xEA o problema ocorre?", "Porqu\xEA?", "Porqu\xEA?", "Porqu\xEA?", "Porqu\xEA?", "Porqu\xEA?"];
+          const motivos = ["1\xC2\xB0 motivo", "2\xC2\xB0 motivo", "3\xC2\xB0 motivo", "4\xC2\xB0 motivo", "5\xC2\xB0 motivo", "6\xC2\xB0 motivo"];
+          for (let i = 0; i < 6; i++) {
+            mainFrame.appendChild(sp(14));
+            const row = hb(0, 12, null);
+            row.counterAxisAlignItems = "CENTER";
+            row.appendChild(tx(emojis[i], 18, "Regular", C.text));
+            const block = vb(null, 0, 2, null);
+            block.appendChild(tx(qLabels[i], 13, "Bold", C.blue));
+            block.appendChild(tx(motivos[i], 12, "Regular", C.muted));
+            row.appendChild(block);
+            mainFrame.appendChild(row);
+          }
+          mainFrame.appendChild(sp(20));
+          mainFrame.appendChild(rct(520, 1, C.line));
+          mainFrame.appendChild(sp(12));
+          addT(mainFrame, "Causa raiz", 14, "Bold", C.blue);
+          mainFrame.appendChild(sp(4));
+          addT(mainFrame, "A real causa do problema \xE9...", 12, "Regular", C.muted);
+          mainFrame.appendChild(sp(8));
+        } else if (msg.frameworkId === "stakeholders") {
+          const shCanvas = figma.createFrame();
+          shCanvas.resize(600, 620);
+          shCanvas.fills = [{ type: "SOLID", color: C.white }];
+          shCanvas.layoutAlign = "STRETCH";
+          const cx = 300, cy = 330;
+          [[520, 460], [390, 344], [260, 230], [130, 115]].forEach(([ew, eh]) => {
+            const e = ell(ew, eh, null, C.line, 1.5, [8, 8]);
+            e.x = cx - ew / 2;
+            e.y = cy - eh / 2;
+            shCanvas.appendChild(e);
+          });
+          const solT = tx("Solu\xE7\xE3o", 13, "Bold", C.text);
+          solT.x = cx - 26;
+          solT.y = cy + 10;
+          shCanvas.appendChild(solT);
+          const stickyBg = rct(106, 84, { r: 1, g: 0.937, b: 0.698 }, 4);
+          stickyBg.x = cx - 100;
+          stickyBg.y = cy - 88;
+          shCanvas.appendChild(stickyBg);
+          const st1 = tx("Stakeholder", 10, "Medium", C.text);
+          st1.x = cx - 94;
+          st1.y = cy - 76;
+          shCanvas.appendChild(st1);
+          const st2 = tx("\u2022 Necessidade", 10, "Regular", C.text);
+          st2.x = cx - 94;
+          st2.y = cy - 60;
+          shCanvas.appendChild(st2);
+          mainFrame = vb(600, 0, 0, C.white, 16);
+          mainFrame.name = "Mapa de Stakeholders";
+          const hdr = mkHeader("Mapa de Stakeholders");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          mainFrame.appendChild(shCanvas);
+        } else if (msg.frameworkId === "value-effort") {
+          const veCanvas = figma.createFrame();
+          veCanvas.resize(620, 720);
+          veCanvas.fills = [{ type: "SOLID", color: C.white }];
+          veCanvas.layoutAlign = "STRETCH";
+          const chartBg = rct(500, 580, C.bgBlue, 8);
+          chartBg.x = 60;
+          chartBg.y = 20;
+          veCanvas.appendChild(chartBg);
+          const yAx = rct(2, 500, C.text);
+          yAx.x = 100;
+          yAx.y = 40;
+          veCanvas.appendChild(yAx);
+          const xAx = rct(420, 2, C.text);
+          xAx.x = 100;
+          xAx.y = 560;
+          veCanvas.appendChild(xAx);
+          mainFrame = vb(620, 0, 0, C.white, 16);
+          mainFrame.name = "Matriz Valor \xD7 Esfor\xE7o";
+          const hdr = mkHeader("Matriz Valor \xD7 Esfor\xE7o");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          mainFrame.appendChild(veCanvas);
+        } else if (msg.frameworkId === "atomic-research") {
+          mainFrame = vb(960, 0, 0, C.white, 16);
+          mainFrame.name = "Atomic Research";
+          const hdr = mkHeader("Atomic Research");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const b = vb(null, 40, 24, null);
+          mainFrame.appendChild(b);
+          b.layoutAlign = "STRETCH";
+          b.appendChild(tx("Insira dados de pesquisa at\xF4mica aqui...", 14, "Regular", C.muted));
+        } else if (msg.frameworkId === "blueprint") {
+          mainFrame = vb(1200, 0, 0, C.white, 16);
+          mainFrame.name = "Blueprint de Servi\xE7o";
+          const hdr = mkHeader("Blueprint de Servi\xE7o");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const b = vb(null, 40, 24, null);
+          mainFrame.appendChild(b);
+          b.layoutAlign = "STRETCH";
+          b.appendChild(tx("Construa o blueprint de servi\xE7o aqui...", 14, "Regular", C.muted));
+        } else if (msg.frameworkId === "heuristics") {
+          mainFrame = vb(960, 0, 0, C.white, 16);
+          mainFrame.name = "Heur\xEDsticas de Nielsen";
+          const hdr = mkHeader("Heur\xEDsticas de Nielsen");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const b = vb(null, 40, 24, null);
+          mainFrame.appendChild(b);
+          b.layoutAlign = "STRETCH";
+          b.appendChild(tx("Avalia\xE7\xE3o heur\xEDstica aqui...", 14, "Regular", C.muted));
+        } else if (msg.frameworkId === "opportunities") {
+          mainFrame = vb(960, 0, 0, C.white, 16);
+          mainFrame.name = "Mapa de Oportunidades";
+          const hdr = mkHeader("Mapa de Oportunidades");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const b = vb(null, 40, 24, null);
+          mainFrame.appendChild(b);
+          b.layoutAlign = "STRETCH";
+          b.appendChild(tx("Mapeamento de oportunidades aqui...", 14, "Regular", C.muted));
+        } else if (msg.frameworkId === "personas") {
+          mainFrame = vb(800, 0, 0, { r: 0.961, g: 0.98, b: 0.992 }, 16);
+          mainFrame.name = "Painel de Personas";
+          const hdr = mkHeader("Painel de Personas");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const body = vb(null, 40, 24, null);
+          mainFrame.appendChild(body);
+          body.layoutAlign = "STRETCH";
+          const infoRow = hb(0, 16, null);
+          infoRow.counterAxisAlignItems = "CENTER";
+          const pic = rct(48, 48, C.blue, 24);
+          infoRow.appendChild(pic);
+          const nameCol = vb(null, 0, 4, null);
+          nameCol.appendChild(tx("Perfil 1 - Nome do Perfil", 18, "Bold", C.blueDark));
+          nameCol.appendChild(tx("Breve descri\xE7\xE3o (exemplo: Perfil 1 foi mapeado entendendo cliente interno)", 12, "Regular", C.muted));
+          infoRow.appendChild(nameCol);
+          body.appendChild(infoRow);
+          const sep1 = rct(720, 1, C.blueLight);
+          body.appendChild(sep1);
+          sep1.layoutAlign = "STRETCH";
+          const detailsRow = hb(0, 32, null);
+          detailsRow.counterAxisAlignItems = "MIN";
+          const photo = rct(160, 200, C.blue, 12);
+          detailsRow.appendChild(photo);
+          const dataCol = vb(null, 0, 16, null);
+          const addData = (l, v) => {
+            const r = hb(0, 8, null);
+            r.appendChild(tx(l + ":", 14, "Bold", C.blueDark));
+            r.appendChild(tx(v, 14, "Regular", C.text));
+            dataCol.appendChild(r);
+          };
+          addData("Nome", "Um nome (opcional)");
+          addData("Idade", "idade m\xE9dia do perfil (pode ser conseguido por dados)");
+          addData("Ocupa\xE7\xE3o", "Trabalho / meio de trabalho");
+          addData("Renda", "Renda m\xE9dia");
+          addData("Escolaridade", "Educa\xE7\xE3o formal");
+          detailsRow.appendChild(dataCol);
+          body.appendChild(detailsRow);
+          const colsRow = hb(0, 40, null);
+          colsRow.layoutAlign = "STRETCH";
+          const col1 = vb(null, 0, 12, null);
+          col1.layoutAlign = "STRETCH";
+          col1.appendChild(tx("Objetivos", 16, "Bold", C.blueDark));
+          const objT = tx("Listar objetivos relacionados ao produto, sejam eles objetivos de vida ou objetivos do dia, organiza\xE7\xE3o financeira, etc.", 13, "Regular", C.text);
+          col1.appendChild(objT);
+          objT.textAutoResize = "HEIGHT";
+          objT.layoutAlign = "STRETCH";
+          colsRow.appendChild(col1);
+          const col2 = vb(null, 0, 12, null);
+          col2.layoutAlign = "STRETCH";
+          col2.appendChild(tx("Necessidade", 16, "Bold", C.blueDark));
+          const necT = tx("Listar necessidades relacionados ao produto, aqui podemos mapear dores para identificar oportunidades.", 13, "Regular", C.text);
+          col2.appendChild(necT);
+          necT.textAutoResize = "HEIGHT";
+          necT.layoutAlign = "STRETCH";
+          colsRow.appendChild(col2);
+          body.appendChild(colsRow);
+          const oppCol = vb(null, 0, 12, null);
+          oppCol.layoutAlign = "STRETCH";
+          oppCol.appendChild(tx("Oportunidades", 16, "Bold", C.blueDark));
+          const oppT = tx("Liste oportunidades de produto relacionadas \xE0s sess\xF5es anteriores.", 13, "Regular", C.text);
+          oppCol.appendChild(oppT);
+          oppT.textAutoResize = "HEIGHT";
+          oppT.layoutAlign = "STRETCH";
+          body.appendChild(oppCol);
+          const sep2 = rct(720, 1, C.blueLight);
+          body.appendChild(sep2);
+          sep2.layoutAlign = "STRETCH";
+          const obsCol = vb(null, 0, 12, null);
+          obsCol.layoutAlign = "STRETCH";
+          obsCol.appendChild(tx("Observa\xE7\xF5es adicionais", 14, "Bold", C.blueDark));
+          const obsT = tx("Escreva aqui observa\xE7\xF5es de hip\xF3teses descobertas em an\xE1lise de dados internos e externos que ajudaram a mapear perfis de clientes / usu\xE1rios.", 13, "Regular", C.text);
+          obsCol.appendChild(obsT);
+          obsT.textAutoResize = "HEIGHT";
+          obsT.layoutAlign = "STRETCH";
+          body.appendChild(obsCol);
+        } else if (msg.frameworkId === "interview-script") {
+          mainFrame = vb(800, 0, 0, C.white, 16);
+          mainFrame.name = "Roteiro de Entrevistas";
+          const hdr = mkHeader("Tag - Nome do Projeto");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const body = vb(null, 40, 24, null);
+          mainFrame.appendChild(body);
+          body.layoutAlign = "STRETCH";
+          const title = tx("Roteiro de Entrevistas", 24, "Bold", C.blueDark);
+          body.appendChild(title);
+          const addSec = (titleStr, descStr, isTitle = false) => {
+            const sec = vb(null, 0, 8, null);
+            sec.layoutAlign = "STRETCH";
+            const t = tx(titleStr, isTitle ? 18 : 14, "Bold", isTitle ? C.blueDark : C.text);
+            sec.appendChild(t);
+            const d = tx(descStr, 13, "Regular", C.muted);
+            sec.appendChild(d);
+            d.textAutoResize = "HEIGHT";
+            d.layoutAlign = "STRETCH";
+            body.appendChild(sec);
+          };
+          addSec("1. Introdu\xE7\xE3o e Aquecimento", "Apresente-se, explique o objetivo da entrevista de forma neutra (sem enviesar) e pe\xE7a consentimento para gravar. Fa\xE7a perguntas que quebrem o gelo.", true);
+          addSec("Sugest\xF5es de perguntas:", "- Como \xE9 um dia t\xEDpico de trabalho para voc\xEA?\n- Quais ferramentas voc\xEA mais utiliza hoje?");
+          const sep1 = rct(720, 1, C.line);
+          body.appendChild(sep1);
+          sep1.layoutAlign = "STRETCH";
+          addSec("2. Descoberta e Contexto", "Entenda como o usu\xE1rio lida com o problema hoje, antes de apresentar qualquer solu\xE7\xE3o.", true);
+          addSec("Sugest\xF5es de perguntas:", "- Me conte sobre a \xFAltima vez que voc\xEA precisou realizar [tarefa].\n- O que foi mais dif\xEDcil nesse processo?\n- Como voc\xEA contorna esse problema atualmente?");
+          const sep2 = rct(720, 1, C.line);
+          body.appendChild(sep2);
+          sep2.layoutAlign = "STRETCH";
+          addSec("3. Aprofundamento (Solu\xE7\xE3o / Prot\xF3tipo)", "Caso haja um prot\xF3tipo, apresente agora. Pe\xE7a para o usu\xE1rio pensar em voz alta.", true);
+          addSec("Sugest\xF5es de perguntas:", "- O que voc\xEA acha que essa tela faz?\n- Onde voc\xEA clicaria para [a\xE7\xE3o]?\n- O que voc\xEA esperava que acontecesse ao clicar ali?");
+          const sep3 = rct(720, 1, C.line);
+          body.appendChild(sep3);
+          sep3.layoutAlign = "STRETCH";
+          addSec("4. Encerramento", "Abra espa\xE7o para considera\xE7\xF5es finais e agrade\xE7a.", true);
+          addSec("Sugest\xF5es de perguntas:", "- H\xE1 algo que n\xE3o perguntei e que voc\xEA gostaria de comentar?\n- Como voc\xEA resumiria essa experi\xEAncia?");
+        } else if (msg.frameworkId === "journey") {
+          mainFrame = vb(1e3, 0, 0, { r: 0.941, g: 0.965, b: 0.976 }, 16);
+          mainFrame.name = "Jornada de Usu\xE1rio";
+          const hdr = mkHeader("Jornada de Usu\xE1rio");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const body = hb(24, 24, null);
+          mainFrame.appendChild(body);
+          body.layoutAlign = "STRETCH";
+          const leftCol = vb(220, 0, 12, null);
+          body.appendChild(leftCol);
+          const mkL = (title, sub, h) => {
+            const b = vb(220, 16, 4, C.white, 8);
+            if (h) {
+              b.counterAxisSizingMode = "FIXED";
+              b.resize(220, h);
+              b.primaryAxisSizingMode = "FIXED";
+            }
+            b.appendChild(tx(title, 16, "Bold", C.text));
+            if (sub) b.appendChild(tx(sub, 12, "Regular", C.muted));
+            return b;
+          };
+          const topBlock = mkL("Jornada", "Etapas da jornada");
+          leftCol.appendChild(topBlock);
+          leftCol.appendChild(mkL("Passos", "O que faz..."));
+          leftCol.appendChild(mkL("Pensa e fala", "O que pensa e fala..."));
+          leftCol.appendChild(mkL("Sentimentos", ""));
+          leftCol.appendChild(mkL("Oportunidades", ""));
+          leftCol.appendChild(mkL("Experi\xEAncia", "", 240));
+          const rightCol = hb(0, 12, null);
+          body.appendChild(rightCol);
+          rightCol.layoutAlign = "STRETCH";
+          const numEtapas = 2;
+          for (let i = 1; i <= numEtapas; i++) {
+            const col = vb(330, 0, 12, null);
+            col.layoutAlign = "STRETCH";
+            const eTop = vb(null, 16, 4, { r: 0.2, g: 0.8, b: 0.96 }, 8);
+            eTop.layoutAlign = "STRETCH";
+            eTop.appendChild(tx(i + ". Nome da Etapa", 16, "Bold", C.blueDark));
+            eTop.appendChild(tx("Descri\xE7\xE3o (opcional)", 12, "Regular", C.blueDark));
+            col.appendChild(eTop);
+            const mkr = (val, h) => {
+              const b = vb(null, 16, 4, C.white, 8);
+              b.layoutAlign = "STRETCH";
+              if (h) {
+                b.counterAxisSizingMode = "FIXED";
+                b.resize(330, h);
+                b.primaryAxisSizingMode = "FIXED";
+              }
+              b.appendChild(tx(val, 13, "Regular", C.text));
+              return b;
+            };
+            const s1 = mkr("1.1 Passo");
+            const s2 = mkr("1.2 Passo");
+            const wS = vb(null, 0, 8, null);
+            wS.layoutAlign = "STRETCH";
+            wS.appendChild(s1);
+            wS.appendChild(s2);
+            col.appendChild(wS);
+            const wP = vb(null, 0, 8, null);
+            wP.layoutAlign = "STRETCH";
+            wP.appendChild(mkr("Pensamento"));
+            wP.appendChild(mkr("Pensamento"));
+            col.appendChild(wP);
+            const wF = vb(null, 0, 8, null);
+            wF.layoutAlign = "STRETCH";
+            wF.appendChild(mkr("Sentimento"));
+            wF.appendChild(mkr("Sentimento"));
+            col.appendChild(wF);
+            const wO = vb(null, 0, 8, null);
+            wO.layoutAlign = "STRETCH";
+            wO.appendChild(mkr("Oportunidade"));
+            wO.appendChild(mkr("Oportunidade"));
+            col.appendChild(wO);
+            const expB = vb(null, 16, 4, null, 0);
+            expB.layoutAlign = "STRETCH";
+            expB.counterAxisSizingMode = "FIXED";
+            expB.resize(330, 240);
+            expB.primaryAxisSizingMode = "FIXED";
+            const line = rct(330, 1, C.muted);
+            expB.appendChild(line);
+            line.layoutAlign = "STRETCH";
+            col.appendChild(expB);
+            rightCol.appendChild(col);
+          }
+        } else if (msg.frameworkId === "relational-map") {
+          mainFrame = vb(1e3, 0, 0, C.white, 16);
+          mainFrame.name = "Mapa Relacional";
+          const hdr = mkHeader("Mapa Relacional");
+          mainFrame.appendChild(hdr);
+          hdr.layoutAlign = "STRETCH";
+          const body = hb(40, 32, null);
+          mainFrame.appendChild(body);
+          body.layoutAlign = "STRETCH";
+          for (let i = 0; i < 4; i++) {
+            const col = vb(200, 0, 16, null);
+            const headB = vb(200, 12, 0, C.white, 4);
+            headB.strokes = [{ type: "SOLID", color: C.blue }];
+            headB.strokeWeight = 1.5;
+            const ht = tx("Classifique, por temas gerais, os itens a serem agrupados abaixo", 10, "Bold", C.text);
+            ht.textAlignHorizontal = "CENTER";
+            ht.textAutoResize = "HEIGHT";
+            ht.layoutAlign = "STRETCH";
+            headB.appendChild(ht);
+            col.appendChild(headB);
+            for (let j = 0; j < 4; j++) {
+              const card = vb(200, 16, 0, { r: 0.94, g: 0.95, b: 0.96 }, 8);
+              card.counterAxisSizingMode = "FIXED";
+              card.resize(200, 100);
+              card.primaryAxisSizingMode = "FIXED";
+              const dot = ell(20, 20, j % 2 == 0 ? C.teal : j == 1 ? C.blue : C.orange);
+              card.appendChild(dot);
+              col.appendChild(card);
+            }
+            body.appendChild(col);
+          }
+        }
+        if (mainFrame) {
+          const frameName = mainFrame.name;
+          figma.currentPage.appendChild(mainFrame);
+          const vp = figma.viewport.bounds;
+          mainFrame.x = Math.round(vp.x + (vp.width - mainFrame.width) / 2);
+          mainFrame.y = Math.round(vp.y + (vp.height - mainFrame.height) / 2);
+          const grp = figma.group([mainFrame], figma.currentPage);
+          grp.name = frameName;
+          figma.currentPage.selection = [grp];
+          figma.viewport.scrollAndZoomIntoView([grp]);
+          figma.ui.postMessage({ type: "framework-injected", name: msg.frameworkId });
+          figma.notify("Framework inserido no canvas! \xE2\u0153\u201C");
+        }
+      })();
+      return;
+    }
+    if (msg.type === "close") {
+      figma.closePlugin();
+    }
+  };
+})();

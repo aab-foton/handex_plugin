@@ -1,0 +1,68 @@
+<!-- VIEW: FLOWS (Diagramas de Fluxo) -->
+<main id="view-flows" class="view flex p-0 flex-col h-full overflow-hidden">
+  <!-- Sub-Header -->
+  <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex items-center justify-between shrink-0 shadow-md">
+    <div class="flex items-center gap-2 min-w-0">
+      <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial"
+        class="p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
+        <i data-lucide="arrow-left" class="w-4 h-4 text-white" aria-hidden="true"></i>
+      </button>
+      <h2 class="text-white font-bold text-[18px] truncate min-w-0">Fluxos de Tela</h2>
+      <div id="flows-help" class="relative shrink-0">
+        <button type="button" onclick="toggleFlowsHelp(event)"
+          class="w-4 h-4 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+          title="Como funcionam os fluxos?" aria-label="Como funcionam os fluxos">
+          <i data-lucide="circle-help" class="w-3.5 h-3.5"></i>
+        </button>
+        <div data-flows-help-panel
+          class="hidden absolute left-0 top-full mt-2 w-64 z-50 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-xl p-3.5 space-y-3">
+          <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Como funciona</p>
+          <div class="space-y-2.5">
+            <div class="flex items-start gap-2">
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0 mt-0.5"></i>
+              <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight">A seta desenhada no canvas segue a <strong class="text-slate-600 dark:text-dark-text">ordem de seleção</strong>: do primeiro elemento clicado para o segundo.</p>
+            </div>
+            <div class="flex items-start gap-2">
+              <i data-lucide="eye" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0 mt-0.5"></i>
+              <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight">Use o ícone de <strong class="text-slate-600 dark:text-dark-text">olho</strong> no card para ocultar/exibir a conexão sem excluí-la.</p>
+            </div>
+            <div class="flex items-start gap-2">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0 mt-0.5"></i>
+              <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight">Use o ícone de <strong class="text-slate-600 dark:text-dark-text">lixeira</strong> para remover a conexão do canvas e da lista.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button onclick="openFlowFormModal()" class="fab-inline shrink-0" title="Conectar Frames" aria-label="Conectar Frames">
+      <i data-lucide="git-branch" class="w-4 h-4 shrink-0"></i>
+      <span>Conectar Frames</span>
+    </button>
+  </div>
+
+  <!-- Scrollable Content -->
+  <div class="flex-1 overflow-y-auto pt-6 px-4 pb-4 space-y-4" onscroll="handleScroll(this)">
+
+    <div class="min-h-[76px] p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex items-center gap-2.5">
+      <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
+      <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-tight">
+        Selecione dois elementos no Figma e use o botão <strong>+ Conectar Frames</strong> para mapear fluxos de navegação.
+      </p>
+    </div>
+
+    <ul id="flows-results" class="flex flex-col gap-2 min-h-[50px]">
+      <!-- renderFlowsList() insere aqui -->
+    </ul>
+
+    <!-- Salvar e Voltar -->
+    <div class="pt-4 pb-2">
+      <button onclick="saveAndGoHome((handoffData.createdFlows||[]).length > 0, 'Fluxos salvos!')"
+        class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
+        <i data-lucide="arrow-left" class="w-4 h-4" aria-hidden="true"></i>
+        Salvar e Voltar
+      </button>
+    </div>
+
+  </div>
+
+</main>

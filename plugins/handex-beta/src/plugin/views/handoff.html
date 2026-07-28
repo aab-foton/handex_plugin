@@ -1,0 +1,64 @@
+<!-- VIEW: FRAMES (Hub por Frame) -->
+<main id="view-frames" class="view flex p-0 flex-col h-full overflow-hidden">
+  <!-- Sub-Header -->
+  <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex items-center justify-between shrink-0 shadow-md">
+    <div class="flex items-center gap-2 min-w-0">
+      <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial"
+        class="p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
+        <i data-lucide="arrow-left" class="w-4 h-4 text-white" aria-hidden="true"></i>
+      </button>
+      <h2 class="text-white font-bold text-[18px] truncate min-w-0">Escanear Tokens</h2>
+      <div id="frame-status-help" class="relative shrink-0">
+        <button type="button" onclick="openModal('frame-status-modal')"
+          class="w-4 h-4 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+          title="O que significa cada status?" aria-label="O que significa cada status do frame">
+          <i data-lucide="circle-help" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+    </div>
+    <div class="flex items-center gap-1.5 shrink-0">
+      <button data-collapse-toggle onclick="collapseAllAccordions(document.querySelector('#view-frames .overflow-y-auto'))" title="Recolher/expandir todos" aria-label="Recolher ou expandir todos os accordions"
+        class="hidden p-1.5 hover:bg-white/20 rounded-md transition-colors text-white/80 hover:text-white">
+        <i data-lucide="chevrons-up-down" class="w-4 h-4" aria-hidden="true"></i>
+      </button>
+      <button onclick="requestFrameRegistration()" class="fab-inline" title="Registrar Frame" aria-label="Registrar Frame">
+        <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
+        <span>Registrar Frame</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Scrollable Content -->
+  <div class="flex-1 overflow-y-auto pt-6 px-4 pb-4 space-y-3" onscroll="handleScroll(this)">
+
+    <div class="min-h-[76px] p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex items-center gap-2.5">
+      <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
+      <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-tight">
+        Selecione um <strong>Frame</strong> no canvas do Figma e clique em <strong>Registrar Frame</strong> para adicioná-lo ao hub. Depois de registrado, ele fica disponível para as outras ferramentas de documentação.
+      </p>
+    </div>
+
+    <div id="frames-empty-state" class="flex flex-col items-center justify-center py-12 animate-in fade-in duration-500">
+      <div class="relative mb-4">
+        <i data-lucide="layout" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
+      </div>
+      <p class="text-[12px] font-bold text-slate-500 dark:text-dark-muted text-center px-4 mb-1">Nenhum frame documentado</p>
+      <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6">Selecione um frame no canvas e toque em <strong>Registrar Frame</strong></p>
+    </div>
+
+    <ul id="list-frames" class="space-y-3">
+      <!-- renderFrameCard() insere aqui -->
+    </ul>
+
+    <!-- Salvar e Voltar -->
+    <div class="pt-2 pb-2">
+      <button onclick="saveAndGoHome((handoffData.frames||[]).length > 0, 'Frames salvos!')"
+        class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
+        <i data-lucide="arrow-left" class="w-4 h-4" aria-hidden="true"></i>
+        Salvar e Voltar
+      </button>
+    </div>
+
+  </div>
+
+</main>

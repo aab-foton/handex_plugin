@@ -1,0 +1,142 @@
+<!-- VIEW: SPECIFICATIONS -->
+    <main id="view-specifications" class="view flex p-0 flex-col h-full overflow-hidden">
+      <!-- Header -->
+      <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex flex-col shrink-0 shadow-md">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2 min-w-0">
+            <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial" class="p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
+              <i data-lucide="arrow-left" class="w-4 h-4 text-white" aria-hidden="true"></i>
+            </button>
+            <h2 class="text-white font-bold text-[18px] truncate min-w-0">Anotar Specs</h2>
+            <button type="button" onclick="openSpecsGuideHelp()"
+              class="w-4 h-4 flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
+              title="Ver guia de categorias" aria-label="Ver guia de categorias de especificação">
+              <i data-lucide="circle-help" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('specs-scroll-container'))" title="Recolher/expandir todos" aria-label="Recolher ou expandir todos os accordions"
+              class="hidden p-1.5 hover:bg-white/20 rounded-md transition-colors text-white/80 hover:text-white">
+              <i data-lucide="chevrons-up-down" class="w-4 h-4" aria-hidden="true"></i>
+            </button>
+            <button id="specs-header-action-form" onclick="openSpecFormModal()" class="fab-inline" title="Criar especificação" aria-label="Criar especificação">
+              <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
+              <span>Criar Especificação</span>
+            </button>
+            <div id="specs-header-action-a11y-area-wrap" class="hidden">
+              <button id="specs-header-action-a11y-area" type="button" onclick="openA11yAreaModal()" class="fab-inline" title="Marcar área da tela" aria-label="Marcar área da tela">
+                <i data-lucide="map-pin" class="w-4 h-4 shrink-0"></i>
+                <span>Marcar Área</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- Tab switcher: Specs | Acessibilidade -->
+        <div class="flex items-center gap-1 mt-2.5 bg-white/10 rounded-xl p-1" role="tablist" aria-label="Tipo de especificação">
+          <button type="button" id="specs-maintab-specs" onclick="switchSpecsMainTab('specs')" role="tab" aria-selected="true" aria-controls="specs-form"
+            class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors bg-white/20 text-white">
+            <i data-lucide="file-text" class="w-3.5 h-3.5" aria-hidden="true"></i> Specs
+          </button>
+          <button type="button" id="specs-maintab-a11y" onclick="switchSpecsMainTab('acessibilidade')" role="tab" aria-selected="false" aria-controls="specs-panel-a11y"
+            class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors text-white/70 hover:text-white">
+            <i data-lucide="accessibility" class="w-3.5 h-3.5" aria-hidden="true"></i> Acessibilidade
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrollable content -->
+      <div id="specs-scroll-container" class="flex-1 overflow-y-auto pt-6 px-4 pb-4" onscroll="handleScroll(this)">
+        <div class="space-y-4 w-full mx-auto">
+
+          <!-- Frame Selector -->
+          <div data-frame-selector-card>
+            <div class="flex items-center gap-2 mb-2.5">
+              <i data-lucide="scan-line" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0"></i>
+              <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Frames Mapeados</h4>
+            </div>
+            <select id="spec-frame-selector" onchange="setMeasureActiveFrame(this.value)"
+              class="w-full text-[12px] bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-slate-700 dark:text-white outline-none focus:border-[#0070af]/50 transition-colors">
+              <option value="">Sem vínculo (spec avulsa)</option>
+            </select>
+            <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-2 leading-tight">
+              Selecione um frame para focá-lo no canvas e associar esta spec a ele.
+            </p>
+          </div>
+
+          <div id="specs-form" class="space-y-4">
+
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-[0.15em]">Especificações Criadas</h4>
+                <div class="flex items-center gap-3">
+                  <button id="btn-hide-all-specs" onclick="toggleAllSpecsVisibility()"
+                    class="hidden text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors flex items-center gap-1">
+                    <i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo
+                  </button>
+                </div>
+              </div>
+
+              <!-- Instrução discreta -->
+              <div id="hint-specs" class="mb-5 min-h-[76px] p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-2">
+                <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5"></i>
+                <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-tight">
+                  Selecione um elemento no canvas e toque no botão <strong>+</strong> no topo para criar uma especificação.
+                </p>
+              </div>
+
+              <ul id="specs-results" class="flex flex-col gap-2 min-h-[50px]">
+                <!-- List of accordions will be rendered here -->
+              </ul>
+            </div>
+          </div>
+
+          <!-- Aba Acessibilidade — conteúdo renderizado por modules/accessibility.js -->
+          <div id="specs-panel-a11y" class="hidden space-y-4">
+
+            <!-- Áreas Marcadas viram o agrupamento principal: cada área é um accordion,
+                 e toda spec de A11y nasce dentro da área escolhida (ver renderA11yGroupedList). -->
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-[0.15em]">Áreas Marcadas</h4>
+              </div>
+              <p class="text-[10px] text-slate-400 dark:text-dark-muted mb-2 leading-tight">
+                Marque uma área da tela (selo numerado) e crie as especificações de acessibilidade dentro dela, usando o botão "+" no cabeçalho de cada área.
+              </p>
+
+              <div id="hint-a11y-areas" class="hidden mb-2 min-h-[76px] p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl border border-cyan-100 dark:border-cyan-800/30 flex gap-2">
+                <i data-lucide="map-pin" class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5"></i>
+                <p class="text-[11px] text-cyan-800 dark:text-cyan-300 leading-tight">
+                  Toque em <strong>Marcar Área</strong> no topo para identificar a primeira seção/bloco da tela. As especificações de acessibilidade são criadas dentro de cada área.
+                </p>
+              </div>
+
+              <ul id="a11y-groups-results" class="flex flex-col gap-2 min-h-[10px] mb-1">
+                <!-- Preenchido por renderA11yGroupedList() em modules/accessibility.js -->
+              </ul>
+            </div>
+
+            <div class="pt-2 space-y-2">
+              <p class="text-[10px] text-slate-400 dark:text-dark-muted leading-tight px-0.5">
+                Cada especificação já aplica sozinha no canvas (selo + card real da lib), organizada dentro da section "Especificações de Acessibilidade". O resumo consolidado por área fica pronto na aba <strong>"♿ Acessibilidade"</strong> do Handoff exportado.
+              </p>
+              <button onclick="navigate('view-handoff-summary')"
+                class="w-full flex items-center justify-center gap-2 py-3 bg-[#0070af] hover:bg-blue-700 rounded-2xl text-[12px] font-bold text-white transition-all shadow-sm">
+                <i data-lucide="sparkles" class="w-4 h-4" aria-hidden="true"></i>
+                Exportar Ficha em HTML
+              </button>
+            </div>
+          </div>
+
+          <!-- Salvar e Voltar -->
+          <div class="pt-4 pb-2">
+            <button onclick="saveAndGoHome((handoffData.frames||[]).some(f=>(f.createdSpecs||[]).length > 0), 'Specs salvas!')"
+              class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
+              <i data-lucide="arrow-left" class="w-4 h-4" aria-hidden="true"></i>
+              Salvar e Voltar
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
