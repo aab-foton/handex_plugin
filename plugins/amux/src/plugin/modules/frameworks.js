@@ -1,5 +1,6 @@
 // ============================================================
-// frameworks.js — Catálogo e operações de frameworks (Maturai UX)
+// frameworks.js — Catálogo e operações de frameworks de UX (AMUX)
+// Herdado do Maturai UX, mantido como ferramenta auxiliar.
 // ============================================================
 
 let _activeCategory = 'Todos';
@@ -9,8 +10,8 @@ function renderFrameworks() {
   if (!list) return;
 
   const filtered = _activeCategory === 'Todos'
-    ? MATURAI_FRAMEWORKS
-    : MATURAI_FRAMEWORKS.filter(f => f.category === _activeCategory);
+    ? AMUX_FRAMEWORKS
+    : AMUX_FRAMEWORKS.filter(f => f.category === _activeCategory);
 
   list.innerHTML = '';
 
@@ -43,7 +44,7 @@ function renderFrameworks() {
         <div class="flex flex-wrap gap-1.5">${fieldsHtml}</div>
       </div>
       <button onclick="injectFramework('${fw.id}')"
-        class="w-full py-2.5 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-600 hover:text-white text-emerald-700 dark:text-emerald-300 text-[12px] font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+        class="w-full py-2.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-600 hover:text-white text-blue-700 dark:text-blue-300 text-[12px] font-bold rounded-xl transition-all flex items-center justify-center gap-2">
         <i data-lucide="plus-circle" class="w-4 h-4"></i>
         Inserir no Canvas
       </button>
@@ -59,7 +60,7 @@ function _applyFilterStyles(category) {
     const active = btn.dataset.fwFilter === category;
     btn.className = `px-2.5 py-1 text-[10px] font-bold rounded-full transition-all ${
       active
-        ? 'bg-[#059669] text-white'
+        ? 'bg-[#2563eb] text-white'
         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-dark-muted hover:bg-slate-200'
     }`;
   });
@@ -72,7 +73,7 @@ function filterFrameworks(category) {
 }
 
 function injectFramework(id) {
-  const fw = MATURAI_FRAMEWORKS.find(f => f.id === id);
+  const fw = AMUX_FRAMEWORKS.find(f => f.id === id);
   if (!fw) return;
   parent.postMessage({ pluginMessage: { type: 'inject-framework', framework: fw } }, '*');
   showToast('Inserindo framework no canvas...', 'info');

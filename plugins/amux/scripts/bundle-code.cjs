@@ -15,7 +15,7 @@ esbuild.buildSync({
   target: 'es2017',
   outfile: 'src/plugin/code.bundle.js',
   define: {
-    __MATURAI_VERSION__: JSON.stringify(version),
+    __AMUX_VERSION__: JSON.stringify(version),
   },
 });
 

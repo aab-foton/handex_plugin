@@ -1,0 +1,1768 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    if (typeof window.lucide === 'undefined') {
+      window.lucide = { createIcons: function () {} };
+    }
+  </script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            dark: {
+              bg:      "#0f172a",
+              surface: "#1e293b",
+              line:    "#334155",
+              text:    "#f1f5f9",
+              muted:   "#94a3b8",
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.view { display: none !important; }
+.view.active { display: block !important; }
+.view.active.flex { display: flex !important; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.dark ::-webkit-scrollbar-thumb { background: #475569; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+* { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
+
+.checklist-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: #F8FAFC;
+  border: 1px solid #F1F5F9;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.dark .checklist-pill { background: #1e293b; border-color: #334155; color: #94a3b8; }
+.checklist-pill:has(input:checked) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: white;
+  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.2);
+}
+
+button:not(.rounded-full) { border-radius: 8px !important; }
+
+button.bg-\[\#2563eb\], button.bg-blue-600, button.bg-blue-500 {
+  background-color: #1d4ed8 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border: none !important;
+  transition: background-color 0.2s ease !important;
+}
+button.bg-\[\#2563eb\]:hover, button.bg-blue-600:hover, button.bg-blue-500:hover {
+  background-color: #1e40af !important;
+}
+
+button.border-\[\#2563eb\], button.border-blue-500 {
+  background-color: #ffffff !important;
+  color: #1d4ed8 !important;
+  border: 1.5px solid #1d4ed8 !important;
+  font-weight: 700 !important;
+  transition: all 0.2s ease !important;
+}
+button.border-\[\#2563eb\]:hover, button.border-blue-500:hover {
+  background-color: #eff6ff !important;
+}
+
+.dark button.bg-\[\#2563eb\], .dark button.bg-blue-600, .dark button.bg-blue-500 {
+  background-color: #1d4ed8 !important;
+}
+.dark button.border-\[\#2563eb\], .dark button.border-blue-500 {
+  background-color: #1e293b !important;
+  color: #60a5fa !important;
+  border-color: #60a5fa !important;
+}
+
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+.dark button:focus-visible { outline-color: #60a5fa; }
+
+.fab-inline {
+  width: 30px; height: 30px;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0; border-radius: 999px;
+  background: rgba(37, 99, 235, 0.13);
+  border: 1px solid rgba(37, 99, 235, 0.28);
+  color: #2563eb;
+  cursor: pointer; flex-shrink: 0;
+  transition: background 0.18s ease, transform 0.15s ease;
+}
+.fab-inline > i, .fab-inline > svg { flex-shrink: 0; }
+.fab-inline span { display: none; }
+.fab-inline:hover { background: rgba(37, 99, 235, 0.24); }
+.fab-inline:active { transform: scale(0.92); }
+.dark .fab-inline { background: rgba(37,99,235,0.18); border-color: rgba(96,165,250,0.35); color: #60a5fa; }
+.dark .fab-inline:hover { background: rgba(37,99,235,0.3); }
+
+#btn-top {
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(148, 163, 184, 0.55);
+  box-shadow: none;
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease, opacity 0.3s ease, translate 0.3s ease;
+}
+#btn-top:hover {
+  background: rgba(37, 99, 235, 0.65);
+  border-color: rgba(37, 99, 235, 0.5);
+  color: white;
+  box-shadow: 0 4px 16px -4px rgba(37, 99, 235, 0.5);
+  transform: scale(1.1);
+}
+
+.fab-main {
+  width: 48px; height: 48px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease !important;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0; overflow: hidden; white-space: nowrap;
+}
+.fab-main:active { transform: scale(0.94); }
+.fab-main:hover {
+  width: auto; min-width: 160px; padding: 0 20px;
+  justify-content: flex-start;
+  box-shadow: 0 8px 24px -4px rgba(37,99,235,0.45);
+}
+.fab-main span {
+  max-width: 0; opacity: 0;
+  transition: max-width 0.3s ease, opacity 0.2s ease, margin 0.3s ease !important;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.01em;
+}
+.fab-main:hover span { max-width: 200px; opacity: 1; margin-left: 8px; }
+
+#toast-container {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; gap: 8px;
+  z-index: 9999; pointer-events: none;
+}
+@keyframes slideUp {
+  from { transform: translate(-50%, 100%); opacity: 0; }
+  to   { transform: translate(-50%, 0); opacity: 1; }
+}
+.animate-toast { animation: slideUp 0.3s ease-out forwards; }
+.fade-out {
+  opacity: 0 !important;
+  transform: translate(-50%, 10px) !important;
+  transition: opacity 0.3s ease, transform 0.3s ease !important;
+}
+
+[data-tooltip] { position: relative; }
+[data-tooltip]:before {
+  content: attr(data-tooltip);
+  position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
+  padding: 6px 10px; background-color: #1e293b; color: #fff;
+  font-size: 10px; border-radius: 6px; white-space: normal;
+  width: max-content; max-width: 180px; line-height: 1.4; text-align: center;
+  opacity: 0; visibility: hidden; transition: all 0.2s ease; z-index: 1000;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); border: 1px solid #334155; pointer-events: none;
+}
+[data-tooltip]:after {
+  content: ''; position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%);
+  border-width: 5px; border-style: solid; border-color: #1e293b transparent transparent transparent;
+  opacity: 0; visibility: hidden; transition: all 0.2s ease; z-index: 1000; pointer-events: none;
+}
+[data-tooltip]:hover:before, [data-tooltip]:hover:after { opacity: 1; visibility: visible; bottom: 135%; }
+.dark [data-tooltip]:before { background-color: #0f172a; border-color: #1e293b; }
+.dark [data-tooltip]:after { border-color: #0f172a transparent transparent transparent; }
+[data-tooltip].tooltip-left:before { left: auto; right: 0; transform: translateX(0); }
+[data-tooltip].tooltip-left:after { left: auto; right: 15px; transform: translateX(0); }
+[data-tooltip].tooltip-right:before { left: 0; transform: translateX(0); }
+[data-tooltip].tooltip-right:after { left: 15px; transform: translateX(0); }
+
+#resize-handle {
+  position: fixed; bottom: 0; right: 0; width: 14px; height: 14px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 50%, #94a3b8 50%);
+  z-index: 10000; opacity: 0.5; transition: opacity 0.2s;
+}
+#resize-handle:hover { opacity: 1; }
+.dark #resize-handle { background: linear-gradient(135deg, transparent 50%, #475569 50%); }
+
+:root { --ui-scale: 1; }
+body { zoom: var(--ui-scale); width: 100%; height: 100vh; overflow: hidden; }
+
+body.scale-high header h1,
+body.scale-high header #version-badge,
+body.scale-high footer .footer-signature-text { display: none !important; }
+body.scale-high header { padding-left: 8px; padding-right: 8px; }
+body.scale-high header .gap-2 { gap: 4px; }
+body.scale-high footer { padding: 8px 12px; }
+
+.flex-1.overflow-y-auto { min-height: 0; }
+
+.bg-white.dark\:bg-dark-surface,
+.bg-white.dark\:bg-dark-bg,
+[id$="-card"],
+.view > section > div {
+  border-radius: 16px !important;
+  border: 1px solid #f1f5f9 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.dark .bg-white.dark\:bg-dark-surface,
+.dark .bg-white.dark\:bg-dark-bg,
+.dark [id$="-card"],
+.dark .view > section > div {
+  border-color: #1e293b !important;
+  background-color: #0f172a !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+.bg-white.dark\:bg-dark-surface:hover,
+.bg-white.dark\:bg-dark-bg:hover,
+[id$="-card"]:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
+  border-color: #e2e8f0 !important;
+}
+.dark .bg-white.dark\:bg-dark-surface:hover,
+.dark .bg-white.dark\:bg-dark-bg:hover,
+.dark [id$="-card"]:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.25) !important;
+  border-color: #334155 !important;
+}
+
+h1, h2, h3, .text-slate-800 {
+  font-family: 'Inter', sans-serif !important;
+  letter-spacing: -0.01em !important;
+}
+label, .text-\[10px\], .text-\[11px\], .checklist-pill {
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.03em !important;
+}
+
+input[type="text"], input[type="search"], input[type="email"], select, textarea {
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  background-color: #f8fafc !important;
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+  color: #334155 !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+.dark input[type="text"], .dark input[type="search"], .dark input[type="email"], .dark select, .dark textarea {
+  border-color: #1e293b !important;
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+input[type="text"]:focus, input[type="search"]:focus, input[type="email"]:focus, select:focus, textarea:focus {
+  border-color: #1d4ed8 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15) !important;
+  outline: none !important;
+}
+.dark input[type="text"]:focus, .dark input[type="search"]:focus, .dark input[type="email"]:focus, .dark select:focus, .dark textarea:focus {
+  border-color: #60a5fa !important;
+  background-color: #0f172a !important;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15) !important;
+}
+textarea { min-height: 80px; }
+
+input::placeholder, textarea::placeholder, select::placeholder {
+  font-weight: 400 !important;
+  color: #94a3b8 !important;
+  opacity: 0.85 !important;
+}
+.dark input::placeholder, .dark textarea::placeholder, .dark select::placeholder {
+  font-weight: 400 !important;
+  color: #64748b !important;
+  opacity: 0.85 !important;
+}
+
+header {
+  border-top-left-radius: 0px !important;
+  border-top-right-radius: 0px !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+  </style>
+</head>
+
+<body class="h-screen flex flex-col overflow-hidden bg-white text-slate-900 dark:bg-dark-bg dark:text-dark-text">
+
+  <header class="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-dark-line shrink-0 bg-white dark:bg-dark-bg z-50">
+    <div class="flex items-center gap-2">
+      <!-- Logo AMUX -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" class="h-6 w-6">
+        <rect width="40" height="40" rx="8" fill="#2563eb"/>
+        <path d="M12 26 L16 14 L20 26 M14 21 L18 21" stroke="white" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M23 26 L23 14 L29 26 L29 14" stroke="white" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="text-[#1E293B] dark:text-white font-bold text-[12px] opacity-50">|</span>
+      <h1 class="font-bold text-[#1E293B] dark:text-white text-[12px] tracking-[0.15em] uppercase">AMUX</h1>
+      <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v1.0.0</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <button onclick="exportAmuxData()" title="Exportar dados do projeto" aria-label="Exportar"
+        class="p-1.5 hover:bg-blue-50 dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-blue-600 dark:text-blue-400">
+        <i data-lucide="download" class="w-4 h-4" aria-hidden="true"></i>
+      </button>
+      <button onclick="toggleTheme()" title="Alternar tema" aria-label="Alternar tema claro/escuro"
+        class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
+        <i data-lucide="sun" class="sun-icon w-5 h-5" aria-hidden="true"></i>
+        <i data-lucide="moon" class="moon-icon w-5 h-5 hidden" aria-hidden="true"></i>
+      </button>
+      <button onclick="toggleCollapse()" id="btn-collapse"
+        title="Minimizar — clique no ícone para expandir novamente" aria-label="Minimizar plugin"
+        class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
+        <i data-lucide="minimize-2" class="w-4 h-4" aria-hidden="true"></i>
+      </button>
+    </div>
+  </header>
+
+  <div class="flex-1 overflow-y-auto relative" onscroll="handleScroll(this)">
+<!-- VIEW: HOME -->
+<main id="view-home" class="view active px-5 py-5 flex flex-col h-full overflow-y-auto">
+
+  <div class="mb-4">
+    <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[15px] tracking-tight">Auditoria de Maturidade UX</h2>
+    <p class="text-slate-400 dark:text-dark-muted text-[11px] mt-0.5">Selecione uma ferramenta para começar.</p>
+  </div>
+
+  <!-- Cards -->
+  <div class="grid grid-cols-2 gap-2.5 w-full">
+
+    <!-- Briefing -->
+    <button onclick="navigate('view-briefing')" aria-label="Briefing do Projeto"
+      class="flex flex-col items-start gap-2 p-3.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-blue-300 hover:bg-blue-50/40 dark:hover:bg-slate-800 rounded-2xl shadow-sm transition-all focus:ring-2 focus:ring-blue-300/30 outline-none text-left relative">
+      <div class="w-8 h-8 flex items-center justify-center bg-blue-50 dark:bg-blue-900/20 rounded-xl shrink-0">
+        <i data-lucide="clipboard-list" class="w-4 h-4 text-blue-600 dark:text-blue-400" aria-hidden="true"></i>
+      </div>
+      <div class="min-w-0">
+        <p class="font-extrabold text-[11.5px] tracking-tight text-slate-800 dark:text-white leading-tight">Briefing</p>
+        <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-0.5 leading-tight">Contexto e objetivos</p>
+      </div>
+      <span id="badge-briefing" class="hidden absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-blue-500"></span>
+    </button>
+
+    <!-- Auditoria de Maturidade -->
+    <button onclick="navigateToAudit()" aria-label="Auditoria de Maturidade"
+      class="flex flex-col items-start gap-2 p-3.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-indigo-300 hover:bg-indigo-50/40 dark:hover:bg-slate-800 rounded-2xl shadow-sm transition-all focus:ring-2 focus:ring-indigo-300/30 outline-none text-left relative">
+      <div class="w-8 h-8 flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/20 rounded-xl shrink-0">
+        <i data-lucide="clipboard-check" class="w-4 h-4 text-indigo-600 dark:text-indigo-400" aria-hidden="true"></i>
+      </div>
+      <div class="min-w-0">
+        <p class="font-extrabold text-[11.5px] tracking-tight text-slate-800 dark:text-white leading-tight">Auditoria</p>
+        <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-0.5 leading-tight">Evidências de processo</p>
+      </div>
+      <span id="badge-audit" class="hidden absolute top-2 right-2 min-w-[16px] h-4 px-1 bg-indigo-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"></span>
+    </button>
+
+    <!-- Score & IA -->
+    <button onclick="navigateToScore()" aria-label="Score de Maturidade"
+      class="flex flex-col items-start gap-2 p-3.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-amber-300 hover:bg-amber-50/40 dark:hover:bg-slate-800 rounded-2xl shadow-sm transition-all focus:ring-2 focus:ring-amber-300/30 outline-none text-left relative">
+      <div class="w-8 h-8 flex items-center justify-center bg-amber-50 dark:bg-amber-900/20 rounded-xl shrink-0">
+        <i data-lucide="sparkles" class="w-4 h-4 text-amber-500 dark:text-amber-400" aria-hidden="true"></i>
+      </div>
+      <div class="min-w-0">
+        <p class="font-extrabold text-[11.5px] tracking-tight text-slate-800 dark:text-white leading-tight">Score & IA</p>
+        <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-0.5 leading-tight">Pontuação de maturidade</p>
+      </div>
+      <span id="badge-score" class="hidden absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-amber-500"></span>
+    </button>
+
+    <!-- Frameworks -->
+    <button onclick="navigateToFrameworks()" aria-label="Frameworks de UX"
+      class="flex flex-col items-start gap-2 p-3.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-violet-200 dark:hover:border-violet-800 hover:bg-violet-50/40 dark:hover:bg-slate-800 rounded-2xl shadow-sm transition-all focus:ring-2 focus:ring-violet-300/30 outline-none text-left relative">
+      <div class="w-8 h-8 flex items-center justify-center bg-violet-50 dark:bg-violet-900/20 rounded-xl shrink-0">
+        <i data-lucide="layout-template" class="w-4 h-4 text-violet-500 dark:text-violet-400" aria-hidden="true"></i>
+      </div>
+      <div class="min-w-0">
+        <p class="font-extrabold text-[11.5px] tracking-tight text-slate-800 dark:text-white leading-tight">Frameworks</p>
+        <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-0.5 leading-tight">18 instrumentos de UX</p>
+      </div>
+      <span id="badge-frameworks" class="hidden absolute top-2 right-2 min-w-[16px] h-4 px-1 bg-violet-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"></span>
+    </button>
+
+    <!-- Dados Coletados -->
+    <button onclick="navigate('view-collected')" aria-label="Dados Coletados"
+      class="flex flex-col items-start gap-2 p-3.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-sky-200 hover:bg-sky-50/40 dark:hover:bg-slate-800 rounded-2xl shadow-sm transition-all focus:ring-2 focus:ring-sky-300/30 outline-none text-left">
+      <div class="w-8 h-8 flex items-center justify-center bg-sky-50 dark:bg-sky-900/20 rounded-xl shrink-0">
+        <i data-lucide="database" class="w-4 h-4 text-sky-500 dark:text-sky-400" aria-hidden="true"></i>
+      </div>
+      <div class="min-w-0">
+        <p class="font-extrabold text-[11.5px] tracking-tight text-slate-800 dark:text-white leading-tight">Dados Coletados</p>
+        <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-0.5 leading-tight">Resultados escaneados</p>
+      </div>
+    </button>
+
+    <!-- Guia -->
+    <button onclick="navigate('view-guide')" aria-label="Guia de uso"
+      class="flex flex-col items-start gap-2 p-3.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-slate-300 hover:bg-slate-50/60 dark:hover:bg-slate-800 rounded-2xl shadow-sm transition-all focus:ring-2 focus:ring-slate-300/30 outline-none text-left">
+      <div class="w-8 h-8 flex items-center justify-center bg-gray-50 dark:bg-slate-700 rounded-xl shrink-0">
+        <i data-lucide="book-open" class="w-4 h-4 text-slate-500 dark:text-slate-300" aria-hidden="true"></i>
+      </div>
+      <div class="min-w-0">
+        <p class="font-extrabold text-[11.5px] tracking-tight text-slate-800 dark:text-white leading-tight">Guia</p>
+        <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-0.5 leading-tight">Como usar o plugin</p>
+      </div>
+    </button>
+
+  </div>
+
+  <!-- CTA Exportar -->
+  <div class="mt-auto pt-5">
+    <button onclick="exportAmuxData()"
+      class="w-full py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[13px] font-extrabold rounded-2xl transition-colors flex items-center justify-center gap-2 shadow-sm">
+      <i data-lucide="download" class="w-4 h-4" aria-hidden="true"></i>
+      Exportar Dados do Projeto
+    </button>
+    <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center mt-2 leading-tight">
+      <i data-lucide="info" class="w-3 h-3 inline-block mr-1 opacity-70" aria-hidden="true"></i>
+      Gera JSON com briefing, evidências, auditoria e score — pronto para integração com o HANDEX ou outros sistemas.
+    </p>
+  </div>
+
+</main>
+
+<!-- VIEW: BRIEFING -->
+<main id="view-briefing" class="view px-5 py-5 flex flex-col h-full overflow-y-auto">
+
+  <!-- Header da view -->
+  <div class="flex items-center gap-3 mb-5">
+    <button onclick="navigate('view-home')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-lg transition-colors text-slate-400" aria-label="Voltar">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    </button>
+    <div>
+      <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[14px] tracking-tight">Briefing do Projeto</h2>
+      <p class="text-slate-400 dark:text-dark-muted text-[10px]">Contexto usado pela IA para orientar a auditoria de maturidade</p>
+    </div>
+  </div>
+
+  <div class="space-y-4 flex-1">
+
+    <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Identificação</p>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Comunidade ou Box</label>
+        <input id="b-comunidade" type="text" placeholder="Ex: Acesso Digital" class="w-full" />
+      </div>
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Sistema / Sigla</label>
+        <input id="b-sistema-sigla" type="text" placeholder="Ex: SIGA" class="w-full" />
+      </div>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">
+        Produto <span class="text-red-400">*</span>
+      </label>
+      <input id="b-produto" type="text" placeholder="Ex: Portal do Servidor v3" class="w-full" />
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Tipo de Canal</label>
+      <input id="b-canal" type="text" placeholder="Ex: Web e App" class="w-full" />
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">
+        Nome do Projeto <span class="text-red-400">*</span>
+      </label>
+      <input id="b-nome-projeto" type="text" placeholder="Ex: Auditoria de Maturidade UX" class="w-full" />
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Data de Início</label>
+      <input id="b-data-inicio" type="text" placeholder="DD/MM/AAAA" class="w-full" />
+    </div>
+
+    <div class="pt-2 border-t border-gray-100 dark:border-dark-line"></div>
+    <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Visão do Projeto</p>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">
+        Visão Geral <span class="text-red-400">*</span>
+      </label>
+      <textarea id="b-visao-geral" rows="3" placeholder="Descreva o contexto e o problema que motivou este projeto."
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Objetivos de Negócio</label>
+      <textarea id="b-objetivos-negocio" rows="3" placeholder="O que a organização espera alcançar com este projeto?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Meta da Pesquisa (como mediremos o sucesso)</label>
+      <textarea id="b-meta-pesquisa" rows="2" placeholder="Como saberemos que a maturidade de UX evoluiu?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div class="pt-2 border-t border-gray-100 dark:border-dark-line"></div>
+    <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Público e Necessidades</p>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Público-Alvo</label>
+      <textarea id="b-publico-alvo" rows="2" placeholder="Ex: UX Leads, UX/UI Designers, Design Ops"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Necessidades Principais</label>
+      <textarea id="b-necessidades" rows="2" placeholder="O que este projeto precisa resolver?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Frustrações Atuais</label>
+      <textarea id="b-frustracoes" rows="2" placeholder="O que hoje não funciona bem no processo de avaliação de UX?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div class="pt-2 border-t border-gray-100 dark:border-dark-line"></div>
+    <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Entrega e Equipe</p>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Entregáveis Esperados</label>
+      <textarea id="b-entregaveis" rows="2" placeholder="O que deve ser produzido ao final?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Stakeholders e Equipe</label>
+      <textarea id="b-stakeholders" rows="2" placeholder="Quem participa e quem valida as decisões?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Tempo</label>
+      <input id="b-tempo" type="text" placeholder="Ex: A definir / Q3 2026" class="w-full" />
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Rotina de Trabalho</label>
+      <input id="b-rotina" type="text" placeholder="Ex: Pontos de controle semanais" class="w-full" />
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Compartilhamento de Dados</label>
+      <input id="b-compartilhamento" type="text" placeholder="Ex: Figma (prioritário)" class="w-full" />
+    </div>
+
+  </div>
+
+  <!-- Ações -->
+  <div class="pt-5 flex gap-3">
+    <button onclick="clearBriefing()"
+      class="px-4 py-2.5 text-[12px] font-bold text-slate-400 hover:text-slate-600 dark:text-dark-muted border border-gray-200 dark:border-dark-line rounded-xl transition-colors">
+      Limpar
+    </button>
+    <button onclick="saveBriefing()"
+      class="flex-1 py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[13px] font-extrabold rounded-xl transition-colors flex items-center justify-center gap-2">
+      <i data-lucide="check" class="w-4 h-4"></i>
+      Salvar Briefing
+    </button>
+  </div>
+
+</main>
+
+<!-- VIEW: AUDITORIA DE MATURIDADE -->
+<main id="view-audit" class="view px-5 py-5 flex flex-col h-full overflow-y-auto">
+
+  <!-- Header da view -->
+  <div class="flex items-center gap-3 mb-4">
+    <button onclick="navigate('view-home')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-lg transition-colors text-slate-400" aria-label="Voltar">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    </button>
+    <div>
+      <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[14px] tracking-tight">Auditoria de Maturidade</h2>
+      <p class="text-slate-400 dark:text-dark-muted text-[10px]">Evidências do processo de UX e aderência ao DSC/acessibilidade</p>
+    </div>
+  </div>
+
+  <!-- Tabs das 4 etapas -->
+  <div class="flex flex-wrap gap-1.5 mb-4">
+    <button data-etapa-tab="descoberta" onclick="selectEtapa('descoberta')" class="px-3 py-1.5 text-[11px] font-bold rounded-full transition-all">Descoberta</button>
+    <button data-etapa-tab="definicao" onclick="selectEtapa('definicao')" class="px-3 py-1.5 text-[11px] font-bold rounded-full transition-all">Definição</button>
+    <button data-etapa-tab="ideacao" onclick="selectEtapa('ideacao')" class="px-3 py-1.5 text-[11px] font-bold rounded-full transition-all">Ideação</button>
+    <button data-etapa-tab="validacao" onclick="selectEtapa('validacao')" class="px-3 py-1.5 text-[11px] font-bold rounded-full transition-all">Validação</button>
+  </div>
+
+  <!-- Painéis por etapa -->
+  <div class="space-y-3">
+
+    <div data-etapa-panel="descoberta" class="hidden space-y-3">
+      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Pesquisas, benchmarks e entrevistas que embasaram o entendimento do problema.</p>
+      <div id="artefatos-lista-descoberta" class="space-y-2"></div>
+      <div class="flex gap-2">
+        <input id="artefato-nome-descoberta" type="text" placeholder="Nome do artefato" class="flex-1" />
+        <input id="artefato-url-descoberta" type="text" placeholder="Link (opcional)" class="flex-1" />
+      </div>
+      <button onclick="addArtefato('descoberta')" class="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-dark-muted text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
+        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Anexar artefato
+      </button>
+      <textarea id="etapa-obs-descoberta" onblur="saveEtapaObservacoes('descoberta')" rows="2" placeholder="Observações sobre esta etapa..." class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div data-etapa-panel="definicao" class="hidden space-y-3">
+      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Briefings, jornadas e hipóteses que definiram o escopo da solução.</p>
+      <div id="artefatos-lista-definicao" class="space-y-2"></div>
+      <div class="flex gap-2">
+        <input id="artefato-nome-definicao" type="text" placeholder="Nome do artefato" class="flex-1" />
+        <input id="artefato-url-definicao" type="text" placeholder="Link (opcional)" class="flex-1" />
+      </div>
+      <button onclick="addArtefato('definicao')" class="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-dark-muted text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
+        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Anexar artefato
+      </button>
+      <textarea id="etapa-obs-definicao" onblur="saveEtapaObservacoes('definicao')" rows="2" placeholder="Observações sobre esta etapa..." class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div data-etapa-panel="ideacao" class="hidden space-y-3">
+      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Wireframes e protótipos de alta fidelidade e navegáveis.</p>
+      <div id="artefatos-lista-ideacao" class="space-y-2"></div>
+      <div class="flex gap-2">
+        <input id="artefato-nome-ideacao" type="text" placeholder="Nome do artefato" class="flex-1" />
+        <input id="artefato-url-ideacao" type="text" placeholder="Link (opcional)" class="flex-1" />
+      </div>
+      <button onclick="addArtefato('ideacao')" class="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-dark-muted text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
+        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Anexar artefato
+      </button>
+      <textarea id="etapa-obs-ideacao" onblur="saveEtapaObservacoes('ideacao')" rows="2" placeholder="Observações sobre esta etapa..." class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div data-etapa-panel="validacao" class="hidden space-y-3">
+      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Testes de usabilidade, métricas e demais evidências de validação com usuários.</p>
+      <div id="artefatos-lista-validacao" class="space-y-2"></div>
+      <div class="flex gap-2">
+        <input id="artefato-nome-validacao" type="text" placeholder="Nome do artefato" class="flex-1" />
+        <input id="artefato-url-validacao" type="text" placeholder="Link (opcional)" class="flex-1" />
+      </div>
+      <button onclick="addArtefato('validacao')" class="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-dark-muted text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
+        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Anexar artefato
+      </button>
+      <textarea id="etapa-obs-validacao" onblur="saveEtapaObservacoes('validacao')" rows="2" placeholder="Observações sobre esta etapa..." class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+  </div>
+
+  <div class="pt-4 mt-4 border-t border-gray-100 dark:border-dark-line space-y-4">
+    <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Aderência ao Design System e Acessibilidade</p>
+
+    <!-- Design System -->
+    <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-3.5 space-y-2.5">
+      <div class="flex items-center justify-between">
+        <span class="text-[12px] font-bold text-slate-700 dark:text-white">Design System CAIXA</span>
+        <span id="audit-status-designSystem" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-500">Pendente</span>
+      </div>
+      <div class="flex gap-1.5">
+        <button data-audit-toggle="designSystem" data-audit-value="pendente" onclick="setAuditStatus('designSystem','pendente')" class="flex-1 py-2 text-[11px] font-bold rounded-xl transition-all">Pendente</button>
+        <button data-audit-toggle="designSystem" data-audit-value="conforme" onclick="setAuditStatus('designSystem','conforme')" class="flex-1 py-2 text-[11px] font-bold rounded-xl transition-all">Conforme</button>
+        <button data-audit-toggle="designSystem" data-audit-value="com-desvios" onclick="setAuditStatus('designSystem','com-desvios')" class="flex-1 py-2 text-[11px] font-bold rounded-xl transition-all">Com desvios</button>
+      </div>
+      <textarea id="audit-obs-designSystem" onblur="saveAuditObservacoes('designSystem')" rows="2" placeholder="Observações sobre aderência ao DSC..." class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <!-- Acessibilidade -->
+    <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-3.5 space-y-2.5">
+      <div class="flex items-center justify-between">
+        <span class="text-[12px] font-bold text-slate-700 dark:text-white">Acessibilidade (WCAG)</span>
+        <span id="audit-status-acessibilidade" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-500">Pendente</span>
+      </div>
+      <div class="flex gap-1.5">
+        <button data-audit-toggle="acessibilidade" data-audit-value="pendente" onclick="setAuditStatus('acessibilidade','pendente')" class="flex-1 py-2 text-[11px] font-bold rounded-xl transition-all">Pendente</button>
+        <button data-audit-toggle="acessibilidade" data-audit-value="conforme" onclick="setAuditStatus('acessibilidade','conforme')" class="flex-1 py-2 text-[11px] font-bold rounded-xl transition-all">Conforme</button>
+        <button data-audit-toggle="acessibilidade" data-audit-value="com-desvios" onclick="setAuditStatus('acessibilidade','com-desvios')" class="flex-1 py-2 text-[11px] font-bold rounded-xl transition-all">Com desvios</button>
+      </div>
+      <textarea id="audit-obs-acessibilidade" onblur="saveAuditObservacoes('acessibilidade')" rows="2" placeholder="Observações sobre conformidade WCAG..." class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="pt-5 mt-auto">
+    <button onclick="navigateToScore()"
+      class="w-full py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[13px] font-extrabold rounded-xl transition-colors flex items-center justify-center gap-2">
+      <i data-lucide="sparkles" class="w-4 h-4"></i>
+      Ir para Score & IA
+    </button>
+  </div>
+
+</main>
+
+<!-- VIEW: SCORE & IA -->
+<main id="view-score" class="view px-5 py-5 flex flex-col h-full overflow-y-auto">
+
+  <!-- Header da view -->
+  <div class="flex items-center gap-3 mb-4">
+    <button onclick="navigate('view-home')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-lg transition-colors text-slate-400" aria-label="Voltar">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    </button>
+    <div>
+      <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[14px] tracking-tight">Score & IA</h2>
+      <p class="text-slate-400 dark:text-dark-muted text-[10px]">Pontuação de maturidade UX gerada a partir do briefing, evidências e auditoria</p>
+    </div>
+  </div>
+
+  <!-- Card de resultado -->
+  <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-5 text-center space-y-2">
+    <div id="score-stars" class="flex items-center justify-center gap-1"></div>
+    <p id="score-numeric" class="text-[20px] font-extrabold text-slate-800 dark:text-white">—</p>
+    <p class="text-[10px] text-slate-400 dark:text-dark-muted">Maturidade de UX (0–100)</p>
+  </div>
+
+  <!-- Status da análise -->
+  <div class="mt-4 flex items-center justify-center gap-2" id="ai-status">
+    <i data-lucide="sparkles" class="w-4 h-4 text-slate-400"></i>
+    <span class="text-[12px] font-bold text-slate-400">Pronto para analisar</span>
+  </div>
+
+  <button id="btn-run-ai" onclick="runAiAnalysis()"
+    class="mt-4 w-full py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[13px] font-extrabold rounded-xl transition-colors flex items-center justify-center gap-2">
+    <i data-lucide="sparkles" class="w-4 h-4"></i>
+    Analisar com IA
+  </button>
+  <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center mt-2 leading-tight">
+    <i data-lucide="info" class="w-3 h-3 inline-block mr-1 opacity-70" aria-hidden="true"></i>
+    A análise usa o briefing, as evidências das 4 etapas e a auditoria declarada de Design System/Acessibilidade.
+  </p>
+
+  <!-- Breakdown por dimensão -->
+  <div class="mt-5 pt-4 border-t border-gray-100 dark:border-dark-line">
+    <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide mb-2.5">Detalhamento por dimensão</p>
+    <div id="score-breakdown" class="space-y-2"></div>
+  </div>
+
+</main>
+
+<!-- VIEW: FRAMEWORKS -->
+<main id="view-frameworks" class="view px-5 py-5 flex flex-col h-full overflow-y-auto">
+
+  <!-- Header da view -->
+  <div class="flex items-center gap-3 mb-4">
+    <button onclick="navigate('view-home')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-lg transition-colors text-slate-400" aria-label="Voltar">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    </button>
+    <div class="flex-1 min-w-0">
+      <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[14px] tracking-tight">Frameworks de UX</h2>
+      <p class="text-slate-400 dark:text-dark-muted text-[10px]">Insira no canvas, preencha e escaneie os dados</p>
+    </div>
+    <button onclick="scanAll()"
+      class="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[11px] font-bold rounded-xl transition-colors">
+      <i data-lucide="scan-line" class="w-3.5 h-3.5"></i>
+      Escanear
+    </button>
+  </div>
+
+  <!-- Filtros de categoria -->
+  <div class="flex gap-1.5 flex-wrap mb-4">
+    <button data-fw-filter="Todos" onclick="filterFrameworks('Todos')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Todos</button>
+    <button data-fw-filter="Descoberta" onclick="filterFrameworks('Descoberta')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Descoberta</button>
+    <button data-fw-filter="Alinhamento" onclick="filterFrameworks('Alinhamento')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Alinhamento</button>
+    <button data-fw-filter="Diagnóstico" onclick="filterFrameworks('Diagnóstico')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Diagnóstico</button>
+    <button data-fw-filter="Priorização" onclick="filterFrameworks('Priorização')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Priorização</button>
+    <button data-fw-filter="Pesquisa" onclick="filterFrameworks('Pesquisa')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Pesquisa</button>
+    <button data-fw-filter="Mapeamento" onclick="filterFrameworks('Mapeamento')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Mapeamento</button>
+    <button data-fw-filter="Avaliação" onclick="filterFrameworks('Avaliação')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Avaliação</button>
+    <button data-fw-filter="Ideação" onclick="filterFrameworks('Ideação')"
+      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Ideação</button>
+  </div>
+
+  <!-- Lista de frameworks -->
+  <div id="framework-list" class="space-y-3 pb-4"></div>
+
+</main>
+
+<!-- VIEW: DADOS COLETADOS -->
+<main id="view-collected" class="view px-5 py-5 flex flex-col h-full overflow-y-auto">
+
+  <!-- Header da view -->
+  <div class="flex items-center gap-3 mb-5">
+    <button onclick="navigate('view-home')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-lg transition-colors text-slate-400" aria-label="Voltar">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    </button>
+    <div class="flex-1">
+      <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[14px] tracking-tight">Dados Coletados</h2>
+      <p class="text-slate-400 dark:text-dark-muted text-[10px]">Frameworks escaneados neste projeto</p>
+    </div>
+    <button onclick="scanAll()"
+      class="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[11px] font-bold rounded-xl transition-colors">
+      <i data-lucide="scan-line" class="w-3.5 h-3.5"></i>
+      Escanear
+    </button>
+  </div>
+
+  <!-- Lista de instâncias escaneadas -->
+  <div id="scanned-instances" class="space-y-3 flex-1"></div>
+
+</main>
+
+<!-- VIEW: GUIA -->
+<main id="view-guide" class="view px-5 py-5 flex flex-col h-full overflow-y-auto">
+
+  <div class="flex items-center gap-3 mb-5">
+    <button onclick="navigate('view-home')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-lg transition-colors text-slate-400" aria-label="Voltar">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    </button>
+    <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[14px] tracking-tight">Como usar</h2>
+  </div>
+
+  <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40 rounded-2xl p-4 mb-5">
+    <p class="font-extrabold text-blue-700 dark:text-blue-300 text-[13px] mb-1.5">O que é o AMUX?</p>
+    <p class="text-[11px] text-blue-800 dark:text-blue-200 leading-relaxed">Plugin de Auditoria & Maturidade em UX. Avalia não só o protótipo visual, mas todo o processo de UX por trás da solução — aderência ao Design System CAIXA, conformidade com acessibilidade e evidências das etapas de Descoberta, Definição, Ideação e Validação — com apoio de agentes de IA para gerar uma pontuação de maturidade.</p>
+  </div>
+
+  <div class="space-y-4">
+
+    <div class="flex gap-3 items-start">
+      <span class="w-6 h-6 rounded-full bg-[#2563eb] text-white text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">1</span>
+      <div>
+        <p class="font-extrabold text-[12px] text-slate-800 dark:text-white">Preencha o Briefing</p>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5 leading-relaxed">Registre o contexto do projeto, objetivos de negócio, público-alvo e stakeholders.</p>
+      </div>
+    </div>
+
+    <div class="flex gap-3 items-start">
+      <span class="w-6 h-6 rounded-full bg-[#2563eb] text-white text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">2</span>
+      <div>
+        <p class="font-extrabold text-[12px] text-slate-800 dark:text-white">Anexe evidências nas 4 etapas</p>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5 leading-relaxed">Em "Auditoria", registre artefatos de Descoberta, Definição, Ideação e Validação — pesquisas, briefings, protótipos, testes.</p>
+      </div>
+    </div>
+
+    <div class="flex gap-3 items-start">
+      <span class="w-6 h-6 rounded-full bg-[#2563eb] text-white text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">3</span>
+      <div>
+        <p class="font-extrabold text-[12px] text-slate-800 dark:text-white">Declare a aderência ao DSC e acessibilidade</p>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5 leading-relaxed">Ainda em "Auditoria", marque o status de conformidade com o Design System CAIXA e com as diretrizes de acessibilidade (WCAG).</p>
+      </div>
+    </div>
+
+    <div class="flex gap-3 items-start">
+      <span class="w-6 h-6 rounded-full bg-[#2563eb] text-white text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">4</span>
+      <div>
+        <p class="font-extrabold text-[12px] text-slate-800 dark:text-white">Analise com IA</p>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5 leading-relaxed">Em "Score & IA", clique em "Analisar com IA" para gerar a pontuação de maturidade (1 a 5 estrelas) com o detalhamento por dimensão.</p>
+      </div>
+    </div>
+
+    <div class="flex gap-3 items-start">
+      <span class="w-6 h-6 rounded-full bg-[#2563eb] text-white text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">5</span>
+      <div>
+        <p class="font-extrabold text-[12px] text-slate-800 dark:text-white">Use os Frameworks como apoio (opcional)</p>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5 leading-relaxed">Insira templates de UX (Matriz CSD, Personas, Jornada, etc.) diretamente no canvas para estruturar o trabalho antes de documentar as evidências.</p>
+      </div>
+    </div>
+
+    <div class="flex gap-3 items-start">
+      <span class="w-6 h-6 rounded-full bg-[#2563eb] text-white text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">6</span>
+      <div>
+        <p class="font-extrabold text-[12px] text-slate-800 dark:text-white">Exporte os dados</p>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5 leading-relaxed">Use "Exportar Dados do Projeto" para gerar um JSON completo — briefing, evidências, auditoria e score — pronto para integração com outros sistemas.</p>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<!-- MODAL: Loading -->
+<div id="amux-loading" class="hidden fixed inset-0 z-[2000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+  <div class="bg-white dark:bg-dark-bg rounded-2xl shadow-2xl p-8 flex flex-col items-center gap-4 w-[220px]">
+    <div class="relative w-12 h-12">
+      <div class="absolute inset-0 rounded-full border-4 border-blue-200"></div>
+      <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-600 animate-spin"></div>
+    </div>
+    <p class="text-[12px] font-bold text-slate-700 dark:text-white text-center">Processando...</p>
+  </div>
+</div>
+
+  </div>
+
+  <footer id="footer-signature" class="pb-2 pt-1 text-center shrink-0 bg-white dark:bg-dark-bg">
+    <p class="text-[9px] text-gray-400 dark:text-dark-muted font-bold tracking-wider uppercase">
+      Auditoria & Maturidade em UX
+    </p>
+  </footer>
+
+  <script>
+    // Frameworks data — embutido do refs/frameworks.json no build
+    const AMUX_FRAMEWORKS = [{"id":"briefing","name":"Briefing Estruturado","icon":"clipboard-list","color":"text-blue-600","bg":"bg-blue-50 dark:bg-blue-900/20","category":"Descoberta","categoryColor":"bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300","description":"Alinha o time no início do projeto: contexto, escopo, atores, riscos e critérios de sucesso em um único artefato.","when":"Kickoff do projeto ou quando a demanda chega sem documentação clara.","fields":[{"id":"context","label":"Contexto","type":"text","required":true},{"id":"objectives","label":"Resultados-chave","type":"list","required":true},{"id":"actors","label":"Atores","type":"list","required":false},{"id":"in_scope","label":"Está no escopo","type":"list","required":false},{"id":"maybe_scope","label":"Pode entrar","type":"list","required":false},{"id":"out_scope","label":"Não está no escopo","type":"list","required":false},{"id":"dependencies","label":"Dependências","type":"list","required":false},{"id":"risks","label":"Riscos","type":"list","required":false},{"id":"deadline","label":"Prazo","type":"text","required":false}]},{"id":"csd","name":"Matriz CSD","icon":"triangle-alert","color":"text-amber-500","bg":"bg-amber-50 dark:bg-amber-900/20","category":"Alinhamento","categoryColor":"bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300","description":"Mapeia o que o time sabe (Certezas), o que supõe (Suposições) e o que ainda precisa descobrir (Dúvidas).","when":"Antes de sair para pesquisa ou quando o time tem muita divergência de visão.","fields":[{"id":"certainties","label":"Certezas","type":"list","required":true},{"id":"assumptions","label":"Suposições","type":"list","required":true},{"id":"doubts","label":"Dúvidas","type":"list","required":true}]},{"id":"five-whys","name":"5 Porquês","icon":"search","color":"text-red-500","bg":"bg-red-50 dark:bg-red-900/20","category":"Diagnóstico","categoryColor":"bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300","description":"Investiga a causa raiz de um problema através de cinco camadas sucessivas de questionamento.","when":"Quando o problema é conhecido mas a causa real ainda não está clara.","fields":[{"id":"problem","label":"Problema","type":"text","required":true},{"id":"why1","label":"Por quê? 1","type":"text","required":true},{"id":"why2","label":"Por quê? 2","type":"text","required":true},{"id":"why3","label":"Por quê? 3","type":"text","required":false},{"id":"why4","label":"Por quê? 4","type":"text","required":false},{"id":"why5","label":"Por quê? 5","type":"text","required":false},{"id":"root_cause","label":"Causa Raiz","type":"text","required":true}]},{"id":"stakeholders","name":"Mapa de Stakeholders","icon":"users","color":"text-teal-500","bg":"bg-teal-50 dark:bg-teal-900/20","category":"Alinhamento","categoryColor":"bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300","description":"Posiciona os envolvidos em uma matriz Poder × Interesse para definir a estratégia de engajamento de cada grupo.","when":"No início do projeto para mapear quem decide, quem aprova e quem apenas é informado.","fields":[{"id":"manage_closely","label":"Gerenciar de Perto (alto poder, alto interesse)","type":"list","required":true},{"id":"keep_satisfied","label":"Manter Satisfeito (alto poder, baixo interesse)","type":"list","required":false},{"id":"keep_informed","label":"Manter Informado (baixo poder, alto interesse)","type":"list","required":false},{"id":"monitor","label":"Monitorar (baixo poder, baixo interesse)","type":"list","required":false}]},{"id":"value-effort","name":"Matriz Valor × Esforço","icon":"layout-grid","color":"text-green-600","bg":"bg-green-50 dark:bg-green-900/20","category":"Priorização","categoryColor":"bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300","description":"Prioriza iniciativas cruzando o valor entregue ao usuário com o esforço de implementação.","when":"Quando há muitas iniciativas em disputa e o time precisa decidir o que fazer primeiro.","fields":[{"id":"quick_wins","label":"Quick Wins (alto valor, baixo esforço)","type":"list","required":false},{"id":"big_bets","label":"Grandes Apostas (alto valor, alto esforço)","type":"list","required":false},{"id":"fill_ins","label":"Fill-ins (baixo valor, baixo esforço)","type":"list","required":false},{"id":"thankless_tasks","label":"Thankless Tasks (baixo valor, alto esforço)","type":"list","required":false}]},{"id":"atomic-research","name":"Atomic Research","icon":"atom","color":"text-purple-500","bg":"bg-purple-50 dark:bg-purple-900/20","category":"Pesquisa","categoryColor":"bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300","description":"Estrutura os achados de pesquisa em quatro níveis atômicos: Experimento, Fato, Insight e Conclusão.","when":"Para registrar e compartilhar pesquisas de forma rastreável e reaproveitável.","fields":[{"id":"experiment","label":"Experimento","type":"text","required":true},{"id":"fact","label":"Fato","type":"text","required":true},{"id":"insight","label":"Insight","type":"text","required":true},{"id":"conclusion","label":"Conclusão","type":"text","required":false}]},{"id":"blueprint","name":"Blueprint de Serviço","icon":"map","color":"text-indigo-500","bg":"bg-indigo-50 dark:bg-indigo-900/20","category":"Mapeamento","categoryColor":"bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300","description":"Mapeia a experiência completa do serviço em swim lanes, incluindo o que o usuário vê e o que acontece nos bastidores.","when":"Para visualizar a entrega ponta a ponta e identificar gaps entre front e backstage.","fields":[{"id":"evidence","label":"Evidências","type":"list","required":false},{"id":"user_journey","label":"Jornada do Usuário","type":"list","required":true},{"id":"frontstage","label":"Ações de Frontstage","type":"list","required":true},{"id":"technology","label":"Tecnologia","type":"list","required":false},{"id":"backstage","label":"Ações de Backstage","type":"list","required":false},{"id":"support","label":"Processos de Suporte","type":"list","required":false}]},{"id":"heuristics","name":"Heurísticas de Nielsen","icon":"shield-check","color":"text-orange-500","bg":"bg-orange-50 dark:bg-orange-900/20","category":"Avaliação","categoryColor":"bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300","description":"Avalia a usabilidade de interfaces com base nas 10 heurísticas clássicas de Jakob Nielsen.","when":"Revisão de usabilidade de um fluxo existente antes de entregar para dev.","fields":[{"id":"visibility","label":"Visibilidade do status","type":"scale","required":false},{"id":"real_world","label":"Correspondência com o real","type":"scale","required":false},{"id":"user_control","label":"Controle do usuário","type":"scale","required":false},{"id":"consistency","label":"Consistência e padrões","type":"scale","required":false},{"id":"error_prevention","label":"Prevenção de erros","type":"scale","required":false},{"id":"recognition","label":"Reconhecimento","type":"scale","required":false},{"id":"flexibility","label":"Flexibilidade","type":"scale","required":false},{"id":"aesthetics","label":"Estética e minimalismo","type":"scale","required":false},{"id":"error_recovery","label":"Recuperação de erros","type":"scale","required":false},{"id":"help_docs","label":"Ajuda e documentação","type":"scale","required":false}]},{"id":"opportunities","name":"Mapa de Oportunidades","icon":"lightbulb","color":"text-yellow-500","bg":"bg-yellow-50 dark:bg-yellow-900/20","category":"Ideação","categoryColor":"bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300","description":"Organiza oportunidades identificadas em clusters por tema, permitindo visualizar padrões e prioridades.","when":"Após rodadas de pesquisa ou brainstorm, para sintetizar e agrupar descobertas.","fields":[{"id":"clusters","label":"Clusters temáticos","type":"list","required":true},{"id":"priority","label":"Prioridade","type":"list","required":false},{"id":"responsible","label":"Responsável","type":"list","required":false},{"id":"next_steps","label":"Próximos passos","type":"list","required":false}]},{"id":"personas","name":"Painel de Personas","icon":"user-circle","color":"text-blue-500","bg":"bg-blue-50 dark:bg-blue-900/20","category":"Descoberta","categoryColor":"bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300","description":"Constrói um perfil tangível do seu usuário, alinhando necessidades, objetivos e características-chave.","when":"No início do projeto ou após pesquisas exploratórias, para alinhar quem é o usuário central.","fields":[{"id":"demographics","label":"Dados demográficos","type":"text","required":true},{"id":"goals","label":"Objetivos","type":"list","required":true},{"id":"needs","label":"Necessidades","type":"list","required":true},{"id":"pain_points","label":"Dores","type":"list","required":false},{"id":"opportunities","label":"Oportunidades","type":"list","required":false}]},{"id":"interview-script","name":"Roteiro de Entrevistas","icon":"mic","color":"text-rose-500","bg":"bg-rose-50 dark:bg-rose-900/20","category":"Pesquisa","categoryColor":"bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300","description":"Estrutura um guia seguro e neutro para conduzir entrevistas de profundidade com usuários.","when":"Antes de iniciar qualquer ciclo de entrevistas qualitativas.","fields":[{"id":"objective","label":"Objetivo da entrevista","type":"text","required":true},{"id":"warmup","label":"Aquecimento","type":"list","required":false},{"id":"discovery","label":"Descoberta","type":"list","required":true},{"id":"deepening","label":"Aprofundamento","type":"list","required":false},{"id":"closing","label":"Encerramento","type":"list","required":false}]},{"id":"journey","name":"Jornada de Usuário","icon":"route","color":"text-cyan-500","bg":"bg-cyan-50 dark:bg-cyan-900/20","category":"Mapeamento","categoryColor":"bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300","description":"Visualiza o passo a passo da experiência do usuário, mapeando dores, sentimentos e pensamentos ao longo do tempo.","when":"Para entender o cenário atual ou desenhar o fluxo ideal de uma experiência complexa.","fields":[{"id":"stages","label":"Etapas","type":"list","required":true},{"id":"actions","label":"Ações","type":"list","required":false},{"id":"thoughts","label":"Pensamentos","type":"list","required":false},{"id":"feelings","label":"Sentimentos","type":"list","required":false},{"id":"pain_points","label":"Dores","type":"list","required":false},{"id":"opportunities","label":"Oportunidades","type":"list","required":false},{"id":"experience_curve","label":"Curva de Experiência","type":"text","required":false}]},{"id":"relational-map","name":"Mapa Relacional","icon":"network","color":"text-sky-500","bg":"bg-sky-50 dark:bg-sky-900/20","category":"Ideação","categoryColor":"bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300","description":"Conecta certezas, suposições e dúvidas geradas a métodos de pesquisa que responderão essas questões.","when":"Logo após uma matriz CSD, para planejar os métodos de pesquisa mais adequados.","fields":[{"id":"themes","label":"Temas","type":"list","required":true},{"id":"hypotheses","label":"Hipóteses","type":"list","required":true},{"id":"methods","label":"Métodos (Questionário, Entrevista, etc.)","type":"list","required":false}]},{"id":"5w2h","name":"5W2H","icon":"table-2","color":"text-blue-600","bg":"bg-blue-50 dark:bg-blue-900/20","category":"Diagnóstico","categoryColor":"bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300","description":"Estrutura um plano de ação respondendo 7 perguntas essenciais: O quê, Por quê, Quem, Onde, Quando, Como e Quanto custa.","when":"Para planejar ações de forma objetiva, muito útil em equipes públicas que precisam de rastreabilidade.","fields":[{"id":"what","label":"O quê? (What)","type":"text","required":true},{"id":"why","label":"Por quê? (Why)","type":"text","required":true},{"id":"who","label":"Quem? (Who)","type":"text","required":true},{"id":"where","label":"Onde? (Where)","type":"text","required":false},{"id":"when","label":"Quando? (When)","type":"text","required":false},{"id":"how","label":"Como? (How)","type":"text","required":true},{"id":"how_much","label":"Quanto custa? (How Much)","type":"text","required":false}]},{"id":"golden-circle","name":"Golden Circle","icon":"target","color":"text-yellow-600","bg":"bg-yellow-50 dark:bg-yellow-900/20","category":"Alinhamento","categoryColor":"bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300","description":"O modelo de Simon Sinek que parte do Porquê (propósito) para o Como (processo) e o Quê (produto), alinhando times em torno de um propósito comum.","when":"No início de um projeto estratégico ou quando o time perde o senso de propósito.","fields":[{"id":"why","label":"Por quê? (Propósito/Crença)","type":"text","required":true},{"id":"how","label":"Como? (Processo/Valores)","type":"text","required":true},{"id":"what","label":"O quê? (Produto/Serviço)","type":"text","required":true}]},{"id":"risk-matrix","name":"Matriz de Riscos","icon":"shield-alert","color":"text-red-600","bg":"bg-red-50 dark:bg-red-900/20","category":"Diagnóstico","categoryColor":"bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300","description":"Classifica riscos pela combinação de Probabilidade de ocorrência e Impacto no projeto, priorizando o que exige atenção imediata.","when":"Em planejamento de projeto, antes de sprints críticas ou na análise de mudanças de escopo.","fields":[{"id":"critical","label":"Riscos Críticos (alta prob. + alto impacto)","type":"list","required":true},{"id":"high","label":"Riscos Altos","type":"list","required":false},{"id":"moderate","label":"Riscos Moderados","type":"list","required":false},{"id":"low","label":"Riscos Baixos","type":"list","required":false}]},{"id":"crazy-8s","name":"Crazy 8s","icon":"zap","color":"text-purple-600","bg":"bg-purple-50 dark:bg-purple-900/20","category":"Ideação","categoryColor":"bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300","description":"Exercício de ideação rápida do Design Sprint: 8 ideias em 8 minutos para estimular criatividade sem autojulgamento.","when":"Em sessões de ideação, quando o time precisa divergir e sair do óbvio rapidamente.","fields":[{"id":"idea_1","label":"Ideia 1","type":"text","required":false},{"id":"idea_2","label":"Ideia 2","type":"text","required":false},{"id":"idea_3","label":"Ideia 3","type":"text","required":false},{"id":"idea_4","label":"Ideia 4","type":"text","required":false},{"id":"idea_5","label":"Ideia 5","type":"text","required":false},{"id":"idea_6","label":"Ideia 6","type":"text","required":false},{"id":"idea_7","label":"Ideia 7","type":"text","required":false},{"id":"idea_8","label":"Ideia 8","type":"text","required":false}]},{"id":"dot-voting","name":"Dot Voting","icon":"vote","color":"text-emerald-600","bg":"bg-emerald-50 dark:bg-emerald-900/20","category":"Priorização","categoryColor":"bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300","description":"Técnica de votação democrática onde cada participante distribui pontos (dots) entre as opções para revelar as preferências do grupo.","when":"Após brainstorm ou listagem de ideias, para o grupo convergir e priorizar colaborativamente.","fields":[{"id":"items","label":"Itens para votação","type":"list","required":true},{"id":"participants","label":"Participantes","type":"list","required":false},{"id":"results","label":"Resultado/Vencedores","type":"list","required":false}]},{"id":"journey-versioning","name":"Versionamento de Jornadas","icon":"git-branch","color":"text-cyan-600","bg":"bg-cyan-50 dark:bg-cyan-900/20","category":"Mapeamento","categoryColor":"bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300","description":"Compara versões da jornada do usuário (Atual vs. Proposta) lado a lado, evidenciando melhorias, dores resolvidas e oportunidades futuras.","when":"Após redesenho de fluxo para comunicar ao time e stakeholders o que muda e por quê.","fields":[{"id":"stages","label":"Etapas da Jornada","type":"list","required":true},{"id":"v1_actions","label":"v1.0 — Ações do Usuário","type":"list","required":true},{"id":"v1_pains","label":"v1.0 — Dores","type":"list","required":false},{"id":"v2_actions","label":"v2.0 — Ações do Usuário","type":"list","required":true},{"id":"v2_improved","label":"v2.0 — Melhorias","type":"list","required":false},{"id":"delta","label":"O que muda (Delta)","type":"list","required":false}]}];
+
+// ============================================================
+// MODULE: core.js
+// ============================================================
+// ============================================================
+// core.js — Estado, navegação e persistência do AMUX
+// ============================================================
+
+const AMUX_VERSION = '1.0.0';
+
+let amuxData = _defaultState();
+
+function _defaultState() {
+  return {
+    _schemaVersion: 1,
+    projectId: _generateId(),
+    createdAt: new Date().toISOString(),
+    briefing: {
+      comunidade: '',
+      produto: '',
+      canal: '',
+      sistemaSigla: '',
+      nomeProjeto: '',
+      dataInicio: '',
+      visaoGeral: '',
+      objetivosNegocio: '',
+      metaPesquisa: '',
+      publicoAlvo: '',
+      necessidades: '',
+      frustracoes: '',
+      entregaveis: '',
+      stakeholders: '',
+      tempo: '',
+      rotina: '',
+      compartilhamento: ''
+    },
+    evidencias: {
+      descoberta:  { artefatos: [], observacoes: '' },
+      definicao:   { artefatos: [], observacoes: '' },
+      ideacao:     { artefatos: [], observacoes: '' },
+      validacao:   { artefatos: [], observacoes: '' }
+    },
+    auditoria: {
+      designSystem:   { status: 'pendente', observacoes: '', desvios: [] },
+      acessibilidade: { status: 'pendente', observacoes: '', desvios: [] }
+    },
+    aiAnalysis: {
+      status: 'idle',
+      lastRunAt: null,
+      agentResponses: {},
+      scoreBreakdown: {}
+    },
+    score: {
+      numeric: 0,
+      stars: 0,
+      computedAt: null
+    },
+    frameworks: []
+  };
+}
+
+function _generateId() {
+  return 'ax-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+const AMUX_ETAPAS = ['descoberta', 'definicao', 'ideacao', 'validacao'];
+const AMUX_ETAPA_LABELS = {
+  descoberta: 'Descoberta',
+  definicao:  'Definição',
+  ideacao:    'Ideação',
+  validacao:  'Validação'
+};
+
+// ── Navigation ────────────────────────────────────────────────
+function navigate(viewId) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const target = document.getElementById(viewId);
+  if (target) target.classList.add('active');
+  try { lucide.createIcons(); } catch(e) {}
+}
+
+// ── Persistence ───────────────────────────────────────────────
+function saveState() {
+  parent.postMessage({ pluginMessage: { type: 'save-state', data: amuxData } }, '*');
+}
+
+function restoreUIFromState() {
+  const b = amuxData.briefing || {};
+  _setVal('b-comunidade', b.comunidade);
+  _setVal('b-produto', b.produto);
+  _setVal('b-canal', b.canal);
+  _setVal('b-sistema-sigla', b.sistemaSigla);
+  _setVal('b-nome-projeto', b.nomeProjeto);
+  _setVal('b-data-inicio', b.dataInicio);
+  _setVal('b-visao-geral', b.visaoGeral);
+  _setVal('b-objetivos-negocio', b.objetivosNegocio);
+  _setVal('b-meta-pesquisa', b.metaPesquisa);
+  _setVal('b-publico-alvo', b.publicoAlvo);
+  _setVal('b-necessidades', b.necessidades);
+  _setVal('b-frustracoes', b.frustracoes);
+  _setVal('b-entregaveis', b.entregaveis);
+  _setVal('b-stakeholders', b.stakeholders);
+  _setVal('b-tempo', b.tempo);
+  _setVal('b-rotina', b.rotina);
+  _setVal('b-compartilhamento', b.compartilhamento);
+
+  renderFrameworkInstances();
+  renderAuditStatus();
+  renderScore();
+  updateHomeBadges();
+}
+
+function _setVal(id, val) {
+  const el = document.getElementById(id);
+  if (el && val !== undefined && val !== null) el.value = val;
+}
+
+// ── Briefing ──────────────────────────────────────────────────
+function saveBriefing() {
+  amuxData.briefing = {
+    comunidade:        document.getElementById('b-comunidade')?.value?.trim() || '',
+    produto:            document.getElementById('b-produto')?.value?.trim() || '',
+    canal:              document.getElementById('b-canal')?.value?.trim() || '',
+    sistemaSigla:       document.getElementById('b-sistema-sigla')?.value?.trim() || '',
+    nomeProjeto:        document.getElementById('b-nome-projeto')?.value?.trim() || '',
+    dataInicio:         document.getElementById('b-data-inicio')?.value?.trim() || '',
+    visaoGeral:         document.getElementById('b-visao-geral')?.value?.trim() || '',
+    objetivosNegocio:   document.getElementById('b-objetivos-negocio')?.value?.trim() || '',
+    metaPesquisa:       document.getElementById('b-meta-pesquisa')?.value?.trim() || '',
+    publicoAlvo:        document.getElementById('b-publico-alvo')?.value?.trim() || '',
+    necessidades:       document.getElementById('b-necessidades')?.value?.trim() || '',
+    frustracoes:        document.getElementById('b-frustracoes')?.value?.trim() || '',
+    entregaveis:        document.getElementById('b-entregaveis')?.value?.trim() || '',
+    stakeholders:       document.getElementById('b-stakeholders')?.value?.trim() || '',
+    tempo:              document.getElementById('b-tempo')?.value?.trim() || '',
+    rotina:             document.getElementById('b-rotina')?.value?.trim() || '',
+    compartilhamento:   document.getElementById('b-compartilhamento')?.value?.trim() || ''
+  };
+  saveState();
+  showToast('Briefing salvo.');
+  updateHomeBadges();
+}
+
+function clearBriefing() {
+  amuxData.briefing = _defaultState().briefing;
+  restoreUIFromState();
+  saveState();
+  showToast('Briefing limpo.');
+}
+
+// ── Framework instances (herdado do Maturai UX) ─────────────────
+function renderFrameworkInstances() {
+  const container = document.getElementById('scanned-instances');
+  if (!container) return;
+  const instances = amuxData.frameworks || [];
+
+  if (instances.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-8 text-slate-400 dark:text-dark-muted">
+        <i data-lucide="scan-line" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
+        <p class="text-[12px]">Nenhum framework escaneado ainda.</p>
+        <p class="text-[11px] mt-1 opacity-70">Insira um framework no canvas e clique em Escanear.</p>
+      </div>`;
+    try { lucide.createIcons(); } catch(e) {}
+    return;
+  }
+
+  container.innerHTML = instances.map((inst, i) => {
+    const fw = AMUX_FRAMEWORKS.find(f => f.id === inst.frameworkId);
+    const fieldCount = Object.keys(inst.data || {}).filter(k => inst.data[k]).length;
+    const totalFields = fw ? fw.fields.length : 0;
+    return `
+      <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-xl p-3.5 space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2 min-w-0">
+            <i data-lucide="${fw?.icon || 'file'}" class="w-4 h-4 shrink-0 ${fw?.color || 'text-slate-400'}"></i>
+            <span class="font-bold text-[12px] text-slate-800 dark:text-white truncate">${inst.frameName || fw?.name || inst.frameworkId}</span>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="text-[10px] text-slate-400">${fieldCount}/${totalFields} campos</span>
+            <button onclick="removeFrameworkInstance(${i})" class="text-slate-300 hover:text-red-400 transition-colors">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-1">
+          ${Object.entries(inst.data || {}).filter(([,v]) => v).slice(0, 3).map(([k, v]) =>
+            `<span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-[9px] font-bold rounded-full truncate max-w-[120px]">${v.slice(0, 40)}</span>`
+          ).join('')}
+          ${Object.values(inst.data || {}).filter(v => v).length > 3 ? `<span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-400 text-[9px] font-bold rounded-full">+${Object.values(inst.data).filter(v => v).length - 3}</span>` : ''}
+        </div>
+        <p class="text-[10px] text-slate-400">Escaneado em ${new Date(inst.scannedAt).toLocaleDateString('pt-BR')}</p>
+      </div>`;
+  }).join('');
+
+  try { lucide.createIcons(); } catch(e) {}
+}
+
+function removeFrameworkInstance(idx) {
+  amuxData.frameworks.splice(idx, 1);
+  renderFrameworkInstances();
+  saveState();
+  updateHomeBadges();
+}
+
+// ── Auditoria (DSC / Acessibilidade) — status geral ─────────────
+function renderAuditStatus() {
+  ['designSystem', 'acessibilidade'].forEach(key => {
+    const dim = amuxData.auditoria[key];
+    const badge = document.getElementById('audit-status-' + key);
+    if (badge && dim) {
+      badge.textContent = _statusLabel(dim.status);
+      badge.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full ' + _statusClass(dim.status);
+    }
+  });
+}
+
+function _statusLabel(status) {
+  return { pendente: 'Pendente', conforme: 'Conforme', 'com-desvios': 'Com desvios' }[status] || 'Pendente';
+}
+
+function _statusClass(status) {
+  return {
+    pendente:     'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-dark-muted',
+    conforme:     'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300',
+    'com-desvios': 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300'
+  }[status] || 'bg-slate-100 text-slate-500';
+}
+
+// ── Score ─────────────────────────────────────────────────────
+function renderScore() {
+  const starsEl = document.getElementById('score-stars');
+  const numEl = document.getElementById('score-numeric');
+  if (starsEl) {
+    const stars = amuxData.score?.stars || 0;
+    starsEl.innerHTML = Array.from({ length: 5 }, (_, i) =>
+      `<i data-lucide="star" class="w-5 h-5 ${i < stars ? 'text-amber-400 fill-amber-400' : 'text-slate-200 dark:text-slate-700'}"></i>`
+    ).join('');
+  }
+  if (numEl) numEl.textContent = amuxData.score?.numeric ? `${amuxData.score.numeric}/100` : '—';
+  try { lucide.createIcons(); } catch(e) {}
+}
+
+// ── Home badges ───────────────────────────────────────────────
+function updateHomeBadges() {
+  const briefingFilled = Object.values(amuxData.briefing || {}).some(v => v);
+  const el = document.getElementById('badge-briefing');
+  if (el) el.classList.toggle('hidden', !briefingFilled);
+
+  const evidenciasCount = AMUX_ETAPAS.filter(e => (amuxData.evidencias[e]?.artefatos || []).length > 0).length;
+  const auditBadge = document.getElementById('badge-audit');
+  if (auditBadge) {
+    auditBadge.textContent = evidenciasCount;
+    auditBadge.classList.toggle('hidden', evidenciasCount === 0);
+  }
+
+  const fwCount = (amuxData.frameworks || []).length;
+  const fwBadge = document.getElementById('badge-frameworks');
+  if (fwBadge) {
+    fwBadge.textContent = fwCount;
+    fwBadge.classList.toggle('hidden', fwCount === 0);
+  }
+
+  const scoreBadge = document.getElementById('badge-score');
+  if (scoreBadge) scoreBadge.classList.toggle('hidden', !amuxData.score?.computedAt);
+}
+
+// ── Export ────────────────────────────────────────────────────
+function exportAmuxData() {
+  const payload = {
+    ...amuxData,
+    exportedAt: new Date().toISOString(),
+    _plugin: 'AMUX',
+    _version: AMUX_VERSION
+  };
+  parent.postMessage({ pluginMessage: { type: 'export-data', data: payload } }, '*');
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `amux-${amuxData.briefing.nomeProjeto || 'projeto'}-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Dados exportados com sucesso!', 'success');
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function showToast(msg, type = 'default') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const colors = {
+    default: 'bg-slate-800 text-white',
+    success: 'bg-blue-600 text-white',
+    error:   'bg-red-600 text-white',
+    info:    'bg-[#2563eb] text-white'
+  };
+  const toast = document.createElement('div');
+  toast.className = `px-4 py-2.5 rounded-xl text-[12px] font-bold shadow-lg ${colors[type] || colors.default} transition-all`;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// ── Collapse / Expand ─────────────────────────────────────────
+let _isCollapsed = false;
+const _FULL_W = 380, _FULL_H = 600, _MINI_H = 44;
+
+function toggleCollapse() {
+  _isCollapsed = !_isCollapsed;
+  const content = document.querySelector('body > div.flex-1');
+  const footer  = document.getElementById('footer-signature');
+  const btn     = document.getElementById('btn-collapse');
+  if (_isCollapsed) {
+    if (content) content.classList.add('hidden');
+    if (footer)  footer.classList.add('hidden');
+    if (btn) btn.innerHTML = '<i data-lucide="maximize-2" class="w-4 h-4" aria-hidden="true"></i>';
+  } else {
+    if (content) content.classList.remove('hidden');
+    if (footer)  footer.classList.remove('hidden');
+    if (btn) btn.innerHTML = '<i data-lucide="minimize-2" class="w-4 h-4" aria-hidden="true"></i>';
+  }
+  parent.postMessage({
+    pluginMessage: { type: 'resize-ui', width: _FULL_W, height: _isCollapsed ? _MINI_H : _FULL_H }
+  }, '*');
+  try { lucide.createIcons(); } catch(e) {}
+}
+
+// ── Theme ─────────────────────────────────────────────────────
+function toggleTheme() {
+  const isDark = document.documentElement.classList.toggle('dark');
+  try { localStorage.setItem('amux-theme', isDark ? 'dark' : 'light'); } catch(e) {}
+  document.querySelectorAll('.sun-icon').forEach(el => el.classList.toggle('hidden', isDark));
+  document.querySelectorAll('.moon-icon').forEach(el => el.classList.toggle('hidden', !isDark));
+  try { lucide.createIcons(); } catch(e) {}
+}
+
+function applyTheme() {
+  let dark = false;
+  try { dark = localStorage.getItem('amux-theme') === 'dark'; } catch(e) {}
+  if (dark) {
+    document.documentElement.classList.add('dark');
+    document.querySelectorAll('.sun-icon').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.moon-icon').forEach(el => el.classList.remove('hidden'));
+  }
+}
+
+applyTheme();
+
+function handleScroll(el) {
+  const btn = document.getElementById('btn-top');
+  if (!btn) return;
+  if (el.scrollTop > 80) {
+    btn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
+  } else {
+    btn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
+  }
+}
+
+function scrollToTop() {
+  document.querySelectorAll('.view.active').forEach(v => v.scrollTo({ top: 0, behavior: 'smooth' }));
+  const sc = document.querySelector('.flex-1.overflow-y-auto');
+  if (sc) sc.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+Object.assign(window, {
+  navigate, saveBriefing, clearBriefing,
+  removeFrameworkInstance, exportAmuxData,
+  showToast, toggleTheme, updateHomeBadges,
+  handleScroll, scrollToTop,
+  toggleCollapse, renderAuditStatus, renderScore
+});
+
+
+// ============================================================
+// MODULE: messages.js
+// ============================================================
+// ============================================================
+// messages.js — Bridge de mensagens UI ↔ canvas/backend (AMUX)
+// ============================================================
+
+window.addEventListener('message', (event) => {
+  const msg = event.data?.pluginMessage;
+  if (!msg) return;
+
+  if (msg.type === 'init-plugin') {
+    if (msg.savedState && msg.savedState._schemaVersion === 1) {
+      amuxData = msg.savedState;
+    }
+    if (msg.currentUser?.name) {
+      const el = document.getElementById('current-user');
+      if (el) el.textContent = msg.currentUser.name;
+    }
+    restoreUIFromState();
+    return;
+  }
+
+  if (msg.type === 'framework-injected') {
+    showToast(`Framework inserido: "${msg.frameName}"`, 'success');
+    return;
+  }
+
+  if (msg.type === 'scan-complete') {
+    const results = msg.results || [];
+    if (results.length === 0) {
+      showToast('Nenhum framework [AMUX] encontrado no canvas.', 'info');
+      return;
+    }
+    results.forEach(inst => {
+      const existing = amuxData.frameworks.findIndex(f => f.instanceId === inst.instanceId);
+      if (existing >= 0) {
+        amuxData.frameworks[existing] = inst;
+      } else {
+        amuxData.frameworks.push(inst);
+      }
+    });
+    saveState();
+    renderFrameworkInstances();
+    updateHomeBadges();
+    showToast(`${results.length} framework(s) escaneado(s).`, 'success');
+    return;
+  }
+
+  if (msg.type === 'ai-analysis-complete') {
+    _onAiAnalysisComplete(msg.result);
+    return;
+  }
+
+  if (msg.type === 'ai-analysis-error') {
+    _onAiAnalysisError(msg.error);
+    return;
+  }
+});
+
+
+// ============================================================
+// MODULE: audit.js
+// ============================================================
+// ============================================================
+// audit.js — Auditoria de Maturidade: evidências das 4 etapas
+// de UX (Descoberta, Definição, Ideação, Validação) + aderência
+// ao Design System CAIXA e acessibilidade (AMUX)
+// ============================================================
+
+let _activeEtapa = 'descoberta';
+
+function navigateToAudit() {
+  navigate('view-audit');
+  setTimeout(() => {
+    selectEtapa(_activeEtapa);
+    renderAuditStatus();
+  }, 50);
+}
+
+function selectEtapa(etapa) {
+  _activeEtapa = etapa;
+  document.querySelectorAll('[data-etapa-tab]').forEach(btn => {
+    const active = btn.dataset.etapaTab === etapa;
+    btn.className = `px-3 py-1.5 text-[11px] font-bold rounded-full transition-all ${
+      active
+        ? 'bg-blue-600 text-white'
+        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-dark-muted hover:bg-slate-200'
+    }`;
+  });
+  document.querySelectorAll('[data-etapa-panel]').forEach(panel => {
+    panel.classList.toggle('hidden', panel.dataset.etapaPanel !== etapa);
+  });
+  renderArtefatos(etapa);
+  const obsEl = document.getElementById('etapa-obs-' + etapa);
+  if (obsEl) obsEl.value = amuxData.evidencias[etapa]?.observacoes || '';
+}
+
+function saveEtapaObservacoes(etapa) {
+  const el = document.getElementById('etapa-obs-' + etapa);
+  if (!el || !amuxData.evidencias[etapa]) return;
+  amuxData.evidencias[etapa].observacoes = el.value.trim();
+  saveState();
+}
+
+function addArtefato(etapa) {
+  const nomeEl = document.getElementById('artefato-nome-' + etapa);
+  const urlEl = document.getElementById('artefato-url-' + etapa);
+  const nome = nomeEl?.value?.trim();
+  const url = urlEl?.value?.trim();
+  if (!nome) {
+    showToast('Informe um nome para o artefato.', 'error');
+    return;
+  }
+  amuxData.evidencias[etapa].artefatos.push({
+    id: _generateId(),
+    nome,
+    tipo: url ? 'link' : 'referencia',
+    url: url || '',
+    anexadoEm: new Date().toISOString()
+  });
+  if (nomeEl) nomeEl.value = '';
+  if (urlEl) urlEl.value = '';
+  renderArtefatos(etapa);
+  saveState();
+  updateHomeBadges();
+  showToast('Artefato anexado.', 'success');
+}
+
+function removeArtefato(etapa, artefatoId) {
+  const lista = amuxData.evidencias[etapa]?.artefatos || [];
+  const idx = lista.findIndex(a => a.id === artefatoId);
+  if (idx >= 0) lista.splice(idx, 1);
+  renderArtefatos(etapa);
+  saveState();
+  updateHomeBadges();
+}
+
+function renderArtefatos(etapa) {
+  const container = document.getElementById('artefatos-lista-' + etapa);
+  if (!container) return;
+  const artefatos = amuxData.evidencias[etapa]?.artefatos || [];
+
+  if (artefatos.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-6 text-slate-400 dark:text-dark-muted">
+        <i data-lucide="paperclip" class="w-6 h-6 mx-auto mb-1.5 opacity-40"></i>
+        <p class="text-[11px]">Nenhum artefato anexado nesta etapa.</p>
+      </div>`;
+    try { lucide.createIcons(); } catch(e) {}
+    return;
+  }
+
+  container.innerHTML = artefatos.map(a => `
+    <div class="flex items-center justify-between gap-2 bg-slate-50 dark:bg-dark-bg/40 border border-gray-100 dark:border-dark-line rounded-xl px-3 py-2">
+      <div class="flex items-center gap-2 min-w-0">
+        <i data-lucide="${a.tipo === 'link' ? 'link' : 'file-text'}" class="w-3.5 h-3.5 shrink-0 text-blue-500"></i>
+        <div class="min-w-0">
+          <p class="text-[11px] font-bold text-slate-700 dark:text-white truncate">${a.nome}</p>
+          ${a.url ? `<p class="text-[10px] text-slate-400 truncate">${a.url}</p>` : ''}
+        </div>
+      </div>
+      <button onclick="removeArtefato('${etapa}', '${a.id}')" class="text-slate-300 hover:text-red-400 transition-colors shrink-0">
+        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+      </button>
+    </div>
+  `).join('');
+
+  try { lucide.createIcons(); } catch(e) {}
+}
+
+// ── Auditoria declarada: Design System / Acessibilidade ─────────
+function setAuditStatus(dimensao, status) {
+  if (!amuxData.auditoria[dimensao]) return;
+  amuxData.auditoria[dimensao].status = status;
+  renderAuditStatus();
+  _renderAuditToggle(dimensao);
+  saveState();
+}
+
+function _renderAuditToggle(dimensao) {
+  const status = amuxData.auditoria[dimensao]?.status || 'pendente';
+  document.querySelectorAll(`[data-audit-toggle="${dimensao}"]`).forEach(btn => {
+    const active = btn.dataset.auditValue === status;
+    btn.className = `flex-1 py-2 text-[11px] font-bold rounded-xl transition-all ${
+      active
+        ? (status === 'conforme' ? 'bg-emerald-600 text-white' : status === 'com-desvios' ? 'bg-amber-500 text-white' : 'bg-slate-400 text-white')
+        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-dark-muted hover:bg-slate-200'
+    }`;
+  });
+}
+
+function saveAuditObservacoes(dimensao) {
+  const el = document.getElementById('audit-obs-' + dimensao);
+  if (!el || !amuxData.auditoria[dimensao]) return;
+  amuxData.auditoria[dimensao].observacoes = el.value.trim();
+  saveState();
+}
+
+function initAuditView() {
+  ['designSystem', 'acessibilidade'].forEach(dim => {
+    _renderAuditToggle(dim);
+    const obsEl = document.getElementById('audit-obs-' + dim);
+    if (obsEl) obsEl.value = amuxData.auditoria[dim]?.observacoes || '';
+  });
+}
+
+Object.assign(window, {
+  navigateToAudit, selectEtapa, saveEtapaObservacoes,
+  addArtefato, removeArtefato, renderArtefatos,
+  setAuditStatus, saveAuditObservacoes, initAuditView
+});
+
+
+// ============================================================
+// MODULE: ai-client.js
+// ============================================================
+// ============================================================
+// ai-client.js — Ponte com a análise de IA (AMUX)
+// Isola toda a lógica de "chamar a IA" do frontend: monta o
+// payload a partir de amuxData, dispara a mensagem para o
+// backend e trata a resposta (ou erro). Ver src/plugin/ai/
+// foundry-client.js para o lado backend (hoje mock, desenhado
+// para receber o orquestrador Microsoft Foundry no futuro).
+// ============================================================
+
+function navigateToScore() {
+  navigate('view-score');
+  setTimeout(() => renderScore(), 50);
+}
+
+function runAiAnalysis() {
+  if (amuxData.aiAnalysis.status === 'processing') return;
+
+  amuxData.aiAnalysis.status = 'processing';
+  _renderAiStatus();
+  saveState();
+
+  const payload = {
+    projectId: amuxData.projectId,
+    briefing: amuxData.briefing,
+    evidencias: amuxData.evidencias,
+    auditoria: amuxData.auditoria
+  };
+
+  parent.postMessage({ pluginMessage: { type: 'analyze-with-ai', payload } }, '*');
+}
+
+function _onAiAnalysisComplete(result) {
+  amuxData.aiAnalysis.status = 'done';
+  amuxData.aiAnalysis.lastRunAt = new Date().toISOString();
+  amuxData.aiAnalysis.agentResponses = result.agentResponses || {};
+  amuxData.aiAnalysis.scoreBreakdown = result.scoreBreakdown || {};
+  amuxData.score = {
+    numeric: result.score?.numeric || 0,
+    stars: result.score?.stars || 0,
+    computedAt: new Date().toISOString()
+  };
+  saveState();
+  _renderAiStatus();
+  renderScore();
+  renderScoreBreakdown();
+  updateHomeBadges();
+  showToast('Análise de IA concluída.', 'success');
+}
+
+function _onAiAnalysisError(error) {
+  amuxData.aiAnalysis.status = 'error';
+  saveState();
+  _renderAiStatus();
+  showToast('Não foi possível concluir a análise de IA.', 'error');
+}
+
+function _renderAiStatus() {
+  const el = document.getElementById('ai-status');
+  if (!el) return;
+  const status = amuxData.aiAnalysis.status;
+  const map = {
+    idle:       { text: 'Pronto para analisar', icon: 'sparkles', cls: 'text-slate-400' },
+    processing: { text: 'Analisando com IA...', icon: 'loader-circle', cls: 'text-blue-500 animate-spin' },
+    done:       { text: 'Análise concluída', icon: 'check-circle-2', cls: 'text-emerald-500' },
+    error:      { text: 'Falha na análise — tente novamente', icon: 'alert-circle', cls: 'text-red-500' }
+  };
+  const s = map[status] || map.idle;
+  el.innerHTML = `<i data-lucide="${s.icon}" class="w-4 h-4 ${s.cls}"></i><span class="text-[12px] font-bold ${s.cls.replace('animate-spin','')}">${s.text}</span>`;
+
+  const btn = document.getElementById('btn-run-ai');
+  if (btn) btn.disabled = status === 'processing';
+
+  try { lucide.createIcons(); } catch(e) {}
+}
+
+function renderScoreBreakdown() {
+  const container = document.getElementById('score-breakdown');
+  if (!container) return;
+  const breakdown = amuxData.aiAnalysis.scoreBreakdown || {};
+  const responses = amuxData.aiAnalysis.agentResponses || {};
+  const dims = Object.keys(breakdown);
+
+  if (dims.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-6 text-slate-400 dark:text-dark-muted">
+        <i data-lucide="bar-chart-3" class="w-6 h-6 mx-auto mb-1.5 opacity-40"></i>
+        <p class="text-[11px]">Rode a análise de IA para ver o detalhamento por dimensão.</p>
+      </div>`;
+    try { lucide.createIcons(); } catch(e) {}
+    return;
+  }
+
+  const dimLabels = {
+    descoberta: 'Descoberta', definicao: 'Definição', ideacao: 'Ideação', validacao: 'Validação',
+    designSystem: 'Design System', acessibilidade: 'Acessibilidade'
+  };
+
+  container.innerHTML = dims.map(dim => {
+    const nota = breakdown[dim];
+    const comentario = responses[dim]?.comentario || '';
+    return `
+      <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-xl p-3 space-y-1.5">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold text-slate-700 dark:text-white">${dimLabels[dim] || dim}</span>
+          <span class="text-[11px] font-extrabold text-blue-600">${nota}/100</span>
+        </div>
+        <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+          <div class="h-full bg-blue-500 rounded-full" style="width:${nota}%"></div>
+        </div>
+        ${comentario ? `<p class="text-[10px] text-slate-400 leading-relaxed">${comentario}</p>` : ''}
+      </div>`;
+  }).join('');
+
+  try { lucide.createIcons(); } catch(e) {}
+}
+
+Object.assign(window, {
+  navigateToScore, runAiAnalysis, renderScoreBreakdown,
+  _onAiAnalysisComplete, _onAiAnalysisError, _renderAiStatus
+});
+
+
+// ============================================================
+// MODULE: frameworks.js
+// ============================================================
+// ============================================================
+// frameworks.js — Catálogo e operações de frameworks de UX (AMUX)
+// Herdado do Maturai UX, mantido como ferramenta auxiliar.
+// ============================================================
+
+let _activeCategory = 'Todos';
+
+function renderFrameworks() {
+  const list = document.getElementById('framework-list');
+  if (!list) return;
+
+  const filtered = _activeCategory === 'Todos'
+    ? AMUX_FRAMEWORKS
+    : AMUX_FRAMEWORKS.filter(f => f.category === _activeCategory);
+
+  list.innerHTML = '';
+
+  filtered.forEach(fw => {
+    const fieldsHtml = fw.fields.map(f =>
+      `<span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-dark-muted text-[10px] font-bold rounded-full">${f.label}</span>`
+    ).join('');
+
+    const card = document.createElement('div');
+    card.className = 'bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-4 space-y-3 shadow-sm';
+    card.innerHTML = `
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 flex items-center justify-center ${fw.bg} rounded-xl shrink-0">
+          <i data-lucide="${fw.icon}" class="w-5 h-5 ${fw.color}"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <p class="font-extrabold text-[13px] text-slate-800 dark:text-white tracking-tight">${fw.name}</p>
+            <span class="px-2 py-0.5 text-[9px] font-bold rounded uppercase tracking-wide ${fw.categoryColor}">${fw.category}</span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-1 leading-relaxed">${fw.description}</p>
+        </div>
+      </div>
+      <div class="bg-slate-50 dark:bg-dark-bg/40 rounded-xl px-3 py-2">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Quando usar</p>
+        <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">${fw.when}</p>
+      </div>
+      <div>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-2">Campos estruturados (${fw.fields.length})</p>
+        <div class="flex flex-wrap gap-1.5">${fieldsHtml}</div>
+      </div>
+      <button onclick="injectFramework('${fw.id}')"
+        class="w-full py-2.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-600 hover:text-white text-blue-700 dark:text-blue-300 text-[12px] font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+        Inserir no Canvas
+      </button>
+    `;
+    list.appendChild(card);
+  });
+
+  try { lucide.createIcons(); } catch(e) {}
+}
+
+function _applyFilterStyles(category) {
+  document.querySelectorAll('[data-fw-filter]').forEach(btn => {
+    const active = btn.dataset.fwFilter === category;
+    btn.className = `px-2.5 py-1 text-[10px] font-bold rounded-full transition-all ${
+      active
+        ? 'bg-[#2563eb] text-white'
+        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-dark-muted hover:bg-slate-200'
+    }`;
+  });
+}
+
+function filterFrameworks(category) {
+  _activeCategory = category;
+  _applyFilterStyles(category);
+  renderFrameworks();
+}
+
+function injectFramework(id) {
+  const fw = AMUX_FRAMEWORKS.find(f => f.id === id);
+  if (!fw) return;
+  parent.postMessage({ pluginMessage: { type: 'inject-framework', framework: fw } }, '*');
+  showToast('Inserindo framework no canvas...', 'info');
+}
+
+function scanAll() {
+  parent.postMessage({ pluginMessage: { type: 'scan-frameworks', frameworkIds: [] } }, '*');
+  showToast('Escaneando canvas...', 'info');
+}
+
+function navigateToFrameworks() {
+  navigate('view-frameworks');
+  setTimeout(() => {
+    _applyFilterStyles(_activeCategory);
+    renderFrameworks();
+  }, 50);
+}
+
+Object.assign(window, { renderFrameworks, filterFrameworks, injectFramework, scanAll, navigateToFrameworks });
+
+  </script>
+
+  <button id="btn-top" onclick="scrollToTop()" title="Voltar ao topo" aria-label="Voltar ao topo"
+    class="fixed bottom-6 right-6 w-10 h-10 rounded-full flex items-center justify-center opacity-0 pointer-events-none translate-y-10 z-[100]">
+    <i data-lucide="chevron-up" class="w-5 h-5"></i>
+  </button>
+
+  <script>
+    window.addEventListener('load', () => {
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+
+    function handleScroll(el) {
+      const btn = document.getElementById('btn-top');
+      if (!btn) return;
+      if (el.scrollTop > 80) {
+        btn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
+      } else {
+        btn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
+      }
+    }
+    function scrollToTop() {
+      document.querySelectorAll('.view.active').forEach(v => v.scrollTo({ top: 0, behavior: 'smooth' }));
+      const sc = document.querySelector('.flex-1.overflow-y-auto');
+      if (sc) sc.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+
+  <div id="toast-container"></div>
+  <div id="resize-handle"></div>
+
+</body>
+</html>

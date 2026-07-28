@@ -1,10 +1,10 @@
 // ============================================================
-// core.js — Estado, navegação e persistência do Maturai UX
+// core.js — Estado, navegação e persistência do AMUX
 // ============================================================
 
-const MATURAI_VERSION = '1.0.0';
+const AMUX_VERSION = '1.0.0';
 
-let maturaiData = _defaultState();
+let amuxData = _defaultState();
 
 function _defaultState() {
   return {
@@ -12,21 +12,60 @@ function _defaultState() {
     projectId: _generateId(),
     createdAt: new Date().toISOString(),
     briefing: {
-      projectName: '',
-      squad: '',
-      context: '',
-      objectives: '',
-      timeline: '',
-      scope: '',
-      outOfScope: ''
+      comunidade: '',
+      produto: '',
+      canal: '',
+      sistemaSigla: '',
+      nomeProjeto: '',
+      dataInicio: '',
+      visaoGeral: '',
+      objetivosNegocio: '',
+      metaPesquisa: '',
+      publicoAlvo: '',
+      necessidades: '',
+      frustracoes: '',
+      entregaveis: '',
+      stakeholders: '',
+      tempo: '',
+      rotina: '',
+      compartilhamento: ''
+    },
+    evidencias: {
+      descoberta:  { artefatos: [], observacoes: '' },
+      definicao:   { artefatos: [], observacoes: '' },
+      ideacao:     { artefatos: [], observacoes: '' },
+      validacao:   { artefatos: [], observacoes: '' }
+    },
+    auditoria: {
+      designSystem:   { status: 'pendente', observacoes: '', desvios: [] },
+      acessibilidade: { status: 'pendente', observacoes: '', desvios: [] }
+    },
+    aiAnalysis: {
+      status: 'idle',
+      lastRunAt: null,
+      agentResponses: {},
+      scoreBreakdown: {}
+    },
+    score: {
+      numeric: 0,
+      stars: 0,
+      computedAt: null
     },
     frameworks: []
   };
 }
 
 function _generateId() {
-  return 'mx-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  return 'ax-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
+
+const AMUX_ETAPAS = ['descoberta', 'definicao', 'ideacao', 'validacao'];
+const AMUX_ETAPA_LABELS = {
+  descoberta: 'Descoberta',
+  definicao:  'Definição',
+  ideacao:    'Ideação',
+  validacao:  'Validação'
+};
 
 // ── Navigation ────────────────────────────────────────────────
 function navigate(viewId) {
@@ -38,19 +77,32 @@ function navigate(viewId) {
 
 // ── Persistence ───────────────────────────────────────────────
 function saveState() {
-  parent.postMessage({ pluginMessage: { type: 'save-state', data: maturaiData } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'save-state', data: amuxData } }, '*');
 }
 
 function restoreUIFromState() {
-  const b = maturaiData.briefing || {};
-  _setVal('b-project-name', b.projectName);
-  _setVal('b-squad', b.squad);
-  _setVal('b-context', b.context);
-  _setVal('b-objectives', b.objectives);
-  _setVal('b-timeline', b.timeline);
-  _setVal('b-scope', b.scope);
-  _setVal('b-out-of-scope', b.outOfScope);
+  const b = amuxData.briefing || {};
+  _setVal('b-comunidade', b.comunidade);
+  _setVal('b-produto', b.produto);
+  _setVal('b-canal', b.canal);
+  _setVal('b-sistema-sigla', b.sistemaSigla);
+  _setVal('b-nome-projeto', b.nomeProjeto);
+  _setVal('b-data-inicio', b.dataInicio);
+  _setVal('b-visao-geral', b.visaoGeral);
+  _setVal('b-objetivos-negocio', b.objetivosNegocio);
+  _setVal('b-meta-pesquisa', b.metaPesquisa);
+  _setVal('b-publico-alvo', b.publicoAlvo);
+  _setVal('b-necessidades', b.necessidades);
+  _setVal('b-frustracoes', b.frustracoes);
+  _setVal('b-entregaveis', b.entregaveis);
+  _setVal('b-stakeholders', b.stakeholders);
+  _setVal('b-tempo', b.tempo);
+  _setVal('b-rotina', b.rotina);
+  _setVal('b-compartilhamento', b.compartilhamento);
+
   renderFrameworkInstances();
+  renderAuditStatus();
+  renderScore();
   updateHomeBadges();
 }
 
@@ -61,14 +113,24 @@ function _setVal(id, val) {
 
 // ── Briefing ──────────────────────────────────────────────────
 function saveBriefing() {
-  maturaiData.briefing = {
-    projectName: document.getElementById('b-project-name')?.value?.trim() || '',
-    squad:       document.getElementById('b-squad')?.value?.trim() || '',
-    context:     document.getElementById('b-context')?.value?.trim() || '',
-    objectives:  document.getElementById('b-objectives')?.value?.trim() || '',
-    timeline:    document.getElementById('b-timeline')?.value?.trim() || '',
-    scope:       document.getElementById('b-scope')?.value?.trim() || '',
-    outOfScope:  document.getElementById('b-out-of-scope')?.value?.trim() || ''
+  amuxData.briefing = {
+    comunidade:        document.getElementById('b-comunidade')?.value?.trim() || '',
+    produto:            document.getElementById('b-produto')?.value?.trim() || '',
+    canal:              document.getElementById('b-canal')?.value?.trim() || '',
+    sistemaSigla:       document.getElementById('b-sistema-sigla')?.value?.trim() || '',
+    nomeProjeto:        document.getElementById('b-nome-projeto')?.value?.trim() || '',
+    dataInicio:         document.getElementById('b-data-inicio')?.value?.trim() || '',
+    visaoGeral:         document.getElementById('b-visao-geral')?.value?.trim() || '',
+    objetivosNegocio:   document.getElementById('b-objetivos-negocio')?.value?.trim() || '',
+    metaPesquisa:       document.getElementById('b-meta-pesquisa')?.value?.trim() || '',
+    publicoAlvo:        document.getElementById('b-publico-alvo')?.value?.trim() || '',
+    necessidades:       document.getElementById('b-necessidades')?.value?.trim() || '',
+    frustracoes:        document.getElementById('b-frustracoes')?.value?.trim() || '',
+    entregaveis:        document.getElementById('b-entregaveis')?.value?.trim() || '',
+    stakeholders:       document.getElementById('b-stakeholders')?.value?.trim() || '',
+    tempo:              document.getElementById('b-tempo')?.value?.trim() || '',
+    rotina:             document.getElementById('b-rotina')?.value?.trim() || '',
+    compartilhamento:   document.getElementById('b-compartilhamento')?.value?.trim() || ''
   };
   saveState();
   showToast('Briefing salvo.');
@@ -76,17 +138,17 @@ function saveBriefing() {
 }
 
 function clearBriefing() {
-  maturaiData.briefing = _defaultState().briefing;
+  amuxData.briefing = _defaultState().briefing;
   restoreUIFromState();
   saveState();
   showToast('Briefing limpo.');
 }
 
-// ── Framework instances ───────────────────────────────────────
+// ── Framework instances (herdado do Maturai UX) ─────────────────
 function renderFrameworkInstances() {
   const container = document.getElementById('scanned-instances');
   if (!container) return;
-  const instances = maturaiData.frameworks || [];
+  const instances = amuxData.frameworks || [];
 
   if (instances.length === 0) {
     container.innerHTML = `
@@ -100,7 +162,7 @@ function renderFrameworkInstances() {
   }
 
   container.innerHTML = instances.map((inst, i) => {
-    const fw = MATURAI_FRAMEWORKS.find(f => f.id === inst.frameworkId);
+    const fw = AMUX_FRAMEWORKS.find(f => f.id === inst.frameworkId);
     const fieldCount = Object.keys(inst.data || {}).filter(k => inst.data[k]).length;
     const totalFields = fw ? fw.fields.length : 0;
     return `
@@ -119,7 +181,7 @@ function renderFrameworkInstances() {
         </div>
         <div class="flex flex-wrap gap-1">
           ${Object.entries(inst.data || {}).filter(([,v]) => v).slice(0, 3).map(([k, v]) =>
-            `<span class="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold rounded-full truncate max-w-[120px]">${v.slice(0, 40)}</span>`
+            `<span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-[9px] font-bold rounded-full truncate max-w-[120px]">${v.slice(0, 40)}</span>`
           ).join('')}
           ${Object.values(inst.data || {}).filter(v => v).length > 3 ? `<span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-400 text-[9px] font-bold rounded-full">+${Object.values(inst.data).filter(v => v).length - 3}</span>` : ''}
         </div>
@@ -131,33 +193,81 @@ function renderFrameworkInstances() {
 }
 
 function removeFrameworkInstance(idx) {
-  maturaiData.frameworks.splice(idx, 1);
+  amuxData.frameworks.splice(idx, 1);
   renderFrameworkInstances();
   saveState();
   updateHomeBadges();
 }
 
+// ── Auditoria (DSC / Acessibilidade) — status geral ─────────────
+function renderAuditStatus() {
+  ['designSystem', 'acessibilidade'].forEach(key => {
+    const dim = amuxData.auditoria[key];
+    const badge = document.getElementById('audit-status-' + key);
+    if (badge && dim) {
+      badge.textContent = _statusLabel(dim.status);
+      badge.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full ' + _statusClass(dim.status);
+    }
+  });
+}
+
+function _statusLabel(status) {
+  return { pendente: 'Pendente', conforme: 'Conforme', 'com-desvios': 'Com desvios' }[status] || 'Pendente';
+}
+
+function _statusClass(status) {
+  return {
+    pendente:     'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-dark-muted',
+    conforme:     'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300',
+    'com-desvios': 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300'
+  }[status] || 'bg-slate-100 text-slate-500';
+}
+
+// ── Score ─────────────────────────────────────────────────────
+function renderScore() {
+  const starsEl = document.getElementById('score-stars');
+  const numEl = document.getElementById('score-numeric');
+  if (starsEl) {
+    const stars = amuxData.score?.stars || 0;
+    starsEl.innerHTML = Array.from({ length: 5 }, (_, i) =>
+      `<i data-lucide="star" class="w-5 h-5 ${i < stars ? 'text-amber-400 fill-amber-400' : 'text-slate-200 dark:text-slate-700'}"></i>`
+    ).join('');
+  }
+  if (numEl) numEl.textContent = amuxData.score?.numeric ? `${amuxData.score.numeric}/100` : '—';
+  try { lucide.createIcons(); } catch(e) {}
+}
+
 // ── Home badges ───────────────────────────────────────────────
 function updateHomeBadges() {
-  const briefingFilled = Object.values(maturaiData.briefing || {}).some(v => v);
+  const briefingFilled = Object.values(amuxData.briefing || {}).some(v => v);
   const el = document.getElementById('badge-briefing');
   if (el) el.classList.toggle('hidden', !briefingFilled);
 
-  const fwCount = (maturaiData.frameworks || []).length;
+  const evidenciasCount = AMUX_ETAPAS.filter(e => (amuxData.evidencias[e]?.artefatos || []).length > 0).length;
+  const auditBadge = document.getElementById('badge-audit');
+  if (auditBadge) {
+    auditBadge.textContent = evidenciasCount;
+    auditBadge.classList.toggle('hidden', evidenciasCount === 0);
+  }
+
+  const fwCount = (amuxData.frameworks || []).length;
   const fwBadge = document.getElementById('badge-frameworks');
   if (fwBadge) {
     fwBadge.textContent = fwCount;
     fwBadge.classList.toggle('hidden', fwCount === 0);
   }
+
+  const scoreBadge = document.getElementById('badge-score');
+  if (scoreBadge) scoreBadge.classList.toggle('hidden', !amuxData.score?.computedAt);
 }
 
 // ── Export ────────────────────────────────────────────────────
-function exportMaturaiData() {
+function exportAmuxData() {
   const payload = {
-    ...maturaiData,
+    ...amuxData,
     exportedAt: new Date().toISOString(),
-    _plugin: 'Maturai UX',
-    _version: MATURAI_VERSION
+    _plugin: 'AMUX',
+    _version: AMUX_VERSION
   };
   parent.postMessage({ pluginMessage: { type: 'export-data', data: payload } }, '*');
   const json = JSON.stringify(payload, null, 2);
@@ -165,7 +275,7 @@ function exportMaturaiData() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `maturai-${maturaiData.briefing.projectName || 'projeto'}-${Date.now()}.json`;
+  a.download = `amux-${amuxData.briefing.nomeProjeto || 'projeto'}-${Date.now()}.json`;
   a.click();
   URL.revokeObjectURL(url);
   showToast('Dados exportados com sucesso!', 'success');
@@ -177,9 +287,9 @@ function showToast(msg, type = 'default') {
   if (!container) return;
   const colors = {
     default: 'bg-slate-800 text-white',
-    success: 'bg-emerald-600 text-white',
+    success: 'bg-blue-600 text-white',
     error:   'bg-red-600 text-white',
-    info:    'bg-[#059669] text-white'
+    info:    'bg-[#2563eb] text-white'
   };
   const toast = document.createElement('div');
   toast.className = `px-4 py-2.5 rounded-xl text-[12px] font-bold shadow-lg ${colors[type] || colors.default} transition-all`;
@@ -215,7 +325,7 @@ function toggleCollapse() {
 // ── Theme ─────────────────────────────────────────────────────
 function toggleTheme() {
   const isDark = document.documentElement.classList.toggle('dark');
-  try { localStorage.setItem('maturai-theme', isDark ? 'dark' : 'light'); } catch(e) {}
+  try { localStorage.setItem('amux-theme', isDark ? 'dark' : 'light'); } catch(e) {}
   document.querySelectorAll('.sun-icon').forEach(el => el.classList.toggle('hidden', isDark));
   document.querySelectorAll('.moon-icon').forEach(el => el.classList.toggle('hidden', !isDark));
   try { lucide.createIcons(); } catch(e) {}
@@ -223,7 +333,7 @@ function toggleTheme() {
 
 function applyTheme() {
   let dark = false;
-  try { dark = localStorage.getItem('maturai-theme') === 'dark'; } catch(e) {}
+  try { dark = localStorage.getItem('amux-theme') === 'dark'; } catch(e) {}
   if (dark) {
     document.documentElement.classList.add('dark');
     document.querySelectorAll('.sun-icon').forEach(el => el.classList.add('hidden'));
@@ -251,8 +361,8 @@ function scrollToTop() {
 
 Object.assign(window, {
   navigate, saveBriefing, clearBriefing,
-  removeFrameworkInstance, exportMaturaiData,
+  removeFrameworkInstance, exportAmuxData,
   showToast, toggleTheme, updateHomeBadges,
   handleScroll, scrollToTop,
-  toggleCollapse
+  toggleCollapse, renderAuditStatus, renderScore
 });

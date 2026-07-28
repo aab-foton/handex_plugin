@@ -1,0 +1,143 @@
+<!-- VIEW: BRIEFING -->
+<main id="view-briefing" class="view px-5 py-5 flex flex-col h-full overflow-y-auto">
+
+  <!-- Header da view -->
+  <div class="flex items-center gap-3 mb-5">
+    <button onclick="navigate('view-home')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-lg transition-colors text-slate-400" aria-label="Voltar">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    </button>
+    <div>
+      <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[14px] tracking-tight">Briefing do Projeto</h2>
+      <p class="text-slate-400 dark:text-dark-muted text-[10px]">Contexto usado pela IA para orientar a auditoria de maturidade</p>
+    </div>
+  </div>
+
+  <div class="space-y-4 flex-1">
+
+    <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Identificação</p>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Comunidade ou Box</label>
+        <input id="b-comunidade" type="text" placeholder="Ex: Acesso Digital" class="w-full" />
+      </div>
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Sistema / Sigla</label>
+        <input id="b-sistema-sigla" type="text" placeholder="Ex: SIGA" class="w-full" />
+      </div>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">
+        Produto <span class="text-red-400">*</span>
+      </label>
+      <input id="b-produto" type="text" placeholder="Ex: Portal do Servidor v3" class="w-full" />
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Tipo de Canal</label>
+      <input id="b-canal" type="text" placeholder="Ex: Web e App" class="w-full" />
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">
+        Nome do Projeto <span class="text-red-400">*</span>
+      </label>
+      <input id="b-nome-projeto" type="text" placeholder="Ex: Auditoria de Maturidade UX" class="w-full" />
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Data de Início</label>
+      <input id="b-data-inicio" type="text" placeholder="DD/MM/AAAA" class="w-full" />
+    </div>
+
+    <div class="pt-2 border-t border-gray-100 dark:border-dark-line"></div>
+    <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Visão do Projeto</p>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">
+        Visão Geral <span class="text-red-400">*</span>
+      </label>
+      <textarea id="b-visao-geral" rows="3" placeholder="Descreva o contexto e o problema que motivou este projeto."
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Objetivos de Negócio</label>
+      <textarea id="b-objetivos-negocio" rows="3" placeholder="O que a organização espera alcançar com este projeto?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Meta da Pesquisa (como mediremos o sucesso)</label>
+      <textarea id="b-meta-pesquisa" rows="2" placeholder="Como saberemos que a maturidade de UX evoluiu?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div class="pt-2 border-t border-gray-100 dark:border-dark-line"></div>
+    <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Público e Necessidades</p>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Público-Alvo</label>
+      <textarea id="b-publico-alvo" rows="2" placeholder="Ex: UX Leads, UX/UI Designers, Design Ops"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Necessidades Principais</label>
+      <textarea id="b-necessidades" rows="2" placeholder="O que este projeto precisa resolver?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Frustrações Atuais</label>
+      <textarea id="b-frustracoes" rows="2" placeholder="O que hoje não funciona bem no processo de avaliação de UX?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div class="pt-2 border-t border-gray-100 dark:border-dark-line"></div>
+    <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Entrega e Equipe</p>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Entregáveis Esperados</label>
+      <textarea id="b-entregaveis" rows="2" placeholder="O que deve ser produzido ao final?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Stakeholders e Equipe</label>
+      <textarea id="b-stakeholders" rows="2" placeholder="Quem participa e quem valida as decisões?"
+        class="w-full resize-none leading-relaxed"></textarea>
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Tempo</label>
+      <input id="b-tempo" type="text" placeholder="Ex: A definir / Q3 2026" class="w-full" />
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Rotina de Trabalho</label>
+      <input id="b-rotina" type="text" placeholder="Ex: Pontos de controle semanais" class="w-full" />
+    </div>
+
+    <div>
+      <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Compartilhamento de Dados</label>
+      <input id="b-compartilhamento" type="text" placeholder="Ex: Figma (prioritário)" class="w-full" />
+    </div>
+
+  </div>
+
+  <!-- Ações -->
+  <div class="pt-5 flex gap-3">
+    <button onclick="clearBriefing()"
+      class="px-4 py-2.5 text-[12px] font-bold text-slate-400 hover:text-slate-600 dark:text-dark-muted border border-gray-200 dark:border-dark-line rounded-xl transition-colors">
+      Limpar
+    </button>
+    <button onclick="saveBriefing()"
+      class="flex-1 py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[13px] font-extrabold rounded-xl transition-colors flex items-center justify-center gap-2">
+      <i data-lucide="check" class="w-4 h-4"></i>
+      Salvar Briefing
+    </button>
+  </div>
+
+</main>

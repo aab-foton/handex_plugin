@@ -1,9 +1,75 @@
 (() => {
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __commonJS = (cb, mod) => function __require() {
+    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  };
+
+  // src/plugin/ai/foundry-client.js
+  var require_foundry_client = __commonJS({
+    "src/plugin/ai/foundry-client.js"(exports, module) {
+      var AMUX_AI_DIMENSIONS = [
+        "descoberta",
+        "definicao",
+        "ideacao",
+        "validacao",
+        "designSystem",
+        "acessibilidade"
+      ];
+      function _mockAgentResponse(dimensao, temEvidencia) {
+        const nota = temEvidencia ? 60 + Math.round(Math.random() * 35) : 15 + Math.round(Math.random() * 20);
+        const comentarios = {
+          descoberta: temEvidencia ? "Evid\xEAncias de descoberta encontradas; recomenda-se detalhar os m\xE9todos usados." : "Nenhuma evid\xEAncia de descoberta anexada at\xE9 o momento.",
+          definicao: temEvidencia ? "Briefing e hip\xF3teses documentados de forma consistente." : "Defini\xE7\xE3o do problema ainda n\xE3o est\xE1 evidenciada.",
+          ideacao: temEvidencia ? "Processo de idea\xE7\xE3o registrado, com varia\xE7\xE3o de alternativas." : "Sem registro de explora\xE7\xE3o de alternativas de solu\xE7\xE3o.",
+          validacao: temEvidencia ? "H\xE1 evid\xEAncias de testes com usu\xE1rios ou m\xE9tricas de valida\xE7\xE3o." : "Ainda n\xE3o h\xE1 evid\xEAncias de valida\xE7\xE3o com usu\xE1rios.",
+          designSystem: temEvidencia ? "Uso do Design System CAIXA declarado, sujeito a checagem automatizada futura." : "Ader\xEAncia ao Design System n\xE3o avaliada.",
+          acessibilidade: temEvidencia ? "Diretrizes de acessibilidade observadas conforme declara\xE7\xE3o do time." : "Conformidade com WCAG n\xE3o avaliada."
+        };
+        return { nota, comentario: comentarios[dimensao] || "" };
+      }
+      function _hasEvidence(payload, dimensao) {
+        var _a, _b, _c, _d, _e;
+        if (dimensao === "designSystem") return !!(((_b = (_a = payload == null ? void 0 : payload.auditoria) == null ? void 0 : _a.designSystem) == null ? void 0 : _b.status) && payload.auditoria.designSystem.status !== "pendente");
+        if (dimensao === "acessibilidade") return !!(((_d = (_c = payload == null ? void 0 : payload.auditoria) == null ? void 0 : _c.acessibilidade) == null ? void 0 : _d.status) && payload.auditoria.acessibilidade.status !== "pendente");
+        const etapa = (_e = payload == null ? void 0 : payload.evidencias) == null ? void 0 : _e[dimensao];
+        return !!(etapa && Array.isArray(etapa.artefatos) && etapa.artefatos.length > 0);
+      }
+      function _starsFromScore(numeric) {
+        if (numeric >= 90) return 5;
+        if (numeric >= 70) return 4;
+        if (numeric >= 50) return 3;
+        if (numeric >= 30) return 2;
+        return 1;
+      }
+      async function analyzeWithFoundry2(payload) {
+        await new Promise((resolve) => setTimeout(resolve, 900));
+        const agentResponses = {};
+        const scoreBreakdown = {};
+        for (const dimensao of AMUX_AI_DIMENSIONS) {
+          const resposta = _mockAgentResponse(dimensao, _hasEvidence(payload, dimensao));
+          agentResponses[dimensao] = resposta;
+          scoreBreakdown[dimensao] = resposta.nota;
+        }
+        const numeric = Math.round(
+          Object.values(scoreBreakdown).reduce((sum, n) => sum + n, 0) / AMUX_AI_DIMENSIONS.length
+        );
+        return {
+          status: "done",
+          agentResponses,
+          scoreBreakdown,
+          score: { numeric, stars: _starsFromScore(numeric) }
+        };
+      }
+      module.exports = { analyzeWithFoundry: analyzeWithFoundry2, AMUX_AI_DIMENSIONS };
+    }
+  });
+
   // src/plugin/code.js
+  var { analyzeWithFoundry } = require_foundry_client();
   var VERSION = true ? "1.0.0" : "1.0.0";
-  var STORAGE_KEY = "maturai-ux-data";
-  var CANVAS_PREFIX = "[MaturAI]";
-  figma.showUI(__html__, { width: 380, height: 600, title: `Maturai UX v${VERSION}` });
+  var STORAGE_KEY = "amux-data";
+  var CANVAS_PREFIX = "[AMUX]";
+  figma.showUI(__html__, { width: 380, height: 600, title: `AMUX v${VERSION}` });
   async function init() {
     var _a, _b;
     let savedState = null;
@@ -35,6 +101,15 @@
     if (msg.type === "scan-frameworks") {
       const results = await scanFrameworks(msg.frameworkIds);
       figma.ui.postMessage({ type: "scan-complete", results });
+      return;
+    }
+    if (msg.type === "analyze-with-ai") {
+      try {
+        const result = await analyzeWithFoundry(msg.payload);
+        figma.ui.postMessage({ type: "ai-analysis-complete", result });
+      } catch (e) {
+        figma.ui.postMessage({ type: "ai-analysis-error", error: String(e && e.message || e) });
+      }
       return;
     }
     if (msg.type === "export-data") {

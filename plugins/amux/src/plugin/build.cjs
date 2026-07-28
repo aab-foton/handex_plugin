@@ -1,5 +1,5 @@
 // ============================================================
-// Maturai UX — build.cjs
+// AMUX — build.cjs
 // Monta todos os arquivos modulares em um único ui.html
 // Uso: node src/plugin/build.cjs  |  npm run bundle:ui
 // ============================================================
@@ -25,10 +25,14 @@ const frameworksJSON = JSON.stringify(JSON.parse(fs.readFileSync(path.join(BASE,
 const css          = read('styles/plugin.css');
 const modCore      = read('modules/core.js');
 const modMsgs      = read('modules/messages.js');
+const modAudit     = read('modules/audit.js');
+const modAi        = read('modules/ai-client.js');
 const modFw        = read('modules/frameworks.js');
 
 const viewHome       = read('views/home.html');
 const viewBriefing   = read('views/briefing.html');
+const viewAudit      = read('views/audit.html');
+const viewScore      = read('views/score.html');
 const viewFrameworks = read('views/frameworks.html');
 const viewCollected  = read('views/collected.html');
 const viewGuide      = read('views/guide.html');
@@ -52,19 +56,6 @@ const html = `<!doctype html>
       theme: {
         extend: {
           colors: {
-            emerald: {
-              50:  '#f0fdf4',
-              100: '#dcfce7',
-              200: '#bbf7d0',
-              300: '#86efac',
-              400: '#4ade80',
-              500: '#22c55e',
-              600: '#059669',
-              700: '#047857',
-              800: '#065f46',
-              900: '#064e3b',
-              950: '#022c22',
-            },
             dark: {
               bg:      "#0f172a",
               surface: "#1e293b",
@@ -86,19 +77,19 @@ ${css}
 
   <header class="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-dark-line shrink-0 bg-white dark:bg-dark-bg z-50">
     <div class="flex items-center gap-2">
-      <!-- Logo Maturai UX -->
+      <!-- Logo AMUX -->
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" class="h-6 w-6">
-        <rect width="40" height="40" rx="8" fill="#059669"/>
-        <path d="M8 28 L8 16 L14 22 L20 14 L26 22 L32 12 L32 28" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="32" cy="12" r="2.5" fill="#34d399"/>
+        <rect width="40" height="40" rx="8" fill="#2563eb"/>
+        <path d="M12 26 L16 14 L20 26 M14 21 L18 21" stroke="white" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M23 26 L23 14 L29 26 L29 14" stroke="white" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       <span class="text-[#1E293B] dark:text-white font-bold text-[12px] opacity-50">|</span>
-      <h1 class="font-bold text-[#1E293B] dark:text-white text-[12px] tracking-[0.15em] uppercase">MATURAI UX</h1>
-      <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded flex items-center justify-center">v1.0.0</span>
+      <h1 class="font-bold text-[#1E293B] dark:text-white text-[12px] tracking-[0.15em] uppercase">AMUX</h1>
+      <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v1.0.0</span>
     </div>
     <div class="flex items-center gap-2 shrink-0">
-      <button onclick="exportMaturaiData()" title="Exportar dados do projeto" aria-label="Exportar"
-        class="p-1.5 hover:bg-emerald-50 dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-emerald-600 dark:text-emerald-400">
+      <button onclick="exportAmuxData()" title="Exportar dados do projeto" aria-label="Exportar"
+        class="p-1.5 hover:bg-blue-50 dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-blue-600 dark:text-blue-400">
         <i data-lucide="download" class="w-4 h-4" aria-hidden="true"></i>
       </button>
       <button onclick="toggleTheme()" title="Alternar tema" aria-label="Alternar tema claro/escuro"
@@ -117,6 +108,8 @@ ${css}
   <div class="flex-1 overflow-y-auto relative" onscroll="handleScroll(this)">
 ${viewHome}
 ${viewBriefing}
+${viewAudit}
+${viewScore}
 ${viewFrameworks}
 ${viewCollected}
 ${viewGuide}
@@ -125,13 +118,13 @@ ${modals}
 
   <footer id="footer-signature" class="pb-2 pt-1 text-center shrink-0 bg-white dark:bg-dark-bg">
     <p class="text-[9px] text-gray-400 dark:text-dark-muted font-bold tracking-wider uppercase">
-      Vertical de Métricas de UX
+      Auditoria & Maturidade em UX
     </p>
   </footer>
 
   <script>
     // Frameworks data — embutido do refs/frameworks.json no build
-    const MATURAI_FRAMEWORKS = ${frameworksJSON};
+    const AMUX_FRAMEWORKS = ${frameworksJSON};
 
 // ============================================================
 // MODULE: core.js
@@ -142,6 +135,16 @@ ${modCore}
 // MODULE: messages.js
 // ============================================================
 ${modMsgs}
+
+// ============================================================
+// MODULE: audit.js
+// ============================================================
+${modAudit}
+
+// ============================================================
+// MODULE: ai-client.js
+// ============================================================
+${modAi}
 
 // ============================================================
 // MODULE: frameworks.js

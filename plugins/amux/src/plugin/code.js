@@ -1,12 +1,14 @@
 // ============================================================
-// Maturai UX — code.js (main thread / Figma API)
+// AMUX — Auditoria & Maturidade em UX — code.js (main thread / Figma API)
 // ============================================================
 
-const VERSION = typeof __MATURAI_VERSION__ !== 'undefined' ? __MATURAI_VERSION__ : '1.0.0';
-const STORAGE_KEY = 'maturai-ux-data';
-const CANVAS_PREFIX = '[MaturAI]';
+const { analyzeWithFoundry } = require('./ai/foundry-client');
 
-figma.showUI(__html__, { width: 380, height: 600, title: `Maturai UX v${VERSION}` });
+const VERSION = typeof __AMUX_VERSION__ !== 'undefined' ? __AMUX_VERSION__ : '1.0.0';
+const STORAGE_KEY = 'amux-data';
+const CANVAS_PREFIX = '[AMUX]';
+
+figma.showUI(__html__, { width: 380, height: 600, title: `AMUX v${VERSION}` });
 
 // ── Init ──────────────────────────────────────────────────────
 async function init() {
@@ -40,6 +42,16 @@ figma.ui.onmessage = async (msg) => {
   if (msg.type === 'scan-frameworks') {
     const results = await scanFrameworks(msg.frameworkIds);
     figma.ui.postMessage({ type: 'scan-complete', results });
+    return;
+  }
+
+  if (msg.type === 'analyze-with-ai') {
+    try {
+      const result = await analyzeWithFoundry(msg.payload);
+      figma.ui.postMessage({ type: 'ai-analysis-complete', result });
+    } catch (e) {
+      figma.ui.postMessage({ type: 'ai-analysis-error', error: String(e && e.message || e) });
+    }
     return;
   }
 
