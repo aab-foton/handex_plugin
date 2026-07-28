@@ -45,6 +45,12 @@
             // --- Acessibilidade --- JSON importado pode ser de formato antigo,
             // com specs de A11y ainda dentro de createdSpecs/frame.createdSpecs.
             if (typeof _migrateA11ySpecsFromCreatedSpecs === 'function') _migrateA11ySpecsFromCreatedSpecs();
+            // Resincroniza createdSpecs/a11ySpecs/a11yAreas (variáveis globais
+            // que a tela de specs realmente renderiza) a partir de
+            // handoffData.frames — sem isso, o Object.assign acima atualiza o
+            // estado mas a lista de specs (normais e A11y) fica com os dados
+            // antigos até o usuário navegar manualmente pra "Anotar Specs".
+            if (typeof syncAndRenderSpecs === 'function') syncAndRenderSpecs();
             saveToStorage();
             restoreUIFromState();
 
