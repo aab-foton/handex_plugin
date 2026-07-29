@@ -42,13 +42,23 @@
             importedData.step1.versao = newVersion;
 
             Object.assign(handoffData, importedData);
+            // Resincroniza createdSpecs (variável global que a tela de specs
+            // realmente renderiza) a partir de handoffData — sem isso, o
+            // Object.assign acima atualiza o estado mas a lista de specs
+            // fica com os dados antigos até o usuário navegar manualmente
+            // pra "Anotar Specs".
+            if (typeof syncAndRenderSpecs === 'function') syncAndRenderSpecs();
             saveToStorage();
             restoreUIFromState();
 
-            // Contagens para o modal
+            // Contagens para o modal — soma specs/medidas "avulsas" (nível
+            // superior de handoffData, sem frame vinculado) com as por-frame.
+            // Sem isso, um backup só com dados avulsos contava 0 e
+            // desabilitava a opção de recriar no canvas mesmo tendo dado
+            // real pra recriar.
             const nFrames = (handoffData.frames || []).length;
-            const nSpecs = (handoffData.frames || []).reduce((s, f) => s + (f.createdSpecs || []).length, 0);
-            const nMeasures = (handoffData.frames || []).reduce((s, f) => s + (f.measurements || []).length, 0);
+            const nSpecs = (handoffData.specs || []).length + (handoffData.frames || []).reduce((s, f) => s + (f.createdSpecs || []).length, 0);
+            const nMeasures = (handoffData.measurements || []).length + (handoffData.frames || []).reduce((s, f) => s + (f.measurements || []).length, 0);
             const nFlows = (handoffData.createdFlows || []).length;
             const nFlowsRecreatable = (handoffData.createdFlows || []).filter(f => f.sourceId).length;
 
@@ -153,27 +163,31 @@
       }
 
       if (doSpecs) {
-        const frames = handoffData.frames || [];
         let count = 0;
-        frames.forEach(frame => {
-          (frame.createdSpecs || []).forEach(spec => {
-            const resolvedNodeId = spec.targetNodeId || frame.figmaId;
-            if (!resolvedNodeId) return;
-            parent.postMessage({
-              pluginMessage: {
-                type: 'create-unified-spec',
-                opts: {
-                  targetNodeId: resolvedNodeId,
-                  letter: spec.letter || 'A',
-                  color: spec.color || '#0070af',
-                  note: spec.note || '',
-                  properties: spec.properties || [],
-                  categoryLabel: spec.type || ''
-                }
+        const recreateSpec = (spec, fallbackNodeId) => {
+          const resolvedNodeId = spec.targetNodeId || fallbackNodeId;
+          if (!resolvedNodeId) return;
+          parent.postMessage({
+            pluginMessage: {
+              type: 'create-unified-spec',
+              opts: {
+                targetNodeId: resolvedNodeId,
+                letter: spec.letter || 'A',
+                color: spec.color || '#0070af',
+                note: spec.note || '',
+                properties: spec.properties || [],
+                categoryLabel: spec.type || ''
               }
-            }, '*');
-            count++;
-          });
+            }
+          }, '*');
+          count++;
+        };
+        // Specs "avulsas" (nível superior de handoffData, sem frame
+        // vinculado) — sem isso, um backup só com dados avulsos nunca
+        // recriava nada no canvas, mesmo com o checkbox marcado.
+        (handoffData.specs || []).forEach(spec => recreateSpec(spec, null));
+        (handoffData.frames || []).forEach(frame => {
+          (frame.createdSpecs || []).forEach(spec => recreateSpec(spec, frame.figmaId));
         });
         if (count > 0) showToast(`${count} spec(s) sendo recriadas no canvas...`);
       }

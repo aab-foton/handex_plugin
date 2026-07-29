@@ -54,12 +54,16 @@
             saveToStorage();
             restoreUIFromState();
 
-            // Contagens para o modal
+            // Contagens para o modal — soma specs/medidas "avulsas" (nível
+            // superior de handoffData, sem frame vinculado) com as por-frame.
+            // Sem isso, um backup só com dados avulsos (ex: specs de A11y
+            // criadas sem nenhum frame mapeado) contava 0 e desabilitava a
+            // opção de recriar no canvas mesmo tendo dado real pra recriar.
             const nFrames = (handoffData.frames || []).length;
-            const nSpecsNormal = (handoffData.frames || []).reduce((s, f) => s + (f.createdSpecs || []).length, 0);
-            const nA11ySpecs = (handoffData.frames || []).reduce((s, f) => s + (f.a11ySpecs || []).length, 0);
+            const nSpecsNormal = (handoffData.specs || []).length + (handoffData.frames || []).reduce((s, f) => s + (f.createdSpecs || []).length, 0);
+            const nA11ySpecs = (handoffData.a11ySpecs || []).length + (handoffData.frames || []).reduce((s, f) => s + (f.a11ySpecs || []).length, 0);
             const nSpecs = nSpecsNormal + nA11ySpecs;
-            const nMeasures = (handoffData.frames || []).reduce((s, f) => s + (f.measurements || []).length, 0);
+            const nMeasures = (handoffData.measurements || []).length + (handoffData.frames || []).reduce((s, f) => s + (f.measurements || []).length, 0);
             const nFlows = (handoffData.createdFlows || []).length;
             const nFlowsRecreatable = (handoffData.createdFlows || []).filter(f => f.sourceId).length;
 
@@ -164,60 +168,71 @@
       }
 
       if (doSpecs) {
-        const frames = handoffData.frames || [];
         let count = 0;
-        frames.forEach(frame => {
-          (frame.createdSpecs || []).forEach(spec => {
-            const resolvedNodeId = spec.targetNodeId || frame.figmaId;
-            if (!resolvedNodeId) return;
-            parent.postMessage({
-              pluginMessage: {
-                type: 'create-unified-spec',
-                opts: {
-                  targetNodeId: resolvedNodeId,
-                  letter: spec.letter || 'A',
-                  color: spec.color || '#0070af',
-                  note: spec.note || '',
-                  properties: spec.properties || [],
-                  categoryLabel: spec.type || ''
-                }
+
+        const recreateNormalSpec = (spec, fallbackNodeId) => {
+          const resolvedNodeId = spec.targetNodeId || fallbackNodeId;
+          if (!resolvedNodeId) return;
+          parent.postMessage({
+            pluginMessage: {
+              type: 'create-unified-spec',
+              opts: {
+                targetNodeId: resolvedNodeId,
+                letter: spec.letter || 'A',
+                color: spec.color || '#0070af',
+                note: spec.note || '',
+                properties: spec.properties || [],
+                categoryLabel: spec.type || ''
               }
-            }, '*');
-            count++;
-          });
-          // --- Acessibilidade --- specs de A11y criam nó no canvas na hora
-          // desde a reversão da Fase 3 (2026-07-23, ver accessibility.js) —
-          // mesmo handler create-unified-spec das specs normais, diferenciado
-          // por opts.a11yType. O comentário anterior aqui ("não têm mais nó
-          // de canvas... só ganham nó ao clicar em Gerar Ficha de
-          // Acessibilidade") descrevia a Fase 3 revertida e ficou
-          // desatualizado — a função "Gerar Ficha de Acessibilidade" nem
-          // existe mais (removida em 2026-07-24). Sem este bloco, specs de
-          // A11y importadas nunca ganhavam nó no canvas.
-          (frame.a11ySpecs || []).forEach(spec => {
-            const resolvedNodeId = spec.targetNodeId || frame.figmaId;
-            if (!resolvedNodeId) return;
-            parent.postMessage({
-              pluginMessage: {
-                type: 'create-unified-spec',
-                opts: {
-                  targetNodeId: resolvedNodeId,
-                  letter: spec.letter || 'A',
-                  color: spec.color || '#0070af',
-                  note: spec.note || '',
-                  properties: spec.properties || [],
-                  categoryLabel: spec.type || '',
-                  category: spec.category || 'acessibilidade',
-                  a11yType: spec.a11yType || null,
-                  a11ySubtype: spec.a11ySubtype || null,
-                  a11yAreaId: spec.a11yAreaId || null,
-                  guideSide: spec.guideSide || 'right'
-                }
+            }
+          }, '*');
+          count++;
+        };
+
+        // --- Acessibilidade --- specs de A11y criam nó no canvas na hora
+        // desde a reversão da Fase 3 (2026-07-23, ver accessibility.js) —
+        // mesmo handler create-unified-spec das specs normais, diferenciado
+        // por opts.a11yType. Comentário antigo aqui ("não têm mais nó de
+        // canvas... só ganham nó ao clicar em Gerar Ficha de Acessibilidade")
+        // descrevia a Fase 3 revertida e ficou desatualizado — "Gerar Ficha
+        // de Acessibilidade" nem existe mais (removida em 2026-07-24).
+        const recreateA11ySpec = (spec, fallbackNodeId) => {
+          const resolvedNodeId = spec.targetNodeId || fallbackNodeId;
+          if (!resolvedNodeId) return;
+          parent.postMessage({
+            pluginMessage: {
+              type: 'create-unified-spec',
+              opts: {
+                targetNodeId: resolvedNodeId,
+                letter: spec.letter || 'A',
+                color: spec.color || '#0070af',
+                note: spec.note || '',
+                properties: spec.properties || [],
+                categoryLabel: spec.type || '',
+                category: spec.category || 'acessibilidade',
+                a11yType: spec.a11yType || null,
+                a11ySubtype: spec.a11ySubtype || null,
+                a11yAreaId: spec.a11yAreaId || null,
+                guideSide: spec.guideSide || 'right'
               }
-            }, '*');
-            count++;
-          });
+            }
+          }, '*');
+          count++;
+        };
+
+        // Specs "avulsas" (nível superior de handoffData, sem frame
+        // vinculado) — mesmo padrão de bug já corrigido em
+        // syncAndRenderSpecs()/import: sem isso, um backup só com dados
+        // avulsos (ex: a11ySpecs criadas sem nenhum frame mapeado) nunca
+        // recriava nada no canvas, mesmo com o checkbox marcado.
+        (handoffData.specs || []).forEach(spec => recreateNormalSpec(spec, null));
+        (handoffData.a11ySpecs || []).forEach(spec => recreateA11ySpec(spec, null));
+
+        (handoffData.frames || []).forEach(frame => {
+          (frame.createdSpecs || []).forEach(spec => recreateNormalSpec(spec, frame.figmaId));
+          (frame.a11ySpecs || []).forEach(spec => recreateA11ySpec(spec, frame.figmaId));
         });
+
         if (count > 0) showToast(`${count} spec(s) sendo recriadas no canvas...`);
       }
 
