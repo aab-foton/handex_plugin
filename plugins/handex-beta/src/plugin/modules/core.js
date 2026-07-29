@@ -1792,13 +1792,37 @@ function renderAllMeasurements() {
   if (typeof renderMeasurementsResults === 'function') renderMeasurementsResults(all);
 }
 
+// Junta a lista "avulsa" (handoffData.<key>, nível superior — specs/áreas
+// criadas sem activeFrameId) com as por-frame, deduplicando por id. saveSpecsToStorage()
+// grava de volta em handoffData.<key> o array global inteiro (avulsas + por-frame já
+// resolvidas), então uma spec com frame pode aparecer nos dois lados na próxima leitura —
+// sem dedup, ela dobraria de contagem a cada resync.
+function _mergeLooseAndFramed(looseArr, framedArr) {
+  const merged = (looseArr || []).concat(framedArr || []);
+  const seen = new Set();
+  const out = [];
+  for (let i = merged.length - 1; i >= 0; i--) {
+    const item = merged[i];
+    const key = item && item.id ? item.id : Symbol();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.unshift(item);
+  }
+  return out;
+}
+
 function syncAndRenderSpecs() {
-  createdSpecs = (handoffData.frames || []).flatMap(f => f.createdSpecs || []);
-  a11ySpecs = (handoffData.frames || []).flatMap(f => f.a11ySpecs || []);
-  a11yAreas = (handoffData.frames || []).flatMap(f => f.a11yAreas || []);
+  // Specs/áreas "avulsas" (criadas sem activeFrameId, ex: nenhum frame
+  // mapeado/selecionado no momento) só existem no nível superior de
+  // handoffData (specs/a11ySpecs/a11yAreas), não dentro de nenhum
+  // frame.* — precisam entrar aqui junto com as por-frame, senão somem
+  // (accordion nunca persiste) na primeira resync depois de criadas.
+  createdSpecs = _mergeLooseAndFramed(handoffData.specs, (handoffData.frames || []).flatMap(f => f.createdSpecs || []));
+  a11ySpecs = _mergeLooseAndFramed(handoffData.a11ySpecs, (handoffData.frames || []).flatMap(f => f.a11ySpecs || []));
+  a11yAreas = _mergeLooseAndFramed(handoffData.a11yAreas, (handoffData.frames || []).flatMap(f => f.a11yAreas || []));
   if (typeof _migrateA11ySpecsFromCreatedSpecs === 'function' && _migrateA11ySpecsFromCreatedSpecs()) {
-    createdSpecs = (handoffData.frames || []).flatMap(f => f.createdSpecs || []);
-    a11ySpecs = (handoffData.frames || []).flatMap(f => f.a11ySpecs || []);
+    createdSpecs = _mergeLooseAndFramed(handoffData.specs, (handoffData.frames || []).flatMap(f => f.createdSpecs || []));
+    a11ySpecs = _mergeLooseAndFramed(handoffData.a11ySpecs, (handoffData.frames || []).flatMap(f => f.a11ySpecs || []));
   }
   if (typeof renderSpecsList === 'function') renderSpecsList();
   // renderA11ySpecsList/renderA11yAreasList são wrappers do mesmo
