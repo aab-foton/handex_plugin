@@ -2,6 +2,28 @@
 
 ---
 
+## v6.0.0-beta.2 — 2026-07-29
+
+### Resumo
+Sequência de correções na importação/sincronização de dados "avulsos" (specs, áreas e specs de Acessibilidade criados sem frame vinculado) e na ficha HTML exportada. Pacote de testes desta versão vai para os testers.
+
+### Corrigido — Specs/áreas de A11y avulsas desapareciam ao resincronizar
+`syncAndRenderSpecs()` só reconstruía as listas a partir de `handoffData.frames[].createdSpecs`/`.a11ySpecs`/`.a11yAreas` (por-frame) — nunca dos equivalentes soltos no nível superior de `handoffData` (usados quando o item nasce sem frame ativo). O item aparecia na hora da criação, mas sumia na primeira resincronização seguinte (navegar pra outra view e voltar, importar JSON). Corrigido juntando avulsas + por-frame com deduplicação por id.
+
+### Corrigido — Importação de JSON não atualizava a tela imediatamente
+`importHandoffData()` mesclava os dados em `handoffData`, mas nunca chamava `syncAndRenderSpecs()` — a lista de specs (normais e de A11y) só refletia o import depois de o usuário navegar manualmente pra "Anotar Specs".
+
+### Corrigido — Import de backup só com dados avulsos contava 0 e não recriava nada no canvas
+Testado com um backup real de projeto sem nenhum frame mapeado, mas com specs de A11y avulsas: o modal de import mostrava "0 Specs" e desabilitava a opção de recriar no canvas, mesmo com dado real no arquivo. A contagem e `applyImportedDataToCanvas()` liam só os arrays por-frame. Specs avulsas agora são contadas e recriadas no canvas (usando `spec.targetNodeId`, salvo desde a criação original).
+
+### Corrigido — Specs de Acessibilidade importadas via JSON não ganhavam nó no canvas
+`applyImportedDataToCanvas()` ignorava `frame.a11ySpecs` ao recriar specs no canvas, com um comentário que descrevia um comportamento (Fase 3, "só mapeamento, sem nó") revertido em 2026-07-23. Corrigido processando `a11ySpecs` com o mesmo padrão de `createdSpecs`, repassando os campos específicos de A11y.
+
+### Corrigido — Seção "Especificações Visuais" duplicada na ficha HTML exportada
+Consequência do fix de sincronização: uma spec vinculada a frame passava a existir também no array avulso de nível superior após qualquer save, e a ficha HTML mostrava a mesma spec duas vezes (em "Especificações Anotadas" e em "Especificações Visuais"). O canvas nativo já tinha essa seção duplicada removida por decisão de produto anterior — replicada aqui na ficha HTML. A aba "♿ Acessibilidade" da ficha (que precisa mostrar avulsas + por-frame, sem uma seção equivalente pra remover) agora usa a mesma função de merge com deduplicação.
+
+---
+
 ## v6.0.0 — 2026-07-22
 
 ### Resumo

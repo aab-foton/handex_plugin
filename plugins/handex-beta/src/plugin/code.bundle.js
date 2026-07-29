@@ -696,7 +696,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "6.0.0-beta.1" : "dev";
+  var PLUGIN_VERSION = true ? "6.0.0-beta.2" : "dev";
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
     const NS = "handex";
