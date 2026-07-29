@@ -2,6 +2,19 @@
 
 ---
 
+## v6.1.2 — 2026-07-29
+
+### Adicionado — Sugestão automática de tag ao criar especificação
+Ao abrir o formulário de nova especificação, o campo de tag agora já vem preenchido com a próxima letra-base disponível (A, B, C...), olhando as especificações já existentes no frame. O designer continua podendo editar livremente — inclusive para criar sub-níveis (A1, B1.1) — a sugestão só evita ter que apagar o valor padrão e digitar do zero toda vez.
+
+### Corrigido — Definição duplicada de uma função interna do formulário de specs
+Manutenção interna sem efeito visível: existiam duas versões da função que prepara o formulário de nova especificação, uma delas nunca era executada. Removida a versão morta para evitar confusão em manutenções futuras.
+
+### Nota
+Esta é a publicação que a Figma Community vai registrar como "Version 10".
+
+---
+
 ## v6.1.1 — 2026-07-28
 
 ### Corrigido — Especificações criadas sem frame vinculado desapareciam ao navegar

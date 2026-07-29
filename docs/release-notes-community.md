@@ -4,6 +4,15 @@ Texto pronto para colar no campo de descrição de cada publicação em Communit
 
 ---
 
+## Version 10 — v6.1.2 (2026-07-29)
+
+**Novidade**
+
+**Sugestão automática de tag ao criar especificação**
+Ao criar uma nova especificação, o campo de tag já vem preenchido com a próxima letra disponível (A, B, C...), com base nas especificações já existentes no frame. Você continua podendo editar livremente — inclusive para criar sub-níveis como A1 ou B1.1 — a sugestão só poupa o trabalho de digitar do zero toda vez.
+
+---
+
 ## Version 9 — v6.1.1 (2026-07-29)
 
 > Publicada sem este texto colado no campo de release notes da Figma — ver nota no `CHANGELOG.md` v6.1.1. Reaproveitar aqui na próxima publicação, ou adicionar retroativamente se a Figma permitir editar a descrição de uma versão já publicada.
