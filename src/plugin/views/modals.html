@@ -567,35 +567,12 @@
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
-    function openSpecFormModal(frameId) {
-      if (frameId && typeof activeFrameId !== 'undefined') activeFrameId = frameId;
-      document.getElementById('spec-form-modal').dataset.editIdx = '';
-      document.getElementById('spec-letter-input').value = 'A';
-      document.getElementById('spec-color-input').value = '#005ca9';
-      validateSpecLetterInput();
-      const _sw = document.getElementById('spec-color-swatch');
-      if (_sw) _sw.style.backgroundColor = '#005ca9';
-      document.getElementById('ann-category').value = '';
-      document.getElementById('spec-link-input').value = '';
-      document.getElementById('ann-note').value = '';
-      document.getElementById('chk-has-link').checked = false;
-      toggleLinkInput(false);
-      const chkConn = document.getElementById('chk-draw-connection');
-      if (chkConn) chkConn.checked = true;
-      const rightRadio = document.querySelector('input[name="guide-side"][value="right"]');
-      if (rightRadio) rightRadio.checked = true;
-      const modalTitle = document.querySelector('#spec-form-modal h3');
-      if (modalTitle) {
-        modalTitle.innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 text-[#005ca9]"></i> Criar Especificação/Nota';
-      }
-      const confirmBtn = document.getElementById('btn-spec-form-confirm');
-      if (confirmBtn) {
-        confirmBtn.textContent = 'Avançar para Propriedades';
-        confirmBtn.onclick = requestSpecProperties;
-      }
-      document.getElementById('spec-form-modal').classList.remove('hidden');
-      if (typeof lucide !== 'undefined') lucide.createIcons();
-    }
+    // openSpecFormModal() vive em modules/specifications.js — essa era uma
+    // segunda definição quase-idêntica que nunca executava (build.cjs
+    // concatena modals.html ANTES de specifications.js no <script> final, e a
+    // última declaração de função com o mesmo nome vence em JS). Removida
+    // para não confundir quem for editar o fluxo de criação de spec achando
+    // que esta é a versão ativa.
 
     function closeSpecFormModal() {
       document.getElementById('spec-form-modal').classList.add('hidden');
