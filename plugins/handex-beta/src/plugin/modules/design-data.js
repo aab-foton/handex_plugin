@@ -185,11 +185,38 @@
             }, '*');
             count++;
           });
-          // --- Acessibilidade --- specs de A11y não têm mais nó de canvas
-          // (são só mapeamento — ver accessibility.js, confirmA11ySpec). Já
-          // vieram junto no Object.assign(handoffData, importedData) acima,
-          // então não há nada a recriar aqui; elas só ganham nó quando o
-          // designer clicar em "Gerar Ficha de Acessibilidade".
+          // --- Acessibilidade --- specs de A11y criam nó no canvas na hora
+          // desde a reversão da Fase 3 (2026-07-23, ver accessibility.js) —
+          // mesmo handler create-unified-spec das specs normais, diferenciado
+          // por opts.a11yType. O comentário anterior aqui ("não têm mais nó
+          // de canvas... só ganham nó ao clicar em Gerar Ficha de
+          // Acessibilidade") descrevia a Fase 3 revertida e ficou
+          // desatualizado — a função "Gerar Ficha de Acessibilidade" nem
+          // existe mais (removida em 2026-07-24). Sem este bloco, specs de
+          // A11y importadas nunca ganhavam nó no canvas.
+          (frame.a11ySpecs || []).forEach(spec => {
+            const resolvedNodeId = spec.targetNodeId || frame.figmaId;
+            if (!resolvedNodeId) return;
+            parent.postMessage({
+              pluginMessage: {
+                type: 'create-unified-spec',
+                opts: {
+                  targetNodeId: resolvedNodeId,
+                  letter: spec.letter || 'A',
+                  color: spec.color || '#0070af',
+                  note: spec.note || '',
+                  properties: spec.properties || [],
+                  categoryLabel: spec.type || '',
+                  category: spec.category || 'acessibilidade',
+                  a11yType: spec.a11yType || null,
+                  a11ySubtype: spec.a11ySubtype || null,
+                  a11yAreaId: spec.a11yAreaId || null,
+                  guideSide: spec.guideSide || 'right'
+                }
+              }
+            }, '*');
+            count++;
+          });
         });
         if (count > 0) showToast(`${count} spec(s) sendo recriadas no canvas...`);
       }
