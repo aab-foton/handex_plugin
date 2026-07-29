@@ -1377,39 +1377,13 @@ ${(handoffData.createdFlows || []).length === 0
         accordionsHTML += buildAccordionHTML("acc-flows", "Fluxos de Tela", "git-branch", flowsContent, false);
       }
 
-      // 9. Especificações Visuais (specs globais)
-      const _globalSpecs = (handoffData.specs || []);
-      if (_globalSpecs.length > 0) {
-        const _excColorsHTML = { 'Erro': '#dc2626', 'Alerta': '#d97706', 'Sucesso': '#16a34a', 'Confirmação': '#2563eb' };
-        const globalSpecsContent = `
-          <div class="space-y-2 text-left">
-            ${_globalSpecs.map(s => {
-              const isHidden = s.visible === false;
-              const cat = s.category || s.categoryLabel || '';
-              const excs = s.excecoes || [];
-              return `
-                <div class="p-3 ${isHidden ? 'opacity-40' : ''} bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800/40 rounded-xl">
-                  <div class="flex items-center gap-2 mb-1">
-                    <div class="w-5 h-5 rounded flex items-center justify-center text-[9px] font-black text-white shrink-0" style="background:${s.color || '#005ca9'}">${s.letter || 'A'}</div>
-                    <span class="text-[11px] font-bold text-slate-800 dark:text-white flex-1">${s.name || ''}</span>
-                    ${isHidden ? '<span class="text-[9px] text-slate-400 dark:text-slate-400 italic">oculta</span>' : ''}
-                    ${cat ? `<span style="${_getCatStyleHTML(s.category)}">${cat}</span>` : ''}
-                  </div>
-                  ${s.note ? `<p class="text-[10px] text-slate-500 dark:text-slate-400 mb-1.5 ml-7">${s.note}</p>` : ''}
-                  ${excs.length > 0 ? `
-                    <div class="ml-7 space-y-1 mt-1.5">
-                      ${excs.map(e => `
-                        <div class="flex items-center gap-1.5">
-                          <span class="text-[9px] font-bold uppercase shrink-0 w-16" style="color:${_excColorsHTML[e.tipo] || '#64748b'}">${e.tipo || ''}</span>
-                          <span class="text-[10px] text-slate-600 dark:text-slate-300">${e.titulo || ''}</span>
-                        </div>`).join('')}
-                    </div>` : ''}
-                </div>`;
-            }).join('')}
-          </div>
-        `;
-        accordionsHTML += buildAccordionHTML("acc-global-specs", "Especificações Visuais", "tag", globalSpecsContent, false);
-      }
+      // 9. "Especificações Visuais" (specs a partir de handoffData.specs, nível
+      // superior) foi removida — duplicava specs já mostradas em "Especificações
+      // Anotadas" (por-frame) assim que uma spec vinculada a frame também passava
+      // a existir em handoffData.specs (saveSpecsToStorage grava o array já
+      // mesclado avulsas+por-frame de volta no nível superior). Mesma decisão de
+      // produto já aplicada ao canvas nativo em code.js ("specs consolidadas em
+      // 1.9") — nunca tinha sido replicada aqui na ficha HTML exportada.
 
       // Frame & Elementos Tab content
       let assetsHTML = "";
