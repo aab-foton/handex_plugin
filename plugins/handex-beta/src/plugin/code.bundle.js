@@ -1192,6 +1192,7 @@
       const wanted = {
         ficha: !!msg.ficha,
         spec: !!msg.specs,
+        a11y: !!msg.a11y,
         medida: !!msg.medidas,
         fluxo: !!msg.fluxos
       };
@@ -1201,13 +1202,24 @@
         if (!node.name) return null;
         if (wanted.ficha && node.name.startsWith("Handex | Ficha de Projeto")) return "ficha";
         if (wanted.spec && (node.name.startsWith("[Spec | ") || node.name.startsWith("[Spec]"))) return "spec";
+        if (wanted.a11y && (node.name.startsWith("[SpecA11y") || node.name.startsWith("[A11yArea"))) return "a11y";
         if (wanted.medida && node.name.startsWith("[Medida]")) return "medida";
         if (wanted.fluxo && node.name.startsWith("[Fluxo")) return "fluxo";
         return null;
       };
-      const counts = { ficha: 0, spec: 0, medida: 0, fluxo: 0 };
+      const counts = { ficha: 0, spec: 0, a11y: 0, medida: 0, fluxo: 0 };
       const toRemove = [];
       figma.currentPage.children.forEach((node) => {
+        if (node.type === "SECTION" && node.name === A11Y_SECTION_NAME) {
+          (node.children || []).forEach((child) => {
+            const cat2 = matchCategory(child);
+            if (cat2) {
+              toRemove.push(child);
+              counts[cat2]++;
+            }
+          });
+          return;
+        }
         const cat = matchCategory(node);
         if (cat) {
           toRemove.push(node);
@@ -3798,7 +3810,7 @@
         const specGroup = figma.group(groupNodes, figma.currentPage);
         specGroup.name = `[${_layerTag} | ${opts.letter} | ${_specSide}] ${node.name}`;
         specGroup.locked = !!opts.a11yType;
-        specGroup.setPluginData("handexCategory", "spec");
+        specGroup.setPluginData("handexCategory", opts.a11yType ? "a11y" : "spec");
         if (opts.a11yType) {
           _reparentIntoA11ySection(specGroup);
         } else {
@@ -3985,6 +3997,7 @@
         }
         group.name = `[A11yArea | ${msg.number}] ${msg.label}`;
         group.locked = false;
+        group.setPluginData("handexCategory", "a11y");
         _reparentIntoA11ySection(group);
         figma.currentPage.selection = [group];
         figma.viewport.scrollAndZoomIntoView([group]);

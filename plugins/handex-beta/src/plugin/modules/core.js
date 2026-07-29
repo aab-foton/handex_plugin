@@ -1811,6 +1811,48 @@ function _mergeLooseAndFramed(looseArr, framedArr) {
   return out;
 }
 
+// Sugere a próxima letra-base livre (A, B, C...) pra tag de uma nova spec,
+// olhando TODAS as specs já existentes no frame — normais (createdSpecs) e
+// de Acessibilidade (a11ySpecs) juntas, já que compartilham o mesmo espaço
+// de tags no canvas (não faz sentido uma spec normal "A" e uma de A11y "A"
+// coexistirem sem se distinguir). Regra deliberadamente simples: sempre a
+// próxima letra-base do alfabeto ainda não usada, nunca tenta adivinhar
+// sub-níveis (A1, B1.1) — o designer edita manualmente pra isso, mantendo o
+// controle que already era decisão de produto (specs não são reordenadas/
+// geradas automaticamente, só a letra inicial sugerida).
+function _suggestNextSpecTag(frameId) {
+  const frame = frameId ? getFrame(frameId) : null;
+  const specs = frame
+    ? [...(frame.createdSpecs || []), ...(frame.a11ySpecs || [])]
+    : [...(handoffData.specs || []), ...(handoffData.a11ySpecs || [])];
+
+  const usedBaseLetters = new Set();
+  specs.forEach(s => {
+    const raw = String((s && s.letter) || '').trim().toUpperCase();
+    const match = raw.match(/^([A-Z]+)/);
+    if (match) usedBaseLetters.add(match[1]);
+  });
+
+  // Sequência A, B, C... Z, AA, AB... — cobre o caso raro de >26 grupos.
+  let i = 0;
+  const toLetters = (n) => {
+    let s = '';
+    n += 1;
+    while (n > 0) {
+      const rem = (n - 1) % 26;
+      s = String.fromCharCode(65 + rem) + s;
+      n = Math.floor((n - 1) / 26);
+    }
+    return s;
+  };
+  let candidate = toLetters(i);
+  while (usedBaseLetters.has(candidate)) {
+    i++;
+    candidate = toLetters(i);
+  }
+  return candidate;
+}
+
 function syncAndRenderSpecs() {
   // Specs/áreas "avulsas" (criadas sem activeFrameId, ex: nenhum frame
   // mapeado/selecionado no momento) só existem no nível superior de

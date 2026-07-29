@@ -380,7 +380,10 @@ function openA11yModal(category) {
   const tagInputId = A11Y_TAG_INPUT_ID[category];
   if (tagInputId) {
     const tagInput = document.getElementById(tagInputId);
-    if (tagInput) tagInput.value = 'A';
+    // Sugestão compartilhada com specs normais (_suggestNextSpecTag, core.js)
+    // — olha createdSpecs + a11ySpecs juntas do frame ativo, já que as duas
+    // categorias compartilham o mesmo espaço de tags no canvas.
+    if (tagInput) tagInput.value = typeof _suggestNextSpecTag === 'function' ? _suggestNextSpecTag(activeFrameId) : 'A';
   }
   validateA11yTagInput();
 

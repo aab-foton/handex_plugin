@@ -917,13 +917,16 @@ figma.ui.onmessage = async (msg) => {
   if (msg.type === 'delete-canvas-content') {
     // Todo conteúdo criado pelo Handex é agrupado num único nó de topo de página
     // no momento da criação (mainContainer da ficha, specGroup, grupo de medida,
-    // finalGroup/legendFrame de fluxo) -- não sobram nós-irmãos soltos. Por isso
-    // basta varrer figma.currentPage.children (nível de topo).
+    // finalGroup/legendFrame de fluxo) -- não sobram nós-irmãos soltos. Exceção:
+    // specs/áreas de A11y são reparentadas para dentro da Section dedicada
+    // (_reparentIntoA11ySection) logo após criadas, então varrem um nível a
+    // mais (os filhos da Section), não só figma.currentPage.children.
     // handexCategory (pluginData) é a fonte de verdade; prefixo de nome é fallback
     // para conteúdo criado antes desta marcação existir.
     const wanted = {
       ficha: !!msg.ficha,
       spec: !!msg.specs,
+      a11y: !!msg.a11y,
       medida: !!msg.medidas,
       fluxo: !!msg.fluxos,
     };
@@ -934,15 +937,26 @@ figma.ui.onmessage = async (msg) => {
       if (!node.name) return null;
       if (wanted.ficha && node.name.startsWith('Handex | Ficha de Projeto')) return 'ficha';
       if (wanted.spec && (node.name.startsWith('[Spec | ') || node.name.startsWith('[Spec]'))) return 'spec';
+      if (wanted.a11y && (node.name.startsWith('[SpecA11y') || node.name.startsWith('[A11yArea'))) return 'a11y';
       if (wanted.medida && node.name.startsWith('[Medida]')) return 'medida';
       if (wanted.fluxo && node.name.startsWith('[Fluxo')) return 'fluxo';
       return null;
     };
 
-    const counts = { ficha: 0, spec: 0, medida: 0, fluxo: 0 };
+    const counts = { ficha: 0, spec: 0, a11y: 0, medida: 0, fluxo: 0 };
     const toRemove = [];
 
     figma.currentPage.children.forEach(node => {
+      if (node.type === 'SECTION' && node.name === A11Y_SECTION_NAME) {
+        (node.children || []).forEach(child => {
+          const cat = matchCategory(child);
+          if (cat) {
+            toRemove.push(child);
+            counts[cat]++;
+          }
+        });
+        return;
+      }
       const cat = matchCategory(node);
       if (cat) {
         toRemove.push(node);
@@ -4073,7 +4087,10 @@ figma.ui.onmessage = async (msg) => {
       // contornar o elemento certo, não é pra arrastar/reposicionar como as
       // specs normais. Um cadeado na listagem destrava se precisar.
       specGroup.locked = !!opts.a11yType;
-      specGroup.setPluginData('handexCategory', 'spec');
+      // Specs de A11y ganham categoria própria ('a11y', não 'spec') — permite
+      // apagar/filtrar separadamente das specs normais (ver delete-canvas-content
+      // e o checkbox "Specs de Acessibilidade" no modal de limpeza do canvas).
+      specGroup.setPluginData('handexCategory', opts.a11yType ? 'a11y' : 'spec');
 
       // Organização de canvas — specs de Acessibilidade vão para dentro da
       // Section dedicada (não afeta specs normais nem a posição visual).
@@ -4302,6 +4319,7 @@ figma.ui.onmessage = async (msg) => {
       }
       group.name = `[A11yArea | ${msg.number}] ${msg.label}`;
       group.locked = false;
+      group.setPluginData('handexCategory', 'a11y');
 
       // Organização de canvas — selo de área também vai para a Section
       // dedicada de Acessibilidade, junto com as specs.
