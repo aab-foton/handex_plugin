@@ -7,8 +7,14 @@
 ### Corrigido — Especificações criadas sem frame vinculado desapareciam ao navegar
 `syncAndRenderSpecs()` reconstruía a lista de specs anotadas só a partir de `handoffData.frames[].createdSpecs`, ignorando `handoffData.specs` (nível superior) — usado quando uma spec é criada sem nenhum frame ativo/selecionado ("Sem vínculo (avulso)"). A spec aparecia normalmente logo após ser criada, mas sumia da lista assim que o designer navegava para outra tela e voltava. Agora a sincronização junta as duas origens (avulsas + por-frame), com deduplicação por id.
 
+### Corrigido — Especificações duplicadas na ficha HTML exportada
+A ficha HTML tinha uma seção "Especificações Visuais" que mostrava o mesmo conteúdo já presente em "Especificações Anotadas" — consequência do fix acima, uma spec vinculada a frame passava a existir também no registro avulso após qualquer salvamento, e a ficha exportada mostrava a mesma spec duas vezes. Seção duplicada removida (o canvas nativo já não tinha esse problema).
+
+### Corrigido — Importação de backup (JSON) ignorava specs/medidas sem frame vinculado
+Um backup exportado de um projeto com specs criadas sem frame associado mostrava "0 Specs" no resumo da importação e não recriava nada no canvas, mesmo com dados reais no arquivo — a contagem e a recriação no canvas também só olhavam para specs vinculadas a frame. Corrigido para considerar ambos os casos.
+
 ### Nota
-Esta é a publicação que a Figma Community vai registrar como "Version 8" — o contador de versão da Community é independente do número semver deste `package.json` (6.1.1); não confundir os dois.
+Publicada na Figma Community como "Version 9" (2026-07-29) — sem release notes preenchidas na publicação em si (esqueceu de colar antes de confirmar). O texto que deveria ter ido lá está em `docs/release-notes-community.md`, caso precise ser adicionado depois via "Version history" ou reaproveitado na próxima publicação. O contador de versão da Community é independente do número semver deste `package.json` (6.1.1); não confundir os dois.
 
 ---
 
