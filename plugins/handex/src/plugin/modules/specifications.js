@@ -2338,9 +2338,9 @@ function toggleLinkInput(show) {
       if (frameId) activeFrameId = frameId;
       // Modo criação: limpa campos e reseta estado
       document.getElementById('spec-form-modal').dataset.editIdx = '';
-      document.getElementById('spec-letter-input').value = 'A';
+      document.getElementById('spec-letter-input').value = typeof _suggestNextSpecTag === 'function' ? _suggestNextSpecTag(activeFrameId) : 'A';
       document.getElementById('spec-color-input').value = '#005ca9';
-      validateSpecLetterInput();
+      if (typeof validateSpecLetterInput === 'function') validateSpecLetterInput();
       document.getElementById('ann-category').value = '';
       if (typeof _csSyncLabel === 'function') _csSyncLabel('cs-ann-cat');
       if (typeof syncSpecColorFromCategory === 'function') syncSpecColorFromCategory();
