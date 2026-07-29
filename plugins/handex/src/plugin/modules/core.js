@@ -1739,8 +1739,32 @@ function renderAllMeasurements() {
   if (typeof renderMeasurementsResults === 'function') renderMeasurementsResults(all);
 }
 
+// Junta a lista "avulsa" (handoffData.specs, nível superior — specs criadas
+// sem activeFrameId) com as por-frame, deduplicando por id. saveSpecsToStorage()
+// grava de volta em handoffData.specs o array global inteiro (avulsas + por-frame
+// já resolvidas), então uma spec com frame pode aparecer nos dois lados na próxima
+// leitura — sem dedup, ela dobraria de contagem a cada resync.
+function _mergeLooseAndFramed(looseArr, framedArr) {
+  const merged = (looseArr || []).concat(framedArr || []);
+  const seen = new Set();
+  const out = [];
+  for (let i = merged.length - 1; i >= 0; i--) {
+    const item = merged[i];
+    const key = item && item.id ? item.id : Symbol();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.unshift(item);
+  }
+  return out;
+}
+
 function syncAndRenderSpecs() {
-  createdSpecs = (handoffData.frames || []).flatMap(f => f.createdSpecs || []);
+  // Specs "avulsas" (criadas sem activeFrameId, ex: nenhum frame
+  // mapeado/selecionado no momento) só existem em handoffData.specs
+  // (nível superior), não dentro de nenhum frame.createdSpecs — precisam
+  // entrar aqui junto com as por-frame, senão somem na primeira resync
+  // depois de criadas (navegar pra outra view e voltar, por exemplo).
+  createdSpecs = _mergeLooseAndFramed(handoffData.specs, (handoffData.frames || []).flatMap(f => f.createdSpecs || []));
   if (typeof renderSpecsList === 'function') renderSpecsList();
 }
 
