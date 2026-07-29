@@ -2,6 +2,22 @@
 
 ---
 
+## v6.0.0-beta.3 — 2026-07-29
+
+### Resumo
+Permite apagar specs/áreas de Acessibilidade do canvas via "Apagar conteúdo do canvas" (antes só specs tradicionais, ficha, medidas e fluxos). Adiciona sugestão automática de tag ao criar spec (normal ou A11y). Pacote de testes desta versão vai para os testers.
+
+### Adicionado — Apagar specs de Acessibilidade do canvas
+O modal "Apagar conteúdo do canvas" ganhou um checkbox próprio "Specs de Acessibilidade", independente do checkbox "Specs" (tradicionais). Antes, specs e áreas de A11y nunca eram alcançadas por essa limpeza — ficavam presas dentro da Section organizadora, fora do alcance da varredura.
+
+### Adicionado — Sugestão automática de tag ao criar especificação
+Mesma melhoria da main (v6.1.2): o campo de tag já vem preenchido com a próxima letra-base disponível, considerando specs normais e de A11y juntas (compartilham o mesmo espaço de tags no canvas).
+
+### Corrigido — Definição duplicada de uma função interna do formulário de specs
+Manutenção interna sem efeito visível — mesma correção da main.
+
+---
+
 ## v6.0.0-beta.2 — 2026-07-29
 
 ### Resumo

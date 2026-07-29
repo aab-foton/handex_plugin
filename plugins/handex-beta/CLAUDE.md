@@ -19,7 +19,7 @@ Plugin Figma que automatiza o handoff de design. Permite ao designer:
 - Mapear fluxos de tela
 - Gerar uma ficha técnica completa no canvas do Figma
 
-**Versão atual:** v6.0.0-beta.2  
+**Versão atual:** v6.0.0-beta.3  
 **Documentação:** `BUSINESS_RULES.md` (regras de negócio) · `CHANGELOG.md` (histórico)
 
 ---
