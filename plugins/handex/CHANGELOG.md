@@ -2,6 +2,16 @@
 
 ---
 
+## v6.1.1 — 2026-07-28
+
+### Corrigido — Especificações criadas sem frame vinculado desapareciam ao navegar
+`syncAndRenderSpecs()` reconstruía a lista de specs anotadas só a partir de `handoffData.frames[].createdSpecs`, ignorando `handoffData.specs` (nível superior) — usado quando uma spec é criada sem nenhum frame ativo/selecionado ("Sem vínculo (avulso)"). A spec aparecia normalmente logo após ser criada, mas sumia da lista assim que o designer navegava para outra tela e voltava. Agora a sincronização junta as duas origens (avulsas + por-frame), com deduplicação por id.
+
+### Nota
+Esta é a publicação que a Figma Community vai registrar como "Version 8" — o contador de versão da Community é independente do número semver deste `package.json` (6.1.1); não confundir os dois.
+
+---
+
 ## v6.1.0 — 2026-07-24
 
 ### Resumo

@@ -19,7 +19,7 @@ Plugin Figma que automatiza o handoff de design. Permite ao designer:
 - Mapear fluxos de tela
 - Gerar uma ficha técnica completa no canvas do Figma
 
-**Versão atual:** v6.1.0  
+**Versão atual:** v6.1.1  
 **Documentação:** `BUSINESS_RULES.md` (regras de negócio) · `CHANGELOG.md` (histórico)
 
 ---
@@ -184,3 +184,12 @@ A pasta `handex-plugin/` (gitignored) contém os 3 arquivos para distribuição:
 - Bump em `package.json` (`npm version <x.y.z> --no-git-tag-version`) e em `CLAUDE.md` ("Versão atual") **antes** de commitar, não depois — nunca deixar a versão do código dessincronizada do relatório de atividades.
 - Beta e estável versionam de forma independente: a beta usa sufixo `-beta.N` (ex: `5.1.0-beta.1`) enquanto está em teste; ao promover pra `main`, o sufixo é removido.
 - `code.bundle.js` já lê a versão do `package.json` automaticamente via `scripts/bundle-code.cjs` — rodar `npm run bundle:code` depois do bump para propagar.
+
+### Versão do `package.json` ≠ "Version N" da Figma Community
+
+São **dois números completamente independentes** — não confundir nem tentar sincronizar um com o outro:
+
+- **`package.json` (semver, ex: `6.1.1`)**: versionamento interno do código, segue as regras acima (minor/patch, beta com sufixo).
+- **"Version N" da Figma Community** (ex: "Version 7", "Version 8"): contador próprio da Figma, incrementado automaticamente a cada publicação de nova versão no Community, visível em Community → Manage → Version history. Não é configurável, não lê `package.json`, e não tem relação matemática com o semver do projeto — a publicação da v6.1.1 pode virar "Version 8" na Community mesmo sem qualquer conexão numérica entre os dois.
+
+Ao falar de "nova versão" com o time, sempre deixar claro qual dos dois números está em jogo — já causou confusão real (2026-07-28: tentativa de forçar o `package.json` para `8.0.0` para "alinhar" com o Version 7/8 da Community, revertida depois de esclarecido que são sistemas distintos).
