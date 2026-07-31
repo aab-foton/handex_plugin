@@ -24,8 +24,9 @@ const frameworksJSON = JSON.stringify(JSON.parse(fs.readFileSync(path.join(BASE,
 
 const css          = read('styles/plugin.css');
 const modCore      = read('modules/core.js');
-const modMsgs      = read('modules/messages.js');
 const modAudit     = read('modules/audit.js');
+const modEvidence  = read('modules/evidence-bridge.js');
+const modMsgs      = read('modules/messages.js');
 const modAi        = read('modules/ai-client.js');
 const modFw        = read('modules/frameworks.js');
 
@@ -132,14 +133,19 @@ ${modals}
 ${modCore}
 
 // ============================================================
-// MODULE: messages.js
-// ============================================================
-${modMsgs}
-
-// ============================================================
 // MODULE: audit.js
 // ============================================================
 ${modAudit}
+
+// ============================================================
+// MODULE: evidence-bridge.js
+// ============================================================
+${modEvidence}
+
+// ============================================================
+// MODULE: messages.js
+// ============================================================
+${modMsgs}
 
 // ============================================================
 // MODULE: ai-client.js

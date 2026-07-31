@@ -12,12 +12,18 @@
     </div>
   </div>
 
+  <!-- Proveniência do score (mock vs. real) -->
+  <div id="score-provenance-banner" class="hidden"></div>
+
   <!-- Card de resultado -->
   <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-5 text-center space-y-2">
     <div id="score-stars" class="flex items-center justify-center gap-1"></div>
     <p id="score-numeric" class="text-[20px] font-extrabold text-slate-800 dark:text-white">—</p>
     <p class="text-[10px] text-slate-400 dark:text-dark-muted">Maturidade de UX (0–100)</p>
   </div>
+
+  <!-- Score desatualizado (última tentativa falhou) -->
+  <div id="score-stale-banner" class="hidden mt-2.5 px-3 py-2 flex gap-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl"></div>
 
   <!-- Status da análise -->
   <div class="mt-4 flex items-center justify-center gap-2" id="ai-status">
@@ -39,6 +45,18 @@
   <div class="mt-5 pt-4 border-t border-gray-100 dark:border-dark-line">
     <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide mb-2.5">Detalhamento por dimensão</p>
     <div id="score-breakdown" class="space-y-2"></div>
+  </div>
+
+  <!-- Histórico de auditorias -->
+  <div class="mt-5 pt-4 border-t border-gray-100 dark:border-dark-line">
+    <div class="flex items-center justify-between mb-2.5">
+      <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Histórico de auditorias</p>
+      <button id="btn-close-audit" onclick="closeAuditRound()" disabled
+        class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed text-slate-600 dark:text-dark-muted text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1">
+        <i data-lucide="flag" class="w-3 h-3"></i> Fechar auditoria
+      </button>
+    </div>
+    <div id="score-history" class="space-y-2"></div>
   </div>
 
 </main>

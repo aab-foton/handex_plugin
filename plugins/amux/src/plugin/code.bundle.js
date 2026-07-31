@@ -4,35 +4,178 @@
     return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
   };
 
+  // src/plugin/refs/maturity-checklist.json
+  var require_maturity_checklist = __commonJS({
+    "src/plugin/refs/maturity-checklist.json"(exports, module) {
+      module.exports = {
+        _comment: "Checklist balizador de maturidade \u2014 RASCUNHO t\xE9cnico, pendente de valida\xE7\xE3o pelos UX Leads da CAIXA. Cada item tem um peso (soma 1.0 por dimens\xE3o) e uma verifica\xE7\xE3o lida do dado j\xE1 coletado no plugin. Editar este arquivo e rodar `npm run build` \xE9 suficiente para ajustar crit\xE9rios \u2014 nenhuma mudan\xE7a de c\xF3digo \xE9 necess\xE1ria.",
+        _schemaVersion: 1,
+        dimensions: {
+          descoberta: {
+            label: "Descoberta",
+            items: [
+              { id: "metodo_reconhecido", label: 'M\xE9todo de pesquisa \xE9 um tipo reconhecido (entrevista, pesquisa quantitativa, benchmark, analytics, card sorting, diary study) \u2014 n\xE3o "Outro" nem link solto', weight: 0.2, check: { type: "artefato_tipo_em", valores: ["Entrevista", "Pesquisa quantitativa", "Benchmark", "An\xE1lise de dados/analytics", "Card sorting", "Diary study"] } },
+              { id: "amostra_declarada", label: "N\xFAmero de participantes/fontes declarado", weight: 0.2, check: { type: "artefato_campo_preenchido", campo: "qtdParticipantesFontes" } },
+              { id: "sintese_achado", label: "Principal achado sintetizado, n\xE3o s\xF3 dado bruto", weight: 0.2, check: { type: "artefato_campo_preenchido", campo: "principalAchado" } },
+              { id: "data_recente", label: "Data de realiza\xE7\xE3o registrada (permite avaliar se a pesquisa ainda \xE9 v\xE1lida)", weight: 0.15, check: { type: "artefato_campo_preenchido", campo: "dataRealizacao" } },
+              { id: "multiplas_fontes", label: "Mais de uma evid\xEAncia anexada (triangula\xE7\xE3o de m\xE9todos ou fontes)", weight: 0.25, check: { type: "artefato_count_min", min: 2 } }
+            ]
+          },
+          definicao: {
+            label: "Defini\xE7\xE3o",
+            items: [
+              { id: "artefato_reconhecido", label: 'Artefato de defini\xE7\xE3o \xE9 um tipo reconhecido (briefing, jornada, persona, hip\xF3tese, mapa de stakeholders) \u2014 n\xE3o "Outro"', weight: 0.2, check: { type: "artefato_tipo_em", valores: ["Briefing", "Jornada do usu\xE1rio", "Persona", "Hip\xF3tese/problema statement", "Mapa de stakeholders"] } },
+              { id: "problema_documentado", label: "Problema documentado em artefato formal", weight: 0.15, check: { type: "artefato_presente" } },
+              { id: "origem_rastreavel", label: "Origem da defini\xE7\xE3o rastre\xE1vel a pesquisa, n\xE3o a suposi\xE7\xE3o", weight: 0.4, check: { type: "artefato_campo_igual", campo: "origemDados", valor: "Baseado em pesquisa da Descoberta" } },
+              { id: "criterio_sucesso", label: "Crit\xE9rio de sucesso expl\xEDcito definido antes de ideiar/construir", weight: 0.25, check: { type: "artefato_campo_preenchido", campo: "criterioSucesso" } }
+            ]
+          },
+          ideacao: {
+            label: "Idea\xE7\xE3o",
+            items: [
+              { id: "artefato_reconhecido", label: 'Artefato de idea\xE7\xE3o \xE9 um tipo reconhecido (wireframe, prot\xF3tipo, fluxograma, sketch) \u2014 n\xE3o "Outro"', weight: 0.2, check: { type: "artefato_tipo_em", valores: ["Wireframe", "Prot\xF3tipo de alta fidelidade", "Prot\xF3tipo naveg\xE1vel", "Fluxograma", "Crazy 8s / sketch"] } },
+              { id: "alternativa_registrada", label: "Pelo menos uma alternativa de solu\xE7\xE3o registrada", weight: 0.15, check: { type: "artefato_presente" } },
+              { id: "multiplas_alternativas", label: "Mais de uma alternativa explorada antes de convergir (n\xE3o \xE9 a primeira ideia que virou solu\xE7\xE3o)", weight: 0.4, check: { type: "artefato_campo_min", campo: "qtdAlternativas", min: 2 } },
+              { id: "cobertura_fluxo_completo", label: "Cobertura de fluxo completo declarada (n\xE3o s\xF3 uma tela isolada)", weight: 0.25, check: { type: "artefato_campo_igual", campo: "coberturaFluxo", valor: "Fluxo completo" } }
+            ]
+          },
+          validacao: {
+            label: "Valida\xE7\xE3o",
+            items: [
+              { id: "metodo_reconhecido", label: 'M\xE9todo de valida\xE7\xE3o \xE9 um tipo reconhecido (teste moderado/n\xE3o-moderado, A/B, CSAT/NPS, analytics, teste de acessibilidade) \u2014 n\xE3o "Outro"', weight: 0.15, check: { type: "artefato_tipo_em", valores: ["Teste de usabilidade moderado", "Teste n\xE3o-moderado", "Teste A/B", "Pesquisa de satisfa\xE7\xE3o (CSAT/NPS)", "An\xE1lise de m\xE9tricas de uso", "Teste de acessibilidade assistido"] } },
+              { id: "teste_com_usuarios", label: "Teste realizado com usu\xE1rios reais (n\xE3o s\xF3 revis\xE3o interna do time)", weight: 0.25, check: { type: "artefato_campo_preenchido", campo: "qtdUsuariosTestados" } },
+              { id: "metrica_objetiva", label: "M\xE9trica objetiva coletada (taxa de conclus\xE3o, SUS, CSAT, etc.)", weight: 0.25, check: { type: "artefato_campo_preenchido", campo: "metricaColetada" } },
+              { id: "amostra_minima", label: "Amostra m\xEDnima de usu\xE1rios testados (\u2265 5) \u2014 refer\xEAncia Nielsen Norman Group", weight: 0.2, check: { type: "artefato_campo_min", campo: "qtdUsuariosTestados", min: 5 } },
+              { id: "data_recente", label: "Data de realiza\xE7\xE3o registrada (permite avaliar se a valida\xE7\xE3o ainda \xE9 v\xE1lida frente \xE0 vers\xE3o atual)", weight: 0.15, check: { type: "artefato_campo_preenchido", campo: "dataRealizacao" } }
+            ]
+          },
+          posLancamento: {
+            label: "P\xF3s-lan\xE7amento",
+            items: [
+              { id: "artefato_reconhecido", label: 'Artefato de acompanhamento \xE9 um tipo reconhecido (dashboard de uso, pesquisa p\xF3s-entrega, an\xE1lise de chamados, retrospectiva, roadmap) \u2014 n\xE3o "Outro"', weight: 0.2, check: { type: "artefato_tipo_em", valores: ["Dashboard de m\xE9tricas de uso", "Pesquisa de satisfa\xE7\xE3o p\xF3s-entrega", "An\xE1lise de chamados/suporte", "Retrospectiva de squad", "Plano de itera\xE7\xE3o/roadmap"] } },
+              { id: "metrica_producao", label: "M\xE9trica em produ\xE7\xE3o observada e registrada (n\xE3o s\xF3 previs\xE3o pr\xE9-lan\xE7amento)", weight: 0.3, check: { type: "artefato_campo_preenchido", campo: "metricaProducao" } },
+              { id: "periodo_observado", label: "Per\xEDodo de observa\xE7\xE3o declarado (evita conclus\xE3o precipitada com poucos dias de dado)", weight: 0.2, check: { type: "artefato_campo_preenchido", campo: "periodoObservado" } },
+              { id: "acao_decorrente", label: "A\xE7\xE3o ou ajuste decorrente do acompanhamento documentado (o time fechou o ciclo, n\xE3o s\xF3 observou)", weight: 0.3, check: { type: "artefato_campo_preenchido", campo: "acaoDecorrente" } }
+            ]
+          },
+          designSystem: {
+            label: "Design System",
+            items: [
+              { id: "aderencia_declarada", label: "Ader\xEAncia ao Design System CAIXA avaliada (n\xE3o pendente)", weight: 0.4, check: { type: "status_nao_pendente" } },
+              { id: "sem_desvios", label: "Sem desvios de conformidade n\xE3o resolvidos", weight: 0.4, check: { type: "status_conforme" } },
+              { id: "observacoes_registradas", label: "Observa\xE7\xF5es da auditoria de DS registradas (rastro do que foi avaliado, n\xE3o s\xF3 um status solto)", weight: 0.2, check: { type: "auditoria_observacoes_preenchidas" } }
+            ]
+          },
+          acessibilidade: {
+            label: "Acessibilidade",
+            items: [
+              { id: "checagem_realizada", label: "Conformidade com WCAG avaliada (n\xE3o pendente)", weight: 0.4, check: { type: "status_nao_pendente" } },
+              { id: "sem_desvios", label: "Sem desvios de conformidade n\xE3o resolvidos", weight: 0.4, check: { type: "status_conforme" } },
+              { id: "observacoes_registradas", label: "Observa\xE7\xF5es da checagem de acessibilidade registradas (rastro do que foi avaliado, n\xE3o s\xF3 um status solto)", weight: 0.2, check: { type: "auditoria_observacoes_preenchidas" } }
+            ]
+          }
+        }
+      };
+    }
+  });
+
+  // src/plugin/ai/maturity-checklist.js
+  var require_maturity_checklist2 = __commonJS({
+    "src/plugin/ai/maturity-checklist.js"(exports, module) {
+      var checklist = require_maturity_checklist();
+      function _artefatos(payload, dimensao) {
+        var _a;
+        const etapa = (_a = payload == null ? void 0 : payload.evidencias) == null ? void 0 : _a[dimensao];
+        return Array.isArray(etapa == null ? void 0 : etapa.artefatos) ? etapa.artefatos : [];
+      }
+      function _campoPreenchido(artefato, campo) {
+        var _a;
+        const v = (_a = artefato == null ? void 0 : artefato.metadados) == null ? void 0 : _a[campo];
+        return v !== void 0 && v !== null && String(v).trim() !== "";
+      }
+      var CHECKS = {
+        artefato_presente: (payload, dimensao) => _artefatos(payload, dimensao).length > 0,
+        artefato_count_min: (payload, dimensao, check) => _artefatos(payload, dimensao).length >= check.min,
+        artefato_campo_preenchido: (payload, dimensao, check) => _artefatos(payload, dimensao).some((a) => _campoPreenchido(a, check.campo)),
+        artefato_campo_igual: (payload, dimensao, check) => _artefatos(payload, dimensao).some((a) => {
+          var _a;
+          return String(((_a = a == null ? void 0 : a.metadados) == null ? void 0 : _a[check.campo]) || "") === check.valor;
+        }),
+        artefato_campo_min: (payload, dimensao, check) => _artefatos(payload, dimensao).some((a) => {
+          var _a;
+          return Number((_a = a == null ? void 0 : a.metadados) == null ? void 0 : _a[check.campo]) >= check.min;
+        }),
+        artefato_tipo_em: (payload, dimensao, check) => _artefatos(payload, dimensao).some((a) => (check.valores || []).includes(a == null ? void 0 : a.tipo)),
+        status_nao_pendente: (payload, dimensao) => {
+          var _a, _b;
+          const status = (_b = (_a = payload == null ? void 0 : payload.auditoria) == null ? void 0 : _a[dimensao]) == null ? void 0 : _b.status;
+          return !!status && status !== "pendente";
+        },
+        status_conforme: (payload, dimensao) => {
+          var _a, _b;
+          return ((_b = (_a = payload == null ? void 0 : payload.auditoria) == null ? void 0 : _a[dimensao]) == null ? void 0 : _b.status) === "conforme";
+        },
+        auditoria_observacoes_preenchidas: (payload, dimensao) => {
+          var _a, _b;
+          return !!String(((_b = (_a = payload == null ? void 0 : payload.auditoria) == null ? void 0 : _a[dimensao]) == null ? void 0 : _b.observacoes) || "").trim();
+        }
+      };
+      function evaluateDimension(payload, dimensao) {
+        const def = checklist.dimensions[dimensao];
+        if (!def || !Array.isArray(def.items) || def.items.length === 0) {
+          return { score: 0, items: [] };
+        }
+        const items = def.items.map((item) => {
+          var _a;
+          const fn = CHECKS[(_a = item.check) == null ? void 0 : _a.type];
+          const passed = typeof fn === "function" ? !!fn(payload, dimensao, item.check) : false;
+          return { id: item.id, label: item.label, weight: item.weight, passed };
+        });
+        const totalWeight = items.reduce((sum, i) => sum + i.weight, 0) || 1;
+        const score = items.reduce((sum, i) => sum + (i.passed ? i.weight : 0), 0) / totalWeight;
+        return { score, items };
+      }
+      function evaluateAll(payload, dimensions) {
+        const result = {};
+        for (const dimensao of dimensions) {
+          result[dimensao] = evaluateDimension(payload, dimensao);
+        }
+        return result;
+      }
+      function getChecklistDefinition() {
+        return checklist;
+      }
+      module.exports = { evaluateDimension, evaluateAll, getChecklistDefinition };
+    }
+  });
+
   // src/plugin/ai/foundry-client.js
   var require_foundry_client = __commonJS({
     "src/plugin/ai/foundry-client.js"(exports, module) {
+      var { evaluateDimension } = require_maturity_checklist2();
       var AMUX_AI_DIMENSIONS = [
         "descoberta",
         "definicao",
         "ideacao",
         "validacao",
+        "posLancamento",
         "designSystem",
         "acessibilidade"
       ];
-      function _mockAgentResponse(dimensao, temEvidencia) {
-        const nota = temEvidencia ? 60 + Math.round(Math.random() * 35) : 15 + Math.round(Math.random() * 20);
+      function _mockAgentResponse(dimensao, qualidade) {
+        const ruido = Math.round((Math.random() - 0.5) * 10);
+        const nota = Math.max(5, Math.min(99, 15 + Math.round(qualidade * 80) + ruido));
+        const temEvidencia = qualidade > 0;
         const comentarios = {
           descoberta: temEvidencia ? "Evid\xEAncias de descoberta encontradas; recomenda-se detalhar os m\xE9todos usados." : "Nenhuma evid\xEAncia de descoberta anexada at\xE9 o momento.",
           definicao: temEvidencia ? "Briefing e hip\xF3teses documentados de forma consistente." : "Defini\xE7\xE3o do problema ainda n\xE3o est\xE1 evidenciada.",
           ideacao: temEvidencia ? "Processo de idea\xE7\xE3o registrado, com varia\xE7\xE3o de alternativas." : "Sem registro de explora\xE7\xE3o de alternativas de solu\xE7\xE3o.",
           validacao: temEvidencia ? "H\xE1 evid\xEAncias de testes com usu\xE1rios ou m\xE9tricas de valida\xE7\xE3o." : "Ainda n\xE3o h\xE1 evid\xEAncias de valida\xE7\xE3o com usu\xE1rios.",
+          posLancamento: temEvidencia ? "Acompanhamento p\xF3s-lan\xE7amento registrado, com m\xE9tricas ou itera\xE7\xE3o documentada." : "Nenhuma evid\xEAncia de acompanhamento p\xF3s-lan\xE7amento at\xE9 o momento.",
           designSystem: temEvidencia ? "Uso do Design System CAIXA declarado, sujeito a checagem automatizada futura." : "Ader\xEAncia ao Design System n\xE3o avaliada.",
           acessibilidade: temEvidencia ? "Diretrizes de acessibilidade observadas conforme declara\xE7\xE3o do time." : "Conformidade com WCAG n\xE3o avaliada."
         };
         return { nota, comentario: comentarios[dimensao] || "" };
-      }
-      function _hasEvidence(payload, dimensao) {
-        var _a, _b, _c, _d, _e;
-        if (dimensao === "designSystem") return !!(((_b = (_a = payload == null ? void 0 : payload.auditoria) == null ? void 0 : _a.designSystem) == null ? void 0 : _b.status) && payload.auditoria.designSystem.status !== "pendente");
-        if (dimensao === "acessibilidade") return !!(((_d = (_c = payload == null ? void 0 : payload.auditoria) == null ? void 0 : _c.acessibilidade) == null ? void 0 : _d.status) && payload.auditoria.acessibilidade.status !== "pendente");
-        const etapa = (_e = payload == null ? void 0 : payload.evidencias) == null ? void 0 : _e[dimensao];
-        return !!(etapa && Array.isArray(etapa.artefatos) && etapa.artefatos.length > 0);
       }
       function _starsFromScore(numeric) {
         if (numeric >= 90) return 5;
@@ -45,8 +188,11 @@
         await new Promise((resolve) => setTimeout(resolve, 900));
         const agentResponses = {};
         const scoreBreakdown = {};
+        const checklistResults = {};
         for (const dimensao of AMUX_AI_DIMENSIONS) {
-          const resposta = _mockAgentResponse(dimensao, _hasEvidence(payload, dimensao));
+          const avaliacao = evaluateDimension(payload, dimensao);
+          checklistResults[dimensao] = avaliacao.items;
+          const resposta = _mockAgentResponse(dimensao, avaliacao.score);
           agentResponses[dimensao] = resposta;
           scoreBreakdown[dimensao] = resposta.nota;
         }
@@ -55,8 +201,10 @@
         );
         return {
           status: "done",
+          fonte: "mock",
           agentResponses,
           scoreBreakdown,
+          checklistResults,
           score: { numeric, stars: _starsFromScore(numeric) }
         };
       }
@@ -69,13 +217,14 @@
   var VERSION = true ? "1.0.0" : "1.0.0";
   var STORAGE_KEY = "amux-data";
   var CANVAS_PREFIX = "[AMUX]";
+  var AMUX_GROUP_NAME = `${CANVAS_PREFIX} Frameworks`;
   figma.showUI(__html__, { width: 380, height: 600, title: `AMUX v${VERSION}` });
   async function init() {
     var _a, _b;
     let savedState = null;
     try {
       const raw = await figma.clientStorage.getAsync(STORAGE_KEY);
-      if (raw && raw._schemaVersion === 1) savedState = raw;
+      if (raw && (raw._schemaVersion === 1 || raw._schemaVersion === 2)) savedState = raw;
     } catch (e) {
     }
     let currentUser = null;
@@ -289,9 +438,6 @@
         mainFrame.appendChild(sp(4));
       };
       const section = (header, body, sub, fieldId) => {
-        const wrap = vb(null, 0, 4, null);
-        wrap.name = fieldId ? "section/" + fieldId : "_section";
-        wrap.layoutAlign = "STRETCH";
         mainFrame.appendChild(sp(sub ? 4 : 14));
         addT(mainFrame, header, sub ? 12 : 14, "Bold", sub ? C.orange : C.blue, "_label");
         if (body) {
@@ -801,6 +947,7 @@
       body.appendChild(detailsRow);
       const colsRow = hb(0, 40, null);
       colsRow.layoutAlign = "STRETCH";
+      colsRow.counterAxisAlignItems = "STRETCH";
       const col1 = vb(null, 20, 12, C.blueLight, 12);
       col1.name = "section/objetivos";
       col1.layoutAlign = "STRETCH";
@@ -812,6 +959,7 @@
       objT.textAutoResize = "HEIGHT";
       objT.layoutAlign = "STRETCH";
       colsRow.appendChild(col1);
+      col1.layoutSizingVertical = "FILL";
       const col2 = vb(null, 20, 12, C.blueLight, 12);
       col2.name = "section/necessidades";
       col2.layoutAlign = "STRETCH";
@@ -823,6 +971,7 @@
       necT.textAutoResize = "HEIGHT";
       necT.layoutAlign = "STRETCH";
       colsRow.appendChild(col2);
+      col2.layoutSizingVertical = "FILL";
       body.appendChild(colsRow);
       const oppCol = vb(null, 0, 12, null);
       oppCol.name = "section/oportunidades";
@@ -1488,19 +1637,31 @@
       mainFrame.appendChild(sp(8));
     }
     if (mainFrame) {
-      const frameName = `${CANVAS_PREFIX} ${mainFrame.name} \u2014 ${ts}`;
+      const tag = framework.category ? `${framework.category} \xB7 ` : "";
+      const frameName = `${CANVAS_PREFIX} ${tag}${framework.name || mainFrame.name} \u2014 ${ts}`;
       mainFrame.name = frameName;
+      const existingGroup = figma.currentPage.findOne(
+        (n) => n.type === "GROUP" && n.getSharedPluginData("maturai", "amuxGroup") === "1"
+      );
+      const priorFrames = existingGroup ? existingGroup.children.filter((n) => n.type === "FRAME") : [];
+      if (existingGroup) figma.ungroup(existingGroup);
       figma.currentPage.appendChild(mainFrame);
-      const vp = figma.viewport.bounds;
-      mainFrame.x = Math.round(vp.x + (vp.width - mainFrame.width) / 2);
-      mainFrame.y = Math.round(vp.y + (vp.height - mainFrame.height) / 2);
+      if (priorFrames.length > 0) {
+        const rightmost = priorFrames.reduce((a, b) => a.x + a.width > b.x + b.width ? a : b);
+        mainFrame.x = rightmost.x + rightmost.width + 80;
+        mainFrame.y = rightmost.y;
+      } else {
+        mainFrame.x = 0;
+        mainFrame.y = 0;
+      }
       mainFrame.setSharedPluginData("maturai", "frameworkId", framework.id);
       mainFrame.setSharedPluginData("maturai", "frameworkName", framework.name);
       mainFrame.setSharedPluginData("maturai", "injectedAt", (/* @__PURE__ */ new Date()).toISOString());
-      const grp = figma.group([mainFrame], figma.currentPage);
-      grp.name = frameName;
-      figma.currentPage.selection = [grp];
-      figma.viewport.scrollAndZoomIntoView([grp]);
+      const group = figma.group([...priorFrames, mainFrame], figma.currentPage);
+      group.name = AMUX_GROUP_NAME;
+      group.setSharedPluginData("maturai", "amuxGroup", "1");
+      figma.currentPage.selection = [mainFrame];
+      figma.viewport.scrollAndZoomIntoView([mainFrame]);
       figma.ui.postMessage({ type: "framework-injected", frameworkId: framework.id, frameName });
       figma.notify("Framework inserido no canvas! \u2713");
     }

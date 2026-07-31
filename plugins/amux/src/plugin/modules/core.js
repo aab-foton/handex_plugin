@@ -3,12 +3,14 @@
 // ============================================================
 
 const AMUX_VERSION = '1.0.0';
+const AMUX_SCHEMA_VERSION = 3;
+const AMUX_HISTORY_CAP = 24;
 
 let amuxData = _defaultState();
 
 function _defaultState() {
   return {
-    _schemaVersion: 1,
+    _schemaVersion: AMUX_SCHEMA_VERSION,
     projectId: _generateId(),
     createdAt: new Date().toISOString(),
     briefing: {
@@ -31,10 +33,11 @@ function _defaultState() {
       compartilhamento: ''
     },
     evidencias: {
-      descoberta:  { artefatos: [], observacoes: '' },
-      definicao:   { artefatos: [], observacoes: '' },
-      ideacao:     { artefatos: [], observacoes: '' },
-      validacao:   { artefatos: [], observacoes: '' }
+      descoberta:     { artefatos: [], observacoes: '' },
+      definicao:      { artefatos: [], observacoes: '' },
+      ideacao:        { artefatos: [], observacoes: '' },
+      validacao:      { artefatos: [], observacoes: '' },
+      posLancamento:  { artefatos: [], observacoes: '' }
     },
     auditoria: {
       designSystem:   { status: 'pendente', observacoes: '', desvios: [] },
@@ -42,29 +45,53 @@ function _defaultState() {
     },
     aiAnalysis: {
       status: 'idle',
+      fonte: null,
       lastRunAt: null,
+      lastErrorAt: null,
       agentResponses: {},
-      scoreBreakdown: {}
+      scoreBreakdown: {},
+      checklistResults: {}
     },
     score: {
       numeric: 0,
       stars: 0,
       computedAt: null
     },
-    frameworks: []
+    frameworks: [],
+    history: []
   };
+}
+
+// Migração aditiva de schema — nunca transforma dado existente,
+// só preenche defaults para campos novos. Formatos desconhecidos
+// (fora de 1–3) são descartados, como já era a regra para v1.
+function _migrateState(raw) {
+  if (raw._schemaVersion === AMUX_SCHEMA_VERSION) return raw;
+  if (raw._schemaVersion === 1 || raw._schemaVersion === 2) {
+    return {
+      ...raw,
+      history: raw.history || [],
+      evidencias: {
+        ...raw.evidencias,
+        posLancamento: raw.evidencias?.posLancamento || { artefatos: [], observacoes: '' }
+      },
+      _schemaVersion: AMUX_SCHEMA_VERSION
+    };
+  }
+  return null;
 }
 
 function _generateId() {
   return 'ax-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-const AMUX_ETAPAS = ['descoberta', 'definicao', 'ideacao', 'validacao'];
+const AMUX_ETAPAS = ['descoberta', 'definicao', 'ideacao', 'validacao', 'posLancamento'];
 const AMUX_ETAPA_LABELS = {
-  descoberta: 'Descoberta',
-  definicao:  'Definição',
-  ideacao:    'Ideação',
-  validacao:  'Validação'
+  descoberta:    'Descoberta',
+  definicao:     'Definição',
+  ideacao:       'Ideação',
+  validacao:     'Validação',
+  posLancamento: 'Pós-lançamento'
 };
 
 // ── Navigation ────────────────────────────────────────────────
@@ -103,6 +130,8 @@ function restoreUIFromState() {
   renderFrameworkInstances();
   renderAuditStatus();
   renderScore();
+  if (typeof _renderScoreProvenance === 'function') _renderScoreProvenance();
+  if (typeof renderHistory === 'function') renderHistory();
   updateHomeBadges();
 }
 
@@ -257,8 +286,14 @@ function updateHomeBadges() {
     fwBadge.classList.toggle('hidden', fwCount === 0);
   }
 
+  const hasScore = !!amuxData.score?.computedAt;
+  const isMockScore = hasScore && amuxData.aiAnalysis?.fonte === 'mock';
   const scoreBadge = document.getElementById('badge-score');
-  if (scoreBadge) scoreBadge.classList.toggle('hidden', !amuxData.score?.computedAt);
+  if (scoreBadge) scoreBadge.classList.toggle('hidden', !hasScore || isMockScore);
+  const scoreMockBadge = document.getElementById('badge-score-mock');
+  if (scoreMockBadge) scoreMockBadge.classList.toggle('hidden', !isMockScore);
+  const exportWarning = document.getElementById('export-mock-warning');
+  if (exportWarning) exportWarning.classList.toggle('hidden', !isMockScore);
 }
 
 // ── Export ────────────────────────────────────────────────────

@@ -6,6 +6,75 @@
 
 let _activeEtapa = 'descoberta';
 
+// ── Checklist de completude por etapa ───────────────────────────
+// Cada etapa define os tipos de artefato aceitos e, para cada tipo,
+// os campos extra de metadado que ajudam a medir completude real
+// (não só presença) da evidência anexada.
+const AMUX_ARTEFATO_TIPOS = {
+  descoberta: ['Entrevista', 'Pesquisa quantitativa', 'Benchmark', 'Análise de dados/analytics', 'Card sorting', 'Diary study', 'Outro'],
+  definicao:  ['Briefing', 'Jornada do usuário', 'Persona', 'Hipótese/problema statement', 'Mapa de stakeholders', 'Outro'],
+  ideacao:    ['Wireframe', 'Protótipo de alta fidelidade', 'Protótipo navegável', 'Fluxograma', 'Crazy 8s / sketch', 'Outro'],
+  validacao:  ['Teste de usabilidade moderado', 'Teste não-moderado', 'Teste A/B', 'Pesquisa de satisfação (CSAT/NPS)', 'Análise de métricas de uso', 'Teste de acessibilidade assistido', 'Outro'],
+  posLancamento: ['Dashboard de métricas de uso', 'Pesquisa de satisfação pós-entrega', 'Análise de chamados/suporte', 'Retrospectiva de squad', 'Plano de iteração/roadmap', 'Outro']
+};
+
+const AMUX_ARTEFATO_CAMPOS = {
+  descoberta: [
+    { id: 'qtdParticipantesFontes', label: 'Nº de participantes/fontes', type: 'number' },
+    { id: 'principalAchado', label: 'Principal achado', type: 'text' },
+    { id: 'dataRealizacao', label: 'Data de realização', type: 'date' }
+  ],
+  definicao: [
+    { id: 'origemDados', label: 'Origem', type: 'select', options: ['Baseado em pesquisa da Descoberta', 'Baseado em dados de negócio', 'Suposição do time'] },
+    { id: 'criterioSucesso', label: 'Critério de sucesso definido', type: 'text' }
+  ],
+  ideacao: [
+    { id: 'qtdAlternativas', label: 'Nº de alternativas exploradas', type: 'number' },
+    { id: 'coberturaFluxo', label: 'Cobertura', type: 'select', options: ['Fluxo completo', 'Tela isolada', 'Componente específico'] }
+  ],
+  validacao: [
+    { id: 'qtdUsuariosTestados', label: 'Nº de usuários testados', type: 'number' },
+    { id: 'metricaColetada', label: 'Métrica coletada', type: 'text' },
+    { id: 'dataRealizacao', label: 'Data de realização', type: 'date' }
+  ],
+  posLancamento: [
+    { id: 'metricaProducao', label: 'Métrica em produção observada', type: 'text' },
+    { id: 'periodoObservado', label: 'Período observado', type: 'text' },
+    { id: 'acaoDecorrente', label: 'Ação/ajuste decorrente', type: 'text' }
+  ]
+};
+
+// Nota neutra (0–1) atribuída a artefatos anexados antes desta feature
+// existir (sem `metadados`) — não penaliza retroativamente quem já
+// usou o plugin, mas também não infla a nota como se estivesse completo.
+const AMUX_COMPLETUDE_LEGADO = 0.5;
+
+function _camposDaEtapa(etapa) {
+  return AMUX_ARTEFATO_CAMPOS[etapa] || [];
+}
+
+function completudeArtefato(etapa, artefato) {
+  if (!artefato.metadados) return AMUX_COMPLETUDE_LEGADO;
+  const campos = _camposDaEtapa(etapa);
+  if (campos.length === 0) return 1;
+  const preenchidos = campos.filter(c => {
+    const v = artefato.metadados[c.id];
+    return v !== undefined && v !== null && String(v).trim() !== '';
+  }).length;
+  return preenchidos / campos.length;
+}
+
+// Completude da etapa = melhor artefato + pequeno bônus por volume,
+// em vez de média simples — não pune quem também anexa rascunhos
+// além de uma evidência robusta.
+function completudeEtapa(etapa) {
+  const artefatos = amuxData.evidencias[etapa]?.artefatos || [];
+  if (artefatos.length === 0) return 0;
+  const melhor = Math.max(...artefatos.map(a => completudeArtefato(etapa, a)));
+  const bonus = Math.min(0.05 * (artefatos.length - 1), 0.15);
+  return Math.min(melhor + bonus, 1);
+}
+
 function navigateToAudit() {
   navigate('view-audit');
   setTimeout(() => {
@@ -28,8 +97,35 @@ function selectEtapa(etapa) {
     panel.classList.toggle('hidden', panel.dataset.etapaPanel !== etapa);
   });
   renderArtefatos(etapa);
+  _renderTipoOptions(etapa);
   const obsEl = document.getElementById('etapa-obs-' + etapa);
   if (obsEl) obsEl.value = amuxData.evidencias[etapa]?.observacoes || '';
+}
+
+function _renderTipoOptions(etapa) {
+  const sel = document.getElementById('artefato-tipo-' + etapa);
+  if (!sel) return;
+  const tipos = AMUX_ARTEFATO_TIPOS[etapa] || [];
+  sel.innerHTML = '<option value="">Tipo do artefato...</option>' +
+    tipos.map(t => `<option value="${t}">${t}</option>`).join('');
+  sel.onchange = () => _renderCamposExtra(etapa);
+  _renderCamposExtra(etapa);
+}
+
+function _renderCamposExtra(etapa) {
+  const container = document.getElementById('artefato-campos-' + etapa);
+  if (!container) return;
+  const campos = _camposDaEtapa(etapa);
+  container.innerHTML = campos.map(c => {
+    if (c.type === 'select') {
+      return `<select id="artefato-meta-${etapa}-${c.id}" class="w-full">
+        <option value="">${c.label}...</option>
+        ${c.options.map(o => `<option value="${o}">${o}</option>`).join('')}
+      </select>`;
+    }
+    const inputType = c.type === 'number' ? 'number' : c.type === 'date' ? 'date' : 'text';
+    return `<input id="artefato-meta-${etapa}-${c.id}" type="${inputType}" placeholder="${c.label}" class="w-full" />`;
+  }).join('');
 }
 
 function saveEtapaObservacoes(etapa) {
@@ -42,21 +138,34 @@ function saveEtapaObservacoes(etapa) {
 function addArtefato(etapa) {
   const nomeEl = document.getElementById('artefato-nome-' + etapa);
   const urlEl = document.getElementById('artefato-url-' + etapa);
+  const tipoEl = document.getElementById('artefato-tipo-' + etapa);
   const nome = nomeEl?.value?.trim();
   const url = urlEl?.value?.trim();
+  const tipo = tipoEl?.value || '';
   if (!nome) {
     showToast('Informe um nome para o artefato.', 'error');
     return;
   }
+
+  const metadados = {};
+  _camposDaEtapa(etapa).forEach(c => {
+    const el = document.getElementById(`artefato-meta-${etapa}-${c.id}`);
+    const v = el?.value?.trim();
+    if (v) metadados[c.id] = v;
+  });
+
   amuxData.evidencias[etapa].artefatos.push({
     id: _generateId(),
     nome,
-    tipo: url ? 'link' : 'referencia',
+    tipo: tipo || (url ? 'link' : 'referencia'),
     url: url || '',
-    anexadoEm: new Date().toISOString()
+    anexadoEm: new Date().toISOString(),
+    metadados
   });
   if (nomeEl) nomeEl.value = '';
   if (urlEl) urlEl.value = '';
+  if (tipoEl) tipoEl.value = '';
+  _renderCamposExtra(etapa);
   renderArtefatos(etapa);
   saveState();
   updateHomeBadges();
@@ -87,20 +196,29 @@ function renderArtefatos(etapa) {
     return;
   }
 
-  container.innerHTML = artefatos.map(a => `
+  container.innerHTML = artefatos.map(a => {
+    const pct = Math.round(completudeArtefato(etapa, a) * 100);
+    const badgeCls = pct >= 100 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300'
+      : pct >= 50 ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300'
+      : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-dark-muted';
+    return `
     <div class="flex items-center justify-between gap-2 bg-slate-50 dark:bg-dark-bg/40 border border-gray-100 dark:border-dark-line rounded-xl px-3 py-2">
       <div class="flex items-center gap-2 min-w-0">
         <i data-lucide="${a.tipo === 'link' ? 'link' : 'file-text'}" class="w-3.5 h-3.5 shrink-0 text-blue-500"></i>
         <div class="min-w-0">
-          <p class="text-[11px] font-bold text-slate-700 dark:text-white truncate">${a.nome}</p>
+          <p class="text-[11px] font-bold text-slate-700 dark:text-white truncate">${a.nome}${a.tipo ? ` <span class="font-normal text-slate-400">· ${a.tipo}</span>` : ''}</p>
           ${a.url ? `<p class="text-[10px] text-slate-400 truncate">${a.url}</p>` : ''}
         </div>
       </div>
-      <button onclick="removeArtefato('${etapa}', '${a.id}')" class="text-slate-300 hover:text-red-400 transition-colors shrink-0">
-        <i data-lucide="x" class="w-3.5 h-3.5"></i>
-      </button>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <span class="px-1.5 py-0.5 text-[9px] font-bold rounded-full ${badgeCls}">${pct}%</span>
+        <button onclick="removeArtefato('${etapa}', '${a.id}')" class="text-slate-300 hover:text-red-400 transition-colors">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   try { lucide.createIcons(); } catch(e) {}
 }
@@ -144,5 +262,6 @@ function initAuditView() {
 Object.assign(window, {
   navigateToAudit, selectEtapa, saveEtapaObservacoes,
   addArtefato, removeArtefato, renderArtefatos,
-  setAuditStatus, saveAuditObservacoes, initAuditView
+  setAuditStatus, saveAuditObservacoes, initAuditView,
+  completudeArtefato, completudeEtapa
 });

@@ -7,10 +7,12 @@ window.addEventListener('message', (event) => {
   if (!msg) return;
 
   if (msg.type === 'init-plugin') {
-    if (msg.savedState && msg.savedState._schemaVersion === 1) {
-      amuxData = msg.savedState;
+    if (msg.savedState) {
+      const migrated = _migrateState(msg.savedState);
+      if (migrated) amuxData = migrated;
     }
     if (msg.currentUser?.name) {
+      window.__amuxCurrentUser = msg.currentUser.name;
       const el = document.getElementById('current-user');
       if (el) el.textContent = msg.currentUser.name;
     }
@@ -40,6 +42,7 @@ window.addEventListener('message', (event) => {
     saveState();
     renderFrameworkInstances();
     updateHomeBadges();
+    if (typeof collectEvidenceSuggestions === 'function') collectEvidenceSuggestions(results);
     showToast(`${results.length} framework(s) escaneado(s).`, 'success');
     return;
   }

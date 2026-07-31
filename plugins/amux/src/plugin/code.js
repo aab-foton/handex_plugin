@@ -7,6 +7,7 @@ const { analyzeWithFoundry } = require('./ai/foundry-client');
 const VERSION = typeof __AMUX_VERSION__ !== 'undefined' ? __AMUX_VERSION__ : '1.0.0';
 const STORAGE_KEY = 'amux-data';
 const CANVAS_PREFIX = '[AMUX]';
+const AMUX_GROUP_NAME = `${CANVAS_PREFIX} Frameworks`;
 
 figma.showUI(__html__, { width: 380, height: 600, title: `AMUX v${VERSION}` });
 
@@ -15,7 +16,7 @@ async function init() {
   let savedState = null;
   try {
     const raw = await figma.clientStorage.getAsync(STORAGE_KEY);
-    if (raw && raw._schemaVersion === 1) savedState = raw;
+    if (raw && (raw._schemaVersion === 1 || raw._schemaVersion === 2)) savedState = raw;
   } catch (e) {}
 
   let currentUser = null;
@@ -254,9 +255,6 @@ async function injectFramework(framework) {
     };
 
     const section = (header, body, sub, fieldId) => {
-      const wrap = vb(null, 0, 4, null);
-      wrap.name = fieldId ? 'section/' + fieldId : '_section';
-      wrap.layoutAlign = "STRETCH";
       mainFrame.appendChild(sp(sub ? 4 : 14));
       addT(mainFrame, header, sub ? 12 : 14, "Bold", sub ? C.orange : C.blue, '_label');
       if (body) {
@@ -755,6 +753,8 @@ async function injectFramework(framework) {
     const colsRow = hb(0, 40, null);
     colsRow.layoutAlign = "STRETCH";
 
+    colsRow.counterAxisAlignItems = "STRETCH";
+
     const col1 = vb(null, 20, 12, C.blueLight, 12);
     col1.name = 'section/objetivos';
     col1.layoutAlign = "STRETCH";
@@ -765,6 +765,7 @@ async function injectFramework(framework) {
     col1.appendChild(objT);
     objT.textAutoResize = "HEIGHT"; objT.layoutAlign = "STRETCH";
     colsRow.appendChild(col1);
+    col1.layoutSizingVertical = "FILL";
 
     const col2 = vb(null, 20, 12, C.blueLight, 12);
     col2.name = 'section/necessidades';
@@ -776,6 +777,7 @@ async function injectFramework(framework) {
     col2.appendChild(necT);
     necT.textAutoResize = "HEIGHT"; necT.layoutAlign = "STRETCH";
     colsRow.appendChild(col2);
+    col2.layoutSizingVertical = "FILL";
     body.appendChild(colsRow);
 
     const oppCol = vb(null, 0, 12, null);
@@ -1449,23 +1451,43 @@ async function injectFramework(framework) {
 
   // ── Finalizar no canvas ──────────────────────────────────────
   if (mainFrame) {
-    const frameName = `${CANVAS_PREFIX} ${mainFrame.name} — ${ts}`;
+    const tag = framework.category ? `${framework.category} · ` : '';
+    const frameName = `${CANVAS_PREFIX} ${tag}${framework.name || mainFrame.name} — ${ts}`;
     mainFrame.name = frameName;
+
+    // Desfaz o grupo AMUX existente (se houver) para poder regroupar com o
+    // novo frame incluído — figma.group() sempre cria um GroupNode novo.
+    const existingGroup = figma.currentPage.findOne(n =>
+      n.type === 'GROUP' && n.getSharedPluginData('maturai', 'amuxGroup') === '1'
+    );
+    const priorFrames = existingGroup
+      ? existingGroup.children.filter(n => n.type === 'FRAME')
+      : [];
+    if (existingGroup) figma.ungroup(existingGroup);
+
     figma.currentPage.appendChild(mainFrame);
 
-    const vp = figma.viewport.bounds;
-    mainFrame.x = Math.round(vp.x + (vp.width  - mainFrame.width)  / 2);
-    mainFrame.y = Math.round(vp.y + (vp.height - mainFrame.height) / 2);
+    // Posiciona o novo frame ao lado dos demais frames AMUX já existentes,
+    // em vez de sempre no centro do viewport (evita sobreposição entre injeções).
+    if (priorFrames.length > 0) {
+      const rightmost = priorFrames.reduce((a, b) => (a.x + a.width > b.x + b.width ? a : b));
+      mainFrame.x = rightmost.x + rightmost.width + 80;
+      mainFrame.y = rightmost.y;
+    } else {
+      mainFrame.x = 0;
+      mainFrame.y = 0;
+    }
 
     mainFrame.setSharedPluginData('maturai', 'frameworkId', framework.id);
     mainFrame.setSharedPluginData('maturai', 'frameworkName', framework.name);
     mainFrame.setSharedPluginData('maturai', 'injectedAt', new Date().toISOString());
 
-    const grp = figma.group([mainFrame], figma.currentPage);
-    grp.name = frameName;
+    const group = figma.group([...priorFrames, mainFrame], figma.currentPage);
+    group.name = AMUX_GROUP_NAME;
+    group.setSharedPluginData('maturai', 'amuxGroup', '1');
 
-    figma.currentPage.selection = [grp];
-    figma.viewport.scrollAndZoomIntoView([grp]);
+    figma.currentPage.selection = [mainFrame];
+    figma.viewport.scrollAndZoomIntoView([mainFrame]);
     figma.ui.postMessage({ type: 'framework-injected', frameworkId: framework.id, frameName });
     figma.notify("Framework inserido no canvas! ✓");
   }

@@ -1,0 +1,69 @@
+{
+  "_comment": "Checklist balizador de maturidade — RASCUNHO técnico, pendente de validação pelos UX Leads da CAIXA. Cada item tem um peso (soma 1.0 por dimensão) e uma verificação lida do dado já coletado no plugin. Editar este arquivo e rodar `npm run build` é suficiente para ajustar critérios — nenhuma mudança de código é necessária.",
+  "_schemaVersion": 1,
+  "dimensions": {
+    "descoberta": {
+      "label": "Descoberta",
+      "items": [
+        { "id": "metodo_reconhecido", "label": "Método de pesquisa é um tipo reconhecido (entrevista, pesquisa quantitativa, benchmark, analytics, card sorting, diary study) — não \"Outro\" nem link solto", "weight": 0.20, "check": { "type": "artefato_tipo_em", "valores": ["Entrevista", "Pesquisa quantitativa", "Benchmark", "Análise de dados/analytics", "Card sorting", "Diary study"] } },
+        { "id": "amostra_declarada", "label": "Número de participantes/fontes declarado", "weight": 0.20, "check": { "type": "artefato_campo_preenchido", "campo": "qtdParticipantesFontes" } },
+        { "id": "sintese_achado", "label": "Principal achado sintetizado, não só dado bruto", "weight": 0.20, "check": { "type": "artefato_campo_preenchido", "campo": "principalAchado" } },
+        { "id": "data_recente", "label": "Data de realização registrada (permite avaliar se a pesquisa ainda é válida)", "weight": 0.15, "check": { "type": "artefato_campo_preenchido", "campo": "dataRealizacao" } },
+        { "id": "multiplas_fontes", "label": "Mais de uma evidência anexada (triangulação de métodos ou fontes)", "weight": 0.25, "check": { "type": "artefato_count_min", "min": 2 } }
+      ]
+    },
+    "definicao": {
+      "label": "Definição",
+      "items": [
+        { "id": "artefato_reconhecido", "label": "Artefato de definição é um tipo reconhecido (briefing, jornada, persona, hipótese, mapa de stakeholders) — não \"Outro\"", "weight": 0.20, "check": { "type": "artefato_tipo_em", "valores": ["Briefing", "Jornada do usuário", "Persona", "Hipótese/problema statement", "Mapa de stakeholders"] } },
+        { "id": "problema_documentado", "label": "Problema documentado em artefato formal", "weight": 0.15, "check": { "type": "artefato_presente" } },
+        { "id": "origem_rastreavel", "label": "Origem da definição rastreável a pesquisa, não a suposição", "weight": 0.40, "check": { "type": "artefato_campo_igual", "campo": "origemDados", "valor": "Baseado em pesquisa da Descoberta" } },
+        { "id": "criterio_sucesso", "label": "Critério de sucesso explícito definido antes de ideiar/construir", "weight": 0.25, "check": { "type": "artefato_campo_preenchido", "campo": "criterioSucesso" } }
+      ]
+    },
+    "ideacao": {
+      "label": "Ideação",
+      "items": [
+        { "id": "artefato_reconhecido", "label": "Artefato de ideação é um tipo reconhecido (wireframe, protótipo, fluxograma, sketch) — não \"Outro\"", "weight": 0.20, "check": { "type": "artefato_tipo_em", "valores": ["Wireframe", "Protótipo de alta fidelidade", "Protótipo navegável", "Fluxograma", "Crazy 8s / sketch"] } },
+        { "id": "alternativa_registrada", "label": "Pelo menos uma alternativa de solução registrada", "weight": 0.15, "check": { "type": "artefato_presente" } },
+        { "id": "multiplas_alternativas", "label": "Mais de uma alternativa explorada antes de convergir (não é a primeira ideia que virou solução)", "weight": 0.40, "check": { "type": "artefato_campo_min", "campo": "qtdAlternativas", "min": 2 } },
+        { "id": "cobertura_fluxo_completo", "label": "Cobertura de fluxo completo declarada (não só uma tela isolada)", "weight": 0.25, "check": { "type": "artefato_campo_igual", "campo": "coberturaFluxo", "valor": "Fluxo completo" } }
+      ]
+    },
+    "validacao": {
+      "label": "Validação",
+      "items": [
+        { "id": "metodo_reconhecido", "label": "Método de validação é um tipo reconhecido (teste moderado/não-moderado, A/B, CSAT/NPS, analytics, teste de acessibilidade) — não \"Outro\"", "weight": 0.15, "check": { "type": "artefato_tipo_em", "valores": ["Teste de usabilidade moderado", "Teste não-moderado", "Teste A/B", "Pesquisa de satisfação (CSAT/NPS)", "Análise de métricas de uso", "Teste de acessibilidade assistido"] } },
+        { "id": "teste_com_usuarios", "label": "Teste realizado com usuários reais (não só revisão interna do time)", "weight": 0.25, "check": { "type": "artefato_campo_preenchido", "campo": "qtdUsuariosTestados" } },
+        { "id": "metrica_objetiva", "label": "Métrica objetiva coletada (taxa de conclusão, SUS, CSAT, etc.)", "weight": 0.25, "check": { "type": "artefato_campo_preenchido", "campo": "metricaColetada" } },
+        { "id": "amostra_minima", "label": "Amostra mínima de usuários testados (≥ 5) — referência Nielsen Norman Group", "weight": 0.20, "check": { "type": "artefato_campo_min", "campo": "qtdUsuariosTestados", "min": 5 } },
+        { "id": "data_recente", "label": "Data de realização registrada (permite avaliar se a validação ainda é válida frente à versão atual)", "weight": 0.15, "check": { "type": "artefato_campo_preenchido", "campo": "dataRealizacao" } }
+      ]
+    },
+    "posLancamento": {
+      "label": "Pós-lançamento",
+      "items": [
+        { "id": "artefato_reconhecido", "label": "Artefato de acompanhamento é um tipo reconhecido (dashboard de uso, pesquisa pós-entrega, análise de chamados, retrospectiva, roadmap) — não \"Outro\"", "weight": 0.20, "check": { "type": "artefato_tipo_em", "valores": ["Dashboard de métricas de uso", "Pesquisa de satisfação pós-entrega", "Análise de chamados/suporte", "Retrospectiva de squad", "Plano de iteração/roadmap"] } },
+        { "id": "metrica_producao", "label": "Métrica em produção observada e registrada (não só previsão pré-lançamento)", "weight": 0.30, "check": { "type": "artefato_campo_preenchido", "campo": "metricaProducao" } },
+        { "id": "periodo_observado", "label": "Período de observação declarado (evita conclusão precipitada com poucos dias de dado)", "weight": 0.20, "check": { "type": "artefato_campo_preenchido", "campo": "periodoObservado" } },
+        { "id": "acao_decorrente", "label": "Ação ou ajuste decorrente do acompanhamento documentado (o time fechou o ciclo, não só observou)", "weight": 0.30, "check": { "type": "artefato_campo_preenchido", "campo": "acaoDecorrente" } }
+      ]
+    },
+    "designSystem": {
+      "label": "Design System",
+      "items": [
+        { "id": "aderencia_declarada", "label": "Aderência ao Design System CAIXA avaliada (não pendente)", "weight": 0.40, "check": { "type": "status_nao_pendente" } },
+        { "id": "sem_desvios", "label": "Sem desvios de conformidade não resolvidos", "weight": 0.40, "check": { "type": "status_conforme" } },
+        { "id": "observacoes_registradas", "label": "Observações da auditoria de DS registradas (rastro do que foi avaliado, não só um status solto)", "weight": 0.20, "check": { "type": "auditoria_observacoes_preenchidas" } }
+      ]
+    },
+    "acessibilidade": {
+      "label": "Acessibilidade",
+      "items": [
+        { "id": "checagem_realizada", "label": "Conformidade com WCAG avaliada (não pendente)", "weight": 0.40, "check": { "type": "status_nao_pendente" } },
+        { "id": "sem_desvios", "label": "Sem desvios de conformidade não resolvidos", "weight": 0.40, "check": { "type": "status_conforme" } },
+        { "id": "observacoes_registradas", "label": "Observações da checagem de acessibilidade registradas (rastro do que foi avaliado, não só um status solto)", "weight": 0.20, "check": { "type": "auditoria_observacoes_preenchidas" } }
+      ]
+    }
+  }
+}

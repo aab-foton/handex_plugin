@@ -13,6 +13,16 @@
 // para que plugar o Foundry de verdade seja só trocar o corpo desta
 // função — sem redesenhar o restante do plugin.
 //
+// DIREÇÃO DE PRODUTO (ainda não implementada): o Foundry real deve
+// orquestrar agentes especializados chamados PONTUALMENTE por
+// dimensão/etapa (um agente de Descoberta, um de Validação, etc.),
+// não um único modelo que julga as 7 dimensões de uma vez como este
+// mock faz hoje por simplicidade. O checklist já é estruturado por
+// dimensão (ver ai/maturity-checklist.js) justamente para servir de
+// input a essa futura chamada por agente — mas a divisão em N
+// chamadas reais ao Foundry (uma por dimensão) é um redesenho de
+// `analyzeWithFoundry` ainda pendente, não algo a assumir hoje.
+//
 // Payload de entrada esperado:
 // {
 //   projectId, briefing: {...},
@@ -23,6 +33,7 @@
 // Resposta esperada:
 // {
 //   status: 'done',
+//   fonte: 'mock' | 'foundry',
 //   agentResponses: {
 //     descoberta:      { nota, comentario },
 //     definicao:        { nota, comentario },
@@ -32,32 +43,31 @@
 //     acessibilidade:   { nota, comentario }
 //   },
 //   scoreBreakdown: { <mesmas chaves>: nota (0–100) },
+//   checklistResults: { <mesmas chaves>: [{ id, label, weight, passed }] },
 //   score: { numeric: 0–100, stars: 1–5 }
 // }
 
+const { evaluateDimension } = require('./maturity-checklist');
+
 const AMUX_AI_DIMENSIONS = [
-  'descoberta', 'definicao', 'ideacao', 'validacao',
+  'descoberta', 'definicao', 'ideacao', 'validacao', 'posLancamento',
   'designSystem', 'acessibilidade'
 ];
 
-function _mockAgentResponse(dimensao, temEvidencia) {
-  const nota = temEvidencia ? 60 + Math.round(Math.random() * 35) : 15 + Math.round(Math.random() * 20);
+function _mockAgentResponse(dimensao, qualidade) {
+  const ruido = Math.round((Math.random() - 0.5) * 10); // pequena flutuação, não distorce o sinal de completude
+  const nota = Math.max(5, Math.min(99, 15 + Math.round(qualidade * 80) + ruido));
+  const temEvidencia = qualidade > 0;
   const comentarios = {
     descoberta:     temEvidencia ? 'Evidências de descoberta encontradas; recomenda-se detalhar os métodos usados.' : 'Nenhuma evidência de descoberta anexada até o momento.',
     definicao:      temEvidencia ? 'Briefing e hipóteses documentados de forma consistente.' : 'Definição do problema ainda não está evidenciada.',
     ideacao:        temEvidencia ? 'Processo de ideação registrado, com variação de alternativas.' : 'Sem registro de exploração de alternativas de solução.',
     validacao:      temEvidencia ? 'Há evidências de testes com usuários ou métricas de validação.' : 'Ainda não há evidências de validação com usuários.',
+    posLancamento:  temEvidencia ? 'Acompanhamento pós-lançamento registrado, com métricas ou iteração documentada.' : 'Nenhuma evidência de acompanhamento pós-lançamento até o momento.',
     designSystem:   temEvidencia ? 'Uso do Design System CAIXA declarado, sujeito a checagem automatizada futura.' : 'Aderência ao Design System não avaliada.',
     acessibilidade: temEvidencia ? 'Diretrizes de acessibilidade observadas conforme declaração do time.' : 'Conformidade com WCAG não avaliada.'
   };
   return { nota, comentario: comentarios[dimensao] || '' };
-}
-
-function _hasEvidence(payload, dimensao) {
-  if (dimensao === 'designSystem') return !!(payload?.auditoria?.designSystem?.status && payload.auditoria.designSystem.status !== 'pendente');
-  if (dimensao === 'acessibilidade') return !!(payload?.auditoria?.acessibilidade?.status && payload.auditoria.acessibilidade.status !== 'pendente');
-  const etapa = payload?.evidencias?.[dimensao];
-  return !!(etapa && Array.isArray(etapa.artefatos) && etapa.artefatos.length > 0);
 }
 
 function _starsFromScore(numeric) {
@@ -70,15 +80,21 @@ function _starsFromScore(numeric) {
 
 // analyzeWithFoundry(payload) → Promise<resultado>
 // Mock: simula latência de rede/processamento e retorna notas plausíveis
-// com base na presença (ou ausência) de evidências no payload recebido.
+// com base no checklist balizador de maturidade (ver
+// refs/maturity-checklist.json e ai/maturity-checklist.js) — não mais
+// presença/ausência simples, e sim critérios objetivos e configuráveis
+// pelos UX Leads, sem exigir mudança de código.
 async function analyzeWithFoundry(payload) {
   await new Promise((resolve) => setTimeout(resolve, 900));
 
   const agentResponses = {};
   const scoreBreakdown = {};
+  const checklistResults = {};
 
   for (const dimensao of AMUX_AI_DIMENSIONS) {
-    const resposta = _mockAgentResponse(dimensao, _hasEvidence(payload, dimensao));
+    const avaliacao = evaluateDimension(payload, dimensao);
+    checklistResults[dimensao] = avaliacao.items;
+    const resposta = _mockAgentResponse(dimensao, avaliacao.score);
     agentResponses[dimensao] = resposta;
     scoreBreakdown[dimensao] = resposta.nota;
   }
@@ -89,8 +105,10 @@ async function analyzeWithFoundry(payload) {
 
   return {
     status: 'done',
+    fonte: 'mock',
     agentResponses,
     scoreBreakdown,
+    checklistResults,
     score: { numeric, stars: _starsFromScore(numeric) }
   };
 }
