@@ -1635,6 +1635,69 @@
         });
       });
       mainFrame.appendChild(sp(8));
+    } else if (fid === "ds-audit-checklist") {
+      mainFrame = vb(640, 48, 0, C.white, 16);
+      mainFrame.name = "Checklist de Auditoria DSC";
+      const hdr = mkHeader("Checklist de Auditoria DSC");
+      mainFrame.appendChild(hdr);
+      hdr.layoutAlign = "STRETCH";
+      mainFrame.appendChild(sp(20));
+      const section = (header, body, fieldId) => {
+        mainFrame.appendChild(sp(14));
+        addT(mainFrame, header, 14, "Bold", C.blue, "_label");
+        if (body) {
+          mainFrame.appendChild(sp(4));
+          addT(mainFrame, body, 12, "Regular", C.muted, fieldId ? "field/" + fieldId : void 0);
+        }
+      };
+      section("Lib DSC de refer\xEAncia", "Ex: Fundamentos Visuais, Web (Angular/React)...", "lib_referencia");
+      section("Componentes do DSC usados", "Liste os componentes do Design System aplicados neste projeto.", "componentes_usados");
+      section("Componentes customizados / fora do DSC", "O que fugiu do padr\xE3o e precisou de customiza\xE7\xE3o.", "componentes_customizados");
+      section("Justificativa dos desvios", "Por que os desvios acima foram necess\xE1rios.", "justificativa_desvio");
+      section("Tokens de cor/tipografia verificados", "Quais tokens (cores, fontes, espa\xE7amentos) foram checados.", "tokens_verificados");
+      mainFrame.appendChild(sp(8));
+    } else if (fid === "a11y-audit-checklist") {
+      mainFrame = vb(640, 48, 0, C.white, 16);
+      mainFrame.name = "Checklist de Acessibilidade";
+      const hdr = mkHeader("Checklist de Acessibilidade");
+      mainFrame.appendChild(hdr);
+      hdr.layoutAlign = "STRETCH";
+      mainFrame.appendChild(sp(20));
+      const section = (header, body, fieldId) => {
+        mainFrame.appendChild(sp(14));
+        addT(mainFrame, header, 14, "Bold", C.teal, "_label");
+        if (body) {
+          mainFrame.appendChild(sp(4));
+          addT(mainFrame, body, 12, "Regular", C.muted, fieldId ? "field/" + fieldId : void 0);
+        }
+      };
+      section("N\xEDvel WCAG alvo", "A, AA ou AAA.", "nivel_wcag_alvo");
+      section("Componentes da lib Design Acess\xEDvel usados", "Liste os componentes acess\xEDveis aplicados.", "componentes_a11y_usados");
+      section("Itens verificados", "Contraste, navega\xE7\xE3o por teclado, leitor de tela, alt-text, etc.", "itens_verificados");
+      section("Desvios encontrados", "O que n\xE3o atendeu ao n\xEDvel alvo e precisa de ajuste.", "desvios_encontrados");
+      section("Ferramenta/m\xE9todo de checagem", "Ex: plugin de contraste, leitor de tela, auditoria externa.", "ferramenta_checagem");
+      mainFrame.appendChild(sp(8));
+    } else if (fid === "post-launch-tracker") {
+      mainFrame = vb(640, 48, 0, C.white, 16);
+      mainFrame.name = "Painel de Acompanhamento P\xF3s-lan\xE7amento";
+      const hdr = mkHeader("Acompanhamento P\xF3s-lan\xE7amento");
+      mainFrame.appendChild(hdr);
+      hdr.layoutAlign = "STRETCH";
+      mainFrame.appendChild(sp(20));
+      const section = (header, body, fieldId) => {
+        mainFrame.appendChild(sp(14));
+        addT(mainFrame, header, 14, "Bold", C.green, "_label");
+        if (body) {
+          mainFrame.appendChild(sp(4));
+          addT(mainFrame, body, 12, "Regular", C.muted, fieldId ? "field/" + fieldId : void 0);
+        }
+      };
+      section("M\xE9trica em produ\xE7\xE3o observada", "Ex: taxa de conclus\xE3o, chamados de suporte, NPS.", "metrica_producao");
+      section("Per\xEDodo observado", "Ex: 30/60/90 dias ap\xF3s o lan\xE7amento.", "periodo_observado");
+      section("Canal de feedback monitorado", "Ex: pesquisa de satisfa\xE7\xE3o, analytics, suporte.", "canal_feedback");
+      section("A\xE7\xE3o/ajuste decorrente", "O que o time fez a partir do que foi observado.", "acao_decorrente");
+      section("Pr\xF3ximo ciclo de revis\xE3o", "Quando o time volta a olhar essas m\xE9tricas.", "proximo_ciclo");
+      mainFrame.appendChild(sp(8));
     }
     if (mainFrame) {
       const tag = framework.category ? `${framework.category} \xB7 ` : "";

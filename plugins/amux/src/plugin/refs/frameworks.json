@@ -876,5 +876,137 @@
       }
     ],
     "auditStage": "validacao"
+  },
+  {
+    "id": "ds-audit-checklist",
+    "name": "Checklist de Auditoria DSC",
+    "icon": "component",
+    "color": "text-blue-600",
+    "bg": "bg-blue-50 dark:bg-blue-900/20",
+    "category": "Avaliação",
+    "categoryColor": "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+    "description": "Registra a aderência do projeto ao Design System CAIXA: quais componentes/tokens foram usados, quais foram customizados e por quê.",
+    "when": "Ao final de cada entrega, ou periodicamente, para auditar aderência ao DSC.",
+    "fields": [
+      {
+        "id": "lib_referencia",
+        "label": "Lib DSC de referência",
+        "type": "text",
+        "required": true
+      },
+      {
+        "id": "componentes_usados",
+        "label": "Componentes do DSC usados",
+        "type": "list",
+        "required": true
+      },
+      {
+        "id": "componentes_customizados",
+        "label": "Componentes customizados/fora do DSC",
+        "type": "list",
+        "required": false
+      },
+      {
+        "id": "justificativa_desvio",
+        "label": "Justificativa dos desvios",
+        "type": "text",
+        "required": false
+      },
+      {
+        "id": "tokens_verificados",
+        "label": "Tokens de cor/tipografia verificados",
+        "type": "list",
+        "required": false
+      }
+    ],
+    "auditStage": "designSystem"
+  },
+  {
+    "id": "a11y-audit-checklist",
+    "name": "Checklist de Acessibilidade",
+    "icon": "accessibility",
+    "color": "text-teal-500",
+    "bg": "bg-teal-50 dark:bg-teal-900/20",
+    "category": "Avaliação",
+    "categoryColor": "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
+    "description": "Registra a checagem de acessibilidade do projeto contra a lib Design Acessível da CAIXA e diretrizes WCAG.",
+    "when": "Antes da entrega, ou como parte do ciclo de validação com usuários.",
+    "fields": [
+      {
+        "id": "nivel_wcag_alvo",
+        "label": "Nível WCAG alvo (A/AA/AAA)",
+        "type": "text",
+        "required": true
+      },
+      {
+        "id": "componentes_a11y_usados",
+        "label": "Componentes da lib Design Acessível usados",
+        "type": "list",
+        "required": true
+      },
+      {
+        "id": "itens_verificados",
+        "label": "Itens verificados (contraste, foco, leitor de tela, etc.)",
+        "type": "list",
+        "required": true
+      },
+      {
+        "id": "desvios_encontrados",
+        "label": "Desvios encontrados",
+        "type": "list",
+        "required": false
+      },
+      {
+        "id": "ferramenta_checagem",
+        "label": "Ferramenta/método de checagem",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "auditStage": "acessibilidade"
+  },
+  {
+    "id": "post-launch-tracker",
+    "name": "Painel de Acompanhamento Pós-lançamento",
+    "icon": "trending-up",
+    "color": "text-emerald-600",
+    "bg": "bg-emerald-50 dark:bg-emerald-900/20",
+    "category": "Avaliação",
+    "categoryColor": "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+    "description": "Consolida métricas de uso em produção, feedback pós-entrega e ações decorrentes — evidência de que o time fechou o ciclo e itera após o lançamento.",
+    "when": "Periodicamente após o lançamento (ex: 30/60/90 dias), ou em retrospectivas de squad.",
+    "fields": [
+      {
+        "id": "metrica_producao",
+        "label": "Métrica em produção observada",
+        "type": "text",
+        "required": true
+      },
+      {
+        "id": "periodo_observado",
+        "label": "Período observado",
+        "type": "text",
+        "required": true
+      },
+      {
+        "id": "canal_feedback",
+        "label": "Canal de feedback monitorado",
+        "type": "list",
+        "required": false
+      },
+      {
+        "id": "acao_decorrente",
+        "label": "Ação/ajuste decorrente",
+        "type": "text",
+        "required": true
+      },
+      {
+        "id": "proximo_ciclo",
+        "label": "Próximo ciclo de revisão",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "auditStage": "posLancamento"
   }
 ]

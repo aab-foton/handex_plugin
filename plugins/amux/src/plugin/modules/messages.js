@@ -42,8 +42,9 @@ window.addEventListener('message', (event) => {
     saveState();
     renderFrameworkInstances();
     updateHomeBadges();
-    if (typeof collectEvidenceSuggestions === 'function') collectEvidenceSuggestions(results);
-    showToast(`${results.length} framework(s) escaneado(s).`, 'success');
+    const synced = typeof syncEvidenceFromScan === 'function' ? syncEvidenceFromScan(results) : [];
+    const msgSuffix = synced.length > 0 ? ` — ${synced.length} vinculado(s) à Auditoria` : '';
+    showToast(`${results.length} framework(s) escaneado(s)${msgSuffix}.`, 'success');
     return;
   }
 

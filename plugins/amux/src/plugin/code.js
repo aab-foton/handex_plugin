@@ -1448,6 +1448,78 @@ async function injectFramework(framework) {
 
     mainFrame.appendChild(sp(8));
   }
+  else if (fid === 'ds-audit-checklist') {
+    mainFrame = vb(640, 48, 0, C.white, 16);
+    mainFrame.name = "Checklist de Auditoria DSC";
+    const hdr = mkHeader("Checklist de Auditoria DSC");
+    mainFrame.appendChild(hdr);
+    hdr.layoutAlign = "STRETCH";
+    mainFrame.appendChild(sp(20));
+
+    const section = (header, body, fieldId) => {
+      mainFrame.appendChild(sp(14));
+      addT(mainFrame, header, 14, "Bold", C.blue, '_label');
+      if (body) {
+        mainFrame.appendChild(sp(4));
+        addT(mainFrame, body, 12, "Regular", C.muted, fieldId ? 'field/' + fieldId : undefined);
+      }
+    };
+
+    section("Lib DSC de referência",                 "Ex: Fundamentos Visuais, Web (Angular/React)...", "lib_referencia");
+    section("Componentes do DSC usados",              "Liste os componentes do Design System aplicados neste projeto.", "componentes_usados");
+    section("Componentes customizados / fora do DSC", "O que fugiu do padrão e precisou de customização.", "componentes_customizados");
+    section("Justificativa dos desvios",              "Por que os desvios acima foram necessários.", "justificativa_desvio");
+    section("Tokens de cor/tipografia verificados",   "Quais tokens (cores, fontes, espaçamentos) foram checados.", "tokens_verificados");
+    mainFrame.appendChild(sp(8));
+  }
+  else if (fid === 'a11y-audit-checklist') {
+    mainFrame = vb(640, 48, 0, C.white, 16);
+    mainFrame.name = "Checklist de Acessibilidade";
+    const hdr = mkHeader("Checklist de Acessibilidade");
+    mainFrame.appendChild(hdr);
+    hdr.layoutAlign = "STRETCH";
+    mainFrame.appendChild(sp(20));
+
+    const section = (header, body, fieldId) => {
+      mainFrame.appendChild(sp(14));
+      addT(mainFrame, header, 14, "Bold", C.teal, '_label');
+      if (body) {
+        mainFrame.appendChild(sp(4));
+        addT(mainFrame, body, 12, "Regular", C.muted, fieldId ? 'field/' + fieldId : undefined);
+      }
+    };
+
+    section("Nível WCAG alvo",                              "A, AA ou AAA.", "nivel_wcag_alvo");
+    section("Componentes da lib Design Acessível usados",   "Liste os componentes acessíveis aplicados.", "componentes_a11y_usados");
+    section("Itens verificados",                             "Contraste, navegação por teclado, leitor de tela, alt-text, etc.", "itens_verificados");
+    section("Desvios encontrados",                           "O que não atendeu ao nível alvo e precisa de ajuste.", "desvios_encontrados");
+    section("Ferramenta/método de checagem",                "Ex: plugin de contraste, leitor de tela, auditoria externa.", "ferramenta_checagem");
+    mainFrame.appendChild(sp(8));
+  }
+  else if (fid === 'post-launch-tracker') {
+    mainFrame = vb(640, 48, 0, C.white, 16);
+    mainFrame.name = "Painel de Acompanhamento Pós-lançamento";
+    const hdr = mkHeader("Acompanhamento Pós-lançamento");
+    mainFrame.appendChild(hdr);
+    hdr.layoutAlign = "STRETCH";
+    mainFrame.appendChild(sp(20));
+
+    const section = (header, body, fieldId) => {
+      mainFrame.appendChild(sp(14));
+      addT(mainFrame, header, 14, "Bold", C.green, '_label');
+      if (body) {
+        mainFrame.appendChild(sp(4));
+        addT(mainFrame, body, 12, "Regular", C.muted, fieldId ? 'field/' + fieldId : undefined);
+      }
+    };
+
+    section("Métrica em produção observada",  "Ex: taxa de conclusão, chamados de suporte, NPS.", "metrica_producao");
+    section("Período observado",               "Ex: 30/60/90 dias após o lançamento.", "periodo_observado");
+    section("Canal de feedback monitorado",    "Ex: pesquisa de satisfação, analytics, suporte.", "canal_feedback");
+    section("Ação/ajuste decorrente",           "O que o time fez a partir do que foi observado.", "acao_decorrente");
+    section("Próximo ciclo de revisão",         "Quando o time volta a olhar essas métricas.", "proximo_ciclo");
+    mainFrame.appendChild(sp(8));
+  }
 
   // ── Finalizar no canvas ──────────────────────────────────────
   if (mainFrame) {
