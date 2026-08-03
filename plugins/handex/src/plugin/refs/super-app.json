@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Super App",
     "figmaFileKey": "epCGtlKQxedDxQVlK3lNcN",
-    "exportedAt": "2026-07-24T19:59:46.422Z",
+    "exportedAt": "2026-08-03T12:23:56.857Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -67,18 +67,18 @@
         "value": "#03453b"
       },
       {
-        "key": "1416193b41f620131c30e8d26f42a5150330fd18",
-        "name": "color/decorative/decorativeOutlined [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#d0f2ed"
-      },
-      {
         "key": "f7d0c2ecc99d5ea43afd7a47ac8a4062d4871c3c",
         "name": "color/accent/accentBg [Color 2]",
         "resolvedType": "COLOR",
         "collection": "SuperApp Theme",
         "value": "#ffefd6"
+      },
+      {
+        "key": "1416193b41f620131c30e8d26f42a5150330fd18",
+        "name": "color/decorative/decorativeOutlined [Color 3]",
+        "resolvedType": "COLOR",
+        "collection": "SuperApp Theme",
+        "value": "#d0f2ed"
       },
       {
         "key": "5770cb929fafef3eb752fdb5d3c3b9b2d5b36e47",
@@ -879,15 +879,15 @@
         "value": "#f0f0f0"
       },
       {
-        "key": "db4eb020cc90fb1f8ace84590a5c41c2b1cbc713",
-        "name": "icon/color/highlight 1 [color 9]",
+        "key": "7e844ccc4bb8c78f5df0a954fa0bc6a94c6621ee",
+        "name": "color/state/highlight/hover2 [Color 9]",
         "resolvedType": "COLOR",
         "collection": "SuperApp Theme",
         "value": "#005194"
       },
       {
-        "key": "7e844ccc4bb8c78f5df0a954fa0bc6a94c6621ee",
-        "name": "color/state/highlight/hover2 [Color 9]",
+        "key": "db4eb020cc90fb1f8ace84590a5c41c2b1cbc713",
+        "name": "icon/color/highlight 1 [color 9]",
         "resolvedType": "COLOR",
         "collection": "SuperApp Theme",
         "value": "#005194"
@@ -1384,10 +1384,10 @@
       },
       {
         "key": "1b3fc12554941251f481ada5637fa415cd055317",
-        "name": "mode",
+        "name": "Mode",
         "resolvedType": "STRING",
         "collection": "SuperApp Theme",
-        "value": "Light"
+        "value": "light"
       },
       {
         "key": "6d55c7ee5d2e1a384aa9d415f041152f27b237c1",
@@ -1551,13 +1551,6 @@
         "value": "#ffffff"
       },
       {
-        "key": "eb3ddb00d95838255af587ad1eb890abbb18a35b",
-        "name": "color blind on",
-        "resolvedType": "BOOLEAN",
-        "collection": "Accessibility",
-        "value": null
-      },
-      {
         "key": "46a7bea58854c19170e7152b4f3ed97718aafb60",
         "name": "Width - Screen",
         "resolvedType": "FLOAT",
@@ -1570,76 +1563,6 @@
         "resolvedType": "FLOAT",
         "collection": "Screen size",
         "value": 800
-      },
-      {
-        "key": "ca24663a9e3759502249fab29b9abb5f005b7581",
-        "name": "variant/tracking progress 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "tracking progress"
-      },
-      {
-        "key": "2b99dea81adec805a8f7200ca90dd8f90ce39139",
-        "name": "Component Set Name",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "Component Set"
-      },
-      {
-        "key": "3f52e4fa38fbdf3c10d707638bb5a5600686fd2b",
-        "name": "Component Set Disclaimer",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "Apresentação dos componentes de design para utilização dos devs e QAs."
-      },
-      {
-        "key": "224dbb4a9aebe089a4ad9b4032ee0e5131882902",
-        "name": "Base Component Alert",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "Base components representam componentes acessórios para compor o componente principal e não devem ser usados fora deste componente principal."
-      },
-      {
-        "key": "5d31d9abfed2ea0171ed1a16b1ca522f4bc3dcf5",
-        "name": "shapes/rounded 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "rounded"
-      },
-      {
-        "key": "651d1dee2e29568bd8675a32d1407dbbc819ab1a",
-        "name": "shapes/hexagon 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "hexagon"
-      },
-      {
-        "key": "634bffa9b81ddec80c681e7982c802f01c0b5be4",
-        "name": "shapes/rosette 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "rosette"
-      },
-      {
-        "key": "cb1b4757a710610ed9f7f115630331aaaf770ea1",
-        "name": "shapes/triangle 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "triangle"
-      },
-      {
-        "key": "47eb21d530faa207a439bfacae8afe92dc12bf3c",
-        "name": "shapes/square 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "square"
-      },
-      {
-        "key": "96e8e5ba683c5fed3f4405b485fec30149d0588f",
-        "name": "shapes/circle 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "circle"
       },
       {
         "key": "441e5c9892c6b8422b58d7fde53fd14a11ac9bb5",
@@ -2046,6 +1969,83 @@
         "resolvedType": "STRING",
         "collection": "Terms dictionary",
         "value": "Usar em outro banco"
+      },
+      {
+        "key": "eb3ddb00d95838255af587ad1eb890abbb18a35b",
+        "name": "color blind on",
+        "resolvedType": "BOOLEAN",
+        "collection": "Accessibility",
+        "value": null
+      },
+      {
+        "key": "ca24663a9e3759502249fab29b9abb5f005b7581",
+        "name": "variant/tracking progress 🔒",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "tracking progress"
+      },
+      {
+        "key": "2b99dea81adec805a8f7200ca90dd8f90ce39139",
+        "name": "Component Set Name",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "Component Set"
+      },
+      {
+        "key": "3f52e4fa38fbdf3c10d707638bb5a5600686fd2b",
+        "name": "Component Set Disclaimer",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "Apresentação dos componentes de design para utilização dos devs e QAs."
+      },
+      {
+        "key": "224dbb4a9aebe089a4ad9b4032ee0e5131882902",
+        "name": "Base Component Alert",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "Base components representam componentes acessórios para compor o componente principal e não devem ser usados fora deste componente principal."
+      },
+      {
+        "key": "5d31d9abfed2ea0171ed1a16b1ca522f4bc3dcf5",
+        "name": "shapes/rounded 🔒",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "rounded"
+      },
+      {
+        "key": "651d1dee2e29568bd8675a32d1407dbbc819ab1a",
+        "name": "shapes/hexagon 🔒",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "hexagon"
+      },
+      {
+        "key": "634bffa9b81ddec80c681e7982c802f01c0b5be4",
+        "name": "shapes/rosette 🔒",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "rosette"
+      },
+      {
+        "key": "cb1b4757a710610ed9f7f115630331aaaf770ea1",
+        "name": "shapes/triangle 🔒",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "triangle"
+      },
+      {
+        "key": "47eb21d530faa207a439bfacae8afe92dc12bf3c",
+        "name": "shapes/square 🔒",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "square"
+      },
+      {
+        "key": "96e8e5ba683c5fed3f4405b485fec30149d0588f",
+        "name": "shapes/circle 🔒",
+        "resolvedType": "STRING",
+        "collection": "Properties glossary",
+        "value": "circle"
       }
     ]
   },
@@ -21964,12 +21964,6 @@
       "containingFrame": ""
     },
     {
-      "key": "099dce44616fee7fbea1df04b9727ca4ab56f39a",
-      "name": "show page controller=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "49e7aad0fcef1257a6d35de0c1d6c9179447055b",
       "name": "show page controller=false",
       "description": "",
@@ -22234,12 +22228,6 @@
       "containingFrame": ""
     },
     {
-      "key": "03cdefd81b9d9db4f8e031819590003ad5b326e3",
-      "name": "type=screen, input=single input, keyboard open=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "03f9f4834483d689506855cce1decc0f86d900a3",
       "name": "variant=banking, state=default",
       "description": "",
@@ -22262,12 +22250,6 @@
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "send-dollars"
-    },
-    {
-      "key": "187634a2867d577e6979a496eb005fa45cb043e0",
-      "name": "height=full, variant=on media bg",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "1b616de302f6deb2ff90da0dc8ce41ecfaaa073e",
@@ -22294,20 +22276,8 @@
       "containingFrame": ""
     },
     {
-      "key": "2b98a999653a8de46138ac2e35b611e5aee533d2",
-      "name": "type=sheet, input=pin (token), keyboard open=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "375c67f4fea10a2fae5329d4a4d6f5220e6adfac",
       "name": "step=rating, category=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3d4342cc3847ab2b55b4a0fc3c683d105e81499e",
-      "name": "type=sheet, input=single input, keyboard open=false",
       "description": "",
       "containingFrame": ""
     },
@@ -22342,20 +22312,14 @@
       "containingFrame": "send-dollars"
     },
     {
-      "key": "6bec1510f69db2da816c5361cbe122958a2641ee",
-      "name": "type=sheet, input=money, keyboard open=false",
+      "key": "6d18203d1b93d7f9cae8ce65f0fd00bf02796314",
+      "name": "state=default",
       "description": "",
       "containingFrame": ""
     },
     {
       "key": "6ca2b8873a2c2e8fe0e2dfe608225f51685f9e23",
       "name": "height=auto, variant=on media bg",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6d18203d1b93d7f9cae8ce65f0fd00bf02796314",
-      "name": "state=default",
       "description": "",
       "containingFrame": ""
     },
@@ -22372,22 +22336,10 @@
       "containingFrame": ""
     },
     {
-      "key": "87c9866210662b33fac6ed63d1651c01562a4654",
-      "name": "type=sheet, input=money, keyboard open=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "8a6c1c46c635ee515d5554edbf84e00a2d0723e8",
       "name": "Weight=Solid",
       "description": "",
       "containingFrame": "share-ios"
-    },
-    {
-      "key": "8dc1cb9f77cb1891ba8b35f5c8ccf8bff6ae3187",
-      "name": "height=full, variant=default",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "91c833d439d1bef39846bf995e53570fb217fcb9",
@@ -22414,12 +22366,6 @@
       "containingFrame": ""
     },
     {
-      "key": "a795fd6dee3de8f208bd56fa1bbab21277e2df80",
-      "name": "type=screen, input=pin (token), keyboard open=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "a922eaefc43bc6ff6df153918c3e4a8a71a1e337",
       "name": "state=loading",
       "description": "",
@@ -22434,12 +22380,6 @@
     {
       "key": "b2e227f22736ecc849d14c525e252340a59482c7",
       "name": "type=sheet, input=single input, keyboard open=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "b63fa17110e46a5d32ff7bb4a64563b427b18d26",
-      "name": "type=screen, input=pin (token), keyboard open=true",
       "description": "",
       "containingFrame": ""
     },
@@ -22462,12 +22402,6 @@
       "containingFrame": ""
     },
     {
-      "key": "d552a41bddb4789757d70e6d3ee0f17b47f106de",
-      "name": "type=screen, input=money, keyboard open=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "e3a26667f8e46c2b6ddecfe12388735b5fec622a",
       "name": "Weight=Dynamic",
       "description": "",
@@ -22486,24 +22420,6 @@
       "containingFrame": ""
     },
     {
-      "key": "f3ccbbfaa8ef683a9f831030ec1333090916b0f5",
-      "name": "type=sheet, input=stepper, keyboard open=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f3ffbbe9a6270ca298618bd62ed369ae7a048b76",
-      "name": "type=sheet, input=pin (token), keyboard open=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f423f7cb3f3c0fd0416fc4358fbd4587dea30a21",
-      "name": "type=screen, input=single input, keyboard open=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "fa4ace8b8449628b4bcf5f493b0e33d2565bbfbf",
       "name": "variant=feedback",
       "description": "",
@@ -22512,6 +22428,12 @@
     {
       "key": "fbc0f15d9817d6a8caa4160af3378a74c7c70c17",
       "name": "step=follow-up, category=neutral",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f3ccbbfaa8ef683a9f831030ec1333090916b0f5",
+      "name": "type=sheet, input=stepper, keyboard open=false",
       "description": "",
       "containingFrame": ""
     },
@@ -22555,12 +22477,6 @@
       "key": "0b3b445e778727c584c0f9e78e77cabf0b4d1cce",
       "name": "variant=swipe left, state=pressed, force centered text=false",
       "description": "⚠️ Swipe to reveal: \nUse em listas que possam ter ações secundárias.Não crie ações que só possam ser usadas pelo swipe, pois ele não é intuitivo ou acessível para todos os usuários.",
-      "containingFrame": ""
-    },
-    {
-      "key": "0bde132d9445789c1ca7edb4969337909c66d4f7",
-      "name": "variant=product home",
-      "description": "",
       "containingFrame": ""
     },
     {
@@ -22762,12 +22678,6 @@
       "containingFrame": ""
     },
     {
-      "key": "55a5d1871db3276e810dafa42f4ce3810c651cd8",
-      "name": "variant=Default",
-      "description": "❖[template] Screen Multipurpose<ScreenExample>\n🏷️ screen generic, screen example",
-      "containingFrame": ""
-    },
-    {
       "key": "55e64e3178032b3ee1bfacaa57aa23a7248973a0",
       "name": "screen=preview",
       "description": "",
@@ -22872,12 +22782,6 @@
     {
       "key": "6eb76168978745d5fb4e710a5aa4a3732a53e03d",
       "name": "variant=high rating, type=reactive",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6ffc5228d007a06d873decde35ce3107f2491cac",
-      "name": "variant=miniapp home",
       "description": "",
       "containingFrame": ""
     },
@@ -23404,12 +23308,6 @@
       "containingFrame": ""
     },
     {
-      "key": "2d2320d667950edf658626c6ed9159048aaa16a8",
-      "name": "state=empty",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "2fd71c904632ebcad3e5fc300bc815c3b8f1e52b",
       "name": "variant=text, state=loading",
       "description": "",
@@ -23458,12 +23356,6 @@
       "containingFrame": ""
     },
     {
-      "key": "3e88bf4a26bbb83f685f776e8e58ccf04ab5d327",
-      "name": "state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "41af9656c4b6659e4b3a9e914c0964c0191c392a",
       "name": "state=loading, featured=true",
       "description": "",
@@ -23471,6 +23363,12 @@
     },
     {
       "key": "42552f76b5045117c6050f898abe034f8ea0b033",
+      "name": "state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3e88bf4a26bbb83f685f776e8e58ccf04ab5d327",
       "name": "state=default",
       "description": "",
       "containingFrame": ""
@@ -23802,12 +23700,6 @@
     {
       "key": "da50c10c2c34e3edba4c3903a409939e1bfa19ac",
       "name": "feedback=warning, animation=step 2",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "db1f74650aa5c89b5574255f93dde72597c58118",
-      "name": "state=loading",
       "description": "",
       "containingFrame": ""
     },
@@ -26051,19 +25943,13 @@
     },
     {
       "key": "fd3f6729da97076f28a70af6d5cdd59509cc9abe",
-      "name": "type=screen, input=money, keyboard open=true",
+      "name": "type=screen, show value=True",
       "description": "",
       "containingFrame": ""
     },
     {
       "key": "fd4ec4a4cf2261cb331a5e5665de10deb3f01cd7",
       "name": "type=sheet, input=stepper, keyboard open=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "01e4e52287fe8a1e93433b6e5b5797948dd43e6a",
-      "name": "variant=mockup, state=pressed, invert text hierarchy=false",
       "description": "",
       "containingFrame": ""
     },
@@ -26088,12 +25974,6 @@
     {
       "key": "0cd599effc4d0128e505d39fab55fabffb9079c7",
       "name": "variant=informative, show action=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1e24d4f9e63c1d466a3915ccd9a4c727bdd10a1d",
-      "name": "variant=mockup, state=pressed, invert text hierarchy=true",
       "description": "",
       "containingFrame": ""
     },
@@ -26134,24 +26014,6 @@
       "containingFrame": ""
     },
     {
-      "key": "25976ab9451a5898112bd891349b9226ab660bf4",
-      "name": "variant=inverse, state=hover, invert text hierarchy=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "27fe24262252338e1d672a407524dac17cac2d41",
-      "name": "variant=image, state=focus, invert text hierarchy=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "281664243f43c1987c7a70d62715e3f36cd509d2",
-      "name": "variant=image, state=pressed, invert text hierarchy=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "2ac02d64e8f634ffa2346cd8ee56c9554284edbd",
       "name": "variant=on gray bg, type=icon, state=pressed",
       "description": "",
@@ -26162,12 +26024,6 @@
       "name": "stroke=dark, width=4px, position=center",
       "description": "",
       "containingFrame": "[dsc-ult] Focus Indicator"
-    },
-    {
-      "key": "30e67efbb2db8594011410fa26a2b988a6fde412",
-      "name": "variant=image, state=default, invert text hierarchy=false",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "312ad5ac00ad9af092e6ed0266d4cd35982cd04b",
@@ -26206,12 +26062,6 @@
       "containingFrame": "[dsc-ult] Focus Indicator"
     },
     {
-      "key": "4f49677e817cb6dc1961a9673eb73fc8cf3a0b6a",
-      "name": "variant=mockup, state=focus, invert text hierarchy=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "5622d964cbfb28ef490d6ef0208855df3b90c38d",
       "name": "stroke=dark, width=4px, position=inside",
       "description": "",
@@ -26228,12 +26078,6 @@
       "name": "system=Android, inverted=false",
       "description": "",
       "containingFrame": "[dsc-ult] Device / Home Indicator"
-    },
-    {
-      "key": "59c946f44bbd902955e59c8a385fc0dfda723cf1",
-      "name": "variant=mockup, state=hover, invert text hierarchy=false",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "5a5619032bda3fd391e0a7e6552e00462ea3cfff",
@@ -26362,12 +26206,6 @@
       "containingFrame": ""
     },
     {
-      "key": "827536cf2796ace52ee0f655b53e8d6595d9917a",
-      "name": "variant=mockup, state=default, invert text hierarchy=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "84ff40be8b22b80b43124dd0dc383d927231a9a6",
       "name": "state=default, status=checked",
       "description": "",
@@ -26422,12 +26260,6 @@
       "containingFrame": "[dsc-ult] Device / Keyboard"
     },
     {
-      "key": "a222f26238c4dd319b577c9af7ec990fb3cedecc",
-      "name": "variant=inverse, state=pressed, invert text hierarchy=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "a2c8871bf98110ef09e212dcaa21a24db375c004",
       "name": "variant=informative, show action=false",
       "description": "",
@@ -26436,12 +26268,6 @@
     {
       "key": "a3df84ac070c5d2e0f96c8948b758c691b86f0f9",
       "name": "state=default, selected=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a8893c753f18256241addc4d989e7963fcd68109",
-      "name": "variant=mockup, state=hover, invert text hierarchy=true",
       "description": "",
       "containingFrame": ""
     },
@@ -26518,18 +26344,6 @@
       "containingFrame": ""
     },
     {
-      "key": "cae948fe9620c11244bf189598b5a170e2d71fc6",
-      "name": "variant=mockup, state=default, invert text hierarchy=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "cb213cbf6c258aba24e7561a6ef403ee137acf76",
-      "name": "variant=inverse, state=default, invert text hierarchy=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "ce2578faf9d5f47a759bdbd024d4c672684df64b",
       "name": "state=hover, selected=false",
       "description": "",
@@ -26566,22 +26380,10 @@
       "containingFrame": ""
     },
     {
-      "key": "d6f14e58248592115aa92d964846ea8a75f07a0c",
-      "name": "variant=mockup, state=focus, invert text hierarchy=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "d9decd118fcc58e9f8ed23d31c4780d93d85688e",
       "name": "stroke=light, width=2px, position=center",
       "description": "",
       "containingFrame": "[dsc-ult] Focus Indicator"
-    },
-    {
-      "key": "daea257665e721ece5acecd843395f0a10c0e252",
-      "name": "variant=inverse, state=focus, invert text hierarchy=true",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "dfff1757f8bbb462cb48df94c9cc2e0f744802dc",
@@ -28590,6 +28392,204 @@
     {
       "key": "fc7b5f17426da0ab0aabab8803426c8c674fa681",
       "name": "variant=on media bg, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "cafe0695ccca0d08d85ecc9ac3c3d8afd75995cf",
+      "name": "type=screen, show value=False",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d908b7393800afa8f9fdd02d7447960e9290f018",
+      "name": "type=sheet, show value=False",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "241ff22c0357557abdb832dbe3a4c94cfaf587ac",
+      "name": "type=sheet, show value=True",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "099dce44616fee7fbea1df04b9727ca4ab56f39a",
+      "name": "show page controller=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0bde132d9445789c1ca7edb4969337909c66d4f7",
+      "name": "variant=product home",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2b98a999653a8de46138ac2e35b611e5aee533d2",
+      "name": "type=sheet, input=pin (token), keyboard open=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2d2320d667950edf658626c6ed9159048aaa16a8",
+      "name": "state=empty",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "55a5d1871db3276e810dafa42f4ce3810c651cd8",
+      "name": "variant=Default",
+      "description": "❖[template] Screen Multipurpose<ScreenExample>\n🏷️ screen generic, screen example",
+      "containingFrame": ""
+    },
+    {
+      "key": "6ffc5228d007a06d873decde35ce3107f2491cac",
+      "name": "variant=miniapp home",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b63fa17110e46a5d32ff7bb4a64563b427b18d26",
+      "name": "type=screen, input=pin (token), keyboard open=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "db1f74650aa5c89b5574255f93dde72597c58118",
+      "name": "state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f3ffbbe9a6270ca298618bd62ed369ae7a048b76",
+      "name": "type=sheet, input=pin (token), keyboard open=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "25976ab9451a5898112bd891349b9226ab660bf4",
+      "name": "variant=inverse, state=hover, invert text hierarchy=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "27fe24262252338e1d672a407524dac17cac2d41",
+      "name": "variant=image, state=focus, invert text hierarchy=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "281664243f43c1987c7a70d62715e3f36cd509d2",
+      "name": "variant=image, state=pressed, invert text hierarchy=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "29eb675101a25e2beca19b16e0a569245310cdcd",
+      "name": "variant=cover, state=default, invert text hierarchy=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "29f721afe776dfda4da5d306e1f12bfc9632862a",
+      "name": "variant=cover, state=focus, invert text hierarchy=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "30e67efbb2db8594011410fa26a2b988a6fde412",
+      "name": "variant=image, state=default, invert text hierarchy=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8d9c03519a2cd2522c6ebe4af582f4849c1091de",
+      "name": "variant=cover, state=pressed, invert text hierarchy=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "909711e6a23ed8cd075e523b84e2a7a4e951bb81",
+      "name": "variant=cover, state=pressed, invert text hierarchy=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a222f26238c4dd319b577c9af7ec990fb3cedecc",
+      "name": "variant=inverse, state=pressed, invert text hierarchy=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c102406274e8e0f5f1828dca7d97ff43c4dc83d0",
+      "name": "variant=cover, state=hover, invert text hierarchy=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "cb213cbf6c258aba24e7561a6ef403ee137acf76",
+      "name": "variant=inverse, state=default, invert text hierarchy=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "daea257665e721ece5acecd843395f0a10c0e252",
+      "name": "variant=inverse, state=focus, invert text hierarchy=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e160149462d53827c27362409a25712df92df32c",
+      "name": "variant=cover, state=hover, invert text hierarchy=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e5ee98ea8911d462f563ed4caee191884ef86dc1",
+      "name": "variant=cover, state=default, invert text hierarchy=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f8e8d741b16af1fbe2df038a38fcba89a16ee400",
+      "name": "variant=cover, state=focus, invert text hierarchy=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "03cdefd81b9d9db4f8e031819590003ad5b326e3",
+      "name": "type=screen, input=single input, keyboard open=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "187634a2867d577e6979a496eb005fa45cb043e0",
+      "name": "height=full, variant=on media bg",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3d4342cc3847ab2b55b4a0fc3c683d105e81499e",
+      "name": "type=sheet, input=single input, keyboard open=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8dc1cb9f77cb1891ba8b35f5c8ccf8bff6ae3187",
+      "name": "height=full, variant=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a795fd6dee3de8f208bd56fa1bbab21277e2df80",
+      "name": "type=screen, input=pin (token), keyboard open=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f423f7cb3f3c0fd0416fc4358fbd4587dea30a21",
+      "name": "type=screen, input=single input, keyboard open=true",
       "description": "",
       "containingFrame": ""
     }

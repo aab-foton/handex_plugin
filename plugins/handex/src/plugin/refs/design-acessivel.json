@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Design Acessível",
     "figmaFileKey": "Wy0IhXRVZMSOOr8E609UqI",
-    "exportedAt": "2026-07-24T20:02:12.560Z",
+    "exportedAt": "2026-08-03T12:24:59.946Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -872,18 +872,18 @@
         "value": "Em HTML <aside> possui um significado semântico, indicando que o conteúdo é \"à parte\",  mas relacionado. "
       },
       {
-        "key": "9fb826cb3106b524ea3b7c24bc34e86d23d1f268",
-        "name": "itens interativos/lista/ordenada/descricao",
-        "resolvedType": "STRING",
-        "collection": "[a11y]specification",
-        "value": "Construir como lista ordenada."
-      },
-      {
         "key": "6549fe3b3f19153b25001fb272dd6bb3a20c611b",
         "name": "estruturais/marcos/header/descricao",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
         "value": "Indicar como cabeçalho. "
+      },
+      {
+        "key": "9fb826cb3106b524ea3b7c24bc34e86d23d1f268",
+        "name": "itens interativos/lista/ordenada/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Construir como lista ordenada."
       },
       {
         "key": "dcc66b5accd20fd977ad8adddf8573fe938fba64",
@@ -900,13 +900,6 @@
         "value": "Em HTML utilize a tag <ol>."
       },
       {
-        "key": "6506ef617dbb027d6c7714f609a07b82d41338c8",
-        "name": "itens interativos/lista/nao ordenada/descricao",
-        "resolvedType": "STRING",
-        "collection": "[a11y]specification",
-        "value": "Construir como lista não ordenada."
-      },
-      {
         "key": "3c17610e4228bf785764215fc58d4406848f1ff9",
         "name": "estruturais/marcos/header/nota",
         "resolvedType": "STRING",
@@ -914,11 +907,11 @@
         "value": "Em HTML use a tag <header> para um cabeçalho de uma seção ou página."
       },
       {
-        "key": "e1710a4ac8687bb89799d8f5e46f9f74b7a1d263",
-        "name": "itens interativos/lista/nao ordenada/nota",
+        "key": "6506ef617dbb027d6c7714f609a07b82d41338c8",
+        "name": "itens interativos/lista/nao ordenada/descricao",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
-        "value": "Em HTML utilize a tag <ul>."
+        "value": "Construir como lista não ordenada."
       },
       {
         "key": "6e4aed443c5b6cfe318c637887897d3cce78b139",
@@ -926,6 +919,13 @@
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
         "value": "Indicar como rodapé. "
+      },
+      {
+        "key": "e1710a4ac8687bb89799d8f5e46f9f74b7a1d263",
+        "name": "itens interativos/lista/nao ordenada/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML utilize a tag <ul>."
       },
       {
         "key": "0c5e36755c9ffeace223ac70479e3cc06a33c013",
@@ -942,18 +942,18 @@
         "value": "É um elemento que oferece um local centralizado para informações importantes para serem acessadas facilmente."
       },
       {
-        "key": "f4cffb7e6b130dc20dee93887059f7fc68264134",
-        "name": "itens interativos/lista/de definição/nota",
-        "resolvedType": "STRING",
-        "collection": "[a11y]specification",
-        "value": "Em HTML utilize a tag <dl>."
-      },
-      {
         "key": "2cacfd2766356cba69327f85d9b015f7d33bd399",
         "name": "estruturais/marcos/footer/nota",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
         "value": " Em HTML use a tag <footer> para agrupar informações relacionadas à parte inferior de uma página ou seção."
+      },
+      {
+        "key": "f4cffb7e6b130dc20dee93887059f7fc68264134",
+        "name": "itens interativos/lista/de definição/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML utilize a tag <dl>."
       },
       {
         "key": "0dbec947265d6d739987db9fedca81d9d42fed2b",
