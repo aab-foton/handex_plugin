@@ -26,18 +26,19 @@ const css          = read('styles/plugin.css');
 const modCore      = read('modules/core.js');
 const modAudit     = read('modules/audit.js');
 const modEvidence  = read('modules/evidence-bridge.js');
+const modUxTest    = read('modules/usability-test.js');
 const modMsgs      = read('modules/messages.js');
 const modAi        = read('modules/ai-client.js');
 const modFw        = read('modules/frameworks.js');
 
-const viewHome       = read('views/home.html');
-const viewBriefing   = read('views/briefing.html');
-const viewAudit      = read('views/audit.html');
-const viewScore      = read('views/score.html');
-const viewFrameworks = read('views/frameworks.html');
-const viewCollected  = read('views/collected.html');
-const viewGuide      = read('views/guide.html');
-const modals         = read('views/modals.html');
+const viewHome        = read('views/home.html');
+const viewBriefing    = read('views/briefing.html');
+const viewAudit       = read('views/audit.html');
+const viewScore       = read('views/score.html');
+const viewFrameworks  = read('views/frameworks.html');
+const viewUxTest      = read('views/usability-test.html');
+const viewGuide       = read('views/guide.html');
+const modals          = read('views/modals.html');
 
 const html = `<!doctype html>
 <html lang="pt-BR">
@@ -106,13 +107,13 @@ ${css}
     </div>
   </header>
 
-  <div class="flex-1 overflow-y-auto relative" onscroll="handleScroll(this)">
+  <div class="flex-1 overflow-y-auto relative">
 ${viewHome}
 ${viewBriefing}
 ${viewAudit}
 ${viewScore}
 ${viewFrameworks}
-${viewCollected}
+${viewUxTest}
 ${viewGuide}
 ${modals}
   </div>
@@ -141,6 +142,11 @@ ${modAudit}
 // MODULE: evidence-bridge.js
 // ============================================================
 ${modEvidence}
+
+// ============================================================
+// MODULE: usability-test.js
+// ============================================================
+${modUxTest}
 
 // ============================================================
 // MODULE: messages.js
@@ -177,6 +183,16 @@ ${modFw}
         btn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
       }
     }
+    // O scroll de fato acontece dentro de cada <main class="view">
+    // (cada view tem seu próprio overflow-y-auto), não no wrapper
+    // ".flex-1.overflow-y-auto" que só as contém — scroll não faz bubble,
+    // então escutamos na fase de captura no ancestral comum para cobrir
+    // qualquer view ativa sem precisar de um listener por view.
+    document.addEventListener('scroll', (e) => {
+      if (e.target && e.target.classList && e.target.classList.contains('view')) {
+        handleScroll(e.target);
+      }
+    }, true);
     function scrollToTop() {
       document.querySelectorAll('.view.active').forEach(v => v.scrollTo({ top: 0, behavior: 'smooth' }));
       const sc = document.querySelector('.flex-1.overflow-y-auto');

@@ -85,7 +85,7 @@ function syncEvidenceFromScan(scanResults) {
       etapasTocadas.add(etapa);
     }
 
-    synced.push({ etapa, frameworkName: inst.frameworkName, frameName: inst.frameName, fieldCount: inst.fieldCount, updated });
+    synced.push({ id: inst.instanceId, etapa, frameworkName: inst.frameworkName, frameName: inst.frameName, fieldCount: inst.fieldCount, updated });
   });
 
   if (synced.length > 0) {
@@ -105,6 +105,16 @@ function syncEvidenceFromScan(scanResults) {
   return synced;
 }
 
+function dismissSyncItem(id) {
+  _lastSyncSummary = _lastSyncSummary.filter(s => s.id !== id);
+  renderEvidenceSyncSummary();
+}
+
+function dismissSyncSummary() {
+  _lastSyncSummary = [];
+  renderEvidenceSyncSummary();
+}
+
 function renderEvidenceSyncSummary() {
   const container = document.getElementById('evidence-suggestions');
   if (!container) return;
@@ -117,17 +127,25 @@ function renderEvidenceSyncSummary() {
 
   container.classList.remove('hidden');
   container.innerHTML = `
-    <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide mb-2">Evidências sincronizadas do canvas (${_lastSyncSummary.length})</p>
+    <div class="flex items-center justify-between mb-2">
+      <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Evidências sincronizadas do canvas (${_lastSyncSummary.length})</p>
+      <button onclick="dismissSyncSummary()" class="text-slate-300 hover:text-slate-500 dark:hover:text-dark-muted transition-colors shrink-0" aria-label="Fechar resumo">
+        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+      </button>
+    </div>
     <div class="space-y-2 mb-4">
       ${_lastSyncSummary.map(s => `
         <div class="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 rounded-xl px-3 py-2.5 flex items-start gap-2">
           <i data-lucide="${s.updated ? 'refresh-cw' : 'check-circle-2'}" class="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400"></i>
-          <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-snug">
+          <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-snug flex-1">
             <span class="font-bold text-slate-800 dark:text-white">${s.frameworkName}</span>
             ${s.updated ? 'atualizado como' : 'anexado como'} evidência de
             <span class="font-bold text-emerald-600 dark:text-emerald-400">${AMUX_ETAPA_LABELS[s.etapa]}</span>
             (${s.fieldCount} campo(s) preenchidos)
           </p>
+          <button onclick="dismissSyncItem('${s.id}')" class="text-emerald-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors shrink-0" aria-label="Fechar item">
+            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+          </button>
         </div>
       `).join('')}
     </div>`;
@@ -135,4 +153,42 @@ function renderEvidenceSyncSummary() {
   try { lucide.createIcons(); } catch(e) {}
 }
 
-Object.assign(window, { syncEvidenceFromScan, renderEvidenceSyncSummary });
+// Sincroniza um Teste de Usabilidade concluído com evidencias.validacao
+// — mesmo princípio dos frameworks (o dado real vivo em outro módulo é
+// a fonte de evidência, não uma cópia manual), mas aqui o artefato
+// carrega métricas agregadas (participantes, taxa de sucesso) em vez de
+// apenas fieldCount, porque um teste de usabilidade produz muito mais
+// contexto do que um framework escaneado.
+function syncUsabilityTestToEvidence(test) {
+  if (!amuxData.evidencias.validacao) return false;
+  const m = typeof _testMetrics === 'function' ? _testMetrics(test) : { taxaSucessoGeral: 0 };
+  const artefato = {
+    id: _generateId(),
+    nome: test.nome,
+    tipo: 'Teste de usabilidade moderado',
+    url: '',
+    anexadoEm: new Date().toISOString(),
+    metadados: {
+      qtdUsuariosTestados: String(test.sessoes.length),
+      metricaColetada: `Taxa de sucesso geral: ${m.taxaSucessoGeral}% · ${test.achados.length} achado(s)`,
+      dataRealizacao: (test.sessoes[test.sessoes.length - 1]?.dataRealizacao || '').slice(0, 10)
+    },
+    origem: 'usability-test',
+    origemFrameworkId: '',
+    origemInstanceId: test.id
+  };
+
+  const artefatos = amuxData.evidencias.validacao.artefatos;
+  const idx = artefatos.findIndex(a => a.origemInstanceId === test.id);
+  if (idx >= 0) {
+    artefatos[idx] = { ...artefatos[idx], ...artefato, id: artefatos[idx].id, anexadoEm: artefatos[idx].anexadoEm };
+  } else {
+    artefatos.push(artefato);
+  }
+  saveState();
+  if (typeof renderArtefatos === 'function') renderArtefatos('validacao');
+  updateHomeBadges();
+  return true;
+}
+
+Object.assign(window, { syncEvidenceFromScan, renderEvidenceSyncSummary, dismissSyncItem, dismissSyncSummary, syncUsabilityTestToEvidence });

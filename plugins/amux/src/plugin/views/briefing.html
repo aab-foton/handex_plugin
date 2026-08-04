@@ -42,14 +42,16 @@
 
       <div>
         <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">
-          Nome do Projeto <span class="text-red-400">*</span>
+          Nome do Projeto
         </label>
-        <input id="b-nome-projeto" type="text" placeholder="Ex: Auditoria de Maturidade UX" class="w-full" />
+        <div id="b-nome-projeto" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-500 dark:text-dark-muted truncate" title="Preenchido automaticamente com o nome do arquivo Figma">—</div>
+        <p class="text-[9px] text-slate-400 dark:text-dark-muted mt-1">Preenchido automaticamente com o nome do arquivo Figma.</p>
       </div>
 
       <div>
-        <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Data de Início</label>
-        <input id="b-data-inicio" type="text" placeholder="DD/MM/AAAA" class="w-full" />
+        <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Data de Registro</label>
+        <div id="b-data-inicio" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-500 dark:text-dark-muted" title="Data em que este projeto foi registrado no plugin">—</div>
+        <p class="text-[9px] text-slate-400 dark:text-dark-muted mt-1">Preenchida automaticamente com a data de criação deste projeto no plugin.</p>
       </div>
     </div>
 
@@ -128,20 +130,73 @@
         <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Compartilhamento de Dados</label>
         <input id="b-compartilhamento" type="text" placeholder="Ex: Figma (prioritário)" class="w-full" />
       </div>
+
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Comunicação</label>
+        <textarea id="b-comunicacao" rows="2" placeholder="Ex: reuniões por email, feitas pelo Teams."
+          class="w-full resize-none leading-relaxed"></textarea>
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-3.5 space-y-3">
+      <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Escopo e Riscos</p>
+
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Está no escopo</label>
+        <textarea id="b-in-scope" rows="2" placeholder="O que precisa ser trabalhado e por quê."
+          class="w-full resize-none leading-relaxed"></textarea>
+      </div>
+
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Pode estar no escopo</label>
+        <textarea id="b-maybe-scope" rows="2" placeholder="O que depende de outros fatores para entrar."
+          class="w-full resize-none leading-relaxed"></textarea>
+      </div>
+
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Não está no escopo</label>
+        <textarea id="b-out-scope" rows="2" placeholder="Limitações técnicas ou escopo excluído explicitamente."
+          class="w-full resize-none leading-relaxed"></textarea>
+      </div>
+
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Dependências</label>
+        <textarea id="b-dependencias" rows="2" placeholder="Outras áreas com conhecimento sobre parte do projeto."
+          class="w-full resize-none leading-relaxed"></textarea>
+      </div>
+
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Riscos</label>
+        <textarea id="b-riscos" rows="2" placeholder="O que pode atrapalhar o sucesso? O que acontece se não atingirmos as metas?"
+          class="w-full resize-none leading-relaxed"></textarea>
+      </div>
+
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Notas adicionais</label>
+        <textarea id="b-notas" rows="2" placeholder="Notas aqui."
+          class="w-full resize-none leading-relaxed"></textarea>
+      </div>
     </div>
 
   </div>
 
   <!-- Ações -->
-  <div class="pt-5 flex gap-3">
-    <button onclick="clearBriefing()"
-      class="px-4 py-2.5 text-[12px] font-bold text-slate-400 hover:text-slate-600 dark:text-dark-muted border border-gray-200 dark:border-dark-line rounded-xl transition-colors">
-      Limpar
-    </button>
-    <button onclick="saveBriefing()"
-      class="flex-1 py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[13px] font-extrabold rounded-xl transition-colors flex items-center justify-center gap-2">
-      <i data-lucide="check" class="w-4 h-4"></i>
-      Salvar Briefing
+  <div class="pt-5 space-y-2">
+    <div class="flex gap-3">
+      <button onclick="clearBriefing()"
+        class="px-4 py-2.5 text-[12px] font-bold text-slate-400 hover:text-slate-600 dark:text-dark-muted border border-gray-200 dark:border-dark-line rounded-xl transition-colors">
+        Limpar
+      </button>
+      <button onclick="saveBriefing()"
+        class="flex-1 py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[13px] font-extrabold rounded-xl transition-colors flex items-center justify-center gap-2">
+        <i data-lucide="check" class="w-4 h-4"></i>
+        Salvar Briefing
+      </button>
+    </div>
+    <button onclick="injectBriefingIntoCanvas()"
+      class="w-full py-2.5 bg-white dark:bg-dark-surface border border-blue-300 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[12px] font-bold rounded-xl transition-colors flex items-center justify-center gap-2">
+      <i data-lucide="layout-template" class="w-4 h-4"></i>
+      Inserir no Canvas
     </button>
   </div>
 

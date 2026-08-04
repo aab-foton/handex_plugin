@@ -32,15 +32,21 @@
         <div id="artefatos-lista-descoberta" class="space-y-2"></div>
       </div>
 
-      <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-3.5 space-y-2.5">
-        <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Anexar novo artefato</p>
-        <select id="artefato-tipo-descoberta" class="w-full"></select>
-        <input id="artefato-nome-descoberta" type="text" placeholder="Nome do artefato" class="w-full" />
-        <input id="artefato-url-descoberta" type="text" placeholder="Link (opcional)" class="w-full" />
-        <div id="artefato-campos-descoberta" class="flex flex-col gap-2.5"></div>
-        <button onclick="addArtefato('descoberta')" class="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-dark-muted text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
-          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Anexar artefato
+      <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-3.5">
+        <button onclick="toggleArtefatoForm('descoberta')" id="btn-toggle-artefato-descoberta" class="w-full flex items-center justify-between text-left">
+          <span class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Anexar evidência manualmente</span>
+          <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform"></i>
         </button>
+        <div id="artefato-form-descoberta" class="hidden pt-2.5 space-y-2.5">
+          <select id="artefato-tipo-descoberta" class="w-full"></select>
+          <div id="artefato-fw-suggestion-descoberta" class="hidden flex items-start gap-1.5 text-[10px] text-slate-500 dark:text-dark-muted leading-relaxed bg-blue-50/60 dark:bg-blue-900/10 rounded-lg p-2"></div>
+          <input id="artefato-nome-descoberta" type="text" placeholder="Nome do artefato" class="w-full" />
+          <input id="artefato-url-descoberta" type="text" placeholder="Link (opcional)" class="w-full" />
+          <div id="artefato-campos-descoberta" class="flex flex-col gap-2.5"></div>
+          <button onclick="addArtefato('descoberta')" class="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-dark-muted text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Anexar artefato
+          </button>
+        </div>
       </div>
 
       <textarea id="etapa-obs-descoberta" onblur="saveEtapaObservacoes('descoberta')" rows="2" placeholder="Observações sobre esta etapa..." class="w-full resize-none leading-relaxed"></textarea>
@@ -54,15 +60,21 @@
         <div id="artefatos-lista-definicao" class="space-y-2"></div>
       </div>
 
-      <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-3.5 space-y-2.5">
-        <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Anexar novo artefato</p>
-        <select id="artefato-tipo-definicao" class="w-full"></select>
-        <input id="artefato-nome-definicao" type="text" placeholder="Nome do artefato" class="w-full" />
-        <input id="artefato-url-definicao" type="text" placeholder="Link (opcional)" class="w-full" />
-        <div id="artefato-campos-definicao" class="flex flex-col gap-2.5"></div>
-        <button onclick="addArtefato('definicao')" class="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-dark-muted text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
-          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Anexar artefato
+      <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-3.5">
+        <button onclick="toggleArtefatoForm('definicao')" id="btn-toggle-artefato-definicao" class="w-full flex items-center justify-between text-left">
+          <span class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Anexar evidência manualmente</span>
+          <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform"></i>
         </button>
+        <div id="artefato-form-definicao" class="hidden pt-2.5 space-y-2.5">
+          <select id="artefato-tipo-definicao" class="w-full"></select>
+          <div id="artefato-fw-suggestion-definicao" class="hidden flex items-start gap-1.5 text-[10px] text-slate-500 dark:text-dark-muted leading-relaxed bg-blue-50/60 dark:bg-blue-900/10 rounded-lg p-2"></div>
+          <input id="artefato-nome-definicao" type="text" placeholder="Nome do artefato" class="w-full" />
+          <input id="artefato-url-definicao" type="text" placeholder="Link (opcional)" class="w-full" />
+          <div id="artefato-campos-definicao" class="flex flex-col gap-2.5"></div>
+          <button onclick="addArtefato('definicao')" class="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-dark-muted text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Anexar artefato
+          </button>
+        </div>
       </div>
 
       <textarea id="etapa-obs-definicao" onblur="saveEtapaObservacoes('definicao')" rows="2" placeholder="Observações sobre esta etapa..." class="w-full resize-none leading-relaxed"></textarea>
@@ -76,15 +88,21 @@
         <div id="artefatos-lista-ideacao" class="space-y-2"></div>
       </div>
 
-      <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-3.5 space-y-2.5">
-        <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Anexar novo artefato</p>
-        <select id="artefato-tipo-ideacao" class="w-full"></select>
-        <input id="artefato-nome-ideacao" type="text" placeholder="Nome do artefato" class="w-full" />
-        <input id="artefato-url-ideacao" type="text" placeholder="Link (opcional)" class="w-full" />
-        <div id="artefato-campos-ideacao" class="flex flex-col gap-2.5"></div>
-        <button onclick="addArtefato('ideacao')" class="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-dark-muted text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
-          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Anexar artefato
+      <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-3.5">
+        <button onclick="toggleArtefatoForm('ideacao')" id="btn-toggle-artefato-ideacao" class="w-full flex items-center justify-between text-left">
+          <span class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Anexar evidência manualmente</span>
+          <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform"></i>
         </button>
+        <div id="artefato-form-ideacao" class="hidden pt-2.5 space-y-2.5">
+          <select id="artefato-tipo-ideacao" class="w-full"></select>
+          <div id="artefato-fw-suggestion-ideacao" class="hidden flex items-start gap-1.5 text-[10px] text-slate-500 dark:text-dark-muted leading-relaxed bg-blue-50/60 dark:bg-blue-900/10 rounded-lg p-2"></div>
+          <input id="artefato-nome-ideacao" type="text" placeholder="Nome do artefato" class="w-full" />
+          <input id="artefato-url-ideacao" type="text" placeholder="Link (opcional)" class="w-full" />
+          <div id="artefato-campos-ideacao" class="flex flex-col gap-2.5"></div>
+          <button onclick="addArtefato('ideacao')" class="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-dark-muted text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Anexar artefato
+          </button>
+        </div>
       </div>
 
       <textarea id="etapa-obs-ideacao" onblur="saveEtapaObservacoes('ideacao')" rows="2" placeholder="Observações sobre esta etapa..." class="w-full resize-none leading-relaxed"></textarea>
@@ -98,15 +116,21 @@
         <div id="artefatos-lista-validacao" class="space-y-2"></div>
       </div>
 
-      <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-3.5 space-y-2.5">
-        <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Anexar novo artefato</p>
-        <select id="artefato-tipo-validacao" class="w-full"></select>
-        <input id="artefato-nome-validacao" type="text" placeholder="Nome do artefato" class="w-full" />
-        <input id="artefato-url-validacao" type="text" placeholder="Link (opcional)" class="w-full" />
-        <div id="artefato-campos-validacao" class="flex flex-col gap-2.5"></div>
-        <button onclick="addArtefato('validacao')" class="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-dark-muted text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
-          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Anexar artefato
+      <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-3.5">
+        <button onclick="toggleArtefatoForm('validacao')" id="btn-toggle-artefato-validacao" class="w-full flex items-center justify-between text-left">
+          <span class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Anexar evidência manualmente</span>
+          <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform"></i>
         </button>
+        <div id="artefato-form-validacao" class="hidden pt-2.5 space-y-2.5">
+          <select id="artefato-tipo-validacao" class="w-full"></select>
+          <div id="artefato-fw-suggestion-validacao" class="hidden flex items-start gap-1.5 text-[10px] text-slate-500 dark:text-dark-muted leading-relaxed bg-blue-50/60 dark:bg-blue-900/10 rounded-lg p-2"></div>
+          <input id="artefato-nome-validacao" type="text" placeholder="Nome do artefato" class="w-full" />
+          <input id="artefato-url-validacao" type="text" placeholder="Link (opcional)" class="w-full" />
+          <div id="artefato-campos-validacao" class="flex flex-col gap-2.5"></div>
+          <button onclick="addArtefato('validacao')" class="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-dark-muted text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Anexar artefato
+          </button>
+        </div>
       </div>
 
       <textarea id="etapa-obs-validacao" onblur="saveEtapaObservacoes('validacao')" rows="2" placeholder="Observações sobre esta etapa..." class="w-full resize-none leading-relaxed"></textarea>
@@ -120,15 +144,21 @@
         <div id="artefatos-lista-posLancamento" class="space-y-2"></div>
       </div>
 
-      <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-3.5 space-y-2.5">
-        <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Anexar novo artefato</p>
-        <select id="artefato-tipo-posLancamento" class="w-full"></select>
-        <input id="artefato-nome-posLancamento" type="text" placeholder="Nome do artefato" class="w-full" />
-        <input id="artefato-url-posLancamento" type="text" placeholder="Link (opcional)" class="w-full" />
-        <div id="artefato-campos-posLancamento" class="flex flex-col gap-2.5"></div>
-        <button onclick="addArtefato('posLancamento')" class="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-dark-muted text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
-          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Anexar artefato
+      <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-3.5">
+        <button onclick="toggleArtefatoForm('posLancamento')" id="btn-toggle-artefato-posLancamento" class="w-full flex items-center justify-between text-left">
+          <span class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Anexar evidência manualmente</span>
+          <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform"></i>
         </button>
+        <div id="artefato-form-posLancamento" class="hidden pt-2.5 space-y-2.5">
+          <select id="artefato-tipo-posLancamento" class="w-full"></select>
+          <div id="artefato-fw-suggestion-posLancamento" class="hidden flex items-start gap-1.5 text-[10px] text-slate-500 dark:text-dark-muted leading-relaxed bg-blue-50/60 dark:bg-blue-900/10 rounded-lg p-2"></div>
+          <input id="artefato-nome-posLancamento" type="text" placeholder="Nome do artefato" class="w-full" />
+          <input id="artefato-url-posLancamento" type="text" placeholder="Link (opcional)" class="w-full" />
+          <div id="artefato-campos-posLancamento" class="flex flex-col gap-2.5"></div>
+          <button onclick="addArtefato('posLancamento')" class="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-dark-muted text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Anexar artefato
+          </button>
+        </div>
       </div>
 
       <textarea id="etapa-obs-posLancamento" onblur="saveEtapaObservacoes('posLancamento')" rows="2" placeholder="Observações sobre esta etapa..." class="w-full resize-none leading-relaxed"></textarea>
@@ -136,8 +166,19 @@
 
   </div>
 
-  <div class="pt-4 mt-4 border-t border-gray-100 dark:border-dark-line space-y-4">
-    <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Aderência ao Design System e Acessibilidade</p>
+  <!-- Bloco de CONFORMIDADE DECLARADA — deliberadamente destacado do fluxo
+       de etapas acima: fundo de seção próprio + cabeçalho com ícone, para
+       que o usuário não confunda isso com uma 6ª etapa do processo. -->
+  <div class="mt-5 -mx-5 px-5 py-4 bg-slate-50 dark:bg-black/20 border-t border-b border-gray-100 dark:border-dark-line space-y-3.5">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 flex items-center justify-center bg-indigo-100 dark:bg-indigo-900/30 rounded-lg shrink-0">
+        <i data-lucide="shield-check" class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300"></i>
+      </div>
+      <div>
+        <p class="text-[12px] font-extrabold text-slate-700 dark:text-white leading-tight">Conformidade declarada</p>
+        <p class="text-[10px] text-slate-400 dark:text-dark-muted leading-tight">Aderência ao Design System CAIXA e à acessibilidade — não é uma etapa do processo</p>
+      </div>
+    </div>
 
     <!-- Design System -->
     <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-3.5 space-y-2.5">
@@ -145,10 +186,16 @@
         <span class="text-[12px] font-bold text-slate-700 dark:text-white">Design System CAIXA</span>
         <span id="audit-status-designSystem" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-500">Pendente</span>
       </div>
-      <div class="flex flex-wrap gap-1.5">
-        <button data-audit-toggle="designSystem" data-audit-value="pendente" onclick="setAuditStatus('designSystem','pendente')" class="flex-1 min-w-[90px] py-2 text-[11px] font-bold rounded-xl transition-all">Pendente</button>
-        <button data-audit-toggle="designSystem" data-audit-value="conforme" onclick="setAuditStatus('designSystem','conforme')" class="flex-1 min-w-[90px] py-2 text-[11px] font-bold rounded-xl transition-all">Conforme</button>
-        <button data-audit-toggle="designSystem" data-audit-value="com-desvios" onclick="setAuditStatus('designSystem','com-desvios')" class="flex-1 min-w-[90px] py-2 text-[11px] font-bold rounded-xl transition-all">Com desvios</button>
+      <div class="flex flex-col gap-1.5">
+        <button data-audit-toggle="designSystem" data-audit-value="pendente" onclick="setAuditStatus('designSystem','pendente')" class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold rounded-lg border transition-all">
+          <i data-lucide="circle-dashed" class="w-3.5 h-3.5 shrink-0"></i> Pendente
+        </button>
+        <button data-audit-toggle="designSystem" data-audit-value="conforme" onclick="setAuditStatus('designSystem','conforme')" class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold rounded-lg border transition-all">
+          <i data-lucide="check-circle-2" class="w-3.5 h-3.5 shrink-0"></i> Conforme
+        </button>
+        <button data-audit-toggle="designSystem" data-audit-value="com-desvios" onclick="setAuditStatus('designSystem','com-desvios')" class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold rounded-lg border transition-all">
+          <i data-lucide="alert-triangle" class="w-3.5 h-3.5 shrink-0"></i> Com desvios
+        </button>
       </div>
       <textarea id="audit-obs-designSystem" onblur="saveAuditObservacoes('designSystem')" rows="2" placeholder="Observações sobre aderência ao DSC..." class="w-full resize-none leading-relaxed"></textarea>
     </div>
@@ -159,10 +206,16 @@
         <span class="text-[12px] font-bold text-slate-700 dark:text-white">Acessibilidade (WCAG)</span>
         <span id="audit-status-acessibilidade" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-500">Pendente</span>
       </div>
-      <div class="flex flex-wrap gap-1.5">
-        <button data-audit-toggle="acessibilidade" data-audit-value="pendente" onclick="setAuditStatus('acessibilidade','pendente')" class="flex-1 min-w-[90px] py-2 text-[11px] font-bold rounded-xl transition-all">Pendente</button>
-        <button data-audit-toggle="acessibilidade" data-audit-value="conforme" onclick="setAuditStatus('acessibilidade','conforme')" class="flex-1 min-w-[90px] py-2 text-[11px] font-bold rounded-xl transition-all">Conforme</button>
-        <button data-audit-toggle="acessibilidade" data-audit-value="com-desvios" onclick="setAuditStatus('acessibilidade','com-desvios')" class="flex-1 min-w-[90px] py-2 text-[11px] font-bold rounded-xl transition-all">Com desvios</button>
+      <div class="flex flex-col gap-1.5">
+        <button data-audit-toggle="acessibilidade" data-audit-value="pendente" onclick="setAuditStatus('acessibilidade','pendente')" class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold rounded-lg border transition-all">
+          <i data-lucide="circle-dashed" class="w-3.5 h-3.5 shrink-0"></i> Pendente
+        </button>
+        <button data-audit-toggle="acessibilidade" data-audit-value="conforme" onclick="setAuditStatus('acessibilidade','conforme')" class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold rounded-lg border transition-all">
+          <i data-lucide="check-circle-2" class="w-3.5 h-3.5 shrink-0"></i> Conforme
+        </button>
+        <button data-audit-toggle="acessibilidade" data-audit-value="com-desvios" onclick="setAuditStatus('acessibilidade','com-desvios')" class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold rounded-lg border transition-all">
+          <i data-lucide="alert-triangle" class="w-3.5 h-3.5 shrink-0"></i> Com desvios
+        </button>
       </div>
       <textarea id="audit-obs-acessibilidade" onblur="saveAuditObservacoes('acessibilidade')" rows="2" placeholder="Observações sobre conformidade WCAG..." class="w-full resize-none leading-relaxed"></textarea>
     </div>

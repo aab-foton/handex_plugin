@@ -1,73 +1,5 @@
 [
   {
-    "id": "briefing",
-    "name": "Briefing Estruturado",
-    "icon": "clipboard-list",
-    "color": "text-blue-600",
-    "bg": "bg-blue-50 dark:bg-blue-900/20",
-    "category": "Descoberta",
-    "categoryColor": "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-    "description": "Alinha o time no início do projeto: contexto, escopo, atores, riscos e critérios de sucesso em um único artefato.",
-    "when": "Kickoff do projeto ou quando a demanda chega sem documentação clara.",
-    "fields": [
-      {
-        "id": "context",
-        "label": "Contexto",
-        "type": "text",
-        "required": true
-      },
-      {
-        "id": "objectives",
-        "label": "Resultados-chave",
-        "type": "list",
-        "required": true
-      },
-      {
-        "id": "actors",
-        "label": "Atores",
-        "type": "list",
-        "required": false
-      },
-      {
-        "id": "in_scope",
-        "label": "Está no escopo",
-        "type": "list",
-        "required": false
-      },
-      {
-        "id": "maybe_scope",
-        "label": "Pode entrar",
-        "type": "list",
-        "required": false
-      },
-      {
-        "id": "out_scope",
-        "label": "Não está no escopo",
-        "type": "list",
-        "required": false
-      },
-      {
-        "id": "dependencies",
-        "label": "Dependências",
-        "type": "list",
-        "required": false
-      },
-      {
-        "id": "risks",
-        "label": "Riscos",
-        "type": "list",
-        "required": false
-      },
-      {
-        "id": "deadline",
-        "label": "Prazo",
-        "type": "text",
-        "required": false
-      }
-    ],
-    "auditStage": "descoberta"
-  },
-  {
     "id": "csd",
     "name": "Matriz CSD",
     "icon": "triangle-alert",
@@ -143,6 +75,12 @@
       {
         "id": "why5",
         "label": "Por quê? 5",
+        "type": "text",
+        "required": false
+      },
+      {
+        "id": "why6",
+        "label": "Por quê? 6",
         "type": "text",
         "required": false
       },
@@ -470,6 +408,12 @@
         "id": "opportunities",
         "label": "Oportunidades",
         "type": "list",
+        "required": false
+      },
+      {
+        "id": "notes",
+        "label": "Observações adicionais",
+        "type": "text",
         "required": false
       }
     ],
@@ -851,8 +795,26 @@
         "required": true
       },
       {
+        "id": "v1_emotion",
+        "label": "v1.0 — Emoção / Sentimento",
+        "type": "list",
+        "required": false
+      },
+      {
         "id": "v1_pains",
         "label": "v1.0 — Dores",
+        "type": "list",
+        "required": false
+      },
+      {
+        "id": "v1_opportunities",
+        "label": "v1.0 — Oportunidades",
+        "type": "list",
+        "required": false
+      },
+      {
+        "id": "v1_notes",
+        "label": "v1.0 — Observações",
         "type": "list",
         "required": false
       },
@@ -863,8 +825,50 @@
         "required": true
       },
       {
+        "id": "v2_emotion",
+        "label": "v2.0 — Emoção / Sentimento",
+        "type": "list",
+        "required": false
+      },
+      {
+        "id": "v2_pains",
+        "label": "v2.0 — Dores",
+        "type": "list",
+        "required": false
+      },
+      {
         "id": "v2_improved",
         "label": "v2.0 — Melhorias",
+        "type": "list",
+        "required": false
+      },
+      {
+        "id": "v2_notes",
+        "label": "v2.0 — Observações",
+        "type": "list",
+        "required": false
+      },
+      {
+        "id": "v3_actions",
+        "label": "v3.0 — Ações do Usuário",
+        "type": "list",
+        "required": false
+      },
+      {
+        "id": "v3_emotion",
+        "label": "v3.0 — Emoção / Sentimento",
+        "type": "list",
+        "required": false
+      },
+      {
+        "id": "v3_pains",
+        "label": "v3.0 — Dores",
+        "type": "list",
+        "required": false
+      },
+      {
+        "id": "v3_improved",
+        "label": "v3.0 — Melhorias",
         "type": "list",
         "required": false
       },
@@ -1008,5 +1012,95 @@
       }
     ],
     "auditStage": "posLancamento"
+  },
+  {
+    "id": "card-sorting",
+    "name": "Síntese de Card Sorting",
+    "icon": "layout-grid",
+    "color": "text-teal-500",
+    "bg": "bg-teal-50 dark:bg-teal-900/20",
+    "category": "Pesquisa",
+    "categoryColor": "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
+    "description": "Organiza as categorias e agrupamentos que emergiram de uma sessão de card sorting conduzida fora do Figma (ex: Optimal Workshop), para o time sintetizar o resultado.",
+    "when": "Depois de rodar um card sorting (aberto ou fechado) numa ferramenta dedicada — este quadro não substitui a condução da sessão, só organiza o resultado.",
+    "fields": [
+      { "id": "metodo", "label": "Método usado (aberto/fechado/híbrido)", "type": "text", "required": true },
+      { "id": "qtd_participantes", "label": "Nº de participantes", "type": "text", "required": false },
+      { "id": "categoria_1", "label": "Categoria 1", "type": "list", "required": true },
+      { "id": "categoria_2", "label": "Categoria 2", "type": "list", "required": true },
+      { "id": "categoria_3", "label": "Categoria 3", "type": "list", "required": false },
+      { "id": "categoria_4", "label": "Categoria 4", "type": "list", "required": false },
+      { "id": "divergencias", "label": "Divergências entre participantes", "type": "text", "required": false },
+      { "id": "decisao_ia", "label": "Decisão de arquitetura de informação", "type": "text", "required": true }
+    ],
+    "auditStage": "descoberta"
+  },
+  {
+    "id": "sus-seq",
+    "name": "SUS / SEQ — Satisfação Pós-Tarefa",
+    "icon": "smile",
+    "color": "text-violet-500",
+    "bg": "bg-violet-50 dark:bg-violet-900/20",
+    "category": "Avaliação",
+    "categoryColor": "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+    "description": "Registra as respostas do System Usability Scale (10 afirmações) e/ou Single Ease Question (1 pergunta) coletadas após uma tarefa ou sessão de teste.",
+    "when": "Ao final de uma sessão de teste de usabilidade ou de uso real, para medir satisfação percebida além do sucesso/falha da tarefa.",
+    "fields": [
+      { "id": "seq_nota", "label": "SEQ — Facilidade percebida (1–7)", "type": "scale", "required": false },
+      { "id": "sus_1", "label": "SUS 1 — Eu usaria este sistema com frequência", "type": "scale", "required": false },
+      { "id": "sus_2", "label": "SUS 2 — Achei o sistema desnecessariamente complexo", "type": "scale", "required": false },
+      { "id": "sus_3", "label": "SUS 3 — Achei o sistema fácil de usar", "type": "scale", "required": false },
+      { "id": "sus_4", "label": "SUS 4 — Precisaria de apoio técnico para usar", "type": "scale", "required": false },
+      { "id": "sus_5", "label": "SUS 5 — As funções estão bem integradas", "type": "scale", "required": false },
+      { "id": "sus_6", "label": "SUS 6 — Há muita inconsistência no sistema", "type": "scale", "required": false },
+      { "id": "sus_7", "label": "SUS 7 — A maioria aprenderia a usar rapidamente", "type": "scale", "required": false },
+      { "id": "sus_8", "label": "SUS 8 — Achei o sistema pesado/confuso de usar", "type": "scale", "required": false },
+      { "id": "sus_9", "label": "SUS 9 — Me senti confiante usando o sistema", "type": "scale", "required": false },
+      { "id": "sus_10", "label": "SUS 10 — Precisei aprender muita coisa antes de usar", "type": "scale", "required": false },
+      { "id": "sus_score", "label": "SUS Score calculado (0–100)", "type": "text", "required": false },
+      { "id": "notas", "label": "Notas sobre a coleta", "type": "text", "required": false }
+    ],
+    "auditStage": "validacao"
+  },
+  {
+    "id": "how-might-we",
+    "name": "How Might We",
+    "icon": "lightbulb",
+    "color": "text-amber-500",
+    "bg": "bg-amber-50 dark:bg-amber-900/20",
+    "category": "Ideação",
+    "categoryColor": "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+    "description": "Reformula dores e necessidades identificadas na pesquisa em perguntas geradoras ('Como poderíamos...'), fazendo a ponte entre Descoberta e Ideação.",
+    "when": "Depois da Descoberta, antes de gerar soluções — quando o time tem dores mapeadas mas precisa traduzi-las em oportunidades de design.",
+    "fields": [
+      { "id": "dor_1", "label": "Dor/necessidade 1", "type": "text", "required": true },
+      { "id": "hmw_1", "label": "Como poderíamos... (1)", "type": "list", "required": true },
+      { "id": "dor_2", "label": "Dor/necessidade 2", "type": "text", "required": false },
+      { "id": "hmw_2", "label": "Como poderíamos... (2)", "type": "list", "required": false },
+      { "id": "dor_3", "label": "Dor/necessidade 3", "type": "text", "required": false },
+      { "id": "hmw_3", "label": "Como poderíamos... (3)", "type": "list", "required": false },
+      { "id": "hmw_selecionada", "label": "Pergunta selecionada para prosseguir", "type": "text", "required": false }
+    ],
+    "auditStage": "ideacao"
+  },
+  {
+    "id": "storyboard",
+    "name": "Storyboard",
+    "icon": "clapperboard",
+    "color": "text-pink-500",
+    "bg": "bg-pink-50 dark:bg-pink-900/20",
+    "category": "Ideação",
+    "categoryColor": "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+    "description": "Sequência de cenas mostrando como um usuário vive um cenário de uso, do contexto inicial à resolução — torna soluções abstratas mais tangíveis antes de prototipar.",
+    "when": "Em Ideação, para alinhar o time em torno de um cenário de uso concreto antes de desenhar telas.",
+    "fields": [
+      { "id": "cenario", "label": "Cenário / contexto", "type": "text", "required": true },
+      { "id": "cena_1", "label": "Cena 1 — Situação inicial", "type": "text", "required": true },
+      { "id": "cena_2", "label": "Cena 2", "type": "text", "required": true },
+      { "id": "cena_3", "label": "Cena 3", "type": "text", "required": true },
+      { "id": "cena_4", "label": "Cena 4 — Resolução", "type": "text", "required": true },
+      { "id": "emocao_usuario", "label": "Emoção do usuário ao longo da história", "type": "text", "required": false }
+    ],
+    "auditStage": "ideacao"
   }
 ]

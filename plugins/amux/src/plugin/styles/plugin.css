@@ -231,7 +231,7 @@ label, .text-\[10px\], .text-\[11px\], .checklist-pill {
   letter-spacing: 0.03em !important;
 }
 
-input[type="text"], input[type="search"], input[type="email"], select, textarea {
+input[type="text"], input[type="search"], input[type="email"], input[type="number"], input[type="date"], select, textarea {
   border-radius: 8px !important;
   border: 1px solid #e2e8f0 !important;
   background-color: #f8fafc !important;
@@ -241,18 +241,18 @@ input[type="text"], input[type="search"], input[type="email"], select, textarea 
   font-weight: 500 !important;
   transition: all 0.2s ease !important;
 }
-.dark input[type="text"], .dark input[type="search"], .dark input[type="email"], .dark select, .dark textarea {
+.dark input[type="text"], .dark input[type="search"], .dark input[type="email"], .dark input[type="number"], .dark input[type="date"], .dark select, .dark textarea {
   border-color: #1e293b !important;
   background-color: #0f172a !important;
   color: #f8fafc !important;
 }
-input[type="text"]:focus, input[type="search"]:focus, input[type="email"]:focus, select:focus, textarea:focus {
+input[type="text"]:focus, input[type="search"]:focus, input[type="email"]:focus, input[type="number"]:focus, input[type="date"]:focus, select:focus, textarea:focus {
   border-color: #1d4ed8 !important;
   background-color: #ffffff !important;
   box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15) !important;
   outline: none !important;
 }
-.dark input[type="text"]:focus, .dark input[type="search"]:focus, .dark input[type="email"]:focus, .dark select:focus, .dark textarea:focus {
+.dark input[type="text"]:focus, .dark input[type="search"]:focus, .dark input[type="email"]:focus, .dark input[type="number"]:focus, .dark input[type="date"]:focus, .dark select:focus, .dark textarea:focus {
   border-color: #60a5fa !important;
   background-color: #0f172a !important;
   box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15) !important;

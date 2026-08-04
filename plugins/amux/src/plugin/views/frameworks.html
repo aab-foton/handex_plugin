@@ -8,38 +8,32 @@
     </button>
     <div class="flex-1 min-w-0">
       <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[14px] tracking-tight">Frameworks de UX</h2>
-      <p class="text-slate-400 dark:text-dark-muted text-[10px]">Insira no canvas, preencha e escaneie os dados</p>
+      <p class="text-slate-400 dark:text-dark-muted text-[10px]">O que já está no canvas — escaneado automaticamente</p>
     </div>
-    <button onclick="scanAll()"
+    <button onclick="openInsertFrameworkModal()"
       class="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[11px] font-bold rounded-xl transition-colors">
-      <i data-lucide="scan-line" class="w-3.5 h-3.5"></i>
-      Escanear
+      <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+      Inserir
     </button>
   </div>
 
-  <!-- Filtros de categoria -->
-  <div class="flex gap-1.5 flex-wrap mb-4">
-    <button data-fw-filter="Todos" onclick="filterFrameworks('Todos')"
-      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Todos</button>
-    <button data-fw-filter="Descoberta" onclick="filterFrameworks('Descoberta')"
-      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Descoberta</button>
-    <button data-fw-filter="Alinhamento" onclick="filterFrameworks('Alinhamento')"
-      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Alinhamento</button>
-    <button data-fw-filter="Diagnóstico" onclick="filterFrameworks('Diagnóstico')"
-      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Diagnóstico</button>
-    <button data-fw-filter="Priorização" onclick="filterFrameworks('Priorização')"
-      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Priorização</button>
-    <button data-fw-filter="Pesquisa" onclick="filterFrameworks('Pesquisa')"
-      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Pesquisa</button>
-    <button data-fw-filter="Mapeamento" onclick="filterFrameworks('Mapeamento')"
-      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Mapeamento</button>
-    <button data-fw-filter="Avaliação" onclick="filterFrameworks('Avaliação')"
-      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Avaliação</button>
-    <button data-fw-filter="Ideação" onclick="filterFrameworks('Ideação')"
-      class="px-2.5 py-1 text-[10px] font-bold rounded-full transition-all">Ideação</button>
+  <!-- Busca entre os frameworks já injetados no canvas -->
+  <div class="mb-3">
+    <input id="instance-filter" type="text" placeholder="Buscar entre os frameworks injetados..." oninput="filterFrameworkInstances()" class="w-full" />
   </div>
 
-  <!-- Lista de frameworks -->
-  <div id="framework-list" class="space-y-3 pb-4"></div>
+  <!-- Sugestões de evidência (frameworks escaneados ainda não anexados à Auditoria) -->
+  <div id="evidence-suggestions" class="hidden"></div>
+
+  <!-- Instâncias já no canvas -->
+  <div id="scanned-instances" class="space-y-3"></div>
+
+  <!-- Reescanear — só aparece depois do primeiro scan -->
+  <div class="pt-4 mt-auto">
+    <button onclick="scanAll()" id="btn-rescan" class="hidden w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-dark-muted text-[11px] font-bold rounded-xl transition-colors items-center justify-center gap-1.5">
+      <i data-lucide="scan-line" class="w-3.5 h-3.5"></i>
+      Reescanear
+    </button>
+  </div>
 
 </main>
