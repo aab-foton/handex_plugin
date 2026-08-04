@@ -1083,12 +1083,8 @@ function deleteA11ySpec(originalIndex) {
     parent.postMessage({ pluginMessage: { type: 'delete-node', id: spec.id } }, '*');
   }
   a11ySpecs.splice(originalIndex, 1);
-  (handoffData.frames || []).forEach(frame => {
-    if (!frame.a11ySpecs) return;
-    const idx = frame.a11ySpecs.indexOf(spec);
-    if (idx !== -1) frame.a11ySpecs.splice(idx, 1);
-  });
-  saveToStorage();
+  removeA11ySpecById(spec.id);
+  saveSpecsToStorage();
   renderA11yGroupedList();
 }
 window.deleteA11ySpec = deleteA11ySpec;
@@ -1309,12 +1305,8 @@ function deleteA11yArea(originalIndex) {
     parent.postMessage({ pluginMessage: { type: 'delete-node', id: area.id } }, '*');
   }
   a11yAreas.splice(originalIndex, 1);
-  (handoffData.frames || []).forEach(frame => {
-    if (!frame.a11yAreas) return;
-    const idx = frame.a11yAreas.indexOf(area);
-    if (idx !== -1) frame.a11yAreas.splice(idx, 1);
-  });
-  saveToStorage();
+  removeA11yAreaById(area.id);
+  saveSpecsToStorage();
   renderA11yGroupedList();
 }
 window.deleteA11yArea = deleteA11yArea;

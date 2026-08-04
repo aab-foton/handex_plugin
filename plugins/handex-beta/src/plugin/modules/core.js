@@ -326,6 +326,46 @@ function saveSpecsToStorage() {
   saveToStorage();
 }
 
+// createdSpecs/a11ySpecs/a11yAreas são merges (avulsas + por-frame) recriados
+// a cada resync — dar splice neles não remove o item da fonte real quando ele
+// pertence a um frame (frame.createdSpecs é um array próprio, não o mesmo
+// array). Por isso a exclusão precisa remover pelo id em AMBAS as fontes
+// possíveis antes de salvar, senão o item sobrevive em
+// handoffData.frames[].createdSpecs (ou a11ySpecs/a11yAreas) e "ressuscita"
+// no próximo syncAndRenderSpecs().
+function removeSpecById(specId) {
+  if (handoffData.specs && specId) {
+    handoffData.specs = handoffData.specs.filter(s => s.id !== specId);
+  }
+  (handoffData.frames || []).forEach(frame => {
+    if (frame.createdSpecs && specId) {
+      frame.createdSpecs = frame.createdSpecs.filter(s => s.id !== specId);
+    }
+  });
+}
+
+function removeA11ySpecById(specId) {
+  if (handoffData.a11ySpecs && specId) {
+    handoffData.a11ySpecs = handoffData.a11ySpecs.filter(s => s.id !== specId);
+  }
+  (handoffData.frames || []).forEach(frame => {
+    if (frame.a11ySpecs && specId) {
+      frame.a11ySpecs = frame.a11ySpecs.filter(s => s.id !== specId);
+    }
+  });
+}
+
+function removeA11yAreaById(areaId) {
+  if (handoffData.a11yAreas && areaId) {
+    handoffData.a11yAreas = handoffData.a11yAreas.filter(a => a.id !== areaId);
+  }
+  (handoffData.frames || []).forEach(frame => {
+    if (frame.a11yAreas && areaId) {
+      frame.a11yAreas = frame.a11yAreas.filter(a => a.id !== areaId);
+    }
+  });
+}
+
 // --- Acessibilidade --- migração defensiva: dados salvos antes da separação
 // estrutural (createdSpecs/a11ySpecs) podem ter specs de A11y ainda dentro de
 // createdSpecs/frame.createdSpecs (só distinguíveis pelo campo a11yType).
