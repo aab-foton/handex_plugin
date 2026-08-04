@@ -2,6 +2,19 @@
 
 ---
 
+## v6.2.0 — 2026-08-04
+
+### Corrigido — Especificação excluída "ressuscitava" ao navegar entre telas
+`createdSpecs` (a lista em memória renderizada na tela) é reconstruída a cada troca de aba a partir de um merge entre `handoffData.specs` (avulsas) e `handoffData.frames[].createdSpecs` (por-frame). Dois pontos de exclusão (botão de lixeira no card de spec e o handler `deleteNode`) removiam o item só dessa lista em memória, sem remover da fonte real — a especificação apagada continuava guardada em `handoffData.specs` ou dentro do frame, e voltava a aparecer no próximo merge (ex: ao sair e voltar de "Anotar Specs", ou reabrir o plugin). Corrigido com uma remoção explícita por id em ambas as fontes possíveis antes de salvar.
+
+### Ajustado — Ícone de linhas do grupo de specs sem indicação visual de estado
+O ícone que oculta/exibe as linhas de conexão de um grupo de especificações não tinha destaque de cor quando as linhas estavam visíveis, diferente do ícone de olho ao lado (que fica azul quando o grupo está visível). Agora usa a mesma cor de destaque (`#005ca9`) quando as linhas estão visíveis, mantendo consistência visual entre os dois controles.
+
+### Nota
+Se você já tinha apagado uma especificação antes desta correção e ela ainda aparece na primeira abertura após a atualização, é resíduo salvo do bug anterior — exclua normalmente mais uma vez; a partir de agora a exclusão remove definitivamente.
+
+---
+
 ## v6.1.2 — 2026-07-29
 
 ### Adicionado — Sugestão automática de tag ao criar especificação

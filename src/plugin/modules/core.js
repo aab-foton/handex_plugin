@@ -306,6 +306,23 @@ function saveSpecsToStorage() {
   saveToStorage();
 }
 
+// createdSpecs é um merge (avulsas + por-frame) recriado a cada resync — dar
+// splice nele não remove a spec da fonte real quando ela pertence a um frame
+// (frame.createdSpecs é um array próprio, não o mesmo array). Por isso a
+// exclusão precisa remover pelo id em AMBAS as fontes possíveis antes de
+// salvar, senão o item sobrevive em handoffData.frames[].createdSpecs e
+// "ressuscita" no próximo syncAndRenderSpecs().
+function removeSpecById(specId) {
+  if (handoffData.specs && specId) {
+    handoffData.specs = handoffData.specs.filter(s => s.id !== specId);
+  }
+  (handoffData.frames || []).forEach(frame => {
+    if (frame.createdSpecs && specId) {
+      frame.createdSpecs = frame.createdSpecs.filter(s => s.id !== specId);
+    }
+  });
+}
+
 let nextMeasurementNumber = 1;
 
 document.addEventListener('DOMContentLoaded', () => {

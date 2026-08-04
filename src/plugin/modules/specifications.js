@@ -1748,7 +1748,7 @@
         const isLinesHidden = handoffData.specLinesVisible && handoffData.specLinesVisible[letter] === false;
         groupLinesBtn.title = isLinesHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo';
         groupLinesBtn.setAttribute('aria-label', groupLinesBtn.title);
-        groupLinesBtn.className = `p-2 hover:bg-white/50 dark:hover:bg-slate-700 rounded-lg transition-colors shrink-0 ${isLinesHidden ? 'text-gray-400' : 'text-gray-500'}`;
+        groupLinesBtn.className = `p-2 hover:bg-white/50 dark:hover:bg-slate-700 rounded-lg transition-colors shrink-0 ${isLinesHidden ? 'text-gray-400' : 'text-[#005ca9]'}`;
         groupLinesBtn.innerHTML = '<i data-lucide="spline" class="w-4 h-4"></i>';
 
         groupLinesBtn.onclick = (e) => {
@@ -1762,7 +1762,7 @@
           groupLinesBtn.title = nowHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo';
           groupLinesBtn.setAttribute('aria-label', groupLinesBtn.title);
           groupLinesBtn.classList.toggle('text-gray-400', nowHidden);
-          groupLinesBtn.classList.toggle('text-gray-500', !nowHidden);
+          groupLinesBtn.classList.toggle('text-[#005ca9]', !nowHidden);
           _refreshIcons();
         };
 
@@ -1928,7 +1928,8 @@
               parent.postMessage({ pluginMessage: { type: 'delete-node', id: spec.id } }, '*');
             }
             createdSpecs.splice(spec.originalIndex, 1);
-            saveToStorage();
+            removeSpecById(spec.id);
+            saveSpecsToStorage();
             renderSpecsList();
           };
 
@@ -2046,7 +2047,9 @@
           renderFlowsList();
         }
       } else {
+        const removedSpec = createdSpecs[idx];
         createdSpecs.splice(idx, 1);
+        if (removedSpec) removeSpecById(removedSpec.id);
         saveSpecsToStorage();
         renderSpecsList();
       }

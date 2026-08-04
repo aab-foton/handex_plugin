@@ -4,6 +4,20 @@ Texto pronto para colar no campo de descrição de cada publicação em Communit
 
 ---
 
+## Version 11 — v6.2.0 (2026-08-04)
+
+**Correções e melhorias**
+
+**Especificação apagada não volta mais sozinha**
+Ao excluir uma especificação e depois navegar para outra tela do plugin (ou reabrir o plugin), ela podia reaparecer na lista mesmo já tendo sido apagada. Corrigido — agora a exclusão é definitiva.
+
+> Se você já tinha apagado alguma especificação antes desta atualização e ela ainda aparecer uma última vez, é só excluir novamente — a partir daqui ela não volta mais.
+
+**Indicação visual no ícone de linhas do grupo de especificações**
+O ícone que oculta/exibe as linhas de conexão de um grupo de especificações agora fica azul quando as linhas estão visíveis, no mesmo padrão do ícone de olho ao lado.
+
+---
+
 ## Version 10 — v6.1.2 (2026-07-29)
 
 **Novidade**
