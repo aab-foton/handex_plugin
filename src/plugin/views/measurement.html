@@ -1,7 +1,7 @@
 <!-- VIEW: MEASUREMENT -->
     <main id="view-measurement" class="view p-0 flex flex-col h-full overflow-hidden">
       <!-- Header -->
-      <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex flex-col shrink-0 shadow-md">
+      <div class="subheader-brand px-4 py-3 bg-[#3d3dff] dark:bg-[#00335c] flex flex-col shrink-0 shadow-md">
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-2 min-w-0">
             <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial"
@@ -63,7 +63,7 @@
               <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Frames Mapeados</h4>
             </div>
             <select id="measure-frame-selector" onchange="setMeasureActiveFrame(this.value)"
-              class="w-full text-[12px] bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-slate-700 dark:text-white outline-none focus:border-[#0070af]/50 transition-colors">
+              class="w-full text-[12px] bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-slate-700 dark:text-white outline-none focus:border-[#3d3dff]/50 transition-colors">
               <option value="">Sem vínculo (medida avulsa)</option>
             </select>
             <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-2 leading-tight">
@@ -81,7 +81,7 @@
                   <i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo
                 </button>
                 <button id="btn-export-measures" onclick="exportMeasurements()"
-                  class="hidden text-[11px] font-bold text-[#0070af] dark:text-blue-400 hover:underline flex items-center gap-1">
+                  class="hidden text-[11px] font-bold text-[#3d3dff] dark:text-blue-400 hover:underline flex items-center gap-1">
                   <i data-lucide="download" class="w-3.5 h-3.5"></i> Exportar (.md)
                 </button>
               </div>
@@ -100,12 +100,14 @@
 
           </div>
 
-          <!-- Salvar e Voltar -->
+          <!-- Finalizar Registros — ação única de fechamento, tom discreto (outline)
+               para não competir com "Inserir medida" no header, a ação mais
+               frequente da tela. -->
           <div class="pt-4 pb-2">
-            <button onclick="saveAndGoHome((handoffData.frames||[]).some(f=>(f.measurements||[]).length > 0), 'Medidas salvas!')"
+            <button onclick="finalizeSection('measurements')"
               class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
-              <i data-lucide="arrow-left" class="w-4 h-4" aria-hidden="true"></i>
-              Salvar e Voltar
+              <i data-lucide="clipboard-check" class="w-4 h-4" aria-hidden="true"></i>
+              Finalizar Registros
             </button>
           </div>
 

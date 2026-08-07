@@ -1,7 +1,7 @@
 <!-- VIEW: DADOS DO PROJETO -->
 <main id="view-dados-projeto" class="view flex p-0 flex-col h-full overflow-hidden relative">
   <!-- Sub-Header -->
-  <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex items-center justify-between shrink-0 shadow-md">
+  <div class="subheader-brand px-4 py-3 bg-[#3d3dff] dark:bg-[#00335c] flex items-center justify-between shrink-0 shadow-md">
     <div class="flex items-center gap-2">
       <button onclick="navigate('view-home')" aria-label="Voltar"
         class="p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
@@ -24,7 +24,7 @@
         <label for="s1-titulo" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5">Título do Projeto <span class="text-red-400">*</span></label>
         <input type="text" id="s1-titulo" placeholder="Nome do projeto"
           oninput="validateStep1()"
-          class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[13px] text-slate-800 dark:text-white focus:ring-2 focus:ring-[#0070af]/20 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600" />
+          class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[13px] text-slate-800 dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600" />
       </div>
 
       <!-- Status + Versão -->
@@ -39,7 +39,7 @@
           </select>
           <div class="relative" id="s1-status-wrapper">
             <button type="button" id="s1-status-btn" onclick="toggleStatusDropdown(event)"
-              class="w-full flex items-center justify-between pl-3 pr-2.5 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:border-gray-300 focus:ring-2 focus:ring-[#0070af]/20 outline-none transition-all text-left">
+              class="w-full flex items-center justify-between pl-3 pr-2.5 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:border-gray-300 focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all text-left">
               <span class="flex items-center gap-2 min-w-0">
                 <span id="s1-status-dot" class="w-2 h-2 rounded-full shrink-0 bg-gray-400"></span>
                 <span id="s1-status-text" class="text-[12px] text-slate-700 dark:text-white truncate">Rascunho</span>
@@ -72,7 +72,7 @@
           <label for="s1-versao" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5">Versão <span class="text-red-400">*</span></label>
           <input type="text" id="s1-versao" placeholder="v1.0" value="v1.0"
             oninput="updateData('step1', 'versao', this.value)"
-            class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-800 dark:text-white focus:ring-2 focus:ring-[#0070af]/20 outline-none transition-all placeholder:text-gray-300" />
+            class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-800 dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all placeholder:text-gray-300" />
         </div>
       </div>
 
@@ -81,14 +81,14 @@
         <label class="flex items-center gap-2 cursor-pointer select-none">
           <input type="checkbox" id="toggle-jornada"
             onchange="toggleContextField('jornada', this.checked)"
-            class="w-4 h-4 rounded accent-[#0070af] cursor-pointer shrink-0">
+            class="w-4 h-4 rounded accent-[#3d3dff] cursor-pointer shrink-0">
           <span class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Jornada</span>
         </label>
         <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug mt-1">Ao marcar, preenche com o nome do frame selecionado no Figma</p>
         <div id="jornada-field" class="hidden mt-2.5">
           <input type="text" id="s1-jornada" placeholder="Ex: Onboarding"
             oninput="updateData('step1', 'jornada', this.value)"
-            class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-800 dark:text-white focus:ring-2 focus:ring-[#0070af]/20 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600" />
+            class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-800 dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600" />
         </div>
       </div>
 
@@ -97,14 +97,14 @@
         <label class="flex items-center gap-2 cursor-pointer select-none">
           <input type="checkbox" id="toggle-feature"
             onchange="toggleContextField('feature', this.checked)"
-            class="w-4 h-4 rounded accent-[#0070af] cursor-pointer shrink-0">
+            class="w-4 h-4 rounded accent-[#3d3dff] cursor-pointer shrink-0">
           <span class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Feature</span>
         </label>
         <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug mt-1">Ao marcar, preenche com o nome do frame selecionado no Figma</p>
         <div id="feature-field" class="hidden mt-2.5">
           <input type="text" id="s1-feature" placeholder="Ex: Cadastro de usuário"
             oninput="updateData('step1', 'feature', this.value)"
-            class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-800 dark:text-white focus:ring-2 focus:ring-[#0070af]/20 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600" />
+            class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-800 dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600" />
         </div>
       </div>
 
@@ -113,7 +113,7 @@
         <label for="s1-objetivo" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5">Objetivo da entrega <span class="text-red-400">*</span></label>
         <textarea id="s1-objetivo" placeholder="Descreva o que está sendo entregue e qual o contexto geral..."
           oninput="updateData('step1', 'objetivo', this.value)"
-          class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-800 dark:text-white min-h-[90px] focus:ring-2 focus:ring-[#0070af]/20 outline-none transition-all resize-none placeholder:text-gray-300"></textarea>
+          class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-800 dark:text-white min-h-[90px] focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all resize-none placeholder:text-gray-300"></textarea>
       </div>
 
     </div>
@@ -124,7 +124,7 @@
         <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-widest mb-3">Equipe e Responsáveis <span class="text-red-400">*</span></p>
         <div id="list-equipe" class="space-y-3"></div>
         <button onclick="addTeamMember()"
-          class="w-full mt-3 py-2.5 border-2 border-dashed border-slate-200 dark:border-slate-700/50 rounded-xl text-slate-500 dark:text-dark-muted text-[11px] font-bold hover:border-[#0070af]/40 hover:text-[#0070af] transition-all">
+          class="w-full mt-3 py-2.5 border-2 border-dashed border-slate-200 dark:border-slate-700/50 rounded-xl text-slate-500 dark:text-dark-muted text-[11px] font-bold hover:border-[#3d3dff]/40 hover:text-[#3d3dff] transition-all">
           + Adicionar Membro
         </button>
         <p id="step1-validation-hint" class="text-[11px] text-amber-500 mt-2 px-1 hidden"></p>
@@ -144,7 +144,7 @@
         <button onclick="toggleAccordion(this)" aria-expanded="false"
           class="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-dark-line/10 transition-colors">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-[#0070af]">
+            <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-[#3d3dff]">
               <i data-lucide="message-square-plus" class="w-4 h-4"></i>
             </div>
             <div class="text-left">
@@ -159,7 +159,7 @@
         <div id="briefing-card" class="accordion-content hidden p-5 pt-0 border-t border-gray-50 dark:border-dark-line">
           <div class="space-y-2 mt-4" id="briefing-categories-container-v2"></div>
           <div id="briefing-questions-container-v2" class="space-y-4 mt-2"></div>
-          <button onclick="addBriefingQuestion()" class="mt-4 w-full flex items-center justify-center gap-2 py-2.5 border border-dashed border-gray-200 dark:border-dark-line rounded-2xl text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:border-[#0070af]/50 hover:text-[#0070af] transition-colors">
+          <button onclick="addBriefingQuestion()" class="mt-4 w-full flex items-center justify-center gap-2 py-2.5 border border-dashed border-gray-200 dark:border-dark-line rounded-2xl text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:border-[#3d3dff]/50 hover:text-[#3d3dff] transition-colors">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
             Adicionar pergunta
           </button>
@@ -217,7 +217,7 @@
               </label>
               <div id="proto-field" class="hidden pl-5">
                 <input type="text" id="s2-proto-link" placeholder="Cole o link do protótipo"
-                  class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg text-[12px] outline-none focus:ring-2 focus:ring-[#0070af]/20 transition-all"
+                  class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg text-[12px] outline-none focus:ring-2 focus:ring-[#3d3dff]/20 transition-all"
                   onchange="updateData('step2', 'proto_link', this.value)" onblur="validateUrl(this)">
               </div>
             </div>
@@ -231,7 +231,7 @@
               </label>
               <div id="a11y-field" class="hidden pl-5">
                 <input type="text" id="s2-a11y-link" placeholder="Cole o link do handoff de acessibilidade"
-                  class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg text-[12px] outline-none focus:ring-2 focus:ring-[#0070af]/20 transition-all"
+                  class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg text-[12px] outline-none focus:ring-2 focus:ring-[#3d3dff]/20 transition-all"
                   onchange="updateData('step2', 'a11y_link', this.value)" onblur="validateUrl(this)">
               </div>
             </div>
@@ -245,7 +245,7 @@
               </label>
               <div id="research-field" class="hidden pl-5">
                 <input type="text" id="s2-research-link" placeholder="Cole o link da pesquisa"
-                  class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg text-[12px] outline-none focus:ring-2 focus:ring-[#0070af]/20 transition-all"
+                  class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg text-[12px] outline-none focus:ring-2 focus:ring-[#3d3dff]/20 transition-all"
                   onchange="updateData('step2', 'research_link', this.value)" onblur="validateUrl(this)">
               </div>
             </div>
@@ -258,7 +258,7 @@
       <div class="pt-4 pb-4 px-4 space-y-2">
         <button onclick="openHandoffInjectModal()"
           title="Gerar Ficha no Canvas" aria-label="Gerar Ficha no Canvas"
-          class="w-full flex items-center justify-center gap-2 py-3 bg-[#0070af] hover:bg-[#005ca9] rounded-2xl text-[12px] font-bold text-white transition-all shadow-sm">
+          class="w-full flex items-center justify-center gap-2 py-3 bg-[#3d3dff] hover:bg-[#2e2ee0] rounded-2xl text-[12px] font-bold text-white transition-all shadow-sm">
           <i data-lucide="sparkles" class="w-4 h-4" aria-hidden="true"></i>
           Gerar Ficha
         </button>

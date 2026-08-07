@@ -24,9 +24,9 @@
 
     <!-- Dados do Projeto -->
     <button onclick="openDadosProjetoModal()" aria-label="Dados do Projeto"
-      class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-[#0070af] hover:bg-[#0070af]/15 dark:hover:bg-blue-900/40 dark:hover:border-blue-500 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-[#0070af]/30 outline-none group text-left">
+      class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-[#3d3dff] hover:bg-[#3d3dff]/15 dark:hover:bg-blue-900/40 dark:hover:border-blue-500 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-[#3d3dff]/30 outline-none group text-left">
       <div class="w-10 h-10 flex items-center justify-center bg-blue-50 dark:bg-blue-900/20 rounded-xl shrink-0">
-        <i data-lucide="clipboard-list" class="w-5 h-5 text-[#0070af] dark:text-blue-400" aria-hidden="true"></i>
+        <i data-lucide="clipboard-list" class="w-5 h-5 text-[#3d3dff] dark:text-blue-400" aria-hidden="true"></i>
       </div>
       <div class="min-w-0">
         <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Informações do Projeto</p>
@@ -86,11 +86,18 @@
 
   <!-- CTA Handoff -->
   <div class="mt-auto pt-3 w-full space-y-2">
-    <button onclick="navigate('view-handoff-summary')" aria-label="Ir para Handoff"
-      class="w-full py-2.5 bg-[#005ca9] hover:bg-[#004d8f] text-white text-[12px] font-extrabold rounded-2xl transition-colors flex items-center justify-center gap-2 shadow-sm">
-      <i data-lucide="sparkles" class="w-4 h-4" aria-hidden="true"></i>
-      Gerar Ficha de Handoff
-    </button>
+    <div class="flex gap-2">
+      <button onclick="navigate('view-handoff-summary')" aria-label="Ir para Handoff"
+        class="flex-1 py-2.5 bg-[#2e2ee0] hover:bg-[#004d8f] text-white text-[12px] font-extrabold rounded-2xl transition-colors flex items-center justify-center gap-2 shadow-sm">
+        <i data-lucide="sparkles" class="w-4 h-4" aria-hidden="true"></i>
+        Gerar Ficha de Handoff
+      </button>
+      <button onclick="exportHandoffData()" aria-label="Baixar backup completo em JSON"
+        title="Baixar backup completo em JSON — mesmo conteúdo salvo, para restaurar ou compartilhar o projeto depois"
+        class="px-3 py-2.5 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 outline-none transition-all shadow-sm">
+        <i data-lucide="download" class="w-4 h-4" aria-hidden="true"></i>
+      </button>
+    </div>
 
     <div class="flex gap-2">
       <button onclick="importHandoffData()" aria-label="Importar dados de um arquivo JSON"

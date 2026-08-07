@@ -1,7 +1,7 @@
 <!-- VIEW: FRAMES (Hub por Frame) -->
 <main id="view-frames" class="view flex p-0 flex-col h-full overflow-hidden">
   <!-- Sub-Header -->
-  <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex items-center justify-between shrink-0 shadow-md">
+  <div class="subheader-brand px-4 py-3 bg-[#3d3dff] dark:bg-[#00335c] flex items-center justify-between shrink-0 shadow-md">
     <div class="flex items-center gap-2 min-w-0">
       <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial"
         class="p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
@@ -43,19 +43,21 @@
         <i data-lucide="layout" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
       </div>
       <p class="text-[12px] font-bold text-slate-500 dark:text-dark-muted text-center px-4 mb-1">Nenhum frame documentado</p>
-      <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6">Selecione um frame no canvas e toque em <strong>Registrar Frame</strong></p>
+      <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6">Selecione um frame no canvas e toque em <button type="button" onclick="requestFrameRegistration()" class="font-bold text-[#2e2ee0] dark:text-[#4da3e0] hover:underline">Registrar Frame</button></p>
     </div>
 
     <ul id="list-frames" class="space-y-3">
       <!-- renderFrameCard() insere aqui -->
     </ul>
 
-    <!-- Salvar e Voltar -->
+    <!-- Finalizar Registros — ação única de fechamento, tom discreto (outline)
+         para não competir com "Registrar Frame" no header, a ação mais
+         frequente da tela. -->
     <div class="pt-2 pb-2">
-      <button onclick="saveAndGoHome((handoffData.frames||[]).length > 0, 'Frames salvos!')"
+      <button onclick="finalizeSection('tokens')"
         class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
-        <i data-lucide="arrow-left" class="w-4 h-4" aria-hidden="true"></i>
-        Salvar e Voltar
+        <i data-lucide="clipboard-check" class="w-4 h-4" aria-hidden="true"></i>
+        Finalizar Registros
       </button>
     </div>
 

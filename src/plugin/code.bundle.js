@@ -295,6 +295,7 @@
   // src/plugin/code.js
   figma.showUI(__html__, { width: 480, height: 750 });
   var activeHighlightNode = null;
+  var _highlightToken = 0;
   figma.on("close", () => {
     if (activeHighlightNode) {
       try {
@@ -341,7 +342,7 @@
     return 0;
   }
   function _reorderSpecGroupByTag(specGroup, tag) {
-    const siblings = figma.currentPage.children.filter((n) => n !== specGroup && n.type === "GROUP");
+    const siblings = figma.currentPage.children.filter((n) => n !== specGroup && (n.getPluginData("handexCategory") === "spec" || n.name.startsWith("[Spec")));
     let insertIndex = figma.currentPage.children.length;
     for (let i = 0; i < siblings.length; i++) {
       const m = siblings[i].name.match(/^\[Spec \| ([A-Z]\d*(?:\.\d+)*) \| [a-z]+\] /);
@@ -361,6 +362,319 @@
       b: parseInt(result[3], 16) / 255
     } : { r: 0.5, g: 0.5, b: 0.5 };
   }
+  function _hdCreateText(text, size = 14, weight = "Regular", color = { r: 0.12, g: 0.16, b: 0.23 }) {
+    const t = figma.createText();
+    t.fontName = { family: "Inter", style: weight };
+    t.characters = String(text || "");
+    t.fontSize = size;
+    t.fills = [{ type: "SOLID", color }];
+    return t;
+  }
+  function _hdCreateFrame(direction = "VERTICAL", padding = 0, spacing = 0, fill = null) {
+    const f = figma.createFrame();
+    f.layoutMode = direction;
+    f.paddingLeft = padding;
+    f.paddingRight = padding;
+    f.paddingTop = padding;
+    f.paddingBottom = padding;
+    f.itemSpacing = spacing;
+    f.primaryAxisSizingMode = "AUTO";
+    f.counterAxisSizingMode = "AUTO";
+    f.layoutAlign = "INHERIT";
+    f.fills = fill ? [{ type: "SOLID", color: fill }] : [];
+    return f;
+  }
+  function _hdSetFillAndHug(node) {
+    if (!node) return;
+    try {
+      if ("layoutSizingHorizontal" in node) node.layoutSizingHorizontal = "FILL";
+      if ("layoutSizingVertical" in node) node.layoutSizingVertical = "HUG";
+    } catch (e) {
+    }
+    const parent = node.parent;
+    const pMode = parent && "layoutMode" in parent ? parent.layoutMode : "VERTICAL";
+    if (pMode === "VERTICAL") {
+      node.layoutAlign = "STRETCH";
+      if (node.type === "FRAME") {
+        if (node.layoutMode === "VERTICAL") node.primaryAxisSizingMode = "AUTO";
+        else node.counterAxisSizingMode = "AUTO";
+      } else if (node.type === "TEXT") node.textAutoResize = "HEIGHT";
+    } else if (pMode === "HORIZONTAL") {
+      node.layoutGrow = 1;
+      node.layoutAlign = "INHERIT";
+      if (node.type === "FRAME") {
+        if (node.layoutMode === "HORIZONTAL") node.counterAxisSizingMode = "AUTO";
+        else node.primaryAxisSizingMode = "AUTO";
+      } else if (node.type === "TEXT") node.textAutoResize = "HEIGHT";
+    }
+  }
+  function _hdCreateSection(parent, titleText) {
+    const section = _hdCreateFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
+    section.name = `[Se\xE7\xE3o] ${titleText}`;
+    parent.appendChild(section);
+    _hdSetFillAndHug(section);
+    section.cornerRadius = 8;
+    section.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
+    section.strokeWeight = 1;
+    const title = _hdCreateText(titleText, 16, "Bold", { r: 0.24, g: 0.24, b: 1 });
+    section.appendChild(title);
+    _hdSetFillAndHug(title);
+    return section;
+  }
+  function _hdCreateRow(parent, label, value) {
+    const row = _hdCreateFrame("VERTICAL", 0, 4);
+    row.name = `[Campo] ${label}`;
+    parent.appendChild(row);
+    _hdSetFillAndHug(row);
+    const lbl = _hdCreateText(label, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+    row.appendChild(lbl);
+    _hdSetFillAndHug(lbl);
+    const val = _hdCreateText(value || "-", 14, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+    row.appendChild(val);
+    _hdSetFillAndHug(val);
+    return row;
+  }
+  function _hdBuildFrameCard(f, fi) {
+    const fRow = _hdCreateFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.99, b: 1 });
+    fRow.name = `[Frame] ${f.nome || "Frame " + (fi + 1)}`;
+    fRow.cornerRadius = 8;
+    fRow.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.92, b: 0.96 } }];
+    fRow.setPluginData("handexFrameId", f.figmaId || f.id || "");
+    const fHeader = _hdCreateFrame("HORIZONTAL", 0, 8);
+    fHeader.counterAxisAlignItems = "CENTER";
+    const fName = _hdCreateText(f.nome || "Frame", 12, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+    fName.layoutGrow = 1;
+    fHeader.appendChild(fName);
+    if (f.isNewComponent) {
+      const badge = _hdCreateFrame("HORIZONTAL", 8, 3, { r: 0.94, g: 0.92, b: 1 });
+      badge.cornerRadius = 999;
+      badge.strokes = [{ type: "SOLID", color: { r: 0.7, g: 0.6, b: 0.96 } }];
+      badge.strokeWeight = 1;
+      badge.appendChild(_hdCreateText("Novo componente", 9, "Medium", { r: 0.38, g: 0.18, b: 0.78 }));
+      fHeader.appendChild(badge);
+    }
+    fRow.appendChild(fHeader);
+    _hdSetFillAndHug(fHeader);
+    if (f.audit && f.audit.status) {
+      _hdCreateRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? " \u2014 " + f.audit.justificativa : ""));
+    }
+    return fRow;
+  }
+  function _hdBuildMeasuresSubgroup(f) {
+    const fGroup = _hdCreateFrame("VERTICAL", 0, 6);
+    fGroup.name = `[Medidas | ${f.figmaId || f.id}] ${f.nome || "Frame"}`;
+    fGroup.setPluginData("handexFrameId", f.figmaId || f.id || "");
+    const fLabel = _hdCreateText(f.nome || "Frame", 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
+    fGroup.appendChild(fLabel);
+    _hdSetFillAndHug(fLabel);
+    f.measurements.forEach((m) => {
+      const details = Array.isArray(m.details) ? m.details.join(" | ") : m.details || "";
+      const mRow = _hdCreateFrame("HORIZONTAL", 10, 7, { r: 0.94, g: 0.97, b: 1 });
+      mRow.name = `[Medida] ${m.name || "Medida"}`;
+      mRow.cornerRadius = 6;
+      mRow.counterAxisAlignItems = "CENTER";
+      fGroup.appendChild(mRow);
+      _hdSetFillAndHug(mRow);
+      const mName = _hdCreateText(m.name || "Medida", 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+      mName.layoutGrow = 1;
+      mRow.appendChild(mName);
+      const mVal = _hdCreateText(details, 10, "Regular", { r: 0.27, g: 0.45, b: 0.78 });
+      mRow.appendChild(mVal);
+      _hdSetFillAndHug(mVal);
+    });
+    return fGroup;
+  }
+  async function _hdBuildSpecsSubgroup(f) {
+    var _a;
+    const fGroup = _hdCreateFrame("VERTICAL", 0, 10);
+    fGroup.name = `[Specs] ${f.nome || "Frame"}`;
+    fGroup.setPluginData("handexFrameId", f.figmaId || f.id || "");
+    const fLabel = _hdCreateText(f.nome || "Frame", 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
+    fGroup.appendChild(fLabel);
+    _hdSetFillAndHug(fLabel);
+    const groupNames = f.specGroupNames || {};
+    const groupVisible = f.specGroupVisible || {};
+    const letterOrder = [];
+    const specsByLetter = {};
+    (f.createdSpecs || []).forEach((s) => {
+      const l = s.letter || "A";
+      if (!specsByLetter[l]) {
+        specsByLetter[l] = [];
+        letterOrder.push(l);
+      }
+      specsByLetter[l].push(s);
+    });
+    for (const letter of letterOrder) {
+      if (groupVisible[letter] === false) continue;
+      const groupSpecs = specsByLetter[letter];
+      const groupColor = ((_a = groupSpecs[0]) == null ? void 0 : _a.color) ? hexToRgb2(groupSpecs[0].color) : { r: 0.38, g: 0.35, b: 0.75 };
+      const groupNameText = groupNames[letter] || "";
+      const gBox = _hdCreateFrame("VERTICAL", 0, 6);
+      gBox.name = `[Grupo/${letter}] ${groupNameText || letter}`;
+      fGroup.appendChild(gBox);
+      _hdSetFillAndHug(gBox);
+      const gHeader = _hdCreateFrame("HORIZONTAL", 0, 6);
+      gHeader.counterAxisAlignItems = "CENTER";
+      gBox.appendChild(gHeader);
+      _hdSetFillAndHug(gHeader);
+      const gBadge = _hdCreateFrame("HORIZONTAL", 0, 0, groupColor);
+      gBadge.resize(18, 18);
+      gBadge.cornerRadius = 4;
+      gBadge.primaryAxisAlignItems = "CENTER";
+      gBadge.counterAxisAlignItems = "CENTER";
+      gHeader.appendChild(gBadge);
+      const gBadgeT = figma.createText();
+      gBadgeT.fontName = { family: "Inter", style: "Bold" };
+      gBadgeT.fontSize = 9;
+      gBadgeT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+      gBadgeT.characters = letter;
+      gBadgeT.textAutoResize = "WIDTH_AND_HEIGHT";
+      gBadge.appendChild(gBadgeT);
+      if (groupNameText) {
+        const gName = _hdCreateText(groupNameText, 10, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+        gHeader.appendChild(gName);
+        _hdSetFillAndHug(gName);
+      }
+      const gCount = _hdCreateText(`${groupSpecs.length} esp.`, 9, "Regular", { r: 0.55, g: 0.6, b: 0.65 });
+      gHeader.appendChild(gCount);
+      _hdSetFillAndHug(gCount);
+      const gSpecs = _hdCreateFrame("VERTICAL", 0, 4);
+      gSpecs.fills = [];
+      gBox.appendChild(gSpecs);
+      _hdSetFillAndHug(gSpecs);
+      for (const s of groupSpecs) {
+        const catLabel = s.type || s.categoryLabel || s.category || "Geral";
+        const sc = s.color ? hexToRgb2(s.color) : { r: 0.38, g: 0.35, b: 0.75 };
+        const scBg = s.fillColor ? hexToRgb2(s.fillColor) : { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
+        const sRow = _hdCreateFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.97, b: 1 });
+        sRow.name = `[Spec/${s.letter || "A"}] ${s.name || s.label || "Spec"}`;
+        sRow.cornerRadius = 8;
+        sRow.strokes = [{ type: "SOLID", color: sc }];
+        gSpecs.appendChild(sRow);
+        _hdSetFillAndHug(sRow);
+        const sTop = _hdCreateFrame("HORIZONTAL", 0, 6);
+        sTop.counterAxisAlignItems = "CENTER";
+        sRow.appendChild(sTop);
+        _hdSetFillAndHug(sTop);
+        const sName = _hdCreateText(s.name || s.label || "Spec", 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+        sName.layoutGrow = 1;
+        sTop.appendChild(sName);
+        if (s.link) {
+          sName.textDecoration = "UNDERLINE";
+          sName.hyperlink = { type: "URL", value: s.link };
+        } else if (s.id && await figma.getNodeByIdAsync(s.id)) {
+          sName.textDecoration = "UNDERLINE";
+          sName.hyperlink = { type: "NODE", value: s.id };
+        }
+        const sCatTag = _hdCreateFrame("HORIZONTAL", 6, 3, scBg);
+        sCatTag.cornerRadius = 999;
+        sCatTag.strokes = [{ type: "SOLID", color: sc }];
+        sCatTag.strokeWeight = 1;
+        sTop.appendChild(sCatTag);
+        _hdSetFillAndHug(sCatTag);
+        sCatTag.appendChild(_hdCreateText(catLabel, 9, "Medium", sc));
+        if (s.note) {
+          const sNote = _hdCreateText(s.note, 10, "Regular", { r: 0.4, g: 0.45, b: 0.55 });
+          sRow.appendChild(sNote);
+          _hdSetFillAndHug(sNote);
+        }
+        const _props = s.properties || [];
+        if (_props.length > 0) {
+          const propsFrame = _hdCreateFrame("VERTICAL", 0, 3);
+          propsFrame.fills = [];
+          _hdSetFillAndHug(propsFrame);
+          sRow.appendChild(propsFrame);
+          _props.forEach((prop) => {
+            const pRow = _hdCreateFrame("HORIZONTAL", 8, 4, { r: 0.93, g: 0.95, b: 1 });
+            pRow.cornerRadius = 4;
+            pRow.counterAxisAlignItems = "CENTER";
+            _hdSetFillAndHug(pRow);
+            propsFrame.appendChild(pRow);
+            const pKey = _hdCreateText(prop.label || prop.key || "", 9, "Regular", { r: 0.35, g: 0.4, b: 0.5 });
+            pKey.layoutGrow = 1;
+            pRow.appendChild(pKey);
+            if (prop.token) {
+              const tBadge = _hdCreateText(prop.token, 8, "Medium", { r: 0.24, g: 0.24, b: 1 });
+              _hdSetFillAndHug(tBadge);
+              pRow.appendChild(tBadge);
+            }
+            const pVal = _hdCreateText(String(prop.value || ""), 9, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+            _hdSetFillAndHug(pVal);
+            pRow.appendChild(pVal);
+          });
+        }
+        const _excs = s.excecoes || [];
+        if (_excs.length > 0) {
+          const excFrame = _hdCreateFrame("VERTICAL", 0, 4);
+          excFrame.fills = [];
+          _hdSetFillAndHug(excFrame);
+          sRow.appendChild(excFrame);
+          _excs.forEach((exc) => {
+            const eRow = _hdCreateFrame("VERTICAL", 6, 2, { r: 1, g: 0.97, b: 0.92 });
+            eRow.cornerRadius = 4;
+            eRow.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.55, b: 0.13 } }];
+            eRow.strokeWeight = 1;
+            _hdSetFillAndHug(eRow);
+            excFrame.appendChild(eRow);
+            const eTitle = _hdCreateText(`${exc.tipo || "Exce\xE7\xE3o"}${exc.titulo ? " \u2014 " + exc.titulo : ""}`, 9, "Bold", { r: 0.7, g: 0.4, b: 0.05 });
+            eRow.appendChild(eTitle);
+            _hdSetFillAndHug(eTitle);
+            if (exc.obs) {
+              const eObs = _hdCreateText(exc.obs, 9, "Regular", { r: 0.5, g: 0.45, b: 0.35 });
+              eRow.appendChild(eObs);
+              _hdSetFillAndHug(eObs);
+            }
+          });
+        }
+      }
+    }
+    return fGroup;
+  }
+  var _HD_FLOW_TYPE_LABEL = { line_solid: "Linha s\xF3lida", line_dashed: "Linha tracejada", diamond: "Decis\xE3o", diamond_dashed: "Decis\xE3o tracejada", event_start: "In\xEDcio", event_end: "Fim", gateway_parallel: "Paralelo" };
+  function _hdBuildFlowCard(flow, fi) {
+    const fRow = _hdCreateFrame("VERTICAL", 12, 10, { r: 0.97, g: 0.96, b: 1 });
+    fRow.name = `[Fluxo] ${flow.name || "Fluxo " + (fi + 1)}`;
+    fRow.cornerRadius = 8;
+    fRow.strokes = [{ type: "SOLID", color: { r: 0.86, g: 0.84, b: 0.96 } }];
+    fRow.setPluginData("handexFlowId", flow.flowUid || flow.id || "");
+    const fTop = _hdCreateFrame("HORIZONTAL", 0, 4);
+    fTop.counterAxisAlignItems = "CENTER";
+    const fName = _hdCreateText(flow.name || "Fluxo", 12, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+    fName.layoutGrow = 1;
+    fTop.appendChild(fName);
+    const typeStr = _HD_FLOW_TYPE_LABEL[flow.type] || flow.type || "";
+    if (typeStr) {
+      const fTypeTag = _hdCreateFrame("HORIZONTAL", 6, 3, { r: 0.93, g: 0.9, b: 1 });
+      fTypeTag.cornerRadius = 999;
+      fTop.appendChild(fTypeTag);
+      _hdSetFillAndHug(fTypeTag);
+      fTypeTag.appendChild(_hdCreateText(typeStr, 9, "Medium", { r: 0.45, g: 0.35, b: 0.75 }));
+    }
+    fRow.appendChild(fTop);
+    _hdSetFillAndHug(fTop);
+    if (flow.fromName || flow.toName) {
+      const connStr = `${flow.fromName || "?"} \u2192 ${flow.toName || "?"}`;
+      const fConn = _hdCreateText(connStr, 10, "Regular", { r: 0.45, g: 0.5, b: 0.6 });
+      fRow.appendChild(fConn);
+      _hdSetFillAndHug(fConn);
+    }
+    if (flow.decisionText) {
+      const dText = _hdCreateText(`"${flow.decisionText}"`, 10, "Regular", { r: 0.5, g: 0.45, b: 0.7 });
+      fRow.appendChild(dText);
+      _hdSetFillAndHug(dText);
+    }
+    return fRow;
+  }
+  function _hdFindExistingFicha(titulo) {
+    const _titulo = (titulo || "").trim();
+    const _prefix = _titulo ? `Handex | Ficha de Projeto | ${_titulo}` : "Handex | Ficha de Projeto";
+    const fichas = figma.currentPage.children.filter(
+      (n) => n.type === "FRAME" && n.name.startsWith(_prefix)
+    );
+    if (fichas.length === 0) return null;
+    fichas.sort((a, b) => a.name.localeCompare(b.name));
+    return fichas[fichas.length - 1];
+  }
   function rgbToHex(r, g, b) {
     const toHex = (c) => {
       const hex = Math.round(c * 255).toString(16);
@@ -368,7 +682,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "6.2.0" : "dev";
+  var PLUGIN_VERSION = true ? "6.3.0" : "dev";
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
     const NS = "handex";
@@ -403,12 +717,15 @@
         node.setSharedPluginData(NS, "context", JSON.stringify({
           nome: frame.nome || "",
           isNewComponent: frame.isNewComponent || false,
-          excecoes: (frame.excecoes || []).map((e) => ({
+          // Agregado das specs do frame -- frame.excecoes (nível de frame)
+          // nunca teve UI real de entrada; spec.excecoes é o único conceito vivo.
+          excecoes: (frame.createdSpecs || []).flatMap((s) => (s.excecoes || []).map((e) => ({
             tipo: e.tipo || "",
             titulo: e.titulo || "",
-            notas: e.notas || "",
-            link: e.link || ""
-          }))
+            obs: e.obs || "",
+            link: e.anchor || "",
+            spec: s.name || ""
+          })))
         }));
       } catch (e) {
       }
@@ -493,6 +810,43 @@
         else bestB.x += offset;
       }
     }
+    const _connectorStyle = msg.flowType === "line_solid" || msg.flowType === "line_dashed" ? msg.connectorStyle || "straight" : "straight";
+    const _curvature = _connectorStyle === "curved" ? msg.curvature || 0 : 0;
+    const _midX = (bestA.x + bestB.x) / 2, _midY = (bestA.y + bestB.y) / 2;
+    let curveCtrl = { x: _midX, y: _midY };
+    if (_curvature) {
+      const dx = bestB.x - bestA.x, dy = bestB.y - bestA.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      const px = -dy / dist, py = dx / dist;
+      const offset = _curvature / 100 * dist * 0.5;
+      curveCtrl = { x: _midX + px * offset, y: _midY + py * offset };
+    }
+    const curveMid = _curvature ? { x: 0.25 * bestA.x + 0.5 * curveCtrl.x + 0.25 * bestB.x, y: 0.25 * bestA.y + 0.5 * curveCtrl.y + 0.25 * bestB.y } : { x: _midX, y: _midY };
+    const elbowPoints = [];
+    if (_connectorStyle === "elbow" && bestA.side && bestB.side) {
+      const aVertical = bestA.side === "top" || bestA.side === "bottom";
+      const bVertical = bestB.side === "top" || bestB.side === "bottom";
+      if (aVertical !== bVertical) {
+        const corner = aVertical ? { x: bestB.x, y: bestA.y } : { x: bestA.x, y: bestB.y };
+        elbowPoints.push(corner);
+      } else {
+        const OFFSET_MIN = 24;
+        if (aVertical) {
+          const offsetY = Math.max(OFFSET_MIN, Math.abs(bestB.y - bestA.y) / 2);
+          const y1 = bestA.side === "bottom" ? bestA.y + offsetY : bestA.y - offsetY;
+          const y2 = bestB.side === "bottom" ? bestB.y + offsetY : bestB.y - offsetY;
+          const midY = bestA.side === "bottom" ? Math.max(y1, y2) : Math.min(y1, y2);
+          elbowPoints.push({ x: bestA.x, y: midY }, { x: bestB.x, y: midY });
+        } else {
+          const offsetX = Math.max(OFFSET_MIN, Math.abs(bestB.x - bestA.x) / 2);
+          const x1 = bestA.side === "right" ? bestA.x + offsetX : bestA.x - offsetX;
+          const x2 = bestB.side === "right" ? bestB.x + offsetX : bestB.x - offsetX;
+          const midX = bestA.side === "right" ? Math.max(x1, x2) : Math.min(x1, x2);
+          elbowPoints.push({ x: midX, y: bestA.y }, { x: midX, y: bestB.y });
+        }
+      }
+    }
+    const elbowMid = elbowPoints.length === 1 ? elbowPoints[0] : elbowPoints.length === 2 ? { x: (elbowPoints[0].x + elbowPoints[1].x) / 2, y: (elbowPoints[0].y + elbowPoints[1].y) / 2 } : curveMid;
     const strokeColor = { r: 0.12, g: 0.16, b: 0.23 };
     const line = figma.createVector();
     line.name = `Linha`;
@@ -502,10 +856,20 @@
     line.strokes = [{ type: "SOLID", color: strokeColor }];
     line.strokeWeight = 2;
     if (msg.flowType === "line_dashed" || msg.flowType === "diamond_dashed") line.dashPattern = [6, 4];
-    line.vectorPaths = [{ windingRule: "NONZERO", data: `M ${bestA.x} ${bestA.y} L ${bestB.x} ${bestB.y}` }];
+    let linePath;
+    if (elbowPoints.length > 0) {
+      const segs = [bestA, ...elbowPoints, bestB].map((p) => `${p.x} ${p.y}`).join(" L ");
+      linePath = `M ${segs}`;
+    } else if (_curvature) {
+      linePath = `M ${bestA.x} ${bestA.y} Q ${curveCtrl.x} ${curveCtrl.y} ${bestB.x} ${bestB.y}`;
+    } else {
+      linePath = `M ${bestA.x} ${bestA.y} L ${bestB.x} ${bestB.y}`;
+    }
+    line.vectorPaths = [{ windingRule: "NONZERO", data: linePath }];
     let nodesToGroup = [line];
     if (msg.flowType !== "event_start") {
-      const angle = Math.atan2(bestB.y - bestA.y, bestB.x - bestA.x);
+      const arrowFrom = elbowPoints.length > 0 ? elbowPoints[elbowPoints.length - 1] : curveCtrl;
+      const angle = Math.atan2(bestB.y - arrowFrom.y, bestB.x - arrowFrom.x);
       const arrowSize = 8;
       const arrow = figma.createVector();
       figma.currentPage.appendChild(arrow);
@@ -522,11 +886,14 @@
       arrow.vectorPaths = [{ windingRule: "NONZERO", data: `M ${x1} ${y1} L ${bestB.x} ${bestB.y} L ${x2} ${y2}` }];
       nodesToGroup.push(arrow);
     }
+    const _flowId = msg.flowId || String(Date.now());
     const _flowExtra = {
       sourceId: nodeA.id,
       targetId: nodeB ? nodeB.id : null,
       decisionText: msg.decisionText || null,
-      flowSide: msg.flowSide || "auto"
+      flowSide: msg.flowSide || "auto",
+      connectorStyle: _connectorStyle,
+      curvature: _curvature
     };
     if (msg.flowType === "diamond" || msg.flowType === "diamond_dashed") {
       const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
@@ -558,7 +925,8 @@
         finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | decisao] ${msg.flowName || "Decis\xE3o"}`;
         finalGroup.locked = true;
         finalGroup.setPluginData("handexCategory", "fluxo");
-        figma.ui.postMessage({ type: "flow-created", flow: __spreadValues({ id: finalGroup.id, name: finalGroup.name, type: msg.flowType }, _flowExtra) });
+        finalGroup.setPluginData("handexFlowId", _flowId);
+        figma.ui.postMessage({ type: "flow-created", flow: __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: finalGroup.name, type: msg.flowType }, _flowExtra) });
       } catch (e) {
         console.error(e);
       }
@@ -589,12 +957,13 @@
         finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | ${isStart ? "inicio" : "fim"}] ${msg.flowName || (isStart ? "In\xEDcio" : "Fim")}`;
         finalGroup.locked = true;
         finalGroup.setPluginData("handexCategory", "fluxo");
-        figma.ui.postMessage({ type: "flow-created", flow: __spreadValues({ id: finalGroup.id, name: finalGroup.name, type: msg.flowType }, _flowExtra) });
+        finalGroup.setPluginData("handexFlowId", _flowId);
+        figma.ui.postMessage({ type: "flow-created", flow: __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: finalGroup.name, type: msg.flowType }, _flowExtra) });
       } catch (e) {
         console.error(e);
       }
     } else if (msg.decisionText && (msg.flowType === "line_solid" || msg.flowType === "line_dashed")) {
-      const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
+      const midX = elbowMid.x, midY = elbowMid.y;
       try {
         await figma.loadFontAsync({ family: "Inter", style: "Bold" });
         const textNode = figma.createText();
@@ -624,7 +993,8 @@
         finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conex\xE3o"}`;
         finalGroup.locked = true;
         finalGroup.setPluginData("handexCategory", "fluxo");
-        figma.ui.postMessage({ type: "flow-created", flow: __spreadValues({ id: finalGroup.id, name: finalGroup.name, type: msg.flowType }, _flowExtra) });
+        finalGroup.setPluginData("handexFlowId", _flowId);
+        figma.ui.postMessage({ type: "flow-created", flow: __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: finalGroup.name, type: msg.flowType }, _flowExtra) });
       } catch (e) {
         console.error(e);
       }
@@ -633,12 +1003,13 @@
       finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conex\xE3o"}`;
       finalGroup.locked = true;
       finalGroup.setPluginData("handexCategory", "fluxo");
-      figma.ui.postMessage({ type: "flow-created", flow: __spreadValues({ id: finalGroup.id, name: finalGroup.name, type: msg.flowType }, _flowExtra) });
+      finalGroup.setPluginData("handexFlowId", _flowId);
+      figma.ui.postMessage({ type: "flow-created", flow: __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: finalGroup.name, type: msg.flowType }, _flowExtra) });
     }
     figma.notify("Fluxo criado!");
   }
   figma.ui.onmessage = async (msg) => {
-    var _a, _b, _c;
+    var _a, _b;
     if (msg.type === "ui-ready") {
       const currentUser = figma.currentUser ? { id: figma.currentUser.id, name: figma.currentUser.name, photoUrl: figma.currentUser.photoUrl } : null;
       const theme = figma.ui.theme || "light";
@@ -677,7 +1048,7 @@
         figma.ui.postMessage({ type: "toast", message: "Card n\xE3o encontrado no canvas.", kind: "error" });
         return;
       }
-      const children = grpNode.type === "GROUP" ? grpNode.children : [grpNode];
+      const children = "children" in grpNode ? grpNode.children : [grpNode];
       const cardFrame = children.find((n) => n.name && (n.name === "Spec Notes" || n.name === "Ficha" || n.name.endsWith("/Ficha")));
       if (!cardFrame || cardFrame.type !== "FRAME") {
         figma.ui.postMessage({ type: "toast", message: "Card n\xE3o encontrado no grupo.", kind: "error" });
@@ -685,6 +1056,23 @@
       }
       const existing = cardFrame.children.find((n) => n.name === "[Spec] Exce\xE7\xF5es");
       if (existing) existing.remove();
+      if (msg.hasOwnProperty("note")) {
+        const existingNote = cardFrame.children.find((n) => n.name === "[Spec] Nota");
+        if (existingNote) existingNote.remove();
+        if (msg.note) {
+          await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+          const desc = figma.createText();
+          desc.name = "[Spec] Nota";
+          desc.fontName = { family: "Inter", style: "Regular" };
+          desc.fontSize = 11;
+          desc.fills = [{ type: "SOLID", color: { r: 0.4, g: 0.4, b: 0.4 } }];
+          desc.characters = msg.note;
+          desc.textAutoResize = "WIDTH_AND_HEIGHT";
+          const propsFrame = cardFrame.children.find((n) => n.name === "Propriedades");
+          const insertIdx = propsFrame ? cardFrame.children.indexOf(propsFrame) : cardFrame.children.length;
+          cardFrame.insertChild(insertIdx, desc);
+        }
+      }
       if (msg.excecoes && msg.excecoes.length > 0) {
         (async () => {
           await figma.loadFontAsync({ family: "Inter", style: "Bold" });
@@ -886,6 +1274,18 @@
           counts[cat]++;
         }
       });
+      for (const node of toRemove) {
+        const markerId = node.getPluginData && node.getPluginData("handexSpecMarkerId");
+        if (markerId) {
+          const marker = await figma.getNodeByIdAsync(markerId);
+          if (marker) {
+            try {
+              marker.remove();
+            } catch (e) {
+            }
+          }
+        }
+      }
       toRemove.forEach((node) => {
         try {
           node.remove();
@@ -1033,7 +1433,7 @@
           section.cornerRadius = 8;
           section.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
           section.strokeWeight = 1;
-          const title = createText(titleText, 16, "Bold", { r: 0, g: 0.35, b: 0.79 });
+          const title = createText(titleText, 16, "Bold", { r: 0.24, g: 0.24, b: 1 });
           section.appendChild(title);
           setFillAndHug(title);
           return section;
@@ -1047,7 +1447,7 @@
           const lbl = createText(label, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
           row.appendChild(lbl);
           setFillAndHug(lbl);
-          const val = createText(value || "-", 14, "Regular", isLink ? { r: 0, g: 0.35, b: 0.79 } : { r: 0.12, g: 0.16, b: 0.23 });
+          const val = createText(value || "-", 14, "Regular", isLink ? { r: 0.24, g: 0.24, b: 1 } : { r: 0.12, g: 0.16, b: 0.23 });
           row.appendChild(val);
           setFillAndHug(val);
           if (isLink && value) {
@@ -1093,12 +1493,22 @@
         }
         const _titulo = (((_a = data.step1) == null ? void 0 : _a.titulo) || "Projeto").replace(/\//g, "-");
         const _handoffBase = `Handex | Ficha de Projeto | ${_titulo}`;
-        const _isUpdate = false;
+        const _existingFicha = _hdFindExistingFicha(_titulo);
+        let _inheritedX = null, _inheritedY = null;
+        const _isUpdate = !!_existingFicha;
+        if (_existingFicha) {
+          _inheritedX = _existingFicha.x;
+          _inheritedY = _existingFicha.y;
+          try {
+            _existingFicha.remove();
+          } catch (e) {
+          }
+        }
         const _now = /* @__PURE__ */ new Date();
         const _ts = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}-${String(_now.getDate()).padStart(2, "0")} ${String(_now.getHours()).padStart(2, "0")}:${String(_now.getMinutes()).padStart(2, "0")}`;
         const _versaoLabel = (((_b = data.step1) == null ? void 0 : _b.versao) || "").trim();
         const _containerName = `${_handoffBase} | ${_ts}${_versaoLabel ? " | " + _versaoLabel : ""}`;
-        const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb2("#026173"));
+        const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb2("#181875"));
         mainContainer.name = _containerName;
         mainContainer.counterAxisAlignItems = "MIN";
         mainContainer.primaryAxisSizingMode = "AUTO";
@@ -1120,12 +1530,12 @@
         <g transform="translate(-284.78446,-475.51214)">
           <g transform="matrix(1.25,0,0,-1.25,15.493106,1024.9702)">
             <g transform="scale(0.24,0.24)">
-              <path d="m 1107.19,1780.04 -17.74,-44.21 24.55,0 -6.73,44.39 -0.08,-0.18 z m -93.98,-101.49 72.77,149.83 55.02,0 30.68,-149.83 -48.3,0 -3.56,19.97 -46.86,0 -10.78,-19.97 -48.97,0 z m 181.34,0 21.08,149.83 48.67,0 -21.07,-149.83 -48.68,0 z m 323.71,101.67 -17.81,-44.39 24.54,0 -6.73,44.39 z m -94.06,-101.67 72.78,149.83 55.01,0 30.69,-149.83 -48.31,0 -3.55,19.97 -46.87,0 -10.78,-19.97 -48.97,0" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none" />
-              <path d="m 1316.6,1748.61 60.99,0 41.79,-69.21 -61,0 -41.78,69.21" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1107.19,1780.04 -17.74,-44.21 24.55,0 -6.73,44.39 -0.08,-0.18 z m -93.98,-101.49 72.77,149.83 55.02,0 30.68,-149.83 -48.3,0 -3.56,19.97 -46.86,0 -10.78,-19.97 -48.97,0 z m 181.34,0 21.08,149.83 48.67,0 -21.07,-149.83 -48.68,0 z m 323.71,101.67 -17.81,-44.39 24.54,0 -6.73,44.39 z m -94.06,-101.67 72.78,149.83 55.01,0 30.69,-149.83 -48.31,0 -3.55,19.97 -46.87,0 -10.78,-19.97 -48.97,0" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1316.6,1748.61 60.99,0 41.79,-69.21 -61,0 -41.78,69.21" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none" />
               <path d="m 1322.94,1759.24 63.04,0 54.75,68.92 -63.04,0 -54.75,-68.92" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none" />
               <path d="m 1259.91,1678.98 63.03,0 54.75,69.76 -63.04,0 -54.74,-69.76" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none" />
-              <path d="m 1282.64,1829 58.83,0 40.31,-69.76 -58.84,0 -40.3,69.76" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none" />
-              <path d="m 1014.65,1823.02 -4.68,-44.07 c -17.939,24.75 -59.517,7.67 -62.782,-23.16 -4.149,-39.13 35.867,-48.25 57.642,-25.21 l -4.69,-44.17 c -6.499,-3.19 -12.855,-5.67 -19.128,-7.34 -6.239,-1.68 -12.492,-2.57 -18.696,-2.7 -7.8,-0.17 -14.867,0.65 -21.234,2.44 -6.367,1.76 -12.129,4.56 -17.227,8.34 -9.832,7.19 -16.941,16.33 -21.32,27.45 -4.379,11.16 -5.82,23.75 -4.328,37.82 1.203,11.31 4.051,21.62 8.59,30.97 4.5,9.34 10.734,17.84 18.672,25.54 7.504,7.34 15.676,12.88 24.519,16.64 8.809,3.73 18.422,5.72 28.813,5.94 6.207,0.13 12.297,-0.49 18.207,-1.92 5.942,-1.42 11.802,-3.64 17.642,-6.57" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1282.64,1829 58.83,0 40.31,-69.76 -58.84,0 -40.3,69.76" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1014.65,1823.02 -4.68,-44.07 c -17.939,24.75 -59.517,7.67 -62.782,-23.16 -4.149,-39.13 35.867,-48.25 57.642,-25.21 l -4.69,-44.17 c -6.499,-3.19 -12.855,-5.67 -19.128,-7.34 -6.239,-1.68 -12.492,-2.57 -18.696,-2.7 -7.8,-0.17 -14.867,0.65 -21.234,2.44 -6.367,1.76 -12.129,4.56 -17.227,8.34 -9.832,7.19 -16.941,16.33 -21.32,27.45 -4.379,11.16 -5.82,23.75 -4.328,37.82 1.203,11.31 4.051,21.62 8.59,30.97 4.5,9.34 10.734,17.84 18.672,25.54 7.504,7.34 15.676,12.88 24.519,16.64 8.809,3.73 18.422,5.72 28.813,5.94 6.207,0.13 12.297,-0.49 18.207,-1.92 5.942,-1.42 11.802,-3.64 17.642,-6.57" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none" />
             </g>
           </g>
         </g>
@@ -1139,6 +1549,7 @@
         header.appendChild(headerTitle);
         fichaTecnica.appendChild(header);
         const content = createFrame("VERTICAL", 24, 24, { r: 1, g: 1, b: 1 });
+        content.name = "Handex | Content";
         fichaTecnica.appendChild(content);
         setFillAndHug(content);
         if (!data.setup || data.setup.ficha !== false) {
@@ -1186,13 +1597,13 @@
             roleTag.cornerRadius = 999;
             roleTag.strokes = [{ type: "SOLID", color: { r: 0.7, g: 0.82, b: 0.96 } }];
             roleTag.strokeWeight = 1;
-            roleTag.appendChild(createText(m.papel || "Membro", 9, "Medium", { r: 0, g: 0.35, b: 0.79 }));
+            roleTag.appendChild(createText(m.papel || "Membro", 9, "Medium", { r: 0.24, g: 0.24, b: 1 }));
             mRow.appendChild(roleTag);
             const nameText = createText(m.nome || "", 12, "Medium");
             nameText.layoutGrow = 1;
             mRow.appendChild(nameText);
             if (m.email) {
-              const contactLink = createText("Contato", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
+              const contactLink = createText("Contato", 11, "Bold", { r: 0.24, g: 0.24, b: 1 });
               contactLink.textDecoration = "UNDERLINE";
               contactLink.hyperlink = { type: "URL", value: "mailto:" + m.email };
               mRow.appendChild(contactLink);
@@ -1213,7 +1624,7 @@
             rRow.appendChild(rTitle);
             setFillAndHug(rTitle);
             if (r.link && r.link !== "#") {
-              const lText = createText("Acesse o link da HU", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
+              const lText = createText("Acesse o link da HU", 11, "Bold", { r: 0.24, g: 0.24, b: 1 });
               lText.textDecoration = "UNDERLINE";
               lText.hyperlink = { type: "URL", value: r.link };
               rRow.appendChild(lText);
@@ -1228,9 +1639,14 @@
           content.appendChild(rulesSection);
           setFillAndHug(rulesSection);
         }
-        const _allExcecoes = (data.frames || []).flatMap(
-          (f) => (f.excecoes || []).map((e) => __spreadProps(__spreadValues({}, e), { _frame: f.nome }))
-        );
+        const _allExcecoes = [
+          ...(data.frames || []).flatMap((f) => (f.createdSpecs || []).flatMap(
+            (s) => (s.excecoes || []).map((e) => __spreadProps(__spreadValues({}, e), { _frame: f.nome, _spec: s.name }))
+          )),
+          ...(data.specs || []).flatMap(
+            (s) => (s.excecoes || []).map((e) => __spreadProps(__spreadValues({}, e), { _frame: null, _spec: s.name }))
+          )
+        ];
         if (_allExcecoes.length > 0) {
           const excSection = createSection(content, "Cen\xE1rios de Exce\xE7\xE3o");
           _allExcecoes.forEach((e) => {
@@ -1244,7 +1660,8 @@
             typeTag.cornerRadius = 4;
             typeTag.appendChild(createText(e.tipo || "", 10, "Bold", { r: 1, g: 1, b: 1 }));
             eRow.appendChild(typeTag);
-            const titleText = createText(`${e.titulo || ""}${e._frame ? " (" + e._frame + ")" : ""}`, 12, "Medium");
+            const _origem = e._frame ? `${e._spec || ""} \u2014 ${e._frame}` : e._spec || "";
+            const titleText = createText(`${e.titulo || ""}${_origem ? " (" + _origem + ")" : ""}`, 12, "Medium");
             titleText.layoutGrow = 1;
             eRow.appendChild(titleText);
             if (e.anchor && e.anchor !== "#") {
@@ -1274,7 +1691,7 @@
               const dLabel = createText(item.label, 12, "Bold");
               dLabel.layoutGrow = 1;
               dRow.appendChild(dLabel);
-              const dLink = createText("Acesse o link", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
+              const dLink = createText("Acesse o link", 11, "Bold", { r: 0.24, g: 0.24, b: 1 });
               dLink.textDecoration = "UNDERLINE";
               dLink.hyperlink = { type: "URL", value: docData.link };
               dRow.appendChild(dLink);
@@ -1283,376 +1700,55 @@
             setFillAndHug(docsSection);
           }
         }
-        if (false) {
-          let buildSpecCard = function(s) {
-            const tc = s.color ? { r: parseInt(s.color.slice(1, 3), 16) / 255, g: parseInt(s.color.slice(3, 5), 16) / 255, b: parseInt(s.color.slice(5, 7), 16) / 255 } : themeColor;
-            const card = figma.createFrame();
-            card.name = `[Spec/${s.letter || "A"}] ${s.name || ""}`;
-            card.layoutMode = "VERTICAL";
-            card.itemSpacing = 4;
-            card.paddingLeft = 10;
-            card.paddingRight = 10;
-            card.paddingTop = 8;
-            card.paddingBottom = 8;
-            card.cornerRadius = 8;
-            card.fills = [{ type: "SOLID", color: { r: 0.98, g: 0.98, b: 1 } }];
-            card.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.92, b: 0.96 } }];
-            card.primaryAxisSizingMode = "AUTO";
-            card.counterAxisSizingMode = "FIXED";
-            card.resize(SPEC_CARD_W, 10);
-            const sHeader = figma.createFrame();
-            sHeader.layoutMode = "HORIZONTAL";
-            sHeader.itemSpacing = 8;
-            sHeader.fills = [];
-            sHeader.counterAxisAlignItems = "CENTER";
-            sHeader.primaryAxisSizingMode = "FIXED";
-            sHeader.counterAxisSizingMode = "AUTO";
-            sHeader.layoutAlign = "STRETCH";
-            card.appendChild(sHeader);
-            const badge = figma.createFrame();
-            badge.layoutMode = "HORIZONTAL";
-            badge.resize(20, 20);
-            badge.cornerRadius = 4;
-            badge.fills = [{ type: "SOLID", color: tc }];
-            badge.primaryAxisAlignItems = "CENTER";
-            badge.counterAxisAlignItems = "CENTER";
-            const badgeT = figma.createText();
-            badgeT.fontName = { family: "Inter", style: "Bold" };
-            badgeT.fontSize = 9;
-            badgeT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
-            badgeT.characters = s.letter || "A";
-            badgeT.textAutoResize = "WIDTH_AND_HEIGHT";
-            badge.appendChild(badgeT);
-            sHeader.appendChild(badge);
-            const sName = figma.createText();
-            sName.fontName = { family: "Inter", style: "Bold" };
-            sName.fontSize = 11;
-            sName.fills = [{ type: "SOLID", color: { r: 0.12, g: 0.16, b: 0.23 } }];
-            sName.characters = s.name || "";
-            sName.textAutoResize = "HEIGHT";
-            sName.layoutGrow = 1;
-            sHeader.appendChild(sName);
-            if (s.note) {
-              const sNote = figma.createText();
-              sNote.fontName = { family: "Inter", style: "Regular" };
-              sNote.fontSize = 10;
-              sNote.fills = [{ type: "SOLID", color: { r: 0.4, g: 0.4, b: 0.4 } }];
-              sNote.characters = s.note;
-              sNote.textAutoResize = "HEIGHT";
-              sNote.layoutAlign = "STRETCH";
-              card.appendChild(sNote);
-            }
-            if (s.link) {
-              const lText = figma.createText();
-              lText.fontName = { family: "Inter", style: "Regular" };
-              lText.fontSize = 9;
-              lText.fills = [{ type: "SOLID", color: { r: 0, g: 0.35, b: 0.79 } }];
-              lText.characters = s.link;
-              lText.textDecoration = "UNDERLINE";
-              lText.hyperlink = { type: "URL", value: s.link };
-              lText.textAutoResize = "HEIGHT";
-              lText.layoutAlign = "STRETCH";
-              card.appendChild(lText);
-            }
-            const sExcs = s.excecoes || [];
-            if (sExcs.length > 0) {
-              const _excRgb = { "Erro": { r: 0.8, g: 0.15, b: 0.15 }, "Alerta": { r: 0.8, g: 0.5, b: 0 }, "Sucesso": { r: 0.1, g: 0.55, b: 0.25 }, "Confirma\xE7\xE3o": { r: 0.05, g: 0.35, b: 0.8 } };
-              sExcs.forEach((exc) => {
-                const eRow = figma.createFrame();
-                eRow.layoutMode = "HORIZONTAL";
-                eRow.itemSpacing = 6;
-                eRow.fills = [];
-                eRow.primaryAxisSizingMode = "FIXED";
-                eRow.counterAxisSizingMode = "AUTO";
-                eRow.layoutAlign = "STRETCH";
-                eRow.counterAxisAlignItems = "CENTER";
-                card.appendChild(eRow);
-                const eType = figma.createText();
-                eType.fontName = { family: "Inter", style: "Bold" };
-                eType.fontSize = 9;
-                eType.fills = [{ type: "SOLID", color: _excRgb[exc.tipo] || { r: 0.4, g: 0.4, b: 0.4 } }];
-                eType.characters = (exc.tipo || "GERAL").toUpperCase();
-                eType.textAutoResize = "WIDTH_AND_HEIGHT";
-                const eTitle = figma.createText();
-                eTitle.fontName = { family: "Inter", style: "Regular" };
-                eTitle.fontSize = 10;
-                eTitle.fills = [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2 } }];
-                eTitle.characters = exc.titulo || "";
-                eTitle.textAutoResize = "HEIGHT";
-                eTitle.layoutGrow = 1;
-                eRow.appendChild(eType);
-                eRow.appendChild(eTitle);
-              });
-            }
-            return card;
-          };
-          const SPEC_CARD_W = 240;
-          const _specsByTag = {};
-          _globalSpecs.forEach((s) => {
-            const tag = s.categoryLabel || s.category || "Geral";
-            if (!_specsByTag[tag]) _specsByTag[tag] = [];
-            _specsByTag[tag].push(s);
-          });
-          const specsSection = createSection(content, "Especifica\xE7\xF5es Visuais");
-          const specsTagRow = figma.createFrame();
-          specsTagRow.name = "[Row] Especifica\xE7\xF5es por Tag";
-          specsTagRow.layoutMode = "HORIZONTAL";
-          specsTagRow.layoutWrap = "WRAP";
-          specsTagRow.itemSpacing = 16;
-          specsTagRow.counterAxisSpacing = 16;
-          specsTagRow.fills = [];
-          specsTagRow.primaryAxisSizingMode = "AUTO";
-          specsTagRow.counterAxisSizingMode = "AUTO";
-          specsTagRow.counterAxisAlignItems = "MIN";
-          specsSection.appendChild(specsTagRow);
-          setFillAndHug(specsTagRow);
-          Object.entries(_specsByTag).forEach(([tag, tagSpecs]) => {
-            if (tagSpecs.length === 1) {
-              specsTagRow.appendChild(buildSpecCard(tagSpecs[0]));
-            } else {
-              const group = figma.createFrame();
-              group.name = `[Specs/${tag}] Especifica\xE7\xF5es Visuais`;
-              group.layoutMode = "VERTICAL";
-              group.itemSpacing = 8;
-              group.fills = [];
-              group.primaryAxisSizingMode = "AUTO";
-              group.counterAxisSizingMode = "AUTO";
-              group.counterAxisAlignItems = "MIN";
-              tagSpecs.forEach((s) => group.appendChild(buildSpecCard(s)));
-              specsTagRow.appendChild(group);
-              setFillAndHug(group);
-            }
-          });
-          content.appendChild(specsSection);
-          setFillAndHug(specsSection);
-        }
         const _frames = data.frames || [];
         if (_frames.length > 0) {
-          const framesSection = createSection(content, "Frames Documentados");
+          const framesSection = _hdCreateSection(content, "Frames Documentados");
           _frames.forEach((f, fi) => {
-            const fRow = createFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.99, b: 1 });
-            fRow.name = `[Frame] ${f.nome || "Frame " + (fi + 1)}`;
-            fRow.cornerRadius = 8;
-            fRow.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.92, b: 0.96 } }];
+            const fRow = _hdBuildFrameCard(f, fi);
             framesSection.appendChild(fRow);
-            setFillAndHug(fRow);
-            const fHeader = createFrame("HORIZONTAL", 0, 8);
-            fHeader.counterAxisAlignItems = "CENTER";
-            fRow.appendChild(fHeader);
-            setFillAndHug(fHeader);
-            const fName = createText(f.nome || "Frame", 12, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-            fName.layoutGrow = 1;
-            fHeader.appendChild(fName);
-            if (f.isNewComponent) {
-              const badge = createFrame("HORIZONTAL", 8, 3, { r: 0.94, g: 0.92, b: 1 });
-              badge.cornerRadius = 999;
-              badge.strokes = [{ type: "SOLID", color: { r: 0.7, g: 0.6, b: 0.96 } }];
-              badge.strokeWeight = 1;
-              badge.appendChild(createText("Novo componente", 9, "Medium", { r: 0.38, g: 0.18, b: 0.78 }));
-              fHeader.appendChild(badge);
-            }
-            if (f.audit && f.audit.status) {
-              createRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? " \u2014 " + f.audit.justificativa : ""));
-            }
+            _hdSetFillAndHug(fRow);
           });
           content.appendChild(framesSection);
           setFillAndHug(framesSection);
         }
         const _framesWithMeasures = (_frames || []).filter((f) => (f.measurements || []).length > 0);
         if (_framesWithMeasures.length > 0) {
-          const measSection = createSection(content, "Medidas");
+          const measSection = _hdCreateSection(content, "Medidas");
           _framesWithMeasures.forEach((f) => {
-            const fGroup = createFrame("VERTICAL", 0, 6);
-            fGroup.name = `[Medidas | ${f.figmaId || f.id}] ${f.nome || "Frame"}`;
+            const fGroup = _hdBuildMeasuresSubgroup(f);
             measSection.appendChild(fGroup);
-            setFillAndHug(fGroup);
-            const fLabel = createText(f.nome || "Frame", 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
-            fGroup.appendChild(fLabel);
-            setFillAndHug(fLabel);
-            f.measurements.forEach((m) => {
-              const details = Array.isArray(m.details) ? m.details.join(" | ") : m.details || "";
-              const mRow = createFrame("HORIZONTAL", 10, 7, { r: 0.94, g: 0.97, b: 1 });
-              mRow.name = `[Medida] ${m.name || "Medida"}`;
-              mRow.cornerRadius = 6;
-              mRow.counterAxisAlignItems = "CENTER";
-              fGroup.appendChild(mRow);
-              setFillAndHug(mRow);
-              const mName = createText(m.name || "Medida", 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-              mName.layoutGrow = 1;
-              mRow.appendChild(mName);
-              const mVal = createText(details, 10, "Regular", { r: 0.27, g: 0.45, b: 0.78 });
-              mRow.appendChild(mVal);
-              setFillAndHug(mVal);
-            });
+            _hdSetFillAndHug(fGroup);
           });
           content.appendChild(measSection);
           setFillAndHug(measSection);
         }
+        const _framedSpecIds = new Set((_frames || []).flatMap((f) => (f.createdSpecs || []).map((s) => s.id)));
+        const _looseSpecs = (data.specs || []).filter((s) => !_framedSpecIds.has(s.id));
         const _framesWithSpecs = (_frames || []).filter((f) => (f.createdSpecs || []).length > 0);
-        if (_framesWithSpecs.length > 0) {
-          const annotSection = createSection(content, "Especifica\xE7\xF5es");
+        if (_framesWithSpecs.length > 0 || _looseSpecs.length > 0) {
+          const annotSection = _hdCreateSection(content, "Especifica\xE7\xF5es");
           for (const f of _framesWithSpecs) {
-            const fGroup = createFrame("VERTICAL", 0, 10);
-            fGroup.name = `[Specs] ${f.nome || "Frame"}`;
+            const fGroup = await _hdBuildSpecsSubgroup(f);
             annotSection.appendChild(fGroup);
-            setFillAndHug(fGroup);
-            const fLabel = createText(f.nome || "Frame", 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
-            fGroup.appendChild(fLabel);
-            setFillAndHug(fLabel);
-            const groupNames = f.specGroupNames || {};
-            const groupVisible = f.specGroupVisible || {};
-            const letterOrder = [];
-            const specsByLetter = {};
-            (f.createdSpecs || []).forEach((s) => {
-              const l = s.letter || "A";
-              if (!specsByLetter[l]) {
-                specsByLetter[l] = [];
-                letterOrder.push(l);
-              }
-              specsByLetter[l].push(s);
-            });
-            for (const letter of letterOrder) {
-              if (groupVisible[letter] === false) continue;
-              const groupSpecs = specsByLetter[letter];
-              const groupColor = ((_c = groupSpecs[0]) == null ? void 0 : _c.color) ? hexToRgb2(groupSpecs[0].color) : { r: 0.38, g: 0.35, b: 0.75 };
-              const groupNameText = groupNames[letter] || "";
-              const gBox = createFrame("VERTICAL", 0, 6);
-              gBox.name = `[Grupo/${letter}] ${groupNameText || letter}`;
-              fGroup.appendChild(gBox);
-              setFillAndHug(gBox);
-              const gHeader = createFrame("HORIZONTAL", 0, 6);
-              gHeader.counterAxisAlignItems = "CENTER";
-              gBox.appendChild(gHeader);
-              setFillAndHug(gHeader);
-              const gBadge = createFrame("HORIZONTAL", 0, 0, groupColor);
-              gBadge.resize(18, 18);
-              gBadge.cornerRadius = 4;
-              gBadge.primaryAxisAlignItems = "CENTER";
-              gBadge.counterAxisAlignItems = "CENTER";
-              gHeader.appendChild(gBadge);
-              const gBadgeT = figma.createText();
-              gBadgeT.fontName = { family: "Inter", style: "Bold" };
-              gBadgeT.fontSize = 9;
-              gBadgeT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
-              gBadgeT.characters = letter;
-              gBadgeT.textAutoResize = "WIDTH_AND_HEIGHT";
-              gBadge.appendChild(gBadgeT);
-              if (groupNameText) {
-                const gName = createText(groupNameText, 10, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-                gHeader.appendChild(gName);
-                setFillAndHug(gName);
-              }
-              const gCount = createText(`${groupSpecs.length} esp.`, 9, "Regular", { r: 0.55, g: 0.6, b: 0.65 });
-              gHeader.appendChild(gCount);
-              setFillAndHug(gCount);
-              const gSpecs = createFrame("VERTICAL", 0, 4);
-              gSpecs.fills = [];
-              gBox.appendChild(gSpecs);
-              setFillAndHug(gSpecs);
-              for (const s of groupSpecs) {
-                const catLabel = s.type || s.categoryLabel || s.category || "Geral";
-                const sc = s.color ? hexToRgb2(s.color) : { r: 0.38, g: 0.35, b: 0.75 };
-                const scBg = s.fillColor ? hexToRgb2(s.fillColor) : { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
-                const sRow = createFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.97, b: 1 });
-                sRow.name = `[Spec/${s.letter || "A"}] ${s.name || s.label || "Spec"}`;
-                sRow.cornerRadius = 8;
-                sRow.strokes = [{ type: "SOLID", color: sc }];
-                gSpecs.appendChild(sRow);
-                setFillAndHug(sRow);
-                const sTop = createFrame("HORIZONTAL", 0, 6);
-                sTop.counterAxisAlignItems = "CENTER";
-                sRow.appendChild(sTop);
-                setFillAndHug(sTop);
-                const sName = createText(s.name || s.label || "Spec", 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-                sName.layoutGrow = 1;
-                sTop.appendChild(sName);
-                if (s.link) {
-                  sName.textDecoration = "UNDERLINE";
-                  sName.hyperlink = { type: "URL", value: s.link };
-                } else if (s.id && await figma.getNodeByIdAsync(s.id)) {
-                  sName.textDecoration = "UNDERLINE";
-                  sName.hyperlink = { type: "NODE", value: s.id };
-                }
-                const sCatTag = createFrame("HORIZONTAL", 6, 3, scBg);
-                sCatTag.cornerRadius = 999;
-                sCatTag.strokes = [{ type: "SOLID", color: sc }];
-                sCatTag.strokeWeight = 1;
-                sTop.appendChild(sCatTag);
-                setFillAndHug(sCatTag);
-                sCatTag.appendChild(createText(catLabel, 9, "Medium", sc));
-                if (s.note) {
-                  const sNote = createText(s.note, 10, "Regular", { r: 0.4, g: 0.45, b: 0.55 });
-                  sRow.appendChild(sNote);
-                  setFillAndHug(sNote);
-                }
-                const _props = s.properties || [];
-                if (_props.length > 0) {
-                  const propsFrame = createFrame("VERTICAL", 0, 3);
-                  propsFrame.fills = [];
-                  setFillAndHug(propsFrame);
-                  sRow.appendChild(propsFrame);
-                  _props.forEach((prop) => {
-                    const pRow = createFrame("HORIZONTAL", 8, 4, { r: 0.93, g: 0.95, b: 1 });
-                    pRow.cornerRadius = 4;
-                    pRow.counterAxisAlignItems = "CENTER";
-                    setFillAndHug(pRow);
-                    propsFrame.appendChild(pRow);
-                    const pKey = createText(prop.label || prop.key || "", 9, "Regular", { r: 0.35, g: 0.4, b: 0.5 });
-                    pKey.layoutGrow = 1;
-                    pRow.appendChild(pKey);
-                    if (prop.token) {
-                      const tBadge = createText(prop.token, 8, "Medium", { r: 0, g: 0.44, b: 0.69 });
-                      setFillAndHug(tBadge);
-                      pRow.appendChild(tBadge);
-                    }
-                    const pVal = createText(String(prop.value || ""), 9, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-                    setFillAndHug(pVal);
-                    pRow.appendChild(pVal);
-                  });
-                }
-              }
-            }
+            _hdSetFillAndHug(fGroup);
+          }
+          if (_looseSpecs.length > 0) {
+            const looseFrame = { nome: "Sem frame vinculado", createdSpecs: _looseSpecs, specGroupNames: {}, specGroupVisible: {} };
+            const looseGroup = await _hdBuildSpecsSubgroup(looseFrame);
+            looseGroup.setPluginData("handexFrameId", "__loose__");
+            annotSection.appendChild(looseGroup);
+            _hdSetFillAndHug(looseGroup);
           }
           content.appendChild(annotSection);
           setFillAndHug(annotSection);
         }
         const _flows = data.createdFlows || [];
         if (_flows.length > 0) {
-          const flowTypeLabel = { line_solid: "Linha s\xF3lida", line_dashed: "Linha tracejada", diamond: "Decis\xE3o", diamond_dashed: "Decis\xE3o tracejada", event_start: "In\xEDcio", event_end: "Fim", gateway_parallel: "Paralelo" };
-          const flowsSection = createSection(content, "Fluxos de Tela");
+          const flowsSection = _hdCreateSection(content, "Fluxos de Tela");
           _flows.forEach((flow, fi) => {
-            const fRow = createFrame("VERTICAL", 12, 10, { r: 0.97, g: 0.96, b: 1 });
-            fRow.name = `[Fluxo] ${flow.name || "Fluxo " + (fi + 1)}`;
-            fRow.cornerRadius = 8;
-            fRow.strokes = [{ type: "SOLID", color: { r: 0.86, g: 0.84, b: 0.96 } }];
+            const fRow = _hdBuildFlowCard(flow, fi);
             flowsSection.appendChild(fRow);
-            setFillAndHug(fRow);
-            const fTop = createFrame("HORIZONTAL", 0, 4);
-            fTop.counterAxisAlignItems = "CENTER";
-            fRow.appendChild(fTop);
-            setFillAndHug(fTop);
-            const fName = createText(flow.name || "Fluxo", 12, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-            fName.layoutGrow = 1;
-            fTop.appendChild(fName);
-            const typeStr = flowTypeLabel[flow.type] || flow.type || "";
-            if (typeStr) {
-              const fTypeTag = createFrame("HORIZONTAL", 6, 3, { r: 0.93, g: 0.9, b: 1 });
-              fTypeTag.cornerRadius = 999;
-              fTop.appendChild(fTypeTag);
-              setFillAndHug(fTypeTag);
-              fTypeTag.appendChild(createText(typeStr, 9, "Medium", { r: 0.45, g: 0.35, b: 0.75 }));
-            }
-            if (flow.fromName || flow.toName) {
-              const connStr = `${flow.fromName || "?"} \u2192 ${flow.toName || "?"}`;
-              const fConn = createText(connStr, 10, "Regular", { r: 0.45, g: 0.5, b: 0.6 });
-              fRow.appendChild(fConn);
-              setFillAndHug(fConn);
-            }
-            if (flow.decisionText) {
-              const dText = createText(`"${flow.decisionText}"`, 10, "Regular", { r: 0.5, g: 0.45, b: 0.7 });
-              fRow.appendChild(dText);
-              setFillAndHug(dText);
-            }
+            _hdSetFillAndHug(fRow);
           });
           content.appendChild(flowsSection);
           setFillAndHug(flowsSection);
@@ -1700,7 +1796,7 @@
             sec.resize(280, 100);
             sec.primaryAxisSizingMode = "AUTO";
             sec.counterAxisSizingMode = "FIXED";
-            const titleNode = createText(title, 18, "Bold", { r: 0, g: 0.35, b: 0.79 });
+            const titleNode = createText(title, 18, "Bold", { r: 0.24, g: 0.24, b: 1 });
             sec.appendChild(titleNode);
             setFillAndHug(titleNode);
             const listContainer = createFrame("VERTICAL", 0, 12);
@@ -1738,7 +1834,7 @@
                     value: `https://www.figma.com/design/${figma.fileKey}?node-id=${encodeURIComponent(item.nodeId)}`
                   };
                   iName.textDecoration = "UNDERLINE";
-                  iName.fills = [{ type: "SOLID", color: { r: 0, g: 0.35, b: 0.79 } }];
+                  iName.fills = [{ type: "SOLID", color: { r: 0.24, g: 0.24, b: 1 } }];
                 } catch (e) {
                 }
               }
@@ -1807,7 +1903,7 @@
                   pVal.layoutGrow = 1;
                   pRow.appendChild(pVal);
                   if (prop.token) {
-                    const tBadge = createText(prop.token, 8, "Regular", { r: 0, g: 0.44, b: 0.69 });
+                    const tBadge = createText(prop.token, 8, "Regular", { r: 0.24, g: 0.24, b: 1 });
                     pRow.appendChild(tBadge);
                   }
                 });
@@ -1830,8 +1926,8 @@
           uiTitle.layoutGrow = 1;
           uiHeaderRow.appendChild(uiTitle);
           const _allFrameSpecs = (data.frames || []).map((f) => f.specs).filter(Boolean);
-          const _globalSpecs2 = data.step2 && data.step2.specs ? data.step2.specs : null;
-          const _specsSource = _allFrameSpecs.length > 0 ? _allFrameSpecs : _globalSpecs2 ? [_globalSpecs2] : [];
+          const _globalSpecs = data.step2 && data.step2.specs ? data.step2.specs : null;
+          const _specsSource = _allFrameSpecs.length > 0 ? _allFrameSpecs : _globalSpecs ? [_globalSpecs] : [];
           const specsData = {
             components: _specsSource.flatMap((s) => s.components || []),
             icons: _specsSource.flatMap((s) => s.icons || []),
@@ -1943,7 +2039,7 @@
           auditBoard.resize(800, 100);
           auditBoard.counterAxisSizingMode = "FIXED";
           auditBoard.primaryAxisSizingMode = "AUTO";
-          const auditTitle = createText("Relat\xF3rio de Auditoria", 24, "Bold", { r: 0, g: 0.35, b: 0.79 });
+          const auditTitle = createText("Relat\xF3rio de Auditoria", 24, "Bold", { r: 0.24, g: 0.24, b: 1 });
           auditBoard.appendChild(auditTitle);
           setFillAndHug(auditTitle);
           const summaryText = createText(`Ader\xEAncia ao Design System: ${data.auditSummary.adoption}%`, 18, "Bold", data.auditSummary.adoption > 90 ? { r: 0, g: 0.5, b: 0 } : { r: 0.8, g: 0, b: 0 });
@@ -1978,6 +2074,14 @@
         mainContainer.locked = false;
         mainContainer.setPluginData("handexCategory", "ficha");
         figma.currentPage.appendChild(mainContainer);
+        if (_isUpdate && _inheritedX !== null) {
+          mainContainer.x = _inheritedX;
+          mainContainer.y = _inheritedY;
+          figma.currentPage.selection = [mainContainer];
+          figma.viewport.scrollAndZoomIntoView([mainContainer]);
+          figma.ui.postMessage({ type: "handoff-complete", isUpdate: _isUpdate, timestamp: _ts });
+          return;
+        }
         mainContainer.x = -99999;
         mainContainer.y = -99999;
         const _fichaGap = 200;
@@ -2050,7 +2154,7 @@
           mainContainer.y = Math.round(_vb.y + _vb.height / 2 - mainContainer.height / 2);
         }
         try {
-          const _pageNodes = figma.currentPage.children.filter((n) => n !== mainContainer && !_existingFichas.includes(n));
+          const _pageNodes = figma.currentPage.children.filter((n) => n !== mainContainer && !_existingFichas.includes(n)).flatMap((n) => n.type === "SECTION" ? n.children : [n]);
           let _collisionIterations = 0;
           let _hasCollision = true;
           while (_hasCollision && _collisionIterations < 50) {
@@ -2952,20 +3056,23 @@
           await figma.loadFontAsync({ family: "Inter", style: "Bold" });
         } catch (e) {
         }
-        const themeColor2 = hexToRgb2(opts.color || "#005ca9");
+        const themeColor = hexToRgb2(opts.color || "#2e2ee0");
         const themeFill = hexToRgb2(opts.fillColor || opts.color || "#EBF4FB");
         const _specSide = opts.guideSide || "right";
+        const _tagRadius = 8;
+        const _layerTag = "Spec";
         const specCard = figma.createFrame();
         specCard.name = "Spec Notes";
         specCard.layoutMode = "VERTICAL";
-        specCard.paddingLeft = 16;
-        specCard.paddingRight = 16;
-        specCard.paddingTop = 16;
-        specCard.paddingBottom = 16;
+        const _cardPadding = 16;
+        specCard.paddingLeft = _cardPadding;
+        specCard.paddingRight = _cardPadding;
+        specCard.paddingTop = _cardPadding;
+        specCard.paddingBottom = _cardPadding;
         specCard.itemSpacing = 12;
         specCard.cornerRadius = 8;
         specCard.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
-        specCard.strokes = [{ type: "SOLID", color: themeColor2 }];
+        specCard.strokes = [{ type: "SOLID", color: themeColor }];
         specCard.strokeWeight = 1.5;
         specCard.primaryAxisSizingMode = "AUTO";
         specCard.counterAxisSizingMode = "AUTO";
@@ -2981,16 +3088,16 @@
         tagCircle.primaryAxisSizingMode = "FIXED";
         tagCircle.counterAxisSizingMode = "FIXED";
         tagCircle.resize(42, 42);
-        tagCircle.cornerRadius = 8;
+        tagCircle.cornerRadius = _tagRadius;
         tagCircle.fills = [{ type: "SOLID", color: themeFill }];
-        tagCircle.strokes = [{ type: "SOLID", color: themeColor2 }];
+        tagCircle.strokes = [{ type: "SOLID", color: themeColor }];
         tagCircle.strokeWeight = 1.5;
         tagCircle.primaryAxisAlignItems = "CENTER";
         tagCircle.counterAxisAlignItems = "CENTER";
         const tagText = figma.createText();
         tagText.fontName = { family: "Inter", style: "Bold" };
         tagText.fontSize = 18;
-        tagText.fills = [{ type: "SOLID", color: themeColor2 }];
+        tagText.fills = [{ type: "SOLID", color: themeColor }];
         tagText.characters = opts.letter;
         tagCircle.appendChild(tagText);
         headerRow.appendChild(tagCircle);
@@ -3014,17 +3121,18 @@
           pill.primaryAxisSizingMode = "AUTO";
           pill.counterAxisSizingMode = "AUTO";
           pill.fills = [{ type: "SOLID", color: themeFill }];
-          pill.strokes = [{ type: "SOLID", color: themeColor2 }];
+          pill.strokes = [{ type: "SOLID", color: themeColor }];
           const pillText = figma.createText();
           pillText.fontName = { family: "Inter", style: "Medium" };
           pillText.fontSize = 10;
-          pillText.fills = [{ type: "SOLID", color: themeColor2 }];
+          pillText.fills = [{ type: "SOLID", color: themeColor }];
           pillText.characters = opts.categoryLabel;
           pill.appendChild(pillText);
           specCard.appendChild(pill);
         }
         if (opts.note) {
           const desc = figma.createText();
+          desc.name = "[Spec] Nota";
           desc.fontName = { family: "Inter", style: "Regular" };
           desc.fontSize = 11;
           desc.fills = [{ type: "SOLID", color: { r: 0.4, g: 0.4, b: 0.4 } }];
@@ -3060,7 +3168,7 @@
             const pVal = figma.createText();
             pVal.fontName = { family: "Inter", style: "Bold" };
             pVal.fontSize = 11;
-            pVal.fills = [{ type: "SOLID", color: p.token ? themeColor2 : { r: 0.1, g: 0.1, b: 0.1 } }];
+            pVal.fills = [{ type: "SOLID", color: p.token ? themeColor : { r: 0.1, g: 0.1, b: 0.1 } }];
             pVal.characters = p.token || String(p.value);
             pVal.textAutoResize = "WIDTH_AND_HEIGHT";
             row.appendChild(pLabel);
@@ -3128,7 +3236,7 @@
           const linkTxt = figma.createText();
           linkTxt.fontName = { family: "Inter", style: "Regular" };
           linkTxt.fontSize = 11;
-          linkTxt.fills = [{ type: "SOLID", color: { r: 0, g: 0.4, b: 0.8 } }];
+          linkTxt.fills = [{ type: "SOLID", color: { r: 0.24, g: 0.24, b: 1 } }];
           linkTxt.characters = opts.link;
           linkTxt.textDecoration = "UNDERLINE";
           linkTxt.hyperlink = { type: "URL", value: opts.link };
@@ -3138,47 +3246,49 @@
         }
         let groupNodes = [];
         let _absCardX = 0, _absCardY = 0, _absCardW = 0, _absCardH = 0;
+        let contour = null;
         const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
+        let _markerAnchorBounds = bounds;
         if (bounds) {
-          const contour = figma.createFrame();
+          contour = figma.createFrame();
           contour.name = "Destaque";
           contour.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
           figma.currentPage.appendChild(contour);
           contour.x = bounds.x - 16;
           contour.y = bounds.y - 16;
           contour.fills = [];
-          contour.strokes = [{ type: "SOLID", color: themeColor2 }];
+          contour.strokes = [{ type: "SOLID", color: themeColor }];
           contour.strokeWeight = 2;
           contour.dashPattern = [4, 4];
           contour.locked = true;
+          contour.setPluginData("handexCategory", "spec-marcador");
           const chip = figma.createFrame();
           chip.name = "Chip";
           chip.layoutMode = "HORIZONTAL";
           chip.primaryAxisSizingMode = "FIXED";
           chip.counterAxisSizingMode = "FIXED";
           chip.resize(42, 42);
-          chip.cornerRadius = 8;
+          chip.cornerRadius = _tagRadius;
           chip.fills = [{ type: "SOLID", color: themeFill }];
-          chip.strokes = [{ type: "SOLID", color: themeColor2 }];
+          chip.strokes = [{ type: "SOLID", color: themeColor }];
           chip.strokeWeight = 1.5;
           chip.primaryAxisAlignItems = "CENTER";
           chip.counterAxisAlignItems = "CENTER";
           const chipText = figma.createText();
           chipText.fontName = { family: "Inter", style: "Bold" };
           chipText.fontSize = 18;
-          chipText.fills = [{ type: "SOLID", color: themeColor2 }];
+          chipText.fills = [{ type: "SOLID", color: themeColor }];
           chipText.characters = opts.letter;
           chip.appendChild(chipText);
           contour.appendChild(chip);
           chip.x = 0;
           chip.y = 0;
-          groupNodes.push(contour);
           figma.currentPage.appendChild(specCard);
           const side = opts.guideSide || "right";
           const _isVertSide = side === "right" || side === "left";
           const _specLetter = opts.letter;
           let _anchorNode = node;
-          while (_anchorNode.parent && _anchorNode.parent.type !== "PAGE") {
+          while (_anchorNode.parent && _anchorNode.type !== "FRAME" && _anchorNode.parent.type !== "PAGE") {
             _anchorNode = _anchorNode.parent;
           }
           const _anchorBounds = _anchorNode.absoluteBoundingBox || bounds;
@@ -3190,12 +3300,14 @@
             if (bb.x < _letterMap[l].x) _letterMap[l].x = bb.x;
             if (bb.y < _letterMap[l].topY) _letterMap[l].topY = bb.y;
           };
-          figma.currentPage.children.forEach((n) => {
-            if (n.type !== "GROUP") return;
-            const newFmt = n.name.match(/^\[Spec \| ([A-Z]\d*(?:\.\d+)*) \| ([a-z]+)\] /);
+          const _stackScanNodes = figma.currentPage.children;
+          _stackScanNodes.forEach((n) => {
+            const _isSpecNode = n.getPluginData("handexCategory") === "spec" || n.name.startsWith("[Spec");
+            if (!_isSpecNode) return;
+            const newFmt = n.name.match(new RegExp("^\\[" + _layerTag + " \\| ([A-Z]\\d*(?:\\.\\d+)*) \\| ([a-z]+)\\] "));
             if (newFmt) {
               if (newFmt[2] !== side) return;
-              const specNotes = n.children && n.children.find((c) => c.type === "FRAME" && (c.name === "Spec Notes" || c.name === "Ficha") && c !== specCard);
+              const specNotes = n.children && n.children.find((c) => (c.type === "FRAME" || c.type === "INSTANCE") && (c.name === "Spec Notes" || c.name === "Ficha") && c !== specCard);
               if (!specNotes) return;
               const bb2 = specNotes.absoluteBoundingBox || specNotes.absoluteRenderBounds;
               if (bb2) _updateLetterMap(newFmt[1], bb2);
@@ -3216,7 +3328,10 @@
           const cardW = specCard.width;
           const cardH = specCard.height;
           let targetX, targetY;
-          if (_letterMap[_specLetter]) {
+          if (opts.pinnedPosition) {
+            targetX = opts.pinnedPosition.x;
+            targetY = opts.pinnedPosition.y;
+          } else if (_letterMap[_specLetter]) {
             targetX = _letterMap[_specLetter].x;
             if (side === "top") {
               targetY = _letterMap[_specLetter].topY - cardH - _SPEC_GAP;
@@ -3257,18 +3372,19 @@
           groupNodes.push(specCard);
           const USE_NATIVE_CONNECTOR = false;
           if (opts.drawConnection !== false) {
+            const _anchorB = _markerAnchorBounds;
             let startPt, endPt;
             if (side === "right") {
-              startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+              startPt = { x: _anchorB.x + _anchorB.width, y: _anchorB.y + _anchorB.height / 2 };
               endPt = { x: specCard.x, y: specCard.y + specCard.height / 2 };
             } else if (side === "left") {
-              startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
+              startPt = { x: _anchorB.x, y: _anchorB.y + _anchorB.height / 2 };
               endPt = { x: specCard.x + specCard.width, y: specCard.y + specCard.height / 2 };
             } else if (side === "bottom") {
-              startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
+              startPt = { x: _anchorB.x + _anchorB.width / 2, y: _anchorB.y + _anchorB.height };
               endPt = { x: specCard.x + specCard.width / 2, y: specCard.y };
             } else {
-              startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
+              startPt = { x: _anchorB.x + _anchorB.width / 2, y: _anchorB.y };
               endPt = { x: specCard.x + specCard.width / 2, y: specCard.y + specCard.height };
             }
             if (USE_NATIVE_CONNECTOR) {
@@ -3277,7 +3393,7 @@
               connector.connectorStart = { endpointNodeId: node.id, magnet: "AUTO" };
               connector.connectorEnd = { endpointNodeId: specCard.id, magnet: "AUTO" };
               connector.connectorLineType = "STRAIGHT";
-              connector.strokes = [{ type: "SOLID", color: themeColor2 }];
+              connector.strokes = [{ type: "SOLID", color: themeColor }];
               connector.strokeWeight = 1.5;
               connector.dashPattern = [4, 4];
               connector.connectorStartStrokeCap = "CIRCLE_FILLED";
@@ -3285,21 +3401,38 @@
               figma.currentPage.appendChild(connector);
               groupNodes.push(connector);
             } else {
+              const _specConnectorStyle = opts.connectorStyle || "straight";
+              const _specCurvature = _specConnectorStyle === "curved" ? opts.connectorCurvature || 0 : 0;
+              let connectorPath = `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}`;
+              if (_specConnectorStyle === "elbow") {
+                const isHorizontal = side === "right" || side === "left";
+                const corner = isHorizontal ? { x: endPt.x, y: startPt.y } : { x: startPt.x, y: endPt.y };
+                connectorPath = `M ${startPt.x} ${startPt.y} L ${corner.x} ${corner.y} L ${endPt.x} ${endPt.y}`;
+              } else if (_specCurvature) {
+                const dx = endPt.x - startPt.x, dy = endPt.y - startPt.y;
+                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                const px = -dy / dist, py = dx / dist;
+                const offset = _specCurvature / 100 * dist * 0.5;
+                const midX = (startPt.x + endPt.x) / 2, midY = (startPt.y + endPt.y) / 2;
+                const ctrlX = midX + px * offset, ctrlY = midY + py * offset;
+                connectorPath = `M ${startPt.x} ${startPt.y} Q ${ctrlX} ${ctrlY} ${endPt.x} ${endPt.y}`;
+              }
               const connector = figma.createVector();
               connector.name = "Conector";
-              connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
-              connector.strokes = [{ type: "SOLID", color: themeColor2 }];
+              connector.strokes = [{ type: "SOLID", color: themeColor }];
               connector.strokeWeight = 1.5;
               connector.dashPattern = [4, 4];
               connector.strokeCap = "ROUND";
               figma.currentPage.appendChild(connector);
+              connector.vectorPaths = [{ windingRule: "NONZERO", data: connectorPath }];
               groupNodes.push(connector);
               const _DOT_R = 4;
               const startDot = figma.createEllipse();
               startDot.name = "DotInicio";
               startDot.resize(_DOT_R * 2, _DOT_R * 2);
-              startDot.fills = [{ type: "SOLID", color: themeColor2 }];
+              startDot.fills = [{ type: "SOLID", color: themeColor }];
               startDot.strokes = [];
+              startDot.locked = true;
               figma.currentPage.appendChild(startDot);
               startDot.x = startPt.x - _DOT_R;
               startDot.y = startPt.y - _DOT_R;
@@ -3307,8 +3440,9 @@
               const endDot = figma.createEllipse();
               endDot.name = "DotFim";
               endDot.resize(_DOT_R * 2, _DOT_R * 2);
-              endDot.fills = [{ type: "SOLID", color: themeColor2 }];
+              endDot.fills = [{ type: "SOLID", color: themeColor }];
               endDot.strokes = [];
+              endDot.locked = true;
               figma.currentPage.appendChild(endDot);
               endDot.x = endPt.x - _DOT_R;
               endDot.y = endPt.y - _DOT_R;
@@ -3326,9 +3460,13 @@
           groupNodes.push(specCard);
         }
         const specGroup = figma.group(groupNodes, figma.currentPage);
-        specGroup.name = `[Spec | ${opts.letter} | ${_specSide}] ${node.name}`;
+        specGroup.name = `[${_layerTag} | ${opts.letter} | ${_specSide}] ${node.name}`;
         specGroup.locked = false;
         specGroup.setPluginData("handexCategory", "spec");
+        if (contour) {
+          contour.setPluginData("handexSpecMarkerFor", specGroup.id);
+          specGroup.setPluginData("handexSpecMarkerId", contour.id);
+        }
         _reorderSpecGroupByTag(specGroup, opts.letter);
         figma.ui.postMessage({
           type: "spec-created",
@@ -3343,7 +3481,10 @@
             type: opts.categoryLabel || "Sem categoria",
             note: opts.note,
             properties: opts.properties,
+            excecoes: opts.excecaoInicial ? [opts.excecaoInicial] : [],
             guideSide: opts.guideSide || "right",
+            connectorStyle: opts.connectorStyle || "straight",
+            connectorCurvature: opts.connectorCurvature || 0,
             cardX: _absCardX,
             cardY: _absCardY,
             cardW: _absCardW,
@@ -3353,10 +3494,19 @@
         figma.notify("Especifica\xE7\xE3o criada \u2014 arraste para posicionar. Clique em Concluir quando pronto.");
       })();
     }
+    if (msg.type === "get-selection-name") {
+      const sel = figma.currentPage.selection;
+      figma.ui.postMessage({ type: "selection-name", name: sel.length > 0 ? sel[0].name : null });
+    }
     if (msg.type === "lock-spec") {
       const specNode = await figma.getNodeByIdAsync(msg.specId);
-      if (specNode && specNode.name && specNode.name.startsWith("[Spec | ")) {
+      if (specNode && specNode.name && /^\[Spec \| /.test(specNode.name)) {
         specNode.locked = true;
+        const markerId = specNode.getPluginData("handexSpecMarkerId");
+        if (markerId) {
+          const marker = await figma.getNodeByIdAsync(markerId);
+          if (marker) marker.locked = true;
+        }
         figma.ui.postMessage({ type: "spec-locked", specId: msg.specId });
       }
     }
@@ -3368,17 +3518,25 @@
         }
         activeHighlightNode = null;
       }
+      const myToken = ++_highlightToken;
       const node = await figma.getNodeByIdAsync(msg.id);
+      if (myToken !== _highlightToken) return;
       if (node && node.visible && _nodeOnCurrentPage(node)) {
         if (msg.selectNode !== false) {
           figma.currentPage.selection = [node];
         }
         if (msg.shouldScroll !== false) {
-          figma.viewport.scrollAndZoomIntoView([node]);
+          const zoomTargets = [node];
+          const markerId = node.getPluginData && node.getPluginData("handexSpecMarkerId");
+          if (markerId) {
+            const marker = await figma.getNodeByIdAsync(markerId);
+            if (marker) zoomTargets.push(marker);
+          }
+          figma.viewport.scrollAndZoomIntoView(zoomTargets);
         }
         if (msg.highlight && node.absoluteBoundingBox) {
           const hexToRgbLocal = (hex) => {
-            const h = (hex || "#0070af").replace("#", "");
+            const h = (hex || "#3d3dff").replace("#", "");
             return {
               r: parseInt(h.substring(0, 2), 16) / 255,
               g: parseInt(h.substring(2, 4), 16) / 255,
@@ -3399,11 +3557,19 @@
           strokeRect.locked = true;
           strokeRect.cornerRadius = node.cornerRadius && typeof node.cornerRadius === "number" ? node.cornerRadius : 0;
           figma.currentPage.appendChild(strokeRect);
+          if (myToken !== _highlightToken) {
+            try {
+              strokeRect.remove();
+            } catch (e) {
+            }
+            return;
+          }
           activeHighlightNode = strokeRect;
         }
       }
     }
     if (msg.type === "clear-highlight") {
+      _highlightToken++;
       if (activeHighlightNode) {
         try {
           activeHighlightNode.remove();
@@ -3415,16 +3581,25 @@
     if (msg.type === "hide-node") {
       const node = await figma.getNodeByIdAsync(msg.id);
       if (node) {
-        if (msg.forceState !== void 0) {
-          node.visible = msg.forceState;
-        } else {
-          node.visible = false;
+        const targetVisible = msg.forceState !== void 0 ? msg.forceState : false;
+        node.visible = targetVisible;
+        const markerId = node.getPluginData && node.getPluginData("handexSpecMarkerId");
+        if (markerId) {
+          const marker = await figma.getNodeByIdAsync(markerId);
+          if (marker) marker.visible = targetVisible;
         }
       }
     }
     if (msg.type === "show-node") {
       const node = await figma.getNodeByIdAsync(msg.id);
-      if (node) node.visible = true;
+      if (node) {
+        node.visible = true;
+        const markerId = node.getPluginData && node.getPluginData("handexSpecMarkerId");
+        if (markerId) {
+          const marker = await figma.getNodeByIdAsync(markerId);
+          if (marker) marker.visible = true;
+        }
+      }
     }
     if (msg.type === "hide-spec-lines") {
       const targetVisible = msg.forceState !== void 0 ? msg.forceState : false;
@@ -3437,12 +3612,114 @@
         });
       }
     }
+    if (msg.type === "edit-spec-connector") {
+      try {
+        const specGroup = await figma.getNodeByIdAsync(msg.specId);
+        const node = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
+        if (!specGroup || !("findChildren" in specGroup) || !node) {
+          figma.ui.postMessage({ type: "spec-connector-edit-failed", specId: msg.specId });
+          return;
+        }
+        const specCard = specGroup.findOne((n) => n.name === "Spec Notes");
+        const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
+        const cardBounds = specCard && (specCard.absoluteBoundingBox || specCard.absoluteRenderBounds);
+        if (!specCard || !bounds || !cardBounds) {
+          figma.ui.postMessage({ type: "spec-connector-edit-failed", specId: msg.specId });
+          return;
+        }
+        const wasVisible = specGroup.findChildren((n) => n.name === "Conector" || n.name === "DotInicio" || n.name === "DotFim").every((n) => n.visible !== false);
+        const side = msg.guideSide || "right";
+        let startPt, endPt;
+        if (side === "right") {
+          startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+          endPt = { x: cardBounds.x, y: cardBounds.y + cardBounds.height / 2 };
+        } else if (side === "left") {
+          startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
+          endPt = { x: cardBounds.x + cardBounds.width, y: cardBounds.y + cardBounds.height / 2 };
+        } else if (side === "bottom") {
+          startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
+          endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y };
+        } else {
+          startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
+          endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y + cardBounds.height };
+        }
+        const _specConnectorStyle = msg.connectorStyle || "straight";
+        const _specCurvature = _specConnectorStyle === "curved" ? msg.connectorCurvature || 0 : 0;
+        const _groupBounds = specGroup.absoluteBoundingBox || specGroup.absoluteRenderBounds;
+        const _gx = _groupBounds.x, _gy = _groupBounds.y;
+        const localStart = { x: startPt.x - _gx, y: startPt.y - _gy };
+        const localEnd = { x: endPt.x - _gx, y: endPt.y - _gy };
+        let connectorPath = `M ${localStart.x} ${localStart.y} L ${localEnd.x} ${localEnd.y}`;
+        if (_specConnectorStyle === "elbow") {
+          const isHorizontal = side === "right" || side === "left";
+          const corner = isHorizontal ? { x: localEnd.x, y: localStart.y } : { x: localStart.x, y: localEnd.y };
+          connectorPath = `M ${localStart.x} ${localStart.y} L ${corner.x} ${corner.y} L ${localEnd.x} ${localEnd.y}`;
+        } else if (_specCurvature) {
+          const dx = localEnd.x - localStart.x, dy = localEnd.y - localStart.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          const px = -dy / dist, py = dx / dist;
+          const offset = _specCurvature / 100 * dist * 0.5;
+          const midX = (localStart.x + localEnd.x) / 2, midY = (localStart.y + localEnd.y) / 2;
+          const ctrlX = midX + px * offset, ctrlY = midY + py * offset;
+          connectorPath = `M ${localStart.x} ${localStart.y} Q ${ctrlX} ${ctrlY} ${localEnd.x} ${localEnd.y}`;
+        }
+        const themeColor = hexToRgb2(msg.color || "#2e2ee0");
+        const oldLineNodes = specGroup.findChildren((n) => n.name === "Conector" || n.name === "DotInicio" || n.name === "DotFim");
+        oldLineNodes.forEach((n) => n.remove());
+        const connector = figma.createVector();
+        connector.name = "Conector";
+        connector.x = 0;
+        connector.y = 0;
+        connector.vectorPaths = [{ windingRule: "NONZERO", data: connectorPath }];
+        connector.strokes = [{ type: "SOLID", color: themeColor }];
+        connector.strokeWeight = 1.5;
+        connector.dashPattern = [4, 4];
+        connector.strokeCap = "ROUND";
+        connector.visible = wasVisible;
+        connector.locked = false;
+        specGroup.appendChild(connector);
+        const _DOT_R = 4;
+        const startDot = figma.createEllipse();
+        startDot.name = "DotInicio";
+        startDot.resize(_DOT_R * 2, _DOT_R * 2);
+        startDot.fills = [{ type: "SOLID", color: themeColor }];
+        startDot.strokes = [];
+        startDot.visible = wasVisible;
+        startDot.locked = true;
+        specGroup.appendChild(startDot);
+        startDot.x = localStart.x - _DOT_R;
+        startDot.y = localStart.y - _DOT_R;
+        const endDot = figma.createEllipse();
+        endDot.name = "DotFim";
+        endDot.resize(_DOT_R * 2, _DOT_R * 2);
+        endDot.fills = [{ type: "SOLID", color: themeColor }];
+        endDot.strokes = [];
+        endDot.visible = wasVisible;
+        endDot.locked = true;
+        specGroup.appendChild(endDot);
+        endDot.x = localEnd.x - _DOT_R;
+        endDot.y = localEnd.y - _DOT_R;
+        figma.ui.postMessage({
+          type: "spec-connector-edited",
+          specId: msg.specId,
+          connectorStyle: _specConnectorStyle,
+          connectorCurvature: _specCurvature
+        });
+      } catch (e) {
+        figma.ui.postMessage({ type: "spec-connector-edit-failed", specId: msg.specId, message: e.message });
+      }
+    }
     if (msg.type === "unlock-spec-group") {
       const targetLocked = msg.locked !== void 0 ? msg.locked : false;
       for (const specId of msg.specIds || []) {
         const specGroup = await figma.getNodeByIdAsync(specId);
         if (!specGroup) continue;
         specGroup.locked = targetLocked;
+        const markerId = specGroup.getPluginData("handexSpecMarkerId");
+        if (markerId) {
+          const destaque = await figma.getNodeByIdAsync(markerId);
+          if (destaque) destaque.locked = true;
+        }
       }
     }
     if (msg.type === "rename-node") {
@@ -3518,6 +3795,16 @@
     if (msg.type === "delete-node") {
       const node = await figma.getNodeByIdAsync(msg.id);
       if (node) {
+        const markerId = node.getPluginData && node.getPluginData("handexSpecMarkerId");
+        if (markerId) {
+          const marker = await figma.getNodeByIdAsync(markerId);
+          if (marker) {
+            try {
+              marker.remove();
+            } catch (e) {
+            }
+          }
+        }
         node.remove();
         figma.notify("Item exclu\xEDdo com sucesso");
       }
@@ -3557,17 +3844,40 @@
     if (msg.type === "create-flow-connection") {
       const selection = figma.currentPage.selection;
       const isEvent = msg.flowType === "event_start" || msg.flowType === "event_end";
-      if (!isEvent && selection.length !== 2) {
-        figma.notify("Selecione exatamente dois elementos para conectar.");
+      if (isEvent) {
+        if (selection.length === 0) {
+          figma.notify("Selecione pelo menos um elemento.");
+          return;
+        }
+        await _buildFlowConnection(selection[0], null, msg);
         return;
       }
-      if (isEvent && selection.length === 0) {
-        figma.notify("Selecione pelo menos um elemento.");
+      if (selection.length < 2) {
+        figma.notify("Selecione pelo menos dois elementos para conectar.");
         return;
       }
-      const nodeA = selection[0];
-      const nodeB = selection[1] || null;
-      await _buildFlowConnection(nodeA, nodeB, msg);
+      if (selection.length === 2) {
+        await _buildFlowConnection(selection[0], selection[1], msg);
+        return;
+      }
+      const ordered = [...selection].sort((a, b) => {
+        const ba = a.absoluteBoundingBox || a.absoluteRenderBounds;
+        const bb = b.absoluteBoundingBox || b.absoluteRenderBounds;
+        if (!ba || !bb) return 0;
+        if (Math.abs(ba.x - bb.x) > 1) return ba.x - bb.x;
+        return ba.y - bb.y;
+      });
+      figma.ui.postMessage({ type: "flow-batch-started" });
+      let created = 0;
+      for (let i = 0; i < ordered.length - 1; i++) {
+        const segMsg = Object.assign({}, msg, {
+          flowId: `${msg.flowId || Date.now()}-${i}`,
+          nextFlowNumber: (msg.nextFlowNumber || 1) + i
+        });
+        await _buildFlowConnection(ordered[i], ordered[i + 1], segMsg);
+        created++;
+      }
+      figma.ui.postMessage({ type: "flow-batch-created", count: created });
     }
     if (msg.type === "recreate-flow-connection") {
       const isEvent = msg.flowType === "event_start" || msg.flowType === "event_end";
@@ -3576,6 +3886,22 @@
       if (!nodeA || !isEvent && msg.targetId && !nodeB) {
         figma.ui.postMessage({ type: "flow-recreate-failed", flowName: msg.flowName || "" });
         return;
+      }
+      await _buildFlowConnection(nodeA, nodeB, msg);
+    }
+    if (msg.type === "edit-flow-connection") {
+      const nodeA = msg.sourceId ? await figma.getNodeByIdAsync(msg.sourceId) : null;
+      const nodeB = msg.targetId ? await figma.getNodeByIdAsync(msg.targetId) : null;
+      if (!nodeA) {
+        figma.ui.postMessage({ type: "flow-edit-failed", reason: "nodes-nao-encontrados" });
+        return;
+      }
+      if (msg.oldGroupId) {
+        try {
+          const oldGroup = await figma.getNodeByIdAsync(msg.oldGroupId);
+          if (oldGroup) oldGroup.remove();
+        } catch (e) {
+        }
       }
       await _buildFlowConnection(nodeA, nodeB, msg);
     }
@@ -3682,7 +4008,7 @@
           (n) => n.type === "FRAME" && n.name.startsWith(_prefix)
         );
         if (fichas.length === 0) {
-          figma.ui.postMessage({ type: "ficha-version-pulled", versao: null });
+          figma.ui.postMessage({ type: "ficha-version-pulled", versao: null, temFicha: false });
           return;
         }
         fichas.sort((a, b) => a.name.localeCompare(b.name));
@@ -3690,7 +4016,7 @@
         const campoVersao = latest.findOne((n) => n.type === "FRAME" && n.name === "[Campo] Vers\xE3o");
         const versaoText = campoVersao ? campoVersao.findAll((n) => n.type === "TEXT")[1] : null;
         const versao = versaoText ? versaoText.characters.trim() : null;
-        figma.ui.postMessage({ type: "ficha-version-pulled", versao: versao && versao !== "-" ? versao : null });
+        figma.ui.postMessage({ type: "ficha-version-pulled", versao: versao && versao !== "-" ? versao : null, temFicha: true });
       } catch (e) {
         figma.ui.postMessage({ type: "ficha-version-pulled", versao: null });
       }
@@ -3708,7 +4034,7 @@
           } catch (e) {
           }
         }
-        const CAIXA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 205.51265 46.553631"><g transform="translate(-284.78446,-475.51214)"><g transform="matrix(1.25,0,0,-1.25,15.493106,1024.9702)"><g transform="scale(0.24,0.24)"><path d="m 1107.19,1780.04 -17.74,-44.21 24.55,0 -6.73,44.39 -0.08,-0.18 z m -93.98,-101.49 72.77,149.83 55.02,0 30.68,-149.83 -48.3,0 -3.56,19.97 -46.86,0 -10.78,-19.97 -48.97,0 z m 181.34,0 21.08,149.83 48.67,0 -21.07,-149.83 -48.68,0 z m 323.71,101.67 -17.81,-44.39 24.54,0 -6.73,44.39 z m -94.06,-101.67 72.78,149.83 55.01,0 30.69,-149.83 -48.31,0 -3.55,19.97 -46.87,0 -10.78,-19.97 -48.97,0" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1316.6,1748.61 60.99,0 41.79,-69.21 -61,0 -41.78,69.21" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1322.94,1759.24 63.04,0 54.75,68.92 -63.04,0 -54.75,-68.92" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1259.91,1678.98 63.03,0 54.75,69.76 -63.04,0 -54.74,-69.76" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1282.64,1829 58.83,0 40.31,-69.76 -58.84,0 -40.3,69.76" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1014.65,1823.02 -4.68,-44.07 c -17.939,24.75 -59.517,7.67 -62.782,-23.16 -4.149,-39.13 35.867,-48.25 57.642,-25.21 l -4.69,-44.17 c -6.499,-3.19 -12.855,-5.67 -19.128,-7.34 -6.239,-1.68 -12.492,-2.57 -18.696,-2.7 -7.8,-0.17 -14.867,0.65 -21.234,2.44 -6.367,1.76 -12.129,4.56 -17.227,8.34 -9.832,7.19 -16.941,16.33 -21.32,27.45 -4.379,11.16 -5.82,23.75 -4.328,37.82 1.203,11.31 4.051,21.62 8.59,30.97 4.5,9.34 10.734,17.84 18.672,25.54 7.504,7.34 15.676,12.88 24.519,16.64 8.809,3.73 18.422,5.72 28.813,5.94 6.207,0.13 12.297,-0.49 18.207,-1.92 5.942,-1.42 11.802,-3.64 17.642,-6.57" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/></g></g></g></svg>`;
+        const CAIXA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 205.51265 46.553631"><g transform="translate(-284.78446,-475.51214)"><g transform="matrix(1.25,0,0,-1.25,15.493106,1024.9702)"><g transform="scale(0.24,0.24)"><path d="m 1107.19,1780.04 -17.74,-44.21 24.55,0 -6.73,44.39 -0.08,-0.18 z m -93.98,-101.49 72.77,149.83 55.02,0 30.68,-149.83 -48.3,0 -3.56,19.97 -46.86,0 -10.78,-19.97 -48.97,0 z m 181.34,0 21.08,149.83 48.67,0 -21.07,-149.83 -48.68,0 z m 323.71,101.67 -17.81,-44.39 24.54,0 -6.73,44.39 z m -94.06,-101.67 72.78,149.83 55.01,0 30.69,-149.83 -48.31,0 -3.55,19.97 -46.87,0 -10.78,-19.97 -48.97,0" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1316.6,1748.61 60.99,0 41.79,-69.21 -61,0 -41.78,69.21" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1322.94,1759.24 63.04,0 54.75,68.92 -63.04,0 -54.75,-68.92" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1259.91,1678.98 63.03,0 54.75,69.76 -63.04,0 -54.74,-69.76" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1282.64,1829 58.83,0 40.31,-69.76 -58.84,0 -40.3,69.76" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1014.65,1823.02 -4.68,-44.07 c -17.939,24.75 -59.517,7.67 -62.782,-23.16 -4.149,-39.13 35.867,-48.25 57.642,-25.21 l -4.69,-44.17 c -6.499,-3.19 -12.855,-5.67 -19.128,-7.34 -6.239,-1.68 -12.492,-2.57 -18.696,-2.7 -7.8,-0.17 -14.867,0.65 -21.234,2.44 -6.367,1.76 -12.129,4.56 -17.227,8.34 -9.832,7.19 -16.941,16.33 -21.32,27.45 -4.379,11.16 -5.82,23.75 -4.328,37.82 1.203,11.31 4.051,21.62 8.59,30.97 4.5,9.34 10.734,17.84 18.672,25.54 7.504,7.34 15.676,12.88 24.519,16.64 8.809,3.73 18.422,5.72 28.813,5.94 6.207,0.13 12.297,-0.49 18.207,-1.92 5.942,-1.42 11.802,-3.64 17.642,-6.57" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none"/></g></g></g></svg>`;
         const mkLogo = (h) => {
           try {
             const n = figma.createNodeFromSvg(CAIXA_SVG);
@@ -3744,17 +4070,17 @@
           return c;
         };
         const C = {
-          blue: { r: 0, g: 0.439, b: 0.686 },
-          blueDark: { r: 0, g: 0.247, b: 0.478 },
-          blueLight: { r: 0.91, g: 0.957, b: 0.98 },
-          orange: { r: 0.965, g: 0.51, b: 0.165 },
+          blue: { r: 0.239, g: 0.239, b: 1 },
+          blueDark: { r: 0.137, g: 0.137, b: 0.659 },
+          blueLight: { r: 0.933, g: 0.941, b: 1 },
+          orange: { r: 0.961, g: 0.706, b: 0 },
           teal: { r: 0.298, g: 0.745, b: 0.714 },
           tealLight: { r: 0.851, g: 0.961, b: 0.957 },
           lime: { r: 0.831, g: 0.969, b: 0.188 },
           yellow: { r: 1, g: 0.949, b: 0.749 },
           white: { r: 1, g: 1, b: 1 },
           bg: { r: 0.941, g: 0.953, b: 0.969 },
-          bgBlue: { r: 0.91, g: 0.957, b: 0.98 },
+          bgBlue: { r: 0.933, g: 0.941, b: 1 },
           line: { r: 0.882, g: 0.894, b: 0.91 },
           text: { r: 0.118, g: 0.161, b: 0.231 },
           muted: { r: 0.392, g: 0.455, b: 0.545 },
