@@ -1,7 +1,7 @@
 <!-- VIEW: FLOWS (Diagramas de Fluxo) -->
 <main id="view-flows" class="view flex p-0 flex-col h-full overflow-hidden">
   <!-- Sub-Header -->
-  <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex items-center justify-between shrink-0 shadow-md">
+  <div class="subheader-brand px-4 py-3 bg-[#3d3dff] dark:bg-[#00335c] flex items-center justify-between shrink-0 shadow-md">
     <div class="flex items-center gap-2 min-w-0">
       <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial"
         class="p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
@@ -46,7 +46,7 @@
     <div class="min-h-[76px] p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex items-center gap-2.5">
       <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
       <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-tight">
-        Selecione dois elementos no Figma e use o botão <strong>+ Conectar Frames</strong> para mapear fluxos de navegação.
+        Selecione dois ou mais elementos no Figma e use o botão <strong>+ Conectar Frames</strong> para mapear fluxos de navegação. Com 3 ou mais, o plugin conecta em sequência automaticamente (da esquerda para a direita).
       </p>
     </div>
 
@@ -54,12 +54,14 @@
       <!-- renderFlowsList() insere aqui -->
     </ul>
 
-    <!-- Salvar e Voltar -->
+    <!-- Finalizar Registros — ação única de fechamento, tom discreto (outline)
+         para não competir com "Conectar Frames" no header, a ação mais
+         frequente da tela. -->
     <div class="pt-4 pb-2">
-      <button onclick="saveAndGoHome((handoffData.createdFlows||[]).length > 0, 'Fluxos salvos!')"
+      <button onclick="finalizeSection('flows')"
         class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
-        <i data-lucide="arrow-left" class="w-4 h-4" aria-hidden="true"></i>
-        Salvar e Voltar
+        <i data-lucide="clipboard-check" class="w-4 h-4" aria-hidden="true"></i>
+        Finalizar Registros
       </button>
     </div>
 

@@ -47,7 +47,7 @@
                 <i data-lucide="ruler" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
               </div>
               <p class="text-[12px] font-bold text-slate-500 dark:text-dark-muted text-center px-4 mb-1">Nenhuma medida criada ainda</p>
-              <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6">Selecione elementos no canvas e toque no botão <strong>+</strong></p>
+              <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6">Selecione elementos no canvas e toque em <button type="button" onclick="openMeasureModal()" class="font-bold text-[#2e2ee0] dark:text-[#4da3e0] hover:underline">Inserir medida</button></p>
             </li>
           `;
           _refreshIcons();
@@ -71,7 +71,7 @@
           <span class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wide">${data.length} medida${data.length !== 1 ? 's' : ''}</span>
           <button type="button" title="${isGroupVisible ? 'Ocultar todas as medidas' : 'Exibir todas as medidas'}"
             onclick="toggleMeasurementsGroup('${frameId}')"
-            class="flex items-center gap-1 px-2 py-0.5 rounded-xl text-[10px] font-bold ${isGroupVisible ? 'text-[#0070af]' : 'text-gray-500'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+            class="flex items-center gap-1 px-2 py-0.5 rounded-xl text-[10px] font-bold ${isGroupVisible ? 'text-[#3d3dff]' : 'text-gray-500'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
             <i data-lucide="${isGroupVisible ? 'eye' : 'eye-off'}" class="w-3 h-3"></i>
             ${isGroupVisible ? 'Ocultar todas' : 'Exibir todas'}
           </button>`;
@@ -93,13 +93,13 @@
         btn.type = "button";
         btn.title = "Expandir/recolher e focar no elemento no Figma";
         btn.setAttribute('aria-label', "Expandir/recolher e focar no elemento no Figma");
-        btn.className = "flex-1 flex items-center gap-3 px-3 py-3 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-left";
+        btn.className = "w-full flex items-center gap-3 px-3 py-3 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-left";
         btn.setAttribute('data-accordion-toggle', '');
         btn.onclick = () => toggleAccordion(btn, item.nodeId, item.number || (index + 1));
 
         const chevronClass = isExpanded ? "rotate-180" : "";
         btn.innerHTML = `
-          <div class="w-5 h-5 flex items-center justify-center bg-[#005ca9] text-white text-[10px] font-bold rounded-full shrink-0">${item.number || (index + 1)}</div>
+          <div class="w-5 h-5 flex items-center justify-center bg-[#2e2ee0] text-white text-[10px] font-bold rounded-full shrink-0">${item.number || (index + 1)}</div>
           <div class="flex-1 min-w-0 text-left">
             <span class="text-[12px] font-bold text-[#1E293B] dark:text-white truncate block" title="${item.name}">${item.name}</span>
           </div>
@@ -119,7 +119,7 @@
 
         const isVisible = item.visible !== false;
         visBtn.innerHTML = isVisible ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
-        visBtn.classList.toggle("text-[#005ca9]", isVisible);
+        visBtn.classList.toggle("text-[#2e2ee0]", isVisible);
         visBtn.classList.toggle("text-gray-400", !isVisible);
         visBtn.setAttribute('aria-label', isVisible ? 'Ocultar medida no canvas' : 'Exibir medida no canvas');
 
@@ -129,7 +129,7 @@
           item.visible = nowVisible;
 
           visBtn.innerHTML = nowVisible ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
-          visBtn.classList.toggle("text-[#005ca9]", nowVisible);
+          visBtn.classList.toggle("text-[#2e2ee0]", nowVisible);
           visBtn.classList.toggle("text-gray-400", !nowVisible);
           visBtn.setAttribute('aria-label', nowVisible ? 'Ocultar medida no canvas' : 'Exibir medida no canvas');
 
@@ -164,8 +164,18 @@
         };
 
         header.appendChild(btn);
-        header.appendChild(visBtn);
-        header.appendChild(delBtn);
+
+        const measActionsRow = document.createElement("div");
+        measActionsRow.className = "flex items-center justify-end gap-2 px-3 py-1.5 border-t border-gray-100 dark:border-dark-line bg-gray-50/50 dark:bg-slate-900/30";
+        const measActionsLabel = document.createElement("span");
+        measActionsLabel.className = "text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider shrink-0";
+        measActionsLabel.textContent = "Ações";
+        measActionsRow.appendChild(measActionsLabel);
+        const measActions = document.createElement("div");
+        measActions.className = "flex items-center gap-0.5";
+        measActions.appendChild(visBtn);
+        measActions.appendChild(delBtn);
+        measActionsRow.appendChild(measActions);
 
         const content = document.createElement("div");
         content.setAttribute('data-accordion-content', '');
@@ -187,6 +197,7 @@
         }
 
         section.appendChild(header);
+        section.appendChild(measActionsRow);
         section.appendChild(content);
         container.appendChild(section);
       });
@@ -269,7 +280,7 @@
       // Atualiza botões de visibilidade em todos os containers (global + por frame)
       document.querySelectorAll('[data-node-id] [data-vis-btn]').forEach(visBtn => {
         visBtn.innerHTML = targetState ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
-        visBtn.classList.toggle("text-[#005ca9]", targetState);
+        visBtn.classList.toggle("text-[#2e2ee0]", targetState);
         visBtn.classList.toggle("text-gray-400", !targetState);
       });
 
@@ -298,16 +309,16 @@
     function resetMeasureSelection() {
       currentMeasureTypes = [];
       document.querySelectorAll('.measure-btn').forEach(btn => {
-        btn.classList.remove('border-[#0070af]', 'bg-blue-50', 'dark:bg-blue-900/20', 'outline', 'outline-2', 'outline-offset-2', 'outline-[#0070af]');
+        btn.classList.remove('border-[#3d3dff]', 'bg-blue-50', 'dark:bg-blue-900/20', 'outline', 'outline-2', 'outline-offset-2', 'outline-[#3d3dff]');
         btn.classList.add('border-gray-100', 'dark:border-dark-line', 'hover:bg-gray-50', 'dark:hover:bg-slate-700');
         const icon = btn.querySelector('.measure-icon');
         if (icon) {
-          icon.classList.remove('text-[#0070af]', 'dark:text-blue-400');
+          icon.classList.remove('text-[#3d3dff]', 'dark:text-blue-400');
           icon.classList.add('text-slate-500');
         }
         const label = btn.querySelector('.measure-label');
         if (label) {
-          label.classList.remove('text-[#0070af]', 'dark:text-blue-400', 'font-bold');
+          label.classList.remove('text-[#3d3dff]', 'dark:text-blue-400', 'font-bold');
           label.classList.add('text-slate-500', 'dark:text-dark-text');
         }
       });
@@ -327,28 +338,28 @@
 
         if (isActive) {
           btn.classList.remove('border-gray-100', 'dark:border-dark-line', 'hover:bg-gray-50', 'dark:hover:bg-slate-700');
-          btn.classList.add('border-[#0070af]', 'bg-blue-50', 'dark:bg-blue-900/20', 'outline', 'outline-2', 'outline-offset-2', 'outline-[#0070af]');
+          btn.classList.add('border-[#3d3dff]', 'bg-blue-50', 'dark:bg-blue-900/20', 'outline', 'outline-2', 'outline-offset-2', 'outline-[#3d3dff]');
           const icon = btn.querySelector('.measure-icon');
           if (icon) {
             icon.classList.remove('text-slate-500');
-            icon.classList.add('text-[#0070af]', 'dark:text-blue-400');
+            icon.classList.add('text-[#3d3dff]', 'dark:text-blue-400');
           }
           const label = btn.querySelector('.measure-label');
           if (label) {
             label.classList.remove('text-slate-500', 'dark:text-dark-text');
-            label.classList.add('text-[#0070af]', 'dark:text-blue-400', 'font-bold');
+            label.classList.add('text-[#3d3dff]', 'dark:text-blue-400', 'font-bold');
           }
         } else {
-          btn.classList.remove('border-[#0070af]', 'bg-blue-50', 'dark:bg-blue-900/20', 'outline', 'outline-2', 'outline-offset-2', 'outline-[#0070af]');
+          btn.classList.remove('border-[#3d3dff]', 'bg-blue-50', 'dark:bg-blue-900/20', 'outline', 'outline-2', 'outline-offset-2', 'outline-[#3d3dff]');
           btn.classList.add('border-gray-100', 'dark:border-dark-line', 'hover:bg-gray-50', 'dark:hover:bg-slate-700');
           const icon = btn.querySelector('.measure-icon');
           if (icon) {
-            icon.classList.remove('text-[#0070af]', 'dark:text-blue-400');
+            icon.classList.remove('text-[#3d3dff]', 'dark:text-blue-400');
             icon.classList.add('text-slate-500');
           }
           const label = btn.querySelector('.measure-label');
           if (label) {
-            label.classList.remove('text-[#0070af]', 'dark:text-blue-400', 'font-bold');
+            label.classList.remove('text-[#3d3dff]', 'dark:text-blue-400', 'font-bold');
             label.classList.add('text-slate-500', 'dark:text-dark-text');
           }
         }

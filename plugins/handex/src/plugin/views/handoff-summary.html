@@ -1,7 +1,7 @@
 <!-- VIEW: HANDOFF SUMMARY -->
 <main id="view-handoff-summary" class="view flex p-0 flex-col h-full overflow-hidden">
   <!-- Header -->
-  <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex items-center justify-between shrink-0 shadow-md">
+  <div class="subheader-brand px-4 py-3 bg-[#3d3dff] dark:bg-[#00335c] flex items-center justify-between shrink-0 shadow-md">
     <div class="flex items-center gap-2">
       <button onclick="navigate('view-home')" aria-label="Voltar"
         class="p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
@@ -12,12 +12,6 @@
         <p class="text-[10px] text-blue-100 leading-none mt-0.5">Resumo e exportação da entrega</p>
       </div>
     </div>
-    <button onclick="openHandoffInjectModal()"
-      title="Gerar Ficha no Canvas" aria-label="Gerar Ficha no Canvas"
-      class="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-blue-50 border border-white/60 text-[#0070af] text-[11px] font-bold rounded-2xl transition-all cursor-pointer shrink-0 shadow-sm active:scale-95">
-      <i data-lucide="sparkles" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
-      <span>Gerar Ficha</span>
-    </button>
   </div>
 
   <!-- Scrollable content -->
@@ -115,6 +109,14 @@
 
       </div>
     </div>
+
+    <!-- Gerar Ficha no Canvas -->
+    <button onclick="openHandoffInjectModal()"
+      title="Gerar Ficha no Canvas" aria-label="Gerar Ficha no Canvas"
+      class="w-full flex items-center justify-center gap-2 py-3.5 bg-[#3d3dff] hover:bg-[#2e2ee0] rounded-2xl text-[13px] font-bold text-white transition-all shadow-md">
+      <i data-lucide="sparkles" class="w-4 h-4" aria-hidden="true"></i>
+      Gerar Ficha
+    </button>
 
   </div>
 </main>

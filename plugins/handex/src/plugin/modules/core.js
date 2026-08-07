@@ -160,8 +160,15 @@ function setFrameSemDesvios(frameId, checked) {
       });
     }
     frame.audit.ressalvas = _ressalvas;
+    const _declarante = handoffData.currentUser?.name
+      || (handoffData.step1?.equipe || []).find(m => (m.papel || '').toLowerCase() === 'designer')?.nome
+      || null;
+    frame.audit.declaradoPor = _declarante;
+    frame.audit.declaradoEm = new Date().toISOString();
   } else {
     frame.audit.ressalvas = [];
+    frame.audit.declaradoPor = null;
+    frame.audit.declaradoEm = null;
   }
 
   // Obs fica visível quando sem desvios=false OU há itens desvinculados do DSC
@@ -207,8 +214,6 @@ Object.assign(window, {
   addBriefingQuestion,
   addRegra,
   removeRegra,
-  addExcecaoForFrame,
-  removeExcecaoForFrame,
   scrollToTop,
   handleScroll,
   removeBriefingQuestion,
@@ -229,7 +234,6 @@ Object.assign(window, {
   closeHelpAndReturn,
   toggleCategoryManager,
   requestSpecProperties,
-  confirmSpecProperties,
   closeMeasureModal,
   selectMeasurement,
   executeMeasurement,
@@ -278,8 +282,6 @@ Object.assign(window, {
   exportHandoffMD,
   updateHandoffSummary,
   updateNewComponentObs,
-  openExceptionForSpecs,
-  renderExcecoesView,
   syncAndRenderSpecs,
   renderAllMeasurements,
   _computeFrameHasUnlinked,
@@ -382,7 +384,7 @@ function initBriefingSuggestions() {
       ]
     },
     {
-      id: 'escopo', name: 'Escopo e Riscos', icon: 'git-merge', color: 'text-orange-500',
+      id: 'escopo', name: 'Escopo e Riscos', icon: 'git-merge', color: 'text-orange-700',
       questions: [
         { label: 'No Escopo', text: 'O que está definitivamente incluído nesta entrega?' },
         { label: 'Pode Entrar', text: 'O que pode entrar no escopo, mas ainda precisa de validação?' },
@@ -451,7 +453,7 @@ function initBriefingSuggestions() {
     const chipsContainer = document.getElementById(`chips-${cat.id}`);
     cat.questions.forEach(q => {
       const btn = document.createElement('button');
-      btn.className = 'px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-dark-muted rounded-full text-[11px] font-bold hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-[#0070af] dark:hover:text-blue-400 transition-all border border-transparent hover:border-blue-100 dark:hover:border-blue-900';
+      btn.className = 'px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-dark-muted rounded-full text-[11px] font-bold hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-[#3d3dff] dark:hover:text-blue-400 transition-all border border-transparent hover:border-blue-100 dark:hover:border-blue-900';
       btn.innerHTML = `+ ${q.label}`;
       btn.onclick = () => addBriefingQuestion(q.text, cat.name);
       chipsContainer.appendChild(btn);
@@ -484,19 +486,19 @@ function addBriefingQuestion(questionText = "", category = "Customizada") {
       <i data-lucide="trash-2" class="w-4 h-4"></i>
     </button>
     <div class="flex items-center gap-3 mb-4">
-      <span class="text-[#0070af] font-bold text-[14px]">#${index} Pergunta</span>
+      <span class="text-[#3d3dff] font-bold text-[14px]">#${index} Pergunta</span>
       <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 dark:text-dark-muted rounded border border-gray-100 dark:border-dark-line uppercase tracking-wider">${category}</span>
     </div>
     <div class="space-y-4">
       <div>
-        <label class="block text-[11px] font-bold text-[#0070af] uppercase mb-1.5">Pergunta</label>
+        <label class="block text-[11px] font-bold text-[#3d3dff] uppercase mb-1.5">Pergunta</label>
         <textarea placeholder="Digite sua pergunta estratégica..."
           class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all font-bold text-slate-700 dark:text-white min-h-[44px] resize-none overflow-hidden"
           oninput="this.style.height='';this.style.height=this.scrollHeight+'px'"
           onchange="updateBriefingQuestion('${id}','question',this.value)">${questionText}</textarea>
       </div>
       <div>
-        <label class="block text-[11px] font-bold text-[#0070af] uppercase mb-1.5">Resposta</label>
+        <label class="block text-[11px] font-bold text-[#3d3dff] uppercase mb-1.5">Resposta</label>
         <textarea placeholder="Insira aqui a resposta ou direcionamento..."
           class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg text-sm min-h-[100px] focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none"
           onchange="updateBriefingQuestion('${id}','answer',this.value)"></textarea>
@@ -535,7 +537,7 @@ function removeBriefingQuestion(id) {
   const container = document.getElementById('briefing-questions-container-v2');
   if (container) {
     Array.from(container.children).forEach((child, i) => {
-      const badge = child.querySelector('.text-\\[\\#0070af\\]');
+      const badge = child.querySelector('.text-\\[\\#3d3dff\\]');
       if (badge) badge.textContent = `#${i + 1} Pergunta`;
     });
   }
@@ -616,71 +618,6 @@ function updateRegrasCount() {
   if (list && countEl) countEl.textContent = `${list.children.length} ${list.children.length === 1 ? 'item' : 'itens'}`;
 }
 
-// ── Exceções por Frame ─────────────────────────────────────────────────
-function addExcecaoForFrame(frameId, tipo, icon, color, vinc = '', anchor = '', obs = '', titulo = '') {
-  const frame = getFrame(frameId);
-  if (!frame) return;
-  // Show section and open sub-accordion
-  if (typeof showFrameSection === 'function') showFrameSection(frameId, 'excecoes');
-  const list = document.getElementById(`excecoes-list-${frameId}`);
-  if (!list) return;
-  const id = `exc-${Date.now()}`;
-  if (!frame.excecoes) frame.excecoes = [];
-  frame.excecoes.push({ id, tipo, titulo: titulo || vinc, frameName: vinc, notas: obs, link: anchor });
-
-  const item = document.createElement('div');
-  item.id = `item-${id}`;
-  item.className = "p-3 bg-gray-50/50 dark:bg-dark-bg/30 border border-gray-100 dark:border-dark-line rounded-lg animate-in slide-in-from-top-2 duration-200";
-  const tituloDisplay = titulo || tipo;
-  item.innerHTML = `
-    <div class="flex items-start justify-between gap-2 mb-2">
-      <div class="flex items-center gap-2 min-w-0">
-        <i data-lucide="${icon}" class="w-3.5 h-3.5 ${color} shrink-0"></i>
-        <div class="min-w-0">
-          <span class="text-[11px] font-bold text-slate-700 dark:text-white block truncate">${tituloDisplay}</span>
-          ${vinc ? `<span class="text-[10px] text-slate-500 dark:text-dark-muted truncate block">→ ${vinc}</span>` : ''}
-        </div>
-      </div>
-      <button onclick="removeExcecaoForFrame('${frameId}','${id}')" title="Remover" class="text-gray-400 hover:text-red-500 transition-colors shrink-0">
-        <i data-lucide="trash-2" class="w-3 h-3"></i>
-      </button>
-    </div>
-    ${anchor ? `<a href="${anchor}" target="_blank" class="flex items-center gap-1 text-[10px] text-[#0070af] hover:underline truncate mb-1"><i data-lucide="link" class="w-2.5 h-2.5 shrink-0"></i>${anchor}</a>` : ''}
-    ${obs ? `<p class="text-[10px] text-slate-500 dark:text-dark-muted mt-1 leading-relaxed">${obs}</p>` : ''}
-  `;
-  list.appendChild(item);
-  _refreshIcons();
-  updateExcecoesCount(frameId);
-  autoScrollToNewItem('handoff-scroll-container', item);
-  saveToStorage();
-}
-
-function removeExcecaoForFrame(frameId, itemId) {
-  const el = document.getElementById(`item-${itemId}`);
-  if (el) el.remove();
-  const frame = getFrame(frameId);
-  if (frame) frame.excecoes = (frame.excecoes || []).filter(e => e.id !== itemId);
-  updateExcecoesCount(frameId);
-  saveToStorage();
-}
-
-function updateExcecaoField(frameId, itemId, field, value) {
-  const frame = getFrame(frameId);
-  if (!frame) return;
-  const exc = (frame.excecoes || []).find(e => e.id === itemId);
-  if (exc) exc[field] = value;
-  saveToStorage();
-}
-
-function updateExcecoesCount(frameId) {
-  const list = document.getElementById(`excecoes-list-${frameId}`);
-  const countEl = document.getElementById(`count-excecoes-${frameId}`);
-  if (list && countEl) {
-    const count = list.children.length;
-    countEl.textContent = count > 0 ? `${count} ${count === 1 ? 'cenário' : 'cenários'}` : '';
-    countEl.classList.toggle('hidden', count === 0);
-  }
-}
 
 function toggleContextField(field, checked) {
   const fieldDiv = document.getElementById(field + '-field');
@@ -785,6 +722,29 @@ function confirmException() {
       if (typeof saveSpecsToStorage === 'function') saveSpecsToStorage();
       window._expandSpecIdAfterRender = createdSpecs[globalIdx].id;
       if (typeof renderSpecsList === 'function') renderSpecsList();
+      // Card no canvas sempre reflete os cenários registrados -- distinto
+      // da injeção opcional de um bloco [Obs] extra no frame da spec
+      // (checkbox "injetar", abaixo), que é decisão do designer sobre o
+      // que fica visível ali, não sobre a anotação de trabalho em si.
+      if (createdSpecs[globalIdx].id) {
+        parent.postMessage({ pluginMessage: {
+          type: 'refresh-spec-card',
+          nodeId: createdSpecs[globalIdx].id,
+          excecoes: createdSpecs[globalIdx].excecoes
+        }}, '*');
+      }
+      const injectCheck = document.getElementById('exc-modal-inject-spec');
+      if (injectCheck && injectCheck.checked && obs && createdSpecs[globalIdx].id) {
+        parent.postMessage({
+          pluginMessage: {
+            type: 'inject-obs-to-spec',
+            specNodeId: createdSpecs[globalIdx].id,
+            tipo: _currentExceptionType.tipo,
+            titulo: vinc,
+            obs
+          }
+        }, '*');
+      }
     }
     window._globalSpecExceptionIdx = null;
     _currentExceptionFrameId = null;
@@ -825,13 +785,12 @@ function confirmException() {
       }
     }
     window._currentExceptionSpecIdx = null;
-  } else {
-    addExcecaoForFrame(_currentExceptionFrameId, _currentExceptionType.tipo,
-      _currentExceptionType.icon, _currentExceptionType.color, vinc, anchor, obs, vinc);
-
   }
+  // frame.excecoes (exceção no nível de FRAME, distinto de spec.excecoes)
+  // era código morto -- addExcecaoForFrame dependia de `excecoes-list-${frameId}`,
+  // elemento que nunca existiu em nenhuma view real. Removido: spec.excecoes
+  // é o único conceito de exceção em uso de fato (ver branches acima).
   closeModal('exception-modal');
-  if (typeof renderExcecoesView === 'function') renderExcecoesView();
 }
 
 function toggleExcModalObs(checked) {
@@ -858,7 +817,7 @@ function addFrame(figmaId, nome) {
     nome,
     isNewComponent: false,
     specs: null,
-    audit: { checkDone: false, semDesvios: false, observacoes: '', ressalvas: [] },
+    audit: { checkDone: false, semDesvios: false, observacoes: '', ressalvas: [], declaradoPor: null, declaradoEm: null },
     newComponentObservations: '',
     specGroupNames: {},
     specGroupVisible: {},
@@ -869,7 +828,7 @@ function addFrame(figmaId, nome) {
     excecoes: []
   };
   handoffData.frames.push(frame);
-  renderFrameCard(frame);
+  renderFrameCard(frame, true);
   updateEmptyFramesState();
   saveToStorage();
   _toastSaved();
@@ -1008,7 +967,7 @@ function _csSyncLabel(wid) {
   const sel = hiddenSel.options[hiddenSel.selectedIndex];
   if (!sel) return;
   if (wid === 'cs-ann-cat' && sel.value) {
-    const color = typeof getCategoryColor === 'function' ? getCategoryColor(sel.value) : '#005ca9';
+    const color = typeof getCategoryColor === 'function' ? getCategoryColor(sel.value) : '#2e2ee0';
     labelEl.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${color};margin-right:6px;vertical-align:middle;flex-shrink:0"></span>${escapeHtml(sel.text)}`;
   } else {
     labelEl.textContent = sel.text;
@@ -1026,11 +985,11 @@ function _csMarkActive(wid, value) {
     const active = btn.dataset.csOpt === String(value);
     btn.classList.toggle('bg-blue-50',         active);
     btn.classList.toggle('dark:bg-blue-900/20', active);
-    btn.classList.toggle('text-[#0070af]',      active);
+    btn.classList.toggle('text-[#3d3dff]',      active);
     btn.classList.toggle('font-bold',           active);
     // Remove active from inactive
     if (!active) {
-      btn.classList.remove('bg-blue-50', 'dark:bg-blue-900/20', 'text-[#0070af]', 'font-bold');
+      btn.classList.remove('bg-blue-50', 'dark:bg-blue-900/20', 'text-[#3d3dff]', 'font-bold');
     }
   });
 }
@@ -1054,7 +1013,7 @@ function _csSyncPanel(wid) {
     btn.className = `w-full text-left flex items-center gap-2 px-3 py-2 text-[12px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors${isActive ? ' bg-blue-50 dark:bg-blue-900/20 font-bold' : ''}`;
     if (isCatPanel && opt.value) {
       const dot = document.createElement('span');
-      const color = typeof getCategoryColor === 'function' ? getCategoryColor(opt.value) : '#005ca9';
+      const color = typeof getCategoryColor === 'function' ? getCategoryColor(opt.value) : '#2e2ee0';
       dot.style.cssText = `width:8px;height:8px;border-radius:50%;background-color:${color};flex-shrink:0`;
       btn.appendChild(dot);
     }
@@ -1186,12 +1145,12 @@ function addTeamMember(papel = "Designer", nome = "", email = "", skipScroll = f
           <option value="Outro"    ${papel === "Outro"    ? "selected" : ""}>Outro</option>
         </select>
         <button type="button" onclick="_csToggle('cs-role-${id}', event)"
-          class="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl text-[11px] font-bold text-slate-700 dark:text-white cursor-pointer hover:border-gray-300 focus:ring-1 focus:ring-[#0070af]/30 outline-none transition-all">
+          class="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl text-[11px] font-bold text-slate-700 dark:text-white cursor-pointer hover:border-gray-300 focus:ring-1 focus:ring-[#3d3dff]/30 outline-none transition-all">
           <span data-cs-label>${papel}</span>
           <i data-lucide="chevron-down" data-cs-chev class="w-3 h-3 text-gray-500 dark:text-dark-muted transition-transform"></i>
         </button>
         <div data-cs-panel class="hidden absolute top-full left-0 mt-1 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg shadow-lg z-50 overflow-hidden py-1 min-w-[110px]">
-          ${['Designer','DEV','PO','QA','Outro'].map(r => `<button type="button" onclick="_csSelect('cs-role-${id}','${r}')" data-cs-opt="${r}" class="w-full text-left px-3 py-2 text-[11px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors${papel === r ? ' bg-blue-50 dark:bg-blue-900/20 text-[#0070af] font-bold' : ''}">${r}</button>`).join('')}
+          ${['Designer','DEV','PO','QA','Outro'].map(r => `<button type="button" onclick="_csSelect('cs-role-${id}','${r}')" data-cs-opt="${r}" class="w-full text-left px-3 py-2 text-[11px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors${papel === r ? ' bg-blue-50 dark:bg-blue-900/20 text-[#3d3dff] font-bold' : ''}">${r}</button>`).join('')}
         </div>
       </div>
       <button onclick="removeTeamMember('${id}')" title="Remover membro" class="text-gray-400 hover:text-red-500 transition-colors">
@@ -1436,7 +1395,7 @@ function updateNavigationUI() {
   for (let i = 1; i <= totalSteps; i++) {
     const dot = document.getElementById("dot-" + i);
     if (dot) {
-      dot.classList.toggle("bg-[#0070af]", i === currentStep);
+      dot.classList.toggle("bg-[#3d3dff]", i === currentStep);
       dot.classList.toggle("bg-gray-200", i !== currentStep);
       dot.classList.toggle("dark:bg-dark-surface", i !== currentStep);
       dot.classList.toggle("w-3", i === currentStep);
@@ -1495,7 +1454,7 @@ function updateFooterButtons() {
     btnNext.classList.remove("hidden");
     btnNext.innerHTML = '<span>Próximo</span> <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>';
     btnNext.classList.remove("bg-green-600");
-    btnNext.classList.add("bg-[#0070af]");
+    btnNext.classList.add("bg-[#3d3dff]");
     btnNext.onclick = () => nextStep();
   }
   _refreshIcons();
@@ -1560,12 +1519,15 @@ function saveAndGoHome(check, msg) {
 }
 window.saveAndGoHome = saveAndGoHome;
 
-function showToast(message) {
+function showToast(message, type = 'success') {
   const container = document.getElementById('toast-container');
   if (!container) return;
   const toast = document.createElement('div');
   toast.className = 'bg-slate-800 text-white px-4 py-2 rounded-lg shadow-xl text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-300 flex items-center gap-2';
-  toast.innerHTML = `<i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-400"></i>`;
+  const isError = type === 'error';
+  toast.innerHTML = isError
+    ? `<i data-lucide="alert-circle" class="w-3.5 h-3.5 text-red-400"></i>`
+    : `<i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-400"></i>`;
   const _tn = document.createTextNode(' ' + message);
   toast.appendChild(_tn);
   container.appendChild(toast);
@@ -1643,7 +1605,6 @@ function navigate(viewId) {
   document.getElementById("header-home")?.classList.remove("hidden");
   if (viewId === 'view-specifications') {
     syncAndRenderSpecs();
-    renderExcecoesView();
     populateFrameSelector('spec-frame-selector');
   }
   if (viewId === 'view-flows') renderFlowsList();
@@ -1761,6 +1722,13 @@ function renderAllMeasurements() {
 // grava de volta em handoffData.specs o array global inteiro (avulsas + por-frame
 // já resolvidas), então uma spec com frame pode aparecer nos dois lados na próxima
 // leitura — sem dedup, ela dobraria de contagem a cada resync.
+// IMPORTANTE: o merge é raso (.concat) de propósito — os objetos dentro do
+// array resultante são as MESMAS referências de handoffData.specs/
+// frame.createdSpecs, não clones. Qualquer código que mute um item de
+// createdSpecs (ex: editar connectorStyle de uma spec) já muta o objeto
+// original nos dois lados automaticamente. Se este merge for trocado por
+// clonagem profunda no futuro, essa mutação por referência para de
+// funcionar e a persistência de edições passa a falhar silenciosamente.
 function _mergeLooseAndFramed(looseArr, framedArr) {
   const merged = (looseArr || []).concat(framedArr || []);
   const seen = new Set();
@@ -1775,26 +1743,17 @@ function _mergeLooseAndFramed(looseArr, framedArr) {
   return out;
 }
 
-function syncAndRenderSpecs() {
-  // Specs "avulsas" (criadas sem activeFrameId, ex: nenhum frame
-  // mapeado/selecionado no momento) só existem em handoffData.specs
-  // (nível superior), não dentro de nenhum frame.createdSpecs — precisam
-  // entrar aqui junto com as por-frame, senão somem na primeira resync
-  // depois de criadas (navegar pra outra view e voltar, por exemplo).
-  createdSpecs = _mergeLooseAndFramed(handoffData.specs, (handoffData.frames || []).flatMap(f => f.createdSpecs || []));
-  if (typeof renderSpecsList === 'function') renderSpecsList();
-}
-
 // Sugere a próxima letra-base livre (A, B, C...) pra tag de uma nova spec,
-// olhando todas as specs já existentes no frame ativo (ou avulsas, se não
-// houver frame). Regra deliberadamente simples: sempre a próxima letra-base
-// do alfabeto ainda não usada, nunca tenta adivinhar sub-níveis (A1, B1.1) —
-// o designer edita manualmente pra isso, mantendo o controle que já era
-// decisão de produto (specs não são reordenadas/geradas automaticamente, só
-// a letra inicial sugerida).
+// olhando TODAS as specs já existentes no frame. Regra deliberadamente
+// simples: sempre a próxima letra-base do alfabeto ainda não usada, nunca
+// tenta adivinhar sub-níveis (A1, B1.1) — o designer edita manualmente pra
+// isso, mantendo o controle que já era decisão de produto (specs não são
+// reordenadas/geradas automaticamente, só a letra inicial sugerida).
 function _suggestNextSpecTag(frameId) {
   const frame = frameId ? getFrame(frameId) : null;
-  const specs = frame ? (frame.createdSpecs || []) : (handoffData.specs || []);
+  const specs = frame
+    ? [...(frame.createdSpecs || [])]
+    : [...(handoffData.specs || [])];
 
   const usedBaseLetters = new Set();
   specs.forEach(s => {
@@ -1823,51 +1782,14 @@ function _suggestNextSpecTag(frameId) {
   return candidate;
 }
 
-function renderExcecoesView() {
-  const container = document.getElementById('excecoes-results');
-  if (!container) return;
-  const all = (handoffData.frames || []).flatMap(f =>
-    (f.excecoes || []).map(e => ({ ...e, _frameName: f.nome, _frameId: f.id }))
-  );
-  if (all.length === 0) {
-    container.innerHTML = `<p class="text-[11px] text-slate-500 dark:text-dark-muted text-center py-5">Nenhum cenário registrado ainda</p>`;
-    return;
-  }
-  const iconMap = { Erro: 'x-circle', Sucesso: 'check-circle', Confirmação: 'help-circle', Alerta: 'alert-triangle' };
-  const colorMap = { Erro: 'text-red-500', Sucesso: 'text-green-500', Confirmação: 'text-blue-500', Alerta: 'text-amber-500' };
-  container.innerHTML = '';
-  all.forEach(exc => {
-    const icon  = iconMap[exc.tipo]  || 'alert-circle';
-    const color = colorMap[exc.tipo] || 'text-orange-500';
-    const div = document.createElement('div');
-    div.className = 'p-3 bg-gray-50 dark:bg-dark-bg/30 border border-gray-100 dark:border-dark-line rounded-xl';
-    div.innerHTML = `
-      <div class="flex items-start justify-between gap-2">
-        <div class="flex items-center gap-2 min-w-0">
-          <i data-lucide="${icon}" class="w-3.5 h-3.5 ${color} shrink-0"></i>
-          <div class="min-w-0">
-            <span class="text-[11px] font-bold text-slate-700 dark:text-white block truncate">${exc.titulo || exc.tipo}</span>
-            <span class="text-[10px] text-slate-500 dark:text-dark-muted truncate block">${exc._frameName ? '→ ' + exc._frameName : ''}</span>
-          </div>
-        </div>
-        <button onclick="removeExcecaoForFrame('${exc._frameId}','${exc.id}')" class="text-gray-400 hover:text-red-500 transition-colors shrink-0">
-          <i data-lucide="trash-2" class="w-3 h-3"></i>
-        </button>
-      </div>
-      ${exc.link ? `<a href="${exc.link}" target="_blank" class="flex items-center gap-1 text-[10px] text-[#0070af] hover:underline truncate mt-1"><i data-lucide="link" class="w-2.5 h-2.5 shrink-0"></i>${exc.link}</a>` : ''}
-      ${exc.notas ? `<p class="text-[10px] text-slate-500 dark:text-dark-muted mt-1 leading-relaxed">${exc.notas}</p>` : ''}
-    `;
-    container.appendChild(div);
-  });
-  _refreshIcons();
-}
-
-function openExceptionForSpecs() {
-  if (!activeFrameId) {
-    showToast('Selecione um frame em "Frames Mapeados" antes de criar um cenário.', 'warning');
-    return;
-  }
-  openExceptionModal(activeFrameId);
+function syncAndRenderSpecs() {
+  // Specs "avulsas" (criadas sem activeFrameId, ex: nenhum frame
+  // mapeado/selecionado no momento) só existem no nível superior de
+  // handoffData.specs, não dentro de nenhum frame.* — precisam entrar aqui
+  // junto com as por-frame, senão somem (accordion nunca persiste) na
+  // primeira resync depois de criadas.
+  createdSpecs = _mergeLooseAndFramed(handoffData.specs, (handoffData.frames || []).flatMap(f => f.createdSpecs || []));
+  if (typeof renderSpecsList === 'function') renderSpecsList();
 }
 
 function exportHandoffMD() {
@@ -2132,7 +2054,7 @@ function autoScrollToNewItem(containerId, targetElement = null) {
 }
 
 function focusNode(id) {
-  parent.postMessage({ pluginMessage: { type: 'highlight-node', id, highlight: true, shouldScroll: true, color: '#0070af' } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'highlight-node', id, highlight: true, shouldScroll: true, color: '#3d3dff' } }, '*');
 }
 
 // Destaque transitório (retângulo HighlightStroke) pra qualquer lista que
@@ -2142,7 +2064,7 @@ function focusNode(id) {
 // qualquer accordion/lista que precise desse preview (hoje: medidas).
 function sendHighlight(figmaId) {
   if (figmaId) {
-    parent.postMessage({ pluginMessage: { type: 'highlight-node', id: figmaId, highlight: true, shouldScroll: false, selectNode: false, color: '#0070af' } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'highlight-node', id: figmaId, highlight: true, shouldScroll: false, selectNode: false, color: '#3d3dff' } }, '*');
   }
 }
 function clearHighlight() {
@@ -2218,18 +2140,18 @@ function restoreUIFromState() {
           <i data-lucide="trash-2" class="w-4 h-4"></i>
         </button>
         <div class="flex items-center gap-3 mb-4">
-          <span class="text-[#0070af] font-bold text-[14px]">#${i+1} Pergunta</span>
+          <span class="text-[#3d3dff] font-bold text-[14px]">#${i+1} Pergunta</span>
           <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 dark:text-dark-muted rounded border border-gray-100 dark:border-dark-line uppercase tracking-wider">${q.category || "Customizada"}</span>
         </div>
         <div class="space-y-4">
           <div>
-            <label class="block text-[11px] font-bold text-[#0070af] uppercase mb-1.5">Pergunta</label>
+            <label class="block text-[11px] font-bold text-[#3d3dff] uppercase mb-1.5">Pergunta</label>
             <textarea class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all font-bold text-slate-700 dark:text-white min-h-[44px] resize-none overflow-hidden"
               oninput="this.style.height='';this.style.height=this.scrollHeight+'px'"
               onchange="updateBriefingQuestion('${q.id}','question',this.value)">${q.question}</textarea>
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-[#0070af] uppercase mb-1.5">Resposta</label>
+            <label class="block text-[11px] font-bold text-[#3d3dff] uppercase mb-1.5">Resposta</label>
             <textarea class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg text-sm min-h-[100px] focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none"
               onchange="updateBriefingQuestion('${q.id}','answer',this.value)">${q.answer}</textarea>
           </div>
@@ -2353,6 +2275,5 @@ window.zoomOut = zoomOut;
 window.initResizable = initResizable;
 window.updateRegraField = updateRegraField;
 window.removeAnexo = removeAnexo;
-window.updateExcecaoField = updateExcecaoField;
 window.linkCurrentSelectionForExc = linkCurrentSelectionForExc;
 window.requestFrameRegistration = requestFrameRegistration;

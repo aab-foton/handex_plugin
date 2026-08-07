@@ -10,30 +10,38 @@ module.exports = {
     extend: {
       colors: {
         blue: {
-          50:  '#f0f7ff',
-          100: '#e0effe',
-          200: '#bae0fd',
-          300: '#7cc7fb',
-          400: '#38a9f8',
-          500: '#005ca9',
-          600: '#004782',
-          700: '#00335c',
-          800: '#001f38',
-          900: '#000c17',
-          950: '#000308',
+          // Nova identidade visual CAIXA (2026-08) — azul-roxo vibrante do
+          // Uau CAIXA em vez do azul institucional marinho anterior
+          // (#005ca9). Hex extraídos por leitura visual de posts do
+          // Instagram @uaucaixa (não há manual de marca oficial disponível
+          // no momento) — calibrar com hex exato se/quando disponível.
+          50:  '#eef0ff',
+          100: '#dcdfff',
+          200: '#c3c7ff',
+          300: '#8b8fff',
+          400: '#868bff',
+          500: '#3d3dff',
+          600: '#2e2ee0',
+          700: '#2323a8',
+          800: '#181875',
+          900: '#0d0d40',
+          950: '#060620',
         },
         orange: {
-          50:  '#fff7ed',
-          100: '#ffedd5',
-          200: '#fed7aa',
-          300: '#fdba74',
-          400: '#fb923c',
-          500: '#d36a00',
-          600: '#b25a00',
-          700: '#914900',
-          800: '#703900',
-          900: '#4f2800',
-          950: '#2e1800',
+          // Amarelo/dourado dos ícones hexagonais do Uau CAIXA — ocupa o
+          // papel de acento secundário que o laranja institucional tinha
+          // antes. Mesma ressalva de origem (leitura visual) do azul acima.
+          50:  '#fffbea',
+          100: '#fff3c4',
+          200: '#ffe388',
+          300: '#ffd24d',
+          400: '#ffc940',
+          500: '#f5b400',
+          600: '#cc9500',
+          700: '#a37600',
+          800: '#7a5800',
+          900: '#523a00',
+          950: '#291d00',
         },
         light: {
           bg:      '#eef2f7',

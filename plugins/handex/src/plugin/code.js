@@ -3,6 +3,14 @@
 figma.showUI(__html__, { width: 480, height: 750 });
 
 let activeHighlightNode = null;
+// Incrementado a cada chamada de highlight-node -- o handler é async
+// (await getNodeByIdAsync) e o Figma não serializa mensagens, então focos
+// em sucessão rápida (hover, cliques rápidos) podiam ter duas chamadas em
+// voo ao mesmo tempo: a mais lenta sobrescrevia activeHighlightNode da mais
+// rápida sem nunca a ter lido, deixando o [HighlightStroke] antigo órfão no
+// canvas (nunca removido). Cada chamada guarda o token que tinha ao entrar
+// e só escreve o resultado se ainda for o mais recente ao terminar o await.
+let _highlightToken = 0;
 
 figma.on('close', () => {
   if (activeHighlightNode) {
@@ -55,7 +63,10 @@ function _compareSpecTags(tagA, tagB) {
 // para que a profundidade (z-order) siga a ordem hierárquica das tags, não a
 // ordem de criação. Não afeta X/Y — só o índice na lista de filhos da página.
 function _reorderSpecGroupByTag(specGroup, tag) {
-  const siblings = figma.currentPage.children.filter(n => n !== specGroup && n.type === 'GROUP');
+  // handexCategory cobre specs novas (FRAME/GROUP); prefixo de nome cobre
+  // specs legadas criadas antes dessa marcação existir.
+  const siblings = figma.currentPage.children.filter(n =>
+    n !== specGroup && (n.getPluginData('handexCategory') === 'spec' || n.name.startsWith('[Spec')));
   // Fallback = ficar no topo (equivalente ao appendChild padrão), não a contagem de
   // grupos — misturar essa contagem com índices reais de children (abaixo) empurraria
   // a spec para trás de conteúdo não-spec da página quando não há tag posterior.
@@ -79,6 +90,347 @@ function hexToRgb(hex) {
     g: parseInt(result[2], 16) / 255,
     b: parseInt(result[3], 16) / 255
   } : { r: 0.5, g: 0.5, b: 0.5 };
+}
+
+// ─── Helpers de montagem da ficha de handoff ──────────────────────────────
+// Extraídos do escopo de create-handoff/insert-frame-in-ficha/
+// insert-flows-in-ficha (onde existiam como 3 cópias quase idênticas) para
+// que os 3 handlers montem os mesmos cards a partir da mesma fonte -- sem
+// isso, criar a ficha do zero e atualizar uma ficha existente podiam
+// divergir silenciosamente conforme um dos 3 fosse editado sem replicar a
+// mudança nos outros dois.
+function _hdCreateText(text, size = 14, weight = "Regular", color = { r: 0.12, g: 0.16, b: 0.23 }) {
+  const t = figma.createText();
+  t.fontName = { family: "Inter", style: weight };
+  t.characters = String(text || "");
+  t.fontSize = size;
+  t.fills = [{ type: "SOLID", color }];
+  return t;
+}
+function _hdCreateFrame(direction = "VERTICAL", padding = 0, spacing = 0, fill = null) {
+  const f = figma.createFrame();
+  f.layoutMode = direction;
+  f.paddingLeft = padding; f.paddingRight = padding;
+  f.paddingTop = padding; f.paddingBottom = padding;
+  f.itemSpacing = spacing;
+  f.primaryAxisSizingMode = "AUTO";
+  f.counterAxisSizingMode = "AUTO";
+  f.layoutAlign = "INHERIT";
+  f.fills = fill ? [{ type: "SOLID", color: fill }] : [];
+  return f;
+}
+function _hdSetFillAndHug(node) {
+  if (!node) return;
+  try {
+    if ('layoutSizingHorizontal' in node) node.layoutSizingHorizontal = "FILL";
+    if ('layoutSizingVertical' in node) node.layoutSizingVertical = "HUG";
+  } catch (e) {}
+  const parent = node.parent;
+  const pMode = (parent && 'layoutMode' in parent) ? parent.layoutMode : "VERTICAL";
+  if (pMode === "VERTICAL") {
+    node.layoutAlign = "STRETCH";
+    if (node.type === "FRAME") {
+      if (node.layoutMode === "VERTICAL") node.primaryAxisSizingMode = "AUTO";
+      else node.counterAxisSizingMode = "AUTO";
+    } else if (node.type === "TEXT") node.textAutoResize = "HEIGHT";
+  } else if (pMode === "HORIZONTAL") {
+    node.layoutGrow = 1;
+    node.layoutAlign = "INHERIT";
+    if (node.type === "FRAME") {
+      if (node.layoutMode === "HORIZONTAL") node.counterAxisSizingMode = "AUTO";
+      else node.primaryAxisSizingMode = "AUTO";
+    } else if (node.type === "TEXT") node.textAutoResize = "HEIGHT";
+  }
+}
+function _hdCreateSection(parent, titleText) {
+  const section = _hdCreateFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
+  section.name = `[Seção] ${titleText}`;
+  parent.appendChild(section);
+  _hdSetFillAndHug(section);
+  section.cornerRadius = 8;
+  section.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
+  section.strokeWeight = 1;
+  const title = _hdCreateText(titleText, 16, "Bold", { r: 0.24, g: 0.24, b: 1 });
+  section.appendChild(title);
+  _hdSetFillAndHug(title);
+  return section;
+}
+function _hdCreateRow(parent, label, value) {
+  const row = _hdCreateFrame("VERTICAL", 0, 4);
+  row.name = `[Campo] ${label}`;
+  parent.appendChild(row);
+  _hdSetFillAndHug(row);
+  const lbl = _hdCreateText(label, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+  row.appendChild(lbl);
+  _hdSetFillAndHug(lbl);
+  const val = _hdCreateText(value || "-", 14, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+  row.appendChild(val);
+  _hdSetFillAndHug(val);
+  return row;
+}
+
+// Card de "Frame Documentado" (nome, badge "Novo componente", auditoria DSC).
+// handexFrameId identifica o card entre gerações para permitir substituir em
+// vez de duplicar quando a ficha já existe.
+function _hdBuildFrameCard(f, fi) {
+  const fRow = _hdCreateFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.99, b: 1 });
+  fRow.name = `[Frame] ${f.nome || 'Frame ' + (fi + 1)}`;
+  fRow.cornerRadius = 8;
+  fRow.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.92, b: 0.96 } }];
+  fRow.setPluginData('handexFrameId', f.figmaId || f.id || '');
+  const fHeader = _hdCreateFrame("HORIZONTAL", 0, 8);
+  fHeader.counterAxisAlignItems = "CENTER";
+  const fName = _hdCreateText(f.nome || 'Frame', 12, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+  fName.layoutGrow = 1;
+  fHeader.appendChild(fName);
+  if (f.isNewComponent) {
+    const badge = _hdCreateFrame("HORIZONTAL", 8, 3, { r: 0.94, g: 0.92, b: 1.0 });
+    badge.cornerRadius = 999;
+    badge.strokes = [{ type: "SOLID", color: { r: 0.70, g: 0.60, b: 0.96 } }];
+    badge.strokeWeight = 1;
+    badge.appendChild(_hdCreateText("Novo componente", 9, "Medium", { r: 0.38, g: 0.18, b: 0.78 }));
+    fHeader.appendChild(badge);
+  }
+  fRow.appendChild(fHeader);
+  _hdSetFillAndHug(fHeader);
+  if (f.audit && f.audit.status) {
+    _hdCreateRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? ' — ' + f.audit.justificativa : ''));
+  }
+  return fRow;
+}
+
+// Subgrupo de medidas de 1 frame. handexFrameId identifica o subgrupo entre
+// gerações.
+function _hdBuildMeasuresSubgroup(f) {
+  const fGroup = _hdCreateFrame("VERTICAL", 0, 6);
+  fGroup.name = `[Medidas | ${f.figmaId || f.id}] ${f.nome || 'Frame'}`;
+  fGroup.setPluginData('handexFrameId', f.figmaId || f.id || '');
+  const fLabel = _hdCreateText(f.nome || 'Frame', 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
+  fGroup.appendChild(fLabel);
+  _hdSetFillAndHug(fLabel);
+  f.measurements.forEach(m => {
+    const details = Array.isArray(m.details) ? m.details.join(' | ') : (m.details || '');
+    const mRow = _hdCreateFrame("HORIZONTAL", 10, 7, { r: 0.94, g: 0.97, b: 1 });
+    mRow.name = `[Medida] ${m.name || 'Medida'}`;
+    mRow.cornerRadius = 6;
+    mRow.counterAxisAlignItems = "CENTER";
+    fGroup.appendChild(mRow);
+    _hdSetFillAndHug(mRow);
+    const mName = _hdCreateText(m.name || 'Medida', 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+    mName.layoutGrow = 1;
+    mRow.appendChild(mName);
+    const mVal = _hdCreateText(details, 10, "Regular", { r: 0.27, g: 0.45, b: 0.78 });
+    mRow.appendChild(mVal);
+    _hdSetFillAndHug(mVal);
+  });
+  return fGroup;
+}
+
+// Subgrupo de especificações anotadas de 1 frame (ou de specs avulsas, com
+// f.nome === 'Sem frame vinculado'). handexFrameId identifica o subgrupo
+// entre gerações; specs avulsas usam a chave fixa '__loose__' (setada pelo
+// chamador) já que não têm frame.figmaId real.
+async function _hdBuildSpecsSubgroup(f) {
+  const fGroup = _hdCreateFrame("VERTICAL", 0, 10);
+  fGroup.name = `[Specs] ${f.nome || 'Frame'}`;
+  fGroup.setPluginData('handexFrameId', f.figmaId || f.id || '');
+  const fLabel = _hdCreateText(f.nome || 'Frame', 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
+  fGroup.appendChild(fLabel);
+  _hdSetFillAndHug(fLabel);
+
+  const groupNames = f.specGroupNames || {};
+  const groupVisible = f.specGroupVisible || {};
+  const letterOrder = [];
+  const specsByLetter = {};
+  (f.createdSpecs || []).forEach(s => {
+    const l = s.letter || 'A';
+    if (!specsByLetter[l]) { specsByLetter[l] = []; letterOrder.push(l); }
+    specsByLetter[l].push(s);
+  });
+
+  for (const letter of letterOrder) {
+    if (groupVisible[letter] === false) continue;
+    const groupSpecs = specsByLetter[letter];
+    const groupColor = groupSpecs[0]?.color ? hexToRgb(groupSpecs[0].color) : { r: 0.38, g: 0.35, b: 0.75 };
+    const groupNameText = groupNames[letter] || '';
+
+    const gBox = _hdCreateFrame("VERTICAL", 0, 6);
+    gBox.name = `[Grupo/${letter}] ${groupNameText || letter}`;
+    fGroup.appendChild(gBox);
+    _hdSetFillAndHug(gBox);
+
+    const gHeader = _hdCreateFrame("HORIZONTAL", 0, 6);
+    gHeader.counterAxisAlignItems = "CENTER";
+    gBox.appendChild(gHeader);
+    _hdSetFillAndHug(gHeader);
+    const gBadge = _hdCreateFrame("HORIZONTAL", 0, 0, groupColor);
+    gBadge.resize(18, 18);
+    gBadge.cornerRadius = 4;
+    gBadge.primaryAxisAlignItems = "CENTER";
+    gBadge.counterAxisAlignItems = "CENTER";
+    gHeader.appendChild(gBadge);
+    const gBadgeT = figma.createText();
+    gBadgeT.fontName = { family: "Inter", style: "Bold" };
+    gBadgeT.fontSize = 9;
+    gBadgeT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+    gBadgeT.characters = letter;
+    gBadgeT.textAutoResize = "WIDTH_AND_HEIGHT";
+    gBadge.appendChild(gBadgeT);
+    if (groupNameText) {
+      const gName = _hdCreateText(groupNameText, 10, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+      gHeader.appendChild(gName);
+      _hdSetFillAndHug(gName);
+    }
+    const gCount = _hdCreateText(`${groupSpecs.length} esp.`, 9, "Regular", { r: 0.55, g: 0.6, b: 0.65 });
+    gHeader.appendChild(gCount);
+    _hdSetFillAndHug(gCount);
+
+    const gSpecs = _hdCreateFrame("VERTICAL", 0, 4);
+    gSpecs.fills = [];
+    gBox.appendChild(gSpecs);
+    _hdSetFillAndHug(gSpecs);
+
+    for (const s of groupSpecs) {
+      const catLabel = s.type || s.categoryLabel || s.category || 'Geral';
+      const sc = s.color ? hexToRgb(s.color) : { r: 0.38, g: 0.35, b: 0.75 };
+      const scBg = s.fillColor ? hexToRgb(s.fillColor) : { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
+      const sRow = _hdCreateFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.97, b: 1 });
+      sRow.name = `[Spec/${s.letter || 'A'}] ${s.name || s.label || 'Spec'}`;
+      sRow.cornerRadius = 8;
+      sRow.strokes = [{ type: "SOLID", color: sc }];
+      gSpecs.appendChild(sRow);
+      _hdSetFillAndHug(sRow);
+      const sTop = _hdCreateFrame("HORIZONTAL", 0, 6);
+      sTop.counterAxisAlignItems = "CENTER";
+      sRow.appendChild(sTop);
+      _hdSetFillAndHug(sTop);
+      const sName = _hdCreateText(s.name || s.label || 'Spec', 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+      sName.layoutGrow = 1;
+      sTop.appendChild(sName);
+      if (s.link) {
+        sName.textDecoration = "UNDERLINE";
+        sName.hyperlink = { type: "URL", value: s.link };
+      } else if (s.id && await figma.getNodeByIdAsync(s.id)) {
+        sName.textDecoration = "UNDERLINE";
+        sName.hyperlink = { type: "NODE", value: s.id };
+      }
+      const sCatTag = _hdCreateFrame("HORIZONTAL", 6, 3, scBg);
+      sCatTag.cornerRadius = 999;
+      sCatTag.strokes = [{ type: "SOLID", color: sc }];
+      sCatTag.strokeWeight = 1;
+      sTop.appendChild(sCatTag);
+      _hdSetFillAndHug(sCatTag);
+      sCatTag.appendChild(_hdCreateText(catLabel, 9, "Medium", sc));
+      if (s.note) {
+        const sNote = _hdCreateText(s.note, 10, "Regular", { r: 0.4, g: 0.45, b: 0.55 });
+        sRow.appendChild(sNote);
+        _hdSetFillAndHug(sNote);
+      }
+      const _props = s.properties || [];
+      if (_props.length > 0) {
+        const propsFrame = _hdCreateFrame("VERTICAL", 0, 3);
+        propsFrame.fills = [];
+        _hdSetFillAndHug(propsFrame);
+        sRow.appendChild(propsFrame);
+        _props.forEach(prop => {
+          const pRow = _hdCreateFrame("HORIZONTAL", 8, 4, { r: 0.93, g: 0.95, b: 1 });
+          pRow.cornerRadius = 4;
+          pRow.counterAxisAlignItems = "CENTER";
+          _hdSetFillAndHug(pRow);
+          propsFrame.appendChild(pRow);
+          const pKey = _hdCreateText(prop.label || prop.key || '', 9, "Regular", { r: 0.35, g: 0.4, b: 0.5 });
+          pKey.layoutGrow = 1;
+          pRow.appendChild(pKey);
+          if (prop.token) {
+            const tBadge = _hdCreateText(prop.token, 8, "Medium", { r: 0.24, g: 0.24, b: 1 });
+            _hdSetFillAndHug(tBadge);
+            pRow.appendChild(tBadge);
+          }
+          const pVal = _hdCreateText(String(prop.value || ''), 9, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+          _hdSetFillAndHug(pVal);
+          pRow.appendChild(pVal);
+        });
+      }
+      const _excs = s.excecoes || [];
+      if (_excs.length > 0) {
+        const excFrame = _hdCreateFrame("VERTICAL", 0, 4);
+        excFrame.fills = [];
+        _hdSetFillAndHug(excFrame);
+        sRow.appendChild(excFrame);
+        _excs.forEach(exc => {
+          const eRow = _hdCreateFrame("VERTICAL", 6, 2, { r: 1, g: 0.97, b: 0.92 });
+          eRow.cornerRadius = 4;
+          eRow.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.55, b: 0.13 } }];
+          eRow.strokeWeight = 1;
+          _hdSetFillAndHug(eRow);
+          excFrame.appendChild(eRow);
+          const eTitle = _hdCreateText(`${exc.tipo || 'Exceção'}${exc.titulo ? ' — ' + exc.titulo : ''}`, 9, "Bold", { r: 0.7, g: 0.4, b: 0.05 });
+          eRow.appendChild(eTitle);
+          _hdSetFillAndHug(eTitle);
+          if (exc.obs) {
+            const eObs = _hdCreateText(exc.obs, 9, "Regular", { r: 0.5, g: 0.45, b: 0.35 });
+            eRow.appendChild(eObs);
+            _hdSetFillAndHug(eObs);
+          }
+        });
+      }
+    }
+  }
+  return fGroup;
+}
+
+// Card de fluxo de tela. handexFlowId (id estável gerado no frontend, não o
+// node.id do Figma) identifica o card entre gerações.
+const _HD_FLOW_TYPE_LABEL = { line_solid: 'Linha sólida', line_dashed: 'Linha tracejada', diamond: 'Decisão', diamond_dashed: 'Decisão tracejada', event_start: 'Início', event_end: 'Fim', gateway_parallel: 'Paralelo' };
+function _hdBuildFlowCard(flow, fi) {
+  const fRow = _hdCreateFrame("VERTICAL", 12, 10, { r: 0.97, g: 0.96, b: 1 });
+  fRow.name = `[Fluxo] ${flow.name || 'Fluxo ' + (fi + 1)}`;
+  fRow.cornerRadius = 8;
+  fRow.strokes = [{ type: "SOLID", color: { r: 0.86, g: 0.84, b: 0.96 } }];
+  fRow.setPluginData('handexFlowId', flow.flowUid || flow.id || '');
+  const fTop = _hdCreateFrame("HORIZONTAL", 0, 4);
+  fTop.counterAxisAlignItems = "CENTER";
+  const fName = _hdCreateText(flow.name || 'Fluxo', 12, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+  fName.layoutGrow = 1;
+  fTop.appendChild(fName);
+  const typeStr = _HD_FLOW_TYPE_LABEL[flow.type] || flow.type || '';
+  if (typeStr) {
+    const fTypeTag = _hdCreateFrame("HORIZONTAL", 6, 3, { r: 0.93, g: 0.90, b: 1 });
+    fTypeTag.cornerRadius = 999;
+    fTop.appendChild(fTypeTag);
+    _hdSetFillAndHug(fTypeTag);
+    fTypeTag.appendChild(_hdCreateText(typeStr, 9, "Medium", { r: 0.45, g: 0.35, b: 0.75 }));
+  }
+  fRow.appendChild(fTop);
+  _hdSetFillAndHug(fTop);
+  if (flow.fromName || flow.toName) {
+    const connStr = `${flow.fromName || '?'} → ${flow.toName || '?'}`;
+    const fConn = _hdCreateText(connStr, 10, "Regular", { r: 0.45, g: 0.50, b: 0.60 });
+    fRow.appendChild(fConn);
+    _hdSetFillAndHug(fConn);
+  }
+  if (flow.decisionText) {
+    const dText = _hdCreateText(`"${flow.decisionText}"`, 10, "Regular", { r: 0.5, g: 0.45, b: 0.70 });
+    fRow.appendChild(dText);
+    _hdSetFillAndHug(dText);
+  }
+  return fRow;
+}
+
+// Localiza a ficha mais recente do projeto no canvas (mesmo critério usado
+// por pull-ficha-version-from-canvas/insert-frame-in-ficha/
+// insert-flows-in-ficha): prefixo de nome + ordenação por timestamp
+// embutido no nome (ordenação alfabética de string já resolve, formato do
+// timestamp é sempre YYYY-MM-DD HH:MM). Retorna null se não encontrar.
+function _hdFindExistingFicha(titulo) {
+  const _titulo = (titulo || '').trim();
+  const _prefix = _titulo ? `Handex | Ficha de Projeto | ${_titulo}` : 'Handex | Ficha de Projeto';
+  const fichas = figma.currentPage.children.filter(
+    n => n.type === 'FRAME' && n.name.startsWith(_prefix)
+  );
+  if (fichas.length === 0) return null;
+  fichas.sort((a, b) => a.name.localeCompare(b.name));
+  return fichas[fichas.length - 1];
 }
 
 function rgbToHex(r, g, b) {
@@ -138,12 +490,15 @@ async function _writeSharedPluginData(data) {
       node.setSharedPluginData(NS, 'context', JSON.stringify({
         nome:           frame.nome           || '',
         isNewComponent: frame.isNewComponent || false,
-        excecoes: (frame.excecoes || []).map(e => ({
+        // Agregado das specs do frame -- frame.excecoes (nível de frame)
+        // nunca teve UI real de entrada; spec.excecoes é o único conceito vivo.
+        excecoes: (frame.createdSpecs || []).flatMap(s => (s.excecoes || []).map(e => ({
           tipo:   e.tipo   || '',
           titulo: e.titulo || '',
-          notas:  e.notas  || '',
-          link:   e.link   || ''
-        }))
+          obs:    e.obs    || '',
+          link:   e.anchor || '',
+          spec:   s.name   || ''
+        })))
       }));
     } catch (e) {
       // Node pode ter sido deletado — ignorar silenciosamente
@@ -225,6 +580,80 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
     }
   }
 
+  // Estilo de conexão só se aplica a linhas de conexão puras
+  // (line_solid/line_dashed) -- diamond/event têm forma própria com
+  // semântica fixa, moldar a linha que leva até elas confundiria a leitura
+  // do fluxograma. 'straight' (padrão) | 'curved' (Bézier, grau -100..100,
+  // deslocamento perpendicular em % da distância) | 'elbow' (esquinas retas
+  // de 90°, 1 ou 2 dobras conforme a compatibilidade dos lados de saída/entrada).
+  const _connectorStyle = (msg.flowType === "line_solid" || msg.flowType === "line_dashed") ? (msg.connectorStyle || 'straight') : 'straight';
+  const _curvature = _connectorStyle === 'curved' ? (msg.curvature || 0) : 0;
+  const _midX = (bestA.x + bestB.x) / 2, _midY = (bestA.y + bestB.y) / 2;
+  let curveCtrl = { x: _midX, y: _midY };
+  if (_curvature) {
+    const dx = bestB.x - bestA.x, dy = bestB.y - bestA.y;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    // Perpendicular unitária ao segmento AB.
+    const px = -dy / dist, py = dx / dist;
+    const offset = (_curvature / 100) * dist * 0.5;
+    curveCtrl = { x: _midX + px * offset, y: _midY + py * offset };
+  }
+  // Ponto médio real da curva (t=0.5 de uma quadrática) -- usado para
+  // centralizar texto/chip de decisão; coincide com curveCtrl quando reto.
+  const curveMid = _curvature
+    ? { x: 0.25 * bestA.x + 0.5 * curveCtrl.x + 0.25 * bestB.x, y: 0.25 * bestA.y + 0.5 * curveCtrl.y + 0.25 * bestB.y }
+    : { x: _midX, y: _midY };
+
+  // Conector ortogonal (elbow): decide 1 ou 2 dobras a partir dos lados de
+  // saída (bestA.side) e chegada (bestB.side). 1 dobra (L) quando os dois
+  // eixos são perpendiculares -- a interseção das duas retas nunca cruza A
+  // nem B, pois bestA/bestB já estão na borda externa. 2 dobras (Z/U)
+  // quando os eixos são paralelos (mesma direção ou opostos) -- 1 dobra só
+  // nesse caso faria a linha voltar por dentro do próprio elemento; usa um
+  // offset fixo (metade da distância no eixo perpendicular, com mínimo de
+  // 24px) para sair/entrar reto antes de atravessar lateralmente.
+  const elbowPoints = [];
+  if (_connectorStyle === 'elbow' && bestA.side && bestB.side) {
+    const aVertical = bestA.side === 'top' || bestA.side === 'bottom';
+    const bVertical = bestB.side === 'top' || bestB.side === 'bottom';
+    if (aVertical !== bVertical) {
+      // Eixos perpendiculares -- 1 dobra, ponto = interseção das retas.
+      const corner = aVertical ? { x: bestB.x, y: bestA.y } : { x: bestA.x, y: bestB.y };
+      elbowPoints.push(corner);
+    } else {
+      // Eixos paralelos -- 2 dobras (Z/U). A coluna/linha de trânsito
+      // precisa ficar SEMPRE além dos dois pontos na direção de saída
+      // (max se 'right'/'bottom', min se 'left'/'top') -- usar a média de
+      // x1/x2 degenera o path quando bestB já está além de bestA nessa
+      // direção (segmento final de comprimento zero, seta com ângulo
+      // incorreto). Usar o extremo garante os dois segmentos finais não-nulos
+      // e a coluna sempre "por fora" de ambos os elementos.
+      const OFFSET_MIN = 24;
+      if (aVertical) {
+        const offsetY = Math.max(OFFSET_MIN, Math.abs(bestB.y - bestA.y) / 2);
+        const y1 = bestA.side === 'bottom' ? bestA.y + offsetY : bestA.y - offsetY;
+        const y2 = bestB.side === 'bottom' ? bestB.y + offsetY : bestB.y - offsetY;
+        const midY = bestA.side === 'bottom' ? Math.max(y1, y2) : Math.min(y1, y2);
+        elbowPoints.push({ x: bestA.x, y: midY }, { x: bestB.x, y: midY });
+      } else {
+        const offsetX = Math.max(OFFSET_MIN, Math.abs(bestB.x - bestA.x) / 2);
+        const x1 = bestA.side === 'right' ? bestA.x + offsetX : bestA.x - offsetX;
+        const x2 = bestB.side === 'right' ? bestB.x + offsetX : bestB.x - offsetX;
+        const midX = bestA.side === 'right' ? Math.max(x1, x2) : Math.min(x1, x2);
+        elbowPoints.push({ x: midX, y: bestA.y }, { x: midX, y: bestB.y });
+      }
+    }
+  }
+  // Midpoint do conector elbow para o chip de decisão: o cotovelo único
+  // (1 dobra) ou o ponto médio do segmento do meio (2 dobras) -- padrão
+  // visual já usado por ferramentas de diagrama (draw.io/Visio), evita
+  // cálculo de arc-length desnecessário para 1-2 segmentos curtos.
+  const elbowMid = elbowPoints.length === 1
+    ? elbowPoints[0]
+    : elbowPoints.length === 2
+      ? { x: (elbowPoints[0].x + elbowPoints[1].x) / 2, y: (elbowPoints[0].y + elbowPoints[1].y) / 2 }
+      : curveMid;
+
   const strokeColor = { r: 0.12, g: 0.16, b: 0.23 };
   const line = figma.createVector();
   line.name = `Linha`;
@@ -233,12 +662,27 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
   line.strokes = [{ type: "SOLID", color: strokeColor }];
   line.strokeWeight = 2;
   if (msg.flowType === "line_dashed" || msg.flowType === "diamond_dashed") line.dashPattern = [6, 4];
-  line.vectorPaths = [{ windingRule: "NONZERO", data: `M ${bestA.x} ${bestA.y} L ${bestB.x} ${bestB.y}` }];
+  let linePath;
+  if (elbowPoints.length > 0) {
+    const segs = [bestA, ...elbowPoints, bestB].map(p => `${p.x} ${p.y}`).join(' L ');
+    linePath = `M ${segs}`;
+  } else if (_curvature) {
+    linePath = `M ${bestA.x} ${bestA.y} Q ${curveCtrl.x} ${curveCtrl.y} ${bestB.x} ${bestB.y}`;
+  } else {
+    linePath = `M ${bestA.x} ${bestA.y} L ${bestB.x} ${bestB.y}`;
+  }
+  line.vectorPaths = [{ windingRule: "NONZERO", data: linePath }];
 
   let nodesToGroup = [line];
 
   if (msg.flowType !== "event_start") {
-    const angle = Math.atan2(bestB.y - bestA.y, bestB.x - bestA.x);
+    // Ângulo da seta: direção do ÚLTIMO segmento antes de bestB. Com elbow,
+    // é o penúltimo ponto do path (mais simples que a tangente de Bézier --
+    // é constante ao longo do segmento reto, não varia por t). Com
+    // curvatura, é a tangente exata (bestB - curveCtrl); reto, os dois
+    // casos coincidem porque curveCtrl é o midpoint quando _curvature é 0.
+    const arrowFrom = elbowPoints.length > 0 ? elbowPoints[elbowPoints.length - 1] : curveCtrl;
+    const angle = Math.atan2(bestB.y - arrowFrom.y, bestB.x - arrowFrom.x);
     const arrowSize = 8;
     const arrow = figma.createVector();
     figma.currentPage.appendChild(arrow);
@@ -253,11 +697,19 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
     nodesToGroup.push(arrow);
   }
 
+  // Id estável do fluxo, gerado no frontend (não é o node.id do Figma) --
+  // sobrevive a recriações (regroup manual, restore de backup via
+  // recreate-flow-connection), permitindo que a inserção incremental na
+  // ficha (insert-flows-in-ficha) reconheça "este é o mesmo fluxo" mesmo
+  // após o grupo visual antigo ter sido substituído por um novo node.
+  const _flowId = msg.flowId || String(Date.now());
   const _flowExtra = {
     sourceId: nodeA.id,
     targetId: nodeB ? nodeB.id : null,
     decisionText: msg.decisionText || null,
-    flowSide: msg.flowSide || 'auto'
+    flowSide: msg.flowSide || 'auto',
+    connectorStyle: _connectorStyle,
+    curvature: _curvature
   };
 
   if (msg.flowType === "diamond" || msg.flowType === "diamond_dashed") {
@@ -287,7 +739,8 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
       finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | decisao] ${msg.flowName || "Decisão"}`;
       finalGroup.locked = true;
       finalGroup.setPluginData('handexCategory', 'fluxo');
-      figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
+      finalGroup.setPluginData('handexFlowId', _flowId);
+      figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, flowUid: _flowId, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
     } catch (e) { console.error(e); }
   } else if (isEvent) {
     const isStart = msg.flowType === "event_start";
@@ -314,10 +767,11 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
       finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | ${isStart ? 'inicio' : 'fim'}] ${msg.flowName || (isStart ? "Início" : "Fim")}`;
       finalGroup.locked = true;
       finalGroup.setPluginData('handexCategory', 'fluxo');
-      figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
+      finalGroup.setPluginData('handexFlowId', _flowId);
+      figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, flowUid: _flowId, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
     } catch (e) { console.error(e); }
   } else if (msg.decisionText && (msg.flowType === "line_solid" || msg.flowType === "line_dashed")) {
-    const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
+    const midX = elbowMid.x, midY = elbowMid.y;
     try {
       await figma.loadFontAsync({ family: "Inter", style: "Bold" });
       const textNode = figma.createText();
@@ -343,14 +797,16 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
       finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conexão"}`;
       finalGroup.locked = true;
       finalGroup.setPluginData('handexCategory', 'fluxo');
-      figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
+      finalGroup.setPluginData('handexFlowId', _flowId);
+      figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, flowUid: _flowId, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
     } catch (e) { console.error(e); }
   } else {
     const finalGroup = figma.group(nodesToGroup, figma.currentPage);
     finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conexão"}`;
     finalGroup.locked = true;
     finalGroup.setPluginData('handexCategory', 'fluxo');
-    figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
+    finalGroup.setPluginData('handexFlowId', _flowId);
+    figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, flowUid: _flowId, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
   }
   figma.notify("Fluxo criado!");
 }
@@ -396,12 +852,29 @@ figma.ui.onmessage = async (msg) => {
     const grpNode = await figma.getNodeByIdAsync(msg.nodeId);
     if (!grpNode) { figma.ui.postMessage({ type: 'toast', message: 'Card não encontrado no canvas.', kind: 'error' }); return; }
     // Find the spec card frame inside the group (nome atual 'Spec Notes', legado 'Ficha' ou '.../Ficha')
-    const children = grpNode.type === 'GROUP' ? grpNode.children : [grpNode];
+    const children = 'children' in grpNode ? grpNode.children : [grpNode];
     const cardFrame = children.find(n => n.name && (n.name === 'Spec Notes' || n.name === 'Ficha' || n.name.endsWith('/Ficha')));
     if (!cardFrame || cardFrame.type !== 'FRAME') { figma.ui.postMessage({ type: 'toast', message: 'Card não encontrado no grupo.', kind: 'error' }); return; }
     // Remove existing exception frame if any (named /Exceções)
     const existing = cardFrame.children.find(n => n.name === '[Spec] Exceções');
     if (existing) existing.remove();
+    if (msg.hasOwnProperty('note')) {
+      const existingNote = cardFrame.children.find(n => n.name === '[Spec] Nota');
+      if (existingNote) existingNote.remove();
+      if (msg.note) {
+        await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+        const desc = figma.createText();
+        desc.name = '[Spec] Nota';
+        desc.fontName = { family: "Inter", style: "Regular" };
+        desc.fontSize = 11;
+        desc.fills = [{ type: "SOLID", color: { r: 0.4, g: 0.4, b: 0.4 } }];
+        desc.characters = msg.note;
+        desc.textAutoResize = "WIDTH_AND_HEIGHT";
+        const propsFrame = cardFrame.children.find(n => n.name === 'Propriedades');
+        const insertIdx = propsFrame ? cardFrame.children.indexOf(propsFrame) : cardFrame.children.length;
+        cardFrame.insertChild(insertIdx, desc);
+      }
+    }
     if (msg.excecoes && msg.excecoes.length > 0) {
       (async () => {
         await figma.loadFontAsync({ family: "Inter", style: "Bold" });
@@ -579,8 +1052,7 @@ figma.ui.onmessage = async (msg) => {
   if (msg.type === 'delete-canvas-content') {
     // Todo conteúdo criado pelo Handex é agrupado num único nó de topo de página
     // no momento da criação (mainContainer da ficha, specGroup, grupo de medida,
-    // finalGroup/legendFrame de fluxo) -- não sobram nós-irmãos soltos. Por isso
-    // basta varrer figma.currentPage.children (nível de topo).
+    // finalGroup/legendFrame de fluxo) -- não sobram nós-irmãos soltos.
     // handexCategory (pluginData) é a fonte de verdade; prefixo de nome é fallback
     // para conteúdo criado antes desta marcação existir.
     const wanted = {
@@ -612,6 +1084,17 @@ figma.ui.onmessage = async (msg) => {
       }
     });
 
+    // Marcador (contour procedural) fica fora do specGroup, vinculado só por
+    // pluginData (handexSpecMarkerId) -- remover o specGroup sozinho não o
+    // leva junto (mesmo cuidado de delete-node), senão ele fica órfão no
+    // canvas após a limpeza em massa.
+    for (const node of toRemove) {
+      const markerId = node.getPluginData && node.getPluginData('handexSpecMarkerId');
+      if (markerId) {
+        const marker = await figma.getNodeByIdAsync(markerId);
+        if (marker) { try { marker.remove(); } catch (e) {} }
+      }
+    }
     toRemove.forEach(node => { try { node.remove(); } catch (e) {} });
 
     figma.ui.postMessage({ type: 'canvas-content-deleted', counts });
@@ -817,7 +1300,7 @@ figma.ui.onmessage = async (msg) => {
         section.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
         section.strokeWeight = 1;
 
-        const title = createText(titleText, 16, "Bold", { r: 0, g: 0.35, b: 0.79 });
+        const title = createText(titleText, 16, "Bold", { r: 0.24, g: 0.24, b: 1 });
         section.appendChild(title);
         setFillAndHug(title);
         return section;
@@ -840,7 +1323,7 @@ figma.ui.onmessage = async (msg) => {
         row.appendChild(lbl);
         setFillAndHug(lbl);
 
-        const val = createText(value || "-", 14, "Regular", isLink ? { r: 0, g: 0.35, b: 0.79 } : { r: 0.12, g: 0.16, b: 0.23 });
+        const val = createText(value || "-", 14, "Regular", isLink ? { r: 0.24, g: 0.24, b: 1 } : { r: 0.12, g: 0.16, b: 0.23 });
         row.appendChild(val);
         setFillAndHug(val);
 
@@ -861,8 +1344,21 @@ figma.ui.onmessage = async (msg) => {
       const _titulo = (data.step1?.titulo || 'Projeto').replace(/\//g, '-');
       const _handoffBase = `Handex | Ficha de Projeto | ${_titulo}`;
 
-      // Nome sempre inclui data (primeira versão ou atualização)
-      const _isUpdate = false;
+      // Detecta ficha já existente do projeto ANTES de construir a nova --
+      // decisão de produto: "Gerar Ficha" atualiza em vez de duplicar.
+      // Guarda só a posição (x/y) para a nova ficha herdar -- o designer
+      // pode ter movido/organizado a ficha no canvas, atualizar não deve
+      // reposicioná-la. Remove a antiga assim que a posição é capturada,
+      // antes de construir a nova, para ela não interferir no cálculo de
+      // colisão/posicionamento (que só roda quando não há ficha anterior).
+      const _existingFicha = _hdFindExistingFicha(_titulo);
+      let _inheritedX = null, _inheritedY = null;
+      const _isUpdate = !!_existingFicha;
+      if (_existingFicha) {
+        _inheritedX = _existingFicha.x;
+        _inheritedY = _existingFicha.y;
+        try { _existingFicha.remove(); } catch (e) {}
+      }
       const _now = new Date();
       const _ts = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')} ${String(_now.getHours()).padStart(2,'0')}:${String(_now.getMinutes()).padStart(2,'0')}`;
       // Timestamp antes da versão no nome: garante que a ordenação alfabética
@@ -872,7 +1368,7 @@ figma.ui.onmessage = async (msg) => {
       const _containerName = `${_handoffBase} | ${_ts}${_versaoLabel ? ' | ' + _versaoLabel : ''}`;
 
       // MAIN CONTAINER
-      const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb("#026173"));
+      const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb("#181875"));
       mainContainer.name = _containerName;
       mainContainer.counterAxisAlignItems = "MIN"; // Top align
       mainContainer.primaryAxisSizingMode = "AUTO"; // Hug children width
@@ -900,12 +1396,12 @@ figma.ui.onmessage = async (msg) => {
         <g transform="translate(-284.78446,-475.51214)">
           <g transform="matrix(1.25,0,0,-1.25,15.493106,1024.9702)">
             <g transform="scale(0.24,0.24)">
-              <path d="m 1107.19,1780.04 -17.74,-44.21 24.55,0 -6.73,44.39 -0.08,-0.18 z m -93.98,-101.49 72.77,149.83 55.02,0 30.68,-149.83 -48.3,0 -3.56,19.97 -46.86,0 -10.78,-19.97 -48.97,0 z m 181.34,0 21.08,149.83 48.67,0 -21.07,-149.83 -48.68,0 z m 323.71,101.67 -17.81,-44.39 24.54,0 -6.73,44.39 z m -94.06,-101.67 72.78,149.83 55.01,0 30.69,-149.83 -48.31,0 -3.55,19.97 -46.87,0 -10.78,-19.97 -48.97,0" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none" />
-              <path d="m 1316.6,1748.61 60.99,0 41.79,-69.21 -61,0 -41.78,69.21" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1107.19,1780.04 -17.74,-44.21 24.55,0 -6.73,44.39 -0.08,-0.18 z m -93.98,-101.49 72.77,149.83 55.02,0 30.68,-149.83 -48.3,0 -3.56,19.97 -46.86,0 -10.78,-19.97 -48.97,0 z m 181.34,0 21.08,149.83 48.67,0 -21.07,-149.83 -48.68,0 z m 323.71,101.67 -17.81,-44.39 24.54,0 -6.73,44.39 z m -94.06,-101.67 72.78,149.83 55.01,0 30.69,-149.83 -48.31,0 -3.55,19.97 -46.87,0 -10.78,-19.97 -48.97,0" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1316.6,1748.61 60.99,0 41.79,-69.21 -61,0 -41.78,69.21" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none" />
               <path d="m 1322.94,1759.24 63.04,0 54.75,68.92 -63.04,0 -54.75,-68.92" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none" />
               <path d="m 1259.91,1678.98 63.03,0 54.75,69.76 -63.04,0 -54.74,-69.76" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none" />
-              <path d="m 1282.64,1829 58.83,0 40.31,-69.76 -58.84,0 -40.3,69.76" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none" />
-              <path d="m 1014.65,1823.02 -4.68,-44.07 c -17.939,24.75 -59.517,7.67 -62.782,-23.16 -4.149,-39.13 35.867,-48.25 57.642,-25.21 l -4.69,-44.17 c -6.499,-3.19 -12.855,-5.67 -19.128,-7.34 -6.239,-1.68 -12.492,-2.57 -18.696,-2.7 -7.8,-0.17 -14.867,0.65 -21.234,2.44 -6.367,1.76 -12.129,4.56 -17.227,8.34 -9.832,7.19 -16.941,16.33 -21.32,27.45 -4.379,11.16 -5.82,23.75 -4.328,37.82 1.203,11.31 4.051,21.62 8.59,30.97 4.5,9.34 10.734,17.84 18.672,25.54 7.504,7.34 15.676,12.88 24.519,16.64 8.809,3.73 18.422,5.72 28.813,5.94 6.207,0.13 12.297,-0.49 18.207,-1.92 5.942,-1.42 11.802,-3.64 17.642,-6.57" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1282.64,1829 58.83,0 40.31,-69.76 -58.84,0 -40.3,69.76" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1014.65,1823.02 -4.68,-44.07 c -17.939,24.75 -59.517,7.67 -62.782,-23.16 -4.149,-39.13 35.867,-48.25 57.642,-25.21 l -4.69,-44.17 c -6.499,-3.19 -12.855,-5.67 -19.128,-7.34 -6.239,-1.68 -12.492,-2.57 -18.696,-2.7 -7.8,-0.17 -14.867,0.65 -21.234,2.44 -6.367,1.76 -12.129,4.56 -17.227,8.34 -9.832,7.19 -16.941,16.33 -21.32,27.45 -4.379,11.16 -5.82,23.75 -4.328,37.82 1.203,11.31 4.051,21.62 8.59,30.97 4.5,9.34 10.734,17.84 18.672,25.54 7.504,7.34 15.676,12.88 24.519,16.64 8.809,3.73 18.422,5.72 28.813,5.94 6.207,0.13 12.297,-0.49 18.207,-1.92 5.942,-1.42 11.802,-3.64 17.642,-6.57" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none" />
             </g>
           </g>
         </g>
@@ -922,6 +1418,10 @@ figma.ui.onmessage = async (msg) => {
 
       // CONTENT WRAPPER
       const content = createFrame("VERTICAL", 24, 24, { r: 1, g: 1, b: 1 });
+      // Nome próprio permite ao handler insert-frame-in-ficha localizar este
+      // nó sem depender de posição/índice de filho (fichas geradas antes
+      // desta marcação existir caem no fallback posicional, ver lá).
+      content.name = 'Handex | Content';
       fichaTecnica.appendChild(content);
       setFillAndHug(content);
 
@@ -977,7 +1477,7 @@ figma.ui.onmessage = async (msg) => {
           roleTag.cornerRadius = 999;
           roleTag.strokes = [{ type: "SOLID", color: { r: 0.70, g: 0.82, b: 0.96 } }];
           roleTag.strokeWeight = 1;
-          roleTag.appendChild(createText(m.papel || 'Membro', 9, "Medium", { r: 0, g: 0.35, b: 0.79 }));
+          roleTag.appendChild(createText(m.papel || 'Membro', 9, "Medium", { r: 0.24, g: 0.24, b: 1 }));
           mRow.appendChild(roleTag);
 
           const nameText = createText(m.nome || '', 12, "Medium");
@@ -985,7 +1485,7 @@ figma.ui.onmessage = async (msg) => {
           mRow.appendChild(nameText);
 
           if (m.email) {
-            const contactLink = createText("Contato", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
+            const contactLink = createText("Contato", 11, "Bold", { r: 0.24, g: 0.24, b: 1 });
             contactLink.textDecoration = "UNDERLINE";
             contactLink.hyperlink = { type: "URL", value: "mailto:" + m.email };
             mRow.appendChild(contactLink);
@@ -1014,7 +1514,7 @@ figma.ui.onmessage = async (msg) => {
           setFillAndHug(rTitle);
 
           if (r.link && r.link !== "#") {
-            const lText = createText("Acesse o link da HU", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
+            const lText = createText("Acesse o link da HU", 11, "Bold", { r: 0.24, g: 0.24, b: 1 });
             lText.textDecoration = "UNDERLINE";
             lText.hyperlink = { type: "URL", value: r.link };
             rRow.appendChild(lText);
@@ -1030,10 +1530,21 @@ figma.ui.onmessage = async (msg) => {
         setFillAndHug(rulesSection);
       }
 
-      // 1.5 CENÁRIOS DE EXCEÇÃO (agregados de todos os frames)
-      const _allExcecoes = (data.frames || []).flatMap(f =>
-        (f.excecoes || []).map(e => ({ ...e, _frame: f.nome }))
-      );
+      // 1.5 CENÁRIOS DE EXCEÇÃO (agregados de todas as specs, de todos os
+      // frames + avulsas). Antes lia frame.excecoes (nível de frame) -- esse
+      // conceito nunca teve UI real de entrada e foi removido; spec.excecoes
+      // (nível de spec, anexado via botão "Cenário de Exceção" no card da
+      // spec) é o único conceito vivo hoje. Também aparece dentro do card
+      // de cada spec na seção "Especificações" (1.9) -- esta seção agregada
+      // dá visibilidade extra, reunindo tudo num só lugar no topo da ficha.
+      const _allExcecoes = [
+        ...(data.frames || []).flatMap(f => (f.createdSpecs || []).flatMap(s =>
+          (s.excecoes || []).map(e => ({ ...e, _frame: f.nome, _spec: s.name }))
+        )),
+        ...(data.specs || []).flatMap(s =>
+          (s.excecoes || []).map(e => ({ ...e, _frame: null, _spec: s.name }))
+        )
+      ];
       if (_allExcecoes.length > 0) {
         const excSection = createSection(content, "Cenários de Exceção");
         _allExcecoes.forEach(e => {
@@ -1049,7 +1560,8 @@ figma.ui.onmessage = async (msg) => {
           typeTag.appendChild(createText(e.tipo || '', 10, "Bold", { r: 1, g: 1, b: 1 }));
           eRow.appendChild(typeTag);
 
-          const titleText = createText(`${e.titulo || ''}${e._frame ? ' (' + e._frame + ')' : ''}`, 12, "Medium");
+          const _origem = e._frame ? `${e._spec || ''} — ${e._frame}` : (e._spec || '');
+          const titleText = createText(`${e.titulo || ''}${_origem ? ' (' + _origem + ')' : ''}`, 12, "Medium");
           titleText.layoutGrow = 1;
           eRow.appendChild(titleText);
 
@@ -1085,7 +1597,7 @@ figma.ui.onmessage = async (msg) => {
             dLabel.layoutGrow = 1;
             dRow.appendChild(dLabel);
 
-            const dLink = createText("Acesse o link", 11, "Bold", { r: 0, g: 0.35, b: 0.79 });
+            const dLink = createText("Acesse o link", 11, "Bold", { r: 0.24, g: 0.24, b: 1 });
             dLink.textDecoration = "UNDERLINE";
             dLink.hyperlink = { type: "URL", value: docData.link };
             dRow.appendChild(dLink);
@@ -1096,189 +1608,14 @@ figma.ui.onmessage = async (msg) => {
         }
       }
 
-      // 1.6b — seção "Especificações Visuais" removida; specs consolidadas em 1.9
-      if (false) { // dead block kept for diff clarity — remove on next cleanup
-        const SPEC_CARD_W = 240;
-        function buildSpecCard(s) {
-          const tc = s.color
-            ? { r: parseInt(s.color.slice(1,3),16)/255, g: parseInt(s.color.slice(3,5),16)/255, b: parseInt(s.color.slice(5,7),16)/255 }
-            : themeColor;
-
-          const card = figma.createFrame();
-          card.name = `[Spec/${s.letter || 'A'}] ${s.name || ''}`;
-          card.layoutMode = "VERTICAL";
-          card.itemSpacing = 4;
-          card.paddingLeft = 10; card.paddingRight = 10;
-          card.paddingTop = 8; card.paddingBottom = 8;
-          card.cornerRadius = 8;
-          card.fills = [{ type: "SOLID", color: { r: 0.98, g: 0.98, b: 1 } }];
-          card.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.92, b: 0.96 } }];
-          card.primaryAxisSizingMode = "AUTO";    // hug height
-          card.counterAxisSizingMode = "FIXED";   // fixed width → text wraps
-          card.resize(SPEC_CARD_W, 10);
-
-          // Header: badge + name
-          const sHeader = figma.createFrame();
-          sHeader.layoutMode = "HORIZONTAL";
-          sHeader.itemSpacing = 8;
-          sHeader.fills = [];
-          sHeader.counterAxisAlignItems = "CENTER";
-          sHeader.primaryAxisSizingMode = "FIXED";
-          sHeader.counterAxisSizingMode = "AUTO";
-          sHeader.layoutAlign = "STRETCH";
-          card.appendChild(sHeader);
-
-          const badge = figma.createFrame();
-          badge.layoutMode = "HORIZONTAL";
-          badge.resize(20, 20);
-          badge.cornerRadius = 4;
-          badge.fills = [{ type: "SOLID", color: tc }];
-          badge.primaryAxisAlignItems = "CENTER"; badge.counterAxisAlignItems = "CENTER";
-          const badgeT = figma.createText();
-          badgeT.fontName = { family: "Inter", style: "Bold" }; badgeT.fontSize = 9;
-          badgeT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
-          badgeT.characters = s.letter || 'A'; badgeT.textAutoResize = "WIDTH_AND_HEIGHT";
-          badge.appendChild(badgeT);
-          sHeader.appendChild(badge);
-
-          const sName = figma.createText();
-          sName.fontName = { family: "Inter", style: "Bold" }; sName.fontSize = 11;
-          sName.fills = [{ type: "SOLID", color: { r: 0.12, g: 0.16, b: 0.23 } }];
-          sName.characters = s.name || '';
-          sName.textAutoResize = "HEIGHT";  // wrap within fixed card width
-          sName.layoutGrow = 1;
-          sHeader.appendChild(sName);
-
-          if (s.note) {
-            const sNote = figma.createText();
-            sNote.fontName = { family: "Inter", style: "Regular" }; sNote.fontSize = 10;
-            sNote.fills = [{ type: "SOLID", color: { r: 0.4, g: 0.4, b: 0.4 } }];
-            sNote.characters = s.note;
-            sNote.textAutoResize = "HEIGHT";
-            sNote.layoutAlign = "STRETCH";
-            card.appendChild(sNote);
-          }
-
-          // Link
-          if (s.link) {
-            const lText = figma.createText();
-            lText.fontName = { family: "Inter", style: "Regular" }; lText.fontSize = 9;
-            lText.fills = [{ type: "SOLID", color: { r: 0, g: 0.35, b: 0.79 } }];
-            lText.characters = s.link;
-            lText.textDecoration = "UNDERLINE";
-            lText.hyperlink = { type: "URL", value: s.link };
-            lText.textAutoResize = "HEIGHT";  // wrap long URLs
-            lText.layoutAlign = "STRETCH";
-            card.appendChild(lText);
-          }
-
-          // Exceptions
-          const sExcs = s.excecoes || [];
-          if (sExcs.length > 0) {
-            const _excRgb = { 'Erro': { r: 0.80, g: 0.15, b: 0.15 }, 'Alerta': { r: 0.80, g: 0.50, b: 0.00 }, 'Sucesso': { r: 0.10, g: 0.55, b: 0.25 }, 'Confirmação': { r: 0.05, g: 0.35, b: 0.80 } };
-            sExcs.forEach(exc => {
-              const eRow = figma.createFrame();
-              eRow.layoutMode = "HORIZONTAL"; eRow.itemSpacing = 6; eRow.fills = [];
-              eRow.primaryAxisSizingMode = "FIXED"; eRow.counterAxisSizingMode = "AUTO";
-              eRow.layoutAlign = "STRETCH";
-              eRow.counterAxisAlignItems = "CENTER";
-              card.appendChild(eRow);
-              const eType = figma.createText();
-              eType.fontName = { family: "Inter", style: "Bold" }; eType.fontSize = 9;
-              eType.fills = [{ type: "SOLID", color: _excRgb[exc.tipo] || { r: 0.4, g: 0.4, b: 0.4 } }];
-              eType.characters = (exc.tipo || 'GERAL').toUpperCase(); eType.textAutoResize = "WIDTH_AND_HEIGHT";
-              const eTitle = figma.createText();
-              eTitle.fontName = { family: "Inter", style: "Regular" }; eTitle.fontSize = 10;
-              eTitle.fills = [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2 } }];
-              eTitle.characters = exc.titulo || '';
-              eTitle.textAutoResize = "HEIGHT";
-              eTitle.layoutGrow = 1;
-              eRow.appendChild(eType); eRow.appendChild(eTitle);
-            });
-          }
-
-          return card;
-        }
-
-        // Group specs by tag
-        const _specsByTag = {};
-        _globalSpecs.forEach(s => {
-          const tag = s.categoryLabel || s.category || 'Geral';
-          if (!_specsByTag[tag]) _specsByTag[tag] = [];
-          _specsByTag[tag].push(s);
-        });
-
-        const specsSection = createSection(content, "Especificações Visuais");
-
-        // Outer row: different tags side by side
-        const specsTagRow = figma.createFrame();
-        specsTagRow.name = '[Row] Especificações por Tag';
-        specsTagRow.layoutMode = "HORIZONTAL";
-        specsTagRow.layoutWrap = "WRAP";
-        specsTagRow.itemSpacing = 16;
-        specsTagRow.counterAxisSpacing = 16;
-        specsTagRow.fills = [];
-        specsTagRow.primaryAxisSizingMode = "AUTO";
-        specsTagRow.counterAxisSizingMode = "AUTO";
-        specsTagRow.counterAxisAlignItems = "MIN";
-        specsSection.appendChild(specsTagRow);
-        setFillAndHug(specsTagRow);
-
-        Object.entries(_specsByTag).forEach(([tag, tagSpecs]) => {
-          if (tagSpecs.length === 1) {
-            // Single spec: no group wrapper
-            specsTagRow.appendChild(buildSpecCard(tagSpecs[0]));
-          } else {
-            // 2+ specs with same tag: vertical group
-            const group = figma.createFrame();
-            group.name = `[Specs/${tag}] Especificações Visuais`;
-            group.layoutMode = "VERTICAL";
-            group.itemSpacing = 8;
-            group.fills = [];
-            group.primaryAxisSizingMode = "AUTO";
-            group.counterAxisSizingMode = "AUTO";
-            group.counterAxisAlignItems = "MIN";
-            tagSpecs.forEach(s => group.appendChild(buildSpecCard(s)));
-            specsTagRow.appendChild(group);
-            setFillAndHug(group);
-          }
-        });
-
-        content.appendChild(specsSection);
-        setFillAndHug(specsSection);
-      }
-
       // 1.7 FRAMES DOCUMENTADOS
       const _frames = data.frames || [];
       if (_frames.length > 0) {
-        const framesSection = createSection(content, "Frames Documentados");
+        const framesSection = _hdCreateSection(content, "Frames Documentados");
         _frames.forEach((f, fi) => {
-          const fRow = createFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.99, b: 1 });
-          fRow.name = `[Frame] ${f.nome || 'Frame ' + (fi + 1)}`;
-          fRow.cornerRadius = 8;
-          fRow.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.92, b: 0.96 } }];
+          const fRow = _hdBuildFrameCard(f, fi);
           framesSection.appendChild(fRow);
-          setFillAndHug(fRow);
-
-          // Nome + badge novo componente
-          const fHeader = createFrame("HORIZONTAL", 0, 8);
-          fHeader.counterAxisAlignItems = "CENTER";
-          fRow.appendChild(fHeader);
-          setFillAndHug(fHeader);
-          const fName = createText(f.nome || 'Frame', 12, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-          fName.layoutGrow = 1;
-          fHeader.appendChild(fName);
-          if (f.isNewComponent) {
-            const badge = createFrame("HORIZONTAL", 8, 3, { r: 0.94, g: 0.92, b: 1.0 });
-            badge.cornerRadius = 999;
-            badge.strokes = [{ type: "SOLID", color: { r: 0.70, g: 0.60, b: 0.96 } }];
-            badge.strokeWeight = 1;
-            badge.appendChild(createText("Novo componente", 9, "Medium", { r: 0.38, g: 0.18, b: 0.78 }));
-            fHeader.appendChild(badge);
-          }
-          if (f.audit && f.audit.status) {
-            createRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? ' — ' + f.audit.justificativa : ''));
-          }
+          _hdSetFillAndHug(fRow);
         });
         content.appendChild(framesSection);
         setFillAndHug(framesSection);
@@ -1287,173 +1624,42 @@ figma.ui.onmessage = async (msg) => {
       // 1.8 MEDIDAS (seção independente, agrupada por frame)
       const _framesWithMeasures = (_frames || []).filter(f => (f.measurements || []).length > 0);
       if (_framesWithMeasures.length > 0) {
-        const measSection = createSection(content, "Medidas");
+        const measSection = _hdCreateSection(content, "Medidas");
         _framesWithMeasures.forEach(f => {
-          // Sub-cabeçalho do frame
-          const fGroup = createFrame("VERTICAL", 0, 6);
-          fGroup.name = `[Medidas | ${f.figmaId || f.id}] ${f.nome || 'Frame'}`;
+          const fGroup = _hdBuildMeasuresSubgroup(f);
           measSection.appendChild(fGroup);
-          setFillAndHug(fGroup);
-          const fLabel = createText(f.nome || 'Frame', 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
-          fGroup.appendChild(fLabel);
-          setFillAndHug(fLabel);
-          f.measurements.forEach(m => {
-            const details = Array.isArray(m.details) ? m.details.join(' | ') : (m.details || '');
-            const mRow = createFrame("HORIZONTAL", 10, 7, { r: 0.94, g: 0.97, b: 1 });
-            mRow.name = `[Medida] ${m.name || 'Medida'}`;
-            mRow.cornerRadius = 6;
-            mRow.counterAxisAlignItems = "CENTER";
-            fGroup.appendChild(mRow);
-            setFillAndHug(mRow);
-            const mName = createText(m.name || 'Medida', 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-            mName.layoutGrow = 1;
-            mRow.appendChild(mName);
-            const mVal = createText(details, 10, "Regular", { r: 0.27, g: 0.45, b: 0.78 });
-            mRow.appendChild(mVal);
-            setFillAndHug(mVal);
-          });
+          _hdSetFillAndHug(fGroup);
         });
         content.appendChild(measSection);
         setFillAndHug(measSection);
       }
 
       // 1.9 ESPECIFICAÇÕES ANOTADAS (seção independente, agrupada por frame)
+      // Specs criadas sem nenhum frame ativo/selecionado ficam em data.specs
+      // (nível superior), não em nenhum frame.createdSpecs -- identificadas
+      // pela chave fixa 'handexFrameId' = '__loose__' (mesmo padrão usado
+      // pela inserção incremental), já que não têm frame.figmaId real.
+      // data.specs pode conter specs que JÁ estão em algum frame.createdSpecs
+      // (contaminação por saveSpecsToStorage/_mergeLooseAndFramed, mesma
+      // duplicidade de fonte que já causou o bug de spec "ressuscitada" --
+      // ver CHANGELOG v6.1.1/v6.2.0) -- sem este filtro, a spec apareceria
+      // duas vezes na ficha: no card do frame real E no card de avulsas.
+      const _framedSpecIds = new Set((_frames || []).flatMap(f => (f.createdSpecs || []).map(s => s.id)));
+      const _looseSpecs = (data.specs || []).filter(s => !_framedSpecIds.has(s.id));
       const _framesWithSpecs = (_frames || []).filter(f => (f.createdSpecs || []).length > 0);
-      if (_framesWithSpecs.length > 0) {
-        const annotSection = createSection(content, "Especificações");
+      if (_framesWithSpecs.length > 0 || _looseSpecs.length > 0) {
+        const annotSection = _hdCreateSection(content, "Especificações");
         for (const f of _framesWithSpecs) {
-          const fGroup = createFrame("VERTICAL", 0, 10);
-          fGroup.name = `[Specs] ${f.nome || 'Frame'}`;
+          const fGroup = await _hdBuildSpecsSubgroup(f);
           annotSection.appendChild(fGroup);
-          setFillAndHug(fGroup);
-          const fLabel = createText(f.nome || 'Frame', 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
-          fGroup.appendChild(fLabel);
-          setFillAndHug(fLabel);
-
-          // Agrupa specs por letra, mantendo ordem de aparição
-          const groupNames = f.specGroupNames || {};
-          const groupVisible = f.specGroupVisible || {};
-          const letterOrder = [];
-          const specsByLetter = {};
-          (f.createdSpecs || []).forEach(s => {
-            const l = s.letter || 'A';
-            if (!specsByLetter[l]) { specsByLetter[l] = []; letterOrder.push(l); }
-            specsByLetter[l].push(s);
-          });
-
-          for (const letter of letterOrder) {
-            if (groupVisible[letter] === false) continue; // grupo oculto
-            const groupSpecs = specsByLetter[letter];
-            const groupColor = groupSpecs[0]?.color ? hexToRgb(groupSpecs[0].color) : { r: 0.38, g: 0.35, b: 0.75 };
-            const groupNameText = groupNames[letter] || '';
-
-            // Contêiner do grupo
-            const gBox = createFrame("VERTICAL", 0, 6);
-            gBox.name = `[Grupo/${letter}] ${groupNameText || letter}`;
-            fGroup.appendChild(gBox);
-            setFillAndHug(gBox);
-
-            // Cabeçalho do grupo: badge da letra + nome do grupo
-            const gHeader = createFrame("HORIZONTAL", 0, 6);
-            gHeader.counterAxisAlignItems = "CENTER";
-            gBox.appendChild(gHeader);
-            setFillAndHug(gHeader);
-            const gBadge = createFrame("HORIZONTAL", 0, 0, groupColor);
-            gBadge.resize(18, 18);
-            gBadge.cornerRadius = 4;
-            gBadge.primaryAxisAlignItems = "CENTER";
-            gBadge.counterAxisAlignItems = "CENTER";
-            gHeader.appendChild(gBadge);
-            const gBadgeT = figma.createText();
-            gBadgeT.fontName = { family: "Inter", style: "Bold" };
-            gBadgeT.fontSize = 9;
-            gBadgeT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
-            gBadgeT.characters = letter;
-            gBadgeT.textAutoResize = "WIDTH_AND_HEIGHT";
-            gBadge.appendChild(gBadgeT);
-            if (groupNameText) {
-              const gName = createText(groupNameText, 10, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-              gHeader.appendChild(gName);
-              setFillAndHug(gName);
-            }
-            const gCount = createText(`${groupSpecs.length} esp.`, 9, "Regular", { r: 0.55, g: 0.6, b: 0.65 });
-            gHeader.appendChild(gCount);
-            setFillAndHug(gCount);
-
-            // Specs do grupo
-            const gSpecs = createFrame("VERTICAL", 0, 4);
-            gSpecs.fills = [];
-            gBox.appendChild(gSpecs);
-            setFillAndHug(gSpecs);
-
-            for (const s of groupSpecs) {
-              const catLabel = s.type || s.categoryLabel || s.category || 'Geral';
-              const sc = s.color ? hexToRgb(s.color) : { r: 0.38, g: 0.35, b: 0.75 };
-              const scBg = s.fillColor ? hexToRgb(s.fillColor) : { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
-              const sRow = createFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.97, b: 1 });
-              sRow.name = `[Spec/${s.letter || 'A'}] ${s.name || s.label || 'Spec'}`;
-              sRow.cornerRadius = 8;
-              sRow.strokes = [{ type: "SOLID", color: sc }];
-              gSpecs.appendChild(sRow);
-              setFillAndHug(sRow);
-              // Linha topo: nome + categoria (badge da letra no grupo já identifica)
-              const sTop = createFrame("HORIZONTAL", 0, 6);
-              sTop.counterAxisAlignItems = "CENTER";
-              sRow.appendChild(sTop);
-              setFillAndHug(sTop);
-              // Nome: link para spec no canvas (ou DSC docs)
-              const sName = createText(s.name || s.label || 'Spec', 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-              sName.layoutGrow = 1;
-              sTop.appendChild(sName);
-              if (s.link) {
-                sName.textDecoration = "UNDERLINE";
-                sName.hyperlink = { type: "URL", value: s.link };
-              } else if (s.id && await figma.getNodeByIdAsync(s.id)) {
-                sName.textDecoration = "UNDERLINE";
-                sName.hyperlink = { type: "NODE", value: s.id };
-              }
-              // Categoria chip
-              const sCatTag = createFrame("HORIZONTAL", 6, 3, scBg);
-              sCatTag.cornerRadius = 999;
-              sCatTag.strokes = [{ type: "SOLID", color: sc }];
-              sCatTag.strokeWeight = 1;
-              sTop.appendChild(sCatTag);
-              setFillAndHug(sCatTag);
-              sCatTag.appendChild(createText(catLabel, 9, "Medium", sc));
-              // Nota (se tiver)
-              if (s.note) {
-                const sNote = createText(s.note, 10, "Regular", { r: 0.4, g: 0.45, b: 0.55 });
-                sRow.appendChild(sNote);
-                setFillAndHug(sNote);
-              }
-              // Propriedades selecionadas na spec
-              const _props = s.properties || [];
-              if (_props.length > 0) {
-                const propsFrame = createFrame("VERTICAL", 0, 3);
-                propsFrame.fills = [];
-                setFillAndHug(propsFrame);
-                sRow.appendChild(propsFrame);
-                _props.forEach(prop => {
-                  const pRow = createFrame("HORIZONTAL", 8, 4, { r: 0.93, g: 0.95, b: 1 });
-                  pRow.cornerRadius = 4;
-                  pRow.counterAxisAlignItems = "CENTER";
-                  setFillAndHug(pRow);
-                  propsFrame.appendChild(pRow);
-                  const pKey = createText(prop.label || prop.key || '', 9, "Regular", { r: 0.35, g: 0.4, b: 0.5 });
-                  pKey.layoutGrow = 1;
-                  pRow.appendChild(pKey);
-                  if (prop.token) {
-                    const tBadge = createText(prop.token, 8, "Medium", { r: 0, g: 0.44, b: 0.69 });
-                    setFillAndHug(tBadge);
-                    pRow.appendChild(tBadge);
-                  }
-                  const pVal = createText(String(prop.value || ''), 9, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-                  setFillAndHug(pVal);
-                  pRow.appendChild(pVal);
-                });
-              }
-            }
-          }
+          _hdSetFillAndHug(fGroup);
+        }
+        if (_looseSpecs.length > 0) {
+          const looseFrame = { nome: 'Sem frame vinculado', createdSpecs: _looseSpecs, specGroupNames: {}, specGroupVisible: {} };
+          const looseGroup = await _hdBuildSpecsSubgroup(looseFrame);
+          looseGroup.setPluginData('handexFrameId', '__loose__');
+          annotSection.appendChild(looseGroup);
+          _hdSetFillAndHug(looseGroup);
         }
         content.appendChild(annotSection);
         setFillAndHug(annotSection);
@@ -1462,44 +1668,11 @@ figma.ui.onmessage = async (msg) => {
       // 1.10 FLUXOS DE TELA
       const _flows = data.createdFlows || [];
       if (_flows.length > 0) {
-        const flowTypeLabel = { line_solid: 'Linha sólida', line_dashed: 'Linha tracejada', diamond: 'Decisão', diamond_dashed: 'Decisão tracejada', event_start: 'Início', event_end: 'Fim', gateway_parallel: 'Paralelo' };
-        const flowsSection = createSection(content, "Fluxos de Tela");
+        const flowsSection = _hdCreateSection(content, "Fluxos de Tela");
         _flows.forEach((flow, fi) => {
-          const fRow = createFrame("VERTICAL", 12, 10, { r: 0.97, g: 0.96, b: 1 });
-          fRow.name = `[Fluxo] ${flow.name || 'Fluxo ' + (fi + 1)}`;
-          fRow.cornerRadius = 8;
-          fRow.strokes = [{ type: "SOLID", color: { r: 0.86, g: 0.84, b: 0.96 } }];
+          const fRow = _hdBuildFlowCard(flow, fi);
           flowsSection.appendChild(fRow);
-          setFillAndHug(fRow);
-          // Topo: nome + tipo
-          const fTop = createFrame("HORIZONTAL", 0, 4);
-          fTop.counterAxisAlignItems = "CENTER";
-          fRow.appendChild(fTop);
-          setFillAndHug(fTop);
-          const fName = createText(flow.name || 'Fluxo', 12, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-          fName.layoutGrow = 1;
-          fTop.appendChild(fName);
-          const typeStr = flowTypeLabel[flow.type] || flow.type || '';
-          if (typeStr) {
-            const fTypeTag = createFrame("HORIZONTAL", 6, 3, { r: 0.93, g: 0.90, b: 1 });
-            fTypeTag.cornerRadius = 999;
-            fTop.appendChild(fTypeTag);
-            setFillAndHug(fTypeTag);
-            fTypeTag.appendChild(createText(typeStr, 9, "Medium", { r: 0.45, g: 0.35, b: 0.75 }));
-          }
-          // Conexão origem → destino
-          if (flow.fromName || flow.toName) {
-            const connStr = `${flow.fromName || '?'} → ${flow.toName || '?'}`;
-            const fConn = createText(connStr, 10, "Regular", { r: 0.45, g: 0.50, b: 0.60 });
-            fRow.appendChild(fConn);
-            setFillAndHug(fConn);
-          }
-          // Texto de decisão
-          if (flow.decisionText) {
-            const dText = createText(`"${flow.decisionText}"`, 10, "Regular", { r: 0.5, g: 0.45, b: 0.70 });
-            fRow.appendChild(dText);
-            setFillAndHug(dText);
-          }
+          _hdSetFillAndHug(fRow);
         });
         content.appendChild(flowsSection);
         setFillAndHug(flowsSection);
@@ -1579,7 +1752,7 @@ figma.ui.onmessage = async (msg) => {
           sec.primaryAxisSizingMode = "AUTO";  // Hug height
           sec.counterAxisSizingMode = "FIXED"; // Base width 280
 
-          const titleNode = createText(title, 18, "Bold", { r: 0, g: 0.35, b: 0.79 });
+          const titleNode = createText(title, 18, "Bold", { r: 0.24, g: 0.24, b: 1 });
           sec.appendChild(titleNode);
           setFillAndHug(titleNode);
 
@@ -1626,7 +1799,7 @@ figma.ui.onmessage = async (msg) => {
                   value: `https://www.figma.com/design/${figma.fileKey}?node-id=${encodeURIComponent(item.nodeId)}`
                 };
                 iName.textDecoration = "UNDERLINE";
-                iName.fills = [{ type: "SOLID", color: { r: 0, g: 0.35, b: 0.79 } }];
+                iName.fills = [{ type: "SOLID", color: { r: 0.24, g: 0.24, b: 1 } }];
               } catch(e) {}
             }
             headerRow.appendChild(iName);
@@ -1706,7 +1879,7 @@ figma.ui.onmessage = async (msg) => {
                 pRow.appendChild(pVal);
 
                 if (prop.token) {
-                  const tBadge = createText(prop.token, 8, "Regular", { r: 0, g: 0.44, b: 0.69 });
+                  const tBadge = createText(prop.token, 8, "Regular", { r: 0.24, g: 0.24, b: 1 });
                   pRow.appendChild(tBadge);
                 }
               });
@@ -1850,7 +2023,7 @@ figma.ui.onmessage = async (msg) => {
         auditBoard.counterAxisSizingMode = "FIXED";
         auditBoard.primaryAxisSizingMode = "AUTO";
         
-        const auditTitle = createText("Relatório de Auditoria", 24, "Bold", { r: 0, g: 0.35, b: 0.79 });
+        const auditTitle = createText("Relatório de Auditoria", 24, "Bold", { r: 0.24, g: 0.24, b: 1 });
         auditBoard.appendChild(auditTitle);
         setFillAndHug(auditTitle);
 
@@ -1892,6 +2065,19 @@ figma.ui.onmessage = async (msg) => {
       mainContainer.locked = false;
       mainContainer.setPluginData('handexCategory', 'ficha');
       figma.currentPage.appendChild(mainContainer);
+
+      if (_isUpdate && _inheritedX !== null) {
+        // Ficha existente: herda a posição exata de onde estava -- pula todo
+        // o cálculo de posicionamento/colisão abaixo (só relevante para uma
+        // ficha nova, que precisa achar um lugar livre no canvas).
+        mainContainer.x = _inheritedX;
+        mainContainer.y = _inheritedY;
+        figma.currentPage.selection = [mainContainer];
+        figma.viewport.scrollAndZoomIntoView([mainContainer]);
+        figma.ui.postMessage({ type: "handoff-complete", isUpdate: _isUpdate, timestamp: _ts });
+        return;
+      }
+
       // Inicializar fora da tela para evitar flash de sobreposição enquanto calcula posição
       mainContainer.x = -99999;
       mainContainer.y = -99999;
@@ -1990,7 +2176,16 @@ figma.ui.onmessage = async (msg) => {
       // olha para o resto do conteúdo da página. Aqui empurramos a ficha para a direita
       // até não sobrepor nenhum outro nó de topo (frames de design, specs do Handex etc.).
       try {
-        const _pageNodes = figma.currentPage.children.filter(n => n !== mainContainer && !_existingFichas.includes(n));
+        // Sections são só agrupadores visuais, sem conteúdo "por baixo" que
+        // a ficha possa cobrir -- tratá-las como obstáculo faz a ficha ser
+        // empurrada pela área da Section inteira, mesmo que o frame
+        // mapeado (ou qualquer outro) ocupe só uma fração dela. "Achata"
+        // cada Section nos seus filhos diretos antes de checar colisão,
+        // preservando a proteção real (nunca sobrepor um frame, mesmo
+        // dentro de uma Section) sem o falso positivo da área da Section.
+        const _pageNodes = figma.currentPage.children
+          .filter(n => n !== mainContainer && !_existingFichas.includes(n))
+          .flatMap(n => n.type === 'SECTION' ? n.children : [n]);
         let _collisionIterations = 0;
         let _hasCollision = true;
         while (_hasCollision && _collisionIterations < 50) {
@@ -3066,19 +3261,24 @@ figma.ui.onmessage = async (msg) => {
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
 
       // Convert hex color to rgb (stroke = themeColor, fill = themeFill)
-      const themeColor = hexToRgb(opts.color || '#005ca9');
+      const themeColor = hexToRgb(opts.color || '#2e2ee0');
       const themeFill  = hexToRgb(opts.fillColor || opts.color || '#EBF4FB');
 
       const _specSide = opts.guideSide || 'right';
+
+      const _tagRadius = 8;
+
+      const _layerTag = 'Spec';
 
       // Create Spec Card
       const specCard = figma.createFrame();
       specCard.name = 'Spec Notes';
       specCard.layoutMode = "VERTICAL";
-      specCard.paddingLeft = 16;
-      specCard.paddingRight = 16;
-      specCard.paddingTop = 16;
-      specCard.paddingBottom = 16;
+      const _cardPadding = 16;
+      specCard.paddingLeft = _cardPadding;
+      specCard.paddingRight = _cardPadding;
+      specCard.paddingTop = _cardPadding;
+      specCard.paddingBottom = _cardPadding;
       specCard.itemSpacing = 12;
       specCard.cornerRadius = 8;
       specCard.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
@@ -3101,7 +3301,7 @@ figma.ui.onmessage = async (msg) => {
       tagCircle.primaryAxisSizingMode = "FIXED";
       tagCircle.counterAxisSizingMode = "FIXED";
       tagCircle.resize(42, 42);
-      tagCircle.cornerRadius = 8;
+      tagCircle.cornerRadius = _tagRadius;
       tagCircle.fills = [{ type: "SOLID", color: themeFill }];
       tagCircle.strokes = [{ type: "SOLID", color: themeColor }];
       tagCircle.strokeWeight = 1.5;
@@ -3148,6 +3348,7 @@ figma.ui.onmessage = async (msg) => {
 
       if (opts.note) {
         const desc = figma.createText();
+        desc.name = '[Spec] Nota';
         desc.fontName = { family: "Inter", style: "Regular" };
         desc.fontSize = 11;
         desc.fills = [{ type: "SOLID", color: { r: 0.4, g: 0.4, b: 0.4 } }];
@@ -3260,7 +3461,7 @@ figma.ui.onmessage = async (msg) => {
         const linkTxt = figma.createText();
         linkTxt.fontName = { family: "Inter", style: "Regular" };
         linkTxt.fontSize = 11;
-        linkTxt.fills = [{ type: "SOLID", color: { r: 0, g: 0.4, b: 0.8 } }];
+        linkTxt.fills = [{ type: "SOLID", color: { r: 0.24, g: 0.24, b: 1 } }];
         linkTxt.characters = opts.link;
         linkTxt.textDecoration = "UNDERLINE";
         linkTxt.hyperlink = { type: "URL", value: opts.link };
@@ -3269,15 +3470,27 @@ figma.ui.onmessage = async (msg) => {
         specCard.appendChild(linkTxt);
       }
 
-      // Group variables
+      // Nós que entram no GROUP móvel (Conector + specCard). contour/chip
+      // ficam FORA do group, soltos na página e travados -- locked bloqueia
+      // seleção/edição direta mas não desacopla um nó de transformações do
+      // grupo PAI, então a única forma do marcador não se mover junto com o
+      // group ao arrastar é ele nunca ter sido filho dele. O vínculo entre
+      // os dois é feito por pluginData bidirecional (handexSpecMarkerId /
+      // handexSpecMarkerFor), gravado depois que specGroup existe.
       let groupNodes = [];
       let _absCardX = 0, _absCardY = 0, _absCardW = 0, _absCardH = 0;
+      // Declarado no escopo externo (não dentro do if(bounds) abaixo) --
+      // precisa ser lido depois da criação do group.
+      let contour = null;
 
       // Positioning
       const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
+      // Âncora do lado do elemento para o conector -- os bounds do próprio
+      // elemento.
+      let _markerAnchorBounds = bounds;
       if (bounds) {
         // Draw a dotted highlight frame around the node
-        const contour = figma.createFrame();
+        contour = figma.createFrame();
         contour.name = 'Destaque';
         contour.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
 
@@ -3291,6 +3504,7 @@ figma.ui.onmessage = async (msg) => {
         contour.strokeWeight = 2;
         contour.dashPattern = [4, 4];
         contour.locked = true;
+        contour.setPluginData('handexCategory', 'spec-marcador');
 
         // Tag chip on contour
         const chip = figma.createFrame();
@@ -3299,7 +3513,7 @@ figma.ui.onmessage = async (msg) => {
         chip.primaryAxisSizingMode = "FIXED";
         chip.counterAxisSizingMode = "FIXED";
         chip.resize(42, 42);
-        chip.cornerRadius = 8;
+        chip.cornerRadius = _tagRadius;
         chip.fills = [{ type: "SOLID", color: themeFill }];
         chip.strokes = [{ type: "SOLID", color: themeColor }];
         chip.strokeWeight = 1.5;
@@ -3315,7 +3529,12 @@ figma.ui.onmessage = async (msg) => {
         chip.x = 0;
         chip.y = 0;
 
-        groupNodes.push(contour);
+        // contour NÃO entra em groupNodes -- fica solto na página, fora do
+        // group que vai se mover (ver comentário acima). O vínculo
+        // bidirecional por pluginData, gravado após o specGroup existir, é o
+        // que os demais handlers (lock/hide/show/delete/highlight) usam pra
+        // encontrar um a partir do outro, então o
+        // comportamento precisa ser único independente da origem do marcador.
 
         // Append card to page first so Figma computes its real dimensions
         figma.currentPage.appendChild(specCard);
@@ -3324,9 +3543,14 @@ figma.ui.onmessage = async (msg) => {
         const _isVertSide = side === 'right' || side === 'left';
         const _specLetter = opts.letter;
 
-        // Âncora: frame de nível de página que contém o elemento
+        // Âncora: o FRAME que contém o elemento -- para não posicionar a
+        // spec por cima de outro frame. Sections são só agrupadores visuais
+        // (sem conteúdo "por baixo" que possa ser coberto), então param a
+        // subida sem virar âncora -- sem esse cuidado, um frame dentro de
+        // uma Section fazia a spec ser posicionada na altura da SECTION
+        // inteira em vez do frame específico.
         let _anchorNode = node;
-        while (_anchorNode.parent && _anchorNode.parent.type !== 'PAGE') {
+        while (_anchorNode.parent && _anchorNode.type !== 'FRAME' && _anchorNode.parent.type !== 'PAGE') {
           _anchorNode = _anchorNode.parent;
         }
         const _anchorBounds = _anchorNode.absoluteBoundingBox || bounds;
@@ -3341,19 +3565,23 @@ figma.ui.onmessage = async (msg) => {
           if (bb.x < _letterMap[l].x) _letterMap[l].x = bb.x;
           if (bb.y < _letterMap[l].topY) _letterMap[l].topY = bb.y;
         };
-        figma.currentPage.children.forEach(n => {
-          if (n.type !== 'GROUP') return;
-          // Novo formato semântico
-          const newFmt = n.name.match(/^\[Spec \| ([A-Z]\d*(?:\.\d+)*) \| ([a-z]+)\] /);
+        const _stackScanNodes = figma.currentPage.children;
+        _stackScanNodes.forEach(n => {
+          // handexCategory cobre specs novas (FRAME/GROUP); prefixo de nome
+          // cobre specs legadas criadas antes dessa marcação existir.
+          const _isSpecNode = n.getPluginData('handexCategory') === 'spec' || n.name.startsWith('[Spec');
+          if (!_isSpecNode) return;
+          // Novo formato semântico.
+          const newFmt = n.name.match(new RegExp('^\\[' + _layerTag + ' \\| ([A-Z]\\d*(?:\\.\\d+)*) \\| ([a-z]+)\\] '));
           if (newFmt) {
             if (newFmt[2] !== side) return;
-            const specNotes = n.children && n.children.find(c => c.type === 'FRAME' && (c.name === 'Spec Notes' || c.name === 'Ficha') && c !== specCard);
+            const specNotes = n.children && n.children.find(c => (c.type === 'FRAME' || c.type === 'INSTANCE') && (c.name === 'Spec Notes' || c.name === 'Ficha') && c !== specCard);
             if (!specNotes) return;
             const bb = specNotes.absoluteBoundingBox || specNotes.absoluteRenderBounds;
             if (bb) _updateLetterMap(newFmt[1], bb);
             return;
           }
-          // Formato legado: [Spec] NodeName
+          // Formato legado: [Spec] NodeName (specs anteriores a essa marcação).
           if (!n.name.startsWith('[Spec]')) return;
           const ficha = n.children && n.children.find(c => c.type === 'FRAME' && c.name.includes('/Ficha') && c !== specCard);
           if (!ficha) return;
@@ -3371,7 +3599,16 @@ figma.ui.onmessage = async (msg) => {
         const cardH = specCard.height;
         let targetX, targetY;
 
-        if (_letterMap[_specLetter]) {
+        if (opts.pinnedPosition) {
+          // Edição de spec (delete+recreate): mantém a spec exatamente onde
+          // estava, sem reempilhar — o scan de "mesma tag" acima não
+          // encontra mais a spec antiga (já foi apagada antes desta
+          // chamada), então sem isso ela seria posicionada como se fosse
+          // uma spec nova (empilhada no fim do grupo ou ao lado das
+          // últimas), "descendo" na tela sem motivo pro designer.
+          targetX = opts.pinnedPosition.x;
+          targetY = opts.pinnedPosition.y;
+        } else if (_letterMap[_specLetter]) {
           // Mesma letra → empilha na direção do lado
           targetX = _letterMap[_specLetter].x;
           if (side === 'top') {
@@ -3427,18 +3664,20 @@ figma.ui.onmessage = async (msg) => {
         const USE_NATIVE_CONNECTOR = false;
 
         if (opts.drawConnection !== false) {
+          // Âncora do lado do elemento: bounds do elemento/contorno.
+          const _anchorB = _markerAnchorBounds;
           let startPt, endPt;
           if (side === 'right') {
-            startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+            startPt = { x: _anchorB.x + _anchorB.width, y: _anchorB.y + _anchorB.height / 2 };
             endPt   = { x: specCard.x, y: specCard.y + specCard.height / 2 };
           } else if (side === 'left') {
-            startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
+            startPt = { x: _anchorB.x, y: _anchorB.y + _anchorB.height / 2 };
             endPt   = { x: specCard.x + specCard.width, y: specCard.y + specCard.height / 2 };
           } else if (side === 'bottom') {
-            startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
+            startPt = { x: _anchorB.x + _anchorB.width / 2, y: _anchorB.y + _anchorB.height };
             endPt   = { x: specCard.x + specCard.width / 2, y: specCard.y };
           } else { // top
-            startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
+            startPt = { x: _anchorB.x + _anchorB.width / 2, y: _anchorB.y };
             endPt   = { x: specCard.x + specCard.width / 2, y: specCard.y + specCard.height };
           }
 
@@ -3466,14 +3705,47 @@ figma.ui.onmessage = async (msg) => {
             figma.currentPage.appendChild(connector);
             groupNodes.push(connector);
           } else {
+            // Estilo opcional (mesmas fórmulas validadas em fluxos --
+            // _buildFlowConnection): 'straight' (padrão) | 'curved' (grau
+            // -100..100, deslocamento perpendicular em % da distância) |
+            // 'elbow' (1 dobra reta de 90°, ponto = interseção das retas
+            // que saem de startPt/endPt no eixo perpendicular ao lado --
+            // startPt/endPt aqui sempre saem em lados opostos correspondentes
+            // (right↔left, bottom↔top, ver cálculo acima), então 1 dobra
+            // sempre basta, sem o caso de 2 dobras que fluxos precisam para
+            // pares de lados não-opostos). Sem edição pós-criação aqui
+            // (diferente de fluxos) -- só no momento em que a spec é criada,
+            // e a linha não se realinha se o card for arrastado depois
+            // (limitação pré-existente, não agravada por isso, só mais
+            // perceptível visualmente com curva/esquina).
+            const _specConnectorStyle = opts.connectorStyle || 'straight';
+            const _specCurvature = _specConnectorStyle === 'curved' ? (opts.connectorCurvature || 0) : 0;
+            let connectorPath = `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}`;
+            if (_specConnectorStyle === 'elbow') {
+              const isHorizontal = side === 'right' || side === 'left';
+              const corner = isHorizontal ? { x: endPt.x, y: startPt.y } : { x: startPt.x, y: endPt.y };
+              connectorPath = `M ${startPt.x} ${startPt.y} L ${corner.x} ${corner.y} L ${endPt.x} ${endPt.y}`;
+            } else if (_specCurvature) {
+              const dx = endPt.x - startPt.x, dy = endPt.y - startPt.y;
+              const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+              const px = -dy / dist, py = dx / dist;
+              const offset = (_specCurvature / 100) * dist * 0.5;
+              const midX = (startPt.x + endPt.x) / 2, midY = (startPt.y + endPt.y) / 2;
+              const ctrlX = midX + px * offset, ctrlY = midY + py * offset;
+              connectorPath = `M ${startPt.x} ${startPt.y} Q ${ctrlX} ${ctrlY} ${endPt.x} ${endPt.y}`;
+            }
             const connector = figma.createVector();
             connector.name = 'Conector';
-            connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
             connector.strokes = [{ type: "SOLID", color: themeColor }];
             connector.strokeWeight = 1.5;
             connector.dashPattern = [4, 4];
             connector.strokeCap = "ROUND";
             figma.currentPage.appendChild(connector);
+            // vectorPaths embute coordenadas absolutas no `data` do SVG.
+            // figma.currentPage tem origem 0,0, então startPt/endPt (já
+            // absolutos) servem direto -- sem conversão, porque não há mais
+            // FRAME container cuja origem precise ser subtraída.
+            connector.vectorPaths = [{ windingRule: "NONZERO", data: connectorPath }];
             groupNodes.push(connector);
 
             const _DOT_R = 4;
@@ -3482,6 +3754,7 @@ figma.ui.onmessage = async (msg) => {
             startDot.resize(_DOT_R * 2, _DOT_R * 2);
             startDot.fills = [{ type: "SOLID", color: themeColor }];
             startDot.strokes = [];
+            startDot.locked = true;
             figma.currentPage.appendChild(startDot);
             startDot.x = startPt.x - _DOT_R;
             startDot.y = startPt.y - _DOT_R;
@@ -3492,6 +3765,7 @@ figma.ui.onmessage = async (msg) => {
             endDot.resize(_DOT_R * 2, _DOT_R * 2);
             endDot.fills = [{ type: "SOLID", color: themeColor }];
             endDot.strokes = [];
+            endDot.locked = true;
             figma.currentPage.appendChild(endDot);
             endDot.x = endPt.x - _DOT_R;
             endDot.y = endPt.y - _DOT_R;
@@ -3510,13 +3784,25 @@ figma.ui.onmessage = async (msg) => {
         groupNodes.push(specCard);
       }
 
-      // Always create group at the Page level to avoid nesting in selected components
+      // GROUP contendo só os nós móveis (Conector + specCard, e DotInicio/
+      // DotFim quando existem) -- contour/chip ficam de fora, soltos na
+      // página. figma.group() preserva as posições absolutas atuais dos
+      // nós (não precisa recalcular x/y relativo, diferente do FRAME).
       const specGroup = figma.group(groupNodes, figma.currentPage);
-      specGroup.name = `[Spec | ${opts.letter} | ${_specSide}] ${node.name}`;
+      specGroup.name = `[${_layerTag} | ${opts.letter} | ${_specSide}] ${node.name}`;
       specGroup.locked = false;
       specGroup.setPluginData('handexCategory', 'spec');
-      _reorderSpecGroupByTag(specGroup, opts.letter);
 
+      // Vínculo bidirecional entre o marcador solto (contour) e o group
+      // móvel -- é assim que os demais handlers (lock, hide, delete,
+      // highlight, unlock) encontram o marcador a partir do specGroup e
+      // vice-versa, já que não há mais relação de parentesco entre eles.
+      if (contour) {
+        contour.setPluginData('handexSpecMarkerFor', specGroup.id);
+        specGroup.setPluginData('handexSpecMarkerId', contour.id);
+      }
+
+      _reorderSpecGroupByTag(specGroup, opts.letter);
 
       figma.ui.postMessage({
         type: "spec-created",
@@ -3531,7 +3817,10 @@ figma.ui.onmessage = async (msg) => {
           type: opts.categoryLabel || "Sem categoria",
           note: opts.note,
           properties: opts.properties,
+          excecoes: opts.excecaoInicial ? [opts.excecaoInicial] : [],
           guideSide: opts.guideSide || 'right',
+          connectorStyle: opts.connectorStyle || 'straight',
+          connectorCurvature: opts.connectorCurvature || 0,
           cardX: _absCardX,
           cardY: _absCardY,
           cardW: _absCardW,
@@ -3543,10 +3832,23 @@ figma.ui.onmessage = async (msg) => {
     })();
   }
 
+  if (msg.type === "get-selection-name") {
+    const sel = figma.currentPage.selection;
+    figma.ui.postMessage({ type: "selection-name", name: sel.length > 0 ? sel[0].name : null });
+  }
+
   if (msg.type === "lock-spec") {
     const specNode = await figma.getNodeByIdAsync(msg.specId);
-    if (specNode && specNode.name && specNode.name.startsWith('[Spec | ')) {
+    if (specNode && specNode.name && /^\[Spec \| /.test(specNode.name)) {
       specNode.locked = true;
+      // contour está fora do group -- trava também via pluginData, reforço
+      // defensivo (já nasce locked=true na criação, mas cobre specs cujo
+      // marcador tenha sido destravado manualmente por engano).
+      const markerId = specNode.getPluginData('handexSpecMarkerId');
+      if (markerId) {
+        const marker = await figma.getNodeByIdAsync(markerId);
+        if (marker) marker.locked = true;
+      }
       figma.ui.postMessage({ type: "spec-locked", specId: msg.specId });
     }
   }
@@ -3558,18 +3860,34 @@ figma.ui.onmessage = async (msg) => {
       activeHighlightNode = null;
     }
 
+    const myToken = ++_highlightToken;
     const node = await figma.getNodeByIdAsync(msg.id);
+    // Uma chamada mais recente já assumiu enquanto este await estava em
+    // voo -- descarta este resultado sem tocar em activeHighlightNode (que
+    // já pertence à chamada mais nova) e sem criar um stroke órfão.
+    if (myToken !== _highlightToken) return;
     if (node && node.visible && _nodeOnCurrentPage(node)) {
       if (msg.selectNode !== false) {
         figma.currentPage.selection = [node];
       }
       if (msg.shouldScroll !== false) {
-        figma.viewport.scrollAndZoomIntoView([node]);
+        // contour (marcador) está fora do specGroup desde a reversão da
+        // migração para FRAME único -- enquadrar só o specGroup deixaria o
+        // contour de fora do zoom quando ele está distante (ex.: spec
+        // arrastada para longe do elemento original). Inclui o marcador
+        // vinculado via pluginData quando existir.
+        const zoomTargets = [node];
+        const markerId = node.getPluginData && node.getPluginData('handexSpecMarkerId');
+        if (markerId) {
+          const marker = await figma.getNodeByIdAsync(markerId);
+          if (marker) zoomTargets.push(marker);
+        }
+        figma.viewport.scrollAndZoomIntoView(zoomTargets);
       }
 
       if (msg.highlight && node.absoluteBoundingBox) {
         const hexToRgbLocal = (hex) => {
-          const h = (hex || '#0070af').replace('#', '');
+          const h = (hex || '#3d3dff').replace('#', '');
           return {
             r: parseInt(h.substring(0, 2), 16) / 255,
             g: parseInt(h.substring(2, 4), 16) / 255,
@@ -3590,12 +3908,20 @@ figma.ui.onmessage = async (msg) => {
         strokeRect.locked = true;
         strokeRect.cornerRadius = node.cornerRadius && typeof node.cornerRadius === 'number' ? node.cornerRadius : 0;
         figma.currentPage.appendChild(strokeRect);
+        // Outra chamada pode ter passado na frente entre o fim do await
+        // acima e este ponto -- checa de novo antes de assumir a variável
+        // compartilhada, senão o stroke recém-criado também ficaria órfão.
+        if (myToken !== _highlightToken) { try { strokeRect.remove(); } catch (e) {} return; }
         activeHighlightNode = strokeRect;
       }
     }
   }
 
   if (msg.type === "clear-highlight") {
+    // Invalida qualquer highlight-node ainda em voo (await pendente) --
+    // sem isso, ele poderia terminar depois deste clear e recriar um
+    // stroke que devia ter sido limpo.
+    _highlightToken++;
     if (activeHighlightNode) {
       try { activeHighlightNode.remove(); } catch (e) { }
       activeHighlightNode = null;
@@ -3605,17 +3931,28 @@ figma.ui.onmessage = async (msg) => {
   if (msg.type === "hide-node") {
     const node = await figma.getNodeByIdAsync(msg.id);
     if (node) {
-      if (msg.forceState !== undefined) {
-        node.visible = msg.forceState;
-      } else {
-        node.visible = false;
+      const targetVisible = msg.forceState !== undefined ? msg.forceState : false;
+      node.visible = targetVisible;
+      // contour está fora do specGroup -- ocultar o group não afeta o
+      // marcador, então replica a visibilidade nele via pluginData.
+      const markerId = node.getPluginData && node.getPluginData('handexSpecMarkerId');
+      if (markerId) {
+        const marker = await figma.getNodeByIdAsync(markerId);
+        if (marker) marker.visible = targetVisible;
       }
     }
   }
 
   if (msg.type === "show-node") {
     const node = await figma.getNodeByIdAsync(msg.id);
-    if (node) node.visible = true;
+    if (node) {
+      node.visible = true;
+      const markerId = node.getPluginData && node.getPluginData('handexSpecMarkerId');
+      if (markerId) {
+        const marker = await figma.getNodeByIdAsync(markerId);
+        if (marker) marker.visible = true;
+      }
+    }
   }
 
   if (msg.type === "hide-spec-lines") {
@@ -3628,12 +3965,155 @@ figma.ui.onmessage = async (msg) => {
     }
   }
 
+  // Edita o estilo da linha (reta/curva/esquinas) de uma spec já criada --
+  // mesmo precedente de hide-spec-lines (localizar Conector/DotInicio/DotFim
+  // por nome dentro do group), só que removendo e recriando esses 3 nós em
+  // vez de alternar .visible. Diferente de fluxos (edit-flow-connection), NÃO
+  // apaga o group inteiro -- specCard permanece intacto, só a linha é
+  // substituída. 'Destaque' está fora do specGroup (contour solto na página)
+  // e nunca é tocado aqui: a busca por nome inclui só Conector/DotInicio/DotFim.
+  // Recalcula a partir da posição ATUAL do card (não das coordenadas salvas
+  // na criação) -- resolve de brinde a limitação de "linha desalinha se o
+  // card for arrastado", pelo menos no momento da edição.
+  if (msg.type === "edit-spec-connector") {
+    try {
+      const specGroup = await figma.getNodeByIdAsync(msg.specId);
+      const node = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
+      if (!specGroup || !('findChildren' in specGroup) || !node) {
+        figma.ui.postMessage({ type: 'spec-connector-edit-failed', specId: msg.specId });
+        return;
+      }
+      const specCard = specGroup.findOne(n => n.name === 'Spec Notes');
+      const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
+      // specCard.x/y são relativos ao specGroup (GROUP) -- usa
+      // absoluteBoundingBox para obter a posição real no canvas, igual já
+      // se fazia para `node`. Continua necessário mesmo com GROUP (não só
+      // com FRAME): x/y de qualquer nó são sempre relativos ao parent
+      // imediato, e o specGroup pode ter sido movido pelo usuário.
+      const cardBounds = specCard && (specCard.absoluteBoundingBox || specCard.absoluteRenderBounds);
+      if (!specCard || !bounds || !cardBounds) {
+        figma.ui.postMessage({ type: 'spec-connector-edit-failed', specId: msg.specId });
+        return;
+      }
+
+      const wasVisible = specGroup.findChildren(n => n.name === 'Conector' || n.name === 'DotInicio' || n.name === 'DotFim')
+        .every(n => n.visible !== false);
+
+      const side = msg.guideSide || 'right';
+      let startPt, endPt;
+      if (side === 'right') {
+        startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+        endPt   = { x: cardBounds.x, y: cardBounds.y + cardBounds.height / 2 };
+      } else if (side === 'left') {
+        startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
+        endPt   = { x: cardBounds.x + cardBounds.width, y: cardBounds.y + cardBounds.height / 2 };
+      } else if (side === 'bottom') {
+        startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
+        endPt   = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y };
+      } else { // top
+        startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
+        endPt   = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y + cardBounds.height };
+      }
+
+      const _specConnectorStyle = msg.connectorStyle || 'straight';
+      const _specCurvature = _specConnectorStyle === 'curved' ? (msg.connectorCurvature || 0) : 0;
+
+      // vectorPaths e x/y de filhos são relativos à origem do specGroup
+      // (GROUP), não absolutos de página. Usa absoluteBoundingBox (não
+      // specGroup.x/.y) por segurança -- x/y de um GROUP são sempre
+      // derivados do bounding box dos filhos, então ler via
+      // absoluteBoundingBox é a forma robusta de saber a origem real,
+      // inclusive se o specGroup for movido para dentro de uma Section
+      // (ele nasce locked=false e o usuário pode arrastá-lo livremente).
+      const _groupBounds = specGroup.absoluteBoundingBox || specGroup.absoluteRenderBounds;
+      const _gx = _groupBounds.x, _gy = _groupBounds.y;
+      const localStart = { x: startPt.x - _gx, y: startPt.y - _gy };
+      const localEnd = { x: endPt.x - _gx, y: endPt.y - _gy };
+
+      let connectorPath = `M ${localStart.x} ${localStart.y} L ${localEnd.x} ${localEnd.y}`;
+      if (_specConnectorStyle === 'elbow') {
+        const isHorizontal = side === 'right' || side === 'left';
+        const corner = isHorizontal ? { x: localEnd.x, y: localStart.y } : { x: localStart.x, y: localEnd.y };
+        connectorPath = `M ${localStart.x} ${localStart.y} L ${corner.x} ${corner.y} L ${localEnd.x} ${localEnd.y}`;
+      } else if (_specCurvature) {
+        const dx = localEnd.x - localStart.x, dy = localEnd.y - localStart.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const px = -dy / dist, py = dx / dist;
+        const offset = (_specCurvature / 100) * dist * 0.5;
+        const midX = (localStart.x + localEnd.x) / 2, midY = (localStart.y + localEnd.y) / 2;
+        const ctrlX = midX + px * offset, ctrlY = midY + py * offset;
+        connectorPath = `M ${localStart.x} ${localStart.y} Q ${ctrlX} ${ctrlY} ${localEnd.x} ${localEnd.y}`;
+      }
+
+      const themeColor = hexToRgb(msg.color || '#2e2ee0');
+
+      const oldLineNodes = specGroup.findChildren(n => n.name === 'Conector' || n.name === 'DotInicio' || n.name === 'DotFim');
+      oldLineNodes.forEach(n => n.remove());
+
+      const connector = figma.createVector();
+      connector.name = 'Conector';
+      connector.x = 0;
+      connector.y = 0;
+      connector.vectorPaths = [{ windingRule: "NONZERO", data: connectorPath }];
+      connector.strokes = [{ type: "SOLID", color: themeColor }];
+      connector.strokeWeight = 1.5;
+      connector.dashPattern = [4, 4];
+      connector.strokeCap = "ROUND";
+      connector.visible = wasVisible;
+      connector.locked = false;
+      specGroup.appendChild(connector);
+
+      const _DOT_R = 4;
+      const startDot = figma.createEllipse();
+      startDot.name = 'DotInicio';
+      startDot.resize(_DOT_R * 2, _DOT_R * 2);
+      startDot.fills = [{ type: "SOLID", color: themeColor }];
+      startDot.strokes = [];
+      startDot.visible = wasVisible;
+      startDot.locked = true;
+      specGroup.appendChild(startDot);
+      startDot.x = localStart.x - _DOT_R;
+      startDot.y = localStart.y - _DOT_R;
+
+      const endDot = figma.createEllipse();
+      endDot.name = 'DotFim';
+      endDot.resize(_DOT_R * 2, _DOT_R * 2);
+      endDot.fills = [{ type: "SOLID", color: themeColor }];
+      endDot.strokes = [];
+      endDot.visible = wasVisible;
+      endDot.locked = true;
+      specGroup.appendChild(endDot);
+      endDot.x = localEnd.x - _DOT_R;
+      endDot.y = localEnd.y - _DOT_R;
+
+      figma.ui.postMessage({
+        type: 'spec-connector-edited',
+        specId: msg.specId,
+        connectorStyle: _specConnectorStyle,
+        connectorCurvature: _specCurvature
+      });
+    } catch (e) {
+      figma.ui.postMessage({ type: 'spec-connector-edit-failed', specId: msg.specId, message: e.message });
+    }
+  }
+
   if (msg.type === "unlock-spec-group") {
     const targetLocked = msg.locked !== undefined ? msg.locked : false;
     for (const specId of (msg.specIds || [])) {
       const specGroup = await figma.getNodeByIdAsync(specId);
       if (!specGroup) continue;
+      // specGroup (GROUP) só contém Conector + specCard (+ DotInicio/DotFim)
+      // -- contour nunca esteve dentro dele, então travar/destravar o group
+      // inteiro já respeita a regra de negócio (só linha e posição do card
+      // são editáveis) sem precisar de lock seletivo por filho.
       specGroup.locked = targetLocked;
+      // Reforço defensivo: o marcador vinculado nunca pode ser destravado,
+      // mesmo que o group esteja sendo destravado.
+      const markerId = specGroup.getPluginData('handexSpecMarkerId');
+      if (markerId) {
+        const destaque = await figma.getNodeByIdAsync(markerId);
+        if (destaque) destaque.locked = true;
+      }
     }
   }
 
@@ -3713,6 +4193,14 @@ figma.ui.onmessage = async (msg) => {
   if (msg.type === "delete-node") {
     const node = await figma.getNodeByIdAsync(msg.id);
     if (node) {
+      // contour (marcador) está fora do specGroup -- remove() no group não
+      // o leva junto, então busca e remove o marcador vinculado primeiro,
+      // senão ele fica órfão no canvas.
+      const markerId = node.getPluginData && node.getPluginData('handexSpecMarkerId');
+      if (markerId) {
+        const marker = await figma.getNodeByIdAsync(markerId);
+        if (marker) { try { marker.remove(); } catch (e) { } }
+      }
       node.remove();
       figma.notify("Item excluído com sucesso");
     }
@@ -3757,18 +4245,53 @@ figma.ui.onmessage = async (msg) => {
     const selection = figma.currentPage.selection;
     const isEvent = msg.flowType === "event_start" || msg.flowType === "event_end";
 
-    if (!isEvent && selection.length !== 2) {
-      figma.notify("Selecione exatamente dois elementos para conectar.");
-      return;
-    }
-    if (isEvent && selection.length === 0) {
-      figma.notify("Selecione pelo menos um elemento.");
+    if (isEvent) {
+      if (selection.length === 0) {
+        figma.notify("Selecione pelo menos um elemento.");
+        return;
+      }
+      await _buildFlowConnection(selection[0], null, msg);
       return;
     }
 
-    const nodeA = selection[0];
-    const nodeB = selection[1] || null;
-    await _buildFlowConnection(nodeA, nodeB, msg);
+    if (selection.length < 2) {
+      figma.notify("Selecione pelo menos dois elementos para conectar.");
+      return;
+    }
+
+    if (selection.length === 2) {
+      await _buildFlowConnection(selection[0], selection[1], msg);
+      return;
+    }
+
+    // 3+ elementos: conecta em sequência (A→B→C→D), uma conexão a menos que
+    // o total de elementos. A ordem de figma.currentPage.selection reflete
+    // a ordem interna de camadas do Figma, não a ordem de clique do usuário
+    // -- por isso ordena espacialmente (esquerda→direita, empate por
+    // cima→baixo) antes de encadear, resultado previsível independente de
+    // como o Figma devolveu a seleção.
+    const ordered = [...selection].sort((a, b) => {
+      const ba = a.absoluteBoundingBox || a.absoluteRenderBounds;
+      const bb = b.absoluteBoundingBox || b.absoluteRenderBounds;
+      if (!ba || !bb) return 0;
+      if (Math.abs(ba.x - bb.x) > 1) return ba.x - bb.x;
+      return ba.y - bb.y;
+    });
+    figma.ui.postMessage({ type: 'flow-batch-started' });
+    let created = 0;
+    for (let i = 0; i < ordered.length - 1; i++) {
+      // Cada conexão da sequência precisa de flowId/nextFlowNumber próprios
+      // -- sem isso, todas as conexões do lote colidiriam no mesmo
+      // handexFlowId (duplicaria/substituiria umas às outras na ficha) e
+      // teriam o mesmo número sequencial no nome do grupo.
+      const segMsg = Object.assign({}, msg, {
+        flowId: `${msg.flowId || Date.now()}-${i}`,
+        nextFlowNumber: (msg.nextFlowNumber || 1) + i
+      });
+      await _buildFlowConnection(ordered[i], ordered[i + 1], segMsg);
+      created++;
+    }
+    figma.ui.postMessage({ type: 'flow-batch-created', count: created });
   }
 
   // Recria um fluxo salvo em handoffData.createdFlows (import de backup JSON).
@@ -3785,6 +4308,30 @@ figma.ui.onmessage = async (msg) => {
     if (!nodeA || (!isEvent && msg.targetId && !nodeB)) {
       figma.ui.postMessage({ type: 'flow-recreate-failed', flowName: msg.flowName || '' });
       return;
+    }
+
+    await _buildFlowConnection(nodeA, nodeB, msg);
+  }
+
+  // Edita curvatura/texto de um fluxo já criado -- não há API do Figma pra
+  // "reformar" um VECTOR existente com um path diferente preservando o
+  // resto do grupo (seta, chip de texto reposicionado), então apaga o
+  // grupo antigo e recria do zero com os parâmetros novos, preservando
+  // flowUid pra não perder o vínculo com a ficha (insert-flows-in-ficha).
+  if (msg.type === "edit-flow-connection") {
+    const nodeA = msg.sourceId ? await figma.getNodeByIdAsync(msg.sourceId) : null;
+    const nodeB = msg.targetId ? await figma.getNodeByIdAsync(msg.targetId) : null;
+
+    if (!nodeA) {
+      figma.ui.postMessage({ type: 'flow-edit-failed', reason: 'nodes-nao-encontrados' });
+      return;
+    }
+
+    if (msg.oldGroupId) {
+      try {
+        const oldGroup = await figma.getNodeByIdAsync(msg.oldGroupId);
+        if (oldGroup) oldGroup.remove();
+      } catch (e) {}
     }
 
     await _buildFlowConnection(nodeA, nodeB, msg);
@@ -3910,7 +4457,7 @@ figma.ui.onmessage = async (msg) => {
         n => n.type === 'FRAME' && n.name.startsWith(_prefix)
       );
       if (fichas.length === 0) {
-        figma.ui.postMessage({ type: 'ficha-version-pulled', versao: null });
+        figma.ui.postMessage({ type: 'ficha-version-pulled', versao: null, temFicha: false });
         return;
       }
       // Nome inclui timestamp "YYYY-MM-DD HH:MM" no final -- ordenação de string já resolve "mais recente"
@@ -3919,12 +4466,13 @@ figma.ui.onmessage = async (msg) => {
       const campoVersao = latest.findOne(n => n.type === 'FRAME' && n.name === '[Campo] Versão');
       const versaoText = campoVersao ? campoVersao.findAll(n => n.type === 'TEXT')[1] : null;
       const versao = versaoText ? versaoText.characters.trim() : null;
-      figma.ui.postMessage({ type: 'ficha-version-pulled', versao: (versao && versao !== '-') ? versao : null });
+      figma.ui.postMessage({ type: 'ficha-version-pulled', versao: (versao && versao !== '-') ? versao : null, temFicha: true });
     } catch (e) {
       figma.ui.postMessage({ type: 'ficha-version-pulled', versao: null });
     }
     return;
   }
+
 
   // â”€â”€â”€ INJECT FRAMEWORK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (msg.type === 'inject-framework') {
@@ -3937,7 +4485,7 @@ figma.ui.onmessage = async (msg) => {
         try { await figma.loadFontAsync(font); } catch(e) {}
       }
 
-      const CAIXA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 205.51265 46.553631"><g transform="translate(-284.78446,-475.51214)"><g transform="matrix(1.25,0,0,-1.25,15.493106,1024.9702)"><g transform="scale(0.24,0.24)"><path d="m 1107.19,1780.04 -17.74,-44.21 24.55,0 -6.73,44.39 -0.08,-0.18 z m -93.98,-101.49 72.77,149.83 55.02,0 30.68,-149.83 -48.3,0 -3.56,19.97 -46.86,0 -10.78,-19.97 -48.97,0 z m 181.34,0 21.08,149.83 48.67,0 -21.07,-149.83 -48.68,0 z m 323.71,101.67 -17.81,-44.39 24.54,0 -6.73,44.39 z m -94.06,-101.67 72.78,149.83 55.01,0 30.69,-149.83 -48.31,0 -3.55,19.97 -46.87,0 -10.78,-19.97 -48.97,0" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1316.6,1748.61 60.99,0 41.79,-69.21 -61,0 -41.78,69.21" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1322.94,1759.24 63.04,0 54.75,68.92 -63.04,0 -54.75,-68.92" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1259.91,1678.98 63.03,0 54.75,69.76 -63.04,0 -54.74,-69.76" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1282.64,1829 58.83,0 40.31,-69.76 -58.84,0 -40.3,69.76" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1014.65,1823.02 -4.68,-44.07 c -17.939,24.75 -59.517,7.67 -62.782,-23.16 -4.149,-39.13 35.867,-48.25 57.642,-25.21 l -4.69,-44.17 c -6.499,-3.19 -12.855,-5.67 -19.128,-7.34 -6.239,-1.68 -12.492,-2.57 -18.696,-2.7 -7.8,-0.17 -14.867,0.65 -21.234,2.44 -6.367,1.76 -12.129,4.56 -17.227,8.34 -9.832,7.19 -16.941,16.33 -21.32,27.45 -4.379,11.16 -5.82,23.75 -4.328,37.82 1.203,11.31 4.051,21.62 8.59,30.97 4.5,9.34 10.734,17.84 18.672,25.54 7.504,7.34 15.676,12.88 24.519,16.64 8.809,3.73 18.422,5.72 28.813,5.94 6.207,0.13 12.297,-0.49 18.207,-1.92 5.942,-1.42 11.802,-3.64 17.642,-6.57" style="fill:#0070af;fill-opacity:1;fill-rule:evenodd;stroke:none"/></g></g></g></svg>`;
+      const CAIXA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 205.51265 46.553631"><g transform="translate(-284.78446,-475.51214)"><g transform="matrix(1.25,0,0,-1.25,15.493106,1024.9702)"><g transform="scale(0.24,0.24)"><path d="m 1107.19,1780.04 -17.74,-44.21 24.55,0 -6.73,44.39 -0.08,-0.18 z m -93.98,-101.49 72.77,149.83 55.02,0 30.68,-149.83 -48.3,0 -3.56,19.97 -46.86,0 -10.78,-19.97 -48.97,0 z m 181.34,0 21.08,149.83 48.67,0 -21.07,-149.83 -48.68,0 z m 323.71,101.67 -17.81,-44.39 24.54,0 -6.73,44.39 z m -94.06,-101.67 72.78,149.83 55.01,0 30.69,-149.83 -48.31,0 -3.55,19.97 -46.87,0 -10.78,-19.97 -48.97,0" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1316.6,1748.61 60.99,0 41.79,-69.21 -61,0 -41.78,69.21" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1322.94,1759.24 63.04,0 54.75,68.92 -63.04,0 -54.75,-68.92" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1259.91,1678.98 63.03,0 54.75,69.76 -63.04,0 -54.74,-69.76" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1282.64,1829 58.83,0 40.31,-69.76 -58.84,0 -40.3,69.76" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1014.65,1823.02 -4.68,-44.07 c -17.939,24.75 -59.517,7.67 -62.782,-23.16 -4.149,-39.13 35.867,-48.25 57.642,-25.21 l -4.69,-44.17 c -6.499,-3.19 -12.855,-5.67 -19.128,-7.34 -6.239,-1.68 -12.492,-2.57 -18.696,-2.7 -7.8,-0.17 -14.867,0.65 -21.234,2.44 -6.367,1.76 -12.129,4.56 -17.227,8.34 -9.832,7.19 -16.941,16.33 -21.32,27.45 -4.379,11.16 -5.82,23.75 -4.328,37.82 1.203,11.31 4.051,21.62 8.59,30.97 4.5,9.34 10.734,17.84 18.672,25.54 7.504,7.34 15.676,12.88 24.519,16.64 8.809,3.73 18.422,5.72 28.813,5.94 6.207,0.13 12.297,-0.49 18.207,-1.92 5.942,-1.42 11.802,-3.64 17.642,-6.57" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none"/></g></g></g></svg>`;
 
       const mkLogo = (h) => {
         try {
@@ -3977,17 +4525,17 @@ figma.ui.onmessage = async (msg) => {
       };
 
       const C = {
-        blue:      { r: 0,     g: 0.439, b: 0.686 },
-        blueDark:  { r: 0,     g: 0.247, b: 0.478 },
-        blueLight: { r: 0.910, g: 0.957, b: 0.980 },
-        orange:    { r: 0.965, g: 0.510, b: 0.165 },
+        blue:      { r: 0.239, g: 0.239, b: 1     },
+        blueDark:  { r: 0.137, g: 0.137, b: 0.659 },
+        blueLight: { r: 0.933, g: 0.941, b: 1     },
+        orange:    { r: 0.961, g: 0.706, b: 0     },
         teal:      { r: 0.298, g: 0.745, b: 0.714 },
         tealLight: { r: 0.851, g: 0.961, b: 0.957 },
         lime:      { r: 0.831, g: 0.969, b: 0.188 },
         yellow:    { r: 1,     g: 0.949, b: 0.749 },
         white:     { r: 1,     g: 1,     b: 1     },
         bg:        { r: 0.941, g: 0.953, b: 0.969 },
-        bgBlue:    { r: 0.910, g: 0.957, b: 0.980 },
+        bgBlue:    { r: 0.933, g: 0.941, b: 1     },
         line:      { r: 0.882, g: 0.894, b: 0.910 },
         text:      { r: 0.118, g: 0.161, b: 0.231 },
         muted:     { r: 0.392, g: 0.455, b: 0.545 },

@@ -5,7 +5,7 @@
 //   - scanFrame + render dos cards de specs (renderSpecs, createAccordionSection, createSpecItem)
 //   - filtros e busca (filterSpecItems, toggleStatusFilter)
 //   - botões de visibilidade (updateHideAllSpecsButtonState, updateGroupVisButtonState, toggleAllSpecsVisibility)
-//   - modal de criação (openSpecFormModal, closeSpecFormModal, requestSpecProperties, confirmSpecProperties)
+//   - modal de criação (openSpecFormModal, closeSpecFormModal, requestSpecProperties, advanceToSpecExceptionStep, finalizeSpecCreation)
 //   - categorias customizadas (saveCategories, renderCategoryDropdown, renderCategoryList, toggleCategoryManager, addCategory, deleteCategory, renameCategory)
 //   - render no plugin (renderSpecsList)
 //   - exportação (exportSpecsToMd)
@@ -176,7 +176,7 @@
     }
 
     // ── Accordion card por frame (Step 3 — Documentação & Specs) ────────
-    function renderFrameCard(frame) {
+    function renderFrameCard(frame, autoExpand = false) {
       const list = document.getElementById('list-frames');
       if (!list) return;
 
@@ -220,25 +220,32 @@
         <div id="frame-header-${fid}"
           class="flex items-center gap-2 px-3 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors select-none"
           onclick="toggleFrameAccordion('${fid}')">
-          <button type="button"
-            onclick="event.stopPropagation(); focusNode('${frame.figmaId}')"
-            title="Focar no elemento no canvas"
-            aria-label="Focar no elemento no canvas"
-            class="w-7 h-7 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/30 text-[#0070af] hover:bg-blue-100 transition-colors shrink-0">
-            <i data-lucide="locate" class="w-3.5 h-3.5"></i>
-          </button>
           <div class="flex-1 min-w-0">
             <p class="text-[12px] font-bold text-slate-800 dark:text-white truncate">${frame.nome}</p>
             <p id="frame-subtitle-${fid}" class="${_subCls}">${_subLabel}</p>
           </div>
-          <button type="button"
-            onclick="event.stopPropagation(); removeFrame('${fid}')"
-            title="Remover frame"
-            aria-label="Remover frame"
-            class="w-7 h-7 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shrink-0">
-            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-          </button>
           <i data-lucide="chevron-down" id="frame-chevron-${fid}" class="w-4 h-4 text-gray-400 transition-transform shrink-0"></i>
+        </div>
+
+        <!-- Ações -->
+        <div class="flex items-center justify-end gap-2 px-3 py-1.5 border-t border-gray-50 dark:border-dark-line bg-gray-50/50 dark:bg-slate-900/30">
+          <span class="text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider shrink-0">Ações</span>
+          <div class="flex items-center gap-0.5">
+            <button type="button"
+              onclick="focusNode('${frame.figmaId}')"
+              title="Focar no elemento no canvas"
+              aria-label="Focar no elemento no canvas"
+              class="w-7 h-7 flex items-center justify-center rounded-xl text-[#3d3dff] hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors shrink-0">
+              <i data-lucide="locate" class="w-3.5 h-3.5"></i>
+            </button>
+            <button type="button"
+              onclick="removeFrame('${fid}')"
+              title="Remover frame"
+              aria-label="Remover frame"
+              class="w-7 h-7 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shrink-0">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
         </div>
 
         <!-- Corpo -->
@@ -283,7 +290,7 @@
               <span class="flex-1 text-[12px] font-bold text-slate-700 dark:text-white">Tokens Escaneados</span>
               <span id="sub-count-tokens-${fid}" class="text-[10px] text-slate-500 dark:text-dark-muted mr-1"></span>
               <span id="sub-spinner-tokens-${fid}" class="hidden mr-1.5">
-                <i data-lucide="loader-2" class="w-3 h-3 text-[#0070af] animate-spin"></i>
+                <i data-lucide="loader-2" class="w-3 h-3 text-[#3d3dff] animate-spin"></i>
               </span>
               <i data-lucide="chevron-right" id="sub-chev-tokens-${fid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0"></i>
             </button>
@@ -306,7 +313,7 @@
                 <input type="checkbox" id="check-done-${fid}" class="sr-only peer"
                   ${frame.audit && frame.audit.checkDone ? 'checked' : ''}
                   onchange="setFrameCheckDone('${fid}', this.checked)">
-                <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#0070af]"></div>
+                <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#3d3dff]"></div>
               </label>
             </div>
 
@@ -317,7 +324,7 @@
                 <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug">Re-escaneia o frame após ajustes</p>
               </div>
               <button onclick="scanFrame('${fid}')"
-                class="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#0070af]/8 hover:bg-[#0070af]/15 border border-[#0070af]/20 rounded-xl text-[#0070af] dark:text-blue-400 text-[10px] font-bold transition-colors shrink-0">
+                class="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#3d3dff]/8 hover:bg-[#3d3dff]/15 border border-[#3d3dff]/20 rounded-xl text-[#3d3dff] dark:text-blue-400 text-[10px] font-bold transition-colors shrink-0">
                 <i data-lucide="refresh-cw" class="w-3 h-3"></i>
                 Escanear
               </button>
@@ -346,7 +353,7 @@
               <textarea id="audit-obs-${fid}" rows="2"
                 placeholder="Descreva os desvios encontrados ou o motivo da não conformidade com o DSC..."
                 oninput="setFrameAuditObs('${fid}', this.value)"
-                class="${_shouldShowAuditObs(frame) ? '' : 'hidden'} w-full bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl px-3 py-2 text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 resize-none focus:ring-2 focus:ring-[#0070af]/20 outline-none transition-all">${frame.audit && frame.audit.observacoes ? frame.audit.observacoes : ''}</textarea>
+                class="${_shouldShowAuditObs(frame) ? '' : 'hidden'} w-full bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl px-3 py-2 text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 resize-none focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all">${frame.audit && frame.audit.observacoes ? frame.audit.observacoes : ''}</textarea>
             </div>
           </div>
 
@@ -362,7 +369,13 @@
 
       if (frame.specs) { renderSpecs(frame.specs, fid); showFrameSection(fid, 'tokens'); }
 
-      toggleFrameAccordion(fid);
+      // Expandir + focar automaticamente só faz sentido para um frame
+      // RECÉM-REGISTRADO (mostra o resultado do scan na hora) -- ao
+      // reconstruir a lista inteira (restoreUIFromState, abrir a tela com
+      // frames já existentes), isso não deve rodar para cada card, senão o
+      // viewport pula pra cada frame do array (bug reportado: abrir a tela
+      // "joga" pro primeiro item sem nenhum clique do usuário).
+      if (autoExpand) toggleFrameAccordion(fid);
     }
 
     // ── Spec helpers (inline edit, obs, visibility) ──────────────────
@@ -497,7 +510,7 @@
 
       Object.keys(grouped).sort().forEach(letter => {
         const specs = grouped[letter];
-        const color = specs[0].color || '#005ca9';
+        const color = specs[0].color || '#2e2ee0';
         const groupEl = document.createElement('div');
         groupEl.className = 'mb-3';
 
@@ -518,7 +531,7 @@
           <input type="text" value="${groupName.replace(/"/g, '&quot;')}"
             placeholder="Nomear grupo..."
             title="Nome do grupo"
-            class="flex-1 min-w-0 text-[10px] font-bold text-slate-500 dark:text-dark-muted bg-transparent border border-transparent focus:border-[#0070af]/30 focus:ring-1 focus:ring-[#0070af]/20 rounded px-1 py-0.5 outline-none placeholder:text-gray-400 transition-all"
+            class="flex-1 min-w-0 text-[10px] font-bold text-slate-500 dark:text-dark-muted bg-transparent border border-transparent focus:border-[#3d3dff]/30 focus:ring-1 focus:ring-[#3d3dff]/20 rounded px-1 py-0.5 outline-none placeholder:text-gray-400 transition-all"
             onchange="updateSpecGroupName('${frameId}', '${letter}', this.value)"
             onclick="event.stopPropagation()" />
           <span class="text-[10px] text-slate-500 dark:text-dark-muted shrink-0">${specs.length} esp.</span>
@@ -530,19 +543,19 @@
           <button type="button" title="${isLinesHidden ? 'Exibir linhas' : 'Ocultar linhas'}"
             aria-label="${isLinesHidden ? 'Exibir linhas' : 'Ocultar linhas'}"
             onclick="event.stopPropagation(); toggleSpecLinesVisibility('${frameId}', '${letter}')"
-            class="w-5 h-5 flex items-center justify-center ${isLinesHidden ? 'text-gray-400' : 'text-slate-500'} hover:text-[#0070af] transition-colors shrink-0">
+            class="w-5 h-5 flex items-center justify-center ${isLinesHidden ? 'text-gray-400' : 'text-slate-500'} hover:text-[#3d3dff] transition-colors shrink-0">
             <i data-lucide="spline" class="w-3 h-3"></i>
           </button>
           <button type="button" title="${isGroupHidden ? 'Exibir grupo' : 'Ocultar grupo'}"
             aria-label="${isGroupHidden ? 'Exibir grupo' : 'Ocultar grupo'}"
             onclick="event.stopPropagation(); toggleSpecGroupVisibility('${frameId}', '${letter}')"
-            class="w-5 h-5 flex items-center justify-center ${isGroupHidden ? 'text-gray-400' : 'text-slate-500'} hover:text-[#0070af] transition-colors shrink-0">
+            class="w-5 h-5 flex items-center justify-center ${isGroupHidden ? 'text-gray-400' : 'text-slate-500'} hover:text-[#3d3dff] transition-colors shrink-0">
             <i data-lucide="${isGroupHidden ? 'eye-off' : 'eye'}" class="w-3 h-3"></i>
           </button>
           <button type="button" title="${isGroupUnlocked ? 'Travar grupo' : 'Destravar grupo'}"
             aria-label="${isGroupUnlocked ? 'Travar grupo' : 'Destravar grupo'}"
             onclick="event.stopPropagation(); toggleSpecGroupLock('${frameId}', '${letter}')"
-            class="w-5 h-5 flex items-center justify-center ${isGroupUnlocked ? 'text-amber-500' : 'text-slate-500'} hover:text-[#0070af] transition-colors shrink-0">
+            class="w-5 h-5 flex items-center justify-center ${isGroupUnlocked ? 'text-amber-500' : 'text-slate-500'} hover:text-[#3d3dff] transition-colors shrink-0">
             <i data-lucide="${isGroupUnlocked ? 'lock-open' : 'lock'}" class="w-3 h-3"></i>
           </button>`;
         groupEl.appendChild(groupHeader);
@@ -617,28 +630,28 @@
               <div class="flex-1 min-w-0">
                 <input type="text" value="${(spec.name || '').replace(/"/g, '&quot;')}"
                   title="Clique para editar o título"
-                  class="w-full text-[11px] font-semibold text-slate-700 dark:text-white bg-transparent border border-transparent focus:border-[#0070af]/30 focus:ring-1 focus:ring-[#0070af]/20 rounded px-1 py-0 outline-none cursor-text transition-all"
+                  class="w-full text-[11px] font-semibold text-slate-700 dark:text-white bg-transparent border border-transparent focus:border-[#3d3dff]/30 focus:ring-1 focus:ring-[#3d3dff]/20 rounded px-1 py-0 outline-none cursor-text transition-all"
                   onchange="updateSpecTitle('${frameId}', ${spec._idx}, this.value)"
                   onclick="event.stopPropagation()" />
                 ${spec.category ? `<span class="inline-flex mt-0.5 px-1.5 py-0.5 rounded-full border ${_ccPill.border} text-[9px] font-bold ${_ccPill.text} ${_ccPill.bg}">${spec.categoryLabel || spec.category}</span>` : `<p class="text-[9px] text-slate-400 dark:text-slate-600 px-1 leading-none">Sem categoria</p>`}
               </div>
               ${hasRawTokenWarning ? `<span title="Valores sem token — use Check Design" class="w-4 h-4 flex items-center justify-center text-amber-400 shrink-0"><i data-lucide="alert-triangle" class="w-3 h-3"></i></span>` : ''}
-              <span id="exc-badge-${frameId}-${specIdx}" class="px-1 py-0.5 rounded bg-orange-50 text-[9px] font-bold text-orange-500 shrink-0 ${excCount > 0 ? '' : 'hidden'}">${excCount} exc</span>
+              <span id="exc-badge-${frameId}-${specIdx}" class="px-1 py-0.5 rounded bg-orange-50 text-[9px] font-bold text-orange-800 shrink-0 ${excCount > 0 ? '' : 'hidden'}">${excCount} exc</span>
               <button type="button" title="Focar no elemento no canvas" aria-label="Focar no elemento no canvas"
                 onclick="event.stopPropagation(); focusNode('${spec.id}')"
-                class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
+                class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-[#3d3dff] transition-colors shrink-0">
                 <i data-lucide="locate" class="w-3 h-3"></i>
               </button>
               <button type="button" title="${isHidden ? 'Mostrar' : 'Ocultar'} no canvas"
                 aria-label="${isHidden ? 'Mostrar' : 'Ocultar'} no canvas"
                 onclick="event.stopPropagation(); toggleSpecVisibility('${frameId}', ${spec._idx})"
-                class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
+                class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-[#3d3dff] transition-colors shrink-0">
                 <i data-lucide="${isHidden ? 'eye-off' : 'eye'}" class="w-3 h-3"></i>
               </button>
               <button type="button" title="${spec.linesHidden ? 'Exibir linhas' : 'Ocultar linhas'}"
                 aria-label="${spec.linesHidden ? 'Exibir linhas' : 'Ocultar linhas'}"
                 onclick="event.stopPropagation(); toggleSpecItemLines('${frameId}', ${spec._idx})"
-                class="w-5 h-5 flex items-center justify-center ${spec.linesHidden ? 'text-gray-400' : 'text-slate-500'} hover:text-[#0070af] transition-colors shrink-0">
+                class="w-5 h-5 flex items-center justify-center ${spec.linesHidden ? 'text-gray-400' : 'text-slate-500'} hover:text-[#3d3dff] transition-colors shrink-0">
                 <i data-lucide="spline" class="w-3 h-3"></i>
               </button>
               <i data-lucide="chevron-down" id="chev-${detailsId}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0"></i>
@@ -655,14 +668,14 @@
               <!-- Observations -->
               <div class="mb-3">
                 <textarea placeholder="Observações sobre esta spec..."
-                  class="w-full text-[11px] text-slate-600 dark:text-slate-300 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg px-2 py-1.5 resize-none outline-none placeholder:text-gray-300 focus:border-[#0070af]/30 transition-all"
+                  class="w-full text-[11px] text-slate-600 dark:text-slate-300 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg px-2 py-1.5 resize-none outline-none placeholder:text-gray-300 focus:border-[#3d3dff]/30 transition-all"
                   rows="2"
                   onchange="updateSpecObs('${frameId}', ${spec._idx}, this.value)">${spec.obs || ''}</textarea>
               </div>
               <!-- Cenários de Exceção -->
               <div>
                 <div class="flex items-center justify-between mb-1.5">
-                  <p class="text-[9px] font-bold text-orange-500 uppercase tracking-wider">Cenários de Exceção</p>
+                  <p class="text-[9px] font-bold text-orange-800 uppercase tracking-wider">Cenários de Exceção</p>
                   <div class="flex items-center gap-1.5">
                     ${(spec.excecoes || []).length > 0 ? `
                     <button type="button" onclick="event.stopPropagation(); refreshSpecCardOnCanvas('${frameId}', ${spec._idx})"
@@ -671,7 +684,7 @@
                       <i data-lucide="refresh-cw" class="w-2.5 h-2.5"></i> Atualizar card
                     </button>` : ''}
                     <button type="button" onclick="event.stopPropagation(); openSpecException('${frameId}', ${spec._idx})"
-                      class="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/30 rounded-md hover:bg-orange-100 transition-colors">
+                      class="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-bold text-orange-800 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/30 rounded-md hover:bg-orange-100 transition-colors">
                       <i data-lucide="plus" class="w-2.5 h-2.5"></i> Cenário
                     </button>
                   </div>
@@ -759,8 +772,46 @@
         }
         _refreshIcons();
       }
+      if (createdSpecs[specIdx].id) {
+        parent.postMessage({ pluginMessage: {
+          type: 'refresh-spec-card',
+          nodeId: createdSpecs[specIdx].id,
+          excecoes: createdSpecs[specIdx].excecoes
+        }}, '*');
+      }
     }
     window.deleteGlobalSpecException = deleteGlobalSpecException;
+
+    // Nota pós-criação (mesmo padrão de exceção: grava só no dado, sem
+    // atualizar o card visual no canvas -- nota já aparecia na ficha via
+    // s.note, o que faltava era poder incluir/editar depois da criação).
+    function openSpecNoteModal(originalIndex) {
+      if (!createdSpecs[originalIndex]) return;
+      window._editingSpecNoteIdx = originalIndex;
+      const textarea = document.getElementById('spec-note-textarea');
+      if (textarea) textarea.value = createdSpecs[originalIndex].note || '';
+      openModal('spec-note-modal');
+    }
+    window.openSpecNoteModal = openSpecNoteModal;
+
+    function confirmSpecNote() {
+      const idx = window._editingSpecNoteIdx;
+      if (typeof idx !== 'number' || !createdSpecs[idx]) return;
+      const textarea = document.getElementById('spec-note-textarea');
+      createdSpecs[idx].note = textarea ? textarea.value.trim() : '';
+      saveSpecsToStorage();
+      window._expandSpecIdAfterRender = createdSpecs[idx].id;
+      if (createdSpecs[idx].id) {
+        parent.postMessage({ pluginMessage: {
+          type: 'refresh-spec-card',
+          nodeId: createdSpecs[idx].id,
+          note: createdSpecs[idx].note
+        }}, '*');
+      }
+      renderSpecsList();
+      closeModal('spec-note-modal');
+    }
+    window.confirmSpecNote = confirmSpecNote;
 
     function refreshSpecCardOnCanvas(frameId, specIdx) {
       const frame = getFrame(frameId);
@@ -904,6 +955,80 @@
     }
     window.toggleSpecLock = toggleSpecLock;
 
+    function openEditSpecConnectorModal(originalIndex) {
+      const spec = createdSpecs[originalIndex];
+      if (!spec || !spec.id || !spec.targetNodeId) {
+        showToast('Esta especificação não pode ter a linha editada — foi criada antes deste recurso existir ou não tem elemento vinculado.', 'error');
+        return;
+      }
+      window._editingSpecConnectorIndex = originalIndex;
+      const style = spec.connectorStyle || 'straight';
+      const styleRadio = document.querySelector(`input[name="edit-spec-connector-style"][value="${style}"]`);
+      if (styleRadio) styleRadio.checked = true;
+      _onEditSpecConnectorStyleChange(style);
+      const curvatureInput = document.getElementById('edit-spec-curvature-input');
+      if (curvatureInput) curvatureInput.value = spec.connectorCurvature || 0;
+      _updateEditSpecCurvatureLabel(spec.connectorCurvature || 0);
+      const saveBtn = document.getElementById('edit-spec-connector-save-btn');
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> Salvar'; }
+      openModal('edit-spec-connector-modal');
+      _refreshIcons();
+    }
+    window.openEditSpecConnectorModal = openEditSpecConnectorModal;
+
+    function closeEditSpecConnectorModal() {
+      window._editingSpecConnectorIndex = null;
+      closeModal('edit-spec-connector-modal');
+    }
+    window.closeEditSpecConnectorModal = closeEditSpecConnectorModal;
+
+    function _onEditSpecConnectorStyleChange(style) {
+      const container = document.getElementById('edit-spec-curvature-container');
+      if (container) container.classList.toggle('hidden', style !== 'curved');
+    }
+    window._onEditSpecConnectorStyleChange = _onEditSpecConnectorStyleChange;
+
+    function _updateEditSpecCurvatureLabel(value) {
+      const label = document.getElementById('edit-spec-curvature-value');
+      if (!label) return;
+      const n = Number(value);
+      label.textContent = n === 0 ? 'Reta' : (n > 0 ? `Curva ${n}%` : `Curva ${Math.abs(n)}% (invertida)`);
+    }
+    window._updateEditSpecCurvatureLabel = _updateEditSpecCurvatureLabel;
+
+    function confirmEditSpecConnector() {
+      const idx = window._editingSpecConnectorIndex;
+      if (typeof idx !== 'number') return;
+      const spec = createdSpecs[idx];
+      if (!spec) return;
+
+      const saveBtn = document.getElementById('edit-spec-connector-save-btn');
+      if (saveBtn) {
+        if (saveBtn.disabled) return;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Salvando...';
+        _refreshIcons();
+      }
+
+      const styleInput = document.querySelector('input[name="edit-spec-connector-style"]:checked');
+      const curvatureInput = document.getElementById('edit-spec-curvature-input');
+      const connectorStyle = styleInput ? styleInput.value : 'straight';
+      const connectorCurvature = curvatureInput ? Number(curvatureInput.value) || 0 : 0;
+
+      parent.postMessage({
+        pluginMessage: {
+          type: 'edit-spec-connector',
+          specId: spec.id,
+          targetNodeId: spec.targetNodeId,
+          guideSide: spec.guideSide || 'right',
+          color: spec.color || '#2e2ee0',
+          connectorStyle,
+          connectorCurvature
+        }
+      }, '*');
+    }
+    window.confirmEditSpecConnector = confirmEditSpecConnector;
+
     // Global stores already defined at top: lastMeasurements, createdSpecs
 
 
@@ -932,7 +1057,7 @@
       const isGroupVisible = specs.some(s => s.visible !== false);
       
       groupVisBtn.innerHTML = isGroupVisible ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
-      groupVisBtn.classList.toggle('text-[#005ca9]', isGroupVisible);
+      groupVisBtn.classList.toggle('text-[#2e2ee0]', isGroupVisible);
       groupVisBtn.classList.toggle('text-gray-500', !isGroupVisible);
       
       _refreshIcons();
@@ -960,14 +1085,14 @@
         const groupBtns = container.querySelectorAll('[data-group-vis-btn]');
         groupBtns.forEach(gBtn => {
           gBtn.innerHTML = targetState ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
-          gBtn.classList.toggle('text-[#005ca9]', targetState);
+          gBtn.classList.toggle('text-[#2e2ee0]', targetState);
           gBtn.classList.toggle('text-gray-500', !targetState);
         });
 
         const specBtns = container.querySelectorAll('[data-spec-vis-btn]');
         specBtns.forEach(sBtn => {
           sBtn.innerHTML = targetState ? `<i data-lucide="eye" class="w-3.5 h-3.5"></i>` : `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>`;
-          sBtn.classList.toggle("text-[#005ca9]", targetState);
+          sBtn.classList.toggle("text-[#2e2ee0]", targetState);
           sBtn.classList.toggle("text-gray-400", !targetState);
         });
       }
@@ -1039,7 +1164,7 @@
               id="${searchId}"
               type="text"
               placeholder="Buscar em ${section.title}..."
-              class="token-search-input w-full pl-8 pr-3 py-1.5 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0070af]/30 focus:border-[#0070af] transition-all"
+              class="token-search-input w-full pl-8 pr-3 py-1.5 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#3d3dff]/30 focus:border-[#3d3dff] transition-all"
               oninput="filterSpecItems('${gridId}', '${emptyId}', this.value)"
             />
           </div>
@@ -1052,7 +1177,7 @@
              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAccordion(this);}"
              class="w-full px-4 py-3 hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors cursor-pointer select-none">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-[#0070af] dark:text-blue-400 shrink-0">
+            <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-[#3d3dff] dark:text-blue-400 shrink-0">
               <i data-lucide="${section.icon}" class="w-4 h-4"></i>
             </div>
             <div class="flex-1 min-w-0 flex items-center gap-2">
@@ -1215,7 +1340,7 @@
             ? chainSegments.map((seg, i) => {
                 const isLast = i === chainSegments.length - 1;
                 return isLast
-                  ? `<span class="font-bold text-[#0070af] dark:text-blue-400">${seg}</span>`
+                  ? `<span class="font-bold text-[#3d3dff] dark:text-blue-400">${seg}</span>`
                   : `<span class="text-gray-500 dark:text-gray-400">${seg}</span><span class="text-gray-500 dark:text-gray-400 mx-0.5">›</span>`;
               }).join('')
             : '';
@@ -1280,23 +1405,23 @@
                 ? '<i data-lucide=\\'chevron-up\\' class=\\'w-2.5 h-2.5\\'></i> Ocultar inativas'
                 : '<i data-lucide=\\'eye-off\\' class=\\'w-2.5 h-2.5\\'></i> ${toggleLabel}';
               _refreshIcons()"
-            class="mt-1.5 flex items-center gap-1 text-[9px] text-gray-500 dark:text-gray-400 hover:text-[#0070af] dark:hover:text-blue-400 transition-colors font-medium">
+            class="mt-1.5 flex items-center gap-1 text-[9px] text-gray-500 dark:text-gray-400 hover:text-[#3d3dff] dark:hover:text-blue-400 transition-colors font-medium">
             <i data-lucide="eye-off" class="w-2.5 h-2.5"></i>
             ${toggleLabel}
           </button>`
         : '';
 
       return `
-        <div class="col-span-2 p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#0070af] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" title="Focar no elemento no Figma">
+        <div class="col-span-2 p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#3d3dff] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" title="Focar no elemento no Figma">
           <div class="flex items-center gap-2 mb-1 pointer-events-none">
             ${preview}
             <div class="flex-1 min-w-0">
-              <p class="text-[10px] font-bold text-slate-700 dark:text-white truncate group-hover:text-[#0070af] transition-colors">${item.name}</p>
+              <p class="text-[10px] font-bold text-slate-700 dark:text-white truncate group-hover:text-[#3d3dff] transition-colors">${item.name}</p>
               <div class="text-[9px] uppercase tracking-wider font-medium">
                 ${dsStatus}
               </div>
             </div>
-            <i data-lucide="locate" class="w-3 h-3 text-gray-400 dark:text-gray-600 group-hover:text-[#0070af] dark:group-hover:text-blue-400 transition-colors shrink-0"></i>
+            <i data-lucide="locate" class="w-3 h-3 text-gray-400 dark:text-gray-600 group-hover:text-[#3d3dff] dark:group-hover:text-blue-400 transition-colors shrink-0"></i>
           </div>
           ${appliedHtml}
           ${inactiveHtml}
@@ -1382,7 +1507,7 @@
     ];
 
     function getCategoryColor(value) {
-      if (!value) return '#005ca9';
+      if (!value) return '#2e2ee0';
       const pair = CATEGORY_COLORS[value];
       if (pair) return pair.stroke;
       const idx = annCategories.findIndex(c => c.value === value);
@@ -1571,29 +1696,49 @@
       document.getElementById('spec-properties-modal').classList.add('hidden');
     }
 
-    function confirmSpecProperties() {
-      closeSpecPropertiesModal();
-      closeSpecFormModal();
-      
+    function _toggleSpecConnectionCurvature(drawConnection) {
+      const container = document.getElementById('spec-connection-curvature-container');
+      if (container) container.classList.toggle('hidden', !drawConnection);
+    }
+    window._toggleSpecConnectionCurvature = _toggleSpecConnectionCurvature;
+
+    function _updateSpecCurvatureLabel(value) {
+      const label = document.getElementById('spec-curvature-value');
+      if (!label) return;
+      const n = Number(value);
+      label.textContent = n === 0 ? 'Reta' : (n > 0 ? `Curva ${n}%` : `Curva ${Math.abs(n)}% (invertida)`);
+    }
+    window._updateSpecCurvatureLabel = _updateSpecCurvatureLabel;
+
+    function _onSpecConnectorStyleChange(style) {
+      const sliderContainer = document.getElementById('spec-curvature-slider-container');
+      if (sliderContainer) sliderContainer.classList.toggle('hidden', style !== 'curved');
+    }
+    window._onSpecConnectorStyleChange = _onSpecConnectorStyleChange;
+
+    function _collectSpecPropertiesOpts() {
       const g = id => document.getElementById(id);
       const selCat = g('ann-category');
-      
+
       const guideSideEl = document.querySelector('input[name="guide-side"]:checked');
-      
+      const styleEl = document.querySelector('input[name="spec-connector-style"]:checked');
+      const curvatureInput = g('spec-curvature-input');
+
       const opts = {
         category: selCat ? selCat.value : "",
         categoryLabel: selCat && selCat.options[selCat.selectedIndex] ? selCat.options[selCat.selectedIndex].text : "",
         letter: g('spec-letter-input') ? g('spec-letter-input').value.toUpperCase() : "A",
-        color: g('spec-color-input') ? g('spec-color-input').value : "#005ca9",
+        color: g('spec-color-input') ? g('spec-color-input').value : "#2e2ee0",
         fillColor: getCategoryFill(selCat ? selCat.value : ""),
         link: g('spec-link-input') ? g('spec-link-input').value : "",
         note: g('ann-note') ? g('ann-note').value : "",
         guideSide: guideSideEl ? guideSideEl.value : "right",
         drawConnection: g('chk-draw-connection') ? g('chk-draw-connection').checked : true,
+        connectorStyle: styleEl ? styleEl.value : 'straight',
+        connectorCurvature: curvatureInput ? Number(curvatureInput.value) || 0 : 0,
         properties: []
       };
 
-      // Collect selected properties
       const checkboxes = document.querySelectorAll('#spec-properties-list input[type="checkbox"]:checked');
       checkboxes.forEach(chk => {
         const propKey = chk.value;
@@ -1603,8 +1748,69 @@
         }
       });
 
-      parent.postMessage({ pluginMessage: { type: 'create-unified-spec', opts } }, '*');
+      return opts;
     }
+
+    function advanceToSpecExceptionStep() {
+      window._pendingSpecOpts = _collectSpecPropertiesOpts();
+      closeSpecPropertiesModal();
+      window._newSpecExceptionType = null;
+      const g = id => document.getElementById(id);
+      document.querySelectorAll('.new-exc-type-btn').forEach(b => b.classList.remove('border-red-300', 'border-green-300', 'border-blue-300', 'border-amber-300', 'bg-red-50', 'bg-green-50', 'bg-blue-50', 'bg-amber-50'));
+      if (g('new-exc-titulo')) g('new-exc-titulo').value = '';
+      if (g('new-exc-obs')) g('new-exc-obs').value = '';
+      openModal('spec-new-exception-modal');
+    }
+    window.advanceToSpecExceptionStep = advanceToSpecExceptionStep;
+
+    function backToSpecPropertiesFromException() {
+      closeSpecNewExceptionModal();
+      document.getElementById('spec-properties-modal').classList.remove('hidden');
+    }
+    window.backToSpecPropertiesFromException = backToSpecPropertiesFromException;
+
+    function closeSpecNewExceptionModal() {
+      closeModal('spec-new-exception-modal');
+    }
+    window.closeSpecNewExceptionModal = closeSpecNewExceptionModal;
+
+    const NEW_EXC_TYPE_BORDER = { 'Erro': 'border-red-300', 'Sucesso': 'border-green-300', 'Confirmação': 'border-blue-300', 'Alerta': 'border-amber-300' };
+    function selectNewSpecExceptionType(type) {
+      window._newSpecExceptionType = type;
+      document.querySelectorAll('.new-exc-type-btn').forEach(b => {
+        b.classList.remove('border-red-300', 'border-green-300', 'border-blue-300', 'border-amber-300');
+        b.classList.add('border-gray-100');
+      });
+      const btn = document.getElementById(`new-exc-type-${type}`);
+      if (btn) {
+        btn.classList.remove('border-gray-100');
+        btn.classList.add(NEW_EXC_TYPE_BORDER[type] || 'border-gray-100');
+      }
+    }
+    window.selectNewSpecExceptionType = selectNewSpecExceptionType;
+
+    function finalizeSpecCreation() {
+      const opts = window._pendingSpecOpts;
+      if (!opts) { closeSpecNewExceptionModal(); return; }
+
+      const titulo = document.getElementById('new-exc-titulo') ? document.getElementById('new-exc-titulo').value.trim() : '';
+      const type = window._newSpecExceptionType;
+      if (type && titulo) {
+        opts.excecaoInicial = {
+          tipo: type,
+          titulo: titulo,
+          obs: document.getElementById('new-exc-obs') ? document.getElementById('new-exc-obs').value.trim() : ''
+        };
+      }
+
+      closeSpecNewExceptionModal();
+      closeSpecFormModal();
+      parent.postMessage({ pluginMessage: { type: 'create-unified-spec', opts } }, '*');
+
+      window._pendingSpecOpts = null;
+      window._newSpecExceptionType = null;
+    }
+    window.finalizeSpecCreation = finalizeSpecCreation;
 
     function renderSpecsList() {
       const list = document.getElementById('specs-results');
@@ -1628,7 +1834,7 @@
               <i data-lucide="file-text" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
             </div>
             <p class="text-[12px] font-bold text-slate-500 dark:text-dark-muted text-center px-4 mb-1">Nenhuma especificação criada ainda</p>
-            <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6">Selecione um elemento no canvas e toque no botão <strong>+</strong></p>
+            <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6">Selecione um elemento no canvas e toque em <button type="button" onclick="openSpecFormModal()" class="font-bold text-[#2e2ee0] dark:text-[#4da3e0] hover:underline">Nova spec</button></p>
           </li>
         `;
         if (exportBtn) exportBtn.classList.add('hidden');
@@ -1655,19 +1861,19 @@
       // Renderizar cada grupo
       Object.keys(groupedSpecs).sort().forEach(letter => {
         const specs = groupedSpecs[letter];
-        const groupColor = specs[0].color || '#005ca9';
+        const groupColor = specs[0].color || '#2e2ee0';
         
         // Contêiner do Grupo
         const groupWrapper = document.createElement('li');
         groupWrapper.className = 'mb-4 border-l-4 rounded-r-xl overflow-hidden bg-gray-50/30 dark:bg-slate-900/20';
         groupWrapper.style.borderColor = groupColor;
 
-        // Cabeçalho do Grupo
+        // Cabeçalho do Grupo — nome, ações e chevron na mesma linha
         const groupHeader = document.createElement('div');
-        groupHeader.className = 'p-3 flex items-center justify-between bg-gray-100/50 dark:bg-slate-800/50';
-        
+        groupHeader.className = 'p-3 flex items-center gap-2 bg-gray-100/50 dark:bg-slate-800/50';
+
         const headerInfo = document.createElement('div');
-        headerInfo.className = 'flex items-center gap-3 cursor-pointer flex-1 overflow-hidden';
+        headerInfo.className = 'flex items-center gap-3 cursor-pointer flex-1 overflow-hidden min-w-0';
         
         const currentGroupName = (handoffData.tagNames && handoffData.tagNames[letter]) ? handoffData.tagNames[letter] : `Grupo Tag ${letter}`;
 
@@ -1678,7 +1884,7 @@
           <div class="flex flex-col overflow-hidden flex-1">
              <div class="flex items-center gap-1.5 overflow-hidden">
                <span class="text-[12px] font-bold text-slate-700 dark:text-slate-200 group-title-text truncate">${currentGroupName}</span>
-               <button type="button" title="Renomear grupo" aria-label="Renomear grupo" class="edit-group-btn p-1 text-gray-500 hover:text-[#005ca9] transition-colors shrink-0">
+               <button type="button" title="Renomear grupo" aria-label="Renomear grupo" class="edit-group-btn p-1 text-gray-500 hover:text-[#2e2ee0] transition-colors shrink-0">
                  <i data-lucide="pencil" class="w-3 h-3"></i>
                </button>
              </div>
@@ -1740,6 +1946,13 @@
           groupHeader.querySelector('.group-chevron').classList.toggle('rotate-180', !isHidden);
         };
 
+        const groupActionsRow = document.createElement('div');
+        groupActionsRow.className = 'flex items-center gap-1.5 shrink-0';
+        const groupActionsLabel = document.createElement('span');
+        groupActionsLabel.className = 'text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider shrink-0';
+        groupActionsLabel.textContent = 'Ações';
+        groupActionsRow.appendChild(groupActionsLabel);
+
         const groupActions = document.createElement('div');
         groupActions.className = 'flex items-center gap-1';
 
@@ -1748,7 +1961,7 @@
         const isLinesHidden = handoffData.specLinesVisible && handoffData.specLinesVisible[letter] === false;
         groupLinesBtn.title = isLinesHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo';
         groupLinesBtn.setAttribute('aria-label', groupLinesBtn.title);
-        groupLinesBtn.className = `p-2 hover:bg-white/50 dark:hover:bg-slate-700 rounded-lg transition-colors shrink-0 ${isLinesHidden ? 'text-gray-400' : 'text-[#005ca9]'}`;
+        groupLinesBtn.className = `p-2 hover:bg-white/50 dark:hover:bg-slate-700 rounded-lg transition-colors shrink-0 ${isLinesHidden ? 'text-gray-400' : 'text-[#2e2ee0]'}`;
         groupLinesBtn.innerHTML = '<i data-lucide="spline" class="w-4 h-4"></i>';
 
         groupLinesBtn.onclick = (e) => {
@@ -1762,7 +1975,7 @@
           groupLinesBtn.title = nowHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo';
           groupLinesBtn.setAttribute('aria-label', groupLinesBtn.title);
           groupLinesBtn.classList.toggle('text-gray-400', nowHidden);
-          groupLinesBtn.classList.toggle('text-[#005ca9]', !nowHidden);
+          groupLinesBtn.classList.toggle('text-[#2e2ee0]', !nowHidden);
           _refreshIcons();
         };
 
@@ -1775,7 +1988,7 @@
 
         const isGroupVisible = specs.some(s => s.visible !== false);
         groupVisBtn.innerHTML = isGroupVisible ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
-        groupVisBtn.classList.toggle('text-[#005ca9]', isGroupVisible);
+        groupVisBtn.classList.toggle('text-[#2e2ee0]', isGroupVisible);
         groupVisBtn.classList.toggle('text-gray-500', !isGroupVisible);
 
         groupVisBtn.onclick = (e) => {
@@ -1795,13 +2008,13 @@
           saveSpecsToStorage();
           
           groupVisBtn.innerHTML = targetState ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
-          groupVisBtn.classList.toggle('text-[#005ca9]', targetState);
+          groupVisBtn.classList.toggle('text-[#2e2ee0]', targetState);
           groupVisBtn.classList.toggle('text-gray-500', !targetState);
 
           const childBtns = groupWrapper.querySelectorAll('[data-spec-vis-btn]');
           childBtns.forEach(btnEl => {
             btnEl.innerHTML = targetState ? `<i data-lucide="eye" class="w-3.5 h-3.5"></i>` : `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>`;
-            btnEl.classList.toggle("text-[#005ca9]", targetState);
+            btnEl.classList.toggle("text-[#2e2ee0]", targetState);
             btnEl.classList.toggle("text-gray-400", !targetState);
           });
           
@@ -1811,13 +2024,14 @@
 
         const groupChevron = document.createElement('i');
         groupChevron.setAttribute('data-lucide', 'chevron-down');
-        groupChevron.className = 'w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform group-chevron';
+        groupChevron.className = 'w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform group-chevron shrink-0';
 
         groupActions.appendChild(groupLinesBtn);
         groupActions.appendChild(groupVisBtn);
-        groupActions.appendChild(groupChevron);
+        groupActionsRow.appendChild(groupActions);
         groupHeader.appendChild(headerInfo);
-        groupHeader.appendChild(groupActions);
+        groupHeader.appendChild(groupActionsRow);
+        groupHeader.appendChild(groupChevron);
 
         specs.forEach((spec) => {
           const section = document.createElement('li');
@@ -1828,12 +2042,12 @@
 
           const header = document.createElement("div");
           header.className = "flex items-center justify-between bg-white dark:bg-slate-800";
-          
+
           const btn = document.createElement("button");
           btn.type = "button";
           btn.title = "Expandir/recolher e focar no elemento no Figma";
           btn.setAttribute('aria-label', "Expandir/recolher e focar no elemento no Figma");
-          btn.className = "flex-1 flex items-center justify-between text-left p-2.5 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors";
+          btn.className = "w-full flex items-center justify-between text-left p-2.5 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors";
           btn.onclick = () => {
             const contentEl = document.getElementById('content-' + spec.id);
             if (!contentEl) return;
@@ -1858,8 +2072,15 @@
             <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted transition-transform shrink-0"></i>
           `;
 
+          const specActionsRow = document.createElement("div");
+          specActionsRow.className = "flex items-center justify-end gap-2 px-2.5 py-1.5 border-t border-gray-50 dark:border-dark-line bg-gray-50/50 dark:bg-slate-900/30";
+          const specActionsLabel = document.createElement("span");
+          specActionsLabel.className = "text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider shrink-0";
+          specActionsLabel.textContent = "Ações";
+          specActionsRow.appendChild(specActionsLabel);
+
           const actions = document.createElement("div");
-          actions.className = "flex items-center border-l border-gray-100 dark:border-dark-line";
+          actions.className = "flex items-center gap-0.5";
 
           const visBtn = document.createElement("button");
           visBtn.type = "button";
@@ -1873,7 +2094,7 @@
           }
           const isVisible = spec.visible !== false;
           visBtn.innerHTML = isVisible ? `<i data-lucide="eye" class="w-3.5 h-3.5"></i>` : `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>`;
-          visBtn.classList.toggle("text-[#005ca9]", isVisible);
+          visBtn.classList.toggle("text-[#2e2ee0]", isVisible);
           visBtn.classList.toggle("text-gray-400", !isVisible);
 
           visBtn.onclick = (e) => {
@@ -1886,7 +2107,7 @@
             }
 
             visBtn.innerHTML = nowVisible ? `<i data-lucide="eye" class="w-3.5 h-3.5"></i>` : `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>`;
-            visBtn.classList.toggle("text-[#005ca9]", nowVisible);
+            visBtn.classList.toggle("text-[#2e2ee0]", nowVisible);
             visBtn.classList.toggle("text-gray-400", !nowVisible);
 
             if (spec.id) {
@@ -1916,14 +2137,45 @@
             toggleSpecLock(spec.originalIndex);
           };
 
+          const editLineBtn = document.createElement("button");
+          editLineBtn.type = "button";
+          editLineBtn.title = "Editar estilo da linha";
+          editLineBtn.setAttribute("aria-label", "Editar estilo da linha");
+          editLineBtn.className = "p-2.5 text-[#2e2ee0] hover:bg-blue-50 dark:hover:bg-slate-600 transition-colors shrink-0";
+          editLineBtn.innerHTML = '<i data-lucide="pencil-ruler" class="w-3.5 h-3.5"></i>';
+          if (!spec.id || !spec.targetNodeId) {
+            editLineBtn.disabled = true;
+            editLineBtn.classList.remove('text-[#2e2ee0]');
+            editLineBtn.classList.add('text-gray-400', 'opacity-50', 'cursor-not-allowed');
+            editLineBtn.title = "Linha não editável — especificação criada antes deste recurso existir";
+          } else {
+            editLineBtn.onclick = (e) => {
+              e.stopPropagation();
+              openEditSpecConnectorModal(spec.originalIndex);
+            };
+          }
+
           const delBtn = document.createElement("button");
           delBtn.type = "button";
           delBtn.title = "Excluir Especificação";
           delBtn.setAttribute("aria-label", "Excluir especificação");
           delBtn.className = "p-2.5 text-gray-500 dark:text-dark-muted hover:text-red-500 transition-colors";
           delBtn.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>';
+          let _delConfirmTimeout = null;
           delBtn.onclick = (e) => {
             e.stopPropagation();
+            if (!delBtn.classList.contains('confirm-delete')) {
+              delBtn.classList.add('confirm-delete', 'text-red-500', 'bg-red-50', 'dark:bg-red-900/20');
+              delBtn.title = "Clique novamente para confirmar a exclusão";
+              delBtn.setAttribute("aria-label", delBtn.title);
+              _delConfirmTimeout = setTimeout(() => {
+                delBtn.classList.remove('confirm-delete', 'text-red-500', 'bg-red-50', 'dark:bg-red-900/20');
+                delBtn.title = "Excluir Especificação";
+                delBtn.setAttribute("aria-label", delBtn.title);
+              }, 3000);
+              return;
+            }
+            clearTimeout(_delConfirmTimeout);
             if (spec.id) {
               parent.postMessage({ pluginMessage: { type: 'delete-node', id: spec.id } }, '*');
             }
@@ -1935,54 +2187,67 @@
 
           actions.appendChild(visBtn);
           actions.appendChild(lockBtn);
+          actions.appendChild(editLineBtn);
           actions.appendChild(delBtn);
+          specActionsRow.appendChild(actions);
           header.appendChild(btn);
-          header.appendChild(actions);
           section.appendChild(header);
+          section.appendChild(specActionsRow);
 
           const content = document.createElement("div");
           content.id = "content-" + spec.id;
           content.className = "hidden p-3 border-t border-gray-50 dark:border-dark-line bg-gray-50/30 dark:bg-slate-900/50 space-y-2";
           
           if (spec.note) {
-            content.innerHTML += `<div class="text-[10px] text-slate-600 dark:text-dark-text p-2 bg-white dark:bg-dark-bg rounded border border-gray-100 dark:border-dark-line italic">${escapeHtml(spec.note)}</div>`;
+            const noteRow = document.createElement('div');
+            noteRow.className = 'flex items-start gap-1.5 text-[10px] text-slate-600 dark:text-dark-text p-2 bg-white dark:bg-dark-bg rounded border border-gray-100 dark:border-dark-line italic cursor-pointer hover:border-[#2e2ee0]/30 transition-colors';
+            noteRow.title = 'Clique para editar a nota';
+            noteRow.innerHTML = `<i data-lucide="sticky-note" class="w-3 h-3 text-slate-400 shrink-0 mt-0.5"></i><span class="flex-1">${escapeHtml(spec.note)}</span>`;
+            noteRow.onclick = (e) => { e.stopPropagation(); openSpecNoteModal(spec.originalIndex); };
+            content.appendChild(noteRow);
           }
 
           if (spec.properties && spec.properties.length > 0) {
             spec.properties.forEach(p => {
               const detEl = document.createElement("div");
               detEl.className = "flex justify-between text-[10px] bg-white dark:bg-dark-bg p-1.5 rounded border border-gray-100 dark:border-dark-line";
-              const valStr = p.token ? `<span class="text-[8px] text-[#0070af] dark:text-blue-400 font-medium mr-1 px-1 bg-blue-50 dark:bg-blue-900/20 rounded-sm border border-blue-100 dark:border-blue-800">${escapeHtml(p.token)}</span>${escapeHtml(p.value)}` : escapeHtml(p.value);
+              const valStr = p.token ? `<span class="text-[8px] text-[#3d3dff] dark:text-blue-400 font-medium mr-1 px-1 bg-blue-50 dark:bg-blue-900/20 rounded-sm border border-blue-100 dark:border-blue-800">${escapeHtml(p.token)}</span>${escapeHtml(p.value)}` : escapeHtml(p.value);
               const displayVal = p.token || p.value;
               const valStr2 = p.token
-                ? `<span class="text-[9px] text-[#0070af] dark:text-blue-400 font-medium px-1 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-100 dark:border-blue-800">${escapeHtml(p.token)}</span>`
+                ? `<span class="text-[9px] text-[#3d3dff] dark:text-blue-400 font-medium px-1 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-100 dark:border-blue-800">${escapeHtml(p.token)}</span>`
                 : `<span class="font-mono">${escapeHtml(p.value)}</span>`;
               detEl.innerHTML = `<span class="text-slate-500">${escapeHtml(p.label)}</span><span class="font-bold text-slate-700 dark:text-white flex items-center">${valStr2}</span>`;
               content.appendChild(detEl);
             });
           }
 
-          // ── Cenários de Exceção ──────────────────────────────────────────
-          const excSection = document.createElement('div');
-          excSection.className = 'pt-1';
-          const specExcs = spec.excecoes || [];
-          const excListId = 'global-exc-list-' + spec.originalIndex;
-          excSection.innerHTML = `
-            <div class="flex items-center justify-between mb-1">
-              <p class="text-[9px] font-bold text-orange-500 uppercase tracking-wider">Cenários de Exceção ${specExcs.length > 0 ? '(' + specExcs.length + ')' : ''}</p>
-              <button type="button" onclick="event.stopPropagation(); openGlobalSpecException(${spec.originalIndex})"
-                class="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-bold text-orange-500 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/30 rounded-md hover:bg-orange-100 transition-colors">
-                <i data-lucide="plus" class="w-2.5 h-2.5"></i> Cenário
-              </button>
-            </div>
-            <div id="${excListId}" class="space-y-1">
-              ${specExcs.length === 0
-                ? '<p class="text-[10px] text-slate-400 dark:text-slate-600 italic">Nenhum cenário registrado</p>'
-                : specExcs.map((exc, ei) => _renderExcItem(exc, `deleteGlobalSpecException(${spec.originalIndex}, ${ei})`)).join('')
-              }
-            </div>
+          // ── Ações: Cenário de Exceção + Nota ─────────────────────────────
+          // Ampliados a pedido do usuário -- eram pequenos/discretos demais
+          // (9px, padding mínimo) e a ação de nota pós-criação nem existia.
+          // Mesmo par de botões, lado a lado, seguindo o padrão rounded-2xl
+          // do resto do plugin.
+          const actionsRow = document.createElement('div');
+          actionsRow.className = 'flex items-center gap-2 pt-1';
+          actionsRow.innerHTML = `
+            <button type="button" onclick="event.stopPropagation(); openGlobalSpecException(${spec.originalIndex})"
+              class="flex-1 flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-orange-800 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/30 rounded-2xl hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors">
+              <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Cenário de Exceção${(spec.excecoes || []).length > 0 ? ` (${(spec.excecoes || []).length})` : ''}
+            </button>
+            <button type="button" onclick="event.stopPropagation(); openSpecNoteModal(${spec.originalIndex})"
+              class="flex-1 flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-[#2e2ee0] dark:text-[#4da3e0] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-2xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+              <i data-lucide="sticky-note" class="w-3.5 h-3.5"></i> ${spec.note ? 'Editar Nota' : 'Incluir Nota'}
+            </button>
           `;
-          content.appendChild(excSection);
+          content.appendChild(actionsRow);
+
+          const specExcs = spec.excecoes || [];
+          if (specExcs.length > 0) {
+            const excList = document.createElement('div');
+            excList.id = 'global-exc-list-' + spec.originalIndex;
+            excList.className = 'space-y-1 pt-1';
+            excList.innerHTML = specExcs.map((exc, ei) => _renderExcItem(exc, `deleteGlobalSpecException(${spec.originalIndex}, ${ei})`)).join('');
+            content.appendChild(excList);
+          }
 
           section.appendChild(content);
           groupContent.appendChild(section);
@@ -2075,12 +2340,12 @@
       // Highlight selected card
       const activeCard = document.getElementById(`form-flow-${type}`) || document.getElementById(`flow-${type}`);
       if (activeCard) {
-        activeCard.style.borderColor = '#0070af';
-        activeCard.style.backgroundColor = 'rgba(0, 112, 175, 0.08)';
+        activeCard.style.borderColor = '#3d3dff';
+        activeCard.style.backgroundColor = 'rgba(61, 61, 255, 0.08)';
         const icon = activeCard.querySelector('i[data-lucide]');
-        if (icon) icon.style.color = '#0070af';
+        if (icon) icon.style.color = '#3d3dff';
         const diamond = activeCard.querySelector('.rotate-45');
-        if (diamond) diamond.style.borderColor = '#0070af';
+        if (diamond) diamond.style.borderColor = '#3d3dff';
       }
 
       const chipContainer = document.getElementById('flow-chip-container');
@@ -2089,11 +2354,20 @@
         chipContainer.classList.toggle('hidden', !hasChip);
       }
 
+      // Estilo de conector só faz sentido em linha pura -- diamond/evento
+      // têm forma própria com semântica fixa, moldar a linha até eles
+      // confundiria a leitura do fluxograma (ver _buildFlowConnection em code.js).
+      const styleContainer = document.getElementById('flow-connector-style-container');
+      if (styleContainer) {
+        const hasStyle = ['line_solid', 'line_dashed'].includes(type);
+        styleContainer.classList.toggle('hidden', !hasStyle);
+      }
+
       // Enable confirm button
       const btn = document.getElementById('btn-confirm-flow');
       if (btn) {
         btn.disabled = false;
-        btn.style.backgroundColor = '#0070af';
+        btn.style.backgroundColor = '#3d3dff';
         btn.style.cursor = 'pointer';
         btn.classList.remove('bg-gray-300', 'cursor-not-allowed');
       }
@@ -2123,6 +2397,15 @@
       const chipContainer = document.getElementById('flow-chip-container');
       if (chipContainer) chipContainer.classList.add('hidden');
 
+      const styleContainer = document.getElementById('flow-connector-style-container');
+      if (styleContainer) styleContainer.classList.add('hidden');
+      const straightRadio = document.querySelector('input[name="flow-connector-style"][value="straight"]');
+      if (straightRadio) straightRadio.checked = true;
+      _onFlowConnectorStyleChange('straight');
+      const curvatureInput = document.getElementById('flow-curvature-input');
+      if (curvatureInput) curvatureInput.value = 0;
+      _updateFlowCurvatureLabel(0);
+
       const decContainer = document.getElementById('flow-decision-container');
       if (decContainer) decContainer.classList.add('hidden');
 
@@ -2132,29 +2415,55 @@
         btn.style.backgroundColor = '';
         btn.style.cursor = '';
         btn.classList.add('bg-gray-300', 'cursor-not-allowed');
-        btn.classList.remove('bg-[#0070af]', 'hover:bg-blue-700');
+        btn.classList.remove('bg-[#3d3dff]', 'hover:bg-blue-700');
       }
     }
 
+
+    function _updateFlowCurvatureLabel(value) {
+      const label = document.getElementById('flow-curvature-value');
+      if (!label) return;
+      const n = Number(value);
+      label.textContent = n === 0 ? 'Reta' : (n > 0 ? `Curva ${n}%` : `Curva ${Math.abs(n)}% (invertida)`);
+    }
+    window._updateFlowCurvatureLabel = _updateFlowCurvatureLabel;
+
+    // Slider de curvatura só aparece quando o estilo "Curva" está escolhido
+    // -- "Esquinas" não tem parâmetro ajustável (a geometria de 1/2 dobras
+    // é toda derivada da posição relativa dos elementos, ver _buildFlowConnection).
+    function _onFlowConnectorStyleChange(style) {
+      const curvatureContainer = document.getElementById('flow-curvature-container');
+      if (curvatureContainer) curvatureContainer.classList.toggle('hidden', style !== 'curved');
+    }
+    window._onFlowConnectorStyleChange = _onFlowConnectorStyleChange;
 
     function confirmFlowConnection() {
       const type = currentFlowType;
       const textInput = document.getElementById('flow-chip-text');
       const text = textInput ? textInput.value : '';
       const flowName = document.getElementById('flow-name-input') ? document.getElementById('flow-name-input').value : `Linha ${handoffData.nextFlowNumber || 1}`;
-      
+
       const sideInput = document.querySelector('input[name="flow-side"]:checked');
       const flowSide = sideInput ? sideInput.value : 'auto';
 
-      parent.postMessage({ 
-        pluginMessage: { 
-          type: 'create-flow-connection', 
+      const styleInput = document.querySelector('input[name="flow-connector-style"]:checked');
+      const connectorStyle = styleInput ? styleInput.value : 'straight';
+
+      const curvatureInput = document.getElementById('flow-curvature-input');
+      const curvature = curvatureInput ? Number(curvatureInput.value) || 0 : 0;
+
+      parent.postMessage({
+        pluginMessage: {
+          type: 'create-flow-connection',
           flowType: type,
           decisionText: text,
           flowName: flowName,
           flowSide: flowSide,
-          nextFlowNumber: handoffData.nextFlowNumber || 1
-        } 
+          connectorStyle: connectorStyle,
+          curvature: curvature,
+          nextFlowNumber: handoffData.nextFlowNumber || 1,
+          flowId: String(Date.now())
+        }
       }, '*');
       closeModal('flow-form-modal');
     }
@@ -2187,7 +2496,7 @@
               <i data-lucide="git-branch" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
             </div>
             <p class="text-[12px] font-bold text-slate-500 dark:text-dark-muted text-center px-4 mb-1">Nenhum fluxo criado ainda</p>
-            <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6">Selecione 2 elementos no canvas e toque no botão <strong>+</strong></p>
+            <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6">Selecione 2 elementos no canvas e toque em <button type="button" onclick="openFlowFormModal()" class="font-bold text-[#2e2ee0] dark:text-[#4da3e0] hover:underline">Conectar Frames</button></p>
           </li>
         `;
         containers.forEach(c => c.innerHTML = emptyHtml);
@@ -2216,7 +2525,7 @@
              onclick="focusNode('${flow.id}')">
           <div class="flex items-center gap-4 w-full">
             <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-800/50">
-              <i data-lucide="${flow.type.includes('diamond') ? 'help-circle' : (flow.type === 'gateway_parallel' ? 'git-fork' : (flow.type.includes('event') ? 'circle' : 'arrow-right'))}" class="w-5 h-5 text-[#0070af] dark:text-blue-400"></i>
+              <i data-lucide="${flow.type.includes('diamond') ? 'help-circle' : (flow.type === 'gateway_parallel' ? 'git-fork' : (flow.type.includes('event') ? 'circle' : 'arrow-right'))}" class="w-5 h-5 text-[#3d3dff] dark:text-blue-400"></i>
             </div>
             
             <div class="flex-1 overflow-hidden">
@@ -2224,7 +2533,7 @@
                 <div class="flex items-center gap-1.5 flex-1 min-w-0">
                   <input type="text"
                     value="${flow.name || defaultName}"
-                    class="flex-1 bg-transparent border-none p-0 text-[13px] font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#0070af]/20 rounded px-1 -ml-1 transition-all truncate"
+                    class="inline-name-input w-full text-[13px] font-bold text-slate-800 dark:text-white rounded truncate -ml-0.5"
                     onchange="renameFlow(${idx}, this.value)"
                     onkeydown="if(event.key==='Enter') this.blur()"
                     onclick="event.stopPropagation()"
@@ -2232,8 +2541,13 @@
                 </div>
                 
                 <div class="flex items-center gap-1 shrink-0">
-                  <button onclick="event.stopPropagation(); toggleFlowVisibility('${flow.id}', ${idx})" 
-                    class="w-7 h-7 rounded-xl flex items-center justify-center ${isVisible ? 'text-[#0070af]' : 'text-gray-400'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                  ${(flow.type === 'line_solid' || flow.type === 'line_dashed') ? `
+                  <button onclick="event.stopPropagation(); openEditFlowModal(${idx})" title="Editar curvatura e texto" aria-label="Editar curvatura e texto"
+                    class="w-7 h-7 rounded-xl flex items-center justify-center ${isVisible ? 'text-[#3d3dff]' : 'text-gray-400'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all">
+                    <i data-lucide="spline" class="w-3.5 h-3.5"></i>
+                  </button>` : ''}
+                  <button onclick="event.stopPropagation(); toggleFlowVisibility('${flow.id}', ${idx})"
+                    class="w-7 h-7 rounded-xl flex items-center justify-center ${isVisible ? 'text-[#3d3dff]' : 'text-gray-400'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
                     title="${isVisible ? 'Ocultar fluxo' : 'Exibir fluxo'}" aria-label="Alterar visibilidade">
                     <i data-lucide="${isVisible ? 'eye' : 'eye-off'}" class="w-3.5 h-3.5"></i>
                   </button>
@@ -2315,6 +2629,98 @@
       }
     }
 
+    function openEditFlowModal(idx) {
+      const flow = handoffData.createdFlows[idx];
+      if (!flow || !flow.sourceId) {
+        showToast('Este fluxo não pode ser editado — foi criado antes deste recurso existir.', 'error');
+        return;
+      }
+      // Único nome de variável compartilhado com messages.js (flow-created)
+      // -- nomes divergentes aqui já causaram confusão em revisão; manter
+      // um só evita que um refator futuro quebre o fluxo de edição em
+      // silêncio (sintoma seria "editar duplica em vez de substituir").
+      window._editingFlowIndex = idx;
+      const textInput = document.getElementById('edit-flow-chip-text');
+      if (textInput) textInput.value = flow.decisionText || '';
+      const style = flow.connectorStyle || 'straight';
+      const styleRadio = document.querySelector(`input[name="edit-flow-connector-style"][value="${style}"]`);
+      if (styleRadio) styleRadio.checked = true;
+      _onEditFlowConnectorStyleChange(style);
+      const curvatureInput = document.getElementById('edit-flow-curvature-input');
+      if (curvatureInput) curvatureInput.value = flow.curvature || 0;
+      _updateEditFlowCurvatureLabel(flow.curvature || 0);
+      const saveBtn = document.getElementById('edit-flow-save-btn');
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> Salvar'; }
+      openModal('edit-flow-modal');
+      _refreshIcons();
+    }
+    window.openEditFlowModal = openEditFlowModal;
+
+    function closeEditFlowModal() {
+      window._editingFlowIndex = null;
+      closeModal('edit-flow-modal');
+    }
+    window.closeEditFlowModal = closeEditFlowModal;
+
+    function _updateEditFlowCurvatureLabel(value) {
+      const label = document.getElementById('edit-flow-curvature-value');
+      if (!label) return;
+      const n = Number(value);
+      label.textContent = n === 0 ? 'Reta' : (n > 0 ? `Curva ${n}%` : `Curva ${Math.abs(n)}% (invertida)`);
+    }
+    window._updateEditFlowCurvatureLabel = _updateEditFlowCurvatureLabel;
+
+    function _onEditFlowConnectorStyleChange(style) {
+      const curvatureContainer = document.getElementById('edit-flow-curvature-container');
+      if (curvatureContainer) curvatureContainer.classList.toggle('hidden', style !== 'curved');
+    }
+    window._onEditFlowConnectorStyleChange = _onEditFlowConnectorStyleChange;
+
+    function confirmEditFlow() {
+      const idx = window._editingFlowIndex;
+      if (typeof idx !== 'number') return;
+      const flow = handoffData.createdFlows[idx];
+      if (!flow) return;
+
+      // Guard contra clique duplo: sem isso, um segundo clique antes da
+      // resposta do primeiro chegar reenviaria o mesmo oldGroupId (já
+      // removido pelo backend na primeira chamada), deixando o grupo criado
+      // pela primeira edição órfão no canvas (ver achado de QA).
+      const saveBtn = document.getElementById('edit-flow-save-btn');
+      if (saveBtn) {
+        if (saveBtn.disabled) return;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Salvando...';
+        _refreshIcons();
+      }
+
+      const textInput = document.getElementById('edit-flow-chip-text');
+      const styleInput = document.querySelector('input[name="edit-flow-connector-style"]:checked');
+      const curvatureInput = document.getElementById('edit-flow-curvature-input');
+      const decisionText = textInput ? textInput.value : '';
+      const connectorStyle = styleInput ? styleInput.value : 'straight';
+      const curvature = curvatureInput ? Number(curvatureInput.value) || 0 : 0;
+
+      parent.postMessage({
+        pluginMessage: {
+          type: 'edit-flow-connection',
+          flowType: flow.type,
+          flowName: flow.name || '',
+          sourceId: flow.sourceId,
+          targetId: flow.targetId || null,
+          decisionText: decisionText,
+          flowSide: flow.flowSide || 'auto',
+          connectorStyle: connectorStyle,
+          curvature: curvature,
+          nextFlowNumber: handoffData.nextFlowNumber || 1,
+          flowId: flow.flowUid || String(Date.now()),
+          oldGroupId: flow.id
+        }
+      }, '*');
+      closeModal('edit-flow-modal');
+    }
+    window.confirmEditFlow = confirmEditFlow;
+
     function toggleFlowVisibility(id, idx) {
       const flow = handoffData.createdFlows[idx];
       flow.visible = flow.visible === false ? true : false;
@@ -2342,7 +2748,7 @@ function toggleLinkInput(show) {
       // Modo criação: limpa campos e reseta estado
       document.getElementById('spec-form-modal').dataset.editIdx = '';
       document.getElementById('spec-letter-input').value = typeof _suggestNextSpecTag === 'function' ? _suggestNextSpecTag(activeFrameId) : 'A';
-      document.getElementById('spec-color-input').value = '#005ca9';
+      document.getElementById('spec-color-input').value = '#2e2ee0';
       if (typeof validateSpecLetterInput === 'function') validateSpecLetterInput();
       document.getElementById('ann-category').value = '';
       if (typeof _csSyncLabel === 'function') _csSyncLabel('cs-ann-cat');
@@ -2358,9 +2764,19 @@ function toggleLinkInput(show) {
       const rightRadio = document.querySelector('input[name="guide-side"][value="right"]');
       if (rightRadio) rightRadio.checked = true;
 
+      const drawConnChk = document.getElementById('chk-draw-connection');
+      if (drawConnChk) drawConnChk.checked = true;
+      const straightStyleRadio = document.querySelector('input[name="spec-connector-style"][value="straight"]');
+      if (straightStyleRadio) straightStyleRadio.checked = true;
+      _onSpecConnectorStyleChange('straight');
+      const curvatureInput = document.getElementById('spec-curvature-input');
+      if (curvatureInput) curvatureInput.value = 0;
+      _updateSpecCurvatureLabel(0);
+      _toggleSpecConnectionCurvature(true);
+
       const modalTitle = document.querySelector('#spec-form-modal h3');
       if (modalTitle) {
-        modalTitle.innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 text-[#005ca9]"></i> Criar Especificação/Nota';
+        modalTitle.innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 text-[#2e2ee0]"></i> Criar Especificação/Nota';
       }
       const confirmBtn = document.getElementById('btn-spec-form-confirm');
       if (confirmBtn) {

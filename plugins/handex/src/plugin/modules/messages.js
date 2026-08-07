@@ -156,22 +156,27 @@
           _continueOpenHandoffInjectModal();
         }
         window._pendingOpenInjectModal = false;
+        if (typeof _onFinalizarFichaCheck === 'function') _onFinalizarFichaCheck(!!msg.temFicha);
       }
 
       if (msg.type === "selection-link") {
         if (msg.targetId === 'exc-modal-vinc') {
           const vinc = document.getElementById('exc-modal-vinc');
-          if (vinc) {
-            vinc.value = msg.linkName || '';
-            vinc.classList.add('border-green-500', 'ring-2', 'ring-green-100');
-            setTimeout(() => vinc.classList.remove('border-green-500', 'ring-2', 'ring-green-100'), 2000);
-          }
-          if (msg.deeplink) {
-            const anchor = document.getElementById('exc-modal-anchor');
-            if (anchor && !anchor.value) {
-              anchor.value = msg.deeplink;
-              anchor.classList.add('border-green-500', 'ring-2', 'ring-green-100');
-              setTimeout(() => anchor.classList.remove('border-green-500', 'ring-2', 'ring-green-100'), 2000);
+          if (!msg.nodeId) {
+            showToast('Selecione um elemento no canvas antes de vincular.', 'error');
+          } else {
+            if (vinc) {
+              vinc.value = msg.linkName || '';
+              vinc.classList.add('border-green-500', 'ring-2', 'ring-green-100');
+              setTimeout(() => vinc.classList.remove('border-green-500', 'ring-2', 'ring-green-100'), 2000);
+            }
+            if (msg.deeplink) {
+              const anchor = document.getElementById('exc-modal-anchor');
+              if (anchor && !anchor.value) {
+                anchor.value = msg.deeplink;
+                anchor.classList.add('border-green-500', 'ring-2', 'ring-green-100');
+                setTimeout(() => anchor.classList.remove('border-green-500', 'ring-2', 'ring-green-100'), 2000);
+              }
             }
           }
         } else {
@@ -322,17 +327,44 @@
 
       if (msg.type === "flow-created") {
         if (!handoffData.createdFlows) handoffData.createdFlows = [];
-        handoffData.createdFlows.push(msg.flow);
-        handoffData.nextFlowNumber = (handoffData.nextFlowNumber || 1) + 1;
+        // Edição (apaga+recria, ver editFlowConnection em specifications.js)
+        // substitui o item no mesmo índice em vez de adicionar um novo --
+        // sem isso, editar um fluxo duplicaria a entrada na lista.
+        if (typeof window._editingFlowIndex === 'number' && handoffData.createdFlows[window._editingFlowIndex]) {
+          handoffData.createdFlows[window._editingFlowIndex] = msg.flow;
+        } else {
+          handoffData.createdFlows.push(msg.flow);
+          handoffData.nextFlowNumber = (handoffData.nextFlowNumber || 1) + 1;
+        }
+        window._editingFlowIndex = null;
         renderFlowsList();
         saveToStorage();
         if (window._toastSaved) _toastSaved();
-        if (msg.flow && msg.flow.id) focusNode(msg.flow.id);
+        // Conexão em lote (3+ elementos selecionados) dispara flow-created
+        // várias vezes em sequência rápida -- focar o canvas a cada uma
+        // seria ruim (viewport pulando várias vezes). window._flowBatchActive
+        // é setado por flow-batch-created (backend) antes das mensagens
+        // individuais chegarem; só foca quando é uma conexão isolada.
+        if (!window._flowBatchActive && msg.flow && msg.flow.id) focusNode(msg.flow.id);
         setTimeout(() => {
           const list = document.getElementById('flows-results');
           const last = list && list.lastElementChild;
           if (last) autoScrollToNewItem('handoff-scroll-container', last);
         }, 100);
+      }
+
+      if (msg.type === "flow-edit-failed") {
+        window._editingFlowIndex = null;
+        showToast('Não foi possível editar o fluxo — elemento(s) de origem/destino não encontrado(s) no canvas.', 'error');
+      }
+
+      if (msg.type === "flow-batch-started") {
+        window._flowBatchActive = true;
+      }
+
+      if (msg.type === "flow-batch-created") {
+        window._flowBatchActive = false;
+        showToast(`${msg.count} conexão(ões) criadas em sequência`);
       }
 
       if (msg.type === "design-data-exported") {
@@ -353,17 +385,17 @@
         if (list) {
           list.innerHTML = '';
           if (!currentScannedProps || currentScannedProps.length === 0) {
-            list.innerHTML = '<p class="text-[12px] text-orange-500 bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl border border-orange-100 dark:border-orange-800/30 flex items-center gap-3"><i data-lucide="alert-triangle" class="w-5 h-5 shrink-0"></i> Nenhuma propriedade detectada no elemento selecionado.</p>';
+            list.innerHTML = '<p class="text-[12px] text-orange-800 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl border border-orange-100 dark:border-orange-800/30 flex items-center gap-3"><i data-lucide="alert-triangle" class="w-5 h-5 shrink-0"></i> Nenhuma propriedade detectada no elemento selecionado.</p>';
           } else {
             const iconMap = { height: 'maximize-2', width: 'maximize-2', radius: 'corner-up-right', direction: 'move', alignment: 'align-center', gap: 'space', padding: 'box', fill: 'palette', stroke: 'square', strokeWidth: 'hash', fontFamily: 'type', fontWeight: 'bold', fontSize: 'text-cursor-input' };
             currentScannedProps.forEach(prop => {
               const id = 'prop-' + prop.key;
               const iconName = iconMap[prop.key] || (prop.key.startsWith('variant-') ? 'component' : 'settings');
-              const tokenBadge = prop.token ? `<span class="ml-2 px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/40 text-[9px] text-[#0070af] dark:text-blue-400 font-bold border border-blue-100 dark:border-blue-800 shadow-sm">${prop.token}</span>` : '';
+              const tokenBadge = prop.token ? `<span class="ml-2 px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/40 text-[9px] text-[#3d3dff] dark:text-blue-400 font-bold border border-blue-100 dark:border-blue-800 shadow-sm">${prop.token}</span>` : '';
               list.innerHTML += `
                 <label class="flex items-center justify-between p-3 hover:bg-slate-50 dark:hover:bg-dark-surface/50 rounded-2xl cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-800 transition-all group">
                   <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-dark-bg flex items-center justify-center text-slate-500 dark:text-dark-muted group-hover:text-[#0070af] transition-colors">
+                    <div class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-dark-bg flex items-center justify-center text-slate-500 dark:text-dark-muted group-hover:text-[#3d3dff] transition-colors">
                       <i data-lucide="${iconName}" class="w-4 h-4"></i>
                     </div>
                     <div>
@@ -374,7 +406,7 @@
                       ${!prop.token ? `<span class="block text-[11px] text-slate-500 dark:text-dark-muted font-mono">${prop.value}</span>` : ''}
                     </div>
                   </div>
-                  <input type="checkbox" id="${id}" value="${prop.key}" checked class="w-5 h-5 rounded-lg border-gray-200 text-[#0070af] focus:ring-[#0070af] transition-all cursor-pointer" />
+                  <input type="checkbox" id="${id}" value="${prop.key}" checked class="w-5 h-5 rounded-lg border-gray-200 text-[#3d3dff] focus:ring-[#3d3dff] transition-all cursor-pointer" />
                 </label>
               `;
             });
@@ -435,7 +467,7 @@
         if (typeof hideHandoffLoading === 'function') hideHandoffLoading();
         if (typeof _markFichaGenerated === 'function') _markFichaGenerated();
         if (msg.isUpdate) {
-          showToast(`Nova versão ${handoffData.step1.versao} gerada ao lado — ${msg.timestamp}`);
+          showToast(`Ficha atualizada — ${msg.timestamp}`);
         } else {
           showToast('Ficha gerada no canvas!');
         }
@@ -445,6 +477,30 @@
       if (msg.type === 'handoff-error') {
         if (typeof hideHandoffLoading === 'function') hideHandoffLoading();
         showToast('Erro ao gerar ficha: ' + (msg.message || 'Verifique o console do plugin.'), 'error');
+        return;
+      }
+
+      if (msg.type === 'spec-connector-edited') {
+        // Busca em createdSpecs (a variável global renderizada na tela, que
+        // já cobre specs avulsas e por-frame via _mergeLooseAndFramed) --
+        // buscar só em handoffData.frames[].createdSpecs deixaria specs
+        // avulsas sem persistir (mesma família de bug já corrigida em
+        // removeSpecById/saveSpecsToStorage, ver core.js).
+        const spec = (typeof createdSpecs !== 'undefined' ? createdSpecs : []).find(s => s.id === msg.specId);
+        if (spec) {
+          spec.connectorStyle = msg.connectorStyle;
+          spec.connectorCurvature = msg.connectorCurvature;
+        }
+        if (typeof saveSpecsToStorage === 'function') saveSpecsToStorage();
+        else saveToStorage();
+        if (typeof closeEditSpecConnectorModal === 'function') closeEditSpecConnectorModal();
+        showToast('Linha da especificação atualizada');
+        return;
+      }
+
+      if (msg.type === 'spec-connector-edit-failed') {
+        window._editingSpecConnectorIndex = null;
+        showToast('Não foi possível editar a linha — elemento vinculado não encontrado no canvas.', 'error');
         return;
       }
 

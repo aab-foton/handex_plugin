@@ -42,6 +42,20 @@ O MCP Server da Figma permite que agentes de código (Claude Code, Cursor) leiam
 
 Não recomendo integrar o MCP Server como via de edição automática do canvas no contexto do Handex — o valor do produto está em ser a camada de **governança e evidência** (ficha gerada, auditoria declarada, ressalvas documentadas), não em automatizar decisões de design. Um uso possível e mais seguro: expor o `_skeleton.json`/refs DSC como contexto **somente leitura** para agentes de IA que ajudem desenvolvedores a consumir os componentes DSC corretamente — mantendo o Handex como fonte de verdade, não como executor automático.
 
+### 4b. Documentação de projeto como contexto para geração externa (ex: Figma Make) — implementado de forma contida (2026-08)
+
+Ideia avaliada em profundidade (3 rodadas de análise, 2026-08): usar o que já foi documentado de UM projeto no Handex (briefing, tokens usados, cenários de exceção, medidas, fluxos) como contexto para uma ferramenta externa (Figma Make ou equivalente) gerar/propor uma tela nova dentro do mesmo projeto.
+
+**Confirmado tecnicamente:** não existe hoje nenhuma API que permita um plugin do Figma Design empurrar contexto para dentro de um projeto Figma Make — são superfícies de produto separadas, sem canal programático entre elas. O único caminho real é o designer copiar/colar manualmente o conteúdo exportado como attachment/prompt no Make.
+
+**O que foi implementado:** `_aiContext` (`modules/design-data.js`, `_buildAiContext()`) — um campo agregador que entra automaticamente no JSON exportado (`exportHandoffData`/`exportProgress`), sem UI/botão visível. É estritamente material de apoio pronto para copiar/colar, contido a UM projeto (o que já foi documentado nele) — nunca integração automática, nunca geração feita pelo próprio Handex.
+
+**Por que não ir além disso (não expandir para RAG institucional multi-projeto):** uma versão mais ambiciosa — agregar briefings de VÁRIOS projetos numa base de conhecimento institucional consultável — foi avaliada e descartada por dois motivos, não só um:
+1. É uma categoria de infraestrutura diferente (busca semântica/RAG sobre texto livre, exige vector store e pipeline de ingestão institucional — não é "adicionar um endpoint").
+2. Briefings estratégicos são o conteúdo mais sensível que o Handex coleta (decisões de escopo, riscos de LGPD/compliance ainda não revisados formalmente, contexto pré-lançamento) — elevar isso a "fato institucional buscável" por qualquer agente, sem dono de curadoria nem processo de revisão, é risco de governança de conteúdo que não é decisão do Handex tomar unilateralmente.
+
+Se um produto institucional de RAG/base de conhecimento vier a existir, com dono formal e processo de curadoria fora do Handex, o Handex pode ser *uma* fonte exportável entre várias — mas isso não deve ser prototipado nem desenhado a partir daqui.
+
 ## 5. Slots (GA junho 2026)
 
 `SlotNode` é uma feature de **geração/composição** de componentes com conteúdo freeform. O Handex audita e documenta componentes existentes — não gera componentes. Baixa relevância direta, a menos que o produto evolua para sugerir/preencher slots automaticamente durante o handoff (fora do escopo atual "express").

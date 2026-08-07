@@ -19,7 +19,7 @@ Plugin Figma que automatiza o handoff de design. Permite ao designer:
 - Mapear fluxos de tela
 - Gerar uma ficha técnica completa no canvas do Figma
 
-**Versão atual:** v6.2.0  
+**Versão atual:** v6.3.0  
 **Documentação:** `BUSINESS_RULES.md` (regras de negócio) · `CHANGELOG.md` (histórico)
 
 ---
@@ -112,6 +112,12 @@ git push origin main && git push gitlab main
 }
 ```
 
+**Nota sobre `createdSpecs[].id`:** refere-se ao id do nó Figma raiz da spec no canvas — sempre um **GROUP** (`figma.group()` agrupando `Conector`/`DotInicio`/`DotFim`/`specCard`), com o `contour` ("Destaque") solto fora do grupo, travado, vinculado por pluginData (`handexSpecMarkerFor`/`handexSpecMarkerId`). Uma migração para FRAME único foi tentada e revertida (ver "Bugs corrigidos relevantes") — não retomar sem alinhamento.
+
+**Nota sobre `specGroupNames`/`specGroupVisible`:** nome legado — refere-se ao agrupamento lógico de specs por letra/categoria na UI, não ao tipo de nó GROUP do Figma.
+
+**Feature oculta — `_aiContext` (2026-08, `modules/design-data.js`):** `exportHandoffData()` e `exportProgress()` injetam um campo `_aiContext` (calculado por `_buildAiContext()`) no JSON exportado, agregando briefing (`step1`/`step2.briefingQuestions`/`regras`), tokens usados nas specs, cenários de exceção, medidas e fluxos do projeto atual num formato compacto. Objetivo: material de apoio para colar como contexto/prompt em ferramentas externas de geração (ex: Figma Make) ao propor uma tela nova dentro do MESMO projeto — nunca integração automática (não existe canal de API para isso) nem geração feita pelo próprio Handex. Sem botão/UI visível de propósito — funciona em background, sempre presente no export existente. `_aiContext` é dado **derivado**, calculado no momento do export: nunca deve ser persistido em `handoffData` nem sobreviver a um ciclo de import (`importHandoffData()` remove o campo antes do `Object.assign`, de propósito). Ver `docs/figma-api-roadmap-2026.md` (item 4b) para o raciocínio completo de escopo — por que isso fica contido a um projeto e não deve crescer para conhecimento institucional agregado entre projetos.
+
 ---
 
 ## Decisões de produto tomadas (não reverter sem alinhamento)
@@ -124,6 +130,7 @@ git push origin main && git push gitlab main
 | Frames sem nenhum filho DS **mantidos** no scan | Indicam tela 100% custom fora do DS — informação relevante |
 | `isDS` por propriedade **não influencia** os toggles de auditoria | São camadas distintas: scan automatizado vs. declaração humana |
 | Accordions do botão `⇅` incluem **cards de frame** | Antes só recolhia accordions internos |
+| Spec permanece **GROUP + nó solto (`contour`) vinculado por pluginData** — não migrar para FRAME único | Testado em 2026-08: FRAME único exigia duplo-clique para mover Conector/card sem arrastar o marcador junto; não ficou bom na prática. Revertido para o esquema original (clique simples move só o grupo móvel, marcador nunca acompanha) |
 
 ---
 
@@ -133,6 +140,8 @@ git push origin main && git push gitlab main
 - **`setSvgColor` pintava o FRAME container do SVG** — `figma.createNodeFromSvg()` retorna um FRAME envolvendo VECTORs. A função aplicava cor no container, deixando tudo cinza. Corrigido para limpar fills do container e colorir só os nós folha.
 - **`toggleFrameAccordion` buscava `frame-arrow-{id}`** — o HTML renderiza `frame-chevron-{id}`. Corrigido em v4.1.6.
 - **`handoffData.docs` não inicializado no schema v2** — acessos como `handoffData.docs.proto.link` quebravam. Corrigido com null-guards.
+
+**Nota sobre a arquitetura de spec (GROUP + nó solto) — vigente:** o marcador ("Destaque") vive FORA do `specGroup`, como nó irmão travado na página, vinculado por pluginData (`handexSpecMarkerFor`/`handexSpecMarkerId`). Não é escolha estética, é a única solução dada uma limitação real da Figma Plugin API: a posição de um filho é sempre relativa ao pai (tanto em GROUP quanto em FRAME), e `locked = true` num filho não o desacopla de transformações do container pai — mover/redimensionar o container sempre move todos os filhos, travados ou não. Como o usuário sempre seleciona e arrasta o `specGroup` inteiro como unidade com um clique simples (nunca duplo-clique para "entrar" no container), qualquer filho do mesmo grupo se moveria junto, mesmo travado. Em 2026-08 essa arquitetura foi migrada para FRAME único (contour+dots dentro do mesmo container, exigindo duplo-clique do usuário para mover Conector/card sem arrastar o marcador) e depois **revertida** — o gesto de duplo-clique não funcionou bem na prática. Não remigrar sem alinhamento explícito.
 
 ---
 
