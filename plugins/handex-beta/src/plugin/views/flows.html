@@ -54,12 +54,14 @@
       <!-- renderFlowsList() insere aqui -->
     </ul>
 
-    <!-- Salvar e Voltar -->
+    <!-- Finalizar Registros — ação única de fechamento, tom discreto (outline)
+         para não competir com "Conectar Frames" no header, a ação mais
+         frequente da tela. -->
     <div class="pt-4 pb-2">
-      <button onclick="saveAndGoHome((handoffData.createdFlows||[]).length > 0, 'Fluxos salvos!')"
+      <button onclick="finalizeSection('flows')"
         class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
-        <i data-lucide="arrow-left" class="w-4 h-4" aria-hidden="true"></i>
-        Salvar e Voltar
+        <i data-lucide="clipboard-check" class="w-4 h-4" aria-hidden="true"></i>
+        Finalizar Registros
       </button>
     </div>
 

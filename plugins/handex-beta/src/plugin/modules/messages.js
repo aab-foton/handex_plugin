@@ -377,6 +377,30 @@
         }
       }
 
+      if (msg.type === 'spec-connector-edited') {
+        // Busca em createdSpecs (a variável global renderizada na tela, que
+        // já cobre specs avulsas e por-frame via _mergeLooseAndFramed) --
+        // buscar só em handoffData.frames[].createdSpecs deixaria specs
+        // avulsas sem persistir (mesma família de bug já corrigida em
+        // removeSpecById/saveSpecsToStorage, ver core.js).
+        const spec = (typeof createdSpecs !== 'undefined' ? createdSpecs : []).find(s => s.id === msg.specId);
+        if (spec) {
+          spec.connectorStyle = msg.connectorStyle;
+          spec.connectorCurvature = msg.connectorCurvature;
+        }
+        if (typeof saveSpecsToStorage === 'function') saveSpecsToStorage();
+        else saveToStorage();
+        if (typeof closeEditSpecConnectorModal === 'function') closeEditSpecConnectorModal();
+        showToast('Linha da especificação atualizada');
+        return;
+      }
+
+      if (msg.type === 'spec-connector-edit-failed') {
+        window._editingSpecConnectorIndex = null;
+        showToast('Não foi possível editar a linha — elemento vinculado não encontrado no canvas.', 'error');
+        return;
+      }
+
       if (msg.type === "selection-name") {
         if (typeof prefillA11yComponentName === 'function') prefillA11yComponentName(msg.name);
       }
@@ -441,8 +465,16 @@
 
       if (msg.type === "flow-created") {
         if (!handoffData.createdFlows) handoffData.createdFlows = [];
-        handoffData.createdFlows.push(msg.flow);
-        handoffData.nextFlowNumber = (handoffData.nextFlowNumber || 1) + 1;
+        // Edição (apaga+recria, ver confirmEditFlow em specifications.js)
+        // substitui o item no mesmo índice em vez de adicionar um novo --
+        // sem isso, editar um fluxo duplicaria a entrada na lista.
+        if (typeof window._editingFlowIndex === 'number' && handoffData.createdFlows[window._editingFlowIndex]) {
+          handoffData.createdFlows[window._editingFlowIndex] = msg.flow;
+        } else {
+          handoffData.createdFlows.push(msg.flow);
+          handoffData.nextFlowNumber = (handoffData.nextFlowNumber || 1) + 1;
+        }
+        window._editingFlowIndex = null;
         renderFlowsList();
         saveToStorage();
         if (window._toastSaved) _toastSaved();
@@ -452,6 +484,11 @@
           const last = list && list.lastElementChild;
           if (last) autoScrollToNewItem('handoff-scroll-container', last);
         }, 100);
+      }
+
+      if (msg.type === "flow-edit-failed") {
+        window._editingFlowIndex = null;
+        showToast('Não foi possível editar o fluxo — elemento(s) de origem/destino não encontrado(s) no canvas.', 'error');
       }
 
       if (msg.type === "design-data-exported") {

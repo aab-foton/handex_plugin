@@ -616,7 +616,70 @@
       </div>
       <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
         <button onclick="closeSpecPropertiesModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Voltar</button>
-        <button onclick="confirmSpecProperties()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Inserir</button>
+        <button onclick="advanceToSpecExceptionStep()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Avançar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CENÁRIO DE EXCEÇÃO (etapa final da criação de spec, opcional) -->
+  <div id="spec-new-exception-modal" role="dialog" aria-modal="true" aria-labelledby="new-exc-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeSpecNewExceptionModal()" aria-hidden="true"></div>
+    <div class="relative w-full max-w-sm bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line">
+        <h3 id="new-exc-modal-title" class="font-extrabold text-[15px] text-slate-800 dark:text-white flex items-center gap-2 tracking-tight">
+          <i data-lucide="alert-triangle" class="w-4 h-4 text-orange-700" aria-hidden="true"></i> Cenário de Exceção
+        </h3>
+        <button onclick="closeSpecNewExceptionModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+          <i data-lucide="x" class="w-4 h-4" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="p-4 max-h-[65vh] overflow-y-auto space-y-4" onscroll="handleScroll(this)">
+        <div class="flex items-start gap-2.5 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
+          <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5"></i>
+          <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-snug">Esta etapa não é obrigatória. Você pode criar a especificação sem cenário e preencher (ou editar a nota) mais tarde, direto pelo card da spec.</p>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-3">Tipo do Cenário</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="selectNewSpecExceptionType('Erro')" id="new-exc-type-Erro"
+              class="new-exc-type-btn flex items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all hover:border-red-300 group">
+              <i data-lucide="x-circle" class="w-5 h-5 text-gray-400 group-hover:text-red-500 transition-colors"></i>
+              <span class="text-[12px] font-bold text-slate-600 dark:text-dark-text">Erro</span>
+            </button>
+            <button onclick="selectNewSpecExceptionType('Sucesso')" id="new-exc-type-Sucesso"
+              class="new-exc-type-btn flex items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all hover:border-green-300 group">
+              <i data-lucide="check-circle" class="w-5 h-5 text-gray-400 group-hover:text-green-500 transition-colors"></i>
+              <span class="text-[12px] font-bold text-slate-600 dark:text-dark-text">Sucesso</span>
+            </button>
+            <button onclick="selectNewSpecExceptionType('Confirmação')" id="new-exc-type-Confirmação"
+              class="new-exc-type-btn flex items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all hover:border-blue-300 group">
+              <i data-lucide="help-circle" class="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors"></i>
+              <span class="text-[12px] font-bold text-slate-600 dark:text-dark-text">Confirmação</span>
+            </button>
+            <button onclick="selectNewSpecExceptionType('Alerta')" id="new-exc-type-Alerta"
+              class="new-exc-type-btn flex items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all hover:border-amber-300 group">
+              <i data-lucide="alert-triangle" class="w-5 h-5 text-gray-400 group-hover:text-amber-500 transition-colors"></i>
+              <span class="text-[12px] font-bold text-slate-600 dark:text-dark-text">Alerta</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label for="new-exc-titulo" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5">Título</label>
+          <input type="text" id="new-exc-titulo" placeholder="Ex: Usuário sem permissão de acesso"
+            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all" />
+        </div>
+
+        <div>
+          <label for="new-exc-obs" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5">Observação <span class="normal-case font-normal text-slate-400">(opcional)</span></label>
+          <textarea id="new-exc-obs" rows="3" placeholder="Contexto adicional, comportamento esperado..."
+            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none resize-none transition-all"></textarea>
+        </div>
+      </div>
+      <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
+        <button onclick="backToSpecPropertiesFromException()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Voltar</button>
+        <button onclick="finalizeSpecCreation()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Criar Especificação</button>
       </div>
     </div>
   </div>
@@ -669,7 +732,7 @@
   <!-- Controlado por modules/accessibility.js: openA11yModal, closeA11yModal, confirmA11ySpec -->
   <div id="a11y-spec-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
     <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeA11yModal()" aria-hidden="true"></div>
-    <div class="relative w-full max-w-sm max-h-[85vh] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+    <div class="relative w-full max-w-sm max-h-[92vh] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
       <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
         <div class="min-w-0">
           <h3 id="a11y-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
@@ -682,9 +745,9 @@
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
-      <div class="p-6 overflow-y-auto flex-1 min-h-0" onscroll="handleScroll(this)">
-        <p class="text-[11px] text-slate-500 dark:text-dark-muted mb-5 leading-relaxed">
-          Selecione o elemento no canvas antes de aplicar — a especificação nasce no canvas ao lado dele, associada à área marcada. Arraste para posicionar e conclua quando estiver pronta.
+      <div class="p-5 overflow-y-auto flex-1 min-h-0" onscroll="handleScroll(this)">
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted mb-4 leading-relaxed">
+          Selecione o elemento no canvas antes de aplicar — a especificação nasce travada, já posicionada ao lado dele e associada à área marcada. Use o cadeado na listagem se precisar destravar e ajustar depois.
         </p>
 
         <!-- Elementos e Imagens -->
@@ -766,64 +829,6 @@
             <input type="text" id="a11y-el-label" placeholder="Ex: Botão de enviar formulário"
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
           </div>
-          <div id="a11y-el-variante-wrap">
-            <button type="button" id="a11y-el-variante-chip" onclick="toggleA11yOptionalField('a11y-el-variante')"
-              class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-slate-500 dark:text-dark-muted bg-gray-50 dark:bg-dark-bg border border-dashed border-gray-300 dark:border-dark-line rounded-full hover:border-cyan-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">
-              <i data-lucide="plus" class="w-3 h-3"></i> Adicionar Variante
-            </button>
-            <div id="a11y-el-variante-field" class="hidden">
-              <div class="flex items-center justify-between mb-1.5 ml-1">
-                <label for="a11y-el-variante" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Variante <span class="normal-case font-medium text-slate-400">(opcional)</span></label>
-                <button type="button" onclick="toggleA11yOptionalField('a11y-el-variante')" title="Remover" aria-label="Remover Variante" class="text-slate-400 hover:text-red-500 transition-colors"><i data-lucide="x" class="w-3 h-3"></i></button>
-              </div>
-              <input type="text" id="a11y-el-variante" placeholder="Ex: Desabilitado, Selecionado..."
-                class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
-            </div>
-          </div>
-          <div id="a11y-el-hint-wrap">
-            <button type="button" id="a11y-el-hint-chip" onclick="toggleA11yOptionalField('a11y-el-hint')"
-              class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-slate-500 dark:text-dark-muted bg-gray-50 dark:bg-dark-bg border border-dashed border-gray-300 dark:border-dark-line rounded-full hover:border-cyan-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">
-              <i data-lucide="plus" class="w-3 h-3"></i> Adicionar Hint
-            </button>
-            <div id="a11y-el-hint-field" class="hidden">
-              <div class="flex items-center justify-between mb-1.5 ml-1">
-                <label for="a11y-el-hint" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Hint (accessibilityHint) <span class="normal-case font-medium text-slate-400">(opcional)</span></label>
-                <button type="button" onclick="toggleA11yOptionalField('a11y-el-hint')" title="Remover" aria-label="Remover Hint" class="text-slate-400 hover:text-red-500 transition-colors"><i data-lucide="x" class="w-3 h-3"></i></button>
-              </div>
-              <input type="text" id="a11y-el-hint" placeholder="Ex: Envia o formulário preenchido"
-                class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
-            </div>
-          </div>
-          <div class="pt-2 mt-2 border-t border-dashed border-gray-150 dark:border-dark-line space-y-4">
-            <div id="a11y-el-obs-wrap">
-              <button type="button" id="a11y-el-obs-chip" onclick="toggleA11yOptionalField('a11y-el-obs')"
-                class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-slate-500 dark:text-dark-muted bg-gray-50 dark:bg-dark-bg border border-dashed border-gray-300 dark:border-dark-line rounded-full hover:border-cyan-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">
-                <i data-lucide="plus" class="w-3 h-3"></i> Adicionar Observações
-              </button>
-              <div id="a11y-el-obs-field" class="hidden">
-                <div class="flex items-center justify-between mb-1.5 ml-1">
-                  <label for="a11y-el-obs" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Observações <span class="normal-case font-medium text-slate-400">(opcional)</span></label>
-                  <button type="button" onclick="toggleA11yOptionalField('a11y-el-obs')" title="Remover" aria-label="Remover Observações" class="text-slate-400 hover:text-red-500 transition-colors"><i data-lucide="x" class="w-3 h-3"></i></button>
-                </div>
-                <input type="text" id="a11y-el-obs" placeholder="Ex: Deve anunciar o estado ao ser tocado"
-                  class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
-              </div>
-            </div>
-            <div id="a11y-el-link-wrap">
-              <button type="button" id="a11y-el-link-chip" onclick="toggleA11yOptionalField('a11y-el-link')"
-                class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-slate-500 dark:text-dark-muted bg-gray-50 dark:bg-dark-bg border border-dashed border-gray-300 dark:border-dark-line rounded-full hover:border-cyan-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">
-                <i data-lucide="plus" class="w-3 h-3"></i> Adicionar Link do componente
-              </button>
-              <div id="a11y-el-link-field" class="hidden">
-                <div class="flex items-center justify-between mb-1.5 ml-1">
-                  <label for="a11y-el-link" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Link do componente <span class="normal-case font-medium text-slate-400">(opcional)</span></label>
-                  <button type="button" onclick="toggleA11yOptionalField('a11y-el-link')" title="Remover" aria-label="Remover Link do componente" class="text-slate-400 hover:text-red-500 transition-colors"><i data-lucide="x" class="w-3 h-3"></i></button>
-                </div>
-                <input type="text" id="a11y-el-link" placeholder="https://..."
-                  class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Estrutura da Página -->
@@ -879,20 +884,6 @@
             <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
             <p id="a11y-estrutura-nota" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
           </div>
-          <div id="a11y-estrutura-obs-wrap">
-            <button type="button" id="a11y-estrutura-obs-chip" onclick="toggleA11yOptionalField('a11y-estrutura-obs')"
-              class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-slate-500 dark:text-dark-muted bg-gray-50 dark:bg-dark-bg border border-dashed border-gray-300 dark:border-dark-line rounded-full hover:border-cyan-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">
-              <i data-lucide="plus" class="w-3 h-3"></i> Adicionar Observações
-            </button>
-            <div id="a11y-estrutura-obs-field" class="hidden">
-              <div class="flex items-center justify-between mb-1.5 ml-1">
-                <label for="a11y-estrutura-obs" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Observações <span class="normal-case font-medium text-slate-400">(opcional)</span></label>
-                <button type="button" onclick="toggleA11yOptionalField('a11y-estrutura-obs')" title="Remover" aria-label="Remover Observações" class="text-slate-400 hover:text-red-500 transition-colors"><i data-lucide="x" class="w-3 h-3"></i></button>
-              </div>
-              <input type="text" id="a11y-estrutura-obs" placeholder="Ex: Idioma predominante em pt-br"
-                class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
-            </div>
-          </div>
         </div>
 
         <!-- Nível de Título -->
@@ -920,20 +911,6 @@
               <p id="a11y-fixed-nota" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
             </div>
           </div>
-          <div id="a11y-titulo-obs-wrap">
-            <button type="button" id="a11y-titulo-obs-chip" onclick="toggleA11yOptionalField('a11y-titulo-obs')"
-              class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-slate-500 dark:text-dark-muted bg-gray-50 dark:bg-dark-bg border border-dashed border-gray-300 dark:border-dark-line rounded-full hover:border-cyan-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">
-              <i data-lucide="plus" class="w-3 h-3"></i> Adicionar Observações
-            </button>
-            <div id="a11y-titulo-obs-field" class="hidden">
-              <div class="flex items-center justify-between mb-1.5 ml-1">
-                <label for="a11y-titulo-obs" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Observações <span class="normal-case font-medium text-slate-400">(opcional)</span></label>
-                <button type="button" onclick="toggleA11yOptionalField('a11y-titulo-obs')" title="Remover" aria-label="Remover Observações" class="text-slate-400 hover:text-red-500 transition-colors"><i data-lucide="x" class="w-3 h-3"></i></button>
-              </div>
-              <input type="text" id="a11y-titulo-obs" placeholder="Ex: Nível de hierarquia H1"
-                class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
-            </div>
-          </div>
         </div>
 
         <!-- Elemento Decorativo -->
@@ -954,20 +931,6 @@
             <div>
               <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
               <p id="a11y-fixed-nota-dec" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
-            </div>
-          </div>
-          <div id="a11y-decorativo-obs-wrap">
-            <button type="button" id="a11y-decorativo-obs-chip" onclick="toggleA11yOptionalField('a11y-decorativo-obs')"
-              class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-slate-500 dark:text-dark-muted bg-gray-50 dark:bg-dark-bg border border-dashed border-gray-300 dark:border-dark-line rounded-full hover:border-cyan-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">
-              <i data-lucide="plus" class="w-3 h-3"></i> Adicionar Observações
-            </button>
-            <div id="a11y-decorativo-obs-field" class="hidden">
-              <div class="flex items-center justify-between mb-1.5 ml-1">
-                <label for="a11y-decorativo-obs" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Observações <span class="normal-case font-medium text-slate-400">(opcional)</span></label>
-                <button type="button" onclick="toggleA11yOptionalField('a11y-decorativo-obs')" title="Remover" aria-label="Remover Observações" class="text-slate-400 hover:text-red-500 transition-colors"><i data-lucide="x" class="w-3 h-3"></i></button>
-              </div>
-              <input type="text" id="a11y-decorativo-obs" placeholder="Ex: Ícone puramente ilustrativo"
-                class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
             </div>
           </div>
         </div>
@@ -997,24 +960,28 @@
             <input type="text" id="a11y-informacoes-descricao" readonly
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
           </div>
-          <div id="a11y-informacoes-obs-wrap">
-            <button type="button" id="a11y-informacoes-obs-chip" onclick="toggleA11yOptionalField('a11y-informacoes-obs')"
-              class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-slate-500 dark:text-dark-muted bg-gray-50 dark:bg-dark-bg border border-dashed border-gray-300 dark:border-dark-line rounded-full hover:border-cyan-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">
-              <i data-lucide="plus" class="w-3 h-3"></i> Adicionar Observações
-            </button>
-            <div id="a11y-informacoes-obs-field" class="hidden">
-              <div class="flex items-center justify-between mb-1.5 ml-1">
-                <label for="a11y-informacoes-obs" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Observações <span class="normal-case font-medium text-slate-400">(opcional)</span></label>
-                <button type="button" onclick="toggleA11yOptionalField('a11y-informacoes-obs')" title="Remover" aria-label="Remover Observações" class="text-slate-400 hover:text-red-500 transition-colors"><i data-lucide="x" class="w-3 h-3"></i></button>
-              </div>
-              <input type="text" id="a11y-informacoes-obs" placeholder="Ex: Link do handoff no Figma"
-                class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
-            </div>
+        </div>
+
+        <!-- Modo de marcação: Contorno (Agrupamento, envolve a área) vs Linha (Conector, liga a um ponto) -->
+        <div class="mt-4">
+          <label class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Modo de marcação</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
+              <input type="radio" name="a11y-draw-mode" value="contorno" checked class="sr-only" />
+              <i data-lucide="square-dashed" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2] shrink-0"></i>
+              <span class="text-[11px] font-bold text-gray-600 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Contorno</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
+              <input type="radio" name="a11y-draw-mode" value="linha" class="sr-only" />
+              <i data-lucide="spline" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2] shrink-0"></i>
+              <span class="text-[11px] font-bold text-gray-600 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Linha</span>
+            </label>
           </div>
+          <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-1 ml-1 leading-snug">Contorno envolve o elemento com uma moldura. Linha liga um ponto do elemento ao card com um traço.</p>
         </div>
 
         <!-- Guide Side Selection (todas as categorias) -->
-        <div class="mt-5 mb-4">
+        <div class="mt-3 mb-1">
           <label class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Lado da Guia</label>
           <div class="grid grid-cols-4 gap-2">
             <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
@@ -1040,7 +1007,7 @@
           </div>
         </div>
       </div>
-      <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2 shrink-0">
+      <div class="p-3 border-t border-gray-100 dark:border-dark-line flex gap-2 shrink-0">
         <button onclick="closeA11yModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Cancelar</button>
         <button id="btn-a11y-confirm" onclick="confirmA11ySpec()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 rounded-2xl transition-colors shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed">Aplicar</button>
       </div>
@@ -1062,7 +1029,7 @@
       </div>
       <div class="p-6 space-y-4">
         <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
-          Selecione no canvas a seção ou bloco da tela que quer identificar (ex: "Home Portal DSC") e dê um rótulo. Um selo numerado sequencial é criado ao lado do elemento selecionado.
+          Selecione no canvas a seção ou bloco da tela que quer identificar (ex: "Home Portal DSC") e dê um rótulo. Um selo numerado sequencial é criado ao lado do elemento selecionado — ele organiza as especificações dessa seção na listagem lateral (accordion), não é uma marcação obrigatória de leitura pro leitor de tela. Toda especificação de acessibilidade precisa nascer dentro de uma área.
         </p>
         <div>
           <div class="flex items-center justify-between mb-1.5 ml-1">
@@ -1179,7 +1146,13 @@
 
         <div class="pt-3 mt-1 border-t border-gray-100 dark:border-dark-line">
           <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5">Estrutura padrão de cada spec</p>
-          <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Toda categoria segue os mesmos 3 campos — <strong>Descrição</strong> (como o elemento deve ou não ser lido), <strong>Observações</strong> (contexto adicional) e <strong>Notas de Código</strong> (apontamento técnico pro dev) — exceto Informações Adicionais, que é livre.</p>
+          <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Toda categoria segue os mesmos campos — <strong>Descrição</strong> (como o elemento deve ou não ser lido) e <strong>Notas de Código</strong> (apontamento técnico pro dev), quando aplicável à variante escolhida.</p>
+        </div>
+
+        <div class="pt-3 mt-1 border-t border-gray-100 dark:border-dark-line space-y-2">
+          <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5">Área → Especificação</p>
+          <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Marcar Área</strong> (selo azul numerado) é o pré-requisito: identifica uma seção ou bloco da tela e agrupa, na listagem lateral, todas as especificações criadas dentro dela. Cada uma das 5 categorias acima é uma <strong>Especificação</strong>, sempre criada dentro de uma área já marcada.</p>
+          <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Contorno</strong> (padrão) envolve o elemento inteiro com uma moldura, com o selo embutido num dos cantos. <strong>Linha</strong> liga um ponto do elemento ao card de detalhamento com um traço, sem contornar a área — útil quando o elemento é pequeno ou está muito próximo de outros.</p>
         </div>
 
       </div>
@@ -1762,5 +1735,172 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- MODAL: Editar Conexão de Fluxo (texto de decisão + estilo/curvatura da linha) -->
+<div id="edit-flow-modal" role="dialog" aria-modal="true" class="hidden fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+  <div class="bg-white dark:bg-dark-bg w-full max-w-[380px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line overflow-hidden animate-in zoom-in-95 duration-200">
+
+    <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-line flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-[#005ca9]/10 rounded-xl flex items-center justify-center">
+          <i data-lucide="spline" class="w-4 h-4 text-[#005ca9]"></i>
+        </div>
+        <h3 class="text-[14px] font-extrabold text-slate-800 dark:text-white">Editar Conexão</h3>
+      </div>
+      <button onclick="closeEditFlowModal()" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 dark:text-dark-muted">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div class="px-5 py-5 space-y-4">
+      <div class="space-y-2">
+        <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Texto da Conexão / Chip</label>
+        <textarea id="edit-flow-chip-text" placeholder="Ex: Sim, Não, Enviar..."
+          class="w-full h-20 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none resize-none transition-all"></textarea>
+      </div>
+
+      <div class="space-y-3">
+        <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Estilo da Linha</label>
+        <div class="grid grid-cols-3 gap-2">
+          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+            <input type="radio" name="edit-flow-connector-style" value="straight" onchange="_onEditFlowConnectorStyleChange(this.value)" class="sr-only" />
+            <i data-lucide="minus" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]"></i>
+            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]">Reta</span>
+          </label>
+          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+            <input type="radio" name="edit-flow-connector-style" value="curved" onchange="_onEditFlowConnectorStyleChange(this.value)" class="sr-only" />
+            <i data-lucide="spline" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]"></i>
+            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]">Curva</span>
+          </label>
+          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+            <input type="radio" name="edit-flow-connector-style" value="elbow" onchange="_onEditFlowConnectorStyleChange(this.value)" class="sr-only" />
+            <i data-lucide="corner-down-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]"></i>
+            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]">Esquinas</span>
+          </label>
+        </div>
+
+        <div id="edit-flow-curvature-container" class="hidden space-y-2">
+          <div class="flex items-center justify-between px-1">
+            <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Grau da Curva</label>
+            <span id="edit-flow-curvature-value" class="text-[10px] font-bold text-[#005ca9]">Reta</span>
+          </div>
+          <input type="range" id="edit-flow-curvature-input" min="-100" max="100" value="0" step="5"
+            oninput="_updateEditFlowCurvatureLabel(this.value)"
+            class="w-full h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer accent-[#005ca9]" />
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-1">
+        <button onclick="closeEditFlowModal()"
+          class="flex-1 py-2.5 border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+          Cancelar
+        </button>
+        <button id="edit-flow-save-btn" onclick="confirmEditFlow()"
+          class="flex-1 py-2.5 bg-[#005ca9] hover:bg-[#004a87] text-white text-[12px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-1.5">
+          <i data-lucide="check" class="w-3.5 h-3.5"></i>
+          Salvar
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: Editar Linha da Spec (estilo do conector de uma spec já criada) -->
+<div id="edit-spec-connector-modal" role="dialog" aria-modal="true" class="hidden fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+  <div class="bg-white dark:bg-dark-bg w-full max-w-[380px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line overflow-hidden animate-in zoom-in-95 duration-200">
+
+    <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-line flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-[#005ca9]/10 rounded-xl flex items-center justify-center">
+          <i data-lucide="pencil-ruler" class="w-4 h-4 text-[#005ca9]"></i>
+        </div>
+        <h3 class="text-[14px] font-extrabold text-slate-800 dark:text-white">Editar Linha da Spec</h3>
+      </div>
+      <button onclick="closeEditSpecConnectorModal()" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 dark:text-dark-muted">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div class="px-5 py-5 space-y-4">
+      <div class="space-y-3">
+        <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Estilo da Linha</label>
+        <div class="grid grid-cols-3 gap-2">
+          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+            <input type="radio" name="edit-spec-connector-style" value="straight" onchange="_onEditSpecConnectorStyleChange(this.value)" class="sr-only" />
+            <i data-lucide="minus" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]"></i>
+            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]">Reta</span>
+          </label>
+          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+            <input type="radio" name="edit-spec-connector-style" value="curved" onchange="_onEditSpecConnectorStyleChange(this.value)" class="sr-only" />
+            <i data-lucide="spline" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]"></i>
+            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]">Curva</span>
+          </label>
+          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+            <input type="radio" name="edit-spec-connector-style" value="elbow" onchange="_onEditSpecConnectorStyleChange(this.value)" class="sr-only" />
+            <i data-lucide="corner-down-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]"></i>
+            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]">Esquinas</span>
+          </label>
+        </div>
+
+        <div id="edit-spec-curvature-container" class="hidden space-y-2">
+          <div class="flex items-center justify-between px-1">
+            <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Grau da Curva</label>
+            <span id="edit-spec-curvature-value" class="text-[10px] font-bold text-[#005ca9]">Reta</span>
+          </div>
+          <input type="range" id="edit-spec-curvature-input" min="-100" max="100" value="0" step="5"
+            oninput="_updateEditSpecCurvatureLabel(this.value)"
+            class="w-full h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer accent-[#005ca9]" />
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-1">
+        <button onclick="closeEditSpecConnectorModal()"
+          class="flex-1 py-2.5 border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+          Cancelar
+        </button>
+        <button id="edit-spec-connector-save-btn" onclick="confirmEditSpecConnector()"
+          class="flex-1 py-2.5 bg-[#005ca9] hover:bg-[#004a87] text-white text-[12px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-1.5">
+          <i data-lucide="check" class="w-3.5 h-3.5"></i>
+          Salvar
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: Nota da Spec (incluir/editar nota após a criação da especificação) -->
+<div id="spec-note-modal" role="dialog" aria-modal="true" aria-labelledby="spec-note-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+  <div class="absolute inset-0" onclick="closeModal('spec-note-modal')" aria-hidden="true"></div>
+  <div class="relative w-full max-w-sm bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+    <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line">
+      <h3 id="spec-note-modal-title" class="font-extrabold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
+        <i data-lucide="sticky-note" class="w-4 h-4 text-[#005ca9]"></i> Nota da Especificação
+      </h3>
+      <button onclick="closeModal('spec-note-modal')" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div class="p-5 space-y-2">
+      <label for="spec-note-textarea" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Nota</label>
+      <textarea id="spec-note-textarea" rows="4" placeholder="Ex: Usar variável color-primary-500..."
+        class="w-full px-4 py-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl text-[12px] text-slate-700 dark:text-dark-text placeholder:text-gray-300 outline-none focus:ring-2 focus:ring-blue-100 resize-none transition-all"></textarea>
+    </div>
+
+    <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
+      <button onclick="closeModal('spec-note-modal')"
+        class="flex-1 py-2.5 border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+        Cancelar
+      </button>
+      <button onclick="confirmSpecNote()"
+        class="flex-1 py-2.5 bg-[#005ca9] hover:bg-[#004a87] text-white text-[12px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-1.5">
+        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+        Salvar
+      </button>
+    </div>
   </div>
 </div>

@@ -131,7 +131,7 @@ const A11Y_CONTENT = {
       aside:  { descricao: 'Indicar como seção.', notasCodigo: 'Em HTML <aside> possui um significado semântico, indicando que o conteúdo é "à parte", mas relacionado.' },
       footer: { descricao: 'Indicar como rodapé.', notasCodigo: 'Em HTML use a tag <footer> para agrupar informações relacionadas à parte inferior de uma página ou seção.' },
     },
-    tituloPagina: { descricao: 'Definir o título página como: [insira aqui o título].', notasCodigo: 'Definir usando a tag <title> no HTML.' },
+    tituloPagina: { descricao: 'Definir o título da página como: [insira aqui o título].', notasCodigo: 'Definir usando a tag <title> no HTML.' },
     customizavel: { descricao: 'Insira seu texto da descrição.', notasCodigo: 'Insira seu texto com as anotações necessárias para o pessoal de desenvolvimento.' },
   },
   titulo: {
@@ -259,41 +259,6 @@ const A11Y_TAG_ERROR_ID = {
   informacoes: 'a11y-informacoes-tag-error',
 };
 
-// Campos opcionais que ficam escondidos atrás de um chip "+ Adicionar X" até o
-// designer clicar — evita poluir o formulário com inputs vazios. O texto
-// digitado é preservado se o campo for escondido de novo (só o CSS muda, o
-// valor do input não é limpo pelo toggle).
-const A11Y_OPTIONAL_FIELD_IDS = [
-  'a11y-el-variante', 'a11y-el-hint', 'a11y-el-obs', 'a11y-el-link',
-  'a11y-estrutura-obs',
-  'a11y-titulo-obs',
-  'a11y-decorativo-obs',
-  'a11y-informacoes-obs',
-];
-
-function toggleA11yOptionalField(inputId) {
-  const field = document.getElementById(inputId + '-field');
-  const chip = document.getElementById(inputId + '-chip');
-  if (!field) return;
-  const willShow = field.classList.contains('hidden');
-  field.classList.toggle('hidden', !willShow);
-  if (chip) chip.classList.toggle('hidden', willShow);
-  if (willShow) {
-    const input = document.getElementById(inputId);
-    if (input) input.focus();
-  }
-}
-window.toggleA11yOptionalField = toggleA11yOptionalField;
-
-function _collapseA11yOptionalFields() {
-  A11Y_OPTIONAL_FIELD_IDS.forEach(id => {
-    const field = document.getElementById(id + '-field');
-    const chip = document.getElementById(id + '-chip');
-    if (field) field.classList.add('hidden');
-    if (chip) chip.classList.remove('hidden');
-  });
-}
-
 function openA11yModal(category) {
   const meta = A11Y_CATEGORIES[category];
   if (!meta) return;
@@ -335,18 +300,16 @@ function openA11yModal(category) {
     if (block) block.classList.toggle('hidden', category !== c);
   });
 
-  [
-    'a11y-el-variante', 'a11y-el-label', 'a11y-el-hint', 'a11y-el-obs', 'a11y-el-link',
+[
+    'a11y-el-label',
     'a11y-el-componente-outro',
-    'a11y-titulo-obs',
-    'a11y-decorativo-obs',
-    'a11y-estrutura-obs',
-    'a11y-informacoes-obs',
   ].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
-  _collapseA11yOptionalFields();
+
+  const drawModeDefault = document.querySelector('input[name="a11y-draw-mode"][value="contorno"]');
+  if (drawModeDefault) drawModeDefault.checked = true;
 
   if (category === 'elemento') {
     // Pré-preenche via seleção do canvas — puramente cosmético, ver
@@ -699,17 +662,13 @@ function confirmA11ySpec() {
     }
     properties = [
       { key: 'componente', label: 'Componente', value: componente },
-      { key: 'variante', label: 'Variante', value: g('a11y-el-variante') },
       { key: 'label', label: 'Label', value: label },
-      { key: 'hint', label: 'Hint', value: g('a11y-el-hint') },
     ];
     if (!isOutro) {
       const entry = A11Y_CONTENT.elemento.componentes[select.value];
       if (entry && entry.descricao) properties.push({ key: 'descricao', label: 'Descrição', value: entry.descricao });
       if (entry && entry.notasCodigo) properties.push({ key: 'notaCodigo', label: 'Nota de Código', value: entry.notasCodigo });
     }
-    properties.push({ key: 'observacoes', label: 'Observações', value: g('a11y-el-obs') });
-    properties.push({ key: 'link', label: 'Link do componente', value: g('a11y-el-link') });
     properties = properties.filter(p => p.value);
   } else if (category === 'estrutura') {
     const tag = g('a11y-estrutura-tag-input').toUpperCase();
@@ -727,8 +686,6 @@ function confirmA11ySpec() {
     if (notaWrap && !notaWrap.classList.contains('hidden') && notaEl && notaEl.textContent) {
       properties.push({ key: 'notaCodigo', label: 'Nota de Código', value: notaEl.textContent });
     }
-    const obs = g('a11y-estrutura-obs');
-    if (obs) properties.push({ key: 'observacoes', label: 'Observações', value: obs });
     const subtipoSelect = document.getElementById('a11y-estrutura-subtipo-select');
     const marcoSelect = document.getElementById('a11y-estrutura-marco-select');
     const idiomasSelect = document.getElementById('a11y-estrutura-idiomas-select');
@@ -750,8 +707,6 @@ function confirmA11ySpec() {
       const notaEl = document.getElementById('a11y-fixed-nota');
       if (notaEl && notaEl.textContent) properties.push({ key: 'notaCodigo', label: 'Nota de Código', value: notaEl.textContent });
     }
-    const obs = g('a11y-titulo-obs');
-    if (obs) properties.push({ key: 'observacoes', label: 'Observações', value: obs });
     a11ySubtype = { nivel };
   } else if (category === 'decorativo') {
     letter = meta.badge;
@@ -761,8 +716,6 @@ function confirmA11ySpec() {
       { key: 'descricao', label: 'Descrição', value: descEl ? descEl.textContent : '' },
     ];
     if (notaEl && notaEl.textContent) properties.push({ key: 'notaCodigo', label: 'Nota de Código', value: notaEl.textContent });
-    const obs = g('a11y-decorativo-obs');
-    if (obs) properties.push({ key: 'observacoes', label: 'Observações', value: obs });
     const decSelect = document.getElementById('a11y-decorativo-subtipo-select');
     a11ySubtype = { tipo: decSelect ? decSelect.value : 'gerais' };
   } else if (category === 'informacoes') {
@@ -776,8 +729,6 @@ function confirmA11ySpec() {
     properties = [
       { key: 'descricao', label: 'Descrição', value: descricao },
     ];
-    const obs = g('a11y-informacoes-obs');
-    if (obs) properties.push({ key: 'observacoes', label: 'Observações', value: obs });
     const infoSelect = document.getElementById('a11y-informacoes-subtipo-select');
     a11ySubtype = { subtipo: infoSelect ? infoSelect.value : 'handoffs' };
   }
@@ -796,6 +747,8 @@ function confirmA11ySpec() {
   // frame.a11ySpecs quando newSpec.a11yType existe, preenchendo o id REAL do
   // nó e pendingConfirmation:true — não duplicar esse trabalho aqui.
   const guideSideEl = document.querySelector('input[name="a11y-guide-side"]:checked');
+  const drawModeEl = document.querySelector('input[name="a11y-draw-mode"]:checked');
+  const drawMode = drawModeEl ? drawModeEl.value : 'contorno';
 
   const opts = {
     category: 'acessibilidade',
@@ -805,10 +758,12 @@ function confirmA11ySpec() {
     fillColor: meta.fill,
     properties,
     guideSide: guideSideEl ? guideSideEl.value : 'right',
-    // Funcionalidade de conector removida por decisão do usuário — o
-    // marcador real "Agrupamento" já envolve o elemento, não precisa de
-    // linha ligando ele ao card de detalhamento.
-    drawConnection: false,
+    // Modo "Contorno" (default) usa o marcador real "Agrupamento" — a moldura
+    // já embute o selo, não precisa de linha ligando ao card. Modo "Linha"
+    // reativa o conector (real da lib quando disponível, ver
+    // A11Y_CONECTOR_LINHA_KEYS em code.js; vetor procedural como fallback).
+    drawMode,
+    drawConnection: drawMode === 'linha',
     // --- Acessibilidade --- diferencia a categoria na hora de renderizar/agrupar.
     a11yType: category,
     // Chave crua da subvariante — usada pelo backend pra tentar o import real
@@ -1145,8 +1100,7 @@ window.editA11ySpec = editA11ySpec;
 // Reconstrói os campos do formulário a partir de spec.a11ySubtype (chave
 // crua da subvariante) e spec.properties[] (valores já resolvidos/digitados
 // pelo designer) — o inverso exato do que confirmA11ySpec monta por
-// categoria. Campos opcionais (chip "+ Observações" etc.) são revelados só
-// quando já têm valor salvo.
+// categoria.
 function _prefillA11ySpecForEdit(spec) {
   const category = spec.a11yType;
   const sub = spec.a11ySubtype || {};
@@ -1158,17 +1112,6 @@ function _prefillA11ySpecForEdit(spec) {
   const setVal = (id, val) => {
     const el = document.getElementById(id);
     if (el && val) el.value = val;
-  };
-  const reveal = (id) => {
-    const field = document.getElementById(id + '-field');
-    const chip = document.getElementById(id + '-chip');
-    if (field) field.classList.remove('hidden');
-    if (chip) chip.classList.add('hidden');
-  };
-  const setAndReveal = (id, val) => {
-    if (!val) return;
-    setVal(id, val);
-    reveal(id);
   };
 
   const tagInputId = A11Y_TAG_INPUT_ID[category];
@@ -1184,10 +1127,6 @@ function _prefillA11ySpecForEdit(spec) {
     }
     updateA11yElementoFields();
     setVal('a11y-el-label', getProp('label'));
-    setAndReveal('a11y-el-variante', getProp('variante'));
-    setAndReveal('a11y-el-hint', getProp('hint'));
-    setAndReveal('a11y-el-obs', getProp('observacoes'));
-    setAndReveal('a11y-el-link', getProp('link'));
   } else if (category === 'estrutura') {
     const subtipoSelect = document.getElementById('a11y-estrutura-subtipo-select');
     if (subtipoSelect) subtipoSelect.value = sub.variacao || 'idiomas';
@@ -1201,30 +1140,29 @@ function _prefillA11ySpecForEdit(spec) {
     updateA11yEstruturaFields();
     const isCustom = sub.variacao === 'customizavel' || (sub.variacao === 'marco de navegacao' && sub.tipo === 'customizavel');
     if (isCustom) setVal('a11y-estrutura-descricao', getProp('descricao'));
-    setAndReveal('a11y-estrutura-obs', getProp('observacoes'));
   } else if (category === 'titulo') {
     const nivelSelect = document.getElementById('a11y-titulo-nivel-select');
     if (nivelSelect) nivelSelect.value = sub.nivel || 'h1';
     updateA11yTituloFields();
-    setAndReveal('a11y-titulo-obs', getProp('observacoes'));
   } else if (category === 'decorativo') {
     const decSelect = document.getElementById('a11y-decorativo-subtipo-select');
     if (decSelect) decSelect.value = sub.tipo || 'gerais';
     updateA11yDecorativoFields();
-    setAndReveal('a11y-decorativo-obs', getProp('observacoes'));
   } else if (category === 'informacoes') {
     const infoSelect = document.getElementById('a11y-informacoes-subtipo-select');
     if (infoSelect) infoSelect.value = sub.subtipo || 'handoffs';
     updateA11yInformacoesFields();
     const isCustom = sub.subtipo === 'customizavel';
     if (isCustom) setVal('a11y-informacoes-descricao', getProp('descricao'));
-    setAndReveal('a11y-informacoes-obs', getProp('observacoes'));
   }
 
   validateA11yTagInput();
 
   const guideRadio = document.querySelector(`input[name="a11y-guide-side"][value="${spec.guideSide || 'right'}"]`);
   if (guideRadio) guideRadio.checked = true;
+
+  const drawModeRadio = document.querySelector(`input[name="a11y-draw-mode"][value="${spec.drawMode || 'contorno'}"]`);
+  if (drawModeRadio) drawModeRadio.checked = true;
 }
 
 // ── Áreas Marcadas ───────────────────────────────────────────────────────

@@ -577,7 +577,7 @@
         }
       }
     }
-    const _infoLines = (opts.properties || []).filter((p) => p && p.value && p.key !== "descricao" && p.key !== "notasCodigo").map((p) => `${p.label}: ${p.value}`).join("\n");
+    const _infoLines = (opts.properties || []).filter((p) => p && p.value && p.key !== "descricao" && p.key !== "notaCodigo").map((p) => `${p.label}: ${p.value}`).join("\n");
     if (_infoLines && defaultEntry.observacoes) {
       const obsNode = _findTextNodeByCurrentValue(instance, defaultEntry.observacoes);
       if (obsNode) {
@@ -643,6 +643,49 @@
     }
     return instance;
   }
+  var A11Y_CONECTOR_LINHA_KEYS = {
+    elemento: {
+      esquerda: "9c1f1679ab73055ef68dbcbd11b89fc711629f6a",
+      direita: "eec4d7b2153d9eb6bc300787c861b8cfee10dcbf",
+      superior: "fcdb189d2cbdcda11488030e4d4c523d08d95865",
+      inferior: "509491cd5e458ec0cf974b00390f8f65d078c326"
+    },
+    estrutura: {
+      esquerda: "13141fdadb7e8675d8a47ba70be1b6d24d4ed35c",
+      direita: "2621f5cdadea32e0802c8196aad03db1da20bf72",
+      superior: "76d6ba85e4fed4a5d0bd67c709860877fe236d2f",
+      inferior: "3021c901640ffb86e8228dd12bd730ee3f770ebb"
+    },
+    titulo: {
+      esquerda: "670c7c055ed7ebc01a523add5b69499680076419",
+      direita: "f63a82ad250bcc8569d83affbcc39d6f226d64ca",
+      superior: "baf0b4ea8417911a42f7d890654ad8dc3d047881",
+      inferior: "3dafdf7d0543989b82c25686abb88134c879a94c"
+    },
+    decorativo: {
+      esquerda: "4866349b6246fbd45cf493cce308f7da2c312569",
+      direita: "85ff209c592f55cc2149b256909ac65e2e06a66b",
+      superior: "ad87c4797c992bfaadbb41d8d05e9c81fc4207c2",
+      inferior: "a419476ffe6c0b6c10a32c080d624091cf083171"
+    },
+    informacoes: {
+      esquerda: "edb9fed9e58a7bf279d8804014f8755ffc4e711d",
+      direita: "ceff0c518ef33fc326eec74af0320255a6ba53a8",
+      superior: "f8dcedebd882a13e26659b1a614adf16166b996d",
+      inferior: "c2ef79c032a76ffefcb0a8b3123bf91ff2c8a221"
+    }
+  };
+  async function _tryImportA11yConectorLinha(opts) {
+    const orientacao = _A11Y_SIDE_TO_ORIENTACAO[opts.guideSide || "right"];
+    const typeKeys = A11Y_CONECTOR_LINHA_KEYS[opts.a11yType];
+    if (!typeKeys) throw new Error("a11y-conector-linha-tipo-desconhecido: " + opts.a11yType);
+    const key = typeKeys[orientacao];
+    if (!key) throw new Error("a11y-conector-linha-orientacao-desconhecida: " + orientacao);
+    const component = await figma.importComponentByKeyAsync(key);
+    const instance = component.createInstance();
+    instance.name = "Conector";
+    return instance;
+  }
   var A11Y_SECTION_NAME = "Especifica\xE7\xF5es de Acessibilidade";
   function _getOrCreateA11ySection() {
     let section = figma.currentPage.children.find(
@@ -696,7 +739,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "6.0.0-beta.3" : "dev";
+  var PLUGIN_VERSION = true ? "6.1.0-beta.1" : "dev";
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
     const NS = "handex";
@@ -850,11 +893,13 @@
       arrow.vectorPaths = [{ windingRule: "NONZERO", data: `M ${x1} ${y1} L ${bestB.x} ${bestB.y} L ${x2} ${y2}` }];
       nodesToGroup.push(arrow);
     }
+    const _flowId = msg.flowId || String(Date.now());
     const _flowExtra = {
       sourceId: nodeA.id,
       targetId: nodeB ? nodeB.id : null,
       decisionText: msg.decisionText || null,
-      flowSide: msg.flowSide || "auto"
+      flowSide: msg.flowSide || "auto",
+      flowUid: _flowId
     };
     if (msg.flowType === "diamond" || msg.flowType === "diamond_dashed") {
       const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
@@ -3384,7 +3429,6 @@
         const _layerTag = opts.a11yType ? "SpecA11y" : "Spec";
         let specCard = null;
         let _a11yImportFailReason = null;
-        let _markerFailReason = null;
         if (opts.a11yType) {
           try {
             specCard = await _tryImportA11yComponent(opts);
@@ -3406,6 +3450,18 @@
             specCard = null;
             _a11yImportFailReason = e && e.message ? e.message : String(e);
           }
+        }
+        const _A11Y_EXPECTED_FALLBACK_PREFIXES = [
+          "a11y-elemento-outro-sem-componente-real",
+          "a11y-titulo-mobile-sem-variante-real",
+          "a11y-informacoes-customizavel-sem-variante-real",
+          "a11y-estrutura-variacao-sem-import-real",
+          "a11y-estrutura-marco-customizavel-sem-conteudo-catalogado"
+        ];
+        const _isExpectedFallback = _a11yImportFailReason && _A11Y_EXPECTED_FALLBACK_PREFIXES.some((p) => _a11yImportFailReason.startsWith(p));
+        if (opts.a11yType && _a11yImportFailReason && !_isExpectedFallback) {
+          figma.notify('N\xE3o foi poss\xEDvel criar a especifica\xE7\xE3o \u2014 a lib "Design Acess\xEDvel" precisa estar habilitada neste arquivo. (' + _a11yImportFailReason + ")", { error: true });
+          return;
         }
         if (!specCard) {
           specCard = figma.createFrame();
@@ -3598,21 +3654,43 @@
           let marker = null;
           if (opts.a11yType) {
             try {
-              marker = await _tryImportA11yAgrupamento(opts);
+              marker = opts.drawMode === "linha" ? await _tryImportA11yConectorLinha(opts) : await _tryImportA11yAgrupamento(opts);
             } catch (e) {
-              marker = null;
-              _markerFailReason = e && e.message ? e.message : String(e);
+              try {
+                specCard.remove();
+              } catch (_) {
+              }
+              figma.notify('N\xE3o foi poss\xEDvel criar o marcador \u2014 a lib "Design Acess\xEDvel" precisa estar habilitada neste arquivo. (' + (e && e.message ? e.message : String(e)) + ")", { error: true });
+              return;
             }
           }
           let _markerAnchorBounds = bounds;
           if (marker) {
-            figma.currentPage.appendChild(marker);
-            try {
-              marker.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
-            } catch (e) {
+            if (opts.drawMode !== "linha") {
+              figma.currentPage.appendChild(marker);
+              try {
+                marker.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
+              } catch (e) {
+              }
+              marker.x = Math.round(bounds.x - 16);
+              marker.y = Math.round(bounds.y - 16);
+            } else {
+              const _side = opts.guideSide || "right";
+              figma.currentPage.appendChild(marker);
+              if (_side === "right") {
+                marker.x = bounds.x + bounds.width;
+                marker.y = bounds.y + bounds.height / 2 - marker.height / 2;
+              } else if (_side === "left") {
+                marker.x = bounds.x - marker.width;
+                marker.y = bounds.y + bounds.height / 2 - marker.height / 2;
+              } else if (_side === "top") {
+                marker.x = bounds.x + bounds.width / 2 - marker.width / 2;
+                marker.y = bounds.y - marker.height;
+              } else {
+                marker.x = bounds.x + bounds.width / 2 - marker.width / 2;
+                marker.y = bounds.y + bounds.height;
+              }
             }
-            marker.x = Math.round(bounds.x - 16);
-            marker.y = Math.round(bounds.y - 16);
             groupNodes.push(marker);
             _markerAnchorBounds = marker.absoluteBoundingBox || _markerAnchorBounds;
           } else {
@@ -3737,7 +3815,7 @@
           specCard.y = _absCardY;
           groupNodes.push(specCard);
           const USE_NATIVE_CONNECTOR = false;
-          if (opts.drawConnection !== false) {
+          if (opts.drawConnection !== false && !(opts.a11yType && opts.drawMode === "linha")) {
             const _anchorB = _markerAnchorBounds;
             let startPt, endPt;
             if (side === "right") {
@@ -3829,6 +3907,11 @@
             type: opts.categoryLabel || "Sem categoria",
             note: opts.note,
             properties: opts.properties,
+            // Cenário de exceção opcional preenchido já na criação (etapa
+            // "Cenário de Exceção" do wizard) -- mesmo shape usado por
+            // openGlobalSpecException/deleteGlobalSpecException para specs
+            // que ganham o primeiro cenário só depois de criadas.
+            excecoes: opts.excecaoInicial ? [opts.excecaoInicial] : [],
             guideSide: opts.guideSide || "right",
             cardX: _absCardX,
             cardY: _absCardY,
@@ -3843,20 +3926,15 @@
             // (spec-created), não a partir de opts, então tudo que a listagem/geração
             // de ficha precisa depois precisa vir aqui também.
             a11ySubtype: opts.a11ySubtype || null,
-            a11yAreaId: opts.a11yAreaId || null
+            a11yAreaId: opts.a11yAreaId || null,
+            // Modo de marcação escolhido (Contorno/Agrupamento vs Linha/Conector)
+            // — precisa sobreviver no objeto salvo pra editA11ySpec reabrir o
+            // formulário com o radio certo já marcado (ver _prefillA11ySpecForEdit).
+            drawMode: opts.drawMode || "contorno"
           }
         });
-        const _A11Y_EXPECTED_FALLBACK_PREFIXES = [
-          "a11y-elemento-outro-sem-componente-real",
-          "a11y-titulo-mobile-sem-variante-real",
-          "a11y-informacoes-customizavel-sem-variante-real",
-          "a11y-estrutura-variacao-sem-import-real",
-          "a11y-estrutura-marco-customizavel-sem-conteudo-catalogado"
-        ];
-        const _isExpectedFallback = _a11yImportFailReason && _A11Y_EXPECTED_FALLBACK_PREFIXES.some((p) => _a11yImportFailReason.startsWith(p));
-        if (opts.a11yType && (_a11yImportFailReason && !_isExpectedFallback || _markerFailReason)) {
-          const _reason = _markerFailReason || _a11yImportFailReason;
-          figma.notify(`N\xE3o foi poss\xEDvel usar o componente real da lib "Design Acess\xEDvel" (${_reason}) \u2014 spec criada no modo desenhado. Arraste para posicionar.`);
+        if (opts.a11yType && _isExpectedFallback) {
+          figma.notify(`Especifica\xE7\xE3o criada com card desenhado (sem componente real catalogado para esta varia\xE7\xE3o: ${_a11yImportFailReason}). Arraste para posicionar.`);
         } else {
           figma.notify("Especifica\xE7\xE3o criada \u2014 arraste para posicionar. Clique em Concluir quando pronto.");
         }
@@ -4038,6 +4116,103 @@
         });
       }
     }
+    if (msg.type === "edit-spec-connector") {
+      try {
+        const specGroup = await figma.getNodeByIdAsync(msg.specId);
+        const node = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
+        if (!specGroup || !("findChildren" in specGroup) || !node) {
+          figma.ui.postMessage({ type: "spec-connector-edit-failed", specId: msg.specId });
+          return;
+        }
+        const specCard = specGroup.findOne((n) => n.name === "Spec Notes");
+        const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
+        const cardBounds = specCard && (specCard.absoluteBoundingBox || specCard.absoluteRenderBounds);
+        if (!specCard || !bounds || !cardBounds) {
+          figma.ui.postMessage({ type: "spec-connector-edit-failed", specId: msg.specId });
+          return;
+        }
+        const wasVisible = specGroup.findChildren((n) => n.name === "Conector" || n.name === "DotInicio" || n.name === "DotFim").every((n) => n.visible !== false);
+        const side = msg.guideSide || "right";
+        let startPt, endPt;
+        if (side === "right") {
+          startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+          endPt = { x: cardBounds.x, y: cardBounds.y + cardBounds.height / 2 };
+        } else if (side === "left") {
+          startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
+          endPt = { x: cardBounds.x + cardBounds.width, y: cardBounds.y + cardBounds.height / 2 };
+        } else if (side === "bottom") {
+          startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
+          endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y };
+        } else {
+          startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
+          endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y + cardBounds.height };
+        }
+        const _specConnectorStyle = msg.connectorStyle || "straight";
+        const _specCurvature = _specConnectorStyle === "curved" ? msg.connectorCurvature || 0 : 0;
+        const _groupBounds = specGroup.absoluteBoundingBox || specGroup.absoluteRenderBounds;
+        const _gx = _groupBounds.x, _gy = _groupBounds.y;
+        const localStart = { x: startPt.x - _gx, y: startPt.y - _gy };
+        const localEnd = { x: endPt.x - _gx, y: endPt.y - _gy };
+        let connectorPath = `M ${localStart.x} ${localStart.y} L ${localEnd.x} ${localEnd.y}`;
+        if (_specConnectorStyle === "elbow") {
+          const isHorizontal = side === "right" || side === "left";
+          const corner = isHorizontal ? { x: localEnd.x, y: localStart.y } : { x: localStart.x, y: localEnd.y };
+          connectorPath = `M ${localStart.x} ${localStart.y} L ${corner.x} ${corner.y} L ${localEnd.x} ${localEnd.y}`;
+        } else if (_specCurvature) {
+          const dx = localEnd.x - localStart.x, dy = localEnd.y - localStart.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          const px = -dy / dist, py = dx / dist;
+          const offset = _specCurvature / 100 * dist * 0.5;
+          const midX = (localStart.x + localEnd.x) / 2, midY = (localStart.y + localEnd.y) / 2;
+          const ctrlX = midX + px * offset, ctrlY = midY + py * offset;
+          connectorPath = `M ${localStart.x} ${localStart.y} Q ${ctrlX} ${ctrlY} ${localEnd.x} ${localEnd.y}`;
+        }
+        const themeColor2 = hexToRgb2(msg.color || "#005ca9");
+        const oldLineNodes = specGroup.findChildren((n) => n.name === "Conector" || n.name === "DotInicio" || n.name === "DotFim");
+        oldLineNodes.forEach((n) => n.remove());
+        const connector = figma.createVector();
+        connector.name = "Conector";
+        connector.x = 0;
+        connector.y = 0;
+        connector.vectorPaths = [{ windingRule: "NONZERO", data: connectorPath }];
+        connector.strokes = [{ type: "SOLID", color: themeColor2 }];
+        connector.strokeWeight = 1.5;
+        connector.dashPattern = [4, 4];
+        connector.strokeCap = "ROUND";
+        connector.visible = wasVisible;
+        connector.locked = false;
+        specGroup.appendChild(connector);
+        const _DOT_R = 4;
+        const startDot = figma.createEllipse();
+        startDot.name = "DotInicio";
+        startDot.resize(_DOT_R * 2, _DOT_R * 2);
+        startDot.fills = [{ type: "SOLID", color: themeColor2 }];
+        startDot.strokes = [];
+        startDot.visible = wasVisible;
+        startDot.locked = true;
+        specGroup.appendChild(startDot);
+        startDot.x = localStart.x - _DOT_R;
+        startDot.y = localStart.y - _DOT_R;
+        const endDot = figma.createEllipse();
+        endDot.name = "DotFim";
+        endDot.resize(_DOT_R * 2, _DOT_R * 2);
+        endDot.fills = [{ type: "SOLID", color: themeColor2 }];
+        endDot.strokes = [];
+        endDot.visible = wasVisible;
+        endDot.locked = true;
+        specGroup.appendChild(endDot);
+        endDot.x = localEnd.x - _DOT_R;
+        endDot.y = localEnd.y - _DOT_R;
+        figma.ui.postMessage({
+          type: "spec-connector-edited",
+          specId: msg.specId,
+          connectorStyle: _specConnectorStyle,
+          connectorCurvature: _specCurvature
+        });
+      } catch (e) {
+        figma.ui.postMessage({ type: "spec-connector-edit-failed", specId: msg.specId, message: e.message });
+      }
+    }
     if (msg.type === "unlock-spec-group") {
       const targetLocked = msg.locked !== void 0 ? msg.locked : false;
       for (const specId of msg.specIds || []) {
@@ -4177,6 +4352,22 @@
       if (!nodeA || !isEvent && msg.targetId && !nodeB) {
         figma.ui.postMessage({ type: "flow-recreate-failed", flowName: msg.flowName || "" });
         return;
+      }
+      await _buildFlowConnection(nodeA, nodeB, msg);
+    }
+    if (msg.type === "edit-flow-connection") {
+      const nodeA = msg.sourceId ? await figma.getNodeByIdAsync(msg.sourceId) : null;
+      const nodeB = msg.targetId ? await figma.getNodeByIdAsync(msg.targetId) : null;
+      if (!nodeA) {
+        figma.ui.postMessage({ type: "flow-edit-failed", reason: "nodes-nao-encontrados" });
+        return;
+      }
+      if (msg.oldGroupId) {
+        try {
+          const oldGroup = await figma.getNodeByIdAsync(msg.oldGroupId);
+          if (oldGroup) oldGroup.remove();
+        } catch (e) {
+        }
       }
       await _buildFlowConnection(nodeA, nodeB, msg);
     }

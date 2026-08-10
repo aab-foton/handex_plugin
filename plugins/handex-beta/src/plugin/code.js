@@ -260,7 +260,7 @@ async function _tryImportA11yComponent(opts) {
   // por propriedade. Só cai no texto padrão do componente se não houver
   // nenhum dado capturado pra mostrar.
   const _infoLines = (opts.properties || [])
-    .filter(p => p && p.value && p.key !== 'descricao' && p.key !== 'notasCodigo')
+    .filter(p => p && p.value && p.key !== 'descricao' && p.key !== 'notaCodigo')
     .map(p => `${p.label}: ${p.value}`)
     .join('\n');
   if (_infoLines && defaultEntry.observacoes) {
@@ -345,6 +345,88 @@ async function _tryImportA11yAgrupamento(opts) {
     } catch (e) { /* best-effort — nunca bloqueia a criação da spec */ }
   }
 
+  return instance;
+}
+
+// ============================================================
+// Três famílias de componente real da lib "Design Acessível", cada uma com
+// uma função fixa — não reaproveitar o componente de uma família pra outra
+// finalidade, mesmo quando pareceem visualmente próximos:
+//
+//   1. Agrupamento (A11Y_AGRUPAMENTO_KEYS, acima) — CONTORNO/moldura que
+//      envolve a área inteira do elemento documentado, com o selo embutido
+//      num dos 4 cantos conforme a orientação. É o modo "Área" do formulário
+//      (drawMode === 'contorno', default).
+//   2. Conector linha (A11Y_CONECTOR_LINHA_KEYS, abaixo) — LIGAÇÃO simples
+//      (traço + selo na ponta) entre o elemento e o card de detalhamento, sem
+//      envolver a área do elemento. É o modo "Linha" do formulário
+//      (drawMode === 'linha'). Publicado na lib como "tipo=<categoria>,
+//      conector=<direção>" (frame "Conectores  [Handoff]" do arquivo — não
+//      confundir com a frame homônima "Conectores  [DSC Handoff]", de outra
+//      finalidade/vertical, com nomenclatura de tipo diferente e sem
+//      conteúdo catalogado aqui).
+//   3. Item Number ("[a11y] Item Number", ver A11Y_ITEM_NUMBER_KEYS se/quando
+//      existir) — marcador de ORDEM DE TABULAÇÃO (sequência de foco do
+//      teclado), ferramenta separada, ainda não implementada no plugin. Não
+//      tem relação com Agrupamento nem Conector linha; não reaproveitar.
+// ============================================================
+
+// Keys publicadas do component set "tipo=<categoria>, conector=<direção>" —
+// frame "Conectores  [Handoff]" do arquivo da lib (25 componentes = 5
+// categorias × 5 direções, incluindo "desativado"). Direção "desativado"
+// existe na lib mas não é usada aqui — o modo Linha sempre nasce com uma
+// direção real (mesmo default do modo Contorno, guideSide 'right').
+// Confirmado via inspeção local de refs/design-acessivel.json (2026-08-07) —
+// nomes em português com grafia exata "elementos interativos e imagens" /
+// "estrutura da página" / "nível de título / titulo" / "decorativo" /
+// "informações adicionais".
+const A11Y_CONECTOR_LINHA_KEYS = {
+  elemento: {
+    esquerda: '9c1f1679ab73055ef68dbcbd11b89fc711629f6a',
+    direita:  'eec4d7b2153d9eb6bc300787c861b8cfee10dcbf',
+    superior: 'fcdb189d2cbdcda11488030e4d4c523d08d95865',
+    inferior: '509491cd5e458ec0cf974b00390f8f65d078c326',
+  },
+  estrutura: {
+    esquerda: '13141fdadb7e8675d8a47ba70be1b6d24d4ed35c',
+    direita:  '2621f5cdadea32e0802c8196aad03db1da20bf72',
+    superior: '76d6ba85e4fed4a5d0bd67c709860877fe236d2f',
+    inferior: '3021c901640ffb86e8228dd12bd730ee3f770ebb',
+  },
+  titulo: {
+    esquerda: '670c7c055ed7ebc01a523add5b69499680076419',
+    direita:  'f63a82ad250bcc8569d83affbcc39d6f226d64ca',
+    superior: 'baf0b4ea8417911a42f7d890654ad8dc3d047881',
+    inferior: '3dafdf7d0543989b82c25686abb88134c879a94c',
+  },
+  decorativo: {
+    esquerda: '4866349b6246fbd45cf493cce308f7da2c312569',
+    direita:  '85ff209c592f55cc2149b256909ac65e2e06a66b',
+    superior: 'ad87c4797c992bfaadbb41d8d05e9c81fc4207c2',
+    inferior: 'a419476ffe6c0b6c10a32c080d624091cf083171',
+  },
+  informacoes: {
+    esquerda: 'edb9fed9e58a7bf279d8804014f8755ffc4e711d',
+    direita:  'ceff0c518ef33fc326eec74af0320255a6ba53a8',
+    superior: 'f8dcedebd882a13e26659b1a614adf16166b996d',
+    inferior: 'c2ef79c032a76ffefcb0a8b3123bf91ff2c8a221',
+  },
+};
+
+// Tenta importar o conector-linha real (ver A11Y_CONECTOR_LINHA_KEYS) em vez
+// de desenhar o vetor procedural (linha tracejada + dots). Lança em qualquer
+// ponto de incerteza — quem chama trata a exceção como "cai no vetor
+// desenhado", mesma filosofia de _tryImportA11yAgrupamento.
+async function _tryImportA11yConectorLinha(opts) {
+  const orientacao = _A11Y_SIDE_TO_ORIENTACAO[opts.guideSide || 'right'];
+  const typeKeys = A11Y_CONECTOR_LINHA_KEYS[opts.a11yType];
+  if (!typeKeys) throw new Error('a11y-conector-linha-tipo-desconhecido: ' + opts.a11yType);
+  const key = typeKeys[orientacao];
+  if (!key) throw new Error('a11y-conector-linha-orientacao-desconhecida: ' + orientacao);
+
+  const component = await figma.importComponentByKeyAsync(key);
+  const instance = component.createInstance();
+  instance.name = 'Conector';
   return instance;
 }
 
@@ -591,11 +673,17 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
     nodesToGroup.push(arrow);
   }
 
+  // Id estável do fluxo, gerado no frontend (não é o node.id do Figma) --
+  // sobrevive à recriação por edição (edit-flow-connection apaga e recria o
+  // group), permitindo que a inserção incremental na ficha reconheça "este
+  // é o mesmo fluxo" mesmo após o grupo visual antigo ter sido substituído.
+  const _flowId = msg.flowId || String(Date.now());
   const _flowExtra = {
     sourceId: nodeA.id,
     targetId: nodeB ? nodeB.id : null,
     decisionText: msg.decisionText || null,
-    flowSide: msg.flowSide || 'auto'
+    flowSide: msg.flowSide || 'auto',
+    flowUid: _flowId
   };
 
   if (msg.flowType === "diamond" || msg.flowType === "diamond_dashed") {
@@ -3537,13 +3625,14 @@ figma.ui.onmessage = async (msg) => {
 
       // Fase 2c — pra specs de Acessibilidade, tenta reaproveitar o
       // componente REAL da lib "Design Acessível" (importComponentByKeyAsync)
-      // no lugar do card desenhado. Qualquer incerteza (lib inacessível, key
-      // inválida, property/instância aninhada não encontrada) cai no
-      // fallback procedural abaixo sem travar a criação da spec — ver
-      // _tryImportA11yComponent.
+      // no lugar do card desenhado. Algumas variações não têm componente real
+      // catalogado de propósito (ex: Componente "Outro/fora do catálogo",
+      // Título mobile, Customizável) — nesses casos cai no card desenhado
+      // sem erro (fallback ESPERADO, ver _A11Y_EXPECTED_FALLBACK_PREFIXES
+      // abaixo). Qualquer outra falha (lib inacessível, key errada) é erro
+      // real e é tratada mais abaixo, depois que sabemos se era esperado.
       let specCard = null;
       let _a11yImportFailReason = null;
-      let _markerFailReason = null;
       if (opts.a11yType) {
         try {
           specCard = await _tryImportA11yComponent(opts);
@@ -3567,6 +3656,19 @@ figma.ui.onmessage = async (msg) => {
           specCard = null;
           _a11yImportFailReason = e && e.message ? e.message : String(e);
         }
+      }
+
+      const _A11Y_EXPECTED_FALLBACK_PREFIXES = [
+        'a11y-elemento-outro-sem-componente-real',
+        'a11y-titulo-mobile-sem-variante-real',
+        'a11y-informacoes-customizavel-sem-variante-real',
+        'a11y-estrutura-variacao-sem-import-real',
+        'a11y-estrutura-marco-customizavel-sem-conteudo-catalogado',
+      ];
+      const _isExpectedFallback = _a11yImportFailReason && _A11Y_EXPECTED_FALLBACK_PREFIXES.some(p => _a11yImportFailReason.startsWith(p));
+      if (opts.a11yType && _a11yImportFailReason && !_isExpectedFallback) {
+        figma.notify('Não foi possível criar a especificação — a lib "Design Acessível" precisa estar habilitada neste arquivo. (' + _a11yImportFailReason + ')', { error: true });
+        return;
       }
 
       if (!specCard) {
@@ -3779,82 +3881,115 @@ figma.ui.onmessage = async (msg) => {
       // Positioning
       const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
       if (bounds) {
-        // Fase 2d — pra specs de Acessibilidade, tenta reaproveitar o
-        // marcador REAL "[a11y] Agrupamento" da lib no lugar do contorno
-        // tracejado + chip desenhados. Qualquer incerteza (lib inacessível,
-        // key inválida, orientação sem mapa) cai no marcador procedural
-        // abaixo sem travar a criação da spec — ver _tryImportA11yAgrupamento.
+        // Specs de Acessibilidade usam exclusivamente o marcador REAL da lib:
+        // "[a11y] Agrupamento" no modo Contorno (default), ou o conector-linha
+        // real (A11Y_CONECTOR_LINHA_KEYS) no modo Linha — nada de contorno
+        // tracejado ou chip desenhado por procedimento. Se o import falhar, a
+        // spec inteira é abortada (o card já criado é removido) em vez de
+        // nascer com um marcador improvisado.
         let marker = null;
         if (opts.a11yType) {
           try {
-            marker = await _tryImportA11yAgrupamento(opts);
+            marker = opts.drawMode === 'linha'
+              ? await _tryImportA11yConectorLinha(opts)
+              : await _tryImportA11yAgrupamento(opts);
           } catch (e) {
-            marker = null;
-            _markerFailReason = e && e.message ? e.message : String(e);
+            try { specCard.remove(); } catch (_) { }
+            figma.notify('Não foi possível criar o marcador — a lib "Design Acessível" precisa estar habilitada neste arquivo. (' + (e && e.message ? e.message : String(e)) + ')', { error: true });
+            return;
           }
         }
 
         // Âncora usada pelo conector mais abaixo — bounds do elemento por
-        // padrão (specs normais e fallback procedural), ou do marcador real
-        // quando ele existe (o conector nasce dele, não do elemento em si).
+        // padrão (specs normais), ou do marcador real quando ele existe (o
+        // conector nasce dele, não do elemento em si).
         let _markerAnchorBounds = bounds;
 
         if (marker) {
           // Redimensiona o marcador real pra envolver o elemento inteiro —
           // mesma folga (16px por lado) que o contorno tracejado procedural
-          // usava, mantendo o mesmo enquadramento visual. O componente
+          // usava antes, mantendo o mesmo enquadramento visual. O componente
           // "Agrupamento" foi feito pra isso (moldura + selo num canto,
-          // conforme a orientação escolhida), não é só um badge pequeno.
-          figma.currentPage.appendChild(marker);
-          try {
-            marker.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
-          } catch (e) { /* variante sem resize livre — segue com o tamanho padrão */ }
-          marker.x = Math.round(bounds.x - 16);
-          marker.y = Math.round(bounds.y - 16);
+          // conforme a orientação escolhida), não é só um badge pequeno. O
+          // conector-linha real já nasce no tamanho certo, não redimensiona.
+          if (opts.drawMode !== 'linha') {
+            figma.currentPage.appendChild(marker);
+            try {
+              marker.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
+            } catch (e) { /* variante sem resize livre — segue com o tamanho padrão */ }
+            marker.x = Math.round(bounds.x - 16);
+            marker.y = Math.round(bounds.y - 16);
+          } else {
+            // O componente "Conector" NÃO é simétrico: o selo fica numa ponta
+            // e a linha se estende até a outra, que é o ponto de contato real
+            // com o elemento (confirmado via REST API + render em 2026-08-07,
+            // ver nodes 1:91/1:65/1:143/1:117 do arquivo da lib). A ponta de
+            // contato é sempre OPOSTA ao lado indicado pelo nome da variante —
+            // "conector=direita" tem o selo à direita e a ponta de contato na
+            // borda ESQUERDA do bounding box (a linha aponta para a esquerda,
+            // de volta ao elemento); "conector=superior" tem o selo em cima e
+            // a ponta de contato na borda INFERIOR (a linha desce até o
+            // elemento). Por isso o cálculo abaixo ancora a borda oposta do
+            // marcador na borda do elemento, sem gap extra (o componente já
+            // nasce com o comprimento de linha padrão da lib).
+            const _side = opts.guideSide || 'right';
+            figma.currentPage.appendChild(marker);
+            // right → conector=direita: ponto de contato é a borda ESQUERDA
+            // do marker (x local 0); encosta na borda direita do elemento.
+            if (_side === 'right') { marker.x = bounds.x + bounds.width; marker.y = bounds.y + bounds.height / 2 - marker.height / 2; }
+            // left → conector=esquerda: ponto de contato é a borda DIREITA
+            // do marker; encosta na borda esquerda do elemento.
+            else if (_side === 'left') { marker.x = bounds.x - marker.width; marker.y = bounds.y + bounds.height / 2 - marker.height / 2; }
+            // top → conector=superior: ponto de contato é a borda INFERIOR
+            // do marker (selo fica no topo); encosta no topo do elemento.
+            else if (_side === 'top') { marker.x = bounds.x + bounds.width / 2 - marker.width / 2; marker.y = bounds.y - marker.height; }
+            // bottom → conector=inferior: ponto de contato é a borda
+            // SUPERIOR do marker (selo fica embaixo); encosta na base do elemento.
+            else { marker.x = bounds.x + bounds.width / 2 - marker.width / 2; marker.y = bounds.y + bounds.height; }
+          }
           groupNodes.push(marker);
           _markerAnchorBounds = marker.absoluteBoundingBox || _markerAnchorBounds;
         } else {
-        // Draw a dotted highlight frame around the node
-        const contour = figma.createFrame();
-        contour.name = 'Destaque';
-        contour.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
+          // Specs normais (sem a11yType) continuam com o contorno tracejado
+          // + chip desenhados por procedimento — não mexer nisso.
+          const contour = figma.createFrame();
+          contour.name = 'Destaque';
+          contour.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
 
-        // Append first, then set absolute coordinates to avoid origin issues
-        figma.currentPage.appendChild(contour);
-        contour.x = bounds.x - 16;
-        contour.y = bounds.y - 16;
+          figma.currentPage.appendChild(contour);
+          contour.x = bounds.x - 16;
+          contour.y = bounds.y - 16;
 
-        contour.fills = [];
-        contour.strokes = [{ type: "SOLID", color: themeColor }];
-        contour.strokeWeight = 2;
-        contour.dashPattern = [4, 4];
-        contour.locked = true;
+          contour.fills = [];
+          contour.strokes = [{ type: "SOLID", color: themeColor }];
+          contour.strokeWeight = 2;
+          contour.dashPattern = [4, 4];
+          contour.locked = true;
 
-        // Tag chip on contour
-        const chip = figma.createFrame();
-        chip.name = 'Chip';
-        chip.layoutMode = "HORIZONTAL";
-        chip.primaryAxisSizingMode = "FIXED";
-        chip.counterAxisSizingMode = "FIXED";
-        chip.resize(42, 42);
-        chip.cornerRadius = _tagRadius;
-        chip.fills = [{ type: "SOLID", color: themeFill }];
-        chip.strokes = [{ type: "SOLID", color: themeColor }];
-        chip.strokeWeight = 1.5;
-        chip.primaryAxisAlignItems = "CENTER";
-        chip.counterAxisAlignItems = "CENTER";
-        const chipText = figma.createText();
-        chipText.fontName = { family: "Inter", style: "Bold" };
-        chipText.fontSize = 18;
-        chipText.fills = [{ type: "SOLID", color: themeColor }];
-        chipText.characters = opts.letter;
-        chip.appendChild(chipText);
-        contour.appendChild(chip);
-        chip.x = 0;
-        chip.y = 0;
+          const chip = figma.createFrame();
+          chip.name = 'Chip';
+          chip.layoutMode = "HORIZONTAL";
+          chip.primaryAxisSizingMode = "FIXED";
+          chip.counterAxisSizingMode = "FIXED";
+          chip.resize(42, 42);
+          chip.cornerRadius = _tagRadius;
+          chip.fills = [{ type: "SOLID", color: themeFill }];
+          chip.strokes = [{ type: "SOLID", color: themeColor }];
+          chip.strokeWeight = 1.5;
+          chip.primaryAxisAlignItems = "CENTER";
+          chip.counterAxisAlignItems = "CENTER";
+          const chipText = figma.createText();
+          chipText.fontName = { family: "Inter", style: "Bold" };
+          chipText.fontSize = 18;
+          chipText.fills = [{ type: "SOLID", color: themeColor }];
+          chipText.characters = opts.letter;
+          chip.appendChild(chipText);
+          contour.appendChild(chip);
+          chip.x = 0;
+          chip.y = 0;
 
-        groupNodes.push(contour);
-        } // fim do fallback procedural do marcador (else de `if (marker)`)
+          groupNodes.push(contour);
+        }
 
         // Append card to page first so Figma computes its real dimensions
         figma.currentPage.appendChild(specCard);
@@ -3993,7 +4128,12 @@ figma.ui.onmessage = async (msg) => {
         // resumo do agente backend-plugin.
         const USE_NATIVE_CONNECTOR = false;
 
-        if (opts.drawConnection !== false) {
+        // Modo "Linha" de A11y: o marcador real importado acima (Fase 2d,
+        // `marker`) já É o conector completo (linha + selo embutidos no
+        // componente da lib) — não desenha nada mais aqui, senão duplica a
+        // linha. Este bloco só roda pra specs normais e pro modo Contorno de
+        // A11y (que precisa da linha ligando a moldura ao card de texto).
+        if (opts.drawConnection !== false && !(opts.a11yType && opts.drawMode === 'linha')) {
           // Âncora do lado do elemento: bounds do marcador real quando ele
           // existe (Fase 2d), senão os bounds do elemento/contorno como antes.
           const _anchorB = _markerAnchorBounds;
@@ -4116,6 +4256,11 @@ figma.ui.onmessage = async (msg) => {
           type: opts.categoryLabel || "Sem categoria",
           note: opts.note,
           properties: opts.properties,
+          // Cenário de exceção opcional preenchido já na criação (etapa
+          // "Cenário de Exceção" do wizard) -- mesmo shape usado por
+          // openGlobalSpecException/deleteGlobalSpecException para specs
+          // que ganham o primeiro cenário só depois de criadas.
+          excecoes: opts.excecaoInicial ? [opts.excecaoInicial] : [],
           guideSide: opts.guideSide || 'right',
           cardX: _absCardX,
           cardY: _absCardY,
@@ -4131,29 +4276,18 @@ figma.ui.onmessage = async (msg) => {
           // de ficha precisa depois precisa vir aqui também.
           a11ySubtype: opts.a11ySubtype || null,
           a11yAreaId: opts.a11yAreaId || null,
+          // Modo de marcação escolhido (Contorno/Agrupamento vs Linha/Conector)
+          // — precisa sobreviver no objeto salvo pra editA11ySpec reabrir o
+          // formulário com o radio certo já marcado (ver _prefillA11ySpecForEdit).
+          drawMode: opts.drawMode || 'contorno',
         }
       });
 
-      // Prefixos de fallback ESPERADO — o designer escolheu de propósito uma
-      // opção sem componente real catalogado (Outro, Customizável, H mobile).
-      // Cair no card desenhado nesses casos é o comportamento certo, não um
-      // erro; só notifica quando o import falha por algo inesperado (key
-      // errada, property/instância não encontrada etc — sinal de que algo
-      // pode estar desalinhado com a estrutura real da lib).
-      const _A11Y_EXPECTED_FALLBACK_PREFIXES = [
-        'a11y-elemento-outro-sem-componente-real',
-        'a11y-titulo-mobile-sem-variante-real',
-        'a11y-informacoes-customizavel-sem-variante-real',
-        'a11y-estrutura-variacao-sem-import-real',
-        'a11y-estrutura-marco-customizavel-sem-conteudo-catalogado',
-      ];
-      const _isExpectedFallback = _a11yImportFailReason && _A11Y_EXPECTED_FALLBACK_PREFIXES.some(p => _a11yImportFailReason.startsWith(p));
-      // Marcador Agrupamento tem cobertura total (5 categorias × 4 orientações)
-      // — diferente do Spec Notes, não existe fallback ESPERADO pra ele; se
-      // falhou, é sempre sinal de algo desalinhado (lib inacessível, key errada).
-      if (opts.a11yType && ((_a11yImportFailReason && !_isExpectedFallback) || _markerFailReason)) {
-        const _reason = _markerFailReason || _a11yImportFailReason;
-        figma.notify(`Não foi possível usar o componente real da lib "Design Acessível" (${_reason}) — spec criada no modo desenhado. Arraste para posicionar.`);
+      // Se o Spec Notes caiu no fallback ESPERADO (variação sem componente
+      // real catalogado), avisa que o card foi desenhado — não é erro, mas o
+      // designer deve saber que essa combinação ainda não tem cobertura real.
+      if (opts.a11yType && _isExpectedFallback) {
+        figma.notify(`Especificação criada com card desenhado (sem componente real catalogado para esta variação: ${_a11yImportFailReason}). Arraste para posicionar.`);
       } else {
         figma.notify("Especificação criada — arraste para posicionar. Clique em Concluir quando pronto.");
       }
@@ -4384,6 +4518,135 @@ figma.ui.onmessage = async (msg) => {
     }
   }
 
+  // Edita o estilo da linha (reta/curva/esquinas) de uma spec já criada --
+  // mesmo precedente de hide-spec-lines (localizar Conector/DotInicio/DotFim
+  // por nome dentro do group), só que removendo e recriando esses 3 nós em
+  // vez de alternar .visible. Diferente de fluxos (edit-flow-connection), NÃO
+  // apaga o group inteiro -- specCard permanece intacto, só a linha é
+  // substituída. Recalcula a partir da posição ATUAL do card (não das
+  // coordenadas salvas na criação) -- resolve de brinde a limitação de
+  // "linha desalinha se o card for arrastado", pelo menos no momento da edição.
+  if (msg.type === "edit-spec-connector") {
+    try {
+      const specGroup = await figma.getNodeByIdAsync(msg.specId);
+      const node = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
+      if (!specGroup || !('findChildren' in specGroup) || !node) {
+        figma.ui.postMessage({ type: 'spec-connector-edit-failed', specId: msg.specId });
+        return;
+      }
+      const specCard = specGroup.findOne(n => n.name === 'Spec Notes');
+      const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
+      // specCard.x/y são relativos ao specGroup (GROUP) -- usa
+      // absoluteBoundingBox para obter a posição real no canvas, igual já
+      // se fazia para `node`. Continua necessário mesmo com GROUP (não só
+      // com FRAME): x/y de qualquer nó são sempre relativos ao parent
+      // imediato, e o specGroup pode ter sido movido pelo usuário.
+      const cardBounds = specCard && (specCard.absoluteBoundingBox || specCard.absoluteRenderBounds);
+      if (!specCard || !bounds || !cardBounds) {
+        figma.ui.postMessage({ type: 'spec-connector-edit-failed', specId: msg.specId });
+        return;
+      }
+
+      const wasVisible = specGroup.findChildren(n => n.name === 'Conector' || n.name === 'DotInicio' || n.name === 'DotFim')
+        .every(n => n.visible !== false);
+
+      const side = msg.guideSide || 'right';
+      let startPt, endPt;
+      if (side === 'right') {
+        startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+        endPt   = { x: cardBounds.x, y: cardBounds.y + cardBounds.height / 2 };
+      } else if (side === 'left') {
+        startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
+        endPt   = { x: cardBounds.x + cardBounds.width, y: cardBounds.y + cardBounds.height / 2 };
+      } else if (side === 'bottom') {
+        startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
+        endPt   = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y };
+      } else { // top
+        startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
+        endPt   = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y + cardBounds.height };
+      }
+
+      const _specConnectorStyle = msg.connectorStyle || 'straight';
+      const _specCurvature = _specConnectorStyle === 'curved' ? (msg.connectorCurvature || 0) : 0;
+
+      // vectorPaths e x/y de filhos são relativos à origem do specGroup
+      // (GROUP), não absolutos de página. Usa absoluteBoundingBox (não
+      // specGroup.x/.y) por segurança -- x/y de um GROUP são sempre
+      // derivados do bounding box dos filhos, então ler via
+      // absoluteBoundingBox é a forma robusta de saber a origem real,
+      // inclusive se o specGroup for movido para dentro de uma Section.
+      const _groupBounds = specGroup.absoluteBoundingBox || specGroup.absoluteRenderBounds;
+      const _gx = _groupBounds.x, _gy = _groupBounds.y;
+      const localStart = { x: startPt.x - _gx, y: startPt.y - _gy };
+      const localEnd = { x: endPt.x - _gx, y: endPt.y - _gy };
+
+      let connectorPath = `M ${localStart.x} ${localStart.y} L ${localEnd.x} ${localEnd.y}`;
+      if (_specConnectorStyle === 'elbow') {
+        const isHorizontal = side === 'right' || side === 'left';
+        const corner = isHorizontal ? { x: localEnd.x, y: localStart.y } : { x: localStart.x, y: localEnd.y };
+        connectorPath = `M ${localStart.x} ${localStart.y} L ${corner.x} ${corner.y} L ${localEnd.x} ${localEnd.y}`;
+      } else if (_specCurvature) {
+        const dx = localEnd.x - localStart.x, dy = localEnd.y - localStart.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const px = -dy / dist, py = dx / dist;
+        const offset = (_specCurvature / 100) * dist * 0.5;
+        const midX = (localStart.x + localEnd.x) / 2, midY = (localStart.y + localEnd.y) / 2;
+        const ctrlX = midX + px * offset, ctrlY = midY + py * offset;
+        connectorPath = `M ${localStart.x} ${localStart.y} Q ${ctrlX} ${ctrlY} ${localEnd.x} ${localEnd.y}`;
+      }
+
+      const themeColor = hexToRgb(msg.color || '#005ca9');
+
+      const oldLineNodes = specGroup.findChildren(n => n.name === 'Conector' || n.name === 'DotInicio' || n.name === 'DotFim');
+      oldLineNodes.forEach(n => n.remove());
+
+      const connector = figma.createVector();
+      connector.name = 'Conector';
+      connector.x = 0;
+      connector.y = 0;
+      connector.vectorPaths = [{ windingRule: "NONZERO", data: connectorPath }];
+      connector.strokes = [{ type: "SOLID", color: themeColor }];
+      connector.strokeWeight = 1.5;
+      connector.dashPattern = [4, 4];
+      connector.strokeCap = "ROUND";
+      connector.visible = wasVisible;
+      connector.locked = false;
+      specGroup.appendChild(connector);
+
+      const _DOT_R = 4;
+      const startDot = figma.createEllipse();
+      startDot.name = 'DotInicio';
+      startDot.resize(_DOT_R * 2, _DOT_R * 2);
+      startDot.fills = [{ type: "SOLID", color: themeColor }];
+      startDot.strokes = [];
+      startDot.visible = wasVisible;
+      startDot.locked = true;
+      specGroup.appendChild(startDot);
+      startDot.x = localStart.x - _DOT_R;
+      startDot.y = localStart.y - _DOT_R;
+
+      const endDot = figma.createEllipse();
+      endDot.name = 'DotFim';
+      endDot.resize(_DOT_R * 2, _DOT_R * 2);
+      endDot.fills = [{ type: "SOLID", color: themeColor }];
+      endDot.strokes = [];
+      endDot.visible = wasVisible;
+      endDot.locked = true;
+      specGroup.appendChild(endDot);
+      endDot.x = localEnd.x - _DOT_R;
+      endDot.y = localEnd.y - _DOT_R;
+
+      figma.ui.postMessage({
+        type: 'spec-connector-edited',
+        specId: msg.specId,
+        connectorStyle: _specConnectorStyle,
+        connectorCurvature: _specCurvature
+      });
+    } catch (e) {
+      figma.ui.postMessage({ type: 'spec-connector-edit-failed', specId: msg.specId, message: e.message });
+    }
+  }
+
   if (msg.type === "unlock-spec-group") {
     const targetLocked = msg.locked !== undefined ? msg.locked : false;
     for (const specId of (msg.specIds || [])) {
@@ -4541,6 +4804,30 @@ figma.ui.onmessage = async (msg) => {
     if (!nodeA || (!isEvent && msg.targetId && !nodeB)) {
       figma.ui.postMessage({ type: 'flow-recreate-failed', flowName: msg.flowName || '' });
       return;
+    }
+
+    await _buildFlowConnection(nodeA, nodeB, msg);
+  }
+
+  // Edita curvatura/texto de um fluxo já criado -- não há API do Figma pra
+  // "reformar" um VECTOR existente com um path diferente preservando o
+  // resto do grupo (seta, chip de texto reposicionado), então apaga o
+  // grupo antigo e recria do zero com os parâmetros novos, preservando
+  // flowUid pra não perder o vínculo com a ficha (insert-flows-in-ficha).
+  if (msg.type === "edit-flow-connection") {
+    const nodeA = msg.sourceId ? await figma.getNodeByIdAsync(msg.sourceId) : null;
+    const nodeB = msg.targetId ? await figma.getNodeByIdAsync(msg.targetId) : null;
+
+    if (!nodeA) {
+      figma.ui.postMessage({ type: 'flow-edit-failed', reason: 'nodes-nao-encontrados' });
+      return;
+    }
+
+    if (msg.oldGroupId) {
+      try {
+        const oldGroup = await figma.getNodeByIdAsync(msg.oldGroupId);
+        if (oldGroup) oldGroup.remove();
+      } catch (e) {}
     }
 
     await _buildFlowConnection(nodeA, nodeB, msg);

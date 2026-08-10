@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-24T19:34:17.963Z",
+  "generatedAt": "2026-08-07T20:11:28.144Z",
   "libraries": [
     {
       "slug": "fundamentos-visuais",
@@ -37,7 +37,7 @@
         "colors": 0,
         "typography": 36,
         "effects": 2,
-        "components": 4636
+        "components": 0
       }
     },
     {
@@ -46,7 +46,7 @@
       "fileKey": "epCGtlKQxedDxQVlK3lNcN",
       "file": "super-app.json",
       "counts": {
-        "variables": 291,
+        "variables": 0,
         "colors": 0,
         "typography": 36,
         "effects": 2,
@@ -72,7 +72,7 @@
       "fileKey": "3zdtN13YvPlCGPdXeL0Y2i",
       "file": "design-acessivel-mobile.json",
       "counts": {
-        "variables": 5,
+        "variables": 0,
         "colors": 0,
         "typography": 0,
         "effects": 0,

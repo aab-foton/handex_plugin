@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Design Acessível",
     "figmaFileKey": "Wy0IhXRVZMSOOr8E609UqI",
-    "exportedAt": "2026-07-24T19:34:09.799Z",
+    "exportedAt": "2026-08-07T20:11:21.888Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -872,13 +872,6 @@
         "value": "Em HTML <aside> possui um significado semântico, indicando que o conteúdo é \"à parte\",  mas relacionado. "
       },
       {
-        "key": "6549fe3b3f19153b25001fb272dd6bb3a20c611b",
-        "name": "estruturais/marcos/header/descricao",
-        "resolvedType": "STRING",
-        "collection": "[a11y]specification",
-        "value": "Indicar como cabeçalho. "
-      },
-      {
         "key": "9fb826cb3106b524ea3b7c24bc34e86d23d1f268",
         "name": "itens interativos/lista/ordenada/descricao",
         "resolvedType": "STRING",
@@ -886,11 +879,11 @@
         "value": "Construir como lista ordenada."
       },
       {
-        "key": "96643391afeaee052a0c1892d2e60c7040eeac1c",
-        "name": "itens interativos/lista/ordenada/nota",
+        "key": "6549fe3b3f19153b25001fb272dd6bb3a20c611b",
+        "name": "estruturais/marcos/header/descricao",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
-        "value": "Em HTML utilize a tag <ol>."
+        "value": "Indicar como cabeçalho. "
       },
       {
         "key": "dcc66b5accd20fd977ad8adddf8573fe938fba64",
@@ -898,6 +891,13 @@
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
         "value": "É um elemento que ajuda a organizar o conteúdo da página, fornecendo uma estrutura clara e semântica."
+      },
+      {
+        "key": "96643391afeaee052a0c1892d2e60c7040eeac1c",
+        "name": "itens interativos/lista/ordenada/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML utilize a tag <ol>."
       },
       {
         "key": "6506ef617dbb027d6c7714f609a07b82d41338c8",

@@ -837,6 +837,111 @@
     }
     window.deleteGlobalSpecException = deleteGlobalSpecException;
 
+    // Nota pós-criação (mesmo padrão de exceção: grava só no dado, sem
+    // atualizar o card visual no canvas -- nota já aparecia na ficha via
+    // s.note, o que faltava era poder incluir/editar depois da criação).
+    function openSpecNoteModal(originalIndex) {
+      if (!createdSpecs[originalIndex]) return;
+      window._editingSpecNoteIdx = originalIndex;
+      const textarea = document.getElementById('spec-note-textarea');
+      if (textarea) textarea.value = createdSpecs[originalIndex].note || '';
+      openModal('spec-note-modal');
+    }
+    window.openSpecNoteModal = openSpecNoteModal;
+
+    function confirmSpecNote() {
+      const idx = window._editingSpecNoteIdx;
+      if (typeof idx !== 'number' || !createdSpecs[idx]) return;
+      const textarea = document.getElementById('spec-note-textarea');
+      createdSpecs[idx].note = textarea ? textarea.value.trim() : '';
+      saveSpecsToStorage();
+      window._expandSpecIdAfterRender = createdSpecs[idx].id;
+      if (createdSpecs[idx].id) {
+        parent.postMessage({ pluginMessage: {
+          type: 'refresh-spec-card',
+          nodeId: createdSpecs[idx].id,
+          note: createdSpecs[idx].note
+        }}, '*');
+      }
+      renderSpecsList();
+      closeModal('spec-note-modal');
+    }
+    window.confirmSpecNote = confirmSpecNote;
+
+    function openEditSpecConnectorModal(originalIndex) {
+      const spec = createdSpecs[originalIndex];
+      if (!spec || !spec.id || !spec.targetNodeId) {
+        showToast('Esta especificação não pode ter a linha editada — foi criada antes deste recurso existir ou não tem elemento vinculado.', 'error');
+        return;
+      }
+      window._editingSpecConnectorIndex = originalIndex;
+      const style = spec.connectorStyle || 'straight';
+      const styleRadio = document.querySelector(`input[name="edit-spec-connector-style"][value="${style}"]`);
+      if (styleRadio) styleRadio.checked = true;
+      _onEditSpecConnectorStyleChange(style);
+      const curvatureInput = document.getElementById('edit-spec-curvature-input');
+      if (curvatureInput) curvatureInput.value = spec.connectorCurvature || 0;
+      _updateEditSpecCurvatureLabel(spec.connectorCurvature || 0);
+      const saveBtn = document.getElementById('edit-spec-connector-save-btn');
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> Salvar'; }
+      openModal('edit-spec-connector-modal');
+      _refreshIcons();
+    }
+    window.openEditSpecConnectorModal = openEditSpecConnectorModal;
+
+    function closeEditSpecConnectorModal() {
+      window._editingSpecConnectorIndex = null;
+      closeModal('edit-spec-connector-modal');
+    }
+    window.closeEditSpecConnectorModal = closeEditSpecConnectorModal;
+
+    function _onEditSpecConnectorStyleChange(style) {
+      const container = document.getElementById('edit-spec-curvature-container');
+      if (container) container.classList.toggle('hidden', style !== 'curved');
+    }
+    window._onEditSpecConnectorStyleChange = _onEditSpecConnectorStyleChange;
+
+    function _updateEditSpecCurvatureLabel(value) {
+      const label = document.getElementById('edit-spec-curvature-value');
+      if (!label) return;
+      const n = Number(value);
+      label.textContent = n === 0 ? 'Reta' : (n > 0 ? `Curva ${n}%` : `Curva ${Math.abs(n)}% (invertida)`);
+    }
+    window._updateEditSpecCurvatureLabel = _updateEditSpecCurvatureLabel;
+
+    function confirmEditSpecConnector() {
+      const idx = window._editingSpecConnectorIndex;
+      if (typeof idx !== 'number') return;
+      const spec = createdSpecs[idx];
+      if (!spec) return;
+
+      const saveBtn = document.getElementById('edit-spec-connector-save-btn');
+      if (saveBtn) {
+        if (saveBtn.disabled) return;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Salvando...';
+        _refreshIcons();
+      }
+
+      const styleInput = document.querySelector('input[name="edit-spec-connector-style"]:checked');
+      const curvatureInput = document.getElementById('edit-spec-curvature-input');
+      const connectorStyle = styleInput ? styleInput.value : 'straight';
+      const connectorCurvature = curvatureInput ? Number(curvatureInput.value) || 0 : 0;
+
+      parent.postMessage({
+        pluginMessage: {
+          type: 'edit-spec-connector',
+          specId: spec.id,
+          targetNodeId: spec.targetNodeId,
+          guideSide: spec.guideSide || 'right',
+          color: spec.color || '#005ca9',
+          connectorStyle,
+          connectorCurvature
+        }
+      }, '*');
+    }
+    window.confirmEditSpecConnector = confirmEditSpecConnector;
+
     function refreshSpecCardOnCanvas(frameId, specIdx) {
       const frame = getFrame(frameId);
       if (!frame) return;
@@ -1646,16 +1751,12 @@
       document.getElementById('spec-properties-modal').classList.add('hidden');
     }
 
-    function confirmSpecProperties() {
-      closeSpecPropertiesModal();
-      closeSpecFormModal();
-      _duplicateSpecSourceProps = null;
-
+    function _collectSpecPropertiesOpts() {
       const g = id => document.getElementById(id);
       const selCat = g('ann-category');
-      
+
       const guideSideEl = document.querySelector('input[name="guide-side"]:checked');
-      
+
       const opts = {
         category: selCat ? selCat.value : "",
         categoryLabel: selCat && selCat.options[selCat.selectedIndex] ? selCat.options[selCat.selectedIndex].text : "",
@@ -1679,8 +1780,73 @@
         }
       });
 
-      parent.postMessage({ pluginMessage: { type: 'create-unified-spec', opts } }, '*');
+      return opts;
     }
+
+    // Etapa opcional entre "Propriedades" e a criação de fato -- permite já
+    // nascer a spec com um cenário de exceção preenchido, sem precisar abrir
+    // "Cenário de Exceção" de novo depois pelo card (openGlobalSpecException).
+    function advanceToSpecExceptionStep() {
+      window._pendingSpecOpts = _collectSpecPropertiesOpts();
+      closeSpecPropertiesModal();
+      window._newSpecExceptionType = null;
+      const g = id => document.getElementById(id);
+      document.querySelectorAll('.new-exc-type-btn').forEach(b => b.classList.remove('border-red-300', 'border-green-300', 'border-blue-300', 'border-amber-300', 'bg-red-50', 'bg-green-50', 'bg-blue-50', 'bg-amber-50'));
+      if (g('new-exc-titulo')) g('new-exc-titulo').value = '';
+      if (g('new-exc-obs')) g('new-exc-obs').value = '';
+      openModal('spec-new-exception-modal');
+    }
+    window.advanceToSpecExceptionStep = advanceToSpecExceptionStep;
+
+    function backToSpecPropertiesFromException() {
+      closeSpecNewExceptionModal();
+      document.getElementById('spec-properties-modal').classList.remove('hidden');
+    }
+    window.backToSpecPropertiesFromException = backToSpecPropertiesFromException;
+
+    function closeSpecNewExceptionModal() {
+      closeModal('spec-new-exception-modal');
+    }
+    window.closeSpecNewExceptionModal = closeSpecNewExceptionModal;
+
+    const NEW_EXC_TYPE_BORDER = { 'Erro': 'border-red-300', 'Sucesso': 'border-green-300', 'Confirmação': 'border-blue-300', 'Alerta': 'border-amber-300' };
+    function selectNewSpecExceptionType(type) {
+      window._newSpecExceptionType = type;
+      document.querySelectorAll('.new-exc-type-btn').forEach(b => {
+        b.classList.remove('border-red-300', 'border-green-300', 'border-blue-300', 'border-amber-300');
+        b.classList.add('border-gray-100');
+      });
+      const btn = document.getElementById(`new-exc-type-${type}`);
+      if (btn) {
+        btn.classList.remove('border-gray-100');
+        btn.classList.add(NEW_EXC_TYPE_BORDER[type] || 'border-gray-100');
+      }
+    }
+    window.selectNewSpecExceptionType = selectNewSpecExceptionType;
+
+    function finalizeSpecCreation() {
+      const opts = window._pendingSpecOpts;
+      if (!opts) { closeSpecNewExceptionModal(); return; }
+
+      const titulo = document.getElementById('new-exc-titulo') ? document.getElementById('new-exc-titulo').value.trim() : '';
+      const type = window._newSpecExceptionType;
+      if (type && titulo) {
+        opts.excecaoInicial = {
+          tipo: type,
+          titulo: titulo,
+          obs: document.getElementById('new-exc-obs') ? document.getElementById('new-exc-obs').value.trim() : ''
+        };
+      }
+
+      closeSpecNewExceptionModal();
+      closeSpecFormModal();
+      _duplicateSpecSourceProps = null;
+      parent.postMessage({ pluginMessage: { type: 'create-unified-spec', opts } }, '*');
+
+      window._pendingSpecOpts = null;
+      window._newSpecExceptionType = null;
+    }
+    window.finalizeSpecCreation = finalizeSpecCreation;
 
     function renderSpecsList() {
       const list = document.getElementById('specs-results');
@@ -1992,6 +2158,24 @@
             toggleSpecLock(spec.originalIndex);
           };
 
+          const editLineBtn = document.createElement("button");
+          editLineBtn.type = "button";
+          editLineBtn.title = "Editar estilo da linha";
+          editLineBtn.setAttribute("aria-label", "Editar estilo da linha");
+          editLineBtn.className = "p-2.5 text-[#005ca9] hover:bg-blue-50 dark:hover:bg-slate-600 transition-colors shrink-0";
+          editLineBtn.innerHTML = '<i data-lucide="pencil-ruler" class="w-3.5 h-3.5"></i>';
+          if (!spec.id || !spec.targetNodeId) {
+            editLineBtn.disabled = true;
+            editLineBtn.classList.remove('text-[#005ca9]');
+            editLineBtn.classList.add('text-gray-400', 'opacity-50', 'cursor-not-allowed');
+            editLineBtn.title = "Linha não editável — especificação criada antes deste recurso existir";
+          } else {
+            editLineBtn.onclick = (e) => {
+              e.stopPropagation();
+              openEditSpecConnectorModal(spec.originalIndex);
+            };
+          }
+
           const delBtn = document.createElement("button");
           delBtn.type = "button";
           delBtn.title = "Excluir Especificação";
@@ -2011,6 +2195,7 @@
 
           actions.appendChild(visBtn);
           actions.appendChild(lockBtn);
+          actions.appendChild(editLineBtn);
           actions.appendChild(delBtn);
           header.appendChild(btn);
           header.appendChild(actions);
@@ -2021,7 +2206,12 @@
           content.className = "hidden p-3 border-t border-gray-50 dark:border-dark-line bg-gray-50/30 dark:bg-slate-900/50 space-y-2";
           
           if (spec.note) {
-            content.innerHTML += `<div class="text-[10px] text-slate-600 dark:text-dark-text p-2 bg-white dark:bg-dark-bg rounded border border-gray-100 dark:border-dark-line italic">${escapeHtml(spec.note)}</div>`;
+            const noteRow = document.createElement('div');
+            noteRow.className = 'flex items-start gap-1.5 text-[10px] text-slate-600 dark:text-dark-text p-2 bg-white dark:bg-dark-bg rounded border border-gray-100 dark:border-dark-line italic cursor-pointer hover:border-[#005ca9]/30 transition-colors';
+            noteRow.title = 'Clique para editar a nota';
+            noteRow.innerHTML = `<i data-lucide="sticky-note" class="w-3 h-3 text-slate-400 shrink-0 mt-0.5"></i><span class="flex-1">${escapeHtml(spec.note)}</span>`;
+            noteRow.onclick = (e) => { e.stopPropagation(); openSpecNoteModal(spec.originalIndex); };
+            content.appendChild(noteRow);
           }
 
           if (spec.properties && spec.properties.length > 0) {
@@ -2059,6 +2249,16 @@
             </div>
           `;
           content.appendChild(excSection);
+
+          const noteActionRow = document.createElement('div');
+          noteActionRow.className = 'pt-1';
+          noteActionRow.innerHTML = `
+            <button type="button" onclick="event.stopPropagation(); openSpecNoteModal(${spec.originalIndex})"
+              class="w-full flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-[#005ca9] dark:text-[#4da3e0] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-2xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+              <i data-lucide="sticky-note" class="w-3.5 h-3.5"></i> ${spec.note ? 'Editar Nota' : 'Incluir Nota'}
+            </button>
+          `;
+          content.appendChild(noteActionRow);
 
           section.appendChild(content);
           groupContent.appendChild(section);
@@ -2308,7 +2508,12 @@
                 </div>
                 
                 <div class="flex items-center gap-1 shrink-0">
-                  <button onclick="event.stopPropagation(); toggleFlowVisibility('${flow.id}', ${idx})" 
+                  ${(flow.type === 'line_solid' || flow.type === 'line_dashed') ? `
+                  <button onclick="event.stopPropagation(); openEditFlowModal(${idx})" title="Editar curvatura e texto" aria-label="Editar curvatura e texto"
+                    class="w-7 h-7 rounded-xl flex items-center justify-center ${isVisible ? 'text-[#0070af]' : 'text-gray-400'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all">
+                    <i data-lucide="spline" class="w-3.5 h-3.5"></i>
+                  </button>` : ''}
+                  <button onclick="event.stopPropagation(); toggleFlowVisibility('${flow.id}', ${idx})"
                     class="w-7 h-7 rounded-xl flex items-center justify-center ${isVisible ? 'text-[#0070af]' : 'text-gray-400'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
                     title="${isVisible ? 'Ocultar fluxo' : 'Exibir fluxo'}" aria-label="Alterar visibilidade">
                     <i data-lucide="${isVisible ? 'eye' : 'eye-off'}" class="w-3.5 h-3.5"></i>
@@ -2381,15 +2586,107 @@
         flow.name = newName.trim();
         saveToStorage();
         
-        parent.postMessage({ 
-          pluginMessage: { 
-            type: 'rename-node', 
-            id: flow.id, 
-            name: flow.name 
-          } 
+        parent.postMessage({
+          pluginMessage: {
+            type: 'rename-node',
+            id: flow.id,
+            name: flow.name
+          }
         }, '*');
       }
     }
+
+    function openEditFlowModal(idx) {
+      const flow = handoffData.createdFlows[idx];
+      if (!flow || !flow.sourceId) {
+        showToast('Este fluxo não pode ser editado — foi criado antes deste recurso existir.', 'error');
+        return;
+      }
+      // Único nome de variável compartilhado com messages.js (flow-created)
+      // -- nomes divergentes aqui já causaram confusão em revisão; manter
+      // um só evita que um refator futuro quebre o fluxo de edição em
+      // silêncio (sintoma seria "editar duplica em vez de substituir").
+      window._editingFlowIndex = idx;
+      const textInput = document.getElementById('edit-flow-chip-text');
+      if (textInput) textInput.value = flow.decisionText || '';
+      const style = flow.connectorStyle || 'straight';
+      const styleRadio = document.querySelector(`input[name="edit-flow-connector-style"][value="${style}"]`);
+      if (styleRadio) styleRadio.checked = true;
+      _onEditFlowConnectorStyleChange(style);
+      const curvatureInput = document.getElementById('edit-flow-curvature-input');
+      if (curvatureInput) curvatureInput.value = flow.curvature || 0;
+      _updateEditFlowCurvatureLabel(flow.curvature || 0);
+      const saveBtn = document.getElementById('edit-flow-save-btn');
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> Salvar'; }
+      openModal('edit-flow-modal');
+      _refreshIcons();
+    }
+    window.openEditFlowModal = openEditFlowModal;
+
+    function closeEditFlowModal() {
+      window._editingFlowIndex = null;
+      closeModal('edit-flow-modal');
+    }
+    window.closeEditFlowModal = closeEditFlowModal;
+
+    function _updateEditFlowCurvatureLabel(value) {
+      const label = document.getElementById('edit-flow-curvature-value');
+      if (!label) return;
+      const n = Number(value);
+      label.textContent = n === 0 ? 'Reta' : (n > 0 ? `Curva ${n}%` : `Curva ${Math.abs(n)}% (invertida)`);
+    }
+    window._updateEditFlowCurvatureLabel = _updateEditFlowCurvatureLabel;
+
+    function _onEditFlowConnectorStyleChange(style) {
+      const curvatureContainer = document.getElementById('edit-flow-curvature-container');
+      if (curvatureContainer) curvatureContainer.classList.toggle('hidden', style !== 'curved');
+    }
+    window._onEditFlowConnectorStyleChange = _onEditFlowConnectorStyleChange;
+
+    function confirmEditFlow() {
+      const idx = window._editingFlowIndex;
+      if (typeof idx !== 'number') return;
+      const flow = handoffData.createdFlows[idx];
+      if (!flow) return;
+
+      // Guard contra clique duplo: sem isso, um segundo clique antes da
+      // resposta do primeiro chegar reenviaria o mesmo oldGroupId (já
+      // removido pelo backend na primeira chamada), deixando o grupo criado
+      // pela primeira edição órfão no canvas.
+      const saveBtn = document.getElementById('edit-flow-save-btn');
+      if (saveBtn) {
+        if (saveBtn.disabled) return;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Salvando...';
+        _refreshIcons();
+      }
+
+      const textInput = document.getElementById('edit-flow-chip-text');
+      const styleInput = document.querySelector('input[name="edit-flow-connector-style"]:checked');
+      const curvatureInput = document.getElementById('edit-flow-curvature-input');
+      const decisionText = textInput ? textInput.value : '';
+      const connectorStyle = styleInput ? styleInput.value : 'straight';
+      const curvature = curvatureInput ? Number(curvatureInput.value) || 0 : 0;
+
+      parent.postMessage({
+        pluginMessage: {
+          type: 'edit-flow-connection',
+          flowType: flow.type,
+          flowName: flow.name || '',
+          sourceId: flow.sourceId,
+          targetId: flow.targetId || null,
+          decisionText: decisionText,
+          flowSide: flow.flowSide || 'auto',
+          connectorStyle: connectorStyle,
+          curvature: curvature,
+          nextFlowNumber: handoffData.nextFlowNumber || 1,
+          flowId: flow.flowUid || String(Date.now()),
+          oldGroupId: flow.id
+        }
+      }, '*');
+      closeModal('edit-flow-modal');
+    }
+    window.confirmEditFlow = confirmEditFlow;
 
     function toggleFlowVisibility(id, idx) {
       const flow = handoffData.createdFlows[idx];

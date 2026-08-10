@@ -2,50 +2,15 @@
   "meta": {
     "libraryName": "Design Acessível | Super App (React Native)",
     "figmaFileKey": "3zdtN13YvPlCGPdXeL0Y2i",
-    "exportedAt": "2026-07-24T19:34:14.148Z",
+    "exportedAt": "2026-08-07T20:06:57.926Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
-      "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
+      "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API",
+      "variables fetch skipped: fetch failed"
     ]
   },
   "designTokens": {
-    "variables": [
-      {
-        "key": "81bc7fe6cd6410034c0c79c3125ea8cb63f7389b",
-        "name": "títulos/🔒descrição",
-        "resolvedType": "STRING",
-        "collection": "textos de especificação",
-        "value": "Identificar como título."
-      },
-      {
-        "key": "69c8c82282382229c628d0190603d7bf57cebbe9",
-        "name": "títulos/🔒observaçoes",
-        "resolvedType": "STRING",
-        "collection": "textos de especificação",
-        "value": "É um elemento que ajuda a organizar o conteúdo da página, fornecendo uma estrutura clara e semântica."
-      },
-      {
-        "key": "b342211552e88aba1e4e1dbc96bb28dad5742267",
-        "name": "títulos/🔒notas",
-        "resolvedType": "STRING",
-        "collection": "textos de especificação",
-        "value": "Aplicar a propriedade  accessibilityRole=\"header\" no elemento."
-      },
-      {
-        "key": "d29100f56c4981d3f04d46d08fdb76b4bae3d1f1",
-        "name": "elementos e imagens/🔒descrição link",
-        "resolvedType": "STRING",
-        "collection": "textos de especificação",
-        "value": "Identificar como link e anunciar que o link abre uma nova janela e direciona o foco para ela."
-      },
-      {
-        "key": "e1a00087d64ed3dd35f0caf48e52db99c2e463d0",
-        "name": "decorativos/🔒descrição",
-        "resolvedType": "STRING",
-        "collection": "textos de especificação",
-        "value": "Não deve ser anunciado pelo Leitor de Tela."
-      }
-    ]
+    "variables": []
   },
   "styleTokens": {
     "colors": [],

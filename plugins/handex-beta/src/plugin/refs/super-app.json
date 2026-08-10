@@ -2,2052 +2,15 @@
   "meta": {
     "libraryName": "Super App",
     "figmaFileKey": "epCGtlKQxedDxQVlK3lNcN",
-    "exportedAt": "2026-07-24T19:33:25.262Z",
+    "exportedAt": "2026-08-07T20:06:50.711Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
-      "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
+      "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API",
+      "variables fetch skipped: fetch failed"
     ]
   },
   "designTokens": {
-    "variables": [
-      {
-        "key": "46a7bea58854c19170e7152b4f3ed97718aafb60",
-        "name": "Width - Screen",
-        "resolvedType": "FLOAT",
-        "collection": "Screen size",
-        "value": 360
-      },
-      {
-        "key": "713214ddb27195af0824f84fab30b31526f4eb3e",
-        "name": "Height - Screen",
-        "resolvedType": "FLOAT",
-        "collection": "Screen size",
-        "value": 800
-      },
-      {
-        "key": "441e5c9892c6b8422b58d7fde53fd14a11ac9bb5",
-        "name": "Abrir/Abrir",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir"
-      },
-      {
-        "key": "973c5d708dee0fe93b5bd6cf87e30c24f3031ec6",
-        "name": "Abrir/Abrir comprovante",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir comprovante"
-      },
-      {
-        "key": "3031bd2a85ba9074d647212fff7c0a656d1b00c6",
-        "name": "Abrir/Abrir conta digital",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir conta digital"
-      },
-      {
-        "key": "8783f72835be1f33965fab60e0d99142c20751ed",
-        "name": "Adicionar/Adicionar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar"
-      },
-      {
-        "key": "479f8acff5694a4cbfdcb5096687a180e6ad5e75",
-        "name": "Adicionar/Adicionar cartão",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar cartão"
-      },
-      {
-        "key": "b07243dea692ea85ad6f754ae1f9803f0aeeb02f",
-        "name": "Adicionar/Adicionar contato",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar contato"
-      },
-      {
-        "key": "73ab870b0a2506b2390e80f11aef14f6d6e04d16",
-        "name": "Adicionar/Adicionar widget",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar widget"
-      },
-      {
-        "key": "e34d2eff03a24fada8fd9f442665fd90f01c37f0",
-        "name": "Antecipar/Antecipar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Antecipar"
-      },
-      {
-        "key": "050a2434f6f33b50ae437aec07c9114c4f2ad852",
-        "name": "Acessar/Acessar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Acessar"
-      },
-      {
-        "key": "c33181eb5cb34da4ff29e24c3086c1b2862e26f2",
-        "name": "Atualizar/Atualizar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Atualizar"
-      },
-      {
-        "key": "2285763ee12226f62a426966b237cd0341416880",
-        "name": "Ativar/Ativar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar"
-      },
-      {
-        "key": "c74151b726f7e120baab0bda75e991d37d2b9dfc",
-        "name": "Ativar/Ativar biometria",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar biometria"
-      },
-      {
-        "key": "0bebeddbc8e8d9ca5c91ad251c0bb2a9aef36532",
-        "name": "Ativar/Ativar DDA",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar DDA"
-      },
-      {
-        "key": "cf1fc3e121316f24f2cf1b1a61966af3bb8dd2aa",
-        "name": "Ativar/Ativar lembrete",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar lembrete"
-      },
-      {
-        "key": "807926aeaa5a2f1a71d7c77beeaf1f4ea34f412f",
-        "name": "Cadastrar/Cadastrar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar"
-      },
-      {
-        "key": "a4b731474ab3d0d8568e2eeac2829a54a9d41836",
-        "name": "Cadastrar/Cadastrar chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar chave Pix"
-      },
-      {
-        "key": "d9fe8a33c0c18efdd4283a91006628fc51f7aeae",
-        "name": "Cadastrar/Cadastrar débito automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar débito automático"
-      },
-      {
-        "key": "be709143353a6b54cac2d5f7a28e46e7507984e2",
-        "name": "Cadastrar/Cadastrar Pix automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar Pix automático"
-      },
-      {
-        "key": "0a8ffc9461d59e0bc65be071e58d9fd40750d342",
-        "name": "Cancelar/Cancelar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar"
-      },
-      {
-        "key": "747d69f50717908631da5bd56e8553fb1f6822e6",
-        "name": "Cancelar/Cancelar autorização",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar autorização"
-      },
-      {
-        "key": "60942840e6be5324256a3b935ec9aedf153e1850",
-        "name": "Cancelar/Cancelar débito automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar débito automático"
-      },
-      {
-        "key": "b7d334d3011f93f77107fc16966f0a3e5a7cbfb2",
-        "name": "Cancelar/Cancelar portabilidade",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar portabilidade"
-      },
-      {
-        "key": "f06d3796e4daaa91db550ca59c5049338ad31a9a",
-        "name": "Compartilhar/Compartilhar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar"
-      },
-      {
-        "key": "243dd50d1d061270d0299f8069992a16453a20ed",
-        "name": "Compartilhar/Compartilhar chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar chave Pix"
-      },
-      {
-        "key": "09142ba3302388f7b1f16d1109901f3ffe098f9f",
-        "name": "Compartilhar/Compartilhar dados da conta",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar dados da conta"
-      },
-      {
-        "key": "a0bb1c3cafa4aaaab7465d8bfe684c756c7e31d3",
-        "name": "Compartilhar/Compartilhar comprovante",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar comprovante"
-      },
-      {
-        "key": "049b19398c07fadbda78065fc1434224ed30ad19",
-        "name": "Compartilhar/Compartilhar QR Code",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar QR Code"
-      },
-      {
-        "key": "a053b4d249eabb1ab06c83d1a994577c8e98864b",
-        "name": "Confirmar/Confirmar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Confirmar"
-      },
-      {
-        "key": "3e779d84fefcd1dbc6c8b375ec5d0084ea8f5f1e",
-        "name": "Confirmar/Confirmar celular",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Confirmar celular"
-      },
-      {
-        "key": "781bb0ff4be34ba060ca2d13419347b8d42b8494",
-        "name": "Continuar/Continuar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Continuar"
-      },
-      {
-        "key": "8846db41e5418080923b629ae178ad44ae0aec01",
-        "name": "Criar/Criar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Criar"
-      },
-      {
-        "key": "5589967873a34e650c3d9e61a7d57f306b6ac95d",
-        "name": "Criar/Criar lembrete",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Criar lembrete"
-      },
-      {
-        "key": "fc1acecce0ffad831af95832e7e13126a32671df",
-        "name": "Entender/Ok, entendi",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ok, entendi"
-      },
-      {
-        "key": "2aac4f310ca630a79ac4c5536d052c023371d1ff",
-        "name": "Excluir/Excluir",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir"
-      },
-      {
-        "key": "43aaad182bc50f56078e715f717f1f8152cebe55",
-        "name": "Excluir/Excluir Pix Programado",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir Pix Programado"
-      },
-      {
-        "key": "3ec1f3ab3cdbbb9d172969930299cedf1a908096",
-        "name": "Excluir/Excluir chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir chave Pix"
-      },
-      {
-        "key": "87edc4b177b0c6120095d60d0e242a2c01c54eae",
-        "name": "Fazer/Fazer Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer Pix"
-      },
-      {
-        "key": "a169a2bffb44cebdc59ad2865727f4db397d1924",
-        "name": "Fazer/Fazer novo Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer novo Pix"
-      },
-      {
-        "key": "33c03b9cb80bfa694d141c4f3cfc6ae71ad7961a",
-        "name": "Fazer/Fazer pagamento",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer pagamento"
-      },
-      {
-        "key": "c28cccbba57d2caf58528cd8a950a17d393e7436",
-        "name": "Fazer/Fazer novo pagamento",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer novo pagamento"
-      },
-      {
-        "key": "ada9082df19c3666017af18e58d86bcef7fc5961",
-        "name": "Gerar/Gerar QR Code",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Gerar QR Code"
-      },
-      {
-        "key": "da6c5d585b6d53379cebaecba91dc85d029fa5d7",
-        "name": "Gerar/Gerar 2ª via do boleto",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Gerar 2ª via do boleto"
-      },
-      {
-        "key": "2db4d9c4287d5df336dfbf947f7aa75710866f66",
-        "name": "Ir e Voltar/Ir para início",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ir para início"
-      },
-      {
-        "key": "834284a3afad8c207bc4b9ebb111d111a35dd5e7",
-        "name": "Ir e Voltar/Ir para Empréstimos",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ir para Empréstimos"
-      },
-      {
-        "key": "d83959d88d0d8935119128552314235f521bffc9",
-        "name": "Ir e Voltar/Voltar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Voltar"
-      },
-      {
-        "key": "e1e068658918f355ff49753a0b44528355a41f66",
-        "name": "Ir e Voltar/Voltar para início",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Voltar para início"
-      },
-      {
-        "key": "6d508d72d8c0d34ffbc1589be61fd4b366da242f",
-        "name": "Mostrar/Mostrar senha",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar senha"
-      },
-      {
-        "key": "0d66da7feb2d39086e0a2a3e450365d08bd1675c",
-        "name": "Mostrar/Mostrar saldo",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar saldo"
-      },
-      {
-        "key": "063d9c7eb9324571abbdcb7d1fa512c80ecb5af1",
-        "name": "Mostrar/Mostrar todos",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar todos"
-      },
-      {
-        "key": "b825eb9403e79735c622e55cee5ef6967c7fbc41",
-        "name": "Pagar/Pagar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar"
-      },
-      {
-        "key": "969a06167ff01a10cfee29df9b9c6d22400c443b",
-        "name": "Pagar/Pagar boleto",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar boleto"
-      },
-      {
-        "key": "212ebd31d9c0aa24af4417ea2369e7bf38dd597a",
-        "name": "Pagar/Pagar parcela",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar parcela"
-      },
-      {
-        "key": "f5bc15280a7437786072ab4fbb5aa753abde90fb",
-        "name": "Pagar/Pagar prestação",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar prestação"
-      },
-      {
-        "key": "1d968f5e32f2182b8f53ee54df5cf2a73e2774ec",
-        "name": "Salvar/Salvar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar"
-      },
-      {
-        "key": "e682795190c59c69b0679e4b728bc62e87c8dc69",
-        "name": "Salvar/Salvar contato",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar contato"
-      },
-      {
-        "key": "4dd7ded241a85c20582df29207559f53b6f34b55",
-        "name": "Salvar/Salvar mensagem",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar mensagem"
-      },
-      {
-        "key": "182a23014cacb0e36d9f52bf91381d6b30007e1c",
-        "name": "Usar/Usar chave Pix na CAIXA",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Usar chave Pix na CAIXA"
-      },
-      {
-        "key": "a06113e15c61a312bf3b1d88cdc30d456925f7dd",
-        "name": "Usar/Usar em outro banco",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Usar em outro banco"
-      },
-      {
-        "key": "84a507d1b885b05f356cc444daa786a0965f065d",
-        "name": "color/highlight/highlight [Azul CX - Color 8]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#005ca9"
-      },
-      {
-        "key": "97ad8f2aff2ad53f6e5027213f4c6d59a28519ef",
-        "name": "color/highlight/onHighlight [Color 1]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffffff"
-      },
-      {
-        "key": "2387b299b7d043bc65fd125b6ca29dd15d23f003",
-        "name": "color/accent/accent [Color 8]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#d87b00"
-      },
-      {
-        "key": "24acc212695faf9edbfc973427f312ea004cc268",
-        "name": "color/accent/onAccent [Color 1]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffffff"
-      },
-      {
-        "key": "b3bad5a5fb677cb7a1e98841ade9ba6606d720b5",
-        "name": "color/decorative/decorative [Color 8]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#216e62"
-      },
-      {
-        "key": "8ff46da0eb2d109924fd3d2d0a2a66f9429ec6e4",
-        "name": "color/decorative/onDecorative [Color 1]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffffff"
-      },
-      {
-        "key": "af61177accd2c924bd14cd5b614da2c5c8e405c8",
-        "name": "color/decorative/decorativeBg [Color 2]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#e4f7f4"
-      },
-      {
-        "key": "42c2ecae2b3c609228f161382381ca0778ce53c2",
-        "name": "color/decorative/onDecorativeBg [Color 10]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#03453b"
-      },
-      {
-        "key": "f7d0c2ecc99d5ea43afd7a47ac8a4062d4871c3c",
-        "name": "color/accent/accentBg [Color 2]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffefd6"
-      },
-      {
-        "key": "1416193b41f620131c30e8d26f42a5150330fd18",
-        "name": "color/decorative/decorativeOutlined [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#d0f2ed"
-      },
-      {
-        "key": "5770cb929fafef3eb752fdb5d3c3b9b2d5b36e47",
-        "name": "color/accent/onAccentBg [Color 10]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#804800"
-      },
-      {
-        "key": "e6e259af85ee13921af718f55595729570fba5f4",
-        "name": "color/accent/accentOutlined [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffe3b8"
-      },
-      {
-        "key": "ad215425163ceef7c7d6931279c38889ef43e074",
-        "name": "color/highlight/highlightBg [Color 2]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#e5f2fc"
-      },
-      {
-        "key": "e1f17ee875abcc5e41234415787458ee61a53626",
-        "name": "color/highlight/onHighlightBg [Color 10]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#00437a"
-      },
-      {
-        "key": "4112610f90cc08d00f9522d364c0118524749b18",
-        "name": "color/highlight/highlightOutlined [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#cce6fc"
-      },
-      {
-        "key": "62342bbd9c0d200e7aa7fcc5b0239abe55777bcf",
-        "name": "color/neutral/neutralBg1 [Color 1]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffffff"
-      },
-      {
-        "key": "89b41acaf110f0b72f1a32527b9daaef57b95421",
-        "name": "color/neutral/neutralBg2 [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f2f2"
-      },
-      {
-        "key": "1e9bf8cfc9ff23ff6d1848ec442c56fb5765add8",
-        "name": "color/neutral/neutralBg3 [Color 5]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#e3ebeb"
-      },
-      {
-        "key": "99d311f0d19022f91077f602e7a6d21192f0d79d",
-        "name": "color/neutral/neutralBgAlt [Color 1 - Color 5]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffffff"
-      },
-      {
-        "key": "b65a8f678fd75db4dcb1ee95a939ccc12bd353ea",
-        "name": "color/neutral/onNeutral1 [Color 11]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#22292e"
-      },
-      {
-        "key": "3b6c46b6872ae8350e30bce1e8135fe45b3322cc",
-        "name": "color/neutral/onNeutral2 [Color 9]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#525f66"
-      },
-      {
-        "key": "012b3db7e10e2b74c02f49a6b39fd99132016818",
-        "name": "color/neutral/onNeutral3 [Color 8]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#64747a"
-      },
-      {
-        "key": "b9071ea4c00b4a431b919aebb19d03f16fc0b16a",
-        "name": "color/neutral/neutralBgInverse [Color 11]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#22292e"
-      },
-      {
-        "key": "7849e19934698745768b8bfc9ec783d8c8f7b6d0",
-        "name": "color/neutral/onNeutralInverse [Color 1]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffffff"
-      },
-      {
-        "key": "f2f08b97178cace56ee83492e7a799539184dba3",
-        "name": "color/neutral/outlined1 [Color 6]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#d0e0e3"
-      },
-      {
-        "key": "6892081e8c923e4f1a3a53a885abe77f62c5926d",
-        "name": "color/neutral/outlined2 [Color 7]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#9eb2b8"
-      },
-      {
-        "key": "42659a9b4d4c6ca18ec3a82692b08c2e31316b9c",
-        "name": "color/success/success [Color 8]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#127527"
-      },
-      {
-        "key": "cc4b56bbdb100bd3c785d8a68e8edcac281a4ebc",
-        "name": "color/success/onSuccess [Color 1]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffffff"
-      },
-      {
-        "key": "594574bf6d76538d35f306606f2e44f780ea1dc0",
-        "name": "color/warning/warning [Color 8]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#977203"
-      },
-      {
-        "key": "2ef39b8ec2abbd418598418d36ca6f189b8869aa",
-        "name": "color/warning/onWarning [Color 1]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffffff"
-      },
-      {
-        "key": "27d873d3e889020563ca430e80f4f43c17626f51",
-        "name": "color/warning/warningBg [Color 2]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#fff9e6"
-      },
-      {
-        "key": "f32751805e1e8a020df1531f052091548438e443",
-        "name": "color/warning/onWarningBg [Color 10]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#654c02"
-      },
-      {
-        "key": "ffcd37c8627af8141df9025ada49254bce1aa3fa",
-        "name": "color/warning/warningOutlined [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#fff0c2"
-      },
-      {
-        "key": "a06bf6b3c8202f96591f10b9cff6084add31c345",
-        "name": "color/success/successBg [Color 2]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#e7f4ea"
-      },
-      {
-        "key": "ac06454bc6e5db765b48e4f13a49f347def8fb22",
-        "name": "color/success/onSuccessBg [Color 10]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#0d581d"
-      },
-      {
-        "key": "41295c91f3eee32fdc16528b8edbdfdefce11b7c",
-        "name": "color/success/successOutlined [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#c5e4cc"
-      },
-      {
-        "key": "8c51e59c24f6ed3ab940a9662a2dc51140b23c52",
-        "name": "color/danger/danger [Color 8]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#b22c2c"
-      },
-      {
-        "key": "dce7bc040fe6354dcf38e2e93999631aa07f4086",
-        "name": "color/danger/onDanger [Color 1]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffffff"
-      },
-      {
-        "key": "19d0670de1b796524220ae9b0148023b34c5e2db",
-        "name": "color/danger/dangerBg [Color 2]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#fbebeb"
-      },
-      {
-        "key": "02f752d8046ff5e7b1bf0a3baf98dbdf81c7d666",
-        "name": "color/danger/onDangerBg [Color 10]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#8c2424"
-      },
-      {
-        "key": "1b79f12388795f9318216453ab64251ef2d288a0",
-        "name": "color/danger/dangerOutlined [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f5cdcd"
-      },
-      {
-        "key": "6eb7540bcc0133a94e4077a7e2f99ec95a53e543",
-        "name": "color/information/information [Color 8]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#038299"
-      },
-      {
-        "key": "c09ed9c59503cf2b67fbe0e58cdb2058e235b40c",
-        "name": "color/information/onInformation [Color 1]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffffff"
-      },
-      {
-        "key": "75c6ae11024132835c3d4c59da28e44bf9095e3b",
-        "name": "color/information/informationBg [Color 2]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#e5f5f8"
-      },
-      {
-        "key": "34a8ae1fa17ea590bb37f060eb7f336fd467c379",
-        "name": "color/information/onInformationBg [Color 10]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#026273"
-      },
-      {
-        "key": "8166bf9695b4316bc57ac1a3588ebbaf71fe97f6",
-        "name": "color/information/informationOutlined [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#c0e9f0"
-      },
-      {
-        "key": "5c6fc6eb14b3b4fed7a4a1b87ed203922bc1ade5",
-        "name": "color/state/highlight/hover1 [Color 2]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#e5f2fc"
-      },
-      {
-        "key": "9f069b2bfcf15699f1aeb381d9cafabc2ba643a2",
-        "name": "color/charts/chart 1/chart1",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#4687ff"
-      },
-      {
-        "key": "254fedd45aed7860006c5e15e40cb7e86f50617d",
-        "name": "color/charts/chart 1/onChart1",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#000000"
-      },
-      {
-        "key": "3436492277afb0389fed63527cfec6fd6bf8f329",
-        "name": "color/charts/chart 1/charOutlined1",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#3266d1"
-      },
-      {
-        "key": "f5e73bc4fbd11e6b8969a44c25c2fb0292851308",
-        "name": "color/charts/chart 1/chartTextValue1",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#1a3b8a"
-      },
-      {
-        "key": "5288474bbca01776836a22bfca1a545ae7316183",
-        "name": "color/charts/chart 2/chart2",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#e77320"
-      },
-      {
-        "key": "f1365d41a83eb1804d8528d52eec083fafbb2cd6",
-        "name": "color/charts/chart 2/onChart2",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#000000"
-      },
-      {
-        "key": "06363c74269986de6d5cb25f689a94bfac1c687b",
-        "name": "color/charts/chart 2/charOutlined2",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#be5d17"
-      },
-      {
-        "key": "edb6bf1b344d000533b2ec488de1ce3855881d2a",
-        "name": "color/charts/chart 2/chartTextValue2",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#863902"
-      },
-      {
-        "key": "3fffc45b481c610764b81b952a516263449f0b45",
-        "name": "color/charts/chart 3/chart3",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#2899a1"
-      },
-      {
-        "key": "19c7e422832e91ded530d0b3d01686ca9a530b31",
-        "name": "color/charts/chart 3/onChart3",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#000000"
-      },
-      {
-        "key": "0ee426b823d045d0897e1ea273be7c837a083684",
-        "name": "color/charts/chart 3/charOutlined3",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#1b6e74"
-      },
-      {
-        "key": "fcbdd9c4a262aa3a87e9252b17b423a418ce17c9",
-        "name": "color/charts/chart 3/chartTextValue3",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#0e3b3e"
-      },
-      {
-        "key": "1eb1f85947f46938fba1d8b8ac5e0b24fa2dcb94",
-        "name": "color/charts/chart 4/chart4",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f25050"
-      },
-      {
-        "key": "d77484f5d15acb8778ea61276d23ec882abaf88f",
-        "name": "color/charts/chart 4/onChart4",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#000000"
-      },
-      {
-        "key": "009b5448cc6be6938ed3aded9f0336f4359e4be4",
-        "name": "color/charts/chart 4/charOutlined4",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#b33737"
-      },
-      {
-        "key": "eab92838d591a4085ecfd3dc06f7f7f21227d381",
-        "name": "color/charts/chart 4/chartTextValue4",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#a12c2c"
-      },
-      {
-        "key": "d2e19806256931d7e8307dc895c48a3bd708076e",
-        "name": "color/charts/chart 5/chart5",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#10ab05"
-      },
-      {
-        "key": "a3a636957d08a336a41ea69fbda0a84108d944c1",
-        "name": "color/charts/chart 5/onChart5",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#000000"
-      },
-      {
-        "key": "40cbc992acd85424e1921c899806a4921ed5afd3",
-        "name": "color/charts/chart 5/charOutlined5",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#0d8a04"
-      },
-      {
-        "key": "4a8d5df4d94e11fb87d5edcb5d649a71eaee8803",
-        "name": "color/charts/chart 5/chartTextValue5",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#074702"
-      },
-      {
-        "key": "3fa26b72f59bcd40f71787583aaca7d329975c1e",
-        "name": "color/charts/chart 6/chart6",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ca8104"
-      },
-      {
-        "key": "70caefd886065015c31bc1b7d638b203d46041d8",
-        "name": "color/charts/chart 6/onChart6",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#000000"
-      },
-      {
-        "key": "873a27d61801db7de834875dd9db5ffe2f2f7236",
-        "name": "color/charts/chart 6/charOutlined6",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#9e6503"
-      },
-      {
-        "key": "82c285fea62825589d7d55c2311753c1b0b95815",
-        "name": "color/charts/chart 6/chartTextValue6",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#5c3b02"
-      },
-      {
-        "key": "c4cd9061cbeb94761bb5085f72cc5eb4dabf218b",
-        "name": "color/charts/chart 7/chart7",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f04299"
-      },
-      {
-        "key": "1fd8a9912b46418872f31523c082ee60dbc82859",
-        "name": "color/charts/chart 7/onChart7",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#000000"
-      },
-      {
-        "key": "b09983e1aeb3aaad4869bec67723cc3a13d09d6a",
-        "name": "color/charts/chart 7/charOutlined7",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#c13078"
-      },
-      {
-        "key": "2407f54062549c44d240ac8793fb3b7a180fd0ab",
-        "name": "color/charts/chart 7/chartTextValue7",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#93225a"
-      },
-      {
-        "key": "bc42e17c4c1c235c6c970fc9d680bdd1e836e062",
-        "name": "color/charts/chart 8/chart8",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#72849e"
-      },
-      {
-        "key": "453ec410f711749cd268ef4e2649a431709d31e9",
-        "name": "color/charts/chart 8/onChart8",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#000000"
-      },
-      {
-        "key": "9d73c5cb8431deff76a8c2d343138d3fac1ff936",
-        "name": "color/charts/chart 8/charOutlined8",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#475569"
-      },
-      {
-        "key": "5d361bef875e1af05812ba8a937e20c7811e6945",
-        "name": "color/charts/chart 8/chartTextValue8",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#1e293b"
-      },
-      {
-        "key": "d9c6c3293e0867e86bcf7077aab797dd187f3653",
-        "name": "color/charts/chart 9/chart9",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#639906"
-      },
-      {
-        "key": "5c50fc48db87c45114d030b477a5db5f0505d87b",
-        "name": "color/charts/chart 9/onChart9",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#000000"
-      },
-      {
-        "key": "03f761d7d2fa0008dd43d9055286dcd5ed5e3368",
-        "name": "color/charts/chart 9/charOutlined9",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#4e7805"
-      },
-      {
-        "key": "8336009659ceeb9cde225997e030fa080d497525",
-        "name": "color/charts/chart 9/chartTextValue9",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#2a4003"
-      },
-      {
-        "key": "e9691dd87a7da64a0ac8fff7cd1668c2ca98bea1",
-        "name": "color/charts/chart 10/chart10",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#c55ba5"
-      },
-      {
-        "key": "6b9cd6340f228e60a25c7da0ac68a5b3e6369a1d",
-        "name": "color/charts/chart 10/onChart10",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#000000"
-      },
-      {
-        "key": "a90858e10cb79de21f4d170a77c2a986e2e1b7ea",
-        "name": "color/charts/chart 10/charOutlined10",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#9e4984"
-      },
-      {
-        "key": "fe79732f9da87b3b6510f570878504fbcf36277f",
-        "name": "color/charts/chart 10/chartTextValue10",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#5d2b4e"
-      },
-      {
-        "key": "7608d364a0b838797a1e5525265db5460cb99d2c",
-        "name": "color/charts/chart 11/chart11",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ad6efa"
-      },
-      {
-        "key": "ebc4278f918d58685b815be37b4712ec2af72b1f",
-        "name": "color/charts/chart 11/onChart11",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#000000"
-      },
-      {
-        "key": "22203297414827c8efdae1f0d46aaadfda40e603",
-        "name": "color/charts/chart 11/charOutlined11",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#9d63e4"
-      },
-      {
-        "key": "886bd2ef2d23ab3d0741ec1480fc0d1bcad9d463",
-        "name": "color/charts/chart 11/chartTextValue11",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#6835a7"
-      },
-      {
-        "key": "24a89fc9d575dce606be97a30445f1abd4e981b5",
-        "name": "color/charts/chart 12/chart12",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#a96b66"
-      },
-      {
-        "key": "4027a39a0099b51e9cb989fd2f3e2194de8074fd",
-        "name": "color/charts/chart 12/onChart12",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#000000"
-      },
-      {
-        "key": "0972797de9ff3dbf72fe25ac462a1004753cbb47",
-        "name": "color/charts/chart 12/charOutlined12",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#855450"
-      },
-      {
-        "key": "db3f93585a1eeeec1263c322d2b1d0ffec8b9777",
-        "name": "color/charts/chart 12/chartTextValue12",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#4d312e"
-      },
-      {
-        "key": "09c168323f6938fd359b6f60fd25cc7b97a326b8",
-        "name": "color/fixed/fixedHighlight [Azul CX - Color 8]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#005ca9"
-      },
-      {
-        "key": "7ec84e1b2a27d0623c82692ff67ae897be4fd1b7",
-        "name": "color/flexible 1/flexible1 [Color 8]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f0f0"
-      },
-      {
-        "key": "06edf7b376d622f8e67ed56d0dbbf7f69aaaa580",
-        "name": "color/flexible 1/onFlexible1 [Color 1]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f0f0"
-      },
-      {
-        "key": "5d28205a5ab100c538cfc504e253a2dcb7b41018",
-        "name": "color/flexible 1/flexibleBg1 [Color 2]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f0f0"
-      },
-      {
-        "key": "e62155ae09e87592cc0b39f988867ebed6edc3d5",
-        "name": "color/flexible 1/onFlexibleBg1 [Color 10]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f0f0"
-      },
-      {
-        "key": "f623e88f0d4ef7b79884b77a5ff9b10a2069dcde",
-        "name": "color/flexible 1/flexibleOutlined1 [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f0f0"
-      },
-      {
-        "key": "2b1e7f5efad65b88b8a844f64638622cf767aeb7",
-        "name": "color/fixed/fixedOnHighlight [Color 1]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffffff"
-      },
-      {
-        "key": "29e5367dce4e45eee2edaf9e7b571234d164b9de",
-        "name": "color/fixed/fixedHighlightHover1 [Color 2]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#e5f2fc"
-      },
-      {
-        "key": "2b8ca87e6153ce63ae3ff900043e436bfb301311",
-        "name": "color/fixed/fixedHighlightHover2 [Color 9]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#005194"
-      },
-      {
-        "key": "f30e30aaaa1277e6c360cddba6dace1d18c15ac8",
-        "name": "color/fixed/fixedHighlightPressed1 [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#cce6fc"
-      },
-      {
-        "key": "43c5aa087448dddfa901e86c1a5332b4de94d7c0",
-        "name": "color/fixed/fixedHighlightPressed2 [Color 7]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#1474c3"
-      },
-      {
-        "key": "03fd3dc1915dd2b01fad68e7a7c5c01aac6e12ae",
-        "name": "color/fixed/fixedAccent [Color 8]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#d87b00"
-      },
-      {
-        "key": "9b9617703e514b478ef183c46c7984067a1b7bb8",
-        "name": "color/fixed/fixedDecorative [Color 8]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#216e62"
-      },
-      {
-        "key": "3eeea2c8e25b015407d83740501c408fa6de3dd9",
-        "name": "color/fixed/fixedNeutralBg1 [Color 1]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffffff"
-      },
-      {
-        "key": "97c1cad56f8bedbc6b5a7e68ec68bb16a0ee6e39",
-        "name": "color/fixed/fixedNeutralBg2 [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f2f2"
-      },
-      {
-        "key": "9950a1f863d0abaff79b4388ba6617fe599497cf",
-        "name": "color/fixed/fixedOnNeutral1 [Color 11]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#22292e"
-      },
-      {
-        "key": "f6ea5fa90c25c6f7e07ebc901aff89e55bbbc453",
-        "name": "color/fixed/fixedOnNeutral2 [Color 9]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#525f66"
-      },
-      {
-        "key": "92d7c1dd8cc827c816255b1e7c0e296ed4f706c3",
-        "name": "color/fixed/fixedNeutralBgInverse [Color 11]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#22292e"
-      },
-      {
-        "key": "bb31f14914210f670e7da5e3045702ad9e059f61",
-        "name": "color/fixed/fixedOnNeutralInverse [Color 1]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffffff"
-      },
-      {
-        "key": "0f03274a234b5f0a756a308c07ae4f04f6e2cb8d",
-        "name": "color/flexible 2/flexible2 [Color 8]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f0f0"
-      },
-      {
-        "key": "bd46c8cde934b27dc7c3113d83e3fb066b76aa62",
-        "name": "color/flexible 2/onFlexible2 [Color 1]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f0f0"
-      },
-      {
-        "key": "27691fb786821a48741267fbaead7ab8cde55132",
-        "name": "color/flexible 2/flexibleBg2 [Color 2]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f0f0"
-      },
-      {
-        "key": "a725c418fb4f3bf369aef73b045ce9132a375283",
-        "name": "color/flexible 2/onFlexibleBg2 [Color 10]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f0f0"
-      },
-      {
-        "key": "5e29310a91dae61172e506c7a4d0b9ed052b0237",
-        "name": "color/flexible 2/flexibleOutlined2 [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f0f0"
-      },
-      {
-        "key": "afec43f2684391b3686d87949a2ac221f4d8964e",
-        "name": "color/flexible 3/flexible3 [Color 8]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f0f0"
-      },
-      {
-        "key": "ca31a8928dbe3d53582aa28966d98834a7169f72",
-        "name": "color/flexible 3/onFlexible3 [Color 1]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f0f0"
-      },
-      {
-        "key": "c41e437546ac84e440ea4d97b962528381ed62bb",
-        "name": "color/flexible 3/flexibleBg3 [Color 2]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f0f0"
-      },
-      {
-        "key": "63ac27c47fa8c18768ed9df208419cd98588f81c",
-        "name": "color/flexible 3/onFlexibleBg3 [Color 10]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f0f0"
-      },
-      {
-        "key": "da0289315bc75b5d45d334ecbcea7effee105d4d",
-        "name": "color/flexible 3/flexibleOutlined3 [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f0f0"
-      },
-      {
-        "key": "7e844ccc4bb8c78f5df0a954fa0bc6a94c6621ee",
-        "name": "color/state/highlight/hover2 [Color 9]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#005194"
-      },
-      {
-        "key": "db4eb020cc90fb1f8ace84590a5c41c2b1cbc713",
-        "name": "icon/color/highlight 1 [color 9]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#005194"
-      },
-      {
-        "key": "30ae14dda0965e8445e1a9826d34624a3bc31df7",
-        "name": "icon/color/accent 1 [color 9]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#bf6c00"
-      },
-      {
-        "key": "eb6e5c21a23f4e24fc551eb733c0e8b75c720f69",
-        "name": "icon/color/decorative 1 [color 9]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#145248"
-      },
-      {
-        "key": "0ccdebedaac50e8ae327b42a7b48213107ef3bd4",
-        "name": "icon/color/success 1 [color 9]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#106622"
-      },
-      {
-        "key": "e26a2409e4edd2f71745b0d5143e1b386f3c1d36",
-        "name": "icon/color/warning 1 [color 9]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#7d5e02"
-      },
-      {
-        "key": "2b2e621f43563e59390fb37004ce90098893a8a7",
-        "name": "icon/color/danger 1 [color 9]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#a12828"
-      },
-      {
-        "key": "b022a8ee24fcdef9653257f9aac3f4c834a1c0fe",
-        "name": "icon/color/information 1 [color 9]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#037387"
-      },
-      {
-        "key": "4ca4a7c09db58239033fde02fa47ba929f2d4670",
-        "name": "color/state/highlight/pressed1 [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#cce6fc"
-      },
-      {
-        "key": "56c8a54711581842159463759072f37f76038e36",
-        "name": "color/state/highlight/pressed2 [Color 7]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#1474c3"
-      },
-      {
-        "key": "654b34eadcf410462056aa89afca933b84ca5357",
-        "name": "spacing/none",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": null
-      },
-      {
-        "key": "7dd26a2e097531b6eeb52861331ffdab3babe5bf",
-        "name": "spacing/quark",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 4
-      },
-      {
-        "key": "cee8d043e4ada13944589be8ffd2855036b5bde0",
-        "name": "spacing/nano",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 8
-      },
-      {
-        "key": "cc0314cfdb64e80fca21556b823024cd9f5fe90b",
-        "name": "spacing/micro",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 12
-      },
-      {
-        "key": "c2be8c909ddba523698c1d3318bb8ee974c18633",
-        "name": "spacing/tiny",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 16
-      },
-      {
-        "key": "a510f77fec277c18a7efc739f2265fc49443ff2b",
-        "name": "spacing/smaller",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 24
-      },
-      {
-        "key": "ad1647fa95f47a2db9390612965f4a1695c2941b",
-        "name": "spacing/small",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 32
-      },
-      {
-        "key": "7fc02285b014863666632c67bde7402322db50ec",
-        "name": "spacing/medium",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 40
-      },
-      {
-        "key": "c0de280a174f24f0d1f6fea1e29942d94638b144",
-        "name": "spacing/large",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 48
-      },
-      {
-        "key": "43b9ba1c1eadb6b70ad5f1c2ca7f2fb384d5c108",
-        "name": "spacing/larger",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 56
-      },
-      {
-        "key": "b127aa777a1af34559bf6e85b11acf1edf1aef8a",
-        "name": "spacing/big",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 64
-      },
-      {
-        "key": "ab262fbea6efe5b83e378b64643a388c4d1733fc",
-        "name": "spacing/bigger",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 72
-      },
-      {
-        "key": "452a424243316f6bc2c8a57ec4554796289c5bab",
-        "name": "opacity/4",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 4
-      },
-      {
-        "key": "1baa84e69ca146386612a1b0aafe09d60b88d983",
-        "name": "opacity/8",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 8
-      },
-      {
-        "key": "c50075ac1e1797aef483a0a7d169fdf76bc74f25",
-        "name": "opacity/12",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 12
-      },
-      {
-        "key": "fb114e126dcfe1ca7323ef487a4313a7c14297af",
-        "name": "opacity/16",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 16
-      },
-      {
-        "key": "050d22b97917c7bc9372d319f832ddaa1ba72ced",
-        "name": "opacity/24",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 24
-      },
-      {
-        "key": "050052f69b953b2fa953b472746f4f31346ffac2",
-        "name": "opacity/32",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 32
-      },
-      {
-        "key": "9cf896fdd805d03eb7f5c43df3c6b3ac8b1c7a0c",
-        "name": "opacity/40",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 40
-      },
-      {
-        "key": "4d01563f8b10629d042c0988af6410379a1c9368",
-        "name": "opacity/48",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 48
-      },
-      {
-        "key": "323948f515d2fd8cd84a308d9abac62af357288e",
-        "name": "opacity/56",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 56
-      },
-      {
-        "key": "5bb99adc6f1dbdb774d389a231d9ed99f55620bf",
-        "name": "opacity/64",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 64
-      },
-      {
-        "key": "ffd452de49d9a3dd38e8cdbda7ce3775a9bc43d6",
-        "name": "opacity/100",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 100
-      },
-      {
-        "key": "0b78c39276e25b4c4133bdced54ae413b7ddd556",
-        "name": "opacity/chart/chartPattern",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 32
-      },
-      {
-        "key": "85f7fc5fcba2ded0ec9929a9d18924ac9e6a5468",
-        "name": "border/width/none",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": null
-      },
-      {
-        "key": "c2e3fa9744280d372f2095d230ac44d6c3e5706b",
-        "name": "border/width/hairline",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 0.5
-      },
-      {
-        "key": "278c8645a1090fb9f8dfdf45bd5350c453a556b9",
-        "name": "border/width/thin",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 1
-      },
-      {
-        "key": "470ec2553091a4288c2daf974411a8089286045a",
-        "name": "border/width/thick",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 2
-      },
-      {
-        "key": "9d010b6474df0201426209293fa24aae5e5d8910",
-        "name": "border/width/heavy",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 4
-      },
-      {
-        "key": "452ca3339925eebc705888ceadde99c7771f44de",
-        "name": "border/radius/none",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": null
-      },
-      {
-        "key": "503f353af836941df16c074b3964704ec6986de0",
-        "name": "border/radius/quark",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 2
-      },
-      {
-        "key": "414e722cc2fbfd56d1059fc554f6c410e4ab08ff",
-        "name": "border/radius/nano",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 4
-      },
-      {
-        "key": "b125034890298fb829e36b67435b6d387edec632",
-        "name": "border/radius/small",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 8
-      },
-      {
-        "key": "60e8424717b3ea787c0ac7ca126a39ae6527e6c7",
-        "name": "border/radius/medium",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 12
-      },
-      {
-        "key": "ac24d9f20a12b023f73b8e820af94f788fb1b008",
-        "name": "border/radius/large",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 16
-      },
-      {
-        "key": "c24f38c8165d991dd84d0e9da120cd09ac3b9bca",
-        "name": "border/radius/big",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 24
-      },
-      {
-        "key": "f8e7df3169146e460c0d32a492bec69817c8b1d6",
-        "name": "border/radius/pill",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 1000
-      },
-      {
-        "key": "18ce3df8857239790cd8309c5f1ab3578d3d1209",
-        "name": "font/family/1",
-        "resolvedType": "STRING",
-        "collection": "SuperApp Theme",
-        "value": "CAIXA Std"
-      },
-      {
-        "key": "a22100249266218dd322bc12f8b06ccd9b83c46a",
-        "name": "font/family/2",
-        "resolvedType": "STRING",
-        "collection": "SuperApp Theme",
-        "value": "Roboto"
-      },
-      {
-        "key": "87bd2d06f8cc3638a9d6b59d986ddb59760dff8a",
-        "name": "font/letter-spacing/standard",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": null
-      },
-      {
-        "key": "15cf7d2909e31203b9df072f6cadd437a0ce4805",
-        "name": "font/decoration/tashed",
-        "resolvedType": "STRING",
-        "collection": "SuperApp Theme",
-        "value": "Strikethrough"
-      },
-      {
-        "key": "7811e40bc9c92ae82f5305829ca8daa1cf09d1ff",
-        "name": "font/letter-spacing/airy",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 0.10000000149011612
-      },
-      {
-        "key": "bb147ff5b2b078ddefc8461ddf9730e9ea305a36",
-        "name": "font/letter-spacing/loose",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 0.15000000596046448
-      },
-      {
-        "key": "37f60ae05379018316232e0ca01f5ff4ba0388aa",
-        "name": "font/letter-spacing/broad",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 0.25
-      },
-      {
-        "key": "cae03ed80cab99d438ac67cb5293a5fbcc9da9bf",
-        "name": "font/letter-spacing/extended",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 0.5
-      },
-      {
-        "key": "6d0401fcfda74d9c436d5990d2a221d5f9a69863",
-        "name": "icon/size/quark",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 12
-      },
-      {
-        "key": "06b6fd6d856205c6131d9101e95da6719e48503b",
-        "name": "icon/size/nano",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 16
-      },
-      {
-        "key": "cb5071422b4c4e34065ba4cbad9b2eeffb69c3d7",
-        "name": "icon/size/small",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 20
-      },
-      {
-        "key": "a7914405c10c2292b319f538a00c031514fc06ed",
-        "name": "icon/size/medium",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 24
-      },
-      {
-        "key": "a97bc36ae37dca5a023665e288f8d587421077d7",
-        "name": "icon/size/large",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 32
-      },
-      {
-        "key": "9bbc8f67918757d606610608417235171e1ab25e",
-        "name": "icon/size/big",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 40
-      },
-      {
-        "key": "ae2c24b01fb7f4134056a3c7ad0dec88e05ae84f",
-        "name": "icon/size/huge",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 48
-      },
-      {
-        "key": "e061c5cae5a39c399cb8b614c16de3c4ddbf4de1",
-        "name": "icon/border/none",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": null
-      },
-      {
-        "key": "908adf835cd0a4d0d78551ae19511411cfbe064a",
-        "name": "icon/border/quark",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 0.75
-      },
-      {
-        "key": "5f88edf6cd1c143f94f5b65b8b5ad42c7fb44623",
-        "name": "icon/border/nano",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 1
-      },
-      {
-        "key": "c0b7f3abf1dc7eeda56d41fe37afb9564c992b0f",
-        "name": "icon/border/small",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 1.25
-      },
-      {
-        "key": "bbd9ffca077c5cce86be10282d7930fd71d95f20",
-        "name": "icon/border/medium",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 1.5
-      },
-      {
-        "key": "e6242624fc1bf41f4a0d53ab0b7bcaeff975e3e7",
-        "name": "icon/border/large",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 2
-      },
-      {
-        "key": "68449845f0b0b859c39f1d86fd71d41b3ed718a3",
-        "name": "icon/border/big",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 2.5
-      },
-      {
-        "key": "def00373ffc2f817ed8cc77740bd86c6d9ae5db5",
-        "name": "icon/border/huge",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 3
-      },
-      {
-        "key": "be052933ec7df5ca3f19d36ebf14cafe952bd5c3",
-        "name": "Is Light",
-        "resolvedType": "BOOLEAN",
-        "collection": "SuperApp Theme",
-        "value": true
-      },
-      {
-        "key": "495ce394ffd7f3f64e79e0764dd7fe6c907e72dc",
-        "name": "Is Dark",
-        "resolvedType": "BOOLEAN",
-        "collection": "SuperApp Theme",
-        "value": null
-      },
-      {
-        "key": "1b3fc12554941251f481ada5637fa415cd055317",
-        "name": "mode",
-        "resolvedType": "STRING",
-        "collection": "SuperApp Theme",
-        "value": "Light"
-      },
-      {
-        "key": "6d55c7ee5d2e1a384aa9d415f041152f27b237c1",
-        "name": "Is SuperApp Theme",
-        "resolvedType": "BOOLEAN",
-        "collection": "SuperApp Theme",
-        "value": true
-      },
-      {
-        "key": "e3185b36f307f24f5b54f128608dff2c3a7dc4d8",
-        "name": "Is On! CAIXA Theme",
-        "resolvedType": "BOOLEAN",
-        "collection": "SuperApp Theme",
-        "value": null
-      },
-      {
-        "key": "3a92a109a3e622d435a04acca9ff12fc8d77e324",
-        "name": "color/state/accent/hover1 [Color 2]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffefd6"
-      },
-      {
-        "key": "49a8b64d54c0299bcb0e164df01048d8e60f733a",
-        "name": "color/state/accent/hover2 [Color 9]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#bf6c00"
-      },
-      {
-        "key": "faf2f40b0816f671be6841d1a2a61d45fbf657d6",
-        "name": "color/state/accent/pressed1 [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffe3b8"
-      },
-      {
-        "key": "f3da96808e4fc2e7eec93df666e8803fc800b603",
-        "name": "color/state/accent/pressed2 [Color 7]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#e58500"
-      },
-      {
-        "key": "3526d634f7d701f3e5145345b4d1fa15d3e56107",
-        "name": "color/state/neutral/hover1 [Color 5]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#e3ebeb"
-      },
-      {
-        "key": "4709bf3680fd53470369994dd570869fc32959e8",
-        "name": "color/state/neutral/hover2 [Color 11]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#22292e"
-      },
-      {
-        "key": "2627939b462175bf49c4ddee1eb745d5ace4a767",
-        "name": "color/state/neutral/pressed1 [Color 6]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#d0e0e3"
-      },
-      {
-        "key": "e8d87c50462ba4b6e38beffec7dfacd2c4016504",
-        "name": "color/state/neutral/pressed2 [Color 8]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#64747a"
-      },
-      {
-        "key": "9246d597ed3cc93676393b0aab0f3a4a208a059e",
-        "name": "color/state/danger/hover1 [Color 2]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#fbebeb"
-      },
-      {
-        "key": "da37a1ad9ef16bbb8636850d73fd9cc661eda4d1",
-        "name": "color/state/danger/hover2 [Color 9]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#a12828"
-      },
-      {
-        "key": "e88ff1d14bc740c41089eaad4d7c66060ba934ae",
-        "name": "color/state/danger/pressed1 [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f5cdcd"
-      },
-      {
-        "key": "c4fd0e57165cc7536b2423370cac690fd1e04727",
-        "name": "color/state/danger/pressed2 [Color 7]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#c73232"
-      },
-      {
-        "key": "eed186aac6c1dc9cc56479fd5a813cd021fc8fd3",
-        "name": "color/state/disabled/disabled 1 [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#f0f2f2"
-      },
-      {
-        "key": "e100a3d7c93e18fbb665dc6c7a8b5bba2fc455bb",
-        "name": "color/state/disabled/disabled 2 [Color 4]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ebf1f2"
-      },
-      {
-        "key": "2192f0c51175131d89145142b163616852bc51aa",
-        "name": "color/state/disabled/onDisabled 1 [Color 7]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#9eb2b8"
-      },
-      {
-        "key": "95846bfb841d0943886f83879c96fd332d54111b",
-        "name": "color/state/disabled/disabledOutlined 1 [Color 6]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#d0e0e3"
-      },
-      {
-        "key": "91cd3dca1a7b335de258f24a4fd37d378ff03c1d",
-        "name": "color/state/disabled/disabledOutlined 2 [Color 7]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#9eb2b8"
-      },
-      {
-        "key": "1ddbac67c4a0f4e59fa1f6eab6eface8f4aa431d",
-        "name": "blur/clear",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 10
-      },
-      {
-        "key": "c3f53e93bfc129abc9ab38c3fe537d4d38517559",
-        "name": "blur/light",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 20
-      },
-      {
-        "key": "af309129314f50960a1e12c91015112387cac0a4",
-        "name": "blur/medium",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 40
-      },
-      {
-        "key": "554ad2779d7b360d0d577bd5816b19aae90508a7",
-        "name": "color/charts/chartPattern",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#ffffff"
-      },
-      {
-        "key": "ca24663a9e3759502249fab29b9abb5f005b7581",
-        "name": "variant/tracking progress 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "tracking progress"
-      },
-      {
-        "key": "2b99dea81adec805a8f7200ca90dd8f90ce39139",
-        "name": "Component Set Name",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "Component Set"
-      },
-      {
-        "key": "3f52e4fa38fbdf3c10d707638bb5a5600686fd2b",
-        "name": "Component Set Disclaimer",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "Apresentação dos componentes de design para utilização dos devs e QAs."
-      },
-      {
-        "key": "224dbb4a9aebe089a4ad9b4032ee0e5131882902",
-        "name": "Base Component Alert",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "Base components representam componentes acessórios para compor o componente principal e não devem ser usados fora deste componente principal."
-      },
-      {
-        "key": "5d31d9abfed2ea0171ed1a16b1ca522f4bc3dcf5",
-        "name": "shapes/rounded 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "rounded"
-      },
-      {
-        "key": "651d1dee2e29568bd8675a32d1407dbbc819ab1a",
-        "name": "shapes/hexagon 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "hexagon"
-      },
-      {
-        "key": "634bffa9b81ddec80c681e7982c802f01c0b5be4",
-        "name": "shapes/rosette 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "rosette"
-      },
-      {
-        "key": "cb1b4757a710610ed9f7f115630331aaaf770ea1",
-        "name": "shapes/triangle 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "triangle"
-      },
-      {
-        "key": "47eb21d530faa207a439bfacae8afe92dc12bf3c",
-        "name": "shapes/square 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "square"
-      },
-      {
-        "key": "96e8e5ba683c5fed3f4405b485fec30149d0588f",
-        "name": "shapes/circle 🔒",
-        "resolvedType": "STRING",
-        "collection": "Properties glossary",
-        "value": "circle"
-      },
-      {
-        "key": "eb3ddb00d95838255af587ad1eb890abbb18a35b",
-        "name": "color blind on",
-        "resolvedType": "BOOLEAN",
-        "collection": "Accessibility",
-        "value": null
-      }
-    ]
+    "variables": []
   },
   "styleTokens": {
     "colors": [],
@@ -21964,12 +19927,6 @@
       "containingFrame": ""
     },
     {
-      "key": "099dce44616fee7fbea1df04b9727ca4ab56f39a",
-      "name": "show page controller=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "49e7aad0fcef1257a6d35de0c1d6c9179447055b",
       "name": "show page controller=false",
       "description": "",
@@ -22234,12 +20191,6 @@
       "containingFrame": ""
     },
     {
-      "key": "03cdefd81b9d9db4f8e031819590003ad5b326e3",
-      "name": "type=screen, input=single input, keyboard open=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "03f9f4834483d689506855cce1decc0f86d900a3",
       "name": "variant=banking, state=default",
       "description": "",
@@ -22262,12 +20213,6 @@
       "name": "Weight=Dynamic",
       "description": "",
       "containingFrame": "send-dollars"
-    },
-    {
-      "key": "187634a2867d577e6979a496eb005fa45cb043e0",
-      "name": "height=full, variant=on media bg",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "1b616de302f6deb2ff90da0dc8ce41ecfaaa073e",
@@ -22294,20 +20239,8 @@
       "containingFrame": ""
     },
     {
-      "key": "2b98a999653a8de46138ac2e35b611e5aee533d2",
-      "name": "type=sheet, input=pin (token), keyboard open=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "375c67f4fea10a2fae5329d4a4d6f5220e6adfac",
       "name": "step=rating, category=none",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "3d4342cc3847ab2b55b4a0fc3c683d105e81499e",
-      "name": "type=sheet, input=single input, keyboard open=false",
       "description": "",
       "containingFrame": ""
     },
@@ -22342,20 +20275,14 @@
       "containingFrame": "send-dollars"
     },
     {
-      "key": "6bec1510f69db2da816c5361cbe122958a2641ee",
-      "name": "type=sheet, input=money, keyboard open=false",
+      "key": "6d18203d1b93d7f9cae8ce65f0fd00bf02796314",
+      "name": "state=default",
       "description": "",
       "containingFrame": ""
     },
     {
       "key": "6ca2b8873a2c2e8fe0e2dfe608225f51685f9e23",
       "name": "height=auto, variant=on media bg",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6d18203d1b93d7f9cae8ce65f0fd00bf02796314",
-      "name": "state=default",
       "description": "",
       "containingFrame": ""
     },
@@ -22372,22 +20299,10 @@
       "containingFrame": ""
     },
     {
-      "key": "87c9866210662b33fac6ed63d1651c01562a4654",
-      "name": "type=sheet, input=money, keyboard open=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "8a6c1c46c635ee515d5554edbf84e00a2d0723e8",
       "name": "Weight=Solid",
       "description": "",
       "containingFrame": "share-ios"
-    },
-    {
-      "key": "8dc1cb9f77cb1891ba8b35f5c8ccf8bff6ae3187",
-      "name": "height=full, variant=default",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "91c833d439d1bef39846bf995e53570fb217fcb9",
@@ -22414,12 +20329,6 @@
       "containingFrame": ""
     },
     {
-      "key": "a795fd6dee3de8f208bd56fa1bbab21277e2df80",
-      "name": "type=screen, input=pin (token), keyboard open=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "a922eaefc43bc6ff6df153918c3e4a8a71a1e337",
       "name": "state=loading",
       "description": "",
@@ -22434,12 +20343,6 @@
     {
       "key": "b2e227f22736ecc849d14c525e252340a59482c7",
       "name": "type=sheet, input=single input, keyboard open=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "b63fa17110e46a5d32ff7bb4a64563b427b18d26",
-      "name": "type=screen, input=pin (token), keyboard open=true",
       "description": "",
       "containingFrame": ""
     },
@@ -22462,12 +20365,6 @@
       "containingFrame": ""
     },
     {
-      "key": "d552a41bddb4789757d70e6d3ee0f17b47f106de",
-      "name": "type=screen, input=money, keyboard open=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "e3a26667f8e46c2b6ddecfe12388735b5fec622a",
       "name": "Weight=Dynamic",
       "description": "",
@@ -22486,24 +20383,6 @@
       "containingFrame": ""
     },
     {
-      "key": "f3ccbbfaa8ef683a9f831030ec1333090916b0f5",
-      "name": "type=sheet, input=stepper, keyboard open=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f3ffbbe9a6270ca298618bd62ed369ae7a048b76",
-      "name": "type=sheet, input=pin (token), keyboard open=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "f423f7cb3f3c0fd0416fc4358fbd4587dea30a21",
-      "name": "type=screen, input=single input, keyboard open=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "fa4ace8b8449628b4bcf5f493b0e33d2565bbfbf",
       "name": "variant=feedback",
       "description": "",
@@ -22512,6 +20391,12 @@
     {
       "key": "fbc0f15d9817d6a8caa4160af3378a74c7c70c17",
       "name": "step=follow-up, category=neutral",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f3ccbbfaa8ef683a9f831030ec1333090916b0f5",
+      "name": "type=sheet, input=stepper, keyboard open=false",
       "description": "",
       "containingFrame": ""
     },
@@ -22555,12 +20440,6 @@
       "key": "0b3b445e778727c584c0f9e78e77cabf0b4d1cce",
       "name": "variant=swipe left, state=pressed, force centered text=false",
       "description": "⚠️ Swipe to reveal: \nUse em listas que possam ter ações secundárias.Não crie ações que só possam ser usadas pelo swipe, pois ele não é intuitivo ou acessível para todos os usuários.",
-      "containingFrame": ""
-    },
-    {
-      "key": "0bde132d9445789c1ca7edb4969337909c66d4f7",
-      "name": "variant=product home",
-      "description": "",
       "containingFrame": ""
     },
     {
@@ -22762,12 +20641,6 @@
       "containingFrame": ""
     },
     {
-      "key": "55a5d1871db3276e810dafa42f4ce3810c651cd8",
-      "name": "variant=Default",
-      "description": "❖[template] Screen Multipurpose<ScreenExample>\n🏷️ screen generic, screen example",
-      "containingFrame": ""
-    },
-    {
       "key": "55e64e3178032b3ee1bfacaa57aa23a7248973a0",
       "name": "screen=preview",
       "description": "",
@@ -22872,12 +20745,6 @@
     {
       "key": "6eb76168978745d5fb4e710a5aa4a3732a53e03d",
       "name": "variant=high rating, type=reactive",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "6ffc5228d007a06d873decde35ce3107f2491cac",
-      "name": "variant=miniapp home",
       "description": "",
       "containingFrame": ""
     },
@@ -23404,12 +21271,6 @@
       "containingFrame": ""
     },
     {
-      "key": "2d2320d667950edf658626c6ed9159048aaa16a8",
-      "name": "state=empty",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "2fd71c904632ebcad3e5fc300bc815c3b8f1e52b",
       "name": "variant=text, state=loading",
       "description": "",
@@ -23458,12 +21319,6 @@
       "containingFrame": ""
     },
     {
-      "key": "3e88bf4a26bbb83f685f776e8e58ccf04ab5d327",
-      "name": "state=default",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "41af9656c4b6659e4b3a9e914c0964c0191c392a",
       "name": "state=loading, featured=true",
       "description": "",
@@ -23471,6 +21326,12 @@
     },
     {
       "key": "42552f76b5045117c6050f898abe034f8ea0b033",
+      "name": "state=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3e88bf4a26bbb83f685f776e8e58ccf04ab5d327",
       "name": "state=default",
       "description": "",
       "containingFrame": ""
@@ -23802,12 +21663,6 @@
     {
       "key": "da50c10c2c34e3edba4c3903a409939e1bfa19ac",
       "name": "feedback=warning, animation=step 2",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "db1f74650aa5c89b5574255f93dde72597c58118",
-      "name": "state=loading",
       "description": "",
       "containingFrame": ""
     },
@@ -26051,19 +23906,13 @@
     },
     {
       "key": "fd3f6729da97076f28a70af6d5cdd59509cc9abe",
-      "name": "type=screen, input=money, keyboard open=true",
+      "name": "type=screen, show value=True",
       "description": "",
       "containingFrame": ""
     },
     {
       "key": "fd4ec4a4cf2261cb331a5e5665de10deb3f01cd7",
       "name": "type=sheet, input=stepper, keyboard open=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "01e4e52287fe8a1e93433b6e5b5797948dd43e6a",
-      "name": "variant=mockup, state=pressed, invert text hierarchy=false",
       "description": "",
       "containingFrame": ""
     },
@@ -26088,12 +23937,6 @@
     {
       "key": "0cd599effc4d0128e505d39fab55fabffb9079c7",
       "name": "variant=informative, show action=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1e24d4f9e63c1d466a3915ccd9a4c727bdd10a1d",
-      "name": "variant=mockup, state=pressed, invert text hierarchy=true",
       "description": "",
       "containingFrame": ""
     },
@@ -26134,24 +23977,6 @@
       "containingFrame": ""
     },
     {
-      "key": "25976ab9451a5898112bd891349b9226ab660bf4",
-      "name": "variant=inverse, state=hover, invert text hierarchy=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "27fe24262252338e1d672a407524dac17cac2d41",
-      "name": "variant=image, state=focus, invert text hierarchy=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "281664243f43c1987c7a70d62715e3f36cd509d2",
-      "name": "variant=image, state=pressed, invert text hierarchy=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "2ac02d64e8f634ffa2346cd8ee56c9554284edbd",
       "name": "variant=on gray bg, type=icon, state=pressed",
       "description": "",
@@ -26162,12 +23987,6 @@
       "name": "stroke=dark, width=4px, position=center",
       "description": "",
       "containingFrame": "[dsc-ult] Focus Indicator"
-    },
-    {
-      "key": "30e67efbb2db8594011410fa26a2b988a6fde412",
-      "name": "variant=image, state=default, invert text hierarchy=false",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "312ad5ac00ad9af092e6ed0266d4cd35982cd04b",
@@ -26206,12 +24025,6 @@
       "containingFrame": "[dsc-ult] Focus Indicator"
     },
     {
-      "key": "4f49677e817cb6dc1961a9673eb73fc8cf3a0b6a",
-      "name": "variant=mockup, state=focus, invert text hierarchy=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "5622d964cbfb28ef490d6ef0208855df3b90c38d",
       "name": "stroke=dark, width=4px, position=inside",
       "description": "",
@@ -26228,12 +24041,6 @@
       "name": "system=Android, inverted=false",
       "description": "",
       "containingFrame": "[dsc-ult] Device / Home Indicator"
-    },
-    {
-      "key": "59c946f44bbd902955e59c8a385fc0dfda723cf1",
-      "name": "variant=mockup, state=hover, invert text hierarchy=false",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "5a5619032bda3fd391e0a7e6552e00462ea3cfff",
@@ -26362,12 +24169,6 @@
       "containingFrame": ""
     },
     {
-      "key": "827536cf2796ace52ee0f655b53e8d6595d9917a",
-      "name": "variant=mockup, state=default, invert text hierarchy=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "84ff40be8b22b80b43124dd0dc383d927231a9a6",
       "name": "state=default, status=checked",
       "description": "",
@@ -26422,12 +24223,6 @@
       "containingFrame": "[dsc-ult] Device / Keyboard"
     },
     {
-      "key": "a222f26238c4dd319b577c9af7ec990fb3cedecc",
-      "name": "variant=inverse, state=pressed, invert text hierarchy=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "a2c8871bf98110ef09e212dcaa21a24db375c004",
       "name": "variant=informative, show action=false",
       "description": "",
@@ -26436,12 +24231,6 @@
     {
       "key": "a3df84ac070c5d2e0f96c8948b758c691b86f0f9",
       "name": "state=default, selected=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "a8893c753f18256241addc4d989e7963fcd68109",
-      "name": "variant=mockup, state=hover, invert text hierarchy=true",
       "description": "",
       "containingFrame": ""
     },
@@ -26518,18 +24307,6 @@
       "containingFrame": ""
     },
     {
-      "key": "cae948fe9620c11244bf189598b5a170e2d71fc6",
-      "name": "variant=mockup, state=default, invert text hierarchy=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "cb213cbf6c258aba24e7561a6ef403ee137acf76",
-      "name": "variant=inverse, state=default, invert text hierarchy=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "ce2578faf9d5f47a759bdbd024d4c672684df64b",
       "name": "state=hover, selected=false",
       "description": "",
@@ -26566,22 +24343,10 @@
       "containingFrame": ""
     },
     {
-      "key": "d6f14e58248592115aa92d964846ea8a75f07a0c",
-      "name": "variant=mockup, state=focus, invert text hierarchy=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "d9decd118fcc58e9f8ed23d31c4780d93d85688e",
       "name": "stroke=light, width=2px, position=center",
       "description": "",
       "containingFrame": "[dsc-ult] Focus Indicator"
-    },
-    {
-      "key": "daea257665e721ece5acecd843395f0a10c0e252",
-      "name": "variant=inverse, state=focus, invert text hierarchy=true",
-      "description": "",
-      "containingFrame": ""
     },
     {
       "key": "dfff1757f8bbb462cb48df94c9cc2e0f744802dc",
@@ -28590,6 +26355,204 @@
     {
       "key": "fc7b5f17426da0ab0aabab8803426c8c674fa681",
       "name": "variant=on media bg, state=hover",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "cafe0695ccca0d08d85ecc9ac3c3d8afd75995cf",
+      "name": "type=screen, show value=False",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d908b7393800afa8f9fdd02d7447960e9290f018",
+      "name": "type=sheet, show value=False",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "241ff22c0357557abdb832dbe3a4c94cfaf587ac",
+      "name": "type=sheet, show value=True",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "099dce44616fee7fbea1df04b9727ca4ab56f39a",
+      "name": "show page controller=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0bde132d9445789c1ca7edb4969337909c66d4f7",
+      "name": "variant=product home",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2b98a999653a8de46138ac2e35b611e5aee533d2",
+      "name": "type=sheet, input=pin (token), keyboard open=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2d2320d667950edf658626c6ed9159048aaa16a8",
+      "name": "state=empty",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "55a5d1871db3276e810dafa42f4ce3810c651cd8",
+      "name": "variant=Default",
+      "description": "❖[template] Screen Multipurpose<ScreenExample>\n🏷️ screen generic, screen example",
+      "containingFrame": ""
+    },
+    {
+      "key": "6ffc5228d007a06d873decde35ce3107f2491cac",
+      "name": "variant=miniapp home",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b63fa17110e46a5d32ff7bb4a64563b427b18d26",
+      "name": "type=screen, input=pin (token), keyboard open=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "db1f74650aa5c89b5574255f93dde72597c58118",
+      "name": "state=loading",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f3ffbbe9a6270ca298618bd62ed369ae7a048b76",
+      "name": "type=sheet, input=pin (token), keyboard open=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "25976ab9451a5898112bd891349b9226ab660bf4",
+      "name": "variant=inverse, state=hover, invert text hierarchy=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "27fe24262252338e1d672a407524dac17cac2d41",
+      "name": "variant=image, state=focus, invert text hierarchy=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "281664243f43c1987c7a70d62715e3f36cd509d2",
+      "name": "variant=image, state=pressed, invert text hierarchy=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "29eb675101a25e2beca19b16e0a569245310cdcd",
+      "name": "variant=cover, state=default, invert text hierarchy=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "29f721afe776dfda4da5d306e1f12bfc9632862a",
+      "name": "variant=cover, state=focus, invert text hierarchy=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "30e67efbb2db8594011410fa26a2b988a6fde412",
+      "name": "variant=image, state=default, invert text hierarchy=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8d9c03519a2cd2522c6ebe4af582f4849c1091de",
+      "name": "variant=cover, state=pressed, invert text hierarchy=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "909711e6a23ed8cd075e523b84e2a7a4e951bb81",
+      "name": "variant=cover, state=pressed, invert text hierarchy=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a222f26238c4dd319b577c9af7ec990fb3cedecc",
+      "name": "variant=inverse, state=pressed, invert text hierarchy=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c102406274e8e0f5f1828dca7d97ff43c4dc83d0",
+      "name": "variant=cover, state=hover, invert text hierarchy=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "cb213cbf6c258aba24e7561a6ef403ee137acf76",
+      "name": "variant=inverse, state=default, invert text hierarchy=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "daea257665e721ece5acecd843395f0a10c0e252",
+      "name": "variant=inverse, state=focus, invert text hierarchy=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e160149462d53827c27362409a25712df92df32c",
+      "name": "variant=cover, state=hover, invert text hierarchy=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e5ee98ea8911d462f563ed4caee191884ef86dc1",
+      "name": "variant=cover, state=default, invert text hierarchy=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f8e8d741b16af1fbe2df038a38fcba89a16ee400",
+      "name": "variant=cover, state=focus, invert text hierarchy=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "03cdefd81b9d9db4f8e031819590003ad5b326e3",
+      "name": "type=screen, input=single input, keyboard open=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "187634a2867d577e6979a496eb005fa45cb043e0",
+      "name": "height=full, variant=on media bg",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3d4342cc3847ab2b55b4a0fc3c683d105e81499e",
+      "name": "type=sheet, input=single input, keyboard open=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8dc1cb9f77cb1891ba8b35f5c8ccf8bff6ae3187",
+      "name": "height=full, variant=default",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a795fd6dee3de8f208bd56fa1bbab21277e2df80",
+      "name": "type=screen, input=pin (token), keyboard open=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f423f7cb3f3c0fd0416fc4358fbd4587dea30a21",
+      "name": "type=screen, input=single input, keyboard open=true",
       "description": "",
       "containingFrame": ""
     }

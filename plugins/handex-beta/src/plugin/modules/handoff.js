@@ -457,6 +457,26 @@ ${(handoffData.createdFlows || []).length === 0
     }
     window._markFichaGenerated = _markFichaGenerated;
 
+    // "Finalizar Registros" — confirmação leve por tela. Cada funcionalidade
+    // (Tokens, Specs, Medidas, Fluxos) só documenta e salva localmente; a
+    // sincronização com o canvas é responsabilidade exclusiva de "Gerar
+    // Ficha de Handoff" (única etapa que percorre tudo, respeitando
+    // versionamento). Antes existia inserção incremental por tela
+    // (insert-frame-in-ficha/insert-flows-in-ficha via modal compartilhado)
+    // -- removida: manter dado só no backend e materializar tudo de uma vez
+    // em Gerar Ficha evita duplicar lógica de idempotência em 5 lugares.
+    const _FINALIZE_SECTION_LABEL = {
+      tokens: 'Escaneamento de tokens',
+      specs: 'Especificações',
+      measurements: 'Medidas',
+      flows: 'Fluxos de tela'
+    };
+    function finalizeSection(sectionKey) {
+      const label = _FINALIZE_SECTION_LABEL[sectionKey] || 'Registros';
+      saveAndGoHome(true, `${label} documentado — será incluído na próxima geração da ficha.`);
+    }
+    window.finalizeSection = finalizeSection;
+
     async function exportHandoff() {
       const btn = document.getElementById("btn-final-export");
       if (btn) {
