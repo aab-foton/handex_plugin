@@ -157,12 +157,12 @@
           </div>
         </button>
         <div id="briefing-card" class="accordion-content hidden p-5 pt-0 border-t border-gray-50 dark:border-dark-line">
-          <div class="space-y-2 mt-4" id="briefing-categories-container-v2"></div>
-          <div id="briefing-questions-container-v2" class="space-y-4 mt-2"></div>
-          <button onclick="addBriefingQuestion()" class="mt-4 w-full flex items-center justify-center gap-2 py-2.5 border border-dashed border-gray-200 dark:border-dark-line rounded-2xl text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:border-[#3d3dff]/50 hover:text-[#3d3dff] transition-colors">
-            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-            Adicionar pergunta
-          </button>
+          <p id="briefing-total-count" class="hidden text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider mt-4 mb-2"></p>
+          <!-- Um accordion por eixo -- select com as perguntas sugeridas do eixo
+               (+ "Pergunta customizada" no fim), botão "Adicionar" que confirma
+               a escolha, e as perguntas já criadas daquele eixo logo abaixo.
+               Montado por renderBriefingAxisAccordions() em core.js. -->
+          <div class="space-y-2" id="briefing-axes-container"></div>
         </div>
       </div>
 
