@@ -206,6 +206,8 @@ Object.assign(window, {
   toggleAllSpecsVisibility,
   exportSpecsToMd,
   toggleBriefingSection,
+  toggleBriefingAxisAccordion,
+  confirmBriefingAxisSelection,
   scrollToStep,
   scanFrame,
   openMeasureModal,
@@ -273,7 +275,6 @@ Object.assign(window, {
   confirmException,
   toggleExcModalObs,
   linkExcModalVinc,
-  toggleCategory,
   exportChecklistMd,
   exportChecklistJson,
   openDadosProjetoModal,
@@ -366,128 +367,163 @@ window.pullBriefingFromCanvas = function(e) {
 };
 
 // ── Briefing Suggestions ──────────────────────────────────────────────
-function initBriefingSuggestions() {
-  const container = document.getElementById('briefing-categories-container-v2');
+// Eixos do Briefing Estratégico + perguntas sugeridas por eixo. Cada eixo é
+// um accordion (renderBriefingAxisAccordions) com um <select> das perguntas
+// sugeridas + "Pergunta customizada" no fim. Toda pergunta criada, sugerida
+// ou customizada, herda o nome do eixo escolhido como tag (nunca mais uma
+// categoria "Customizada" solta, sem vínculo com eixo).
+const BRIEFING_AXES = [
+  {
+    id: 'contexto', name: 'Contexto do Projeto', icon: 'briefcase', color: 'text-blue-500',
+    questions: [
+      { label: 'Problema Central', text: 'Qual é o problema central que este projeto resolve?' },
+      { label: 'Contexto de Negócio', text: 'Qual é o contexto de negócio ou estratégico que originou essa demanda?' },
+      { label: 'Critério de Sucesso', text: 'Quais resultados-chave definem o sucesso deste projeto? Como vamos medir?' },
+      { label: 'Histórico', text: 'Houve tentativas anteriores de resolver esse problema? O que aprendemos com elas?' },
+      { label: 'Público-Alvo', text: 'Quem é o usuário final desta interface e qual seu perfil?' },
+      { label: 'Canais', text: 'Em quais plataformas ou canais a solução vai operar?' },
+      { label: 'Diferencial', text: 'Qual o principal valor único que esta solução propõe ao usuário?' },
+      { label: 'Organização do Trabalho', text: 'Como o trabalho será organizado: sprints, milestones, cerimônias?' },
+      { label: 'Prazo', text: 'Qual é o prazo da entrega? Há marcos ou datas intermediárias obrigatórias?' }
+    ]
+  },
+  {
+    id: 'escopo', name: 'Escopo e Riscos', icon: 'git-merge', color: 'text-orange-700',
+    questions: [
+      { label: 'No Escopo', text: 'O que está definitivamente incluído nesta entrega?' },
+      { label: 'Pode Entrar', text: 'O que pode entrar no escopo, mas ainda precisa de validação?' },
+      { label: 'Fora do Escopo', text: 'O que está explicitamente fora do escopo desta versão?' },
+      { label: 'MVP', text: 'O que é estritamente essencial para a primeira entrega?' },
+      { label: 'Riscos Técnicos', text: 'Quais os maiores riscos técnicos que podem impedir o sucesso do projeto?' },
+      { label: 'Riscos de Negócio', text: 'Há riscos regulatórios, legais (ex: LGPD) ou de compliance envolvidos?' },
+      { label: 'Dependências', text: 'Quais sistemas ou times externos este projeto depende?' },
+      { label: 'Impacto Cruzado', text: 'Esta solução afeta outras jornadas, componentes ou produtos?' }
+    ]
+  },
+  {
+    id: 'stakeholders', name: 'Usuários e Stakeholders', icon: 'users', color: 'text-teal-500',
+    questions: [
+      { label: 'Usuários Primários', text: 'Quem são os usuários primários deste produto ou fluxo?' },
+      { label: 'Usuários Secundários', text: 'Quem são os usuários secundários ou indiretos?' },
+      { label: 'Dores do Usuário', text: 'Quais são as principais dores ou frustrações relatadas por esses usuários?' },
+      { label: 'Matriz RACI', text: 'Quem decide, quem precisa ser consultado e quem só precisa ser informado sobre este projeto?' },
+      { label: 'Conflitos', text: 'Há conflitos de interesse entre stakeholders que merecem atenção?' }
+    ]
+  },
+  {
+    id: 'design', name: 'UX e Design', icon: 'compass', color: 'text-purple-500',
+    questions: [
+      { label: 'Jornada', text: 'Em qual etapa da jornada do usuário esta interface está inserida?' },
+      { label: 'Benchmarking', text: 'Quais as principais referências de mercado ou concorrentes para esta solução?' },
+      { label: 'Tom de Voz', text: 'Qual o tom de voz e personalidade que o design deve projetar nesta interação?' },
+      { label: 'Sentimento', text: 'Qual a principal percepção que o design deve transmitir (ex: segurança, agilidade)?' },
+      { label: 'Anti-objetivos', text: 'O que você absolutamente NÃO quer ver no resultado final dessa interface?' },
+      { label: 'Acessibilidade', text: 'Há requisitos específicos de acessibilidade ou inclusão para este público?' }
+    ]
+  },
+  {
+    id: 'pesquisa', name: 'Pesquisa e Evidências', icon: 'flask-conical', color: 'text-green-500',
+    questions: [
+      { label: 'Pesquisas Anteriores', text: 'Há pesquisas ou dados de uso anteriores que embasam este projeto?' },
+      { label: 'Hipóteses', text: 'Quais hipóteses precisam ser validadas antes de avançar com o design?' },
+      { label: 'Certezas (CSD)', text: 'O que a equipe tem certeza sobre o problema ou a solução?' },
+      { label: 'Suposições (CSD)', text: 'Quais suposições estão sendo feitas e ainda não foram validadas?' },
+      { label: 'Dúvidas (CSD)', text: 'Quais dúvidas precisam ser respondidas antes de prosseguir?' },
+      { label: 'Insights de Pesquisa', text: 'Quais insights de pesquisa já foram transformados em decisões de design?' },
+      { label: 'Causa Raiz', text: 'Qual é a causa raiz do problema (5 Porquês)? Já foi investigada?' }
+    ]
+  }
+];
+
+function _briefingAxisById(id) {
+  return BRIEFING_AXES.find(a => a.id === id) || null;
+}
+
+// category salva é o nome do eixo (ex: "Contexto do Projeto") — perguntas
+// salvas antes desta feature existir podem ter "Customizada" ou qualquer
+// string livre, que não bate com nenhum eixo; nesse caso a pergunta some do
+// agrupamento por eixo (fallback null, tratado por quem chama).
+function _briefingAxisByName(name) {
+  return BRIEFING_AXES.find(a => a.name === name) || null;
+}
+
+const BRIEFING_CUSTOM_VALUE = '__custom__';
+
+// Um accordion por eixo, cada um com um <select> das perguntas sugeridas
+// daquele eixo (+ "Pergunta customizada" no fim da lista), um botão
+// "Adicionar" que confirma a escolha, e as perguntas já criadas daquele eixo
+// logo abaixo — substitui os chips soltos antigos, mas mantém os eixos
+// sempre visíveis na tela (não escondidos atrás de um popover/clique extra).
+function renderBriefingAxisAccordions() {
+  const container = document.getElementById('briefing-axes-container');
   if (!container) return;
+  const openIds = new Set(
+    Array.from(container.querySelectorAll('[id^="briefing-axis-body-"]:not(.hidden)'))
+      .map(el => el.id.replace('briefing-axis-body-', ''))
+  );
   container.innerHTML = '';
-  const categories = [
-    {
-      id: 'contexto', name: 'Contexto do Projeto', icon: 'briefcase', color: 'text-blue-500',
-      questions: [
-        { label: 'Problema Central', text: 'Qual é o problema central que este projeto resolve?' },
-        { label: 'Contexto de Negócio', text: 'Qual é o contexto de negócio ou estratégico que originou essa demanda?' },
-        { label: 'Critério de Sucesso', text: 'Quais resultados-chave definem o sucesso deste projeto? Como vamos medir?' },
-        { label: 'Histórico', text: 'Houve tentativas anteriores de resolver esse problema? O que aprendemos com elas?' },
-        { label: 'Público-Alvo', text: 'Quem é o usuário final desta interface e qual seu perfil?' },
-        { label: 'Canais', text: 'Em quais plataformas ou canais a solução vai operar?' },
-        { label: 'Diferencial', text: 'Qual o principal valor único que esta solução propõe ao usuário?' }
-      ]
-    },
-    {
-      id: 'escopo', name: 'Escopo e Riscos', icon: 'git-merge', color: 'text-orange-700',
-      questions: [
-        { label: 'No Escopo', text: 'O que está definitivamente incluído nesta entrega?' },
-        { label: 'Pode Entrar', text: 'O que pode entrar no escopo, mas ainda precisa de validação?' },
-        { label: 'Fora do Escopo', text: 'O que está explicitamente fora do escopo desta versão?' },
-        { label: 'MVP', text: 'O que é estritamente essencial para a primeira entrega?' },
-        { label: 'Riscos Técnicos', text: 'Quais os maiores riscos técnicos que podem impedir o sucesso do projeto?' },
-        { label: 'Riscos de Negócio', text: 'Há riscos regulatórios, legais (ex: LGPD) ou de compliance envolvidos?' },
-        { label: 'Dependências', text: 'Quais sistemas ou times externos este projeto depende?' },
-        { label: 'Impacto Cruzado', text: 'Esta solução afeta outras jornadas, componentes ou produtos?' }
-      ]
-    },
-    {
-      id: 'stakeholders', name: 'Usuários e Stakeholders', icon: 'users', color: 'text-teal-500',
-      questions: [
-        { label: 'Usuários Primários', text: 'Quem são os usuários primários deste produto ou fluxo?' },
-        { label: 'Usuários Secundários', text: 'Quem são os usuários secundários ou indiretos?' },
-        { label: 'Dores do Usuário', text: 'Quais são as principais dores ou frustrações relatadas por esses usuários?' },
-        { label: 'Decisores', text: 'Quem são os decisores e precisam aprovar as entregas?' },
-        { label: 'Consultados', text: 'Quem precisa ser consultado mas não decide?' },
-        { label: 'Informados', text: 'Quem precisa ser apenas informado sobre o progresso?' },
-        { label: 'Conflitos', text: 'Há conflitos de interesse entre stakeholders que merecem atenção?' }
-      ]
-    },
-    {
-      id: 'design', name: 'UX e Design', icon: 'compass', color: 'text-purple-500',
-      questions: [
-        { label: 'Jornada', text: 'Em qual etapa da jornada do usuário esta interface está inserida?' },
-        { label: 'Benchmarking', text: 'Quais as principais referências de mercado ou concorrentes para esta solução?' },
-        { label: 'Tom de Voz', text: 'Qual o tom de voz e personalidade que o design deve projetar nesta interação?' },
-        { label: 'Sentimento', text: 'Qual a principal percepção que o design deve transmitir (ex: segurança, agilidade)?' },
-        { label: 'Anti-objetivos', text: 'O que você absolutamente NÃO quer ver no resultado final dessa interface?' },
-        { label: 'Acessibilidade', text: 'Há requisitos específicos de acessibilidade ou inclusão para este público?' },
-        { label: 'Organização do Trabalho', text: 'Como o trabalho será organizado: sprints, milestones, cerimônias?' },
-        { label: 'Prazo', text: 'Qual é o prazo da entrega? Há marcos ou datas intermediárias obrigatórias?' }
-      ]
-    },
-    {
-      id: 'pesquisa', name: 'Pesquisa e Evidências', icon: 'flask-conical', color: 'text-green-500',
-      questions: [
-        { label: 'Pesquisas Anteriores', text: 'Há pesquisas ou dados de uso anteriores que embasam este projeto?' },
-        { label: 'Hipóteses', text: 'Quais hipóteses precisam ser validadas antes de avançar com o design?' },
-        { label: 'Certezas (CSD)', text: 'O que a equipe tem certeza sobre o problema ou a solução?' },
-        { label: 'Suposições (CSD)', text: 'Quais suposições estão sendo feitas e ainda não foram validadas?' },
-        { label: 'Dúvidas (CSD)', text: 'Quais dúvidas precisam ser respondidas antes de prosseguir?' },
-        { label: 'Insights de Pesquisa', text: 'Quais insights de pesquisa já foram transformados em decisões de design?' },
-        { label: 'Causa Raiz', text: 'Qual é a causa raiz do problema (5 Porquês)? Já foi investigada?' }
-      ]
-    }
-  ];
-  categories.forEach(cat => {
-    const catDiv = document.createElement('div');
-    catDiv.className = 'border border-gray-100 dark:border-dark-line rounded-xl overflow-hidden bg-white dark:bg-dark-surface/30';
-    catDiv.innerHTML = `
-      <button onclick="toggleCategory('${cat.id}')" class="w-full flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-dark-surface/50 hover:bg-slate-100 transition-all">
+  BRIEFING_AXES.forEach(axis => {
+    const selectId = `briefing-axis-select-${axis.id}`;
+    const isOpen = openIds.has(axis.id);
+    const wrap = document.createElement('div');
+    wrap.className = 'border border-gray-100 dark:border-dark-line rounded-xl overflow-hidden bg-white dark:bg-dark-surface/30';
+    wrap.innerHTML = `
+      <button type="button" onclick="toggleBriefingAxisAccordion('${axis.id}')" class="w-full flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-dark-surface/50 hover:bg-slate-100 dark:hover:bg-dark-line/20 transition-all">
         <span class="flex items-center gap-2 text-[12px] font-bold text-slate-700 dark:text-white">
-          <i data-lucide="${cat.icon}" class="w-4 h-4 ${cat.color}"></i>
-          ${cat.name}
+          <i data-lucide="${axis.icon}" class="w-4 h-4 ${axis.color}"></i>
+          ${axis.name}
+          <span id="briefing-axis-count-${axis.id}" class="hidden px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-dark-muted text-[10px] font-bold rounded-full leading-none"></span>
         </span>
-        <i data-lucide="chevron-down" id="arrow-${cat.id}" class="w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform"></i>
+        <i data-lucide="chevron-down" id="briefing-axis-arrow-${axis.id}" class="w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform ${isOpen ? 'rotate-180' : ''}"></i>
       </button>
-      <div id="cat-${cat.id}" class="hidden p-3 bg-white dark:bg-dark-bg/10 border-t border-gray-100 dark:border-dark-line">
-        <div class="flex flex-wrap gap-2" id="chips-${cat.id}"></div>
+      <div id="briefing-axis-body-${axis.id}" class="${isOpen ? '' : 'hidden'} p-3 bg-white dark:bg-dark-bg/10 border-t border-gray-100 dark:border-dark-line">
+        <div class="flex gap-2">
+          <select id="${selectId}" class="flex-1 min-w-0 text-[12px] bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2 text-slate-700 dark:text-white outline-none focus:border-[#3d3dff]/50 transition-colors">
+            ${axis.questions.map(q => `<option value="${escapeHtml(q.label)}">${escapeHtml(q.label)}</option>`).join('')}
+            <option value="${BRIEFING_CUSTOM_VALUE}">Pergunta customizada</option>
+          </select>
+          <button type="button" onclick="confirmBriefingAxisSelection('${axis.id}')" title="Adicionar pergunta" aria-label="Adicionar pergunta deste eixo"
+            class="shrink-0 px-3 py-2 bg-[#3d3dff] hover:bg-blue-700 rounded-xl text-[11px] font-bold text-white transition-colors">
+            Adicionar
+          </button>
+        </div>
+        <div id="briefing-axis-questions-${axis.id}" class="space-y-3 mt-3"></div>
       </div>
     `;
-    container.appendChild(catDiv);
-    const chipsContainer = document.getElementById(`chips-${cat.id}`);
-    cat.questions.forEach(q => {
-      const btn = document.createElement('button');
-      btn.className = 'px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-dark-muted rounded-full text-[11px] font-bold hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-[#3d3dff] dark:hover:text-blue-400 transition-all border border-transparent hover:border-blue-100 dark:hover:border-blue-900';
-      btn.innerHTML = `+ ${q.label}`;
-      btn.onclick = () => addBriefingQuestion(q.text, cat.name);
-      chipsContainer.appendChild(btn);
-    });
+    container.appendChild(wrap);
   });
   _refreshIcons();
+  _renderBriefingQuestionCards();
 }
 
-function toggleCategory(id) {
-  const el = document.getElementById(`cat-${id}`);
-  const arrow = document.getElementById(`arrow-${id}`);
-  if (el && arrow) {
-    const isHidden = el.classList.contains('hidden');
-    el.classList.toggle('hidden');
-    arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+function toggleBriefingAxisAccordion(axisId) {
+  const body = document.getElementById(`briefing-axis-body-${axisId}`);
+  const arrow = document.getElementById(`briefing-axis-arrow-${axisId}`);
+  if (!body || !arrow) return;
+  const isHidden = body.classList.contains('hidden');
+  body.classList.toggle('hidden');
+  arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
+function confirmBriefingAxisSelection(axisId) {
+  const axis = _briefingAxisById(axisId);
+  const select = document.getElementById(`briefing-axis-select-${axisId}`);
+  if (!axis || !select) return;
+  if (select.value === BRIEFING_CUSTOM_VALUE) {
+    addBriefingQuestion("", axis.name);
+    return;
   }
+  const q = axis.questions.find(q => q.label === select.value);
+  addBriefingQuestion(q ? q.text : "", axis.name);
 }
 
-function addBriefingQuestion(questionText = "", category = "Customizada") {
-  if (typeof questionText !== 'string') questionText = "";
-  const container = document.getElementById('briefing-questions-container-v2');
-  if (!container) return;
-  const id = Date.now();
-  const index = container.children.length + 1;
-  const card = document.createElement('div');
-  card.id = `briefing-card-${id}`;
-  card.className = "bg-white dark:bg-dark-bg p-5 rounded-xl border border-gray-100 dark:border-dark-line shadow-sm relative animate-in slide-in-from-top-4 duration-300";
-  card.innerHTML = `
-    <button onclick="removeBriefingQuestion('${id}')" title="Excluir Pergunta" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50">
+function _briefingCardHTML(q, index) {
+  return `
+    <button onclick="removeBriefingQuestion('${q.id}')" title="Excluir Pergunta" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50">
       <i data-lucide="trash-2" class="w-4 h-4"></i>
     </button>
     <div class="flex items-center gap-3 mb-4">
       <span class="text-[#3d3dff] font-bold text-[14px]">#${index} Pergunta</span>
-      <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 dark:text-dark-muted rounded border border-gray-100 dark:border-dark-line uppercase tracking-wider">${category}</span>
     </div>
     <div class="space-y-4">
       <div>
@@ -495,22 +531,64 @@ function addBriefingQuestion(questionText = "", category = "Customizada") {
         <textarea placeholder="Digite sua pergunta estratégica..."
           class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all font-bold text-slate-700 dark:text-white min-h-[44px] resize-none overflow-hidden"
           oninput="this.style.height='';this.style.height=this.scrollHeight+'px'"
-          onchange="updateBriefingQuestion('${id}','question',this.value)">${questionText}</textarea>
+          onchange="updateBriefingQuestion('${q.id}','question',this.value)">${q.question}</textarea>
       </div>
       <div>
         <label class="block text-[11px] font-bold text-[#3d3dff] uppercase mb-1.5">Resposta</label>
         <textarea placeholder="Insira aqui a resposta ou direcionamento..."
           class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg text-sm min-h-[100px] focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none"
-          onchange="updateBriefingQuestion('${id}','answer',this.value)"></textarea>
+          onchange="updateBriefingQuestion('${q.id}','answer',this.value)">${q.answer || ''}</textarea>
       </div>
     </div>
   `;
-  container.appendChild(card);
+}
+
+// Distribui handoffData.step2.briefingQuestions nos containers de cada
+// accordion de eixo (por nome de eixo salvo em q.category), atualiza os
+// badges de contagem por eixo e o contador total no topo. Fonte única de
+// renderização — chamada por renderBriefingAxisAccordions() (montagem do
+// zero) e por addBriefingQuestion/removeBriefingQuestion (após mudar dados).
+function _renderBriefingQuestionCards() {
+  const all = handoffData.step2.briefingQuestions || [];
+  BRIEFING_AXES.forEach(axis => {
+    const list = document.getElementById(`briefing-axis-questions-${axis.id}`);
+    if (!list) return;
+    const axisQuestions = all.filter(q => q.category === axis.name);
+    list.innerHTML = '';
+    axisQuestions.forEach((q, i) => {
+      const card = document.createElement('div');
+      card.id = `briefing-card-${q.id}`;
+      card.className = "bg-white dark:bg-dark-bg p-5 rounded-xl border border-gray-100 dark:border-dark-line shadow-sm relative";
+      card.innerHTML = _briefingCardHTML(q, i + 1);
+      list.appendChild(card);
+    });
+    const countBadge = document.getElementById(`briefing-axis-count-${axis.id}`);
+    if (countBadge) {
+      countBadge.textContent = String(axisQuestions.length);
+      countBadge.classList.toggle('hidden', axisQuestions.length === 0);
+    }
+  });
+  const totalEl = document.getElementById('briefing-total-count');
+  if (totalEl) {
+    totalEl.textContent = all.length === 1 ? '1 pergunta no briefing' : `${all.length} perguntas no briefing`;
+    totalEl.classList.toggle('hidden', all.length === 0);
+  }
+  document.querySelectorAll('#briefing-axes-container textarea').forEach(ta => {
+    ta.style.height = ''; ta.style.height = ta.scrollHeight + 'px';
+  });
+  _refreshIcons();
+}
+
+function addBriefingQuestion(questionText = "", category = "") {
+  if (typeof questionText !== 'string') questionText = "";
+  const id = Date.now();
   if (!handoffData.step2.briefingQuestions) handoffData.step2.briefingQuestions = [];
   handoffData.step2.briefingQuestions.push({ id, question: questionText, answer: "", category });
   saveToStorage();
-  _refreshIcons();
-  const ta = card.querySelector('textarea');
+  _renderBriefingQuestionCards();
+
+  const card = document.getElementById(`briefing-card-${id}`);
+  const ta = card ? card.querySelector('textarea') : null;
   if (ta) { ta.style.height = ''; ta.style.height = ta.scrollHeight + 'px'; }
 
   // Auto-open briefing accordion if collapsed
@@ -520,28 +598,31 @@ function addBriefingQuestion(questionText = "", category = "Customizada") {
     if (accordionBtn) accordionBtn.click();
   }
 
-  // Focus the question textarea after accordion opens
+  // Abre o accordion do eixo correspondente se estiver fechado
+  const axis = _briefingAxisByName(category);
+  if (axis) {
+    const body = document.getElementById(`briefing-axis-body-${axis.id}`);
+    if (body && body.classList.contains('hidden')) toggleBriefingAxisAccordion(axis.id);
+  }
+
+  // Foca Pergunta se ela veio vazia (customizada), ou Resposta se a pergunta
+  // já chegou preenchida por uma sugestão — não faz sentido focar um campo
+  // que o usuário não vai editar.
   setTimeout(() => {
-    if (ta) {
-      ta.focus();
-      ta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (!card) return;
+    const targetTa = questionText ? card.querySelectorAll('textarea')[1] : ta;
+    if (targetTa) {
+      targetTa.focus();
+      targetTa.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, 120);
-  autoScrollToNewItem('handoff-scroll-container', card);
+  if (card) autoScrollToNewItem('handoff-scroll-container', card);
 }
 
 function removeBriefingQuestion(id) {
-  const card = document.getElementById(`briefing-card-${id}`);
-  if (card) card.remove();
   handoffData.step2.briefingQuestions = (handoffData.step2.briefingQuestions || []).filter(q => q.id != id);
-  const container = document.getElementById('briefing-questions-container-v2');
-  if (container) {
-    Array.from(container.children).forEach((child, i) => {
-      const badge = child.querySelector('.text-\\[\\#3d3dff\\]');
-      if (badge) badge.textContent = `#${i + 1} Pergunta`;
-    });
-  }
   saveToStorage();
+  _renderBriefingQuestionCards();
 }
 
 function updateBriefingQuestion(id, key, value) {
@@ -554,8 +635,6 @@ function toggleBriefingSection(checked) {
   handoffData.step2.briefingEnabled = checked;
   const card = document.getElementById('briefing-card');
   if (card) card.classList.toggle('hidden', !checked);
-  const container = document.getElementById('briefing-categories-container-v2');
-  if (container && container.innerHTML === '') initBriefingSuggestions();
   saveToStorage();
 }
 
@@ -1460,8 +1539,6 @@ function updateFooterButtons() {
   _refreshIcons();
 }
 
-// initBriefingSuggestions é inicializado sob demanda (ao abrir o briefing pela primeira vez)
-
 // ── Storage ────────────────────────────────────────────────────────────
 function saveToStorage() {
   parent.postMessage({ pluginMessage: { type: 'save-storage', data: handoffData } }, '*');
@@ -1618,7 +1695,6 @@ function navigate(viewId) {
   }
   if (viewId === 'view-dados-projeto') {
     restoreUIFromState();
-    initBriefingSuggestions();
     parent.postMessage({ pluginMessage: { type: 'get-project-name' } }, '*');
     // Snackbar: se o conteúdo couber sem scroll, dispara após breve delay
     setTimeout(() => {
@@ -2127,48 +2203,8 @@ function restoreUIFromState() {
   }
   validateStep1();
 
-  // Step 2 — Briefing
-  const briefingContainer = document.getElementById('briefing-questions-container-v2');
-  if (briefingContainer) {
-    briefingContainer.innerHTML = '';
-    (handoffData.step2.briefingQuestions || []).forEach((q, i) => {
-      const card = document.createElement('div');
-      card.id = `briefing-card-${q.id}`;
-      card.className = "bg-white dark:bg-dark-bg p-5 rounded-xl border border-gray-100 dark:border-dark-line shadow-sm relative";
-      card.innerHTML = `
-        <button onclick="removeBriefingQuestion('${q.id}')" title="Excluir" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50">
-          <i data-lucide="trash-2" class="w-4 h-4"></i>
-        </button>
-        <div class="flex items-center gap-3 mb-4">
-          <span class="text-[#3d3dff] font-bold text-[14px]">#${i+1} Pergunta</span>
-          <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 dark:text-dark-muted rounded border border-gray-100 dark:border-dark-line uppercase tracking-wider">${q.category || "Customizada"}</span>
-        </div>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-[11px] font-bold text-[#3d3dff] uppercase mb-1.5">Pergunta</label>
-            <textarea class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all font-bold text-slate-700 dark:text-white min-h-[44px] resize-none overflow-hidden"
-              oninput="this.style.height='';this.style.height=this.scrollHeight+'px'"
-              onchange="updateBriefingQuestion('${q.id}','question',this.value)">${q.question}</textarea>
-          </div>
-          <div>
-            <label class="block text-[11px] font-bold text-[#3d3dff] uppercase mb-1.5">Resposta</label>
-            <textarea class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg text-sm min-h-[100px] focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none"
-              onchange="updateBriefingQuestion('${q.id}','answer',this.value)">${q.answer}</textarea>
-          </div>
-        </div>
-      `;
-      briefingContainer.appendChild(card);
-    });
-    setTimeout(() => {
-      document.querySelectorAll('#briefing-questions-container-v2 textarea').forEach(ta => {
-        ta.style.height = ''; ta.style.height = ta.scrollHeight + 'px';
-      });
-    }, 100);
-  }
-  // Inicializa categorias de briefing sempre (toggle removido)
-  const catContainer = document.getElementById('briefing-categories-container-v2');
-  if (catContainer && catContainer.innerHTML === '') initBriefingSuggestions();
-
+  // Step 2 — Briefing (accordions por eixo + cards de pergunta dentro de cada um)
+  renderBriefingAxisAccordions();
   // Step 2 — Regras
   const listRegras = document.getElementById('list-regras-s2');
   if (listRegras) {
