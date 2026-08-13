@@ -500,6 +500,34 @@
     }
     .settings-textarea:focus { outline: none; border-color: #0D47A1; }
 
+    /* Dicionário de propriedades — lista de linhas chave/descrição */
+    .dict-list { display: flex; flex-direction: column; gap: 6px; }
+    .dict-row { display: flex; gap: 6px; align-items: center; }
+    .dict-input {
+      font-family: 'Inter', sans-serif; font-size: 12px; color: #333;
+      padding: 6px 8px; border: 1px solid #d0d0d0; border-radius: 6px;
+      min-width: 0; background: #fff;
+    }
+    .dict-input:focus { outline: none; border-color: #0D47A1; }
+    .dict-input-key { flex: 0 0 36%; }
+    .dict-input-desc { flex: 1 1 auto; }
+    .dict-row-remove {
+      width: 22px; height: 22px; flex-shrink: 0; border: none; background: none;
+      color: #bbb; font-size: 16px; line-height: 1; cursor: pointer; border-radius: 4px;
+      display: flex; align-items: center; justify-content: center; padding: 0;
+    }
+    .dict-row-remove:hover { background: #fdecea; color: #C62828; }
+    .dict-empty { font-size: 11px; color: #bbb; padding: 4px 0; }
+    .dict-actions { display: flex; gap: 8px; }
+    .dict-actions .btn-extra { flex: 1; }
+    .btn-extra.primary { background: #0D47A1; color: #fff; }
+    .btn-extra.primary:hover { background: #0a3a85; color: #fff; }
+    .dict-save-msg {
+      font-size: 11px; color: #2E7D32; font-weight: 600;
+      height: 14px; opacity: 0; transition: opacity 0.2s;
+    }
+    .dict-save-msg.show { opacity: 1; }
+
     /* DEV (temporário) */
     .dev-label {
       font-size: 11px; font-weight: 700; color: #E65100;
@@ -656,6 +684,19 @@
 
         <div class="settings-divider"></div>
 
+        <div class="settings-group">
+          <div class="settings-group-title">Dicionário de propriedades</div>
+          <p class="settings-help-text">Descrições exibidas na tabela de propriedades do handoff quando o nome da propriedade do componente bate com um destes. Propriedades não listadas aqui recebem descrição automática pelo tipo.</p>
+          <div class="dict-list" id="dictList"></div>
+          <div class="dict-actions">
+            <button class="btn-extra" id="btnDictAdd">+ Adicionar propriedade</button>
+            <button class="btn-extra primary" id="btnDictSalvar">Salvar</button>
+          </div>
+          <div class="dict-save-msg" id="dictSaveMsg">Dicionário salvo.</div>
+        </div>
+
+        <div class="settings-divider"></div>
+
         <div class="settings-group" style="display:none;">
           <div class="dev-label">Dev (temporário)</div>
           <div class="extras-card">
@@ -800,7 +841,7 @@
     </div>
   </div>
 
-  <div class="footer" id="mainFooter" style="display:none;">DSC Handoff v2.3.3</div>
+  <div class="footer" id="mainFooter" style="display:none;">DSC Handoff v2.4.0</div>
 
   <script>
     const waitingState = document.getElementById('waitingState');
@@ -829,7 +870,16 @@
     btnInfo.onclick = () => infoPanel.classList.add('open');
     btnCloseInfo.onclick = () => infoPanel.classList.remove('open');
     btnSettings.onclick = () => settingsPanel.classList.add('open');
-    btnCloseSettings.onclick = () => settingsPanel.classList.remove('open');
+    btnCloseSettings.onclick = () => {
+      if (_dictDirty) {
+        const descartar = confirm('Você tem alterações não salvas no dicionário de propriedades. Fechar mesmo assim e perder as alterações?');
+        if (!descartar) return;
+        _dictEntries = _dictEntriesSaved.map(e => ({ ...e }));
+        _dictDirty = false;
+        renderDictList();
+      }
+      settingsPanel.classList.remove('open');
+    };
 
     // Navegação de tabs
     document.querySelectorAll('.tab').forEach(tab => {
@@ -1043,6 +1093,79 @@
       parent.postMessage({ pluginMessage: { type: 'salvar-nomes-template', nomes } }, '*');
     });
 
+    const dictListEl = document.getElementById('dictList');
+    const btnDictAdd = document.getElementById('btnDictAdd');
+    const btnDictSalvar = document.getElementById('btnDictSalvar');
+    const dictSaveMsg = document.getElementById('dictSaveMsg');
+    let _dictEntries = [];
+    let _dictEntriesSaved = [];
+    let _dictDirty = false;
+
+    function renderDictList() {
+      dictListEl.innerHTML = '';
+      if (!_dictEntries.length) {
+        const vazio = document.createElement('div');
+        vazio.className = 'dict-empty';
+        vazio.textContent = 'Nenhuma propriedade cadastrada.';
+        dictListEl.appendChild(vazio);
+        return;
+      }
+      _dictEntries.forEach((entry, i) => {
+        const row = document.createElement('div');
+        row.className = 'dict-row';
+
+        const keyEl = document.createElement('input');
+        keyEl.type = 'text';
+        keyEl.className = 'dict-input dict-input-key';
+        keyEl.placeholder = 'propriedade';
+        keyEl.value = entry.chave;
+        keyEl.addEventListener('input', () => { entry.chave = keyEl.value; _dictDirty = true; });
+
+        const descEl = document.createElement('input');
+        descEl.type = 'text';
+        descEl.className = 'dict-input dict-input-desc';
+        descEl.placeholder = 'descrição exibida no handoff';
+        descEl.value = entry.desc;
+        descEl.addEventListener('input', () => { entry.desc = descEl.value; _dictDirty = true; });
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'dict-row-remove';
+        removeBtn.title = 'Remover';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.onclick = () => {
+          _dictEntries.splice(i, 1);
+          _dictDirty = true;
+          renderDictList();
+        };
+
+        row.appendChild(keyEl);
+        row.appendChild(descEl);
+        row.appendChild(removeBtn);
+        dictListEl.appendChild(row);
+      });
+    }
+
+    function salvarDicionario() {
+      const texto = _dictEntries
+        .filter(e => e.chave.trim() && e.desc.trim())
+        .map(e => `${e.chave.trim()}: ${e.desc.trim()}`).join('\n');
+      parent.postMessage({ pluginMessage: { type: 'salvar-dicionario-propriedades', texto } }, '*');
+      _dictEntriesSaved = _dictEntries.map(e => ({ ...e }));
+      _dictDirty = false;
+      dictSaveMsg.classList.add('show');
+      clearTimeout(dictSaveMsg._timeout);
+      dictSaveMsg._timeout = setTimeout(() => dictSaveMsg.classList.remove('show'), 1800);
+    }
+
+    btnDictAdd.onclick = () => {
+      _dictEntries.push({ chave: '', desc: '' });
+      renderDictList();
+      const inputs = dictListEl.querySelectorAll('.dict-input-key');
+      inputs[inputs.length - 1].focus();
+    };
+
+    btnDictSalvar.onclick = () => salvarDicionario();
+
     const btnVarreduraTemplate = document.getElementById('btnVarreduraTemplate');
     const varreduraResultado = document.getElementById('varreduraResultado');
     btnVarreduraTemplate.onclick = () => {
@@ -1111,6 +1234,17 @@
       }
       if (msg.type === 'nomes-template-carregados') {
         nomesTemplateEl.value = msg.texto || '';
+        return;
+      }
+      if (msg.type === 'dicionario-propriedades-carregado') {
+        _dictEntries = (msg.texto || '').split('\n').map(linha => {
+          const idx = linha.indexOf(':');
+          if (idx === -1) return null;
+          return { chave: linha.slice(0, idx).trim(), desc: linha.slice(idx + 1).trim() };
+        }).filter(Boolean);
+        _dictEntriesSaved = _dictEntries.map(e => ({ ...e }));
+        _dictDirty = false;
+        renderDictList();
         return;
       }
       if (msg.type === 'varredura-template-resultado') {
