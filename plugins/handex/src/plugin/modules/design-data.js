@@ -136,12 +136,17 @@
             restoreUIFromState();
 
             // Contagens para o modal — soma specs/medidas "avulsas" (nível
-            // superior de handoffData, sem frame vinculado) com as por-frame.
-            // Sem isso, um backup só com dados avulsos contava 0 e
-            // desabilitava a opção de recriar no canvas mesmo tendo dado
-            // real pra recriar.
+            // superior de handoffData, sem frame vinculado) com as por-frame,
+            // deduplicando por id: handoffData.specs não é garantidamente só
+            // avulsas (ver mesma ressalva em applyImportedDataToCanvas), então
+            // somar os dois arrays crus pode contar a mesma spec duas vezes.
             const nFrames = (handoffData.frames || []).length;
-            const nSpecs = (handoffData.specs || []).length + (handoffData.frames || []).reduce((s, f) => s + (f.createdSpecs || []).length, 0);
+            const dedupSpecIds = new Set(
+              (handoffData.specs || []).map(s => s.id).concat(
+                (handoffData.frames || []).flatMap(f => (f.createdSpecs || []).map(s => s.id))
+              )
+            );
+            const nSpecs = dedupSpecIds.size;
             const nMeasures = (handoffData.measurements || []).length + (handoffData.frames || []).reduce((s, f) => s + (f.measurements || []).length, 0);
             const nFlows = (handoffData.createdFlows || []).length;
             const nFlowsRecreatable = (handoffData.createdFlows || []).filter(f => f.sourceId).length;
@@ -266,12 +271,23 @@
           }, '*');
           count++;
         };
-        // Specs "avulsas" (nível superior de handoffData, sem frame
-        // vinculado) — sem isso, um backup só com dados avulsos nunca
-        // recriava nada no canvas, mesmo com o checkbox marcado.
-        (handoffData.specs || []).forEach(spec => recreateSpec(spec, null));
+        // handoffData.specs não é garantidamente só "avulsas" — depois que
+        // collectHandoffData()/saveSpecsToStorage() rodam na mesma sessão
+        // que gerou o backup, ele já vem com o merge avulsas+por-frame (ver
+        // comentário de _mergeLooseAndFramed em core.js). Sem dedup por id,
+        // uma spec com frame apareceria tanto em handoffData.specs quanto em
+        // frame.createdSpecs e seria recriada duas vezes no canvas.
+        const seenSpecIds = new Set();
+        (handoffData.specs || []).forEach(spec => {
+          if (spec.id) seenSpecIds.add(spec.id);
+          recreateSpec(spec, null);
+        });
         (handoffData.frames || []).forEach(frame => {
-          (frame.createdSpecs || []).forEach(spec => recreateSpec(spec, frame.figmaId));
+          (frame.createdSpecs || []).forEach(spec => {
+            if (spec.id && seenSpecIds.has(spec.id)) return;
+            if (spec.id) seenSpecIds.add(spec.id);
+            recreateSpec(spec, frame.figmaId);
+          });
         });
         if (count > 0) showToast(`${count} spec(s) sendo recriadas no canvas...`);
       }
@@ -290,7 +306,18 @@
           }, '*');
           count += frame.measurements.length;
         });
-        if (count > 0) showToast(`${count} medida(s) sendo reaplicadas no canvas...`);
+        // Medidas avulsas (sem frame vinculado) não têm um nó de referência
+        // pra reapply-measurements ancorar — não são recriadas no canvas,
+        // só as por-frame. Avisa quando isso reduz o total pra não parecer
+        // que a importação "perdeu" dado silenciosamente.
+        const nLooseMeasures = (handoffData.measurements || []).length;
+        if (count > 0) {
+          showToast(nLooseMeasures > 0
+            ? `${count} medida(s) reaplicadas no canvas — ${nLooseMeasures} avulsa(s) sem frame não puderam ser recriadas.`
+            : `${count} medida(s) sendo reaplicadas no canvas...`);
+        } else if (nLooseMeasures > 0) {
+          showToast(`${nLooseMeasures} medida(s) avulsa(s) não puderam ser recriadas — sem frame vinculado no canvas.`, 'error');
+        }
       }
 
       if (doFlows) {

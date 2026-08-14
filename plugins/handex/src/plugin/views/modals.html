@@ -461,6 +461,65 @@
       </div>
     </div>
 
+    <!-- MODAL: BRIEFING GUIDE (eixos + perguntas sugeridas, com busca e filtro) -->
+    <div id="briefing-guide-modal" role="dialog" aria-modal="true" aria-labelledby="briefing-guide-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div class="bg-white dark:bg-dark-bg w-full max-w-[500px] max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-dark-line flex flex-col animate-in fade-in zoom-in duration-200">
+        <div class="p-6 pb-4 border-b border-gray-100 dark:border-dark-line shrink-0">
+          <div class="flex items-center justify-between mb-3">
+            <h3 id="briefing-guide-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[18px]">Guia do Briefing Estratégico</h3>
+            <button onclick="closeModal('briefing-guide-modal')" aria-label="Fechar modal" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
+              <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mb-3">
+            Referência dos eixos e perguntas sugeridas do briefing. Use a busca ou os filtros para achar rápido um tema específico.
+          </p>
+          <div class="relative mb-3">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="briefing-guide-search" oninput="filterBriefingGuide()" placeholder="Buscar por tema ou palavra-chave..."
+              class="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl text-[12px] text-slate-700 dark:text-white outline-none focus:border-[#3d3dff]/50 transition-colors placeholder:text-slate-400" />
+          </div>
+          <div id="briefing-guide-axis-filters" class="flex flex-wrap gap-1.5">
+            <!-- Chips de eixo, populados por openBriefingGuideModal() -->
+          </div>
+        </div>
+        <div id="briefing-guide-results" class="flex-1 overflow-y-auto p-6 space-y-5" onscroll="handleScroll(this)">
+          <!-- Populado por openBriefingGuideModal()/filterBriefingGuide() -->
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: ADICIONAR PERGUNTA DO BRIEFING -->
+    <div id="briefing-question-modal" role="dialog" aria-modal="true" aria-labelledby="briefing-question-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div class="bg-white dark:bg-dark-bg w-full max-w-[440px] max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-dark-line flex flex-col animate-in fade-in zoom-in duration-200">
+        <div class="p-6 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
+          <div class="min-w-0">
+            <h3 id="briefing-question-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[18px]">Adicionar pergunta</h3>
+            <p id="briefing-question-modal-axis" class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5"></p>
+          </div>
+          <button onclick="closeBriefingQuestionModal()" aria-label="Fechar modal" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white shrink-0">
+            <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6 space-y-4" onscroll="handleScroll(this)">
+          <div>
+            <label class="block text-[11px] font-bold text-[#3d3dff] uppercase mb-1.5">Pergunta</label>
+            <textarea id="briefing-question-modal-question" placeholder="Digite sua pergunta estratégica..."
+              class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all font-bold text-slate-700 dark:text-white min-h-[60px] resize-none"></textarea>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-[#3d3dff] uppercase mb-1.5">Resposta</label>
+            <textarea id="briefing-question-modal-answer" placeholder="Insira aqui a resposta ou direcionamento..."
+              class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg text-sm min-h-[120px] focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none"></textarea>
+          </div>
+        </div>
+        <div class="p-4 border-t border-gray-100 dark:border-dark-line flex justify-end gap-2 shrink-0">
+          <button onclick="closeBriefingQuestionModal()" class="px-4 py-2 text-slate-500 dark:text-dark-muted font-bold text-[12px] rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
+          <button onclick="confirmBriefingQuestionModal()" class="px-6 py-2 bg-[#3d3dff] hover:bg-[#2e2ee0] text-white font-bold text-[12px] rounded-xl transition-all">Adicionar</button>
+        </div>
+      </div>
+    </div>
+
 <!-- MODAL: SPEC FORM -->
   <div id="spec-form-modal" role="dialog" aria-modal="true" aria-labelledby="spec-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
     <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeSpecFormModal()" aria-hidden="true"></div>

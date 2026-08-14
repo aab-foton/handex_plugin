@@ -1,29 +1,27 @@
 <!-- VIEW: SPECIFICATIONS -->
     <main id="view-specifications" class="view flex p-0 flex-col h-full overflow-hidden">
       <!-- Header -->
-      <div class="subheader-brand px-4 py-3 bg-[#3d3dff] dark:bg-[#00335c] flex flex-col shrink-0 shadow-md">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2 min-w-0">
-            <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial" class="p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
-              <i data-lucide="arrow-left" class="w-4 h-4 text-white" aria-hidden="true"></i>
-            </button>
-            <h2 class="text-white font-bold text-[18px] truncate min-w-0">Anotar Specs</h2>
-            <button type="button" onclick="openHelp()"
-              class="w-4 h-4 flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
-              title="Ver guia de categorias" aria-label="Ver guia de categorias de especificação">
-              <i data-lucide="circle-help" class="w-3.5 h-3.5"></i>
-            </button>
-          </div>
-          <div class="flex items-center gap-1.5 shrink-0">
-            <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('specs-scroll-container'))" title="Recolher/expandir todos" aria-label="Recolher ou expandir todos os accordions"
-              class="hidden p-1.5 hover:bg-white/20 rounded-md transition-colors text-white/80 hover:text-white">
-              <i data-lucide="chevrons-up-down" class="w-4 h-4" aria-hidden="true"></i>
-            </button>
-            <button id="specs-header-action-form" onclick="openSpecFormModal()" class="fab-inline" title="Criar especificação" aria-label="Criar especificação">
-              <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
-              <span>Nova spec</span>
-            </button>
-          </div>
+      <div class="subheader-brand px-4 py-3 bg-[#3d3dff] dark:bg-[#00335c] flex items-center justify-between shrink-0 shadow-md">
+        <div class="flex items-center gap-2 min-w-0">
+          <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial" class="p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
+            <i data-lucide="arrow-left" class="w-4 h-4 text-white" aria-hidden="true"></i>
+          </button>
+          <h2 class="text-white font-bold text-[18px] truncate min-w-0">Anotar Specs</h2>
+          <button type="button" onclick="openHelp()"
+            class="w-4 h-4 flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
+            title="Ver guia de categorias" aria-label="Ver guia de categorias de especificação">
+            <i data-lucide="circle-help" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('specs-scroll-container'))" title="Recolher/expandir todos" aria-label="Recolher ou expandir todos os accordions"
+            class="hidden p-1.5 hover:bg-white/20 rounded-md transition-colors text-white/80 hover:text-white">
+            <i data-lucide="chevrons-up-down" class="w-4 h-4" aria-hidden="true"></i>
+          </button>
+          <button id="specs-header-action-form" onclick="openSpecFormModal()" class="fab-inline" title="Criar especificação" aria-label="Criar especificação">
+            <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
+            <span>Nova spec</span>
+          </button>
         </div>
       </div>
 
@@ -35,13 +33,13 @@
           <div data-frame-selector-card>
             <div class="flex items-center gap-2 mb-2.5">
               <i data-lucide="scan-line" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0"></i>
-              <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Frames Mapeados</h4>
+              <h4 id="spec-frame-selector-label" class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Frames Mapeados</h4>
             </div>
             <select id="spec-frame-selector" onchange="setMeasureActiveFrame(this.value)"
               class="w-full text-[12px] bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-slate-700 dark:text-white outline-none focus:border-[#3d3dff]/50 transition-colors">
               <option value="">Sem vínculo (spec avulsa)</option>
             </select>
-            <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-2 leading-tight">
+            <p id="spec-frame-selector-hint" class="text-[10px] text-slate-500 dark:text-dark-muted mt-2 leading-tight">
               Selecione um frame para focá-lo no canvas e associar esta spec a ele.
             </p>
           </div>
@@ -49,14 +47,11 @@
           <div id="specs-form" class="space-y-4">
 
             <div>
-              <div class="flex items-center justify-between mb-3">
-                <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-[0.15em]">Especificações Criadas</h4>
-                <div class="flex items-center gap-3">
-                  <button id="btn-hide-all-specs" onclick="toggleAllSpecsVisibility()"
-                    class="hidden text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors flex items-center gap-1">
-                    <i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo
-                  </button>
-                </div>
+              <div class="flex items-center justify-end mb-3">
+                <button id="btn-hide-all-specs" onclick="toggleAllSpecsVisibility()"
+                  class="hidden text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors flex items-center gap-1">
+                  <i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo
+                </button>
               </div>
 
               <!-- Instrução discreta -->
@@ -75,8 +70,8 @@
 
           <!-- Finalizar Registros — ação única de fechamento, tom discreto (outline)
                para não competir com "Nova spec" no header, a ação mais
-               frequente da tela. -->
-          <div class="pt-4 pb-2">
+               frequente da tela. Só aparece com specs criadas (ver renderSpecsList). -->
+          <div id="btn-finalize-specs-wrap" class="hidden pt-4 pb-2">
             <button onclick="finalizeSection('specs')"
               class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
               <i data-lucide="clipboard-check" class="w-4 h-4" aria-hidden="true"></i>
