@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.4.0 — 2026-08-13
+
+### Novidades
+
+- **Dicionário de propriedades editável direto na UI** — antes, alterar uma descrição do dicionário (ex: "change icon") exigia editar `code.ts` e lançar uma versão nova. Agora Configurações tem uma lista de propriedade/descrição editável, com botão "Salvar" explícito e aviso de alterações não salvas ao fechar o painel sem salvar. Persiste via `clientStorage`, por máquina.
+- **Nova seção "Modes"** — quando o componente não tem nenhuma propriedade elegível para "Variações" nem propriedade de state (cenário em que o dark mode não aparecia em nenhum lugar do handoff), o plugin gera uma seção dedicada comparando a aparência Light/Dark do componente default. Só é mantida se existir variável de dark mode configurada na biblioteca; caso contrário some, assim como quando o componente já tem variantes ou states (dark mode já é coberto nessas seções). Requer a seção `modes` no componente master do Template Handoff.
+
+### Correções
+
+- **Seção "Variações" ficava vazia quando o componente não tinha variantes** — o header "Variações" era mantido no handoff mesmo sem nenhuma propriedade elegível para gerar cards, deixando uma seção vazia e órfã. Agora a seção inteira é removida nesse caso, mesmo comportamento que a Matriz de Estados já tinha para componentes sem propriedade de state.
+
 ## v2.3.3 — 2026-07-22
 
 ### Correções

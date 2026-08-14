@@ -26,10 +26,11 @@ const LIMIAR_CONTRASTE_WCAG = 3;
 const PROPRIEDADES_IGNORAR_MATRIZ = ["device", "breakpoint"];
 
 /**
- * Dicionário de descrições para propriedades conhecidas.
+ * Dicionário de descrições para propriedades conhecidas (padrão de fábrica).
  * Propriedades não encontradas aqui recebem descrição automática por tipo.
+ * Editável em tempo de execução via UI — ver `_dicionarioPropriedades`.
  */
-const DICIONARIO_PROPRIEDADES: Record<string, string> = {
+const DICIONARIO_PROPRIEDADES_PADRAO: Record<string, string> = {
   "variant": "Possibilidades de cor/estilos/layout/etc que o componente pode assumir.",
   "size": "Variações de tamanhos",
   "state": "Variações de estados",
@@ -39,6 +40,27 @@ const DICIONARIO_PROPRIEDADES: Record<string, string> = {
   "swap slot": "Permite selecionar um conteúdo personalizado para colocar dentro componente",
   "change slot": "Permite selecionar um conteúdo personalizado para colocar dentro do componente"
 };
+
+/** Dicionário efetivo de descrições (carregado do clientStorage na inicialização) */
+let _dicionarioPropriedades: Record<string, string> = { ...DICIONARIO_PROPRIEDADES_PADRAO };
+
+/** Converte o dicionário em texto "chave: descrição" (um por linha), para exibir na UI */
+function dicionarioParaTexto(dic: Record<string, string>): string {
+  return Object.entries(dic).map(([chave, desc]) => `${chave}: ${desc}`).join("\n");
+}
+
+/** Converte texto "chave: descrição" (um por linha) de volta em dicionário */
+function textoParaDicionario(texto: string): Record<string, string> {
+  const dic: Record<string, string> = {};
+  for (const linha of texto.split("\n")) {
+    const idx = linha.indexOf(":");
+    if (idx === -1) continue;
+    const chave = linha.slice(0, idx).trim().toLowerCase();
+    const desc = linha.slice(idx + 1).trim();
+    if (chave && desc) dic[chave] = desc;
+  }
+  return dic;
+}
 
 /**
  * Pares de termos direcionais usados para agrupar propriedades relacionadas
@@ -52,7 +74,7 @@ const PARES_DIRECIONAIS = [
 ];
 
 /** Ordem canônica das seções no handoff — garante inserção na posição correta */
-const ORDEM_SECOES = ["table", "anatomy", "variants", "states", "observações", "a11y"];
+const ORDEM_SECOES = ["table", "anatomy", "variants", "modes", "states", "observações", "a11y"];
 
 // === COMPONENT SET FORMAT ===
 const CSF_COR_FALLBACK: RGB = { r: 100 / 255, g: 116 / 255, b: 122 / 255 };
@@ -130,6 +152,7 @@ const DOMINIO_SECOES: Record<string, string> = {
   table: "design",
   anatomy: "design",
   variants: "design",
+  modes: "design",
   states: "design",
   "observações": "design",
   a11y: "a11y",
@@ -178,9 +201,20 @@ async function carregarNomesTemplate(): Promise<void> {
   figma.ui.postMessage({ type: 'nomes-template-carregados', texto: _nomesTemplateReconhecidos.join("\n") });
 }
 
+/** Carrega o dicionário de propriedades salvo no clientStorage (se houver) e avisa a UI */
+async function carregarDicionarioPropriedades(): Promise<void> {
+  const salvo = await figma.clientStorage.getAsync("dsc-handoff-dicionarioPropriedades") as string | undefined;
+  if (salvo) {
+    const dic = textoParaDicionario(salvo);
+    if (Object.keys(dic).length) _dicionarioPropriedades = dic;
+  }
+  figma.ui.postMessage({ type: 'dicionario-propriedades-carregado', texto: dicionarioParaTexto(_dicionarioPropriedades) });
+}
+
 // Carregar configurações, avaliar seleção inicial e registrar listener de mudança
 (async () => {
   await carregarNomesTemplate();
+  await carregarDicionarioPropriedades();
   avaliarSelecao();
   figma.on('selectionchange', () => { avaliarSelecao(); });
 })();
@@ -1435,7 +1469,7 @@ function obterDescricaoPropriedade(
   nomeExibicao: string,
   def?: { type: string; variantOptions?: string[] }
 ): string {
-  const descDicionario = DICIONARIO_PROPRIEDADES[propLow];
+  const descDicionario = _dicionarioPropriedades[propLow];
   if (descDicionario) return descDicionario;
 
   if (tipo === "TEXT") return `Texto que será aplicado no ${nomeExibicao}`;
@@ -1732,7 +1766,8 @@ async function criarCardVariacao(
   rotulo: string,
   propriedades: Record<string, any>,
   dna: MapaDNA,
-  modeDark: { collectionId: string; modeId: string; colecao: VariableCollection } | null = null
+  modeDark: { collectionId: string; modeId: string; colecao: VariableCollection } | null = null,
+  prefixoChave: string = "variants"
 ): Promise<void> {
   const cardBruto = cardBase.clone();
   containerCards.appendChild(cardBruto);
@@ -1757,7 +1792,7 @@ async function criarCardVariacao(
   const label = buscarFilho(card, "VALUE") as TextNode;
   if (label) {
     label.characters = rotulo;
-    marcarTextoOriginal(label, `variants::${rotulo}::label`);
+    marcarTextoOriginal(label, `${prefixoChave}::${rotulo}::label`);
   }
 
   // Remover placeholder de swap slot
@@ -1974,13 +2009,14 @@ function sincronizarVisuaisRecursivo(origem: SceneNode, destino: SceneNode): voi
 }
 
 /** Seções que possuem função geradora em atualizarSecao */
-const SECOES_GERAVEIS = ["table", "anatomy", "variants", "states"];
+const SECOES_GERAVEIS = ["table", "anatomy", "variants", "modes", "states"];
 
 /** Nomes amigáveis para exibir no progresso da UI */
 const NOMES_SECOES: Record<string, string> = {
   table: "Tabela de propriedades",
   anatomy: "Anatomia",
   variants: "Variações",
+  modes: "Modes",
   states: "Matriz de estados",
   "observações": "Observações",
   a11y: "Acessibilidade",
@@ -2459,6 +2495,13 @@ async function gerarSecaoVariacoes(
 
   const { grupos, naoAgrupadas } = detectarGruposDirecionais(propsAnatomia, defsRaiz);
 
+  // Sem nenhuma propriedade elegível para gerar variações — remover a seção inteira
+  // (evita deixar o header "Variações" órfão, sem nenhum card abaixo)
+  if (grupos.length === 0 && naoAgrupadas.length === 0) {
+    secaoVariacoes.remove();
+    return;
+  }
+
   // --- Seções agrupadas (pares direcionais) ---
   for (const grupo of grupos) {
     const secaoBruta = conteudoBase.clone();
@@ -2539,6 +2582,77 @@ async function gerarSecaoVariacoes(
   }
 
   conteudoBase.remove();
+}
+
+/** Verifica se o componente tem alguma propriedade VARIANT de state */
+function temPropriedadeState(componentSet: ComponenteDocumentavel): boolean {
+  const defs = componentSet.componentPropertyDefinitions;
+  return Object.keys(defs).some(p =>
+    limparNomePropriedade(p).toLowerCase().includes("state") && defs[p].type === "VARIANT"
+  );
+}
+
+/**
+ * Verifica se o componente tem alguma propriedade elegível para gerar cards na
+ * seção "Variações" (mesmo critério usado em `gerarSecaoVariacoes`: exclui state,
+ * TEXT e INSTANCE_SWAP). Usada para decidir se a seção "Modes" deve aparecer.
+ */
+function temPropriedadesVariaveisElegiveis(componentSet: ComponenteDocumentavel): boolean {
+  const defs = componentSet.componentPropertyDefinitions;
+  return Object.keys(defs).some(p => {
+    const nome = limparNomePropriedade(p).toLowerCase();
+    const tipo = defs[p].type;
+    return !nome.includes("state") && tipo !== "TEXT" && tipo !== "INSTANCE_SWAP";
+  });
+}
+
+/**
+ * Gera a seção "Modes" — comparação Light/Dark do componente na aparência default.
+ * Só faz sentido quando o dark mode NÃO já aparece em nenhum outro lugar do handoff,
+ * ou seja: sem propriedades elegíveis para "Variações" e sem propriedade de state
+ * (que geraria a subseção dark mode dentro da Matriz de Estados). Também exige que
+ * o componente tenha variável de dark mode configurada na biblioteca — sem isso não
+ * há nada para comparar.
+ */
+async function gerarSecaoModos(
+  container: FrameNode,
+  componentSet: ComponenteDocumentavel,
+  dna: MapaDNA
+): Promise<void> {
+  const alvoModos = buscarFilho(container, "modes");
+  if (!alvoModos) return;
+
+  if (temPropriedadesVariaveisElegiveis(componentSet) || temPropriedadeState(componentSet)) {
+    alvoModos.remove();
+    return;
+  }
+
+  const modeDark = await buscarModeDark(componentSet);
+  if (!modeDark) {
+    alvoModos.remove();
+    return;
+  }
+
+  const secaoModos = desvincularTodasInstancias(alvoModos) as FrameNode;
+  const conteudoBase = buscarFilho(secaoModos, "variant content") as FrameNode | null;
+  if (!conteudoBase) return;
+
+  const frameSubtitulo = buscarFilho(conteudoBase, "Subtitle");
+  const cardBase = buscarFilho(conteudoBase, "variant card");
+  if (!cardBase) return;
+
+  const containerCards = criarContainerCards(conteudoBase, frameSubtitulo);
+  const temas: Array<{ sufixo: string; dark: boolean }> = [
+    { sufixo: "Light", dark: false },
+    { sufixo: "Dark", dark: true },
+  ];
+
+  for (const tema of temas) {
+    await criarCardVariacao(containerCards, cardBase, componentSet, tema.sufixo, {}, dna, tema.dark ? modeDark : null, "modes");
+  }
+
+  cardBase.remove();
+  ajustarLayoutSeCardNaoCabe(containerCards);
 }
 
 // === SEÇÃO DE ANATOMIA ===
@@ -3714,6 +3828,13 @@ async function atualizarSecao(
       await reinjetarEdicoesManuais(statesGerada, edicoes);
       persistirEdicoes(container, nomeSecao, edicoes);
     }
+  } else if (nomeSecao === "modes") {
+    await gerarSecaoModos(container, componentSet, dna);
+    const modosGerada = buscarFilho(container, "modes");
+    if (modosGerada) {
+      await reinjetarEdicoesManuais(modosGerada, edicoes);
+      persistirEdicoes(container, nomeSecao, edicoes);
+    }
   } else {
     // Seção sem gerador (Comportamento, Posicionamento, etc.)
     // Reinjetar textos manuais preservados na seção fresca do template
@@ -4365,6 +4486,14 @@ figma.ui.onmessage = async (msg) => {
     await figma.clientStorage.setAsync("dsc-handoff-nomesTemplate", _nomesTemplateReconhecidos.join("\n"));
   }
 
+  /** Salva o dicionário de descrições de propriedades configurado na UI */
+  if (msg.type === 'salvar-dicionario-propriedades') {
+    const texto = typeof msg.texto === 'string' ? msg.texto : '';
+    const dic = textoParaDicionario(texto);
+    _dicionarioPropriedades = Object.keys(dic).length ? dic : { ...DICIONARIO_PROPRIEDADES_PADRAO };
+    await figma.clientStorage.setAsync("dsc-handoff-dicionarioPropriedades", dicionarioParaTexto(_dicionarioPropriedades));
+  }
+
   /** DEV (TEMPORÁRIO) — roda a varredura de nomes do template e devolve o resultado pra UI */
   if (msg.type === 'rodar-varredura-template') {
     const resultado = await varrerNomesTemplate();
@@ -4605,6 +4734,8 @@ async function gerarDocumentoHandoff(
       await gerarSecaoVariacoes(container, componentSet, dna, !!opcoes.truePrimeiro);
     } else if (nomeSecao === "states") {
       await gerarMatrizEstados(container, componentSet, dna, opcoes.propsEixoYSelecionadas);
+    } else if (nomeSecao === "modes") {
+      await gerarSecaoModos(container, componentSet, dna);
     }
   }
 

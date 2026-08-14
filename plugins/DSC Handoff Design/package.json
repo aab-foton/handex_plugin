@@ -1,6 +1,6 @@
 {
   "name": "DSC-Handoff",
-  "version": "2.3.3",
+  "version": "2.4.0",
   "description": "Your Figma Plugin",
   "main": "code.js",
   "scripts": {
