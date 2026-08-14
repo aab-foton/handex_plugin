@@ -185,7 +185,11 @@ function setFrameAuditObs(frameId, value) {
   if (!frame) return;
   if (!frame.audit) frame.audit = {};
   frame.audit.observacoes = value;
-  saveToStorage();
+  // Debounced — sem isso, cada tecla digitada dispara save-storage completo
+  // (serializa handoffData inteiro + _writeSharedPluginData percorre todos
+  // os frames do projeto no backend), pesado em projetos com muitos frames.
+  clearTimeout(setFrameAuditObs._t);
+  setFrameAuditObs._t = setTimeout(saveToStorage, 600);
 }
 
 function _refreshAuditView() {}
@@ -379,12 +383,8 @@ const BRIEFING_AXES = [
       { label: 'Problema Central', text: 'Qual é o problema central que este projeto resolve?' },
       { label: 'Contexto de Negócio', text: 'Qual é o contexto de negócio ou estratégico que originou essa demanda?' },
       { label: 'Critério de Sucesso', text: 'Quais resultados-chave definem o sucesso deste projeto? Como vamos medir?' },
-      { label: 'Histórico', text: 'Houve tentativas anteriores de resolver esse problema? O que aprendemos com elas?' },
-      { label: 'Público-Alvo', text: 'Quem é o usuário final desta interface e qual seu perfil?' },
-      { label: 'Canais', text: 'Em quais plataformas ou canais a solução vai operar?' },
-      { label: 'Diferencial', text: 'Qual o principal valor único que esta solução propõe ao usuário?' },
-      { label: 'Organização do Trabalho', text: 'Como o trabalho será organizado: sprints, milestones, cerimônias?' },
-      { label: 'Prazo', text: 'Qual é o prazo da entrega? Há marcos ou datas intermediárias obrigatórias?' }
+      { label: 'Público-Alvo', text: 'Qual o perfil socioeconômico/demográfico do público que esta solução atende?' },
+      { label: 'Canais', text: 'Em quais plataformas ou canais a solução vai operar?' }
     ]
   },
   {
@@ -397,7 +397,7 @@ const BRIEFING_AXES = [
       { label: 'Riscos Técnicos', text: 'Quais os maiores riscos técnicos que podem impedir o sucesso do projeto?' },
       { label: 'Riscos de Negócio', text: 'Há riscos regulatórios, legais (ex: LGPD) ou de compliance envolvidos?' },
       { label: 'Dependências', text: 'Quais sistemas ou times externos este projeto depende?' },
-      { label: 'Impacto Cruzado', text: 'Esta solução afeta outras jornadas, componentes ou produtos?' }
+      { label: 'Impacto Cruzado', text: 'Esta solução afeta outras jornadas, componentes ou produtos? Quais, e como?' }
     ]
   },
   {
@@ -406,18 +406,14 @@ const BRIEFING_AXES = [
       { label: 'Usuários Primários', text: 'Quem são os usuários primários deste produto ou fluxo?' },
       { label: 'Usuários Secundários', text: 'Quem são os usuários secundários ou indiretos?' },
       { label: 'Dores do Usuário', text: 'Quais são as principais dores ou frustrações relatadas por esses usuários?' },
-      { label: 'Matriz RACI', text: 'Quem decide, quem precisa ser consultado e quem só precisa ser informado sobre este projeto?' },
-      { label: 'Conflitos', text: 'Há conflitos de interesse entre stakeholders que merecem atenção?' }
+      { label: 'Papéis de Decisão', text: 'Quem decide, quem precisa ser consultado e quem só precisa ser informado sobre este projeto?' }
     ]
   },
   {
     id: 'design', name: 'UX e Design', icon: 'compass', color: 'text-purple-500',
     questions: [
       { label: 'Jornada', text: 'Em qual etapa da jornada do usuário esta interface está inserida?' },
-      { label: 'Benchmarking', text: 'Quais as principais referências de mercado ou concorrentes para esta solução?' },
-      { label: 'Tom de Voz', text: 'Qual o tom de voz e personalidade que o design deve projetar nesta interação?' },
-      { label: 'Sentimento', text: 'Qual a principal percepção que o design deve transmitir (ex: segurança, agilidade)?' },
-      { label: 'Anti-objetivos', text: 'O que você absolutamente NÃO quer ver no resultado final dessa interface?' },
+      { label: 'Sentimento e Tom de Voz', text: 'Que tom de voz e percepção (ex: segurança, agilidade) o design deve transmitir nesta interação?' },
       { label: 'Acessibilidade', text: 'Há requisitos específicos de acessibilidade ou inclusão para este público?' }
     ]
   },
@@ -425,12 +421,10 @@ const BRIEFING_AXES = [
     id: 'pesquisa', name: 'Pesquisa e Evidências', icon: 'flask-conical', color: 'text-green-500',
     questions: [
       { label: 'Pesquisas Anteriores', text: 'Há pesquisas ou dados de uso anteriores que embasam este projeto?' },
-      { label: 'Hipóteses', text: 'Quais hipóteses precisam ser validadas antes de avançar com o design?' },
+      { label: 'Causa Raiz', text: 'Qual é a causa raiz do problema (5 Porquês)? Já foi investigada?' },
       { label: 'Certezas (CSD)', text: 'O que a equipe tem certeza sobre o problema ou a solução?' },
       { label: 'Suposições (CSD)', text: 'Quais suposições estão sendo feitas e ainda não foram validadas?' },
-      { label: 'Dúvidas (CSD)', text: 'Quais dúvidas precisam ser respondidas antes de prosseguir?' },
-      { label: 'Insights de Pesquisa', text: 'Quais insights de pesquisa já foram transformados em decisões de design?' },
-      { label: 'Causa Raiz', text: 'Qual é a causa raiz do problema (5 Porquês)? Já foi investigada?' }
+      { label: 'Dúvidas (CSD)', text: 'Quais dúvidas precisam ser respondidas antes de prosseguir?' }
     ]
   }
 ];
@@ -479,7 +473,6 @@ function renderBriefingAxisAccordions() {
       <div id="briefing-axis-body-${axis.id}" class="${isOpen ? '' : 'hidden'} p-3 bg-white dark:bg-dark-bg/10 border-t border-gray-100 dark:border-dark-line">
         <div class="flex gap-2">
           <select id="${selectId}" class="flex-1 min-w-0 text-[12px] bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2 text-slate-700 dark:text-white outline-none focus:border-[#3d3dff]/50 transition-colors">
-            ${axis.questions.map(q => `<option value="${escapeHtml(q.label)}">${escapeHtml(q.label)}</option>`).join('')}
             <option value="${BRIEFING_CUSTOM_VALUE}">Pergunta customizada</option>
           </select>
           <button type="button" onclick="confirmBriefingAxisSelection('${axis.id}')" title="Adicionar pergunta" aria-label="Adicionar pergunta deste eixo"
@@ -509,43 +502,105 @@ function confirmBriefingAxisSelection(axisId) {
   const axis = _briefingAxisById(axisId);
   const select = document.getElementById(`briefing-axis-select-${axisId}`);
   if (!axis || !select) return;
-  if (select.value === BRIEFING_CUSTOM_VALUE) {
-    addBriefingQuestion("", axis.name);
-    return;
-  }
-  const q = axis.questions.find(q => q.label === select.value);
-  addBriefingQuestion(q ? q.text : "", axis.name);
+  const questionText = select.value === BRIEFING_CUSTOM_VALUE
+    ? ""
+    : (axis.questions.find(q => q.label === select.value)?.text || "");
+  openBriefingQuestionModal(axis.name, questionText);
 }
 
+// Modal "Adicionar/Editar pergunta" — único ponto de criação/edição de
+// conteúdo do briefing; o accordion de cada eixo é só vitrine (espelha
+// pergunta+resposta em texto, com lápis pra reabrir aqui e editar). Sem
+// editId é criação (addBriefingQuestion ao confirmar); com editId é edição
+// in-place (updateBriefingQuestion). Cancelar nunca deixa card órfão nem
+// perde edição — só fecha sem salvar.
+let _briefingQuestionModalAxis = null;
+let _briefingQuestionModalEditId = null;
+
+function openBriefingQuestionModal(axisName, questionText = "", answerText = "", editId = null) {
+  _briefingQuestionModalAxis = axisName;
+  _briefingQuestionModalEditId = editId;
+  const title = document.getElementById('briefing-question-modal-title');
+  if (title) title.textContent = editId ? 'Editar pergunta' : 'Adicionar pergunta';
+  const axisLabel = document.getElementById('briefing-question-modal-axis');
+  if (axisLabel) axisLabel.textContent = axisName;
+  const qField = document.getElementById('briefing-question-modal-question');
+  const aField = document.getElementById('briefing-question-modal-answer');
+  if (qField) qField.value = questionText;
+  if (aField) aField.value = answerText;
+  openModal('briefing-question-modal');
+  setTimeout(() => {
+    const target = questionText ? aField : qField;
+    if (target) target.focus();
+  }, 80);
+}
+window.openBriefingQuestionModal = openBriefingQuestionModal;
+
+function editBriefingQuestion(id) {
+  const q = (handoffData.step2.briefingQuestions || []).find(q => q.id == id);
+  if (!q) return;
+  openBriefingQuestionModal(q.category, q.question, q.answer || '', q.id);
+}
+window.editBriefingQuestion = editBriefingQuestion;
+
+function closeBriefingQuestionModal() {
+  _briefingQuestionModalAxis = null;
+  _briefingQuestionModalEditId = null;
+  closeModal('briefing-question-modal');
+}
+window.closeBriefingQuestionModal = closeBriefingQuestionModal;
+
+function confirmBriefingQuestionModal() {
+  const qField = document.getElementById('briefing-question-modal-question');
+  const aField = document.getElementById('briefing-question-modal-answer');
+  const questionText = qField ? qField.value.trim() : '';
+  if (!questionText) {
+    showToast('Digite a pergunta antes de adicionar.', 'error');
+    if (qField) qField.focus();
+    return;
+  }
+  const axisName = _briefingQuestionModalAxis;
+  const editId = _briefingQuestionModalEditId;
+  const answerText = aField ? aField.value : '';
+  closeModal('briefing-question-modal');
+  if (editId) {
+    updateBriefingQuestion(editId, 'question', questionText);
+    updateBriefingQuestion(editId, 'answer', answerText);
+    _renderBriefingQuestionCards();
+  } else {
+    addBriefingQuestion(questionText, axisName, answerText);
+  }
+}
+window.confirmBriefingQuestionModal = confirmBriefingQuestionModal;
+
+// Card-vitrine: só exibição (pergunta + resposta em texto), sem edição
+// inline — lápis reabre o modal de criação/edição, lixeira exclui direto.
 function _briefingCardHTML(q, index) {
+  const hasAnswer = q.answer && q.answer.trim();
   return `
-    <button onclick="removeBriefingQuestion('${q.id}')" title="Excluir Pergunta" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50">
-      <i data-lucide="trash-2" class="w-4 h-4"></i>
-    </button>
-    <div class="flex items-center gap-3 mb-4">
-      <span class="text-[#3d3dff] font-bold text-[14px]">#${index} Pergunta</span>
+    <div class="flex items-start justify-between gap-3 mb-3">
+      <span class="text-[#3d3dff] font-bold text-[14px] shrink-0">#${index}</span>
+      <div class="flex items-center gap-1 shrink-0">
+        <button onclick="editBriefingQuestion('${q.id}')" title="Editar pergunta" aria-label="Editar pergunta" class="p-1.5 text-gray-400 hover:text-[#3d3dff] transition-colors rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20">
+          <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+        </button>
+        <button onclick="removeBriefingQuestion('${q.id}')" title="Excluir pergunta" aria-label="Excluir pergunta" class="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-md hover:bg-red-50 dark:hover:bg-red-900/20">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
     </div>
-    <div class="space-y-4">
-      <div>
-        <label class="block text-[11px] font-bold text-[#3d3dff] uppercase mb-1.5">Pergunta</label>
-        <textarea placeholder="Digite sua pergunta estratégica..."
-          class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all font-bold text-slate-700 dark:text-white min-h-[44px] resize-none overflow-hidden"
-          oninput="this.style.height='';this.style.height=this.scrollHeight+'px'"
-          onchange="updateBriefingQuestion('${q.id}','question',this.value)">${q.question}</textarea>
-      </div>
-      <div>
-        <label class="block text-[11px] font-bold text-[#3d3dff] uppercase mb-1.5">Resposta</label>
-        <textarea placeholder="Insira aqui a resposta ou direcionamento..."
-          class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg text-sm min-h-[100px] focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none"
-          onchange="updateBriefingQuestion('${q.id}','answer',this.value)">${q.answer || ''}</textarea>
-      </div>
+    <div class="space-y-2">
+      <p class="text-[12px] font-bold text-slate-700 dark:text-white leading-relaxed">${escapeHtml(q.question)}</p>
+      <p class="text-[11px] leading-relaxed ${hasAnswer ? 'text-slate-600 dark:text-dark-muted' : 'text-slate-400 dark:text-dark-muted italic'}">${hasAnswer ? escapeHtml(q.answer) : 'Sem resposta ainda.'}</p>
     </div>
   `;
 }
 
 // Distribui handoffData.step2.briefingQuestions nos containers de cada
 // accordion de eixo (por nome de eixo salvo em q.category), atualiza os
-// badges de contagem por eixo e o contador total no topo. Fonte única de
+// badges de contagem por eixo, o contador total no topo, e o <select> de
+// sugestões (esconde a que já foi usada — só volta a aparecer se o card
+// correspondente for apagado ou o texto editado). Fonte única de
 // renderização — chamada por renderBriefingAxisAccordions() (montagem do
 // zero) e por addBriefingQuestion/removeBriefingQuestion (após mudar dados).
 function _renderBriefingQuestionCards() {
@@ -567,29 +622,36 @@ function _renderBriefingQuestionCards() {
       countBadge.textContent = String(axisQuestions.length);
       countBadge.classList.toggle('hidden', axisQuestions.length === 0);
     }
+    const usedTexts = new Set(axisQuestions.map(q => q.question));
+    const select = document.getElementById(`briefing-axis-select-${axis.id}`);
+    if (select) {
+      const currentValue = select.value;
+      select.innerHTML = axis.questions
+        .filter(q => !usedTexts.has(q.text))
+        .map(q => `<option value="${escapeHtml(q.label)}">${escapeHtml(q.label)}</option>`)
+        .join('') + `<option value="${BRIEFING_CUSTOM_VALUE}">Pergunta customizada</option>`;
+      const stillValid = Array.from(select.options).some(o => o.value === currentValue);
+      if (stillValid) select.value = currentValue;
+    }
   });
   const totalEl = document.getElementById('briefing-total-count');
   if (totalEl) {
     totalEl.textContent = all.length === 1 ? '1 pergunta no briefing' : `${all.length} perguntas no briefing`;
     totalEl.classList.toggle('hidden', all.length === 0);
   }
-  document.querySelectorAll('#briefing-axes-container textarea').forEach(ta => {
-    ta.style.height = ''; ta.style.height = ta.scrollHeight + 'px';
-  });
   _refreshIcons();
 }
 
-function addBriefingQuestion(questionText = "", category = "") {
+function addBriefingQuestion(questionText = "", category = "", answerText = "") {
   if (typeof questionText !== 'string') questionText = "";
+  if (typeof answerText !== 'string') answerText = "";
   const id = Date.now();
   if (!handoffData.step2.briefingQuestions) handoffData.step2.briefingQuestions = [];
-  handoffData.step2.briefingQuestions.push({ id, question: questionText, answer: "", category });
+  handoffData.step2.briefingQuestions.push({ id, question: questionText, answer: answerText, category });
   saveToStorage();
   _renderBriefingQuestionCards();
 
   const card = document.getElementById(`briefing-card-${id}`);
-  const ta = card ? card.querySelector('textarea') : null;
-  if (ta) { ta.style.height = ''; ta.style.height = ta.scrollHeight + 'px'; }
 
   // Auto-open briefing accordion if collapsed
   const briefingContent = document.getElementById('briefing-card');
@@ -605,18 +667,12 @@ function addBriefingQuestion(questionText = "", category = "") {
     if (body && body.classList.contains('hidden')) toggleBriefingAxisAccordion(axis.id);
   }
 
-  // Foca Pergunta se ela veio vazia (customizada), ou Resposta se a pergunta
-  // já chegou preenchida por uma sugestão — não faz sentido focar um campo
-  // que o usuário não vai editar.
-  setTimeout(() => {
-    if (!card) return;
-    const targetTa = questionText ? card.querySelectorAll('textarea')[1] : ta;
-    if (targetTa) {
-      targetTa.focus();
-      targetTa.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-  }, 120);
-  if (card) autoScrollToNewItem('handoff-scroll-container', card);
+  // A pergunta chega pronta (via modal, import ou guia) — só rola até o
+  // card criado, sem forçar foco/edição imediata de nenhum campo.
+  if (card) {
+    setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
+    autoScrollToNewItem('handoff-scroll-container', card);
+  }
 }
 
 function removeBriefingQuestion(id) {
@@ -629,6 +685,380 @@ function updateBriefingQuestion(id, key, value) {
   const q = (handoffData.step2.briefingQuestions || []).find(q => q.id == id);
   if (q) q[key] = value;
   saveToStorage();
+}
+
+// ── Import/Export do Briefing Estratégico (.md) ──────────────────────────
+// Formato próprio (não é o mesmo .md de "Exportar como Markdown" da Ficha):
+// carrega uma assinatura de versão e uma chave estável [eixo-id/chave] em
+// cada heading de pergunta, para que a reimportação (inclusive do MESMO
+// arquivo depois de editado manualmente ou preenchido por uma IA fora do
+// plugin) seja determinística — atualiza por chave, cria se a chave for
+// nova, nunca remove o que não estiver no arquivo. Ver BUSINESS_RULES.md.
+const BRIEFING_MD_SIGNATURE = '<!-- HANDEX-BRIEFING v1 -->';
+
+function _briefingSuggestionKey(axisId, label) {
+  const axis = _briefingAxisById(axisId);
+  if (!axis) return null;
+  const idx = axis.questions.findIndex(q => q.label === label);
+  return idx === -1 ? null : `${axisId}/q${idx + 1}`;
+}
+
+function exportBriefingMD() {
+  const all = handoffData.step2?.briefingQuestions || [];
+  if (all.length === 0) { showToast('Nenhuma pergunta no briefing ainda.', 'error'); return; }
+
+  const lines = [];
+  lines.push(BRIEFING_MD_SIGNATURE);
+  lines.push(`<!-- projeto: ${handoffData.step1?.titulo || 'Sem título'} -->`);
+  lines.push(`<!-- gerado-em: ${new Date().toISOString()} -->`);
+  lines.push('');
+  lines.push('# Briefing Estratégico');
+
+  BRIEFING_AXES.forEach(axis => {
+    const axisQuestions = all.filter(q => q.category === axis.name);
+    if (axisQuestions.length === 0) return;
+    lines.push('');
+    lines.push(`## ${axis.name}`);
+    axisQuestions.forEach(q => {
+      const suggestion = axis.questions.find(sq => sq.text === q.question);
+      const key = suggestion ? _briefingSuggestionKey(axis.id, suggestion.label) : `${axis.id}/custom-${q.id}`;
+      lines.push('');
+      lines.push(`### [${key}] ${q.question || '(pergunta em branco)'}`);
+      lines.push(q.answer && q.answer.trim() ? q.answer.trim() : '_(sem resposta)_');
+    });
+  });
+  lines.push('');
+  lines.push('---');
+
+  const md = lines.join('\n');
+  const name = `handex-briefing-${(handoffData.step1?.titulo || 'projeto').replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.md`;
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Briefing exportado!', 'success');
+}
+window.exportBriefingMD = exportBriefingMD;
+
+// Molde em branco: todos os 5 eixos com TODAS as perguntas do catálogo
+// (BRIEFING_AXES), independente de já terem sido usadas ou não — ponto de
+// partida pra preencher fora do Figma (editor de texto, IA) e reimportar
+// depois. Usa o mesmo formato/chaves de exportBriefingMD, então reimporta
+// pelo mesmo parser (_parseBriefingMD) sem nenhum código extra.
+function exportBriefingTemplateMD() {
+  const lines = [];
+  lines.push(BRIEFING_MD_SIGNATURE);
+  lines.push(`<!-- projeto: ${handoffData.step1?.titulo || 'Sem título'} -->`);
+  lines.push(`<!-- gerado-em: ${new Date().toISOString()} -->`);
+  lines.push('');
+  lines.push('# Briefing Estratégico');
+  lines.push('');
+  lines.push('_Preencha as respostas abaixo de cada pergunta e depois importe este arquivo de volta no Handex (botão "Importar", no accordion Briefing Estratégico). Não altere as linhas com colchetes [eixo/id] — elas identificam cada pergunta na hora de importar._');
+
+  BRIEFING_AXES.forEach(axis => {
+    lines.push('');
+    lines.push(`## ${axis.name}`);
+    axis.questions.forEach(q => {
+      const key = _briefingSuggestionKey(axis.id, q.label);
+      lines.push('');
+      lines.push(`### [${key}] ${q.text}`);
+      lines.push('_(sem resposta)_');
+    });
+  });
+  lines.push('');
+  lines.push('---');
+
+  const md = lines.join('\n');
+  const name = `handex-briefing-template-${(handoffData.step1?.titulo || 'projeto').replace(/\s+/g, '-')}.md`;
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Molde do briefing baixado!', 'success');
+}
+window.exportBriefingTemplateMD = exportBriefingTemplateMD;
+
+// Parser estrito: qualquer ambiguidade estrutural aborta a importação
+// inteira (nunca aplica parcial, nunca falha silenciosa). Retorna
+// { ok: true, questions, warnings } ou { ok: false, error }.
+function _parseBriefingMD(text) {
+  const rawLines = text.split(/\r?\n/);
+  let i = 0;
+  while (i < rawLines.length && rawLines[i].trim() === '') i++;
+  if (rawLines[i]?.trim() !== BRIEFING_MD_SIGNATURE) {
+    return { ok: false, error: 'Este arquivo não é um briefing exportado pelo Handex (ou é de uma versão incompatível). Importação cancelada.' };
+  }
+
+  const axisIds = new Set(BRIEFING_AXES.map(a => a.id));
+  const axisById = id => _briefingAxisById(id);
+  const questions = [];
+  const warnings = [];
+  let currentAxisHeadingName = null;
+  let current = null; // { axisId, key, question, answerLines }
+
+  const flush = () => {
+    if (!current) return;
+    const answer = current.answerLines.join('\n').trim();
+    questions.push({
+      axisId: current.axisId,
+      key: current.key,
+      question: current.question,
+      answer: answer === '_(sem resposta)_' ? '' : answer
+    });
+    current = null;
+  };
+
+  for (let lineNo = 0; lineNo < rawLines.length; lineNo++) {
+    const line = rawLines[lineNo];
+    if (/^<!--.*-->\s*$/.test(line) || (lineNo === i)) continue; // assinatura/metadados
+    const axisMatch = line.match(/^##\s+(.+)$/);
+    if (axisMatch) {
+      flush();
+      currentAxisHeadingName = axisMatch[1].trim();
+      continue;
+    }
+    const qMatch = line.match(/^###\s+\[([a-z-]+)\/([a-z0-9-]+)\]\s+(.+)$/);
+    if (qMatch) {
+      flush();
+      const [, axisId, chave, questionText] = qMatch;
+      if (!axisIds.has(axisId)) {
+        return { ok: false, error: `Linha ${lineNo + 1}: eixo "${axisId}" não reconhecido. Eixos válidos: ${Array.from(axisIds).join(', ')}.` };
+      }
+      const axis = axisById(axisId);
+      if (currentAxisHeadingName && currentAxisHeadingName !== axis.name) {
+        warnings.push(`Linha ${lineNo + 1}: pergunta categorizada como "${axis.name}" (pela chave), mas estava na seção "${currentAxisHeadingName}" do arquivo.`);
+      }
+      const questionTrimmed = questionText.trim();
+      if (!questionTrimmed || questionTrimmed === '(pergunta em branco)') {
+        return { ok: false, error: `Linha ${lineNo + 1}: pergunta vazia não é permitida na importação.` };
+      }
+      current = { axisId, key: chave, question: questionTrimmed, answerLines: [] };
+      continue;
+    }
+    if (/^###\s/.test(line)) {
+      return { ok: false, error: `Linha ${lineNo + 1}: heading de pergunta em formato inválido — chave [eixo/id] ausente ou malformada.` };
+    }
+    if (line.trim() === '---' || line.trim() === '# Briefing Estratégico') continue;
+    if (current) current.answerLines.push(line);
+  }
+  flush();
+
+  if (questions.length === 0) {
+    return { ok: false, error: 'Nenhuma pergunta reconhecida no arquivo.' };
+  }
+  return { ok: true, questions, warnings };
+}
+
+// Resolve criar-vs-atualizar por chave estável: perguntas de catálogo (qN)
+// batem por texto original da sugestão; customizadas (custom-{id}) batem
+// pelo id existente. Nunca reaproveita um id vindo do arquivo para item
+// novo — sempre gera id internamente, garantindo unicidade mesmo que o
+// arquivo tenha sido editado manualmente com valores inventados.
+function _applyBriefingImport(parsed) {
+  if (!handoffData.step2.briefingQuestions) handoffData.step2.briefingQuestions = [];
+  const existing = handoffData.step2.briefingQuestions;
+  let created = 0, updated = 0;
+
+  parsed.questions.forEach(pq => {
+    const axis = _briefingAxisById(pq.axisId);
+    if (!axis) return; // já validado no parser, defensivo
+    const category = axis.name;
+    const isCustomKey = pq.key.startsWith('custom-');
+
+    let target = null;
+    if (isCustomKey) {
+      const customId = pq.key.slice('custom-'.length);
+      target = existing.find(q => String(q.id) === customId && q.category === category);
+    } else {
+      const qIndex = parseInt(pq.key.slice(1), 10) - 1;
+      const suggestion = axis.questions[qIndex];
+      if (suggestion) {
+        target = existing.find(q => q.category === category && q.question === suggestion.text);
+      }
+    }
+
+    if (target) {
+      target.question = String(pq.question || '');
+      target.answer = String(pq.answer || '');
+      target.category = category;
+      updated++;
+    } else {
+      existing.push({
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        question: String(pq.question || ''),
+        answer: String(pq.answer || ''),
+        category
+      });
+      created++;
+    }
+  });
+
+  saveToStorage();
+  renderBriefingAxisAccordions();
+  return { created, updated };
+}
+
+function importBriefingMD() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.md,.txt';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = event => {
+      const parsed = _parseBriefingMD(String(event.target.result || ''));
+      if (!parsed.ok) {
+        showToast(parsed.error, 'error');
+        return;
+      }
+      const result = _applyBriefingImport(parsed);
+      const parts = [];
+      if (result.created) parts.push(`${result.created} nova(s)`);
+      if (result.updated) parts.push(`${result.updated} atualizada(s)`);
+      let msg = `Briefing importado — ${parts.join(', ') || 'nenhuma alteração'}.`;
+      if (parsed.warnings.length) msg += ` ${parsed.warnings.length} aviso(s), ver console.`;
+      if (parsed.warnings.length) console.warn('[Handex] Avisos na importação do briefing:', parsed.warnings);
+      showToast(msg, 'success');
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+window.importBriefingMD = importBriefingMD;
+
+// ── Guia do Briefing (modal de referência: eixos + perguntas, com busca e
+// filtro por eixo) ─────────────────────────────────────────────────────
+let _briefingGuideActiveAxis = null; // null = todos os eixos
+
+function openBriefingGuideModal() {
+  _briefingGuideActiveAxis = null;
+  const search = document.getElementById('briefing-guide-search');
+  if (search) search.value = '';
+  _renderBriefingGuideAxisFilters();
+  _renderBriefingGuideResults('');
+  openModal('briefing-guide-modal');
+}
+window.openBriefingGuideModal = openBriefingGuideModal;
+
+function _renderBriefingGuideAxisFilters() {
+  const wrap = document.getElementById('briefing-guide-axis-filters');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const allBtn = document.createElement('button');
+  allBtn.type = 'button';
+  allBtn.textContent = 'Todos os eixos';
+  allBtn.className = _briefingGuideChipClass(_briefingGuideActiveAxis === null);
+  allBtn.onclick = () => { _briefingGuideActiveAxis = null; _refreshBriefingGuide(); };
+  wrap.appendChild(allBtn);
+  BRIEFING_AXES.forEach(axis => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = axis.name;
+    btn.className = _briefingGuideChipClass(_briefingGuideActiveAxis === axis.id);
+    btn.onclick = () => { _briefingGuideActiveAxis = axis.id; _refreshBriefingGuide(); };
+    wrap.appendChild(btn);
+  });
+}
+
+function _briefingGuideChipClass(active) {
+  return active
+    ? 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#3d3dff] text-white transition-colors'
+    : 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-dark-muted hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors';
+}
+
+function _refreshBriefingGuide() {
+  _renderBriefingGuideAxisFilters();
+  const search = document.getElementById('briefing-guide-search');
+  _renderBriefingGuideResults(search ? search.value : '');
+}
+
+function filterBriefingGuide() {
+  clearTimeout(filterBriefingGuide._t);
+  filterBriefingGuide._t = setTimeout(() => {
+    const search = document.getElementById('briefing-guide-search');
+    _renderBriefingGuideResults(search ? search.value : '');
+  }, 150);
+}
+window.filterBriefingGuide = filterBriefingGuide;
+
+function _renderBriefingGuideResults(query) {
+  const container = document.getElementById('briefing-guide-results');
+  if (!container) return;
+  const term = (query || '').trim().toLowerCase();
+  const axes = _briefingGuideActiveAxis ? [_briefingAxisById(_briefingGuideActiveAxis)] : BRIEFING_AXES;
+
+  container.innerHTML = '';
+  let totalMatches = 0;
+
+  axes.forEach(axis => {
+    if (!axis) return;
+    const matches = axis.questions.filter(q =>
+      !term || q.label.toLowerCase().includes(term) || q.text.toLowerCase().includes(term)
+    );
+    if (matches.length === 0) return;
+    totalMatches += matches.length;
+
+    const section = document.createElement('div');
+    section.innerHTML = `
+      <div class="flex items-center gap-2 mb-2.5">
+        <i data-lucide="${axis.icon}" class="w-4 h-4 ${axis.color} shrink-0"></i>
+        <h4 class="text-[11px] font-bold text-slate-700 dark:text-white uppercase tracking-wider">${axis.name}</h4>
+      </div>
+      <ul class="space-y-2"></ul>
+    `;
+    const list = section.querySelector('ul');
+    const usedTexts = new Set(
+      (handoffData.step2?.briefingQuestions || [])
+        .filter(bq => bq.category === axis.name)
+        .map(bq => bq.question)
+    );
+    matches.forEach(q => {
+      const alreadyUsed = usedTexts.has(q.text);
+      const item = document.createElement('li');
+      item.className = 'p-3 bg-gray-50 dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line flex items-start gap-3';
+      const textWrap = document.createElement('div');
+      textWrap.className = 'flex-1 min-w-0';
+      textWrap.innerHTML = `
+        <p class="text-[11px] font-bold text-slate-700 dark:text-white">${escapeHtml(q.label)}</p>
+        <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">${escapeHtml(q.text)}</p>
+      `;
+      item.appendChild(textWrap);
+      if (alreadyUsed) {
+        const badge = document.createElement('span');
+        badge.className = 'shrink-0 text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide mt-0.5';
+        badge.textContent = 'Já usada';
+        item.appendChild(badge);
+      } else {
+        const insertBtn = document.createElement('button');
+        insertBtn.type = 'button';
+        insertBtn.title = 'Inserir esta pergunta no briefing';
+        insertBtn.setAttribute('aria-label', `Inserir "${q.label}" no briefing`);
+        insertBtn.className = 'shrink-0 p-1.5 text-[#3d3dff] hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors';
+        insertBtn.innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4"></i>';
+        insertBtn.onclick = () => {
+          closeModal('briefing-guide-modal');
+          openBriefingQuestionModal(axis.name, q.text);
+        };
+        item.appendChild(insertBtn);
+      }
+      list.appendChild(item);
+    });
+    container.appendChild(section);
+  });
+
+  if (totalMatches === 0) {
+    container.innerHTML = `
+      <div class="flex flex-col items-center justify-center py-10">
+        <i data-lucide="search-x" class="w-10 h-10 text-slate-200 dark:text-slate-700 mb-3" style="opacity:0.5"></i>
+        <p class="text-[11px] font-bold text-slate-500 dark:text-dark-muted text-center">Nenhuma pergunta encontrada</p>
+        <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center mt-1">Tente outro termo ou remova o filtro de eixo.</p>
+      </div>
+    `;
+  }
+  _refreshIcons();
 }
 
 function toggleBriefingSection(checked) {
@@ -968,6 +1398,8 @@ function updateEmptyFramesState() {
   empty.classList.toggle('hidden', hasFrames);
   const collapseBtn = document.querySelector('#view-frames [data-collapse-toggle]');
   if (collapseBtn) collapseBtn.classList.toggle('hidden', !hasFrames);
+  const finalizeWrap = document.getElementById('btn-finalize-tokens-wrap');
+  if (finalizeWrap) finalizeWrap.classList.toggle('hidden', !hasFrames);
 }
 
 function importTitleFromSelection() {
@@ -1586,7 +2018,12 @@ window.bumpVersion = bumpVersion;
 function updateData(step, key, value) {
   if (!handoffData[step]) handoffData[step] = {};
   handoffData[step][key] = value;
-  saveToStorage();
+  // Debounced — usada tanto em oninput (versão/jornada/feature/objetivo,
+  // uma chamada por tecla) quanto em onchange (links, já infrequente); sem
+  // isso, digitar dispara save-storage completo a cada tecla (ver
+  // setFrameAuditObs, mesmo padrão de correção).
+  clearTimeout(updateData._t);
+  updateData._t = setTimeout(saveToStorage, 600);
 }
 
 function saveAndGoHome(check, msg) {
@@ -1727,7 +2164,17 @@ function populateFrameSelector(selectId) {
   });
   // Preserve current activeFrameId selection
   const target = current || (activeFrameId || '');
-  if (target) sel.value = target;
+  if (target) {
+    sel.value = target;
+  } else if (frames.length === 1) {
+    // Com um único frame mapeado não há escolha real a fazer — a única
+    // opção sensata já vem selecionada, virando confirmação de estado em
+    // vez de pergunta em aberto (evita specs/medidas caindo em "avulsa"
+    // por esquecimento de trocar um dropdown com uma opção só).
+    setMeasureActiveFrame(frames[0].id);
+    return;
+  }
+  _updateFrameSelectorCopy();
 }
 
 function setMeasureActiveFrame(frameId) {
@@ -1739,6 +2186,38 @@ function setMeasureActiveFrame(frameId) {
   ['measure-frame-selector', 'spec-frame-selector'].forEach(id => {
     const el = document.getElementById(id);
     if (el && el.value !== (frameId || '')) el.value = frameId || '';
+  });
+  _updateFrameSelectorCopy();
+}
+
+// Ajusta rótulo/instrução/destaque do Frame Selector conforme o estado:
+// - 1 frame mapeado: confirma "Documentando: <nome>" (decisão já tomada
+//   automaticamente por populateFrameSelector, não pendente).
+// - N frames, nenhum selecionado: destaca a borda — specs/medidas criadas
+//   agora ficariam avulsas, uma decisão que afeta a estrutura da ficha
+//   final e merece não passar despercebida.
+// - N frames, um selecionado: texto padrão de seleção múltipla.
+function _updateFrameSelectorCopy() {
+  [
+    { selectId: 'spec-frame-selector', labelId: 'spec-frame-selector-label', hintId: 'spec-frame-selector-hint', noun: 'spec' },
+    { selectId: 'measure-frame-selector', labelId: 'measure-frame-selector-label', hintId: 'measure-frame-selector-hint', noun: 'medida' }
+  ].forEach(({ selectId, labelId, hintId, noun }) => {
+    const sel = document.getElementById(selectId);
+    const label = document.getElementById(labelId);
+    const hint = document.getElementById(hintId);
+    if (!sel || !label || !hint) return;
+    const frames = handoffData.frames || [];
+    const selected = frames.find(f => f.id === sel.value);
+    if (frames.length === 1 && selected) {
+      label.textContent = 'Documentando';
+      hint.textContent = `Focado em "${selected.nome || selected.id}" — toda nova ${noun} criada agora fica vinculada a este frame.`;
+      sel.classList.remove('border-amber-400', 'dark:border-amber-500');
+    } else {
+      label.textContent = 'Frames Mapeados';
+      hint.textContent = `Selecione um frame para focá-lo no canvas e associar esta ${noun} a ele.`;
+      sel.classList.toggle('border-amber-400', frames.length > 0 && !selected);
+      sel.classList.toggle('dark:border-amber-500', frames.length > 0 && !selected);
+    }
   });
 }
 
@@ -2267,9 +2746,20 @@ function initResizable() {
     startW = window.innerWidth; startH = window.innerHeight;
     document.body.style.cursor = 'nwse-resize'; e.preventDefault();
   });
+  // Throttle via rAF — mousemove bruto dispara dezenas de vezes/s, e cada
+  // postMessage aqui aciona figma.ui.resize() (API nativa do host), bem
+  // mais cara que um cálculo em JS puro. No máximo 1 resize por frame de
+  // tela, sempre com a posição mais recente do cursor.
+  let _resizeScheduled = false, _resizeX = 0, _resizeY = 0;
   window.addEventListener('mousemove', (e) => {
     if (!isResizing) return;
-    parent.postMessage({ pluginMessage: { type: 'resize', width: Math.round(Math.max(300, startW + (e.clientX - startX))), height: Math.round(Math.max(300, startH + (e.clientY - startY))) } }, '*');
+    _resizeX = e.clientX; _resizeY = e.clientY;
+    if (_resizeScheduled) return;
+    _resizeScheduled = true;
+    requestAnimationFrame(() => {
+      _resizeScheduled = false;
+      parent.postMessage({ pluginMessage: { type: 'resize', width: Math.round(Math.max(300, startW + (_resizeX - startX))), height: Math.round(Math.max(300, startH + (_resizeY - startY))) } }, '*');
+    });
   });
   window.addEventListener('mouseup', () => { isResizing = false; document.body.style.cursor = 'default'; });
 }

@@ -728,6 +728,7 @@
     document.addEventListener('click', function() {
       const pop = document.getElementById('spec-cat-popover');
       if (pop) pop.classList.add('hidden');
+      document.querySelectorAll('.spec-overflow-menu-panel').forEach(p => p.classList.add('hidden'));
     });
 
     function toggleSpecDetails(id) {
@@ -1826,6 +1827,7 @@
       const exportBtn = document.getElementById('btn-export-specs');
       const hideAllBtn = document.getElementById('btn-hide-all-specs');
       const collapseBtn = document.querySelector('#view-specifications [data-collapse-toggle]');
+      const finalizeWrap = document.getElementById('btn-finalize-specs-wrap');
 
       if (!createdSpecs || createdSpecs.length === 0) {
         list.innerHTML = `
@@ -1840,12 +1842,14 @@
         if (exportBtn) exportBtn.classList.add('hidden');
         if (hideAllBtn) hideAllBtn.classList.add('hidden');
         if (collapseBtn) collapseBtn.classList.add('hidden');
+        if (finalizeWrap) finalizeWrap.classList.add('hidden');
         _refreshIcons();
         return;
       }
       if (exportBtn) exportBtn.classList.remove('hidden');
       if (hideAllBtn) hideAllBtn.classList.remove('hidden');
       if (collapseBtn) collapseBtn.classList.remove('hidden');
+      if (finalizeWrap) finalizeWrap.classList.remove('hidden');
 
       // Agrupar especificações por letra (Tag)
       const groupedSpecs = {};
@@ -1947,22 +1951,27 @@
         };
 
         const groupActionsRow = document.createElement('div');
-        groupActionsRow.className = 'flex items-center gap-1.5 shrink-0';
-        const groupActionsLabel = document.createElement('span');
-        groupActionsLabel.className = 'text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider shrink-0';
-        groupActionsLabel.textContent = 'Ações';
-        groupActionsRow.appendChild(groupActionsLabel);
+        groupActionsRow.className = 'flex items-center gap-1 shrink-0';
 
-        const groupActions = document.createElement('div');
-        groupActions.className = 'flex items-center gap-1';
+        // Menu "..." (overflow) do grupo — ações de acabamento do canvas,
+        // usadas raramente (uma vez por grupo), separadas da ação de
+        // mostrar/ocultar (a única que fica sempre visível na fileira).
+        const groupMenuWrap = document.createElement('div');
+        groupMenuWrap.className = 'relative shrink-0';
+        const groupMenuBtn = document.createElement('button');
+        groupMenuBtn.type = 'button';
+        groupMenuBtn.title = 'Mais ações do grupo';
+        groupMenuBtn.setAttribute('aria-label', 'Mais ações do grupo');
+        groupMenuBtn.className = 'p-2 hover:bg-white/50 dark:hover:bg-slate-700 rounded-lg transition-colors shrink-0 text-gray-500 dark:text-dark-muted';
+        groupMenuBtn.innerHTML = '<i data-lucide="more-horizontal" class="w-4 h-4"></i>';
+        const groupMenuPanel = document.createElement('div');
+        groupMenuPanel.className = 'hidden absolute right-0 top-full mt-1 z-20 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-xl shadow-lg py-1 min-w-[180px]';
 
         const groupLinesBtn = document.createElement('button');
         groupLinesBtn.type = 'button';
         const isLinesHidden = handoffData.specLinesVisible && handoffData.specLinesVisible[letter] === false;
-        groupLinesBtn.title = isLinesHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo';
-        groupLinesBtn.setAttribute('aria-label', groupLinesBtn.title);
-        groupLinesBtn.className = `p-2 hover:bg-white/50 dark:hover:bg-slate-700 rounded-lg transition-colors shrink-0 ${isLinesHidden ? 'text-gray-400' : 'text-[#2e2ee0]'}`;
-        groupLinesBtn.innerHTML = '<i data-lucide="spline" class="w-4 h-4"></i>';
+        groupLinesBtn.className = 'w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-line/20 transition-colors text-left';
+        groupLinesBtn.innerHTML = `<i data-lucide="spline" class="w-3.5 h-3.5 shrink-0"></i><span>${isLinesHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo'}</span>`;
 
         groupLinesBtn.onclick = (e) => {
           e.stopPropagation();
@@ -1972,12 +1981,41 @@
           const specIds = specs.filter(s => s.id).map(s => s.id);
           parent.postMessage({ pluginMessage: { type: 'hide-spec-lines', specIds, forceState: !nowHidden } }, '*');
           saveSpecsToStorage();
-          groupLinesBtn.title = nowHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo';
-          groupLinesBtn.setAttribute('aria-label', groupLinesBtn.title);
-          groupLinesBtn.classList.toggle('text-gray-400', nowHidden);
-          groupLinesBtn.classList.toggle('text-[#2e2ee0]', !nowHidden);
+          groupLinesBtn.querySelector('span').textContent = nowHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo';
+          groupMenuPanel.classList.add('hidden');
           _refreshIcons();
         };
+        groupMenuPanel.appendChild(groupLinesBtn);
+
+        const groupDeleteBtn = document.createElement('button');
+        groupDeleteBtn.type = 'button';
+        groupDeleteBtn.className = 'w-full flex items-center gap-2 px-3 py-2 mt-1 pt-2 border-t border-gray-100 dark:border-dark-line text-[11px] font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left';
+        groupDeleteBtn.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5 shrink-0"></i><span>Excluir grupo completo</span>';
+        groupDeleteBtn.onclick = (e) => {
+          e.stopPropagation();
+          groupMenuPanel.classList.add('hidden');
+          const confirmed = window.confirm(`Excluir o grupo "${currentGroupName}" e suas ${specs.length} especificação(ões)? Essa ação não pode ser desfeita.`);
+          if (!confirmed) return;
+          specs.forEach(s => {
+            if (s.id) {
+              parent.postMessage({ pluginMessage: { type: 'delete-node', id: s.id } }, '*');
+            }
+            removeSpecById(s.id);
+          });
+          createdSpecs = createdSpecs.filter(s => !specs.some(gs => gs.id === s.id));
+          saveSpecsToStorage();
+          renderSpecsList();
+        };
+        groupMenuPanel.appendChild(groupDeleteBtn);
+
+        groupMenuBtn.onclick = (e) => {
+          e.stopPropagation();
+          document.querySelectorAll('.spec-overflow-menu-panel').forEach(p => { if (p !== groupMenuPanel) p.classList.add('hidden'); });
+          groupMenuPanel.classList.toggle('hidden');
+        };
+        groupMenuPanel.className += ' spec-overflow-menu-panel';
+        groupMenuWrap.appendChild(groupMenuBtn);
+        groupMenuWrap.appendChild(groupMenuPanel);
 
         const groupVisBtn = document.createElement('button');
         groupVisBtn.type = 'button';
@@ -2026,9 +2064,8 @@
         groupChevron.setAttribute('data-lucide', 'chevron-down');
         groupChevron.className = 'w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform group-chevron shrink-0';
 
-        groupActions.appendChild(groupLinesBtn);
-        groupActions.appendChild(groupVisBtn);
-        groupActionsRow.appendChild(groupActions);
+        groupActionsRow.appendChild(groupMenuWrap);
+        groupActionsRow.appendChild(groupVisBtn);
         groupHeader.appendChild(headerInfo);
         groupHeader.appendChild(groupActionsRow);
         groupHeader.appendChild(groupChevron);
@@ -2041,52 +2078,45 @@
           }
 
           const header = document.createElement("div");
-          header.className = "flex items-center justify-between bg-white dark:bg-slate-800";
+          header.className = "flex items-center gap-1 p-2 bg-white dark:bg-slate-800";
 
-          const btn = document.createElement("button");
-          btn.type = "button";
+          const btn = document.createElement("div");
+          btn.setAttribute('role', 'button');
+          btn.tabIndex = 0;
           btn.title = "Expandir/recolher e focar no elemento no Figma";
           btn.setAttribute('aria-label', "Expandir/recolher e focar no elemento no Figma");
-          btn.className = "w-full flex items-center justify-between text-left p-2.5 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors";
-          btn.onclick = () => {
+          btn.className = "flex-1 min-w-0 flex items-center gap-2.5 text-left rounded-lg p-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors";
+          const toggleSpecContent = () => {
             const contentEl = document.getElementById('content-' + spec.id);
             if (!contentEl) return;
             const isHidden = contentEl.classList.contains('hidden');
             contentEl.classList.toggle('hidden');
-            const icon = btn.querySelector('[data-lucide="chevron-down"]');
+            const icon = header.querySelector('[data-lucide="chevron-down"]');
             if (icon) icon.style.transform = isHidden ? 'rotate(180deg)' : '';
             if (spec.id) focusNode(spec.id);
           };
-          
+          btn.onclick = toggleSpecContent;
+          btn.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSpecContent(); } };
+
           const _ccSpec = spec.category ? _getCatColor(spec.category) : null;
           btn.innerHTML = `
-            <div class="flex items-center gap-2.5 flex-1 min-w-0">
-              <div class="flex flex-col overflow-hidden min-w-0 text-left gap-0.5">
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="text-[12px] font-bold text-slate-800 dark:text-white truncate" title="${spec.name}">${spec.name}</span>
-                  ${spec.category && _ccSpec ? `<span class="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full border" style="background-color:${_ccSpec.fill};border-color:${_ccSpec.stroke};color:${_ccSpec.stroke};">${spec.categoryLabel || spec.category}</span>` : ''}
-                </div>
-                <span class="text-[10px] text-slate-500 dark:text-dark-muted truncate">${spec.type || ''}</span>
+            <div class="flex flex-col overflow-hidden min-w-0 text-left gap-0.5">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-[12px] font-bold text-slate-800 dark:text-white truncate" title="${spec.name}">${spec.name}</span>
+                ${spec.category && _ccSpec ? `<span class="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full border" style="background-color:${_ccSpec.fill};border-color:${_ccSpec.stroke};color:${_ccSpec.stroke};">${spec.categoryLabel || spec.category}</span>` : ''}
               </div>
+              <span class="text-[10px] text-slate-500 dark:text-dark-muted truncate">${spec.type || ''}</span>
             </div>
-            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted transition-transform shrink-0"></i>
           `;
 
-          const specActionsRow = document.createElement("div");
-          specActionsRow.className = "flex items-center justify-end gap-2 px-2.5 py-1.5 border-t border-gray-50 dark:border-dark-line bg-gray-50/50 dark:bg-slate-900/30";
-          const specActionsLabel = document.createElement("span");
-          specActionsLabel.className = "text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider shrink-0";
-          specActionsLabel.textContent = "Ações";
-          specActionsRow.appendChild(specActionsLabel);
-
           const actions = document.createElement("div");
-          actions.className = "flex items-center gap-0.5";
+          actions.className = "flex items-center gap-0.5 shrink-0";
 
           const visBtn = document.createElement("button");
           visBtn.type = "button";
           visBtn.title = "Ocultar/Exibir no canvas";
           visBtn.setAttribute('aria-label', "Ocultar");
-          visBtn.className = "p-2.5 hover:bg-blue-50 dark:hover:bg-slate-600 transition-colors shrink-0";
+          visBtn.className = "p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-600 transition-colors shrink-0";
           visBtn.setAttribute('data-spec-vis-btn', '');
 
           if (spec.visible === undefined) {
@@ -2120,46 +2150,69 @@
             updateHideAllSpecsButtonState();
           };
 
+          // Menu "..." (overflow) do item — ações de configuração fina do
+          // conector (travar posição, editar estilo da linha), usadas com
+          // pouca frequência dentro do fluxo principal de documentar specs.
+          const specMenuWrap = document.createElement('div');
+          specMenuWrap.className = 'relative shrink-0';
+          const specMenuBtn = document.createElement('button');
+          specMenuBtn.type = 'button';
+          specMenuBtn.title = 'Mais ações';
+          specMenuBtn.setAttribute('aria-label', 'Mais ações da especificação');
+          specMenuBtn.className = 'p-2 rounded-lg text-gray-500 dark:text-dark-muted hover:bg-blue-50 dark:hover:bg-slate-600 transition-colors shrink-0';
+          specMenuBtn.innerHTML = '<i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i>';
+          const specMenuPanel = document.createElement('div');
+          specMenuPanel.className = 'hidden absolute right-0 top-full mt-1 z-20 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-xl shadow-lg py-1 min-w-[200px] spec-overflow-menu-panel';
+
           const lockBtn = document.createElement("button");
           lockBtn.type = "button";
-          lockBtn.className = "p-2.5 hover:bg-blue-50 dark:hover:bg-slate-600 transition-colors shrink-0";
+          lockBtn.className = "w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold hover:bg-slate-50 dark:hover:bg-dark-line/20 transition-colors text-left";
           lockBtn.setAttribute('data-spec-lock-btn', '');
 
           const isUnlocked = spec.locked === false;
-          lockBtn.title = isUnlocked ? "Travar especificação" : "Destravar especificação";
-          lockBtn.setAttribute('aria-label', lockBtn.title);
-          lockBtn.innerHTML = isUnlocked ? '<i data-lucide="lock-open" class="w-3.5 h-3.5"></i>' : '<i data-lucide="lock" class="w-3.5 h-3.5"></i>';
+          const lockLabel = isUnlocked ? "Travar especificação" : "Destravar especificação";
           lockBtn.classList.toggle("text-amber-500", isUnlocked);
-          lockBtn.classList.toggle("text-gray-400", !isUnlocked);
+          lockBtn.classList.toggle("text-slate-600", !isUnlocked);
+          lockBtn.classList.toggle("dark:text-dark-muted", !isUnlocked);
+          lockBtn.innerHTML = `<i data-lucide="${isUnlocked ? 'lock-open' : 'lock'}" class="w-3.5 h-3.5 shrink-0"></i><span>${lockLabel}</span>`;
 
           lockBtn.onclick = (e) => {
             e.stopPropagation();
             toggleSpecLock(spec.originalIndex);
+            specMenuPanel.classList.add('hidden');
           };
 
           const editLineBtn = document.createElement("button");
           editLineBtn.type = "button";
-          editLineBtn.title = "Editar estilo da linha";
-          editLineBtn.setAttribute("aria-label", "Editar estilo da linha");
-          editLineBtn.className = "p-2.5 text-[#2e2ee0] hover:bg-blue-50 dark:hover:bg-slate-600 transition-colors shrink-0";
-          editLineBtn.innerHTML = '<i data-lucide="pencil-ruler" class="w-3.5 h-3.5"></i>';
+          editLineBtn.className = "w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-line/20 transition-colors text-left";
+          editLineBtn.innerHTML = '<i data-lucide="pencil-ruler" class="w-3.5 h-3.5 shrink-0"></i><span>Editar estilo da linha</span>';
           if (!spec.id || !spec.targetNodeId) {
             editLineBtn.disabled = true;
-            editLineBtn.classList.remove('text-[#2e2ee0]');
-            editLineBtn.classList.add('text-gray-400', 'opacity-50', 'cursor-not-allowed');
+            editLineBtn.classList.add('opacity-50', 'cursor-not-allowed');
             editLineBtn.title = "Linha não editável — especificação criada antes deste recurso existir";
           } else {
             editLineBtn.onclick = (e) => {
               e.stopPropagation();
+              specMenuPanel.classList.add('hidden');
               openEditSpecConnectorModal(spec.originalIndex);
             };
           }
+
+          specMenuPanel.appendChild(lockBtn);
+          specMenuPanel.appendChild(editLineBtn);
+          specMenuBtn.onclick = (e) => {
+            e.stopPropagation();
+            document.querySelectorAll('.spec-overflow-menu-panel').forEach(p => { if (p !== specMenuPanel) p.classList.add('hidden'); });
+            specMenuPanel.classList.toggle('hidden');
+          };
+          specMenuWrap.appendChild(specMenuBtn);
+          specMenuWrap.appendChild(specMenuPanel);
 
           const delBtn = document.createElement("button");
           delBtn.type = "button";
           delBtn.title = "Excluir Especificação";
           delBtn.setAttribute("aria-label", "Excluir especificação");
-          delBtn.className = "p-2.5 text-gray-500 dark:text-dark-muted hover:text-red-500 transition-colors";
+          delBtn.className = "p-2 rounded-lg text-gray-500 dark:text-dark-muted hover:text-red-500 transition-colors";
           delBtn.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>';
           let _delConfirmTimeout = null;
           delBtn.onclick = (e) => {
@@ -2186,13 +2239,18 @@
           };
 
           actions.appendChild(visBtn);
-          actions.appendChild(lockBtn);
-          actions.appendChild(editLineBtn);
           actions.appendChild(delBtn);
-          specActionsRow.appendChild(actions);
+          actions.appendChild(specMenuWrap);
+
+          const specChevron = document.createElement('i');
+          specChevron.setAttribute('data-lucide', 'chevron-down');
+          specChevron.className = 'w-3.5 h-3.5 text-gray-500 dark:text-dark-muted transition-transform shrink-0 cursor-pointer';
+          specChevron.onclick = toggleSpecContent;
+
           header.appendChild(btn);
+          header.appendChild(actions);
+          header.appendChild(specChevron);
           section.appendChild(header);
-          section.appendChild(specActionsRow);
 
           const content = document.createElement("div");
           content.id = "content-" + spec.id;
@@ -2489,6 +2547,8 @@
       ].filter(Boolean);
       if (!containers.length) return;
 
+      const finalizeWrap = document.getElementById('btn-finalize-flows-wrap');
+
       if (!handoffData.createdFlows || handoffData.createdFlows.length === 0) {
         const emptyHtml = `
           <li class="flex flex-col items-center justify-center py-12 animate-in fade-in duration-500 list-none">
@@ -2500,9 +2560,11 @@
           </li>
         `;
         containers.forEach(c => c.innerHTML = emptyHtml);
+        if (finalizeWrap) finalizeWrap.classList.add('hidden');
         _refreshIcons();
         return;
       }
+      if (finalizeWrap) finalizeWrap.classList.remove('hidden');
 
       const html = handoffData.createdFlows.map((flow, idx) => {
         const isVisible = flow.visible !== false;
