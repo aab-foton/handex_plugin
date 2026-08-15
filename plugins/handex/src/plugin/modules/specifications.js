@@ -217,14 +217,16 @@
 
       card.innerHTML = `
         <!-- Cabeçalho -->
-        <div id="frame-header-${fid}"
+        <div id="frame-header-${fid}" role="button" tabindex="0" aria-expanded="false" aria-label="Expandir detalhes de ${escapeHtml(frame.nome)}" title="Expandir detalhes"
           class="flex items-center gap-2 px-3 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors select-none"
-          onclick="toggleFrameAccordion('${fid}')">
+          onclick="toggleFrameAccordion('${fid}')"
+          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFrameAccordion('${fid}');}">
           <div class="flex-1 min-w-0">
             <p class="text-[12px] font-bold text-slate-800 dark:text-white truncate">${frame.nome}</p>
             <p id="frame-subtitle-${fid}" class="${_subCls}">${_subLabel}</p>
           </div>
-          <i data-lucide="chevron-down" id="frame-chevron-${fid}" class="w-4 h-4 text-gray-400 transition-transform shrink-0"></i>
+          <span class="text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider shrink-0">Detalhes</span>
+          <i data-lucide="chevron-down" id="frame-chevron-${fid}" class="w-4 h-4 text-gray-400 transition-transform shrink-0" aria-hidden="true"></i>
         </div>
 
         <!-- Ações -->
@@ -272,8 +274,12 @@
 
           <!-- ── Observações Novo Componente ── -->
           <div id="new-component-obs-${fid}" class="${frame.isNewComponent ? '' : 'hidden'} px-3 pt-2.5 pb-0">
-            <textarea id="new-component-obs-text-${fid}"
+            <div class="flex items-center justify-end mb-1">
+              <span id="new-component-obs-text-${fid}-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">${(frame.newComponentObservations || '').length}/500</span>
+            </div>
+            <textarea id="new-component-obs-text-${fid}" maxlength="500"
               onchange="updateNewComponentObs('${fid}', this.value)"
+              oninput="_updateCharCount(this, 500)"
               placeholder="Descreva o padrão de uso, nomenclatura de tokens e diretrizes de aplicação deste componente..."
               rows="3"
               class="w-full bg-violet-50 dark:bg-violet-900/10 border border-violet-200 dark:border-violet-800/30 rounded-xl px-3 py-2.5 text-[11px] text-slate-700 dark:text-white outline-none resize-none focus:border-violet-400 transition-colors"
@@ -350,9 +356,12 @@
                 <p class="text-[11px] text-violet-700 dark:text-violet-300 leading-snug">Componente novo — desvios são esperados. Registre as divergências nas observações abaixo.</p>
               </div>`}
               <div id="conformance-alert-${fid}">${_buildConformanceAlertHTML(frame)}</div>
-              <textarea id="audit-obs-${fid}" rows="2"
+              <div class="${_shouldShowAuditObs(frame) ? '' : 'hidden'} flex items-center justify-end" id="audit-obs-${fid}-count-row">
+                <span id="audit-obs-${fid}-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">${(frame.audit && frame.audit.observacoes ? frame.audit.observacoes : '').length}/500</span>
+              </div>
+              <textarea id="audit-obs-${fid}" rows="2" maxlength="500"
                 placeholder="Descreva os desvios encontrados ou o motivo da não conformidade com o DSC..."
-                oninput="setFrameAuditObs('${fid}', this.value)"
+                oninput="setFrameAuditObs('${fid}', this.value); _updateCharCount(this, 500)"
                 class="${_shouldShowAuditObs(frame) ? '' : 'hidden'} w-full bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl px-3 py-2 text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 resize-none focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all">${frame.audit && frame.audit.observacoes ? frame.audit.observacoes : ''}</textarea>
             </div>
           </div>
@@ -528,12 +537,14 @@
         groupHeader.className = 'flex items-center gap-1.5 px-1 mb-1.5';
         groupHeader.innerHTML = `
           <div class="w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-extrabold text-white shrink-0" style="background-color:${color}">${letter}</div>
-          <input type="text" value="${groupName.replace(/"/g, '&quot;')}"
+          <input type="text" id="spec-group-name-${frameId}-${letter}" value="${groupName.replace(/"/g, '&quot;')}"
             placeholder="Nomear grupo..."
-            title="Nome do grupo"
+            title="Nome do grupo" maxlength="40"
             class="flex-1 min-w-0 text-[10px] font-bold text-slate-500 dark:text-dark-muted bg-transparent border border-transparent focus:border-[#3d3dff]/30 focus:ring-1 focus:ring-[#3d3dff]/20 rounded px-1 py-0.5 outline-none placeholder:text-gray-400 transition-all"
             onchange="updateSpecGroupName('${frameId}', '${letter}', this.value)"
+            oninput="_updateCharCount(this, 40)"
             onclick="event.stopPropagation()" />
+          <span id="spec-group-name-${frameId}-${letter}-count" class="text-[8px] font-bold text-slate-300 dark:text-dark-muted shrink-0">${groupName.length}/40</span>
           <span class="text-[10px] text-slate-500 dark:text-dark-muted shrink-0">${specs.length} esp.</span>
           ${isGroupUnlocked ? `
           <span title="Grupo destravado — fora do estado padrão protegido"
@@ -628,12 +639,16 @@
             <div class="flex items-center px-2 py-1.5 gap-1.5 cursor-pointer select-none" onclick="toggleSpecDetails('${detailsId}')">
               <div class="w-4 h-4 rounded flex items-center justify-center text-[8px] font-extrabold text-white shrink-0" style="background-color:${color}">${letter}</div>
               <div class="flex-1 min-w-0">
-                <input type="text" value="${(spec.name || '').replace(/"/g, '&quot;')}"
-                  title="Clique para editar o título"
+                <input type="text" id="spec-title-${frameId}-${spec._idx}" value="${(spec.name || '').replace(/"/g, '&quot;')}"
+                  title="Clique para editar o título" maxlength="80"
                   class="w-full text-[11px] font-semibold text-slate-700 dark:text-white bg-transparent border border-transparent focus:border-[#3d3dff]/30 focus:ring-1 focus:ring-[#3d3dff]/20 rounded px-1 py-0 outline-none cursor-text transition-all"
                   onchange="updateSpecTitle('${frameId}', ${spec._idx}, this.value)"
+                  oninput="_updateCharCount(this, 80)"
                   onclick="event.stopPropagation()" />
-                ${spec.category ? `<span class="inline-flex mt-0.5 px-1.5 py-0.5 rounded-full border ${_ccPill.border} text-[9px] font-bold ${_ccPill.text} ${_ccPill.bg}">${spec.categoryLabel || spec.category}</span>` : `<p class="text-[9px] text-slate-400 dark:text-slate-600 px-1 leading-none">Sem categoria</p>`}
+                <div class="flex items-center justify-between gap-1.5">
+                  ${spec.category ? `<span class="inline-flex mt-0.5 px-1.5 py-0.5 rounded-full border ${_ccPill.border} text-[9px] font-bold ${_ccPill.text} ${_ccPill.bg}">${spec.categoryLabel || spec.category}</span>` : `<p class="text-[9px] text-slate-400 dark:text-slate-600 px-1 leading-none">Sem categoria</p>`}
+                  <span id="spec-title-${frameId}-${spec._idx}-count" class="text-[8px] font-bold text-slate-300 dark:text-dark-muted shrink-0">${(spec.name || '').length}/80</span>
+                </div>
               </div>
               ${hasRawTokenWarning ? `<span title="Valores sem token — use Check Design" class="w-4 h-4 flex items-center justify-center text-amber-400 shrink-0"><i data-lucide="alert-triangle" class="w-3 h-3"></i></span>` : ''}
               <span id="exc-badge-${frameId}-${specIdx}" class="px-1 py-0.5 rounded bg-orange-50 text-[9px] font-bold text-orange-800 shrink-0 ${excCount > 0 ? '' : 'hidden'}">${excCount} exc</span>
@@ -790,7 +805,10 @@
       if (!createdSpecs[originalIndex]) return;
       window._editingSpecNoteIdx = originalIndex;
       const textarea = document.getElementById('spec-note-textarea');
-      if (textarea) textarea.value = createdSpecs[originalIndex].note || '';
+      if (textarea) {
+        textarea.value = createdSpecs[originalIndex].note || '';
+        _updateCharCount(textarea, 500);
+      }
       openModal('spec-note-modal');
     }
     window.openSpecNoteModal = openSpecNoteModal;
@@ -966,10 +984,6 @@
       const style = spec.connectorStyle || 'straight';
       const styleRadio = document.querySelector(`input[name="edit-spec-connector-style"][value="${style}"]`);
       if (styleRadio) styleRadio.checked = true;
-      _onEditSpecConnectorStyleChange(style);
-      const curvatureInput = document.getElementById('edit-spec-curvature-input');
-      if (curvatureInput) curvatureInput.value = spec.connectorCurvature || 0;
-      _updateEditSpecCurvatureLabel(spec.connectorCurvature || 0);
       const saveBtn = document.getElementById('edit-spec-connector-save-btn');
       if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> Salvar'; }
       openModal('edit-spec-connector-modal');
@@ -982,20 +996,6 @@
       closeModal('edit-spec-connector-modal');
     }
     window.closeEditSpecConnectorModal = closeEditSpecConnectorModal;
-
-    function _onEditSpecConnectorStyleChange(style) {
-      const container = document.getElementById('edit-spec-curvature-container');
-      if (container) container.classList.toggle('hidden', style !== 'curved');
-    }
-    window._onEditSpecConnectorStyleChange = _onEditSpecConnectorStyleChange;
-
-    function _updateEditSpecCurvatureLabel(value) {
-      const label = document.getElementById('edit-spec-curvature-value');
-      if (!label) return;
-      const n = Number(value);
-      label.textContent = n === 0 ? 'Reta' : (n > 0 ? `Curva ${n}%` : `Curva ${Math.abs(n)}% (invertida)`);
-    }
-    window._updateEditSpecCurvatureLabel = _updateEditSpecCurvatureLabel;
 
     function confirmEditSpecConnector() {
       const idx = window._editingSpecConnectorIndex;
@@ -1703,20 +1703,6 @@
     }
     window._toggleSpecConnectionCurvature = _toggleSpecConnectionCurvature;
 
-    function _updateSpecCurvatureLabel(value) {
-      const label = document.getElementById('spec-curvature-value');
-      if (!label) return;
-      const n = Number(value);
-      label.textContent = n === 0 ? 'Reta' : (n > 0 ? `Curva ${n}%` : `Curva ${Math.abs(n)}% (invertida)`);
-    }
-    window._updateSpecCurvatureLabel = _updateSpecCurvatureLabel;
-
-    function _onSpecConnectorStyleChange(style) {
-      const sliderContainer = document.getElementById('spec-curvature-slider-container');
-      if (sliderContainer) sliderContainer.classList.toggle('hidden', style !== 'curved');
-    }
-    window._onSpecConnectorStyleChange = _onSpecConnectorStyleChange;
-
     function _collectSpecPropertiesOpts() {
       const g = id => document.getElementById(id);
       const selCat = g('ann-category');
@@ -1758,8 +1744,8 @@
       window._newSpecExceptionType = null;
       const g = id => document.getElementById(id);
       document.querySelectorAll('.new-exc-type-btn').forEach(b => b.classList.remove('border-red-300', 'border-green-300', 'border-blue-300', 'border-amber-300', 'bg-red-50', 'bg-green-50', 'bg-blue-50', 'bg-amber-50'));
-      if (g('new-exc-titulo')) g('new-exc-titulo').value = '';
-      if (g('new-exc-obs')) g('new-exc-obs').value = '';
+      if (g('new-exc-titulo')) { g('new-exc-titulo').value = ''; _updateCharCount(g('new-exc-titulo'), 80); }
+      if (g('new-exc-obs')) { g('new-exc-obs').value = ''; _updateCharCount(g('new-exc-obs'), 400); }
       openModal('spec-new-exception-modal');
     }
     window.advanceToSpecExceptionStep = advanceToSpecExceptionStep;
@@ -1818,11 +1804,7 @@
       if (!list) return;
       list.innerHTML = '';
       
-      const hint = document.getElementById('hint-specs');
-      if (hint) {
-        if (createdSpecs && createdSpecs.length > 0) hint.classList.add('hidden');
-        else hint.classList.remove('hidden');
-      }
+      _updateContentHint('hint-specs', !!(createdSpecs && createdSpecs.length > 0));
 
       const exportBtn = document.getElementById('btn-export-specs');
       const hideAllBtn = document.getElementById('btn-hide-all-specs');
@@ -1831,7 +1813,7 @@
 
       if (!createdSpecs || createdSpecs.length === 0) {
         list.innerHTML = `
-          <li class="flex flex-col items-center justify-center py-12 animate-in fade-in duration-500 list-none">
+          <li class="empty-state-placeholder flex flex-col items-center list-none">
             <div class="relative mb-4">
               <i data-lucide="file-text" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
             </div>
@@ -2380,6 +2362,394 @@
 
 
 
+    // Mini-mapa de ancoragem do modal de fluxo — nodes vêm do backend via
+    // 'flow-selection-bounds' (ver messages.js), já ordenados pela ordem
+    // real de clique quando disponível, com fallback espacial
+    // (_resolveChainOrder em code.js), tanto por pedido explícito
+    // (get-flow-selection-bounds ao abrir o modal) quanto ao vivo, a cada
+    // mudança de seleção no canvas enquanto o modal está aberto. Com N>2
+    // nodes vira uma cadeia representada como grade lógica (posição relativa
+    // real -- acima/abaixo/esquerda/direita -- mas não proporcional em
+    // pixels, ver _computeFlowChainLayout).
+    let _flowAnchorNodes = [];
+
+    // Lado de ancoragem escolhido clicando numa borda de QUALQUER card no
+    // mini-mapa -- chave é o índice do card (origem daquele segmento da
+    // cadeia), valor é 'top'/'bottom'/'left'/'right'; ausência de chave =
+    // automático pra aquele card. Cada card decide independentemente por
+    // onde a seta SAI dele (A→B usa o lado de A, B→C usa o lado de B, etc),
+    // permitindo por ex. A na direita, B no topo, C embaixo na mesma cadeia
+    // (ver _setFlowAnchorSide/confirmFlowConnection). Substitui os antigos
+    // radios input[name="flow-side"], que só cobriam um lado único pra
+    // cadeia inteira.
+    let _flowAnchorSideByIdx = {};
+
+    const FLOW_CHAIN_LETTERS = 'ABCDEFGHIJKL';
+
+    // Direção relativa dominante entre dois nodes reais do canvas, comparando
+    // os centros dos bounding boxes -- usada tanto pra montar a grade lógica
+    // (passo abaixo) quanto pra restringir bordas clicáveis (allowedSides em
+    // _renderFlowAnchorPreview). Diferença maior em X vira horizontal
+    // (right/left), maior em Y vira vertical (down/up); em caso de segmentos
+    // "diagonais" (ex: B abaixo E à esquerda de A ao mesmo tempo) só o eixo
+    // dominante é representado na grade -- é uma simplificação deliberada
+    // (ver decisão de UX no comentário de _computeFlowChainLayout).
+    function _flowRelativeDirection(fromNode, toNode) {
+      const fromCx = fromNode.x + fromNode.width / 2;
+      const fromCy = fromNode.y + fromNode.height / 2;
+      const toCx = toNode.x + toNode.width / 2;
+      const toCy = toNode.y + toNode.height / 2;
+      const dx = toCx - fromCx;
+      const dy = toCy - fromCy;
+      if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? 'right' : 'left';
+      return dy >= 0 ? 'down' : 'up';
+    }
+
+    const FLOW_DIR_OPPOSITE = { right: 'left', left: 'right', down: 'up', up: 'down' };
+    const FLOW_DIR_TO_SIDE = { right: 'right', left: 'left', down: 'bottom', up: 'top' };
+
+    // Grade lógica: cada card ocupa uma célula (col, row) derivada da direção
+    // relativa real (canvas) do card anterior pro próximo -- NÃO é
+    // proporcional às coordenadas/distâncias reais, só preserva a topologia
+    // (quem fica acima/abaixo/esquerda/direita de quem). Isso permite cadeias
+    // não-lineares no mini-mapa (ex: A-B lado a lado, C abaixo de A, D abaixo
+    // de B) em vez do rail horizontal fixo de antes. Quando todos os
+    // segmentos são 'right' o resultado é idêntico ao rail antigo (mesma
+    // linha, sem regressão pro caso simples).
+    //
+    // Limitação conhecida e aceita: não há detecção de colisão entre células
+    // -- se a cadeia "voltar" sobre si mesma (ex: A→B→C onde C cai na mesma
+    // direção relativa de volta pra A), dois cards podem ocupar a mesma
+    // célula e se sobrepor no desenho. Cadeias de handoff seguem
+    // majoritariamente fluxo progressivo (raramente revisitam a mesma região
+    // do canvas), então esse caso é raro; se aparecer na prática, resolver
+    // então em vez de adicionar complexidade de layout antecipada.
+    function _computeFlowChainLayout(nodes) {
+      const n = nodes.length;
+      const boxSize = n <= 5 ? 56 : Math.max(36, Math.floor(400 / (n * 1.4)));
+      const gap = Math.max(20, boxSize * 0.5);
+      const cell = boxSize + gap;
+
+      const cells = [{ col: 0, row: 0 }];
+      for (let i = 1; i < n; i++) {
+        const dir = _flowRelativeDirection(nodes[i - 1], nodes[i]);
+        const prev = cells[i - 1];
+        const delta = { right: [1, 0], left: [-1, 0], down: [0, 1], up: [0, -1] }[dir];
+        cells.push({ col: prev.col + delta[0], row: prev.row + delta[1] });
+      }
+
+      const cols = cells.map(c => c.col);
+      const rows = cells.map(c => c.row);
+      const minCol = Math.min(...cols), maxCol = Math.max(...cols);
+      const minRow = Math.min(...rows), maxRow = Math.max(...rows);
+
+      const PAD = gap;
+      const rects = cells.map(c => ({
+        x: PAD + (c.col - minCol) * cell,
+        y: PAD + (c.row - minRow) * cell,
+        w: boxSize,
+        h: boxSize
+      }));
+
+      const viewW = Math.max(400, PAD * 2 + (maxCol - minCol) * cell + boxSize);
+      const viewH = Math.max(110, PAD * 2 + (maxRow - minRow) * cell + boxSize);
+      return { rects, viewW, viewH };
+    }
+
+    function _flowRectEdgePoints(r) {
+      return {
+        top:    { x: r.x + r.w / 2, y: r.y,            side: 'top' },
+        bottom: { x: r.x + r.w / 2, y: r.y + r.h,       side: 'bottom' },
+        left:   { x: r.x,           y: r.y + r.h / 2,   side: 'left' },
+        right:  { x: r.x + r.w,     y: r.y + r.h / 2,   side: 'right' }
+      };
+    }
+
+    // Espelha a lógica de dobras do backend (_buildFlowConnection em
+    // code.js) pro preview do mini-mapa mostrar o formato real do conector
+    // ANTES de confirmar -- 1 dobra (L) quando saída/entrada são eixos
+    // perpendiculares, 2 dobras (Z/U) quando são paralelos (mesma direção
+    // ou opostos), usando o mesmo offset mínimo de 24px "por fora" dos dois
+    // pontos. Só entra em jogo quando o estilo "Angular" está selecionado.
+    function _computeElbowPoints(from, to) {
+      if (!from.side || !to.side) return [];
+      const aVertical = from.side === 'top' || from.side === 'bottom';
+      const bVertical = to.side === 'top' || to.side === 'bottom';
+      if (aVertical !== bVertical) {
+        return [aVertical ? { x: to.x, y: from.y } : { x: from.x, y: to.y }];
+      }
+      const OFFSET_MIN = 24;
+      if (aVertical) {
+        const offsetY = Math.max(OFFSET_MIN, Math.abs(to.y - from.y) / 2);
+        const y1 = from.side === 'bottom' ? from.y + offsetY : from.y - offsetY;
+        const y2 = to.side === 'bottom' ? to.y + offsetY : to.y - offsetY;
+        const midY = from.side === 'bottom' ? Math.max(y1, y2) : Math.min(y1, y2);
+        return [{ x: from.x, y: midY }, { x: to.x, y: midY }];
+      }
+      const offsetX = Math.max(OFFSET_MIN, Math.abs(to.x - from.x) / 2);
+      const x1 = from.side === 'right' ? from.x + offsetX : from.x - offsetX;
+      const x2 = to.side === 'right' ? to.x + offsetX : to.x - offsetX;
+      const midX = from.side === 'right' ? Math.max(x1, x2) : Math.min(x1, x2);
+      return [{ x: midX, y: from.y }, { x: midX, y: to.y }];
+    }
+
+    function _flowNearestPoint(pA, pointsB) {
+      let best = null, bestDist = Infinity;
+      Object.values(pointsB).forEach(p => {
+        const d = Math.hypot(p.x - pA.x, p.y - pA.y);
+        if (d < bestDist) { bestDist = d; best = p; }
+      });
+      return best;
+    }
+
+    // Chamada tanto ao chegar 'flow-selection-bounds' quanto ao clicar numa
+    // borda do card A no mini-mapa (ver _setFlowAnchorSide).
+    function updateFlowAnchorPreview(nodes) {
+      _flowAnchorNodes = nodes || [];
+      _renderFlowAnchorPreview();
+      if (typeof _updateFlowConfirmButtonLabel === 'function') _updateFlowConfirmButtonLabel();
+      if (typeof _updateFlowDecisionAvailability === 'function') _updateFlowDecisionAvailability();
+    }
+    window.updateFlowAnchorPreview = updateFlowAnchorPreview;
+
+    // Ordem sempre a que veio do backend (_resolveChainOrder: ordem real de
+    // clique, com fallback espacial esquerda→direita) -- sem botão de
+    // inverter: se sair errado, o designer reseleciona no canvas na ordem
+    // desejada (fluxo natural do Figma).
+    function _orderedFlowAnchorNodes() {
+      return _flowAnchorNodes;
+    }
+
+    function _renderFlowAnchorPreview() {
+      const modalEl = document.getElementById('flow-form-modal');
+      if (!modalEl || modalEl.classList.contains('hidden')) return;
+      const svg = document.getElementById('flow-anchor-svg');
+      const emptyState = document.getElementById('flow-anchor-empty');
+      const orderRow = document.getElementById('flow-chain-order-row');
+      const orderText = document.getElementById('flow-chain-order-text');
+      if (!svg || !emptyState) return;
+
+      const nodes = _orderedFlowAnchorNodes();
+      if (nodes.length < 2) {
+        svg.classList.add('hidden');
+        svg.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        if (orderRow) orderRow.classList.add('hidden');
+        _renderFlowAnchorAutoToggle();
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      svg.classList.remove('hidden');
+
+      const escapeXml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
+      const { rects, viewW, viewH } = _computeFlowChainLayout(nodes);
+      svg.setAttribute('viewBox', `0 0 ${viewW} ${viewH}`);
+
+      // Setas esquemáticas entre caixas consecutivas — reforça a leitura de
+      // "cadeia" sem precisar de uma linha real calculada por par. Agora que
+      // a grade lógica pode ter segmentos verticais/horizontais em qualquer
+      // combinação (não mais só uma fila em linha reta), a seta liga os
+      // CENTROS dos dois retângulos -- não presume mais mesma linha Y.
+      const arrowsHtml = rects.slice(0, -1).map((r, i) => {
+        const next = rects[i + 1];
+        const x1 = r.x + r.w / 2, y1 = r.y + r.h / 2;
+        const x2 = next.x + next.w / 2, y2 = next.y + next.h / 2;
+        return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#flow-chain-arrowhead)" />`;
+      }).join('');
+
+      const boxesHtml = rects.map((r, i) => {
+        const isFirst = i === 0;
+        const letter = FLOW_CHAIN_LETTERS[i] || '?';
+        const name = escapeXml((nodes[i].name || letter).trim());
+        const fill = isFirst ? 'rgba(61,61,255,0.12)' : 'rgba(148,163,184,0.15)';
+        const stroke = isFirst ? '#3d3dff' : '#94a3b8';
+        const textFill = isFirst ? '#2e2ee0' : '#64748b';
+        return `
+          <rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="4" fill="${fill}" stroke="${stroke}" stroke-width="1.5"><title>${name}</title></rect>
+          <text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + 3}" text-anchor="middle" font-size="9" font-weight="700" fill="${textFill}">${letter}</text>
+        `;
+      }).join('');
+
+      // Cada card (exceto o último, que nunca é origem de segmento) expõe
+      // pontos clicáveis de ancoragem -- escolha independente por card (ex:
+      // A na direita, B no topo, C embaixo), em vez de um lado único pra
+      // cadeia inteira. O lado escolhido em cada card decide de onde a seta
+      // SAI daquele card (ver flowSidesByIndex em confirmFlowConnection).
+      //
+      // Restrição geométrica (grade lógica): a saída de um card em direção
+      // ao próximo não pode ser pelo lado diretamente OPOSTO à direção real
+      // do segmento (calculada em _flowRelativeDirection) -- ex: se o próximo
+      // card está à direita, sair pela esquerda faria a linha contornar todo
+      // o card de forma anti-natural. Decisão de UX: bloqueamos só o lado
+      // OPOSTO, não restringimos a uma única borda "correta" -- as duas
+      // bordas perpendiculares (top/bottom quando a direção é horizontal, ou
+      // left/right quando é vertical) continuam disponíveis como opções
+      // válidas de estilo (ex: sair por cima mesmo indo pra direita, pra dar
+      // uma curva mais aberta), já que elas não geram uma linha contornando
+      // o próprio card ou o vizinho -- só a oposta faz isso. Isso evita
+      // over-engineering (não força uma escolha "binária" com 1 única opção
+      // por segmento) mantendo a leitura geometricamente coerente.
+      //
+      // Restrição adicional (já existia, mantida): um card do MEIO recebe a
+      // conexão anterior por um lado (a entrada dele) e envia a próxima por
+      // outro (a saída) -- sair pelo MESMO lado por onde entrou continua
+      // bloqueado (a linha se sobreporia saindo e voltando pelo mesmo
+      // ponto), mesmo que geometricamente aquele lado não seja o oposto da
+      // nova direção. O primeiro card (A) não tem entrada (é o ponto de
+      // partida real da jornada), então só a restrição geométrica se aplica
+      // a ele. A entrada de cada card precisa ser resolvida numa passada
+      // antes de desenhar os pontos, já que "de onde ele entra" depende do
+      // lado de SAÍDA escolhido no card anterior (ou do automático, se não
+      // houver escolha manual lá).
+      const isAngularStyle = (document.querySelector('input[name="flow-connector-style"]:checked') || {}).value === 'elbow';
+      const ALL_SIDES = ['top', 'bottom', 'left', 'right'];
+
+      // Direção geométrica real de cada segmento consecutivo da cadeia
+      // (nodes[i] → nodes[i+1]), calculada sobre as coordenadas reais do
+      // canvas -- independe de onde o card acabou posicionado na grade
+      // lógica do mini-mapa.
+      const segmentDirections = nodes.slice(0, -1).map((n, i) => _flowRelativeDirection(n, nodes[i + 1]));
+
+      // Passada 1: resolve o ponto de saída de cada card e o ponto de
+      // entrada correspondente no próximo, na ordem da cadeia -- mesmo
+      // cálculo que já existia, só separado do desenho pra poder consultar
+      // "por onde este card entra" ao decidir quais bordas de SAÍDA mostrar.
+      const segments = rects.slice(0, -1).map((r, i) => {
+        const pts = _flowRectEdgePoints(r);
+        const chosenSide = _flowAnchorSideByIdx[i];
+        const activePoint = (chosenSide && pts[chosenSide]) ? pts[chosenSide] : null;
+        if (!activePoint) return { pts, activePoint: null, target: null };
+        const pointsNext = _flowRectEdgePoints(rects[i + 1]);
+        const isLastSegment = i === rects.length - 2;
+        const nextChosenSide = isLastSegment ? _flowAnchorSideByIdx.end : null;
+        const target = (nextChosenSide && pointsNext[nextChosenSide]) ? pointsNext[nextChosenSide] : _flowNearestPoint(activePoint, pointsNext);
+        return { pts, activePoint, target };
+      });
+
+      let pointsHtml = '';
+      let linesHtml = '';
+      segments.forEach((seg, i) => {
+        // Lado de entrada deste card: o `side` do ponto de destino resolvido
+        // no segmento anterior (i-1 → i). undefined pro primeiro card (sem
+        // entrada) e sempre que o segmento anterior ainda não tem saída
+        // escolhida (nada a bloquear ainda).
+        const incomingSide = i > 0 ? (segments[i - 1].target ? segments[i - 1].target.side : undefined) : undefined;
+        const opposingSide = FLOW_DIR_TO_SIDE[FLOW_DIR_OPPOSITE[segmentDirections[i]]];
+        const allowedSides = ALL_SIDES.filter(s => s !== opposingSide && s !== incomingSide);
+        let chosenSide = _flowAnchorSideByIdx[i];
+        // Se reescolher o lado de um card anterior mudou a entrada deste
+        // card e ela passou a coincidir com a saída já escolhida aqui,
+        // aquela escolha ficou inválida (repetiria o mesmo ponto de
+        // entrada/saída) -- descarta e volta esse card pro automático,
+        // tanto no estado (próxima renderização já nasce limpa) quanto
+        // neste render (não desenha como ativo nem calcula a linha).
+        if (chosenSide && !allowedSides.includes(chosenSide)) {
+          delete _flowAnchorSideByIdx[i];
+          chosenSide = undefined;
+          seg.activePoint = null;
+        }
+        pointsHtml += allowedSides.map(s => {
+          const p = seg.pts[s];
+          const isActive = chosenSide === s;
+          const rad = isActive ? 8 : 6;
+          return `<circle cx="${p.x}" cy="${p.y}" r="${rad}" fill="${isActive ? '#3d3dff' : '#ffffff'}" stroke="#3d3dff" stroke-width="${isActive ? 2 : 1.5}" style="cursor:pointer" onclick="_setFlowAnchorSide(${i}, '${s}')" />`;
+        }).join('');
+        if (seg.activePoint && seg.target) {
+          if (isAngularStyle) {
+            const elbow = _computeElbowPoints(seg.activePoint, seg.target);
+            const path = [seg.activePoint, ...elbow, seg.target].map(p => `${p.x} ${p.y}`).join(' L ');
+            linesHtml += `<path d="M ${path}" fill="none" stroke="#3d3dff" stroke-width="1.5" stroke-dasharray="4 3" />`;
+          } else {
+            linesHtml += `<line x1="${seg.activePoint.x}" y1="${seg.activePoint.y}" x2="${seg.target.x}" y2="${seg.target.y}" stroke="#3d3dff" stroke-width="1.5" stroke-dasharray="4 3" />`;
+          }
+        }
+      });
+
+      // Último card da cadeia: nunca é origem de segmento, mas expõe bordas
+      // clicáveis pra escolher onde a conexão CHEGA nele (ponto de entrada
+      // do último segmento) -- chave especial 'end' em _flowAnchorSideByIdx,
+      // sem colidir com os índices numéricos de saída. A regra de "não pode
+      // repetir o lado por onde entrou" não se aplica aqui (ele só RECEBE,
+      // nunca envia) -- mas a restrição geométrica (bloquear o lado oposto
+      // à direção real do último segmento) continua fazendo sentido: entrar
+      // pelo lado oposto ao penúltimo card também exigiria a linha
+      // contornar o próprio card de forma anti-natural.
+      {
+        const lastRect = rects[rects.length - 1];
+        const lastPts = _flowRectEdgePoints(lastRect);
+        const chosenEndSide = _flowAnchorSideByIdx.end;
+        const lastDir = segmentDirections[segmentDirections.length - 1];
+        const endOpposingSide = FLOW_DIR_TO_SIDE[lastDir];
+        const endAllowedSides = ALL_SIDES.filter(s => s !== endOpposingSide);
+        pointsHtml += endAllowedSides.map(s => {
+          const p = lastPts[s];
+          const isActive = chosenEndSide === s;
+          const rad = isActive ? 8 : 6;
+          return `<circle cx="${p.x}" cy="${p.y}" r="${rad}" fill="${isActive ? '#3d3dff' : '#ffffff'}" stroke="#3d3dff" stroke-width="${isActive ? 2 : 1.5}" style="cursor:pointer" onclick="_setFlowAnchorSide('end', '${s}')" />`;
+        }).join('');
+      }
+
+      svg.innerHTML = `
+        <defs>
+          <marker id="flow-chain-arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#cbd5e1" />
+          </marker>
+        </defs>
+        ${arrowsHtml}
+        ${boxesHtml}
+        ${linesHtml}
+        ${pointsHtml}
+      `;
+
+      if (orderRow && orderText) {
+        if (nodes.length > 2) {
+          orderRow.classList.remove('hidden');
+          orderText.textContent = nodes.map((n, i) => `${FLOW_CHAIN_LETTERS[i]} · ${(n.name || '').trim() || FLOW_CHAIN_LETTERS[i]}`).join(' → ');
+        } else {
+          orderRow.classList.add('hidden');
+        }
+      }
+
+      _renderFlowAnchorAutoToggle();
+    }
+    window._renderFlowAnchorPreview = _renderFlowAnchorPreview;
+
+    // Reflete _flowAnchorSideByIdx no toggle "Auto" ao lado do label --
+    // track azul preenchido + bolinha à direita quando nenhum card tem lado
+    // manual escolhido, cinza + bolinha à esquerda quando ao menos um tem.
+    function _renderFlowAnchorAutoToggle() {
+      const track = document.getElementById('flow-anchor-auto-track');
+      const knob = document.getElementById('flow-anchor-auto-knob');
+      const btn = document.getElementById('flow-anchor-auto-btn');
+      if (!track || !knob) return;
+      const isAuto = Object.keys(_flowAnchorSideByIdx).length === 0;
+      track.classList.toggle('bg-[#3d3dff]', isAuto);
+      track.classList.toggle('bg-gray-300', !isAuto);
+      track.classList.toggle('dark:bg-slate-600', !isAuto);
+      knob.style.transform = isAuto ? 'translateX(0.625rem)' : 'translateX(0)';
+      if (btn) btn.classList.toggle('text-[#3d3dff]', isAuto);
+      if (btn) btn.classList.toggle('text-slate-400', !isAuto);
+    }
+
+    // Clicar de novo no mesmo lado já ativo pra um card desclica aquele card
+    // (volta pro automático só nele) -- os demais cards mantêm sua própria
+    // escolha, independente. idxOrAuto é um índice numérico (saída daquele
+    // card), a chave especial 'end' (entrada no último card da cadeia), ou
+    // 'auto' (chamado pelo toggle do header, que limpa TODAS as escolhas
+    // manuais de uma vez).
+    function _setFlowAnchorSide(idxOrAuto, side) {
+      if (idxOrAuto === 'auto') {
+        _flowAnchorSideByIdx = {};
+      } else if (_flowAnchorSideByIdx[idxOrAuto] === side) {
+        delete _flowAnchorSideByIdx[idxOrAuto];
+      } else {
+        _flowAnchorSideByIdx[idxOrAuto] = side;
+      }
+      _renderFlowAnchorPreview();
+    }
+    window._setFlowAnchorSide = _setFlowAnchorSide;
+
     let currentFlowType = null;
 
     function selectFlowType(type) {
@@ -2411,6 +2781,8 @@
         const hasChip = ['line_solid', 'line_dashed', 'diamond', 'diamond_dashed'].includes(type);
         chipContainer.classList.toggle('hidden', !hasChip);
       }
+      const chipTextInput = document.getElementById('flow-chip-text');
+      if (chipTextInput) _updateCharCount(chipTextInput, 20);
 
       // Estilo de conector só faz sentido em linha pura -- diamond/evento
       // têm forma própria com semântica fixa, moldar a linha até eles
@@ -2429,6 +2801,7 @@
         btn.style.cursor = 'pointer';
         btn.classList.remove('bg-gray-300', 'cursor-not-allowed');
       }
+      _updateFlowConfirmButtonLabel();
 
       // Auto-scroll to bottom of modal
       setTimeout(() => {
@@ -2437,10 +2810,71 @@
       }, 150);
     }
     window.selectFlowType = selectFlowType;
+
+    // Cadeia (N>2) é sempre 1 lado de ancoragem aplicado a todas as N-1
+    // conexões — Decisão tem resposta específica por conexão (ex: "Sim"
+    // não faz sentido repetido em 3 setas), então fica restrita a
+    // exatamente 2 elementos selecionados; Sequência/Mensagem funcionam
+    // em cadeia normalmente.
+    function _updateFlowDecisionAvailability() {
+      const isChain = _orderedFlowAnchorNodes().length > 2;
+      ['diamond', 'diamond_dashed'].forEach(type => {
+        const card = document.getElementById(`form-flow-${type}`) || document.getElementById(`flow-${type}`);
+        if (!card) return;
+        card.classList.toggle('opacity-40', isChain);
+        if (card.tagName === 'BUTTON') card.disabled = isChain;
+        card.title = isChain ? 'Decisão não é suportada em cadeia com mais de 2 elementos. Para ramificar a partir de um card já conectado, feche este modal, selecione esse card + o novo elemento do caminho alternativo, e conecte só esses dois com Decisão.' : '';
+      });
+      if (isChain && (currentFlowType === 'diamond' || currentFlowType === 'diamond_dashed')) {
+        currentFlowType = null;
+        const btn = document.getElementById('btn-confirm-flow');
+        if (btn) {
+          btn.disabled = true;
+          btn.classList.add('bg-gray-300', 'cursor-not-allowed');
+        }
+      }
+    }
+    window._updateFlowDecisionAvailability = _updateFlowDecisionAvailability;
+
+    function _updateFlowConfirmButtonLabel() {
+      const btn = document.getElementById('btn-confirm-flow');
+      if (!btn) return;
+      const n = _orderedFlowAnchorNodes().length;
+      const label = btn.querySelector('span') || btn;
+      label.textContent = n > 2 ? `Conectar ${n} Telas` : 'Conectar Agora';
+    }
+    window._updateFlowConfirmButtonLabel = _updateFlowConfirmButtonLabel;
       
     function openFlowFormModal() {
       openModal('flow-form-modal');
       currentFlowType = null;
+
+      // Limpa o mini-mapa de ancoragem de uma renderização anterior até a
+      // resposta de get-flow-selection-bounds chegar (evita lixo visual).
+      _flowAnchorNodes = [];
+      _flowAnchorSideByIdx = {};
+      _renderFlowAnchorPreview();
+      const journeyNameInput = document.getElementById('flow-name-input');
+      if (journeyNameInput) {
+        journeyNameInput.value = '';
+        _updateCharCount(journeyNameInput, 70);
+        // openModal() foca o primeiro elemento focável do DOM (o botão "X"
+        // de fechar, que vem antes no HTML) -- no Figma desktop, o painel
+        // do plugin roda num iframe, e o primeiro clique do usuário em
+        // qualquer lugar às vezes só "acorda" o foco da janela do iframe
+        // sem repassar o evento ao elemento clicado, dando a impressão de
+        // que o campo está travado/desabilitado até um segundo clique.
+        // Focar aqui o campo mais provável de uso (nome da jornada) reduz
+        // a chance do usuário precisar de um clique extra pra digitar.
+        setTimeout(() => journeyNameInput.focus(), 0);
+      }
+      window._pendingJourneyName = '';
+      const autoMarkInput = document.getElementById('flow-auto-mark-endpoints');
+      if (autoMarkInput) autoMarkInput.checked = false;
+      parent.postMessage({ pluginMessage: { type: 'get-flow-selection-bounds' } }, '*');
+      // Liga o listener de selectionchange no backend só enquanto este modal
+      // está aberto — desligado em closeFlowFormModal().
+      parent.postMessage({ pluginMessage: { type: 'track-flow-anchor-preview', active: true } }, '*');
 
       // Reset all type card visual feedback
       document.querySelectorAll('.flow-type-card, .flow-type-card-modal').forEach(el => {
@@ -2459,10 +2893,6 @@
       if (styleContainer) styleContainer.classList.add('hidden');
       const straightRadio = document.querySelector('input[name="flow-connector-style"][value="straight"]');
       if (straightRadio) straightRadio.checked = true;
-      _onFlowConnectorStyleChange('straight');
-      const curvatureInput = document.getElementById('flow-curvature-input');
-      if (curvatureInput) curvatureInput.value = 0;
-      _updateFlowCurvatureLabel(0);
 
       const decContainer = document.getElementById('flow-decision-container');
       if (decContainer) decContainer.classList.add('hidden');
@@ -2478,31 +2908,33 @@
     }
 
 
-    function _updateFlowCurvatureLabel(value) {
-      const label = document.getElementById('flow-curvature-value');
-      if (!label) return;
-      const n = Number(value);
-      label.textContent = n === 0 ? 'Reta' : (n > 0 ? `Curva ${n}%` : `Curva ${Math.abs(n)}% (invertida)`);
-    }
-    window._updateFlowCurvatureLabel = _updateFlowCurvatureLabel;
-
-    // Slider de curvatura só aparece quando o estilo "Curva" está escolhido
-    // -- "Esquinas" não tem parâmetro ajustável (a geometria de 1/2 dobras
-    // é toda derivada da posição relativa dos elementos, ver _buildFlowConnection).
-    function _onFlowConnectorStyleChange(style) {
-      const curvatureContainer = document.getElementById('flow-curvature-container');
-      if (curvatureContainer) curvatureContainer.classList.toggle('hidden', style !== 'curved');
-    }
-    window._onFlowConnectorStyleChange = _onFlowConnectorStyleChange;
-
     function confirmFlowConnection() {
       const type = currentFlowType;
       const textInput = document.getElementById('flow-chip-text');
       const text = textInput ? textInput.value : '';
-      const flowName = document.getElementById('flow-name-input') ? document.getElementById('flow-name-input').value : `Linha ${handoffData.nextFlowNumber || 1}`;
 
-      const sideInput = document.querySelector('input[name="flow-side"]:checked');
-      const flowSide = sideInput ? sideInput.value : 'auto';
+      // O campo do modal virou "Nome da Jornada" (ver Mudança 2) -- não é
+      // mais o flow.name de uma conexão isolada. Guardado em
+      // window._pendingJourneyName pra os handlers de flow-created/
+      // flow-marker-moved (messages.js) aplicarem em journeyName de cada
+      // conexão criada nesta operação, deixando flow.name (rótulo do grupo
+      // no canvas e do item na lista) com um nome descritivo por tipo.
+      const journeyNameInput = document.getElementById('flow-name-input');
+      const journeyName = journeyNameInput ? journeyNameInput.value.trim() : '';
+      window._pendingJourneyName = journeyName;
+
+      const flowName = FLOW_TYPE_DEFAULT_NAMES[type] || `Conexão ${handoffData.nextFlowNumber || 1}`;
+
+      // Lado por card (índice = origem do segmento na cadeia, ver
+      // _flowAnchorSideByIdx) -- ausência de índice = automático só naquele
+      // segmento. flowSide (singular) é mantido só como retrocompatibilidade
+      // pro caso de 1 evento isolado (Início/Fim antigo, sem par B) e pro
+      // backend que ainda lê msg.flowSide como fallback quando
+      // flowSidesByIndex não cobre o índice. flowEndSide é o lado de
+      // ENTRADA no último card da cadeia (chave 'end' em
+      // _flowAnchorSideByIdx) -- só se aplica ao último segmento.
+      const flowSidesByIndex = _orderedFlowAnchorNodes().map((_, i) => _flowAnchorSideByIdx[i] || 'auto');
+      const flowEndSide = _flowAnchorSideByIdx.end || 'auto';
 
       const styleInput = document.querySelector('input[name="flow-connector-style"]:checked');
       const connectorStyle = styleInput ? styleInput.value : 'straight';
@@ -2510,17 +2942,23 @@
       const curvatureInput = document.getElementById('flow-curvature-input');
       const curvature = curvatureInput ? Number(curvatureInput.value) || 0 : 0;
 
+      const autoMarkInput = document.getElementById('flow-auto-mark-endpoints');
+      const autoMarkEndpoints = autoMarkInput ? autoMarkInput.checked : false;
+
       parent.postMessage({
         pluginMessage: {
           type: 'create-flow-connection',
           flowType: type,
           decisionText: text,
           flowName: flowName,
-          flowSide: flowSide,
+          flowSide: flowSidesByIndex[0] || 'auto',
+          flowSidesByIndex: flowSidesByIndex,
+          flowEndSide: flowEndSide,
           connectorStyle: connectorStyle,
           curvature: curvature,
           nextFlowNumber: handoffData.nextFlowNumber || 1,
-          flowId: String(Date.now())
+          flowId: String(Date.now()),
+          autoMarkEndpoints: autoMarkEndpoints
         }
       }, '*');
       closeModal('flow-form-modal');
@@ -2548,10 +2986,11 @@
       if (!containers.length) return;
 
       const finalizeWrap = document.getElementById('btn-finalize-flows-wrap');
+      const resyncBtn = document.getElementById('btn-resync-flows');
 
       if (!handoffData.createdFlows || handoffData.createdFlows.length === 0) {
         const emptyHtml = `
-          <li class="flex flex-col items-center justify-center py-12 animate-in fade-in duration-500 list-none">
+          <li class="empty-state-placeholder flex flex-col items-center list-none">
             <div class="relative mb-4">
               <i data-lucide="git-branch" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
             </div>
@@ -2561,116 +3000,239 @@
         `;
         containers.forEach(c => c.innerHTML = emptyHtml);
         if (finalizeWrap) finalizeWrap.classList.add('hidden');
+        if (resyncBtn) resyncBtn.classList.add('hidden');
+        _updateContentHint('hint-flows', false);
         _refreshIcons();
         return;
       }
       if (finalizeWrap) finalizeWrap.classList.remove('hidden');
+      if (resyncBtn) resyncBtn.classList.remove('hidden');
+      _updateContentHint('hint-flows', true);
 
-      const html = handoffData.createdFlows.map((flow, idx) => {
-        const isVisible = flow.visible !== false;
-        
-        const typeLabels = {
-          'line_solid': 'Linha Sólida',
-          'line_dashed': 'Linha Tracejada',
-          'diamond': 'Ponto de Decisão',
-          'diamond_dashed': 'Decisão Tracejada',
-          'gateway_parallel': 'Gateway Paralelo',
-          'event_start': 'Início de Fluxo',
-          'event_end': 'Fim de Fluxo'
-        };
-        const typeLabel = typeLabels[flow.type] || flow.type.replace(/_/g, ' ').toUpperCase();
+      const FLOW_TYPE_LABELS = {
+        'line_solid': 'Linha Sólida',
+        'line_dashed': 'Linha Tracejada',
+        'diamond': 'Ponto de Decisão',
+        'diamond_dashed': 'Decisão Tracejada',
+        'gateway_parallel': 'Gateway Paralelo',
+        'event_start': 'Início de Fluxo',
+        'event_end': 'Fim de Fluxo'
+      };
 
-        const defaultName = flow.type === 'diamond' || flow.type === 'diamond_dashed' ? 'Ponto de Decisão' : (flow.type === 'gateway_parallel' ? 'Fork/Paralelo' : (flow.type === 'event_start' ? 'Início' : (flow.type === 'event_end' ? 'Fim' : 'Conexão de Fluxo')));
-        
+      // idx sempre se refere à posição no array PLANO handoffData.createdFlows
+      // -- renameFlow/openEditFlowModal/deleteNode dependem desse índice, o
+      // agrupamento visual em jornadas não pode perder essa referência.
+      const flatIndexOf = (flow) => handoffData.createdFlows.indexOf(flow);
+
+      const journeys = computeFlowJourneys(handoffData.createdFlows);
+
+      const html = journeys.map(journey => {
+        const itemsHtml = journey.conexoes.map(flow => {
+          const idx = flatIndexOf(flow);
+          const isVisible = flow.visible !== false;
+          const typeLabel = FLOW_TYPE_LABELS[flow.type] || flow.type.replace(/_/g, ' ').toUpperCase();
+          const defaultName = flow.type === 'diamond' || flow.type === 'diamond_dashed' ? 'Ponto de Decisão' : (flow.type === 'gateway_parallel' ? 'Fork/Paralelo' : (flow.type === 'event_start' ? 'Início' : (flow.type === 'event_end' ? 'Fim' : 'Conexão de Fluxo')));
+          return `
+          <li class="group relative bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-all cursor-pointer p-3"
+               onclick="focusNode('${flow.id}')">
+            <div class="flex items-center gap-3 w-full">
+              <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-800/50">
+                <i data-lucide="${flow.type.includes('diamond') ? 'help-circle' : (flow.type === 'gateway_parallel' ? 'git-fork' : (flow.type.includes('event') ? 'circle' : 'arrow-right'))}" class="w-4 h-4 text-[#3d3dff] dark:text-blue-400"></i>
+              </div>
+
+              <div class="flex-1 overflow-hidden">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-1.5 flex-1 min-w-0">
+                    <input type="text"
+                      value="${flow.name || defaultName}"
+                      class="inline-name-input w-full text-[12px] font-bold text-slate-800 dark:text-white rounded truncate -ml-0.5"
+                      onchange="renameFlow(${idx}, this.value)"
+                      onkeydown="if(event.key==='Enter') this.blur()"
+                      onclick="event.stopPropagation()"
+                      placeholder="Nome da conexão..." />
+                  </div>
+
+                  <div class="flex items-center gap-1 shrink-0">
+                    ${(flow.type === 'line_solid' || flow.type === 'line_dashed') ? `
+                    <button onclick="event.stopPropagation(); openEditFlowModal(${idx})" title="Editar curvatura e texto" aria-label="Editar curvatura e texto"
+                      class="w-7 h-7 rounded-xl flex items-center justify-center ${isVisible ? 'text-[#3d3dff]' : 'text-gray-400'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all">
+                      <i data-lucide="spline" class="w-3.5 h-3.5"></i>
+                    </button>` : ''}
+                    <button onclick="event.stopPropagation(); toggleFlowVisibility('${flow.id}', ${idx})"
+                      class="w-7 h-7 rounded-xl flex items-center justify-center ${isVisible ? 'text-[#3d3dff]' : 'text-gray-400'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                      title="${isVisible ? 'Ocultar fluxo' : 'Exibir fluxo'}" aria-label="Alterar visibilidade">
+                      <i data-lucide="${isVisible ? 'eye' : 'eye-off'}" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button onclick="event.stopPropagation(); deleteNode('${flow.id}', ${idx}, 'flow')" title="Excluir" aria-label="Excluir fluxo"
+                      class="w-7 h-7 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all">
+                      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="mt-1 flex items-center gap-2">
+                  <span class="text-[8px] text-gray-500 dark:text-dark-muted font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-900/50 px-1.5 py-0.5 rounded border border-gray-100 dark:border-dark-line">
+                    ${typeLabel}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </li>
+        `;
+        }).join('');
+
+        // Grupo de 1 conexão só: fica exatamente como uma conexão solta,
+        // sem moldura/header de card — evita ruído visual pra um "grupo"
+        // trivial (não há ação de jornada que faça sentido reduzida a N=1).
+        if (journey.conexoes.length === 1) {
+          return `<ul class="rounded-2xl border border-gray-100 dark:border-dark-line hover:border-blue-300 dark:hover:border-blue-800 hover:shadow-md transition-all overflow-hidden active:scale-[0.98]">${itemsHtml}</ul>`;
+        }
+
+        const journeyKey = journey.conexoes[0].id;
+        const allVisible = journey.conexoes.every(f => f.visible !== false);
+        const journeyNameEsc = journey.isUnnamed ? '' : escapeHtml(journey.nome);
+
         return `
-        <li class="group relative bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl p-4 hover:border-blue-300 dark:hover:border-blue-800 hover:shadow-md transition-all cursor-pointer active:scale-[0.98]"
-             onclick="focusNode('${flow.id}')">
-          <div class="flex items-center gap-4 w-full">
-            <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-800/50">
-              <i data-lucide="${flow.type.includes('diamond') ? 'help-circle' : (flow.type === 'gateway_parallel' ? 'git-fork' : (flow.type.includes('event') ? 'circle' : 'arrow-right'))}" class="w-5 h-5 text-[#3d3dff] dark:text-blue-400"></i>
+        <li class="border border-gray-100 dark:border-dark-line rounded-2xl overflow-hidden shadow-sm bg-gray-50/30 dark:bg-slate-900/20">
+          <div class="p-3 flex items-center gap-2 bg-gray-100/50 dark:bg-slate-800/50">
+            <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-800/50">
+              <i data-lucide="git-branch" class="w-4 h-4 text-[#3d3dff] dark:text-blue-400"></i>
             </div>
-            
-            <div class="flex-1 overflow-hidden">
-              <div class="flex items-center justify-between gap-2">
-                <div class="flex items-center gap-1.5 flex-1 min-w-0">
-                  <input type="text"
-                    value="${flow.name || defaultName}"
-                    class="inline-name-input w-full text-[13px] font-bold text-slate-800 dark:text-white rounded truncate -ml-0.5"
-                    onchange="renameFlow(${idx}, this.value)"
-                    onkeydown="if(event.key==='Enter') this.blur()"
-                    onclick="event.stopPropagation()"
-                    placeholder="Nome da conexão..." />
-                </div>
-                
-                <div class="flex items-center gap-1 shrink-0">
-                  ${(flow.type === 'line_solid' || flow.type === 'line_dashed') ? `
-                  <button onclick="event.stopPropagation(); openEditFlowModal(${idx})" title="Editar curvatura e texto" aria-label="Editar curvatura e texto"
-                    class="w-7 h-7 rounded-xl flex items-center justify-center ${isVisible ? 'text-[#3d3dff]' : 'text-gray-400'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all">
-                    <i data-lucide="spline" class="w-3.5 h-3.5"></i>
-                  </button>` : ''}
-                  <button onclick="event.stopPropagation(); toggleFlowVisibility('${flow.id}', ${idx})"
-                    class="w-7 h-7 rounded-xl flex items-center justify-center ${isVisible ? 'text-[#3d3dff]' : 'text-gray-400'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
-                    title="${isVisible ? 'Ocultar fluxo' : 'Exibir fluxo'}" aria-label="Alterar visibilidade">
-                    <i data-lucide="${isVisible ? 'eye' : 'eye-off'}" class="w-3.5 h-3.5"></i>
-                  </button>
-                  <button onclick="event.stopPropagation(); deleteNode('${flow.id}', ${idx}, 'flow')" title="Excluir" aria-label="Excluir fluxo"
-                    class="w-7 h-7 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all">
-                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                  </button>
-                </div>
-              </div>
-              
-              <div class="mt-1 flex items-center gap-2">
-                <span class="text-[8px] text-gray-500 dark:text-dark-muted font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-900/50 px-1.5 py-0.5 rounded border border-gray-100 dark:border-dark-line">
-                  ${typeLabel}
-                </span>
+            <div class="flex-1 min-w-0 flex items-center gap-1.5 cursor-pointer" onclick="toggleFlowJourneyAccordion(this)">
+              <input type="text"
+                value="${journeyNameEsc}"
+                placeholder="Jornada sem nome"
+                class="journey-name-input flex-1 min-w-0 text-[13px] font-bold text-slate-800 dark:text-white rounded truncate bg-transparent placeholder:text-slate-400 dark:placeholder:text-dark-muted placeholder:italic"
+                onchange="renameJourney('${journeyKey}', this.value)"
+                onkeydown="if(event.key==='Enter') this.blur()"
+                onclick="event.stopPropagation()" />
+              <span class="shrink-0 text-[10px] text-slate-400 dark:text-dark-muted font-bold">${journey.conexoes.length} conexões</span>
+            </div>
+            <div class="relative shrink-0">
+              <button type="button" onclick="event.stopPropagation(); toggleFlowJourneyMenu(this)" title="Mais ações da jornada" aria-label="Mais ações da jornada"
+                class="p-2 hover:bg-white/50 dark:hover:bg-slate-700 rounded-lg transition-colors text-gray-500 dark:text-dark-muted">
+                <i data-lucide="more-horizontal" class="w-4 h-4"></i>
+              </button>
+              <div class="hidden absolute right-0 top-full mt-1 z-20 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-xl shadow-lg py-1 min-w-[190px] journey-menu-panel">
+                <button type="button" onclick="event.stopPropagation(); focusJourneyNameInput(this)" class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-line/20 transition-colors text-left">
+                  <i data-lucide="pencil" class="w-3.5 h-3.5 shrink-0"></i><span>Renomear jornada</span>
+                </button>
+                <button type="button" onclick="event.stopPropagation(); toggleJourneyVisibility('${journeyKey}')" class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-line/20 transition-colors text-left">
+                  <i data-lucide="${allVisible ? 'eye-off' : 'eye'}" class="w-3.5 h-3.5 shrink-0"></i><span>${allVisible ? 'Ocultar jornada' : 'Exibir jornada'}</span>
+                </button>
+                <button type="button" onclick="event.stopPropagation(); deleteJourney('${journeyKey}')" class="w-full flex items-center gap-2 px-3 py-2 mt-1 pt-2 border-t border-gray-100 dark:border-dark-line text-[11px] font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5 shrink-0"></i><span>Excluir jornada completa</span>
+                </button>
               </div>
             </div>
+            <i data-lucide="chevron-down" class="journey-chevron w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform shrink-0 rotate-180 cursor-pointer" onclick="toggleFlowJourneyAccordion(this)"></i>
           </div>
+          <ul class="divide-y divide-gray-50 dark:divide-dark-line/50 border-l-2 border-dashed border-[#3d3dff]/40 ml-5">${itemsHtml}</ul>
         </li>
-      `; }).join('');
+      `;
+      }).join('');
 
       containers.forEach(c => c.innerHTML = html);
       _refreshIcons();
     }
 
+    function toggleFlowJourneyAccordion(el) {
+      const card = el.closest('li');
+      const body = card && card.querySelector('ul');
+      const chevron = card && card.querySelector('.journey-chevron');
+      if (!body || !chevron) return;
+      body.classList.toggle('hidden');
+      chevron.classList.toggle('rotate-180');
+    }
+    window.toggleFlowJourneyAccordion = toggleFlowJourneyAccordion;
 
+    function toggleFlowJourneyMenu(btn) {
+      const panel = btn.nextElementSibling;
+      if (!panel) return;
+      document.querySelectorAll('.journey-menu-panel').forEach(p => { if (p !== panel) p.classList.add('hidden'); });
+      panel.classList.toggle('hidden');
+    }
+    window.toggleFlowJourneyMenu = toggleFlowJourneyMenu;
+
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.journey-menu-panel') || e.target.closest('[onclick*="toggleFlowJourneyMenu"]')) return;
+      document.querySelectorAll('.journey-menu-panel').forEach(p => p.classList.add('hidden'));
+    });
+
+    function focusJourneyNameInput(menuItemEl) {
+      const card = menuItemEl.closest('li');
+      const input = card && card.querySelector('.journey-name-input');
+      document.querySelectorAll('.journey-menu-panel').forEach(p => p.classList.add('hidden'));
+      if (input) { input.focus(); input.select(); }
+    }
+    window.focusJourneyNameInput = focusJourneyNameInput;
+
+    // journeyKey é o sourceId da primeira conexão do grupo no momento do
+    // render -- suficiente pra reidentificar o grupo (computeFlowJourneys
+    // é determinístico), nunca persistido como id de jornada.
+    function _journeyMembersByKey(journeyKey) {
+      const journeys = computeFlowJourneys(handoffData.createdFlows);
+      const journey = journeys.find(j => j.conexoes[0] && j.conexoes[0].id === journeyKey);
+      return journey ? journey.conexoes : [];
+    }
+
+    function renameJourney(journeyKey, newName) {
+      const trimmed = (newName || '').trim();
+      const members = _journeyMembersByKey(journeyKey);
+      members.forEach(f => { f.journeyName = trimmed || null; });
+      saveToStorage();
+      renderFlowsList();
+    }
+    window.renameJourney = renameJourney;
+
+    function toggleJourneyVisibility(journeyKey) {
+      const members = _journeyMembersByKey(journeyKey);
+      if (!members.length) return;
+      const allVisible = members.every(f => f.visible !== false);
+      const targetState = !allVisible;
+      members.forEach(f => {
+        f.visible = targetState;
+        if (f.id) parent.postMessage({ pluginMessage: { type: 'hide-node', id: f.id, forceState: targetState } }, '*');
+      });
+      saveToStorage();
+      renderFlowsList();
+    }
+    window.toggleJourneyVisibility = toggleJourneyVisibility;
+
+    // Exclusão de jornada é destrutiva e irreversível (remove todas as
+    // conexões do grupo do canvas) -- confirmação em modal, diferente do
+    // "clique duas vezes" usado no delete de conexão individual, já que
+    // chegar aqui já exige abrir o menu "···" primeiro (fricção equivalente).
+    function deleteJourney(journeyKey) {
+      const members = _journeyMembersByKey(journeyKey);
+      if (!members.length) return;
+      const namedMember = members.find(f => f.journeyName && f.journeyName.trim());
+      const label = namedMember ? `"${namedMember.journeyName.trim()}"` : 'sem nome';
+      const n = members.length;
+      const confirmed = window.confirm(
+        `Excluir a jornada ${label} e ${n === 1 ? 'sua conexão' : `suas ${n} conexões`}? Todas as setas, decisões e marcadores desse fluxo serão removidos do canvas. Essa ação não pode ser desfeita.`
+      );
+      if (!confirmed) return;
+      members.forEach(f => {
+        if (f.id) parent.postMessage({ pluginMessage: { type: 'delete-node', id: f.id } }, '*');
+      });
+      const memberIds = new Set(members.map(f => f.flowUid || f.id));
+      handoffData.createdFlows = handoffData.createdFlows.filter(f => !memberIds.has(f.flowUid || f.id));
+      saveToStorage();
+      renderFlowsList();
+      showToast(`Jornada excluída — ${n === 1 ? '1 conexão removida' : `${n} conexões removidas`}.`);
+    }
+    window.deleteJourney = deleteJourney;
+
+    function resyncAllFlows() {
+      const flows = handoffData.createdFlows || [];
+      if (flows.length === 0) return;
+      parent.postMessage({ pluginMessage: { type: 'resync-all-flows', flows: flows } }, '*');
+    }
+    window.resyncAllFlows = resyncAllFlows;
 
     function createLegend() {
       parent.postMessage({ pluginMessage: { type: 'create-legend' } }, '*');
-    }
-
-    // ── Popover: como funcionam os fluxos (Fluxos de Tela) ────────────
-    function toggleFlowsHelp(e) {
-      if (e) e.stopPropagation();
-      const wrap = document.getElementById('flows-help');
-      if (!wrap) return;
-      const panel = wrap.querySelector('[data-flows-help-panel]');
-      if (!panel) return;
-      const isOpen = !panel.classList.contains('hidden');
-      if (isOpen) {
-        panel.classList.add('hidden');
-        return;
-      }
-      panel.classList.remove('hidden');
-      const close = (ev) => {
-        if (!wrap.contains(ev.target)) {
-          panel.classList.add('hidden');
-          document.removeEventListener('click', close, true);
-          document.removeEventListener('keydown', onEsc, true);
-        }
-      };
-      const onEsc = (ev) => {
-        if (ev.key === 'Escape') {
-          panel.classList.add('hidden');
-          document.removeEventListener('click', close, true);
-          document.removeEventListener('keydown', onEsc, true);
-        }
-      };
-      setTimeout(() => {
-        document.addEventListener('click', close, true);
-        document.addEventListener('keydown', onEsc, true);
-      }, 0);
     }
 
     // --- CONTROLE DE SCROLL (CONSOLIDADO) ---
@@ -2691,10 +3253,65 @@
       }
     }
 
+    // Tipos que podem ser trocados entre si no modal de edição -- exclui
+    // event_start/event_end (marcadores de Início/Fim, sem targetId e com
+    // fluxo de criação totalmente diferente, não fazem sentido aqui) e
+    // gateway_parallel (não exposto na criação normal). Uma conexão editada
+    // é sempre um par sourceId+targetId, nunca uma cadeia de 3+, então a
+    // restrição de "Decisão exige exatamente 2 elementos" já vale por
+    // construção -- pode trocar livremente entre os 4.
+    const EDITABLE_FLOW_TYPES = ['line_solid', 'line_dashed', 'diamond', 'diamond_dashed'];
+    let _editingFlowType = null;
+
+    // line_solid/line_dashed ficam de fora de propósito: na criação
+    // (confirmFlowConnection), o fallback é `Conexão N` (nextFlowNumber),
+    // mais informativo numa lista com várias linhas do mesmo tipo do que um
+    // rótulo genérico repetido "Sequência"/"Sequência"/"Sequência". Na
+    // edição (confirmEditFlow), esses dois tipos são tratados à parte com
+    // EDIT_FLOW_TYPE_FALLBACK_NAMES, que só entra em jogo quando o usuário
+    // TROCA de tipo (ex: de Decisão pra Sequência) e precisa de um nome
+    // novo que não seja mais "Ponto de Decisão".
+    const FLOW_TYPE_DEFAULT_NAMES = {
+      diamond: 'Ponto de Decisão',
+      diamond_dashed: 'Decisão Tracejada',
+      gateway_parallel: 'Fork/Paralelo',
+      event_start: 'Início',
+      event_end: 'Fim'
+    };
+
+    // Mesmo padrão de estilo inline de selectFlowType (specifications.js) --
+    // não depende de classe CSS condicional (ex: has-[:checked] exige radio,
+    // group-[.active] não compila neste setup do Tailwind v3).
+    function _selectEditFlowType(type) {
+      _editingFlowType = type;
+      EDITABLE_FLOW_TYPES.forEach(t => {
+        const card = document.getElementById(`edit-flow-type-${t}`);
+        if (!card) return;
+        card.style.borderColor = '';
+        const icon = card.querySelector('i[data-lucide]');
+        if (icon) icon.style.color = '';
+        const diamond = card.querySelector('.rotate-45');
+        if (diamond) diamond.style.borderColor = '';
+      });
+      const activeCard = document.getElementById(`edit-flow-type-${type}`);
+      if (activeCard) {
+        activeCard.style.borderColor = '#3d3dff';
+        const icon = activeCard.querySelector('i[data-lucide]');
+        if (icon) icon.style.color = '#3d3dff';
+        const diamond = activeCard.querySelector('.rotate-45');
+        if (diamond) diamond.style.borderColor = '#3d3dff';
+      }
+    }
+    window._selectEditFlowType = _selectEditFlowType;
+
     function openEditFlowModal(idx) {
       const flow = handoffData.createdFlows[idx];
       if (!flow || !flow.sourceId) {
         showToast('Este fluxo não pode ser editado — foi criado antes deste recurso existir.', 'error');
+        return;
+      }
+      if (!flow.targetId || !EDITABLE_FLOW_TYPES.includes(flow.type)) {
+        showToast('Marcadores de Início/Fim não têm tipo editável — apague e recrie se precisar mudar.', 'error');
         return;
       }
       // Único nome de variável compartilhado com messages.js (flow-created)
@@ -2702,15 +3319,15 @@
       // um só evita que um refator futuro quebre o fluxo de edição em
       // silêncio (sintoma seria "editar duplica em vez de substituir").
       window._editingFlowIndex = idx;
+      _selectEditFlowType(flow.type);
       const textInput = document.getElementById('edit-flow-chip-text');
-      if (textInput) textInput.value = flow.decisionText || '';
+      if (textInput) {
+        textInput.value = flow.decisionText || '';
+        _updateCharCount(textInput, 20);
+      }
       const style = flow.connectorStyle || 'straight';
       const styleRadio = document.querySelector(`input[name="edit-flow-connector-style"][value="${style}"]`);
       if (styleRadio) styleRadio.checked = true;
-      _onEditFlowConnectorStyleChange(style);
-      const curvatureInput = document.getElementById('edit-flow-curvature-input');
-      if (curvatureInput) curvatureInput.value = flow.curvature || 0;
-      _updateEditFlowCurvatureLabel(flow.curvature || 0);
       const saveBtn = document.getElementById('edit-flow-save-btn');
       if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> Salvar'; }
       openModal('edit-flow-modal');
@@ -2723,20 +3340,6 @@
       closeModal('edit-flow-modal');
     }
     window.closeEditFlowModal = closeEditFlowModal;
-
-    function _updateEditFlowCurvatureLabel(value) {
-      const label = document.getElementById('edit-flow-curvature-value');
-      if (!label) return;
-      const n = Number(value);
-      label.textContent = n === 0 ? 'Reta' : (n > 0 ? `Curva ${n}%` : `Curva ${Math.abs(n)}% (invertida)`);
-    }
-    window._updateEditFlowCurvatureLabel = _updateEditFlowCurvatureLabel;
-
-    function _onEditFlowConnectorStyleChange(style) {
-      const curvatureContainer = document.getElementById('edit-flow-curvature-container');
-      if (curvatureContainer) curvatureContainer.classList.toggle('hidden', style !== 'curved');
-    }
-    window._onEditFlowConnectorStyleChange = _onEditFlowConnectorStyleChange;
 
     function confirmEditFlow() {
       const idx = window._editingFlowIndex;
@@ -2763,11 +3366,20 @@
       const connectorStyle = styleInput ? styleInput.value : 'straight';
       const curvature = curvatureInput ? Number(curvatureInput.value) || 0 : 0;
 
+      // Tipo escolhido no seletor (pode ter mudado de Sequência pra
+      // Decisão, por exemplo) -- nome segue junto: mantém o nome customizado
+      // do usuário só se o tipo não mudou, senão usa um nome padrão do tipo
+      // novo, pra não deixar um fluxo tipo "Sequência" com nome "Ponto de
+      // Decisão" sobrando de antes da troca (ou vice-versa).
+      const EDIT_FLOW_TYPE_FALLBACK_NAMES = Object.assign({ line_solid: 'Sequência', line_dashed: 'Mensagem' }, FLOW_TYPE_DEFAULT_NAMES);
+      const newType = _editingFlowType || flow.type;
+      const flowName = (newType === flow.type && flow.name) ? flow.name : (EDIT_FLOW_TYPE_FALLBACK_NAMES[newType] || flow.name || '');
+
       parent.postMessage({
         pluginMessage: {
           type: 'edit-flow-connection',
-          flowType: flow.type,
-          flowName: flow.name || '',
+          flowType: newType,
+          flowName: flowName,
           sourceId: flow.sourceId,
           targetId: flow.targetId || null,
           decisionText: decisionText,
@@ -2817,6 +3429,7 @@ function toggleLinkInput(show) {
       if (typeof syncSpecColorFromCategory === 'function') syncSpecColorFromCategory();
       document.getElementById('spec-link-input').value = '';
       document.getElementById('ann-note').value = '';
+      _updateCharCount(document.getElementById('ann-note'), 500);
       
       // Reset link checkbox
       document.getElementById('chk-has-link').checked = false;
@@ -2830,10 +3443,6 @@ function toggleLinkInput(show) {
       if (drawConnChk) drawConnChk.checked = true;
       const straightStyleRadio = document.querySelector('input[name="spec-connector-style"][value="straight"]');
       if (straightStyleRadio) straightStyleRadio.checked = true;
-      _onSpecConnectorStyleChange('straight');
-      const curvatureInput = document.getElementById('spec-curvature-input');
-      if (curvatureInput) curvatureInput.value = 0;
-      _updateSpecCurvatureLabel(0);
       _toggleSpecConnectionCurvature(true);
 
       const modalTitle = document.querySelector('#spec-form-modal h3');
@@ -2842,7 +3451,7 @@ function toggleLinkInput(show) {
       }
       const confirmBtn = document.getElementById('btn-spec-form-confirm');
       if (confirmBtn) {
-        confirmBtn.textContent = 'Avançar para Propriedades';
+        confirmBtn.textContent = 'Ir para Propriedades';
         confirmBtn.onclick = requestSpecProperties;
       }
       document.getElementById('spec-form-modal').classList.remove('hidden');

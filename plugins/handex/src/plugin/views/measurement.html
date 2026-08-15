@@ -8,41 +8,13 @@
             <i data-lucide="arrow-left" class="w-4 h-4 text-white" aria-hidden="true"></i>
           </button>
           <h2 class="text-white font-bold text-[18px] truncate min-w-0">Anotar Medidas</h2>
-          <div id="measure-types-help" class="relative shrink-0">
-            <button type="button" onclick="toggleMeasureTypesHelp(event)"
-              class="w-4 h-4 flex items-center justify-center text-white/70 hover:text-white transition-colors"
-              title="Quais tipos de medida posso inserir?" aria-label="Quais tipos de medida posso inserir">
-              <i data-lucide="circle-help" class="w-3.5 h-3.5"></i>
-            </button>
-            <div data-measure-types-panel
-              class="hidden absolute left-0 top-full mt-2 w-64 z-50 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-xl p-3.5 space-y-3">
-              <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Tipos de medida</p>
-              <div class="space-y-2.5">
-                <div class="flex items-start gap-2">
-                  <i data-lucide="scaling" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0 mt-0.5"></i>
-                  <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight"><strong class="text-slate-600 dark:text-dark-text">Altura e Largura:</strong> dimensões do elemento selecionado.</p>
-                </div>
-                <div class="flex items-start gap-2">
-                  <i data-lucide="box-select" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0 mt-0.5"></i>
-                  <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight"><strong class="text-slate-600 dark:text-dark-text">Espaçamento Externo:</strong> distância entre o elemento e seus vizinhos.</p>
-                </div>
-                <div class="flex items-start gap-2">
-                  <i data-lucide="focus" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0 mt-0.5"></i>
-                  <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight"><strong class="text-slate-600 dark:text-dark-text">Padding Interno:</strong> espaço entre a borda do frame e seu conteúdo.</p>
-                </div>
-                <div class="flex items-start gap-2">
-                  <i data-lucide="align-horizontal-space-between" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0 mt-0.5"></i>
-                  <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight"><strong class="text-slate-600 dark:text-dark-text">Padding e Gaps:</strong> espaçamentos internos de um Auto Layout.</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <button type="button" onclick="openOnboarding('medidas')"
+            class="w-4 h-4 flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
+            title="Como funciona esta ferramenta" aria-label="Como funciona esta ferramenta">
+            <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i>
+          </button>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
-          <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('measures-scroll-container'))" title="Recolher/expandir todos" aria-label="Recolher ou expandir todos os accordions"
-            class="hidden p-1.5 hover:bg-white/20 rounded-md transition-colors text-white/80 hover:text-white">
-            <i data-lucide="chevrons-up-down" class="w-4 h-4" aria-hidden="true"></i>
-          </button>
           <button onclick="openMeasureModal()" class="fab-inline" title="Inserir medida" aria-label="Inserir medida">
             <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
             <span>Inserir medida</span>
@@ -51,8 +23,32 @@
       </div>
 
       <!-- Scrollable content -->
-      <div id="measures-scroll-container" class="flex-1 overflow-y-auto pt-6 px-4 pb-4" onscroll="handleScroll(this)">
+      <div id="measures-scroll-container" class="flex-1 overflow-y-auto pt-3 px-4 pb-4" onscroll="handleScroll(this)">
         <div class="space-y-4 max-w-[440px] mx-auto">
+
+          <!-- Recolher/expandir todos -- label aberta, sem ícone; logo
+               abaixo do header, acima da lista de cards. -->
+          <div class="flex justify-end">
+            <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('measures-scroll-container'))"
+              class="hidden text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors">
+              Recolher todos
+            </button>
+          </div>
+
+          <!-- Onboarding banner (primeira visita) -->
+          <div id="onboarding-banner-medidas" class="hidden flex items-start gap-2.5 bg-[#3d3dff]/5 dark:bg-blue-900/10 border border-[#3d3dff]/20 dark:border-blue-800/30 rounded-2xl p-3.5">
+            <i data-lucide="sparkles" class="w-4 h-4 text-[#3d3dff] dark:text-blue-300 shrink-0 mt-0.5"></i>
+            <div class="flex-1 min-w-0">
+              <p class="text-[11px] font-bold text-[#2e2ee0] dark:text-blue-300">Primeira vez aqui?</p>
+              <p class="text-[10px] text-[#2e2ee0]/80 dark:text-blue-300/80 leading-relaxed mt-0.5">Veja como inserir medidas no canvas.</p>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button type="button" onclick="openOnboarding('medidas', { markSeenOnOpen: true })" class="px-2.5 py-1 bg-[#3d3dff] hover:bg-[#2e2ee0] text-white text-[10px] font-bold rounded-lg transition-colors">Ver agora</button>
+              <button type="button" onclick="dismissOnboardingBanner('medidas')" title="Dispensar" aria-label="Dispensar" class="p-1 text-[#3d3dff]/60 hover:text-[#3d3dff] dark:text-blue-300/60 dark:hover:text-blue-300 transition-colors">
+                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
 
           <!-- Frame Selector -->
           <div data-frame-selector-card>

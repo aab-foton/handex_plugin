@@ -20,11 +20,7 @@
 
       // Hint e botões globais (apenas na tela de medidas standalone)
       if (!frameId) {
-        const hint = document.getElementById('hint-measures');
-        if (hint) {
-          if (data && data.length > 0) hint.classList.add('hidden');
-          else hint.classList.remove('hidden');
-        }
+        _updateContentHint('hint-measures', !!(data && data.length > 0));
         const exportBtn = document.getElementById('btn-export-measures');
         const hideAllBtn = document.getElementById('btn-hide-all-measures');
         const collapseBtn = document.querySelector('#view-measurement [data-collapse-toggle]');
@@ -45,7 +41,7 @@
       if (!data || data.length === 0) {
         if (!frameId) {
           container.innerHTML = `
-            <li class="flex flex-col items-center justify-center py-12 animate-in fade-in duration-500 list-none">
+            <li class="empty-state-placeholder flex flex-col items-center list-none">
               <div class="relative mb-4">
                 <i data-lucide="ruler" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
               </div>
@@ -415,35 +411,3 @@
       URL.revokeObjectURL(url);
     }
 
-    // ── Popover: tipos de medida disponíveis (Anotar Medidas) ────────────
-    function toggleMeasureTypesHelp(e) {
-      if (e) e.stopPropagation();
-      const wrap = document.getElementById('measure-types-help');
-      if (!wrap) return;
-      const panel = wrap.querySelector('[data-measure-types-panel]');
-      if (!panel) return;
-      const isOpen = !panel.classList.contains('hidden');
-      if (isOpen) {
-        panel.classList.add('hidden');
-        return;
-      }
-      panel.classList.remove('hidden');
-      const close = (ev) => {
-        if (!wrap.contains(ev.target)) {
-          panel.classList.add('hidden');
-          document.removeEventListener('click', close, true);
-          document.removeEventListener('keydown', onEsc, true);
-        }
-      };
-      const onEsc = (ev) => {
-        if (ev.key === 'Escape') {
-          panel.classList.add('hidden');
-          document.removeEventListener('click', close, true);
-          document.removeEventListener('keydown', onEsc, true);
-        }
-      };
-      setTimeout(() => {
-        document.addEventListener('click', close, true);
-        document.addEventListener('keydown', onEsc, true);
-      }, 0);
-    }

@@ -185,7 +185,10 @@ ${(() => {
 ## Fluxos de Tela (${(handoffData.createdFlows || []).length})
 ${(handoffData.createdFlows || []).length === 0
   ? 'Nenhum fluxo mapeado.'
-  : (handoffData.createdFlows || []).map(flow => `- **${flow.name || 'Fluxo'}** — ${flow.type || ''}${flow.decisionText ? ' ("' + flow.decisionText + '")' : ''}`).join('\n')}
+  : (typeof computeFlowJourneys === 'function' ? computeFlowJourneys(handoffData.createdFlows) : []).map(journey => {
+      const conexoesMd = journey.conexoes.map(flow => `- **${flow.name || 'Fluxo'}** — ${flow.type || ''}${flow.decisionText ? ' ("' + flow.decisionText + '")' : ''}`).join('\n');
+      return `### Jornada: ${journey.nome} (${journey.conexoes.length} conexões)\n${conexoesMd}`;
+    }).join('\n\n')}
 
 ## Documentação
 - Protótipo: ${(handoffData.docs && handoffData.docs.proto && handoffData.docs.proto.link) || 'N/A'}
@@ -1382,25 +1385,35 @@ ${(handoffData.createdFlows || []).length === 0
         accordionsHTML += buildAccordionHTML("acc-annot-specs", `Especificações Anotadas · ${totalAnnot}`, "tag", annotContent, false);
       }
 
-      // 8. Fluxos de Tela
+      // 8. Fluxos de Tela — agrupado por jornada (computeFlowJourneys, core.js),
+      // mesma função reaproveitada pela lista da UI e pelo bloco Markdown da
+      // ficha, nunca reimplementada aqui.
       const _allFlows = handoffData.createdFlows || [];
       if (_allFlows.length > 0) {
         const flowTypeLabel = { line_solid: 'Linha sólida', line_dashed: 'Linha tracejada', diamond: 'Decisão', diamond_dashed: 'Decisão tracejada', event_start: 'Início', event_end: 'Fim', gateway_parallel: 'Paralelo' };
+        const _journeys = typeof computeFlowJourneys === 'function' ? computeFlowJourneys(_allFlows) : [{ nome: 'Fluxos', isUnnamed: true, conexoes: _allFlows }];
         const flowsContent = `
-          <div class="space-y-2 text-left">
-            ${_allFlows.map((flow, fi) => `
-              <div class="flex items-center gap-3 p-3 bg-purple-50/40 dark:bg-purple-950/10 border border-purple-100/60 dark:border-purple-900/30 rounded-xl">
-                <div class="w-6 h-6 rounded-md bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0 text-[10px] font-black">${fi + 1}</div>
-                <div class="flex-1 min-w-0">
-                  <span class="text-[11px] font-black text-slate-800 dark:text-white">${flow.name || 'Fluxo'}</span>
-                  ${flow.decisionText ? `<span class="ml-2 text-[10px] text-slate-500 dark:text-slate-400">"${flow.decisionText}"</span>` : ''}
+          <div class="space-y-4 text-left">
+            ${_journeys.map(journey => `
+              <div>
+                <p class="text-[9px] font-black uppercase tracking-wider text-purple-500 dark:text-purple-400 mb-1.5">${journey.isUnnamed ? journey.nome : escapeHtml(journey.nome)}<span class="text-slate-400 font-normal normal-case"> · ${journey.conexoes.length} conexões</span></p>
+                <div class="space-y-2">
+                  ${journey.conexoes.map((flow, fi) => `
+                    <div class="flex items-center gap-3 p-3 bg-purple-50/40 dark:bg-purple-950/10 border border-purple-100/60 dark:border-purple-900/30 rounded-xl">
+                      <div class="w-6 h-6 rounded-md bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0 text-[10px] font-black">${fi + 1}</div>
+                      <div class="flex-1 min-w-0">
+                        <span class="text-[11px] font-black text-slate-800 dark:text-white">${flow.name || 'Fluxo'}</span>
+                        ${flow.decisionText ? `<span class="ml-2 text-[10px] text-slate-500 dark:text-slate-400">"${flow.decisionText}"</span>` : ''}
+                      </div>
+                      <span class="text-[9px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider shrink-0">${flowTypeLabel[flow.type] || flow.type || ''}</span>
+                    </div>
+                  `).join('')}
                 </div>
-                <span class="text-[9px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider shrink-0">${flowTypeLabel[flow.type] || flow.type || ''}</span>
               </div>
             `).join('')}
           </div>
         `;
-        accordionsHTML += buildAccordionHTML("acc-flows", "Fluxos de Tela", "git-branch", flowsContent, false);
+        accordionsHTML += buildAccordionHTML("acc-flows", `Fluxos de Tela · ${_allFlows.length}`, "git-branch", flowsContent, false);
       }
 
       // 9. "Especificações Visuais" (specs a partir de handoffData.specs, nível

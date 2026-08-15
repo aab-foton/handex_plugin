@@ -9,6 +9,17 @@ function escapeHtml(str) {
 }
 window.escapeHtml = escapeHtml;
 
+// --- UX: contador "N/max" genérico para campos de texto livre com maxlength.
+// Acha o <span id="{input.id}-count"> pelo id do próprio campo -- todo campo
+// que usa esse padrão precisa de um id fixo e de um span irmão com esse
+// sufixo. Reaproveitado por qualquer input/textarea de texto livre do
+// plugin (não usar em campos de URL/busca, que ficam sem limite). ---
+function _updateCharCount(input, max) {
+  const counter = document.getElementById(`${input.id}-count`);
+  if (counter) counter.textContent = `${input.value.length}/${max}`;
+}
+window._updateCharCount = _updateCharCount;
+
 // --- PERFORMANCE: debounced icon refresh (must be first — called at top-level during init) ---
 let _lucideTimer = null;
 function _refreshIcons(container) {
@@ -111,7 +122,10 @@ function _updateFrameAuditSubtitle(frameId) {
   // inicial em renderFrameCard não se atualiza sozinha depois do render).
   const obsField = document.getElementById(`audit-obs-${frameId}`);
   if (obsField && typeof _shouldShowAuditObs === 'function') {
-    obsField.classList.toggle('hidden', !_shouldShowAuditObs(frame));
+    const show = _shouldShowAuditObs(frame);
+    obsField.classList.toggle('hidden', !show);
+    const obsCountRow = document.getElementById(`audit-obs-${frameId}-count-row`);
+    if (obsCountRow) obsCountRow.classList.toggle('hidden', !show);
   }
 }
 
@@ -176,6 +190,8 @@ function setFrameSemDesvios(frameId, checked) {
   const showObs = !checked || hasUnlinked;
   const el = document.getElementById(`audit-obs-${frameId}`);
   if (el) el.classList.toggle('hidden', !showObs);
+  const obsCountRow = document.getElementById(`audit-obs-${frameId}-count-row`);
+  if (obsCountRow) obsCountRow.classList.toggle('hidden', !showObs);
   _updateFrameAuditSubtitle(frameId);
   saveToStorage();
 }
@@ -243,7 +259,6 @@ Object.assign(window, {
   closeMeasureModal,
   selectMeasurement,
   executeMeasurement,
-  toggleMeasureTypesHelp,
   selectFlowType,
   confirmFlowConnection,
   toggleUiScale,
@@ -266,7 +281,6 @@ Object.assign(window, {
   getFrame,
   toggleNewComponent,
   toggleFrameAccordion,
-  toggleFlowsHelp,
   validateStep1,
   addTeamMember,
   removeTeamMember,
@@ -516,18 +530,30 @@ function confirmBriefingAxisSelection(axisId) {
 // perde edição — só fecha sem salvar.
 let _briefingQuestionModalAxis = null;
 let _briefingQuestionModalEditId = null;
+// true quando este modal foi aberto a partir do Guia do Briefing Estratégico
+// (busca+filtros, ver _renderBriefingGuideResults) -- nesse caso, fechar
+// (cancelar OU confirmar) deve reabrir o Guia em vez de revelar a tela de
+// trás. O Guia é um fluxo de seleção em lote (usuário tende a adicionar
+// várias perguntas em sequência), então ejetar pra fora dele a cada
+// pergunta adicionada quebra o ritmo -- mesmo padrão de "adicionar ao
+// carrinho": o item ganha o badge "Já usada" e a busca/filtro continuam
+// como estavam. Os outros dois pontos de entrada (accordion de eixo dentro
+// de Dados do Projeto, e editar uma pergunta já criada) não usam essa
+// flag -- lá, fechar deve mesmo revelar a tela de trás normalmente.
+let _briefingQuestionModalReturnToGuide = false;
 
-function openBriefingQuestionModal(axisName, questionText = "", answerText = "", editId = null) {
+function openBriefingQuestionModal(axisName, questionText = "", answerText = "", editId = null, returnToGuide = false) {
   _briefingQuestionModalAxis = axisName;
   _briefingQuestionModalEditId = editId;
+  _briefingQuestionModalReturnToGuide = returnToGuide;
   const title = document.getElementById('briefing-question-modal-title');
   if (title) title.textContent = editId ? 'Editar pergunta' : 'Adicionar pergunta';
   const axisLabel = document.getElementById('briefing-question-modal-axis');
   if (axisLabel) axisLabel.textContent = axisName;
   const qField = document.getElementById('briefing-question-modal-question');
   const aField = document.getElementById('briefing-question-modal-answer');
-  if (qField) qField.value = questionText;
-  if (aField) aField.value = answerText;
+  if (qField) { qField.value = questionText; _updateCharCount(qField, 250); }
+  if (aField) { aField.value = answerText; _updateCharCount(aField, 600); }
   openModal('briefing-question-modal');
   setTimeout(() => {
     const target = questionText ? aField : qField;
@@ -547,6 +573,10 @@ function closeBriefingQuestionModal() {
   _briefingQuestionModalAxis = null;
   _briefingQuestionModalEditId = null;
   closeModal('briefing-question-modal');
+  if (_briefingQuestionModalReturnToGuide) {
+    _briefingQuestionModalReturnToGuide = false;
+    _reopenBriefingGuideModal();
+  }
 }
 window.closeBriefingQuestionModal = closeBriefingQuestionModal;
 
@@ -561,8 +591,10 @@ function confirmBriefingQuestionModal() {
   }
   const axisName = _briefingQuestionModalAxis;
   const editId = _briefingQuestionModalEditId;
+  const returnToGuide = _briefingQuestionModalReturnToGuide;
   const answerText = aField ? aField.value : '';
   closeModal('briefing-question-modal');
+  _briefingQuestionModalReturnToGuide = false;
   if (editId) {
     updateBriefingQuestion(editId, 'question', questionText);
     updateBriefingQuestion(editId, 'answer', answerText);
@@ -570,6 +602,7 @@ function confirmBriefingQuestionModal() {
   } else {
     addBriefingQuestion(questionText, axisName, answerText);
   }
+  if (returnToGuide) _reopenBriefingGuideModal();
 }
 window.confirmBriefingQuestionModal = confirmBriefingQuestionModal;
 
@@ -638,6 +671,12 @@ function _renderBriefingQuestionCards() {
   if (totalEl) {
     totalEl.textContent = all.length === 1 ? '1 pergunta no briefing' : `${all.length} perguntas no briefing`;
     totalEl.classList.toggle('hidden', all.length === 0);
+  }
+  // Badge no header do accordion — visível mesmo com o accordion fechado.
+  const headerCount = document.getElementById('briefing-header-count');
+  if (headerCount) {
+    headerCount.textContent = String(all.length);
+    headerCount.classList.toggle('hidden', all.length === 0);
   }
   _refreshIcons();
 }
@@ -943,6 +982,19 @@ function openBriefingGuideModal() {
 }
 window.openBriefingGuideModal = openBriefingGuideModal;
 
+// Reabre o Guia depois de adicionar uma pergunta (ver
+// confirmBriefingQuestionModal/closeBriefingQuestionModal com
+// returnToGuide=true) SEM resetar busca/filtro -- diferente de
+// openBriefingGuideModal (entrada "do zero"), aqui o usuário está no meio
+// de uma sessão de seleção em lote e perder o que já tinha buscado/filtrado
+// a cada pergunta adicionada obrigaria refazer tudo de novo.
+function _reopenBriefingGuideModal() {
+  const search = document.getElementById('briefing-guide-search');
+  _renderBriefingGuideAxisFilters();
+  _renderBriefingGuideResults(search ? search.value : '');
+  openModal('briefing-guide-modal');
+}
+
 function _renderBriefingGuideAxisFilters() {
   const wrap = document.getElementById('briefing-guide-axis-filters');
   if (!wrap) return;
@@ -1039,8 +1091,14 @@ function _renderBriefingGuideResults(query) {
         insertBtn.className = 'shrink-0 p-1.5 text-[#3d3dff] hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors';
         insertBtn.innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4"></i>';
         insertBtn.onclick = () => {
-          closeModal('briefing-guide-modal');
-          openBriefingQuestionModal(axis.name, q.text);
+          // Não fecha o Guia -- só sobrepõe o modal "Adicionar pergunta" por
+          // cima (ambos são modais de mesma camada visual, mas o de baixo
+          // continua na DOM). returnToGuide=true reabre o Guia ao
+          // cancelar/confirmar (ver closeBriefingQuestionModal/
+          // confirmBriefingQuestionModal), preservando a busca/filtro
+          // aplicados e permitindo adicionar várias perguntas em sequência
+          // sem ser ejetado pra tela de trás a cada uma.
+          openBriefingQuestionModal(axis.name, q.text, '', null, true);
         };
         item.appendChild(insertBtn);
       }
@@ -1090,15 +1148,25 @@ function addRegra() {
       </button>
     </div>
     <div class="space-y-2">
-      <input type="text" placeholder="Título da Regra/HU" class="w-full px-3 py-1.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg text-[11px] outline-none font-bold"
-        onchange="updateRegraField('${id}','titulo',this.value)">
+      <div>
+        <input type="text" id="regra-titulo-${id}" maxlength="100" placeholder="Título da Regra/HU" class="w-full px-3 py-1.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg text-[11px] outline-none font-bold"
+          onchange="updateRegraField('${id}','titulo',this.value)" oninput="_updateCharCount(this, 100)">
+        <div class="flex items-center justify-end mt-0.5">
+          <span id="regra-titulo-${id}-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/100</span>
+        </div>
+      </div>
       <div class="relative">
         <i data-lucide="link" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500"></i>
         <input type="text" placeholder="Link da HU/Regra (Jira, Confluence...)" class="w-full pl-7 pr-3 py-1.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg text-[11px] outline-none"
           onchange="updateRegraField('${id}','link',this.value)" onblur="validateUrl(this)">
       </div>
-      <textarea placeholder="Descrição ou critérios de aceitação..." rows="2" class="w-full px-3 py-1.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg text-[11px] outline-none resize-none"
-        onchange="updateRegraField('${id}','notas',this.value)"></textarea>
+      <div>
+        <textarea id="regra-notas-${id}" maxlength="400" placeholder="Descrição ou critérios de aceitação..." rows="2" class="w-full px-3 py-1.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg text-[11px] outline-none resize-none"
+          onchange="updateRegraField('${id}','notas',this.value)" oninput="_updateCharCount(this, 400)"></textarea>
+        <div class="flex items-center justify-end mt-0.5">
+          <span id="regra-notas-${id}-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/400</span>
+        </div>
+      </div>
     </div>
   `;
   list.appendChild(item);
@@ -1175,10 +1243,10 @@ function openExceptionModal(frameId) {
   const anchorInput = document.getElementById('exc-modal-anchor');
   const obsCheck    = document.getElementById('exc-modal-has-obs');
   const obsArea     = document.getElementById('exc-modal-obs');
-  if (vincInput)   vincInput.value   = '';
+  if (vincInput)   { vincInput.value   = ''; _updateCharCount(vincInput, 80); }
   if (anchorInput) anchorInput.value = '';
   if (obsCheck)    obsCheck.checked  = false;
-  if (obsArea)     obsArea.classList.add('hidden');
+  if (obsArea)     { obsArea.classList.add('hidden'); _updateCharCount(obsArea, 400); }
   const confirm = document.getElementById('exc-modal-confirm');
   if (confirm) confirm.disabled = true;
   openModal('exception-modal');
@@ -1379,16 +1447,45 @@ function updateNewComponentObs(frameId, value) {
 function toggleFrameAccordion(frameId) {
   const body = document.getElementById(`frame-body-${frameId}`);
   const arrow = document.getElementById(`frame-chevron-${frameId}`);
+  const header = document.getElementById(`frame-header-${frameId}`);
   if (!body) return;
   const isHidden = body.classList.contains('hidden');
   body.classList.toggle('hidden', !isHidden);
   if (arrow) arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+  if (header) {
+    header.setAttribute('aria-expanded', String(isHidden));
+    const frame = typeof getFrame === 'function' ? getFrame(frameId) : null;
+    const nome = frame && frame.nome ? frame.nome : '';
+    header.setAttribute('aria-label', `${isHidden ? 'Recolher' : 'Expandir'} detalhes de ${nome}`);
+    header.setAttribute('title', isHidden ? 'Recolher detalhes' : 'Expandir detalhes');
+  }
   // Foco no canvas só ao expandir (clique explícito) — hover não move mais a
   // seleção/tela, isso ficava confuso passando o mouse pela lista.
   if (isHidden) {
     const frame = typeof getFrame === 'function' ? getFrame(frameId) : null;
     if (frame && frame.figmaId) focusNode(frame.figmaId);
   }
+}
+
+// Dica azul fixa ("Selecione um elemento e toque em +...") de cada view de
+// lista (Escanear Tokens, Anotar Specs, Anotar Medidas, Fluxos de Tela) --
+// não é o banner de onboarding "Primeira vez aqui?" (esse já é dispensável
+// à parte). Essas dicas nascem sempre visíveis e hoje só reagiam a "lista
+// vazia ou não" (reapareciam se o usuário apagasse tudo de novo). Passam a
+// sumir de vez assim que a view tem conteúdo pela primeira vez -- o
+// designer já aprendeu o fluxo, apagar tudo depois não deve trazer a dica
+// de volta. Persistido em localStorage, mesmo padrão do tema/ordem da home,
+// uma chave por view (hintId).
+function _contentHintDismissed(hintId) {
+  try { return localStorage.getItem(`handexHintDismissed_${hintId}`) === '1'; } catch (e) { return false; }
+}
+function _dismissContentHint(hintId) {
+  try { localStorage.setItem(`handexHintDismissed_${hintId}`, '1'); } catch (e) { }
+}
+function _updateContentHint(hintId, hasContent) {
+  if (hasContent) _dismissContentHint(hintId);
+  const hint = document.getElementById(hintId);
+  if (hint) hint.classList.toggle('hidden', hasContent || _contentHintDismissed(hintId));
 }
 
 function updateEmptyFramesState() {
@@ -1400,6 +1497,7 @@ function updateEmptyFramesState() {
   if (collapseBtn) collapseBtn.classList.toggle('hidden', !hasFrames);
   const finalizeWrap = document.getElementById('btn-finalize-tokens-wrap');
   if (finalizeWrap) finalizeWrap.classList.toggle('hidden', !hasFrames);
+  _updateContentHint('frames-register-hint', hasFrames);
 }
 
 function importTitleFromSelection() {
@@ -1669,11 +1767,14 @@ function addTeamMember(papel = "Designer", nome = "", email = "", skipScroll = f
       </button>
     </div>
     <div class="flex items-center gap-2">
-      <input type="text" placeholder="Nome Completo" value="${nome}" class="flex-1 min-w-0 px-3 py-1.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg text-[11px] outline-none"
-        onchange="updateTeamMember('${id}','nome',this.value)" aria-label="Nome completo do membro da equipe">
+      <input type="text" id="team-nome-${id}" maxlength="80" placeholder="Nome Completo" value="${nome}" class="flex-1 min-w-0 px-3 py-1.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg text-[11px] outline-none"
+        onchange="updateTeamMember('${id}','nome',this.value)" oninput="_updateCharCount(this, 80)" aria-label="Nome completo do membro da equipe">
       <input type="email" placeholder="Email Institucional" value="${email}" class="flex-1 min-w-0 px-3 py-1.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg text-[11px] outline-none"
         onchange="updateTeamMember('${id}','email',this.value)" onblur="validateEmail(this);validateStep1()"
         aria-label="Email institucional do membro da equipe (opcional)" aria-describedby="email-hint-${id}" aria-invalid="false">
+    </div>
+    <div class="flex items-center justify-end mt-0.5">
+      <span id="team-nome-${id}-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">${nome.length}/80</span>
     </div>
     <p id="email-hint-${id}" class="hidden text-[10px] text-red-500 dark:text-red-400 mt-1" role="alert"></p>
   `;
@@ -1698,6 +1799,109 @@ function updateTeamMember(id, field, value) {
   validateStep1();
   saveToStorage();
 }
+
+// ── Jornadas (agrupamento de fluxos) ────────────────────────────────────
+// Uma "jornada" é um componente conexo do grafo formado por sourceId/
+// targetId das conexões em handoffData.createdFlows — NUNCA um id de grupo
+// persistido. Duas conexões pertencem à mesma jornada se compartilham
+// algum nó do canvas (ex: A→B e B→C formam uma jornada só, porque ambas
+// tocam o nó B). Recalculado a cada chamada, nunca guardado em cache — é a
+// mesma decisão de projeto que já evitou bugs de dado duplicado em specs
+// avulsas-vs-por-frame e contagem de medidas (ver saveSpecsToStorage/
+// _mergeLooseAndFramed): agrupamento derivado nunca dessincroniza, porque
+// não existe um segundo lugar guardando "quem pertence a quem".
+//
+// Função ÚNICA reaproveitada por renderFlowsList() (lista da UI),
+// _buildAiContext() (design-data.js) e a Ficha de Handoff (handoff.js,
+// markdown e HTML) — não duplicar esta lógica em nenhum desses lugares.
+//
+// journeyName é um campo opcional por conexão (redundante entre todos os
+// membros do mesmo grupo, nunca usado para decidir o agrupamento em si) —
+// só um rótulo de exibição. Grupos sem nenhum membro nomeado recebem
+// "Jornada sem nome N", N sequencial só entre os grupos sem nome, na ordem
+// em que aparecem em createdFlows (determinístico a cada render).
+function computeFlowJourneys(flows) {
+  const list = flows || handoffData.createdFlows || [];
+  // Union-Find simples — id do nó (string) -> raiz do componente.
+  const parent = {};
+  const find = (x) => {
+    if (!(x in parent)) parent[x] = x;
+    while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; }
+    return x;
+  };
+  const union = (a, b) => {
+    const ra = find(a), rb = find(b);
+    if (ra !== rb) parent[ra] = rb;
+  };
+
+  list.forEach(f => {
+    if (f.sourceId) find(f.sourceId);
+    if (f.targetId) find(f.targetId);
+    if (f.sourceId && f.targetId) union(f.sourceId, f.targetId);
+  });
+
+  // Agrupa as conexões pela raiz do componente do sourceId (toda conexão
+  // tem sourceId; targetId pode ser null para eventos de Início/Fim).
+  const groupsByRoot = new Map();
+  list.forEach(f => {
+    if (!f.sourceId) return; // defensivo — não deveria existir sem sourceId
+    const root = find(f.sourceId);
+    if (!groupsByRoot.has(root)) groupsByRoot.set(root, []);
+    groupsByRoot.get(root).push(f);
+  });
+
+  let unnamedCount = 0;
+  const journeys = [];
+  groupsByRoot.forEach(conexoes => {
+    const namedMember = conexoes.find(f => f.journeyName && f.journeyName.trim());
+    let nome;
+    if (namedMember) {
+      nome = namedMember.journeyName.trim();
+    } else {
+      unnamedCount++;
+      nome = `Jornada sem nome ${unnamedCount}`;
+    }
+    journeys.push({ nome, isUnnamed: !namedMember, conexoes: _orderJourneyConexoes(conexoes) });
+  });
+  return journeys;
+}
+
+// Ordena as conexões de uma jornada pela POSIÇÃO REAL na cadeia (Início →
+// sequência A→B→C → Fim), não pela ordem de inserção em createdFlows.
+// Sem isso, o marcador de Início/Fim (criado depois do loop de conexões da
+// cadeia, ver _moveFlowEndpointMarker em code.js) sempre aparecia no fim da
+// lista mesmo quando logicamente é a primeira etapa da jornada. Eventos
+// (f.type === 'event_start'/'event_end') não têm targetId — são ancorados
+// pelo sourceId que aponta pro elemento de início/fim real da cadeia; a
+// sequência entre eles é reconstruída seguindo sourceId→targetId como uma
+// lista ligada.
+function _orderJourneyConexoes(conexoes) {
+  const startEvent = conexoes.find(f => f.type === 'event_start');
+  const endEvent = conexoes.find(f => f.type === 'event_end');
+  const sequence = conexoes.filter(f => f.type !== 'event_start' && f.type !== 'event_end');
+
+  const bySource = new Map();
+  sequence.forEach(f => { if (f.sourceId) bySource.set(f.sourceId, f); });
+  const targetIds = new Set(sequence.map(f => f.targetId).filter(Boolean));
+  let head = sequence.find(f => f.sourceId && !targetIds.has(f.sourceId)) || sequence[0];
+
+  const ordered = [];
+  const visited = new Set();
+  let current = head;
+  while (current && !visited.has(current)) {
+    ordered.push(current);
+    visited.add(current);
+    current = current.targetId ? bySource.get(current.targetId) : null;
+  }
+  sequence.forEach(f => { if (!visited.has(f)) ordered.push(f); });
+
+  const result = [];
+  if (startEvent) result.push(startEvent);
+  result.push(...ordered);
+  if (endEvent) result.push(endEvent);
+  return result;
+}
+window.computeFlowJourneys = computeFlowJourneys;
 
 // ── Checklist exports ──────────────────────────────────────────────────
 function _buildChecklistData() {
@@ -2074,6 +2278,12 @@ function closeModal(id) {
   const returnEl = _modalReturnFocus[id];
   if (returnEl && document.contains(returnEl)) returnEl.focus();
   delete _modalReturnFocus[id];
+  // Desliga o listener de selectionchange do mini-mapa de ancoragem do
+  // backend — ligado só em openFlowFormModal(), independente de por onde o
+  // modal foi fechado (X, Cancelar, ou confirmar a conexão).
+  if (id === 'flow-form-modal') {
+    parent.postMessage({ pluginMessage: { type: 'track-flow-anchor-preview', active: false } }, '*');
+  }
 }
 
 // Fecha o modal visível com maior z-index ao pressionar Escape (topo em caso de sobreposição).
@@ -2103,6 +2313,11 @@ function openDadosProjetoModal() {
 }
 
 function navigate(viewId) {
+  // focusNode() (usado pelo ícone de foco em specs/medidas/fluxos) cria um
+  // [HighlightStroke] persistente no canvas que só some com um clique
+  // explícito subsequente — sem isso, o highlight ficava "preso" ao
+  // navegar pra outra tela do plugin sem interagir de novo com o elemento.
+  if (typeof clearHighlight === 'function') clearHighlight();
   document.querySelectorAll(".view").forEach((el) => el.classList.remove("active"));
   const targetView = document.getElementById(viewId);
   if (targetView) {
@@ -2143,6 +2358,19 @@ function navigate(viewId) {
   }
   if (viewId === 'view-handoff-summary') {
     updateHandoffSummary();
+  }
+  if (typeof maybeShowOnboardingBanner === 'function') {
+    const onboardingKeyByView = {
+      'view-home': 'home',
+      'view-dados-projeto': 'dadosProjeto',
+      'view-frames': 'handoff',
+      'view-specifications': 'specs',
+      'view-measurement': 'medidas',
+      'view-flows': 'fluxos',
+      'view-handoff-summary': 'handoffSummary'
+    };
+    const toolKey = onboardingKeyByView[viewId];
+    if (toolKey) maybeShowOnboardingBanner(toolKey);
   }
   updateFABVisibility();
 }
@@ -2432,12 +2660,11 @@ function collapseAllAccordions(containerEl) {
       }
     }
   });
-  // Update collapse-toggle button icon
+  // Texto do botão reflete a PRÓXIMA ação (não o estado atual) -- "Recolher
+  // todos" enquanto há algo aberto, "Expandir todos" quando tudo já está
+  // fechado. Label aberta em texto, sem ícone (ver views/*.html).
   const toggleBtn = root.querySelector ? root.querySelector('[data-collapse-toggle]') : null;
-  if (toggleBtn) {
-    const icon = toggleBtn.querySelector('i[data-lucide]');
-    if (icon) { icon.setAttribute('data-lucide', anyOpen ? 'chevrons-down' : 'chevrons-up'); if (typeof _refreshIcons === 'function') _refreshIcons(); }
-  }
+  if (toggleBtn) toggleBtn.textContent = anyOpen ? 'Expandir todos' : 'Recolher todos';
 }
 
 // ── File Handling (Anexos - Step 2) ───────────────────────────────────
@@ -2537,6 +2764,8 @@ let currentScannedProps = [];
 function openHelp(fromModalId) {
   lastModalBeforeHelp = fromModalId;
   if (fromModalId) closeModal(fromModalId);
+  const search = document.getElementById('spec-types-search');
+  if (search) { search.value = ''; filterSpecTypesHelp(); }
   openModal('spec-types-help-modal');
 }
 
@@ -2547,6 +2776,29 @@ function closeHelpAndReturn() {
     lastModalBeforeHelp = null;
   }
 }
+
+// Busca por texto na lista de "Tipos de especificação" do
+// spec-types-help-modal (views/modals.html) -- mesmo padrão de filtro em
+// texto livre do briefing-guide-modal (filterBriefingGuide acima), sem
+// select/dropdown: com 11 categorias curtas, a lista inteira ainda é
+// escaneável de uma vez, e um select forçaria escolher 1 de cada vez. A
+// busca só reduz esforço quando o usuário já sabe o nome do tipo.
+function filterSpecTypesHelp() {
+  const search = document.getElementById('spec-types-search');
+  const list = document.getElementById('spec-types-list');
+  const empty = document.getElementById('spec-types-empty');
+  if (!search || !list) return;
+  const term = search.value.trim().toLowerCase();
+  let visibleCount = 0;
+  list.querySelectorAll('[data-spec-type-item]').forEach(item => {
+    const haystack = item.getAttribute('data-search') || '';
+    const match = !term || haystack.includes(term);
+    item.classList.toggle('hidden', !match);
+    if (match) visibleCount++;
+  });
+  if (empty) empty.classList.toggle('hidden', visibleCount > 0);
+}
+window.filterSpecTypesHelp = filterSpecTypesHelp;
 
 // ── Scroll ─────────────────────────────────────────────────────────────
 function handleScroll(el) {
@@ -2628,11 +2880,15 @@ function clearHighlight() {
 
 // ── Restauração leve no boot (só step1, sem renderizar frames/flows/specs) ──
 function _restoreStep1Fields() {
+  const fieldMax = { 's1-titulo': 100, 's1-versao': 15, 's1-objetivo': 500, 's1-jornada': 80, 's1-feature': 80 };
   const fields = ['s1-titulo', 's1-versao', 's1-objetivo', 's1-jornada', 's1-feature'];
   fields.forEach(id => {
     const key = id.replace('s1-', '');
     const el = document.getElementById(id);
-    if (el) el.value = handoffData.step1[key] || (key === 'versao' ? 'v1.0' : '');
+    if (el) {
+      el.value = handoffData.step1[key] || (key === 'versao' ? 'v1.0' : '');
+      _updateCharCount(el, fieldMax[id]);
+    }
   });
   _syncStatusUI(handoffData.step1.status || 'rascunho');
   ['jornada', 'feature'].forEach(function(field) {
@@ -2649,16 +2905,16 @@ function _restoreStep1Fields() {
 function restoreUIFromState() {
   // Step 1 — Governança
   const s1Titulo = document.getElementById("s1-titulo");
-  if (s1Titulo) s1Titulo.value = handoffData.step1.titulo || "";
+  if (s1Titulo) { s1Titulo.value = handoffData.step1.titulo || ""; _updateCharCount(s1Titulo, 100); }
   _syncStatusUI(handoffData.step1.status || "rascunho");
   const s1Versao = document.getElementById("s1-versao");
-  if (s1Versao) s1Versao.value = handoffData.step1.versao || "v1.0";
+  if (s1Versao) { s1Versao.value = handoffData.step1.versao || "v1.0"; _updateCharCount(s1Versao, 15); }
   const s1Objetivo = document.getElementById("s1-objetivo");
-  if (s1Objetivo) s1Objetivo.value = handoffData.step1.objetivo || "";
+  if (s1Objetivo) { s1Objetivo.value = handoffData.step1.objetivo || ""; _updateCharCount(s1Objetivo, 500); }
   const s1Jornada = document.getElementById("s1-jornada");
-  if (s1Jornada) s1Jornada.value = handoffData.step1.jornada || "";
+  if (s1Jornada) { s1Jornada.value = handoffData.step1.jornada || ""; _updateCharCount(s1Jornada, 80); }
   const s1Feature = document.getElementById("s1-feature");
-  if (s1Feature) s1Feature.value = handoffData.step1.feature || "";
+  if (s1Feature) { s1Feature.value = handoffData.step1.feature || ""; _updateCharCount(s1Feature, 80); }
 
   // Restaurar estado dos toggles de Jornada e Feature
   ['jornada', 'feature'].forEach(function(field) {
@@ -2703,9 +2959,9 @@ function restoreUIFromState() {
         const titleInput = newItem.querySelector('input[type="text"]');
         const linkInput = newItem.querySelectorAll('input[type="text"]')[1];
         const textarea = newItem.querySelector('textarea');
-        if (titleInput) titleInput.value = r.titulo || '';
+        if (titleInput) { titleInput.value = r.titulo || ''; _updateCharCount(titleInput, 100); }
         if (linkInput) linkInput.value = r.link || '';
-        if (textarea) textarea.value = r.notas || '';
+        if (textarea) { textarea.value = r.notas || ''; _updateCharCount(textarea, 400); }
       }
     });
     updateRegrasCount();

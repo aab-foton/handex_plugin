@@ -8,42 +8,42 @@
         <i data-lucide="arrow-left" class="w-4 h-4 text-white" aria-hidden="true"></i>
       </button>
       <h2 class="text-white font-bold text-[18px] truncate min-w-0">Fluxos de Tela</h2>
-      <div id="flows-help" class="relative shrink-0">
-        <button type="button" onclick="toggleFlowsHelp(event)"
-          class="w-4 h-4 flex items-center justify-center text-white/70 hover:text-white transition-colors"
-          title="Como funcionam os fluxos?" aria-label="Como funcionam os fluxos">
-          <i data-lucide="circle-help" class="w-3.5 h-3.5"></i>
-        </button>
-        <div data-flows-help-panel
-          class="hidden absolute left-0 top-full mt-2 w-64 z-50 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-xl p-3.5 space-y-3">
-          <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Como funciona</p>
-          <div class="space-y-2.5">
-            <div class="flex items-start gap-2">
-              <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0 mt-0.5"></i>
-              <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight">A seta desenhada no canvas segue a <strong class="text-slate-600 dark:text-dark-text">ordem de seleção</strong>: do primeiro elemento clicado para o segundo.</p>
-            </div>
-            <div class="flex items-start gap-2">
-              <i data-lucide="eye" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0 mt-0.5"></i>
-              <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight">Use o ícone de <strong class="text-slate-600 dark:text-dark-text">olho</strong> no card para ocultar/exibir a conexão sem excluí-la.</p>
-            </div>
-            <div class="flex items-start gap-2">
-              <i data-lucide="trash-2" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0 mt-0.5"></i>
-              <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight">Use o ícone de <strong class="text-slate-600 dark:text-dark-text">lixeira</strong> para remover a conexão do canvas e da lista.</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <button type="button" onclick="openOnboarding('fluxos')"
+        class="w-4 h-4 flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
+        title="Como funciona esta ferramenta" aria-label="Como funciona esta ferramenta">
+        <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i>
+      </button>
     </div>
-    <button onclick="openFlowFormModal()" class="fab-inline shrink-0" title="Conectar Frames" aria-label="Conectar Frames">
-      <i data-lucide="git-branch" class="w-4 h-4 shrink-0"></i>
-      <span>Conectar Frames</span>
-    </button>
+    <div class="flex items-center gap-2 shrink-0">
+      <button id="btn-resync-flows" onclick="resyncAllFlows()" class="hidden p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors" title="Atualizar Fluxos" aria-label="Atualizar Fluxos">
+        <i data-lucide="refresh-cw" class="w-4 h-4 text-white" aria-hidden="true"></i>
+      </button>
+      <button onclick="openFlowFormModal()" class="fab-inline shrink-0" title="Conectar Frames" aria-label="Conectar Frames">
+        <i data-lucide="git-branch" class="w-4 h-4 shrink-0"></i>
+        <span>Conectar Frames</span>
+      </button>
+    </div>
   </div>
 
   <!-- Scrollable Content -->
-  <div class="flex-1 overflow-y-auto pt-6 px-4 pb-4 space-y-4" onscroll="handleScroll(this)">
+  <div class="flex-1 overflow-y-auto pt-3 px-4 pb-4 space-y-4" onscroll="handleScroll(this)">
 
-    <div class="min-h-[76px] p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex items-center gap-2.5">
+    <!-- Onboarding banner (primeira visita) -->
+    <div id="onboarding-banner-fluxos" class="hidden flex items-start gap-2.5 bg-[#3d3dff]/5 dark:bg-blue-900/10 border border-[#3d3dff]/20 dark:border-blue-800/30 rounded-2xl p-3.5">
+      <i data-lucide="sparkles" class="w-4 h-4 text-[#3d3dff] dark:text-blue-300 shrink-0 mt-0.5"></i>
+      <div class="flex-1 min-w-0">
+        <p class="text-[11px] font-bold text-[#2e2ee0] dark:text-blue-300">Primeira vez aqui?</p>
+        <p class="text-[10px] text-[#2e2ee0]/80 dark:text-blue-300/80 leading-relaxed mt-0.5">Veja como conectar frames e mapear fluxos.</p>
+      </div>
+      <div class="flex items-center gap-1 shrink-0">
+        <button type="button" onclick="openOnboarding('fluxos', { markSeenOnOpen: true })" class="px-2.5 py-1 bg-[#3d3dff] hover:bg-[#2e2ee0] text-white text-[10px] font-bold rounded-lg transition-colors">Ver agora</button>
+        <button type="button" onclick="dismissOnboardingBanner('fluxos')" title="Dispensar" aria-label="Dispensar" class="p-1 text-[#3d3dff]/60 hover:text-[#3d3dff] dark:text-blue-300/60 dark:hover:text-blue-300 transition-colors">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="hint-flows" class="min-h-[76px] p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex items-center gap-2.5">
       <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
       <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-tight">
         Selecione dois ou mais elementos no Figma e use o botão <strong>+ Conectar Frames</strong> para mapear fluxos de navegação. Com 3 ou mais, o plugin conecta em sequência automaticamente (da esquerda para a direita).

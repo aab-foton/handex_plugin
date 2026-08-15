@@ -27,9 +27,11 @@ function read(relPath) {
 const tailwindCSS = read('styles/tailwind-compiled.css');
 const css         = read('styles/plugin.css');
 const modCore    = read('modules/core.js');
+const modHomeCards = read('modules/home-cards.js');
 const modHandoff = read('modules/handoff.js');
 const modMeasure = read('modules/measurement.js');
 const modSpecs   = read('modules/specifications.js');
+const modOnboard = read('modules/onboarding.js');
 const modData    = read('modules/design-data.js');
 const modMsgs    = read('modules/messages.js');
 
@@ -182,6 +184,11 @@ ${modalsShared}
 ${modCore}
 
 // ============================================================
+// MODULE: home-cards.js
+// ============================================================
+${modHomeCards}
+
+// ============================================================
 // MODULE: messages.js
 // ============================================================
 ${modMsgs}
@@ -197,6 +204,11 @@ ${modMeasure}
 ${modSpecs}
 
 // ============================================================
+// MODULE: onboarding.js
+// ============================================================
+${modOnboard}
+
+// ============================================================
 // MODULE: design-data.js
 // ============================================================
 ${modData}
@@ -207,9 +219,11 @@ ${modData}
 ${modHandoff}
   </script>
 
-  <!-- Back-to-top button (ghost at rest, highlighted on hover) -->
+  <!-- Back-to-top button (ghost at rest, highlighted on hover -- estilo real
+       vem de #btn-top em styles/plugin.css, não das classes Tailwind
+       abaixo, que só cuidam de posição/tamanho/estado de visibilidade) -->
   <button id="btn-top" onclick="scrollToTop()" title="Voltar ao topo" aria-label="Voltar ao topo"
-    class="fixed bottom-6 right-6 w-10 h-10 rounded-full flex items-center justify-center opacity-0 pointer-events-none translate-y-10 z-[100] bg-slate-900/20 dark:bg-white/10 backdrop-blur-sm border border-slate-900/20 dark:border-white/15 text-slate-700 dark:text-white hover:bg-[#3d3dff] hover:border-[#3d3dff] hover:text-white transition-colors duration-200">
+    class="fixed bottom-6 right-6 w-10 h-10 rounded-full flex items-center justify-center opacity-0 pointer-events-none translate-y-10 z-[100] transition-colors duration-200">
     <i data-lucide="chevron-up" class="w-5 h-5"></i>
   </button>
 

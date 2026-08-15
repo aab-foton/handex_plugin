@@ -77,6 +77,12 @@
           if (typeof _restoreStep1Fields === 'function') _restoreStep1Fields();
         }
 
+        if (typeof setOnboardingSeenState === 'function') setOnboardingSeenState(msg.onboardingSeen);
+        // Home é a view ativa por padrão no boot (não passa por navigate()
+        // na primeira carga) -- dispara o banner aqui, só depois do estado
+        // "visto" chegar do backend, senão apareceria sempre mesmo já visto.
+        if (typeof maybeShowOnboardingBanner === 'function') maybeShowOnboardingBanner('home');
+
         // Auto-fill do título com o nome do arquivo/projeto Figma se campo ainda estiver vazio
         if (msg.projectName) {
           const tituloInput = document.getElementById('s1-titulo');
@@ -167,6 +173,7 @@
           } else {
             if (vinc) {
               vinc.value = msg.linkName || '';
+              _updateCharCount(vinc, 80);
               vinc.classList.add('border-green-500', 'ring-2', 'ring-green-100');
               setTimeout(() => vinc.classList.remove('border-green-500', 'ring-2', 'ring-green-100'), 2000);
             }
@@ -327,6 +334,18 @@
 
       if (msg.type === "flow-created") {
         if (!handoffData.createdFlows) handoffData.createdFlows = [];
+        // Nome digitado em #flow-name-input no modal "Configurar Conexão"
+        // vira journeyName (não flow.name -- ver Mudança 2), aplicado a toda
+        // conexão criada pela MESMA operação de confirmFlowConnection
+        // (inclui cada segmento de uma cadeia de 3+, que dispara flow-created
+        // várias vezes em sequência). window._pendingJourneyName só existe
+        // (typeof !== 'undefined') logo após confirmFlowConnection -- editar
+        // um fluxo existente (confirmEditFlow) não passa por lá, então não
+        // deve tocar journeyName. String vazia nunca sobrescreve um
+        // journeyName já existente (mesma cautela de renameJourney).
+        if (typeof window._pendingJourneyName !== 'undefined' && msg.flow) {
+          if (window._pendingJourneyName) msg.flow.journeyName = window._pendingJourneyName;
+        }
         // Edição (apaga+recria, ver editFlowConnection em specifications.js)
         // substitui o item no mesmo índice em vez de adicionar um novo --
         // sem isso, editar um fluxo duplicaria a entrada na lista.
@@ -346,11 +365,31 @@
         // é setado por flow-batch-created (backend) antes das mensagens
         // individuais chegarem; só foca quando é uma conexão isolada.
         if (!window._flowBatchActive && msg.flow && msg.flow.id) focusNode(msg.flow.id);
+        // Fora de um lote, esta é a única conexão da operação -- consome
+        // window._pendingJourneyName aqui. Em lote, quem consome é
+        // flow-batch-created (dispara só depois de todos os segmentos).
+        if (!window._flowBatchActive) window._pendingJourneyName = undefined;
         setTimeout(() => {
           const list = document.getElementById('flows-results');
           const last = list && list.lastElementChild;
           if (last) autoScrollToNewItem('handoff-scroll-container', last);
         }, 100);
+      }
+
+      // Marcador automático de Início/Fim movido pra outro elemento (ver
+      // _moveFlowEndpointMarker em code.js) -- remove a entrada antiga
+      // (nó já apagado do canvas, ficaria órfão na lista) e adiciona a nova.
+      if (msg.type === "flow-marker-moved") {
+        if (!handoffData.createdFlows) handoffData.createdFlows = [];
+        if (msg.removedOldId) {
+          handoffData.createdFlows = handoffData.createdFlows.filter(f => f.id !== msg.removedOldId);
+        }
+        if (msg.flow) {
+          handoffData.createdFlows.push(msg.flow);
+          handoffData.nextFlowNumber = (handoffData.nextFlowNumber || 1) + 1;
+        }
+        renderFlowsList();
+        saveToStorage();
       }
 
       if (msg.type === "flow-edit-failed") {
@@ -364,7 +403,30 @@
 
       if (msg.type === "flow-batch-created") {
         window._flowBatchActive = false;
+        window._pendingJourneyName = undefined;
         showToast(`${msg.count} conexão(ões) criadas em sequência`);
+      }
+
+      // Chega tanto em resposta a get-flow-selection-bounds (ao abrir o modal)
+      // quanto ao vivo a cada mudança de seleção no canvas -- a função trata
+      // o early-return de modal fechado.
+      if (msg.type === 'flow-selection-bounds') {
+        if (typeof updateFlowAnchorPreview === 'function') updateFlowAnchorPreview(msg.nodes || []);
+      }
+
+      if (msg.type === 'flows-resynced') {
+        const flows = handoffData.createdFlows || [];
+        (msg.updated || []).forEach(u => {
+          const flow = flows.find(f => f.flowUid === u.flowUid);
+          if (flow) flow.id = u.newId;
+        });
+        saveToStorage();
+        renderFlowsList();
+        const failCount = (msg.failed || []).length;
+        const okCount = (msg.updated || []).length;
+        showToast(failCount > 0
+          ? `${okCount} fluxo(s) atualizado(s), ${failCount} não puderam ser recriados.`
+          : `${okCount} fluxo(s) atualizado(s).`, failCount > 0 ? 'error' : 'success');
       }
 
       if (msg.type === "design-data-exported") {
