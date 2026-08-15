@@ -314,10 +314,71 @@
       activeHighlightNode = null;
     }
   });
+  var _flowAnchorPreviewActive = false;
+  var _highlightSelectionExpected = false;
+  var _prevSelectionIds = [];
+  var _selectionClickOrder = [];
+  var _selectionOrderReliable = true;
+  figma.on("selectionchange", () => {
+    const currentIds = figma.currentPage.selection.map((n) => n.id);
+    if (currentIds.length === 0) {
+      _selectionClickOrder = [];
+      _selectionOrderReliable = true;
+    } else {
+      const currentSet = new Set(currentIds);
+      const prevSet = new Set(_prevSelectionIds);
+      const entered = currentIds.filter((id) => !prevSet.has(id));
+      const left = _prevSelectionIds.filter((id) => !currentSet.has(id));
+      if (entered.length > 1) _selectionOrderReliable = false;
+      _selectionClickOrder = _selectionClickOrder.filter((id) => !left.includes(id));
+      _selectionClickOrder.push(...entered);
+    }
+    _prevSelectionIds = currentIds;
+    if (_flowAnchorPreviewActive) {
+      figma.ui.postMessage({ type: "flow-selection-bounds", nodes: _getFlowSelectionBoundsPayload() });
+    }
+    if (_highlightSelectionExpected) {
+      _highlightSelectionExpected = false;
+      return;
+    }
+    if (activeHighlightNode) {
+      try {
+        activeHighlightNode.remove();
+      } catch (e) {
+      }
+      activeHighlightNode = null;
+    }
+  });
+  function _resolveChainOrder(nodes) {
+    const selectionIds = new Set(nodes.map((n) => n.id));
+    const trackedIds = _selectionClickOrder.filter((id) => selectionIds.has(id));
+    const coversAll = _selectionOrderReliable && trackedIds.length === nodes.length;
+    if (!coversAll) return _orderNodesSpatially(nodes);
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    return trackedIds.map((id) => byId.get(id));
+  }
   function _nodeOnCurrentPage(node) {
     let n = node;
     while (n && n.type !== "PAGE") n = n.parent;
     return n != null && n.id === figma.currentPage.id;
+  }
+  function _orderNodesSpatially(nodes) {
+    return [...nodes].sort((a, b) => {
+      const ba = a.absoluteBoundingBox || a.absoluteRenderBounds;
+      const bb = b.absoluteBoundingBox || b.absoluteRenderBounds;
+      if (!ba || !bb) return 0;
+      if (Math.abs(ba.x - bb.x) > 1) return ba.x - bb.x;
+      return ba.y - bb.y;
+    });
+  }
+  var FLOW_CHAIN_MAX = 12;
+  function _getFlowSelectionBoundsPayload() {
+    const ordered = _resolveChainOrder(figma.currentPage.selection).slice(0, FLOW_CHAIN_MAX);
+    return ordered.map((n) => {
+      const b = n.absoluteBoundingBox || n.absoluteRenderBounds;
+      if (!b) return null;
+      return { id: n.id, name: n.name, x: b.x, y: b.y, width: b.width, height: b.height };
+    }).filter(Boolean);
   }
   function _parseSpecTag(tag) {
     const m = tag.match(/^([A-Z])(.*)$/);
@@ -682,7 +743,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "6.3.0" : "dev";
+  var PLUGIN_VERSION = true ? "6.4.0" : "dev";
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
     const NS = "handex";
@@ -731,6 +792,46 @@
       }
     }
   }
+  async function _moveFlowEndpointMarker(targetNode, isStart, nextFlowNumber) {
+    const dataKey = isStart ? "handexFlowStartMarkerId" : "handexFlowEndMarkerId";
+    const alreadyMarkerId = targetNode.getPluginData(dataKey);
+    if (alreadyMarkerId) {
+      const existing = await figma.getNodeByIdAsync(alreadyMarkerId);
+      if (existing) return;
+    }
+    let removedOldId = null;
+    for (const node of figma.currentPage.children) {
+      if (node.getPluginData && node.getPluginData(dataKey)) {
+        const oldMarkerId = node.getPluginData(dataKey);
+        if (oldMarkerId === alreadyMarkerId) continue;
+        try {
+          const oldMarker = await figma.getNodeByIdAsync(oldMarkerId);
+          if (oldMarker) {
+            oldMarker.remove();
+            removedOldId = oldMarkerId;
+          }
+        } catch (e) {
+        }
+        node.setPluginData(dataKey, "");
+      }
+    }
+    const eventMsg = {
+      flowType: isStart ? "event_start" : "event_end",
+      flowName: isStart ? "In\xEDcio" : "Fim",
+      nextFlowNumber,
+      flowId: `${Date.now()}-${isStart ? "start" : "end"}-${targetNode.id}`,
+      // Broadcast próprio (flow-marker-moved) em vez do flow-created padrão --
+      // precisa carregar removedOldId pro frontend tirar a entrada antiga da
+      // lista antes de adicionar a nova, senão o item órfão (apontando pro nó
+      // já removido do canvas) fica na lista até o usuário recarregar.
+      suppressFlowCreatedBroadcast: true
+    };
+    const result = await _buildFlowConnection(targetNode, null, eventMsg);
+    if (result) {
+      targetNode.setPluginData(dataKey, result.id);
+      figma.ui.postMessage({ type: "flow-marker-moved", flow: result, removedOldId });
+    }
+  }
   async function _buildFlowConnection(nodeA, nodeB, msg) {
     const isEvent = msg.flowType === "event_start" || msg.flowType === "event_end";
     let boundsA = nodeA.absoluteBoundingBox || nodeA.absoluteRenderBounds;
@@ -739,7 +840,7 @@
       figma.notify("Elemento de origem sem dimens\xF5es v\xE1lidas.");
       return;
     }
-    if (!isEvent && boundsB && (!msg.flowSide || msg.flowSide === "auto")) {
+    if (!isEvent && boundsB && !msg.orderIsIntentional && (!msg.flowSide || msg.flowSide === "auto")) {
       const cAx = boundsA.x + boundsA.width / 2, cAy = boundsA.y + boundsA.height / 2;
       const cBx = boundsB.x + boundsB.width / 2, cBy = boundsB.y + boundsB.height / 2;
       const adx = Math.abs(cBx - cAx), ady = Math.abs(cBy - cAy);
@@ -783,6 +884,8 @@
             bestB = dy >= 0 ? pointsB.top : pointsB.bottom;
           }
         }
+      } else if (msg.flowSideB && msg.flowSideB !== "auto" && pointsB[msg.flowSideB]) {
+        bestB = pointsB[msg.flowSideB];
       } else {
         let minDist = Infinity;
         for (const pB of Object.values(pointsB)) {
@@ -867,6 +970,30 @@
     }
     line.vectorPaths = [{ windingRule: "NONZERO", data: linePath }];
     let nodesToGroup = [line];
+    const isDecision = msg.flowType === "diamond" || msg.flowType === "diamond_dashed";
+    if (!isEvent) {
+      if (isDecision) {
+        const r = 6;
+        const originMarker = figma.createVector();
+        figma.currentPage.appendChild(originMarker);
+        originMarker.x = 0;
+        originMarker.y = 0;
+        originMarker.vectorPaths = [{ windingRule: "NONZERO", data: `M ${bestA.x} ${bestA.y - r} L ${bestA.x + r} ${bestA.y} L ${bestA.x} ${bestA.y + r} L ${bestA.x - r} ${bestA.y} Z` }];
+        originMarker.fills = [{ type: "SOLID", color: strokeColor }];
+        originMarker.strokes = [];
+        nodesToGroup.push(originMarker);
+      } else {
+        const originDotR = 4;
+        const originDot = figma.createEllipse();
+        figma.currentPage.appendChild(originDot);
+        originDot.resize(originDotR * 2, originDotR * 2);
+        originDot.x = bestA.x - originDotR;
+        originDot.y = bestA.y - originDotR;
+        originDot.fills = [{ type: "SOLID", color: strokeColor }];
+        originDot.strokes = [];
+        nodesToGroup.push(originDot);
+      }
+    }
     if (msg.flowType !== "event_start") {
       const arrowFrom = elbowPoints.length > 0 ? elbowPoints[elbowPoints.length - 1] : curveCtrl;
       const angle = Math.atan2(bestB.y - arrowFrom.y, bestB.x - arrowFrom.x);
@@ -895,6 +1022,7 @@
       connectorStyle: _connectorStyle,
       curvature: _curvature
     };
+    let _flowResult = null;
     if (msg.flowType === "diamond" || msg.flowType === "diamond_dashed") {
       const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
       const size = 64, halfSize = size / 2;
@@ -921,12 +1049,13 @@
         symbol.x = midX - symbol.width / 2;
         symbol.y = midY - symbol.height / 2;
         nodesToGroup.push(shape, symbol);
+        const friendlyName = msg.flowName || "Decis\xE3o";
         const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-        finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | decisao] ${msg.flowName || "Decis\xE3o"}`;
+        finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | decisao] ${friendlyName}`;
         finalGroup.locked = true;
         finalGroup.setPluginData("handexCategory", "fluxo");
         finalGroup.setPluginData("handexFlowId", _flowId);
-        figma.ui.postMessage({ type: "flow-created", flow: __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: finalGroup.name, type: msg.flowType }, _flowExtra) });
+        _flowResult = __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType }, _flowExtra);
       } catch (e) {
         console.error(e);
       }
@@ -953,12 +1082,13 @@
         label.x = circle.x + circle.width / 2 - label.width / 2;
         label.y = circle.y + circle.height / 2 - label.height / 2;
         nodesToGroup.push(circle, label);
+        const friendlyName = msg.flowName || (isStart ? "In\xEDcio" : "Fim");
         const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-        finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | ${isStart ? "inicio" : "fim"}] ${msg.flowName || (isStart ? "In\xEDcio" : "Fim")}`;
+        finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | ${isStart ? "inicio" : "fim"}] ${friendlyName}`;
         finalGroup.locked = true;
         finalGroup.setPluginData("handexCategory", "fluxo");
         finalGroup.setPluginData("handexFlowId", _flowId);
-        figma.ui.postMessage({ type: "flow-created", flow: __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: finalGroup.name, type: msg.flowType }, _flowExtra) });
+        _flowResult = __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType }, _flowExtra);
       } catch (e) {
         console.error(e);
       }
@@ -989,24 +1119,30 @@
         textNode.x = chipBg.x + paddingH;
         textNode.y = chipBg.y + paddingV;
         nodesToGroup.push(chipBg, textNode);
+        const friendlyName = msg.flowName || "Conex\xE3o";
         const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-        finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conex\xE3o"}`;
+        finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${friendlyName}`;
         finalGroup.locked = true;
         finalGroup.setPluginData("handexCategory", "fluxo");
         finalGroup.setPluginData("handexFlowId", _flowId);
-        figma.ui.postMessage({ type: "flow-created", flow: __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: finalGroup.name, type: msg.flowType }, _flowExtra) });
+        _flowResult = __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType }, _flowExtra);
       } catch (e) {
         console.error(e);
       }
     } else {
+      const friendlyName = msg.flowName || "Conex\xE3o";
       const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-      finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conex\xE3o"}`;
+      finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${friendlyName}`;
       finalGroup.locked = true;
       finalGroup.setPluginData("handexCategory", "fluxo");
       finalGroup.setPluginData("handexFlowId", _flowId);
-      figma.ui.postMessage({ type: "flow-created", flow: __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: finalGroup.name, type: msg.flowType }, _flowExtra) });
+      _flowResult = __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType }, _flowExtra);
     }
-    figma.notify("Fluxo criado!");
+    if (!msg.suppressFlowCreatedBroadcast) {
+      if (_flowResult) figma.ui.postMessage({ type: "flow-created", flow: _flowResult });
+      figma.notify("Fluxo criado!");
+    }
+    return _flowResult;
   }
   figma.ui.onmessage = async (msg) => {
     var _a, _b;
@@ -1017,13 +1153,15 @@
       const projectName = figma.root.name || figma.currentPage.name || "";
       try {
         const savedState = await figma.clientStorage.getAsync("handoffData");
+        const onboardingSeen = await figma.clientStorage.getAsync("handex-onboarding-seen");
         figma.ui.postMessage({
           type: "init-plugin",
           version: PLUGIN_VERSION,
           currentUser,
           theme,
           projectName,
-          savedState: savedState || null
+          savedState: savedState || null,
+          onboardingSeen: onboardingSeen || null
         });
       } catch (err) {
         console.error("Initialization error (continuing without saved state):", err);
@@ -1033,7 +1171,8 @@
           currentUser,
           theme,
           projectName,
-          savedState: null
+          savedState: null,
+          onboardingSeen: null
         });
       }
       return;
@@ -3523,6 +3662,7 @@
       if (myToken !== _highlightToken) return;
       if (node && node.visible && _nodeOnCurrentPage(node)) {
         if (msg.selectNode !== false) {
+          _highlightSelectionExpected = true;
           figma.currentPage.selection = [node];
         }
         if (msg.shouldScroll !== false) {
@@ -3725,7 +3865,8 @@
     if (msg.type === "rename-node") {
       const node = await figma.getNodeByIdAsync(msg.id);
       if (node) {
-        node.name = msg.name;
+        const prefixMatch = node.name.match(/^(\[Fluxo \| \d+ \| \w+\] )/);
+        node.name = prefixMatch ? `${prefixMatch[1]}${msg.name}` : msg.name;
         if (node.type === "GROUP" || node.type === "FRAME" || node.type === "COMPONENT" || node.type === "INSTANCE") {
           const textNode = node.findOne((n) => n.type === "TEXT");
           if (textNode) {
@@ -3822,6 +3963,11 @@
       });
       await _writeSharedPluginData(msg.data);
     }
+    if (msg.type === "save-onboarding-state") {
+      figma.clientStorage.setAsync("handex-onboarding-seen", msg.data).catch((err) => {
+        console.warn("Onboarding state save failed:", err);
+      });
+    }
     if (msg.type === "focus-node") {
       const node = await figma.getNodeByIdAsync(msg.id);
       if (node && _nodeOnCurrentPage(node)) {
@@ -3841,6 +3987,12 @@
       });
       figma.ui.postMessage({ type: "design-data-exported", data, format: msg.format });
     }
+    if (msg.type === "get-flow-selection-bounds") {
+      figma.ui.postMessage({ type: "flow-selection-bounds", nodes: _getFlowSelectionBoundsPayload() });
+    }
+    if (msg.type === "track-flow-anchor-preview") {
+      _flowAnchorPreviewActive = !!msg.active;
+    }
     if (msg.type === "create-flow-connection") {
       const selection = figma.currentPage.selection;
       const isEvent = msg.flowType === "event_start" || msg.flowType === "event_end";
@@ -3857,25 +4009,37 @@
         return;
       }
       if (selection.length === 2) {
-        await _buildFlowConnection(selection[0], selection[1], msg);
+        const orderedPair = _resolveChainOrder(selection);
+        const pairMsg = Object.assign({}, msg, { orderIsIntentional: _selectionOrderReliable, flowSideB: msg.flowEndSide });
+        const result = await _buildFlowConnection(orderedPair[0], orderedPair[1], pairMsg);
+        if (msg.autoMarkEndpoints && result) {
+          const nodeStart = await figma.getNodeByIdAsync(result.sourceId);
+          const nodeEnd = result.targetId ? await figma.getNodeByIdAsync(result.targetId) : null;
+          if (nodeStart) await _moveFlowEndpointMarker(nodeStart, true, msg.nextFlowNumber || 1);
+          if (nodeEnd) await _moveFlowEndpointMarker(nodeEnd, false, msg.nextFlowNumber || 1);
+        }
         return;
       }
-      const ordered = [...selection].sort((a, b) => {
-        const ba = a.absoluteBoundingBox || a.absoluteRenderBounds;
-        const bb = b.absoluteBoundingBox || b.absoluteRenderBounds;
-        if (!ba || !bb) return 0;
-        if (Math.abs(ba.x - bb.x) > 1) return ba.x - bb.x;
-        return ba.y - bb.y;
-      });
+      const ordered = _resolveChainOrder(selection);
       figma.ui.postMessage({ type: "flow-batch-started" });
       let created = 0;
       for (let i = 0; i < ordered.length - 1; i++) {
+        const segFlowSide = Array.isArray(msg.flowSidesByIndex) && msg.flowSidesByIndex[i] || msg.flowSide;
+        const isLastSegment = i === ordered.length - 2;
         const segMsg = Object.assign({}, msg, {
           flowId: `${msg.flowId || Date.now()}-${i}`,
-          nextFlowNumber: (msg.nextFlowNumber || 1) + i
+          nextFlowNumber: (msg.nextFlowNumber || 1) + i,
+          orderIsIntentional: true,
+          flowSide: segFlowSide,
+          flowSideB: isLastSegment ? msg.flowEndSide : void 0
         });
         await _buildFlowConnection(ordered[i], ordered[i + 1], segMsg);
         created++;
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+      if (msg.autoMarkEndpoints && ordered.length >= 2) {
+        await _moveFlowEndpointMarker(ordered[0], true, msg.nextFlowNumber || 1);
+        await _moveFlowEndpointMarker(ordered[ordered.length - 1], false, (msg.nextFlowNumber || 1) + created);
       }
       figma.ui.postMessage({ type: "flow-batch-created", count: created });
     }
@@ -3904,6 +4068,38 @@
         }
       }
       await _buildFlowConnection(nodeA, nodeB, msg);
+    }
+    if (msg.type === "resync-all-flows") {
+      const updated = [];
+      const failed = [];
+      for (const flow of msg.flows || []) {
+        if (!flow.sourceId) {
+          failed.push({ flowUid: flow.flowUid, name: flow.name, reason: "sem-origem-salva" });
+          continue;
+        }
+        const nodeA = await figma.getNodeByIdAsync(flow.sourceId);
+        const nodeB = flow.targetId ? await figma.getNodeByIdAsync(flow.targetId) : null;
+        const isEvent = flow.type === "event_start" || flow.type === "event_end";
+        if (!nodeA || !isEvent && flow.targetId && !nodeB) {
+          failed.push({ flowUid: flow.flowUid, name: flow.name, reason: "elemento-nao-encontrado" });
+          continue;
+        }
+        try {
+          const oldGroup = flow.id ? await figma.getNodeByIdAsync(flow.id) : null;
+          if (oldGroup) oldGroup.remove();
+          const result = await _buildFlowConnection(nodeA, nodeB, __spreadProps(__spreadValues({}, flow), { flowType: flow.type, flowName: flow.name, flowId: flow.flowUid, suppressFlowCreatedBroadcast: true }));
+          if (!result) {
+            failed.push({ flowUid: flow.flowUid, name: flow.name, reason: "erro-ao-recriar" });
+            continue;
+          }
+          updated.push({ flowUid: flow.flowUid, oldId: flow.id, newId: result.id });
+        } catch (e) {
+          failed.push({ flowUid: flow.flowUid, name: flow.name, reason: "erro-ao-recriar" });
+        }
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+      figma.ui.postMessage({ type: "flows-resynced", updated, failed });
+      figma.notify(`${updated.length} fluxo(s) atualizado(s)${failed.length ? `, ${failed.length} n\xE3o recriado(s)` : ""}.`);
     }
     if (msg.type === "create-legend") {
       (async () => {

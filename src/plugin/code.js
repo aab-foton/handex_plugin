@@ -26,10 +26,113 @@ figma.on('currentpagechange', () => {
   }
 });
 
+// Alimenta o mini-mapa de ancoragem do modal "Conectar Frames" (ver
+// _getFlowSelectionBoundsPayload) em tempo real, a cada mudança de seleção
+// no canvas enquanto o modal está aberto -- sem isso o mini-mapa só
+// atualizaria ao reabrir o modal. Guardado por _flowAnchorPreviewActive
+// (setado por track-flow-anchor-preview, enviado ao abrir/fechar o modal no
+// frontend) para não gerar postMessage a cada seleção o tempo todo,
+// independente da tela em que o usuário está no plugin.
+let _flowAnchorPreviewActive = false;
+
+// highlight-node seleciona o nó programaticamente (figma.currentPage.selection
+// = [node]) para focar -- isso também dispara selectionchange, então sem essa
+// flag o listener abaixo apagaria o próprio [HighlightStroke] que acabou de
+// criar no mesmo ciclo. Marca "seleção esperada" só durante essa chamada;
+// qualquer selectionchange fora dessa janela é o usuário trocando de
+// seleção de verdade no canvas, e aí sim o highlight deve sumir.
+let _highlightSelectionExpected = false;
+
+// Rastreamento de ORDEM DE CLIQUE real do usuário -- a Plugin API não expõe
+// isso nativamente (figma.currentPage.selection reflete ordem interna de
+// camadas do documento, não ordem de interação). Reconstruído por diff
+// incremental a cada selectionchange: compara a seleção anterior com a
+// atual, e qualquer id que "entrou" nesta mudança específica é anexado ao
+// histórico na ordem em que apareceu. Confiável quando cada mudança
+// adiciona 1 elemento por vez (clique simples, shift+clique um a um) --
+// se alguma mudança adicionar 2+ ids de uma vez (marquise/drag-select,
+// Ctrl+A), não há como saber a ordem real entre eles, e todo o
+// rastreamento da seleção atual fica marcado como não-confiável até a
+// seleção esvaziar de novo (reinicia o rastreamento do zero).
+let _prevSelectionIds = [];
+let _selectionClickOrder = [];
+let _selectionOrderReliable = true;
+
+figma.on('selectionchange', () => {
+  const currentIds = figma.currentPage.selection.map(n => n.id);
+  if (currentIds.length === 0) {
+    _selectionClickOrder = [];
+    _selectionOrderReliable = true;
+  } else {
+    const currentSet = new Set(currentIds);
+    const prevSet = new Set(_prevSelectionIds);
+    const entered = currentIds.filter(id => !prevSet.has(id));
+    const left = _prevSelectionIds.filter(id => !currentSet.has(id));
+    if (entered.length > 1) _selectionOrderReliable = false;
+    _selectionClickOrder = _selectionClickOrder.filter(id => !left.includes(id));
+    _selectionClickOrder.push(...entered);
+  }
+  _prevSelectionIds = currentIds;
+
+  if (_flowAnchorPreviewActive) {
+    figma.ui.postMessage({ type: 'flow-selection-bounds', nodes: _getFlowSelectionBoundsPayload() });
+  }
+  if (_highlightSelectionExpected) {
+    _highlightSelectionExpected = false;
+    return;
+  }
+  if (activeHighlightNode) {
+    try { activeHighlightNode.remove(); } catch (e) { }
+    activeHighlightNode = null;
+  }
+});
+
+// Resolve a ordem real da cadeia: usa a ordem de clique rastreada quando ela
+// cobre TODOS os elementos da seleção atual e não foi contaminada por uma
+// entrada em lote; senão cai no fallback espacial (_orderNodesSpatially) --
+// mesma garantia para 2 elementos (decide o lado A/B) e para cadeias de 3+
+// (decide a sequência A→B→C). Usada tanto pela criação real quanto pelo
+// mini-mapa de prévia, para as duas pontas nunca divergirem.
+function _resolveChainOrder(nodes) {
+  const selectionIds = new Set(nodes.map(n => n.id));
+  const trackedIds = _selectionClickOrder.filter(id => selectionIds.has(id));
+  const coversAll = _selectionOrderReliable && trackedIds.length === nodes.length;
+  if (!coversAll) return _orderNodesSpatially(nodes);
+  const byId = new Map(nodes.map(n => [n.id, n]));
+  return trackedIds.map(id => byId.get(id));
+}
+
 function _nodeOnCurrentPage(node) {
   let n = node;
   while (n && n.type !== 'PAGE') n = n.parent;
   return n != null && n.id === figma.currentPage.id;
+}
+
+// Ordem espacial (esquerda→direita, empate por cima→baixo) -- FALLBACK usado
+// por _resolveChainOrder quando a ordem real de clique não está disponível
+// ou não é confiável (seleção em lote/marquise). Não usar diretamente para
+// decidir a cadeia; ver _resolveChainOrder acima.
+function _orderNodesSpatially(nodes) {
+  return [...nodes].sort((a, b) => {
+    const ba = a.absoluteBoundingBox || a.absoluteRenderBounds;
+    const bb = b.absoluteBoundingBox || b.absoluteRenderBounds;
+    if (!ba || !bb) return 0;
+    if (Math.abs(ba.x - bb.x) > 1) return ba.x - bb.x;
+    return ba.y - bb.y;
+  });
+}
+
+// Teto de 12 -- segurança contra o usuário selecionar dezenas de elementos
+// por engano e o mini-mapa/backend tentarem processar uma cadeia gigante.
+const FLOW_CHAIN_MAX = 12;
+
+function _getFlowSelectionBoundsPayload() {
+  const ordered = _resolveChainOrder(figma.currentPage.selection).slice(0, FLOW_CHAIN_MAX);
+  return ordered.map(n => {
+    const b = n.absoluteBoundingBox || n.absoluteRenderBounds;
+    if (!b) return null;
+    return { id: n.id, name: n.name, x: b.x, y: b.y, width: b.width, height: b.height };
+  }).filter(Boolean);
 }
 
 // "A1.10" deve ordenar depois de "A1.2" — comparação puramente alfabética
@@ -506,6 +609,56 @@ async function _writeSharedPluginData(data) {
   }
 }
 
+// Marcador automático de Início/Fim (opt-in, checkbox "Marcar início e fim
+// automaticamente" no modal "Conectar Frames"). Cada elemento que já tem um
+// marcador desse tipo carrega o vínculo em pluginData
+// (handexFlowStartMarkerId/handexFlowEndMarkerId) -- ao mover o marcador pra
+// um novo elemento (ex: estender uma cadeia existente com mais uma tela),
+// procura e remove o marcador antigo primeiro, nunca deixa dois Fins (ou
+// dois Inícios) simultâneos no canvas por essa via automática.
+async function _moveFlowEndpointMarker(targetNode, isStart, nextFlowNumber) {
+  const dataKey = isStart ? 'handexFlowStartMarkerId' : 'handexFlowEndMarkerId';
+  // Procura, entre os elementos já marcados por essa via automática, se
+  // ALGUM aponta pra um marcador ainda vivo no canvas -- se o alvo já é
+  // esse mesmo elemento, não faz nada (idempotente).
+  const alreadyMarkerId = targetNode.getPluginData(dataKey);
+  if (alreadyMarkerId) {
+    const existing = await figma.getNodeByIdAsync(alreadyMarkerId);
+    if (existing) return; // já é o próprio marcador atual, nada a mover
+  }
+  // Varre a página procurando quem mais carrega esse vínculo (o elemento
+  // que tinha o marcador antes) -- remove o marcador antigo e limpa a
+  // referência antes de criar o novo.
+  let removedOldId = null;
+  for (const node of figma.currentPage.children) {
+    if (node.getPluginData && node.getPluginData(dataKey)) {
+      const oldMarkerId = node.getPluginData(dataKey);
+      if (oldMarkerId === alreadyMarkerId) continue;
+      try {
+        const oldMarker = await figma.getNodeByIdAsync(oldMarkerId);
+        if (oldMarker) { oldMarker.remove(); removedOldId = oldMarkerId; }
+      } catch (e) {}
+      node.setPluginData(dataKey, '');
+    }
+  }
+  const eventMsg = {
+    flowType: isStart ? 'event_start' : 'event_end',
+    flowName: isStart ? 'Início' : 'Fim',
+    nextFlowNumber,
+    flowId: `${Date.now()}-${isStart ? 'start' : 'end'}-${targetNode.id}`,
+    // Broadcast próprio (flow-marker-moved) em vez do flow-created padrão --
+    // precisa carregar removedOldId pro frontend tirar a entrada antiga da
+    // lista antes de adicionar a nova, senão o item órfão (apontando pro nó
+    // já removido do canvas) fica na lista até o usuário recarregar.
+    suppressFlowCreatedBroadcast: true
+  };
+  const result = await _buildFlowConnection(targetNode, null, eventMsg);
+  if (result) {
+    targetNode.setPluginData(dataKey, result.id);
+    figma.ui.postMessage({ type: 'flow-marker-moved', flow: result, removedOldId });
+  }
+}
+
 // Corpo compartilhado da criação de fluxo — usado tanto pela criação normal
 // (create-flow-connection, nodeA/nodeB vêm da seleção ativa) quanto pela
 // recriação a partir de backup (recreate-flow-connection, nodeA/nodeB vêm
@@ -517,7 +670,13 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
   let boundsB = nodeB ? (nodeB.absoluteBoundingBox || nodeB.absoluteRenderBounds) : null;
   if (!boundsA) { figma.notify("Elemento de origem sem dimensões válidas."); return; }
 
-  if (!isEvent && boundsB && (!msg.flowSide || msg.flowSide === 'auto')) {
+  // orderIsIntentional: nodeA/nodeB já vêm na ordem real de clique do
+  // usuário (resolvida por _resolveChainOrder antes de chamar esta função)
+  // -- o swap espacial abaixo existe só pra quando a ordem é arbitrária
+  // (ordem interna de camadas do Figma) e precisamos adivinhar a direção
+  // pela posição. Com ordem intencional, inverter por posição reverteria
+  // silenciosamente a intenção do usuário.
+  if (!isEvent && boundsB && !msg.orderIsIntentional && (!msg.flowSide || msg.flowSide === 'auto')) {
     const cAx = boundsA.x + boundsA.width / 2, cAy = boundsA.y + boundsA.height / 2;
     const cBx = boundsB.x + boundsB.width / 2, cBy = boundsB.y + boundsB.height / 2;
     const adx = Math.abs(cBx - cAx), ady = Math.abs(cBy - cAy);
@@ -559,6 +718,12 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
         if (Math.abs(dx) >= Math.abs(dy)) { bestA = dx >= 0 ? pointsA.right : pointsA.left; bestB = dx >= 0 ? pointsB.left : pointsB.right; }
         else                              { bestA = dy >= 0 ? pointsA.bottom : pointsA.top;  bestB = dy >= 0 ? pointsB.top : pointsB.bottom; }
       }
+    } else if (msg.flowSideB && msg.flowSideB !== 'auto' && pointsB[msg.flowSideB]) {
+      // Lado de ENTRADA escolhido manualmente no card de destino (ver
+      // flowEndSide em confirmFlowConnection, specifications.js) -- só se
+      // aplica ao último card da cadeia, que nunca é origem de segmento
+      // (por isso não tem equivalente a msg.flowSide pra ele).
+      bestB = pointsB[msg.flowSideB];
     } else {
       let minDist = Infinity;
       for (const pB of Object.values(pointsB)) {
@@ -675,6 +840,40 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
 
   let nodesToGroup = [line];
 
+  // Marcador na ponta de ORIGEM (bestA) -- a linha já tinha seta em bestB
+  // (destino) mas nada marcando de onde ela sai, deixando a extremidade
+  // inicial "solta" visualmente. Eventos (Início/Fim) não entram aqui: já
+  // têm seu próprio círculo grande de 96px como marcador (ver bloco isEvent
+  // logo abaixo), que cobre esse papel. Losango pequeno em vez de bolinha
+  // quando o segmento é de decisão (diamond/diamond_dashed) -- convenção
+  // BPMN: círculo é reservado a eventos, losango marca gateway/decisão. O
+  // losango GRANDE (64px) no meio da linha (ver bloco diamond abaixo) é o
+  // próprio gateway; este aqui é só o marcador da ponta, no mesmo espírito
+  // do dot de origem das linhas comuns.
+  const isDecision = msg.flowType === "diamond" || msg.flowType === "diamond_dashed";
+  if (!isEvent) {
+    if (isDecision) {
+      const r = 6;
+      const originMarker = figma.createVector();
+      figma.currentPage.appendChild(originMarker);
+      originMarker.x = 0; originMarker.y = 0;
+      originMarker.vectorPaths = [{ windingRule: "NONZERO", data: `M ${bestA.x} ${bestA.y - r} L ${bestA.x + r} ${bestA.y} L ${bestA.x} ${bestA.y + r} L ${bestA.x - r} ${bestA.y} Z` }];
+      originMarker.fills = [{ type: "SOLID", color: strokeColor }];
+      originMarker.strokes = [];
+      nodesToGroup.push(originMarker);
+    } else {
+      const originDotR = 4;
+      const originDot = figma.createEllipse();
+      figma.currentPage.appendChild(originDot);
+      originDot.resize(originDotR * 2, originDotR * 2);
+      originDot.x = bestA.x - originDotR;
+      originDot.y = bestA.y - originDotR;
+      originDot.fills = [{ type: "SOLID", color: strokeColor }];
+      originDot.strokes = [];
+      nodesToGroup.push(originDot);
+    }
+  }
+
   if (msg.flowType !== "event_start") {
     // Ângulo da seta: direção do ÚLTIMO segmento antes de bestB. Com elbow,
     // é o penúltimo ponto do path (mais simples que a tangente de Bézier --
@@ -711,6 +910,10 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
     connectorStyle: _connectorStyle,
     curvature: _curvature
   };
+  // Preenchido pelo branch que efetivamente criar o grupo -- usado pelo
+  // resync em lote (resync-all-flows) pra saber o novo id do fluxo
+  // recriado sem depender de escutar flow-created assincronamente.
+  let _flowResult = null;
 
   if (msg.flowType === "diamond" || msg.flowType === "diamond_dashed") {
     const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
@@ -735,12 +938,13 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
       symbol.resize(size * 0.8, symbol.height);
       symbol.x = midX - symbol.width / 2; symbol.y = midY - symbol.height / 2;
       nodesToGroup.push(shape, symbol);
+      const friendlyName = msg.flowName || "Decisão";
       const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-      finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | decisao] ${msg.flowName || "Decisão"}`;
+      finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | decisao] ${friendlyName}`;
       finalGroup.locked = true;
       finalGroup.setPluginData('handexCategory', 'fluxo');
       finalGroup.setPluginData('handexFlowId', _flowId);
-      figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, flowUid: _flowId, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
+      _flowResult = { id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType, ..._flowExtra };
     } catch (e) { console.error(e); }
   } else if (isEvent) {
     const isStart = msg.flowType === "event_start";
@@ -763,12 +967,13 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
       label.x = circle.x + circle.width / 2 - label.width / 2;
       label.y = circle.y + circle.height / 2 - label.height / 2;
       nodesToGroup.push(circle, label);
+      const friendlyName = msg.flowName || (isStart ? "Início" : "Fim");
       const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-      finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | ${isStart ? 'inicio' : 'fim'}] ${msg.flowName || (isStart ? "Início" : "Fim")}`;
+      finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | ${isStart ? 'inicio' : 'fim'}] ${friendlyName}`;
       finalGroup.locked = true;
       finalGroup.setPluginData('handexCategory', 'fluxo');
       finalGroup.setPluginData('handexFlowId', _flowId);
-      figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, flowUid: _flowId, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
+      _flowResult = { id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType, ..._flowExtra };
     } catch (e) { console.error(e); }
   } else if (msg.decisionText && (msg.flowType === "line_solid" || msg.flowType === "line_dashed")) {
     const midX = elbowMid.x, midY = elbowMid.y;
@@ -793,22 +998,33 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
       figma.currentPage.appendChild(textNode);
       textNode.x = chipBg.x + paddingH; textNode.y = chipBg.y + paddingV;
       nodesToGroup.push(chipBg, textNode);
+      const friendlyName = msg.flowName || "Conexão";
       const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-      finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conexão"}`;
+      finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${friendlyName}`;
       finalGroup.locked = true;
       finalGroup.setPluginData('handexCategory', 'fluxo');
       finalGroup.setPluginData('handexFlowId', _flowId);
-      figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, flowUid: _flowId, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
+      _flowResult = { id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType, ..._flowExtra };
     } catch (e) { console.error(e); }
   } else {
+    const friendlyName = msg.flowName || "Conexão";
     const finalGroup = figma.group(nodesToGroup, figma.currentPage);
-    finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conexão"}`;
+    finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${friendlyName}`;
     finalGroup.locked = true;
     finalGroup.setPluginData('handexCategory', 'fluxo');
     finalGroup.setPluginData('handexFlowId', _flowId);
-    figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, flowUid: _flowId, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
+    _flowResult = { id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType, ..._flowExtra };
   }
-  figma.notify("Fluxo criado!");
+
+  // resync-all-flows agrega tudo num único flows-resynced/notify no fim do
+  // lote -- sem essa flag, cada item recriado dispararia seu próprio
+  // flow-created e duplicaria a entrada em handoffData.createdFlows (que já
+  // é reescrita pela UI a partir do resultado agregado).
+  if (!msg.suppressFlowCreatedBroadcast) {
+    if (_flowResult) figma.ui.postMessage({ type: 'flow-created', flow: _flowResult });
+    figma.notify("Fluxo criado!");
+  }
+  return _flowResult;
 }
 
 figma.ui.onmessage = async (msg) => {
@@ -821,13 +1037,17 @@ figma.ui.onmessage = async (msg) => {
     const projectName = figma.root.name || figma.currentPage.name || '';
     try {
       const savedState = await figma.clientStorage.getAsync('handoffData');
+      // Onboarding é por instalação do plugin, não por handoffData/projeto —
+      // chave própria, sobrevive a "Limpar Dados do plugin" de propósito.
+      const onboardingSeen = await figma.clientStorage.getAsync('handex-onboarding-seen');
       figma.ui.postMessage({
         type: 'init-plugin',
         version: PLUGIN_VERSION,
         currentUser,
         theme,
         projectName,
-        savedState: savedState || null
+        savedState: savedState || null,
+        onboardingSeen: onboardingSeen || null
       });
     } catch (err) {
       console.error("Initialization error (continuing without saved state):", err);
@@ -837,7 +1057,8 @@ figma.ui.onmessage = async (msg) => {
         currentUser,
         theme,
         projectName,
-        savedState: null
+        savedState: null,
+        onboardingSeen: null
       });
     }
     return;
@@ -3868,6 +4089,7 @@ figma.ui.onmessage = async (msg) => {
     if (myToken !== _highlightToken) return;
     if (node && node.visible && _nodeOnCurrentPage(node)) {
       if (msg.selectNode !== false) {
+        _highlightSelectionExpected = true;
         figma.currentPage.selection = [node];
       }
       if (msg.shouldScroll !== false) {
@@ -4120,7 +4342,13 @@ figma.ui.onmessage = async (msg) => {
   if (msg.type === 'rename-node') {
     const node = await figma.getNodeByIdAsync(msg.id);
     if (node) {
-      node.name = msg.name;
+      // Grupos de fluxo carregam um prefixo técnico "[Fluxo | N | tipo] " no
+      // nome do nó (usado por delete/resync/identificação de categoria) --
+      // renomear via UI só deve trocar a parte legível depois do prefixo,
+      // nunca sobrescrever o nome inteiro (perderia o prefixo e quebraria
+      // esses outros handlers).
+      const prefixMatch = node.name.match(/^(\[Fluxo \| \d+ \| \w+\] )/);
+      node.name = prefixMatch ? `${prefixMatch[1]}${msg.name}` : msg.name;
       // Se for um grupo ou frame, tenta encontrar um texto interno para atualizar também
       if (node.type === 'GROUP' || node.type === 'FRAME' || node.type === 'COMPONENT' || node.type === 'INSTANCE') {
         const textNode = node.findOne(n => n.type === 'TEXT');
@@ -4218,6 +4446,15 @@ figma.ui.onmessage = async (msg) => {
     await _writeSharedPluginData(msg.data);
   }
 
+  // Estado de onboarding — chave própria, deliberadamente fora de
+  // handoffData (não deve ser apagado por "Limpar Dados do plugin" nem
+  // exportado/importado junto com o backup do projeto).
+  if (msg.type === 'save-onboarding-state') {
+    figma.clientStorage.setAsync('handex-onboarding-seen', msg.data).catch(err => {
+      console.warn("Onboarding state save failed:", err);
+    });
+  }
+
   if (msg.type === 'focus-node') {
     const node = await figma.getNodeByIdAsync(msg.id);
     if (node && _nodeOnCurrentPage(node)) {
@@ -4241,6 +4478,18 @@ figma.ui.onmessage = async (msg) => {
     figma.ui.postMessage({ type: 'design-data-exported', data: data, format: msg.format });
   }
 
+  if (msg.type === "get-flow-selection-bounds") {
+    figma.ui.postMessage({ type: 'flow-selection-bounds', nodes: _getFlowSelectionBoundsPayload() });
+  }
+
+  // Liga/desliga o listener de selectionchange do mini-mapa de ancoragem —
+  // enviado pelo frontend ao abrir/fechar o modal "Conectar Frames", evita
+  // postMessage a cada mudança de seleção quando ninguém está olhando pro
+  // mini-mapa (modal fechado ou outra tela do plugin).
+  if (msg.type === "track-flow-anchor-preview") {
+    _flowAnchorPreviewActive = !!msg.active;
+  }
+
   if (msg.type === "create-flow-connection") {
     const selection = figma.currentPage.selection;
     const isEvent = msg.flowType === "event_start" || msg.flowType === "event_end";
@@ -4260,36 +4509,76 @@ figma.ui.onmessage = async (msg) => {
     }
 
     if (selection.length === 2) {
-      await _buildFlowConnection(selection[0], selection[1], msg);
+      // Resolve A/B pela ordem real de clique quando disponível -- sem isso,
+      // o swap espacial em _buildFlowConnection decide a direção só pela
+      // posição no canvas, podendo inverter a intenção do usuário mesmo com
+      // apenas 2 elementos selecionados.
+      const orderedPair = _resolveChainOrder(selection);
+      const pairMsg = Object.assign({}, msg, { orderIsIntentional: _selectionOrderReliable, flowSideB: msg.flowEndSide });
+      const result = await _buildFlowConnection(orderedPair[0], orderedPair[1], pairMsg);
+      // Marcadores automáticos usam sourceId/targetId do RESULTADO, não
+      // selection[0]/[1] -- _buildFlowConnection pode ter invertido A/B
+      // internamente por posição espacial (flowSide 'auto'), e o resultado
+      // já reflete a ordem final real da seta.
+      if (msg.autoMarkEndpoints && result) {
+        const nodeStart = await figma.getNodeByIdAsync(result.sourceId);
+        const nodeEnd = result.targetId ? await figma.getNodeByIdAsync(result.targetId) : null;
+        if (nodeStart) await _moveFlowEndpointMarker(nodeStart, true, msg.nextFlowNumber || 1);
+        if (nodeEnd) await _moveFlowEndpointMarker(nodeEnd, false, msg.nextFlowNumber || 1);
+      }
       return;
     }
 
     // 3+ elementos: conecta em sequência (A→B→C→D), uma conexão a menos que
     // o total de elementos. A ordem de figma.currentPage.selection reflete
     // a ordem interna de camadas do Figma, não a ordem de clique do usuário
-    // -- por isso ordena espacialmente (esquerda→direita, empate por
-    // cima→baixo) antes de encadear, resultado previsível independente de
-    // como o Figma devolveu a seleção.
-    const ordered = [...selection].sort((a, b) => {
-      const ba = a.absoluteBoundingBox || a.absoluteRenderBounds;
-      const bb = b.absoluteBoundingBox || b.absoluteRenderBounds;
-      if (!ba || !bb) return 0;
-      if (Math.abs(ba.x - bb.x) > 1) return ba.x - bb.x;
-      return ba.y - bb.y;
-    });
+    // -- por isso resolve pela ordem de clique rastreada (com fallback
+    // espacial), mesma função do mini-mapa (_resolveChainOrder), pra
+    // garantir que a cadeia mostrada na prévia bata com o resultado real
+    // no canvas.
+    const ordered = _resolveChainOrder(selection);
     figma.ui.postMessage({ type: 'flow-batch-started' });
     let created = 0;
     for (let i = 0; i < ordered.length - 1; i++) {
       // Cada conexão da sequência precisa de flowId/nextFlowNumber próprios
       // -- sem isso, todas as conexões do lote colidiriam no mesmo
       // handexFlowId (duplicaria/substituiria umas às outras na ficha) e
-      // teriam o mesmo número sequencial no nome do grupo.
+      // teriam o mesmo número sequencial no nome do grupo. flowSide também
+      // é por segmento -- flowSidesByIndex[i] é o lado escolhido no card de
+      // ORIGEM deste segmento (índice i na cadeia ordenada), permitindo A
+      // sair pela direita, B pelo topo, C por baixo etc na mesma cadeia
+      // (ver flowSidesByIndex em confirmFlowConnection, specifications.js).
+      const segFlowSide = (Array.isArray(msg.flowSidesByIndex) && msg.flowSidesByIndex[i]) || msg.flowSide;
+      // flowEndSide (lado de ENTRADA escolhido no último card da cadeia) só
+      // se aplica ao segmento final -- os segmentos intermediários usam o
+      // ponto mais próximo, como sempre.
+      const isLastSegment = i === ordered.length - 2;
       const segMsg = Object.assign({}, msg, {
         flowId: `${msg.flowId || Date.now()}-${i}`,
-        nextFlowNumber: (msg.nextFlowNumber || 1) + i
+        nextFlowNumber: (msg.nextFlowNumber || 1) + i,
+        orderIsIntentional: true,
+        flowSide: segFlowSide,
+        flowSideB: isLastSegment ? msg.flowEndSide : undefined
       });
       await _buildFlowConnection(ordered[i], ordered[i + 1], segMsg);
       created++;
+      // Cede o controle ao runtime do Figma entre cada segmento -- sem isso,
+      // uma cadeia longa (cada segmento cria vetores/grupos/texto) roda como
+      // um bloco síncrono contínuo (cada `await` acima resolve
+      // instantaneamente sem ceder o main thread de verdade), deixando o
+      // Figma sem processar input do usuário (teclado no canvas, cliques)
+      // até o loop inteiro terminar -- reportado como travamento de alguns
+      // segundos ao conectar 3+ elementos.
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+    // Cadeia: Início vai sempre no primeiro elemento da ordem final, Fim no
+    // último -- os intermediários nunca recebem marcador, mesmo que já
+    // tivessem um de uma conexão anterior isolada (esse caso não é coberto
+    // aqui; a movimentação de marcador existente só se aplica ao próprio
+    // elemento que está virando a nova ponta da cadeia).
+    if (msg.autoMarkEndpoints && ordered.length >= 2) {
+      await _moveFlowEndpointMarker(ordered[0], true, msg.nextFlowNumber || 1);
+      await _moveFlowEndpointMarker(ordered[ordered.length - 1], false, (msg.nextFlowNumber || 1) + created);
     }
     figma.ui.postMessage({ type: 'flow-batch-created', count: created });
   }
@@ -4335,6 +4624,39 @@ figma.ui.onmessage = async (msg) => {
     }
 
     await _buildFlowConnection(nodeA, nodeB, msg);
+  }
+
+  // Recria em lote todos os fluxos salvos em handoffData.createdFlows --
+  // mesma lógica de recreate-flow-connection, mas iterando a lista inteira
+  // sem postar um flow-created por item (evitaria duplicar entradas em
+  // handoffData.createdFlows); a UI substitui a lista inteira a partir do
+  // resultado agregado flows-resynced.
+  if (msg.type === "resync-all-flows") {
+    const updated = [];
+    const failed = [];
+    for (const flow of (msg.flows || [])) {
+      if (!flow.sourceId) { failed.push({ flowUid: flow.flowUid, name: flow.name, reason: 'sem-origem-salva' }); continue; }
+      const nodeA = await figma.getNodeByIdAsync(flow.sourceId);
+      const nodeB = flow.targetId ? await figma.getNodeByIdAsync(flow.targetId) : null;
+      const isEvent = flow.type === 'event_start' || flow.type === 'event_end';
+      if (!nodeA || (!isEvent && flow.targetId && !nodeB)) { failed.push({ flowUid: flow.flowUid, name: flow.name, reason: 'elemento-nao-encontrado' }); continue; }
+      try {
+        const oldGroup = flow.id ? await figma.getNodeByIdAsync(flow.id) : null;
+        if (oldGroup) oldGroup.remove();
+        const result = await _buildFlowConnection(nodeA, nodeB, { ...flow, flowType: flow.type, flowName: flow.name, flowId: flow.flowUid, suppressFlowCreatedBroadcast: true });
+        if (!result) { failed.push({ flowUid: flow.flowUid, name: flow.name, reason: 'erro-ao-recriar' }); continue; }
+        updated.push({ flowUid: flow.flowUid, oldId: flow.id, newId: result.id });
+      } catch (e) {
+        failed.push({ flowUid: flow.flowUid, name: flow.name, reason: 'erro-ao-recriar' });
+      }
+      // Mesmo motivo do loop de cadeia em create-flow-connection: cede o
+      // main thread do Figma entre cada fluxo recriado, senão um resync com
+      // muitos fluxos trava input do usuário (teclado/clique no canvas) até
+      // o lote inteiro terminar.
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+    figma.ui.postMessage({ type: 'flows-resynced', updated, failed });
+    figma.notify(`${updated.length} fluxo(s) atualizado(s)${failed.length ? `, ${failed.length} não recriado(s)` : ''}.`);
   }
 
   if (msg.type === "create-legend") {

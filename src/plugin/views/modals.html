@@ -118,27 +118,42 @@
         </div>
         
         <div class="p-6 space-y-6 max-h-[60vh] overflow-y-auto" onscroll="handleScroll(this)">
-          <!-- Name Input -->
+          <!-- Name Input -- vira o nome da JORNADA (grupo de conexões que
+               se tocam), não o nome de uma conexão isolada; ver
+               computeFlowJourneys/renameJourney em core.js -->
           <div class="space-y-3">
-            <label for="flow-name-input" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Nome da Conexão</label>
-            <input type="text" id="flow-name-input" placeholder="Ex: Linha 1" 
-              class="w-full bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all" />
+            <div class="flex items-center justify-between px-1">
+              <label for="flow-name-input" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Nome da Jornada</label>
+              <span id="flow-name-input-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/70</span>
+            </div>
+            <input type="text" id="flow-name-input" placeholder="Ex: Cadastro de conta" maxlength="70"
+              oninput="_updateCharCount(this, 70)"
+              class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all" />
+            <p class="text-[9px] text-slate-400 dark:text-dark-muted px-1 -mt-1">Se a seleção estender uma jornada já existente, deixe em branco para manter o nome atual.</p>
+          </div>
+
+          <!-- Marcadores automáticos de Início/Fim — opt-in, desmarcado por
+               padrão. Fica antes do tipo de conexão de propósito: é uma
+               decisão que vale pra toda a seleção, não um detalhe do
+               estilo da linha. O primeiro elemento da conexão/cadeia ganha
+               o marcador de Início, o último ganha o de Fim; se algum deles
+               já tinha um marcador desses (de uma conexão anterior), ele é
+               movido, nunca duplicado. -->
+          <div class="space-y-2">
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" id="flow-auto-mark-endpoints" class="w-4 h-4 rounded accent-[#3d3dff]" />
+              <span class="text-[11px] font-bold text-slate-600 dark:text-dark-muted">Marcar início e fim automaticamente</span>
+            </label>
+            <p class="text-[9px] text-slate-400 dark:text-dark-muted pl-6 leading-snug">O primeiro elemento selecionado recebe o marcador de Início; o último recebe o de Fim.</p>
           </div>
 
           <!-- Selection -->
           <div class="space-y-3">
             <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Estilo do Fluxo</label>
             <p class="text-[10px] text-slate-500 dark:text-dark-muted px-1 italic -mt-2 mb-2">
-              *Para Início/Fim, selecione apenas 1 elemento. Para os demais, selecione 2.
+              Selecione 2 ou mais elementos no canvas para conectar. Para ramificar um fluxo já criado (ex: incluir uma decisão a partir de um card no meio da cadeia), conecte esse card com o novo elemento separadamente, escolhendo Decisão.
             </p>
             <div class="grid grid-cols-2 gap-3">
-              <button onclick="selectFlowType('event_start')" id="form-flow-event_start" title="Marca onde o fluxo começa — selecione 1 elemento" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center">
-                <div class="w-10 h-10 bg-white dark:bg-dark-surface rounded-xl flex items-center justify-center shrink-0 shadow-sm">
-                  <div class="w-5 h-5 rounded-full border-2 border-green-500 bg-green-50/50 dark:bg-green-900/20"></div>
-                </div>
-                <span class="text-[10px] font-bold text-slate-700 dark:text-white uppercase">Início</span>
-              </button>
-
               <button onclick="selectFlowType('line_solid')" id="form-flow-line_solid" title="Conecta telas em sequência direta — selecione 2 ou mais elementos (3+ conecta em cadeia)" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center group">
                 <div class="w-10 h-10 bg-white dark:bg-dark-surface rounded-xl flex items-center justify-center shrink-0 shadow-sm">
                   <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 dark:text-dark-muted group-hover:text-[#3d3dff]"></i>
@@ -166,84 +181,74 @@
                 </div>
                 <span class="text-[10px] font-bold text-slate-700 dark:text-white uppercase">Decisão (Opcional)</span>
               </button>
-
-              <button onclick="selectFlowType('event_end')" id="form-flow-event_end" title="Marca onde o fluxo termina — selecione 1 elemento" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center">
-                <div class="w-10 h-10 bg-white dark:bg-dark-surface rounded-xl flex items-center justify-center shrink-0 shadow-sm">
-                  <div class="w-5 h-5 rounded-full border-[3px] border-red-500"></div>
-                </div>
-                <span class="text-[10px] font-bold text-slate-700 dark:text-white uppercase">Fim</span>
-              </button>
             </div>
           </div>
 
           <!-- Connection Side Selection -->
           <div id="anchor-side-selection" class="space-y-3 pt-4 border-t border-gray-50 dark:border-dark-line/50">
-            <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Lado da Conexão (Ancoragem)</label>
-            <div class="grid grid-cols-5 gap-2">
-              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-                <input type="radio" name="flow-side" value="auto" checked class="sr-only" />
-                <i data-lucide="zap" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-                <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Auto</span>
-              </label>
-              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-                <input type="radio" name="flow-side" value="top" class="sr-only" />
-                <i data-lucide="arrow-up" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-                <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Topo</span>
-              </label>
-              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-                <input type="radio" name="flow-side" value="bottom" class="sr-only" />
-                <i data-lucide="arrow-down" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-                <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Base</span>
-              </label>
-              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-                <input type="radio" name="flow-side" value="left" class="sr-only" />
-                <i data-lucide="arrow-left" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-                <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Esq.</span>
-              </label>
-              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-                <input type="radio" name="flow-side" value="right" class="sr-only" />
-                <i data-lucide="arrow-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-                <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Dir.</span>
-              </label>
+            <div class="flex items-center justify-between gap-2 px-1">
+              <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Lado da Conexão (Ancoragem)</label>
+              <!-- Toggle Auto/Manual -- clicar limpa TODAS as escolhas
+                   manuais de lado (por card), voltando cada segmento da
+                   cadeia pro automático. Ver
+                   _setFlowAnchorSide/_renderFlowAnchorPreview. -->
+              <button type="button" onclick="_setFlowAnchorSide('auto')" id="flow-anchor-auto-btn"
+                class="shrink-0 flex items-center gap-1.5 text-[9px] font-bold px-2 py-1 rounded-full transition-colors">
+                <span id="flow-anchor-auto-track" class="relative inline-block w-6 h-3.5 rounded-full transition-colors">
+                  <span id="flow-anchor-auto-knob" class="absolute top-0.5 left-0.5 w-2.5 h-2.5 rounded-full bg-white shadow transition-transform"></span>
+                </span>
+                Auto
+              </button>
             </div>
+            <p class="text-[9px] text-slate-400 dark:text-dark-muted px-1 -mt-2">Cada card pode ter seu próprio lado de saída. Sem escolha, o lado é automático.</p>
+
+            <!-- Mini-mapa visual dos elementos selecionados (2 = par, 3+ = cadeia em rail esquemático) -->
+            <div id="flow-anchor-preview" class="relative h-[110px] rounded-2xl border border-gray-200 dark:border-dark-line bg-gray-50 dark:bg-dark-bg overflow-hidden">
+              <svg id="flow-anchor-svg" viewBox="0 0 400 110" preserveAspectRatio="xMidYMid meet" class="absolute inset-0 w-full h-full hidden"></svg>
+              <div id="flow-anchor-empty" class="absolute inset-0 flex flex-col items-center justify-center gap-2 px-8 text-center">
+                <i data-lucide="crosshair" class="w-5 h-5 text-gray-300 dark:text-dark-muted"></i>
+                <p class="text-[10px] font-semibold text-gray-400 dark:text-dark-muted leading-snug">Selecione 2 ou mais elementos no canvas para visualizar a conexão</p>
+              </div>
+            </div>
+
+            <!-- Ordem da cadeia (só aparece com 3+ elementos) -->
+            <div id="flow-chain-order-row" class="hidden px-1">
+              <p id="flow-chain-order-text" class="text-[9px] text-slate-500 dark:text-dark-muted leading-snug truncate"></p>
+            </div>
+
+            <p class="text-[9px] text-slate-400 dark:text-dark-muted px-1 leading-snug">
+              Clique numa borda de qualquer card no mini-mapa acima para escolher, por card, o lado de onde a conexão sai.
+            </p>
           </div>
 
           <!-- Chip Input for Lines/Diamonds -->
           <div id="flow-chip-container" class="hidden space-y-3 animate-in slide-in-from-top-2 duration-300">
-            <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Texto da Conexão / Chip</label>
-            <textarea id="flow-chip-text" placeholder="Ex: Sim, Não, Enviar..."
+            <div class="flex items-center justify-between px-1">
+              <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Texto da Conexão / Chip</label>
+              <span id="flow-chip-text-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/20</span>
+            </div>
+            <!-- maxlength 20 -- texto vive dentro do losango de decisão
+                 (64px, fonte 11px) ou do chip da linha; sem limite ficava
+                 ilegível/estourava a forma no canvas. -->
+            <textarea id="flow-chip-text" placeholder="Ex: Sim, Não, Enviar..." maxlength="20"
+              oninput="_updateCharCount(this, 20)"
               class="w-full h-20 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none resize-none transition-all"></textarea>
           </div>
 
           <!-- Estilo do conector (só linha sólida/tracejada -- diamond/evento têm forma própria, não se molda) -->
           <div id="flow-connector-style-container" class="hidden space-y-3 pt-4 border-t border-gray-50 dark:border-dark-line/50">
             <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Estilo da Linha</label>
-            <div class="grid grid-cols-3 gap-2">
+            <div class="grid grid-cols-2 gap-2">
               <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-                <input type="radio" name="flow-connector-style" value="straight" checked onchange="_onFlowConnectorStyleChange(this.value)" class="sr-only" />
+                <input type="radio" name="flow-connector-style" value="straight" checked onchange="_renderFlowAnchorPreview()" class="sr-only" />
                 <i data-lucide="minus" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
                 <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Reta</span>
               </label>
               <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-                <input type="radio" name="flow-connector-style" value="curved" onchange="_onFlowConnectorStyleChange(this.value)" class="sr-only" />
-                <i data-lucide="spline" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-                <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Curva</span>
-              </label>
-              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-                <input type="radio" name="flow-connector-style" value="elbow" onchange="_onFlowConnectorStyleChange(this.value)" class="sr-only" />
+                <input type="radio" name="flow-connector-style" value="elbow" onchange="_renderFlowAnchorPreview()" class="sr-only" />
                 <i data-lucide="corner-down-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-                <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Esquinas</span>
+                <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Angular</span>
               </label>
-            </div>
-
-            <div id="flow-curvature-container" class="hidden space-y-2">
-              <div class="flex items-center justify-between px-1">
-                <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Grau da Curva</label>
-                <span id="flow-curvature-value" class="text-[10px] font-bold text-[#3d3dff]">Reta</span>
-              </div>
-              <input type="range" id="flow-curvature-input" min="-100" max="100" value="0" step="5"
-                oninput="_updateFlowCurvatureLabel(this.value)"
-                class="w-full h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer accent-[#3d3dff]" />
             </div>
           </div>
         </div>
@@ -321,138 +326,165 @@
         </div>
         <div class="flex-1 overflow-y-auto p-6 space-y-6" onscroll="handleScroll(this)">
 
-          <!-- Tags e Agrupamento -->
-          <div class="rounded-xl p-4 space-y-3 bg-[#EBF4FB] dark:bg-blue-900/20 border border-[#b3d4ea] dark:border-blue-800/40">
-            <div class="flex items-center gap-2">
-              <i data-lucide="tag" class="w-4 h-4 shrink-0 text-[#2e2ee0] dark:text-blue-300"></i>
-              <span class="text-[13px] font-bold text-[#2e2ee0] dark:text-blue-300">Como funcionam as Tags</span>
-            </div>
-            <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Cada especificação recebe uma <strong>Tag</strong> (A, B, C…) que define o grupo ao qual pertence no canvas. Use a mesma tag para specs relacionadas ao mesmo elemento ou contexto.</p>
-            <div class="space-y-2">
-              <div class="flex items-start gap-2">
-                <span class="mt-0.5 w-5 h-5 rounded flex items-center justify-center text-[9px] font-bold text-white shrink-0" style="background:#2e2ee0">A</span>
-                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Mesma tag</strong> — ao criar, a spec fica solta no canvas para você arrastar para onde quiser. Ao clicar em <strong>Concluir posicionamento</strong>, ela se junta ao grupo da tag, na direção do lado escolhido (topo empilha para cima; demais lados empilham para baixo).</p>
+          <!-- Tags e Agrupamento (accordion, aberto por padrão -- ver
+               justificativa em spec-types-help-modal: conteúdo curto e é a
+               primeira coisa que o usuário costuma querer escanear) -->
+          <div class="rounded-xl overflow-hidden bg-[#EBF4FB] dark:bg-blue-900/20 border border-[#b3d4ea] dark:border-blue-800/40">
+            <button type="button" onclick="toggleAccordion(this)" aria-expanded="true"
+              class="w-full p-4 flex items-center justify-between gap-2 hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
+              <div class="flex items-center gap-2 min-w-0">
+                <i data-lucide="tag" class="w-4 h-4 shrink-0 text-[#2e2ee0] dark:text-blue-300"></i>
+                <span class="text-[13px] font-bold text-[#2e2ee0] dark:text-blue-300">Como funcionam as Tags</span>
               </div>
-              <div class="flex items-start gap-2">
-                <div class="flex gap-0.5 shrink-0 mt-0.5">
-                  <span class="w-4 h-5 rounded flex items-center justify-center text-[9px] font-bold text-white" style="background:#2e2ee0">A</span>
-                  <span class="w-4 h-5 rounded flex items-center justify-center text-[9px] font-bold text-white" style="background:#93537D">B</span>
+              <i data-lucide="chevron-down" class="w-4 h-4 shrink-0 text-[#2e2ee0] dark:text-blue-300 transition-transform" style="transform:rotate(180deg)"></i>
+            </button>
+            <div class="accordion-content p-4 pt-0 space-y-3">
+              <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Cada especificação recebe uma <strong>Tag</strong> (A, B, C…) que define o grupo ao qual pertence no canvas. Use a mesma tag para specs relacionadas ao mesmo elemento ou contexto.</p>
+              <div class="space-y-2">
+                <div class="flex items-start gap-2">
+                  <span class="mt-0.5 w-5 h-5 rounded flex items-center justify-center text-[9px] font-bold text-white shrink-0" style="background:#2e2ee0">A</span>
+                  <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Mesma tag</strong> — ao criar, a spec fica solta no canvas para você arrastar para onde quiser. Ao clicar em <strong>Concluir posicionamento</strong>, ela se junta ao grupo da tag, na direção do lado escolhido (topo empilha para cima; demais lados empilham para baixo).</p>
                 </div>
-                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Tags diferentes</strong> — grupos aparecem lado a lado no canvas, sem sobreposição.</p>
-              </div>
-              <div class="flex items-start gap-2">
-                <i data-lucide="pencil" class="w-4 h-4 shrink-0 mt-0.5 text-slate-500 dark:text-dark-muted"></i>
-                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Renomear grupo</strong> — clique no ícone de lápis ao lado do nome do grupo na lista de specs para personalizar o rótulo.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Controles do grupo -->
-          <div class="rounded-xl p-4 space-y-3 bg-[#EBF4FB] dark:bg-blue-900/20 border border-[#b3d4ea] dark:border-blue-800/40">
-            <div class="flex items-center gap-2">
-              <i data-lucide="sliders-horizontal" class="w-4 h-4 shrink-0 text-[#2e2ee0] dark:text-blue-300"></i>
-              <span class="text-[13px] font-bold text-[#2e2ee0] dark:text-blue-300">Controles do grupo</span>
-            </div>
-            <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Na lista de specs, o cabeçalho de cada grupo (tag) tem botões para organizar o que aparece no canvas.</p>
-            <div class="space-y-2">
-              <div class="flex items-start gap-2">
-                <i data-lucide="spline" class="w-4 h-4 shrink-0 mt-0.5 text-slate-500 dark:text-dark-muted"></i>
-                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Ocultar linhas</strong> — esconde os conectores entre o grupo e o elemento no canvas, sem esconder as specs.</p>
-              </div>
-              <div class="flex items-start gap-2">
-                <i data-lucide="eye" class="w-4 h-4 shrink-0 mt-0.5 text-slate-500 dark:text-dark-muted"></i>
-                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Ocultar grupo</strong> — esconde todas as specs daquela tag no canvas, sem apagar nada.</p>
-              </div>
-              <div class="flex items-start gap-2">
-                <i data-lucide="lock" class="w-4 h-4 shrink-0 mt-0.5 text-slate-500 dark:text-dark-muted"></i>
-                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Cadeado</strong> — trava a posição de uma spec (ou do grupo inteiro) no canvas, para não mover sem querer.</p>
+                <div class="flex items-start gap-2">
+                  <div class="flex gap-0.5 shrink-0 mt-0.5">
+                    <span class="w-4 h-5 rounded flex items-center justify-center text-[9px] font-bold text-white" style="background:#2e2ee0">A</span>
+                    <span class="w-4 h-5 rounded flex items-center justify-center text-[9px] font-bold text-white" style="background:#93537D">B</span>
+                  </div>
+                  <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Tags diferentes</strong> — grupos aparecem lado a lado no canvas, sem sobreposição.</p>
+                </div>
+                <div class="flex items-start gap-2">
+                  <i data-lucide="pencil" class="w-4 h-4 shrink-0 mt-0.5 text-slate-500 dark:text-dark-muted"></i>
+                  <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Renomear grupo</strong> — clique no ícone de lápis ao lado do nome do grupo na lista de specs para personalizar o rótulo.</p>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Tipos de Especificação -->
-          <p class="text-[12px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Tipos de especificação</p>
-          <p class="text-[11px] text-slate-500 dark:text-dark-muted -mt-4">A cor do card no canvas reflete o tipo escolhido. Cada tom tem uma semântica intencional.</p>
+          <!-- Controles do grupo (accordion, aberto por padrão -- mesma
+               justificativa da seção de Tags acima) -->
+          <div class="rounded-xl overflow-hidden bg-[#EBF4FB] dark:bg-blue-900/20 border border-[#b3d4ea] dark:border-blue-800/40">
+            <button type="button" onclick="toggleAccordion(this)" aria-expanded="true"
+              class="w-full p-4 flex items-center justify-between gap-2 hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
+              <div class="flex items-center gap-2 min-w-0">
+                <i data-lucide="sliders-horizontal" class="w-4 h-4 shrink-0 text-[#2e2ee0] dark:text-blue-300"></i>
+                <span class="text-[13px] font-bold text-[#2e2ee0] dark:text-blue-300">Controles do grupo</span>
+              </div>
+              <i data-lucide="chevron-down" class="w-4 h-4 shrink-0 text-[#2e2ee0] dark:text-blue-300 transition-transform" style="transform:rotate(180deg)"></i>
+            </button>
+            <div class="accordion-content p-4 pt-0 space-y-3">
+              <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Na lista de specs, o cabeçalho de cada grupo (tag) tem botões para organizar o que aparece no canvas.</p>
+              <div class="space-y-2">
+                <div class="flex items-start gap-2">
+                  <i data-lucide="spline" class="w-4 h-4 shrink-0 mt-0.5 text-slate-500 dark:text-dark-muted"></i>
+                  <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Ocultar linhas</strong> — esconde os conectores entre o grupo e o elemento no canvas, sem esconder as specs.</p>
+                </div>
+                <div class="flex items-start gap-2">
+                  <i data-lucide="eye" class="w-4 h-4 shrink-0 mt-0.5 text-slate-500 dark:text-dark-muted"></i>
+                  <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Ocultar grupo</strong> — esconde todas as specs daquela tag no canvas, sem apagar nada.</p>
+                </div>
+                <div class="flex items-start gap-2">
+                  <i data-lucide="lock" class="w-4 h-4 shrink-0 mt-0.5 text-slate-500 dark:text-dark-muted"></i>
+                  <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Cadeado</strong> — trava a posição de uma spec (ou do grupo inteiro) no canvas, para não mover sem querer.</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-          <div class="grid grid-cols-1 gap-4">
-
-            <!-- Informação extra -->
-            <div class="rounded-lg p-3 space-y-1.5 bg-[#EBF1F2] dark:bg-slate-700/20 border border-[#64747A] dark:border-slate-500/40">
-              <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#EBF1F2] dark:bg-slate-700/30 border border-[#64747A] dark:border-slate-500/40 text-[#64747A] dark:text-slate-300">Informação extra</span>
-              <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Informações que não se encaixam nos demais tipos — pendências, decisões de reunião ou contexto adicional.</p>
-              <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Alertas, observações, pendências, componente legado ou fora do DSC.</p>
+          <!-- Tipos de Especificação (busca por texto -- mesmo padrão visual
+               do briefing-guide-modal/filterBriefingGuide, ver core.js.
+               Lista sempre visível, sem select, porque 11 categorias curtas
+               ainda são escaneáveis de uma vez; a busca só reduz o esforço
+               quando o usuário já sabe o nome do tipo que procura. -->
+          <div>
+            <p class="text-[12px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Tipos de especificação</p>
+            <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-1 mb-3">A cor do card no canvas reflete o tipo escolhido. Cada tom tem uma semântica intencional.</p>
+            <div class="relative mb-4">
+              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+              <input type="text" id="spec-types-search" oninput="filterSpecTypesHelp()" placeholder="Buscar por nome, descrição ou exemplo..."
+                class="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl text-[12px] text-slate-700 dark:text-white outline-none focus:border-[#3d3dff]/50 transition-colors placeholder:text-slate-400" />
             </div>
 
-            <!-- Comportamento -->
-            <div class="rounded-lg p-3 space-y-1.5 bg-[#F8EAF3] dark:bg-fuchsia-900/20 border border-[#93537D] dark:border-fuchsia-800/40">
-              <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#F8EAF3] dark:bg-fuchsia-900/30 border border-[#93537D] dark:border-fuchsia-800/40 text-[#93537D] dark:text-fuchsia-300">Comportamento</span>
-              <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Reação do sistema às ações do usuário além do padrão do DSC — microinterações, abertura de modais, transições de estado.</p>
-              <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Sequência de ações, comportamento contextual da jornada, estado condicional.</p>
-            </div>
+            <div id="spec-types-list" class="grid grid-cols-1 gap-4">
 
-            <!-- Regra de Negócio -->
-            <div class="rounded-lg p-3 space-y-1.5 bg-[#E5F5F8] dark:bg-cyan-900/20 border border-[#008CB2] dark:border-cyan-800/40">
-              <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#E5F5F8] dark:bg-cyan-900/30 border border-[#008CB2] dark:border-cyan-800/40 text-[#008CB2] dark:text-cyan-300">Regra de Negócio</span>
-              <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Lógica do sistema não visível na interface — campos obrigatórios, validações e restrições de ações.</p>
-              <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Campos obrigatórios, combinações válidas/inválidas, processos condicionais.</p>
-            </div>
+              <!-- Informação extra -->
+              <div data-spec-type-item data-search="informação extra informacao pendências decisões reunião contexto adicional alertas observações componente legado fora do dsc" class="rounded-lg p-3 space-y-1.5 bg-[#EBF1F2] dark:bg-slate-700/20 border border-[#64747A] dark:border-slate-500/40">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#EBF1F2] dark:bg-slate-700/30 border border-[#64747A] dark:border-slate-500/40 text-[#64747A] dark:text-slate-300">Informação extra</span>
+                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Informações que não se encaixam nos demais tipos — pendências, decisões de reunião ou contexto adicional.</p>
+                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Alertas, observações, pendências, componente legado ou fora do DSC.</p>
+              </div>
 
-            <!-- Dados da API -->
-            <div class="rounded-lg p-3 space-y-1.5 bg-[#F5FEC1] dark:bg-lime-900/20 border border-[#6D8000] dark:border-lime-800/40">
-              <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#F5FEC1] dark:bg-lime-900/30 border border-[#6D8000] dark:border-lime-800/40 text-[#6D8000] dark:text-lime-300">Dados da API</span>
-              <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Informações técnicas para integração com o backend — endpoints, campos esperados, estados de carregamento.</p>
-              <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Tela dependente de resposta de API, dados mockados, informações temporárias.</p>
-            </div>
+              <!-- Comportamento -->
+              <div data-spec-type-item data-search="comportamento reação sistema microinterações modais transições estado sequência ações jornada condicional" class="rounded-lg p-3 space-y-1.5 bg-[#F8EAF3] dark:bg-fuchsia-900/20 border border-[#93537D] dark:border-fuchsia-800/40">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#F8EAF3] dark:bg-fuchsia-900/30 border border-[#93537D] dark:border-fuchsia-800/40 text-[#93537D] dark:text-fuchsia-300">Comportamento</span>
+                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Reação do sistema às ações do usuário além do padrão do DSC — microinterações, abertura de modais, transições de estado.</p>
+                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Sequência de ações, comportamento contextual da jornada, estado condicional.</p>
+              </div>
 
-            <!-- Layout -->
-            <div class="rounded-lg p-3 space-y-1.5 bg-[#EBF0FF] dark:bg-blue-900/20 border border-[#2563EB] dark:border-blue-800/40">
-              <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#EBF0FF] dark:bg-blue-900/30 border border-[#2563EB] dark:border-blue-800/40 text-[#2563EB] dark:text-blue-300">Layout</span>
-              <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Grids, margens, alinhamentos e estruturas de containers — o esqueleto espacial da tela.</p>
-              <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Espaçamentos, breakpoints, max-width, colunas de grid.</p>
-            </div>
+              <!-- Regra de Negócio -->
+              <div data-spec-type-item data-search="regra de negócio negocio lógica campos obrigatórios validações restrições ações combinações válidas inválidas processos condicionais" class="rounded-lg p-3 space-y-1.5 bg-[#E5F5F8] dark:bg-cyan-900/20 border border-[#008CB2] dark:border-cyan-800/40">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#E5F5F8] dark:bg-cyan-900/30 border border-[#008CB2] dark:border-cyan-800/40 text-[#008CB2] dark:text-cyan-300">Regra de Negócio</span>
+                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Lógica do sistema não visível na interface — campos obrigatórios, validações e restrições de ações.</p>
+                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Campos obrigatórios, combinações válidas/inválidas, processos condicionais.</p>
+              </div>
 
-            <!-- Componente -->
-            <div class="rounded-lg p-3 space-y-1.5 bg-[#EDEAFD] dark:bg-indigo-900/20 border border-[#4F46E5] dark:border-indigo-800/40">
-              <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#EDEAFD] dark:bg-indigo-900/30 border border-[#4F46E5] dark:border-indigo-800/40 text-[#4F46E5] dark:text-indigo-300">Componente</span>
-              <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Variações, estados e comportamentos de componentes do DSC específicos ao contexto documentado.</p>
-              <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Estado disabled, variante outline, uso condicional de Badge, slot opcional.</p>
-            </div>
+              <!-- Dados da API -->
+              <div data-spec-type-item data-search="dados da api integração backend endpoints campos esperados carregamento mockados temporárias" class="rounded-lg p-3 space-y-1.5 bg-[#F5FEC1] dark:bg-lime-900/20 border border-[#6D8000] dark:border-lime-800/40">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#F5FEC1] dark:bg-lime-900/30 border border-[#6D8000] dark:border-lime-800/40 text-[#6D8000] dark:text-lime-300">Dados da API</span>
+                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Informações técnicas para integração com o backend — endpoints, campos esperados, estados de carregamento.</p>
+                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Tela dependente de resposta de API, dados mockados, informações temporárias.</p>
+              </div>
 
-            <!-- Interação -->
-            <div class="rounded-lg p-3 space-y-1.5 bg-[#FDE9F3] dark:bg-pink-900/20 border border-[#DB2777] dark:border-pink-800/40">
-              <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#FDE9F3] dark:bg-pink-900/30 border border-[#DB2777] dark:border-pink-800/40 text-[#DB2777] dark:text-pink-300">Interação</span>
-              <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Fluxos de navegação e gestos do usuário — o que acontece quando o dedo toca a tela.</p>
-              <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Swipes, taps, navegação entre telas, gestos de confirmação.</p>
-            </div>
+              <!-- Layout -->
+              <div data-spec-type-item data-search="layout grids margens alinhamentos estruturas containers esqueleto espacial espaçamentos breakpoints max-width colunas grid" class="rounded-lg p-3 space-y-1.5 bg-[#EBF0FF] dark:bg-blue-900/20 border border-[#2563EB] dark:border-blue-800/40">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#EBF0FF] dark:bg-blue-900/30 border border-[#2563EB] dark:border-blue-800/40 text-[#2563EB] dark:text-blue-300">Layout</span>
+                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Grids, margens, alinhamentos e estruturas de containers — o esqueleto espacial da tela.</p>
+                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Espaçamentos, breakpoints, max-width, colunas de grid.</p>
+              </div>
 
-            <!-- Tipografia -->
-            <div class="rounded-lg p-3 space-y-1.5 bg-[#FEF3C7] dark:bg-amber-900/20 border border-[#D97706] dark:border-amber-800/40">
-              <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#FEF3C7] dark:bg-amber-900/30 border border-[#D97706] dark:border-amber-800/40 text-[#D97706] dark:text-amber-300">Tipografia</span>
-              <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Especificações de fontes, tamanhos, pesos e estilos tipográficos aplicados no contexto.</p>
-              <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Heading-1, body-small, uso de itálico, truncamento de texto longo.</p>
-            </div>
+              <!-- Componente -->
+              <div data-spec-type-item data-search="componente variações estados comportamentos dsc disabled outline badge slot opcional" class="rounded-lg p-3 space-y-1.5 bg-[#EDEAFD] dark:bg-indigo-900/20 border border-[#4F46E5] dark:border-indigo-800/40">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#EDEAFD] dark:bg-indigo-900/30 border border-[#4F46E5] dark:border-indigo-800/40 text-[#4F46E5] dark:text-indigo-300">Componente</span>
+                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Variações, estados e comportamentos de componentes do DSC específicos ao contexto documentado.</p>
+                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Estado disabled, variante outline, uso condicional de Badge, slot opcional.</p>
+              </div>
 
-            <!-- Cor -->
-            <div class="rounded-lg p-3 space-y-1.5 bg-[#FEE2E2] dark:bg-red-900/20 border border-[#DC2626] dark:border-red-800/40">
-              <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#FEE2E2] dark:bg-red-900/30 border border-[#DC2626] dark:border-red-800/40 text-[#DC2626] dark:text-red-300">Cor</span>
-              <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Tokens de cor, paleta aplicada, contrastes e variáveis de cor do DSC.</p>
-              <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> color-primary-500, uso de surface-inverse, cor de fundo condicional.</p>
-            </div>
+              <!-- Interação -->
+              <div data-spec-type-item data-search="interação navegação gestos usuário swipes taps telas confirmação" class="rounded-lg p-3 space-y-1.5 bg-[#FDE9F3] dark:bg-pink-900/20 border border-[#DB2777] dark:border-pink-800/40">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#FDE9F3] dark:bg-pink-900/30 border border-[#DB2777] dark:border-pink-800/40 text-[#DB2777] dark:text-pink-300">Interação</span>
+                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Fluxos de navegação e gestos do usuário — o que acontece quando o dedo toca a tela.</p>
+                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Swipes, taps, navegação entre telas, gestos de confirmação.</p>
+              </div>
 
-            <!-- Acessibilidade -->
-            <div class="rounded-lg p-3 space-y-1.5 bg-[#E0F5FA] dark:bg-cyan-900/20 border border-[#0891B2] dark:border-cyan-800/40">
-              <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#E0F5FA] dark:bg-cyan-900/30 border border-[#0891B2] dark:border-cyan-800/40 text-[#0891B2] dark:text-cyan-300">Acessibilidade</span>
-              <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Notas sobre contraste, áreas de toque mínimas e leitura por leitores de tela.</p>
-              <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Alt-text, hierarquia de cabeçalhos, focus states, ratio de contraste.</p>
-            </div>
+              <!-- Tipografia -->
+              <div data-spec-type-item data-search="tipografia fontes tamanhos pesos estilos heading body itálico truncamento texto" class="rounded-lg p-3 space-y-1.5 bg-[#FEF3C7] dark:bg-amber-900/20 border border-[#D97706] dark:border-amber-800/40">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#FEF3C7] dark:bg-amber-900/30 border border-[#D97706] dark:border-amber-800/40 text-[#D97706] dark:text-amber-300">Tipografia</span>
+                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Especificações de fontes, tamanhos, pesos e estilos tipográficos aplicados no contexto.</p>
+                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Heading-1, body-small, uso de itálico, truncamento de texto longo.</p>
+              </div>
 
-            <!-- Conteúdo -->
-            <div class="rounded-lg p-3 space-y-1.5 bg-[#FFEFD6] dark:bg-orange-900/20 border border-[#A65E00] dark:border-orange-800/40">
-              <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#FFEFD6] dark:bg-orange-900/30 border border-[#A65E00] dark:border-orange-800/40 text-[#A65E00] dark:text-orange-300">Conteúdo</span>
-              <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Textos, labels, mensagens e hierarquia de conteúdo da interface.</p>
-              <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Placeholder, limite de caracteres, microcopy de botão, mensagem de estado vazio.</p>
-            </div>
+              <!-- Cor -->
+              <div data-spec-type-item data-search="cor tokens paleta contrastes variáveis primary surface-inverse fundo condicional" class="rounded-lg p-3 space-y-1.5 bg-[#FEE2E2] dark:bg-red-900/20 border border-[#DC2626] dark:border-red-800/40">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#FEE2E2] dark:bg-red-900/30 border border-[#DC2626] dark:border-red-800/40 text-[#DC2626] dark:text-red-300">Cor</span>
+                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Tokens de cor, paleta aplicada, contrastes e variáveis de cor do DSC.</p>
+                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> color-primary-500, uso de surface-inverse, cor de fundo condicional.</p>
+              </div>
 
+              <!-- Acessibilidade -->
+              <div data-spec-type-item data-search="acessibilidade contraste áreas toque leitores tela alt-text hierarquia cabeçalhos focus states ratio" class="rounded-lg p-3 space-y-1.5 bg-[#E0F5FA] dark:bg-cyan-900/20 border border-[#0891B2] dark:border-cyan-800/40">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#E0F5FA] dark:bg-cyan-900/30 border border-[#0891B2] dark:border-cyan-800/40 text-[#0891B2] dark:text-cyan-300">Acessibilidade</span>
+                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Notas sobre contraste, áreas de toque mínimas e leitura por leitores de tela.</p>
+                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Alt-text, hierarquia de cabeçalhos, focus states, ratio de contraste.</p>
+              </div>
+
+              <!-- Conteúdo -->
+              <div data-spec-type-item data-search="conteúdo conteudo textos labels mensagens hierarquia placeholder limite caracteres microcopy botão estado vazio" class="rounded-lg p-3 space-y-1.5 bg-[#FFEFD6] dark:bg-orange-900/20 border border-[#A65E00] dark:border-orange-800/40">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#FFEFD6] dark:bg-orange-900/30 border border-[#A65E00] dark:border-orange-800/40 text-[#A65E00] dark:text-orange-300">Conteúdo</span>
+                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Textos, labels, mensagens e hierarquia de conteúdo da interface.</p>
+                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Placeholder, limite de caracteres, microcopy de botão, mensagem de estado vazio.</p>
+              </div>
+
+            </div>
+            <p id="spec-types-empty" class="hidden text-[11px] text-slate-400 dark:text-dark-muted text-center py-6">Nenhum tipo encontrado para essa busca.</p>
           </div>
         </div>
         <div class="p-4 border-t border-gray-100 dark:border-dark-line flex justify-end">
@@ -503,13 +535,21 @@
         </div>
         <div class="flex-1 overflow-y-auto p-6 space-y-4" onscroll="handleScroll(this)">
           <div>
-            <label class="block text-[11px] font-bold text-[#3d3dff] uppercase mb-1.5">Pergunta</label>
-            <textarea id="briefing-question-modal-question" placeholder="Digite sua pergunta estratégica..."
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-[11px] font-bold text-[#3d3dff] uppercase">Pergunta</label>
+              <span id="briefing-question-modal-question-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/250</span>
+            </div>
+            <textarea id="briefing-question-modal-question" placeholder="Digite sua pergunta estratégica..." maxlength="250"
+              oninput="_updateCharCount(this, 250)"
               class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all font-bold text-slate-700 dark:text-white min-h-[60px] resize-none"></textarea>
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-[#3d3dff] uppercase mb-1.5">Resposta</label>
-            <textarea id="briefing-question-modal-answer" placeholder="Insira aqui a resposta ou direcionamento..."
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-[11px] font-bold text-[#3d3dff] uppercase">Resposta</label>
+              <span id="briefing-question-modal-answer-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/600</span>
+            </div>
+            <textarea id="briefing-question-modal-answer" placeholder="Insira aqui a resposta ou direcionamento..." maxlength="600"
+              oninput="_updateCharCount(this, 600)"
               class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg text-sm min-h-[120px] focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none"></textarea>
           </div>
         </div>
@@ -520,11 +560,28 @@
       </div>
     </div>
 
+    <!-- MODAL: ONBOARDING (genérico — stepper ou cartão único, conforme a ferramenta) -->
+    <div id="onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboarding-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div class="bg-white dark:bg-dark-bg w-full max-w-[420px] max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-dark-line flex flex-col animate-in fade-in zoom-in duration-200">
+        <div class="p-6 border-b border-gray-100 dark:border-dark-line flex items-center gap-3 shrink-0">
+          <div id="onboarding-modal-icon-wrap" class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0">
+            <i id="onboarding-modal-icon" class="w-4.5 h-4.5"></i>
+          </div>
+          <h3 id="onboarding-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[16px] flex-1 min-w-0"></h3>
+          <button onclick="closeOnboarding()" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white shrink-0">
+            <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div id="onboarding-modal-body" class="flex-1 overflow-y-auto p-6" onscroll="handleScroll(this)"></div>
+        <div id="onboarding-modal-footer" class="p-4 border-t border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0"></div>
+      </div>
+    </div>
+
 <!-- MODAL: SPEC FORM -->
   <div id="spec-form-modal" role="dialog" aria-modal="true" aria-labelledby="spec-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
     <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeSpecFormModal()" aria-hidden="true"></div>
-    <div class="relative w-full max-w-sm bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-      <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line">
+    <div class="relative w-full max-w-[360px] max-h-full bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
         <h3 id="spec-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
           <i data-lucide="plus-circle" class="w-4 h-4 text-[#2e2ee0]" aria-hidden="true"></i> Criar Especificação/Nota
         </h3>
@@ -532,7 +589,7 @@
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
-      <div class="p-6 overflow-y-auto max-h-[80vh]" onscroll="handleScroll(this)">
+      <div class="p-6 overflow-y-auto" onscroll="handleScroll(this)">
         <!-- Tag & Color -->
         <div class="grid grid-cols-4 gap-3 mb-6">
           <div class="col-span-1">
@@ -598,8 +655,12 @@
 
         <!-- Note -->
         <div class="mb-4">
-          <label for="ann-note" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Nota personalizada</label>
-          <textarea id="ann-note" rows="3" placeholder="Ex: Usar variável color-primary-500..."
+          <div class="flex items-center justify-between mb-1.5 ml-1">
+            <label for="ann-note" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Nota personalizada</label>
+            <span id="ann-note-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/500</span>
+          </div>
+          <textarea id="ann-note" rows="3" placeholder="Ex: Usar variável color-primary-500..." maxlength="500"
+            oninput="_updateCharCount(this, 500)"
             class="w-full px-4 py-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl text-[12px] text-slate-700 dark:text-dark-text placeholder:text-gray-300 outline-none focus:ring-2 focus:ring-blue-100 resize-none transition-all"></textarea>
         </div>
 
@@ -614,31 +675,17 @@
         <!-- Estilo da linha de conexão (só se a linha estiver ativa) -->
         <div id="spec-connection-curvature-container" class="mb-4 space-y-3 px-1">
           <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Estilo da Linha</label>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-2 gap-2">
             <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-              <input type="radio" name="spec-connector-style" value="straight" checked onchange="_onSpecConnectorStyleChange(this.value)" class="sr-only" />
+              <input type="radio" name="spec-connector-style" value="straight" checked class="sr-only" />
               <i data-lucide="minus" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
               <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Reta</span>
             </label>
             <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-              <input type="radio" name="spec-connector-style" value="curved" onchange="_onSpecConnectorStyleChange(this.value)" class="sr-only" />
-              <i data-lucide="spline" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-              <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Curva</span>
-            </label>
-            <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-              <input type="radio" name="spec-connector-style" value="elbow" onchange="_onSpecConnectorStyleChange(this.value)" class="sr-only" />
+              <input type="radio" name="spec-connector-style" value="elbow" class="sr-only" />
               <i data-lucide="corner-down-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-              <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Esquinas</span>
+              <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Angular</span>
             </label>
-          </div>
-          <div id="spec-curvature-slider-container" class="hidden space-y-2">
-            <div class="flex items-center justify-between">
-              <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Grau da Curva</label>
-              <span id="spec-curvature-value" class="text-[10px] font-bold text-[#3d3dff]">Reta</span>
-            </div>
-            <input type="range" id="spec-curvature-input" min="-100" max="100" value="0" step="5"
-              oninput="_updateSpecCurvatureLabel(this.value)"
-              class="w-full h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer accent-[#3d3dff]" />
           </div>
         </div>
 
@@ -659,9 +706,9 @@
           </div>
         </div>
       </div>
-      <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
+      <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2 shrink-0">
         <button onclick="closeSpecFormModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Cancelar</button>
-        <button id="btn-spec-form-confirm" onclick="requestSpecProperties()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#2e2ee0] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Avançar para Propriedades</button>
+        <button id="btn-spec-form-confirm" onclick="requestSpecProperties()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#2e2ee0] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Ir para Propriedades</button>
       </div>
     </div>
   </div>
@@ -789,14 +836,22 @@
         </div>
 
         <div>
-          <label for="new-exc-titulo" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5">Título</label>
-          <input type="text" id="new-exc-titulo" placeholder="Ex: Usuário sem permissão de acesso"
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="new-exc-titulo" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Título</label>
+            <span id="new-exc-titulo-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/80</span>
+          </div>
+          <input type="text" id="new-exc-titulo" placeholder="Ex: Usuário sem permissão de acesso" maxlength="80"
+            oninput="_updateCharCount(this, 80)"
             class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all" />
         </div>
 
         <div>
-          <label for="new-exc-obs" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5">Observação <span class="normal-case font-normal text-slate-400">(opcional)</span></label>
-          <textarea id="new-exc-obs" rows="3" placeholder="Contexto adicional, comportamento esperado..."
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="new-exc-obs" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Observação <span class="normal-case font-normal text-slate-400">(opcional)</span></label>
+            <span id="new-exc-obs-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/400</span>
+          </div>
+          <textarea id="new-exc-obs" rows="3" placeholder="Contexto adicional, comportamento esperado..." maxlength="400"
+            oninput="_updateCharCount(this, 400)"
             class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none resize-none transition-all"></textarea>
         </div>
       </div>
@@ -1005,9 +1060,13 @@
 
         <!-- Título (= Frame Vinculado) -->
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5">Título</label>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Título</label>
+            <span id="exc-modal-vinc-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/80</span>
+          </div>
           <div class="flex gap-2">
-            <input type="text" id="exc-modal-vinc" placeholder="Ex: Usuário sem permissão de acesso"
+            <input type="text" id="exc-modal-vinc" placeholder="Ex: Usuário sem permissão de acesso" maxlength="80"
+              oninput="_updateCharCount(this, 80)"
               class="flex-1 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all" />
             <button onclick="linkExcModalVinc()" title="Usar nome e link do frame selecionado no canvas"
               class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-[#3d3dff] hover:text-white text-slate-500 dark:text-dark-muted rounded-2xl text-[11px] font-bold transition-all flex items-center gap-1.5 shrink-0">
@@ -1029,12 +1088,16 @@
 
         <!-- Observações (checkbox + condicional) -->
         <div>
-          <label class="flex items-center gap-2 cursor-pointer group mb-2">
-            <input type="checkbox" id="exc-modal-has-obs" onchange="toggleExcModalObs(this.checked)"
-              class="w-4 h-4 rounded border-gray-300 text-[#3d3dff] focus:ring-[#3d3dff] cursor-pointer" />
-            <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#3d3dff] transition-colors select-none">Incluir observações</span>
-          </label>
-          <textarea id="exc-modal-obs" rows="3"
+          <div class="flex items-center justify-between mb-2">
+            <label class="flex items-center gap-2 cursor-pointer group">
+              <input type="checkbox" id="exc-modal-has-obs" onchange="toggleExcModalObs(this.checked)"
+                class="w-4 h-4 rounded border-gray-300 text-[#3d3dff] focus:ring-[#3d3dff] cursor-pointer" />
+              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#3d3dff] transition-colors select-none">Incluir observações</span>
+            </label>
+            <span id="exc-modal-obs-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/400</span>
+          </div>
+          <textarea id="exc-modal-obs" rows="3" maxlength="400"
+            oninput="_updateCharCount(this, 400)"
             placeholder="Contexto adicional, link de API, comportamento esperado..."
             class="hidden w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-4 py-3 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none resize-none transition-all animate-in slide-in-from-top-1 duration-200"></textarea>
           <label id="exc-modal-inject-wrap" class="hidden mt-2 flex items-center gap-2 cursor-pointer group">
@@ -1413,40 +1476,57 @@
     </div>
 
     <div class="px-5 py-5 space-y-4">
+      <!-- Tipo da conexão -- permite trocar Sequência/Mensagem/Decisão numa
+           conexão já criada, sem precisar apagar e reconectar do zero. Só
+           existe aqui (edição) porque uma conexão editada é sempre um par
+           (sourceId+targetId), nunca uma cadeia de 3+ -- a mesma restrição
+           de "Decisão exige exatamente 2 elementos" já está satisfeita por
+           construção. -->
+      <div class="space-y-3">
+        <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Tipo da Conexão</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="_selectEditFlowType('line_solid')" id="edit-flow-type-line_solid" title="Conecta telas em sequência direta" class="edit-flow-type-card flex flex-col items-center gap-1 p-2.5 border-2 border-gray-100 dark:border-dark-line rounded-xl transition-all text-center">
+            <i data-lucide="arrow-right" class="w-4 h-4 text-slate-500 dark:text-dark-muted"></i>
+            <span class="text-[9px] font-bold text-slate-700 dark:text-white uppercase tracking-wider">Sequência</span>
+          </button>
+          <button type="button" onclick="_selectEditFlowType('line_dashed')" id="edit-flow-type-line_dashed" title="Indica uma troca assíncrona (ex: notificação, e-mail)" class="edit-flow-type-card flex flex-col items-center gap-1 p-2.5 border-2 border-gray-100 dark:border-dark-line rounded-xl transition-all text-center">
+            <i data-lucide="move-right" class="w-4 h-4 text-slate-500 dark:text-dark-muted"></i>
+            <span class="text-[9px] font-bold text-slate-700 dark:text-white uppercase tracking-wider">Mensagem</span>
+          </button>
+          <button type="button" onclick="_selectEditFlowType('diamond')" id="edit-flow-type-diamond" title="Marca um ponto de decisão do usuário (ex: Sim/Não)" class="edit-flow-type-card flex flex-col items-center gap-1 p-2.5 border-2 border-gray-100 dark:border-dark-line rounded-xl transition-all text-center">
+            <div class="w-4 h-4 rotate-45 border-2 border-slate-400 dark:border-slate-500"></div>
+            <span class="text-[9px] font-bold text-slate-700 dark:text-white uppercase tracking-wider">Decisão</span>
+          </button>
+          <button type="button" onclick="_selectEditFlowType('diamond_dashed')" id="edit-flow-type-diamond_dashed" title="Marca uma decisão condicional/opcional" class="edit-flow-type-card flex flex-col items-center gap-1 p-2.5 border-2 border-gray-100 dark:border-dark-line rounded-xl transition-all text-center">
+            <div class="w-4 h-4 rotate-45 border-2 border-dashed border-slate-400 dark:border-slate-500"></div>
+            <span class="text-[9px] font-bold text-slate-700 dark:text-white uppercase">Decisão (Opc.)</span>
+          </button>
+        </div>
+      </div>
+
       <div class="space-y-2">
-        <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Texto da Conexão / Chip</label>
-        <textarea id="edit-flow-chip-text" placeholder="Ex: Sim, Não, Enviar..."
+        <div class="flex items-center justify-between px-1">
+          <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Texto da Conexão / Chip</label>
+          <span id="edit-flow-chip-text-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/20</span>
+        </div>
+        <textarea id="edit-flow-chip-text" placeholder="Ex: Sim, Não, Enviar..." maxlength="20"
+          oninput="_updateCharCount(this, 20)"
           class="w-full h-20 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none resize-none transition-all"></textarea>
       </div>
 
       <div class="space-y-3">
         <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Estilo da Linha</label>
-        <div class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-2 gap-2">
           <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-            <input type="radio" name="edit-flow-connector-style" value="straight" onchange="_onEditFlowConnectorStyleChange(this.value)" class="sr-only" />
+            <input type="radio" name="edit-flow-connector-style" value="straight" class="sr-only" />
             <i data-lucide="minus" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
             <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Reta</span>
           </label>
           <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-            <input type="radio" name="edit-flow-connector-style" value="curved" onchange="_onEditFlowConnectorStyleChange(this.value)" class="sr-only" />
-            <i data-lucide="spline" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Curva</span>
-          </label>
-          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-            <input type="radio" name="edit-flow-connector-style" value="elbow" onchange="_onEditFlowConnectorStyleChange(this.value)" class="sr-only" />
+            <input type="radio" name="edit-flow-connector-style" value="elbow" class="sr-only" />
             <i data-lucide="corner-down-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Esquinas</span>
+            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Angular</span>
           </label>
-        </div>
-
-        <div id="edit-flow-curvature-container" class="hidden space-y-2">
-          <div class="flex items-center justify-between px-1">
-            <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Grau da Curva</label>
-            <span id="edit-flow-curvature-value" class="text-[10px] font-bold text-[#3d3dff]">Reta</span>
-          </div>
-          <input type="range" id="edit-flow-curvature-input" min="-100" max="100" value="0" step="5"
-            oninput="_updateEditFlowCurvatureLabel(this.value)"
-            class="w-full h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer accent-[#3d3dff]" />
         </div>
       </div>
 
@@ -1485,32 +1565,17 @@
     <div class="px-5 py-5 space-y-4">
       <div class="space-y-3">
         <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Estilo da Linha</label>
-        <div class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-2 gap-2">
           <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-            <input type="radio" name="edit-spec-connector-style" value="straight" onchange="_onEditSpecConnectorStyleChange(this.value)" class="sr-only" />
+            <input type="radio" name="edit-spec-connector-style" value="straight" class="sr-only" />
             <i data-lucide="minus" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
             <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Reta</span>
           </label>
           <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-            <input type="radio" name="edit-spec-connector-style" value="curved" onchange="_onEditSpecConnectorStyleChange(this.value)" class="sr-only" />
-            <i data-lucide="spline" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Curva</span>
-          </label>
-          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-            <input type="radio" name="edit-spec-connector-style" value="elbow" onchange="_onEditSpecConnectorStyleChange(this.value)" class="sr-only" />
+            <input type="radio" name="edit-spec-connector-style" value="elbow" class="sr-only" />
             <i data-lucide="corner-down-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Esquinas</span>
+            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Angular</span>
           </label>
-        </div>
-
-        <div id="edit-spec-curvature-container" class="hidden space-y-2">
-          <div class="flex items-center justify-between px-1">
-            <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Grau da Curva</label>
-            <span id="edit-spec-curvature-value" class="text-[10px] font-bold text-[#3d3dff]">Reta</span>
-          </div>
-          <input type="range" id="edit-spec-curvature-input" min="-100" max="100" value="0" step="5"
-            oninput="_updateEditSpecCurvatureLabel(this.value)"
-            class="w-full h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer accent-[#3d3dff]" />
         </div>
       </div>
 
@@ -1544,8 +1609,12 @@
     </div>
 
     <div class="p-5 space-y-2">
-      <label for="spec-note-textarea" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Nota</label>
-      <textarea id="spec-note-textarea" rows="4" placeholder="Ex: Usar variável color-primary-500..."
+      <div class="flex items-center justify-between">
+        <label for="spec-note-textarea" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Nota</label>
+        <span id="spec-note-textarea-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/500</span>
+      </div>
+      <textarea id="spec-note-textarea" rows="4" placeholder="Ex: Usar variável color-primary-500..." maxlength="500"
+        oninput="_updateCharCount(this, 500)"
         class="w-full px-4 py-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl text-[12px] text-slate-700 dark:text-dark-text placeholder:text-gray-300 outline-none focus:ring-2 focus:ring-blue-100 resize-none transition-all"></textarea>
     </div>
 

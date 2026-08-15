@@ -61,10 +61,16 @@
         detalhes: Array.isArray(m.details) ? m.details.join(' | ') : (m.details || '')
       })));
 
-      const fluxos = (handoffData.createdFlows || []).map(fl => ({
-        nome: fl.name || '', tipo: fl.type || '',
-        de: fl.fromName || '', para: fl.toName || '',
-        decisao: fl.decisionText || ''
+      // Agrupado por jornada (computeFlowJourneys, core.js) em vez de lista
+      // plana -- mesma função reaproveitada pela UI (renderFlowsList) e pela
+      // Ficha (handoff.js), nunca reimplementada aqui.
+      const jornadas = (typeof computeFlowJourneys === 'function' ? computeFlowJourneys(handoffData.createdFlows) : []).map(j => ({
+        nome: j.nome,
+        conexoes: j.conexoes.map(fl => ({
+          nome: fl.name || '', tipo: fl.type || '',
+          de: fl.fromName || '', para: fl.toName || '',
+          decisao: fl.decisionText || ''
+        }))
       }));
 
       const telasDocumentadas = frames.map(f => ({
@@ -82,7 +88,7 @@
         tokensUsados: Object.values(tokensUsados).sort((a, b) => b.ocorrencias - a.ocorrencias),
         cenariosExcecao,
         medidas,
-        fluxos
+        jornadas
       };
     }
 
