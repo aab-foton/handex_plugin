@@ -429,6 +429,28 @@
           : `${okCount} fluxo(s) atualizado(s).`, failCount > 0 ? 'error' : 'success');
       }
 
+      if (msg.type === 'spec-connector-bounds') {
+        if (typeof _applySuggestedSpecConnectorStyle === 'function') {
+          _applySuggestedSpecConnectorStyle(msg.specId, msg.nodeBounds, msg.cardBounds);
+        }
+      }
+
+      if (msg.type === 'selection-id-for-spec') {
+        if (typeof _onSelectionIdForSpec === 'function') _onSelectionIdForSpec(msg.targetNodeId);
+      }
+
+      if (msg.type === 'node-name-for-spec') {
+        if (typeof _onNodeNameForSpec === 'function') _onNodeNameForSpec(msg.name);
+      }
+
+      if (msg.type === 'position-ghost-created') {
+        if (typeof _onPositionGhostCreated === 'function') _onPositionGhostCreated(msg.ghostId);
+      }
+
+      if (msg.type === 'position-ghost-read') {
+        if (typeof _onPositionGhostRead === 'function') _onPositionGhostRead(msg.position);
+      }
+
       if (msg.type === "design-data-exported") {
         const blob = new Blob([msg.data], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -476,6 +498,9 @@
         }
         document.getElementById('spec-properties-modal').classList.remove('hidden');
         _refreshIcons()
+        if (typeof _persistentFocus === 'function') {
+          _persistentFocus(document.querySelector('#spec-properties-modal ' + FOCUSABLE_SELECTOR));
+        }
       }
 
       if (msg.type === 'context-name') {

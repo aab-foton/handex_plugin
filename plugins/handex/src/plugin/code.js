@@ -58,6 +58,14 @@ let _prevSelectionIds = [];
 let _selectionClickOrder = [];
 let _selectionOrderReliable = true;
 
+// Debounce do postMessage de flow-selection-bounds -- selectionchange
+// dispara em rajada durante drag/marquise ou cliques rápidos no canvas, e
+// sem isso cada disparo forçava o frontend a reconstruir o SVG inteiro do
+// mini-mapa (innerHTML) a cada evento, travando a sensação de resposta da
+// UI. O diff de ordem de clique acima continua síncrono (não pode perder
+// eventos); só o envio pro frontend é coalescido.
+let _flowSelectionBoundsDebounceTimer = null;
+
 figma.on('selectionchange', () => {
   const currentIds = figma.currentPage.selection.map(n => n.id);
   if (currentIds.length === 0) {
@@ -75,7 +83,10 @@ figma.on('selectionchange', () => {
   _prevSelectionIds = currentIds;
 
   if (_flowAnchorPreviewActive) {
-    figma.ui.postMessage({ type: 'flow-selection-bounds', nodes: _getFlowSelectionBoundsPayload() });
+    clearTimeout(_flowSelectionBoundsDebounceTimer);
+    _flowSelectionBoundsDebounceTimer = setTimeout(() => {
+      figma.ui.postMessage({ type: 'flow-selection-bounds', nodes: _getFlowSelectionBoundsPayload() });
+    }, 120);
   }
   if (_highlightSelectionExpected) {
     _highlightSelectionExpected = false;
@@ -664,6 +675,60 @@ async function _moveFlowEndpointMarker(targetNode, isStart, nextFlowNumber) {
 // recriação a partir de backup (recreate-flow-connection, nodeA/nodeB vêm
 // de IDs salvos em handoffData.createdFlows). Ambos os handlers resolvem os
 // nós antes de chamar esta função; ela cuida do desenho e do agrupamento.
+// Roteamento ortogonal genérico entre dois pontos com lado definido
+// (side: 'top'|'bottom'|'left'|'right') -- garante SEMPRE que o primeiro
+// segmento saia reto na direção do lado de A e o último segmento entre
+// reto na direção do lado de B, com o número mínimo de dobras de 90°
+// necessário (1, 2 ou 3) para qualquer combinação de lados e posição
+// relativa. Usado tanto por fluxos (_buildFlowConnection) quanto por specs
+// (_rebuildSpecConnector/create-unified-spec).
+//
+// Estratégia: avança um trecho fixo (OFFSET) na direção normal de cada
+// ponto -- A' = A + dir(A)*OFFSET, B' = B + dir(B)*OFFSET -- isso garante
+// os segmentos A→A' e B'→B já retos nas direções certas. Depois conecta
+// A'→B' com 0 dobras (se já alinhados), 1 dobra (se eixos perpendiculares)
+// ou 2 dobras (se eixos paralelos, evitando cruzar os próprios elementos).
+function _orthogonalElbowPoints(a, b) {
+  const OFFSET = 24;
+  const dirOf = (side) => ({
+    top: { x: 0, y: -1 }, bottom: { x: 0, y: 1 },
+    left: { x: -1, y: 0 }, right: { x: 1, y: 0 }
+  })[side];
+  const dirA = dirOf(a.side), dirB = dirOf(b.side);
+  const aPrime = { x: a.x + dirA.x * OFFSET, y: a.y + dirA.y * OFFSET };
+  const bPrime = { x: b.x + dirB.x * OFFSET, y: b.y + dirB.y * OFFSET };
+
+  const points = [aPrime];
+  const aVertical = dirA.x === 0;
+  const bVertical = dirB.x === 0;
+
+  if (Math.abs(aPrime.x - bPrime.x) < 0.01 || Math.abs(aPrime.y - bPrime.y) < 0.01) {
+    // A' e B' já alinhados num eixo -- 0 dobras entre eles, só o trecho
+    // reto direto (o path final ainda tem as dobras em A e B, ver abaixo).
+  } else if (aVertical !== bVertical) {
+    // Eixos perpendiculares -- 1 dobra: o corner compartilha uma
+    // coordenada com A' (mantém a direção de saída) e a outra com B'
+    // (mantém a direção de entrada).
+    const corner = aVertical ? { x: bPrime.x, y: aPrime.y } : { x: aPrime.x, y: bPrime.y };
+    points.push(corner);
+  } else {
+    // Eixos paralelos -- 2 dobras (Z/U), coluna/linha de trânsito sempre
+    // "por fora" dos dois pontos avançados na direção de saída de A (max
+    // se 'right'/'bottom', min se 'left'/'top'), replicando o mesmo
+    // raciocínio geométrico do caso original (evita voltar por dentro do
+    // próprio elemento e degenerar segmentos).
+    if (aVertical) {
+      const midY = dirA.y > 0 ? Math.max(aPrime.y, bPrime.y) : Math.min(aPrime.y, bPrime.y);
+      points.push({ x: aPrime.x, y: midY }, { x: bPrime.x, y: midY });
+    } else {
+      const midX = dirA.x > 0 ? Math.max(aPrime.x, bPrime.x) : Math.min(aPrime.x, bPrime.x);
+      points.push({ x: midX, y: aPrime.y }, { x: midX, y: bPrime.y });
+    }
+  }
+  points.push(bPrime);
+  return points;
+}
+
 async function _buildFlowConnection(nodeA, nodeB, msg) {
   const isEvent = msg.flowType === "event_start" || msg.flowType === "event_end";
   let boundsA = nodeA.absoluteBoundingBox || nodeA.absoluteRenderBounds;
@@ -769,55 +834,27 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
     ? { x: 0.25 * bestA.x + 0.5 * curveCtrl.x + 0.25 * bestB.x, y: 0.25 * bestA.y + 0.5 * curveCtrl.y + 0.25 * bestB.y }
     : { x: _midX, y: _midY };
 
-  // Conector ortogonal (elbow): decide 1 ou 2 dobras a partir dos lados de
-  // saída (bestA.side) e chegada (bestB.side). 1 dobra (L) quando os dois
-  // eixos são perpendiculares -- a interseção das duas retas nunca cruza A
-  // nem B, pois bestA/bestB já estão na borda externa. 2 dobras (Z/U)
-  // quando os eixos são paralelos (mesma direção ou opostos) -- 1 dobra só
-  // nesse caso faria a linha voltar por dentro do próprio elemento; usa um
-  // offset fixo (metade da distância no eixo perpendicular, com mínimo de
-  // 24px) para sair/entrar reto antes de atravessar lateralmente.
-  const elbowPoints = [];
-  if (_connectorStyle === 'elbow' && bestA.side && bestB.side) {
-    const aVertical = bestA.side === 'top' || bestA.side === 'bottom';
-    const bVertical = bestB.side === 'top' || bestB.side === 'bottom';
-    if (aVertical !== bVertical) {
-      // Eixos perpendiculares -- 1 dobra, ponto = interseção das retas.
-      const corner = aVertical ? { x: bestB.x, y: bestA.y } : { x: bestA.x, y: bestB.y };
-      elbowPoints.push(corner);
-    } else {
-      // Eixos paralelos -- 2 dobras (Z/U). A coluna/linha de trânsito
-      // precisa ficar SEMPRE além dos dois pontos na direção de saída
-      // (max se 'right'/'bottom', min se 'left'/'top') -- usar a média de
-      // x1/x2 degenera o path quando bestB já está além de bestA nessa
-      // direção (segmento final de comprimento zero, seta com ângulo
-      // incorreto). Usar o extremo garante os dois segmentos finais não-nulos
-      // e a coluna sempre "por fora" de ambos os elementos.
-      const OFFSET_MIN = 24;
-      if (aVertical) {
-        const offsetY = Math.max(OFFSET_MIN, Math.abs(bestB.y - bestA.y) / 2);
-        const y1 = bestA.side === 'bottom' ? bestA.y + offsetY : bestA.y - offsetY;
-        const y2 = bestB.side === 'bottom' ? bestB.y + offsetY : bestB.y - offsetY;
-        const midY = bestA.side === 'bottom' ? Math.max(y1, y2) : Math.min(y1, y2);
-        elbowPoints.push({ x: bestA.x, y: midY }, { x: bestB.x, y: midY });
-      } else {
-        const offsetX = Math.max(OFFSET_MIN, Math.abs(bestB.x - bestA.x) / 2);
-        const x1 = bestA.side === 'right' ? bestA.x + offsetX : bestA.x - offsetX;
-        const x2 = bestB.side === 'right' ? bestB.x + offsetX : bestB.x - offsetX;
-        const midX = bestA.side === 'right' ? Math.max(x1, x2) : Math.min(x1, x2);
-        elbowPoints.push({ x: midX, y: bestA.y }, { x: midX, y: bestB.y });
-      }
-    }
-  }
-  // Midpoint do conector elbow para o chip de decisão: o cotovelo único
-  // (1 dobra) ou o ponto médio do segmento do meio (2 dobras) -- padrão
-  // visual já usado por ferramentas de diagrama (draw.io/Visio), evita
-  // cálculo de arc-length desnecessário para 1-2 segmentos curtos.
-  const elbowMid = elbowPoints.length === 1
-    ? elbowPoints[0]
-    : elbowPoints.length === 2
-      ? { x: (elbowPoints[0].x + elbowPoints[1].x) / 2, y: (elbowPoints[0].y + elbowPoints[1].y) / 2 }
-      : curveMid;
+  // Conector ortogonal (elbow): roteamento genérico com N dobras de 90° --
+  // SEMPRE sai reto na direção do lado de A e entra reto na direção do
+  // lado de B, qualquer que seja a combinação de lados (opostos, iguais ou
+  // perpendiculares) e a posição relativa dos dois elementos. Usa
+  // _orthogonalElbowPoints (ver função abaixo), compartilhada com o
+  // conector de specs (_rebuildSpecConnector).
+  const elbowPoints = (_connectorStyle === 'elbow' && bestA.side && bestB.side)
+    ? _orthogonalElbowPoints(bestA, bestB)
+    : [];
+  // Midpoint do conector elbow para o chip de decisão: ponto médio do
+  // segmento central do caminho completo (independente de quantas dobras
+  // o roteamento ortogonal precisou) -- padrão visual já usado por
+  // ferramentas de diagrama (draw.io/Visio).
+  const _elbowFullPath = elbowPoints.length > 0 ? [bestA, ...elbowPoints, bestB] : null;
+  const elbowMid = _elbowFullPath
+    ? (() => {
+        const midIdx = Math.floor((_elbowFullPath.length - 1) / 2);
+        const p1 = _elbowFullPath[midIdx], p2 = _elbowFullPath[Math.min(midIdx + 1, _elbowFullPath.length - 1)];
+        return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+      })()
+    : curveMid;
 
   const strokeColor = { r: 0.12, g: 0.16, b: 0.23 };
   const line = figma.createVector();
@@ -3460,6 +3497,92 @@ figma.ui.onmessage = async (msg) => {
     figma.ui.postMessage({ type: "show-spec-properties", properties });
   }
 
+  // Nome de um nó específico por id -- usado pra mostrar "Especificando:
+  // [nome]" no formulário de criação, fixo mesmo que a seleção do canvas
+  // mude depois (ex: ao marcar a posição).
+  if (msg.type === "get-node-name") {
+    const node = msg.nodeId ? await figma.getNodeByIdAsync(msg.nodeId) : null;
+    figma.ui.postMessage({ type: "node-name-for-spec", name: node ? node.name : null });
+  }
+
+  // Id do elemento selecionado no momento em que o formulário de criação
+  // de spec abriu -- fixado ANTES de qualquer marcação de posição trocar a
+  // seleção (ver create-position-ghost abaixo), pra nunca perder a
+  // referência ao elemento real sendo documentado.
+  if (msg.type === "get-selection-id-for-spec") {
+    const selection = figma.currentPage.selection;
+    figma.ui.postMessage({ type: "selection-id-for-spec", targetNodeId: selection.length > 0 ? selection[0].id : null });
+  }
+
+  // Card fantasma de posição -- a Plugin API não expõe clique bruto no
+  // canvas (nem em área vazia), só reage a mudanças de estado observáveis
+  // (seleção, documento). Pra deixar o usuário "apontar" onde quer o card
+  // antes de finalizar o formulário, cria uma prévia leve no tamanho/estilo
+  // aproximado do card final (nome do elemento, tag, categoria, nota),
+  // já selecionada e arrastável livremente; a posição final é lida via
+  // seleção (read-position-ghost) e o fantasma é removido em seguida.
+  if (msg.type === "create-position-ghost") {
+    const node = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
+    const bounds = node && (node.absoluteBoundingBox || node.absoluteRenderBounds);
+
+    const themeColor = hexToRgb(msg.color || '#2e2ee0');
+    // Sem texto real -- só a moldura, no tamanho ESTIMADO do card final
+    // (título sempre existe; categoria e nota somam altura quando
+    // preenchidas), o suficiente pra dar noção de onde ele vai caber sem
+    // duplicar a renderização completa do card real.
+    const estimatedHeight = 64 + (msg.hasCategory ? 20 : 0) + (msg.hasNote ? 32 : 0);
+    const ghost = figma.createFrame();
+    ghost.name = "[Handex] Prévia de Posição";
+    ghost.cornerRadius = 8;
+    ghost.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 }, opacity: 0.5 }];
+    ghost.strokes = [{ type: 'SOLID', color: themeColor }];
+    ghost.strokeWeight = 1.5;
+    ghost.dashPattern = [4, 3];
+    ghost.resize(220, estimatedHeight);
+    ghost.setPluginData('handexPositionGhost', 'true');
+
+    figma.currentPage.appendChild(ghost);
+    // Nasce ao lado do elemento (mesmo ponto de partida de hoje), já como
+    // prévia arrastável -- não é mais um círculo genérico.
+    if (bounds) {
+      ghost.x = bounds.x + bounds.width + 60;
+      ghost.y = bounds.y;
+    } else {
+      ghost.x = figma.viewport.center.x;
+      ghost.y = figma.viewport.center.y;
+    }
+    _highlightSelectionExpected = true;
+    figma.currentPage.selection = [ghost];
+    // Só o fantasma, centralizado -- é ele que o usuário precisa ver e
+    // arrastar; incluir o elemento original no mesmo scrollAndZoomIntoView
+    // também falhava silenciosamente sem checar se ele está na página
+    // atual (node pode viver em outra página que a do fantasma recém-
+    // criado, e a Plugin API não mistura nós de páginas diferentes numa
+    // mesma chamada).
+    figma.viewport.scrollAndZoomIntoView([ghost]);
+    figma.ui.postMessage({ type: "position-ghost-created", ghostId: ghost.id });
+  }
+
+  // Lê a posição atual do fantasma (arrastado livremente pelo usuário) e o
+  // remove -- chamado ao clicar em "Usar esta posição".
+  if (msg.type === "read-position-ghost") {
+    const ghost = await figma.getNodeByIdAsync(msg.ghostId);
+    if (!ghost) {
+      figma.ui.postMessage({ type: "position-ghost-read", position: null });
+      return;
+    }
+    const bounds = ghost.absoluteBoundingBox || ghost.absoluteRenderBounds;
+    const position = bounds ? { x: bounds.x, y: bounds.y } : null;
+    ghost.remove();
+    figma.ui.postMessage({ type: "position-ghost-read", position });
+  }
+
+  // Cancelamento -- remove o fantasma órfão sem aplicar posição nenhuma.
+  if (msg.type === "cancel-position-ghost") {
+    const ghost = await figma.getNodeByIdAsync(msg.ghostId);
+    if (ghost) { try { ghost.remove(); } catch (e) { } }
+  }
+
   if (msg.type === "create-unified-spec") {
     (async () => {
       const opts = msg.opts;
@@ -3760,7 +3883,14 @@ figma.ui.onmessage = async (msg) => {
         // Append card to page first so Figma computes its real dimensions
         figma.currentPage.appendChild(specCard);
 
-        const side = opts.guideSide || 'right'; // 'right' | 'left' | 'top' | 'bottom'
+        // Com pinnedPosition (marcador de posição arrastado pelo usuário
+        // antes do formulário abrir, ver create-position-marker), o lado
+        // da linha guia é derivado da posição REAL onde a spec vai nascer
+        // -- opts.guideSide (sempre 'right' hoje) não bateria com o lugar
+        // que o usuário escolheu.
+        const side = (opts.pinnedPosition && bounds)
+          ? _computeSideFromBounds(bounds, { x: opts.pinnedPosition.x, y: opts.pinnedPosition.y, width: specCard.width, height: specCard.height })
+          : (opts.guideSide || 'right'); // 'right' | 'left' | 'top' | 'bottom'
         const _isVertSide = side === 'right' || side === 'left';
         const _specLetter = opts.letter;
 
@@ -3926,26 +4056,30 @@ figma.ui.onmessage = async (msg) => {
             figma.currentPage.appendChild(connector);
             groupNodes.push(connector);
           } else {
-            // Estilo opcional (mesmas fórmulas validadas em fluxos --
-            // _buildFlowConnection): 'straight' (padrão) | 'curved' (grau
-            // -100..100, deslocamento perpendicular em % da distância) |
-            // 'elbow' (1 dobra reta de 90°, ponto = interseção das retas
-            // que saem de startPt/endPt no eixo perpendicular ao lado --
-            // startPt/endPt aqui sempre saem em lados opostos correspondentes
-            // (right↔left, bottom↔top, ver cálculo acima), então 1 dobra
-            // sempre basta, sem o caso de 2 dobras que fluxos precisam para
-            // pares de lados não-opostos). Sem edição pós-criação aqui
-            // (diferente de fluxos) -- só no momento em que a spec é criada,
-            // e a linha não se realinha se o card for arrastado depois
-            // (limitação pré-existente, não agravada por isso, só mais
-            // perceptível visualmente com curva/esquina).
+            // Estilo opcional: 'straight' (padrão) | 'curved' (grau -100..100,
+            // deslocamento perpendicular em % da distância) | 'elbow'
+            // (roteamento ortogonal, ver _orthogonalElbowPoints -- SEMPRE
+            // sai reto na direção do lado e entra reto no card, com quantas
+            // dobras de 90° forem necessárias). Sem edição pós-criação aqui
+            // (diferente de fluxos) -- só no momento em que a spec é
+            // criada, e a linha não se realinha se o card for arrastado
+            // depois (limitação pré-existente, não agravada por isso, só
+            // mais perceptível visualmente com curva/esquina).
             const _specConnectorStyle = opts.connectorStyle || 'straight';
             const _specCurvature = _specConnectorStyle === 'curved' ? (opts.connectorCurvature || 0) : 0;
             let connectorPath = `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}`;
             if (_specConnectorStyle === 'elbow') {
-              const isHorizontal = side === 'right' || side === 'left';
-              const corner = isHorizontal ? { x: endPt.x, y: startPt.y } : { x: startPt.x, y: endPt.y };
-              connectorPath = `M ${startPt.x} ${startPt.y} L ${corner.x} ${corner.y} L ${endPt.x} ${endPt.y}`;
+              // endPt sempre entra pelo lado OPOSTO de `side` (right→left,
+              // left→right, bottom→top, top→bottom) -- arquitetura fixa de
+              // specs (guia sempre sai de um lado do elemento e entra pelo
+              // lado voltado pra ele no card).
+              const OPPOSITE_SIDE = { right: 'left', left: 'right', bottom: 'top', top: 'bottom' };
+              const specElbowPoints = _orthogonalElbowPoints(
+                { x: startPt.x, y: startPt.y, side },
+                { x: endPt.x, y: endPt.y, side: OPPOSITE_SIDE[side] }
+              );
+              const segs = [startPt, ...specElbowPoints, endPt].map(p => `${p.x} ${p.y}`).join(' L ');
+              connectorPath = `M ${segs}`;
             } else if (_specCurvature) {
               const dx = endPt.x - startPt.x, dy = endPt.y - startPt.y;
               const dist = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -4187,135 +4321,205 @@ figma.ui.onmessage = async (msg) => {
     }
   }
 
-  // Edita o estilo da linha (reta/curva/esquinas) de uma spec já criada --
-  // mesmo precedente de hide-spec-lines (localizar Conector/DotInicio/DotFim
-  // por nome dentro do group), só que removendo e recriando esses 3 nós em
-  // vez de alternar .visible. Diferente de fluxos (edit-flow-connection), NÃO
-  // apaga o group inteiro -- specCard permanece intacto, só a linha é
-  // substituída. 'Destaque' está fora do specGroup (contour solto na página)
-  // e nunca é tocado aqui: a busca por nome inclui só Conector/DotInicio/DotFim.
-  // Recalcula a partir da posição ATUAL do card (não das coordenadas salvas
-  // na criação) -- resolve de brinde a limitação de "linha desalinha se o
-  // card for arrastado", pelo menos no momento da edição.
+  // Deriva de qual lado do elemento a linha guia deve saír, a partir da
+  // posição REAL do card -- usado quando não há guideSide explícito
+  // (usuário arrastou livremente, sem declarar lado antes). Compara a
+  // posição do centro do card contra os 4 lados do elemento e escolhe o
+  // eixo dominante (maior distância relativa), depois o sinal dentro dele.
+  function _computeSideFromBounds(elBounds, cardBounds) {
+    const elCx = elBounds.x + elBounds.width / 2;
+    const elCy = elBounds.y + elBounds.height / 2;
+    const cardCx = cardBounds.x + cardBounds.width / 2;
+    const cardCy = cardBounds.y + cardBounds.height / 2;
+    const dx = cardCx - elCx;
+    const dy = cardCy - elCy;
+    if (Math.abs(dx) >= Math.abs(dy)) {
+      return dx >= 0 ? 'right' : 'left';
+    }
+    return dy >= 0 ? 'bottom' : 'top';
+  }
+
+  // Recalcula e recria a linha (Conector/DotInicio/DotFim) de UMA spec já
+  // criada, a partir da posição ATUAL do card e do elemento vinculado no
+  // canvas -- não das coordenadas salvas na criação, o que resolve de
+  // brinde "linha desalinha se o card ou o elemento forem arrastados".
+  // Diferente de fluxos (edit-flow-connection), NÃO apaga o specGroup
+  // inteiro -- specCard permanece intacto, só a linha é substituída.
+  // 'Destaque' está fora do specGroup (contour solto na página) e nunca é
+  // tocado aqui: a busca por nome inclui só Conector/DotInicio/DotFim.
+  async function _rebuildSpecConnector(msg) {
+    const specGroup = await figma.getNodeByIdAsync(msg.specId);
+    const node = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
+    if (!specGroup || !('findChildren' in specGroup) || !node) {
+      throw new Error('nodes-nao-encontrados');
+    }
+    const specCard = specGroup.findOne(n => n.name === 'Spec Notes');
+    const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
+    // specCard.x/y são relativos ao specGroup (GROUP) -- usa
+    // absoluteBoundingBox para obter a posição real no canvas, igual já
+    // se fazia para `node`. Continua necessário mesmo com GROUP (não só
+    // com FRAME): x/y de qualquer nó são sempre relativos ao parent
+    // imediato, e o specGroup pode ter sido movido pelo usuário.
+    const cardBounds = specCard && (specCard.absoluteBoundingBox || specCard.absoluteRenderBounds);
+    if (!specCard || !bounds || !cardBounds) {
+      throw new Error('elemento-nao-encontrado');
+    }
+
+    const wasVisible = specGroup.findChildren(n => n.name === 'Conector' || n.name === 'DotInicio' || n.name === 'DotFim')
+      .every(n => n.visible !== false);
+
+    // Sem guideSide explícito (ex: "Concluir posicionamento" após o
+    // usuário arrastar o card livremente) -- deriva o lado da posição REAL
+    // do card em relação ao elemento, em vez de usar uma escolha prévia
+    // que pode não bater mais com onde o card acabou. Compara o centro do
+    // card contra os 4 lados do elemento e escolhe o mais próximo.
+    const side = msg.guideSide || _computeSideFromBounds(bounds, cardBounds);
+    let startPt, endPt;
+    if (side === 'right') {
+      startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+      endPt   = { x: cardBounds.x, y: cardBounds.y + cardBounds.height / 2 };
+    } else if (side === 'left') {
+      startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
+      endPt   = { x: cardBounds.x + cardBounds.width, y: cardBounds.y + cardBounds.height / 2 };
+    } else if (side === 'bottom') {
+      startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
+      endPt   = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y };
+    } else { // top
+      startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
+      endPt   = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y + cardBounds.height };
+    }
+
+    const _specConnectorStyle = msg.connectorStyle || 'straight';
+    const _specCurvature = _specConnectorStyle === 'curved' ? (msg.connectorCurvature || 0) : 0;
+
+    // Path desenhado em coordenadas ABSOLUTAS de página (startPt/endPt já
+    // são absolutos) -- não em relativas ao specGroup. Calcular relativo
+    // manualmente (via specCard.x/y como origem) quebrava sempre que o
+    // group se redimensionava ao ganhar um filho nesta mesma função: um
+    // GROUP no Figma reancora sua origem no bounding box da união dos
+    // filhos, e ao mudar essa origem o Figma desloca x/y de TODOS os
+    // filhos (incluindo o specCard já existente) para preservar a posição
+    // absoluta deles -- só que isso acontece DEPOIS do cálculo de origem
+    // feito aqui, invalidando-o e jogando o Conector novo pra longe do
+    // lugar certo. Solução: construir tudo solto na página (absoluto,
+    // como o fluxo de criação em create-unified-spec já faz) e só then
+    // mover pro group -- o Figma recalcula o relativo sozinho no
+    // appendChild, sem depender de origem pré-calculada.
+    let connectorPath = `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}`;
+    if (_specConnectorStyle === 'elbow') {
+      // Roteamento ortogonal (ver _orthogonalElbowPoints) -- mesma fórmula
+      // da criação (create-unified-spec): sempre sai reto na direção do
+      // lado e entra reto no card, com quantas dobras forem necessárias.
+      const OPPOSITE_SIDE = { right: 'left', left: 'right', bottom: 'top', top: 'bottom' };
+      const specElbowPoints = _orthogonalElbowPoints(
+        { x: startPt.x, y: startPt.y, side },
+        { x: endPt.x, y: endPt.y, side: OPPOSITE_SIDE[side] }
+      );
+      const segs = [startPt, ...specElbowPoints, endPt].map(p => `${p.x} ${p.y}`).join(' L ');
+      connectorPath = `M ${segs}`;
+    } else if (_specCurvature) {
+      const dx = endPt.x - startPt.x, dy = endPt.y - startPt.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      const px = -dy / dist, py = dx / dist;
+      const offset = (_specCurvature / 100) * dist * 0.5;
+      const midX = (startPt.x + endPt.x) / 2, midY = (startPt.y + endPt.y) / 2;
+      const ctrlX = midX + px * offset, ctrlY = midY + py * offset;
+      connectorPath = `M ${startPt.x} ${startPt.y} Q ${ctrlX} ${ctrlY} ${endPt.x} ${endPt.y}`;
+    }
+
+    const themeColor = hexToRgb(msg.color || '#2e2ee0');
+
+    const oldLineNodes = specGroup.findChildren(n => n.name === 'Conector' || n.name === 'DotInicio' || n.name === 'DotFim');
+    oldLineNodes.forEach(n => n.remove());
+
+    // connector.x/y ficam em 0,0 (origem do vetor) porque o path já
+    // carrega as coordenadas absolutas -- appendChild só precisa acontecer
+    // DEPOIS que o vetor já está solto na página com o path certo, senão
+    // o group tenta reancorar em cima de um vetor ainda sem path.
+    const connector = figma.createVector();
+    connector.name = 'Conector';
+    figma.currentPage.appendChild(connector);
+    connector.x = 0;
+    connector.y = 0;
+    connector.vectorPaths = [{ windingRule: "NONZERO", data: connectorPath }];
+    connector.strokes = [{ type: "SOLID", color: themeColor }];
+    connector.strokeWeight = 1.5;
+    connector.dashPattern = [4, 4];
+    connector.strokeCap = "ROUND";
+    connector.visible = wasVisible;
+    connector.locked = false;
+
+    const _DOT_R = 4;
+    const startDot = figma.createEllipse();
+    startDot.name = 'DotInicio';
+    startDot.resize(_DOT_R * 2, _DOT_R * 2);
+    startDot.fills = [{ type: "SOLID", color: themeColor }];
+    startDot.strokes = [];
+    startDot.visible = wasVisible;
+    startDot.locked = true;
+    figma.currentPage.appendChild(startDot);
+    startDot.x = startPt.x - _DOT_R;
+    startDot.y = startPt.y - _DOT_R;
+
+    const endDot = figma.createEllipse();
+    endDot.name = 'DotFim';
+    endDot.resize(_DOT_R * 2, _DOT_R * 2);
+    endDot.fills = [{ type: "SOLID", color: themeColor }];
+    endDot.strokes = [];
+    endDot.visible = wasVisible;
+    endDot.locked = true;
+    figma.currentPage.appendChild(endDot);
+    endDot.x = endPt.x - _DOT_R;
+    endDot.y = endPt.y - _DOT_R;
+
+    // Move os 3 pro group por último -- solto na página com coordenadas
+    // absolutas já corretas, o Figma recalcula x/y relativo sozinho ao
+    // trocar de parent, sem precisar de origem pré-calculada que fica
+    // obsoleta assim que o group se redimensiona.
+    specGroup.appendChild(connector);
+    specGroup.appendChild(startDot);
+    specGroup.appendChild(endDot);
+
+    return { connectorStyle: _specConnectorStyle, connectorCurvature: _specCurvature };
+  }
+
   if (msg.type === "edit-spec-connector") {
     try {
-      const specGroup = await figma.getNodeByIdAsync(msg.specId);
-      const node = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
-      if (!specGroup || !('findChildren' in specGroup) || !node) {
-        figma.ui.postMessage({ type: 'spec-connector-edit-failed', specId: msg.specId });
-        return;
-      }
-      const specCard = specGroup.findOne(n => n.name === 'Spec Notes');
-      const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
-      // specCard.x/y são relativos ao specGroup (GROUP) -- usa
-      // absoluteBoundingBox para obter a posição real no canvas, igual já
-      // se fazia para `node`. Continua necessário mesmo com GROUP (não só
-      // com FRAME): x/y de qualquer nó são sempre relativos ao parent
-      // imediato, e o specGroup pode ter sido movido pelo usuário.
-      const cardBounds = specCard && (specCard.absoluteBoundingBox || specCard.absoluteRenderBounds);
-      if (!specCard || !bounds || !cardBounds) {
-        figma.ui.postMessage({ type: 'spec-connector-edit-failed', specId: msg.specId });
-        return;
-      }
-
-      const wasVisible = specGroup.findChildren(n => n.name === 'Conector' || n.name === 'DotInicio' || n.name === 'DotFim')
-        .every(n => n.visible !== false);
-
-      const side = msg.guideSide || 'right';
-      let startPt, endPt;
-      if (side === 'right') {
-        startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
-        endPt   = { x: cardBounds.x, y: cardBounds.y + cardBounds.height / 2 };
-      } else if (side === 'left') {
-        startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
-        endPt   = { x: cardBounds.x + cardBounds.width, y: cardBounds.y + cardBounds.height / 2 };
-      } else if (side === 'bottom') {
-        startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
-        endPt   = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y };
-      } else { // top
-        startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
-        endPt   = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y + cardBounds.height };
-      }
-
-      const _specConnectorStyle = msg.connectorStyle || 'straight';
-      const _specCurvature = _specConnectorStyle === 'curved' ? (msg.connectorCurvature || 0) : 0;
-
-      // vectorPaths e x/y de filhos são relativos à origem do specGroup
-      // (GROUP), não absolutos de página. Usa absoluteBoundingBox (não
-      // specGroup.x/.y) por segurança -- x/y de um GROUP são sempre
-      // derivados do bounding box dos filhos, então ler via
-      // absoluteBoundingBox é a forma robusta de saber a origem real,
-      // inclusive se o specGroup for movido para dentro de uma Section
-      // (ele nasce locked=false e o usuário pode arrastá-lo livremente).
-      const _groupBounds = specGroup.absoluteBoundingBox || specGroup.absoluteRenderBounds;
-      const _gx = _groupBounds.x, _gy = _groupBounds.y;
-      const localStart = { x: startPt.x - _gx, y: startPt.y - _gy };
-      const localEnd = { x: endPt.x - _gx, y: endPt.y - _gy };
-
-      let connectorPath = `M ${localStart.x} ${localStart.y} L ${localEnd.x} ${localEnd.y}`;
-      if (_specConnectorStyle === 'elbow') {
-        const isHorizontal = side === 'right' || side === 'left';
-        const corner = isHorizontal ? { x: localEnd.x, y: localStart.y } : { x: localStart.x, y: localEnd.y };
-        connectorPath = `M ${localStart.x} ${localStart.y} L ${corner.x} ${corner.y} L ${localEnd.x} ${localEnd.y}`;
-      } else if (_specCurvature) {
-        const dx = localEnd.x - localStart.x, dy = localEnd.y - localStart.y;
-        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        const px = -dy / dist, py = dx / dist;
-        const offset = (_specCurvature / 100) * dist * 0.5;
-        const midX = (localStart.x + localEnd.x) / 2, midY = (localStart.y + localEnd.y) / 2;
-        const ctrlX = midX + px * offset, ctrlY = midY + py * offset;
-        connectorPath = `M ${localStart.x} ${localStart.y} Q ${ctrlX} ${ctrlY} ${localEnd.x} ${localEnd.y}`;
-      }
-
-      const themeColor = hexToRgb(msg.color || '#2e2ee0');
-
-      const oldLineNodes = specGroup.findChildren(n => n.name === 'Conector' || n.name === 'DotInicio' || n.name === 'DotFim');
-      oldLineNodes.forEach(n => n.remove());
-
-      const connector = figma.createVector();
-      connector.name = 'Conector';
-      connector.x = 0;
-      connector.y = 0;
-      connector.vectorPaths = [{ windingRule: "NONZERO", data: connectorPath }];
-      connector.strokes = [{ type: "SOLID", color: themeColor }];
-      connector.strokeWeight = 1.5;
-      connector.dashPattern = [4, 4];
-      connector.strokeCap = "ROUND";
-      connector.visible = wasVisible;
-      connector.locked = false;
-      specGroup.appendChild(connector);
-
-      const _DOT_R = 4;
-      const startDot = figma.createEllipse();
-      startDot.name = 'DotInicio';
-      startDot.resize(_DOT_R * 2, _DOT_R * 2);
-      startDot.fills = [{ type: "SOLID", color: themeColor }];
-      startDot.strokes = [];
-      startDot.visible = wasVisible;
-      startDot.locked = true;
-      specGroup.appendChild(startDot);
-      startDot.x = localStart.x - _DOT_R;
-      startDot.y = localStart.y - _DOT_R;
-
-      const endDot = figma.createEllipse();
-      endDot.name = 'DotFim';
-      endDot.resize(_DOT_R * 2, _DOT_R * 2);
-      endDot.fills = [{ type: "SOLID", color: themeColor }];
-      endDot.strokes = [];
-      endDot.visible = wasVisible;
-      endDot.locked = true;
-      specGroup.appendChild(endDot);
-      endDot.x = localEnd.x - _DOT_R;
-      endDot.y = localEnd.y - _DOT_R;
-
+      const result = await _rebuildSpecConnector(msg);
       figma.ui.postMessage({
         type: 'spec-connector-edited',
         specId: msg.specId,
-        connectorStyle: _specConnectorStyle,
-        connectorCurvature: _specCurvature
+        connectorStyle: result.connectorStyle,
+        connectorCurvature: result.connectorCurvature
       });
     } catch (e) {
       figma.ui.postMessage({ type: 'spec-connector-edit-failed', specId: msg.specId, message: e.message });
+    }
+  }
+
+  // Bounds do elemento vinculado + do specCard, pro frontend sugerir
+  // Reta/Angular no modal "Editar Linha da Spec" (ver
+  // _suggestConnectorStyleFromBounds em specifications.js) -- só faz
+  // sentido na EDIÇÃO (não na criação): o specCard só existe depois que a
+  // spec já foi criada, então não há como sugerir estilo antes disso.
+  if (msg.type === "get-spec-connector-bounds") {
+    try {
+      const specGroup = await figma.getNodeByIdAsync(msg.specId);
+      const node = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
+      const specCard = specGroup && 'findOne' in specGroup ? specGroup.findOne(n => n.name === 'Spec Notes') : null;
+      const nodeBounds = node && (node.absoluteBoundingBox || node.absoluteRenderBounds);
+      const cardBounds = specCard && (specCard.absoluteBoundingBox || specCard.absoluteRenderBounds);
+      if (!nodeBounds || !cardBounds) {
+        figma.ui.postMessage({ type: 'spec-connector-bounds', specId: msg.specId, nodeBounds: null, cardBounds: null });
+      } else {
+        figma.ui.postMessage({
+          type: 'spec-connector-bounds', specId: msg.specId,
+          nodeBounds: { x: nodeBounds.x, y: nodeBounds.y, width: nodeBounds.width, height: nodeBounds.height },
+          cardBounds: { x: cardBounds.x, y: cardBounds.y, width: cardBounds.width, height: cardBounds.height }
+        });
+      }
+    } catch (e) {
+      figma.ui.postMessage({ type: 'spec-connector-bounds', specId: msg.specId, nodeBounds: null, cardBounds: null });
     }
   }
 
@@ -4324,6 +4528,17 @@ figma.ui.onmessage = async (msg) => {
     for (const specId of (msg.specIds || [])) {
       const specGroup = await figma.getNodeByIdAsync(specId);
       if (!specGroup) continue;
+      // Travando de volta (fim da edição/posicionamento) com targetNodeId
+      // conhecido (enviado só por toggleSpecLock, não por
+      // toggleSpecGroupLock) -- recalcula o lado da linha a partir de onde
+      // o card REALMENTE ficou, em vez de manter o lado escolhido antes de
+      // saber onde ele ia parar. Best-effort: falha aqui não deve impedir
+      // o travamento (ação principal do usuário).
+      if (targetLocked && msg.targetNodeId) {
+        try {
+          await _rebuildSpecConnector({ specId, targetNodeId: msg.targetNodeId, color: msg.color });
+        } catch (e) { }
+      }
       // specGroup (GROUP) só contém Conector + specCard (+ DotInicio/DotFim)
       // -- contour nunca esteve dentro dele, então travar/destravar o group
       // inteiro já respeita a regra de negócio (só linha e posição do card

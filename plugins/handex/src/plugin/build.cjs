@@ -233,7 +233,7 @@ ${modHandoff}
     });
   </script>
 
-  <div id="toast-container"></div>
+  <div id="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
   <div id="resize-handle"></div>
 
 </body>

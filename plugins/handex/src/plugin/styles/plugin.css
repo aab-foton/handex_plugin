@@ -544,34 +544,6 @@ body {
       padding-left: 32px !important;
     }
 
-    /* Campos de nome inline (rename de fluxo/spec direto no card) -- borda
-       TRANSPARENTE em repouso (reserva o espaço, sem aparecer) e visível só
-       no hover/foco, para sinalizar "isto é editável" sem virar uma caixa
-       cinza permanente poluindo o card. A regra global "Uniform Inputs"
-       acima usa !important e sempre vence classes utilitárias sem
-       !important (border-none, bg-transparent, p-0), então precisa da
-       mesma arma para se isolar dela. */
-    input.inline-name-input {
-      border: 1px solid transparent !important;
-      background-color: transparent !important;
-      padding: 1px 3px !important;
-    }
-    input.inline-name-input:hover {
-      border-color: #cbd5e1 !important;
-    }
-    input.inline-name-input:focus {
-      border-color: #2e2ee0 !important;
-      background-color: transparent !important;
-      box-shadow: 0 0 0 2px rgba(46, 46, 224, 0.12) !important;
-      outline: none !important;
-    }
-    .dark input.inline-name-input:hover {
-      border-color: #475569 !important;
-    }
-    .dark input.inline-name-input,
-    .dark input.inline-name-input:focus {
-      background-color: transparent !important;
-    }
 
     /* Reset font-weight and color for placeholders to make them look distinct and lighter than labels */
     input::placeholder,

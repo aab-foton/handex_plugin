@@ -319,6 +319,7 @@
   var _prevSelectionIds = [];
   var _selectionClickOrder = [];
   var _selectionOrderReliable = true;
+  var _flowSelectionBoundsDebounceTimer = null;
   figma.on("selectionchange", () => {
     const currentIds = figma.currentPage.selection.map((n) => n.id);
     if (currentIds.length === 0) {
@@ -335,7 +336,10 @@
     }
     _prevSelectionIds = currentIds;
     if (_flowAnchorPreviewActive) {
-      figma.ui.postMessage({ type: "flow-selection-bounds", nodes: _getFlowSelectionBoundsPayload() });
+      clearTimeout(_flowSelectionBoundsDebounceTimer);
+      _flowSelectionBoundsDebounceTimer = setTimeout(() => {
+        figma.ui.postMessage({ type: "flow-selection-bounds", nodes: _getFlowSelectionBoundsPayload() });
+      }, 120);
     }
     if (_highlightSelectionExpected) {
       _highlightSelectionExpected = false;
@@ -743,7 +747,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "6.4.0" : "dev";
+  var PLUGIN_VERSION = true ? "6.5.0" : "dev";
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
     const NS = "handex";
@@ -831,6 +835,36 @@
       targetNode.setPluginData(dataKey, result.id);
       figma.ui.postMessage({ type: "flow-marker-moved", flow: result, removedOldId });
     }
+  }
+  function _orthogonalElbowPoints(a, b) {
+    const OFFSET = 24;
+    const dirOf = (side) => ({
+      top: { x: 0, y: -1 },
+      bottom: { x: 0, y: 1 },
+      left: { x: -1, y: 0 },
+      right: { x: 1, y: 0 }
+    })[side];
+    const dirA = dirOf(a.side), dirB = dirOf(b.side);
+    const aPrime = { x: a.x + dirA.x * OFFSET, y: a.y + dirA.y * OFFSET };
+    const bPrime = { x: b.x + dirB.x * OFFSET, y: b.y + dirB.y * OFFSET };
+    const points = [aPrime];
+    const aVertical = dirA.x === 0;
+    const bVertical = dirB.x === 0;
+    if (Math.abs(aPrime.x - bPrime.x) < 0.01 || Math.abs(aPrime.y - bPrime.y) < 0.01) {
+    } else if (aVertical !== bVertical) {
+      const corner = aVertical ? { x: bPrime.x, y: aPrime.y } : { x: aPrime.x, y: bPrime.y };
+      points.push(corner);
+    } else {
+      if (aVertical) {
+        const midY = dirA.y > 0 ? Math.max(aPrime.y, bPrime.y) : Math.min(aPrime.y, bPrime.y);
+        points.push({ x: aPrime.x, y: midY }, { x: bPrime.x, y: midY });
+      } else {
+        const midX = dirA.x > 0 ? Math.max(aPrime.x, bPrime.x) : Math.min(aPrime.x, bPrime.x);
+        points.push({ x: midX, y: aPrime.y }, { x: midX, y: bPrime.y });
+      }
+    }
+    points.push(bPrime);
+    return points;
   }
   async function _buildFlowConnection(nodeA, nodeB, msg) {
     const isEvent = msg.flowType === "event_start" || msg.flowType === "event_end";
@@ -925,31 +959,13 @@
       curveCtrl = { x: _midX + px * offset, y: _midY + py * offset };
     }
     const curveMid = _curvature ? { x: 0.25 * bestA.x + 0.5 * curveCtrl.x + 0.25 * bestB.x, y: 0.25 * bestA.y + 0.5 * curveCtrl.y + 0.25 * bestB.y } : { x: _midX, y: _midY };
-    const elbowPoints = [];
-    if (_connectorStyle === "elbow" && bestA.side && bestB.side) {
-      const aVertical = bestA.side === "top" || bestA.side === "bottom";
-      const bVertical = bestB.side === "top" || bestB.side === "bottom";
-      if (aVertical !== bVertical) {
-        const corner = aVertical ? { x: bestB.x, y: bestA.y } : { x: bestA.x, y: bestB.y };
-        elbowPoints.push(corner);
-      } else {
-        const OFFSET_MIN = 24;
-        if (aVertical) {
-          const offsetY = Math.max(OFFSET_MIN, Math.abs(bestB.y - bestA.y) / 2);
-          const y1 = bestA.side === "bottom" ? bestA.y + offsetY : bestA.y - offsetY;
-          const y2 = bestB.side === "bottom" ? bestB.y + offsetY : bestB.y - offsetY;
-          const midY = bestA.side === "bottom" ? Math.max(y1, y2) : Math.min(y1, y2);
-          elbowPoints.push({ x: bestA.x, y: midY }, { x: bestB.x, y: midY });
-        } else {
-          const offsetX = Math.max(OFFSET_MIN, Math.abs(bestB.x - bestA.x) / 2);
-          const x1 = bestA.side === "right" ? bestA.x + offsetX : bestA.x - offsetX;
-          const x2 = bestB.side === "right" ? bestB.x + offsetX : bestB.x - offsetX;
-          const midX = bestA.side === "right" ? Math.max(x1, x2) : Math.min(x1, x2);
-          elbowPoints.push({ x: midX, y: bestA.y }, { x: midX, y: bestB.y });
-        }
-      }
-    }
-    const elbowMid = elbowPoints.length === 1 ? elbowPoints[0] : elbowPoints.length === 2 ? { x: (elbowPoints[0].x + elbowPoints[1].x) / 2, y: (elbowPoints[0].y + elbowPoints[1].y) / 2 } : curveMid;
+    const elbowPoints = _connectorStyle === "elbow" && bestA.side && bestB.side ? _orthogonalElbowPoints(bestA, bestB) : [];
+    const _elbowFullPath = elbowPoints.length > 0 ? [bestA, ...elbowPoints, bestB] : null;
+    const elbowMid = _elbowFullPath ? (() => {
+      const midIdx = Math.floor((_elbowFullPath.length - 1) / 2);
+      const p1 = _elbowFullPath[midIdx], p2 = _elbowFullPath[Math.min(midIdx + 1, _elbowFullPath.length - 1)];
+      return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+    })() : curveMid;
     const strokeColor = { r: 0.12, g: 0.16, b: 0.23 };
     const line = figma.createVector();
     line.name = `Linha`;
@@ -3168,6 +3184,61 @@
       }
       figma.ui.postMessage({ type: "show-spec-properties", properties });
     }
+    if (msg.type === "get-node-name") {
+      const node = msg.nodeId ? await figma.getNodeByIdAsync(msg.nodeId) : null;
+      figma.ui.postMessage({ type: "node-name-for-spec", name: node ? node.name : null });
+    }
+    if (msg.type === "get-selection-id-for-spec") {
+      const selection = figma.currentPage.selection;
+      figma.ui.postMessage({ type: "selection-id-for-spec", targetNodeId: selection.length > 0 ? selection[0].id : null });
+    }
+    if (msg.type === "create-position-ghost") {
+      const node = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
+      const bounds = node && (node.absoluteBoundingBox || node.absoluteRenderBounds);
+      const themeColor = hexToRgb2(msg.color || "#2e2ee0");
+      const estimatedHeight = 64 + (msg.hasCategory ? 20 : 0) + (msg.hasNote ? 32 : 0);
+      const ghost = figma.createFrame();
+      ghost.name = "[Handex] Pr\xE9via de Posi\xE7\xE3o";
+      ghost.cornerRadius = 8;
+      ghost.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 }, opacity: 0.5 }];
+      ghost.strokes = [{ type: "SOLID", color: themeColor }];
+      ghost.strokeWeight = 1.5;
+      ghost.dashPattern = [4, 3];
+      ghost.resize(220, estimatedHeight);
+      ghost.setPluginData("handexPositionGhost", "true");
+      figma.currentPage.appendChild(ghost);
+      if (bounds) {
+        ghost.x = bounds.x + bounds.width + 60;
+        ghost.y = bounds.y;
+      } else {
+        ghost.x = figma.viewport.center.x;
+        ghost.y = figma.viewport.center.y;
+      }
+      _highlightSelectionExpected = true;
+      figma.currentPage.selection = [ghost];
+      figma.viewport.scrollAndZoomIntoView([ghost]);
+      figma.ui.postMessage({ type: "position-ghost-created", ghostId: ghost.id });
+    }
+    if (msg.type === "read-position-ghost") {
+      const ghost = await figma.getNodeByIdAsync(msg.ghostId);
+      if (!ghost) {
+        figma.ui.postMessage({ type: "position-ghost-read", position: null });
+        return;
+      }
+      const bounds = ghost.absoluteBoundingBox || ghost.absoluteRenderBounds;
+      const position = bounds ? { x: bounds.x, y: bounds.y } : null;
+      ghost.remove();
+      figma.ui.postMessage({ type: "position-ghost-read", position });
+    }
+    if (msg.type === "cancel-position-ghost") {
+      const ghost = await figma.getNodeByIdAsync(msg.ghostId);
+      if (ghost) {
+        try {
+          ghost.remove();
+        } catch (e) {
+        }
+      }
+    }
     if (msg.type === "create-unified-spec") {
       (async () => {
         const opts = msg.opts;
@@ -3423,7 +3494,7 @@
           chip.x = 0;
           chip.y = 0;
           figma.currentPage.appendChild(specCard);
-          const side = opts.guideSide || "right";
+          const side = opts.pinnedPosition && bounds ? _computeSideFromBounds(bounds, { x: opts.pinnedPosition.x, y: opts.pinnedPosition.y, width: specCard.width, height: specCard.height }) : opts.guideSide || "right";
           const _isVertSide = side === "right" || side === "left";
           const _specLetter = opts.letter;
           let _anchorNode = node;
@@ -3544,9 +3615,13 @@
               const _specCurvature = _specConnectorStyle === "curved" ? opts.connectorCurvature || 0 : 0;
               let connectorPath = `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}`;
               if (_specConnectorStyle === "elbow") {
-                const isHorizontal = side === "right" || side === "left";
-                const corner = isHorizontal ? { x: endPt.x, y: startPt.y } : { x: startPt.x, y: endPt.y };
-                connectorPath = `M ${startPt.x} ${startPt.y} L ${corner.x} ${corner.y} L ${endPt.x} ${endPt.y}`;
+                const OPPOSITE_SIDE = { right: "left", left: "right", bottom: "top", top: "bottom" };
+                const specElbowPoints = _orthogonalElbowPoints(
+                  { x: startPt.x, y: startPt.y, side },
+                  { x: endPt.x, y: endPt.y, side: OPPOSITE_SIDE[side] }
+                );
+                const segs = [startPt, ...specElbowPoints, endPt].map((p) => `${p.x} ${p.y}`).join(" L ");
+                connectorPath = `M ${segs}`;
               } else if (_specCurvature) {
                 const dx = endPt.x - startPt.x, dy = endPt.y - startPt.y;
                 const dist = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -3752,101 +3827,139 @@
         });
       }
     }
+    function _computeSideFromBounds(elBounds, cardBounds) {
+      const elCx = elBounds.x + elBounds.width / 2;
+      const elCy = elBounds.y + elBounds.height / 2;
+      const cardCx = cardBounds.x + cardBounds.width / 2;
+      const cardCy = cardBounds.y + cardBounds.height / 2;
+      const dx = cardCx - elCx;
+      const dy = cardCy - elCy;
+      if (Math.abs(dx) >= Math.abs(dy)) {
+        return dx >= 0 ? "right" : "left";
+      }
+      return dy >= 0 ? "bottom" : "top";
+    }
+    async function _rebuildSpecConnector(msg2) {
+      const specGroup = await figma.getNodeByIdAsync(msg2.specId);
+      const node = msg2.targetNodeId ? await figma.getNodeByIdAsync(msg2.targetNodeId) : null;
+      if (!specGroup || !("findChildren" in specGroup) || !node) {
+        throw new Error("nodes-nao-encontrados");
+      }
+      const specCard = specGroup.findOne((n) => n.name === "Spec Notes");
+      const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
+      const cardBounds = specCard && (specCard.absoluteBoundingBox || specCard.absoluteRenderBounds);
+      if (!specCard || !bounds || !cardBounds) {
+        throw new Error("elemento-nao-encontrado");
+      }
+      const wasVisible = specGroup.findChildren((n) => n.name === "Conector" || n.name === "DotInicio" || n.name === "DotFim").every((n) => n.visible !== false);
+      const side = msg2.guideSide || _computeSideFromBounds(bounds, cardBounds);
+      let startPt, endPt;
+      if (side === "right") {
+        startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+        endPt = { x: cardBounds.x, y: cardBounds.y + cardBounds.height / 2 };
+      } else if (side === "left") {
+        startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
+        endPt = { x: cardBounds.x + cardBounds.width, y: cardBounds.y + cardBounds.height / 2 };
+      } else if (side === "bottom") {
+        startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
+        endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y };
+      } else {
+        startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
+        endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y + cardBounds.height };
+      }
+      const _specConnectorStyle = msg2.connectorStyle || "straight";
+      const _specCurvature = _specConnectorStyle === "curved" ? msg2.connectorCurvature || 0 : 0;
+      let connectorPath = `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}`;
+      if (_specConnectorStyle === "elbow") {
+        const OPPOSITE_SIDE = { right: "left", left: "right", bottom: "top", top: "bottom" };
+        const specElbowPoints = _orthogonalElbowPoints(
+          { x: startPt.x, y: startPt.y, side },
+          { x: endPt.x, y: endPt.y, side: OPPOSITE_SIDE[side] }
+        );
+        const segs = [startPt, ...specElbowPoints, endPt].map((p) => `${p.x} ${p.y}`).join(" L ");
+        connectorPath = `M ${segs}`;
+      } else if (_specCurvature) {
+        const dx = endPt.x - startPt.x, dy = endPt.y - startPt.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const px = -dy / dist, py = dx / dist;
+        const offset = _specCurvature / 100 * dist * 0.5;
+        const midX = (startPt.x + endPt.x) / 2, midY = (startPt.y + endPt.y) / 2;
+        const ctrlX = midX + px * offset, ctrlY = midY + py * offset;
+        connectorPath = `M ${startPt.x} ${startPt.y} Q ${ctrlX} ${ctrlY} ${endPt.x} ${endPt.y}`;
+      }
+      const themeColor = hexToRgb2(msg2.color || "#2e2ee0");
+      const oldLineNodes = specGroup.findChildren((n) => n.name === "Conector" || n.name === "DotInicio" || n.name === "DotFim");
+      oldLineNodes.forEach((n) => n.remove());
+      const connector = figma.createVector();
+      connector.name = "Conector";
+      figma.currentPage.appendChild(connector);
+      connector.x = 0;
+      connector.y = 0;
+      connector.vectorPaths = [{ windingRule: "NONZERO", data: connectorPath }];
+      connector.strokes = [{ type: "SOLID", color: themeColor }];
+      connector.strokeWeight = 1.5;
+      connector.dashPattern = [4, 4];
+      connector.strokeCap = "ROUND";
+      connector.visible = wasVisible;
+      connector.locked = false;
+      const _DOT_R = 4;
+      const startDot = figma.createEllipse();
+      startDot.name = "DotInicio";
+      startDot.resize(_DOT_R * 2, _DOT_R * 2);
+      startDot.fills = [{ type: "SOLID", color: themeColor }];
+      startDot.strokes = [];
+      startDot.visible = wasVisible;
+      startDot.locked = true;
+      figma.currentPage.appendChild(startDot);
+      startDot.x = startPt.x - _DOT_R;
+      startDot.y = startPt.y - _DOT_R;
+      const endDot = figma.createEllipse();
+      endDot.name = "DotFim";
+      endDot.resize(_DOT_R * 2, _DOT_R * 2);
+      endDot.fills = [{ type: "SOLID", color: themeColor }];
+      endDot.strokes = [];
+      endDot.visible = wasVisible;
+      endDot.locked = true;
+      figma.currentPage.appendChild(endDot);
+      endDot.x = endPt.x - _DOT_R;
+      endDot.y = endPt.y - _DOT_R;
+      specGroup.appendChild(connector);
+      specGroup.appendChild(startDot);
+      specGroup.appendChild(endDot);
+      return { connectorStyle: _specConnectorStyle, connectorCurvature: _specCurvature };
+    }
     if (msg.type === "edit-spec-connector") {
       try {
-        const specGroup = await figma.getNodeByIdAsync(msg.specId);
-        const node = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
-        if (!specGroup || !("findChildren" in specGroup) || !node) {
-          figma.ui.postMessage({ type: "spec-connector-edit-failed", specId: msg.specId });
-          return;
-        }
-        const specCard = specGroup.findOne((n) => n.name === "Spec Notes");
-        const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
-        const cardBounds = specCard && (specCard.absoluteBoundingBox || specCard.absoluteRenderBounds);
-        if (!specCard || !bounds || !cardBounds) {
-          figma.ui.postMessage({ type: "spec-connector-edit-failed", specId: msg.specId });
-          return;
-        }
-        const wasVisible = specGroup.findChildren((n) => n.name === "Conector" || n.name === "DotInicio" || n.name === "DotFim").every((n) => n.visible !== false);
-        const side = msg.guideSide || "right";
-        let startPt, endPt;
-        if (side === "right") {
-          startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
-          endPt = { x: cardBounds.x, y: cardBounds.y + cardBounds.height / 2 };
-        } else if (side === "left") {
-          startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
-          endPt = { x: cardBounds.x + cardBounds.width, y: cardBounds.y + cardBounds.height / 2 };
-        } else if (side === "bottom") {
-          startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
-          endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y };
-        } else {
-          startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
-          endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y + cardBounds.height };
-        }
-        const _specConnectorStyle = msg.connectorStyle || "straight";
-        const _specCurvature = _specConnectorStyle === "curved" ? msg.connectorCurvature || 0 : 0;
-        const _groupBounds = specGroup.absoluteBoundingBox || specGroup.absoluteRenderBounds;
-        const _gx = _groupBounds.x, _gy = _groupBounds.y;
-        const localStart = { x: startPt.x - _gx, y: startPt.y - _gy };
-        const localEnd = { x: endPt.x - _gx, y: endPt.y - _gy };
-        let connectorPath = `M ${localStart.x} ${localStart.y} L ${localEnd.x} ${localEnd.y}`;
-        if (_specConnectorStyle === "elbow") {
-          const isHorizontal = side === "right" || side === "left";
-          const corner = isHorizontal ? { x: localEnd.x, y: localStart.y } : { x: localStart.x, y: localEnd.y };
-          connectorPath = `M ${localStart.x} ${localStart.y} L ${corner.x} ${corner.y} L ${localEnd.x} ${localEnd.y}`;
-        } else if (_specCurvature) {
-          const dx = localEnd.x - localStart.x, dy = localEnd.y - localStart.y;
-          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          const px = -dy / dist, py = dx / dist;
-          const offset = _specCurvature / 100 * dist * 0.5;
-          const midX = (localStart.x + localEnd.x) / 2, midY = (localStart.y + localEnd.y) / 2;
-          const ctrlX = midX + px * offset, ctrlY = midY + py * offset;
-          connectorPath = `M ${localStart.x} ${localStart.y} Q ${ctrlX} ${ctrlY} ${localEnd.x} ${localEnd.y}`;
-        }
-        const themeColor = hexToRgb2(msg.color || "#2e2ee0");
-        const oldLineNodes = specGroup.findChildren((n) => n.name === "Conector" || n.name === "DotInicio" || n.name === "DotFim");
-        oldLineNodes.forEach((n) => n.remove());
-        const connector = figma.createVector();
-        connector.name = "Conector";
-        connector.x = 0;
-        connector.y = 0;
-        connector.vectorPaths = [{ windingRule: "NONZERO", data: connectorPath }];
-        connector.strokes = [{ type: "SOLID", color: themeColor }];
-        connector.strokeWeight = 1.5;
-        connector.dashPattern = [4, 4];
-        connector.strokeCap = "ROUND";
-        connector.visible = wasVisible;
-        connector.locked = false;
-        specGroup.appendChild(connector);
-        const _DOT_R = 4;
-        const startDot = figma.createEllipse();
-        startDot.name = "DotInicio";
-        startDot.resize(_DOT_R * 2, _DOT_R * 2);
-        startDot.fills = [{ type: "SOLID", color: themeColor }];
-        startDot.strokes = [];
-        startDot.visible = wasVisible;
-        startDot.locked = true;
-        specGroup.appendChild(startDot);
-        startDot.x = localStart.x - _DOT_R;
-        startDot.y = localStart.y - _DOT_R;
-        const endDot = figma.createEllipse();
-        endDot.name = "DotFim";
-        endDot.resize(_DOT_R * 2, _DOT_R * 2);
-        endDot.fills = [{ type: "SOLID", color: themeColor }];
-        endDot.strokes = [];
-        endDot.visible = wasVisible;
-        endDot.locked = true;
-        specGroup.appendChild(endDot);
-        endDot.x = localEnd.x - _DOT_R;
-        endDot.y = localEnd.y - _DOT_R;
+        const result = await _rebuildSpecConnector(msg);
         figma.ui.postMessage({
           type: "spec-connector-edited",
           specId: msg.specId,
-          connectorStyle: _specConnectorStyle,
-          connectorCurvature: _specCurvature
+          connectorStyle: result.connectorStyle,
+          connectorCurvature: result.connectorCurvature
         });
       } catch (e) {
         figma.ui.postMessage({ type: "spec-connector-edit-failed", specId: msg.specId, message: e.message });
+      }
+    }
+    if (msg.type === "get-spec-connector-bounds") {
+      try {
+        const specGroup = await figma.getNodeByIdAsync(msg.specId);
+        const node = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
+        const specCard = specGroup && "findOne" in specGroup ? specGroup.findOne((n) => n.name === "Spec Notes") : null;
+        const nodeBounds = node && (node.absoluteBoundingBox || node.absoluteRenderBounds);
+        const cardBounds = specCard && (specCard.absoluteBoundingBox || specCard.absoluteRenderBounds);
+        if (!nodeBounds || !cardBounds) {
+          figma.ui.postMessage({ type: "spec-connector-bounds", specId: msg.specId, nodeBounds: null, cardBounds: null });
+        } else {
+          figma.ui.postMessage({
+            type: "spec-connector-bounds",
+            specId: msg.specId,
+            nodeBounds: { x: nodeBounds.x, y: nodeBounds.y, width: nodeBounds.width, height: nodeBounds.height },
+            cardBounds: { x: cardBounds.x, y: cardBounds.y, width: cardBounds.width, height: cardBounds.height }
+          });
+        }
+      } catch (e) {
+        figma.ui.postMessage({ type: "spec-connector-bounds", specId: msg.specId, nodeBounds: null, cardBounds: null });
       }
     }
     if (msg.type === "unlock-spec-group") {
@@ -3854,6 +3967,12 @@
       for (const specId of msg.specIds || []) {
         const specGroup = await figma.getNodeByIdAsync(specId);
         if (!specGroup) continue;
+        if (targetLocked && msg.targetNodeId) {
+          try {
+            await _rebuildSpecConnector({ specId, targetNodeId: msg.targetNodeId, color: msg.color });
+          } catch (e) {
+          }
+        }
         specGroup.locked = targetLocked;
         const markerId = specGroup.getPluginData("handexSpecMarkerId");
         if (markerId) {

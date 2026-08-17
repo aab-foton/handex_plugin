@@ -583,7 +583,7 @@ window.closeBriefingQuestionModal = closeBriefingQuestionModal;
 function confirmBriefingQuestionModal() {
   const qField = document.getElementById('briefing-question-modal-question');
   const aField = document.getElementById('briefing-question-modal-answer');
-  const questionText = qField ? qField.value.trim() : '';
+  const questionText = qField ? qField.value.trim().slice(0, 250) : '';
   if (!questionText) {
     showToast('Digite a pergunta antes de adicionar.', 'error');
     if (qField) qField.focus();
@@ -592,7 +592,7 @@ function confirmBriefingQuestionModal() {
   const axisName = _briefingQuestionModalAxis;
   const editId = _briefingQuestionModalEditId;
   const returnToGuide = _briefingQuestionModalReturnToGuide;
-  const answerText = aField ? aField.value : '';
+  const answerText = aField ? aField.value.slice(0, 600) : '';
   closeModal('briefing-question-modal');
   _briefingQuestionModalReturnToGuide = false;
   if (editId) {
@@ -1279,11 +1279,11 @@ function selectExceptionType(tipo, icon, color) {
 
 function confirmException() {
   if (!_currentExceptionType) return;
-  const vinc   = (document.getElementById('exc-modal-vinc')?.value   || '').trim();
+  const vinc   = (document.getElementById('exc-modal-vinc')?.value   || '').trim().slice(0, 80);
   const anchor = (document.getElementById('exc-modal-anchor')?.value || '').trim();
   const obsCheck = document.getElementById('exc-modal-has-obs');
   const obsArea  = document.getElementById('exc-modal-obs');
-  const obs = (obsCheck && obsCheck.checked && obsArea) ? obsArea.value.trim() : '';
+  const obs = (obsCheck && obsCheck.checked && obsArea) ? obsArea.value.trim().slice(0, 400) : '';
 
   // ── Caso: exceção de spec global (view-specifications sem frame) ───
   const globalIdx = window._globalSpecExceptionIdx;
@@ -1497,6 +1497,11 @@ function updateEmptyFramesState() {
   if (collapseBtn) collapseBtn.classList.toggle('hidden', !hasFrames);
   const finalizeWrap = document.getElementById('btn-finalize-tokens-wrap');
   if (finalizeWrap) finalizeWrap.classList.toggle('hidden', !hasFrames);
+  const sectionTitle = document.getElementById('frames-section-title');
+  if (sectionTitle) {
+    sectionTitle.classList.toggle('hidden', !hasFrames);
+    if (hasFrames) sectionTitle.textContent = `Tokens Escaneados (${handoffData.frames.length})`;
+  }
   _updateContentHint('frames-register-hint', hasFrames);
 }
 
@@ -1707,7 +1712,7 @@ function _hasValidTeamMember(equipe) {
 }
 
 function validateStep1() {
-  const titulo = (document.getElementById('s1-titulo')?.value || '').trim();
+  const titulo = (document.getElementById('s1-titulo')?.value || '').trim().slice(0, STEP1_FIELD_MAX.titulo);
   handoffData.step1.titulo = titulo;
   clearTimeout(validateStep1._t);
   validateStep1._t = setTimeout(saveToStorage, 600);
@@ -2219,8 +2224,13 @@ function bumpVersion(v, type) {
 }
 window.bumpVersion = bumpVersion;
 
+const STEP1_FIELD_MAX = { titulo: 100, versao: 15, objetivo: 500, jornada: 80, feature: 80 };
+
 function updateData(step, key, value) {
   if (!handoffData[step]) handoffData[step] = {};
+  if (step === 'step1' && typeof value === 'string' && STEP1_FIELD_MAX[key]) {
+    value = value.slice(0, STEP1_FIELD_MAX[key]);
+  }
   handoffData[step][key] = value;
   // Debounced — usada tanto em oninput (versão/jornada/feature/objetivo,
   // uma chamada por tecla) quanto em onchange (links, já infrequente); sem
@@ -2243,6 +2253,10 @@ function showToast(message, type = 'success') {
   const toast = document.createElement('div');
   toast.className = 'bg-slate-800 text-white px-4 py-2 rounded-lg shadow-xl text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-300 flex items-center gap-2';
   const isError = type === 'error';
+  // Container é aria-live="polite" por padrão; erro é mais urgente e
+  // sobrescreve pra "assertive" no próprio toast (não interrompe o que o
+  // leitor de tela está lendo, mas anuncia com prioridade maior que sucesso).
+  if (isError) toast.setAttribute('aria-live', 'assertive');
   toast.innerHTML = isError
     ? `<i data-lucide="alert-circle" class="w-3.5 h-3.5 text-red-400"></i>`
     : `<i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-400"></i>`;
@@ -2256,6 +2270,51 @@ function showToast(message, type = 'success') {
 const FOCUSABLE_SELECTOR = 'input, button, select, textarea, a[href], [tabindex]:not([tabindex="-1"])';
 const _modalReturnFocus = {};
 
+// Figma Desktop (Electron) às vezes demora alguns segundos pra ceder foco
+// de teclado à janela do plugin depois que ela abre/ganha destaque -- uma
+// única chamada de .focus() logo na abertura do modal não tem efeito
+// nenhum nesse intervalo (o clique/foco é aceito pelo DOM, mas o SO ainda
+// não roteou input de teclado pra essa janela). Insiste em focar por até
+// ~3s, parando assim que o foco realmente "pegar" (document.activeElement
+// muda de verdade) -- não custa nada quando o foco já estava disponível
+// de primeira (a 1ª tentativa já resolve e as seguintes são no-op).
+//
+// GUARDA CRÍTICA: para em cada tentativa se `target` deixou de estar
+// visível (offsetParent null -- cobre tanto o próprio elemento quanto
+// qualquer ancestral, ex: o modal, terem ganho `hidden`). Sem isso, fechar
+// o modal ANTES do fim da janela de retentativa (ex: usuário clica
+// "Cancelar" em menos de 3s) deixava o loop rodando sozinho, chamando
+// .focus() num campo escondido -- isso rouba o foco de teclado de volta
+// pro iframe do plugin repetidamente, mesmo com o usuário já de volta no
+// canvas do Figma (sintoma: "Espaço não navega o canvas", sem nenhum
+// modal aberto).
+//
+// offsetParent === null sozinho não cobre todo caso de fechamento: se o
+// plugin inteiro for fechado (X do painel do Figma) enquanto o loop ainda
+// está de pé, ou se o modal for fechado por um caminho que não passa por
+// closeModal(), o alvo pode continuar tecnicamente visível e o loop nunca
+// para -- reproduzindo o mesmo sintoma ("Espaço não navega") já na
+// reabertura do plugin. Token de invalidação: cada nova chamada de
+// _persistentFocus, e todo closeModal(), incrementam o token e assim
+// matam qualquer loop anterior ainda em voo, sem depender só de
+// offsetParent.
+let _persistentFocusToken = 0;
+function _persistentFocus(target, attempts = 15, intervalMs = 200) {
+  if (!target) return;
+  const token = ++_persistentFocusToken;
+  let tries = 0;
+  const tryFocus = () => {
+    if (token !== _persistentFocusToken) return;
+    if (target.offsetParent === null) return;
+    tries++;
+    target.focus();
+    if (document.activeElement === target || tries >= attempts) return;
+    setTimeout(tryFocus, intervalMs);
+  };
+  tryFocus();
+}
+window._persistentFocus = _persistentFocus;
+
 function openModal(id) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -2264,10 +2323,10 @@ function openModal(id) {
   updateFABVisibility(true);
   const focusTarget = el.querySelector(FOCUSABLE_SELECTOR);
   if (focusTarget) {
-    focusTarget.focus();
+    _persistentFocus(focusTarget);
   } else {
     if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
-    el.focus();
+    _persistentFocus(el);
   }
 }
 
@@ -2275,6 +2334,11 @@ function closeModal(id) {
   const el = document.getElementById(id);
   if (el) el.classList.add("hidden");
   updateFABVisibility(false);
+  // Mata qualquer loop de _persistentFocus ainda em voo -- inclusive de um
+  // modal diferente do que está sendo fechado agora, já que o cenário
+  // problemático é justamente um fechamento que não passou por aqui da
+  // forma esperada (ver comentário de _persistentFocus).
+  _persistentFocusToken++;
   const returnEl = _modalReturnFocus[id];
   if (returnEl && document.contains(returnEl)) returnEl.focus();
   delete _modalReturnFocus[id];
@@ -2286,20 +2350,61 @@ function closeModal(id) {
   }
 }
 
-// Fecha o modal visível com maior z-index ao pressionar Escape (topo em caso de sobreposição).
-// Focus trap completo (ciclagem via Tab) não foi implementado nesta correção — apenas foco
-// inicial, devolução de foco e Escape, por limitação de tempo.
-document.addEventListener('keydown', function (e) {
-  if (e.key !== 'Escape') return;
+function _topmostVisibleModal() {
   const visibleModals = Array.from(document.querySelectorAll('[id$="-modal"]:not(.hidden)'));
-  if (!visibleModals.length) return;
+  if (!visibleModals.length) return null;
   let topModal = visibleModals[0];
   let topZ = parseInt(getComputedStyle(topModal).zIndex, 10) || 0;
   for (const m of visibleModals) {
     const z = parseInt(getComputedStyle(m).zIndex, 10) || 0;
     if (z >= topZ) { topZ = z; topModal = m; }
   }
-  closeModal(topModal.id);
+  return topModal;
+}
+
+// Fecha o modal visível com maior z-index ao pressionar Escape (topo em caso de sobreposição).
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape') return;
+  const topModal = _topmostVisibleModal();
+  if (topModal) closeModal(topModal.id);
+});
+
+// Focus trap: com o modal aberto, o Tab não tem mais nenhuma borda real do
+// DOM pra parar -- ele sai do último campo do modal, atravessa o resto do
+// body por trás (invisível, mas ainda dentro do iframe do plugin) e o
+// usuário perde o teclado sem conseguir voltar pro canvas do Figma sem
+// clicar nele manualmente (relatado como "trava"/"modo tab do leitor").
+// Ciclagem: Tab no último focável volta pro primeiro; Shift+Tab no
+// primeiro vai pro último.
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Tab') return;
+  const topModal = _topmostVisibleModal();
+  if (!topModal) return;
+  const focusable = Array.from(topModal.querySelectorAll(FOCUSABLE_SELECTOR))
+    .filter(el => el.offsetParent !== null && !el.disabled);
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  const active = document.activeElement;
+  if (e.shiftKey && (active === first || !topModal.contains(active))) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && (active === last || !topModal.contains(active))) {
+    e.preventDefault();
+    first.focus();
+  }
+});
+
+// Clique no overlay (fora da caixa branca do modal) fecha o modal -- o
+// próprio div "*-modal" é o overlay inteiro (fixed inset-0 bg-black/40), e
+// a caixa de conteúdo é um filho dentro dele. Se e.target é o próprio
+// overlay (não um filho), o clique não acertou nenhum elemento de
+// conteúdo — o usuário clicou na área escura de propósito, o que
+// normalmente significa "quero voltar pro canvas", não "não fiz nada".
+document.addEventListener('click', function (e) {
+  if (!e.target.matches || !e.target.matches('[id$="-modal"]')) return;
+  if (e.target.classList.contains('hidden')) return;
+  closeModal(e.target.id);
 });
 
 function startHandoff() {
@@ -2648,6 +2753,17 @@ function collapseAllAccordions(containerEl) {
         const frameId = c.id.replace('frame-body-', '');
         const chevron = document.getElementById(`frame-chevron-${frameId}`);
         if (chevron) chevron.style.transform = anyOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+      } else if (c.matches('[data-accordion-content]') && c.previousElementSibling && c.previousElementSibling.querySelector('.journey-chevron')) {
+        // Card de jornada de fluxo (renderFlowsList) — chevron próprio
+        // (.journey-chevron), não usa toggleAccordion/aria-expanded.
+        const chevron = c.previousElementSibling.querySelector('.journey-chevron');
+        chevron.classList.toggle('rotate-180', !anyOpen);
+      } else if (c.matches('[data-accordion-content]') && c.previousElementSibling && c.previousElementSibling.querySelector('.group-chevron')) {
+        // Grupo de tag em Anotar Specs (renderSpecsList) — chevron próprio
+        // (.group-chevron), toggle feito via headerInfo.onclick, não
+        // toggleAccordion/aria-expanded.
+        const chevron = c.previousElementSibling.querySelector('.group-chevron');
+        chevron.classList.toggle('rotate-180', !anyOpen);
       } else {
         // Regular accordion — find toggle button
         const parent = c.closest('.border, .rounded-xl, .mb-3');
@@ -2797,8 +2913,44 @@ function filterSpecTypesHelp() {
     if (match) visibleCount++;
   });
   if (empty) empty.classList.toggle('hidden', visibleCount > 0);
+  _renderSpecTypesSuggestions();
 }
 window.filterSpecTypesHelp = filterSpecTypesHelp;
+
+// Autocomplete dos nomes de tipo acima da lista, conforme digita -- só
+// nomes (data-name), não descrição/exemplo, no mesmo espírito da busca
+// restrita a nome.
+function _renderSpecTypesSuggestions() {
+  const search = document.getElementById('spec-types-search');
+  const box = document.getElementById('spec-types-suggestions');
+  if (!search || !box) return;
+  const term = search.value.trim().toLowerCase();
+  if (!term) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+  const names = Array.from(document.querySelectorAll('#spec-types-list [data-spec-type-item]'))
+    .map(item => item.getAttribute('data-name') || '')
+    .filter(name => name.toLowerCase().includes(term) && name.toLowerCase() !== term);
+  if (names.length === 0) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+  box.innerHTML = names.map(name =>
+    `<li><button type="button" class="w-full text-left px-3 py-2 text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" onmousedown="_pickSpecTypeSuggestion('${name.replace(/'/g, "\\'")}')">${name}</button></li>`
+  ).join('');
+  box.classList.remove('hidden');
+}
+window._renderSpecTypesSuggestions = _renderSpecTypesSuggestions;
+
+function _pickSpecTypeSuggestion(name) {
+  const search = document.getElementById('spec-types-search');
+  if (!search) return;
+  search.value = name;
+  filterSpecTypesHelp();
+  _hideSpecTypesSuggestions();
+}
+window._pickSpecTypeSuggestion = _pickSpecTypeSuggestion;
+
+function _hideSpecTypesSuggestions() {
+  const box = document.getElementById('spec-types-suggestions');
+  if (box) setTimeout(() => box.classList.add('hidden'), 150);
+}
+window._hideSpecTypesSuggestions = _hideSpecTypesSuggestions;
 
 // ── Scroll ─────────────────────────────────────────────────────────────
 function handleScroll(el) {

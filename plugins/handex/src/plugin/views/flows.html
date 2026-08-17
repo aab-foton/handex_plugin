@@ -15,7 +15,7 @@
       </button>
     </div>
     <div class="flex items-center gap-2 shrink-0">
-      <button id="btn-resync-flows" onclick="resyncAllFlows()" class="hidden p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors" title="Atualizar Fluxos" aria-label="Atualizar Fluxos">
+      <button id="btn-resync-flows" onclick="resyncAllFlows()" class="hidden p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors" title="Redesenhar todas as linhas no canvas a partir dos dados salvos — use se moveu os frames e as conexões ficaram desalinhadas" aria-label="Redesenhar todas as linhas de fluxo no canvas">
         <i data-lucide="refresh-cw" class="w-4 h-4 text-white" aria-hidden="true"></i>
       </button>
       <button onclick="openFlowFormModal()" class="fab-inline shrink-0" title="Conectar Frames" aria-label="Conectar Frames">
@@ -26,7 +26,17 @@
   </div>
 
   <!-- Scrollable Content -->
-  <div class="flex-1 overflow-y-auto pt-3 px-4 pb-4 space-y-4" onscroll="handleScroll(this)">
+  <div id="flows-scroll-container" class="flex-1 overflow-y-auto pt-3 px-4 pb-4 space-y-4" onscroll="handleScroll(this)">
+
+    <!-- Título da seção + Recolher/expandir todos -- logo abaixo do
+         header, acima da lista de jornadas. -->
+    <div class="flex items-center justify-between">
+      <p id="flows-section-title" class="hidden text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Fluxos Desenhados</p>
+      <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('flows-scroll-container'))"
+        class="hidden text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors">
+        Recolher todos
+      </button>
+    </div>
 
     <!-- Onboarding banner (primeira visita) -->
     <div id="onboarding-banner-fluxos" class="hidden flex items-start gap-2.5 bg-[#3d3dff]/5 dark:bg-blue-900/10 border border-[#3d3dff]/20 dark:border-blue-800/30 rounded-2xl p-3.5">

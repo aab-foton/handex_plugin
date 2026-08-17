@@ -74,10 +74,10 @@ const ONBOARDING_TOOLS = {
     purpose: 'Registra decisões técnicas específicas de um elemento — regra de negócio, comportamento, valor de token aplicado — que o scan automático não capta sozinho. É a camada de contexto que só o designer sabe explicar, ancorada visualmente no elemento certo do canvas.',
     steps: [
       { text: '<strong>Selecione um elemento</strong> no canvas do Figma — pode ser um componente, texto, ícone ou qualquer elemento.' },
-      { text: 'Clique no <strong>botão +</strong> no topo da view. O formulário abre com o elemento selecionado já vinculado.' },
-      { text: 'Defina a <strong>Letra</strong> (tag de referência, ex: A, B, C1), a <strong>Categoria</strong> e a <strong>Cor</strong> do grupo.' },
-      { text: 'Adicione uma <strong>Nota técnica</strong> e, em <strong>Propriedades</strong>, os atributos técnicos: nome, token do Design System e valor aplicado.' },
-      { text: 'A spec nasce solta no canvas para você ajustar a posição. Clique em <strong>Concluir posicionamento</strong> na lista para travá-la. Mesma letra empilha verticalmente; letra diferente abre nova coluna.' },
+      { text: 'Clique no <strong>botão +</strong> no topo da view. O formulário abre com o elemento vinculado, mostrado em <strong>"Especificando: [nome]"</strong> no topo — essa referência fica fixa do início ao fim do fluxo.' },
+      { text: 'Defina a <strong>Letra</strong> (tag de referência, ex: A, B, C1), a <strong>Categoria</strong> e a <strong>Cor</strong> do grupo. Adicione uma <strong>Nota técnica</strong> e, em <strong>Propriedades</strong>, os atributos técnicos: nome, token do Design System e valor aplicado.' },
+      { text: 'Ao avançar, você entra direto na etapa <strong>Posição no Canvas</strong>: o modal continua aberto e uma prévia tracejada já aparece no canvas — arraste-a até onde quiser e clique em <strong>Usar esta posição</strong>. O fluxo já segue direto para a próxima etapa (Cenário de Exceção). Não quer marcar? Clique em <strong>Pular</strong> e a spec nasce solta à direita do elemento.' },
+      { text: 'Sem marcar posição, arraste o card pra onde quiser depois e use <strong>Travar especificação</strong> no menu "..." para concluir: a linha guia é recalculada automaticamente a partir de onde o card ficou. Mesma letra empilha verticalmente; letra diferente abre nova coluna.' },
       { text: 'No cabeçalho de cada grupo, você pode <strong>nomear o grupo</strong>, <strong>ocultar as linhas</strong> de conexão, <strong>ocultar o grupo</strong> inteiro, ou usar o menu "..." para travar/destravar e excluir o grupo todo.' },
       { text: 'Para cenários alternativos, expanda uma spec e clique em <strong>+ Exceção</strong> — Erro, Sucesso, Alerta ou Confirmação.' }
     ]
@@ -199,7 +199,9 @@ function openOnboarding(toolKey, { markSeenOnOpen = false } = {}) {
   const tool = ONBOARDING_TOOLS[toolKey];
   if (!tool) return;
   _onboardingCurrentTool = toolKey;
-  _onboardingCurrentStep = 0;
+  // -1 é a tela de "propósito" (para que serve), exibida sozinha antes do
+  // Passo 1 -- só existe quando a ferramenta tem tool.purpose cadastrado.
+  _onboardingCurrentStep = tool.purpose ? -1 : 0;
   const banner = document.getElementById(`onboarding-banner-${toolKey}`);
   if (banner) banner.classList.add('hidden');
   if (markSeenOnOpen) markOnboardingSeen(toolKey);
@@ -277,12 +279,28 @@ function _renderOnboardingModal() {
   const footer = document.getElementById('onboarding-modal-footer');
   if (!body || !footer) return;
 
+  if (_onboardingCurrentStep === -1) {
+    // Tela de propósito: sozinha, sem numeração "Passo N de M" (não é um
+    // passo do stepper) -- só "para que serve" e um Próximo que avança pro
+    // Passo 1. Mesmo layout pras ferramentas 'single' e 'stepper'.
+    body.innerHTML = `
+      <div class="rounded-xl p-3.5" style="background-color:${tool.color}0d">
+        <p class="text-[13px] text-slate-700 dark:text-white leading-relaxed">${tool.purpose}</p>
+      </div>
+    `;
+    footer.innerHTML = `
+      <button type="button" onclick="closeOnboarding()" class="px-4 py-2 text-slate-500 dark:text-dark-muted font-bold text-[12px] rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Pular</button>
+      <button type="button" onclick="_onboardingStep(1)" class="px-6 py-2 text-white font-bold text-[12px] rounded-xl transition-all" style="background-color:${tool.color}">Próximo</button>
+    `;
+    _refreshIcons();
+    return;
+  }
+
   if (isStepper) {
     const step = tool.steps[_onboardingCurrentStep];
     const isLast = _onboardingCurrentStep === tool.steps.length - 1;
     const isFirst = _onboardingCurrentStep === 0;
     body.innerHTML = `
-      ${_onboardingPurposeHTML(tool)}
       <div class="flex items-center justify-center gap-1.5 mb-4">
         ${tool.steps.map((_, i) => `<span class="h-1.5 rounded-full transition-all ${i === _onboardingCurrentStep ? 'w-6' : 'w-1.5'}" style="background-color:${i <= _onboardingCurrentStep ? tool.color : '#e2e8f0'}"></span>`).join('')}
       </div>
@@ -291,16 +309,16 @@ function _renderOnboardingModal() {
       <p class="text-[13px] text-slate-700 dark:text-white leading-relaxed">${step.text}</p>
       ${_onboardingReferenceHTML(tool.reference)}
     `;
+    const showBack = !isFirst || !!tool.purpose;
     footer.innerHTML = `
       <button type="button" onclick="closeOnboarding()" class="px-4 py-2 text-slate-500 dark:text-dark-muted font-bold text-[12px] rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Pular</button>
       <div class="flex items-center gap-2">
-        ${isFirst ? '' : '<button type="button" onclick="_onboardingStep(-1)" class="px-4 py-2 text-slate-600 dark:text-dark-muted font-bold text-[12px] rounded-xl border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Voltar</button>'}
+        ${showBack ? '<button type="button" onclick="_onboardingStep(-1)" class="px-4 py-2 text-slate-600 dark:text-dark-muted font-bold text-[12px] rounded-xl border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Voltar</button>' : ''}
         <button type="button" onclick="${isLast ? 'closeOnboarding()' : '_onboardingStep(1)'}" class="px-6 py-2 text-white font-bold text-[12px] rounded-xl transition-all" style="background-color:${tool.color}">${isLast ? 'Concluir' : 'Próximo'}</button>
       </div>
     `;
   } else {
     body.innerHTML = `
-      ${_onboardingPurposeHTML(tool)}
       <ol class="space-y-3 list-none">
         ${tool.steps.map((s, i) => `
           <li class="flex gap-2.5">
@@ -315,7 +333,7 @@ function _renderOnboardingModal() {
       ${_onboardingReferenceHTML(tool.reference)}
     `;
     footer.innerHTML = `
-      <div></div>
+      ${tool.purpose ? '<button type="button" onclick="_onboardingStep(-1)" class="px-4 py-2 text-slate-600 dark:text-dark-muted font-bold text-[12px] rounded-xl border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Voltar</button>' : '<div></div>'}
       <button type="button" onclick="closeOnboarding()" class="px-6 py-2 text-white font-bold text-[12px] rounded-xl transition-all" style="background-color:${tool.color}">Entendi</button>
     `;
   }
@@ -325,7 +343,9 @@ function _renderOnboardingModal() {
 function _onboardingStep(delta) {
   const tool = ONBOARDING_TOOLS[_onboardingCurrentTool];
   if (!tool) return;
-  _onboardingCurrentStep = Math.max(0, Math.min(tool.steps.length - 1, _onboardingCurrentStep + delta));
+  const minStep = tool.purpose ? -1 : 0;
+  const maxStep = tool.format === 'stepper' ? tool.steps.length - 1 : 0;
+  _onboardingCurrentStep = Math.max(minStep, Math.min(maxStep, _onboardingCurrentStep + delta));
   _renderOnboardingModal();
 }
 window._onboardingStep = _onboardingStep;

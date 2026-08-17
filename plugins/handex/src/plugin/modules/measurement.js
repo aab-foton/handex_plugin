@@ -25,16 +25,22 @@
         const hideAllBtn = document.getElementById('btn-hide-all-measures');
         const collapseBtn = document.querySelector('#view-measurement [data-collapse-toggle]');
         const finalizeWrap = document.getElementById('btn-finalize-measurements-wrap');
+        const sectionTitle = document.getElementById('measures-section-title');
         if (data && data.length > 0) {
           if (exportBtn) exportBtn.classList.remove('hidden');
           if (hideAllBtn) hideAllBtn.classList.remove('hidden');
           if (collapseBtn) collapseBtn.classList.remove('hidden');
           if (finalizeWrap) finalizeWrap.classList.remove('hidden');
+          if (sectionTitle) {
+            sectionTitle.classList.remove('hidden');
+            sectionTitle.textContent = `Medidas Inseridas (${data.length})`;
+          }
         } else {
           if (exportBtn) exportBtn.classList.add('hidden');
           if (hideAllBtn) hideAllBtn.classList.add('hidden');
           if (collapseBtn) collapseBtn.classList.add('hidden');
           if (finalizeWrap) finalizeWrap.classList.add('hidden');
+          if (sectionTitle) sectionTitle.classList.add('hidden');
         }
       }
 

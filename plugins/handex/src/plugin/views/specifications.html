@@ -7,15 +7,15 @@
             <i data-lucide="arrow-left" class="w-4 h-4 text-white" aria-hidden="true"></i>
           </button>
           <h2 class="text-white font-bold text-[18px] truncate min-w-0">Anotar Specs</h2>
-          <button type="button" onclick="openHelp()"
-            class="w-4 h-4 flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
-            title="Ver guia de categorias" aria-label="Ver guia de categorias de especificação">
-            <i data-lucide="circle-help" class="w-3.5 h-3.5"></i>
-          </button>
           <button type="button" onclick="openOnboarding('specs')"
             class="w-4 h-4 flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
             title="Como funciona esta ferramenta" aria-label="Como funciona esta ferramenta">
             <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i>
+          </button>
+          <button type="button" onclick="openHelp()"
+            class="w-4 h-4 flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
+            title="Ver guia de categorias" aria-label="Ver guia de categorias de especificação">
+            <i data-lucide="circle-help" class="w-3.5 h-3.5"></i>
           </button>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
@@ -30,9 +30,10 @@
       <div id="specs-scroll-container" class="flex-1 overflow-y-auto pt-3 px-4 pb-4" onscroll="handleScroll(this)">
         <div class="space-y-4 w-full mx-auto">
 
-          <!-- Recolher/expandir todos -- label aberta, sem ícone; logo
-               abaixo do header, acima da lista de cards. -->
-          <div class="flex justify-end">
+          <!-- Título da seção + Recolher/expandir todos -- logo abaixo do
+               header, acima da lista de cards. -->
+          <div class="flex items-center justify-between">
+            <p id="specs-section-title" class="hidden text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Specs Criadas</p>
             <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('specs-scroll-container'))"
               class="hidden text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors">
               Recolher todos
