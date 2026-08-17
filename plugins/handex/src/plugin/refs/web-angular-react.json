@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Web Angular & React",
     "figmaFileKey": "8QvOeTODSBi3PquJT5CISP",
-    "exportedAt": "2026-07-24T19:58:17.105Z",
+    "exportedAt": "2026-08-17T09:40:22.768Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -4320,18 +4320,6 @@
       "name": "variant=highlight, application=on light, size=small",
       "description": "",
       "containingFrame": "[dsc] Tag"
-    },
-    {
-      "key": "06327938064bad4b149efe02f8dd402a9037ebe6",
-      "name": "variant=default",
-      "description": "",
-      "containingFrame": "Componentes"
-    },
-    {
-      "key": "3c7acbc4e99ceb08c059f003fd16ed918da559dd",
-      "name": "variant=empty",
-      "description": "",
-      "containingFrame": "Componentes"
     },
     {
       "key": "037c74f69ae02457a05c532446431b5ce309538d",
@@ -10466,12 +10454,6 @@
       "containingFrame": "[dsc] Dialog"
     },
     {
-      "key": "b1e25b0f2b210765e938ebf5542d74311fed5d07",
-      "name": "[dsc-tc] Card List Template",
-      "description": "O Card List Template ajuda a pessoa usuária a navegar, comparar e explorar conjuntos de informações de forma visual por meio de listas em grid ou verticalmente alinhadas.",
-      "containingFrame": "Componentes"
-    },
-    {
       "key": "e3b448d4e25f668d1f9deaaa3600264ba3aaa957",
       "name": "size=large",
       "description": "",
@@ -11376,6 +11358,72 @@
       "name": "variant=exposed",
       "description": "",
       "containingFrame": "[dsc] Breadcrumb"
+    },
+    {
+      "key": "6103be3ad361fa5f71bc32758e28501cbfedf663",
+      "name": "background=white, size=large",
+      "description": "",
+      "containingFrame": "Subcomponentes"
+    },
+    {
+      "key": "7a3686869996d2027173cca278cc68cd1df42443",
+      "name": "background=white, size=medium",
+      "description": "",
+      "containingFrame": "Subcomponentes"
+    },
+    {
+      "key": "fe5a21e00a10462e422a63285925de0d59c5171c",
+      "name": "background=gray, size=large",
+      "description": "",
+      "containingFrame": "Subcomponentes"
+    },
+    {
+      "key": "7c7a2c46b22c7bf257375257e1b16fdcff19f451",
+      "name": "background=gray, size=medium",
+      "description": "",
+      "containingFrame": "Subcomponentes"
+    },
+    {
+      "key": "b321a1815d4f890f43c12c9c7332649b6079feb3",
+      "name": "background=white, size=extra small",
+      "description": "",
+      "containingFrame": "Subcomponentes"
+    },
+    {
+      "key": "5001f2a9458e1c726cadac046c086621c8c29ba6",
+      "name": "background=white, size=small",
+      "description": "",
+      "containingFrame": "Subcomponentes"
+    },
+    {
+      "key": "31a9cd8bf935c687f26cd0fdc8237bf41c886973",
+      "name": "background=gray, size=small",
+      "description": "",
+      "containingFrame": "Subcomponentes"
+    },
+    {
+      "key": "b69c9e1fd33b89a0fe273fa2321328a68f558ff7",
+      "name": "background=gray, size=extra small",
+      "description": "",
+      "containingFrame": "Subcomponentes"
+    },
+    {
+      "key": "06327938064bad4b149efe02f8dd402a9037ebe6",
+      "name": "variant=default",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "3c7acbc4e99ceb08c059f003fd16ed918da559dd",
+      "name": "variant=empty",
+      "description": "",
+      "containingFrame": "Componentes"
+    },
+    {
+      "key": "b1e25b0f2b210765e938ebf5542d74311fed5d07",
+      "name": "[dsc-tc] Card List Template",
+      "description": "O Card List Template ajuda a pessoa usuária a navegar, comparar e explorar conjuntos de informações de forma visual por meio de listas em grid ou verticalmente alinhadas.",
+      "containingFrame": "Componentes"
     }
   ],
   "spacing": [],
