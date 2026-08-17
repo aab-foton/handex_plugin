@@ -9,7 +9,7 @@
 //   - categorias customizadas (saveCategories, renderCategoryDropdown, renderCategoryList, toggleCategoryManager, addCategory, deleteCategory, renameCategory)
 //   - render no plugin (renderSpecsList)
 //   - exportação (exportSpecsToMd)
-//   - fluxos (selectFlowType, openFlowFormModal, confirmFlowConnection, switchSpecTab, renderFlowsList, renameFlow, toggleFlowVisibility, createLegend)
+//   - fluxos (selectFlowType, openFlowFormModal, confirmFlowConnection, switchSpecTab, renderFlowsList, openEditFlowModal, toggleFlowVisibility, createLegend)
 //   - manipulação de nós (hideNode, deleteNode)
 //   - executeUnifiedSpec, toggleLinkInput, toggleAllSpecProperties, toggleAllAnnotationProps, togglePropGroup
 //
@@ -636,7 +636,7 @@
           item.innerHTML = `
             <div class="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-dark-surface" style="background-color:${color}"></div>
             ${pendingBarHtml}
-            <div class="flex items-center px-2 py-1.5 gap-1.5 cursor-pointer select-none" onclick="toggleSpecDetails('${detailsId}')">
+            <div role="button" tabindex="0" class="flex items-center px-2 py-1.5 gap-1.5 cursor-pointer select-none" onclick="toggleSpecDetails('${detailsId}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===event.currentTarget){event.preventDefault();toggleSpecDetails('${detailsId}');}" aria-label="Expandir/recolher detalhes da especificação ${escapeHtml(spec.name || '')}">
               <div class="w-4 h-4 rounded flex items-center justify-center text-[8px] font-extrabold text-white shrink-0" style="background-color:${color}">${letter}</div>
               <div class="flex-1 min-w-0">
                 <input type="text" id="spec-title-${frameId}-${spec._idx}" value="${(spec.name || '').replace(/"/g, '&quot;')}"
@@ -817,7 +817,7 @@
       const idx = window._editingSpecNoteIdx;
       if (typeof idx !== 'number' || !createdSpecs[idx]) return;
       const textarea = document.getElementById('spec-note-textarea');
-      createdSpecs[idx].note = textarea ? textarea.value.trim() : '';
+      createdSpecs[idx].note = textarea ? textarea.value.trim().slice(0, 500) : '';
       saveSpecsToStorage();
       window._expandSpecIdAfterRender = createdSpecs[idx].id;
       if (createdSpecs[idx].id) {
@@ -965,7 +965,20 @@
       if (!spec || !spec.id) return;
       const isNowUnlocked = spec.locked !== false;
       spec.locked = isNowUnlocked ? false : true;
-      parent.postMessage({ pluginMessage: { type: 'unlock-spec-group', specIds: [spec.id], locked: !isNowUnlocked } }, '*');
+      // Travando de volta (willLock=true): manda targetNodeId/color pra
+      // backend recalcular o lado da linha a partir de onde o card
+      // REALMENTE ficou depois de arrastado (ver _computeSideFromBounds em
+      // code.js) -- sem lado escolhido antes de saber onde ia parar.
+      const willLock = !isNowUnlocked;
+      parent.postMessage({
+        pluginMessage: {
+          type: 'unlock-spec-group',
+          specIds: [spec.id],
+          locked: !isNowUnlocked,
+          targetNodeId: willLock ? spec.targetNodeId : undefined,
+          color: willLock ? spec.color : undefined
+        }
+      }, '*');
       saveSpecsToStorage();
       renderSpecsList();
       showToast(isNowUnlocked
@@ -973,6 +986,12 @@
         : 'Especificação travada novamente.');
     }
     window.toggleSpecLock = toggleSpecLock;
+
+    // true assim que o usuário troca o estilo manualmente nesse modal --
+    // mesmo espírito de _flowConnectorStyleManuallySet (fluxos): a sugestão
+    // automática (chega depois, via spec-connector-bounds) só se aplica se
+    // ele não tiver decidido antes dela chegar.
+    let _editSpecConnectorStyleManuallySet = false;
 
     function openEditSpecConnectorModal(originalIndex) {
       const spec = createdSpecs[originalIndex];
@@ -988,8 +1007,29 @@
       if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> Salvar'; }
       openModal('edit-spec-connector-modal');
       _refreshIcons();
+      // Pede os bounds atuais (elemento + card já no canvas) pra sugerir
+      // Reta/Angular -- só na edição, ver comentário do handler no backend
+      // (get-spec-connector-bounds em code.js).
+      _editSpecConnectorStyleManuallySet = false;
+      parent.postMessage({ pluginMessage: { type: 'get-spec-connector-bounds', specId: spec.id, targetNodeId: spec.targetNodeId } }, '*');
     }
     window.openEditSpecConnectorModal = openEditSpecConnectorModal;
+
+    // Chamada quando a resposta 'spec-connector-bounds' chega do backend
+    // (ver messages.js) -- aplica a sugestão só se o modal ainda estiver
+    // aberto pra essa mesma spec e o usuário não tiver escolhido manualmente
+    // enquanto a resposta viajava.
+    function _applySuggestedSpecConnectorStyle(specId, nodeBounds, cardBounds) {
+      const idx = window._editingSpecConnectorIndex;
+      if (typeof idx !== 'number') return;
+      const spec = createdSpecs[idx];
+      if (!spec || spec.id !== specId || _editSpecConnectorStyleManuallySet) return;
+      if (!nodeBounds || !cardBounds) return;
+      const suggested = _suggestConnectorStyleFromBounds(nodeBounds, cardBounds);
+      const radio = document.querySelector(`input[name="edit-spec-connector-style"][value="${suggested}"]`);
+      if (radio) radio.checked = true;
+    }
+    window._applySuggestedSpecConnectorStyle = _applySuggestedSpecConnectorStyle;
 
     function closeEditSpecConnectorModal() {
       window._editingSpecConnectorIndex = null;
@@ -1021,7 +1061,12 @@
           type: 'edit-spec-connector',
           specId: spec.id,
           targetNodeId: spec.targetNodeId,
-          guideSide: spec.guideSide || 'right',
+          // Sem guideSide explícito -- deixa o backend recalcular o lado a
+          // partir da posição REAL atual do card (ver _computeSideFromBounds
+          // em code.js), em vez de reusar o lado salvo desde a criação, que
+          // fica obsoleto assim que o card é arrastado pra longe (mesma
+          // lógica já usada em toggleSpecLock/unlock-spec-group -- editar
+          // o estilo aqui não deveria usar uma premissa diferente).
           color: spec.color || '#2e2ee0',
           connectorStyle,
           connectorCurvature
@@ -1413,7 +1458,7 @@
         : '';
 
       return `
-        <div class="col-span-2 p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#3d3dff] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" title="Focar no elemento no Figma">
+        <div role="button" tabindex="0" class="col-span-2 p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#3d3dff] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();focusNode('${item.nodeId}');}" title="Focar no elemento no Figma" aria-label="Focar em ${escapeHtml(item.name)} no Figma">
           <div class="flex items-center gap-2 mb-1 pointer-events-none">
             ${preview}
             <div class="flex-1 min-w-0">
@@ -1437,9 +1482,9 @@
       const chk = id => { const el = g(id); return el ? el.checked : false; };
       const opts = {
         category: g('ann-category').value,
-        letter: g('spec-letter-input') ? g('spec-letter-input').value : "A",
+        letter: g('spec-letter-input') ? g('spec-letter-input').value.slice(0, 8) : "A",
         link: g('spec-link-input') ? g('spec-link-input').value : "",
-        note: g('ann-note') ? g('ann-note').value : "",
+        note: g('ann-note') ? g('ann-note').value.slice(0, 500) : "",
         include: {
           height: chk('ann-height'),
           width: chk('ann-width'),
@@ -1707,24 +1752,42 @@
       const g = id => document.getElementById(id);
       const selCat = g('ann-category');
 
-      const guideSideEl = document.querySelector('input[name="guide-side"]:checked');
       const styleEl = document.querySelector('input[name="spec-connector-style"]:checked');
       const curvatureInput = g('spec-curvature-input');
 
       const opts = {
         category: selCat ? selCat.value : "",
         categoryLabel: selCat && selCat.options[selCat.selectedIndex] ? selCat.options[selCat.selectedIndex].text : "",
-        letter: g('spec-letter-input') ? g('spec-letter-input').value.toUpperCase() : "A",
+        letter: g('spec-letter-input') ? g('spec-letter-input').value.toUpperCase().slice(0, 8) : "A",
         color: g('spec-color-input') ? g('spec-color-input').value : "#2e2ee0",
         fillColor: getCategoryFill(selCat ? selCat.value : ""),
         link: g('spec-link-input') ? g('spec-link-input').value : "",
-        note: g('ann-note') ? g('ann-note').value : "",
-        guideSide: guideSideEl ? guideSideEl.value : "right",
+        note: g('ann-note') ? g('ann-note').value.slice(0, 500) : "",
+        // Sempre nasce à direita do elemento -- usuário não escolhe mais o
+        // lado antes de saber onde vai posicionar o card (ver
+        // toggleSpecLock/unlock-spec-group em code.js, que recalculam o
+        // lado real da linha a partir de onde o card fica ao ser travado).
+        // Ignorado quando pinnedPosition vem do marcador de posição (ver
+        // abaixo) -- nesse caso a spec já nasce exatamente ali.
+        guideSide: "right",
         drawConnection: g('chk-draw-connection') ? g('chk-draw-connection').checked : true,
         connectorStyle: styleEl ? styleEl.value : 'straight',
         connectorCurvature: curvatureInput ? Number(curvatureInput.value) || 0 : 0,
         properties: []
       };
+
+      // targetNodeId sempre presente (capturado na abertura do modal, ver
+      // openSpecFormModal) -- não zera aqui: markSpecPosition ainda
+      // precisa dele na etapa seguinte (Exceção, a última do fluxo).
+      // pinnedPosition só existe se o usuário já marcou a posição ANTES de
+      // avançar pra Propriedades, o que hoje não é possível (o botão só
+      // existe na última etapa) -- mantido por robustez caso isso mude.
+      if (window._pendingSpecTargetNodeId) {
+        opts.targetNodeId = window._pendingSpecTargetNodeId;
+      }
+      if (window._pendingSpecPosition) {
+        opts.pinnedPosition = window._pendingSpecPosition;
+      }
 
       const checkboxes = document.querySelectorAll('#spec-properties-list input[type="checkbox"]:checked');
       checkboxes.forEach(chk => {
@@ -1738,9 +1801,48 @@
       return opts;
     }
 
-    function advanceToSpecExceptionStep() {
+    // Propriedades -> Posição (etapa própria, ver spec-position-modal em
+    // modals.html) -- opts fica congelado aqui; markSpecPosition/
+    // finalizeSpecCreation ainda podem somar pinnedPosition depois.
+    function advanceToSpecPositionStep() {
       window._pendingSpecOpts = _collectSpecPropertiesOpts();
       closeSpecPropertiesModal();
+      openSpecPositionModal();
+    }
+    window.advanceToSpecPositionStep = advanceToSpecPositionStep;
+
+    // Chegar nesta etapa já É a ação de marcar -- sem posição ainda
+    // pendente, abre o modal (visível, ver spec-position-modal em
+    // modals.html) e já dispara markSpecPosition() direto, sem exigir um
+    // clique extra em "Marcar posição no canvas". Se o usuário já
+    // confirmou uma posição antes (ex: voltou da etapa de Exceção), só
+    // mostra o estado "confirmado" -- não recria o fantasma à toa.
+    function openSpecPositionModal() {
+      openModal('spec-position-modal');
+      if (!window._pendingSpecPosition) {
+        markSpecPosition();
+      } else {
+        _renderSpecPositionState('idle');
+      }
+    }
+
+    function backToSpecPropertiesFromPosition() {
+      closeSpecPositionModal();
+      document.getElementById('spec-properties-modal').classList.remove('hidden');
+      if (typeof _persistentFocus === 'function') {
+        _persistentFocus(document.querySelector('#spec-properties-modal ' + FOCUSABLE_SELECTOR));
+      }
+    }
+    window.backToSpecPropertiesFromPosition = backToSpecPropertiesFromPosition;
+
+    function closeSpecPositionModal() {
+      closeModal('spec-position-modal');
+    }
+    window.closeSpecPositionModal = closeSpecPositionModal;
+
+    // Posição -> Exceção (etapa final, opcional).
+    function advanceToSpecExceptionStep() {
+      closeSpecPositionModal();
       window._newSpecExceptionType = null;
       const g = id => document.getElementById(id);
       document.querySelectorAll('.new-exc-type-btn').forEach(b => b.classList.remove('border-red-300', 'border-green-300', 'border-blue-300', 'border-amber-300', 'bg-red-50', 'bg-green-50', 'bg-blue-50', 'bg-amber-50'));
@@ -1750,11 +1852,11 @@
     }
     window.advanceToSpecExceptionStep = advanceToSpecExceptionStep;
 
-    function backToSpecPropertiesFromException() {
+    function backToSpecPositionFromException() {
       closeSpecNewExceptionModal();
-      document.getElementById('spec-properties-modal').classList.remove('hidden');
+      openSpecPositionModal();
     }
-    window.backToSpecPropertiesFromException = backToSpecPropertiesFromException;
+    window.backToSpecPositionFromException = backToSpecPositionFromException;
 
     function closeSpecNewExceptionModal() {
       closeModal('spec-new-exception-modal');
@@ -1780,15 +1882,23 @@
       const opts = window._pendingSpecOpts;
       if (!opts) { closeSpecNewExceptionModal(); return; }
 
-      const titulo = document.getElementById('new-exc-titulo') ? document.getElementById('new-exc-titulo').value.trim() : '';
+      const titulo = document.getElementById('new-exc-titulo') ? document.getElementById('new-exc-titulo').value.trim().slice(0, 80) : '';
       const type = window._newSpecExceptionType;
       if (type && titulo) {
         opts.excecaoInicial = {
           tipo: type,
           titulo: titulo,
-          obs: document.getElementById('new-exc-obs') ? document.getElementById('new-exc-obs').value.trim() : ''
+          obs: document.getElementById('new-exc-obs') ? document.getElementById('new-exc-obs').value.trim().slice(0, 400) : ''
         };
       }
+
+      // pinnedPosition/targetNodeId podem ter sido definidos DEPOIS de
+      // _collectSpecPropertiesOpts já ter congelado window._pendingSpecOpts
+      // -- markSpecPosition só existe nesta última etapa (Exceção), então
+      // precisa ser lido aqui, no envio real, antes de closeSpecFormModal
+      // zerar esse estado.
+      if (window._pendingSpecPosition) opts.pinnedPosition = window._pendingSpecPosition;
+      if (window._pendingSpecTargetNodeId) opts.targetNodeId = window._pendingSpecTargetNodeId;
 
       closeSpecNewExceptionModal();
       closeSpecFormModal();
@@ -1810,6 +1920,7 @@
       const hideAllBtn = document.getElementById('btn-hide-all-specs');
       const collapseBtn = document.querySelector('#view-specifications [data-collapse-toggle]');
       const finalizeWrap = document.getElementById('btn-finalize-specs-wrap');
+      const sectionTitle = document.getElementById('specs-section-title');
 
       if (!createdSpecs || createdSpecs.length === 0) {
         list.innerHTML = `
@@ -1825,6 +1936,7 @@
         if (hideAllBtn) hideAllBtn.classList.add('hidden');
         if (collapseBtn) collapseBtn.classList.add('hidden');
         if (finalizeWrap) finalizeWrap.classList.add('hidden');
+        if (sectionTitle) sectionTitle.classList.add('hidden');
         _refreshIcons();
         return;
       }
@@ -1832,6 +1944,10 @@
       if (hideAllBtn) hideAllBtn.classList.remove('hidden');
       if (collapseBtn) collapseBtn.classList.remove('hidden');
       if (finalizeWrap) finalizeWrap.classList.remove('hidden');
+      if (sectionTitle) {
+        sectionTitle.classList.remove('hidden');
+        sectionTitle.textContent = `Specs Criadas (${createdSpecs.length})`;
+      }
 
       // Agrupar especificações por letra (Tag)
       const groupedSpecs = {};
@@ -1851,12 +1967,16 @@
         
         // Contêiner do Grupo
         const groupWrapper = document.createElement('li');
-        groupWrapper.className = 'mb-4 border-l-4 rounded-r-xl overflow-hidden bg-gray-50/30 dark:bg-slate-900/20';
+        // overflow-hidden fica só no corpo (groupContent), não aqui -- este
+        // wrapper contém o header com o menu "..." (position: absolute), e
+        // overflow-hidden aqui cortava o menu quando o accordion estava
+        // recolhido (corpo com altura mínima, pouca margem antes do corte).
+        groupWrapper.className = 'mb-4 border-l-4 rounded-r-xl bg-gray-50/30 dark:bg-slate-900/20';
         groupWrapper.style.borderColor = groupColor;
 
         // Cabeçalho do Grupo — nome, ações e chevron na mesma linha
         const groupHeader = document.createElement('div');
-        groupHeader.className = 'p-3 flex items-center gap-2 bg-gray-100/50 dark:bg-slate-800/50';
+        groupHeader.className = 'p-3 flex items-center gap-2 bg-gray-100/50 dark:bg-slate-800/50 rounded-tr-xl';
 
         const headerInfo = document.createElement('div');
         headerInfo.className = 'flex items-center gap-3 cursor-pointer flex-1 overflow-hidden min-w-0';
@@ -1888,6 +2008,7 @@
           const input = document.createElement('input');
           input.type = 'text';
           input.value = currentVal;
+          input.maxLength = 24;
           input.className = 'text-[12px] font-bold text-slate-800 dark:text-white bg-white dark:bg-slate-700 border border-blue-400 rounded px-1 w-full outline-none';
           
           titleSpan.parentElement.replaceWith(input);
@@ -1899,7 +2020,9 @@
           const saveNewName = () => {
             if (isFinalized) return;
             isFinalized = true;
-            const newVal = input.value.trim() || `Grupo Tag ${letter}`;
+            // maxlength=24 no HTML não protege contra paste -- trunca de
+            // novo aqui, mesmo padrão usado nos outros campos do plugin.
+            const newVal = input.value.trim().slice(0, 24) || `Grupo Tag ${letter}`;
             if (!handoffData.tagNames) handoffData.tagNames = {};
             handoffData.tagNames[letter] = newVal;
             saveToStorage();
@@ -1923,7 +2046,8 @@
         };
 
         const groupContent = document.createElement('ul');
-        groupContent.className = 'p-2 space-y-2';
+        groupContent.setAttribute('data-accordion-content', '');
+        groupContent.className = 'p-2 space-y-2 rounded-br-xl overflow-hidden';
 
         // Lógica de toggle do Grupo (Acordeão Pai)
         headerInfo.onclick = () => {
@@ -1933,27 +2057,17 @@
         };
 
         const groupActionsRow = document.createElement('div');
-        groupActionsRow.className = 'flex items-center gap-1 shrink-0';
+        groupActionsRow.className = 'flex items-center gap-2 shrink-0';
 
-        // Menu "..." (overflow) do grupo — ações de acabamento do canvas,
-        // usadas raramente (uma vez por grupo), separadas da ação de
-        // mostrar/ocultar (a única que fica sempre visível na fileira).
-        const groupMenuWrap = document.createElement('div');
-        groupMenuWrap.className = 'relative shrink-0';
-        const groupMenuBtn = document.createElement('button');
-        groupMenuBtn.type = 'button';
-        groupMenuBtn.title = 'Mais ações do grupo';
-        groupMenuBtn.setAttribute('aria-label', 'Mais ações do grupo');
-        groupMenuBtn.className = 'p-2 hover:bg-white/50 dark:hover:bg-slate-700 rounded-lg transition-colors shrink-0 text-gray-500 dark:text-dark-muted';
-        groupMenuBtn.innerHTML = '<i data-lucide="more-horizontal" class="w-4 h-4"></i>';
-        const groupMenuPanel = document.createElement('div');
-        groupMenuPanel.className = 'hidden absolute right-0 top-full mt-1 z-20 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-xl shadow-lg py-1 min-w-[180px]';
-
+        // Ícones diretos na fileira -- eram um menu "..." (dropdown), mas
+        // com só 2 ações não justificava o clique extra de abrir o menu.
         const groupLinesBtn = document.createElement('button');
         groupLinesBtn.type = 'button';
         const isLinesHidden = handoffData.specLinesVisible && handoffData.specLinesVisible[letter] === false;
-        groupLinesBtn.className = 'w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-line/20 transition-colors text-left';
-        groupLinesBtn.innerHTML = `<i data-lucide="spline" class="w-3.5 h-3.5 shrink-0"></i><span>${isLinesHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo'}</span>`;
+        groupLinesBtn.title = isLinesHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo';
+        groupLinesBtn.setAttribute('aria-label', groupLinesBtn.title);
+        groupLinesBtn.className = 'p-2 hover:bg-white/50 dark:hover:bg-slate-700 rounded-lg transition-colors shrink-0 text-gray-500 dark:text-dark-muted';
+        groupLinesBtn.innerHTML = '<i data-lucide="spline" class="w-3.5 h-3.5"></i>';
 
         groupLinesBtn.onclick = (e) => {
           e.stopPropagation();
@@ -1963,19 +2077,18 @@
           const specIds = specs.filter(s => s.id).map(s => s.id);
           parent.postMessage({ pluginMessage: { type: 'hide-spec-lines', specIds, forceState: !nowHidden } }, '*');
           saveSpecsToStorage();
-          groupLinesBtn.querySelector('span').textContent = nowHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo';
-          groupMenuPanel.classList.add('hidden');
-          _refreshIcons();
+          groupLinesBtn.title = nowHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo';
+          groupLinesBtn.setAttribute('aria-label', groupLinesBtn.title);
         };
-        groupMenuPanel.appendChild(groupLinesBtn);
 
         const groupDeleteBtn = document.createElement('button');
         groupDeleteBtn.type = 'button';
-        groupDeleteBtn.className = 'w-full flex items-center gap-2 px-3 py-2 mt-1 pt-2 border-t border-gray-100 dark:border-dark-line text-[11px] font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left';
-        groupDeleteBtn.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5 shrink-0"></i><span>Excluir grupo completo</span>';
+        groupDeleteBtn.title = 'Excluir grupo completo';
+        groupDeleteBtn.setAttribute('aria-label', 'Excluir grupo completo');
+        groupDeleteBtn.className = 'p-2 rounded-lg text-gray-500 dark:text-dark-muted hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shrink-0';
+        groupDeleteBtn.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>';
         groupDeleteBtn.onclick = (e) => {
           e.stopPropagation();
-          groupMenuPanel.classList.add('hidden');
           const confirmed = window.confirm(`Excluir o grupo "${currentGroupName}" e suas ${specs.length} especificação(ões)? Essa ação não pode ser desfeita.`);
           if (!confirmed) return;
           specs.forEach(s => {
@@ -1988,16 +2101,6 @@
           saveSpecsToStorage();
           renderSpecsList();
         };
-        groupMenuPanel.appendChild(groupDeleteBtn);
-
-        groupMenuBtn.onclick = (e) => {
-          e.stopPropagation();
-          document.querySelectorAll('.spec-overflow-menu-panel').forEach(p => { if (p !== groupMenuPanel) p.classList.add('hidden'); });
-          groupMenuPanel.classList.toggle('hidden');
-        };
-        groupMenuPanel.className += ' spec-overflow-menu-panel';
-        groupMenuWrap.appendChild(groupMenuBtn);
-        groupMenuWrap.appendChild(groupMenuPanel);
 
         const groupVisBtn = document.createElement('button');
         groupVisBtn.type = 'button';
@@ -2042,25 +2145,42 @@
           updateHideAllSpecsButtonState();
         };
 
+        // Wrapper clicável estável (nunca recriado pelo Lucide) em volta só
+        // do ícone -- <i data-lucide> vira <svg> a cada _refreshIcons(), e
+        // um onclick preso direto nele morre nessa troca. Fica visualmente
+        // por último (depois de menu/olho), mas clicável, chamando o mesmo
+        // toggle de headerInfo.onclick.
+        const groupChevronBtn = document.createElement('button');
+        groupChevronBtn.type = 'button';
+        groupChevronBtn.title = 'Expandir/recolher grupo';
+        groupChevronBtn.setAttribute('aria-label', 'Expandir/recolher grupo');
+        groupChevronBtn.className = 'p-1 shrink-0';
+        groupChevronBtn.onclick = () => headerInfo.onclick();
         const groupChevron = document.createElement('i');
         groupChevron.setAttribute('data-lucide', 'chevron-down');
         groupChevron.className = 'w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform group-chevron shrink-0';
+        groupChevronBtn.appendChild(groupChevron);
 
-        groupActionsRow.appendChild(groupMenuWrap);
+        groupActionsRow.appendChild(groupLinesBtn);
         groupActionsRow.appendChild(groupVisBtn);
+        groupActionsRow.appendChild(groupDeleteBtn);
+        groupActionsRow.appendChild(groupChevronBtn);
         groupHeader.appendChild(headerInfo);
         groupHeader.appendChild(groupActionsRow);
-        groupHeader.appendChild(groupChevron);
 
         specs.forEach((spec) => {
           const section = document.createElement('li');
-          section.className = 'bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg shadow-sm overflow-hidden';
+          // overflow-hidden fica só no corpo (content, abaixo), não aqui --
+          // este <li> contém o header com o menu "..." (position: absolute,
+          // specMenuPanel), e overflow-hidden aqui cortava o menu quando o
+          // accordion do item estava recolhido.
+          section.className = 'bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-lg shadow-sm';
           if (spec.id) {
             section.setAttribute('data-spec-id', spec.id);
           }
 
           const header = document.createElement("div");
-          header.className = "flex items-center gap-1 p-2 bg-white dark:bg-slate-800";
+          header.className = "flex items-center gap-1 p-2 bg-white dark:bg-slate-800 rounded-lg";
 
           const btn = document.createElement("div");
           btn.setAttribute('role', 'button');
@@ -2080,19 +2200,21 @@
           btn.onclick = toggleSpecContent;
           btn.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSpecContent(); } };
 
+          // Tag de categoria (spec.category/categoryLabel) fica só na linha
+          // de baixo, como chip -- antes duplicava a mesma informação ao
+          // lado do título (spec.type é sempre igual a categoryLabel, ver
+          // backend em create-unified-spec) e de novo embaixo em texto
+          // plano.
           const _ccSpec = spec.category ? _getCatColor(spec.category) : null;
           btn.innerHTML = `
             <div class="flex flex-col overflow-hidden min-w-0 text-left gap-0.5">
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="text-[12px] font-bold text-slate-800 dark:text-white truncate" title="${spec.name}">${spec.name}</span>
-                ${spec.category && _ccSpec ? `<span class="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full border" style="background-color:${_ccSpec.fill};border-color:${_ccSpec.stroke};color:${_ccSpec.stroke};">${spec.categoryLabel || spec.category}</span>` : ''}
-              </div>
-              <span class="text-[10px] text-slate-500 dark:text-dark-muted truncate">${spec.type || ''}</span>
+              <span class="text-[12px] font-bold text-slate-800 dark:text-white truncate" title="${spec.name}">${spec.name}</span>
+              ${spec.category && _ccSpec ? `<span class="shrink-0 self-start text-[9px] font-bold px-1.5 py-0.5 rounded-full border" style="background-color:${_ccSpec.fill};border-color:${_ccSpec.stroke};color:${_ccSpec.stroke};">${spec.categoryLabel || spec.category}</span>` : ''}
             </div>
           `;
 
           const actions = document.createElement("div");
-          actions.className = "flex items-center gap-0.5 shrink-0";
+          actions.className = "flex items-center gap-2 shrink-0";
 
           const visBtn = document.createElement("button");
           visBtn.type = "button";
@@ -2132,9 +2254,15 @@
             updateHideAllSpecsButtonState();
           };
 
-          // Menu "..." (overflow) do item — ações de configuração fina do
-          // conector (travar posição, editar estilo da linha), usadas com
-          // pouca frequência dentro do fluxo principal de documentar specs.
+          // Menu "..." (overflow) do item — Travar/Destravar e Editar
+          // estilo da linha, ambas configuração pontual (afetam
+          // apresentação/estado, não conteúdo) usadas com pouca frequência.
+          // Excluir fica FORA do menu, como ícone direto: é ação frequente
+          // num fluxo de documentação (specs viram obsoletas e são
+          // descartadas o tempo todo), e escondê-la não reduziria risco
+          // real -- a única proteção em ambos os casos é o window.confirm()
+          // nativo, sem guard extra. Mesmo padrão do card de grupo acima
+          // (groupActionsRow), que também trata exclusão como ação direta.
           const specMenuWrap = document.createElement('div');
           specMenuWrap.className = 'relative shrink-0';
           const specMenuBtn = document.createElement('button');
@@ -2196,21 +2324,10 @@
           delBtn.setAttribute("aria-label", "Excluir especificação");
           delBtn.className = "p-2 rounded-lg text-gray-500 dark:text-dark-muted hover:text-red-500 transition-colors";
           delBtn.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>';
-          let _delConfirmTimeout = null;
           delBtn.onclick = (e) => {
             e.stopPropagation();
-            if (!delBtn.classList.contains('confirm-delete')) {
-              delBtn.classList.add('confirm-delete', 'text-red-500', 'bg-red-50', 'dark:bg-red-900/20');
-              delBtn.title = "Clique novamente para confirmar a exclusão";
-              delBtn.setAttribute("aria-label", delBtn.title);
-              _delConfirmTimeout = setTimeout(() => {
-                delBtn.classList.remove('confirm-delete', 'text-red-500', 'bg-red-50', 'dark:bg-red-900/20');
-                delBtn.title = "Excluir Especificação";
-                delBtn.setAttribute("aria-label", delBtn.title);
-              }, 3000);
-              return;
-            }
-            clearTimeout(_delConfirmTimeout);
+            const confirmed = window.confirm('Excluir esta especificação? Essa ação não pode ser desfeita.');
+            if (!confirmed) return;
             if (spec.id) {
               parent.postMessage({ pluginMessage: { type: 'delete-node', id: spec.id } }, '*');
             }
@@ -2224,19 +2341,30 @@
           actions.appendChild(delBtn);
           actions.appendChild(specMenuWrap);
 
+          // Último ícone da fileira de ações (depois de olho/lixeira/menu),
+          // não colado ao título -- wrapper clicável próprio (não solto
+          // como <i> puro) porque o Lucide recria <i data-lucide> como
+          // <svg> a cada _refreshIcons(), descartando onclick preso direto
+          // nele. Chama o mesmo toggle de btn.onclick.
+          const specChevronBtn = document.createElement('button');
+          specChevronBtn.type = 'button';
+          specChevronBtn.title = 'Expandir/recolher';
+          specChevronBtn.setAttribute('aria-label', 'Expandir/recolher especificação');
+          specChevronBtn.className = 'p-2 rounded-lg text-gray-500 dark:text-dark-muted hover:bg-blue-50 dark:hover:bg-slate-600 transition-colors shrink-0';
+          specChevronBtn.onclick = (e) => { e.stopPropagation(); toggleSpecContent(); };
           const specChevron = document.createElement('i');
           specChevron.setAttribute('data-lucide', 'chevron-down');
-          specChevron.className = 'w-3.5 h-3.5 text-gray-500 dark:text-dark-muted transition-transform shrink-0 cursor-pointer';
-          specChevron.onclick = toggleSpecContent;
+          specChevron.className = 'w-3.5 h-3.5 text-gray-500 dark:text-dark-muted transition-transform shrink-0';
+          specChevronBtn.appendChild(specChevron);
+          actions.appendChild(specChevronBtn);
 
           header.appendChild(btn);
           header.appendChild(actions);
-          header.appendChild(specChevron);
           section.appendChild(header);
 
           const content = document.createElement("div");
           content.id = "content-" + spec.id;
-          content.className = "hidden p-3 border-t border-gray-50 dark:border-dark-line bg-gray-50/30 dark:bg-slate-900/50 space-y-2";
+          content.className = "hidden p-3 border-t border-gray-50 dark:border-dark-line bg-gray-50/30 dark:bg-slate-900/50 space-y-2 rounded-b-lg overflow-hidden";
           
           if (spec.note) {
             const noteRow = document.createElement('div');
@@ -2471,26 +2599,42 @@
     // perpendiculares, 2 dobras (Z/U) quando são paralelos (mesma direção
     // ou opostos), usando o mesmo offset mínimo de 24px "por fora" dos dois
     // pontos. Só entra em jogo quando o estilo "Angular" está selecionado.
+    // Espelha _orthogonalElbowPoints (code.js) -- mesmo algoritmo de
+    // roteamento ortogonal usado na hora de desenhar a linha real no
+    // canvas, pro preview do mini-mapa não mostrar um traçado diferente do
+    // resultado final. Ver comentário completo em code.js: avança um
+    // trecho fixo na direção do lado de cada ponto (garante saída/entrada
+    // sempre retas), depois conecta os pontos avançados com 0, 1 ou 2
+    // dobras conforme a posição relativa real.
     function _computeElbowPoints(from, to) {
       if (!from.side || !to.side) return [];
-      const aVertical = from.side === 'top' || from.side === 'bottom';
-      const bVertical = to.side === 'top' || to.side === 'bottom';
-      if (aVertical !== bVertical) {
-        return [aVertical ? { x: to.x, y: from.y } : { x: from.x, y: to.y }];
+      const OFFSET = 24;
+      const dirOf = (side) => ({
+        top: { x: 0, y: -1 }, bottom: { x: 0, y: 1 },
+        left: { x: -1, y: 0 }, right: { x: 1, y: 0 }
+      })[side];
+      const dirA = dirOf(from.side), dirB = dirOf(to.side);
+      const aPrime = { x: from.x + dirA.x * OFFSET, y: from.y + dirA.y * OFFSET };
+      const bPrime = { x: to.x + dirB.x * OFFSET, y: to.y + dirB.y * OFFSET };
+
+      const points = [aPrime];
+      const aVertical = dirA.x === 0;
+      const bVertical = dirB.x === 0;
+
+      if (Math.abs(aPrime.x - bPrime.x) < 0.01 || Math.abs(aPrime.y - bPrime.y) < 0.01) {
+        // Já alinhados -- sem dobra entre aPrime/bPrime.
+      } else if (aVertical !== bVertical) {
+        const corner = aVertical ? { x: bPrime.x, y: aPrime.y } : { x: aPrime.x, y: bPrime.y };
+        points.push(corner);
+      } else if (aVertical) {
+        const midY = dirA.y > 0 ? Math.max(aPrime.y, bPrime.y) : Math.min(aPrime.y, bPrime.y);
+        points.push({ x: aPrime.x, y: midY }, { x: bPrime.x, y: midY });
+      } else {
+        const midX = dirA.x > 0 ? Math.max(aPrime.x, bPrime.x) : Math.min(aPrime.x, bPrime.x);
+        points.push({ x: midX, y: aPrime.y }, { x: midX, y: bPrime.y });
       }
-      const OFFSET_MIN = 24;
-      if (aVertical) {
-        const offsetY = Math.max(OFFSET_MIN, Math.abs(to.y - from.y) / 2);
-        const y1 = from.side === 'bottom' ? from.y + offsetY : from.y - offsetY;
-        const y2 = to.side === 'bottom' ? to.y + offsetY : to.y - offsetY;
-        const midY = from.side === 'bottom' ? Math.max(y1, y2) : Math.min(y1, y2);
-        return [{ x: from.x, y: midY }, { x: to.x, y: midY }];
-      }
-      const offsetX = Math.max(OFFSET_MIN, Math.abs(to.x - from.x) / 2);
-      const x1 = from.side === 'right' ? from.x + offsetX : from.x - offsetX;
-      const x2 = to.side === 'right' ? to.x + offsetX : to.x - offsetX;
-      const midX = from.side === 'right' ? Math.max(x1, x2) : Math.min(x1, x2);
-      return [{ x: midX, y: from.y }, { x: midX, y: to.y }];
+      points.push(bPrime);
+      return points;
     }
 
     function _flowNearestPoint(pA, pointsB) {
@@ -2502,10 +2646,52 @@
       return best;
     }
 
+    // Sugere Reta ou Angular a partir da posição relativa dos dois PRIMEIROS
+    // elementos da seleção -- usado tanto no modal de fluxo quanto no de
+    // spec (ver _suggestConnectorStyleFromBounds abaixo, mesma lógica com
+    // bounds já resolvidos em vez de nodes com x/y/width/height). Regra:
+    // compara o desvio no eixo PERPENDICULAR à direção dominante contra a
+    // distância total nesse eixo -- se os elementos estão bem alinhados
+    // (desvio pequeno), uma reta já fica limpa; se estão desalinhados/em
+    // diagonal, a reta cruzaria num ângulo confuso e o Angular (quinas de
+    // 90°) organiza melhor. Limiar de 20% escolhido por ser permissivo o
+    // bastante pra pequenos desalinhamentos (ex: cards quase alinhados mas
+    // não perfeitamente) ainda sugerirem reta.
+    function _suggestConnectorStyleFromBounds(boundsA, boundsB) {
+      if (!boundsA || !boundsB) return 'straight';
+      const cAx = boundsA.x + boundsA.width / 2, cAy = boundsA.y + boundsA.height / 2;
+      const cBx = boundsB.x + boundsB.width / 2, cBy = boundsB.y + boundsB.height / 2;
+      const dx = Math.abs(cBx - cAx), dy = Math.abs(cBy - cAy);
+      const primary = Math.max(dx, dy), perpendicular = Math.min(dx, dy);
+      if (primary === 0) return 'straight';
+      return (perpendicular / primary) > 0.2 ? 'elbow' : 'straight';
+    }
+
+    // true assim que o usuário troca o estilo manualmente (radio onchange)
+    // -- a sugestão automática só se aplica enquanto ele não mexeu, pra não
+    // sobrescrever uma escolha explícita a cada mudança de seleção no
+    // canvas. Resetada ao abrir o modal do zero (ver openFlowFormModal).
+    let _flowConnectorStyleManuallySet = false;
+
+    function _applySuggestedConnectorStyle(nodes) {
+      if (_flowConnectorStyleManuallySet || !nodes || nodes.length < 2) return;
+      const suggested = _suggestConnectorStyleFromBounds(nodes[0], nodes[1]);
+      const radio = document.querySelector(`input[name="flow-connector-style"][value="${suggested}"]`);
+      if (radio && !radio.checked) { radio.checked = true; _onFlowConnectorStyleChangeIfExists(); }
+    }
+    function _onFlowConnectorStyleChangeIfExists() {
+      // Sem handler dedicado hoje além de re-renderizar o mini-mapa (ver
+      // radio onchange="_renderFlowAnchorPreview()" em modals.html) -- só
+      // reaproveita o mesmo re-render pra refletir o estilo sugerido na
+      // linha do mini-mapa imediatamente.
+      if (typeof _renderFlowAnchorPreview === 'function') _renderFlowAnchorPreview();
+    }
+
     // Chamada tanto ao chegar 'flow-selection-bounds' quanto ao clicar numa
     // borda do card A no mini-mapa (ver _setFlowAnchorSide).
     function updateFlowAnchorPreview(nodes) {
       _flowAnchorNodes = nodes || [];
+      _applySuggestedConnectorStyle(_flowAnchorNodes);
       _renderFlowAnchorPreview();
       if (typeof _updateFlowConfirmButtonLabel === 'function') _updateFlowConfirmButtonLabel();
       if (typeof _updateFlowDecisionAvailability === 'function') _updateFlowDecisionAvailability();
@@ -2853,6 +3039,7 @@
       // resposta de get-flow-selection-bounds chegar (evita lixo visual).
       _flowAnchorNodes = [];
       _flowAnchorSideByIdx = {};
+      _flowConnectorStyleManuallySet = false;
       _renderFlowAnchorPreview();
       const journeyNameInput = document.getElementById('flow-name-input');
       if (journeyNameInput) {
@@ -2911,7 +3098,11 @@
     function confirmFlowConnection() {
       const type = currentFlowType;
       const textInput = document.getElementById('flow-chip-text');
-      const text = textInput ? textInput.value : '';
+      // maxlength=20 no HTML só bloqueia digitação normal -- colar texto
+      // (Ctrl+V) ou preencher via JS ignora o atributo, então o limite real
+      // precisa ser garantido aqui antes de salvar. Sem isso, um paste
+      // grande vira o nome do node no canvas sem limite nenhum.
+      const text = textInput ? textInput.value.slice(0, 20) : '';
 
       // O campo do modal virou "Nome da Jornada" (ver Mudança 2) -- não é
       // mais o flow.name de uma conexão isolada. Guardado em
@@ -2920,7 +3111,7 @@
       // conexão criada nesta operação, deixando flow.name (rótulo do grupo
       // no canvas e do item na lista) com um nome descritivo por tipo.
       const journeyNameInput = document.getElementById('flow-name-input');
-      const journeyName = journeyNameInput ? journeyNameInput.value.trim() : '';
+      const journeyName = journeyNameInput ? journeyNameInput.value.trim().slice(0, 70) : '';
       window._pendingJourneyName = journeyName;
 
       const flowName = FLOW_TYPE_DEFAULT_NAMES[type] || `Conexão ${handoffData.nextFlowNumber || 1}`;
@@ -2987,6 +3178,8 @@
 
       const finalizeWrap = document.getElementById('btn-finalize-flows-wrap');
       const resyncBtn = document.getElementById('btn-resync-flows');
+      const collapseBtn = document.querySelector('#view-flows [data-collapse-toggle]');
+      const sectionTitle = document.getElementById('flows-section-title');
 
       if (!handoffData.createdFlows || handoffData.createdFlows.length === 0) {
         const emptyHtml = `
@@ -3001,6 +3194,8 @@
         containers.forEach(c => c.innerHTML = emptyHtml);
         if (finalizeWrap) finalizeWrap.classList.add('hidden');
         if (resyncBtn) resyncBtn.classList.add('hidden');
+        if (collapseBtn) collapseBtn.classList.add('hidden');
+        if (sectionTitle) sectionTitle.classList.add('hidden');
         _updateContentHint('hint-flows', false);
         _refreshIcons();
         return;
@@ -3020,21 +3215,26 @@
       };
 
       // idx sempre se refere à posição no array PLANO handoffData.createdFlows
-      // -- renameFlow/openEditFlowModal/deleteNode dependem desse índice, o
+      // -- openEditFlowModal/deleteNode dependem desse índice, o
       // agrupamento visual em jornadas não pode perder essa referência.
       const flatIndexOf = (flow) => handoffData.createdFlows.indexOf(flow);
 
       const journeys = computeFlowJourneys(handoffData.createdFlows);
+      if (sectionTitle) {
+        sectionTitle.classList.remove('hidden');
+        sectionTitle.textContent = `Fluxos Desenhados (${journeys.length})`;
+      }
 
       const html = journeys.map(journey => {
         const itemsHtml = journey.conexoes.map(flow => {
           const idx = flatIndexOf(flow);
           const isVisible = flow.visible !== false;
           const typeLabel = FLOW_TYPE_LABELS[flow.type] || flow.type.replace(/_/g, ' ').toUpperCase();
+          const isEndpoint = flow.type === 'event_start' || flow.type === 'event_end';
           const defaultName = flow.type === 'diamond' || flow.type === 'diamond_dashed' ? 'Ponto de Decisão' : (flow.type === 'gateway_parallel' ? 'Fork/Paralelo' : (flow.type === 'event_start' ? 'Início' : (flow.type === 'event_end' ? 'Fim' : 'Conexão de Fluxo')));
           return `
-          <li class="group relative bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-all cursor-pointer p-3"
-               onclick="focusNode('${flow.id}')">
+          <li role="button" tabindex="0" class="group relative bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-all cursor-pointer px-3.5 py-3.5"
+               onclick="focusNode('${flow.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();focusNode('${flow.id}');}" aria-label="Focar na conexão ${escapeHtml(flow.name || defaultName)} no Figma">
             <div class="flex items-center gap-3 w-full">
               <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-800/50">
                 <i data-lucide="${flow.type.includes('diamond') ? 'help-circle' : (flow.type === 'gateway_parallel' ? 'git-fork' : (flow.type.includes('event') ? 'circle' : 'arrow-right'))}" class="w-4 h-4 text-[#3d3dff] dark:text-blue-400"></i>
@@ -3043,20 +3243,14 @@
               <div class="flex-1 overflow-hidden">
                 <div class="flex items-center justify-between gap-2">
                   <div class="flex items-center gap-1.5 flex-1 min-w-0">
-                    <input type="text"
-                      value="${flow.name || defaultName}"
-                      class="inline-name-input w-full text-[12px] font-bold text-slate-800 dark:text-white rounded truncate -ml-0.5"
-                      onchange="renameFlow(${idx}, this.value)"
-                      onkeydown="if(event.key==='Enter') this.blur()"
-                      onclick="event.stopPropagation()"
-                      placeholder="Nome da conexão..." />
+                    <span class="w-full text-[12px] font-bold text-slate-800 dark:text-white truncate" ${isEndpoint ? 'title="Início e Fim de jornada não podem ser renomeados"' : ''}>${escapeHtml(flow.name || defaultName)}</span>
                   </div>
 
-                  <div class="flex items-center gap-1 shrink-0">
-                    ${(flow.type === 'line_solid' || flow.type === 'line_dashed') ? `
-                    <button onclick="event.stopPropagation(); openEditFlowModal(${idx})" title="Editar curvatura e texto" aria-label="Editar curvatura e texto"
+                  <div class="flex items-center gap-2 shrink-0">
+                    ${!isEndpoint ? `
+                    <button onclick="event.stopPropagation(); openEditFlowModal(${idx})" title="Editar nome, tipo e estilo" aria-label="Editar conexão"
                       class="w-7 h-7 rounded-xl flex items-center justify-center ${isVisible ? 'text-[#3d3dff]' : 'text-gray-400'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all">
-                      <i data-lucide="spline" class="w-3.5 h-3.5"></i>
+                      <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
                     </button>` : ''}
                     <button onclick="event.stopPropagation(); toggleFlowVisibility('${flow.id}', ${idx})"
                       class="w-7 h-7 rounded-xl flex items-center justify-center ${isVisible ? 'text-[#3d3dff]' : 'text-gray-400'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
@@ -3070,7 +3264,7 @@
                   </div>
                 </div>
 
-                <div class="mt-1 flex items-center gap-2">
+                <div class="mt-1.5 flex items-center gap-2">
                   <span class="text-[8px] text-gray-500 dark:text-dark-muted font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-900/50 px-1.5 py-0.5 rounded border border-gray-100 dark:border-dark-line">
                     ${typeLabel}
                   </span>
@@ -3093,15 +3287,16 @@
         const journeyNameEsc = journey.isUnnamed ? '' : escapeHtml(journey.nome);
 
         return `
-        <li class="border border-gray-100 dark:border-dark-line rounded-2xl overflow-hidden shadow-sm bg-gray-50/30 dark:bg-slate-900/20">
-          <div class="p-3 flex items-center gap-2 bg-gray-100/50 dark:bg-slate-800/50">
+        <li class="border border-gray-100 dark:border-dark-line rounded-2xl shadow-sm bg-gray-50/30 dark:bg-slate-900/20">
+          <div class="p-3 flex items-center gap-2 bg-gray-100/50 dark:bg-slate-800/50 rounded-t-2xl">
             <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-800/50">
               <i data-lucide="git-branch" class="w-4 h-4 text-[#3d3dff] dark:text-blue-400"></i>
             </div>
-            <div class="flex-1 min-w-0 flex items-center gap-1.5 cursor-pointer" onclick="toggleFlowJourneyAccordion(this)">
+            <div role="button" tabindex="0" class="flex-1 min-w-0 flex items-center gap-1.5 cursor-pointer" onclick="toggleFlowJourneyAccordion(this)" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===event.currentTarget){event.preventDefault();toggleFlowJourneyAccordion(this);}" aria-label="Expandir/recolher jornada ${journey.isUnnamed ? 'sem nome' : escapeHtml(journey.nome)}">
               <input type="text"
                 value="${journeyNameEsc}"
                 placeholder="Jornada sem nome"
+                maxlength="70"
                 class="journey-name-input flex-1 min-w-0 text-[13px] font-bold text-slate-800 dark:text-white rounded truncate bg-transparent placeholder:text-slate-400 dark:placeholder:text-dark-muted placeholder:italic"
                 onchange="renameJourney('${journeyKey}', this.value)"
                 onkeydown="if(event.key==='Enter') this.blur()"
@@ -3125,14 +3320,20 @@
                 </button>
               </div>
             </div>
-            <i data-lucide="chevron-down" class="journey-chevron w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform shrink-0 rotate-180 cursor-pointer" onclick="toggleFlowJourneyAccordion(this)"></i>
+            <button type="button" class="p-1 shrink-0" title="Expandir/recolher jornada" aria-label="Expandir/recolher jornada" onclick="toggleFlowJourneyAccordion(this)">
+              <i data-lucide="chevron-down" class="journey-chevron w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform shrink-0"></i>
+            </button>
           </div>
-          <ul class="divide-y divide-gray-50 dark:divide-dark-line/50 border-l-2 border-dashed border-[#3d3dff]/40 ml-5">${itemsHtml}</ul>
+          <ul data-accordion-content class="divide-y divide-gray-50 dark:divide-dark-line/50 border-l-2 border-dashed border-[#3d3dff]/40 ml-5 rounded-b-2xl overflow-hidden">${itemsHtml}</ul>
         </li>
       `;
       }).join('');
 
       containers.forEach(c => c.innerHTML = html);
+      // "Expandir/recolher todos" só faz sentido havendo ao menos 1 jornada
+      // com accordion de verdade (2+ conexões) -- jornada de 1 conexão
+      // renderiza sem moldura/chevron, nada pra recolher.
+      if (collapseBtn) collapseBtn.classList.toggle('hidden', !journeys.some(j => j.conexoes.length > 1));
       _refreshIcons();
     }
 
@@ -3177,7 +3378,8 @@
     }
 
     function renameJourney(journeyKey, newName) {
-      const trimmed = (newName || '').trim();
+      // maxlength=70 no HTML não bloqueia paste -- trunca de novo aqui.
+      const trimmed = (newName || '').trim().slice(0, 70);
       const members = _journeyMembersByKey(journeyKey);
       members.forEach(f => { f.journeyName = trimmed || null; });
       saveToStorage();
@@ -3236,22 +3438,6 @@
     }
 
     // --- CONTROLE DE SCROLL (CONSOLIDADO) ---
-
-    function renameFlow(idx, newName) {
-      if (newName !== null && newName.trim() !== '') {
-        const flow = handoffData.createdFlows[idx];
-        flow.name = newName.trim();
-        saveToStorage();
-        
-        parent.postMessage({ 
-          pluginMessage: { 
-            type: 'rename-node', 
-            id: flow.id, 
-            name: flow.name 
-          } 
-        }, '*');
-      }
-    }
 
     // Tipos que podem ser trocados entre si no modal de edição -- exclui
     // event_start/event_end (marcadores de Início/Fim, sem targetId e com
@@ -3320,6 +3506,11 @@
       // silêncio (sintoma seria "editar duplica em vez de substituir").
       window._editingFlowIndex = idx;
       _selectEditFlowType(flow.type);
+      const nameInput = document.getElementById('edit-flow-name-input');
+      if (nameInput) {
+        nameInput.value = flow.name || '';
+        _updateCharCount(nameInput, 20);
+      }
       const textInput = document.getElementById('edit-flow-chip-text');
       if (textInput) {
         textInput.value = flow.decisionText || '';
@@ -3359,21 +3550,24 @@
         _refreshIcons();
       }
 
+      const nameInput = document.getElementById('edit-flow-name-input');
       const textInput = document.getElementById('edit-flow-chip-text');
       const styleInput = document.querySelector('input[name="edit-flow-connector-style"]:checked');
       const curvatureInput = document.getElementById('edit-flow-curvature-input');
-      const decisionText = textInput ? textInput.value : '';
+      // Mesmo motivo do confirmFlowConnection: maxlength do HTML não
+      // protege contra paste/preenchimento via JS, trunca de novo aqui.
+      const typedName = nameInput ? nameInput.value.slice(0, 20).trim() : '';
+      const decisionText = textInput ? textInput.value.slice(0, 20) : '';
       const connectorStyle = styleInput ? styleInput.value : 'straight';
       const curvature = curvatureInput ? Number(curvatureInput.value) || 0 : 0;
 
-      // Tipo escolhido no seletor (pode ter mudado de Sequência pra
-      // Decisão, por exemplo) -- nome segue junto: mantém o nome customizado
-      // do usuário só se o tipo não mudou, senão usa um nome padrão do tipo
+      // Nome: prioriza o que o usuário digitou no campo. Se deixou vazio E
+      // o tipo mudou (ex: Sequência -> Decisão), cai no nome padrão do tipo
       // novo, pra não deixar um fluxo tipo "Sequência" com nome "Ponto de
       // Decisão" sobrando de antes da troca (ou vice-versa).
       const EDIT_FLOW_TYPE_FALLBACK_NAMES = Object.assign({ line_solid: 'Sequência', line_dashed: 'Mensagem' }, FLOW_TYPE_DEFAULT_NAMES);
       const newType = _editingFlowType || flow.type;
-      const flowName = (newType === flow.type && flow.name) ? flow.name : (EDIT_FLOW_TYPE_FALLBACK_NAMES[newType] || flow.name || '');
+      const flowName = typedName || (newType === flow.type && flow.name) || EDIT_FLOW_TYPE_FALLBACK_NAMES[newType] || flow.name || '';
 
       parent.postMessage({
         pluginMessage: {
@@ -3421,6 +3615,14 @@ function toggleLinkInput(show) {
       if (frameId) activeFrameId = frameId;
       // Modo criação: limpa campos e reseta estado
       document.getElementById('spec-form-modal').dataset.editIdx = '';
+      // Captura o elemento vinculado JÁ na abertura do modal (não no envio
+      // final) -- assim, mesmo que a seleção do canvas mude depois (ex: ao
+      // marcar a posição, ver markSpecPosition), a referência ao elemento
+      // documentado nunca se perde. Preservado se já havia um pendente de
+      // uma marcação de posição anterior no mesmo modal (reabertura).
+      if (!window._pendingSpecTargetNodeId) {
+        parent.postMessage({ pluginMessage: { type: 'get-selection-id-for-spec' } }, '*');
+      }
       document.getElementById('spec-letter-input').value = typeof _suggestNextSpecTag === 'function' ? _suggestNextSpecTag(activeFrameId) : 'A';
       document.getElementById('spec-color-input').value = '#2e2ee0';
       if (typeof validateSpecLetterInput === 'function') validateSpecLetterInput();
@@ -3434,10 +3636,6 @@ function toggleLinkInput(show) {
       // Reset link checkbox
       document.getElementById('chk-has-link').checked = false;
       toggleLinkInput(false);
-
-      // Reset guide side to right
-      const rightRadio = document.querySelector('input[name="guide-side"][value="right"]');
-      if (rightRadio) rightRadio.checked = true;
 
       const drawConnChk = document.getElementById('chk-draw-connection');
       if (drawConnChk) drawConnChk.checked = true;
@@ -3457,13 +3655,153 @@ function toggleLinkInput(show) {
       document.getElementById('spec-form-modal').classList.remove('hidden');
       updateFABVisibility(true);
       _refreshIcons();
+      // Figma Desktop às vezes demora alguns segundos pra ceder foco de
+      // teclado à janela do plugin -- insiste em focar o campo de Tag
+      // (primeiro campo real do formulário) até o foco realmente "pegar",
+      // em vez de exigir um clique manual do usuário que pode não
+      // funcionar se cair dentro dessa janela de atraso (ver
+      // _persistentFocus em core.js).
+      if (typeof _persistentFocus === 'function') {
+        _persistentFocus(document.getElementById('spec-letter-input'));
+      }
     }
 
     function closeSpecFormModal() {
       document.getElementById('spec-form-modal').classList.add('hidden');
       document.getElementById('spec-form-modal').dataset.editIdx = '';
       updateFABVisibility(false);
+      // Fechar sem salvar (Cancelar/X) não deve deixar elemento/posição
+      // "presos" pra próxima spec criada -- openSpecPositionModal recalcula
+      // o texto do botão a partir disso na próxima vez que essa etapa abrir.
+      window._pendingSpecPosition = null;
+      window._pendingSpecTargetNodeId = null;
     }
+
+    // Chamada pelo handler de resposta (messages.js) com o id do elemento
+    // selecionado no momento em que o modal de criação abriu -- fixa a
+    // referência ANTES de qualquer marcação de posição trocar a seleção.
+    function _onSelectionIdForSpec(targetNodeId) {
+      window._pendingSpecTargetNodeId = targetNodeId || null;
+      if (!targetNodeId) {
+        _onNodeNameForSpec(null);
+        return;
+      }
+      parent.postMessage({ pluginMessage: { type: 'get-node-name', nodeId: targetNodeId } }, '*');
+    }
+    window._onSelectionIdForSpec = _onSelectionIdForSpec;
+
+    function _onNodeNameForSpec(name) {
+      // Mesmo indicador existe em três modais (spec-form-modal,
+      // spec-position-modal e spec-new-exception-modal) -- atualiza os
+      // três, já que o elemento vinculado é o mesmo do início ao fim do
+      // fluxo.
+      const label = name || 'nenhum elemento selecionado';
+      ['spec-form-target-name', 'spec-position-target-name', 'spec-exc-target-name'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = label;
+      });
+    }
+    window._onNodeNameForSpec = _onNodeNameForSpec;
+
+    // ── Marcar posição no canvas (card fantasma) ────────────────────────
+    // A Plugin API não expõe clique bruto no canvas (nem em área vazia) --
+    // só reage a mudanças de estado observáveis (seleção, documento). Este
+    // fluxo aproxima a intenção "apontar onde quero o card" criando um
+    // FANTASMA no tamanho estimado do card final (não um marcador
+    // genérico) -- dá noção de onde ele vai caber. Vive numa etapa PRÓPRIA
+    // do fluxo (spec-position-modal, entre Propriedades e Exceção, ver
+    // modals.html). O modal do Handex é uma janela flutuante (não ocupa a
+    // tela toda) -- fica ABERTO o tempo todo durante o arraste, só troca
+    // de estado interno (dragging/confirmed), o canvas ao fundo continua
+    // acessível pro usuário mover o card livremente.
+    let _pendingGhostId = null;
+
+    // Alterna os 2 cards de estado (dragging/confirmed) e os 4 botões do
+    // rodapé (Voltar+Avançar quando parado, Usar esta posição+Pular
+    // enquanto arrastando) -- ver spec-position-modal em modals.html.
+    function _renderSpecPositionState(state) {
+      const draggingEl = document.getElementById('spec-position-dragging-state');
+      const confirmedEl = document.getElementById('spec-position-confirmed-state');
+      const backBtn = document.getElementById('spec-position-back-btn');
+      const advanceBtn = document.getElementById('spec-position-advance-btn');
+      const confirmBtn = document.getElementById('spec-position-confirm-btn');
+      const skipBtn = document.getElementById('spec-position-skip-btn');
+      const isDragging = state === 'dragging';
+      if (draggingEl) draggingEl.classList.toggle('hidden', !isDragging);
+      if (confirmedEl) confirmedEl.classList.toggle('hidden', isDragging);
+      if (backBtn) backBtn.classList.toggle('hidden', isDragging);
+      if (advanceBtn) advanceBtn.classList.toggle('hidden', isDragging);
+      if (confirmBtn) confirmBtn.classList.toggle('hidden', !isDragging);
+      if (skipBtn) skipBtn.classList.toggle('hidden', !isDragging);
+    }
+
+    function markSpecPosition() {
+      if (!window._pendingSpecTargetNodeId) {
+        showToast('Selecione um elemento no canvas antes de marcar a posição.', 'error');
+        return;
+      }
+      const g = id => document.getElementById(id);
+      const selCat = g('ann-category');
+      const noteVal = g('ann-note') ? g('ann-note').value : '';
+      parent.postMessage({
+        pluginMessage: {
+          type: 'create-position-ghost',
+          targetNodeId: window._pendingSpecTargetNodeId,
+          color: g('spec-color-input') ? g('spec-color-input').value : '#2e2ee0',
+          // Só sinalizadores de presença (pra estimar a altura do
+          // fantasma no backend) -- sem enviar o conteúdo em si.
+          hasCategory: !!(selCat && selCat.value),
+          hasNote: !!noteVal.trim()
+        }
+      }, '*');
+      _renderSpecPositionState('dragging');
+    }
+    window.markSpecPosition = markSpecPosition;
+
+    function _onPositionGhostCreated(ghostId) {
+      _pendingGhostId = ghostId;
+    }
+    window._onPositionGhostCreated = _onPositionGhostCreated;
+
+    function confirmSpecPosition() {
+      if (!_pendingGhostId) return;
+      parent.postMessage({ pluginMessage: { type: 'read-position-ghost', ghostId: _pendingGhostId } }, '*');
+    }
+    window.confirmSpecPosition = confirmSpecPosition;
+
+    // "Pular" -- chegar nesta etapa já cria o fantasma automaticamente
+    // (ver openSpecPositionModal), então desistir de marcar precisa de uma
+    // saída explícita que NÃO tente marcar de novo (senão criaria outro
+    // fantasma em loop). Remove o fantasma órfão e segue pra Exceção sem
+    // posição pendente -- a spec nasce solta, como se a etapa nunca
+    // tivesse existido.
+    function skipSpecPosition() {
+      if (_pendingGhostId) {
+        parent.postMessage({ pluginMessage: { type: 'cancel-position-ghost', ghostId: _pendingGhostId } }, '*');
+      }
+      _pendingGhostId = null;
+      advanceToSpecExceptionStep();
+    }
+    window.skipSpecPosition = skipSpecPosition;
+
+    // Resposta de read-position-ghost: posição lida, fantasma já removido
+    // pelo backend. Confirmar a posição no canvas JÁ É a decisão desta
+    // etapa -- avança direto pra Exceção em vez de voltar ao estado
+    // "confirmado" pedindo mais um "Avançar" redundante (parecer de UX: a
+    // confirmação no canvas é a confirmação da etapa). Só volta a mostrar
+    // o estado "confirmado" se o usuário retornar a esta etapa
+    // deliberadamente (Voltar vindo de Exceção, ver openSpecPositionModal).
+    function _onPositionGhostRead(position) {
+      _pendingGhostId = null;
+      if (!position) {
+        showToast('Não foi possível ler a posição marcada — tente novamente.', 'error');
+        _renderSpecPositionState('idle');
+        return;
+      }
+      window._pendingSpecPosition = position;
+      advanceToSpecExceptionStep();
+    }
+    window._onPositionGhostRead = _onPositionGhostRead;
 
     function toggleAllSpecProperties(checked) {
       const list = document.getElementById('spec-properties-list');
