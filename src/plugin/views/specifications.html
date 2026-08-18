@@ -34,10 +34,16 @@
                header, acima da lista de cards. -->
           <div class="flex items-center justify-between">
             <p id="specs-section-title" class="hidden text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Specs Criadas</p>
-            <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('specs-scroll-container'))"
-              class="hidden text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors">
-              Recolher todos
-            </button>
+            <div class="flex items-center gap-3">
+              <button id="btn-hide-all-specs" onclick="toggleAllSpecsVisibility()"
+                class="hidden text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors">
+                Ocultar tudo
+              </button>
+              <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('specs-scroll-container'))"
+                class="hidden text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors">
+                Recolher todos
+              </button>
+            </div>
           </div>
 
           <!-- Onboarding banner (primeira visita) -->
@@ -73,12 +79,6 @@
           <div id="specs-form" class="space-y-4">
 
             <div>
-              <div class="flex items-center justify-end mb-3">
-                <button id="btn-hide-all-specs" onclick="toggleAllSpecsVisibility()"
-                  class="hidden text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors flex items-center gap-1">
-                  <i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo
-                </button>
-              </div>
 
               <!-- Instrução discreta -->
               <div id="hint-specs" class="mb-5 min-h-[76px] p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-2">

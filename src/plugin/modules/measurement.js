@@ -242,10 +242,7 @@
       const allHidden = measurements.every(m => m.visible === false);
       _measuresHidden = allHidden;
 
-      btn.innerHTML = allHidden
-        ? '<i data-lucide="eye" class="w-3.5 h-3.5"></i> Mostrar tudo'
-        : '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo';
-      _refreshIcons();
+      btn.textContent = allHidden ? 'Mostrar tudo' : 'Ocultar tudo';
     }
 
     function toggleMeasurementsGroup(frameId) {
@@ -290,11 +287,7 @@
       });
 
       const btn = document.getElementById('btn-hide-all-measures');
-      if (btn) {
-        btn.innerHTML = _measuresHidden
-          ? '<i data-lucide="eye" class="w-3.5 h-3.5"></i> Mostrar tudo'
-          : '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo';
-      }
+      if (btn) btn.textContent = _measuresHidden ? 'Mostrar tudo' : 'Ocultar tudo';
 
       _refreshIcons();
     }

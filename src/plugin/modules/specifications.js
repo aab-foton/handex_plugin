@@ -300,7 +300,7 @@
               </span>
               <i data-lucide="chevron-right" id="sub-chev-tokens-${fid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0"></i>
             </button>
-            <div id="sub-body-tokens-${fid}" class="hidden bg-gray-50/30 dark:bg-dark-bg/20">
+            <div id="sub-body-tokens-${fid}" data-accordion-content class="hidden bg-gray-50/30 dark:bg-dark-bg/20">
               <div id="scan-results-${fid}" class="p-1"></div>
             </div>
           </div>
@@ -451,13 +451,6 @@
       'comportamento': { fill: '#F8EAF3', stroke: '#93537D' },
       'regra':         { fill: '#E5F5F8', stroke: '#008CB2' },
       'api':           { fill: '#F5FEC1', stroke: '#6D8000' },
-      'layout':        { fill: '#EBF0FF', stroke: '#2563EB' },
-      'componente':    { fill: '#EDEAFD', stroke: '#4F46E5' },
-      'interacao':     { fill: '#FDE9F3', stroke: '#DB2777' },
-      'tipografia':    { fill: '#FEF3C7', stroke: '#D97706' },
-      'cor':           { fill: '#FEE2E2', stroke: '#DC2626' },
-      'acessibilidade':{ fill: '#E0F5FA', stroke: '#0891B2' },
-      'conteudo':      { fill: '#FFEFD6', stroke: '#A65E00' },
     };
     function _getCatColor(value) {
       return _CAT_COLORS[value] || { fill: '#F1F5F9', stroke: '#94A3B8' };
@@ -473,11 +466,12 @@
     function _excColor(tipo) {
       return _excColors[tipo] || { bg: 'bg-slate-50 dark:bg-slate-800/30', border: 'border-slate-100 dark:border-dark-line', text: 'text-slate-500 dark:text-dark-muted', dot: 'bg-slate-400' };
     }
+    const _excEmoji = { 'Sucesso': '✅', 'Erro': '❌', 'Alerta': '⚠️', 'Confirmação': '❓' };
     function _renderExcItem(exc, onDelete) {
       const c = _excColor(exc.tipo);
       return `<div class="flex flex-col gap-1 px-2 py-1.5 ${c.bg} border ${c.border} rounded-lg">
         <div class="flex items-center gap-1.5">
-          <span class="text-[9px] font-bold ${c.text} uppercase shrink-0 px-1.5 py-0.5 rounded-md ${c.bg} border ${c.border}">${exc.tipo || ''}</span>
+          <span class="text-[9px] font-bold ${c.text} uppercase shrink-0 px-1.5 py-0.5 rounded-md ${c.bg} border ${c.border}">${_excEmoji[exc.tipo] || '❔'} ${exc.tipo || ''}</span>
           <span class="flex-1 min-w-0 text-[10px] text-slate-600 dark:text-dark-text leading-snug truncate">${exc.titulo || ''}</span>
           ${onDelete ? `<button type="button" onclick="event.stopPropagation(); ${onDelete}"
             title="Remover exceção" aria-label="Remover exceção"
@@ -631,7 +625,12 @@
             </div>` : '';
 
           const item = document.createElement('div');
-          item.className = `relative bg-white dark:bg-dark-surface rounded-xl border ${isPending ? 'border-amber-200 dark:border-amber-800/40' : isHidden ? 'border-gray-100 opacity-50' : 'border-gray-100 dark:border-dark-line'} overflow-hidden transition-all`;
+          // overflow-hidden fica só no painel de detalhes (abaixo), não aqui
+          // -- este card tem o menu "..." (specMenuPanel, absolute) como
+          // filho direto, e overflow-hidden aqui cortava o menu quando o
+          // item estava recolhido (mesmo padrão já corrigido no grupo, ver
+          // comentário equivalente perto de headerInfo/groupContent).
+          item.className = `relative bg-white dark:bg-dark-surface rounded-xl border ${isPending ? 'border-amber-200 dark:border-amber-800/40' : isHidden ? 'border-gray-100 opacity-50' : 'border-gray-100 dark:border-dark-line'} transition-all`;
 
           item.innerHTML = `
             <div class="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-dark-surface" style="background-color:${color}"></div>
@@ -677,7 +676,7 @@
               </button>
             </div>
             <!-- Details panel (expandable) -->
-            <div id="${detailsId}" class="hidden px-3 pb-3 pt-2 border-t border-gray-50 dark:border-dark-line">
+            <div id="${detailsId}" data-accordion-content class="hidden px-3 pb-3 pt-2 border-t border-gray-50 dark:border-dark-line rounded-b-xl overflow-hidden">
               ${categoryPill}
               ${propsHtml}
               <!-- Observations -->
@@ -821,10 +820,15 @@
       saveSpecsToStorage();
       window._expandSpecIdAfterRender = createdSpecs[idx].id;
       if (createdSpecs[idx].id) {
+        // refresh-spec-card SEMPRE remove o bloco [Spec] Exceções do card no
+        // canvas antes de redesenhar (ver code.js) -- sem reenviar excecoes
+        // aqui, o backend nunca recria o bloco, e os cenários já criados
+        // "desaparecem" visualmente do card ao editar só a nota.
         parent.postMessage({ pluginMessage: {
           type: 'refresh-spec-card',
           nodeId: createdSpecs[idx].id,
-          note: createdSpecs[idx].note
+          note: createdSpecs[idx].note,
+          excecoes: createdSpecs[idx].excecoes || []
         }}, '*');
       }
       renderSpecsList();
@@ -1089,10 +1093,7 @@
       const allHidden = specs.every(s => s.visible === false);
       _specsHidden = allHidden;
       
-      btn.innerHTML = allHidden
-        ? '<i data-lucide="eye" class="w-3.5 h-3.5"></i> Mostrar tudo'
-        : '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo';
-      _refreshIcons();
+      btn.textContent = allHidden ? 'Mostrar tudo' : 'Ocultar tudo';
     }
 
     function updateGroupVisButtonState(letter, groupWrapper) {
@@ -1144,11 +1145,7 @@
       }
       
       const btn = document.getElementById('btn-hide-all-specs');
-      if (btn) {
-        btn.innerHTML = _specsHidden
-          ? '<i data-lucide="eye" class="w-3.5 h-3.5"></i> Mostrar tudo'
-          : '<i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo';
-      }
+      if (btn) btn.textContent = _specsHidden ? 'Mostrar tudo' : 'Ocultar tudo';
       
       _refreshIcons();
     }
@@ -1539,13 +1536,6 @@
       'regra':          { fill: '#E5F5F8', stroke: '#008CB2' },
       'info':           { fill: '#EBF1F2', stroke: '#64747A' },
       'api':            { fill: '#F5FEC1', stroke: '#6D8000' },
-      'layout':         { fill: '#EBF0FF', stroke: '#2563EB' },
-      'componente':     { fill: '#EDEAFD', stroke: '#4F46E5' },
-      'interacao':      { fill: '#FDE9F3', stroke: '#DB2777' },
-      'tipografia':     { fill: '#FEF3C7', stroke: '#D97706' },
-      'cor':            { fill: '#FEE2E2', stroke: '#DC2626' },
-      'acessibilidade': { fill: '#E0F5FA', stroke: '#0891B2' },
-      'conteudo':       { fill: '#FFEFD6', stroke: '#A65E00' },
     };
     const _CAT_FALLBACK_PALETTE = [
       '#7C3AED','#0891B2','#059669','#D97706','#DC2626',
@@ -1585,18 +1575,14 @@
     window.syncSpecColorFromCategory = syncSpecColorFromCategory;
 
     // ── Category Management ──────────────────────────────────────────────
+    // 4 categorias oficiais (ver docs/Anotar Specs — Tipo de especificação):
+    // Cenário de exceção não é uma delas -- é tratado como conceito próprio
+    // no plugin (array spec.excecoes[]), não como valor de spec.category.
     const DEFAULT_CATEGORIES = [
       { label: "Informação extra", value: "info" },
       { label: "Comportamento", value: "comportamento" },
       { label: "Regra de Negócio", value: "regra" },
       { label: "Dados da API", value: "api" },
-      { label: "Layout", value: "layout" },
-      { label: "Componente", value: "componente" },
-      { label: "Interação", value: "interacao" },
-      { label: "Tipografia", value: "tipografia" },
-      { label: "Cor", value: "cor" },
-      { label: "Acessibilidade", value: "acessibilidade" },
-      { label: "Conteúdo", value: "conteudo" },
     ];
 
     // Load from localStorage or use defaults
@@ -2047,7 +2033,15 @@
 
         const groupContent = document.createElement('ul');
         groupContent.setAttribute('data-accordion-content', '');
-        groupContent.className = 'p-2 space-y-2 rounded-br-xl overflow-hidden';
+        // Sem overflow-hidden aqui -- cada item filho (recolhido) tem um
+        // menu "..." (specMenuPanel, absolute) que precisa estourar os
+        // limites deste <ul> pra aparecer inteiro. overflow-hidden no pai
+        // corta esse menu mesmo já tendo sido removido do item (mesmo
+        // padrão de bug já corrigido no item individual, ver comentário em
+        // "item.className" mais abaixo). rounded-br-xl também sai -- sem
+        // clip, o canto some visualmente de qualquer forma; cada item já
+        // tem rounded-xl próprio.
+        groupContent.className = 'p-2 space-y-2';
 
         // Lógica de toggle do Grupo (Acordeão Pai)
         headerInfo.onclick = () => {
@@ -2185,8 +2179,8 @@
           const btn = document.createElement("div");
           btn.setAttribute('role', 'button');
           btn.tabIndex = 0;
-          btn.title = "Expandir/recolher e focar no elemento no Figma";
-          btn.setAttribute('aria-label', "Expandir/recolher e focar no elemento no Figma");
+          btn.title = "Expandir para ver detalhes e focar no elemento no Figma";
+          btn.setAttribute('aria-label', "Expandir para ver detalhes e focar no elemento no Figma");
           btn.className = "flex-1 min-w-0 flex items-center gap-2.5 text-left rounded-lg p-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors";
           const toggleSpecContent = () => {
             const contentEl = document.getElementById('content-' + spec.id);
@@ -2195,7 +2189,11 @@
             contentEl.classList.toggle('hidden');
             const icon = header.querySelector('[data-lucide="chevron-down"]');
             if (icon) icon.style.transform = isHidden ? 'rotate(180deg)' : '';
-            if (spec.id) focusNode(spec.id);
+            // Só foca ao EXPANDIR (isHidden=true antes do toggle) -- recolher
+            // não deveria mexer no canvas, e "Expandir/Recolher todos"
+            // (collapseAllAccordions) nunca chama esta função, então não há
+            // risco de foco em massa ao usar aquele botão.
+            if (spec.id && isHidden) focusNode(spec.id);
           };
           btn.onclick = toggleSpecContent;
           btn.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSpecContent(); } };
@@ -2313,7 +2311,14 @@
           specMenuBtn.onclick = (e) => {
             e.stopPropagation();
             document.querySelectorAll('.spec-overflow-menu-panel').forEach(p => { if (p !== specMenuPanel) p.classList.add('hidden'); });
+            const wasHidden = specMenuPanel.classList.contains('hidden');
             specMenuPanel.classList.toggle('hidden');
+            // Abrir o menu com o card ainda recolhido deixava o dropdown
+            // flutuando sobre um card "vazio" -- expande junto (nunca
+            // recolhe: fechar o menu não deveria fechar o card).
+            if (wasHidden && document.getElementById('content-' + spec.id)?.classList.contains('hidden')) {
+              toggleSpecContent();
+            }
           };
           specMenuWrap.appendChild(specMenuBtn);
           specMenuWrap.appendChild(specMenuPanel);

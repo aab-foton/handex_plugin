@@ -2741,46 +2741,62 @@ function toggleAccordion(btn, nodeId = null) {
 function collapseAllAccordions(containerEl) {
   const root = containerEl || document;
   const allContent = root.querySelectorAll('.accordion-content, [data-accordion-content]');
-  let anyOpen = false;
-  allContent.forEach(c => { if (!c.classList.contains('hidden')) anyOpen = true; });
-  // If any open → collapse all; if all closed → expand all
+  // Estado explícito lido do PRÓPRIO botão (texto = próxima ação), não
+  // inferido pela mistura de conteúdo aberto/fechado -- alguns níveis
+  // (ex: grupo de tag em Anotar Specs) nascem sempre abertos por padrão
+  // enquanto outros (ex: item individual dentro do grupo) nascem sempre
+  // fechados, então "existe algo aberto" nunca reflete de verdade "tudo
+  // está aberto". Com estado explícito, "Expandir todos" sempre abre
+  // literalmente todo nível de accordion dentro do container, e "Recolher
+  // todos" sempre fecha todos, sem depender do que já estava em cada um.
+  const toggleBtnEl = root.querySelector ? root.querySelector('[data-collapse-toggle]') : null;
+  const shouldCollapse = !toggleBtnEl || toggleBtnEl.textContent.trim() === 'Recolher todos';
   allContent.forEach(c => {
-    const isHidden = c.classList.contains('hidden');
-    if (anyOpen ? !isHidden : isHidden) {
-      c.classList.toggle('hidden');
-      // Frame body (id="frame-body-{id}") — rotate frame-chevron
-      if (c.id && c.id.startsWith('frame-body-')) {
-        const frameId = c.id.replace('frame-body-', '');
-        const chevron = document.getElementById(`frame-chevron-${frameId}`);
-        if (chevron) chevron.style.transform = anyOpen ? 'rotate(0deg)' : 'rotate(180deg)';
-      } else if (c.matches('[data-accordion-content]') && c.previousElementSibling && c.previousElementSibling.querySelector('.journey-chevron')) {
-        // Card de jornada de fluxo (renderFlowsList) — chevron próprio
-        // (.journey-chevron), não usa toggleAccordion/aria-expanded.
-        const chevron = c.previousElementSibling.querySelector('.journey-chevron');
-        chevron.classList.toggle('rotate-180', !anyOpen);
-      } else if (c.matches('[data-accordion-content]') && c.previousElementSibling && c.previousElementSibling.querySelector('.group-chevron')) {
-        // Grupo de tag em Anotar Specs (renderSpecsList) — chevron próprio
-        // (.group-chevron), toggle feito via headerInfo.onclick, não
-        // toggleAccordion/aria-expanded.
-        const chevron = c.previousElementSibling.querySelector('.group-chevron');
-        chevron.classList.toggle('rotate-180', !anyOpen);
-      } else {
-        // Regular accordion — find toggle button
-        const parent = c.closest('.border, .rounded-xl, .mb-3');
-        const btn = parent ? parent.querySelector('[onclick*="toggleAccordion"]') : null;
-        if (btn) {
-          btn.setAttribute('aria-expanded', anyOpen ? 'false' : 'true');
-          const icon = btn.querySelector('[data-lucide="chevron-down"]');
-          if (icon) icon.style.transform = anyOpen ? 'rotate(0deg)' : 'rotate(180deg)';
-        }
+    c.classList.toggle('hidden', shouldCollapse);
+    // Frame body (id="frame-body-{id}") — rotate frame-chevron
+    if (c.id && c.id.startsWith('frame-body-')) {
+      const frameId = c.id.replace('frame-body-', '');
+      const chevron = document.getElementById(`frame-chevron-${frameId}`);
+      if (chevron) chevron.style.transform = shouldCollapse ? 'rotate(180deg)' : 'rotate(0deg)';
+    } else if (c.matches('[data-accordion-content]') && c.previousElementSibling && c.previousElementSibling.querySelector('.journey-chevron')) {
+      // Card de jornada de fluxo (renderFlowsList) — chevron próprio
+      // (.journey-chevron), não usa toggleAccordion/aria-expanded.
+      const chevron = c.previousElementSibling.querySelector('.journey-chevron');
+      chevron.classList.toggle('rotate-180', shouldCollapse);
+    } else if (c.matches('[data-accordion-content]') && c.previousElementSibling && c.previousElementSibling.querySelector('.group-chevron')) {
+      // Grupo de tag em Anotar Specs (renderSpecsList) — chevron próprio
+      // (.group-chevron), toggle feito via headerInfo.onclick, não
+      // toggleAccordion/aria-expanded.
+      const chevron = c.previousElementSibling.querySelector('.group-chevron');
+      chevron.classList.toggle('rotate-180', shouldCollapse);
+    } else if (c.id && document.getElementById('chev-' + c.id)) {
+      // Item individual de spec (renderSpecsList/toggleSpecDetails) —
+      // chevron com id="chev-{detailsId}", rotacionado via style.transform
+      // inline (mesmo padrão de toggleSpecDetails), não classList/aria.
+      const chevron = document.getElementById('chev-' + c.id);
+      chevron.style.transform = shouldCollapse ? '' : 'rotate(180deg)';
+    } else if (c.id && c.id.startsWith('sub-body-') && document.getElementById('sub-chev-' + c.id.replace('sub-body-', ''))) {
+      // Sub-accordion aninhado dentro do card de frame (ex: Tokens
+      // Escaneados, toggleSubAccordion em core.js) — chevron com
+      // id="sub-chev-{key}", rotaciona 90deg (não 180) via style.transform
+      // inline, mesmo padrão de toggleSubAccordion.
+      const chevron = document.getElementById('sub-chev-' + c.id.replace('sub-body-', ''));
+      chevron.style.transform = shouldCollapse ? '' : 'rotate(90deg)';
+    } else {
+      // Regular accordion — find toggle button
+      const parent = c.closest('.border, .rounded-xl, .mb-3');
+      const btn = parent ? parent.querySelector('[onclick*="toggleAccordion"]') : null;
+      if (btn) {
+        btn.setAttribute('aria-expanded', shouldCollapse ? 'false' : 'true');
+        const icon = btn.querySelector('[data-lucide="chevron-down"]');
+        if (icon) icon.style.transform = shouldCollapse ? 'rotate(0deg)' : 'rotate(180deg)';
       }
     }
   });
-  // Texto do botão reflete a PRÓXIMA ação (não o estado atual) -- "Recolher
-  // todos" enquanto há algo aberto, "Expandir todos" quando tudo já está
-  // fechado. Label aberta em texto, sem ícone (ver views/*.html).
-  const toggleBtn = root.querySelector ? root.querySelector('[data-collapse-toggle]') : null;
-  if (toggleBtn) toggleBtn.textContent = anyOpen ? 'Expandir todos' : 'Recolher todos';
+  // Texto do botão reflete a PRÓXIMA ação (não o estado atual) -- se acabou
+  // de recolher tudo, a próxima ação passa a ser expandir, e vice-versa.
+  // Label aberta em texto, sem ícone (ver views/*.html).
+  if (toggleBtnEl) toggleBtnEl.textContent = shouldCollapse ? 'Expandir todos' : 'Recolher todos';
 }
 
 // ── File Handling (Anexos - Step 2) ───────────────────────────────────
@@ -2880,8 +2896,6 @@ let currentScannedProps = [];
 function openHelp(fromModalId) {
   lastModalBeforeHelp = fromModalId;
   if (fromModalId) closeModal(fromModalId);
-  const search = document.getElementById('spec-types-search');
-  if (search) { search.value = ''; filterSpecTypesHelp(); }
   openModal('spec-types-help-modal');
 }
 
@@ -2892,65 +2906,6 @@ function closeHelpAndReturn() {
     lastModalBeforeHelp = null;
   }
 }
-
-// Busca por texto na lista de "Tipos de especificação" do
-// spec-types-help-modal (views/modals.html) -- mesmo padrão de filtro em
-// texto livre do briefing-guide-modal (filterBriefingGuide acima), sem
-// select/dropdown: com 11 categorias curtas, a lista inteira ainda é
-// escaneável de uma vez, e um select forçaria escolher 1 de cada vez. A
-// busca só reduz esforço quando o usuário já sabe o nome do tipo.
-function filterSpecTypesHelp() {
-  const search = document.getElementById('spec-types-search');
-  const list = document.getElementById('spec-types-list');
-  const empty = document.getElementById('spec-types-empty');
-  if (!search || !list) return;
-  const term = search.value.trim().toLowerCase();
-  let visibleCount = 0;
-  list.querySelectorAll('[data-spec-type-item]').forEach(item => {
-    const haystack = item.getAttribute('data-search') || '';
-    const match = !term || haystack.includes(term);
-    item.classList.toggle('hidden', !match);
-    if (match) visibleCount++;
-  });
-  if (empty) empty.classList.toggle('hidden', visibleCount > 0);
-  _renderSpecTypesSuggestions();
-}
-window.filterSpecTypesHelp = filterSpecTypesHelp;
-
-// Autocomplete dos nomes de tipo acima da lista, conforme digita -- só
-// nomes (data-name), não descrição/exemplo, no mesmo espírito da busca
-// restrita a nome.
-function _renderSpecTypesSuggestions() {
-  const search = document.getElementById('spec-types-search');
-  const box = document.getElementById('spec-types-suggestions');
-  if (!search || !box) return;
-  const term = search.value.trim().toLowerCase();
-  if (!term) { box.classList.add('hidden'); box.innerHTML = ''; return; }
-  const names = Array.from(document.querySelectorAll('#spec-types-list [data-spec-type-item]'))
-    .map(item => item.getAttribute('data-name') || '')
-    .filter(name => name.toLowerCase().includes(term) && name.toLowerCase() !== term);
-  if (names.length === 0) { box.classList.add('hidden'); box.innerHTML = ''; return; }
-  box.innerHTML = names.map(name =>
-    `<li><button type="button" class="w-full text-left px-3 py-2 text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" onmousedown="_pickSpecTypeSuggestion('${name.replace(/'/g, "\\'")}')">${name}</button></li>`
-  ).join('');
-  box.classList.remove('hidden');
-}
-window._renderSpecTypesSuggestions = _renderSpecTypesSuggestions;
-
-function _pickSpecTypeSuggestion(name) {
-  const search = document.getElementById('spec-types-search');
-  if (!search) return;
-  search.value = name;
-  filterSpecTypesHelp();
-  _hideSpecTypesSuggestions();
-}
-window._pickSpecTypeSuggestion = _pickSpecTypeSuggestion;
-
-function _hideSpecTypesSuggestions() {
-  const box = document.getElementById('spec-types-suggestions');
-  if (box) setTimeout(() => box.classList.add('hidden'), 150);
-}
-window._hideSpecTypesSuggestions = _hideSpecTypesSuggestions;
 
 // ── Scroll ─────────────────────────────────────────────────────────────
 function handleScroll(el) {

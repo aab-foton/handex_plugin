@@ -384,104 +384,62 @@
             </div>
           </div>
 
-          <!-- Tipos de Especificação (busca por texto -- mesmo padrão visual
-               do briefing-guide-modal/filterBriefingGuide, ver core.js.
-               Lista sempre visível, sem select, porque 11 categorias curtas
-               ainda são escaneáveis de uma vez; a busca só reduz o esforço
-               quando o usuário já sabe o nome do tipo que procura. -->
+          <!-- Tipos de Especificação -- lista sempre visível, sem busca:
+               só 4 categorias curtas, todas cabem numa olhada só. -->
           <div>
             <p class="text-[12px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Tipos de especificação</p>
             <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-1 mb-3">A cor do card no canvas reflete o tipo escolhido. Cada tom tem uma semântica intencional.</p>
-            <div class="relative mb-4">
-              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-              <input type="text" id="spec-types-search" oninput="filterSpecTypesHelp()" autocomplete="off"
-                onfocus="_renderSpecTypesSuggestions()" onblur="_hideSpecTypesSuggestions()"
-                placeholder="Buscar por nome do tipo..."
-                class="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl text-[12px] text-slate-700 dark:text-white outline-none focus:border-[#3d3dff]/50 transition-colors placeholder:text-slate-400" />
-              <ul id="spec-types-suggestions" class="hidden absolute z-10 left-0 right-0 mt-1 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl shadow-lg overflow-hidden max-h-48 overflow-y-auto"></ul>
-            </div>
 
             <div id="spec-types-list" class="grid grid-cols-1 gap-4">
 
               <!-- Informação extra -->
-              <div data-spec-type-item data-name="Informação extra" data-search="informação extra informacao" class="rounded-lg p-3 space-y-1.5 bg-[#EBF1F2] dark:bg-slate-700/20 border border-[#64747A] dark:border-slate-500/40">
+              <div class="rounded-lg p-3 space-y-1.5 bg-[#EBF1F2] dark:bg-slate-700/20 border border-[#64747A] dark:border-slate-500/40">
                 <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#EBF1F2] dark:bg-slate-700/30 border border-[#64747A] dark:border-slate-500/40 text-[#64747A] dark:text-slate-300">Informação extra</span>
                 <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Informações que não se encaixam nos demais tipos — pendências, decisões de reunião ou contexto adicional.</p>
                 <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Alertas, observações, pendências, componente legado ou fora do DSC.</p>
               </div>
 
               <!-- Comportamento -->
-              <div data-spec-type-item data-name="Comportamento" data-search="comportamento" class="rounded-lg p-3 space-y-1.5 bg-[#F8EAF3] dark:bg-fuchsia-900/20 border border-[#93537D] dark:border-fuchsia-800/40">
+              <div class="rounded-lg p-3 space-y-1.5 bg-[#F8EAF3] dark:bg-fuchsia-900/20 border border-[#93537D] dark:border-fuchsia-800/40">
                 <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#F8EAF3] dark:bg-fuchsia-900/30 border border-[#93537D] dark:border-fuchsia-800/40 text-[#93537D] dark:text-fuchsia-300">Comportamento</span>
                 <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Reação do sistema às ações do usuário além do padrão do DSC — microinterações, abertura de modais, transições de estado.</p>
                 <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Sequência de ações, comportamento contextual da jornada, estado condicional.</p>
               </div>
 
               <!-- Regra de Negócio -->
-              <div data-spec-type-item data-name="Regra de Negócio" data-search="regra de negócio negocio" class="rounded-lg p-3 space-y-1.5 bg-[#E5F5F8] dark:bg-cyan-900/20 border border-[#008CB2] dark:border-cyan-800/40">
+              <div class="rounded-lg p-3 space-y-1.5 bg-[#E5F5F8] dark:bg-cyan-900/20 border border-[#008CB2] dark:border-cyan-800/40">
                 <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#E5F5F8] dark:bg-cyan-900/30 border border-[#008CB2] dark:border-cyan-800/40 text-[#008CB2] dark:text-cyan-300">Regra de Negócio</span>
                 <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Lógica do sistema não visível na interface — campos obrigatórios, validações e restrições de ações.</p>
                 <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Campos obrigatórios, combinações válidas/inválidas, processos condicionais.</p>
               </div>
 
               <!-- Dados da API -->
-              <div data-spec-type-item data-name="Dados da API" data-search="dados da api" class="rounded-lg p-3 space-y-1.5 bg-[#F5FEC1] dark:bg-lime-900/20 border border-[#6D8000] dark:border-lime-800/40">
+              <div class="rounded-lg p-3 space-y-1.5 bg-[#F5FEC1] dark:bg-lime-900/20 border border-[#6D8000] dark:border-lime-800/40">
                 <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#F5FEC1] dark:bg-lime-900/30 border border-[#6D8000] dark:border-lime-800/40 text-[#6D8000] dark:text-lime-300">Dados da API</span>
                 <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Informações técnicas para integração com o backend — endpoints, campos esperados, estados de carregamento.</p>
                 <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Tela dependente de resposta de API, dados mockados, informações temporárias.</p>
               </div>
 
-              <!-- Layout -->
-              <div data-spec-type-item data-name="Layout" data-search="layout" class="rounded-lg p-3 space-y-1.5 bg-[#EBF0FF] dark:bg-blue-900/20 border border-[#2563EB] dark:border-blue-800/40">
-                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#EBF0FF] dark:bg-blue-900/30 border border-[#2563EB] dark:border-blue-800/40 text-[#2563EB] dark:text-blue-300">Layout</span>
-                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Grids, margens, alinhamentos e estruturas de containers — o esqueleto espacial da tela.</p>
-                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Espaçamentos, breakpoints, max-width, colunas de grid.</p>
-              </div>
-
-              <!-- Componente -->
-              <div data-spec-type-item data-name="Componente" data-search="componente" class="rounded-lg p-3 space-y-1.5 bg-[#EDEAFD] dark:bg-indigo-900/20 border border-[#4F46E5] dark:border-indigo-800/40">
-                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#EDEAFD] dark:bg-indigo-900/30 border border-[#4F46E5] dark:border-indigo-800/40 text-[#4F46E5] dark:text-indigo-300">Componente</span>
-                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Variações, estados e comportamentos de componentes do DSC específicos ao contexto documentado.</p>
-                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Estado disabled, variante outline, uso condicional de Badge, slot opcional.</p>
-              </div>
-
-              <!-- Interação -->
-              <div data-spec-type-item data-name="Interação" data-search="interação interacao" class="rounded-lg p-3 space-y-1.5 bg-[#FDE9F3] dark:bg-pink-900/20 border border-[#DB2777] dark:border-pink-800/40">
-                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#FDE9F3] dark:bg-pink-900/30 border border-[#DB2777] dark:border-pink-800/40 text-[#DB2777] dark:text-pink-300">Interação</span>
-                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Fluxos de navegação e gestos do usuário — o que acontece quando o dedo toca a tela.</p>
-                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Swipes, taps, navegação entre telas, gestos de confirmação.</p>
-              </div>
-
-              <!-- Tipografia -->
-              <div data-spec-type-item data-name="Tipografia" data-search="tipografia" class="rounded-lg p-3 space-y-1.5 bg-[#FEF3C7] dark:bg-amber-900/20 border border-[#D97706] dark:border-amber-800/40">
-                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#FEF3C7] dark:bg-amber-900/30 border border-[#D97706] dark:border-amber-800/40 text-[#D97706] dark:text-amber-300">Tipografia</span>
-                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Especificações de fontes, tamanhos, pesos e estilos tipográficos aplicados no contexto.</p>
-                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Heading-1, body-small, uso de itálico, truncamento de texto longo.</p>
-              </div>
-
-              <!-- Cor -->
-              <div data-spec-type-item data-name="Cor" data-search="cor" class="rounded-lg p-3 space-y-1.5 bg-[#FEE2E2] dark:bg-red-900/20 border border-[#DC2626] dark:border-red-800/40">
-                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#FEE2E2] dark:bg-red-900/30 border border-[#DC2626] dark:border-red-800/40 text-[#DC2626] dark:text-red-300">Cor</span>
-                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Tokens de cor, paleta aplicada, contrastes e variáveis de cor do DSC.</p>
-                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> color-primary-500, uso de surface-inverse, cor de fundo condicional.</p>
-              </div>
-
-              <!-- Acessibilidade -->
-              <div data-spec-type-item data-name="Acessibilidade" data-search="acessibilidade" class="rounded-lg p-3 space-y-1.5 bg-[#E0F5FA] dark:bg-cyan-900/20 border border-[#0891B2] dark:border-cyan-800/40">
-                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#E0F5FA] dark:bg-cyan-900/30 border border-[#0891B2] dark:border-cyan-800/40 text-[#0891B2] dark:text-cyan-300">Acessibilidade</span>
-                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Notas sobre contraste, áreas de toque mínimas e leitura por leitores de tela.</p>
-                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Alt-text, hierarquia de cabeçalhos, focus states, ratio de contraste.</p>
-              </div>
-
-              <!-- Conteúdo -->
-              <div data-spec-type-item data-name="Conteúdo" data-search="conteúdo conteudo" class="rounded-lg p-3 space-y-1.5 bg-[#FFEFD6] dark:bg-orange-900/20 border border-[#A65E00] dark:border-orange-800/40">
-                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#FFEFD6] dark:bg-orange-900/30 border border-[#A65E00] dark:border-orange-800/40 text-[#A65E00] dark:text-orange-300">Conteúdo</span>
-                <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Textos, labels, mensagens e hierarquia de conteúdo da interface.</p>
-                <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Placeholder, limite de caracteres, microcopy de botão, mensagem de estado vazio.</p>
-              </div>
-
             </div>
-            <p id="spec-types-empty" class="hidden text-[11px] text-slate-400 dark:text-dark-muted text-center py-6">Nenhum tipo encontrado para essa busca.</p>
+          </div>
+
+          <!-- Cenário de Exceção -- conceitualmente diferente das 4
+               categorias acima (spec.category): não é um valor de
+               categoria, é um array próprio (spec.excecoes[]) com 4
+               subtipos fixos (Sucesso/Erro/Alerta/Confirmação). Accordion
+               separado pra não confundir com a lista de categorias. -->
+          <div class="mt-5 border border-orange-100 dark:border-orange-900/30 rounded-xl overflow-hidden">
+            <button type="button" onclick="toggleAccordion(this)" aria-expanded="false"
+              class="w-full flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-900/10 hover:bg-orange-100 dark:hover:bg-orange-900/20 transition-colors text-left">
+              <i data-lucide="alert-triangle" class="w-4 h-4 text-orange-600 dark:text-orange-400 shrink-0"></i>
+              <span class="flex-1 text-[12px] font-bold text-orange-700 dark:text-orange-300">Cenário de Exceção</span>
+              <i data-lucide="chevron-down" class="w-4 h-4 text-orange-600 dark:text-orange-400 transition-transform shrink-0"></i>
+            </button>
+            <div class="accordion-content hidden p-3 pt-2 space-y-2 bg-white dark:bg-dark-surface">
+              <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Estados alternativos ou finais que a spec pode assumir — não é uma categoria, é um registro adicional dentro da própria especificação.</p>
+              <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Mensagens de erro de API, alertas de sistema, falha de validação, fluxos não ideais.</p>
+              <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Subtipos:</strong> Sucesso, Erro, Alerta, Confirmação.</p>
+            </div>
           </div>
         </div>
         <div class="p-4 border-t border-gray-100 dark:border-dark-line flex justify-end">
@@ -680,7 +638,7 @@
           <label for="spec-link-input" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Link de referência</label>
           <div class="relative">
             <i data-lucide="link" class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 dark:text-dark-muted"></i>
-            <input type="text" id="spec-link-input" placeholder="https://..." 
+            <input type="text" id="spec-link-input" placeholder="https://..." onblur="validateUrl(this)"
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl pl-9 pr-3 py-2.5 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" />
           </div>
         </div>
@@ -1123,7 +1081,7 @@
           <label for="exc-modal-anchor" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5">Link Âncora <span class="normal-case font-normal text-slate-400">(opcional)</span></label>
           <div class="relative">
             <i data-lucide="link" class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 dark:text-dark-muted"></i>
-            <input type="text" id="exc-modal-anchor" placeholder="https://..."
+            <input type="text" id="exc-modal-anchor" placeholder="https://..." onblur="validateUrl(this)"
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl pl-9 pr-3 py-2.5 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all" />
           </div>
         </div>
