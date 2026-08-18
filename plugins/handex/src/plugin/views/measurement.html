@@ -30,10 +30,16 @@
                header, acima da lista de cards. -->
           <div class="flex items-center justify-between">
             <p id="measures-section-title" class="hidden text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Medidas Inseridas</p>
-            <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('measures-scroll-container'))"
-              class="hidden text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors">
-              Recolher todos
-            </button>
+            <div class="flex items-center gap-3">
+              <button id="btn-hide-all-measures" onclick="toggleAllMeasuresVisibility()"
+                class="hidden text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors">
+                Ocultar tudo
+              </button>
+              <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('measures-scroll-container'))"
+                class="hidden text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors">
+                Recolher todos
+              </button>
+            </div>
           </div>
 
           <!-- Onboarding banner (primeira visita) -->
@@ -69,10 +75,6 @@
           <!-- Results -->
           <div>
             <div class="flex items-center justify-end gap-3 mb-3">
-              <button id="btn-hide-all-measures" onclick="toggleAllMeasuresVisibility()"
-                class="hidden text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors flex items-center gap-1">
-                <i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar tudo
-              </button>
               <button id="btn-export-measures" onclick="exportMeasurements()"
                 class="hidden text-[11px] font-bold text-[#3d3dff] dark:text-blue-400 hover:underline flex items-center gap-1">
                 <i data-lucide="download" class="w-3.5 h-3.5"></i> Exportar (.md)

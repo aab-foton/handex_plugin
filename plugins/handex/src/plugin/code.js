@@ -1141,7 +1141,7 @@ figma.ui.onmessage = async (msg) => {
         excFrame.name = '[Spec] Exceções';
         excFrame.layoutMode = "VERTICAL";
         excFrame.itemSpacing = 4;
-        excFrame.fills = [{ type: "SOLID", color: { r: 1, g: 0.95, b: 0.93 } }];
+        excFrame.fills = [{ type: "SOLID", color: { r: 0.96, g: 0.96, b: 0.97 } }];
         excFrame.paddingLeft = 8; excFrame.paddingRight = 8;
         excFrame.paddingTop = 6; excFrame.paddingBottom = 6;
         excFrame.cornerRadius = 6;
@@ -1150,16 +1150,17 @@ figma.ui.onmessage = async (msg) => {
         const excTitle = figma.createText();
         excTitle.fontName = { family: "Inter", style: "Bold" };
         excTitle.fontSize = 9;
-        excTitle.fills = [{ type: "SOLID", color: { r: 0.8, g: 0.3, b: 0.1 } }];
+        excTitle.fills = [{ type: "SOLID", color: { r: 0.29, g: 0.33, b: 0.39 } }];
         excTitle.characters = `CENÁRIOS (${msg.excecoes.length})`;
         excTitle.textAutoResize = "WIDTH_AND_HEIGHT";
         excFrame.appendChild(excTitle);
+        const _excTypeEmoji = { 'Sucesso': '✅', 'Erro': '❌', 'Alerta': '⚠️', 'Confirmação': '❓' };
         msg.excecoes.forEach(exc => {
           const t = figma.createText();
           t.fontName = { family: "Inter", style: "Regular" };
           t.fontSize = 10;
           t.fills = [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2 } }];
-          t.characters = `[${exc.tipo || 'Geral'}] ${exc.titulo || ''}`;
+          t.characters = `${_excTypeEmoji[exc.tipo] || '❔'} ${exc.tipo || 'Geral'} — ${exc.titulo || ''}`;
           t.textAutoResize = "WIDTH_AND_HEIGHT";
           excFrame.appendChild(t);
         });
@@ -1203,7 +1204,7 @@ figma.ui.onmessage = async (msg) => {
         excFrame.name = '[Spec] Exceções';
         excFrame.layoutMode = "VERTICAL";
         excFrame.itemSpacing = 4;
-        excFrame.fills = [{ type: "SOLID", color: { r: 1, g: 0.95, b: 0.93 } }];
+        excFrame.fills = [{ type: "SOLID", color: { r: 0.96, g: 0.96, b: 0.97 } }];
         excFrame.paddingLeft = 8; excFrame.paddingRight = 8;
         excFrame.paddingTop = 6; excFrame.paddingBottom = 6;
         excFrame.cornerRadius = 6;
@@ -1212,7 +1213,7 @@ figma.ui.onmessage = async (msg) => {
         const hdr = figma.createText();
         hdr.fontName = { family: "Inter", style: "Bold" };
         hdr.fontSize = 9;
-        hdr.fills = [{ type: "SOLID", color: { r: 0.8, g: 0.3, b: 0.1 } }];
+        hdr.fills = [{ type: "SOLID", color: { r: 0.29, g: 0.33, b: 0.39 } }];
         hdr.characters = 'CENÁRIOS (0)';
         hdr.textAutoResize = "WIDTH_AND_HEIGHT";
         excFrame.appendChild(hdr);
@@ -1238,11 +1239,12 @@ figma.ui.onmessage = async (msg) => {
       excRow.counterAxisSizingMode = "AUTO";
       excRow.counterAxisAlignItems = "CENTER";
       const typeColor = _excTypeRgb[exc.tipo] || { r: 0.4, g: 0.4, b: 0.4 };
+      const _excTypeEmoji = { 'Sucesso': '✅', 'Erro': '❌', 'Alerta': '⚠️', 'Confirmação': '❓' };
       const typeLabel = figma.createText();
       typeLabel.fontName = { family: "Inter", style: "Bold" };
       typeLabel.fontSize = 9;
       typeLabel.fills = [{ type: "SOLID", color: typeColor }];
-      typeLabel.characters = (exc.tipo || 'GERAL').toUpperCase();
+      typeLabel.characters = `${_excTypeEmoji[exc.tipo] || '❔'} ${(exc.tipo || 'GERAL').toUpperCase()}`;
       typeLabel.textAutoResize = "WIDTH_AND_HEIGHT";
       const titleLabel = figma.createText();
       titleLabel.fontName = { family: "Inter", style: "Regular" };
@@ -3753,7 +3755,7 @@ figma.ui.onmessage = async (msg) => {
         const excFrame = figma.createFrame();
         excFrame.layoutMode = "VERTICAL";
         excFrame.itemSpacing = 6;
-        excFrame.fills = [{ type: "SOLID", color: { r: 1, g: 0.95, b: 0.93 } }];
+        excFrame.fills = [{ type: "SOLID", color: { r: 0.96, g: 0.96, b: 0.97 } }];
         excFrame.paddingLeft = 10; excFrame.paddingRight = 10;
         excFrame.paddingTop = 8; excFrame.paddingBottom = 8;
         excFrame.cornerRadius = 6;
@@ -3762,7 +3764,7 @@ figma.ui.onmessage = async (msg) => {
         const excTitle = figma.createText();
         excTitle.fontName = { family: "Inter", style: "Bold" };
         excTitle.fontSize = 9;
-        excTitle.fills = [{ type: "SOLID", color: { r: 0.8, g: 0.3, b: 0.1 } }];
+        excTitle.fills = [{ type: "SOLID", color: { r: 0.29, g: 0.33, b: 0.39 } }];
         excTitle.characters = `CENÁRIOS DE EXCEÇÃO (${specExcecoes.length})`;
         excTitle.textAutoResize = "WIDTH_AND_HEIGHT";
         excFrame.appendChild(excTitle);
@@ -3772,6 +3774,7 @@ figma.ui.onmessage = async (msg) => {
           'Sucesso':     { r: 0.10, g: 0.55, b: 0.25 },
           'Confirmação': { r: 0.05, g: 0.35, b: 0.80 },
         };
+        const _excTypeEmoji = { 'Sucesso': '✅', 'Erro': '❌', 'Alerta': '⚠️', 'Confirmação': '❓' };
         specExcecoes.forEach(exc => {
           const excRow = figma.createFrame();
           excRow.layoutMode = "HORIZONTAL";
@@ -3785,7 +3788,7 @@ figma.ui.onmessage = async (msg) => {
           typeLabel.fontName = { family: "Inter", style: "Bold" };
           typeLabel.fontSize = 9;
           typeLabel.fills = [{ type: "SOLID", color: typeColor }];
-          typeLabel.characters = (exc.tipo || 'GERAL').toUpperCase();
+          typeLabel.characters = `${_excTypeEmoji[exc.tipo] || '❔'} ${(exc.tipo || 'GERAL').toUpperCase()}`;
           typeLabel.textAutoResize = "WIDTH_AND_HEIGHT";
           const titleLabel = figma.createText();
           titleLabel.fontName = { family: "Inter", style: "Regular" };

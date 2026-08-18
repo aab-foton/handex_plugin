@@ -718,19 +718,16 @@ ${(handoffData.createdFlows || []).length === 0
       const researchLink = (docs.research && docs.research.link) || '#';
       const researchTarget = (docs.research && docs.research.link) ? 'target="_blank"' : '';
 
-      // Color map for spec categories (used in HTML export inline styles)
+      // Color map for spec categories (used in HTML export inline styles).
+      // Só as 4 categorias oficiais (ver DEFAULT_CATEGORIES em
+      // specifications.js) -- categorias legadas removidas caem no fallback
+      // cinza de _getCatStyleHTML, mesmo comportamento da UI ao vivo
+      // (_getCatColor em specifications.js), sem perda do texto do label.
       const _catColorMapHTML = {
         'info':          { bg: '#f1f5f9', text: '#475569', border: '#cbd5e1' },
         'comportamento': { bg: '#fdf2f8', text: '#be185d', border: '#fbcfe8' },
         'regra':         { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' },
         'api':           { bg: '#f7fee7', text: '#4d7c0f', border: '#bef264' },
-        'layout':        { bg: '#eef2ff', text: '#4338ca', border: '#c7d2fe' },
-        'componente':    { bg: '#fff1f2', text: '#e11d48', border: '#fecdd3' },
-        'interacao':     { bg: '#ecfdf5', text: '#047857', border: '#6ee7b7' },
-        'tipografia':    { bg: '#fefce8', text: '#a16207', border: '#fde68a' },
-        'cor':           { bg: '#f0fdfa', text: '#0d9488', border: '#5eead4' },
-        'acessibilidade':{ bg: '#faf5ff', text: '#7c3aed', border: '#d8b4fe' },
-        'conteudo':      { bg: '#ecfeff', text: '#0e7490', border: '#67e8f9' },
       };
       function _getCatStyleHTML(value) {
         const c = _catColorMapHTML[value] || { bg: '#f9fafb', text: '#64748b', border: '#e5e7eb' };
