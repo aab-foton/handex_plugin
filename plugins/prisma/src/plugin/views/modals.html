@@ -1,0 +1,366 @@
+<!-- MODAL: Loading -->
+<div id="prisma-loading" class="hidden fixed inset-0 z-[2000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+  <div class="bg-white dark:bg-dark-bg rounded-2xl shadow-2xl p-8 flex flex-col items-center gap-4 w-[220px]">
+    <div class="relative w-12 h-12">
+      <div class="absolute inset-0 rounded-full border-4 border-blue-200"></div>
+      <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-600 animate-spin"></div>
+    </div>
+    <p class="text-[12px] font-bold text-slate-700 dark:text-white text-center">Processando...</p>
+  </div>
+</div>
+
+<!-- MODAL: Inserir novo framework -->
+<div id="modal-insert-framework" class="hidden fixed inset-0 z-[2000] flex items-end justify-center bg-black/40 backdrop-blur-sm" onclick="if(event.target===this) closeInsertFrameworkModal()">
+  <div class="bg-white dark:bg-dark-bg rounded-t-2xl shadow-2xl w-full max-h-[85%] flex flex-col">
+    <div class="flex items-center justify-between p-4 pb-2.5 shrink-0">
+      <p class="text-[12px] font-extrabold text-slate-800 dark:text-white">Inserir novo framework</p>
+      <button onclick="closeInsertFrameworkModal()" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-dark-muted transition-colors" aria-label="Fechar">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div class="px-4 shrink-0">
+      <input id="fw-filter" type="text" placeholder="Buscar framework..." oninput="filterFrameworkList()" class="w-full" />
+    </div>
+
+    <!-- Lista customizada, com scroll próprio, contida na modal -->
+    <div id="fw-option-list" class="overflow-y-auto px-4 py-2.5 space-y-3" style="max-height: 220px;"></div>
+
+    <!-- Preview do framework selecionado -->
+    <div id="fw-preview" class="hidden mx-4 bg-blue-50/60 dark:bg-blue-900/10 border-2 border-blue-500 dark:border-blue-400 rounded-xl p-3 space-y-2 shrink-0 shadow-lg shadow-blue-500/20 dark:shadow-blue-400/10">
+      <div class="flex items-start gap-2.5">
+        <div id="fw-preview-icon-wrap" class="w-8 h-8 flex items-center justify-center rounded-lg shrink-0">
+          <i id="fw-preview-icon" data-lucide="layout-template" class="w-4 h-4"></i>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <p id="fw-preview-name" class="font-bold text-[12px] text-slate-800 dark:text-white"></p>
+            <span id="fw-preview-category" class="px-1.5 py-0.5 text-[9px] font-bold rounded uppercase tracking-wide"></span>
+          </div>
+        </div>
+      </div>
+      <p id="fw-preview-description" class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"></p>
+      <div>
+        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Quando usar</p>
+        <p id="fw-preview-when" class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+      </div>
+    </div>
+
+    <div class="p-4 pt-2.5 shrink-0">
+      <button onclick="injectSelectedFramework()" id="btn-insert-framework" disabled
+        class="w-full py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-40 disabled:cursor-not-allowed text-white text-[12px] font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+        Inserir no Canvas
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Exportar dados (consolida os antigos 3 botões de export) -->
+<div id="modal-export" class="hidden fixed inset-0 z-[2000] flex items-end justify-center bg-black/40 backdrop-blur-sm" onclick="if(event.target===this) closeExportModal()">
+  <div class="bg-white dark:bg-dark-bg rounded-t-2xl shadow-2xl w-full max-h-[85%] flex flex-col">
+    <div class="flex items-center justify-between p-4 pb-2.5 shrink-0">
+      <p class="text-[12px] font-extrabold text-slate-800 dark:text-white">Exportar Dados</p>
+      <button onclick="closeExportModal()" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-dark-muted transition-colors" aria-label="Fechar">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div class="overflow-y-auto px-4 pb-2 space-y-4" style="max-height: 420px;">
+
+      <!-- Formato -->
+      <div class="space-y-2">
+        <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Formato</p>
+        <label class="flex items-start gap-2.5 p-2.5 border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
+          <input type="radio" name="export-format" id="export-format-full" checked onchange="updateExportModalUI()" class="mt-0.5" />
+          <span>
+            <span class="block text-[12px] font-bold text-slate-800 dark:text-white">Completo (JSON aninhado)</span>
+            <span class="block text-[10px] text-slate-400 dark:text-dark-muted mt-0.5">Briefing, evidências, auditoria e score em um único arquivo fiel ao schema do plugin.</span>
+          </span>
+        </label>
+        <label class="flex items-start gap-2.5 p-2.5 border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
+          <input type="radio" name="export-format" id="export-format-flat" onchange="updateExportModalUI()" class="mt-0.5" />
+          <span>
+            <span class="block text-[12px] font-bold text-slate-800 dark:text-white">Achatado para Power BI</span>
+            <span class="block text-[10px] text-slate-400 dark:text-dark-muted mt-0.5">Tabelas prontas para Get Data &gt; JSON/CSV no Power BI.</span>
+          </span>
+        </label>
+      </div>
+
+      <!-- Opções específicas do formato achatado -->
+      <div id="export-flat-options" class="hidden space-y-4">
+
+        <div class="space-y-2">
+          <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Tabelas a incluir</p>
+          <div class="space-y-1.5">
+            <label class="flex items-center gap-2 text-[12px] text-slate-700 dark:text-dark-text cursor-pointer">
+              <input type="checkbox" id="export-table-instancias" checked /> Instâncias
+            </label>
+            <label class="flex items-center gap-2 text-[12px] text-slate-700 dark:text-dark-text cursor-pointer">
+              <input type="checkbox" id="export-table-campos" checked /> Campos
+            </label>
+            <label class="flex items-center gap-2 text-[12px] text-slate-700 dark:text-dark-text cursor-pointer">
+              <input type="checkbox" id="export-table-evidencias" checked /> Evidências
+            </label>
+            <label class="flex items-center gap-2 text-[12px] text-slate-700 dark:text-dark-text cursor-pointer">
+              <input type="checkbox" id="export-table-scoreBreakdown" checked /> Score Breakdown
+            </label>
+            <label class="flex items-center gap-2 text-[12px] text-slate-700 dark:text-dark-text cursor-pointer">
+              <input type="checkbox" id="export-table-usabilityTests" checked /> Testes de Usabilidade
+            </label>
+            <label class="flex items-center gap-2 text-[12px] text-slate-700 dark:text-dark-text cursor-pointer">
+              <input type="checkbox" id="export-table-usabilitySessions" checked /> Sessões de Usabilidade
+            </label>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Tipo de arquivo</p>
+          <label class="flex items-center gap-2 text-[12px] text-slate-700 dark:text-dark-text cursor-pointer">
+            <input type="radio" name="export-filetype" id="export-filetype-json" checked /> JSON único (todas as tabelas em um arquivo)
+          </label>
+          <label class="flex items-center gap-2 text-[12px] text-slate-700 dark:text-dark-text cursor-pointer">
+            <input type="radio" name="export-filetype" id="export-filetype-csv" /> CSV (um arquivo por tabela marcada)
+          </label>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="p-4 pt-2.5 shrink-0">
+      <button onclick="runExport()"
+        class="w-full py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[12px] font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+        <i data-lucide="download" class="w-4 h-4"></i>
+        Baixar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Decidir atualização vs. nova versão do Briefing no canvas -->
+<div id="modal-briefing-sync" class="hidden fixed inset-0 z-[2000] flex items-end justify-center bg-black/40 backdrop-blur-sm" onclick="if(event.target===this) closeBriefingSyncModal()">
+  <div class="bg-white dark:bg-dark-bg rounded-t-2xl shadow-2xl w-full max-h-[85%] flex flex-col">
+    <div class="flex items-center justify-between p-4 pb-2.5 shrink-0">
+      <p class="text-[12px] font-extrabold text-slate-800 dark:text-white">Briefing já existe no canvas</p>
+      <button onclick="closeBriefingSyncModal()" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-dark-muted transition-colors" aria-label="Fechar">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div class="px-4 pb-2 shrink-0">
+      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
+        Isso é uma atualização do briefing atual ou uma nova versão?
+      </p>
+    </div>
+
+    <div class="p-4 pt-2 space-y-2 shrink-0">
+      <button onclick="confirmBriefingSync('update')"
+        class="w-full py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[12px] font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+        Atualizar existente
+      </button>
+      <button onclick="confirmBriefingSync('new-version')"
+        class="w-full py-2.5 bg-white dark:bg-dark-surface border border-blue-300 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[12px] font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+        <i data-lucide="copy-plus" class="w-4 h-4"></i>
+        Nova versão
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Confirmar conclusão de um Teste de Usabilidade -->
+<div id="modal-conclude-usability-test" class="hidden fixed inset-0 z-[2000] flex items-end justify-center bg-black/40 backdrop-blur-sm" onclick="if(event.target===this) closeConcludeUsabilityTestModal()">
+  <div class="bg-white dark:bg-dark-bg rounded-t-2xl shadow-2xl w-full max-h-[85%] flex flex-col">
+    <div class="flex items-center justify-between p-4 pb-2.5 shrink-0">
+      <p class="text-[12px] font-extrabold text-slate-800 dark:text-white">Concluir teste de usabilidade?</p>
+      <button onclick="closeConcludeUsabilityTestModal()" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-dark-muted transition-colors" aria-label="Fechar">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div class="px-4 pb-2 shrink-0">
+      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
+        Isso vai sincronizar um resumo deste teste (participantes, taxa de sucesso, achados) como evidência na etapa de Validação da Auditoria. Você ainda pode editar tarefas, sessões e achados depois — a evidência é atualizada de novo na próxima vez que concluir.
+      </p>
+    </div>
+
+    <div class="p-4 pt-2 space-y-2 shrink-0">
+      <button onclick="confirmConcludeUsabilityTest()"
+        class="w-full py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[12px] font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+        <i data-lucide="check-check" class="w-4 h-4"></i>
+        Concluir e sincronizar
+      </button>
+      <button onclick="closeConcludeUsabilityTestModal()"
+        class="w-full py-2.5 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-dark-muted text-[12px] font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Confirmar exclusão de um Teste de Usabilidade -->
+<div id="modal-delete-usability-test" class="hidden fixed inset-0 z-[2000] flex items-end justify-center bg-black/40 backdrop-blur-sm" onclick="if(event.target===this) closeDeleteUsabilityTestModal()">
+  <div class="bg-white dark:bg-dark-bg rounded-t-2xl shadow-2xl w-full max-h-[85%] flex flex-col">
+    <div class="flex items-center justify-between p-4 pb-2.5 shrink-0">
+      <p class="text-[12px] font-extrabold text-slate-800 dark:text-white">Apagar teste de usabilidade?</p>
+      <button onclick="closeDeleteUsabilityTestModal()" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-dark-muted transition-colors" aria-label="Fechar">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div class="px-4 pb-2 shrink-0">
+      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
+        Isso vai apagar permanentemente "<strong id="delete-usability-test-name">—</strong>", incluindo todas as tarefas, sessões e achados registrados. Se este teste já foi sincronizado com a Auditoria, a evidência lá permanece (não é removida junto). Essa ação não pode ser desfeita.
+      </p>
+    </div>
+
+    <div class="p-4 pt-2 space-y-2 shrink-0">
+      <button onclick="confirmDeleteUsabilityTest()"
+        class="w-full py-2.5 bg-red-500 hover:bg-red-600 text-white text-[12px] font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+        <i data-lucide="trash-2" class="w-4 h-4"></i>
+        Apagar teste
+      </button>
+      <button onclick="closeDeleteUsabilityTestModal()"
+        class="w-full py-2.5 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-dark-muted text-[12px] font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Importar resultados do Maze -->
+<div id="modal-maze-import" class="hidden fixed inset-0 z-[2000] flex items-end justify-center bg-black/40 backdrop-blur-sm" onclick="if(event.target===this) closeMazeImportModal()">
+  <div class="bg-white dark:bg-dark-bg rounded-t-2xl shadow-2xl w-full max-h-[85%] flex flex-col">
+    <div class="flex items-center justify-between p-4 pb-2.5 shrink-0">
+      <p class="text-[12px] font-extrabold text-slate-800 dark:text-white">Importar resultados do Maze</p>
+      <button onclick="closeMazeImportModal()" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-dark-muted transition-colors" aria-label="Fechar">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div class="overflow-y-auto px-4 pb-2 space-y-3" style="max-height: 420px;">
+      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
+        Exporte o CSV de resultados do teste no Maze (Results → Export) e selecione o arquivo abaixo.
+        Os sub-passos de cada missão não são importados — só o resultado final por tarefa.
+      </p>
+
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Arquivo CSV</label>
+        <input id="maze-import-file" type="file" accept=".csv,text/csv" onchange="handleMazeCsvSelected(this)" class="w-full text-[11px]" />
+      </div>
+
+      <div id="maze-import-mapping" class="hidden">
+        <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide mb-1.5">Relacionar missões a tarefas</p>
+        <div id="maze-import-mapping-list"></div>
+      </div>
+    </div>
+
+    <div class="p-4 pt-2.5 shrink-0">
+      <button id="maze-import-confirm-btn" onclick="confirmMazeImport()" disabled
+        class="w-full py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-40 disabled:cursor-not-allowed text-white text-[12px] font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+        <i data-lucide="upload" class="w-4 h-4"></i>
+        Importar sessões
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Preencher campos de um framework já no canvas -->
+<div id="modal-fill-framework" class="hidden fixed inset-0 z-[2000] flex items-end justify-center bg-black/40 backdrop-blur-sm" onclick="if(event.target===this) closeFillFrameworkModal()">
+  <div class="bg-white dark:bg-dark-bg rounded-t-2xl shadow-2xl w-full max-h-[85%] flex flex-col">
+    <div class="flex items-center justify-between p-4 pb-2.5 shrink-0">
+      <div class="min-w-0">
+        <p id="fill-modal-title" class="text-[12px] font-extrabold text-slate-800 dark:text-white truncate"></p>
+        <p id="fill-modal-subtitle" class="text-[10px] text-slate-400 dark:text-dark-muted truncate"></p>
+      </div>
+      <button onclick="closeFillFrameworkModal()" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-dark-muted transition-colors shrink-0" aria-label="Fechar">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div id="fill-fields-list" class="overflow-y-auto px-4 py-2 space-y-3" style="max-height: 320px;"></div>
+
+    <div class="p-4 pt-2.5 shrink-0">
+      <button onclick="saveFillFrameworkFields()"
+        class="w-full py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[12px] font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+        <i data-lucide="check" class="w-4 h-4"></i>
+        Salvar no Canvas
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Novo Teste de Usabilidade -->
+<div id="modal-new-usability-test" class="hidden fixed inset-0 z-[2000] flex items-end justify-center bg-black/40 backdrop-blur-sm" onclick="if(event.target===this) closeNewUsabilityTestModal()">
+  <div class="bg-white dark:bg-dark-bg rounded-t-2xl shadow-2xl w-full max-h-[85%] flex flex-col">
+    <div class="flex items-center justify-between p-4 pb-2.5 shrink-0">
+      <p id="ux-test-new-modal-title" class="text-[12px] font-extrabold text-slate-800 dark:text-white">Novo teste de usabilidade</p>
+      <button onclick="closeNewUsabilityTestModal()" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-dark-muted transition-colors" aria-label="Fechar">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div class="px-4 pb-2 space-y-2.5">
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Nome do teste</label>
+        <input id="ux-test-new-nome" type="text" placeholder="Ex: Fluxo de cancelamento de pedido" class="w-full" />
+      </div>
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Objetivo (opcional)</label>
+        <textarea id="ux-test-new-objetivo" rows="2" placeholder="O que você quer descobrir com este teste?" class="w-full resize-none leading-relaxed"></textarea>
+      </div>
+    </div>
+    <div class="p-4 pt-2.5 shrink-0">
+      <button onclick="createUsabilityTest()"
+        class="w-full py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[12px] font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+        <i data-lucide="check" class="w-4 h-4"></i>
+        <span id="ux-test-new-confirm-btn">Criar teste</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Registrar/editar sessão de Teste de Usabilidade -->
+<div id="modal-usability-session" class="hidden fixed inset-0 z-[2000] flex items-end justify-center bg-black/40 backdrop-blur-sm" onclick="if(event.target===this) closeUsabilitySessionModal()">
+  <div class="bg-white dark:bg-dark-bg rounded-t-2xl shadow-2xl w-full max-h-[85%] flex flex-col">
+    <div class="flex items-center justify-between p-4 pb-2.5 shrink-0">
+      <p id="ux-session-modal-title" class="text-[12px] font-extrabold text-slate-800 dark:text-white">Nova sessão</p>
+      <button onclick="closeUsabilitySessionModal()" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-dark-muted transition-colors" aria-label="Fechar">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div class="overflow-y-auto px-4 pb-2 space-y-3" style="max-height: 420px;">
+      <div class="grid grid-cols-2 gap-2.5">
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Participante</label>
+          <input id="ux-session-participante" type="text" placeholder="Nome ou código" class="w-full" />
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Data da sessão</label>
+          <input id="ux-session-data" type="date" class="w-full" />
+        </div>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide">Resultado por tarefa</p>
+          <p id="ux-session-tarefas-progresso" class="text-[10px] font-bold text-blue-500"></p>
+        </div>
+        <div id="ux-session-tarefas" class="space-y-2"></div>
+      </div>
+
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Notas gerais / citações</label>
+        <textarea id="ux-session-notas" rows="2" placeholder="Observações gerais da sessão, citações relevantes..." class="w-full resize-none leading-relaxed"></textarea>
+      </div>
+    </div>
+
+    <div class="p-4 pt-2.5 shrink-0">
+      <button onclick="saveUsabilitySession()"
+        class="w-full py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[12px] font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+        <i data-lucide="check" class="w-4 h-4"></i>
+        Salvar sessão
+      </button>
+    </div>
+  </div>
+</div>

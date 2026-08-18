@@ -1,0 +1,14 @@
+{
+  "name": "prisma",
+  "private": true,
+  "version": "1.0.0",
+  "description": "PRISMA — Plataforma de Revisão e Inspeção da Maturidade UX. Plugin Figma que avalia a maturidade do processo de UX (Design System, acessibilidade e evidências das etapas de Descoberta, Definição, Ideação e Validação), com apoio de agentes de IA orquestrados via Microsoft Foundry.",
+  "scripts": {
+    "bundle:ui": "node src/plugin/build.cjs",
+    "bundle:code": "node scripts/bundle-code.cjs",
+    "build": "npm run bundle:ui && npm run bundle:code"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0"
+  }
+}
