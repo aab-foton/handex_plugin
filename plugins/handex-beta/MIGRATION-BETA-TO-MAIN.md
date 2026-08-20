@@ -389,6 +389,27 @@ Dois atalhos novos de "ocultar/mostrar tudo de uma vez" por TIPO de marcação n
 
 ---
 
+## 20. `a11y-inferencia-variante-lote`
+
+Fase 1 de um pedido maior do designer de "mapeamento profundo" entre características reais do componente DSC detectado no canvas e os parâmetros de a11y da lib "Design Acessível". Investigação concluiu que a varredura já é profunda o suficiente (mesma função recursiva do scan de tokens) e que os toggles de a11y (Nome Acessível/Observações/Notas de Código) são decisões textuais puras do designer, sem correspondência automática possível — não há o que inferir aí. O único cruzamento viável com dado já disponível e sem heurística arriscada: pré-selecionar a variante secundária ("tipo") no `<select>` de "Elementos e Imagens" durante o lote de "Gerar Handoff Automatizado", a partir das variantes REAIS do componente DSC (`item.variants`, já vinha do scan — nenhuma mudança de backend foi necessária).
+
+Cobre só 3 pares de correspondência clara e confirmados contra a lib real: Button `state=disabled` → a11y `'desabilitado'`; Button `icon only=true` → a11y `'de icone'` (com precedência de `desabilitado` quando os dois sinais coexistem — estado é mais crítico que variação visual); Inputs `state=readonly` → a11y `'somente leitura'`. Nenhum outro componente (`checkbox`, `radio button`, `switch`, etc.) foi mapeado — os `variantOptions` deles descrevem presença de rótulo/agrupamento, não estado, e não há como inferir isso com segurança a partir das variantes do DSC; continuam caindo no default do catálogo, como antes.
+
+**Arquivos e blocos afetados.**
+- `src/plugin/modules/accessibility.js` — nova função `_inferA11yVariantFromDsc(shortName, itemVariants)`, comparação case-insensitive/trim de `name`/`value` (`item.variants` já vem com `name` limpo de sufixo `#id`, mas o case original do Figma não é garantido). `confirmA11yBatchGenerate` passa `{ tipo: _inferA11yVariantFromDsc(shortName, item.variants) || undefined }` para `_buildA11yElementoPayload` em vez do `{}` fixo anterior — `undefined` (não `null`) preserva o fallback pro defaultValue do catálogo já existente quando não há correspondência.
+- Nenhuma mudança em `code.js` — `item.variants` já chegava pronto no payload da detecção (`extractNodeProperties`/`addElement`), consumido só no frontend.
+- `_prefillA11ySpecForEdit`/`_restoreA11yElementoVariant` (edição de spec já criada) já liam `spec.a11ySubtype.tipo` antes desta mudança — nenhum ajuste necessário ali, a spec criada pelo lote com `tipo` inferido é indistinguível de uma criada manualmente com o mesmo valor.
+
+**Decisões tomadas sem pedido explícito (documentar se for revisitar).** A comparação usa `name`/`value` normalizados (`.trim().toLowerCase()`) por segurança, já que o formato exato de capitalização das variantes no arquivo Figma real (`"state"` vs `"State"`) não foi reconfirmado nó a nó antes da implementação — os pares de valor (`disabled`, `readonly`, `true`) seguem a convenção documentada em `refs/_skeleton.json` → `componentsDetailed`.
+
+**Fora de escopo (trabalho futuro, decisão explícita do designer).** O restante do "mapeamento profundo" pedido originalmente — inferência automática dos toggles reais (Nome Acessível/Observações/Notas de Código) e expansão da tabela de correspondência pra mais componentes (`checkbox`, `radio button`, `switch`, etc.) — ficou fora desta fase por não ter correspondência clara ou viável hoje. Não implementar sem novo material da vertical de a11y confirmando semântica de estado desses componentes.
+
+**Dependências que a main não tem hoje.** As mesmas do bloco de a11y como um todo (`a11y-deteccao-automatica`, item 4) — `item.variants`/`item.dscComponentMatch` só existem no payload do scan quando esse bloco já está migrado.
+
+**Risco de migração:** baixo. Mudança aditiva e isolada a uma função nova + um call site; não altera schema salvo, não altera contrato de nenhum handler, comportamento padrão (sem correspondência) idêntico ao anterior.
+
+---
+
 ## Ordem de migração recomendada
 
 1. **Dados/refs primeiro:** `refs/design-acessivel-component-properties.json`, `refs/dsc-component-a11y-mapping.json` — sem eles nada do bloco de a11y funciona.

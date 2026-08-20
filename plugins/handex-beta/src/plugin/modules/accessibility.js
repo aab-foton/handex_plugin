@@ -1101,7 +1101,9 @@ window._getA11ySelectionInfo = _getA11ySelectionInfo;
 //                  NÓ no canvas como placeholder — decisão de UX deliberada,
 //                  ver confirmA11yBatchGenerate.
 //   tipo           variante secundária (ex: Button → "de icone") — no lote
-//                  sempre null (usa o defaultValue do catálogo, mesmo
+//                  vem de _inferA11yVariantFromDsc quando há correspondência
+//                  DSC conhecida (BETA-ONLY: a11y-inferencia-variante-lote),
+//                  senão null (usa o defaultValue do catálogo, mesmo
 //                  comportamento do formulário quando o designer não mexe
 //                  em nada).
 //   toggleProperties  array já no formato properties[] ({key,label,value})
@@ -2314,6 +2316,39 @@ function _suggestNextA11yTagForArea(areaId) {
   return candidate;
 }
 
+// BETA-ONLY: a11y-inferencia-variante-lote — Fase 1 do "mapeamento profundo"
+// pedido pelo designer (ver MIGRATION-BETA-TO-MAIN.md). Cruza as variantes
+// REAIS do componente DSC detectado no canvas (item.variants, já vêm do scan
+// — ver extractNodeProperties/addElement, code.js) com a variante secundária
+// ("tipo") do catálogo de a11y, pra não deixar todo item do lote nascer com
+// o default (ex: um Button já desabilitado no canvas vira spec "default" em
+// vez de "desabilitado"). Só cobre os pares com correspondência CLARA e
+// confirmada contra a lib real — não é heurística especulativa. Nenhum outro
+// componente (checkbox/radio/switch/...) tem correspondência segura hoje:
+// os variantOptions deles são sobre presença de rótulo/agrupamento, não
+// estado, e não dá pra inferir isso a partir das variantes do DSC.
+function _inferA11yVariantFromDsc(shortName, itemVariants) {
+  const variants = Array.isArray(itemVariants) ? itemVariants : [];
+  const has = (propName, propValue) => variants.some(v =>
+    v && String(v.name || '').trim().toLowerCase() === propName
+      && String(v.value || '').trim().toLowerCase() === propValue
+  );
+
+  if (shortName === 'button') {
+    // Prioridade: estado tem precedência sobre variação visual — um botão
+    // desabilitado E de ícone documenta-se primeiro como "desabilitado"
+    // (é a informação mais crítica pro leitor de tela).
+    if (has('state', 'disabled')) return 'desabilitado';
+    if (has('icon only', 'true')) return 'de icone';
+    return null;
+  }
+  if (shortName === 'inputs') {
+    if (has('state', 'readonly')) return 'somente leitura';
+    return null;
+  }
+  return null;
+}
+
 // Confirma o lote: para cada detecção, monta letra sequencial + payload puro
 // (_buildA11yElementoPayload) e chama create-unified-spec SEQUENCIALMENTE
 // (await uma de cada vez, ver _createA11ySpecAndWait) — nunca em paralelo.
@@ -2372,9 +2407,16 @@ async function confirmA11yBatchGenerate() {
     // "gerais") — decisão consciente do usuário de priorizar velocidade,
     // revisão manual depois.
     const a11yType = (shortName === 'titulo' || shortName === 'decorativo') ? shortName : 'elemento';
+    // BETA-ONLY: a11y-inferencia-variante-lote — pré-seleciona a variante
+    // secundária quando o componente real no canvas já sinaliza um estado/
+    // variação com correspondência DSC conhecida (ver _inferA11yVariantFromDsc).
+    // undefined (não null) pra cair no comportamento padrão já existente em
+    // _buildA11yElementoPayload quando não há correspondência.
     const built = a11yType === 'titulo' ? _buildA11yTituloPayload(letter, item.name || 'Elemento')
       : a11yType === 'decorativo' ? _buildA11yDecorativoPayload(item.name || 'Elemento')
-      : _buildA11yElementoPayload(letter, shortName, item.name || 'Elemento', {});
+      : _buildA11yElementoPayload(letter, shortName, item.name || 'Elemento', {
+        tipo: _inferA11yVariantFromDsc(shortName, item.variants) || undefined,
+      });
     const catMeta = A11Y_CATEGORIES[a11yType];
     const opts = {
       category: 'acessibilidade',
