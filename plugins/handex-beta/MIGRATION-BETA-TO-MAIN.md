@@ -434,6 +434,22 @@ Quatro correções pontuais reportadas pelo designer após teste da build mais r
 
 ---
 
+## 22. `a11y-pular-listagem-deteccao`
+
+Simplifica/substitui parte do comportamento descrito no item 4 (`a11y-deteccao-automatica`): o modal de Detecção Automática (`#a11y-post-area-detect-modal`) tinha 3 estados sequenciais (`ask` → `loading` → `result`), mas o estado `result` (listagem intermediária dos itens detectados) já não tinha nenhuma ação individual desde `a11y-injecao-em-massa` (item 18) — virou só um passo extra entre marcar a área e criar as specs. Testado e confirmado pelo designer: o estado `result` foi removido. O modal passa a ter só 2 estados visíveis (`ask`/`loading`); ao terminar a varredura, o fluxo pula direto pro resumo do lote (`openA11yBatchSummaryModal`, já existente) quando há ao menos 1 item elegível, ou fecha o modal com um toast informativo quando não há nada reconhecido.
+
+**Arquivos e blocos afetados.**
+- `src/plugin/modules/accessibility.js` — `handleA11yPostAreaDetectionResult` reescrita: não monta mais listagem HTML (funções locais `itemHtml`/`blockHtml`/`_a11yDetectionLabel` deletadas, sem outro chamador no arquivo). Agora só decide entre toast de "nada detectado" (com `closeA11yPostAreaDetectModal()`) ou abrir o resumo do lote. Pra não empilhar os dois modais visíveis ao mesmo tempo, mas também sem perder `window._a11yPendingDetectionArea` (usado por `openA11yBatchSummaryModal` pra pré-selecionar a área de origem no `<select>`, e zerado por `closeA11yPostAreaDetectModal`), a ordem é: abre o resumo do lote PRIMEIRO, depois fecha o modal de detecção via `closeModal('a11y-post-area-detect-modal')` direto (não o wrapper). `openA11yPostAreaDetectModal` e `confirmA11yBatchGenerate` perderam as referências mortas a `#a11y-post-area-result`/`#a11y-post-area-footer-result`. `confirmA11yBatchGenerate` agora precisa REABRIR `#a11y-post-area-detect-modal` (`openModal(...)`) antes de reaproveitar seu estado de loading como feedback de progresso do lote (ver item 21-a) — antes desta mudança o modal já ficava aberto por baixo do resumo o tempo todo, então esse reaproveitamento nunca precisava reabrir nada; agora que o modal é fechado de fato entre a detecção e o resumo, sem essa reabertura o loading do lote deixaria de aparecer (regressão silenciosa do item 21-a, evitada aqui).
+- `src/plugin/views/modals.html` — `#a11y-post-area-detect-modal`: removidos `#a11y-post-area-result` (com `#a11y-post-area-result-empty`, `#a11y-post-area-result-found`, `#a11y-post-area-results-list`, `#btn-a11y-post-area-batch-generate`) e `#a11y-post-area-footer-result`. Modal fica só com `#a11y-post-area-ask` + `#a11y-post-area-loading` + `#a11y-post-area-footer-ask`.
+
+**Decisões tomadas sem pedido explícito (documentar se for revisitar).** Texto do toast de "nada detectado" (`'Nenhum componente do DSC reconhecido nessa área — anote manualmente.'`) seguiu o tom/estrutura de toasts já existentes no mesmo arquivo (ex.: `'Nenhum elemento interativo (instância ou componente) encontrado dentro dessa área.'`) — não veio de pedido literal, só de convenção local.
+
+**Dependências que a main não tem hoje.** As mesmas do bloco de a11y como um todo — depende de `a11y-deteccao-automatica` (item 4) e `a11y-injecao-em-massa` (item 18, que já tinha deixado o estado `result` sem ação nenhuma) estarem migrados primeiro.
+
+**Risco de migração:** baixo. Simplificação de fluxo (remove um estado visual), sem mudança de schema salvo nem de contrato de handler backend↔frontend. Atenção só ao detalhe de reabertura do modal em `confirmA11yBatchGenerate` (ver acima) — se migrar por partes, não pular esse ajuste.
+
+---
+
 ## Ordem de migração recomendada
 
 1. **Dados/refs primeiro:** `refs/design-acessivel-component-properties.json`, `refs/dsc-component-a11y-mapping.json` — sem eles nada do bloco de a11y funciona.

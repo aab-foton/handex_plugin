@@ -1967,14 +1967,10 @@ function openA11yPostAreaDetectModal(area) {
   };
   const ask = document.getElementById('a11y-post-area-ask');
   const loading = document.getElementById('a11y-post-area-loading');
-  const result = document.getElementById('a11y-post-area-result');
   const footerAsk = document.getElementById('a11y-post-area-footer-ask');
-  const footerResult = document.getElementById('a11y-post-area-footer-result');
   if (ask) ask.classList.remove('hidden');
   if (loading) loading.classList.add('hidden');
-  if (result) result.classList.add('hidden');
   if (footerAsk) footerAsk.classList.remove('hidden');
-  if (footerResult) footerResult.classList.add('hidden');
   // BETA-ONLY: a11y-fixes-pos-teste — loading no lote. Reseta o texto do
   // loading pro estado padrão de varredura (pode ter ficado "Criando
   // especificações…" de um lote anterior nesta mesma sessão do modal).
@@ -2042,99 +2038,37 @@ window.runA11yPostAreaDetection = runA11yPostAreaDetection;
 
 // Chamado pelo handler scan-result (messages.js) quando origin ===
 // 'a11y-detection' — recebe as detecções já filtradas (components com
-// dscComponentMatch) e desenha o estado de resultado dentro do modal aberto
-// por runA11yPostAreaDetection. Persiste em frame.a11yDetections quando há
+// dscComponentMatch). Persiste em frame.a11yDetections quando há
 // activeFrameId (best-effort, mantém compatibilidade com quem também usa a
 // aba Escanear Tokens); sem frame ativo, guarda em window._a11yLooseDetections
 // só pra alimentar o botão de lote nesta sessão do modal.
+//
+// BETA-ONLY: a11y-pular-listagem-deteccao — a listagem intermediária
+// (#a11y-post-area-result) foi removida por decisão de produto: já não tinha
+// ação individual nenhuma (ver a11y-injecao-em-massa), então era só um passo
+// extra entre marcar a área e criar as specs. Agora, ao terminar a varredura,
+// pula direto pro modal de resumo do lote (openA11yBatchSummaryModal) quando
+// há algo elegível, ou fecha o modal com um toast informativo quando não há.
 function handleA11yPostAreaDetectionResult(detections) {
   window._a11yLooseDetections = detections;
 
-  const loading = document.getElementById('a11y-post-area-loading');
-  const result = document.getElementById('a11y-post-area-result');
-  const footerResult = document.getElementById('a11y-post-area-footer-result');
-  if (loading) loading.classList.add('hidden');
-  if (result) result.classList.remove('hidden');
-  if (footerResult) footerResult.classList.remove('hidden');
+  const eligible = _filterA11yBatchEligible(detections);
 
-  const emptyEl = document.getElementById('a11y-post-area-result-empty');
-  const foundEl = document.getElementById('a11y-post-area-result-found');
-  const list = document.getElementById('a11y-post-area-results-list');
-  const batchBtn = document.getElementById('btn-a11y-post-area-batch-generate');
-
-  if (!detections || detections.length === 0) {
-    if (emptyEl) emptyEl.classList.remove('hidden');
-    if (foundEl) foundEl.classList.add('hidden');
+  if (!detections || detections.length === 0 || eligible.length === 0) {
+    closeA11yPostAreaDetectModal();
+    showToast('Nenhum componente do DSC reconhecido nessa área — anote manualmente.');
     return;
   }
-  if (emptyEl) emptyEl.classList.add('hidden');
-  if (foundEl) foundEl.classList.remove('hidden');
 
-  const alta = detections.filter(d => d.dscComponentMatch.confidence === 'alta');
-  const baixa = detections.filter(d => d.dscComponentMatch.confidence !== 'alta');
-
-  // shortName aqui pode ser (a) um dos 16 componentes reais do catálogo
-  // "elemento" (A11Y_COMPONENTE_LABELS) ou (b) a própria chave de categoria
-  // 'titulo'/'decorativo' quando a detecção veio de heurística de texto/ícone
-  // (ver _resolveTypographyA11yMatch/_resolveDecorativeA11yMatch em code.js)
-  // — essas duas não têm entrada em A11Y_COMPONENTE_LABELS, então cai no
-  // label da categoria inteira (A11Y_CATEGORIES).
-  const _a11yDetectionLabel = (shortName) => {
-    if (shortName === 'titulo' || shortName === 'decorativo') {
-      return A11Y_CATEGORIES[shortName] ? A11Y_CATEGORIES[shortName].label : _capitalizeFirst(shortName);
-    }
-    return A11Y_COMPONENTE_LABELS[shortName] || _capitalizeFirst(shortName);
-  };
-
-  // BETA-ONLY: a11y-injecao-em-massa — item passou a ser só informativo (sem
-  // ação de clique). O único caminho de criação agora é o lote
-  // (confirmA11yBatchGenerate); o botão "Usar sugestão" por item foi removido
-  // por decisão de produto (fluxo individual descontinuado).
-  const itemHtml = (item, confidence) => {
-    const shortName = item.dscComponentMatch.a11yCategory;
-    const label = _a11yDetectionLabel(shortName);
-    const isBaixa = confidence !== 'alta';
-    return `
-      <li class="list-none flex items-center gap-2 px-2.5 py-2 rounded-xl border ${isBaixa ? 'bg-amber-50/60 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40' : 'bg-white dark:bg-dark-surface border-gray-100 dark:border-dark-line'}">
-        <div class="w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${isBaixa ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' : 'bg-[#FFF6DC] text-[#FCBE05]'}">
-          <i data-lucide="${isBaixa ? 'help-circle' : 'sparkles'}" class="w-3.5 h-3.5"></i>
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-[11px] font-semibold text-slate-700 dark:text-white truncate">${escapeHtml(item.name || 'Elemento')}</p>
-          <p class="text-[9px] text-slate-400 dark:text-dark-muted truncate">Sugestão: ${escapeHtml(label)}</p>
-        </div>
-      </li>
-    `;
-  };
-
-  const blockHtml = (title, icon, items, confidence) => {
-    if (items.length === 0) return '';
-    return `
-      <div class="mb-2">
-        <div class="flex items-center gap-1.5 mb-1.5">
-          <i data-lucide="${icon}" class="w-3 h-3 ${confidence === 'alta' ? 'text-slate-400' : 'text-amber-500'}"></i>
-          <span class="text-[9px] font-bold uppercase tracking-wider ${confidence === 'alta' ? 'text-slate-400 dark:text-dark-muted' : 'text-amber-600 dark:text-amber-400'}">${title}</span>
-        </div>
-        <ul class="flex flex-col gap-1.5">
-          ${items.map(i => itemHtml(i, confidence)).join('')}
-        </ul>
-      </div>
-    `;
-  };
-
-  if (list) {
-    list.innerHTML =
-      blockHtml('Detectado automaticamente', 'check-circle-2', alta, 'alta') +
-      blockHtml('Confirmar categoria', 'alert-triangle', baixa, 'baixa');
-  }
-
-  // "Gerar Handoff Automatizado" em lote — único caminho de criação a partir
-  // da Detecção Automática (ver BETA-ONLY: a11y-injecao-em-massa). Só faz
-  // sentido oferecer se houver ao menos 1 item elegível — ver
-  // _filterA11yBatchEligible (inclui 'elemento', 'titulo' e 'decorativo').
-  if (batchBtn) batchBtn.classList.toggle('hidden', _filterA11yBatchEligible(detections).length === 0);
-
-  _refreshIcons();
+  // Abre o resumo do lote ANTES de fechar o modal de detecção — precisa que
+  // window._a11yPendingDetectionArea ainda esteja setado pra pré-selecionar a
+  // área de origem no <select> (closeA11yPostAreaDetectModal zera essa
+  // variável). closeModal('a11y-post-area-detect-modal') direto (em vez do
+  // wrapper) evita empilhar os dois modais visíveis ao mesmo tempo sem perder
+  // esse dado — mesmo efeito de "fechar", só sem o side-effect de limpar
+  // _a11yPendingDetectionArea antes da hora.
+  openA11yBatchSummaryModal();
+  closeModal('a11y-post-area-detect-modal');
 }
 window.handleA11yPostAreaDetectionResult = handleA11yPostAreaDetectionResult;
 
@@ -2405,24 +2339,24 @@ async function confirmA11yBatchGenerate() {
   closeA11yBatchSummaryModal();
 
   // BETA-ONLY: a11y-fixes-pos-teste — loading no lote. O modal de Detecção
-  // Automática (#a11y-post-area-detect-modal) fica aberto por baixo enquanto
-  // o loop sequencial abaixo cria uma spec de cada vez (pode levar vários
-  // segundos em lotes grandes); sem isso o designer via o modal "parado" sem
-  // nenhum feedback. Reaproveita o mesmo elemento/estrutura visual do estado
-  // de loading já usado durante a varredura inicial (runA11yPostAreaDetection)
-  // — só troca o texto pra não sugerir que ainda está escaneando.
+  // Automática (#a11y-post-area-detect-modal) reabre por baixo (ver
+  // BETA-ONLY: a11y-pular-listagem-deteccao — o modal já vem FECHADO neste
+  // ponto desde que a listagem intermediária foi removida, precisa reabrir
+  // explicitamente) enquanto o loop sequencial abaixo cria uma spec de cada
+  // vez (pode levar vários segundos em lotes grandes); sem isso o designer
+  // via a tela "parada" sem nenhum feedback. Reaproveita o mesmo elemento/
+  // estrutura visual do estado de loading já usado durante a varredura
+  // inicial (runA11yPostAreaDetection) — só troca o texto pra não sugerir que
+  // ainda está escaneando.
   const ask = document.getElementById('a11y-post-area-ask');
-  const result = document.getElementById('a11y-post-area-result');
   const loading = document.getElementById('a11y-post-area-loading');
   const loadingText = loading ? loading.querySelector('p') : null;
   const footerAsk = document.getElementById('a11y-post-area-footer-ask');
-  const footerResult = document.getElementById('a11y-post-area-footer-result');
   if (ask) ask.classList.add('hidden');
-  if (result) result.classList.add('hidden');
   if (loadingText) loadingText.textContent = 'Criando especificações…';
   if (loading) loading.classList.remove('hidden');
   if (footerAsk) footerAsk.classList.add('hidden');
-  if (footerResult) footerResult.classList.add('hidden');
+  openModal('a11y-post-area-detect-modal');
 
   window._a11yExpandedAreaIds = window._a11yExpandedAreaIds || new Set();
   window._a11yExpandedAreaIds.add(areaId);

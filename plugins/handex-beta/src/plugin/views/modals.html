@@ -1242,30 +1242,18 @@
         <p class="text-[11px] text-slate-500 dark:text-dark-muted">Detectando componentes…</p>
       </div>
 
-      <!-- Estado 3: resultado -->
-      <div id="a11y-post-area-result" class="hidden p-5 overflow-y-auto flex-1 min-h-0" onscroll="handleScroll(this)">
-        <p id="a11y-post-area-result-empty" class="hidden text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
-          Nenhum componente do DSC reconhecido dentro dessa área.
-        </p>
-        <div id="a11y-post-area-result-found" class="hidden">
-          <p class="text-[10px] text-slate-400 dark:text-dark-muted mb-2 leading-tight">
-            Componentes do DSC reconhecidos nessa área. Confirme a categoria e pré-preencha o formulário, ou ignore e anote manualmente.
-          </p>
-          <div id="a11y-post-area-results-list" class="flex flex-col gap-2 min-h-[10px] mb-3"></div>
-          <button type="button" id="btn-a11y-post-area-batch-generate" onclick="openA11yBatchSummaryModal()"
-            class="hidden w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-bold text-white bg-gradient-to-r from-[#0891B2] to-[#0070af] hover:opacity-90 transition-opacity">
-            <i data-lucide="wand-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
-            Gerar Handoff Automatizado
-          </button>
-        </div>
-      </div>
+      <!-- BETA-ONLY: a11y-pular-listagem-deteccao — Estado 3 (listagem de
+           resultado, #a11y-post-area-result) removido: já não tinha ação
+           individual nenhuma (ver a11y-injecao-em-massa), então era só um
+           passo extra entre marcar a área e criar as specs. Ao terminar a
+           varredura (handleA11yPostAreaDetectionResult, accessibility.js), o
+           fluxo agora pula direto pro modal de resumo do lote
+           (#a11y-batch-summary-modal) ou fecha este modal com um toast, sem
+           passar por um estado visual intermediário aqui. -->
 
       <div id="a11y-post-area-footer-ask" class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2 shrink-0">
         <button onclick="closeA11yPostAreaDetectModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Agora não</button>
         <button onclick="runA11yPostAreaDetection()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0070af] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Detectar</button>
-      </div>
-      <div id="a11y-post-area-footer-result" class="hidden p-4 border-t border-gray-100 dark:border-dark-line shrink-0">
-        <button onclick="closeA11yPostAreaDetectModal()" class="w-full py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Fechar</button>
       </div>
     </div>
   </div>
