@@ -4114,7 +4114,12 @@ figma.ui.onmessage = async (msg) => {
     }
 
     async function extractSpecs(n, depth) {
-      if ((depth || 0) > 8) return;
+      // BETA-ONLY: a11y-fixes-pos-teste — profundidade. Telas bancárias reais
+      // (sidebar + área de conteúdo com cards/seções aninhadas) facilmente
+      // ultrapassam 8 níveis, fazendo o scan "esquecer" elementos legítimos
+      // nos níveis mais profundos. Afeta ambos os scans (tokens e a11y —
+      // mesma função, `origin` só diferencia o roteamento da resposta).
+      if ((depth || 0) > 16) return;
       // SKIP HIDDEN NODES
       if (n.visible === false) return;
 
@@ -5687,6 +5692,26 @@ figma.ui.onmessage = async (msg) => {
         figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items: [] });
         return;
       }
+
+      // BETA-ONLY: a11y-fixes-pos-teste — ordem de tabulação por posição
+      // espacial. `collected` nasce na ordem de camadas/z-order do Figma
+      // (ordem de `n.children`), nunca na ordem de leitura visual real. Reordena
+      // por fluxo de leitura ocidental (esquerda→direita na mesma "linha",
+      // depois cima→baixo entre linhas) ANTES de numerar — equivalente ao
+      // comparador já usado no FRONTEND para a listagem de specs
+      // (_a11ySortSpecsSpatially/A11Y_SPATIAL_ROW_THRESHOLD em accessibility.js,
+      // sub-feature a11y-ordenacao-espacial). Mesma tolerância de 24px pra
+      // "mesma linha", pra manter os dois comportamentos consistentes.
+      const TAB_ORDER_SPATIAL_ROW_THRESHOLD = 24;
+      collected.sort((a, b) => {
+        const boundsA = a.absoluteBoundingBox;
+        const boundsB = b.absoluteBoundingBox;
+        if (!boundsA || !boundsB) return 0;
+        if (Math.abs(boundsA.y - boundsB.y) > TAB_ORDER_SPATIAL_ROW_THRESHOLD) {
+          return boundsA.y - boundsB.y;
+        }
+        return boundsA.x - boundsB.x;
+      });
 
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
 

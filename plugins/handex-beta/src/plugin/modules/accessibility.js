@@ -1513,6 +1513,26 @@ function toggleA11yAreaAccordion(uid, areaId) {
 }
 window.toggleA11yAreaAccordion = toggleA11yAreaAccordion;
 
+// BETA-ONLY: a11y-fixes-pos-teste — subaccordion de Ordem de Tabulação.
+// Conjunto separado de window._a11yExpandedAreaIds: expandir/recolher a
+// seção de Ordem de Tabulação de uma área não pode afetar o estado de
+// expansão da própria área (são dois accordions independentes, aninhados).
+// Chaveado pelo uid do accordion PAI (área ou "sem área"), não pelo areaId,
+// pra bater com o padrão já usado em toggleA11yAreaAccordion.
+window._a11yExpandedTabOrderIds = window._a11yExpandedTabOrderIds || new Set();
+
+function toggleA11yTabOrderAccordion(uid) {
+  const body = document.getElementById(`tab-order-body-${uid}`);
+  const chevron = document.getElementById(`tab-order-chevron-${uid}`);
+  if (!body) return;
+  const isHidden = body.classList.contains('hidden');
+  body.classList.toggle('hidden', !isHidden);
+  if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+  if (isHidden) window._a11yExpandedTabOrderIds.add(uid);
+  else window._a11yExpandedTabOrderIds.delete(uid);
+}
+window.toggleA11yTabOrderAccordion = toggleA11yTabOrderAccordion;
+
 // ══ BETA-ONLY: a11y-subaccordions (início) ══
 // Depende de: chamada em _a11yAreaAccordionEl mais abaixo. Ver
 // MIGRATION-BETA-TO-MAIN.md.
@@ -1556,17 +1576,29 @@ function _tabOrderSectionHtml(uid, area) {
   const ulId = `tab-order-list-${uid}`;
   const readOnly = !area;
   const areaIdAttr = area ? area.id : '__sem_area__';
+  // BETA-ONLY: a11y-fixes-pos-teste — subaccordion de Ordem de Tabulação.
+  // Mesmo padrão visual/comportamental de _a11yCategoryAccordionEl (header
+  // clicável com chevron + corpo com classe accordion-content/hidden), mas
+  // com estado de expansão em window._a11yExpandedTabOrderIds (Set separado
+  // de window._a11yExpandedAreaIds — ver toggleA11yTabOrderAccordion) pra não
+  // acoplar a expansão da seção de tab order à expansão da área/"sem área"
+  // que a contém.
+  const expand = window._a11yExpandedTabOrderIds.has(uid);
+  const chevronStyle = expand ? 'rotate(180deg)' : 'rotate(0deg)';
+  const bodyHiddenClass = expand ? '' : 'hidden';
 
   if (readOnly) {
     return `
       <div class="rounded-lg border border-gray-100 dark:border-dark-line overflow-hidden ml-1">
-        <div class="flex items-center gap-2 px-2 py-1.5 bg-gray-50/60 dark:bg-dark-bg/30">
+        <div class="flex items-center gap-2 px-2 py-1.5 cursor-pointer select-none bg-gray-50/60 dark:bg-dark-bg/30 hover:bg-gray-100/60 dark:hover:bg-dark-line/20 transition-colors"
+          onclick="toggleA11yTabOrderAccordion('${uid}')">
           <div class="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0 bg-gray-100 dark:bg-dark-line/40">
             <i data-lucide="list-ordered" class="w-2.5 h-2.5 text-gray-400"></i>
           </div>
           <p class="flex-1 min-w-0 text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wide truncate">Ordem de Tabulação</p>
+          <i data-lucide="chevron-down" id="tab-order-chevron-${uid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:${chevronStyle}"></i>
         </div>
-        <div class="p-1.5">
+        <div id="tab-order-body-${uid}" class="accordion-content ${bodyHiddenClass} border-t border-gray-50 dark:border-dark-line p-1.5">
           <ul id="${ulId}" class="flex flex-col gap-1.5 min-h-[10px]"></ul>
         </div>
       </div>
@@ -1575,25 +1607,27 @@ function _tabOrderSectionHtml(uid, area) {
 
   return `
     <div class="rounded-lg border border-gray-100 dark:border-dark-line overflow-hidden ml-1">
-      <div class="flex items-center gap-2 px-2 py-1.5 bg-gray-50/60 dark:bg-dark-bg/30">
+      <div class="flex items-center gap-2 px-2 py-1.5 cursor-pointer select-none bg-gray-50/60 dark:bg-dark-bg/30 hover:bg-gray-100/60 dark:hover:bg-dark-line/20 transition-colors"
+        onclick="toggleA11yTabOrderAccordion('${uid}')">
         <div class="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0" style="background-color:#E0F5FA">
           <i data-lucide="list-ordered" class="w-2.5 h-2.5" style="color:#0891B2"></i>
         </div>
         <p class="flex-1 min-w-0 text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wide truncate">Ordem de Tabulação</p>
+        <i data-lucide="chevron-down" id="tab-order-chevron-${uid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:${chevronStyle}"></i>
       </div>
-      <div class="p-1.5 space-y-1.5">
-        <button type="button" data-tab-order-btn-toggle="${escapeHtml(areaIdAttr)}" onclick="toggleTabOrderMode('${escapeHtml(areaIdAttr)}', this)"
+      <div id="tab-order-body-${uid}" class="accordion-content ${bodyHiddenClass} border-t border-gray-50 dark:border-dark-line p-1.5 space-y-1.5">
+        <button type="button" data-tab-order-btn-toggle="${escapeHtml(areaIdAttr)}" onclick="event.stopPropagation(); toggleTabOrderMode('${escapeHtml(areaIdAttr)}', this)"
           class="w-full flex items-center justify-center gap-2 h-8 rounded-xl text-[10.5px] font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
           <i data-lucide="list-ordered" class="w-3.5 h-3.5" aria-hidden="true"></i>
           <span data-tab-order-toggle-label>Iniciar Ordem de Tabulação</span>
         </button>
-        <button type="button" onclick="_confirmGenerateTabOrderFromLayers('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
+        <button type="button" onclick="event.stopPropagation(); _confirmGenerateTabOrderFromLayers('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
           class="w-full flex items-center justify-center gap-2 h-8 rounded-xl text-[10.5px] font-bold transition-all border border-cyan-200 dark:border-cyan-800/40 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99]">
           <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Gerar Automaticamente
         </button>
         <ul id="${ulId}" class="flex flex-col gap-1.5 min-h-[10px]"></ul>
-        <button type="button" onclick="updateTabOrderNumbering('${escapeHtml(areaIdAttr)}')"
+        <button type="button" onclick="event.stopPropagation(); updateTabOrderNumbering('${escapeHtml(areaIdAttr)}')"
           class="w-full flex items-center justify-center gap-2 h-7 mt-1 rounded-2xl text-[10.5px] font-bold border border-gray-200 dark:border-dark-line text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all">
           <i data-lucide="refresh-cw" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Atualizar
@@ -1941,6 +1975,11 @@ function openA11yPostAreaDetectModal(area) {
   if (result) result.classList.add('hidden');
   if (footerAsk) footerAsk.classList.remove('hidden');
   if (footerResult) footerResult.classList.add('hidden');
+  // BETA-ONLY: a11y-fixes-pos-teste — loading no lote. Reseta o texto do
+  // loading pro estado padrão de varredura (pode ter ficado "Criando
+  // especificações…" de um lote anterior nesta mesma sessão do modal).
+  const loadingText = loading ? loading.querySelector('p') : null;
+  if (loadingText) loadingText.textContent = 'Detectando componentes…';
   openModal('a11y-post-area-detect-modal');
 }
 window.openA11yPostAreaDetectModal = openA11yPostAreaDetectModal;
@@ -2364,6 +2403,26 @@ async function confirmA11yBatchGenerate() {
   const confirmBtn = document.getElementById('btn-a11y-batch-confirm');
   if (confirmBtn) confirmBtn.disabled = true;
   closeA11yBatchSummaryModal();
+
+  // BETA-ONLY: a11y-fixes-pos-teste — loading no lote. O modal de Detecção
+  // Automática (#a11y-post-area-detect-modal) fica aberto por baixo enquanto
+  // o loop sequencial abaixo cria uma spec de cada vez (pode levar vários
+  // segundos em lotes grandes); sem isso o designer via o modal "parado" sem
+  // nenhum feedback. Reaproveita o mesmo elemento/estrutura visual do estado
+  // de loading já usado durante a varredura inicial (runA11yPostAreaDetection)
+  // — só troca o texto pra não sugerir que ainda está escaneando.
+  const ask = document.getElementById('a11y-post-area-ask');
+  const result = document.getElementById('a11y-post-area-result');
+  const loading = document.getElementById('a11y-post-area-loading');
+  const loadingText = loading ? loading.querySelector('p') : null;
+  const footerAsk = document.getElementById('a11y-post-area-footer-ask');
+  const footerResult = document.getElementById('a11y-post-area-footer-result');
+  if (ask) ask.classList.add('hidden');
+  if (result) result.classList.add('hidden');
+  if (loadingText) loadingText.textContent = 'Criando especificações…';
+  if (loading) loading.classList.remove('hidden');
+  if (footerAsk) footerAsk.classList.add('hidden');
+  if (footerResult) footerResult.classList.add('hidden');
 
   window._a11yExpandedAreaIds = window._a11yExpandedAreaIds || new Set();
   window._a11yExpandedAreaIds.add(areaId);

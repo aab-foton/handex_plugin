@@ -410,6 +410,30 @@ Cobre só 3 pares de correspondência clara e confirmados contra a lib real: But
 
 ---
 
+## 21. `a11y-fixes-pos-teste`
+
+Quatro correções pontuais reportadas pelo designer após teste da build mais recente — sem mudança de schema, aditivas ou de ajuste de comportamento já existente.
+
+**(a) Loading no lote de Detecção Automática.** `confirmA11yBatchGenerate` fechava `#a11y-batch-summary-modal` (resumo) de imediato mas deixava `#a11y-post-area-detect-modal` (Detecção Automática) aberto e sem feedback durante todo o loop sequencial de criação (`await _createA11ySpecAndWait` por item, pode levar vários segundos em lotes grandes) — parecia travado. Agora o loop troca o modal pro mesmo estado visual de loading já usado durante a varredura inicial (`#a11y-post-area-loading`, reaproveitado — não duplicado), só com o texto trocado para "Criando especificações…" (evita sugerir que ainda está escaneando). `openA11yPostAreaDetectModal` reseta o texto de volta a "Detectando componentes…" ao reabrir o modal do zero, pra não vazar o texto de uma rodada de lote anterior pra próxima varredura.
+
+**(b) Profundidade do scan (8 → 16 níveis).** `extractSpecs(n, depth)` em `code.js` cortava a recursão em `depth > 8`, raso demais pra telas bancárias reais (sidebar + conteúdo com cards/seções aninhadas), fazendo o scan "esquecer" elementos legítimos nos níveis mais profundos. Limite dobrado para `depth > 16`. Afeta os dois scans que usam essa função (tokens normal e Detecção Automática de a11y — mesmo código, só o `origin` no payload difere o roteamento da resposta).
+
+**(c) Ordem de tabulação automática por posição espacial.** O handler `generate-tab-order-from-layers` (`code.js`) coletava elementos interativos em `collected` na ordem de camadas/z-order do Figma (ordem de `n.children`) e numerava direto nessa ordem bruta — nunca respeitava o fluxo de leitura ocidental (esquerda→direita, cima→baixo) que o designer já tinha pedido antes. Agora `collected` é reordenado por `absoluteBoundingBox` (mesmo campo já usado no loop de numeração) imediatamente após `_walk` terminar de coletar, com um comparador espacial equivalente ao que já existe no FRONTEND para a listagem de specs (`_a11ySortSpecsSpatially`/`A11Y_SPATIAL_ROW_THRESHOLD`, sub-feature `a11y-ordenacao-espacial`, `accessibility.js`) — mesma tolerância de 24px pra considerar dois elementos "na mesma linha" antes de desempatar por `y` e cair no desempate final por `x`. Implementado como constante local `TAB_ORDER_SPATIAL_ROW_THRESHOLD` no backend (não importa a constante do frontend — são bundles/escopos JS separados), mas com o mesmo valor documentado em comentário.
+
+**(d) Subaccordion recolhível pra Ordem de Tabulação.** A seção "Ordem de Tabulação" (`_tabOrderSectionHtml`) ficava sempre exposta dentro do body do accordion de Área/"Sem área", junto com os subaccordions de categoria de specs (`_a11yCategoryAccordionEl`) — pesado visualmente quando várias categorias estão abertas ao mesmo tempo. `_tabOrderSectionHtml` passou a gerar seu próprio header clicável com chevron (mesmo padrão visual/mecânica de `_a11yCategoryAccordionEl`: `id="tab-order-chevron-${uid}"` + corpo `id="tab-order-body-${uid}"` com classe `accordion-content`/`hidden`), controlado por `toggleA11yTabOrderAccordion(uid)` nova. Estado de expansão guardado num Set PRÓPRIO, `window._a11yExpandedTabOrderIds` (chaveado pelo `uid` do accordion pai) — deliberadamente separado de `window._a11yExpandedAreaIds`, pra expandir/recolher a seção de tab order de uma área não afetar o estado de expansão da própria área. Os três botões internos (`toggleTabOrderMode`, `_confirmGenerateTabOrderFromLayers`, `updateTabOrderNumbering`) ganharam `event.stopPropagation()` pra não disparar o toggle do header ao clicar neles — mesmo cuidado já usado nos botões de ação dentro do header de `_a11yAreaAccordionEl`. `_tabOrderSectionHtml` continua sendo a única função que gera o conteúdo (botões + `<ul>`), chamada sem alteração de assinatura por `_a11yAreaAccordionEl` e `_a11ySemAreaAccordionEl` — o `ulId` (`tab-order-list-${uid}`) não mudou, então `_renderTabOrderListForArea` continua encontrando o container normalmente mesmo com o body do accordion recolhido (`getElementById` funciona em elementos ocultos por CSS).
+
+**Arquivos e blocos afetados.**
+- `src/plugin/modules/accessibility.js` — `confirmA11yBatchGenerate` (loading), `openA11yPostAreaDetectModal` (reset do texto), `toggleA11yTabOrderAccordion`/`window._a11yExpandedTabOrderIds` (novos), `_tabOrderSectionHtml` (reescrita com wrapper de accordion).
+- `src/plugin/code.js` — `extractSpecs` (limite de profundidade), handler `generate-tab-order-from-layers` (ordenação espacial de `collected` antes do loop de numeração).
+
+**Decisões tomadas sem pedido explícito (documentar se for revisitar).** Nenhuma decisão de produto nova — os quatro pontos já vieram com causa raiz e direção de correção confirmadas pelo designer. Detalhe de implementação: o comparador espacial do backend foi escrito como função local inline (não importado do frontend, que roda em bundle/escopo JS separado), com a mesma tolerância de 24px documentada em comentário — se a vertical de a11y validar um valor diferente no futuro, os dois pontos (frontend `A11Y_SPATIAL_ROW_THRESHOLD` e backend `TAB_ORDER_SPATIAL_ROW_THRESHOLD`) precisam ser atualizados juntos.
+
+**Dependências que a main não tem hoje.** As mesmas do bloco de a11y como um todo — `a11y-deteccao-automatica` (item 4, loading do lote), `a11y-ordem-tabulacao-por-area` (item 5, subaccordion e ordenação de tab order), `a11y-ordenacao-espacial` (comparador de referência no frontend).
+
+**Risco de migração:** baixo. Todos os quatro pontos são ajustes de comportamento sobre código já existente na main (uma vez que os blocos-base acima estiverem migrados) — sem mudança de schema salvo, sem novo contrato de mensagem backend↔frontend.
+
+---
+
 ## Ordem de migração recomendada
 
 1. **Dados/refs primeiro:** `refs/design-acessivel-component-properties.json`, `refs/dsc-component-a11y-mapping.json` — sem eles nada do bloco de a11y funciona.
