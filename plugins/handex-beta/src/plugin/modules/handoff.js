@@ -477,6 +477,42 @@ ${(handoffData.createdFlows || []).length === 0
     }
     window.finalizeSection = finalizeSection;
 
+    // ══ BETA-ONLY: finalizar-registros-condicional (início) ════════════════
+    // Depende de: #finalize-wrap-{tokens,specs,measurements,flows} em
+    // handoff.html/flows.html/measurement.html/specifications.html, e das
+    // chamadas a _updateFinalizeVisibility() em core.js (saveToStorage/
+    // navigate). O toggle de #btn-resync-flows aqui dentro pertence à feature
+    // flows-mini-mapa-conector-criacao (resyncAllFlows, specifications.js) —
+    // reaproveita o mesmo array `has.flows` só para decidir visibilidade, sem
+    // acoplar as duas features além disso. Ver MIGRATION-BETA-TO-MAIN.md.
+    // "Finalizar Registros" só faz sentido quando há algo registrado naquela
+    // tela — sem isso o botão convida a "finalizar" um trabalho que nem
+    // começou. Cada seção olha a mesma fonte que sua listagem já renderiza
+    // (avulsas + por-frame), não só o array por-frame.
+    function _updateFinalizeVisibility() {
+      const _frames = handoffData.frames || [];
+      const has = {
+        tokens: _frames.length > 0,
+        specs: (typeof createdSpecs !== 'undefined' && createdSpecs.length > 0)
+          || (typeof a11ySpecs !== 'undefined' && a11ySpecs.length > 0)
+          || (typeof a11yAreas !== 'undefined' && a11yAreas.length > 0),
+        measurements: (handoffData.measurements || []).length > 0
+          || _frames.some(f => (f.measurements || []).length > 0),
+        flows: (handoffData.createdFlows || []).length > 0
+      };
+      Object.keys(has).forEach(key => {
+        const wrap = document.getElementById(`finalize-wrap-${key}`);
+        if (wrap) wrap.classList.toggle('hidden', !has[key]);
+      });
+
+      // BETA-ONLY: flows-mini-mapa-conector-criacao — botão de resync só
+      // existe na beta (ver views/flows.html).
+      const resyncBtn = document.getElementById('btn-resync-flows');
+      if (resyncBtn) resyncBtn.classList.toggle('hidden', !has.flows);
+    }
+    window._updateFinalizeVisibility = _updateFinalizeVisibility;
+    // ══ BETA-ONLY: finalizar-registros-condicional (fim) ═══════════════════
+
     async function exportHandoff() {
       const btn = document.getElementById("btn-final-export");
       if (btn) {

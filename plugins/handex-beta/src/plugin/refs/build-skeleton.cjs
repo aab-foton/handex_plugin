@@ -6,6 +6,11 @@
 //   - library metadata (slug, name, fileKey)
 //   - style keys + names + types (no descriptions → no U+2028)
 //   - component keys (flat string array per lib)
+//   - componentsDetailed (key + name + containingFrame) — só para a lib
+//     "web-angular-react", fundação de dados para a futura detecção de
+//     componente DSC → categoria de handoff de a11y (ver
+//     refs/build-dsc-a11y-mapping.cjs). Aditivo, não substitui
+//     componentKeys.
 //
 // The skeleton is embedded into ui.html by build.cjs as
 // window.__HANDEX_REF_SKELETON__. At runtime the plugin calls
@@ -89,6 +94,21 @@ for (const libMeta of manifest.libraries) {
       .map(c => c.key);
   }
 
+  // componentsDetailed: key + name + containingFrame, só para a lib
+  // "web-angular-react" (componentes de produção instanciados em telas —
+  // é onde vive a correspondência componente DSC → categoria de handoff
+  // de a11y). Escopo deliberadamente restrito a esta lib: as outras 5 têm
+  // volumes muito maiores (ex: Fundamentos Visuais > 10k componentes) e
+  // não são relevantes para a iniciativa atual — ver
+  // refs/build-dsc-a11y-mapping.cjs e refs/dsc-component-a11y-mapping.json.
+  // Aditivo: não substitui componentKeys (mantido acima para os
+  // consumidores existentes de audit.js/code.js que só precisam da key).
+  if (libMeta.slug === 'web-angular-react' && Array.isArray(lib.components)) {
+    entry.componentsDetailed = lib.components
+      .filter(c => c && c.key)
+      .map(c => ({ key: c.key, name: clean(c.name || ''), containingFrame: clean(c.containingFrame || '') }));
+  }
+
   skeleton.libraries.push(entry);
 }
 
@@ -100,10 +120,14 @@ const totalStyles     = skeleton.libraries.reduce((a, l) => a + l.styleTokens.co
 const totalComponents = skeleton.libraries.reduce((a, l) => a + l.componentKeys.length, 0);
 const totalVarColors  = skeleton.libraries.reduce((a, l) => a + l.variables.colors.length, 0);
 const totalVarNumbers = skeleton.libraries.reduce((a, l) => a + l.variables.numbers.length, 0);
+const totalDetailed   = skeleton.libraries.reduce((a, l) => a + (Array.isArray(l.componentsDetailed) ? l.componentsDetailed.length : 0), 0);
 
 console.log(`✅ _skeleton.json (${sizeKB} KB)`);
 console.log(`   ${skeleton.libraries.length} libraries`);
 console.log(`   ${totalStyles} styles • ${totalComponents} component keys`);
 if (totalVarColors || totalVarNumbers) {
   console.log(`   ${totalVarColors} color variables • ${totalVarNumbers} number variables`);
+}
+if (totalDetailed) {
+  console.log(`   ${totalDetailed} componentsDetailed (web-angular-react only)`);
 }

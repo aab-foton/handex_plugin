@@ -179,34 +179,88 @@
           <!-- Connection Side Selection -->
           <div id="anchor-side-selection" class="space-y-3 pt-4 border-t border-gray-50 dark:border-dark-line/50">
             <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Lado da Conexão (Ancoragem)</label>
-            <div class="grid grid-cols-5 gap-2">
-              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+
+            <!-- ══ BETA-ONLY: flows-mini-mapa-conector-criacao (início) ══
+                 Depende de: updateFlowAnchorPreview/_renderFlowAnchorPreview
+                 (specifications.js), 'flow-selection-bounds' (code.js/
+                 messages.js). Ver MIGRATION-BETA-TO-MAIN.md. -->
+            <!-- Mini-mapa visual dos 2 elementos selecionados -->
+            <div id="flow-anchor-preview" class="relative h-[160px] rounded-2xl border border-gray-200 dark:border-dark-line bg-gray-50 dark:bg-dark-bg overflow-hidden">
+              <svg id="flow-anchor-svg" viewBox="0 0 280 160" preserveAspectRatio="xMidYMid meet" class="absolute inset-0 w-full h-full hidden"></svg>
+              <div id="flow-anchor-empty" class="absolute inset-0 flex flex-col items-center justify-center gap-2 px-8 text-center">
+                <i data-lucide="crosshair" class="w-5 h-5 text-gray-300 dark:text-dark-muted"></i>
+                <p class="text-[10px] font-semibold text-gray-400 dark:text-dark-muted leading-snug">Selecione 2 elementos no canvas para visualizar a conexão</p>
+              </div>
+            </div>
+            <!-- ══ BETA-ONLY: flows-mini-mapa-conector-criacao (fim) ══ -->
+
+            <div class="grid grid-cols-5 gap-1.5">
+              <label class="flex flex-col items-center gap-0.5 p-1.5 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
                 <input type="radio" name="flow-side" value="auto" checked class="sr-only" />
-                <i data-lucide="zap" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
+                <i data-lucide="zap" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
                 <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Auto</span>
               </label>
-              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+              <label class="flex flex-col items-center gap-0.5 p-1.5 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
                 <input type="radio" name="flow-side" value="top" class="sr-only" />
-                <i data-lucide="arrow-up" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
+                <i data-lucide="arrow-up" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
                 <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Topo</span>
               </label>
-              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+              <label class="flex flex-col items-center gap-0.5 p-1.5 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
                 <input type="radio" name="flow-side" value="bottom" class="sr-only" />
-                <i data-lucide="arrow-down" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
+                <i data-lucide="arrow-down" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
                 <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Base</span>
               </label>
-              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+              <label class="flex flex-col items-center gap-0.5 p-1.5 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
                 <input type="radio" name="flow-side" value="left" class="sr-only" />
-                <i data-lucide="arrow-left" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
                 <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Esq.</span>
               </label>
-              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+              <label class="flex flex-col items-center gap-0.5 p-1.5 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
                 <input type="radio" name="flow-side" value="right" class="sr-only" />
-                <i data-lucide="arrow-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
                 <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Dir.</span>
               </label>
             </div>
           </div>
+
+          <!-- ══ BETA-ONLY: flows-mini-mapa-conector-criacao (início) ══
+               Estilo reto/curvo/esquinas no modal de CRIAÇÃO de fluxo — antes
+               esse controle só existia na edição (edit-flow-modal, mesma
+               tela mais abaixo). Depende de _onCreateFlowConnectorStyleChange/
+               _updateCreateFlowCurvatureLabel (specifications.js). Ver
+               MIGRATION-BETA-TO-MAIN.md. -->
+          <!-- Connector Style Selection -->
+          <div class="space-y-3 pt-4 border-t border-gray-50 dark:border-dark-line/50">
+            <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Estilo da Linha</label>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+                <input type="radio" name="create-flow-connector-style" value="straight" checked onchange="_onCreateFlowConnectorStyleChange(this.value)" class="sr-only" />
+                <i data-lucide="minus" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
+                <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Reta</span>
+              </label>
+              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+                <input type="radio" name="create-flow-connector-style" value="curved" onchange="_onCreateFlowConnectorStyleChange(this.value)" class="sr-only" />
+                <i data-lucide="spline" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
+                <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Curva</span>
+              </label>
+              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+                <input type="radio" name="create-flow-connector-style" value="elbow" onchange="_onCreateFlowConnectorStyleChange(this.value)" class="sr-only" />
+                <i data-lucide="corner-down-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
+                <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Esquinas</span>
+              </label>
+            </div>
+
+            <div id="create-flow-curvature-container" class="hidden space-y-2">
+              <div class="flex items-center justify-between px-1">
+                <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Grau da Curva</label>
+                <span id="create-flow-curvature-value" class="text-[10px] font-bold text-[#0070af]">Reta</span>
+              </div>
+              <input type="range" id="create-flow-curvature-input" min="-100" max="100" value="0" step="5"
+                oninput="_updateCreateFlowCurvatureLabel(this.value)"
+                class="w-full h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer accent-[#0070af]" />
+            </div>
+          </div>
+          <!-- ══ BETA-ONLY: flows-mini-mapa-conector-criacao (fim) ══ -->
 
           <!-- Chip Input for Lines/Diamonds -->
           <div id="flow-chip-container" class="hidden space-y-3 animate-in slide-in-from-top-2 duration-300">
@@ -829,6 +883,32 @@
             <input type="text" id="a11y-el-label" placeholder="Ex: Botão de enviar formulário"
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
           </div>
+          <!-- ══ BETA-ONLY: a11y-formulario-dinamico (início)
+               Depende de: refs/design-acessivel-component-properties.json,
+               _getA11yComponentToggles/renderA11yElementoVariants/
+               renderA11yElementoToggles (accessibility.js). Ver
+               MIGRATION-BETA-TO-MAIN.md, seção 1. ══ -->
+          <!-- Variante secundária real do componente (ex: Button → "tipo":
+               default/desabilitado/de icone...) — não confundir com o
+               <select> de "Componente" (nível 1, controla qual dos 16
+               componentes é usado). Só aparece se o componente ESCOLHIDO
+               tiver essa property catalogada na lib (ver
+               _getA11yComponentToggles/renderA11yElementoVariants em
+               accessibility.js). Vem antes dos toggles booleanos por ser
+               mais estrutural. -->
+          <div id="a11y-el-variants-wrap" class="hidden space-y-2.5">
+            <div id="a11y-el-variants-list" class="space-y-3"></div>
+          </div>
+          <!-- Campos dinâmicos por componente — só aparecem os toggles que o
+               componente ESCOLHIDO realmente tem na lib (ver
+               _getA11yComponentToggles/renderA11yElementoToggles em
+               accessibility.js). Vazio quando o componente não está
+               catalogado ou não tem nenhum toggle. -->
+          <div id="a11y-el-toggles-wrap" class="hidden space-y-2.5">
+            <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
+            <div id="a11y-el-toggles-list" class="space-y-2"></div>
+          </div>
+          <!-- ══ BETA-ONLY: a11y-formulario-dinamico (fim) ══ -->
         </div>
 
         <!-- Estrutura da Página -->
@@ -884,6 +964,16 @@
             <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
             <p id="a11y-estrutura-nota" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
           </div>
+          <!-- BETA-ONLY: a11y-formulario-dinamico — campos dinâmicos reais
+               dos sub-níveis "EE idiomas"/"EE marco de navegacao" (ex:
+               Observações, Notas de Código) — só aparecem quando o sub-nível
+               escolhido tem componente real catalogado (ver
+               updateA11yEstruturaFields/accessibility.js). Vazio em "Título
+               da Página" e em "Customizável". -->
+          <div id="a11y-estrutura-toggles-wrap" class="hidden space-y-2.5">
+            <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
+            <div id="a11y-estrutura-toggles-list" class="space-y-2"></div>
+          </div>
         </div>
 
         <!-- Nível de Título -->
@@ -911,6 +1001,14 @@
               <p id="a11y-fixed-nota" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
             </div>
           </div>
+          <!-- BETA-ONLY: a11y-formulario-dinamico — campo dinâmico real do
+               set "niveis de titulo" (só "Observações") — some no modo
+               mobile ("H", sem nível real catalogado, ver
+               updateA11yTituloFields/accessibility.js). -->
+          <div id="a11y-titulo-toggles-wrap" class="hidden space-y-2.5">
+            <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
+            <div id="a11y-titulo-toggles-list" class="space-y-2"></div>
+          </div>
         </div>
 
         <!-- Elemento Decorativo -->
@@ -932,6 +1030,14 @@
               <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
               <p id="a11y-fixed-nota-dec" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
             </div>
+          </div>
+          <!-- BETA-ONLY: a11y-formulario-dinamico — campos dinâmicos reais do
+               set correspondente ao subtipo (ED gerais/ED imagem) —
+               Observações e Notas de Código, ver
+               updateA11yDecorativoFields/accessibility.js. -->
+          <div id="a11y-decorativo-toggles-wrap" class="hidden space-y-2.5">
+            <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
+            <div id="a11y-decorativo-toggles-list" class="space-y-2"></div>
           </div>
         </div>
 
@@ -959,6 +1065,15 @@
             <label for="a11y-informacoes-descricao" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Descrição</label>
             <input type="text" id="a11y-informacoes-descricao" readonly
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+          </div>
+          <!-- BETA-ONLY: a11y-formulario-dinamico (fim do formulário
+               dinâmico) — campo dinâmico real do set "informações
+               adicionais" (só "Observações") — some no subtipo
+               "Customizável" (sem componente real catalogado, ver
+               updateA11yInformacoesFields/accessibility.js). -->
+          <div id="a11y-informacoes-toggles-wrap" class="hidden space-y-2.5">
+            <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
+            <div id="a11y-informacoes-toggles-list" class="space-y-2"></div>
           </div>
         </div>
 
@@ -1029,7 +1144,7 @@
       </div>
       <div class="p-6 space-y-4">
         <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
-          Selecione no canvas a seção ou bloco da tela que quer identificar (ex: "Home Portal DSC") e dê um rótulo. Um selo numerado sequencial é criado ao lado do elemento selecionado — ele organiza as especificações dessa seção na listagem lateral (accordion), não é uma marcação obrigatória de leitura pro leitor de tela. Toda especificação de acessibilidade precisa nascer dentro de uma área.
+          Selecione a seção no canvas e dê um rótulo — o selo criado organiza as specs dessa área na listagem.
         </p>
         <div>
           <div class="flex items-center justify-between mb-1.5 ml-1">
@@ -1042,6 +1157,48 @@
           <input type="text" id="a11y-area-label-input" placeholder="Ex: Home Portal DSC" maxlength="80"
             class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all" />
         </div>
+        <!-- ══ BETA-ONLY: a11y-marcar-area (início) ══
+             Seletor de conector + campo Número, dentro do modal pré-existente
+             "Marcar Área". Depende de confirmA11yArea (accessibility.js) lendo
+             estes dois campos e do handler 'create-a11y-area' (code.js:
+             A11Y_AREA_CONECTOR_KEYS). Ver MIGRATION-BETA-TO-MAIN.md. -->
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Posição do conector</label>
+          <div class="grid grid-cols-5 gap-1.5">
+            <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+              <input type="radio" name="a11y-area-conector" value="superior" checked class="sr-only" />
+              <i data-lucide="arrow-up" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
+              <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Topo</span>
+            </label>
+            <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+              <input type="radio" name="a11y-area-conector" value="inferior" class="sr-only" />
+              <i data-lucide="arrow-down" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
+              <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Base</span>
+            </label>
+            <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+              <input type="radio" name="a11y-area-conector" value="esquerda" class="sr-only" />
+              <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
+              <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Esq.</span>
+            </label>
+            <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+              <input type="radio" name="a11y-area-conector" value="direita" class="sr-only" />
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
+              <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Dir.</span>
+            </label>
+            <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+              <input type="radio" name="a11y-area-conector" value="desativado" class="sr-only" />
+              <i data-lucide="ban" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
+              <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Nenhum</span>
+            </label>
+          </div>
+          <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-1.5 ml-1 leading-relaxed">Lado do componente real da lib onde o conector/linha do selo aparece. "Nenhum" mostra só o número, sem linha.</p>
+        </div>
+        <div>
+          <label for="a11y-area-number-input" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Número</label>
+          <input type="number" id="a11y-area-number-input" min="1" step="1"
+            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all" />
+        </div>
+        <!-- ══ BETA-ONLY: a11y-marcar-area (fim) ══ -->
       </div>
       <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
         <button onclick="closeA11yAreaModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Cancelar</button>
@@ -1049,6 +1206,70 @@
       </div>
     </div>
   </div>
+
+  <!-- ══ BETA-ONLY: a11y-deteccao-automatica (início) ══
+       Depende de: openA11yPostAreaDetectModal/runA11yPostAreaDetection/
+       handleA11yPostAreaDetectionResult/useA11yDetection (accessibility.js),
+       origin: 'a11y-detection' no scan (code.js/messages.js). Ver
+       MIGRATION-BETA-TO-MAIN.md, seção 4. -->
+  <!-- MODAL: DETECÇÃO AUTOMÁTICA PÓS-ÁREA -->
+  <!-- Aberto logo após 'a11y-area-created' (messages.js). Um único modal que
+       evolui de pergunta → loading → resultado (ver accessibility.js:
+       openA11yPostAreaDetectModal, runA11yPostAreaDetection). Escopado ao
+       targetNodeId da área recém-marcada — não depende de activeFrameId. -->
+  <div id="a11y-post-area-detect-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-post-area-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeA11yPostAreaDetectModal()" aria-hidden="true"></div>
+    <div class="relative w-full max-w-sm max-h-[85vh] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
+        <h3 id="a11y-post-area-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
+          <i data-lucide="radar" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Detecção Automática
+        </h3>
+        <button onclick="closeA11yPostAreaDetectModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Estado 1: pergunta -->
+      <div id="a11y-post-area-ask" class="p-6 space-y-4">
+        <p class="text-[12px] text-slate-600 dark:text-dark-muted leading-relaxed">
+          Área marcada! Quer que o plugin tente reconhecer automaticamente os componentes do DSC dentro dela?
+        </p>
+      </div>
+
+      <!-- Estado 2: carregando -->
+      <div id="a11y-post-area-loading" class="hidden p-6 flex flex-col items-center gap-3">
+        <i data-lucide="loader-2" class="w-6 h-6 text-[#0070af] animate-spin" aria-hidden="true"></i>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted">Detectando componentes…</p>
+      </div>
+
+      <!-- Estado 3: resultado -->
+      <div id="a11y-post-area-result" class="hidden p-5 overflow-y-auto flex-1 min-h-0" onscroll="handleScroll(this)">
+        <p id="a11y-post-area-result-empty" class="hidden text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
+          Nenhum componente do DSC reconhecido dentro dessa área.
+        </p>
+        <div id="a11y-post-area-result-found" class="hidden">
+          <p class="text-[10px] text-slate-400 dark:text-dark-muted mb-2 leading-tight">
+            Componentes do DSC reconhecidos nessa área. Confirme a categoria e pré-preencha o formulário, ou ignore e anote manualmente.
+          </p>
+          <div id="a11y-post-area-results-list" class="flex flex-col gap-2 min-h-[10px] mb-3"></div>
+          <button type="button" id="btn-a11y-post-area-batch-generate" onclick="openA11yBatchSummaryModal()"
+            class="hidden w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-bold text-white bg-gradient-to-r from-[#0891B2] to-[#0070af] hover:opacity-90 transition-opacity">
+            <i data-lucide="wand-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
+            Gerar Handoff Automatizado
+          </button>
+        </div>
+      </div>
+
+      <div id="a11y-post-area-footer-ask" class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2 shrink-0">
+        <button onclick="closeA11yPostAreaDetectModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Agora não</button>
+        <button onclick="runA11yPostAreaDetection()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0070af] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Detectar</button>
+      </div>
+      <div id="a11y-post-area-footer-result" class="hidden p-4 border-t border-gray-100 dark:border-dark-line shrink-0">
+        <button onclick="closeA11yPostAreaDetectModal()" class="w-full py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Fechar</button>
+      </div>
+    </div>
+  </div>
+  <!-- ══ BETA-ONLY: a11y-deteccao-automatica (fim) ══ -->
 
   <!-- MODAL: LIB DE ACESSIBILIDADE NÃO VINCULADA -->
   <div id="a11y-library-required-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-lib-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
@@ -1081,6 +1302,57 @@
       </div>
     </div>
   </div>
+
+  <!-- ══ BETA-ONLY: a11y-ordem-tabulacao-por-area — modal de escolha de área
+       pra "Gerar Automaticamente" removido. Cada botão "Gerar
+       Automaticamente" agora já nasce dentro do accordion de uma Área
+       Marcada específica (ver _tabOrderSectionHtml em accessibility.js), que
+       chama _confirmGenerateTabOrderFromLayers(area.id, area.targetNodeId)
+       direto, sem perguntar qual área. Ver MIGRATION-BETA-TO-MAIN.md. ══ -->
+
+  <!-- ══ BETA-ONLY: a11y-deteccao-automatica (início, modal de lote) ══
+       Depende de: openA11yBatchSummaryModal/closeA11yBatchSummaryModal/
+       confirmA11yBatchGenerate (accessibility.js). Ver
+       MIGRATION-BETA-TO-MAIN.md. -->
+  <!-- MODAL: RESUMO DO LOTE "GERAR HANDOFF AUTOMATIZADO" -->
+  <!-- Controlado por modules/accessibility.js: openA11yBatchSummaryModal, closeA11yBatchSummaryModal, confirmA11yBatchGenerate -->
+  <div id="a11y-batch-summary-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-batch-summary-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeA11yBatchSummaryModal()" aria-hidden="true"></div>
+    <div class="relative w-full max-w-sm max-h-[88vh] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
+        <h3 id="a11y-batch-summary-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
+          <i data-lucide="wand-2" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i> Gerar Handoff Automatizado
+        </h3>
+        <button onclick="closeA11yBatchSummaryModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="p-5 overflow-y-auto flex-1 min-h-0" onscroll="handleScroll(this)">
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted mb-4 leading-relaxed">
+          Serão criadas especificações de "Elementos e Imagens" para cada componente detectado — as de baixa confiança precisam de revisão manual depois. O <strong>Label</strong> de cada uma usa o nome do elemento no canvas como texto inicial; ajuste depois pelo botão de editar.
+        </p>
+
+        <div id="a11y-batch-summary-groups" class="space-y-1.5 mb-4"></div>
+
+        <p id="a11y-batch-summary-skipped-notice" class="hidden text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl px-3 py-2 mb-4 leading-relaxed"></p>
+
+        <div id="a11y-batch-area-wrap" class="mb-1">
+          <label for="a11y-batch-area-select" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Área de destino</label>
+          <select id="a11y-batch-area-select"
+            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
+          </select>
+          <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-1.5 leading-tight">Todas as especificações do lote nascem dentro desta área.</p>
+        </div>
+      </div>
+      <div class="p-4 border-t border-gray-100 dark:border-dark-line shrink-0">
+        <button id="btn-a11y-batch-confirm" onclick="confirmA11yBatchGenerate()"
+          class="w-full py-2.5 text-[12px] font-bold text-white bg-[#0070af] hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl transition-colors">
+          Criar Especificações
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- ══ BETA-ONLY: a11y-deteccao-automatica (fim, modal de lote) ══ -->
 
   <!-- MODAL: GUIA DE CATEGORIAS DE ACESSIBILIDADE -->
   <div id="a11y-categories-help-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-help-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
@@ -1559,6 +1831,28 @@
       <i data-lucide="download" class="w-4 h-4 shrink-0"></i>
       Baixar backup (JSON) antes de apagar
     </button>
+
+    <!-- ══ BETA-ONLY: apagar-tudo (início) ══
+         Depende de: confirmClearEverything() (design-data.js), que reaproveita
+         confirmClearAllData() + handler 'delete-canvas-content' (code.js), já
+         pré-existentes. Ver MIGRATION-BETA-TO-MAIN.md. -->
+    <!-- Apagar Tudo: combina os 2 blocos abaixo (dados do plugin + todo o
+         conteúdo do canvas) num único clique, sem precisar marcar os 5
+         checkboxes manualmente. Ação mais ampla do modal — destaque visual
+         mais forte (borda sólida, ícone preenchido) pra não ser confundida
+         com as ações parciais dos blocos abaixo. -->
+    <button onclick="confirmClearEverything()"
+      class="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold transition-colors shadow-sm">
+      <i data-lucide="trash-2" class="w-4 h-4 shrink-0"></i>
+      Apagar Tudo (dados + canvas)
+    </button>
+
+    <div class="flex items-center gap-2">
+      <div class="flex-1 h-px bg-gray-200 dark:bg-dark-line"></div>
+      <span class="text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider">ou escolha o que apagar</span>
+      <div class="flex-1 h-px bg-gray-200 dark:bg-dark-line"></div>
+    </div>
+    <!-- ══ BETA-ONLY: apagar-tudo (fim) ══ -->
 
     <!-- Bloco 1: dados internos do plugin -->
     <div class="border border-gray-200 dark:border-dark-line rounded-2xl p-3.5 flex flex-col gap-2.5">

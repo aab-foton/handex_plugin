@@ -52,6 +52,14 @@
       const fabA11yAreaWrap = document.getElementById('specs-header-action-a11y-area-wrap');
       if (fabA11yAreaWrap) fabA11yAreaWrap.classList.toggle('hidden', !isA11y);
 
+      // BETA-ONLY: specs-busca-filtro — busca/filtro são temporários por aba,
+      // trocar de aba não deve manter um termo/categoria filtrando a outra
+      // listagem por engano.
+      if (typeof _resetSpecsSearchInputs === 'function') _resetSpecsSearchInputs();
+
+      // BETA-ONLY: a11y-ordem-tabulacao-por-area — renderA11yGroupedList já
+      // renderiza a seção de Ordem de Tabulação dentro do accordion de cada
+      // área (e do bucket "Sem área"); não há mais lista global à parte.
       if (isA11y && typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
       _refreshIcons();
     }
@@ -1903,6 +1911,7 @@
         const groupWrapper = document.createElement('li');
         groupWrapper.className = 'mb-4 border-l-4 rounded-r-xl overflow-hidden bg-gray-50/30 dark:bg-slate-900/20';
         groupWrapper.style.borderColor = groupColor;
+        groupWrapper.setAttribute('data-spec-group', letter); // BETA-ONLY: specs-busca-filtro
 
         // Cabeçalho do Grupo
         const groupHeader = document.createElement('div');
@@ -2067,6 +2076,15 @@
           if (spec.id) {
             section.setAttribute('data-spec-id', spec.id);
           }
+          // BETA-ONLY: specs-busca-filtro — data-attrs consumidos por
+          // _applySpecsFilters (função dedicada mais abaixo neste arquivo).
+          section.setAttribute('data-spec-category', spec.category || '');
+          section.setAttribute('data-spec-search', _normalizeSearchText(
+            [spec.letter, spec.name, spec.type, spec.categoryLabel, spec.obs, spec.note]
+              .concat((spec.properties || []).flatMap(p => [p.label, p.value, p.token]))
+              .filter(Boolean)
+              .join(' ')
+          ));
 
           const header = document.createElement("div");
           header.className = "flex items-center justify-between bg-white dark:bg-slate-800";
@@ -2303,9 +2321,116 @@
         lastSpecsCount = createdSpecs.length;
       }
       updateHideAllSpecsButtonState();
+      _setupSpecsSearchBar(); // BETA-ONLY: specs-busca-filtro
     }
     let lastSpecsCount = 0;
 
+    // ══ BETA-ONLY: specs-busca-filtro (início) ═════════════════════════════
+    // Depende de: data-spec-group/data-spec-category/data-spec-search
+    // (renderSpecsList acima), #specs-search-bar/#specs-search-input/
+    // #specs-category-filter/#specs-search-empty (views/specifications.html).
+    // Ver MIGRATION-BETA-TO-MAIN.md.
+    // ── Busca + filtro por categoria (aba Specs) ────────────────────────
+    // Filtro puramente de EXIBIÇÃO sobre a lista já renderizada por
+    // renderSpecsList() — não persiste entre sessões (reseta a cada
+    // navegação pra esta view, ver navigate() em core.js) e não altera
+    // createdSpecs/handoffData.specs.
+    // Reseta os dois pares de campos (Specs + Acessibilidade) — chamado ao
+    // trocar de aba (switchSpecsMainTab) e ao (re)entrar na view (navigate,
+    // core.js). Não persiste entre sessões por decisão de escopo (filtro
+    // temporário de uso, não estado salvo em handoffData).
+    function _resetSpecsSearchInputs() {
+      const specsInput = document.getElementById('specs-search-input');
+      const specsSel = document.getElementById('specs-category-filter');
+      if (specsInput) specsInput.value = '';
+      if (specsSel) specsSel.value = '';
+      const a11yInput = document.getElementById('a11y-search-input');
+      const a11ySel = document.getElementById('a11y-category-filter');
+      if (a11yInput) a11yInput.value = '';
+      if (a11ySel) a11ySel.value = '';
+    }
+    window._resetSpecsSearchInputs = _resetSpecsSearchInputs;
+
+    function _normalizeSearchText(str) {
+      return String(str || '')
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .toLowerCase()
+        .trim();
+    }
+    window._normalizeSearchText = _normalizeSearchText;
+
+    // Mostra a barra de busca só quando há specs (evita ruído visual no
+    // estado vazio) e repopula o <select> de categorias a partir de
+    // annCategories — dinâmico porque o usuário pode renomear/criar/excluir
+    // categorias (ver Category Management acima).
+    function _setupSpecsSearchBar() {
+      const bar = document.getElementById('specs-search-bar');
+      if (!bar) return;
+      const hasSpecs = createdSpecs && createdSpecs.length > 0;
+      bar.classList.toggle('hidden', !hasSpecs);
+      if (!hasSpecs) return;
+
+      const sel = document.getElementById('specs-category-filter');
+      if (sel) {
+        const current = sel.value;
+        sel.innerHTML = '<option value="">Todas as categorias</option>';
+        annCategories.forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat.value;
+          opt.textContent = cat.label;
+          sel.appendChild(opt);
+        });
+        const semCatOpt = document.createElement('option');
+        semCatOpt.value = '__sem_categoria__';
+        semCatOpt.textContent = 'Sem categoria';
+        sel.appendChild(semCatOpt);
+        if ([...sel.options].some(o => o.value === current)) sel.value = current;
+      }
+
+      const searchInput = document.getElementById('specs-search-input');
+      _applySpecsFilters(searchInput ? searchInput.value : '', sel ? sel.value : '');
+    }
+
+    function applySpecsSearchFilter(query) {
+      const sel = document.getElementById('specs-category-filter');
+      _applySpecsFilters(query, sel ? sel.value : '');
+    }
+    window.applySpecsSearchFilter = applySpecsSearchFilter;
+
+    function applySpecsCategoryFilter(category) {
+      const searchInput = document.getElementById('specs-search-input');
+      _applySpecsFilters(searchInput ? searchInput.value : '', category);
+    }
+    window.applySpecsCategoryFilter = applySpecsCategoryFilter;
+
+    function _applySpecsFilters(query, category) {
+      const list = document.getElementById('specs-results');
+      const emptyMsg = document.getElementById('specs-search-empty');
+      if (!list) return;
+
+      const term = _normalizeSearchText(query);
+      let visibleTotal = 0;
+
+      list.querySelectorAll('[data-spec-group]').forEach(groupEl => {
+        let visibleInGroup = 0;
+        groupEl.querySelectorAll('[data-spec-search]').forEach(itemEl => {
+          const text = itemEl.getAttribute('data-spec-search') || '';
+          const cat = itemEl.getAttribute('data-spec-category') || '';
+          const matchText = !term || text.includes(term);
+          const matchCat = !category
+            || (category === '__sem_categoria__' ? !cat : cat === category);
+          const show = matchText && matchCat;
+          itemEl.style.display = show ? '' : 'none';
+          if (show) visibleInGroup++;
+        });
+        groupEl.style.display = visibleInGroup > 0 ? '' : 'none';
+        visibleTotal += visibleInGroup;
+      });
+
+      const hasAnyFilter = term || category;
+      if (emptyMsg) emptyMsg.classList.toggle('hidden', !hasAnyFilter || visibleTotal > 0);
+    }
+    // ══ BETA-ONLY: specs-busca-filtro (fim) ════════════════════════════════
 
     function hideNode(id) {
       parent.postMessage({ pluginMessage: { type: 'hide-node', id } }, '*');
@@ -2334,6 +2459,137 @@
 
 
     let currentFlowType = null;
+
+    // ══ BETA-ONLY: flows-mini-mapa-conector-criacao (início) ═══════════════
+    // Depende de: #flow-anchor-svg/#flow-anchor-empty (views/modals.html),
+    // handler 'get-flow-selection-bounds' e figma.on('selectionchange')
+    // postando 'flow-selection-bounds' (code.js), roteamento em messages.js.
+    // Ver MIGRATION-BETA-TO-MAIN.md.
+    // Mini-mapa de ancoragem do modal de fluxo — nodes vêm do backend via
+    // 'flow-selection-bounds' (ver messages.js), tanto por pedido explícito
+    // (get-flow-selection-bounds ao abrir o modal) quanto ao vivo, a cada
+    // mudança de seleção no canvas enquanto o modal está aberto.
+    let _flowAnchorNodes = [];
+
+    function _computeFlowAnchorLayout(nodes) {
+      const VW = 280, VH = 160, PAD = 24, MIN_SIZE = 24;
+      const a = nodes[0], b = nodes[1];
+      const minX = Math.min(a.x, b.x);
+      const minY = Math.min(a.y, b.y);
+      const maxX = Math.max(a.x + a.width, b.x + b.width);
+      const maxY = Math.max(a.y + a.height, b.y + b.height);
+      const bboxW = Math.max(1, maxX - minX);
+      const bboxH = Math.max(1, maxY - minY);
+      const availW = VW - PAD * 2, availH = VH - PAD * 2;
+      const scale = Math.min(availW / bboxW, availH / bboxH);
+      const offsetX = (VW - bboxW * scale) / 2;
+      const offsetY = (VH - bboxH * scale) / 2;
+
+      const toRect = (n) => {
+        let x = offsetX + (n.x - minX) * scale;
+        let y = offsetY + (n.y - minY) * scale;
+        let w = n.width * scale;
+        let h = n.height * scale;
+        if (w < MIN_SIZE) { x -= (MIN_SIZE - w) / 2; w = MIN_SIZE; }
+        if (h < MIN_SIZE) { y -= (MIN_SIZE - h) / 2; h = MIN_SIZE; }
+        return { x, y, w, h };
+      };
+
+      return { rectA: toRect(a), rectB: toRect(b) };
+    }
+
+    function _flowRectEdgePoints(r) {
+      return {
+        top:    { x: r.x + r.w / 2, y: r.y,            side: 'top' },
+        bottom: { x: r.x + r.w / 2, y: r.y + r.h,       side: 'bottom' },
+        left:   { x: r.x,           y: r.y + r.h / 2,   side: 'left' },
+        right:  { x: r.x + r.w,     y: r.y + r.h / 2,   side: 'right' }
+      };
+    }
+
+    function _flowNearestPoint(pA, pointsB) {
+      let best = null, bestDist = Infinity;
+      Object.values(pointsB).forEach(p => {
+        const d = Math.hypot(p.x - pA.x, p.y - pA.y);
+        if (d < bestDist) { bestDist = d; best = p; }
+      });
+      return best;
+    }
+
+    // Chamada tanto ao chegar 'flow-selection-bounds' quanto (indiretamente,
+    // via _renderFlowAnchorPreview) ao clicar num radio -- mantém o SVG e os
+    // radios sincronizados nos dois sentidos.
+    function updateFlowAnchorPreview(nodes) {
+      _flowAnchorNodes = nodes || [];
+      _renderFlowAnchorPreview();
+    }
+    window.updateFlowAnchorPreview = updateFlowAnchorPreview;
+
+    function _renderFlowAnchorPreview() {
+      const modalEl = document.getElementById('flow-form-modal');
+      if (!modalEl || modalEl.classList.contains('hidden')) return;
+      const svg = document.getElementById('flow-anchor-svg');
+      const emptyState = document.getElementById('flow-anchor-empty');
+      if (!svg || !emptyState) return;
+
+      if (_flowAnchorNodes.length < 2) {
+        svg.classList.add('hidden');
+        svg.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      svg.classList.remove('hidden');
+
+      const { rectA, rectB } = _computeFlowAnchorLayout(_flowAnchorNodes);
+      const pointsA = _flowRectEdgePoints(rectA);
+      const pointsB = _flowRectEdgePoints(rectB);
+
+      const sideInput = document.querySelector('input[name="flow-side"]:checked');
+      const side = sideInput ? sideInput.value : 'auto';
+      const activePoint = (side !== 'auto' && pointsA[side]) ? pointsA[side] : null;
+
+      let lineHtml = '';
+      if (activePoint) {
+        const target = _flowNearestPoint(activePoint, pointsB);
+        lineHtml = `<line x1="${activePoint.x}" y1="${activePoint.y}" x2="${target.x}" y2="${target.y}" stroke="#0070af" stroke-width="1.5" stroke-dasharray="4 3" />`;
+      }
+
+      const pointsHtml = ['top', 'bottom', 'left', 'right'].map(s => {
+        const p = pointsA[s];
+        const isActive = side === s;
+        return `<circle cx="${p.x}" cy="${p.y}" r="6" fill="${isActive ? '#0070af' : '#ffffff'}" stroke="#0070af" stroke-width="1.5" style="cursor:pointer" onclick="_setFlowAnchorSide('${s}')" />`;
+      }).join('');
+
+      const escapeXml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
+      const nameA = escapeXml((_flowAnchorNodes[0].name || 'A').trim());
+      const nameB = escapeXml((_flowAnchorNodes[1].name || 'B').trim());
+
+      svg.innerHTML = `
+        <rect x="${rectB.x}" y="${rectB.y}" width="${rectB.w}" height="${rectB.h}" rx="4" fill="rgba(148,163,184,0.15)" stroke="#94a3b8" stroke-width="1.5"><title>${nameB}</title></rect>
+        <text x="${rectB.x + rectB.w / 2}" y="${rectB.y + rectB.h / 2 + 3}" text-anchor="middle" font-size="9" font-weight="700" fill="#64748b">B</text>
+        <rect x="${rectA.x}" y="${rectA.y}" width="${rectA.w}" height="${rectA.h}" rx="4" fill="rgba(0,112,175,0.12)" stroke="#0070af" stroke-width="1.5"><title>${nameA}</title></rect>
+        <text x="${rectA.x + rectA.w / 2}" y="${rectA.y + rectA.h / 2 + 3}" text-anchor="middle" font-size="9" font-weight="700" fill="#0070af">A</text>
+        ${lineHtml}
+        ${pointsHtml}
+      `;
+    }
+
+    function _setFlowAnchorSide(side) {
+      const input = document.querySelector(`input[name="flow-side"][value="${side}"]`);
+      if (!input) return;
+      input.checked = true;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    window._setFlowAnchorSide = _setFlowAnchorSide;
+
+    // Sincronização inversa: clicar num radio (fallback textual) também
+    // atualiza o destaque do mini-mapa, sem re-pedir bounds ao backend.
+    document.addEventListener('change', (e) => {
+      if (e.target && e.target.name === 'flow-side') _renderFlowAnchorPreview();
+    });
+    // ══ BETA-ONLY: flows-mini-mapa-conector-criacao (fim) ══════════════════
 
     function selectFlowType(type) {
       currentFlowType = type;
@@ -2386,6 +2642,15 @@
       openModal('flow-form-modal');
       currentFlowType = null;
 
+      // BETA-ONLY: flows-mini-mapa-conector-criacao (início do trecho
+      // intercalado nesta função pré-existente)
+      // Limpa o mini-mapa de ancoragem de uma renderização anterior até a
+      // resposta de get-flow-selection-bounds chegar (evita lixo visual).
+      _flowAnchorNodes = [];
+      _renderFlowAnchorPreview();
+      parent.postMessage({ pluginMessage: { type: 'get-flow-selection-bounds' } }, '*');
+      // BETA-ONLY: flows-mini-mapa-conector-criacao (fim do trecho acima)
+
       // Reset all type card visual feedback
       document.querySelectorAll('.flow-type-card, .flow-type-card-modal').forEach(el => {
         el.style.borderColor = '';
@@ -2401,6 +2666,16 @@
 
       const decContainer = document.getElementById('flow-decision-container');
       if (decContainer) decContainer.classList.add('hidden');
+
+      // BETA-ONLY: flows-mini-mapa-conector-criacao — reset do estilo de
+      // conector (reto/curvo/esquinas) no modal de CRIAÇÃO, mesmo controle
+      // que já existia só na edição de fluxo.
+      const straightRadio = document.querySelector('input[name="create-flow-connector-style"][value="straight"]');
+      if (straightRadio) straightRadio.checked = true;
+      const createCurvatureInput = document.getElementById('create-flow-curvature-input');
+      if (createCurvatureInput) createCurvatureInput.value = 0;
+      _updateCreateFlowCurvatureLabel(0);
+      _onCreateFlowConnectorStyleChange('straight');
 
       const btn = document.getElementById('btn-confirm-flow');
       if (btn) {
@@ -2422,15 +2697,25 @@
       const sideInput = document.querySelector('input[name="flow-side"]:checked');
       const flowSide = sideInput ? sideInput.value : 'auto';
 
-      parent.postMessage({ 
-        pluginMessage: { 
-          type: 'create-flow-connection', 
+      // BETA-ONLY: flows-mini-mapa-conector-criacao — connectorStyle/curvature
+      // no fluxo de CRIAÇÃO (antes só existia esse controle na edição). Lido
+      // por _buildFlowConnection em code.js.
+      const styleInput = document.querySelector('input[name="create-flow-connector-style"]:checked');
+      const connectorStyle = styleInput ? styleInput.value : 'straight';
+      const curvatureInput = document.getElementById('create-flow-curvature-input');
+      const curvature = curvatureInput ? Number(curvatureInput.value) || 0 : 0;
+
+      parent.postMessage({
+        pluginMessage: {
+          type: 'create-flow-connection',
           flowType: type,
           decisionText: text,
           flowName: flowName,
           flowSide: flowSide,
+          connectorStyle: connectorStyle,
+          curvature: curvature,
           nextFlowNumber: handoffData.nextFlowNumber || 1
-        } 
+        }
       }, '*');
       closeModal('flow-form-modal');
     }
@@ -2642,6 +2927,34 @@
       if (curvatureContainer) curvatureContainer.classList.toggle('hidden', style !== 'curved');
     }
     window._onEditFlowConnectorStyleChange = _onEditFlowConnectorStyleChange;
+
+    // ══ BETA-ONLY: flows-mini-mapa-conector-criacao (início) ═══════════════
+    // Análogas às _updateEditFlowCurvatureLabel/_onEditFlowConnectorStyleChange
+    // (pré-existentes, edição de fluxo) — agora o mesmo controle de estilo
+    // reto/curvo/esquinas existe também na CRIAÇÃO. resyncAllFlows depende do
+    // handler 'resync-all-flows' em code.js e do botão #btn-resync-flows
+    // (views/flows.html). Ver MIGRATION-BETA-TO-MAIN.md.
+    function _updateCreateFlowCurvatureLabel(value) {
+      const label = document.getElementById('create-flow-curvature-value');
+      if (!label) return;
+      const n = Number(value);
+      label.textContent = n === 0 ? 'Reta' : (n > 0 ? `Curva ${n}%` : `Curva ${Math.abs(n)}% (invertida)`);
+    }
+    window._updateCreateFlowCurvatureLabel = _updateCreateFlowCurvatureLabel;
+
+    function _onCreateFlowConnectorStyleChange(style) {
+      const curvatureContainer = document.getElementById('create-flow-curvature-container');
+      if (curvatureContainer) curvatureContainer.classList.toggle('hidden', style !== 'curved');
+    }
+    window._onCreateFlowConnectorStyleChange = _onCreateFlowConnectorStyleChange;
+
+    function resyncAllFlows() {
+      const flows = handoffData.createdFlows || [];
+      if (flows.length === 0) return;
+      parent.postMessage({ pluginMessage: { type: 'resync-all-flows', flows: flows } }, '*');
+    }
+    window.resyncAllFlows = resyncAllFlows;
+    // ══ BETA-ONLY: flows-mini-mapa-conector-criacao (fim) ══════════════════
 
     function confirmEditFlow() {
       const idx = window._editingFlowIndex;

@@ -34,10 +34,18 @@
         </div>
       </div>
     </div>
-    <button onclick="openFlowFormModal()" class="fab-inline shrink-0" title="Conectar Frames" aria-label="Conectar Frames">
-      <i data-lucide="git-branch" class="w-4 h-4 shrink-0"></i>
-      <span>Conectar Frames</span>
-    </button>
+    <!-- BETA-ONLY: flows-mini-mapa-conector-criacao — botão de resync em lote
+         (resyncAllFlows, specifications.js/code.js:resync-all-flows). Ver
+         MIGRATION-BETA-TO-MAIN.md. -->
+    <div class="flex items-center gap-2 shrink-0">
+      <button id="btn-resync-flows" onclick="resyncAllFlows()" class="hidden p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors" title="Atualizar Fluxos" aria-label="Atualizar Fluxos">
+        <i data-lucide="refresh-cw" class="w-4 h-4 text-white" aria-hidden="true"></i>
+      </button>
+      <button onclick="openFlowFormModal()" class="fab-inline shrink-0" title="Conectar Frames" aria-label="Conectar Frames">
+        <i data-lucide="git-branch" class="w-4 h-4 shrink-0"></i>
+        <span>Conectar Frames</span>
+      </button>
+    </div>
   </div>
 
   <!-- Scrollable Content -->
@@ -54,10 +62,13 @@
       <!-- renderFlowsList() insere aqui -->
     </ul>
 
+    <!-- BETA-ONLY: finalizar-registros-condicional — wrap era sempre visível,
+         agora começa hidden e é controlado por _updateFinalizeVisibility()
+         (handoff.js). Ver MIGRATION-BETA-TO-MAIN.md. -->
     <!-- Finalizar Registros — ação única de fechamento, tom discreto (outline)
          para não competir com "Conectar Frames" no header, a ação mais
          frequente da tela. -->
-    <div class="pt-4 pb-2">
+    <div id="finalize-wrap-flows" class="hidden pt-4 pb-2">
       <button onclick="finalizeSection('flows')"
         class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
         <i data-lucide="clipboard-check" class="w-4 h-4" aria-hidden="true"></i>

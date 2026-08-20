@@ -4,7 +4,8 @@ export const frameJsonTemplate = () => ({
     icons: [],
     typography: [],
     frames: [],
-    vectors: []
+    vectors: [],
+    images: [] // BETA-ONLY: a11y-mapeamento-interativo
   }
 });
 

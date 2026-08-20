@@ -1,5 +1,14 @@
 ﻿import { auditProperty, AUDIT_SCORE, AUDIT_THRESHOLDS, frameJsonTemplate, suggestClosestMatch } from './audit.js';
 import A11Y_CONTENT from './refs/design-acessivel-content.json';
+// BETA-ONLY: a11y-formulario-dinamico — refs/design-acessivel-component-properties.json
+// não existe na main; precisa ser gerado lá também. Ver MIGRATION-BETA-TO-MAIN.md.
+import A11Y_COMPONENT_PROPERTIES_RAW from './refs/design-acessivel-component-properties.json';
+// BETA-ONLY: a11y-deteccao-automatica — refs/dsc-component-a11y-mapping.json
+// não existe na main. Ver MIGRATION-BETA-TO-MAIN.md.
+import DSC_A11Y_MAPPING from './refs/dsc-component-a11y-mapping.json';
+// BETA-ONLY: a11y-deteccao-automatica — usado só para resolver componente DSC
+// → categoria de a11y via _getDscComponentKeyToFrameMap. Ver MIGRATION-BETA-TO-MAIN.md.
+import REF_SKELETON from './refs/_skeleton.json';
 
 figma.showUI(__html__, { width: 480, height: 750 });
 
@@ -19,11 +28,45 @@ figma.on('currentpagechange', () => {
   }
 });
 
+// ══ BETA-ONLY: a11y-ordem-tabulacao + flows-mini-mapa-conector-criacao (início) ══
+// Listener único de selectionchange compartilhado pelas duas features: posta
+// 'flow-selection-bounds' sempre (flows-mini-mapa-conector-criacao) e, quando
+// o modo de clique sequencial está ativo, também 'tab-order-selection-changed'
+// (a11y-ordem-tabulacao). Ver MIGRATION-BETA-TO-MAIN.md — cuidado ao migrar
+// uma feature sem a outra: este listener precisa ser dividido ou adaptado.
+// --- Acessibilidade --- "Ordem de Tabulação": modo de clique sequencial.
+// Reaproveita o MESMO listener global de selectionchange (já usado pelo
+// preview de conexão de fluxos) em vez de registrar um segundo — quando o
+// modo está ativo (ligado/desligado por start-tab-order-mode/stop-tab-order-mode,
+// vindos do frontend) e há exatamente 1 elemento selecionado, também posta
+// tab-order-selection-changed; seleção vazia ou múltipla é ignorada nesse modo.
+let _tabOrderModeActive = false;
+
+figma.on('selectionchange', () => {
+  figma.ui.postMessage({ type: 'flow-selection-bounds', nodes: _getFlowSelectionBoundsPayload() });
+  if (_tabOrderModeActive) {
+    const sel = figma.currentPage.selection;
+    if (sel.length === 1) {
+      figma.ui.postMessage({ type: 'tab-order-selection-changed', nodeId: sel[0].id, nodeName: sel[0].name });
+    }
+  }
+});
+
 function _nodeOnCurrentPage(node) {
   let n = node;
   while (n && n.type !== 'PAGE') n = n.parent;
   return n != null && n.id === figma.currentPage.id;
 }
+
+// BETA-ONLY: flows-mini-mapa-conector-criacao
+function _getFlowSelectionBoundsPayload() {
+  return figma.currentPage.selection.slice(0, 2).map(n => {
+    const b = n.absoluteBoundingBox || n.absoluteRenderBounds;
+    if (!b) return null;
+    return { id: n.id, name: n.name, x: b.x, y: b.y, width: b.width, height: b.height };
+  }).filter(Boolean);
+}
+// ══ BETA-ONLY: a11y-ordem-tabulacao + flows-mini-mapa-conector-criacao (fim, setup do listener) ══
 
 // "A1.10" deve ordenar depois de "A1.2" — comparação puramente alfabética
 // trataria "10" < "2" como string. Parseia em [letra, ...números] e compara
@@ -57,6 +100,224 @@ function _compareSpecTags(tagA, tagB) {
 // desenhar o card procedural. Ver .claude/agents/accessibility-specialist.md
 // ("Mecânica de variantes aninhadas") e refs/design-acessivel-content.json.
 // ============================================================
+
+// ══ BETA-ONLY: a11y-formulario-dinamico (início) ══
+// Depende de: refs/design-acessivel-component-properties.json (import JSON,
+// só existe na beta). Ver MIGRATION-BETA-TO-MAIN.md, seção 1.
+// Duplicação consciente: mesmo catálogo de component properties da lib
+// "Design Acessível" que accessibility.js (frontend) usa pra RENDERIZAR o
+// formulário dinâmico da categoria "elemento" — aqui o backend precisa dele
+// pra APLICAR (setProperties na instância aninhada certa). Diferente de
+// A11Y_AGRUPAMENTO_KEYS/A11Y_CONECTOR_LINHA_KEYS (só-backend, o frontend não
+// participa dessas), esta é uma das poucas constantes do módulo a11y que
+// PRECISA existir nos dois runtimes — front pra render, back pra aplicar —
+// então a duplicação (aqui via import de JSON; lá via literal JS colado,
+// já que o frontend não tem bundler de módulos) é decisão consciente, não
+// esquecimento. Se o catálogo mudar (refetch da lib), rodar
+// `npm run refs:a11y-properties` e colar de novo em accessibility.js.
+// ============================================================
+// ══ BETA-ONLY: a11y-formulario-dinamico (fim do bloco acima) ══
+
+// ══ BETA-ONLY: a11y-deteccao-automatica (início) ══
+// Depende de: refs/dsc-component-a11y-mapping.json, refs/_skeleton.json
+// (REF_SKELETON). Ver MIGRATION-BETA-TO-MAIN.md, seção 4.
+// Detecção aditiva: instância de componente DSC → categoria de a11y
+// (fundação para uma futura pré-sugestão de handoff de acessibilidade —
+// NÃO implementada ainda, ver tarefa que introduziu este bloco). Só
+// enriquece o resultado do scan com um campo novo (`dscComponentMatch`),
+// nunca altera isDS/score/matchedBy existentes.
+// ============================================================
+
+// key (componentKey resolvido via getMainComponentAsync/mainComp.key) →
+// containingFrame (nome do component set real, ex: "[dsc] Accordion").
+// Construído uma única vez a partir de REF_SKELETON.libraries
+// (slug "web-angular-react" → componentsDetailed), não de
+// DSC_A11Y_MAPPING.*.sampleKeys (que são só amostras de 3 chaves por
+// família, insuficientes para resolver qualquer instância real).
+let _dscComponentKeyToFrameMap = null;
+function _getDscComponentKeyToFrameMap() {
+  if (_dscComponentKeyToFrameMap) return _dscComponentKeyToFrameMap;
+  _dscComponentKeyToFrameMap = new Map();
+  const lib = (REF_SKELETON && Array.isArray(REF_SKELETON.libraries))
+    ? REF_SKELETON.libraries.find(l => l.slug === 'web-angular-react')
+    : null;
+  if (lib && Array.isArray(lib.componentsDetailed)) {
+    lib.componentsDetailed.forEach(c => {
+      if (c && c.key && c.containingFrame) _dscComponentKeyToFrameMap.set(c.key, c.containingFrame);
+    });
+  }
+  return _dscComponentKeyToFrameMap;
+}
+
+// containingFrame → { shortName, confidence } (só alta/baixa confiança;
+// famílias sem match não entram no mapa e resultam em dscComponentMatch: null).
+let _dscFrameToA11yMap = null;
+function _getDscFrameToA11yMap() {
+  if (_dscFrameToA11yMap) return _dscFrameToA11yMap;
+  _dscFrameToA11yMap = new Map();
+  const buckets = [DSC_A11Y_MAPPING.altaConfianca, DSC_A11Y_MAPPING.baixaConfianca];
+  buckets.forEach(bucket => {
+    if (!Array.isArray(bucket)) return;
+    bucket.forEach(entry => {
+      if (entry && entry.containingFrame && entry.match) {
+        _dscFrameToA11yMap.set(entry.containingFrame, {
+          shortName: entry.match.shortName,
+          confidence: entry.match.confidence
+        });
+      }
+    });
+  });
+  return _dscFrameToA11yMap;
+}
+
+// Retorna { containingFrame, a11yCategory, confidence } ou null.
+// componentKey deve ser o mainComp.key de uma INSTANCE remote (mesma
+// condição que já decide "conforme ao DSC" hoje) — chamador garante isso.
+function _resolveDscComponentA11yMatch(componentKey) {
+  if (!componentKey) return null;
+  const containingFrame = _getDscComponentKeyToFrameMap().get(componentKey);
+  if (!containingFrame) return null;
+  const a11yMatch = _getDscFrameToA11yMap().get(containingFrame);
+  if (!a11yMatch) return null;
+  return {
+    containingFrame,
+    a11yCategory: a11yMatch.shortName,
+    confidence: a11yMatch.confidence
+  };
+}
+
+// ══ BETA-ONLY: a11y-mapeamento-interativo (início) ══
+// shortNames (mesmo vocabulário de a11yCategory retornado por
+// _resolveDscComponentA11yMatch) que representam controles reais de foco de
+// teclado — usados pra filtrar a geração automática de Ordem de Tabulação
+// (generate-tab-order-from-layers), que deve percorrer só "links, botões e
+// campos de formulário" (texto da lib "Design Acessível"), não qualquer
+// INSTANCE/COMPONENT solto no canvas (ícone decorativo, card, imagem, badge).
+// Decisão de produto (confirmada pelo designer): inclui 'inputs' (após
+// achado 2 cobre select/slider/datepicker/etc.), 'accordion' (cabeçalho é
+// focável) e 'breadcrumb' (é composto por links). NÃO inclui 'dialog',
+// 'snackbar', 'table', 'listas' (não são o elemento focável em si) nem
+// 'imagem'/'titulo'/'decorativo' (nunca focáveis).
+const A11Y_INTERACTIVE_SHORTNAMES = new Set([
+  'button', 'checkbox', 'radio button', 'switch', 'inputs',
+  'paginator', 'stepper', 'tab group', 'accordion', 'breadcrumb'
+]);
+// ══ BETA-ONLY: a11y-mapeamento-interativo (fim) ══
+
+// ============================================================
+// Expansão da detecção aditiva para texto (categoria "titulo") e
+// ícones/vetores (categoria "decorativo") — ver tarefa que introduziu este
+// bloco. Diferente de _resolveDscComponentA11yMatch acima (que casa
+// componentKey real contra o skeleton DSC, com possível confiança "alta"),
+// estas duas funções NUNCA têm uma key/nome de biblioteca real para casar —
+// são heurísticas de nome de camada/estilo, propositalmente conservadoras, e
+// por isso SEMPRE retornam confidence: 'baixa'. O shape retornado usa
+// containingFrame: null (não existe frame de componente DSC por trás) e um
+// campo `source` extra para o frontend/telemetria saberem que a origem foi
+// heurística, não correspondência de biblioteca.
+// ============================================================
+
+// Nome de estilo de texto nomeado (styleName, quando o TEXT usa um Text
+// Style do Figma) ou nome da própria camada — sinal fraco, mas suficiente
+// pra sugerir (nunca afirmar) que um texto é um "Nível de Título". Não
+// analisa tamanho de fonte, peso ou posição — isso seria heurística visual
+// elaborada, fora de escopo (ver tarefa). Também não tenta advinhar o nível
+// (h1..h6): o designer escolhe o nível certo no formulário depois de "Usar
+// sugestão"; aqui só decidimos SE parece um título, não QUAL nível.
+const _A11Y_HEADING_NAME_REGEX = /\bh[1-6]\b|título|titulo|heading|headline/i;
+
+function _resolveTypographyA11yMatch(node, typoProp) {
+  const styleName = (typoProp && typoProp.styleKey && typoProp.name) ? typoProp.name : null;
+  const layerName = node && node.name ? node.name : '';
+  const signal = (styleName && _A11Y_HEADING_NAME_REGEX.test(styleName)) ? styleName
+    : (_A11Y_HEADING_NAME_REGEX.test(layerName) ? layerName : null);
+  if (!signal) return null;
+  return {
+    containingFrame: null,
+    a11yCategory: 'titulo',
+    confidence: 'baixa',
+    source: styleName && signal === styleName ? 'text-style-name' : 'layer-name'
+  };
+}
+
+// Ícone/vetor solto (não coberto por _resolveDscComponentA11yMatch, ou seja,
+// não é instância remote de um componente DSC catalogado) — sugere "Elemento
+// Decorativo" só quando não há indício de que o elemento carregue
+// texto/rótulo próprio (o que sugeriria antes um componente com nome
+// acessível do que algo puramente decorativo). Sinal: nome da camada não
+// menciona termos de rótulo/label/alt/ícone-com-função (ex.: "icon-button",
+// "ícone informativo") — mantém conservador, sempre confidence 'baixa'.
+const _A11Y_NON_DECORATIVE_NAME_REGEX = /label|rótulo|rotulo|alt|informativ|funcional|clic[áa]vel|button|botão|botao/i;
+
+function _resolveDecorativeA11yMatch(node) {
+  const layerName = node && node.name ? node.name : '';
+  if (_A11Y_NON_DECORATIVE_NAME_REGEX.test(layerName)) return null;
+  return {
+    containingFrame: null,
+    a11yCategory: 'decorativo',
+    confidence: 'baixa',
+    source: 'layer-name'
+  };
+}
+
+// ══ BETA-ONLY: a11y-mapeamento-interativo (início) ══
+// Node com fill do tipo IMAGE (categoria "images" do scan, ver
+// extractSpecs/_walk mais abaixo) — imagem de CONTEÚDO real (não ícone
+// decorativo), portanto precisa de texto alternativo pra leitor de tela.
+// Categoria de a11y correta é o shortName 'imagem' (não 'decorativo' — ver
+// _resolveDecorativeA11yMatch acima, que é só pra ícone/vetor sem função) e
+// NÃO 'elemento' (que é a categoria MACRO/rótulo de formulário, não o
+// shortName usado em dscComponentMatch.a11yCategory — confirmado contra o
+// uso real em accessibility.js, onde shortName 'imagem' cai no branch
+// _buildA11yElementoPayload(letter, 'imagem', ...) dentro da categoria macro
+// 'elemento'). Sempre confidence 'baixa' — mesmo padrão conservador de
+// _resolveDecorativeA11yMatch/_resolveTypographyA11yMatch, sem correspondência
+// de biblioteca real por trás.
+function _resolveImageA11yMatch(node) {
+  return {
+    containingFrame: null,
+    a11yCategory: 'imagem',
+    confidence: 'baixa',
+    source: 'image-fill'
+  };
+}
+// ══ BETA-ONLY: a11y-mapeamento-interativo (fim) ══
+// ══ BETA-ONLY: a11y-deteccao-automatica (fim) ══
+
+// ══ BETA-ONLY: a11y-formulario-dinamico (retomada — aplicação backend) ══
+const _A11Y_SELECT_TO_SHORTNAME = { imagem: 'texto alternativo para imagens' };
+
+function _normalizeA11yToggleName(rawName) {
+  const s = String(rawName || '')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .trim();
+  if (s === 'nome acesivel' || s === 'nome acessivel') return 'nomeAcessivel';
+  if (s === 'observacao' || s === 'observacoes') return 'observacoes';
+  if (s === 'notas' || s === 'notas de codigo') return 'notas';
+  return null;
+}
+
+// Property definitions (com syncId real, ex: "observacoes#7489:0") do
+// component set "[a11y base]" correspondente ao componente/subtipo escolhido
+// no formulário — usado pelas 5 categorias (ver bloco de toggles dinâmicos em
+// _tryImportA11yComponent, que resolve o shortName certo por categoria).
+// Retorna null se o componente/subtipo não estiver catalogado (fallback
+// gracioso: nenhum toggle extra é aplicado).
+function _getA11yComponentToggleMap(selectValue) {
+  const shortName = _A11Y_SELECT_TO_SHORTNAME[selectValue] || selectValue;
+  const entry = A11Y_COMPONENT_PROPERTIES_RAW.components.find(c => c.shortName === shortName);
+  if (!entry) return null;
+  const map = {};
+  entry.properties.forEach(p => {
+    if (p.type !== 'BOOLEAN') return;
+    const canonical = _normalizeA11yToggleName(p.name);
+    if (!canonical || map[canonical]) return;
+    map[canonical] = { rawKey: p.rawKey, name: p.name, syncId: p.syncId };
+  });
+  return map;
+}
+// ══ BETA-ONLY: a11y-formulario-dinamico (fim da aplicação backend) ══
 
 // Procura, em profundidade, a primeira INSTANCE descendente (inclusive a
 // própria raiz) que tenha uma componentProperty cujo nome (sem o sufixo
@@ -99,6 +360,32 @@ function _findTextNodeByCurrentValue(root, value) {
   }
   return null;
 }
+
+// ══ BETA-ONLY: label-automatico (início) ══
+// Chamada por get-selection-name/get-node-main-text mais abaixo. Ver
+// MIGRATION-BETA-TO-MAIN.md.
+// Primeiro TEXT node VISÍVEL na ordem de camadas (profundidade primeiro,
+// mesma ordem em que os filhos aparecem no painel do Figma) — usado pra
+// sugerir o texto de Label (accessibilityLabel) a partir do conteúdo real do
+// elemento, em vez do designer digitar do zero. Ignora nós com visible ===
+// false (não é isso que aparece de fato na tela) e strings vazias/só
+// espaço. Best-effort: se não achar nenhum texto, retorna null e o
+// formulário permanece vazio como hoje, sem travar nada.
+function _findMainTextContent(root) {
+  if (root.visible === false) return null;
+  if (root.type === 'TEXT') {
+    const text = String(root.characters || '').trim();
+    return text ? text : null;
+  }
+  if ('children' in root) {
+    for (const child of root.children) {
+      const found = _findMainTextContent(child);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+// ══ BETA-ONLY: label-automatico (fim) ══
 
 // Best-effort: tenta achar o selo/tag de letra manual (A, B, A1...) dentro
 // do componente importado para sincronizar com o texto digitado no
@@ -201,7 +488,7 @@ async function _tryImportA11yComponent(opts) {
   const wrapperComponent = await figma.importComponentByKeyAsync(catData.wrapperComponentKey);
   const instance = wrapperComponent.createInstance();
 
-  const found = _findNestedInstanceWithAnyProp(instance, propCandidates);
+  let found = _findNestedInstanceWithAnyProp(instance, propCandidates); // BETA-ONLY: a11y-formulario-dinamico — era `const`, virou `let` pra permitir reatribuição no bloco de nível 2 abaixo
   if (!found) {
     instance.remove();
     throw new Error('a11y-instancia-aninhada-nao-encontrada: prop~=' + propCandidates.join('|'));
@@ -219,12 +506,54 @@ async function _tryImportA11yComponent(opts) {
     throw new Error('a11y-set-properties-falhou: ' + (e && e.message ? e.message : e));
   }
 
+  // ══ BETA-ONLY: a11y-formulario-dinamico (início do trecho intercalado em
+  // _tryImportA11yComponent — instâncias aninhadas de nível 2/3 e aplicação
+  // de variantFields/toggles dinâmicos). Ver MIGRATION-BETA-TO-MAIN.md. ══
+  // Categoria "elemento": trocar "componente" no wrapper (found.instance)
+  // revela um SEGUNDO nível de instância aninhada (ex: instância "Button",
+  // "Accordion"...) — é NELA, não no wrapper, que vivem a property "tipo"
+  // (variante secundária, ex: Button tem default/desabilitado/de icone/...)
+  // e os 3 toggles booleanos (nome acessivel/observacoes/notas). Confirmado
+  // via REST API em 2026-08-19 (node 45:3389, instância "Elementos
+  // interativos e imagens" tem só variante+componente; a instância filha
+  // "Accordion" tem letter/observacoes/notas de codigo/nome acessivel/tipo).
+  // Mesmo padrão de "Estrutura da página" (variacao → tipo) mais abaixo.
+  let _elementoNestedFound = null;
+  if (type === 'elemento') {
+    _elementoNestedFound = _findNestedInstanceWithAnyProp(found.instance, ['tipo', 'nome acessivel', 'observacoes', 'notas']);
+    if (_elementoNestedFound) {
+      found = _elementoNestedFound;
+    }
+    // Se não achar, segue com found.instance (nível 1) — toggles/tipo
+    // simplesmente não são aplicados, mesma filosofia best-effort do resto
+    // da função; a spec real (Descrição/Nota fixas) já foi criada.
+
+    // Variante secundária "tipo" (ex: Button → de icone, Switch → switch e
+    // rotulo...) escolhida no <select> dinâmico do formulário (ver
+    // _getA11yComponentToggles/variantFields, accessibility.js). Só aplica se
+    // o designer escolheu algo diferente do default — best-effort, nunca
+    // derruba a criação da spec se o componente não tiver "tipo" ou o valor
+    // não existir mais na lib.
+    if (sub.tipo && _elementoNestedFound) {
+      const tipoKey = Object.keys(found.instance.componentProperties || {}).find(
+        k => k.split('#')[0].toLowerCase() === 'tipo'
+      );
+      if (tipoKey) {
+        try { found.instance.setProperties({ [tipoKey]: sub.tipo }); } catch (e) { /* best-effort */ }
+      }
+    }
+  }
+
   // Estrutura da página tem um SEGUNDO nível de instância aninhada dentro do
   // primeiro (variacao) — "idiomas" e "marco de navegacao" abrem um
   // sub-componente próprio com a property "tipo" (idioma ou marco
   // específico); "titulo da pagina" não tem esse segundo nível (conteúdo
   // fixo). Precisa buscar DEPOIS de setProperties acima, porque é a troca de
-  // variacao que revela a subárvore certa.
+  // variacao que revela a subárvore certa. Essa mesma instância aninhada
+  // ("EE idiomas"/"EE marco de navegacao" no catálogo) já é onde vivem os
+  // toggles observacoes/notas dessa categoria — guardada em
+  // _estruturaNestedFound pro bloco de toggles dinâmicos mais abaixo.
+  let _estruturaNestedFound = null;
   if (type === 'estrutura' && sub.variacao !== 'titulo da pagina') {
     const nestedValue = sub.variacao === 'idiomas' ? sub.idioma : sub.tipo;
     const nestedFound = _findNestedInstanceWithAnyProp(found.instance, ['tipo']);
@@ -238,7 +567,22 @@ async function _tryImportA11yComponent(opts) {
       instance.remove();
       throw new Error('a11y-estrutura-set-tipo-falhou: ' + (e && e.message ? e.message : e));
     }
+    _estruturaNestedFound = nestedFound;
   }
+
+  // Elemento Decorativo tem um TERCEIRO nível de instância aninhada — o
+  // wrapper (found, prop "variacao") revela uma instância "Elementos
+  // decorativos" (nível 2, mesma prop "variacao" — já é 'found' aqui) cujo
+  // filho direto "Content" (nível 3) é quem tem observacoes/notas/tipo de
+  // verdade. Confirmado via REST API em 2026-08-19 (node 31:553): "Elementos
+  // decorativos [variacao]" > "Content [notas, observacoes, tipo]". Guardado
+  // pra o bloco de toggles dinâmicos mais abaixo, mesma filosofia de
+  // _elementoNestedFound/_estruturaNestedFound.
+  let _decorativoNestedFound = null;
+  if (type === 'decorativo') {
+    _decorativoNestedFound = _findNestedInstanceWithAnyProp(found.instance, ['notas', 'observacoes']) || found;
+  }
+  // ══ BETA-ONLY: a11y-formulario-dinamico (pausa — próximo trecho é pré-existente) ══
 
   // Tag manual de Estrutura — o "Conector" (selo/estrela visível no elemento)
   // tem sua própria property "letter#..." num nível irmão de "Elementos
@@ -252,15 +596,104 @@ async function _tryImportA11yComponent(opts) {
     }
   }
 
+  // ══ BETA-ONLY: a11y-formulario-dinamico (retomada — aplicação dos toggles
+  // dinâmicos Nome Acessível/Observações/Notas de Código na instância real) ══
+  // Campos dinâmicos Nome Acessível/Observações/Notas de Código — nas 5
+  // categorias, só os que o componente/subtipo ESCOLHIDO realmente tem no
+  // catálogo (ver _getA11yComponentToggleMap) e que o designer ligou +
+  // preencheu no formulário (properties[].key já vem no vocabulário canônico
+  // nomeAcessivel/observacoes/notas, ver accessibility.js). Cada um precisa
+  // de dois passos: (1) ativar o toggle de verdade na instância aninhada via
+  // setProperties (usa o syncId exato do catálogo, próprio de cada
+  // componente/subtipo), pra revelar o bloco de conteúdo; (2) achar o TEXT
+  // node revelado por valor-padrão atual (mesmo mecanismo de
+  // _findTextNodeByCurrentValue já usado abaixo) e escrever o texto
+  // digitado. Nenhuma etapa lança — falha em um toggle não derruba a spec
+  // inteira, só aquele campo específico fica sem o texto do designer.
+  //
+  // shortName do catálogo (design-acessivel-component-properties.json) e a
+  // instância aninhada onde a property BOOLEAN de fato mora variam por
+  // categoria — todos confirmados via REST API em 2026-08-19/20 (ver
+  // .claude/agents/accessibility-specialist.md):
+  //   elemento    → shortName = sub.componente (ou 'texto alternativo para
+  //                 imagens' se 'imagem', ver _A11Y_SELECT_TO_SHORTNAME);
+  //                 instância = _elementoNestedFound (2º nível, "Button" etc)
+  //   titulo      → shortName 'niveis de titulo'; instância = found (nível 1,
+  //                 já tem observacoes+nivel juntos — confirmado node 31:551)
+  //   informacoes → shortName 'informações adicionais'; instância = found
+  //                 (nível 1, já tem observacoes+tipo juntos — node 31:555)
+  //   decorativo  → shortName 'ED gerais'/'ED imagem' conforme sub.tipo;
+  //                 instância = _decorativoNestedFound (3º nível "Content" —
+  //                 node 31:553)
+  //   estrutura   → shortName 'EE idiomas'/'EE marco de navegacao' conforme
+  //                 sub.variacao; instância = _estruturaNestedFound (2º
+  //                 nível, mesmo já usado pra aplicar "tipo"/"idioma" acima —
+  //                 nulo em "titulo da pagina", sem toggle catalogado)
+  const _dynamicToggleKeys = new Set(['nomeAcessivel', 'observacoes', 'notas']);
+  let _toggleShortName = null;
+  let _toggleTargetInstance = null;
+  if (type === 'elemento' && !sub.isOutro && sub.componente) {
+    _toggleShortName = sub.componente;
+    _toggleTargetInstance = found.instance;
+  } else if (type === 'titulo') {
+    _toggleShortName = 'niveis de titulo';
+    _toggleTargetInstance = found.instance;
+  } else if (type === 'informacoes') {
+    _toggleShortName = 'informações adicionais';
+    _toggleTargetInstance = found.instance;
+  } else if (type === 'decorativo' && _decorativoNestedFound) {
+    _toggleShortName = sub.tipo === 'imagem' ? 'ED imagem' : 'ED gerais';
+    _toggleTargetInstance = _decorativoNestedFound.instance;
+  } else if (type === 'estrutura' && _estruturaNestedFound) {
+    _toggleShortName = sub.variacao === 'idiomas' ? 'EE idiomas' : sub.variacao === 'marco de navegacao' ? 'EE marco de navegacao' : null;
+    _toggleTargetInstance = _estruturaNestedFound.instance;
+  }
+
+  if (_toggleShortName && _toggleTargetInstance) {
+    const toggleMap = _getA11yComponentToggleMap(_toggleShortName);
+    if (toggleMap) {
+      for (const p of (opts.properties || [])) {
+        if (!p || !p.value || !_dynamicToggleKeys.has(p.key)) continue;
+        const toggleDef = toggleMap[p.key];
+        if (!toggleDef) continue; // componente/subtipo não tem esse toggle — ignora silenciosamente
+        try {
+          _toggleTargetInstance.setProperties({ [toggleDef.rawKey]: true });
+        } catch (e) { continue; } // toggle não ativou — não adianta procurar o texto
+        // Valor-padrão atual do campo (placeholder tipo "Insira seu texto da
+        // observação.") é o que _findTextNodeByCurrentValue usa pra achar o
+        // TEXT node certo sem depender do nome da camada — mesmo padrão do
+        // bloco de Descrição/Notas mais abaixo. defaultEntry já é resolvido
+        // por categoria/subtipo mais acima na função (ex: decorativo/
+        // estrutura já têm 'observacoes'/'notasCodigo' reais no JSON de
+        // conteúdo, não só 'descricao'/'notasCodigo' como no bloco de
+        // "elemento").
+        const defaultText = p.key === 'observacoes' ? defaultEntry.observacoes
+          : p.key === 'notas' ? defaultEntry.notasCodigo
+          : p.key === 'nomeAcessivel' ? defaultEntry.nomeAcessivel
+          : null;
+        if (!defaultText) continue;
+        const fieldNode = _findTextNodeByCurrentValue(instance, defaultText);
+        if (fieldNode) {
+          try {
+            await figma.loadFontAsync(fieldNode.fontName);
+            fieldNode.characters = p.value;
+          } catch (e) { /* best-effort — campo fica com o texto padrão do componente */ }
+        }
+      }
+    }
+  }
+  // ══ BETA-ONLY: a11y-formulario-dinamico (fim do trecho intercalado) ══
+
   // O componente real só tem campos de Descrição/Observações/Notas de Código
-  // — não tem onde encaixar Componente/Variante/Label/Hint separadamente.
-  // Em vez de perder esse dado (ou duplicar num card paralelo), injeta tudo
-  // que foi capturado no formulário (exceto Descrição/Notas, que já vêm
-  // certas pela variante escolhida) dentro do campo Observações, uma linha
+  // (mais Nome Acessível, quando o componente tem, ver bloco acima) — não tem
+  // onde encaixar Componente/Variante/Label/Hint separadamente. Em vez de
+  // perder esse dado (ou duplicar num card paralelo), injeta o que sobrar
+  // (exceto Descrição/Notas/os 3 toggles dinâmicos já tratados acima, que já
+  // foram escritos nos campos certos) dentro do campo Observações, uma linha
   // por propriedade. Só cai no texto padrão do componente se não houver
   // nenhum dado capturado pra mostrar.
   const _infoLines = (opts.properties || [])
-    .filter(p => p && p.value && p.key !== 'descricao' && p.key !== 'notaCodigo')
+    .filter(p => p && p.value && p.key !== 'descricao' && p.key !== 'notaCodigo' && !_dynamicToggleKeys.has(p.key)) // BETA-ONLY: a11y-formulario-dinamico — exclusão de _dynamicToggleKeys
     .map(p => `${p.label}: ${p.value}`)
     .join('\n');
   if (_infoLines && defaultEntry.observacoes) {
@@ -273,8 +706,12 @@ async function _tryImportA11yComponent(opts) {
     }
   }
 
-  // Tag manual (A, B, A1...) — só faz sentido pras categorias com tag manual.
-  if ((type === 'elemento' || type === 'informacoes') && opts.letter) {
+  // Tag manual (A, B, A1... ou H1, H2, H3... em Título) — sincroniza o selo
+  // do componente importado com o nível/letra escolhido no formulário.
+  // BETA-ONLY: bugfixes-a11y-diversos — "|| type === 'titulo'" é novo (o selo
+  // de Título antes não sincronizava H1-H6, ver workaround no WORKAROUND
+  // abaixo de _tryImportA11yAgrupamento).
+  if ((type === 'elemento' || type === 'informacoes' || type === 'titulo') && opts.letter) {
     _bestEffortSyncA11yBadgeLetter(instance, opts.letter);
   }
 
@@ -342,8 +779,36 @@ async function _tryImportA11yAgrupamento(opts) {
   if (opts.letter) {
     try {
       instance.setProperties({ 'letra#3925:32': opts.letter });
-    } catch (e) { /* best-effort — nunca bloqueia a criação da spec */ }
+    } catch (e) { /* best-effort — cai no workaround abaixo se for título */ } // BETA-ONLY: bugfixes-a11y-diversos — comentário atualizado, cai no workaround abaixo
   }
+
+  // ══ BETA-ONLY: bugfixes-a11y-diversos (início) — correção de badge de
+  // título hardcoded na lib "[a11y] Agrupamento". Ver MIGRATION-BETA-TO-MAIN.md. ══
+  // WORKAROUND — falha real confirmada na própria lib publicada (2026-08-20):
+  // a variante "tipo=nível de título" do component set "[a11y] Agrupamento"
+  // tem o TEXT node "Number" com o texto "H" HARDCODED, sem
+  // componentPropertyReferences nenhuma vinculando ele à property
+  // "letra#3925:32" (confirmado inspecionando a árvore bruta via REST API —
+  // as outras 4 categorias têm o vínculo correto, só esta variante foi
+  // publicada sem ele). Por isso "H2"/"H3"/etc nunca apareciam — o
+  // setProperties acima roda sem erro, mas não tem efeito nenhum nesse texto
+  // específico porque ele não escuta a property. Bypassa escrevendo
+  // `.characters` direto no node, pelo caminho conhecido (Agrupamento >
+  // "order" > "Number"), com fallback pra busca por nome caso a lib mude a
+  // estrutura interna no futuro. Se a lib um dia corrigir o vínculo na
+  // origem, o setProperties acima já resolve sozinho e este bloco vira
+  // no-op inofensivo (best-effort, nunca lança).
+  if (opts.letter && opts.a11yType === 'titulo') {
+    try {
+      const numberNode = instance.findOne(n => n.type === 'TEXT' && n.name === 'Number')
+        || instance.findOne(n => n.type === 'TEXT' && /^H\d*$/.test(n.characters));
+      if (numberNode) {
+        await figma.loadFontAsync(numberNode.fontName);
+        numberNode.characters = opts.letter;
+      }
+    } catch (e) { /* best-effort — selo fica com o texto padrão "H" da lib */ }
+  }
+  // ══ BETA-ONLY: bugfixes-a11y-diversos (fim) ══
 
   return instance;
 }
@@ -356,7 +821,13 @@ async function _tryImportA11yAgrupamento(opts) {
 //   1. Agrupamento (A11Y_AGRUPAMENTO_KEYS, acima) — CONTORNO/moldura que
 //      envolve a área inteira do elemento documentado, com o selo embutido
 //      num dos 4 cantos conforme a orientação. É o modo "Área" do formulário
-//      (drawMode === 'contorno', default).
+//      (drawMode === 'contorno', default). Diferente do Conector linha
+//      (abaixo), este component set NÃO publica uma variante "desativado" —
+//      só as 4 orientações reais existem na lib (confirmado por extração
+//      completa de refs/design-acessivel.json em 2026-08-19: 20 componentes
+//      = 5 categorias × 4 orientações, sem exceção). Não inventar uma 5ª
+//      variante aqui; se um dia a lib publicar "desativado" pra esta família,
+//      recatalogar então.
 //   2. Conector linha (A11Y_CONECTOR_LINHA_KEYS, abaixo) — LIGAÇÃO simples
 //      (traço + selo na ponta) entre o elemento e o card de detalhamento, sem
 //      envolver a área do elemento. É o modo "Linha" do formulário
@@ -364,52 +835,143 @@ async function _tryImportA11yAgrupamento(opts) {
 //      conector=<direção>" (frame "Conectores  [Handoff]" do arquivo — não
 //      confundir com a frame homônima "Conectores  [DSC Handoff]", de outra
 //      finalidade/vertical, com nomenclatura de tipo diferente e sem
-//      conteúdo catalogado aqui).
-//   3. Item Number ("[a11y] Item Number", ver A11Y_ITEM_NUMBER_KEYS se/quando
-//      existir) — marcador de ORDEM DE TABULAÇÃO (sequência de foco do
-//      teclado), ferramenta separada, ainda não implementada no plugin. Não
+//      conteúdo catalogado aqui). Esta família TEM a variante "desativado"
+//      (ver comentário da constante abaixo) — visualmente é só o selo, sem
+//      o traço/linha e sem ponta de contato com o elemento; não tem "lado"
+//      geométrico, por isso ainda não está exposta no seletor "Lado da
+//      Guia" da UI (que hoje só lista as 4 direções reais) — precisaria de
+//      um cálculo de posicionamento próprio (selo solto perto do elemento,
+//      sem ancoragem por borda oposta) em vez do usado pelas 4 direções
+//      reais. Decisão de escopo: catalogado no backend, sem UI ainda —
+//      ver A11Y_COMBINADOS_KEYS mais abaixo pro mesmo raciocínio aplicado
+//      à família 4.
+//   3. Item Number ("[a11y] Item Number", keys em A11Y_ITEM_NUMBER_KEYS mais
+//      abaixo, handler create-tab-order-item) — marcador de ORDEM DE
+//      TABULAÇÃO (sequência de foco do teclado), ferramenta separada dentro
+//      da aba Acessibilidade ("Ordem de Tabulação", accessibility.js). Não
 //      tem relação com Agrupamento nem Conector linha; não reaproveitar.
+//   4. Combinados (A11Y_COMBINADOS_KEYS, abaixo) — permite empilhar MAIS DE
+//      UM selo no mesmo conector (ex: uma spec que é ao mesmo tempo
+//      "Elemento e Imagens" E "Nível de Título"). Publicado na lib como
+//      "variação=<layout>, conector=<direção>" (mesma frame "Conectores
+//      [Handoff]", sem a property "tipo" — os selos empilhados dentro do
+//      componente é que carregam a categoria, não o conector em si).
+//      CATALOGADO mas SEM fluxo de uso no plugin ainda: o schema de spec
+//      hoje (`a11yType`) é uma categoria única por spec, não há conceito de
+//      "esta spec pertence a duas categorias" em nenhum lugar do formulário
+//      ou do handoffData — usar esta família exigiria desenhar essa UX
+//      (como escolher quais categorias combinar, quantos selos, em que
+//      ordem) antes de implementar. Não inventar essa UI sem alinhamento
+//      explícito — ver CLAUDE.md.
 // ============================================================
 
 // Keys publicadas do component set "tipo=<categoria>, conector=<direção>" —
 // frame "Conectores  [Handoff]" do arquivo da lib (25 componentes = 5
 // categorias × 5 direções, incluindo "desativado"). Direção "desativado"
-// existe na lib mas não é usada aqui — o modo Linha sempre nasce com uma
-// direção real (mesmo default do modo Contorno, guideSide 'right').
-// Confirmado via inspeção local de refs/design-acessivel.json (2026-08-07) —
-// nomes em português com grafia exata "elementos interativos e imagens" /
-// "estrutura da página" / "nível de título / titulo" / "decorativo" /
-// "informações adicionais".
+// existe na lib e está catalogada aqui, mas ainda não é usada por
+// _tryImportA11yConectorLinha — o modo Linha sempre nasce com uma direção
+// real (mesmo default do modo Contorno, guideSide 'right'); ver o item 2 do
+// bloco de comentário acima pra explicação de por que "desativado" não tem
+// um "lado" equivalente no cálculo de posicionamento atual.
+// Confirmado via inspeção local de refs/design-acessivel.json (2026-08-07,
+// revalidado 2026-08-19) — nomes em português com grafia exata "elementos
+// interativos e imagens" / "estrutura da página" / "nível de título /
+// titulo" / "decorativo" / "informações adicionais".
 const A11Y_CONECTOR_LINHA_KEYS = {
   elemento: {
     esquerda: '9c1f1679ab73055ef68dbcbd11b89fc711629f6a',
     direita:  'eec4d7b2153d9eb6bc300787c861b8cfee10dcbf',
     superior: 'fcdb189d2cbdcda11488030e4d4c523d08d95865',
     inferior: '509491cd5e458ec0cf974b00390f8f65d078c326',
+    desativado: 'eb12c7da71c1b661a72438ff4e27462ce798c07e', // BETA-ONLY: bugfixes-a11y-diversos
   },
   estrutura: {
     esquerda: '13141fdadb7e8675d8a47ba70be1b6d24d4ed35c',
     direita:  '2621f5cdadea32e0802c8196aad03db1da20bf72',
     superior: '76d6ba85e4fed4a5d0bd67c709860877fe236d2f',
     inferior: '3021c901640ffb86e8228dd12bd730ee3f770ebb',
+    desativado: '63e22dc70dde84d0aa43c1592388751e6bb8c44e', // BETA-ONLY: bugfixes-a11y-diversos
   },
   titulo: {
     esquerda: '670c7c055ed7ebc01a523add5b69499680076419',
     direita:  'f63a82ad250bcc8569d83affbcc39d6f226d64ca',
     superior: 'baf0b4ea8417911a42f7d890654ad8dc3d047881',
     inferior: '3dafdf7d0543989b82c25686abb88134c879a94c',
+    desativado: 'ba1aa8640e1593f93ed1e0ee03cd59ed4ff54ae8', // BETA-ONLY: bugfixes-a11y-diversos
   },
   decorativo: {
     esquerda: '4866349b6246fbd45cf493cce308f7da2c312569',
     direita:  '85ff209c592f55cc2149b256909ac65e2e06a66b',
     superior: 'ad87c4797c992bfaadbb41d8d05e9c81fc4207c2',
     inferior: 'a419476ffe6c0b6c10a32c080d624091cf083171',
+    desativado: '08ec11bff941a75a75bbe248b822da7715140da7', // BETA-ONLY: bugfixes-a11y-diversos
   },
   informacoes: {
     esquerda: 'edb9fed9e58a7bf279d8804014f8755ffc4e711d',
     direita:  'ceff0c518ef33fc326eec74af0320255a6ba53a8',
     superior: 'f8dcedebd882a13e26659b1a614adf16166b996d',
     inferior: 'c2ef79c032a76ffefcb0a8b3123bf91ff2c8a221',
+    desativado: 'cef964a1a1bfa7ea3d0e4d24d005d3a669ca56b2', // BETA-ONLY: bugfixes-a11y-diversos
+  },
+};
+
+// Keys publicadas do component set "variação=<layout>, conector=<direção>"
+// (mesma frame "Conectores  [Handoff]", ver item 4 do bloco de comentário
+// acima) — permite empilhar múltiplos selos de categoria no mesmo conector.
+// 25 componentes no total: 4 layouts ("só vertical" / "só horizontal" /
+// "dupla vertical" / "dupla horizontal") × 5 direções (incluindo
+// "desativado") = 20, mais 5 componentes "conector=<direção>" sem variação
+// (layout base/nenhum, um único selo — a raiz do variant group antes de
+// aplicar "variação"). Confirmado via inspeção local de
+// refs/design-acessivel.json em 2026-08-19. NÃO usada em nenhum fluxo do
+// plugin ainda — ver o item 4 do bloco de comentário acima: falta desenhar
+// a UX de "combinar categorias numa spec" antes de ter um chamador real
+// (equivalente a _tryImportA11yAgrupamento/_tryImportA11yConectorLinha).
+// AVISO: por não ter nenhum chamador, esta constante é removida do
+// code.bundle.js pelo tree-shaking do esbuild (bundle-code.cjs usa
+// bundle:true) — ela só existe hoje na fonte (code.js). Isso é esperado e
+// inofensivo (sem side-effect, não é referenciada por engano em nenhum
+// lugar); quando alguém implementar a função de import real desta família,
+// ela volta a aparecer no bundle automaticamente. Não é preciso "forçar" a
+// sobrevivência dela até existir um uso de verdade.
+// BETA-ONLY: bugfixes-a11y-diversos — constante catalogada, sem chamador
+// ainda (removida do bundle por tree-shoking, ver comentário acima). Ver
+// MIGRATION-BETA-TO-MAIN.md.
+const A11Y_COMBINADOS_KEYS = {
+  base: {
+    esquerda: 'f9cd4394c0bfc48ae86d3028e836877887d23fcd',
+    direita:  '08ac04391034777646eec9395c6d221189ee6d46',
+    superior: 'ff43b15ac0c078b35219984bf035c4c0f0089cf1',
+    inferior: 'b355a26c5a89aea074effe28ca6767b08e4a7f99',
+    desativado: '71719f112ec0135b16df0deb6584fbc44af3aff2',
+  },
+  soVertical: {
+    esquerda: '213f18aa23c4a840ddaae07ffe5aeeabe4615627',
+    direita:  '5a3a927d60d20014473782bfbe7ffb8b75df53d4',
+    superior: 'a8c6982340d110a2de97f700fa8641f79e8ab0dc',
+    inferior: '3baea19ba737593ece499033603469d0ccba2f44',
+    desativado: '683436fb483bbbd84909e19a22ef44ca85b77788',
+  },
+  soHorizontal: {
+    esquerda: 'c8be4be969e448d2c111482d0a3fc43fe620bec7',
+    direita:  'ab50550d6b4fa0c9bd6fb582b4f9d4623693df23',
+    superior: '486d97e5dd243af65f2142aed26bc6f439d707a1',
+    inferior: 'a27bb28570c0041fb41ceebe4a37539f3d508fc5',
+    desativado: 'be7a32a35125f7b086d47de7f6f93c4901299faf',
+  },
+  duplaVertical: {
+    esquerda: '836529947666a324678552bd57d377ee94c686ad',
+    direita:  'd2569306f2cd11e8d6ced4b308b403e03387b170',
+    superior: 'b219d9ac725540f309a06675cbefac94baec3132',
+    inferior: '2a2e7ce268d169c65086bb59c9c82cf19debbf14',
+    desativado: 'ca002cd0f9bb8a236f74b9e4170431fd8492509f',
+  },
+  duplaHorizontal: {
+    esquerda: '8da5d723b005b4ab001fab5cf9ad301f334cbbe6',
+    direita:  '74fba6bdbbd2a02788176d58723802909e46ef33',
+    superior: 'ddbec1765daf151d178927b7ea8224776cea2aa3',
+    inferior: '8022fdb598077eff42c81cf9a2cfff74300413db',
+    desativado: 'c9c0cd18390420ec66c1e0a66bf3f53a99d41509',
   },
 };
 
@@ -427,6 +989,22 @@ async function _tryImportA11yConectorLinha(opts) {
   const component = await figma.importComponentByKeyAsync(key);
   const instance = component.createInstance();
   instance.name = 'Conector';
+
+  // BETA-ONLY: bugfixes-a11y-diversos (início) — antes usava sempre
+  // 'letra#3925:6', que não existe/não sincroniza pra Título.
+  // "[a11y] Conectores" tem DUAS properties de texto separadas (confirmado
+  // via componentPropertyDefinitions do component set, node 1:50): "letra"
+  // (tags A/B/A1...) e "nível de título" (H1/H2/H3...) — não são a mesma
+  // property, diferente do que se poderia supor pelo padrão de "Agrupamento".
+  // Título usa a segunda; as demais categorias usam a primeira.
+  if (opts.letter) {
+    const propKey = opts.a11yType === 'titulo' ? 'nível de título#6411:2' : 'letra#3925:6';
+    try {
+      instance.setProperties({ [propKey]: opts.letter });
+    } catch (e) { /* best-effort — nunca bloqueia a criação da spec */ }
+  }
+  // ══ BETA-ONLY: bugfixes-a11y-diversos (fim) ══
+
   return instance;
 }
 
@@ -491,6 +1069,27 @@ function _reorderSpecGroupByTag(specGroup, tag) {
   figma.currentPage.insertChild(insertIndex, specGroup);
 }
 
+
+// ══ BETA-ONLY: ficha-atualiza-sem-duplicar (início) ══
+// Depende de: chamada em handler de geração de ficha mais abaixo
+// (const _existingFicha = _hdFindExistingFicha(_titulo)). Ver
+// MIGRATION-BETA-TO-MAIN.md.
+// Localiza a ficha mais recente do projeto no canvas (mesmo critério usado
+// por pull-ficha-version-from-canvas/insert-frame-in-ficha/
+// insert-flows-in-ficha): prefixo de nome + ordenação por timestamp
+// embutido no nome (ordenação alfabética de string já resolve, formato do
+// timestamp é sempre YYYY-MM-DD HH:MM). Retorna null se não encontrar.
+function _hdFindExistingFicha(titulo) {
+  const _titulo = (titulo || '').trim();
+  const _prefix = _titulo ? `Handex | Ficha de Projeto | ${_titulo}` : 'Handex | Ficha de Projeto';
+  const fichas = figma.currentPage.children.filter(
+    n => n.type === 'FRAME' && n.name.startsWith(_prefix)
+  );
+  if (fichas.length === 0) return null;
+  fichas.sort((a, b) => a.name.localeCompare(b.name));
+  return fichas[fichas.length - 1];
+}
+// ══ BETA-ONLY: ficha-atualiza-sem-duplicar (fim) ══
 
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -646,6 +1245,40 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
   }
 
   const strokeColor = { r: 0.12, g: 0.16, b: 0.23 };
+
+  // ══ BETA-ONLY: flows-mini-mapa-conector-criacao (início) ══
+  // Depende de: msg.connectorStyle/msg.curvature vindos do modal de criação
+  // (specifications.js: confirmFlowConnection) e de resync-all-flows
+  // repassando os mesmos campos salvos. Ver MIGRATION-BETA-TO-MAIN.md.
+  // Mesmo cálculo de estilo de conector usado em edit-spec-connector --
+  // reaproveitado aqui para que fluxos respeitem connectorStyle/curvature
+  // vindos do frontend (antes ignorados, sempre desenhava reta).
+  const _flowConnectorStyle = msg.connectorStyle || 'straight';
+  const _flowCurvature = _flowConnectorStyle === 'curved' ? (msg.curvature || 0) : 0;
+
+  let linePath = `M ${bestA.x} ${bestA.y} L ${bestB.x} ${bestB.y}`;
+  let arrowAngle = Math.atan2(bestB.y - bestA.y, bestB.x - bestA.x);
+
+  if (_flowConnectorStyle === 'elbow') {
+    const isHorizontal = bestA.side === 'left' || bestA.side === 'right';
+    const corner = isHorizontal ? { x: bestB.x, y: bestA.y } : { x: bestA.x, y: bestB.y };
+    linePath = `M ${bestA.x} ${bestA.y} L ${corner.x} ${corner.y} L ${bestB.x} ${bestB.y}`;
+    arrowAngle = Math.atan2(bestB.y - corner.y, bestB.x - corner.x);
+  } else if (_flowCurvature) {
+    const dx = bestB.x - bestA.x, dy = bestB.y - bestA.y;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    const px = -dy / dist, py = dx / dist;
+    const offset = (_flowCurvature / 100) * dist * 0.5;
+    const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
+    const ctrlX = midX + px * offset, ctrlY = midY + py * offset;
+    linePath = `M ${bestA.x} ${bestA.y} Q ${ctrlX} ${ctrlY} ${bestB.x} ${bestB.y}`;
+    // Aproximação barata da tangente no ponto final: ângulo entre o ponto
+    // de controle e o ponto final -- suficiente pra apontar a seta na
+    // direção geral de chegada da curva sem calcular derivada da bezier.
+    arrowAngle = Math.atan2(bestB.y - ctrlY, bestB.x - ctrlX);
+  }
+  // ══ BETA-ONLY: flows-mini-mapa-conector-criacao (fim do cálculo de path) ══
+
   const line = figma.createVector();
   line.name = `Linha`;
   figma.currentPage.appendChild(line);
@@ -653,12 +1286,12 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
   line.strokes = [{ type: "SOLID", color: strokeColor }];
   line.strokeWeight = 2;
   if (msg.flowType === "line_dashed" || msg.flowType === "diamond_dashed") line.dashPattern = [6, 4];
-  line.vectorPaths = [{ windingRule: "NONZERO", data: `M ${bestA.x} ${bestA.y} L ${bestB.x} ${bestB.y}` }];
+  line.vectorPaths = [{ windingRule: "NONZERO", data: linePath }]; // BETA-ONLY: flows-mini-mapa-conector-criacao — linePath (antes hardcoded reta)
 
   let nodesToGroup = [line];
 
   if (msg.flowType !== "event_start") {
-    const angle = Math.atan2(bestB.y - bestA.y, bestB.x - bestA.x);
+    const angle = arrowAngle; // BETA-ONLY: flows-mini-mapa-conector-criacao — arrowAngle (antes calculado só da reta bestA→bestB)
     const arrowSize = 8;
     const arrow = figma.createVector();
     figma.currentPage.appendChild(arrow);
@@ -683,8 +1316,17 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
     targetId: nodeB ? nodeB.id : null,
     decisionText: msg.decisionText || null,
     flowSide: msg.flowSide || 'auto',
-    flowUid: _flowId
+    flowUid: _flowId,
+    connectorStyle: _flowConnectorStyle, // BETA-ONLY: flows-mini-mapa-conector-criacao
+    curvature: _flowCurvature // BETA-ONLY: flows-mini-mapa-conector-criacao
   };
+
+  // BETA-ONLY: flows-mini-mapa-conector-criacao — _buildFlowConnection
+  // passou a RETORNAR { group, flow } em vez de postar 'flow-created' e
+  // chamar figma.notify direto; os 3 chamadores (create-flow-connection/
+  // recreate-flow-connection/edit-spec-connector) e o novo resync-all-flows
+  // (abaixo) agora fazem isso eles mesmos. Ver MIGRATION-BETA-TO-MAIN.md.
+  let result = null;
 
   if (msg.flowType === "diamond" || msg.flowType === "diamond_dashed") {
     const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
@@ -713,7 +1355,7 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
       finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | decisao] ${msg.flowName || "Decisão"}`;
       finalGroup.locked = true;
       finalGroup.setPluginData('handexCategory', 'fluxo');
-      figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
+      result = { group: finalGroup, flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType, ..._flowExtra } };
     } catch (e) { console.error(e); }
   } else if (isEvent) {
     const isStart = msg.flowType === "event_start";
@@ -740,7 +1382,7 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
       finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | ${isStart ? 'inicio' : 'fim'}] ${msg.flowName || (isStart ? "Início" : "Fim")}`;
       finalGroup.locked = true;
       finalGroup.setPluginData('handexCategory', 'fluxo');
-      figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
+      result = { group: finalGroup, flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType, ..._flowExtra } };
     } catch (e) { console.error(e); }
   } else if (msg.decisionText && (msg.flowType === "line_solid" || msg.flowType === "line_dashed")) {
     const midX = (bestA.x + bestB.x) / 2, midY = (bestA.y + bestB.y) / 2;
@@ -769,16 +1411,17 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
       finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conexão"}`;
       finalGroup.locked = true;
       finalGroup.setPluginData('handexCategory', 'fluxo');
-      figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
+      result = { group: finalGroup, flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType, ..._flowExtra } };
     } catch (e) { console.error(e); }
   } else {
     const finalGroup = figma.group(nodesToGroup, figma.currentPage);
     finalGroup.name = `[Fluxo | ${msg.nextFlowNumber || 1} | conexao] ${msg.flowName || "Conexão"}`;
     finalGroup.locked = true;
     finalGroup.setPluginData('handexCategory', 'fluxo');
-    figma.ui.postMessage({ type: 'flow-created', flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType, ..._flowExtra } });
+    result = { group: finalGroup, flow: { id: finalGroup.id, name: finalGroup.name, type: msg.flowType, ..._flowExtra } };
   }
-  figma.notify("Fluxo criado!");
+
+  return result;
 }
 
 figma.ui.onmessage = async (msg) => {
@@ -1025,7 +1668,7 @@ figma.ui.onmessage = async (msg) => {
       if (!node.name) return null;
       if (wanted.ficha && node.name.startsWith('Handex | Ficha de Projeto')) return 'ficha';
       if (wanted.spec && (node.name.startsWith('[Spec | ') || node.name.startsWith('[Spec]'))) return 'spec';
-      if (wanted.a11y && (node.name.startsWith('[SpecA11y') || node.name.startsWith('[A11yArea'))) return 'a11y';
+      if (wanted.a11y && (node.name.startsWith('[SpecA11y') || node.name.startsWith('[A11yArea') || node.name.startsWith('[TabOrder'))) return 'a11y'; // BETA-ONLY: apagar-tudo — "|| node.name.startsWith('[TabOrder')" é novo, bugfix de filtro do canvas não reconhecer selos de Ordem de Tabulação
       if (wanted.medida && node.name.startsWith('[Medida]')) return 'medida';
       if (wanted.fluxo && node.name.startsWith('[Fluxo')) return 'fluxo';
       return null;
@@ -1311,8 +1954,25 @@ figma.ui.onmessage = async (msg) => {
       const _titulo = (data.step1?.titulo || 'Projeto').replace(/\//g, '-');
       const _handoffBase = `Handex | Ficha de Projeto | ${_titulo}`;
 
-      // Nome sempre inclui data (primeira versão ou atualização)
-      const _isUpdate = false;
+      // ══ BETA-ONLY: ficha-atualiza-sem-duplicar (início) ══
+      // Depende de: _hdFindExistingFicha (função dedicada acima nesta
+      // mesma fonte). Ver MIGRATION-BETA-TO-MAIN.md.
+      // Detecta ficha já existente do projeto ANTES de construir a nova --
+      // decisão de produto: "Gerar Ficha" atualiza em vez de duplicar.
+      // Guarda só a posição (x/y) para a nova ficha herdar -- o designer
+      // pode ter movido/organizado a ficha no canvas, atualizar não deve
+      // reposicioná-la. Remove a antiga assim que a posição é capturada,
+      // antes de construir a nova, para ela não interferir no cálculo de
+      // colisão/posicionamento (que só roda quando não há ficha anterior).
+      const _existingFicha = _hdFindExistingFicha(_titulo);
+      let _inheritedX = null, _inheritedY = null;
+      const _isUpdate = !!_existingFicha;
+      if (_existingFicha) {
+        _inheritedX = _existingFicha.x;
+        _inheritedY = _existingFicha.y;
+        try { _existingFicha.remove(); } catch (e) {}
+      }
+      // ══ BETA-ONLY: ficha-atualiza-sem-duplicar (pausa — segue lógica pré-existente) ══
       const _now = new Date();
       const _ts = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')} ${String(_now.getHours()).padStart(2,'0')}:${String(_now.getMinutes()).padStart(2,'0')}`;
       // Timestamp antes da versão no nome: garante que a ordenação alfabética
@@ -1778,7 +2438,23 @@ figma.ui.onmessage = async (msg) => {
       // 1.9 ESPECIFICAÇÕES ANOTADAS (seção independente, agrupada por frame)
       // Specs de Acessibilidade (a11yType) ficam de fora daqui — têm seção própria
       // logo abaixo (ver "1.9b ESPECIFICAÇÕES DE ACESSIBILIDADE").
+      // ══ BETA-ONLY: ficha-specs-avulsas-sem-frame (início) ══
+      // Antes desta sessão a Ficha só olhava frame.createdSpecs — specs
+      // criadas sem frame associado (avulsas) simplesmente não apareciam na
+      // Ficha, apesar de existirem no canvas e em handoffData.specs. Ver
+      // MIGRATION-BETA-TO-MAIN.md.
+      // data.specs (nível superior) é o array JÁ MESCLADO avulsas+por-frame (ver
+      // saveSpecsToStorage em core.js) — specs realmente sem frame são as que sobram
+      // depois de remover, por id, tudo que já está em algum frame.createdSpecs.
+      // Entram como um grupo "Avulsas" próprio, no mesmo formato de card usado pelos
+      // frames reais (mesmo padrão do bucket "Sem área" da a11y — ver 1.9b/handoff.js).
+      const _framedSpecIds = new Set(_frames.flatMap(f => (f.createdSpecs || []).map(s => s && s.id)).filter(Boolean));
+      const _looseSpecs = (data.specs || []).filter(s => s && !s.a11yType && !_framedSpecIds.has(s.id));
       const _framesWithSpecs = (_frames || []).filter(f => (f.createdSpecs || []).some(s => s && !s.a11yType));
+      if (_looseSpecs.length > 0) {
+        _framesWithSpecs.push({ nome: 'Avulsas (sem frame)', createdSpecs: _looseSpecs });
+      }
+      // ══ BETA-ONLY: ficha-specs-avulsas-sem-frame (fim) ══
       if (_framesWithSpecs.length > 0) {
         const annotSection = createSection(content, "Especificações");
         for (const f of _framesWithSpecs) {
@@ -1920,12 +2596,27 @@ figma.ui.onmessage = async (msg) => {
       }
 
       // 1.9b ESPECIFICAÇÕES DE ACESSIBILIDADE (seção independente — só aparece se
-      // houver ao menos uma spec em algum frame.a11ySpecs). Array estruturalmente
-      // separado de frame.createdSpecs (ver core.js/_migrateA11ySpecsFromCreatedSpecs
-      // para dados salvos antes dessa separação) — mesmo formato de properties[]
-      // que 1.9, só de origem e rótulo diferentes.
+      // houver ao menos uma spec de a11y, avulsa ou em algum frame.a11ySpecs). Array
+      // estruturalmente separado de frame.createdSpecs (ver core.js/
+      // _migrateA11ySpecsFromCreatedSpecs para dados salvos antes dessa separação) —
+      // mesmo formato de properties[] que 1.9, só de origem e rótulo diferentes.
+      // ══ BETA-ONLY: ficha-specs-avulsas-sem-frame (a11y) (início) ══
+      // Mesma correção do bloco 1.9 acima, agora para specs/áreas de a11y —
+      // antes só frame.a11ySpecs entrava na Ficha. Ver MIGRATION-BETA-TO-MAIN.md.
+      // data.a11ySpecs/data.a11yAreas (nível superior) são os arrays JÁ MESCLADOS
+      // avulsas+por-frame (ver saveSpecsToStorage em core.js) — itens realmente
+      // avulsos são os que sobram depois de remover, por id, tudo que já está em
+      // algum frame.a11ySpecs/a11yAreas.
       const _A11Y_TYPE_LABEL = { elemento: 'Elementos e Imagens', estrutura: 'Estrutura da Página', titulo: 'Nível de Título', decorativo: 'Elemento Decorativo', informacoes: 'Informações Adicionais' };
+      const _framedA11ySpecIds = new Set(_frames.flatMap(f => (f.a11ySpecs || []).map(s => s && s.id)).filter(Boolean));
+      const _framedA11yAreaIds = new Set(_frames.flatMap(f => (f.a11yAreas || []).map(a => a && a.id)).filter(Boolean));
+      const _looseA11ySpecs = (data.a11ySpecs || []).filter(s => s && !_framedA11ySpecIds.has(s.id));
+      const _looseA11yAreas = (data.a11yAreas || []).filter(a => a && !_framedA11yAreaIds.has(a.id));
       const _framesWithA11y = (_frames || []).filter(f => (f.a11ySpecs || []).length > 0);
+      if (_looseA11ySpecs.length > 0) {
+        _framesWithA11y.push({ nome: 'Avulsas (sem frame)', a11ySpecs: _looseA11ySpecs, a11yAreas: _looseA11yAreas });
+      }
+      // ══ BETA-ONLY: ficha-specs-avulsas-sem-frame (a11y) (fim) ══
       if (_framesWithA11y.length > 0) {
         const a11ySection = createSection(content, "Especificações de Acessibilidade");
         for (const f of _framesWithA11y) {
@@ -1937,13 +2628,14 @@ figma.ui.onmessage = async (msg) => {
           fGroup.appendChild(fLabel);
           setFillAndHug(fLabel);
 
-          const a11ySpecs = (f.a11ySpecs || []).filter(Boolean);
-          const aSpecs = createFrame("VERTICAL", 0, 6);
-          aSpecs.fills = [];
-          fGroup.appendChild(aSpecs);
-          setFillAndHug(aSpecs);
-
-          for (const s of a11ySpecs) {
+          // ══ BETA-ONLY: ficha-a11y-agrupada-por-area (início) ══
+          // buildA11ySpecCard foi extraída do corpo do loop antigo (que
+          // iterava a11ySpecs linearmente, sem agrupar) para ser reaproveitada
+          // tanto dentro de cada Área Marcada quanto no bucket "Sem área"
+          // abaixo. Espelha na Ficha o mesmo agrupamento por área que a UI já
+          // faz (accessibility.js: renderA11yGroupedList). Ver
+          // MIGRATION-BETA-TO-MAIN.md.
+          const buildA11ySpecCard = (parent, s) => {
             const subtypeLabel = _A11Y_TYPE_LABEL[s.a11yType] || 'Acessibilidade';
             const sc = s.color ? hexToRgb(s.color) : { r: 0.03, g: 0.57, b: 0.70 };
             const scBg = s.fillColor ? hexToRgb(s.fillColor) : { r: 0.88, g: 0.96, b: 0.98 };
@@ -1951,7 +2643,7 @@ figma.ui.onmessage = async (msg) => {
             sRow.name = `[A11y/${s.letter || 'A'}] ${s.name || 'Spec'}`;
             sRow.cornerRadius = 8;
             sRow.strokes = [{ type: "SOLID", color: sc }];
-            aSpecs.appendChild(sRow);
+            parent.appendChild(sRow);
             setFillAndHug(sRow);
 
             const sTop = createFrame("HORIZONTAL", 0, 6);
@@ -1962,10 +2654,6 @@ figma.ui.onmessage = async (msg) => {
             const sName = createText(s.name || 'Spec', 11, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
             sName.layoutGrow = 1;
             sTop.appendChild(sName);
-            if (s.id && await figma.getNodeByIdAsync(s.id)) {
-              sName.textDecoration = "UNDERLINE";
-              sName.hyperlink = { type: "NODE", value: s.id };
-            }
 
             const sTypeTag = createFrame("HORIZONTAL", 6, 3, scBg);
             sTypeTag.cornerRadius = 999;
@@ -1995,7 +2683,95 @@ figma.ui.onmessage = async (msg) => {
                 pRow.appendChild(pVal);
               });
             }
+            return sName;
+          };
+
+          const a11ySpecs = (f.a11ySpecs || []).filter(Boolean);
+          const a11yAreas = (f.a11yAreas || []).filter(Boolean).sort((a, b) => (a.number || 0) - (b.number || 0));
+          const aAreasBox = createFrame("VERTICAL", 0, 8);
+          aAreasBox.fills = [];
+          fGroup.appendChild(aAreasBox);
+          setFillAndHug(aAreasBox);
+
+          for (const area of a11yAreas) {
+            const areaSpecs = a11ySpecs.filter(s => s.a11yAreaId === area.id);
+            if (areaSpecs.length === 0) continue;
+
+            const gBox = createFrame("VERTICAL", 0, 6);
+            gBox.name = `[Área ${area.number != null ? area.number : ''}] ${area.label || 'Área'}`;
+            aAreasBox.appendChild(gBox);
+            setFillAndHug(gBox);
+
+            const gHeader = createFrame("HORIZONTAL", 0, 6);
+            gHeader.counterAxisAlignItems = "CENTER";
+            gBox.appendChild(gHeader);
+            setFillAndHug(gHeader);
+            const gBadge = createFrame("HORIZONTAL", 0, 0, { r: 0, g: 0.44, b: 0.69 });
+            gBadge.resize(18, 18);
+            gBadge.cornerRadius = 999;
+            gBadge.primaryAxisAlignItems = "CENTER";
+            gBadge.counterAxisAlignItems = "CENTER";
+            gHeader.appendChild(gBadge);
+            const gBadgeT = figma.createText();
+            gBadgeT.fontName = { family: "Inter", style: "Bold" };
+            gBadgeT.fontSize = 9;
+            gBadgeT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+            gBadgeT.characters = String(area.number != null ? area.number : '·');
+            gBadgeT.textAutoResize = "WIDTH_AND_HEIGHT";
+            gBadge.appendChild(gBadgeT);
+            const gName = createText(area.label || 'Área', 10, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+            gHeader.appendChild(gName);
+            setFillAndHug(gName);
+            const gCount = createText(`${areaSpecs.length} esp.`, 9, "Regular", { r: 0.55, g: 0.6, b: 0.65 });
+            gHeader.appendChild(gCount);
+            setFillAndHug(gCount);
+
+            const gSpecs = createFrame("VERTICAL", 0, 6);
+            gSpecs.fills = [];
+            gBox.appendChild(gSpecs);
+            setFillAndHug(gSpecs);
+
+            for (const s of areaSpecs) {
+              const sName = buildA11ySpecCard(gSpecs, s);
+              if (s.id && await figma.getNodeByIdAsync(s.id)) {
+                sName.textDecoration = "UNDERLINE";
+                sName.hyperlink = { type: "NODE", value: s.id };
+              }
+            }
           }
+
+          const _semArea = a11ySpecs.filter(s => !s.a11yAreaId || !a11yAreas.some(a => a.id === s.a11yAreaId));
+          if (_semArea.length > 0) {
+            const gBox = createFrame("VERTICAL", 0, 6);
+            gBox.name = `[Sem área]`;
+            aAreasBox.appendChild(gBox);
+            setFillAndHug(gBox);
+
+            const gHeader = createFrame("HORIZONTAL", 0, 6);
+            gHeader.counterAxisAlignItems = "CENTER";
+            gBox.appendChild(gHeader);
+            setFillAndHug(gHeader);
+            const gName = createText('Sem área', 10, "Bold", { r: 0.7, g: 0.5, b: 0.1 });
+            gHeader.appendChild(gName);
+            setFillAndHug(gName);
+            const gCount = createText(`${_semArea.length} esp.`, 9, "Regular", { r: 0.55, g: 0.6, b: 0.65 });
+            gHeader.appendChild(gCount);
+            setFillAndHug(gCount);
+
+            const gSpecs = createFrame("VERTICAL", 0, 6);
+            gSpecs.fills = [];
+            gBox.appendChild(gSpecs);
+            setFillAndHug(gSpecs);
+
+            for (const s of _semArea) {
+              const sName = buildA11ySpecCard(gSpecs, s);
+              if (s.id && await figma.getNodeByIdAsync(s.id)) {
+                sName.textDecoration = "UNDERLINE";
+                sName.hyperlink = { type: "NODE", value: s.id };
+              }
+            }
+          }
+          // ══ BETA-ONLY: ficha-a11y-agrupada-por-area (fim) ══
         }
         content.appendChild(a11ySection);
         setFillAndHug(a11ySection);
@@ -2434,6 +3210,21 @@ figma.ui.onmessage = async (msg) => {
       mainContainer.locked = false;
       mainContainer.setPluginData('handexCategory', 'ficha');
       figma.currentPage.appendChild(mainContainer);
+
+      if (_isUpdate && _inheritedX !== null) {
+        // BETA-ONLY: ficha-atualiza-sem-duplicar
+        // Ficha existente: herda a posição exata de onde estava -- pula todo
+        // o cálculo de posicionamento/colisão abaixo (só relevante para uma
+        // ficha nova, que precisa achar um lugar livre no canvas).
+        mainContainer.x = _inheritedX;
+        mainContainer.y = _inheritedY;
+        figma.currentPage.selection = [mainContainer];
+        figma.viewport.scrollAndZoomIntoView([mainContainer]);
+        figma.ui.postMessage({ type: "handoff-complete", isUpdate: _isUpdate, timestamp: _ts });
+        return;
+      }
+      // ══ BETA-ONLY: ficha-atualiza-sem-duplicar (fim) ══
+
       // Inicializar fora da tela para evitar flash de sobreposição enquanto calcula posição
       mainContainer.x = -99999;
       mainContainer.y = -99999;
@@ -2888,6 +3679,7 @@ figma.ui.onmessage = async (msg) => {
       figma.ui.postMessage({
         type: "scan-result",
         frameId: _scanFrameId,
+        origin: msg.origin || null, // BETA-ONLY: a11y-deteccao-automatica — roteia a resposta em messages.js
         error: "Nenhum item selecionado. Por favor, selecione um ou mais frames, seções ou grupos no Figma para escanear.",
       });
       return;
@@ -2898,7 +3690,8 @@ figma.ui.onmessage = async (msg) => {
       icons: new Map(),
       typography: new Map(),
       frames: new Map(),
-      vectors: new Map()
+      vectors: new Map(),
+      images: new Map() // BETA-ONLY: a11y-mapeamento-interativo
     };
     const frameJson = frameJsonTemplate();
 
@@ -3179,6 +3972,27 @@ figma.ui.onmessage = async (msg) => {
           dsElement = true;
         }
       }
+
+      // ══ BETA-ONLY: a11y-deteccao-automatica (início — enriquecimento do scan) ══
+      // Depende de: _resolveDscComponentA11yMatch/_resolveDecorativeA11yMatch/
+      // _resolveTypographyA11yMatch (definidas mais acima nesta mesma fonte).
+      // Ver MIGRATION-BETA-TO-MAIN.md.
+      // Aditivo: detecção de correspondência componente DSC → categoria de a11y.
+      // Não influencia isDS/score/matchedBy — só anexa dado extra ao lado, usado
+      // pela Detecção Automática de a11y (aba Anotar Specs).
+      let dscComponentMatch = null;
+      if (node.type === 'INSTANCE' && mainComp && mainComp.remote && componentKey) {
+        dscComponentMatch = _resolveDscComponentA11yMatch(componentKey);
+      } else if ((category === 'icons' || category === 'vectors') && !dscComponentMatch) {
+        // Ícone/vetor solto sem correspondência de biblioteca real — heurística
+        // conservadora de "Elemento Decorativo" (ver _resolveDecorativeA11yMatch).
+        dscComponentMatch = _resolveDecorativeA11yMatch(node);
+      } else if (category === 'images' && !dscComponentMatch) {
+        // BETA-ONLY: a11y-mapeamento-interativo — imagem de conteúdo real
+        // (fill IMAGE), ver _resolveImageA11yMatch.
+        dscComponentMatch = _resolveImageA11yMatch(node);
+      }
+      // ══ BETA-ONLY: a11y-deteccao-automatica (pausa — segue lógica pré-existente) ══
       if (category === "frames") {
         // Frame é conforme se todos os seus tokens de estilo vêm do DSC.
         // Props sem isDS definido (variantes, etc.) são ignoradas na conta.
@@ -3205,7 +4019,13 @@ figma.ui.onmessage = async (msg) => {
             if (/caixa/i.test(_family)) dsElement = true;
           }
         }
+        // BETA-ONLY: a11y-deteccao-automatica
+        // Aditivo: heurística fraca de nome (estilo nomeado ou camada) →
+        // sugestão de "Nível de Título" para a Detecção Automática de a11y.
+        // Sempre confidence 'baixa' — ver _resolveTypographyA11yMatch.
+        dscComponentMatch = _resolveTypographyA11yMatch(node, _typoProp);
       }
+      // ══ BETA-ONLY: a11y-deteccao-automatica (fim do enriquecimento do scan) ══
 
       // Pluck variant props from props[] into a separate flat list so the UI
       // can render them as pills in the card header (most relevant info for dev).
@@ -3226,6 +4046,7 @@ figma.ui.onmessage = async (msg) => {
           matchedBy: elementMatchedBy,
           matchedIn: elementMatchedIn,
           matchedTokenName: elementMatchedTokenName,
+          dscComponentMatch: dscComponentMatch, // BETA-ONLY: a11y-deteccao-automatica
           variants: variants,
           nodeId: node.id,
           layers: new Set([name]),
@@ -3243,6 +4064,7 @@ figma.ui.onmessage = async (msg) => {
           matchedBy: elementMatchedBy,
           matchedIn: elementMatchedIn,
           matchedTokenName: elementMatchedTokenName,
+          dscComponentMatch: dscComponentMatch, // BETA-ONLY: a11y-deteccao-automatica
           variants: variants,
           properties: props
         });
@@ -3262,10 +4084,25 @@ figma.ui.onmessage = async (msg) => {
         let category = "frames";
 
         const nameLower = n.name.toLowerCase();
-        const isIcon = nameLower.includes("icon") || nameLower.includes("ic-") || 
+        const isIcon = nameLower.includes("icon") || nameLower.includes("ic-") ||
                        (n.type === "INSTANCE" && n.width <= 32 && n.height <= 32 && !nameLower.includes("button"));
 
-        if (n.type === "TEXT") {
+        // ══ BETA-ONLY: a11y-mapeamento-interativo (início) ══
+        // Node com fill do tipo IMAGE (RECTANGLE, FRAME, ELLIPSE ou qualquer
+        // node com `fills`) nunca era coletado em categoria nenhuma, e por
+        // isso nunca passava pelo enriquecimento de a11y — imagens de
+        // conteúdo real (que precisam de "Elementos e Imagens"/texto
+        // alternativo para leitores de tela) ficavam invisíveis pra Detecção
+        // Automática. Checado ANTES das ramificações abaixo pra garantir
+        // categorização mutuamente exclusiva (um node com fill de imagem não
+        // deve também virar vectors/components/icons na mesma passada).
+        const hasImageFill = Array.isArray(n.fills) &&
+          n.fills.some(f => f && f.type === 'IMAGE' && f.visible !== false);
+
+        if (hasImageFill && !isIcon) {
+          category = "images";
+        } else if (n.type === "TEXT") {
+        // ══ BETA-ONLY: a11y-mapeamento-interativo (fim) ══
           category = isIcon ? "icons" : "typography";
         } else if (n.type === "INSTANCE" || n.type === "COMPONENT") {
           category = isIcon ? "icons" : "components";
@@ -3324,6 +4161,7 @@ figma.ui.onmessage = async (msg) => {
     await prepareListWithPreviews(specs.typography);
     await prepareListWithPreviews(specs.frames);
     await prepareListWithPreviews(specs.vectors);
+    await prepareListWithPreviews(specs.images); // BETA-ONLY: a11y-mapeamento-interativo
     await Promise.all(previewPromises);
 
     const formatMap = (map) => {
@@ -3343,12 +4181,14 @@ figma.ui.onmessage = async (msg) => {
     figma.ui.postMessage({
       type: "scan-result",
       frameId: _scanFrameId,
+      origin: msg.origin || null, // BETA-ONLY: a11y-deteccao-automatica — roteia a resposta em messages.js
       data: {
         components: formatMap(specs.components),
         icons: formatMap(specs.icons),
         typography: formatMap(specs.typography),
         frames: formatMap(specs.frames),
         vectors: formatMap(specs.vectors),
+        images: formatMap(specs.images), // BETA-ONLY: a11y-mapeamento-interativo
         frameJson: frameJson,
         fileKey: figma.fileKey,
         framePreview: framePreview
@@ -4058,6 +4898,72 @@ figma.ui.onmessage = async (msg) => {
           if (bb) _updateLetterMap(lm[1], bb);
         });
 
+        // ══ BETA-ONLY: a11y-layout-colunas (início) ══
+        // Depende de: opts.existingAreaSpecIds/opts.existingAreaAllSpecIds
+        // (accessibility.js: _collectAreaSiblingSpecIds/_collectAreaAllSpecIds).
+        // Ver MIGRATION-BETA-TO-MAIN.md.
+        // Specs de A11y com Área Marcada (opts.a11yAreaId) precisam ficar
+        // organizadas em sub-colunas por CATEGORIA (opts.a11yType) dentro do
+        // espaço da área: specs da MESMA área E MESMA categoria empilham na
+        // MESMA coluna X (independente de letra ou lado do conector);
+        // categorias diferentes da mesma área ganham colunas X diferentes,
+        // lado a lado (refinamento sobre o agrupamento por área anterior,
+        // que indexava só por a11yAreaId). O node de spec no canvas não
+        // carrega a11yAreaId/a11yType em lugar nenhum (nem no nome, nem em
+        // pluginData) — só o frontend sabe essa associação, via handoffData.
+        // Por isso o frontend manda opts.existingAreaSpecIds (irmãs da MESMA
+        // área+categoria, ver _collectAreaSiblingSpecIds em accessibility.js)
+        // e opts.existingAreaAllSpecIds (irmãs da área inteira, qualquer
+        // categoria — só usado como fallback pra achar a coluna mais à
+        // direita já ocupada quando a categoria é nova na área). Resolvemos
+        // aqui via getNodeByIdAsync — sem depender de parsing de nome nem de
+        // pluginData retroativo, compatível com specs criadas antes desta
+        // mudança.
+        const _areaColKey = opts.a11yAreaId ? `${opts.a11yAreaId}::${opts.a11yType}` : null;
+        const _areaMap = {};
+        if (opts.a11yType && opts.a11yAreaId && Array.isArray(opts.existingAreaSpecIds) && opts.existingAreaSpecIds.length > 0) {
+          for (const _sid of opts.existingAreaSpecIds) {
+            if (!_sid) continue;
+            const _sibling = await figma.getNodeByIdAsync(_sid);
+            if (!_sibling || _sibling.removed) continue;
+            const _siblingNotes = _sibling.children && _sibling.children.find(c => (c.type === 'FRAME' || c.type === 'INSTANCE') && (c.name === 'Spec Notes' || c.name === 'Ficha'));
+            const _bb = (_siblingNotes && (_siblingNotes.absoluteBoundingBox || _siblingNotes.absoluteRenderBounds))
+              || _sibling.absoluteBoundingBox || _sibling.absoluteRenderBounds;
+            if (!_bb) continue;
+            if (!_areaMap[_areaColKey]) {
+              _areaMap[_areaColKey] = { x: _bb.x, topY: _bb.y, bottom: _bb.y + _bb.height, right: _bb.x + _bb.width };
+            } else {
+              const _a = _areaMap[_areaColKey];
+              if (_bb.y + _bb.height > _a.bottom) _a.bottom = _bb.y + _bb.height;
+              if (_bb.x + _bb.width > _a.right) _a.right = _bb.x + _bb.width;
+              if (_bb.x < _a.x) _a.x = _bb.x;
+              if (_bb.y < _a.topY) _a.topY = _bb.y;
+            }
+          }
+        }
+
+        // Categoria nova na área (sem specs próprias ainda): calcula a
+        // coluna mais à direita já ocupada por OUTRA categoria da MESMA área
+        // (não do canvas inteiro) pra encostar a nova sub-coluna ao lado
+        // dela — mesmo princípio do fallback "letra nova" mais abaixo
+        // (_letterMap), aplicado agora ao nível de área.
+        let _areaRightmostOtherCategory = null;
+        if (opts.a11yType && opts.a11yAreaId && !_areaMap[_areaColKey] && Array.isArray(opts.existingAreaAllSpecIds) && opts.existingAreaAllSpecIds.length > 0) {
+          for (const _sid of opts.existingAreaAllSpecIds) {
+            if (!_sid) continue;
+            const _sibling = await figma.getNodeByIdAsync(_sid);
+            if (!_sibling || _sibling.removed) continue;
+            const _siblingNotes = _sibling.children && _sibling.children.find(c => (c.type === 'FRAME' || c.type === 'INSTANCE') && (c.name === 'Spec Notes' || c.name === 'Ficha'));
+            const _bb = (_siblingNotes && (_siblingNotes.absoluteBoundingBox || _siblingNotes.absoluteRenderBounds))
+              || _sibling.absoluteBoundingBox || _sibling.absoluteRenderBounds;
+            if (!_bb) continue;
+            if (!_areaRightmostOtherCategory || _bb.x + _bb.width > _areaRightmostOtherCategory.right) {
+              _areaRightmostOtherCategory = { topY: _bb.y, right: _bb.x + _bb.width };
+            }
+          }
+        }
+        // ══ BETA-ONLY: a11y-layout-colunas (fim do cálculo — uso em targetX/targetY abaixo) ══
+
         const _SPEC_GAP = 32;
         const _SPEC_COL_GAP = 64;
         const cardW = specCard.width;
@@ -4073,6 +4979,24 @@ figma.ui.onmessage = async (msg) => {
           // últimas), "descendo" na tela sem motivo pro designer.
           targetX = opts.pinnedPosition.x;
           targetY = opts.pinnedPosition.y;
+        // BETA-ONLY: a11y-layout-colunas (início) — os 2 branches abaixo
+        } else if (opts.a11yType && opts.a11yAreaId && _areaMap[_areaColKey]) {
+          // Já existe pelo menos uma spec nesta Área Marcada E nesta mesma
+          // categoria — empilha na MESMA sub-coluna X dela, independente da
+          // letra ou do lado (side) da spec sendo criada agora. Empilhamento
+          // sempre por Y crescente (regra do usuário: "conforme novas specs
+          // são adicionadas", não depende de side aqui como o agrupamento
+          // por letra depende).
+          targetX = _areaMap[_areaColKey].x;
+          targetY = _areaMap[_areaColKey].bottom + _SPEC_GAP;
+        } else if (opts.a11yType && opts.a11yAreaId && _areaRightmostOtherCategory) {
+          // Categoria nova dentro de uma área que já tem outras categorias —
+          // abre uma sub-coluna nova ao lado da mais à direita JÁ OCUPADA
+          // NESTA ÁREA (não do canvas inteiro), mantendo as sub-colunas de
+          // uma mesma área fisicamente próximas umas das outras.
+          targetX = _areaRightmostOtherCategory.right + _SPEC_COL_GAP;
+          targetY = _areaRightmostOtherCategory.topY;
+        // BETA-ONLY: a11y-layout-colunas (fim)
         } else if (_letterMap[_specLetter]) {
           // Mesma letra → empilha na direção do lado
           targetX = _letterMap[_specLetter].x;
@@ -4118,16 +5042,10 @@ figma.ui.onmessage = async (msg) => {
         groupNodes.push(specCard);
 
         // --- Conector (opcional: desativado se drawConnection === false) ---
-        // SPIKE: USE_NATIVE_CONNECTOR alterna entre o VectorNode estático (produção,
-        // default) e um ConnectorNode nativo (figma.createConnector()) ancorado via
-        // connectorStart/connectorEnd + magnet: 'AUTO'. Objetivo: validar se o conector
-        // nativo recalcula sozinho quando o nó original ou o specCard se movem, evitando
-        // coordenadas fixas desatualizadas. Para reverter: apenas trocar para `false`
-        // (ou remover o branch `if (USE_NATIVE_CONNECTOR)` e o bloco todo abaixo dele,
-        // mantendo só o `else`). Resultado do spike documentado no PR/changelog — ver
-        // resumo do agente backend-plugin.
-        const USE_NATIVE_CONNECTOR = false;
-
+        // Sempre VectorNode estático — figma.createConnector() é exclusivo do
+        // FigJam, não funciona em arquivos Figma Design (confirmado via API
+        // docs), então não há alternativa nativa viável aqui.
+        //
         // Modo "Linha" de A11y: o marcador real importado acima (Fase 2d,
         // `marker`) já É o conector completo (linha + selo embutidos no
         // componente da lib) — não desenha nada mais aqui, senão duplica a
@@ -4152,61 +5070,36 @@ figma.ui.onmessage = async (msg) => {
             endPt   = { x: specCard.x + specCard.width / 2, y: specCard.y + specCard.height };
           }
 
-          if (USE_NATIVE_CONNECTOR) {
-            // SPIKE: ConnectorNode nativo. Ancora nos nós reais (node.id / specCard.id)
-            // em vez de coordenadas calculadas — em teoria o Figma reposiciona a linha
-            // automaticamente se `node` ou `specCard` se moverem depois de criados.
-            // ATENÇÃO: connectorStart/connectorEnd exigem que os nós referenciados já
-            // estejam no canvas (appendChild) com id estável — ambos já satisfazem isso
-            // neste ponto do fluxo (node veio da seleção; specCard já foi appendChild'd
-            // acima). Não criamos DotInicio/DotFim nesta variante: o ConnectorNode tem
-            // seus próprios estilos de ponta (connectorStartStrokeCap/connectorEndStrokeCap)
-            // que substituem a necessidade dos dots decorativos — ver riscos/resultado
-            // no resumo do spike.
-            const connector = figma.createConnector();
-            connector.name = 'Conector';
-            connector.connectorStart = { endpointNodeId: node.id, magnet: 'AUTO' };
-            connector.connectorEnd = { endpointNodeId: specCard.id, magnet: 'AUTO' };
-            connector.connectorLineType = 'STRAIGHT';
-            connector.strokes = [{ type: "SOLID", color: themeColor }];
-            connector.strokeWeight = 1.5;
-            connector.dashPattern = [4, 4];
-            connector.connectorStartStrokeCap = 'CIRCLE_FILLED';
-            connector.connectorEndStrokeCap = 'CIRCLE_FILLED';
-            figma.currentPage.appendChild(connector);
-            groupNodes.push(connector);
-          } else {
-            const connector = figma.createVector();
-            connector.name = 'Conector';
-            connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
-            connector.strokes = [{ type: "SOLID", color: themeColor }];
-            connector.strokeWeight = 1.5;
-            connector.dashPattern = [4, 4];
-            connector.strokeCap = "ROUND";
-            figma.currentPage.appendChild(connector);
-            groupNodes.push(connector);
+          const connector = figma.createVector();
+          connector.name = 'Conector';
+          connector.vectorPaths = [{ windingRule: "NONZERO", data: `M ${startPt.x} ${startPt.y} L ${endPt.x} ${endPt.y}` }];
+          connector.strokes = [{ type: "SOLID", color: themeColor }];
+          connector.strokeWeight = 1.5;
+          connector.dashPattern = [4, 4];
+          connector.strokeCap = "ROUND";
+          figma.currentPage.appendChild(connector);
+          groupNodes.push(connector);
 
-            const _DOT_R = 4;
-            const startDot = figma.createEllipse();
-            startDot.name = 'DotInicio';
-            startDot.resize(_DOT_R * 2, _DOT_R * 2);
-            startDot.fills = [{ type: "SOLID", color: themeColor }];
-            startDot.strokes = [];
-            figma.currentPage.appendChild(startDot);
-            startDot.x = startPt.x - _DOT_R;
-            startDot.y = startPt.y - _DOT_R;
-            groupNodes.push(startDot);
+          const _DOT_R = 4;
+          const startDot = figma.createEllipse();
+          startDot.name = 'DotInicio';
+          startDot.resize(_DOT_R * 2, _DOT_R * 2);
+          startDot.fills = [{ type: "SOLID", color: themeColor }];
+          startDot.strokes = [];
+          figma.currentPage.appendChild(startDot);
+          startDot.x = startPt.x - _DOT_R;
+          startDot.y = startPt.y - _DOT_R;
+          groupNodes.push(startDot);
 
-            const endDot = figma.createEllipse();
-            endDot.name = 'DotFim';
-            endDot.resize(_DOT_R * 2, _DOT_R * 2);
-            endDot.fills = [{ type: "SOLID", color: themeColor }];
-            endDot.strokes = [];
-            figma.currentPage.appendChild(endDot);
-            endDot.x = endPt.x - _DOT_R;
-            endDot.y = endPt.y - _DOT_R;
-            groupNodes.push(endDot);
-          }
+          const endDot = figma.createEllipse();
+          endDot.name = 'DotFim';
+          endDot.resize(_DOT_R * 2, _DOT_R * 2);
+          endDot.fills = [{ type: "SOLID", color: themeColor }];
+          endDot.strokes = [];
+          figma.currentPage.appendChild(endDot);
+          endDot.x = endPt.x - _DOT_R;
+          endDot.y = endPt.y - _DOT_R;
+          groupNodes.push(endDot);
         }
 
       } else {
@@ -4371,8 +5264,34 @@ figma.ui.onmessage = async (msg) => {
 
   if (msg.type === "get-selection-name") {
     const sel = figma.currentPage.selection;
-    figma.ui.postMessage({ type: "selection-name", name: sel.length > 0 ? sel[0].name : null });
+    const node = sel.length > 0 ? sel[0] : null;
+    figma.ui.postMessage({
+      type: "selection-name",
+      name: node ? node.name : null,
+      mainText: node ? _findMainTextContent(node) : null, // BETA-ONLY: label-automatico
+    });
   }
+
+  // ══ BETA-ONLY: label-automatico (início) ══
+  // Depende de: _findMainTextContent (função dedicada mais acima nesta
+  // fonte). Ver MIGRATION-BETA-TO-MAIN.md.
+  // Sugestão de Label (accessibilityLabel) a partir do conteúdo real do
+  // elemento — usado tanto pelo fluxo manual (get-selection-name acima)
+  // quanto pelo "Usar sugestão" da Detecção Automática (que já tem o nodeId
+  // resolvido, sem depender da seleção atual do canvas). Nome da camada
+  // raramente reflete o texto visível (ex: "Frame 128"), então extrai o
+  // primeiro TEXT node VISÍVEL na ordem de camadas — decisão consciente do
+  // usuário: mais simples que escolher por maior fontSize, e funciona bem
+  // quando o título é o primeiro filho (padrão comum nos componentes DSC).
+  if (msg.type === "get-node-main-text") {
+    const node = msg.nodeId ? await figma.getNodeByIdAsync(msg.nodeId) : null;
+    figma.ui.postMessage({
+      type: "node-main-text",
+      nodeId: msg.nodeId || null,
+      mainText: node ? _findMainTextContent(node) : null,
+    });
+  }
+  // ══ BETA-ONLY: label-automatico (fim) ══
 
   // --- Acessibilidade --- usado tanto para confirmar uma spec de A11y
   // (mapeamento puro: só precisamos saber QUAL nó foi selecionado) quanto
@@ -4386,10 +5305,23 @@ figma.ui.onmessage = async (msg) => {
     });
   }
 
-  // --- Acessibilidade --- "Marcar Área": cria um selo numerado (componente
-  // REAL [a11y] Item Number, orientação "desativado") perto do elemento
-  // selecionado, com um TEXT procedural ao lado para o rótulo (o componente
-  // só tem o campo "Number" embutido — ver accessibility-specialist.md).
+  // ══ BETA-ONLY: a11y-marcar-area (início) ══
+  // Handler pré-existente (Marcar Área), expandido nesta sessão para
+  // aceitar msg.conector e escolher entre as 5 variantes do component set em
+  // vez de usar sempre "superior" fixo. Depende de: #a11y-area-conector /
+  // #a11y-area-number-input (modals.html), confirmA11yArea (accessibility.js).
+  // Ver MIGRATION-BETA-TO-MAIN.md.
+  // --- Acessibilidade --- "Marcar Área": cria um selo numerado usando o
+  // componente REAL "[a11y] Conectores" (mesma family do modo Linha das
+  // specs — ver A11Y_CONECTOR_LINHA_KEYS), na variante escolhida pelo
+  // designer (msg.conector: superior/inferior/esquerda/direita/desativado).
+  const A11Y_AREA_CONECTOR_KEYS = {
+    superior:   'ff43b15ac0c078b35219984bf035c4c0f0089cf1',
+    inferior:   'b355a26c5a89aea074effe28ca6767b08e4a7f99',
+    esquerda:   'f9cd4394c0bfc48ae86d3028e836877887d23fcd',
+    direita:    '08ac04391034777646eec9395c6d221189ee6d46',
+    desativado: '71719f112ec0135b16df0deb6584fbc44af3aff2',
+  };
   if (msg.type === "create-a11y-area") {
     (async () => {
       const node = await figma.getNodeByIdAsync(msg.targetNodeId);
@@ -4399,20 +5331,16 @@ figma.ui.onmessage = async (msg) => {
       }
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
 
-      // Padrão: conector "superior" (número + linha + rótulo grande abaixo,
-      // tudo dentro do próprio componente) com "show label" ativo — decisão
-      // do usuário, não é o mesmo conceito de linha spec→elemento que fica
-      // oculta por padrão em outro lugar do plugin.
-      const ITEM_NUMBER_KEY_SUPERIOR = 'ff43b15ac0c078b35219984bf035c4c0f0089cf1';
+      const _conector = A11Y_AREA_CONECTOR_KEYS[msg.conector] ? msg.conector : 'superior';
+      const _conectorKey = A11Y_AREA_CONECTOR_KEYS[_conector];
       let badge = null;
       let usedRealComponent = true;
       try {
-        const comp = await figma.importComponentByKeyAsync(ITEM_NUMBER_KEY_SUPERIOR);
+        const comp = await figma.importComponentByKeyAsync(_conectorKey);
         badge = comp.createInstance();
-        // Propriedades reais do componente "[a11y] Item Number" (confirmadas
-        // via componentPropertyDefinitions do component set — number#1478:0,
-        // label#733:6, show label#733:0) — o rótulo já vem embutido no
-        // componente, não precisa mais de um text node nosso do lado.
+        // Propriedades reais do component set (number/label/show label) —
+        // compartilhadas entre as 5 variantes de conector, confirmadas na
+        // variante "superior" via componentPropertyDefinitions.
         badge.setProperties({
           'number#1478:0': String(msg.number),
           'label#733:6': msg.label,
@@ -4428,13 +5356,28 @@ figma.ui.onmessage = async (msg) => {
 
       const bb = node.absoluteBoundingBox;
       figma.currentPage.appendChild(badge);
-      // Selo inteiro (número + linha + rótulo) fica ACIMA do frame
-      // selecionado, centralizado horizontalmente, com uma folga pra caber
-      // o rótulo sem sobrepor o frame nem cortar o texto.
+      // Posição do selo relativa ao elemento conforme o conector escolhido —
+      // cada variante do componente já nasce com a linha apontando pro lado
+      // certo, só precisamos encostar a borda oposta do selo no elemento.
       const _A11Y_AREA_GAP = 24;
       const targetCenterX = bb.x + bb.width / 2;
-      badge.x = Math.round(targetCenterX - badge.width / 2);
-      badge.y = Math.round(bb.y - badge.height - _A11Y_AREA_GAP);
+      const targetCenterY = bb.y + bb.height / 2;
+      if (_conector === 'inferior') {
+        badge.x = Math.round(targetCenterX - badge.width / 2);
+        badge.y = Math.round(bb.y + bb.height + _A11Y_AREA_GAP);
+      } else if (_conector === 'esquerda') {
+        badge.x = Math.round(bb.x - badge.width - _A11Y_AREA_GAP);
+        badge.y = Math.round(targetCenterY - badge.height / 2);
+      } else if (_conector === 'direita') {
+        badge.x = Math.round(bb.x + bb.width + _A11Y_AREA_GAP);
+        badge.y = Math.round(targetCenterY - badge.height / 2);
+      } else if (_conector === 'desativado') {
+        badge.x = Math.round(targetCenterX - badge.width / 2);
+        badge.y = Math.round(bb.y - badge.height - _A11Y_AREA_GAP);
+      } else { // superior
+        badge.x = Math.round(targetCenterX - badge.width / 2);
+        badge.y = Math.round(bb.y - badge.height - _A11Y_AREA_GAP);
+      }
 
       // Só precisa de um text node procedural + grupo quando o componente
       // real falha (modo simplificado, sem rótulo embutido).
@@ -4468,6 +5411,7 @@ figma.ui.onmessage = async (msg) => {
           id: group.id,
           number: msg.number,
           label: msg.label,
+          conector: _conector,
           targetNodeId: node.id,
           targetNodeName: node.name,
         }
@@ -4478,6 +5422,276 @@ figma.ui.onmessage = async (msg) => {
         : 'Área marcada — não foi possível usar o selo real da lib "Design Acessível" (modo simplificado).');
     })();
   }
+  // ══ BETA-ONLY: a11y-marcar-area (fim) ══
+
+  // ══ BETA-ONLY: a11y-ordem-tabulacao (início — handlers do backend) ══
+  // Depende de: window._tabOrderModeOn/toggleTabOrderMode/
+  // handleTabOrderSelectionChanged/addTabOrderItem/addTabOrderItemsFromLayers/
+  // updateTabOrderNumbering/deleteTabOrderItem (accessibility.js); tabOrderItems
+  // (core.js). Ver MIGRATION-BETA-TO-MAIN.md.
+  // BETA-ONLY: a11y-ordem-tabulacao-por-area — a partir desta revisão a
+  // ferramenta é ESCOPADA por Área Marcada (a11yAreaId em cada item,
+  // numeração reinicia por área, UI vive dentro do accordion da área em
+  // accessibility.js/_a11yAreaAccordionEl — não mais em specifications.html).
+  // Estes handlers de backend continuam agnósticos à área pra desenho no
+  // canvas (badge é o mesmo); a11yAreaId é só ecoado no item pro front
+  // agrupar/numerar. Ver MIGRATION-BETA-TO-MAIN.md.
+  // --- Acessibilidade --- "Ordem de Tabulação": liga/desliga o modo de
+  // clique sequencial (ver figma.on('selectionchange') acima). Componente
+  // real é "[a11y] Item Number" (component set node 13:479).
+  //
+  // BUG CORRIGIDO: a constante antiga usava a key do COMPONENT_SET pai
+  // ('754e81b72212316d62a33eeaf8d6c273cc0137ed', node 13:479), mas
+  // figma.importComponentByKeyAsync só funciona com a key de um COMPONENT
+  // filho (uma variante), nunca a do set — por isso o import sempre
+  // falhava silenciosamente e caía no fallback (círculo procedural).
+  // Confirmado via REST API (2026-08-20): os 5 filhos reais de "[a11y] Item
+  // Number" (node_ids 13:480/13:484/13:492/13:500/13:508, nome
+  // "conector=X") são, por reaproveitamento de asset da própria lib, as
+  // MESMAS 5 keys já usadas em A11Y_AREA_CONECTOR_KEYS ("Marcar Área") —
+  // apesar do nome dessa constante sugerir "[a11y] Conectores" (outro
+  // component set, node 1:50, com nomes "tipo=X, conector=Y" e node_ids
+  // completamente diferentes), o que ela sempre importou de verdade é
+  // este mesmo "[a11y] Item Number". Reaproveita as keys já validadas em
+  // produção por "Marcar Área" em vez de duplicar/inventar uma segunda
+  // extração.
+  const A11Y_ITEM_NUMBER_KEYS = {
+    superior:   'ff43b15ac0c078b35219984bf035c4c0f0089cf1',
+    inferior:   'b355a26c5a89aea074effe28ca6767b08e4a7f99',
+    esquerda:   'f9cd4394c0bfc48ae86d3028e836877887d23fcd',
+    direita:    '08ac04391034777646eec9395c6d221189ee6d46',
+    desativado: '71719f112ec0135b16df0deb6584fbc44af3aff2',
+  };
+
+  if (msg.type === "start-tab-order-mode") {
+    _tabOrderModeActive = true;
+  }
+
+  if (msg.type === "stop-tab-order-mode") {
+    _tabOrderModeActive = false;
+  }
+
+  // Extraída de create-tab-order-item pra ser reaproveitada também por
+  // generate-tab-order-from-layers (geração automática por varredura de
+  // camadas) — as duas vias criam exatamente o mesmo selo "[a11y] Item
+  // Number" real (ou o fallback círculo+texto), só muda quem decide o
+  // targetNodeId/number de entrada. Não faz appendChild na seleção nem
+  // scroll de viewport (quem chama decide isso, já que o lote automático
+  // não deve reposicionar a viewport a cada item).
+  // BETA-ONLY: a11y-ordem-tabulacao-por-area — parâmetro areaId novo, só
+  // ecoado no item retornado (não influencia o desenho no canvas). É o que
+  // permite ao frontend escopar a numeração por Área Marcada em vez de uma
+  // sequência única por frame. Ver MIGRATION-BETA-TO-MAIN.md.
+  async function _createTabOrderBadge(node, number, label, conector, areaId) {
+    const _conectorOptions = ['desativado', 'inferior', 'superior', 'esquerda', 'direita'];
+    // "Direita" é o padrão: mantém o selo visível ao lado do elemento sem
+    // sobrepor o conteúdo, mesma convenção adotada em create-a11y-area.
+    const _conector = _conectorOptions.includes(conector) ? conector : 'direita';
+    const hasLabel = !!label;
+
+    let badge = null;
+    let usedRealComponent = true;
+    try {
+      const comp = await figma.importComponentByKeyAsync(A11Y_ITEM_NUMBER_KEYS[_conector]);
+      badge = comp.createInstance();
+      badge.setProperties({
+        'number#1478:0': String(number),
+        'show label#733:0': hasLabel,
+        'label#733:6': label || 'Label',
+      });
+    } catch (e) {
+      usedRealComponent = false;
+      badge = figma.createEllipse();
+      badge.name = 'Selo de Ordem de Tabulação';
+      badge.resize(28, 28);
+      badge.fills = [{ type: "SOLID", color: hexToRgb('#0070AF') }];
+    }
+
+    const bb = node.absoluteBoundingBox;
+    figma.currentPage.appendChild(badge);
+    const _TAB_ORDER_GAP = 24;
+    const targetCenterX = bb.x + bb.width / 2;
+    const targetCenterY = bb.y + bb.height / 2;
+    if (_conector === 'inferior') {
+      badge.x = Math.round(targetCenterX - badge.width / 2);
+      badge.y = Math.round(bb.y + bb.height + _TAB_ORDER_GAP);
+    } else if (_conector === 'esquerda') {
+      badge.x = Math.round(bb.x - badge.width - _TAB_ORDER_GAP);
+      badge.y = Math.round(targetCenterY - badge.height / 2);
+    } else if (_conector === 'superior' || _conector === 'desativado') {
+      badge.x = Math.round(targetCenterX - badge.width / 2);
+      badge.y = Math.round(bb.y - badge.height - _TAB_ORDER_GAP);
+    } else { // direita (default)
+      badge.x = Math.round(bb.x + bb.width + _TAB_ORDER_GAP);
+      badge.y = Math.round(targetCenterY - badge.height / 2);
+    }
+
+    let group = badge;
+    if (!usedRealComponent) {
+      const labelText = figma.createText();
+      labelText.name = 'Número';
+      labelText.fontName = { family: "Inter", style: "Bold" };
+      labelText.fontSize = 12;
+      labelText.fills = [{ type: "SOLID", color: hexToRgb('#FFFFFF') }];
+      labelText.characters = String(number);
+      figma.currentPage.appendChild(labelText);
+      labelText.x = Math.round(badge.x + badge.width / 2 - labelText.width / 2);
+      labelText.y = Math.round(badge.y + badge.height / 2 - labelText.height / 2);
+      group = figma.group([badge, labelText], figma.currentPage);
+    }
+    group.name = `[TabOrder | ${number}] ${node.name}`;
+    group.locked = false;
+    group.setPluginData('handexCategory', 'a11y');
+
+    _reparentIntoA11ySection(group);
+
+    return {
+      group,
+      usedRealComponent,
+      item: {
+        id: group.id,
+        number: number,
+        label: label || '',
+        conector: _conector,
+        targetNodeId: node.id,
+        targetNodeName: node.name,
+        a11yAreaId: areaId || null, // BETA-ONLY: a11y-ordem-tabulacao-por-area
+      },
+    };
+  }
+
+  if (msg.type === "create-tab-order-item") {
+    (async () => {
+      const node = await figma.getNodeByIdAsync(msg.targetNodeId);
+      if (!node || !node.absoluteBoundingBox) {
+        figma.notify("Elemento não encontrado no canvas — selecione novamente.");
+        return;
+      }
+      try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
+
+      // BETA-ONLY: a11y-ordem-tabulacao-por-area — msg.areaId agora é
+      // obrigatório no fluxo normal (front bloqueia início do modo sem área
+      // ativa), mas o handler continua tolerante a undefined por segurança.
+      const { group, usedRealComponent, item } = await _createTabOrderBadge(node, msg.number, msg.label, msg.conector, msg.areaId);
+
+      figma.currentPage.selection = [group];
+      figma.viewport.scrollAndZoomIntoView([group]);
+
+      figma.ui.postMessage({ type: "tab-order-item-created", item });
+
+      figma.notify(usedRealComponent
+        ? "Elemento marcado na ordem de tabulação."
+        : 'Elemento marcado — não foi possível usar o selo real da lib "Design Acessível" (modo simplificado).');
+    })();
+  }
+
+  // --- Acessibilidade --- "Ordem de Tabulação" — geração automática varrendo
+  // a árvore de camadas de uma Área Marcada já existente, em profundidade
+  // (ordem real de node.children, a mesma do painel Layers do Figma — não
+  // posição visual X/Y). Complementar ao modo de clique manual acima, não um
+  // substituto: o designer pode reordenar depois via drag-and-drop na lista
+  // e clicar "Atualizar" (renumber-tab-order-items) pra ajustar os selos.
+  //
+  // BETA-ONLY: a11y-mapeamento-interativo — critério de elegibilidade deixou
+  // de ser puramente estrutural (qualquer INSTANCE/COMPONENT). A lib "Design
+  // Acessível" documenta que a Ordem de Tabulação deve percorrer "links,
+  // botões e campos de formulário" — agora só entram componentes que
+  // resolvem, via catálogo DSC (_resolveDscComponentA11yMatch), para um
+  // shortName de A11Y_INTERACTIVE_SHORTNAMES (controles reais de foco de
+  // teclado). Ícone decorativo, card de layout, imagem, badge etc. são
+  // ignorados por inteiro. Não desce dentro de um INSTANCE/COMPONENT já
+  // avaliado como unidade (interativo ou não) — mesma regra de sempre, pra
+  // não numerar sub-elementos internos (ex: ícone dentro de um Button já
+  // contado como unidade inteira) nem descer dentro de algo descartado. O
+  // node raiz da própria área nunca entra, só os descendentes.
+  if (msg.type === "generate-tab-order-from-layers") {
+    (async () => {
+      const root = await figma.getNodeByIdAsync(msg.targetNodeId);
+      if (!root) {
+        figma.notify("Área não encontrada no canvas — marque novamente.");
+        figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items: [] });
+        return;
+      }
+
+      const collected = [];
+      async function _walk(n) {
+        const children = n.children || [];
+        for (const child of children) {
+          if (child.visible === false) continue;
+          if (child.type === 'INSTANCE' || child.type === 'COMPONENT') {
+            let componentKey = null;
+            if (child.type === 'INSTANCE') {
+              try {
+                const mainComp = await child.getMainComponentAsync();
+                componentKey = mainComp ? mainComp.key : null;
+              } catch (e) { componentKey = null; }
+            } else {
+              componentKey = child.key || null;
+            }
+            const match = componentKey ? _resolveDscComponentA11yMatch(componentKey) : null;
+            if (match && A11Y_INTERACTIVE_SHORTNAMES.has(match.a11yCategory)) {
+              collected.push(child);
+            }
+            continue; // não desce dentro de um elemento já avaliado como unidade (interativo ou não)
+          }
+          await _walk(child);
+        }
+      }
+      await _walk(root);
+
+      if (collected.length === 0) {
+        figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items: [] });
+        return;
+      }
+
+      try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
+
+      const items = [];
+      const createdGroups = [];
+      let baseNumber = typeof msg.startNumber === 'number' ? msg.startNumber : 1;
+      for (let i = 0; i < collected.length; i++) {
+        const node = collected[i];
+        if (!node.absoluteBoundingBox) continue;
+        // BETA-ONLY: a11y-ordem-tabulacao-por-area — areaId ecoado no item.
+        const { group, item } = await _createTabOrderBadge(node, baseNumber + i, '', 'direita', msg.areaId);
+        createdGroups.push(group);
+        items.push(item);
+      }
+
+      if (createdGroups.length > 0) {
+        figma.currentPage.selection = createdGroups;
+        figma.viewport.scrollAndZoomIntoView(createdGroups);
+      }
+
+      figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items });
+      figma.notify(`${items.length} elemento${items.length === 1 ? '' : 's'} numerado${items.length === 1 ? '' : 's'} automaticamente.`);
+    })();
+  }
+
+  // --- Acessibilidade --- renumeração dos selos já desenhados no canvas
+  // quando um item do meio da sequência é excluído (ver deleteTabOrderItem em
+  // accessibility.js) — o front já recalculou os números finais, aqui só
+  // aplicamos setProperties na instância real de cada grupo afetado.
+  if (msg.type === "renumber-tab-order-items") {
+    (async () => {
+      const updated = [];
+      for (const entry of (msg.items || [])) {
+        const node = await figma.getNodeByIdAsync(entry.id);
+        if (!node) continue;
+        const instance = node.type === 'INSTANCE'
+          ? node
+          : (typeof node.findOne === 'function' ? node.findOne(n => n.type === 'INSTANCE') : null);
+        if (!instance) continue;
+        try {
+          instance.setProperties({ 'number#1478:0': String(entry.number) });
+          node.name = `[TabOrder | ${entry.number}] ${node.name.replace(/^\[TabOrder \| \d+\]\s*/, '')}`;
+          updated.push(entry.id);
+        } catch (e) { }
+      }
+      figma.ui.postMessage({ type: "tab-order-renumbered", updated });
+    })();
+  }
+  // ══ BETA-ONLY: a11y-ordem-tabulacao (fim — handlers do backend) ══
 
   // --- Acessibilidade --- "Gerar Ficha de Acessibilidade" no canvas foi
   // removida de novo (2026-07-24) — com as specs já organizadas dentro da
@@ -4772,6 +5986,11 @@ figma.ui.onmessage = async (msg) => {
     figma.ui.postMessage({ type: 'design-data-exported', data: data, format: msg.format });
   }
 
+  // BETA-ONLY: flows-mini-mapa-conector-criacao
+  if (msg.type === "get-flow-selection-bounds") {
+    figma.ui.postMessage({ type: 'flow-selection-bounds', nodes: _getFlowSelectionBoundsPayload() });
+  }
+
   if (msg.type === "create-flow-connection") {
     const selection = figma.currentPage.selection;
     const isEvent = msg.flowType === "event_start" || msg.flowType === "event_end";
@@ -4787,7 +6006,12 @@ figma.ui.onmessage = async (msg) => {
 
     const nodeA = selection[0];
     const nodeB = selection[1] || null;
-    await _buildFlowConnection(nodeA, nodeB, msg);
+    // BETA-ONLY: flows-mini-mapa-conector-criacao — _buildFlowConnection
+    // agora retorna { group, flow } em vez de postar/notificar direto (ver
+    // comentário no fim de _buildFlowConnection).
+    const result = await _buildFlowConnection(nodeA, nodeB, msg);
+    if (result) figma.ui.postMessage({ type: 'flow-created', flow: result.flow });
+    figma.notify("Fluxo criado!");
   }
 
   // Recria um fluxo salvo em handoffData.createdFlows (import de backup JSON).
@@ -4806,7 +6030,9 @@ figma.ui.onmessage = async (msg) => {
       return;
     }
 
-    await _buildFlowConnection(nodeA, nodeB, msg);
+    const result = await _buildFlowConnection(nodeA, nodeB, msg); // BETA-ONLY: flows-mini-mapa-conector-criacao — retorno em vez de post/notify direto
+    if (result) figma.ui.postMessage({ type: 'flow-created', flow: result.flow });
+    figma.notify("Fluxo criado!");
   }
 
   // Edita curvatura/texto de um fluxo já criado -- não há API do Figma pra
@@ -4830,8 +6056,65 @@ figma.ui.onmessage = async (msg) => {
       } catch (e) {}
     }
 
-    await _buildFlowConnection(nodeA, nodeB, msg);
+    const result = await _buildFlowConnection(nodeA, nodeB, msg); // BETA-ONLY: flows-mini-mapa-conector-criacao — retorno em vez de post/notify direto
+    if (result) figma.ui.postMessage({ type: 'flow-created', flow: result.flow });
+    figma.notify("Fluxo criado!");
   }
+
+  // ══ BETA-ONLY: flows-mini-mapa-conector-criacao (início — resync-all-flows) ══
+  // Depende de: resyncAllFlows/#btn-resync-flows (specifications.js/
+  // flows.html), _buildFlowConnection retornando { group, flow }. Ver
+  // MIGRATION-BETA-TO-MAIN.md.
+  // Recria em lote todos os fluxos salvos em handoffData.createdFlows --
+  // mesma lógica de recreate-flow-connection, mas iterando a lista inteira
+  // sem postar um flow-created por item (evitaria duplicar entradas em
+  // handoffData.createdFlows); a UI substitui a lista inteira a partir do
+  // resultado agregado flows-resynced.
+  if (msg.type === "resync-all-flows") {
+    const updated = [];
+    const failed = [];
+    for (const flow of (msg.flows || [])) {
+      if (!flow.sourceId) { failed.push({ flowUid: flow.flowUid, name: flow.name, reason: 'sem-origem-salva' }); continue; }
+      const nodeA = await figma.getNodeByIdAsync(flow.sourceId);
+      const nodeB = flow.targetId ? await figma.getNodeByIdAsync(flow.targetId) : null;
+      const isEvent = flow.type === 'event_start' || flow.type === 'event_end';
+      if (!nodeA || (!isEvent && flow.targetId && !nodeB)) { failed.push({ flowUid: flow.flowUid, name: flow.name, reason: 'elemento-nao-encontrado' }); continue; }
+      try {
+        const oldGroup = flow.id ? await figma.getNodeByIdAsync(flow.id) : null;
+        if (oldGroup) oldGroup.remove();
+        const result = await _buildFlowConnection(nodeA, nodeB, { ...flow, flowType: flow.type, flowName: flow.name, flowId: flow.flowUid });
+        if (!result) { failed.push({ flowUid: flow.flowUid, name: flow.name, reason: 'erro-ao-recriar' }); continue; }
+        updated.push({ flowUid: flow.flowUid, oldId: flow.id, newId: result.flow.id });
+      } catch (e) {
+        failed.push({ flowUid: flow.flowUid, name: flow.name, reason: 'erro-ao-recriar' });
+      }
+    }
+    figma.ui.postMessage({ type: 'flows-resynced', updated, failed });
+    figma.notify(`${updated.length} fluxo(s) atualizado(s)${failed.length ? `, ${failed.length} não recriado(s)` : ''}.`);
+  }
+  // ══ BETA-ONLY: flows-mini-mapa-conector-criacao (fim — resync-all-flows) ══
+
+  // ══ BETA-ONLY: a11y-ordenacao-espacial (início) ══
+  // Consulta pura de posição no canvas — usada pela listagem agrupada de
+  // a11y (renderA11yGroupedList, accessibility.js) pra ordenar specs por
+  // posição de leitura real (x/y) em vez da tag alfabética de criação. Sem
+  // efeito colateral (não seleciona, não notifica); resolve tudo em paralelo.
+  if (msg.type === "resolve-nodes-bounds") {
+    const ids = Array.isArray(msg.ids) ? msg.ids : [];
+    const bounds = {};
+    await Promise.all(ids.map(async (id) => {
+      try {
+        const node = await figma.getNodeByIdAsync(id);
+        bounds[id] = (node && node.absoluteBoundingBox)
+          ? { x: node.absoluteBoundingBox.x, y: node.absoluteBoundingBox.y }
+          : null;
+      } catch (e) {
+        bounds[id] = null;
+      }
+    }));
+    figma.ui.postMessage({ type: "nodes-bounds-resolved", bounds });
+  }
+  // ══ BETA-ONLY: a11y-ordenacao-espacial (fim) ══
 
   if (msg.type === "create-legend") {
     (async () => {

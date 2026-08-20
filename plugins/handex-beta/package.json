@@ -1,7 +1,7 @@
 {
   "name": "handex-handoff-express",
   "private": true,
-  "version": "6.1.0-beta.1",
+  "version": "6.2.0-beta.1",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
@@ -11,6 +11,7 @@
     "lint": "tsc --noEmit && npm run lint:figma-api",
     "lint:figma-api": "node scripts/check-figma-api-usage.cjs",
     "refs:fetch": "node src/plugin/refs/fetch-design-refs.cjs",
+    "refs:a11y-properties": "node src/plugin/refs/fetch-a11y-component-properties.cjs",
     "refs:rebuild": "npm run refs:fetch && node src/plugin/refs/build-skeleton.cjs",
     "refs:update": "npm run refs:rebuild && npm run bundle:ui && npm run bundle:code",
     "bundle:refs": "node src/plugin/refs/build-skeleton.cjs",

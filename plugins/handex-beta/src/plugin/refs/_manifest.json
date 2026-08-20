@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-07T20:11:28.144Z",
+  "generatedAt": "2026-08-19T19:31:11.720Z",
   "libraries": [
     {
       "slug": "fundamentos-visuais",
@@ -24,7 +24,7 @@
         "colors": 0,
         "typography": 0,
         "effects": 0,
-        "components": 1885
+        "components": 1893
       }
     },
     {

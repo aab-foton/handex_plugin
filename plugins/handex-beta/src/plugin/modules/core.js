@@ -38,6 +38,13 @@ let a11ySpecs = [];
 // espelhamento global/por-frame de a11ySpecs (ver saveSpecsToStorage,
 // syncAndRenderSpecs, addFrame).
 let a11yAreas = [];
+// BETA-ONLY: a11y-ordem-tabulacao — array próprio de estado, mesmo padrão de
+// espelhamento global/por-frame de a11yAreas. Ver MIGRATION-BETA-TO-MAIN.md.
+// --- Acessibilidade --- "Ordem de Tabulação": sequência de selos numerados
+// (1, 2, 3...) marcando a ordem de foco do teclado — mesmo padrão de
+// espelhamento global/por-frame de a11yAreas, mas array próprio (não é
+// spec nem área, é uma terceira camada de anotação).
+let tabOrderItems = [];
 let currentSpecTab = 'specs-form';
 let lastAuditResults = null;
 let activeFrameId = null; // frame em foco para operações de modal
@@ -70,6 +77,7 @@ let handoffData = {
   // nenhuma iteração (ver _migrateA11ySpecsFromCreatedSpecs para dados antigos).
   a11ySpecs: [],
   a11yAreas: [],
+  tabOrderItems: [], // BETA-ONLY: a11y-ordem-tabulacao
   createdFlows: [],
   nextFlowNumber: 1,
   currentUser: null,
@@ -327,6 +335,7 @@ function saveSpecsToStorage() {
   handoffData.specs = createdSpecs;
   handoffData.a11ySpecs = a11ySpecs;
   handoffData.a11yAreas = a11yAreas;
+  handoffData.tabOrderItems = tabOrderItems; // BETA-ONLY: a11y-ordem-tabulacao
   saveToStorage();
 }
 
@@ -369,6 +378,21 @@ function removeA11yAreaById(areaId) {
     }
   });
 }
+
+// ══ BETA-ONLY: a11y-ordem-tabulacao (início) ═══════════════════════════════
+// Depende de: tabOrderItems (array de estado acima), handoffData.tabOrderItems,
+// addFrame() inicializando frame.tabOrderItems. Ver MIGRATION-BETA-TO-MAIN.md.
+function removeTabOrderItemById(itemId) {
+  if (handoffData.tabOrderItems && itemId) {
+    handoffData.tabOrderItems = handoffData.tabOrderItems.filter(i => i.id !== itemId);
+  }
+  (handoffData.frames || []).forEach(frame => {
+    if (frame.tabOrderItems && itemId) {
+      frame.tabOrderItems = frame.tabOrderItems.filter(i => i.id !== itemId);
+    }
+  });
+}
+// ══ BETA-ONLY: a11y-ordem-tabulacao (fim) ══════════════════════════════════
 
 // --- Acessibilidade --- migração defensiva: dados salvos antes da separação
 // estrutural (createdSpecs/a11ySpecs) podem ter specs de A11y ainda dentro de
@@ -943,6 +967,8 @@ function addFrame(figmaId, nome) {
     createdSpecs: [],
     a11ySpecs: [],
     a11yAreas: [],
+    tabOrderItems: [], // BETA-ONLY: a11y-ordem-tabulacao
+    a11yDetections: [], // BETA-ONLY: a11y-deteccao-automatica
     excecoes: []
   };
   handoffData.frames.push(frame);
@@ -1586,6 +1612,7 @@ function updateFooterButtons() {
 // ── Storage ────────────────────────────────────────────────────────────
 function saveToStorage() {
   parent.postMessage({ pluginMessage: { type: 'save-storage', data: handoffData } }, '*');
+  if (typeof _updateFinalizeVisibility === 'function') _updateFinalizeVisibility(); // BETA-ONLY: finalizar-registros-condicional
 }
 
 function saveAndReturn() {
@@ -1722,9 +1749,17 @@ function navigate(viewId) {
   }
   document.getElementById("header-home")?.classList.remove("hidden");
   if (viewId === 'view-specifications') {
+    if (typeof _resetSpecsSearchInputs === 'function') _resetSpecsSearchInputs(); // BETA-ONLY: specs-busca-filtro
     syncAndRenderSpecs();
     renderExcecoesView();
     populateFrameSelector('spec-frame-selector');
+  } else if (window._tabOrderModeOn && typeof toggleTabOrderMode === 'function') {
+    // BETA-ONLY: a11y-ordem-tabulacao — só entra quando o modo de clique
+    // sequencial está ativo ao navegar pra fora de Anotar Specs.
+    // Sair da tela de Anotar Specs com o modo de clique sequencial ainda
+    // ativo deixaria o backend postando tab-order-selection-changed às
+    // cegas em qualquer outra tela — desliga por segurança ao navegar.
+    toggleTabOrderMode();
   }
   if (viewId === 'view-flows') renderFlowsList();
   if (viewId === 'view-measurement') {
@@ -1750,6 +1785,9 @@ function navigate(viewId) {
   if (viewId === 'view-handoff-summary') {
     updateHandoffSummary();
   }
+  // Depois dos renders da view — syncAndRenderSpecs recalcula createdSpecs/
+  // a11ySpecs a partir do handoffData, então a contagem só é confiável aqui.
+  if (typeof _updateFinalizeVisibility === 'function') _updateFinalizeVisibility(); // BETA-ONLY: finalizar-registros-condicional
   updateFABVisibility();
 }
 
@@ -1906,6 +1944,7 @@ function syncAndRenderSpecs() {
   createdSpecs = _mergeLooseAndFramed(handoffData.specs, (handoffData.frames || []).flatMap(f => f.createdSpecs || []));
   a11ySpecs = _mergeLooseAndFramed(handoffData.a11ySpecs, (handoffData.frames || []).flatMap(f => f.a11ySpecs || []));
   a11yAreas = _mergeLooseAndFramed(handoffData.a11yAreas, (handoffData.frames || []).flatMap(f => f.a11yAreas || []));
+  tabOrderItems = _mergeLooseAndFramed(handoffData.tabOrderItems, (handoffData.frames || []).flatMap(f => f.tabOrderItems || [])); // BETA-ONLY: a11y-ordem-tabulacao
   if (typeof _migrateA11ySpecsFromCreatedSpecs === 'function' && _migrateA11ySpecsFromCreatedSpecs()) {
     createdSpecs = _mergeLooseAndFramed(handoffData.specs, (handoffData.frames || []).flatMap(f => f.createdSpecs || []));
     a11ySpecs = _mergeLooseAndFramed(handoffData.a11ySpecs, (handoffData.frames || []).flatMap(f => f.a11ySpecs || []));
@@ -1914,6 +1953,9 @@ function syncAndRenderSpecs() {
   // renderA11ySpecsList/renderA11yAreasList são wrappers do mesmo
   // renderA11yGroupedList() — chamar só uma vez evita reconstruir o DOM (e
   // resetar accordions abertos) duas vezes seguidas à toa.
+  // BETA-ONLY: a11y-ordem-tabulacao-por-area — renderA11yGroupedList já
+  // renderiza a seção de Ordem de Tabulação escopada dentro do accordion de
+  // cada área; não há mais lista global à parte pra chamar aqui.
   if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
 }
 

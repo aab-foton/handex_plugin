@@ -347,6 +347,7 @@
         frames: [],
         a11ySpecs: [],
         a11yAreas: [],
+        tabOrderItems: [], // BETA-ONLY: a11y-ordem-tabulacao
         createdFlows: [],
         nextFlowNumber: 1,
         currentUser: null,
@@ -356,6 +357,7 @@
       if (typeof createdSpecs !== 'undefined') createdSpecs.length = 0;
       if (typeof a11ySpecs !== 'undefined') a11ySpecs.length = 0;
       if (typeof a11yAreas !== 'undefined') a11yAreas.length = 0;
+      if (typeof tabOrderItems !== 'undefined') tabOrderItems.length = 0; // BETA-ONLY: a11y-ordem-tabulacao
       restoreUIFromState();
       // Sem isso, o reset só vive na sessão atual -- o figma.clientStorage
       // continua com os dados antigos e eles voltam ao reabrir o plugin.
@@ -392,3 +394,21 @@
         pluginMessage: { type: 'delete-canvas-content', ficha, specs, a11y, medidas, fluxos }
       }, '*');
     }
+
+    // ══ BETA-ONLY: apagar-tudo (início) ═════════════════════════════════════
+    // Depende de: confirmClearAllData() e o handler 'delete-canvas-content'
+    // (code.js), ambos pré-existentes — só combina as duas chamadas. Ver
+    // MIGRATION-BETA-TO-MAIN.md.
+    // "Apagar Tudo" — combina as duas ações do modal (dados do plugin +
+    // conteúdo do canvas) num único clique/confirmação, em vez de exigir
+    // marcar os 5 checkboxes manualmente e clicar em 2 botões separados.
+    // Reaproveita os dois fluxos existentes (não duplica lógica de reset nem
+    // de exclusão no canvas).
+    function confirmClearEverything() {
+      parent.postMessage({
+        pluginMessage: { type: 'delete-canvas-content', ficha: true, specs: true, a11y: true, medidas: true, fluxos: true }
+      }, '*');
+      confirmClearAllData();
+    }
+    window.confirmClearEverything = confirmClearEverything;
+    // ══ BETA-ONLY: apagar-tudo (fim) ════════════════════════════════════════

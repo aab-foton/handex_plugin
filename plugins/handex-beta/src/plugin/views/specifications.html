@@ -84,14 +84,50 @@
                 </p>
               </div>
 
+              <!-- ══ BETA-ONLY: specs-busca-filtro (início) ══
+                   Depende de: applySpecsSearchFilter/applySpecsCategoryFilter/
+                   _setupSpecsSearchBar (specifications.js). Ver
+                   MIGRATION-BETA-TO-MAIN.md. -->
+              <!-- Busca + filtro por categoria — filtra só a exibição da lista já
+                   renderizada (ver applySpecsSearchFilter em specifications.js) -->
+              <div id="specs-search-bar" class="hidden flex items-center gap-2 mb-3">
+                <div class="relative flex-1 min-w-0">
+                  <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                  <input type="text" id="specs-search-input"
+                    placeholder="Buscar por nome, texto ou tag..."
+                    oninput="applySpecsSearchFilter(this.value)"
+                    class="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl text-[11px] text-slate-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none focus:ring-2 focus:ring-[#0070af]/20 focus:border-[#0070af] transition-all" />
+                </div>
+                <select id="specs-category-filter" onchange="applySpecsCategoryFilter(this.value)"
+                  class="shrink-0 max-w-[40%] bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl px-2.5 py-2 text-[11px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-[#0070af]/20 focus:border-[#0070af] transition-all">
+                  <option value="">Todas as categorias</option>
+                </select>
+              </div>
+
               <ul id="specs-results" class="flex flex-col gap-2 min-h-[50px]">
                 <!-- List of accordions will be rendered here -->
               </ul>
+              <div id="specs-search-empty" class="hidden flex flex-col items-center justify-center py-10">
+                <i data-lucide="search-x" class="w-10 h-10 text-slate-200 dark:text-slate-700 mb-3" style="opacity:0.4"></i>
+                <p class="text-[11px] font-bold text-slate-500 dark:text-dark-muted text-center px-4">Nenhuma especificação encontrada</p>
+                <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6 mt-0.5">Ajuste a busca ou o filtro de categoria.</p>
+              </div>
+              <!-- ══ BETA-ONLY: specs-busca-filtro (fim) ══ -->
             </div>
           </div>
 
           <!-- Aba Acessibilidade — conteúdo renderizado por modules/accessibility.js -->
           <div id="specs-panel-a11y" class="hidden space-y-4">
+
+            <!-- BETA-ONLY: a11y-deteccao-automatica — a seção fixa "Detecção
+                 Automática" foi removida (decisão de produto, 2026-08): a
+                 detecção agora é oferecida logo após "Marcar Área", já
+                 escopada ao elemento marcado, via #a11y-post-area-detect-modal
+                 (modals.html) — ver a11y-area-created em messages.js e
+                 openA11yPostAreaDetectModal em accessibility.js. Botões
+                 #btn-a11y-detect / #btn-a11y-batch-generate antigos deixaram de existir
+                 na tela principal; o botão de lote equivalente vive dentro do modal.
+                 Ver MIGRATION-BETA-TO-MAIN.md. -->
 
             <!-- Áreas Marcadas viram o agrupamento principal: cada área é um accordion,
                  e toda spec de A11y nasce dentro da área escolhida (ver renderA11yGroupedList). -->
@@ -110,27 +146,47 @@
                 </p>
               </div>
 
+              <!-- ══ BETA-ONLY: specs-busca-filtro (início, aba Acessibilidade) ══
+                   Depende de: applyA11ySearchFilter/applyA11yCategoryFilter/
+                   _setupA11ySearchBar (accessibility.js). Ver
+                   MIGRATION-BETA-TO-MAIN.md. -->
+              <!-- Busca + filtro por categoria — mesma lógica de exibição da aba
+                   Specs (ver applyA11ySearchFilter em accessibility.js) -->
+              <div id="a11y-search-bar" class="hidden flex items-center gap-2 mb-3">
+                <div class="relative flex-1 min-w-0">
+                  <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                  <input type="text" id="a11y-search-input"
+                    placeholder="Buscar por elemento, área ou tag..."
+                    oninput="applyA11ySearchFilter(this.value)"
+                    class="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl text-[11px] text-slate-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none focus:ring-2 focus:ring-[#0891B2]/20 focus:border-[#0891B2] transition-all" />
+                </div>
+                <select id="a11y-category-filter" onchange="applyA11yCategoryFilter(this.value)"
+                  class="shrink-0 max-w-[40%] bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl px-2.5 py-2 text-[11px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-[#0891B2]/20 focus:border-[#0891B2] transition-all">
+                  <option value="">Todas as categorias</option>
+                </select>
+              </div>
+
               <ul id="a11y-groups-results" class="flex flex-col gap-2 min-h-[10px] mb-1">
                 <!-- Preenchido por renderA11yGroupedList() em modules/accessibility.js -->
               </ul>
+              <div id="a11y-search-empty" class="hidden flex flex-col items-center justify-center py-10">
+                <i data-lucide="search-x" class="w-10 h-10 text-slate-200 dark:text-slate-700 mb-3" style="opacity:0.4"></i>
+                <p class="text-[11px] font-bold text-slate-500 dark:text-dark-muted text-center px-4">Nenhuma especificação encontrada</p>
+                <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6 mt-0.5">Ajuste a busca ou o filtro de categoria.</p>
+              </div>
+              <!-- ══ BETA-ONLY: specs-busca-filtro (fim, aba Acessibilidade) ══ -->
             </div>
 
-            <div class="pt-2 space-y-2">
-              <p class="text-[10px] text-slate-400 dark:text-dark-muted leading-tight px-0.5">
-                Cada especificação já aplica sozinha no canvas (selo + card real da lib), organizada dentro da section "Especificações de Acessibilidade". O resumo consolidado por área fica pronto na aba <strong>"♿ Acessibilidade"</strong> do Handoff exportado.
-              </p>
-              <button onclick="navigate('view-handoff-summary')"
-                class="w-full flex items-center justify-center gap-2 py-3 bg-[#0070af] hover:bg-blue-700 rounded-2xl text-[12px] font-bold text-white transition-all shadow-sm">
-                <i data-lucide="sparkles" class="w-4 h-4" aria-hidden="true"></i>
-                Exportar Ficha em HTML
-              </button>
-            </div>
           </div>
 
+          <!-- BETA-ONLY: finalizar-registros-condicional — wrap era sempre
+               visível, agora começa hidden e é controlado por
+               _updateFinalizeVisibility() (handoff.js). Ver
+               MIGRATION-BETA-TO-MAIN.md. -->
           <!-- Finalizar Registros — ação única de fechamento, tom discreto (outline)
                para não competir com "Criar Especificação"/"Marcar Área" no header, a ação mais
                frequente da tela. Compartilhado entre as abas Specs e Acessibilidade. -->
-          <div class="pt-4 pb-2">
+          <div id="finalize-wrap-specs" class="hidden pt-4 pb-2">
             <button onclick="finalizeSection('specs')"
               class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
               <i data-lucide="clipboard-check" class="w-4 h-4" aria-hidden="true"></i>

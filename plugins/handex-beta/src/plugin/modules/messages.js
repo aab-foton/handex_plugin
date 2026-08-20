@@ -115,7 +115,21 @@
         // Preferir frameId embutido na resposta (suporte multi-frame)
         const targetFrameId = msg.frameId || activeFrameId;
 
+        // BETA-ONLY: a11y-deteccao-automatica — msg.origin só existe quando o
+        // scan foi disparado por runA11yPostAreaDetection (accessibility.js);
+        // code.js precisa ecoar msg.origin de volta em scan-result. Ver
+        // MIGRATION-BETA-TO-MAIN.md.
+        const _isA11yDetectionScan = msg.origin === 'a11y-detection';
+
         if (msg.error) {
+          if (_isA11yDetectionScan) {
+            // BETA-ONLY: a11y-deteccao-automatica
+            // Fluxo pós-Marcar-Área (accessibility.js): erro fecha o loading do
+            // modal e volta pro estado de pergunta, em vez de travar carregando.
+            if (typeof closeA11yPostAreaDetectModal === 'function') closeA11yPostAreaDetectModal();
+            if (typeof showToast === 'function') showToast(msg.error);
+            return;
+          }
           if (targetFrameId) {
             const res = document.getElementById(`scan-results-${targetFrameId}`);
             if (res) { const _ed = document.createElement('div'); _ed.className = 'p-4 bg-red-50 text-red-600 rounded-xl text-xs'; _ed.textContent = msg.error; res.innerHTML = ''; res.appendChild(_ed); }
@@ -127,11 +141,39 @@
 
         lastAuditResults = msg.data;
 
+        // ══ BETA-ONLY: a11y-deteccao-automatica (início) ═══════════════════
+        // Depende de: _collectA11yDetections/handleA11yPostAreaDetectionResult
+        // (accessibility.js), origin: 'a11y-detection' ecoado por code.js. Ver
+        // MIGRATION-BETA-TO-MAIN.md.
+        // Fluxo pós-Marcar-Área (accessibility.js): o scan foi disparado com
+        // nodeId = targetNodeId da área, não do frame inteiro — targetFrameId
+        // pode ser null (designer nunca mexeu no seletor "Frames Mapeados").
+        // Trata a resposta à parte, sem depender de frame nenhum, e sai antes
+        // de cair no ramo normal (que exigiria targetFrameId ou empurraria
+        // pra handoffData.step2.specs, sujando o scan de tokens normal).
+        if (_isA11yDetectionScan) {
+          const detections = _collectA11yDetections(msg.data);
+          if (targetFrameId) {
+            if (targetFrameId !== activeFrameId) activeFrameId = targetFrameId;
+            const frame = getFrame(targetFrameId);
+            if (frame) {
+              frame.specs = msg.data;
+              frame.a11yDetections = detections;
+              if (typeof _updateFrameAuditSubtitle === 'function') _updateFrameAuditSubtitle(targetFrameId);
+            }
+          }
+          if (typeof handleA11yPostAreaDetectionResult === 'function') handleA11yPostAreaDetectionResult(detections);
+          saveToStorage();
+          return;
+        }
+        // ══ BETA-ONLY: a11y-deteccao-automatica (fim) ══════════════════════
+
         if (targetFrameId) {
           if (targetFrameId !== activeFrameId) activeFrameId = targetFrameId;
           const frame = getFrame(targetFrameId);
           if (frame) {
             frame.specs = msg.data;
+            frame.a11yDetections = _collectA11yDetections(msg.data); // BETA-ONLY: a11y-deteccao-automatica
             renderSpecs(msg.data, targetFrameId);
             if (typeof showFrameSection === 'function') showFrameSection(targetFrameId, 'tokens');
             if (typeof _updateFrameAuditSubtitle === 'function') _updateFrameAuditSubtitle(targetFrameId);
@@ -336,6 +378,21 @@
         if (typeof renderA11ySpecsList === 'function') renderA11ySpecsList();
         saveSpecsToStorage();
         if (window._toastSaved) _toastSaved();
+        // BETA-ONLY: a11y-deteccao-automatica (lote "Gerar Handoff
+        // Automatizado") — depende de window._a11yBatchCreateResolve
+        // (accessibility.js: _createA11ySpecAndWait/confirmA11yBatchGenerate).
+        // Ver MIGRATION-BETA-TO-MAIN.md.
+        // Lote "Gerar Handoff Automatizado" (accessibility.js,
+        // _createA11ySpecAndWait/confirmA11yBatchGenerate): resolve a Promise
+        // pendente da chamada atual (serializa a próxima create-unified-spec)
+        // e suprime o toast por item — o lote mostra um único toast agregado
+        // no final, com a contagem real de sucesso/falha.
+        if (typeof window._a11yBatchCreateResolve === 'function') {
+          const resolve = window._a11yBatchCreateResolve;
+          window._a11yBatchCreateResolve = null;
+          resolve(true);
+          return;
+        }
         showToast(isA11y
           ? 'Especificação criada e posicionada — travada por padrão, use o cadeado pra ajustar.'
           : 'Especificação criada — arraste para posicionar e conclua o posicionamento.');
@@ -402,8 +459,19 @@
       }
 
       if (msg.type === "selection-name") {
-        if (typeof prefillA11yComponentName === 'function') prefillA11yComponentName(msg.name);
+        // msg.mainText é BETA-ONLY: label-automatico (code.js:
+        // _findMainTextContent ecoado em get-selection-name).
+        if (typeof prefillA11yComponentName === 'function') prefillA11yComponentName(msg.name, msg.mainText);
       }
+
+      // ══ BETA-ONLY: label-automatico (início) ═══════════════════════════
+      // Depende de: handler 'get-node-main-text' em code.js e
+      // prefillA11yLabelFromMainText em accessibility.js. Ver
+      // MIGRATION-BETA-TO-MAIN.md.
+      if (msg.type === "node-main-text") {
+        if (typeof prefillA11yLabelFromMainText === 'function') prefillA11yLabelFromMainText(msg.mainText);
+      }
+      // ══ BETA-ONLY: label-automatico (fim) ═══════════════════════════════
 
       // Resposta de 'get-a11y-selection-info' — resolve o Promise pendente aberto
       // por _getA11ySelectionInfo() (accessibility.js), usado tanto para
@@ -438,8 +506,52 @@
           if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
           saveSpecsToStorage();
           if (window._toastSaved) _toastSaved();
+          // BETA-ONLY: a11y-deteccao-automatica — pergunta se quer detectar
+          // componentes DSC automaticamente já escopado a esta área (ver
+          // openA11yPostAreaDetectModal em accessibility.js) — substitui o
+          // antigo botão solto "Detectar Componentes" que dependia de
+          // activeFrameId. Ver MIGRATION-BETA-TO-MAIN.md.
+          if (typeof openA11yPostAreaDetectModal === 'function') openA11yPostAreaDetectModal(area);
         }
       }
+
+      // ══ BETA-ONLY: a11y-ordem-tabulacao (início) ═══════════════════════
+      // Depende de: handlers 'start-tab-order-mode'/'create-tab-order-item'/
+      // 'generate-tab-order-from-layers'/'renumber-tab-order-items' em
+      // code.js, e handleTabOrderSelectionChanged/addTabOrderItem/
+      // addTabOrderItemsFromLayers em accessibility.js. Ver
+      // MIGRATION-BETA-TO-MAIN.md.
+      // --- Acessibilidade --- "Ordem de Tabulação": chega a cada mudança de
+      // seleção enquanto o modo de clique sequencial está ativo (ver
+      // start-tab-order-mode/figma.on('selectionchange') em code.js).
+      // handleTabOrderSelectionChanged já faz o early-return se o modo tiver
+      // sido desligado nesse meio tempo.
+      if (msg.type === "tab-order-selection-changed") {
+        if (typeof handleTabOrderSelectionChanged === 'function') {
+          handleTabOrderSelectionChanged(msg.nodeId, msg.nodeName);
+        }
+      }
+
+      if (msg.type === "tab-order-item-created") {
+        if (typeof addTabOrderItem === 'function') addTabOrderItem(msg.item);
+        if (window._toastSaved) _toastSaved();
+      }
+
+      // Geração automática por varredura de camadas (generate-tab-order-
+      // from-layers em code.js) — responde de uma vez com todos os itens
+      // criados; addTabOrderItemsFromLayers reaproveita addTabOrderItem
+      // item a item pra manter o mesmo merge avulsa/por-frame.
+      if (msg.type === "tab-order-generated-from-layers") {
+        if (typeof addTabOrderItemsFromLayers === 'function') addTabOrderItemsFromLayers(msg.items);
+      }
+
+      // Confirmação de renumber-tab-order-items — os números já foram
+      // atualizados otimisticamente no front (deleteTabOrderItem); esta
+      // resposta só existe para eventuais diagnósticos, sem ação adicional.
+      if (msg.type === "tab-order-renumbered") {
+        // no-op
+      }
+      // ══ BETA-ONLY: a11y-ordem-tabulacao (fim) ══════════════════════════
 
       // Fase 3 — o antigo popover de categoria (#a11y-type-menu) virou o modal
       // #a11y-category-picker-modal (accessibility.js). A checagem de vínculo
@@ -489,6 +601,43 @@
       if (msg.type === "flow-edit-failed") {
         window._editingFlowIndex = null;
         showToast('Não foi possível editar o fluxo — elemento(s) de origem/destino não encontrado(s) no canvas.', 'error');
+      }
+
+      // ══ BETA-ONLY: flows-mini-mapa-conector-criacao (início) ═══════════
+      // Depende de: figma.on('selectionchange') postando 'flow-selection-
+      // bounds' e handler 'resync-all-flows' em code.js;
+      // updateFlowAnchorPreview/resyncAllFlows em specifications.js. Ver
+      // MIGRATION-BETA-TO-MAIN.md.
+      // Chega tanto em resposta a get-flow-selection-bounds (ao abrir o modal)
+      // quanto ao vivo a cada mudança de seleção no canvas -- a função trata
+      // o early-return de modal fechado.
+      if (msg.type === 'flow-selection-bounds') {
+        if (typeof updateFlowAnchorPreview === 'function') updateFlowAnchorPreview(msg.nodes || []);
+      }
+
+      if (msg.type === 'flows-resynced') {
+        const flows = handoffData.createdFlows || [];
+        (msg.updated || []).forEach(u => {
+          const flow = flows.find(f => f.flowUid === u.flowUid);
+          if (flow) flow.id = u.newId;
+        });
+        saveToStorage();
+        renderFlowsList();
+        const failCount = (msg.failed || []).length;
+        const okCount = (msg.updated || []).length;
+        showToast(failCount > 0
+          ? `${okCount} fluxo(s) atualizado(s), ${failCount} não puderam ser recriados.`
+          : `${okCount} fluxo(s) atualizado(s).`, failCount > 0 ? 'error' : 'success');
+      }
+      // ══ BETA-ONLY: flows-mini-mapa-conector-criacao (fim) ══════════════
+
+      // BETA-ONLY: a11y-ordenacao-espacial — resposta de resolve-nodes-bounds
+      // (code.js), disparada por _a11yQueueBoundsResolution (accessibility.js).
+      // Só mescla no cache em memória e re-renderiza a listagem agrupada;
+      // sem persistência em handoffData/storage.
+      if (msg.type === 'nodes-bounds-resolved') {
+        window._a11yNodeBoundsCache = Object.assign(window._a11yNodeBoundsCache || {}, msg.bounds || {});
+        if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
       }
 
       if (msg.type === "design-data-exported") {
@@ -601,7 +750,11 @@
         if (typeof hideHandoffLoading === 'function') hideHandoffLoading();
         if (typeof _markFichaGenerated === 'function') _markFichaGenerated();
         if (msg.isUpdate) {
-          showToast(`Nova versão ${handoffData.step1.versao} gerada ao lado — ${msg.timestamp}`);
+          // BETA-ONLY: ficha-atualiza-sem-duplicar — mensagem simplificada
+          // (antes citava "Nova versão X gerada ao lado"; agora a ficha
+          // anterior é removida e substituída no lugar, ver _hdFindExistingFicha
+          // em code.js). Ver MIGRATION-BETA-TO-MAIN.md.
+          showToast(`Ficha atualizada — ${msg.timestamp}`);
         } else {
           showToast('Ficha gerada no canvas!');
         }

@@ -1,0 +1,762 @@
+{
+  "_meta": {
+    "description": "Component property definitions (toggles booleanos, campos de texto, variantes) dos 14 component sets da lib Design Acessível que NÃO fazem parte do conteúdo de spec \"[NÃO UTILIZAR][a11y base] *\" (ver design-acessivel-component-properties.json, os outros 25). São os marcadores/conectores/wrapper usados no canvas: Agrupamento, Conectores, Order, Legenda, Screen Size, Zoom, Item Number, Combinados e o wrapper \"Box specs LT\" — cada um com uma versão normal (frame \"Conectores  [Handoff]\") e uma \"[EXCLUSIVO DSC]\" (frame \"Conectores  [DSC Handoff]\"), exceto Legenda/Screen Size/Zoom/Box specs LT que só existem numa versão. 25 + 14 = 39 component sets no arquivo ao todo.",
+    "fileKey": "Wy0IhXRVZMSOOr8E609UqI",
+    "generatedAt": "2026-08-19T18:34:02.378Z",
+    "generator": "fetch-a11y-marker-component-properties.cjs",
+    "totalComponentSetsInFile": 39,
+    "baseCatalogCount": 25,
+    "schema": {
+      "components": "array — um item por component set fora do catálogo \"[a11y base]\"",
+      "components[].nodeId": "node_id do component set no arquivo Figma (usado em GET /v1/files/:key/nodes)",
+      "components[].key": "component key publicada (usado em figma.importComponentByKeyAsync)",
+      "components[].fullName": "nome completo do node no Figma, com prefixos originais (ex.: \"[EXCLUSIVO DSC][a11y] Conectores\")",
+      "components[].shortName": "nome normalizado (minúsculo, sem acento, kebab-case), sem os prefixos \"[a11y]\"/\"[EXCLUSIVO DSC]\"/\"[NÃO UTILIZAR][a11y base]\". Quando o mesmo nome existe nas duas famílias (handoff normal e DSC), a versão DSC recebe sufixo \"-dsc\" para não colidir (ex.: \"conectores\" vs \"conectores-dsc\").",
+      "components[].family": "\"handoff\" (frame \"Conectores  [Handoff]\", uso normal) | \"dsc-handoff\" (frame \"Conectores  [DSC Handoff]\", prefixo \"[EXCLUSIVO DSC]\" — outra vertical/finalidade)",
+      "components[].properties": "array flat de todas as component property definitions do set",
+      "components[].properties[].rawKey": "chave exata como retornada pela API, ex: \"letra#3925:6\" — usar para depuração ou para setProperties direto quando a key é estável",
+      "components[].properties[].name": "nome legível sem o sufixo #id, ex: \"letra\"",
+      "components[].properties[].syncId": "sufixo #id (sync key), null se a property não tiver um",
+      "components[].properties[].type": "\"BOOLEAN\" | \"TEXT\" | \"VARIANT\"",
+      "components[].properties[].defaultValue": "valor padrão retornado pela API",
+      "components[].properties[].variantOptions": "presente só quando type === \"VARIANT\" — lista de valores aceitos",
+      "components[].propertiesByType": "atalho: mesmos dados de properties, separados por type e reduzidos a só os nomes",
+      "warnings": "lista de avisos não fatais — JSON pode estar parcial se não vazio"
+    },
+    "warnings": []
+  },
+  "components": [
+    {
+      "nodeId": "31:544",
+      "key": "fc38a1a3dd1318cae8d22de2c08fbec2bfc9eae4",
+      "fullName": "[a11y] Box specs LT",
+      "shortName": "box-specs-lt",
+      "family": "handoff",
+      "properties": [
+        {
+          "rawKey": "conector",
+          "name": "conector",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "elementos interativos e imagens",
+          "variantOptions": [
+            "elementos interativos e imagens",
+            "estrutura da página",
+            "niveis de titulo",
+            "elementos decorativos",
+            "informações adicionais"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "conector"
+        ]
+      }
+    },
+    {
+      "nodeId": "1:508",
+      "key": "59d3105dffefa29a1ca8bdaf86c78a2cc9f6efdf",
+      "fullName": "[a11y] Order",
+      "shortName": "order",
+      "family": "handoff",
+      "properties": [
+        {
+          "rawKey": "number#7545:0",
+          "name": "number",
+          "syncId": "7545:0",
+          "type": "TEXT",
+          "defaultValue": "0"
+        },
+        {
+          "rawKey": "size",
+          "name": "size",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "small",
+          "variantOptions": [
+            "small",
+            "large"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "number"
+        ],
+        "variants": [
+          "size"
+        ]
+      }
+    },
+    {
+      "nodeId": "1:465",
+      "key": "a74d339e8e7b67689f3ca854e84dc608727c4c99",
+      "fullName": "[a11y] Legenda",
+      "shortName": "legenda",
+      "family": "handoff",
+      "properties": [
+        {
+          "rawKey": "função e valor#6833:0",
+          "name": "função e valor",
+          "syncId": "6833:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "nome acessível e texto alt#6833:1",
+          "name": "nome acessível e texto alt",
+          "syncId": "6833:1",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "decorativo#6833:2",
+          "name": "decorativo",
+          "syncId": "6833:2",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "nível de título#6833:3",
+          "name": "nível de título",
+          "syncId": "6833:3",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "elementos estruturais#6833:4",
+          "name": "elementos estruturais",
+          "syncId": "6833:4",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "outros#6833:5",
+          "name": "outros",
+          "syncId": "6833:5",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "ordem de foco#6899:0",
+          "name": "ordem de foco",
+          "syncId": "6899:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "variação",
+          "name": "variação",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "ordem de foco e tabulação web",
+          "variantOptions": [
+            "web",
+            "ordem de foco e tabulação web",
+            "ordem de foco e tabulação DS"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "função e valor",
+          "nome acessível e texto alt",
+          "decorativo",
+          "nível de título",
+          "elementos estruturais",
+          "outros",
+          "ordem de foco"
+        ],
+        "texts": [],
+        "variants": [
+          "variação"
+        ]
+      }
+    },
+    {
+      "nodeId": "733:1628",
+      "key": "1461e1964e1287fc2e7f0f51cee4441696caa5f2",
+      "fullName": "[EXCLUSIVO DSC][a11y] Conectores",
+      "shortName": "conectores-dsc",
+      "family": "dsc-handoff",
+      "properties": [
+        {
+          "rawKey": "letra#3925:6",
+          "name": "letra",
+          "syncId": "3925:6",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "nível de título#6411:2",
+          "name": "nível de título",
+          "syncId": "6411:2",
+          "type": "TEXT",
+          "defaultValue": "H1"
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "função e valor",
+          "variantOptions": [
+            "função e valor",
+            "elementos estruturais",
+            "nível de título / titulo",
+            "nome acessível e texto alternativo",
+            "decorativo",
+            "outros"
+          ]
+        },
+        {
+          "rawKey": "conector",
+          "name": "conector",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "desativado",
+          "variantOptions": [
+            "desativado",
+            "inferior",
+            "superior",
+            "esquerda",
+            "direita"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "letra",
+          "nível de título"
+        ],
+        "variants": [
+          "tipo",
+          "conector"
+        ]
+      }
+    },
+    {
+      "nodeId": "13:450",
+      "key": "147bc7f44729fa1dac74c50c8b083c852916208d",
+      "fullName": "[a11y] Screen Size",
+      "shortName": "screen-size",
+      "family": "handoff",
+      "properties": [
+        {
+          "rawKey": "type",
+          "name": "type",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "extra small",
+          "variantOptions": [
+            "extra small",
+            "small",
+            "medium",
+            "large",
+            "extra large"
+          ]
+        },
+        {
+          "rawKey": "size",
+          "name": "size",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "menor que 576px",
+          "variantOptions": [
+            "menor que 576px",
+            "entre 576px e 768px",
+            "entre 768px e 992px",
+            "entre 992px e 1200px",
+            "maior que 1200px"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "type",
+          "size"
+        ]
+      }
+    },
+    {
+      "nodeId": "13:461",
+      "key": "427e23640ce4fb6b39a2d2b5bc62e257fe014644",
+      "fullName": "[a11y] Zoom",
+      "shortName": "zoom",
+      "family": "handoff",
+      "properties": [
+        {
+          "rawKey": "value",
+          "name": "value",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "200%",
+          "variantOptions": [
+            "200%",
+            "400%",
+            "200% text resized"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "value"
+        ]
+      }
+    },
+    {
+      "nodeId": "13:479",
+      "key": "754e81b72212316d62a33eeaf8d6c273cc0137ed",
+      "fullName": "[a11y] Item Number",
+      "shortName": "item-number",
+      "family": "handoff",
+      "properties": [
+        {
+          "rawKey": "show label#733:0",
+          "name": "show label",
+          "syncId": "733:0",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "label#733:6",
+          "name": "label",
+          "syncId": "733:6",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "number#1478:0",
+          "name": "number",
+          "syncId": "1478:0",
+          "type": "TEXT",
+          "defaultValue": "1"
+        },
+        {
+          "rawKey": "conector",
+          "name": "conector",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "desativado",
+          "variantOptions": [
+            "desativado",
+            "inferior",
+            "superior",
+            "esquerda",
+            "direita"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "show label"
+        ],
+        "texts": [
+          "label",
+          "number"
+        ],
+        "variants": [
+          "conector"
+        ]
+      }
+    },
+    {
+      "nodeId": "1:169",
+      "key": "cfa097289584d667e59208c9ba3226dfb5007ab2",
+      "fullName": "[a11y] Agrupamento",
+      "shortName": "agrupamento",
+      "family": "handoff",
+      "properties": [
+        {
+          "rawKey": "letra#3925:32",
+          "name": "letra",
+          "syncId": "3925:32",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "elementos interativos e imagens",
+          "variantOptions": [
+            "elementos interativos e imagens",
+            "decorativo",
+            "estrutura da página",
+            "nível de título",
+            "informações adicionais"
+          ]
+        },
+        {
+          "rawKey": "orientação",
+          "name": "orientação",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "direita",
+          "variantOptions": [
+            "esquerda",
+            "direita",
+            "inferior",
+            "superior"
+          ]
+        },
+        {
+          "rawKey": "variação",
+          "name": "variação",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unitário",
+          "variantOptions": [
+            "unitário"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "letra"
+        ],
+        "variants": [
+          "tipo",
+          "orientação",
+          "variação"
+        ]
+      }
+    },
+    {
+      "nodeId": "1:228",
+      "key": "c5f0ae0223f86e636ed0661ced834b4d9390d832",
+      "fullName": "[a11y] Combinados",
+      "shortName": "combinados",
+      "family": "handoff",
+      "properties": [
+        {
+          "rawKey": "conector 6#6397:0",
+          "name": "conector 6",
+          "syncId": "6397:0",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "conector 5#6397:21",
+          "name": "conector 5",
+          "syncId": "6397:21",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "conector 4#6397:42",
+          "name": "conector 4",
+          "syncId": "6397:42",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "conector 3#6397:63",
+          "name": "conector 3",
+          "syncId": "6397:63",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "variação",
+          "name": "variação",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "dupla vertical",
+          "variantOptions": [
+            "dupla horizontal",
+            "dupla vertical",
+            "só horizontal",
+            "só vertical"
+          ]
+        },
+        {
+          "rawKey": "conector",
+          "name": "conector",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "superior",
+          "variantOptions": [
+            "desativado",
+            "inferior",
+            "superior",
+            "esquerda",
+            "direita"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "conector 6",
+          "conector 5",
+          "conector 4",
+          "conector 3"
+        ],
+        "texts": [],
+        "variants": [
+          "variação",
+          "conector"
+        ]
+      }
+    },
+    {
+      "nodeId": "733:1747",
+      "key": "6376a9f03d427fa7d5672514f79e8af32ff94fcc",
+      "fullName": "[EXCLUSIVO DSC][a11y] Agrupamento",
+      "shortName": "agrupamento-dsc",
+      "family": "dsc-handoff",
+      "properties": [
+        {
+          "rawKey": "letra#3925:32",
+          "name": "letra",
+          "syncId": "3925:32",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "função e valor",
+          "variantOptions": [
+            "função e valor",
+            "texto alternativo",
+            "decorativo",
+            "elementos estruturais",
+            "nível de título",
+            "outros"
+          ]
+        },
+        {
+          "rawKey": "orientação",
+          "name": "orientação",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "direita",
+          "variantOptions": [
+            "esquerda",
+            "direita",
+            "inferior",
+            "superior",
+            "esquerd"
+          ]
+        },
+        {
+          "rawKey": "variação",
+          "name": "variação",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unitário",
+          "variantOptions": [
+            "unitário",
+            "grupo"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "letra"
+        ],
+        "variants": [
+          "tipo",
+          "orientação",
+          "variação"
+        ]
+      }
+    },
+    {
+      "nodeId": "733:2106",
+      "key": "bbfbc14da7bf6ace503290db5d5f72d1785f39b5",
+      "fullName": "[EXCLUSIVO DSC][a11y] Item Number",
+      "shortName": "item-number-dsc",
+      "family": "dsc-handoff",
+      "properties": [
+        {
+          "rawKey": "number#1478:0",
+          "name": "number",
+          "syncId": "1478:0",
+          "type": "TEXT",
+          "defaultValue": "1"
+        },
+        {
+          "rawKey": "conector",
+          "name": "conector",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "desativado",
+          "variantOptions": [
+            "desativado",
+            "inferior",
+            "superior",
+            "esquerda",
+            "direita"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "number"
+        ],
+        "variants": [
+          "conector"
+        ]
+      }
+    },
+    {
+      "nodeId": "1:50",
+      "key": "3d33a5d23c37720b22761064d9ecfafc5f791f88",
+      "fullName": "[a11y] Conectores",
+      "shortName": "conectores",
+      "family": "handoff",
+      "properties": [
+        {
+          "rawKey": "letra#3925:6",
+          "name": "letra",
+          "syncId": "3925:6",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "nível de título#6411:2",
+          "name": "nível de título",
+          "syncId": "6411:2",
+          "type": "TEXT",
+          "defaultValue": "H1"
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "elementos interativos e imagens",
+          "variantOptions": [
+            "elementos interativos e imagens",
+            "estrutura da página",
+            "nível de título / titulo",
+            "decorativo",
+            "informações adicionais"
+          ]
+        },
+        {
+          "rawKey": "conector",
+          "name": "conector",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "desativado",
+          "variantOptions": [
+            "desativado",
+            "inferior",
+            "superior",
+            "esquerda",
+            "direita"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "letra",
+          "nível de título"
+        ],
+        "variants": [
+          "tipo",
+          "conector"
+        ]
+      }
+    },
+    {
+      "nodeId": "733:1864",
+      "key": "4ce99fab0333f4d819bfbe29a01ca192299bc7e0",
+      "fullName": "[EXCLUSIVO DSC][a11y] Combinados",
+      "shortName": "combinados-dsc",
+      "family": "dsc-handoff",
+      "properties": [
+        {
+          "rawKey": "variação",
+          "name": "variação",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "dupla vertical",
+          "variantOptions": [
+            "dupla horizontal",
+            "dupla vertical",
+            "só horizontal",
+            "só vertical"
+          ]
+        },
+        {
+          "rawKey": "conector",
+          "name": "conector",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "desativado",
+          "variantOptions": [
+            "desativado",
+            "inferior",
+            "superior",
+            "esquerda",
+            "direita"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "variação",
+          "conector"
+        ]
+      }
+    },
+    {
+      "nodeId": "733:2101",
+      "key": "68837b4fee2f901c135f9ea964763d89ab81e683",
+      "fullName": "[EXCLUSIVO DSC][a11y] Order",
+      "shortName": "order-dsc",
+      "family": "dsc-handoff",
+      "properties": [
+        {
+          "rawKey": "number#7545:0",
+          "name": "number",
+          "syncId": "7545:0",
+          "type": "TEXT",
+          "defaultValue": "0"
+        },
+        {
+          "rawKey": "size",
+          "name": "size",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "small",
+          "variantOptions": [
+            "small",
+            "large"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "number"
+        ],
+        "variants": [
+          "size"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,866 @@
+{
+  "_meta": {
+    "description": "Fundação de dados (fase 1) para detecção automática de componente DSC → categoria de handoff de a11y. Gerado por build-dsc-a11y-mapping.cjs a partir de refs/web-angular-react.json (dados reais da REST API do Figma, sem valores inventados). NÃO usado em runtime — é insumo para revisão humana antes de qualquer fase de detecção/UI.",
+    "generatedAt": "2026-08-20T20:50:59.366Z",
+    "generator": "build-dsc-a11y-mapping.cjs",
+    "sourceFile": "web-angular-react.json",
+    "sourceFileKey": "8QvOeTODSBi3PquJT5CISP",
+    "unit": "containingFrame (nome do component set/família — não o nome da variante individual, ver comentário de cabeçalho do script)",
+    "a11yShortNames": [
+      "accordion",
+      "breadcrumb",
+      "button",
+      "checkbox",
+      "dialog",
+      "inputs",
+      "link",
+      "listas",
+      "paginator",
+      "radio button",
+      "snackbar",
+      "stepper",
+      "switch",
+      "table",
+      "tab group",
+      "imagem"
+    ],
+    "counts": {
+      "totalComponentsVariants": 1893,
+      "totalFamilies": 61,
+      "altaConfianca": {
+        "families": 17,
+        "variantCount": 646
+      },
+      "baixaConfianca": {
+        "families": 19,
+        "variantCount": 689
+      },
+      "semMatch": {
+        "families": 25,
+        "variantCount": 558
+      },
+      "pctFamiliesAlta": 27.9,
+      "pctVariantsAlta": 34.1
+    },
+    "byShortName": {
+      "accordion": {
+        "families": 2,
+        "variantCount": 26
+      },
+      "breadcrumb": {
+        "families": 1,
+        "variantCount": 5
+      },
+      "button": {
+        "families": 1,
+        "variantCount": 270
+      },
+      "checkbox": {
+        "families": 1,
+        "variantCount": 84
+      },
+      "dialog": {
+        "families": 1,
+        "variantCount": 4
+      },
+      "inputs": {
+        "families": 16,
+        "variantCount": 570
+      },
+      "link": {
+        "families": 0,
+        "variantCount": 0
+      },
+      "listas": {
+        "families": 2,
+        "variantCount": 39
+      },
+      "paginator": {
+        "families": 1,
+        "variantCount": 3
+      },
+      "radio button": {
+        "families": 1,
+        "variantCount": 48
+      },
+      "snackbar": {
+        "families": 1,
+        "variantCount": 4
+      },
+      "stepper": {
+        "families": 3,
+        "variantCount": 64
+      },
+      "switch": {
+        "families": 1,
+        "variantCount": 46
+      },
+      "table": {
+        "families": 3,
+        "variantCount": 84
+      },
+      "tab group": {
+        "families": 2,
+        "variantCount": 88
+      },
+      "imagem": {
+        "families": 0,
+        "variantCount": 0
+      }
+    }
+  },
+  "altaConfianca": [
+    {
+      "containingFrame": "[dsc] Button",
+      "variantCount": 270,
+      "sampleKeys": [
+        "011ec09c647002722d8d84fea69fc49b96a03184",
+        "01d27fba327b59bd9a42e696aa3f98329fd6edc0",
+        "02e6fdb8bae7ecc0fe64ce0407d22400ed1a6b91"
+      ],
+      "match": {
+        "shortName": "button",
+        "confidence": "alta",
+        "reason": "substring \"button\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Checkbox",
+      "variantCount": 84,
+      "sampleKeys": [
+        "05680bb539434249f3d84c7bdac02441ce9e0126",
+        "09898537c69571374550af933f1cec9b16ecebb9",
+        "09c55ac244b611ad9ad1ca4a34ca45064d121db9"
+      ],
+      "match": {
+        "shortName": "checkbox",
+        "confidence": "alta",
+        "reason": "substring \"checkbox\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Table Cell",
+      "variantCount": 52,
+      "sampleKeys": [
+        "06e8b5ec840f63019edbee9ea7bcadc19900482f",
+        "0b20dcf0e7a8ccffc317df39e66ed3fa6ebe6dfc",
+        "1776fd9c6b66115a5065934e7a18224f1f89b3cb"
+      ],
+      "match": {
+        "shortName": "table",
+        "confidence": "alta",
+        "reason": "substring \"table\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Radio Button",
+      "variantCount": 48,
+      "sampleKeys": [
+        "041c5219e68d6d0c8af9c06e4ac08998ef9df52a",
+        "0d5e79ba56a3cd5ffd0ed3d72941fc5489609051",
+        "10443fe0d0c2bdadb1fa3591c0fa7afae30d3017"
+      ],
+      "match": {
+        "shortName": "radio button",
+        "confidence": "alta",
+        "reason": "substring \"radio button\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Switch",
+      "variantCount": 46,
+      "sampleKeys": [
+        "045ffb9c22b52ee31763ed665b122859be545264",
+        "0fd7f7068e7a57cc8f92d4bfb896c13fd583ee55",
+        "116fd7e20da07a3c112cde9097690a5e79ea9b1f"
+      ],
+      "match": {
+        "shortName": "switch",
+        "confidence": "alta",
+        "reason": "substring \"switch\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Vertical Stepper",
+      "variantCount": 40,
+      "sampleKeys": [
+        "0174d5dd8d5e8c5c783368b2e0cd88f05b4aedde",
+        "06b410a5d795fc3ecb77739727a538db2b5dee1a",
+        "1a2056a21b0c2cedfca87a9dae95f654b1d5303a"
+      ],
+      "match": {
+        "shortName": "stepper",
+        "confidence": "alta",
+        "reason": "substring \"stepper\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Table Header",
+      "variantCount": 28,
+      "sampleKeys": [
+        "05545e9479d4c3a0a7b2ad1f0492402dbeaf2799",
+        "08da57b9ecf35b06507a8c479beb34157cfe5438",
+        "1722f4f3eaf4dc3d51c149197e1c101e1f88fc1e"
+      ],
+      "match": {
+        "shortName": "table",
+        "confidence": "alta",
+        "reason": "substring \"table\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Accordion",
+      "variantCount": 24,
+      "sampleKeys": [
+        "01746f7b7e1cdeed9dc360ebb346f9bd4a691ae9",
+        "3af2694d4a8e0ceccd521aa812d54aa331a8e9c9",
+        "40aef98a32db0f0626fc531b2618a722d6b85c31"
+      ],
+      "match": {
+        "shortName": "accordion",
+        "confidence": "alta",
+        "reason": "substring \"accordion\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Horizontal Stepper",
+      "variantCount": 20,
+      "sampleKeys": [
+        "13242f286df31562c995afe8be76ec989e3caa87",
+        "2cc406f6c9608cecc79f26399862239df19a0ca1",
+        "343131d07a867129ac525dc85e2a3afaa45849d0"
+      ],
+      "match": {
+        "shortName": "stepper",
+        "confidence": "alta",
+        "reason": "substring \"stepper\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Tab Group",
+      "variantCount": 8,
+      "sampleKeys": [
+        "e0c639017facdd938cb3cdec16973456af991ddf",
+        "34f07deed30d3775b7b25407e2e4f5e6edb6501f",
+        "63039748c8face06051babe935606a4eacb71276"
+      ],
+      "match": {
+        "shortName": "tab group",
+        "confidence": "alta",
+        "reason": "substring \"tab group\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Breadcrumb",
+      "variantCount": 5,
+      "sampleKeys": [
+        "7591cecc9f1b61897ba8e16c4e07c66654c1f039",
+        "911383cee509706024e018e11e884aff50f1c155",
+        "94c8996768715e9763b7ca5c300c5b6716762c78"
+      ],
+      "match": {
+        "shortName": "breadcrumb",
+        "confidence": "alta",
+        "reason": "substring \"breadcrumb\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Table Footer",
+      "variantCount": 4,
+      "sampleKeys": [
+        "034e92b4e93ba55857e4a7125398666c916f2d40",
+        "2d738468746433f5cc9d96a6bf7b6ef39005cf2f",
+        "4f256f23639d76663613f871d8dbc6e1393bc0c6"
+      ],
+      "match": {
+        "shortName": "table",
+        "confidence": "alta",
+        "reason": "substring \"table\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Dialog",
+      "variantCount": 4,
+      "sampleKeys": [
+        "5bf881a3f0f38862f39305802ef6d95d136ede32",
+        "f419f21615f29eb89d9089f12156f170e649ddd3",
+        "0e26e91da64830659dece14af67ba46ddfef309f"
+      ],
+      "match": {
+        "shortName": "dialog",
+        "confidence": "alta",
+        "reason": "substring \"dialog\""
+      }
+    },
+    {
+      "containingFrame": "[dsc-tc] Stepper Template",
+      "variantCount": 4,
+      "sampleKeys": [
+        "911fd8a22e95b71c431e99ff5f7ea2f1fcbf3bef",
+        "3627a3da4effa0261b9c9de9b80822e3c4776159",
+        "b2e857e56da45b13ceae0b521b615585fec0659c"
+      ],
+      "match": {
+        "shortName": "stepper",
+        "confidence": "alta",
+        "reason": "substring \"stepper\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Snackbar",
+      "variantCount": 4,
+      "sampleKeys": [
+        "5b1e1e03ccd2a973aded85bceca94bc7c7208da7",
+        "140f6f61cb7df9159ec7dc9119a362cda0e02e62",
+        "2b35cd0d35aa80b7912bcca4311bfc98463a6d65"
+      ],
+      "match": {
+        "shortName": "snackbar",
+        "confidence": "alta",
+        "reason": "substring \"snackbar\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Paginator",
+      "variantCount": 3,
+      "sampleKeys": [
+        "2ef7e171b22d9b2ea9b3dd495bedbf976425b57b",
+        "51e7bd6e9185361d5502d68de80d2eb86defbcea",
+        "ab556bd85a5f37e0748fea7d10159e9f25ca344c"
+      ],
+      "match": {
+        "shortName": "paginator",
+        "confidence": "alta",
+        "reason": "substring \"paginator\""
+      }
+    },
+    {
+      "containingFrame": "[dsc-tc] Accordion Template",
+      "variantCount": 2,
+      "sampleKeys": [
+        "2e035b2436f7af7c01ca84c69d3a6c0a403ef835",
+        "5d61c3100a29eede4232ee5289a3d208ef33b3e4"
+      ],
+      "match": {
+        "shortName": "accordion",
+        "confidence": "alta",
+        "reason": "substring \"accordion\""
+      }
+    }
+  ],
+  "baixaConfianca": [
+    {
+      "containingFrame": "[dsc] Tab",
+      "variantCount": 80,
+      "sampleKeys": [
+        "65a904b82218cb3b8d00d9c29e60d112beaf856c",
+        "10698d9f5c99043eaa64be4e293f958769b8cc12",
+        "aaebf818fe63e3bd55ee3d9c44eee25f4f0f7392"
+      ],
+      "match": {
+        "shortName": "tab group",
+        "confidence": "baixa",
+        "reason": "\"tab\" isolado, sem \"group\" no nome — pode ser aba individual do Tab Group"
+      }
+    },
+    {
+      "containingFrame": "[dsc] Select with Chips",
+      "variantCount": 78,
+      "sampleKeys": [
+        "6b7735f490cc5995c7aaae65b1267bf25d6ed671",
+        "71821f3fb13e5fd38a661b7ff2d76396d5a1ac01",
+        "72478391b68898830fb87068eb7ff3cfadfbe8fd"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "sinônimo \"select\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Input with Chips",
+      "variantCount": 78,
+      "sampleKeys": [
+        "049f4f6da02f8f7e7502af57a316744ff9d24c02",
+        "0803ce17aa511ed4d460efb8c484f73e2ae1beb3",
+        "08641067298e153376f8cdb6ec009ffeb6ce84bf"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "sinônimo \"input\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Range Slider",
+      "variantCount": 48,
+      "sampleKeys": [
+        "b8a1e72145254ff42f6ccd5c98ed7353226bae2b",
+        "01f7f02e658e570fd519980cc1f53696e31cafac",
+        "4693c075e3fa527430c0cd3a4231649a70465d39"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "sinônimo \"slider\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Input File",
+      "variantCount": 39,
+      "sampleKeys": [
+        "23ec5824ae184ec87ad1714ab690f0cf35a96a5e",
+        "41876e94fa5c6b3e4e3aedff9277770c6bf02653",
+        "00cc6e5b92308d8704071d44510384963e94a19e"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "sinônimo \"input\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Input Textarea",
+      "variantCount": 39,
+      "sampleKeys": [
+        "d468afd4708727b1a218f651fecdb38d10ba0d44",
+        "e3c401b6e828148788b3e58a95ff4f16d5797bfb",
+        "e6d3b26ea67e54365cb586dc2d3203d6eca75fac"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "sinônimo \"input\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Datepicker",
+      "variantCount": 39,
+      "sampleKeys": [
+        "e745c673bc56384e9d2e2fe22107477f550e083f",
+        "fb45c258df47456cb2d456cd8838b9607a1338e7",
+        "081013bd195398affc63cdc73cd451dbdf931601"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "sinônimo \"datepicker\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Select",
+      "variantCount": 39,
+      "sampleKeys": [
+        "13332c96738aac3ba2704bda13f8df196864aea0",
+        "2d4777726ce98b8c66af55d1e542e775dad82583",
+        "54c42e3f02ca95da3ef02b67b8117e9639f3c6b1"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "sinônimo \"select\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Input",
+      "variantCount": 39,
+      "sampleKeys": [
+        "0d49275aff6d695014b75ba9e36ff0a607f963c1",
+        "3924cda3d8076a2eeb175008158bf86020488df7",
+        "4729685f1bab4f90d261aacfecc9e77046bbc54d"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "sinônimo \"input\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Input Currency",
+      "variantCount": 39,
+      "sampleKeys": [
+        "0250864c710b184a35ebe234f2d48592c73c65ff",
+        "0ff4bc47a0a51ad7c4054b8f1e04ff591ea4c56b",
+        "140d60d19a7428c10d09fd23d50c309196fc4f63"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "sinônimo \"input\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Datepicker Range",
+      "variantCount": 39,
+      "sampleKeys": [
+        "be3cb4e1cc1254f68d67df02a19c34a53a19eb8d",
+        "5b34ef30afaa1477e3210c6a61a9a5ef8733666e",
+        "fb6f20f2c8c3f429e6113575b51ebeb93fe1100a"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "sinônimo \"datepicker\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Timepicker",
+      "variantCount": 39,
+      "sampleKeys": [
+        "090f3f4827934a54783e9f0b01645b0ce7227e50",
+        "02d91c58e79e03ddab181c381912493111444d03",
+        "03597ed04ec2500def644ee1af0b2ea8bb811829"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "sinônimo \"timepicker\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Menu item",
+      "variantCount": 36,
+      "sampleKeys": [
+        "066212db92dc155d01b49114e6483c6a390eb52e",
+        "069235c99487d16e8075add0d7bda27d0de7d5b7",
+        "08ad6750c4258d4133975a3d0df160d2fb0a3ea0"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "sinônimo \"menuitem\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Slider",
+      "variantCount": 30,
+      "sampleKeys": [
+        "a907af29dc5d67284c587f41a82ecf290cfb7853",
+        "a18b9080e6731a40a1c3a1132dd5b2ea46110061",
+        "97ed155e98ccc4e6d1c11b3a460a4e1df47b809c"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "sinônimo \"slider\""
+      }
+    },
+    {
+      "containingFrame": "Sliders Template",
+      "variantCount": 12,
+      "sampleKeys": [
+        "97ec08926b9cffdd5934e3d3f6fc584f259cde78",
+        "1643a75964fedd56f624e66e9ab429f07c05df3d",
+        "200284f18a69f1210b28242400fceefd6d03d86f"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "sinônimo \"slider\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Dropdown Select with Chips",
+      "variantCount": 6,
+      "sampleKeys": [
+        "6ef37832405c4fef2fc692b5ff286b8f8bb67a09",
+        "bd8effef8fd94f9b24641deb0b6c59e3e7f66886",
+        "c4817c58b261e3ee3ff984ae8bfae151cc02d898"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "sinônimo \"select\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Menu Lateral",
+      "variantCount": 3,
+      "sampleKeys": [
+        "1d1ae77aa876123913c0dae00930f7b8b3453bf3",
+        "44471d19afb555faab954e4b99ec536bab22804a",
+        "c6e499a016c196c58edfdbee99f97a857839adf9"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "sinônimo \"menulateral\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Datepicker Calendar",
+      "variantCount": 3,
+      "sampleKeys": [
+        "3b43e68ccd82f02791b4cfe18e4643ad60bd4c7b",
+        "5d3d7f5ad1124470709b57495cb6143d491c94fc",
+        "820c2ecf07ea2f53d6ce0591fab53e564f10eccb"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "sinônimo \"datepicker\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Dropdown Input with Chips",
+      "variantCount": 3,
+      "sampleKeys": [
+        "62b1bddb3877931d5aa8965ec21de3365a37144a",
+        "86a3bf5c0464e48954703795cb21ea62d13b0be2",
+        "edfd5861543a6c63ce05be79c735fafc04934951"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "sinônimo \"input\""
+      }
+    }
+  ],
+  "semMatch": [
+    {
+      "containingFrame": "[dsc] Chips",
+      "variantCount": 240,
+      "sampleKeys": [
+        "1a0ea39950d91f620c69849d8a0577a1af6c4306",
+        "1fe0cd419e2dde2a3e9427be605a7db69d30778b",
+        "62783f68e53e3a0109bea92d44cb2f5579ae8c71"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Tag",
+      "variantCount": 40,
+      "sampleKeys": [
+        "00bb9ae744462140f253a63678c254fcd3715fa2",
+        "00df9c38ab2f37c57d30705bb847979d71d5ad92",
+        "0263517508e9cd2788051ff383f520865f7eaeae"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Logotipo",
+      "variantCount": 36,
+      "sampleKeys": [
+        "ea56159696e33a98cdc0834ce5965af1932d5609",
+        "0f7a79660b01659b216701aa5b956920a35f94a3",
+        "ce0efe58277d4c6cebaf3d62a6d6c35a82919499"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Badge",
+      "variantCount": 36,
+      "sampleKeys": [
+        "032d09cf2d6b17ee9d808af237897e16e31ccf3f",
+        "1aa70574a8280986a1ca0a93536f6ccdc779e1fc",
+        "2456ae16935eccc7a4ae83087e6a259f2bfa7e95"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "Componentes",
+      "variantCount": 32,
+      "sampleKeys": [
+        "037c74f69ae02457a05c532446431b5ce309538d",
+        "11d8d61cdd04eebc5bdb29198300c74fbecf4de9",
+        "4315bd3d4079a080dadd8d91a4a67059acdc3016"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "Componentes [DSC]",
+      "variantCount": 24,
+      "sampleKeys": [
+        "e2f81426d78d8875f76107e2962a2139821fd083",
+        "f46f74d22e9c6b3fa327e8965adda9500ad6ed30",
+        "34fda94f059889cb5a20381e666d8c4c15425550"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Card",
+      "variantCount": 18,
+      "sampleKeys": [
+        "022eae81d8c4a1e1b33bf7b15d755b2ac4fa912a",
+        "23b476c357f6e59d985d6b65bd7f05f3c2be7e4b",
+        "54dd907079c9ae669885fa5dd40e463457717b6b"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Footer",
+      "variantCount": 16,
+      "sampleKeys": [
+        "1c68f825551b0a52a7f4aa671074c57add906697",
+        "30d9b9328bbab424f60ac9667b8e0a6796c9bf96",
+        "3895dc9bc14bf6c48bf9b097dffef4183cf74a45"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Classificação de Conteúdo",
+      "variantCount": 12,
+      "sampleKeys": [
+        "9f35761337054df2f09e447ad79c792df08abf58",
+        "ade0646bdb7d335254509fe6d655dd76718722fe",
+        "f51cd76e3004e97f2379e682d91c8c930e342d88"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "Subcomponentes e template",
+      "variantCount": 12,
+      "sampleKeys": [
+        "e3b448d4e25f668d1f9deaaa3600264ba3aaa957",
+        "74661562624752d259c41eba8e76a48e512c5540",
+        "aabca7cb60750622fc25a15844e45382ec970c1f"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "Dropdown",
+      "variantCount": 12,
+      "sampleKeys": [
+        "053d3bd90b538944a715dd494981855713fe2107",
+        "1d5f74f48b642bf2e5952bf4091ea35633b0fda7",
+        "2fe781c1c6d585cdab0114eff43f0adfb94a7e7d"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Progress Spinner Indeterminate",
+      "variantCount": 9,
+      "sampleKeys": [
+        "3434df32564e4a3653d02193eef2cf1cf35818e7",
+        "34d4c8b397269185170ca69b49d764eaf8ba4d34",
+        "612313e9abee4e9b89ac22b5b766504cac1e7b63"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "componentes",
+      "variantCount": 9,
+      "sampleKeys": [
+        "012019bc299abad6764788c3a31e5db5ebc7d431",
+        "1597ae1952a886212d3c533f7a1c502654269b7a",
+        "31d8d421f80ba32c25518b44a1fa4f15c5ae2961"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Tooltip",
+      "variantCount": 8,
+      "sampleKeys": [
+        "15e22783892f754a9f1dd1f554eb98e4770bff92",
+        "a526cc00237ab5663c3fc31f49b99e33ce6e1224",
+        "53f0cb24f40df8b4e94506c2e1d1b927966ee1a7"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Alert",
+      "variantCount": 8,
+      "sampleKeys": [
+        "15e320d5a236df4f645c510650f4d34088303aad",
+        "326221e5f01f7b61f14058a967ad857e87c1d1c3",
+        "3a402daf651da18cca88a173efdf2163d8bb78dd"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "Atómos, moléculas e organismos",
+      "variantCount": 8,
+      "sampleKeys": [
+        "09527629ea509b2a8ae40feb8053489b804d20b3",
+        "0f7a012220ce5193b81a7d77649a4a8cdede1bd3",
+        "9042ed0879d5efd3bf78c5361829cc9030f85f51"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "Subcomponentes",
+      "variantCount": 8,
+      "sampleKeys": [
+        "6103be3ad361fa5f71bc32758e28501cbfedf663",
+        "7a3686869996d2027173cca278cc68cd1df42443",
+        "fe5a21e00a10462e422a63285925de0d59c5171c"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Progress Bar Determinate",
+      "variantCount": 7,
+      "sampleKeys": [
+        "02dea72377275c348f76203bb550b4762ffd8234",
+        "1b2cb9e3c3bcdffebb2001b23cbf9478c9a67ca2",
+        "1c065374e47189c1ec42df916801e9169e45c259"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Progress Bar Indeterminate",
+      "variantCount": 7,
+      "sampleKeys": [
+        "2b28b780a83c2be7eb82d3be6c20517c0ab2471c",
+        "50f0efa37983b5672b02af4f8ddd18a54de79b12",
+        "5b787e9b9c339ca069db04d5f0b2d25d6bc7f934"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Progress Spinner Determinate",
+      "variantCount": 6,
+      "sampleKeys": [
+        "620e108d65d60e46fff7af0e19a5af83b9a5744d",
+        "7bd433a1e4a5c30395cbe560e3ee66ee173e867a",
+        "6b4cb2ca6130fb511c20ee15368e3f78cfb6dfc5"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc doc] Component Building",
+      "variantCount": 3,
+      "sampleKeys": [
+        "ac1c9ff8b54951de70708a56a8df34b538c493a7",
+        "df969cd2d6ca281ad29f4c99175e070e8757f2cf",
+        "4f4d6cdf23c26e1f42ff353c275e0c05cee05ebc"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "Group 8",
+      "variantCount": 2,
+      "sampleKeys": [
+        "2fa0fee13b225321cbe4e6df6e4d54fdca3f848b",
+        "94808d8b6a05820f450a45b61d2a2b0e505ffbdf"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Header",
+      "variantCount": 2,
+      "sampleKeys": [
+        "1f2f30971a809f97fd8f7ff103575cfc266aba6d",
+        "f394208b007750ee0fa6ff3b64e63d70dec411d6"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-tc] Footer Template",
+      "variantCount": 2,
+      "sampleKeys": [
+        "4e6f9a18a9180a002d470180f1084e0dd05bc15a",
+        "ee23a0f4c375bc8b20f837abf145eb48200b3138"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "(sem containingFrame)",
+      "variantCount": 1,
+      "sampleKeys": [
+        "d0dd91e3694dac9aac4c703ca60092136b197d92"
+      ],
+      "match": null
+    }
+  ]
+}
