@@ -355,6 +355,40 @@ A listagem agrupada de a11y (`renderA11yGroupedList`, dentro de cada Área Marca
 
 ---
 
+## 18. `a11y-injecao-em-massa`
+
+O botão individual "Usar sugestão" por item detectado (fluxo de confirmação item a item antes de criar) foi REMOVIDO. O único caminho de criação a partir da Detecção Automática pós-Marcar-Área passou a ser o lote ("Gerar Handoff Automatizado", já existente desde `a11y-deteccao-automatica`) — que já cria todas as specs elegíveis de uma vez (alta e baixa confiança). Itens de baixa confiança, uma vez criados, ganham uma tag/badge "Verificar" visível no card já renderizado na listagem principal — clicável, leva direto pra edição da spec (`editA11ySpec`).
+
+**Arquivos e blocos afetados.**
+- `src/plugin/modules/accessibility.js` — `itemHtml` (dentro de `handleA11yPostAreaDetectionResult`) perdeu o `<button onclick="useA11yDetection(...)">`, item da lista de resultado ficou só informativo. Função `useA11yDetection` removida inteira (não deixada morta) — era o único chamador de `get-node-main-text`/`prefillA11yLabelFromMainText` (ver nota abaixo). `confirmA11yBatchGenerate` — cada item do loop calcula `needsReview = item.dscComponentMatch.confidence !== 'alta'` e inclui no `opts` enviado a `create-unified-spec`. `_a11ySpecItemHtml` — novo badge "Verificar" (ícone `alert-triangle`, estilo âmbar) renderizado quando `spec.needsReview === true`, ao lado do badge de categoria já existente.
+- `src/plugin/code.js` — handler `create-unified-spec`: objeto `spec` retornado em `spec-created` ganhou `needsReview: !!opts.needsReview` (ecoa o campo, mesmo padrão de `letter`/`color`/`category`). Specs criadas fora do lote nunca enviam `opts.needsReview` — cai em `false` por padrão, sem exigir o campo em nenhum outro ponto de criação.
+
+**Nota — dead code introduzido por esta mudança (não removido, sinalizado).** `get-node-main-text` (handler em `code.js`), o roteamento em `messages.js` e `prefillA11yLabelFromMainText` (`accessibility.js`) — toda a cadeia de "buscar o texto do nó sugerido pra pré-preencher o Label" — ficaram inalcançáveis: `useA11yDetection` era o único disparador de `parent.postMessage({type: 'get-node-main-text', ...})` no frontend, e não existe mais. Mantidos por ora (fora do escopo desta mudança limpar), candidatos a remoção numa passada de limpeza futura — ou a um novo disparador, se o pré-preenchimento de Label a partir da sugestão detectada for reintroduzido de outra forma. Ver também `label-automatico` (item 11) — feature relacionada, já marcada como "ponto de atenção" (possivelmente mais evoluída em `main`).
+
+**Dependências que a main não tem hoje.** As mesmas do bloco de a11y como um todo — migrar junto com `a11y-deteccao-automatica` (item 4), que é pré-requisito direto (o lote que esta mudança torna único caminho já existe lá).
+
+**O que verificar/adaptar ao migrar.** Se `main` ainda tiver o fluxo individual "Usar sugestão" antigo (de uma versão anterior a esta mudança), a remoção do botão + função precisa ser reaplicada — não é só copiar `confirmA11yBatchGenerate`/`_a11ySpecItemHtml` novos, é também DELETAR o botão/função antigos, senão os dois caminhos coexistem de novo em `main`.
+
+**Risco de migração:** baixo-médio. Mudança de fluxo (remove uma opção de UI), não de dado — mas precisa ser migrada como unidade (remoção do botão antigo + badge novo + campo `needsReview`), não em partes.
+
+---
+
+## 19. `a11y-toggle-visibilidade-tipo`
+
+Dois atalhos novos de "ocultar/mostrar tudo de uma vez" por TIPO de marcação no canvas, independentes do toggle por item já existente (`toggleA11ySpecVisibility`): um pra todas as specs de leitor de tela (áreas marcadas + cards de a11y) e outro só pros selos de Ordem de Tabulação — permite alternar a visualização do canvas conforme o que o designer estiver documentando no momento, sem os dois tipos competirem visualmente.
+
+**Arquivos e blocos afetados.**
+- `src/plugin/code.js` — novo handler `toggle-a11y-category-visibility`, recebe `{ category: 'specs'|'tabOrder', visible: boolean }`. Localiza a Section `A11Y_SECTION_NAME` e alterna `.visible` dos filhos que batem o critério: `isTabOrder` (nome com prefixo `[TabOrder`) vs `isA11ySpec` (tudo que não é tab order E tem `handexCategory === 'a11y'` via `getPluginData`, com fallback pro prefixo de nome `[SpecA11y`/`[A11yArea` se a pluginData não estiver setada). Mesma distinção por prefixo que `delete-canvas-content` já usa — reaproveitada, não duplicada com lógica nova. Responde `{ type: 'a11y-category-visibility-toggled', category, visible, changed }`.
+- `src/plugin/modules/accessibility.js` — `toggleAllA11ySpecsVisibility`/`toggleAllTabOrderVisibility` (estado local efêmero `_a11ySpecsHiddenAll`/`_a11yTabOrderHiddenAll`, não persiste entre sessões — clique otimista, atualiza ícone/label do botão antes da resposta do backend), `_setA11yCategoryToggleBtnState`.
+- `src/plugin/modules/messages.js` — roteamento de `a11y-category-visibility-toggled`: só usado pra avisar o designer quando `changed === 0` (nada encontrado no canvas pra esse tipo) — o resto do feedback visual já é otimista no clique.
+- `src/plugin/views/specifications.html` — dois botões nas Áreas Marcadas (`#btn-hide-all-a11y-specs`/`#btn-hide-all-tab-order`), mesmo padrão visual de `#btn-hide-all-measures` (`views/measurement.html`).
+
+**Dependências que a main não tem hoje.** `A11Y_SECTION_NAME`/Section dedicada de Acessibilidade (pré-requisito lógico, já deve existir em `main` de sessões anteriores). Depende de `a11y-ordem-tabulacao-por-area` (item 5) pro filtro `tabOrder` fazer sentido (senão não há selos `[TabOrder` pra alternar).
+
+**Risco de migração:** baixo. Aditivo, não altera nenhum handler/contrato pré-existente — só lê `.visible`/`getPluginData` de nodes já existentes na Section.
+
+---
+
 ## Ordem de migração recomendada
 
 1. **Dados/refs primeiro:** `refs/design-acessivel-component-properties.json`, `refs/dsc-component-a11y-mapping.json` — sem eles nada do bloco de a11y funciona.

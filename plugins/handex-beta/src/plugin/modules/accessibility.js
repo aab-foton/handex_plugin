@@ -387,7 +387,7 @@ function openA11yModal(category, options) { // BETA-ONLY: a11y-deteccao-automati
   if (!modal) return;
   modal.dataset.category = category;
   modal.dataset.areaId = window._a11yPendingAreaId || '';
-  // BETA-ONLY: a11y-deteccao-automatica (início) — usado por useA11yDetection
+  // BETA-ONLY: a11y-deteccao-automatica (início) — usado pelo lote automatizado
   // pra pré-selecionar o componente sugerido no <select>.
   if (presetComponente) modal.dataset.presetComponente = presetComponente;
   else delete modal.dataset.presetComponente;
@@ -803,10 +803,14 @@ function _fillA11yLabelIfEmpty(mainText) {
   if (labelInput && !labelInput.value.trim()) labelInput.value = mainText;
 }
 
-// Resposta de 'get-node-main-text' (disparada por useA11yDetection, ver
-// abaixo) — mesmo preenchimento condicional de _fillA11yLabelIfEmpty, só
-// que a partir do nodeId resolvido pela sugestão, não da seleção atual do
-// canvas (o designer pode nem ter esse elemento selecionado no momento).
+// Resposta de 'get-node-main-text' — mesmo preenchimento condicional de
+// _fillA11yLabelIfEmpty, só que a partir de um nodeId específico, não da
+// seleção atual do canvas. BETA-ONLY: a11y-injecao-em-massa — desde a
+// remoção do fluxo individual "Usar sugestão" (único disparador desta
+// mensagem), nenhum caminho do frontend envia mais 'get-node-main-text' —
+// handler (code.js), roteamento (messages.js) e esta função ficaram
+// inalcançáveis. Mantidos por ora (não é escopo desta mudança limpar),
+// candidatos a remoção numa passada de limpeza futura.
 function prefillA11yLabelFromMainText(mainText) {
   const modal = document.getElementById('a11y-spec-modal');
   if (!modal || modal.classList.contains('hidden')) return;
@@ -1437,9 +1441,17 @@ function _a11ySpecItemHtml(spec) {
         <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0 mt-0.5" style="background-color:${color}">${escapeHtml(spec.letter || 'A')}</div>
         <div class="flex-1 min-w-0">
           <p class="text-[11px] font-semibold text-slate-700 dark:text-white truncate">${escapeHtml(spec.targetNodeName || spec.name || 'Elemento')}</p>
-          <span class="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded-full border text-[9px] font-bold" style="background-color:${fill};border-color:${color};color:${color};">
-            <i data-lucide="${meta.icon}" class="w-2.5 h-2.5"></i> ${meta.label}
-          </span>
+          <div class="flex items-center flex-wrap gap-1 mt-0.5">
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[9px] font-bold" style="background-color:${fill};border-color:${color};color:${color};">
+              <i data-lucide="${meta.icon}" class="w-2.5 h-2.5"></i> ${meta.label}
+            </span>
+            ${spec.needsReview ? `
+            <button type="button" title="Criado em lote com baixa confiança — clique para revisar" aria-label="Verificar especificação — criada em lote com baixa confiança"
+              onclick="editA11ySpec(${spec.originalIndex})"
+              class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[9px] font-bold bg-amber-50/60 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/20 transition-colors">
+              <i data-lucide="alert-triangle" class="w-2.5 h-2.5"></i> Verificar
+            </button>` : ''}
+          </div>
         </div>
         <button type="button" title="Focar no elemento no canvas" aria-label="Focar no elemento no canvas"
           onclick="focusNode('${spec.targetNodeId}')"
@@ -2033,6 +2045,10 @@ function handleA11yPostAreaDetectionResult(detections) {
     return A11Y_COMPONENTE_LABELS[shortName] || _capitalizeFirst(shortName);
   };
 
+  // BETA-ONLY: a11y-injecao-em-massa — item passou a ser só informativo (sem
+  // ação de clique). O único caminho de criação agora é o lote
+  // (confirmA11yBatchGenerate); o botão "Usar sugestão" por item foi removido
+  // por decisão de produto (fluxo individual descontinuado).
   const itemHtml = (item, confidence) => {
     const shortName = item.dscComponentMatch.a11yCategory;
     const label = _a11yDetectionLabel(shortName);
@@ -2046,10 +2062,6 @@ function handleA11yPostAreaDetectionResult(detections) {
           <p class="text-[11px] font-semibold text-slate-700 dark:text-white truncate">${escapeHtml(item.name || 'Elemento')}</p>
           <p class="text-[9px] text-slate-400 dark:text-dark-muted truncate">Sugestão: ${escapeHtml(label)}</p>
         </div>
-        <button type="button" onclick="useA11yDetection('${escapeHtml(shortName)}', '${escapeHtml(item.nodeId || '')}')"
-          class="shrink-0 px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-white bg-[#0070af] hover:bg-[#005a8c] transition-colors">
-          Usar sugestão
-        </button>
       </li>
     `;
   };
@@ -2075,57 +2087,21 @@ function handleA11yPostAreaDetectionResult(detections) {
       blockHtml('Confirmar categoria', 'alert-triangle', baixa, 'baixa');
   }
 
-  // "Gerar Handoff Automatizado" em lote — só faz sentido oferecer se houver
-  // ao menos 1 item elegível (categoria 'elemento'; ver
-  // _filterA11yBatchEligible). Uma área só com detecções de 'titulo'/
-  // 'decorativo' (heurística de texto/ícone) não tem nada pro lote processar
-  // — o designer trata cada uma individualmente via "Usar sugestão".
+  // "Gerar Handoff Automatizado" em lote — único caminho de criação a partir
+  // da Detecção Automática (ver BETA-ONLY: a11y-injecao-em-massa). Só faz
+  // sentido oferecer se houver ao menos 1 item elegível — ver
+  // _filterA11yBatchEligible (inclui 'elemento', 'titulo' e 'decorativo').
   if (batchBtn) batchBtn.classList.toggle('hidden', _filterA11yBatchEligible(detections).length === 0);
 
   _refreshIcons();
 }
 window.handleA11yPostAreaDetectionResult = handleA11yPostAreaDetectionResult;
 
-// Chamado pelo botão "Usar sugestão" de cada item detectado — abre o
-// formulário certo já com a categoria da sugestão, igual o designer tivesse
-// escolhido manualmente. Duas origens possíveis de shortName:
-//   - um dos 16 componentes do catálogo "elemento" (ex: 'button', 'checkbox')
-//     → abre a categoria 'elemento' com o componente pré-selecionado
-//     (presetComponente), como sempre foi.
-//   - a própria chave de categoria 'titulo'/'decorativo', quando a detecção
-//     veio de heurística de texto/ícone (ver _resolveTypographyA11yMatch/
-//     _resolveDecorativeA11yMatch em code.js) — não há preset de subtipo/
-//     nível equivalente ainda (sempre confidence 'baixa', o designer precisa
-//     olhar e escolher o nível/subtipo certo manualmente), então só abre a
-//     categoria certa, sem preset.
-// Nunca cria spec sozinho: o designer ainda confirma no modal (fluxo
-// individual). O fluxo em lote (abaixo) é uma ação adicional, não substitui
-// este botão por item. Fecha o modal de detecção antes de abrir o formulário
-// pra não empilhar dois modais na tela.
-function useA11yDetection(shortName, nodeId) {
-  // A spec precisa nascer atrelada à MESMA área que originou esta detecção —
-  // bug real encontrado: openA11yModal só grava modal.dataset.areaId a partir
-  // de window._a11yPendingAreaId (ver openA11yCategoryPickerModal), que este
-  // fluxo nunca passava por setar (ele pula direto pro formulário, sem passar
-  // pelo seletor de categoria). Sem isso a spec nascia sem a11yAreaId e caía
-  // no bucket "Sem área", mesmo tendo sido criada a partir de uma área já
-  // marcada. window._a11yPendingDetectionArea já guarda o areaId certo desde
-  // que o modal pós-Marcar-Área foi aberto — só faltava repassar.
-  const pendingArea = window._a11yPendingDetectionArea;
-  window._a11yPendingAreaId = (pendingArea && pendingArea.areaId) || null;
-  closeA11yPostAreaDetectModal();
-  if (nodeId && typeof focusNode === 'function') focusNode(nodeId);
-  if (shortName === 'titulo' || shortName === 'decorativo') {
-    openA11yModal(shortName);
-  } else {
-    openA11yModal('elemento', { presetComponente: shortName });
-    // Label a partir do texto real do elemento sugerido — pedido explícito
-    // do designer (nodeId já resolvido pela detecção, não depende da seleção
-    // atual do canvas, diferente do fluxo manual que usa get-selection-name).
-    if (nodeId) parent.postMessage({ pluginMessage: { type: 'get-node-main-text', nodeId } }, '*');
-  }
-}
-window.useA11yDetection = useA11yDetection;
+// BETA-ONLY: a11y-injecao-em-massa — useA11yDetection (fluxo individual de
+// "Usar sugestão" por item) foi removida por decisão de produto. O único
+// caminho de criação a partir da Detecção Automática agora é o lote
+// (confirmA11yBatchGenerate, abaixo), que já cria todas as specs elegíveis
+// de uma vez (alta e baixa confiança) sem confirmação item a item.
 
 // ── Fase 3: "Gerar Handoff Automatizado" (lote) ─────────────────────────
 // Processa as detecções da área/frame corrente (alta E baixa confiança,
@@ -2133,17 +2109,12 @@ window.useA11yDetection = useA11yDetection;
 // agregado, o designer escolhe a Área de destino (pré-requisito — toda spec
 // de A11y precisa de a11yAreaId) e confirma uma única vez.
 //
-// Decisão pragmática (ver tarefa de expansão pra titulo/decorativo): o lote
-// continua restrito à categoria "elemento" (Elementos e Imagens) — é a única
-// com payload builder pronto (_buildA11yElementoPayload) e a única onde o
-// "default do componente" é uma spec sensata sem input do designer. Itens
-// detectados como 'titulo'/'decorativo' (heurística de nome de camada/
-// estilo, sempre confidence 'baixa') aparecem na lista de resultado com o
-// botão individual "Usar sugestão" (useA11yDetection), mas são FILTRADOS do
-// lote — criar em massa um "Nível de Título" ou "Elemento Decorativo" sem o
-// designer olhar cada um seria arriscado (título puxa o nível certo H1-H6,
-// decorativo pode estar errado se o ícone na verdade for funcional). Ver
-// _filterA11yBatchEligible.
+// BETA-ONLY: a11y-injecao-em-massa — o lote é o ÚNICO caminho de criação a
+// partir da Detecção Automática (fluxo individual "Usar sugestão" removido).
+// _filterA11yBatchEligible inclui 'titulo'/'decorativo' (sempre confidence
+// 'baixa') com o default mais comum (H1, subtipo "gerais") — o designer
+// revisa/corrige depois via o badge "Verificar" na listagem (ver
+// _a11ySpecItemHtml), em vez de confirmar item a item antes de criar.
 function _allA11yAreas() {
   return [
     ...(a11yAreas || []),
@@ -2243,7 +2214,7 @@ function openA11yBatchSummaryModal() {
   const skippedNotice = document.getElementById('a11y-batch-summary-skipped-notice');
   if (skippedNotice) {
     if (skippedCount > 0) {
-      skippedNotice.textContent = `${skippedCount} item${skippedCount === 1 ? '' : 'ns'} não ${skippedCount === 1 ? 'entra' : 'entram'} neste lote — use "Usar sugestão" individualmente na lista de detecções.`;
+      skippedNotice.textContent = `${skippedCount} item${skippedCount === 1 ? '' : 'ns'} não ${skippedCount === 1 ? 'entra' : 'entram'} neste lote.`;
       skippedNotice.classList.remove('hidden');
     } else {
       skippedNotice.classList.add('hidden');
@@ -2388,6 +2359,10 @@ async function confirmA11yBatchGenerate() {
     const shortName = item.dscComponentMatch.a11yCategory;
     const letter = toLetters(startIndex + nextLetterIndex);
     nextLetterIndex++;
+    // BETA-ONLY: a11y-injecao-em-massa — itens de baixa confiança nascem
+    // marcados pra revisão (badge "Verificar" na listagem, ver
+    // _a11ySpecItemHtml) já que não passam mais por confirmação item a item.
+    const needsReview = item.dscComponentMatch.confidence !== 'alta';
 
     // 'titulo'/'decorativo' vêm da heurística de texto/ícone (ver
     // _resolveTypographyA11yMatch/_resolveDecorativeA11yMatch, code.js) — o
@@ -2421,6 +2396,7 @@ async function confirmA11yBatchGenerate() {
       existingAreaSpecIds: _collectAreaSiblingSpecIds(areaId, a11yType),
       existingAreaAllSpecIds: _collectAreaAllSpecIds(areaId),
       targetNodeId: item.nodeId || null,
+      needsReview,
     };
     const ok = await _createA11ySpecAndWait(opts);
     if (ok) created++; else failed++;
@@ -2474,6 +2450,41 @@ function toggleA11ySpecVisibility(originalIndex) {
   renderA11yGroupedList();
 }
 window.toggleA11ySpecVisibility = toggleA11ySpecVisibility;
+
+// BETA-ONLY: a11y-toggle-visibilidade-tipo — dois atalhos de "tudo de uma
+// vez" por TIPO de marcação no canvas, independentes do toggle por item
+// acima (toggleA11ySpecVisibility): um pra todas as specs de leitor de tela
+// (áreas marcadas + cards de a11y) e outro só pros selos de Ordem de
+// Tabulação. A distinção de quem é o quê é feita no BACKEND direto no canvas
+// (handler 'toggle-a11y-category-visibility', code.js), nunca a partir de
+// a11ySpecs/tabOrderItems locais — que podem estar desatualizados se o
+// designer mexeu manualmente no canvas. Estado local aqui só controla
+// ícone/label do botão (efêmero, não persiste entre sessões).
+let _a11ySpecsHiddenAll = false;
+let _a11yTabOrderHiddenAll = false;
+
+function _setA11yCategoryToggleBtnState(btnId, hidden, label) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.innerHTML = hidden
+    ? `<i data-lucide="eye" class="w-3.5 h-3.5"></i> Mostrar ${label}`
+    : `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar ${label}`;
+  _refreshIcons();
+}
+
+function toggleAllA11ySpecsVisibility() {
+  _a11ySpecsHiddenAll = !_a11ySpecsHiddenAll;
+  _setA11yCategoryToggleBtnState('btn-hide-all-a11y-specs', _a11ySpecsHiddenAll, 'Specs');
+  parent.postMessage({ pluginMessage: { type: 'toggle-a11y-category-visibility', category: 'specs', visible: !_a11ySpecsHiddenAll } }, '*');
+}
+window.toggleAllA11ySpecsVisibility = toggleAllA11ySpecsVisibility;
+
+function toggleAllTabOrderVisibility() {
+  _a11yTabOrderHiddenAll = !_a11yTabOrderHiddenAll;
+  _setA11yCategoryToggleBtnState('btn-hide-all-tab-order', _a11yTabOrderHiddenAll, 'Ordem de Tabulação');
+  parent.postMessage({ pluginMessage: { type: 'toggle-a11y-category-visibility', category: 'tabOrder', visible: !_a11yTabOrderHiddenAll } }, '*');
+}
+window.toggleAllTabOrderVisibility = toggleAllTabOrderVisibility;
 
 // "Concluir posicionamento" — trava o specGroup no canvas (lock-spec já
 // aceita o prefixo '[SpecA11y | ...]', ver regex em code.js). A UI só some o

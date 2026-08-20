@@ -1701,6 +1701,45 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
+  // BETA-ONLY: a11y-toggle-visibilidade-tipo — toggle de visibilidade em
+  // massa por TIPO, dentro da Section de Acessibilidade: 'specs' (leitor de
+  // tela — tudo com handexCategory 'a11y' que NÃO seja selo de Ordem de
+  // Tabulação) vs 'tabOrder' (só os selos '[TabOrder | N] ...'). Mesma
+  // distinção por prefixo de nome que delete-canvas-content já usa acima —
+  // fonte de verdade é o canvas em tempo real, não os arrays locais
+  // (a11ySpecs/tabOrderItems), que podem estar desatualizados se o designer
+  // mexeu manualmente no canvas.
+  if (msg.type === 'toggle-a11y-category-visibility') {
+    try {
+      const category = msg.category === 'tabOrder' ? 'tabOrder' : 'specs';
+      const visible = !!msg.visible;
+      const section = figma.currentPage.children.find(
+        n => n.type === 'SECTION' && n.name === A11Y_SECTION_NAME
+      );
+      const isTabOrder = (node) => !!(node.name && node.name.startsWith('[TabOrder'));
+      const isA11ySpec = (node) => {
+        if (isTabOrder(node)) return false;
+        const tag = node.getPluginData('handexCategory');
+        if (tag) return tag === 'a11y';
+        return !!(node.name && (node.name.startsWith('[SpecA11y') || node.name.startsWith('[A11yArea')));
+      };
+      const matcher = category === 'tabOrder' ? isTabOrder : isA11ySpec;
+      let changed = 0;
+      if (section) {
+        (section.children || []).forEach(node => {
+          if (matcher(node)) {
+            try { node.visible = visible; changed++; } catch (e) { }
+          }
+        });
+      }
+      figma.ui.postMessage({ type: 'a11y-category-visibility-toggled', category, visible, changed });
+    } catch (e) {
+      console.error('toggle-a11y-category-visibility failed:', e);
+      figma.notify('Erro ao alternar visibilidade no canvas', { error: true });
+    }
+    return;
+  }
+
   if (msg.type === 'scan-cache-save') {
     figma.clientStorage.setAsync('handex-scan-cache-v1', msg.data).catch(e =>
       console.warn("scan-cache-save failed:", e)
@@ -5173,6 +5212,11 @@ figma.ui.onmessage = async (msg) => {
           // — precisa sobreviver no objeto salvo pra editA11ySpec reabrir o
           // formulário com o radio certo já marcado (ver _prefillA11ySpecForEdit).
           drawMode: opts.drawMode || 'contorno',
+          // BETA-ONLY: a11y-injecao-em-massa — specs criadas pelo lote com
+          // confiança "baixa" ganham este flag pra virar um badge "Verificar"
+          // na listagem (_a11ySpecItemHtml, accessibility.js). Fluxo manual
+          // nunca envia opts.needsReview, então cai em false por padrão.
+          needsReview: !!opts.needsReview,
         }
       });
 

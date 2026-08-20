@@ -139,6 +139,21 @@
                 Marque uma área da tela (selo numerado) e crie as especificações de acessibilidade dentro dela, usando o botão "+" no cabeçalho de cada área.
               </p>
 
+              <!-- BETA-ONLY: a11y-toggle-visibilidade-tipo — dois toggles independentes de
+                   "ocultar tudo" por TIPO de marcação no canvas (specs de leitor de tela vs.
+                   selos de Ordem de Tabulação), mesmo padrão visual de #btn-hide-all-measures
+                   (views/measurement.html). Estado é efêmero (não persiste entre sessões). -->
+              <div class="flex items-center gap-3 mb-2">
+                <button id="btn-hide-all-a11y-specs" type="button" onclick="toggleAllA11ySpecsVisibility()"
+                  class="text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors flex items-center gap-1">
+                  <i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar Specs
+                </button>
+                <button id="btn-hide-all-tab-order" type="button" onclick="toggleAllTabOrderVisibility()"
+                  class="text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors flex items-center gap-1">
+                  <i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar Ordem de Tabulação
+                </button>
+              </div>
+
               <div id="hint-a11y-areas" class="hidden mb-2 min-h-[76px] p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl border border-cyan-100 dark:border-cyan-800/30 flex gap-2">
                 <i data-lucide="map-pin" class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5"></i>
                 <p class="text-[11px] text-cyan-800 dark:text-cyan-300 leading-tight">

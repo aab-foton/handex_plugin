@@ -1328,6 +1328,17 @@
         </button>
       </div>
       <div class="p-5 overflow-y-auto flex-1 min-h-0" onscroll="handleScroll(this)">
+        <!-- BETA-ONLY: a11y-injecao-em-massa — select de área movido pro topo
+             do modal (antes vinha depois do resumo de grupos) e label trocado
+             pra "Área mapeada para especificação". Ver MIGRATION-BETA-TO-MAIN.md. -->
+        <div id="a11y-batch-area-wrap" class="mb-4">
+          <label for="a11y-batch-area-select" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Área mapeada para especificação</label>
+          <select id="a11y-batch-area-select"
+            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
+          </select>
+          <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-1.5 leading-tight">Todas as especificações do lote nascem dentro desta área.</p>
+        </div>
+
         <p class="text-[11px] text-slate-500 dark:text-dark-muted mb-4 leading-relaxed">
           Serão criadas especificações de "Elementos e Imagens" para cada componente detectado — as de baixa confiança precisam de revisão manual depois. O <strong>Label</strong> de cada uma usa o nome do elemento no canvas como texto inicial; ajuste depois pelo botão de editar.
         </p>
@@ -1335,14 +1346,6 @@
         <div id="a11y-batch-summary-groups" class="space-y-1.5 mb-4"></div>
 
         <p id="a11y-batch-summary-skipped-notice" class="hidden text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl px-3 py-2 mb-4 leading-relaxed"></p>
-
-        <div id="a11y-batch-area-wrap" class="mb-1">
-          <label for="a11y-batch-area-select" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Área de destino</label>
-          <select id="a11y-batch-area-select"
-            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
-          </select>
-          <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-1.5 leading-tight">Todas as especificações do lote nascem dentro desta área.</p>
-        </div>
       </div>
       <div class="p-4 border-t border-gray-100 dark:border-dark-line shrink-0">
         <button id="btn-a11y-batch-confirm" onclick="confirmA11yBatchGenerate()"
