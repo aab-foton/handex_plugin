@@ -1846,58 +1846,64 @@ function _a11ySemAreaAccordionEl(specs, tabItemsCount) {
   return li;
 }
 
-// ══ BETA-ONLY: a11y-ordenacao-espacial (início) ══
-// A listagem agrupada (renderA11yGroupedList) ordenava as specs de cada área
-// alfabeticamente pela tag (letter), o que reflete ORDEM DE CRIAÇÃO, não a
-// ordem real de leitura de tela (esquerda→direita, cima→baixo). Aqui só a
-// EXIBIÇÃO muda — tags/selos no canvas continuam intocados.
+// ══ BETA-ONLY: a11y-ordem-camadas-reversao (início) ══
+// A ordenação espacial por posição x/y (sub-feature a11y-ordenacao-espacial)
+// foi REVERTIDA a pedido do designer: um Header, sendo literalmente a
+// primeira camada da árvore (`[dsc] Header` dentro de header > main >
+// wrapper...), nascia no FINAL da listagem por causa da heurística de
+// linha/coluna — sem sentido algum pra quem está lendo a spec.
+//
+// Decisão confirmada: a árvore de camadas do Figma (painel Layers) é a fonte
+// de verdade estrutural do documento. Se algo aparece fora de ordem ali mas
+// "correto" visualmente, é sinal de que o próprio arquivo Figma está
+// desorganizado — cabe ao designer reorganizar a árvore, não ao plugin
+// compensar isso com heurística espacial. A listagem agrupada
+// (renderA11yGroupedList) volta a ordenar as specs de cada área pela ordem
+// de camadas real (DFS a partir da Área Marcada), não mais pela tag (letter)
+// alfabética nem por x/y. Aqui só a EXIBIÇÃO muda — tags/selos no canvas
+// continuam intocados.
 //
 // Cache em memória (não persiste entre sessões/reload do plugin — é só pra
-// não repetir a mesma consulta de bounds a cada re-render dentro da mesma
-// sessão da UI). Chave: targetNodeId; valor: {x,y} ou null (node não existe
-// mais / sem absoluteBoundingBox).
-window._a11yNodeBoundsCache = window._a11yNodeBoundsCache || {};
+// não repetir a mesma consulta de ordem de camadas a cada re-render dentro
+// da mesma sessão da UI). Estrutura: { [areaId]: { [nodeId]: índice de
+// visita DFS } } — o índice só é comparável DENTRO da mesma área (a árvore
+// percorrida é a da Área Marcada, não do documento inteiro), por isso o
+// cache é escopado por areaId em vez de ser um mapa único nodeId→índice.
+window._a11yLayerOrderCache = window._a11yLayerOrderCache || {};
 
-// Tolerância (px) pra considerar duas specs "na mesma linha de leitura"
-// antes de desempatar por y e cair no desempate final por x. Valor escolhido
-// sem dado da vertical de a11y — 24px cobre a maioria dos selos/cards
-// pequenos do canvas sem juntar linhas genuinamente distintas; ajustar se
-// a vertical validar um valor melhor.
-const A11Y_SPATIAL_ROW_THRESHOLD = 24;
-
-function _a11ySortSpecsSpatially(specsList) {
-  const cache = window._a11yNodeBoundsCache;
+function _a11ySortSpecsByLayerOrder(specsList, areaId) {
+  const areaCache = (window._a11yLayerOrderCache && areaId) ? window._a11yLayerOrderCache[areaId] : null;
   return specsList.slice().sort((a, b) => {
-    const boundsA = a.targetNodeId ? cache[a.targetNodeId] : undefined;
-    const boundsB = b.targetNodeId ? cache[b.targetNodeId] : undefined;
-    if (!boundsA || !boundsB) {
+    const orderA = (areaCache && a.targetNodeId) ? areaCache[a.targetNodeId] : undefined;
+    const orderB = (areaCache && b.targetNodeId) ? areaCache[b.targetNodeId] : undefined;
+    if (orderA === undefined || orderB === undefined) {
       return String(a.letter || '').localeCompare(String(b.letter || ''));
     }
-    if (Math.abs(boundsA.y - boundsB.y) > A11Y_SPATIAL_ROW_THRESHOLD) {
-      return boundsA.y - boundsB.y;
-    }
-    return boundsA.x - boundsB.x;
+    return orderA - orderB;
   });
 }
 
-// Coleta os targetNodeId ainda não cacheados (de todas as specs passadas,
-// tipicamente todas as visíveis na listagem inteira) e consulta o backend
-// de uma vez só. Re-renderiza ao final — chamada "fire and forget" a partir
-// de renderA11yGroupedList, que já rendeu uma vez com o fallback alfabético
-// enquanto a consulta está em voo (evita bloquear a UI, aceita um re-render
-// rápido em vez de esperar a resposta antes do primeiro paint).
-function _a11yQueueBoundsResolution(specsList) {
-  const cache = window._a11yNodeBoundsCache;
+// Coleta os targetNodeId ainda não cacheados PARA ESTA ÁREA (o índice de
+// ordem de camadas só faz sentido escopado à árvore de uma área específica)
+// e consulta o backend de uma vez só. Re-renderiza ao final — chamada
+// "fire and forget" a partir de renderA11yGroupedList, que já rendeu uma vez
+// com o fallback alfabético enquanto a consulta está em voo (evita bloquear
+// a UI, aceita um re-render rápido em vez de esperar a resposta antes do
+// primeiro paint).
+function _a11yQueueLayerOrderResolution(areaId, targetNodeId, specsList) {
+  if (!areaId || !targetNodeId) return;
+  const cache = window._a11yLayerOrderCache;
+  const areaCache = cache[areaId] || {};
   const missingIds = Array.from(new Set(
     specsList
       .map(s => s.targetNodeId)
-      .filter(id => id && !(id in cache))
+      .filter(id => id && !(id in areaCache))
   ));
   if (missingIds.length === 0) return;
 
-  parent.postMessage({ pluginMessage: { type: 'resolve-nodes-bounds', ids: missingIds } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'resolve-layer-order', areaId, areaTargetNodeId: targetNodeId, nodeIds: missingIds } }, '*');
 }
-// ══ BETA-ONLY: a11y-ordenacao-espacial (fim) ══
+// ══ BETA-ONLY: a11y-ordem-camadas-reversao (fim) ══
 
 function renderA11yGroupedList() {
   const list = document.getElementById('a11y-groups-results');
@@ -1943,20 +1949,25 @@ function renderA11yGroupedList() {
   }
 
   areas.forEach(area => {
-    const areaSpecs = _a11ySortSpecsSpatially( // BETA-ONLY: a11y-ordenacao-espacial
-      specs.filter(s => s.a11yAreaId === area.id)
-    );
+    const areaSpecsRaw = specs.filter(s => s.a11yAreaId === area.id);
+    const areaSpecs = _a11ySortSpecsByLayerOrder(areaSpecsRaw, area.id); // BETA-ONLY: a11y-ordem-camadas-reversao
     const areaLi = _a11yAreaAccordionEl(area, areaSpecs);
     list.appendChild(areaLi);
     // BETA-ONLY: a11y-ordem-tabulacao-por-area — o <ul> nasce vazio no
     // template de _a11yAreaAccordionEl; preenche agora que já está no DOM.
     const uid = `a11y-area-${area.originalIndex}`;
     _renderTabOrderListForArea(area.id, document.getElementById(`tab-order-list-${uid}`));
+    _a11yQueueLayerOrderResolution(area.id, area.targetNodeId, areaSpecsRaw); // BETA-ONLY: a11y-ordem-camadas-reversao
   });
 
-  const semArea = _a11ySortSpecsSpatially( // BETA-ONLY: a11y-ordenacao-espacial
-    specs.filter(s => !s.a11yAreaId || !areas.some(a => a.id === s.a11yAreaId))
-  );
+  // BETA-ONLY: a11y-ordem-camadas-reversao — o bucket "Sem área" (specs sem
+  // a11yAreaId válido) não tem uma área real pra escopar a árvore/DFS, então
+  // mantém o fallback alfabético por tag (letter), sem consulta de ordem de
+  // camadas.
+  const semArea = specs
+    .filter(s => !s.a11yAreaId || !areas.some(a => a.id === s.a11yAreaId))
+    .slice()
+    .sort((a, b) => String(a.letter || '').localeCompare(String(b.letter || '')));
   // BETA-ONLY: a11y-ordem-tabulacao-por-area — itens legados sem a11yAreaId
   // válido (área inexistente/excluída) também entram no bucket "Sem área".
   const semAreaTabItems = _currentTabOrderItems('__sem_area__');
@@ -1970,7 +1981,6 @@ function renderA11yGroupedList() {
 
   _refreshIcons();
   _setupA11ySearchBar(); // BETA-ONLY: specs-busca-filtro
-  _a11yQueueBoundsResolution(specs); // BETA-ONLY: a11y-ordenacao-espacial
 }
 window.renderA11yGroupedList = renderA11yGroupedList;
 

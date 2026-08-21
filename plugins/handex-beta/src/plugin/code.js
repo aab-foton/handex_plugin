@@ -5891,25 +5891,18 @@ figma.ui.onmessage = async (msg) => {
         return;
       }
 
-      // BETA-ONLY: a11y-fixes-pos-teste — ordem de tabulação por posição
-      // espacial. `collected` nasce na ordem de camadas/z-order do Figma
-      // (ordem de `n.children`), nunca na ordem de leitura visual real. Reordena
-      // por fluxo de leitura ocidental (esquerda→direita na mesma "linha",
-      // depois cima→baixo entre linhas) ANTES de numerar — equivalente ao
-      // comparador já usado no FRONTEND para a listagem de specs
-      // (_a11ySortSpecsSpatially/A11Y_SPATIAL_ROW_THRESHOLD em accessibility.js,
-      // sub-feature a11y-ordenacao-espacial). Mesma tolerância de 24px pra
-      // "mesma linha", pra manter os dois comportamentos consistentes.
-      const TAB_ORDER_SPATIAL_ROW_THRESHOLD = 24;
-      collected.sort((a, b) => {
-        const boundsA = a.absoluteBoundingBox;
-        const boundsB = b.absoluteBoundingBox;
-        if (!boundsA || !boundsB) return 0;
-        if (Math.abs(boundsA.y - boundsB.y) > TAB_ORDER_SPATIAL_ROW_THRESHOLD) {
-          return boundsA.y - boundsB.y;
-        }
-        return boundsA.x - boundsB.x;
-      });
+      // BETA-ONLY: a11y-ordem-camadas-reversao — a ordenação espacial por
+      // posição x/y (sub-feature a11y-fixes-pos-teste) foi REVERTIDA a pedido
+      // do designer: um Header, sendo literalmente a primeira camada da
+      // árvore, nascia no FINAL da listagem por causa da heurística de
+      // linha/coluna. Decisão confirmada: a árvore de camadas do Figma
+      // (painel Layers) é a fonte de verdade estrutural do documento — se
+      // algo aparece fora de ordem ali mas correto visualmente, é sinal de
+      // que o próprio arquivo Figma está desorganizado, e cabe ao designer
+      // reorganizar a árvore, não ao plugin compensar com heurística
+      // espacial. `collected` já nasce na ordem de camadas/DFS (mesma ordem
+      // que `_walk` percorre `n.children`, que é a mesma ordem do painel
+      // Layers) — não precisa de nenhum sort adicional.
 
       // BETA-ONLY: a11y-tabordem-copia-frame — items agora é só a lista de
       // candidatos {nodeId, nodeName}, na ordem espacial já calculada acima.
@@ -6638,27 +6631,42 @@ figma.ui.onmessage = async (msg) => {
   }
   // ══ BETA-ONLY: flows-mini-mapa-conector-criacao (fim — resync-all-flows) ══
 
-  // ══ BETA-ONLY: a11y-ordenacao-espacial (início) ══
-  // Consulta pura de posição no canvas — usada pela listagem agrupada de
-  // a11y (renderA11yGroupedList, accessibility.js) pra ordenar specs por
-  // posição de leitura real (x/y) em vez da tag alfabética de criação. Sem
-  // efeito colateral (não seleciona, não notifica); resolve tudo em paralelo.
-  if (msg.type === "resolve-nodes-bounds") {
-    const ids = Array.isArray(msg.ids) ? msg.ids : [];
-    const bounds = {};
-    await Promise.all(ids.map(async (id) => {
-      try {
-        const node = await figma.getNodeByIdAsync(id);
-        bounds[id] = (node && node.absoluteBoundingBox)
-          ? { x: node.absoluteBoundingBox.x, y: node.absoluteBoundingBox.y }
-          : null;
-      } catch (e) {
-        bounds[id] = null;
+  // ══ BETA-ONLY: a11y-ordem-camadas-reversao (início) ══
+  // Substitui a consulta de posição x/y (sub-feature a11y-ordenacao-espacial,
+  // REVERTIDA) — usada pela listagem agrupada de a11y (renderA11yGroupedList,
+  // accessibility.js) pra ordenar specs pela ordem de camadas real da árvore
+  // (painel Layers), escopada à Área Marcada de cada grupo (o índice de
+  // visita só faz sentido dentro da árvore de uma mesma área). Percorre a
+  // partir de `areaTargetNodeId` em DFS — mesmo algoritmo `_walk` de
+  // generate-tab-order-from-layers, mas sem o filtro de interatividade
+  // (aqui queremos o índice de QUALQUER node, não só elementos focáveis).
+  // Sem efeito colateral (não seleciona, não notifica).
+  if (msg.type === "resolve-layer-order") {
+    (async () => {
+      const areaId = msg.areaId; // id lógico da área (a11yAreas), usado pelo front pra indexar o cache
+      const areaTargetNodeId = msg.areaTargetNodeId; // node real no canvas, usado aqui pra percorrer a árvore
+      const wantedIds = new Set(Array.isArray(msg.nodeIds) ? msg.nodeIds : []);
+      const order = {};
+      const root = areaTargetNodeId ? await figma.getNodeByIdAsync(areaTargetNodeId) : null;
+      if (root) {
+        let visitIndex = 0;
+        async function _walkLayerOrder(n) {
+          const children = n.children || [];
+          for (const child of children) {
+            if (child.visible === false) continue;
+            if (wantedIds.has(child.id) && !(child.id in order)) {
+              order[child.id] = visitIndex;
+            }
+            visitIndex++;
+            await _walkLayerOrder(child);
+          }
+        }
+        await _walkLayerOrder(root);
       }
-    }));
-    figma.ui.postMessage({ type: "nodes-bounds-resolved", bounds });
+      figma.ui.postMessage({ type: "layer-order-resolved", areaId, areaTargetNodeId, order });
+    })();
   }
-  // ══ BETA-ONLY: a11y-ordenacao-espacial (fim) ══
+  // ══ BETA-ONLY: a11y-ordem-camadas-reversao (fim) ══
 
   if (msg.type === "create-legend") {
     (async () => {

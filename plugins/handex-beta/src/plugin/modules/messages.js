@@ -664,12 +664,21 @@
       }
       // ══ BETA-ONLY: flows-mini-mapa-conector-criacao (fim) ══════════════
 
-      // BETA-ONLY: a11y-ordenacao-espacial — resposta de resolve-nodes-bounds
-      // (code.js), disparada por _a11yQueueBoundsResolution (accessibility.js).
-      // Só mescla no cache em memória e re-renderiza a listagem agrupada;
-      // sem persistência em handoffData/storage.
-      if (msg.type === 'nodes-bounds-resolved') {
-        window._a11yNodeBoundsCache = Object.assign(window._a11yNodeBoundsCache || {}, msg.bounds || {});
+      // BETA-ONLY: a11y-ordem-camadas-reversao — resposta de resolve-layer-order
+      // (code.js), disparada por _a11yQueueLayerOrderResolution (accessibility.js).
+      // Substitui a antiga resposta nodes-bounds-resolved (sub-feature
+      // a11y-ordenacao-espacial, REVERTIDA). Só mescla no cache em memória
+      // (escopado por área) e re-renderiza a listagem agrupada; sem
+      // persistência em handoffData/storage.
+      if (msg.type === 'layer-order-resolved') {
+        window._a11yLayerOrderCache = window._a11yLayerOrderCache || {};
+        const areaId = msg.areaId;
+        if (areaId) {
+          window._a11yLayerOrderCache[areaId] = Object.assign(
+            window._a11yLayerOrderCache[areaId] || {},
+            msg.order || {}
+          );
+        }
         if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
       }
 
