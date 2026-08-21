@@ -1418,6 +1418,21 @@
         <div id="a11y-batch-summary-groups" class="space-y-1.5 mb-4"></div>
 
         <p id="a11y-batch-summary-skipped-notice" class="hidden text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl px-3 py-2 mb-4 leading-relaxed"></p>
+
+        <!-- BETA-ONLY: a11y-aviso-titulo-sem-token — bloco de avisos, visualmente
+             separado da lista de grupos elegíveis ao lote (não gera spec, só
+             sinaliza candidato a título sem token DSC vinculado). Fica oculto
+             (via classList 'hidden' no JS) quando não há nenhum candidato. -->
+        <div id="a11y-token-review-block" class="hidden mb-1">
+          <div class="flex items-center gap-1.5 mb-2">
+            <i data-lucide="link-2-off" class="w-3.5 h-3.5 text-amber-500" aria-hidden="true"></i>
+            <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Possíveis títulos sem token DSC</p>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-dark-muted mb-2 leading-relaxed">
+            Estes textos podem ser títulos de página, mas não têm nenhum estilo do DSC vinculado — por isso não entram na detecção automática. Vincule um Text Style do DSC no Figma e escaneie de novo pra gerar a sugestão de "Nível de Título" automaticamente.
+          </p>
+          <div id="a11y-token-review-list" class="space-y-1.5"></div>
+        </div>
       </div>
       <div class="p-4 border-t border-gray-100 dark:border-dark-line shrink-0">
         <button id="btn-a11y-batch-confirm" onclick="confirmA11yBatchGenerate()"

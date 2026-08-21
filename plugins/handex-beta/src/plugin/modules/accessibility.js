@@ -2145,15 +2145,42 @@ window.closeA11yPostAreaDetectModal = closeA11yPostAreaDetectModal;
 // (messages.js, handler scan-result) — ver ambos os pontos de chamada.
 function _collectA11yDetections(data) {
   if (!data) return [];
+  // BETA-ONLY: fix-ordem-tags-lote-a11y
+  // Cada bucket (components/icons/typography/vectors/images) já chega do
+  // backend ordenado por `formatMap` (conformidade + alfabético, ver code.js)
+  // — correto pro Scan de Tokens, mas irrelevante aqui: a Detecção
+  // Automática de a11y precisa da ordem estrutural real da árvore de
+  // camadas pra que as tags sequenciais (A, B, C...) atribuídas no lote
+  // (confirmA11yBatchGenerate) batam com a ordem em que os elementos
+  // aparecem na página. `treeOrder` (índice de visita DFS pré-order anexado
+  // por `extractSpecs`/`addElement` em code.js) sobrevive ao `formatMap`
+  // (spread genérico). Ordenamos por ele como último passo de preparação da
+  // lista — itens sem treeOrder (não deveria acontecer, mas por segurança)
+  // vão pro fim via `?? Infinity`.
   return [
     ...(data.components || []),
     ...(data.icons || []),
     ...(data.typography || []),
     ...(data.vectors || []),
     ...(data.images || []),
-  ].filter(c => c && c.dscComponentMatch);
+  ]
+    .filter(c => c && c.dscComponentMatch)
+    .sort((a, b) => (a.treeOrder ?? Infinity) - (b.treeOrder ?? Infinity));
 }
 window._collectA11yDetections = _collectA11yDetections;
+
+// BETA-ONLY: a11y-aviso-titulo-sem-token
+// Coleta separada dos itens de category === 'typography' que NÃO viraram
+// sugestão real (dscComponentMatch continua null/undefined — ver
+// _resolveTypographyA11yMatch em code.js) mas foram marcados pelo backend
+// (needsA11yTokenReview) por não terem token DSC de tipografia vinculado.
+// Nunca se mistura com _collectA11yDetections (que exige dscComponentMatch
+// truthy) — são candidatos de aviso, não sugestões elegíveis pro lote.
+function _collectA11yTokenReviewCandidates(data) {
+  if (!data) return [];
+  return (data.typography || []).filter(c => c && c.needsA11yTokenReview === true && !c.dscComponentMatch);
+}
+window._collectA11yTokenReviewCandidates = _collectA11yTokenReviewCandidates;
 
 // Dispara o mesmo scan de conformidade DSC usado pela aba "Escanear Tokens"
 // (postMessage scan-frame), mas escopado ao targetNodeId da área (não mais ao
@@ -2197,17 +2224,28 @@ window.runA11yPostAreaDetection = runA11yPostAreaDetection;
 // extra entre marcar a área e criar as specs. Agora, ao terminar a varredura,
 // pula direto pro modal de resumo do lote (openA11yBatchSummaryModal) quando
 // há algo elegível, ou fecha o modal com um toast informativo quando não há.
-function handleA11yPostAreaDetectionResult(detections) {
+// BETA-ONLY: a11y-aviso-titulo-sem-token — segundo parâmetro opcional
+// (tokenReviewCandidates) com os TEXT que parecem título mas não têm token
+// DSC vinculado (ver _collectA11yTokenReviewCandidates). Só ganham um bloco
+// de aviso no modal de resumo do lote — nunca entram no lote em si nem geram
+// spec sozinhos, por isso não afetam o cálculo de `eligible` abaixo.
+function handleA11yPostAreaDetectionResult(detections, tokenReviewCandidates) {
   window._a11yLooseDetections = detections;
+  window._a11yTokenReviewCandidates = tokenReviewCandidates || [];
 
   const eligible = _filterA11yBatchEligible(detections);
+  const hasTokenReviewCandidates = window._a11yTokenReviewCandidates.length > 0;
 
-  if (!detections || detections.length === 0 || eligible.length === 0) {
+  if ((!detections || detections.length === 0 || eligible.length === 0) && !hasTokenReviewCandidates) {
     closeA11yPostAreaDetectModal();
     showToast('Nenhum componente do DSC reconhecido nessa área — anote manualmente.');
     return;
   }
 
+  // BETA-ONLY: a11y-aviso-titulo-sem-token — quando não há nada elegível pro
+  // lote mas existe pelo menos um candidato de aviso, ainda vale abrir o
+  // modal de resumo (só pra mostrar o bloco de aviso) em vez de fechar tudo
+  // com o toast de "nenhum componente reconhecido", que seria enganoso.
   // Abre o resumo do lote ANTES de fechar o modal de detecção — precisa que
   // window._a11yPendingDetectionArea ainda esteja setado pra pré-selecionar a
   // área de origem no <select> (closeA11yPostAreaDetectModal zera essa
@@ -2279,10 +2317,15 @@ function openA11yBatchSummaryModal() {
   const allDetections = _currentA11yDetectionsSource();
   const detections = _filterA11yBatchEligible(allDetections);
   const skippedCount = allDetections.length - detections.length;
-  if (detections.length === 0) return;
+  // BETA-ONLY: a11y-aviso-titulo-sem-token — antes fechava o modal direto
+  // quando não havia nada elegível pro lote. Agora só fecha se também não
+  // houver nenhum candidato de aviso (o bloco de aviso sozinho já justifica
+  // abrir o resumo, mesmo sem nada pra criar em lote).
+  const tokenReviewCandidates = window._a11yTokenReviewCandidates || [];
+  if (detections.length === 0 && tokenReviewCandidates.length === 0) return;
 
   const areas = _allA11yAreas();
-  if (areas.length === 0) {
+  if (detections.length > 0 && areas.length === 0) {
     showToast('Marque uma área da tela antes de gerar o handoff automatizado.');
     return;
   }
@@ -2339,9 +2382,13 @@ function openA11yBatchSummaryModal() {
     }).join('');
   }
 
+  // BETA-ONLY: a11y-aviso-titulo-sem-token — select/botão de lote só fazem
+  // sentido quando há algo elegível; no caso "só aviso" ficam ocultos/
+  // desabilitados em vez de forçar escolha de área sem propósito.
   const areaSelect = document.getElementById('a11y-batch-area-select');
   const areaWrap = document.getElementById('a11y-batch-area-wrap');
-  if (areaSelect) {
+  if (areaWrap) areaWrap.classList.toggle('hidden', detections.length === 0);
+  if (areaSelect && detections.length > 0) {
     const sortedAreas = [...areas].sort((a, b) => (a.number || 0) - (b.number || 0));
     areaSelect.innerHTML = sortedAreas.map(a => `<option value="${escapeHtml(a.id)}">${escapeHtml(String(a.number))}  ${escapeHtml(a.label)}</option>`).join('');
     // Pré-seleciona a área que originou a detecção (fluxo pós-Marcar-Área),
@@ -2358,8 +2405,9 @@ function openA11yBatchSummaryModal() {
 
   const confirmBtn = document.getElementById('btn-a11y-batch-confirm');
   if (confirmBtn) {
+    confirmBtn.classList.toggle('hidden', detections.length === 0);
     confirmBtn.textContent = `Criar ${detections.length} Especifica${detections.length === 1 ? 'ção' : 'ções'}`;
-    confirmBtn.disabled = false;
+    confirmBtn.disabled = detections.length === 0;
   }
 
   // Hoje _filterA11yBatchEligible não exclui mais nenhuma categoria (titulo/
@@ -2373,6 +2421,33 @@ function openA11yBatchSummaryModal() {
       skippedNotice.classList.remove('hidden');
     } else {
       skippedNotice.classList.add('hidden');
+    }
+  }
+
+  // BETA-ONLY: a11y-aviso-titulo-sem-token — renderiza o bloco de aviso
+  // (fica oculto se não houver nenhum candidato, ver critério em
+  // _collectA11yTokenReviewCandidates). Cada item ganha um botão de foco no
+  // canvas (focusNode, mesmo mecanismo de seleção+scroll já usado em outras
+  // listas do plugin) — nenhuma ação de criação de spec aqui.
+  const tokenReviewBlock = document.getElementById('a11y-token-review-block');
+  const tokenReviewList = document.getElementById('a11y-token-review-list');
+  if (tokenReviewBlock && tokenReviewList) {
+    if (tokenReviewCandidates.length === 0) {
+      tokenReviewBlock.classList.add('hidden');
+      tokenReviewList.innerHTML = '';
+    } else {
+      tokenReviewBlock.classList.remove('hidden');
+      tokenReviewList.innerHTML = tokenReviewCandidates.map(item => `
+        <div class="flex items-center gap-2 px-3 py-2 rounded-xl border bg-amber-50/60 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40">
+          <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true"></i>
+          <p class="flex-1 text-[11px] font-semibold text-slate-700 dark:text-white truncate" title="${escapeHtml(item.layerName || item.name || 'Elemento')}">${escapeHtml(item.layerName || item.name || 'Elemento')}</p>
+          <button type="button" onclick="focusNode('${item.nodeId}')" title="Focar no canvas" aria-label="Focar no canvas"
+            class="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors">
+            <i data-lucide="crosshair" class="w-3.5 h-3.5" aria-hidden="true"></i>
+          </button>
+        </div>
+      `).join('');
+      if (typeof _refreshIcons === 'function') _refreshIcons();
     }
   }
 

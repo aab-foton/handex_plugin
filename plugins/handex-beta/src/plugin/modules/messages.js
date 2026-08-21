@@ -153,6 +153,9 @@
         // pra handoffData.step2.specs, sujando o scan de tokens normal).
         if (_isA11yDetectionScan) {
           const detections = _collectA11yDetections(msg.data);
+          // BETA-ONLY: a11y-aviso-titulo-sem-token
+          const tokenReviewCandidates = typeof _collectA11yTokenReviewCandidates === 'function'
+            ? _collectA11yTokenReviewCandidates(msg.data) : [];
           if (targetFrameId) {
             if (targetFrameId !== activeFrameId) activeFrameId = targetFrameId;
             const frame = getFrame(targetFrameId);
@@ -162,7 +165,7 @@
               if (typeof _updateFrameAuditSubtitle === 'function') _updateFrameAuditSubtitle(targetFrameId);
             }
           }
-          if (typeof handleA11yPostAreaDetectionResult === 'function') handleA11yPostAreaDetectionResult(detections);
+          if (typeof handleA11yPostAreaDetectionResult === 'function') handleA11yPostAreaDetectionResult(detections, tokenReviewCandidates);
           saveToStorage();
           return;
         }

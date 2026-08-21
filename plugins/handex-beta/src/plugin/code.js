@@ -3864,6 +3864,17 @@ figma.ui.onmessage = async (msg) => {
       images: new Map() // BETA-ONLY: a11y-mapeamento-interativo
     };
     const frameJson = frameJsonTemplate();
+    // BETA-ONLY: fix-ordem-tags-lote-a11y
+    // Contador de visita DFS pré-order da árvore escaneada (mesma ordem de
+    // percurso de `extractSpecs`, análoga ao `visitIndex` de
+    // `resolve-layer-order`). Calculado sempre (custo desprezível de um
+    // incremento por node) e anexado a cada item como `treeOrder` — usado só
+    // pela Detecção Automática de a11y (`origin === 'a11y-detection'`, ver
+    // `_collectA11yDetections` em accessibility.js) pra corrigir a atribuição
+    // de tags sequenciais no lote, que hoje seguia a ordem de `formatMap`
+    // (conformidade + alfabético) em vez da ordem estrutural real da árvore.
+    // O Scan de Tokens normal ignora esse campo extra.
+    let _a11yTreeVisitIndex = 0;
 
     const selectedLibSlugs = Array.isArray(msg.selectedLibSlugs) && msg.selectedLibSlugs.length > 0 ? msg.selectedLibSlugs : null;
     const rawReferenceTokens = msg.referenceTokens || null;
@@ -4080,7 +4091,7 @@ figma.ui.onmessage = async (msg) => {
       return props;
     }
 
-    async function addElement(category, node, props) {
+    async function addElement(category, node, props, treeOrder) {
       // FILTRAGEM POR CATEGORIA (apenas se não for auditoria)
       if (!isAudit && allowedCategories && allowedCategories.length > 0) {
         let isAllowed = false;
@@ -4151,6 +4162,7 @@ figma.ui.onmessage = async (msg) => {
       // Não influencia isDS/score/matchedBy — só anexa dado extra ao lado, usado
       // pela Detecção Automática de a11y (aba Anotar Specs).
       let dscComponentMatch = null;
+      let needsA11yTokenReview = false; // BETA-ONLY: a11y-aviso-titulo-sem-token
       if (node.type === 'INSTANCE' && mainComp && mainComp.remote && componentKey) {
         dscComponentMatch = _resolveDscComponentA11yMatch(componentKey);
       } else if ((category === 'icons' || category === 'vectors') && !dscComponentMatch) {
@@ -4194,6 +4206,24 @@ figma.ui.onmessage = async (msg) => {
         // sugestão de "Nível de Título" para a Detecção Automática de a11y.
         // Sempre confidence 'baixa' — ver _resolveTypographyA11yMatch.
         dscComponentMatch = _resolveTypographyA11yMatch(node, _typoProp);
+
+        // BETA-ONLY: a11y-aviso-titulo-sem-token
+        // Caso relatado: TEXT que É visualmente um título de página mas não
+        // tem NENHUM sinal pra _resolveTypographyA11yMatch (nem token DSC
+        // vinculado, nem nome de camada batendo _A11Y_HEADING_NAME_REGEX) —
+        // some da Detecção Automática sem aviso nenhum. Critério adotado
+        // (documentado em MIGRATION-BETA-TO-MAIN.md): quando NADA virou
+        // sugestão real (dscComponentMatch ainda null aqui) e o texto não
+        // tem token DSC vinculado (dsElement === false, já considerando o
+        // ajuste de fonte CAIXAstd acima), marcamos needsA11yTokenReview
+        // como aviso de baixa prioridade — não afirma que É título, só que
+        // é um candidato plausível por não ter nenhuma conformidade de
+        // tipografia declarada. Não usa fontSize/posição (heurística visual
+        // nova, fora de escopo) nem duplica a regex de nome já coberta por
+        // _resolveTypographyA11yMatch.
+        if (!dscComponentMatch && dsElement === false) {
+          needsA11yTokenReview = true;
+        }
       }
       // ══ BETA-ONLY: a11y-deteccao-automatica (fim do enriquecimento do scan) ══
 
@@ -4231,10 +4261,12 @@ figma.ui.onmessage = async (msg) => {
           matchedIn: elementMatchedIn,
           matchedTokenName: elementMatchedTokenName,
           dscComponentMatch: dscComponentMatch, // BETA-ONLY: a11y-deteccao-automatica
+          needsA11yTokenReview: needsA11yTokenReview, // BETA-ONLY: a11y-aviso-titulo-sem-token
           variants: variants,
           nodeId: node.id,
           layers: new Set([name]),
-          properties: props
+          properties: props,
+          treeOrder: treeOrder // BETA-ONLY: fix-ordem-tags-lote-a11y
         };
         map.set(mapKey, itemObj);
         frameJson.elements[category].push({
@@ -4249,8 +4281,10 @@ figma.ui.onmessage = async (msg) => {
           matchedIn: elementMatchedIn,
           matchedTokenName: elementMatchedTokenName,
           dscComponentMatch: dscComponentMatch, // BETA-ONLY: a11y-deteccao-automatica
+          needsA11yTokenReview: needsA11yTokenReview, // BETA-ONLY: a11y-aviso-titulo-sem-token
           variants: variants,
-          properties: props
+          properties: props,
+          treeOrder: treeOrder // BETA-ONLY: fix-ordem-tags-lote-a11y
         });
       } else {
         const item = map.get(mapKey);
@@ -4301,7 +4335,11 @@ figma.ui.onmessage = async (msg) => {
           category = "frames";
         }
 
-        await addElement(category, n, props);
+        // BETA-ONLY: fix-ordem-tags-lote-a11y — captura o índice de visita
+        // ANTES de incrementar, na mesma ordem pré-order em que os nodes são
+        // percorridos (pai visitado antes de descer pros filhos).
+        const _treeOrder = _a11yTreeVisitIndex++;
+        await addElement(category, n, props, _treeOrder);
 
         if ('children' in n && n.children) {
           for (const child of n.children) {
