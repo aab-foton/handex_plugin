@@ -5463,6 +5463,10 @@ figma.ui.onmessage = async (msg) => {
           conector: _conector,
           targetNodeId: node.id,
           targetNodeName: node.name,
+          // BETA-ONLY: a11y-marcar-area-unificado — ecoa a escolha
+          // Automático/Manual feita no modal, decidida no frontend
+          // (confirmA11yArea). Sem lógica nova aqui, só repasse.
+          autoDetect: !!msg.autoDetect,
         }
       });
 

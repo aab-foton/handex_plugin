@@ -1948,16 +1948,17 @@ window.renderA11yAreasList = renderA11yAreasList;
 // Área (targetNodeId, já resolvido no backend em create-a11y-area) — nunca
 // mais depende de activeFrameId pra saber "o quê" escanear.
 //
-// Fluxo: a11y-area-created (messages.js) guarda o contexto pendente em
-// window._a11yPendingDetectionArea e abre #a11y-post-area-detect-modal. Um
-// único modal evolui pergunta → loading → resultado (ver estados
-// #a11y-post-area-ask/-loading/-result em modals.html), reaproveitando o
-// mesmo HTML/classes de item que a extinta renderA11yDetections desenhava —
-// só o container de destino mudou. Se activeFrameId existir (designer também
-// usa a aba Escanear Tokens), o resultado é persistido em frame.a11yDetections
-// como antes; se não existir, funciona igual mas guarda o resultado em
-// window._a11yLooseDetections (não perde a função, só não fica atrelado a
-// nenhum frame no schema salvo).
+// Fluxo (revisado — a11y-marcar-area-unificado): a11y-area-created
+// (messages.js) só chama isto quando area.autoDetect é truthy (Manual não
+// abre modal nenhum, ver messages.js). Abre #a11y-post-area-detect-modal JÁ
+// no estado de loading e dispara a varredura na sequência — a escolha
+// "Automático" feita no modal "Marcar Área" já é o consentimento do
+// designer, então não existe mais pergunta intermediária aqui (antes havia
+// um estado #a11y-post-area-ask removido do HTML). Se activeFrameId existir
+// (designer também usa a aba Escanear Tokens), o resultado é persistido em
+// frame.a11yDetections como antes; se não existir, funciona igual mas guarda
+// o resultado em window._a11yLooseDetections (não perde a função, só não
+// fica atrelado a nenhum frame no schema salvo).
 function openA11yPostAreaDetectModal(area) {
   if (!area || !area.targetNodeId) return;
   window._a11yPendingDetectionArea = {
@@ -1965,18 +1966,16 @@ function openA11yPostAreaDetectModal(area) {
     areaId: area.id,
     label: area.label,
   };
-  const ask = document.getElementById('a11y-post-area-ask');
   const loading = document.getElementById('a11y-post-area-loading');
-  const footerAsk = document.getElementById('a11y-post-area-footer-ask');
-  if (ask) ask.classList.remove('hidden');
-  if (loading) loading.classList.add('hidden');
-  if (footerAsk) footerAsk.classList.remove('hidden');
   // BETA-ONLY: a11y-fixes-pos-teste — loading no lote. Reseta o texto do
   // loading pro estado padrão de varredura (pode ter ficado "Criando
   // especificações…" de um lote anterior nesta mesma sessão do modal).
   const loadingText = loading ? loading.querySelector('p') : null;
   if (loadingText) loadingText.textContent = 'Detectando componentes…';
   openModal('a11y-post-area-detect-modal');
+  // BETA-ONLY: a11y-marcar-area-unificado — dispara a varredura imediatamente,
+  // sem esperar clique em "Detectar" (botão/estado de pergunta removidos).
+  runA11yPostAreaDetection();
 }
 window.openA11yPostAreaDetectModal = openA11yPostAreaDetectModal;
 
@@ -1986,12 +1985,17 @@ function closeA11yPostAreaDetectModal() {
 }
 window.closeA11yPostAreaDetectModal = closeA11yPostAreaDetectModal;
 
-// Agrega os 4 buckets do scan (components/icons/typography/vectors) que
-// vierem com dscComponentMatch preenchido — components/icons cobrem os 16
-// componentes reais do DSC (confidence pode ser 'alta' ou 'baixa');
+// Agrega os 5 buckets do scan (components/icons/typography/vectors/images)
+// que vierem com dscComponentMatch preenchido — components/icons cobrem os
+// 16 componentes reais do DSC (confidence pode ser 'alta' ou 'baixa');
 // typography/vectors só existem por heurística de nome de camada/estilo
 // (categorias 'titulo'/'decorativo' — ver _resolveTypographyA11yMatch/
 // _resolveDecorativeA11yMatch em code.js) e por isso vêm sempre 'baixa'.
+// BETA-ONLY: a11y-mapeamento-interativo — `images` (fills tipo IMAGE, ver
+// _resolveImageA11yMatch em code.js) faltava aqui: a categoria foi
+// adicionada ao scan mas esta função não foi atualizada junto, então
+// imagens nunca entravam na Detecção Automática mesmo já sendo capturadas
+// corretamente pelo scan de tokens. Corrigido.
 // Usado tanto no fluxo pós-Marcar-Área quanto no scan normal de Tokens
 // (messages.js, handler scan-result) — ver ambos os pontos de chamada.
 function _collectA11yDetections(data) {
@@ -2001,6 +2005,7 @@ function _collectA11yDetections(data) {
     ...(data.icons || []),
     ...(data.typography || []),
     ...(data.vectors || []),
+    ...(data.images || []),
   ].filter(c => c && c.dscComponentMatch);
 }
 window._collectA11yDetections = _collectA11yDetections;
@@ -2010,16 +2015,14 @@ window._collectA11yDetections = _collectA11yDetections;
 // frame inteiro) e com origin: 'a11y-detection' — o backend só repassa esse
 // campo de volta na resposta; é o handler scan-result (messages.js) que usa
 // esse campo pra rotear a resposta pra cá em vez do fluxo normal de tokens.
+// BETA-ONLY: a11y-marcar-area-unificado — antes chamada pelo clique no botão
+// "Detectar" do estado de pergunta (removido); agora é chamada direto por
+// openA11yPostAreaDetectModal, sem clique nenhum entre marcar a área em modo
+// Automático e a varredura começar. O modal já abre no estado de loading, não
+// precisa mais alternar visibilidade de estados aqui.
 function runA11yPostAreaDetection() {
   const pending = window._a11yPendingDetectionArea;
   if (!pending || !pending.targetNodeId) return;
-
-  const ask = document.getElementById('a11y-post-area-ask');
-  const loading = document.getElementById('a11y-post-area-loading');
-  const footerAsk = document.getElementById('a11y-post-area-footer-ask');
-  if (ask) ask.classList.add('hidden');
-  if (loading) loading.classList.remove('hidden');
-  if (footerAsk) footerAsk.classList.add('hidden');
 
   parent.postMessage({
     pluginMessage: {
@@ -2348,14 +2351,11 @@ async function confirmA11yBatchGenerate() {
   // estrutura visual do estado de loading já usado durante a varredura
   // inicial (runA11yPostAreaDetection) — só troca o texto pra não sugerir que
   // ainda está escaneando.
-  const ask = document.getElementById('a11y-post-area-ask');
+  // BETA-ONLY: a11y-marcar-area-unificado — estados #a11y-post-area-ask/
+  // -footer-ask removidos do HTML (modal só tem o estado de loading agora).
   const loading = document.getElementById('a11y-post-area-loading');
   const loadingText = loading ? loading.querySelector('p') : null;
-  const footerAsk = document.getElementById('a11y-post-area-footer-ask');
-  if (ask) ask.classList.add('hidden');
   if (loadingText) loadingText.textContent = 'Criando especificações…';
-  if (loading) loading.classList.remove('hidden');
-  if (footerAsk) footerAsk.classList.add('hidden');
   openModal('a11y-post-area-detect-modal');
 
   window._a11yExpandedAreaIds = window._a11yExpandedAreaIds || new Set();
@@ -2716,13 +2716,17 @@ function confirmA11yArea() {
   const numberInput = document.getElementById('a11y-area-number-input');
   const number = numberInput && numberInput.value ? parseInt(numberInput.value, 10) : _nextA11yAreaNumber();
   // BETA-ONLY: a11y-marcar-area (fim)
+  // BETA-ONLY: a11y-marcar-area-unificado — escolha Automático/Manual feita
+  // junto com a criação da área (default 'auto', mesmo se nada vier marcado).
+  const modeInput = document.querySelector('input[name="a11y-area-detect-mode"]:checked');
+  const autoDetect = (modeInput ? modeInput.value : 'auto') === 'auto';
   closeA11yAreaModal();
   _getA11ySelectionInfo().then(sel => {
     if (!sel || !sel.id) {
       showToast('Selecione um elemento no canvas antes de marcar a área.');
       return;
     }
-    parent.postMessage({ pluginMessage: { type: 'create-a11y-area', targetNodeId: sel.id, label, number, conector } }, '*'); // BETA-ONLY: a11y-marcar-area — payload ganhou `conector`
+    parent.postMessage({ pluginMessage: { type: 'create-a11y-area', targetNodeId: sel.id, label, number, conector, autoDetect } }, '*'); // BETA-ONLY: a11y-marcar-area-unificado — payload ganhou `autoDetect`
   });
 }
 window.confirmA11yArea = confirmA11yArea;

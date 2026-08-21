@@ -1157,6 +1157,30 @@
           <input type="text" id="a11y-area-label-input" placeholder="Ex: Home Portal DSC" maxlength="80"
             class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all" />
         </div>
+        <!-- BETA-ONLY: a11y-marcar-area-unificado — escolha Automático/Manual
+             feita junto com a criação da área (antes era um 2º modal separado
+             perguntando "Detectar?" depois de criada). Lido por
+             confirmA11yArea (accessibility.js) via
+             input[name="a11y-area-detect-mode"]:checked. Ver
+             MIGRATION-BETA-TO-MAIN.md. -->
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Como documentar esta área?</label>
+          <div class="grid grid-cols-2 gap-1.5">
+            <label class="flex flex-col items-center gap-1 p-2.5 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+              <input type="radio" name="a11y-area-detect-mode" value="auto" checked class="sr-only" />
+              <i data-lucide="radar" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
+              <span class="text-[10px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Detecção Automática</span>
+              <span class="text-[8px] text-gray-400 dark:text-dark-muted group-has-[:checked]:text-[#0070af]/70">Recomendado</span>
+            </label>
+            <label class="flex flex-col items-center gap-1 p-2.5 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+              <input type="radio" name="a11y-area-detect-mode" value="manual" class="sr-only" />
+              <i data-lucide="pencil" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
+              <span class="text-[10px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Manual</span>
+              <span class="text-[8px] text-gray-400 dark:text-dark-muted group-has-[:checked]:text-[#0070af]/70">Anotar você mesmo</span>
+            </label>
+          </div>
+          <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-1.5 ml-1 leading-relaxed">Automática varre a área em busca de componentes do DSC e já sugere as specs. Manual só cria a área — você anota as specs depois.</p>
+        </div>
         <!-- ══ BETA-ONLY: a11y-marcar-area (início) ══
              Seletor de conector + campo Número, dentro do modal pré-existente
              "Marcar Área". Depende de confirmA11yArea (accessibility.js) lendo
@@ -1213,48 +1237,36 @@
        origin: 'a11y-detection' no scan (code.js/messages.js). Ver
        MIGRATION-BETA-TO-MAIN.md, seção 4. -->
   <!-- MODAL: DETECÇÃO AUTOMÁTICA PÓS-ÁREA -->
-  <!-- Aberto logo após 'a11y-area-created' (messages.js). Um único modal que
-       evolui de pergunta → loading → resultado (ver accessibility.js:
-       openA11yPostAreaDetectModal, runA11yPostAreaDetection). Escopado ao
-       targetNodeId da área recém-marcada — não depende de activeFrameId. -->
+  <!-- BETA-ONLY: a11y-marcar-area-unificado — a escolha Automático/Manual
+       agora é feita no próprio modal "Marcar Área" (ver
+       #a11y-area-detect-mode acima), então este modal não pergunta mais nada:
+       só é aberto quando a área foi criada em modo Automático, já direto no
+       estado de loading (feedback visual de progresso da varredura e, na
+       sequência, da criação do lote — ver openA11yPostAreaDetectModal em
+       accessibility.js). Sem footer, sem fechar manual: é transitório. -->
   <div id="a11y-post-area-detect-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-post-area-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeA11yPostAreaDetectModal()" aria-hidden="true"></div>
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true"></div>
     <div class="relative w-full max-w-sm max-h-[85vh] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
       <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
         <h3 id="a11y-post-area-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
           <i data-lucide="radar" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Detecção Automática
         </h3>
-        <button onclick="closeA11yPostAreaDetectModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
-          <i data-lucide="x" class="w-4 h-4"></i>
-        </button>
       </div>
 
-      <!-- Estado 1: pergunta -->
-      <div id="a11y-post-area-ask" class="p-6 space-y-4">
-        <p class="text-[12px] text-slate-600 dark:text-dark-muted leading-relaxed">
-          Área marcada! Quer que o plugin tente reconhecer automaticamente os componentes do DSC dentro dela?
-        </p>
-      </div>
-
-      <!-- Estado 2: carregando -->
-      <div id="a11y-post-area-loading" class="hidden p-6 flex flex-col items-center gap-3">
+      <!-- Único estado: carregando (varredura, depois criação do lote) -->
+      <div id="a11y-post-area-loading" class="p-6 flex flex-col items-center gap-3">
         <i data-lucide="loader-2" class="w-6 h-6 text-[#0070af] animate-spin" aria-hidden="true"></i>
         <p class="text-[11px] text-slate-500 dark:text-dark-muted">Detectando componentes…</p>
       </div>
 
-      <!-- BETA-ONLY: a11y-pular-listagem-deteccao — Estado 3 (listagem de
-           resultado, #a11y-post-area-result) removido: já não tinha ação
+      <!-- BETA-ONLY: a11y-pular-listagem-deteccao — Estado de listagem de
+           resultado (#a11y-post-area-result) removido: já não tinha ação
            individual nenhuma (ver a11y-injecao-em-massa), então era só um
            passo extra entre marcar a área e criar as specs. Ao terminar a
            varredura (handleA11yPostAreaDetectionResult, accessibility.js), o
            fluxo agora pula direto pro modal de resumo do lote
            (#a11y-batch-summary-modal) ou fecha este modal com um toast, sem
            passar por um estado visual intermediário aqui. -->
-
-      <div id="a11y-post-area-footer-ask" class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2 shrink-0">
-        <button onclick="closeA11yPostAreaDetectModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Agora não</button>
-        <button onclick="runA11yPostAreaDetection()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0070af] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Detectar</button>
-      </div>
     </div>
   </div>
   <!-- ══ BETA-ONLY: a11y-deteccao-automatica (fim) ══ -->

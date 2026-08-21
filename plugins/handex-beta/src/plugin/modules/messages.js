@@ -519,12 +519,18 @@
           if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
           saveSpecsToStorage();
           if (window._toastSaved) _toastSaved();
-          // BETA-ONLY: a11y-deteccao-automatica — pergunta se quer detectar
-          // componentes DSC automaticamente já escopado a esta área (ver
-          // openA11yPostAreaDetectModal em accessibility.js) — substitui o
-          // antigo botão solto "Detectar Componentes" que dependia de
-          // activeFrameId. Ver MIGRATION-BETA-TO-MAIN.md.
-          if (typeof openA11yPostAreaDetectModal === 'function') openA11yPostAreaDetectModal(area);
+          // BETA-ONLY: a11y-marcar-area-unificado — a escolha Automático/
+          // Manual agora é feita no próprio modal "Marcar Área" (campo
+          // autoDetect, ecoado pelo backend em create-a11y-area). Só dispara
+          // a detecção (abre modal + varre, sem pergunta intermediária) se o
+          // designer escolheu Automático; em Manual não abre modal nenhum —
+          // a área já foi criada/expandida/renderizada acima, é só isso
+          // mesmo (equivalente ao antigo "Agora não"). Ver
+          // openA11yPostAreaDetectModal em accessibility.js e
+          // MIGRATION-BETA-TO-MAIN.md.
+          if (area.autoDetect && typeof openA11yPostAreaDetectModal === 'function') {
+            openA11yPostAreaDetectModal(area);
+          }
         }
       }
 
