@@ -842,6 +842,23 @@ Não usa fontSize, posição na árvore ou qualquer heurística visual nova (ava
 
 ---
 
+## `fix-ordem-arvore-scan-tokens`
+
+**O que é.** Extensão direta da decisão já tomada em `fix-ordem-tags-lote-a11y` (item acima), agora aplicada ao próprio **Scan de Tokens normal** (aba "Escanear Tokens", handler `scan-frame`), não só ao caminho de a11y. `formatMap` (`code.js`) ordenava a lista de elementos escaneados primeiro por conformidade (`isDS: true` no topo, desviantes depois) e alfabeticamente como desempate. O designer pediu explicitamente que essa ordenação saia por completo, substituída por ordem real de posição na árvore de camadas (`treeOrder`) — conformes e desviantes ficam intercalados, na ordem em que aparecem na tela/árvore, sem agrupamento por conformidade. Confirmado explicitamente: "ordem de árvore substitui tudo, mistura conforme/desviante".
+
+**Implementação.** `.sort()` de `formatMap` trocado de `(a.isDS && !b.isDS) ? -1 : ... : a.name.localeCompare(b.name)` para `(a.treeOrder ?? Infinity) - (b.treeOrder ?? Infinity)` — mesmo campo e mesmo fallback (`?? Infinity`) já usados em `_collectA11yDetections` (`accessibility.js`), por consistência entre os dois lugares. Nenhuma mudança adicional foi necessária: `treeOrder` já era calculado incondicionalmente para todo scan (ver decisão de design documentada em `fix-ordem-tags-lote-a11y` — "calcular sempre, não condicionalmente"), então o Scan de Tokens normal já recebia o campo no payload, só não o usava.
+
+**Investigação feita antes de implementar (3 pontos confirmados por leitura, não assumidos).**
+1. **Frontend não reordena de novo.** `messages.js` (handler `scan-result`) repassa `msg.data` direto para `renderSpecs(msg.data, targetFrameId)` sem nenhum `.sort()` intermediário. Dentro de `specifications.js`, `renderSpecs` → `createAccordionSection` itera `section.items.map(...)` na ordem recebida do backend — nenhum `.sort()` sobre os itens do scan. Os únicos `.sort()` existentes em `specifications.js` (linhas ~593 e ~1932) ordenam chaves de agrupamento por *letra de tag* de specs manuais anotadas pelo designer — feature completamente diferente, não tocada.
+2. **Não existe agrupamento estrutural em seções por conformidade.** As seções de `renderSpecs` são só por TIPO (Componentes/Ícones/Tipografia/Vetores), cada uma com uma grid única contendo itens conformes e desviantes já misturados — o status vira só cor/ícone por item em `createSpecItem` (badge "EM CONFORMIDADE"/"FORA DO PADRÃO"/"NECESSITA REVISÃO"), nunca uma seção HTML separada. Logo a mudança de ordenação no backend tem efeito visível direto, sem necessidade de preservar nenhuma separação estrutural por conformidade.
+3. **Contagens/badges não dependem de ordem.** `issuesCount`/`adjustmentsCount` (chips de "erro"/"revisão" no cabeçalho de cada seção) são somados via `forEach` sobre `section.items`, e o filtro por status (`toggleStatusFilter`/`filterSpecItems`) atua via atributos `data-status`/`data-name` por item — nenhum dos dois é sensível à posição no array.
+
+**Arquivos alterados:** `src/plugin/code.js` (`.sort()` de `formatMap`, dentro do handler `scan-frame`). Nenhum arquivo de frontend precisou de alteração.
+
+**Risco de migração — MAIOR que o de `fix-ordem-tags-lote-a11y`.** Diferente daquela correção (que só afetava o fluxo de Detecção Automática de a11y, feature nova/beta), esta muda **comportamento visível de uma ferramenta já em produção usada por todos os usuários da aba "Escanear Tokens"**, não só quem usa a11y. Quem já se acostumou a ver "conformes primeiro, depois desviantes, alfabético" no resultado do scan verá uma lista reordenada por posição na tela. Não há flag de opt-in/opt-out — é substituição total do critério de ordenação. Testar manualmente no Figma em ao menos um frame com mistura real de itens conformes/desviantes antes de dar como concluído, e considerar comunicar a mudança aos demais usuários do plugin (não é regressão, mas é diferença perceptível de UX que pode gerar estranhamento).
+
+---
+
 ## Ordem de migração recomendada
 
 1. **Dados/refs primeiro:** `refs/design-acessivel-component-properties.json`, `refs/dsc-component-a11y-mapping.json` — sem eles nada do bloco de a11y funciona.

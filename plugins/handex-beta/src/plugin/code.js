@@ -4398,11 +4398,10 @@ figma.ui.onmessage = async (msg) => {
           newItem.layers = Array.from(item.layers);
           return newItem;
         })
-        .sort((a, b) => {
-          if (a.isDS && !b.isDS) return -1;
-          if (!a.isDS && b.isDS) return 1;
-          return a.name.localeCompare(b.name);
-        });
+        // BETA-ONLY: fix-ordem-arvore-scan-tokens — ordena só por posição real na árvore
+        // de camadas (mesmo campo/fallback usado em accessibility.js/_collectA11yDetections),
+        // substituindo a ordenação anterior por conformidade+alfabética.
+        .sort((a, b) => (a.treeOrder ?? Infinity) - (b.treeOrder ?? Infinity));
     };
 
     figma.ui.postMessage({
