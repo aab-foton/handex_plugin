@@ -748,6 +748,40 @@ Novo modal `#a11y-tab-order-review-modal` — segue o padrão visual dos demais 
 
 ---
 
+## `fix-toast-generico-a11y-lote`
+
+**O que é.** Bug de UX confirmado pelo designer com captura de tela: durante a Detecção Automática (lote), cada spec de a11y criada disparava o toast genérico "Especificação criada — arraste para posicionar. Clique em Concluir quando pronto." — texto que não se aplica a specs de a11y (elas nascem `locked: true`, sem fluxo de arrastar/Concluir, ver `messages.js` handler `spec-created`) e que, em lote, ainda repetia N vezes em sequência competindo com o resumo único já mostrado ao final (`confirmA11yBatchGenerate`, `accessibility.js`).
+
+**Correção — dois problemas, duas mudanças independentes.**
+
+1. **Texto diferenciado por `opts.a11yType`** (handler `create-unified-spec`, `code.js`): o `else` genérico ("arraste para posicionar... Concluir") agora só dispara quando a spec **não** é de a11y. Specs de a11y sem fallback ganham `figma.notify("Especificação de acessibilidade criada.")`. O branch do fallback ESPERADO (`_isExpectedFallback`, card desenhado sem componente real catalogado) não mudou de texto.
+2. **`opts.silent`** — novo campo, setado como `true` só no payload montado por `confirmA11yBatchGenerate` (`accessibility.js`, loop sequencial de `_createA11ySpecAndWait`). O fluxo manual (`confirmA11ySpec`, uma spec por vez) não seta esse campo, então continua notificando normalmente. No backend, a guarda `else if (!opts.silent)` pula o `figma.notify` do caminho feliz quando `silent` é truthy.
+
+**Decisão tomada sobre o toast de erro do fallback (`_isExpectedFallback`):** **não respeita `opts.silent`** — continua notificando item a item mesmo dentro do lote. Justificativa: `silent` existe pra suprimir o ruído do caso feliz repetitivo (N specs criadas com sucesso, N toasts idênticos), não pra esconder problemas reais. O fallback esperado sinaliza que aquela variação específica não tem componente DSC real catalogado — informação acionável por item (o designer precisa saber quais cards do lote vieram "desenhados" em vez de instanciados de verdade), diferente do resumo final genérico que não distingue isso.
+
+**Arquivos alterados:** `src/plugin/code.js` (handler `create-unified-spec`), `src/plugin/modules/accessibility.js` (`confirmA11yBatchGenerate`). Também corrigido, de passagem, um comentário com barra invertida solta (`\ BETA-ONLY:` em vez de `// BETA-ONLY:`) no mesmo trecho de `code.js` — não alterava comportamento, só poluía a leitura do diff.
+
+**Risco de migração:** baixo — mudança aditiva e localizada (novo campo opcional + branch de texto), não altera o fluxo de criação de spec em si, só o conteúdo/ocorrência do toast.
+
+---
+
+## `a11y-ocultar-grupo-area`
+
+**O que é.** Botão novo no cabeçalho de cada card de Área Marcada (`_a11yAreaAccordionEl`) que oculta/mostra TUDO daquela área no canvas de uma vez só: as specs das 5 categorias de leitor de tela e os itens de Ordem de Tabulação da área (a cópia separada do frame, ver `a11y-tabordem-copia-frame`) — sem distinguir por tipo. Não é uma reintrodução do switch por TIPO removido em `a11y-switch-modo-visualizacao` (item 24): aqui não existe conceito de "mostrar só specs" ou "só tab order", é tudo junto ou nada.
+
+**Implementação.**
+- **Frontend (`accessibility.js`):** `window._a11yAreaHiddenIds` (Set de `areaId`, estado efêmero em memória, não persiste entre sessões). `toggleAreaGroupVisibility(areaId)` inverte a presença no Set, itera `a11ySpecs.filter(s => s.a11yAreaId === areaId && s.id)` atualizando `spec.visible` e disparando `hide-node`/`show-node` (handlers singulares já existentes, mesmo padrão de `toggleA11ySpecVisibility`, em loop — não um handler de lote novo) e dispara `toggle-tab-order-copy-visibility` pro backend cobrir a cópia de Ordem de Tabulação. Chama `saveToStorage()` (mesma função usada por `toggleA11ySpecVisibility`) e `renderA11yGroupedList()` ao final.
+- **Backend (`code.js`), handler `toggle-tab-order-copy-visibility`:** localiza o frame clonado por `getPluginData('handexTabOrderCopyForArea') === areaId` em `figma.currentPage.children` (mesmo padrão de busca de `delete-tab-order-copy-for-area`/`start-tab-order-copy`) e seta `.visible` nele — ocultar o frame clonado inteiro já esconde todos os selos dentro dele. Se a área nunca gerou cópia, não encontra nada e não faz nada; fire-and-forget, sem resposta ao frontend.
+- **HTML:** botão de olho (`eye`/`eye-off`, condicionado a `window._a11yAreaHiddenIds.has(area.id)`) inserido entre "Focar" e "Remover" no cabeçalho do card — os três afetam a área como um todo, diferente de "Nova spec" que cria conteúdo. Mesma classe visual dos outros três botões (`w-6 h-6 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0`).
+
+**Relação com `a11y-switch-modo-visualizacao` (item 24).** Aquele switch de 3 posições (Specs/Tabulação/Ambos) foi removido nesta mesma sessão antes desta sub-feature ser implementada (ver comentário em `accessibility.js` logo após `toggleA11ySpecVisibility`) — motivo: com a Ordem de Tabulação vivendo numa cópia separada do frame desde `a11y-tabordem-copia-frame`, specs e tab order nunca mais competem visualmente no mesmo canvas, então alternar por TIPO deixou de fazer sentido. Este botão não reintroduz aquele controle; é um mecanismo novo e mais simples (liga/desliga tudo da área) que não depende da distinção specs/tab order em nenhum momento.
+
+**Arquivos alterados:** `src/plugin/modules/accessibility.js` (estado `_a11yAreaHiddenIds`, função `toggleAreaGroupVisibility`, botão em `_a11yAreaAccordionEl`), `src/plugin/code.js` (handler `toggle-tab-order-copy-visibility`).
+
+**Risco de migração:** baixo — aditivo, não toca em nenhum handler existente; único pré-requisito é `a11y-tabordem-copia-frame` (item 26) já estar migrado, senão o handler novo simplesmente nunca encontra nada pra ocultar (degrada bem, mas a mensagem "oculta a área inteira" fica incompleta sem a cópia).
+
+---
+
 ## Ordem de migração recomendada
 
 1. **Dados/refs primeiro:** `refs/design-acessivel-component-properties.json`, `refs/dsc-component-a11y-mapping.json` — sem eles nada do bloco de a11y funciona.

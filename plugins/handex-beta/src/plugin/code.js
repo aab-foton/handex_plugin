@@ -5409,10 +5409,26 @@ figma.ui.onmessage = async (msg) => {
       // segundos, confirma a hipótese de atraso assíncrono (não causalidade
       // com o clique) — ver comentário no topo do handler create-unified-spec.
       console.log('[fantasma-v3] figma.notify disparado', Date.now() - _t0, 'ms após a mensagem create-unified-spec ter chegado');
+      // BETA-ONLY: fix-toast-generico-a11y-lote — opts.silent (enviado só pelo
+      // lote automático, ver confirmA11yBatchGenerate em accessibility.js)
+      // suprime o toast do caso feliz repetitivo (uma spec de cada vez, N
+      // vezes em sequência), que já tem um resumo único no fim do lote
+      // (showToast no frontend). O fallback ESPERADO continua notificando
+      // mesmo em modo silencioso: é sinal de que aquela variação específica
+      // não teve componente real catalogado — informação relevante por item,
+      // não ruído do caminho feliz, e o designer precisa saber quais specs do
+      // lote vieram com card desenhado em vez de componente real.
       if (opts.a11yType && _isExpectedFallback) {
         figma.notify(`Especificação criada com card desenhado (sem componente real catalogado para esta variação: ${_a11yImportFailReason}). Arraste para posicionar.`);
-      } else {
-        figma.notify("Especificação criada — arraste para posicionar. Clique em Concluir quando pronto.");
+      } else if (!opts.silent) {
+        if (opts.a11yType) {
+          // Specs de A11y nascem BLOQUEADAS (locked: true), sem fluxo de
+          // arrastar/Concluir — ver comentário em messages.js (handler
+          // spec-created). O texto genérico abaixo não se aplica a elas.
+          figma.notify("Especificação de acessibilidade criada.");
+        } else {
+          figma.notify("Especificação criada — arraste para posicionar. Clique em Concluir quando pronto.");
+        }
       }
     })();
   }
@@ -6195,6 +6211,24 @@ figma.ui.onmessage = async (msg) => {
       try {
         if (sibling.getPluginData && sibling.getPluginData('handexTabOrderCopyForArea') === msg.areaId) {
           sibling.remove();
+        }
+      } catch (e) { }
+    }
+  }
+  // BETA-ONLY: a11y-ocultar-grupo-area — "Ocultar/Mostrar toda a área"
+  // (toggleAreaGroupVisibility, accessibility.js) cobre também a cópia de
+  // Ordem de Tabulação, que vive como um FRAME irmão solto em
+  // figma.currentPage (nunca dentro do specGroup das specs). Ocultar o
+  // frame clonado inteiro já esconde os selos dentro dele de uma vez, sem
+  // precisar iterar item por item. Localiza só por pluginData
+  // (handexTabOrderCopyForArea), mesmo padrão dos handlers acima — se a
+  // área nunca gerou cópia, simplesmente não encontra nada e não faz nada
+  // (fire-and-forget, sem resposta ao frontend).
+  if (msg.type === "toggle-tab-order-copy-visibility") {
+    for (const sibling of figma.currentPage.children) {
+      try {
+        if (sibling.getPluginData && sibling.getPluginData('handexTabOrderCopyForArea') === msg.areaId) {
+          sibling.visible = !!msg.visible;
         }
       } catch (e) { }
     }

@@ -1770,6 +1770,16 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
         class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
         <i data-lucide="locate" class="w-3.5 h-3.5"></i>
       </button>
+      <!-- BETA-ONLY: a11y-ocultar-grupo-area — oculta/mostra TUDO da área de
+           uma vez (specs das 5 categorias + cópia de Ordem de Tabulação, se
+           existir). Posicionado entre "Focar" e "Remover" porque os três
+           afetam a área como um todo, diferente de "Nova spec" que cria
+           conteúdo novo. -->
+      <button type="button" title="Ocultar/Mostrar toda a área no canvas" aria-label="Ocultar/Mostrar toda a área no canvas"
+        onclick="event.stopPropagation(); toggleAreaGroupVisibility('${area.id}')"
+        class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
+        <i data-lucide="${window._a11yAreaHiddenIds.has(area.id) ? 'eye-off' : 'eye'}" class="w-3.5 h-3.5"></i>
+      </button>
       <button type="button" title="Remover área" aria-label="Remover área"
         onclick="event.stopPropagation(); deleteA11yArea(${area.originalIndex})"
         class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shrink-0">
@@ -2615,6 +2625,13 @@ async function confirmA11yBatchGenerate() {
       existingAreaAllSpecIds: _collectAreaAllSpecIds(areaId),
       targetNodeId: item.nodeId || null,
       needsReview,
+      // BETA-ONLY: fix-toast-generico-a11y-lote — suprime o toast individual
+      // de create-unified-spec (code.js) pra cada item do loop: com N specs
+      // criadas em sequência, N toasts do caso feliz só competem com o resumo
+      // único já disparado no fim desta função (showToast abaixo). O fluxo
+      // manual (confirmA11ySpec) não seta este campo, então continua
+      // notificando item a item normalmente.
+      silent: true,
     };
     const ok = await _createA11ySpecAndWait(opts);
     if (ok) created++; else failed++;
@@ -2668,6 +2685,43 @@ function toggleA11ySpecVisibility(originalIndex) {
   renderA11yGroupedList();
 }
 window.toggleA11ySpecVisibility = toggleA11ySpecVisibility;
+
+// BETA-ONLY: a11y-ocultar-grupo-area — estado efêmero (não persiste entre
+// sessões, mesmo padrão de outros estados de UI desta sessão) das áreas
+// ocultadas de uma vez pelo botão de olho no cabeçalho do card. Set de
+// areaId, não de spec.id — a visibilidade por spec continua controlada
+// individualmente por toggleA11ySpecVisibility.
+window._a11yAreaHiddenIds = window._a11yAreaHiddenIds || new Set();
+
+// Ocultar/mostrar TUDO de uma área de uma vez: as specs de leitor de tela
+// (5 categorias) e os itens de Ordem de Tabulação daquela área — que hoje
+// vivem numa CÓPIA separada do frame (ver a11y-tabordem-copia-frame), não
+// nos elementos de trabalho reais. Substitui o antigo switch por TIPO
+// (Specs ⇄ Ordem de Tabulação, a11y-switch-modo-visualizacao, removido
+// nesta mesma sessão) por um controle único que afeta a área inteira, sem
+// distinguir tipo de conteúdo.
+function toggleAreaGroupVisibility(areaId) {
+  if (window._a11yAreaHiddenIds.has(areaId)) {
+    window._a11yAreaHiddenIds.delete(areaId);
+  } else {
+    window._a11yAreaHiddenIds.add(areaId);
+  }
+  const hidden = window._a11yAreaHiddenIds.has(areaId);
+
+  (a11ySpecs || []).forEach(spec => {
+    if (!spec || spec.a11yAreaId !== areaId || !spec.id) return;
+    spec.visible = !hidden;
+    parent.postMessage({ pluginMessage: { type: hidden ? 'hide-node' : 'show-node', id: spec.id } }, '*');
+  });
+
+  // Cópia de Ordem de Tabulação: fire-and-forget, o backend simplesmente
+  // não encontra nada se a área nunca gerou cópia.
+  parent.postMessage({ pluginMessage: { type: 'toggle-tab-order-copy-visibility', areaId, visible: !hidden } }, '*');
+
+  saveToStorage();
+  renderA11yGroupedList();
+}
+window.toggleAreaGroupVisibility = toggleAreaGroupVisibility;
 
 // BETA-ONLY: a11y-tabordem-copia-frame — setAreaViewMode/window._a11yAreaViewMode
 // (a11y-switch-modo-visualizacao) removidos por completo. Motivo: a Ordem de
