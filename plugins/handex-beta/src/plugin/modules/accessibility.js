@@ -1127,6 +1127,36 @@ function _buildA11yElementoPayload(letter, componenteKey, label, options) {
   return { letter, properties, a11ySubtype };
 }
 
+// BETA-ONLY: a11y-outro-componentes-sem-match — variante de
+// _buildA11yElementoPayload pro caso "Outro" no lote: componente DSC real
+// reconhecido (dscComponentMatch.isUnmapped === true), mas sem categoria de
+// a11y catalogada. Replica EXATAMENTE o formato que o branch isOutro de
+// confirmA11ySpec monta no fluxo manual (properties sem toggles/descrição/
+// nota — só componente + label — e a11ySubtype com componente/tipo nulos),
+// pra _prefillA11ySpecForEdit continuar funcionando sem distinguir origem
+// manual vs. lote.
+// containingFrame chega como o nome cru do component set (ex: "[dsc]
+// Alert") — remove o prefixo "[dsc]"/colchetes pra virar um nome legível no
+// campo "Componente" (ex: "Alert").
+function _cleanDscContainingFrameName(containingFrame) {
+  return String(containingFrame || '')
+    .replace(/^\[dsc\]\s*/i, '')
+    .trim() || (containingFrame || 'Componente');
+}
+window._cleanDscContainingFrameName = _cleanDscContainingFrameName; // BETA-ONLY: a11y-outro-componentes-sem-match
+
+function _buildA11yElementoOutroPayload(letter, containingFrame, label) {
+  const componenteOutro = _cleanDscContainingFrameName(containingFrame);
+  return {
+    letter,
+    properties: [
+      { key: 'componente', label: 'Componente', value: componenteOutro },
+      { key: 'label', label: 'Label', value: label },
+    ].filter(p => p.value),
+    a11ySubtype: { componente: null, isOutro: true, tipo: null },
+  };
+}
+
 // Payload puro pra categoria "titulo" no lote automatizado — mesmo espírito
 // de _buildA11yElementoPayload. BETA-ONLY: a11y-revisao-mapeamento-profundo
 // (correção 2) — nível agora é inferido a partir do token de tipografia real
@@ -1136,9 +1166,18 @@ function _buildA11yElementoPayload(letter, componenteKey, label, options) {
 // "solto") ou o token não pertence à escala de heading/display — mesmo
 // comportamento de antes nesses casos. O designer ainda revisa/corrige o
 // nível manualmente depois quando necessário.
-function _buildA11yTituloPayload(letter, label, suggestedLevel) {
+// BETA-ONLY: fix-tag-heading-lote — a tag de uma spec de "Nível de Título"
+// precisa SEMPRE refletir o próprio nível (H1..H6), nunca a letra sequencial
+// usada pelas outras 4 categorias — mesma regra que já existia no fluxo
+// MANUAL (ver branch 'titulo' em confirmA11ySpec: `letter = nivel === 'mobile'
+// ? 'H' : nivel.toUpperCase()`), que o lote automático não replicava (usava a
+// letra sequencial normal, ex: "AO", em vez de "H5"). `letter` deixou de ser
+// parâmetro de entrada — é sempre DERIVADO do nível aqui dentro, pra não
+// haver dois lugares divergentes calculando a mesma coisa.
+function _buildA11yTituloPayload(label, suggestedLevel) {
   const nivel = suggestedLevel || 'h1';
   const entry = A11Y_CONTENT.titulo.niveis[nivel];
+  const letter = nivel === 'mobile' ? 'H' : nivel.toUpperCase();
   const properties = [
     { key: 'descricao', label: 'Descrição', value: (entry && entry.descricao) || '' },
     { key: 'label', label: 'Label', value: label },
@@ -2139,8 +2178,18 @@ function _allA11yAreas() {
 // mais comum. Decisão consciente do usuário: velocidade acima de precisão
 // perfeita — o designer revisa/corrige nível de título e subtipo decorativo
 // manualmente depois, em vez de precisar confirmar item a item no lote.
+//
+// BETA-ONLY: a11y-outro-componentes-sem-match — também elegível quando
+// dscComponentMatch.isUnmapped === true (componente DSC real reconhecido,
+// ex: "[dsc] Alert", mas sem categoria de a11y catalogada na lib "Design
+// Acessível"). Esse caso não tem a11yCategory preenchido, por isso precisa
+// de uma condição própria — vira sugestão "Outro" em elemento (ver
+// confirmA11yBatchGenerate/_buildA11yElementoOutroPayload). Volume maior de
+// cobertura é intencional (decisão confirmada com o designer), não restrinja
+// artificialmente.
 function _filterA11yBatchEligible(detections) {
-  return (detections || []).filter(d => d && d.dscComponentMatch && d.dscComponentMatch.a11yCategory);
+  return (detections || []).filter(d => d && d.dscComponentMatch
+    && (d.dscComponentMatch.a11yCategory || d.dscComponentMatch.isUnmapped === true));
 }
 
 // Fonte das detecções pro lote: prioriza frame.a11yDetections (quando há
@@ -2167,23 +2216,34 @@ function openA11yBatchSummaryModal() {
 
   // Agrupa por shortName de componente + confiança, pra mostrar contagem
   // agregada ("2 Accordion (alta confiança)") em vez de listar item a item.
+  // BETA-ONLY: a11y-outro-componentes-sem-match — itens com
+  // dscComponentMatch.isUnmapped agrupam por containingFrame (nome do
+  // component set DSC real, ex: "[dsc] Alert") em vez de a11yCategory (que
+  // vem null nesse caso) — sempre confiança "baixa" (é literalmente um
+  // "Outro" sem categoria conhecida, nunca alta confiança).
   const groups = {};
   detections.forEach(item => {
-    const shortName = item.dscComponentMatch.a11yCategory;
-    const confidence = item.dscComponentMatch.confidence === 'alta' ? 'alta' : 'baixa';
-    const key = shortName + '|' + confidence;
-    if (!groups[key]) groups[key] = { shortName, confidence, count: 0 };
+    const isUnmapped = item.dscComponentMatch.isUnmapped === true;
+    const shortName = isUnmapped ? null : item.dscComponentMatch.a11yCategory;
+    const confidence = isUnmapped ? 'baixa' : (item.dscComponentMatch.confidence === 'alta' ? 'alta' : 'baixa');
+    const containingFrame = isUnmapped ? item.dscComponentMatch.containingFrame : null;
+    const key = isUnmapped ? ('outro|' + containingFrame) : (shortName + '|' + confidence);
+    if (!groups[key]) groups[key] = { shortName, confidence, containingFrame, isUnmapped, count: 0 };
     groups[key].count++;
   });
   const groupList = Object.values(groups).sort((a, b) => {
     if (a.confidence !== b.confidence) return a.confidence === 'alta' ? -1 : 1;
-    return (A11Y_COMPONENTE_LABELS[a.shortName] || a.shortName).localeCompare(A11Y_COMPONENTE_LABELS[b.shortName] || b.shortName);
+    const labelA = a.isUnmapped ? _cleanDscContainingFrameName(a.containingFrame) : (A11Y_COMPONENTE_LABELS[a.shortName] || a.shortName);
+    const labelB = b.isUnmapped ? _cleanDscContainingFrameName(b.containingFrame) : (A11Y_COMPONENTE_LABELS[b.shortName] || b.shortName);
+    return labelA.localeCompare(labelB);
   });
 
   const groupsWrap = document.getElementById('a11y-batch-summary-groups');
   if (groupsWrap) {
     groupsWrap.innerHTML = groupList.map(g => {
-      const label = A11Y_COMPONENTE_LABELS[g.shortName] || _capitalizeFirst(g.shortName);
+      const label = g.isUnmapped
+        ? `Outro (${_cleanDscContainingFrameName(g.containingFrame)})`
+        : (A11Y_COMPONENTE_LABELS[g.shortName] || _capitalizeFirst(g.shortName));
       const isBaixa = g.confidence !== 'alta';
       return `
         <div class="flex items-center gap-2 px-3 py-2 rounded-xl border ${isBaixa ? 'bg-amber-50/60 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40' : 'bg-gray-50 dark:bg-dark-bg border-gray-100 dark:border-dark-line'}">
@@ -2417,13 +2477,24 @@ async function confirmA11yBatchGenerate() {
   const startIndex = startTag.length === 1 ? startTag.charCodeAt(0) - 65 : 0;
 
   for (const item of detections) {
+    const isUnmapped = item.dscComponentMatch.isUnmapped === true; // BETA-ONLY: a11y-outro-componentes-sem-match
     const shortName = item.dscComponentMatch.a11yCategory;
-    const letter = toLetters(startIndex + nextLetterIndex);
-    nextLetterIndex++;
+    // BETA-ONLY: fix-tag-heading-lote — título e decorativo não consomem uma
+    // letra da sequência: título usa o próprio nível como tag (H1..H6, ver
+    // _buildA11yTituloPayload) e decorativo já usava um badge fixo
+    // (A11Y_CATEGORIES.decorativo.badge, pré-existente) — só "elemento" usa
+    // de fato a letra sequencial calculada aqui. Sem essa checagem, um lote
+    // intercalado (ex: título + botão + decorativo) pularia letras à toa
+    // pro próximo elemento real.
+    const usesSequentialLetter = shortName !== 'titulo' && shortName !== 'decorativo';
+    const letter = usesSequentialLetter ? toLetters(startIndex + nextLetterIndex) : null;
+    if (usesSequentialLetter) nextLetterIndex++;
     // BETA-ONLY: a11y-injecao-em-massa — itens de baixa confiança nascem
     // marcados pra revisão (badge "Verificar" na listagem, ver
     // _a11ySpecItemHtml) já que não passam mais por confirmação item a item.
-    const needsReview = item.dscComponentMatch.confidence !== 'alta';
+    // isUnmapped sempre precisa de revisão — é literalmente um "Outro" sem
+    // categoria conhecida (BETA-ONLY: a11y-outro-componentes-sem-match).
+    const needsReview = isUnmapped || item.dscComponentMatch.confidence !== 'alta';
 
     // 'titulo'/'decorativo' vêm da heurística de texto/ícone (ver
     // _resolveTypographyA11yMatch/_resolveDecorativeA11yMatch, code.js) — o
@@ -2438,7 +2509,11 @@ async function confirmA11yBatchGenerate() {
     // variação com correspondência DSC conhecida (ver _inferA11yVariantFromDsc).
     // undefined (não null) pra cair no comportamento padrão já existente em
     // _buildA11yElementoPayload quando não há correspondência.
-    const built = a11yType === 'titulo' ? _buildA11yTituloPayload(letter, item.name || 'Elemento', item.dscComponentMatch.suggestedLevel)
+    // BETA-ONLY: a11y-outro-componentes-sem-match — isUnmapped monta o
+    // payload "Outro" (_buildA11yElementoOutroPayload), com o nome do
+    // component set DSC real (containingFrame) como valor de "Componente".
+    const built = isUnmapped ? _buildA11yElementoOutroPayload(letter, item.dscComponentMatch.containingFrame, item.name || 'Elemento')
+      : a11yType === 'titulo' ? _buildA11yTituloPayload(item.name || 'Elemento', item.dscComponentMatch.suggestedLevel)
       : a11yType === 'decorativo' ? _buildA11yDecorativoPayload(item.name || 'Elemento')
       : _buildA11yElementoPayload(letter, shortName, item.name || 'Elemento', {
         tipo: _inferA11yVariantFromDsc(shortName, item.variants) || undefined,
@@ -2858,6 +2933,15 @@ function _tabOrderNextTempId() {
 // Ativado pelo botão "Iniciar Ordem de Tabulação" — reinicia a lista
 // pendente (fluxo novo, nunca acumula com uma sessão anterior não aplicada)
 // e abre o modal já em modo de escuta contínua.
+//
+// BETA-ONLY: a11y-copia-antecipada-tabordem — dispara 'start-tab-order-copy'
+// ANTES de abrir a escuta de cliques: o backend clona o frame da área
+// IMEDIATAMENTE (cópia vazia, sem selos ainda — ver start-tab-order-copy,
+// code.js), pra que o frame ORIGINAL fique 100% intocado durante todo o
+// fluxo manual (o highlight temporário de cada clique passa a ser desenhado
+// sobre o node equivalente dentro da cópia, nunca mais no original — ver
+// handleTabOrderSelectionChanged). Resposta tratada em
+// handleTabOrderCopyStarted (messages.js → aqui).
 function startTabOrderManualMode(areaId, targetNodeId) {
   if (!areaId || !targetNodeId) {
     showToast('Marque uma área da tela antes de iniciar a ordem de tabulação.');
@@ -2866,11 +2950,27 @@ function startTabOrderManualMode(areaId, targetNodeId) {
   window._tabOrderPendingList = [];
   window._tabOrderPendingAreaId = areaId;
   window._tabOrderPendingTargetNodeId = targetNodeId;
+  window._tabOrderActiveCloneId = null;
+  window._tabOrderActiveCloneNodeMap = null;
+  parent.postMessage({ pluginMessage: { type: 'start-tab-order-copy', areaId, targetNodeId } }, '*');
   openTabOrderReviewModal();
   _tabOrderSetCaptureMode('continuous');
   showToast('Clique nos elementos do canvas, em sequência.');
 }
 window.startTabOrderManualMode = startTabOrderManualMode;
+
+// Resposta de 'tab-order-copy-started' (messages.js) — guarda o id da cópia
+// rascunho e o mapa original→clone (objeto plano {nodeId-original:
+// nodeId-do-clone}, ver start-tab-order-copy em code.js) pra uso local
+// (diagnóstico/eventual necessidade futura do front); o BACKEND também
+// guarda o mapa completo em memória (_activeTabOrderCloneMap, code.js) — é
+// ele quem de fato resolve original→clone a cada highlight, o front só
+// precisa saber que a cópia existe.
+function handleTabOrderCopyStarted(cloneId, nodeMap) {
+  window._tabOrderActiveCloneId = cloneId || null;
+  window._tabOrderActiveCloneNodeMap = nodeMap || null;
+}
+window.handleTabOrderCopyStarted = handleTabOrderCopyStarted;
 
 // Abre o modal de revisão vazio/pré-populado — chamado tanto pelo início do
 // fluxo manual quanto pela chegada do resultado da varredura automática
@@ -2928,12 +3028,14 @@ function handleTabOrderSelectionChanged(nodeId, nodeName) {
 
   const wasSingle = window._tabOrderCaptureMode === 'single';
   window._tabOrderPendingList.push({ nodeId, nodeName: nodeName || '', tempId: _tabOrderNextTempId() });
-  // Reaproveita o mecanismo já existente de highlight temporário
-  // (highlight-node/clear-highlight, code.js — o mesmo usado por outros
-  // pontos do plugin pra "piscar" um elemento) em vez de um handler novo:
-  // desenha um contorno cyan por cima do elemento capturado, sem selecionar
-  // nem dar scroll (o designer está de olho no canvas, não na UI).
-  parent.postMessage({ pluginMessage: { type: 'highlight-node', id: nodeId, highlight: true, color: '#0891B2', selectNode: false, shouldScroll: false } }, '*');
+  // BETA-ONLY: a11y-copia-antecipada-tabordem — antes usava highlight-node
+  // direto (destacava o elemento no FRAME ORIGINAL, competindo visualmente
+  // com as specs de a11y já desenhadas lá). Agora usa o handler dedicado
+  // highlight-tab-order-copy-node (code.js), que resolve o nodeId ORIGINAL
+  // pro node equivalente dentro da cópia rascunho (criada em
+  // startTabOrderManualMode) e desenha o contorno lá — o original nunca é
+  // tocado. Mesmo formato de mensagem de antes, só o tipo mudou.
+  parent.postMessage({ pluginMessage: { type: 'highlight-tab-order-copy-node', id: nodeId, highlight: true, color: '#0891B2', selectNode: false, shouldScroll: false } }, '*');
 
   if (wasSingle) {
     _tabOrderSetCaptureMode(window._tabOrderResumeCaptureMode || null);
@@ -3014,11 +3116,24 @@ function deleteTabOrderPendingItem(tempId) {
 window.deleteTabOrderPendingItem = deleteTabOrderPendingItem;
 
 // Fecha o modal sem aplicar nada — descarta a lista pendente por completo
-// (nenhum node foi criado no canvas ainda, então não há nada pra desfazer)
-// e limpa o highlight temporário, se ainda visível.
+// (nenhum selo foi desenhado ainda, então não há nada pra desfazer) e limpa
+// o highlight temporário, se ainda visível.
+//
+// BETA-ONLY: a11y-copia-antecipada-tabordem — a cópia "rascunho" do frame
+// (criada em startTabOrderManualMode, ANTES de qualquer selo) fica órfã se o
+// designer desistir aqui — sem selo nenhum, não faz sentido deixá-la no
+// canvas. Dispara 'delete-tab-order-draft-copy' pra removê-la, só quando
+// havia de fato uma cópia ativa desta área (window._tabOrderActiveCloneId) —
+// evita mandar a mensagem à toa em fluxos que nunca passaram por "Iniciar"
+// (ex: só usou "Gerar Automaticamente", que não cria cópia antecipada).
 function cancelTabOrderReview() {
   _tabOrderSetCaptureMode(null);
   window._tabOrderResumeCaptureMode = null;
+  if (window._tabOrderActiveCloneId && window._tabOrderPendingAreaId) {
+    parent.postMessage({ pluginMessage: { type: 'delete-tab-order-draft-copy', areaId: window._tabOrderPendingAreaId } }, '*');
+  }
+  window._tabOrderActiveCloneId = null;
+  window._tabOrderActiveCloneNodeMap = null;
   window._tabOrderPendingList = [];
   window._tabOrderPendingAreaId = null;
   window._tabOrderPendingTargetNodeId = null;
@@ -3087,6 +3202,11 @@ function handleTabOrderAppliedToCanvas(items, copyName) {
   window._tabOrderPendingList = [];
   window._tabOrderPendingAreaId = null;
   window._tabOrderPendingTargetNodeId = null;
+  // BETA-ONLY: a11y-copia-antecipada-tabordem — a cópia rascunho (se havia)
+  // já foi reaproveitada/finalizada pelo backend (apply-tab-order-to-canvas
+  // zera _activeTabOrderCloneMap internamente); limpa o espelho local.
+  window._tabOrderActiveCloneId = null;
+  window._tabOrderActiveCloneNodeMap = null;
   closeModal('a11y-tab-order-review-modal');
   showToast(`Ordem de tabulação aplicada em "${copyName || 'cópia do frame'}".`);
 }

@@ -32,16 +32,21 @@
       if (panelMain) panelMain.classList.toggle('hidden', isA11y);
       if (panelA11y) panelA11y.classList.toggle('hidden', !isA11y);
 
-      // BETA-ONLY: fix-toast-spec-fantasma — trocar para a aba "Especificações"
-      // com o modo de clique sequencial da Ordem de Tabulação ainda ativo
-      // deixava o backend postando tab-order-selection-changed às cegas
-      // nessa outra aba: qualquer clique no canvas para só navegar/inspecionar
-      // (sem nenhuma intenção de criar spec) virava silenciosamente um novo
-      // selo de Ordem de Tabulação + toast. navigate() já tinha essa mesma
-      // salvaguarda ao sair da tela "Anotar Specs" inteira (ver navigate,
-      // core.js) — faltava replicar ao trocar de aba SEM sair da tela.
-      if (!isA11y && window._tabOrderModeOn && typeof toggleTabOrderMode === 'function') {
-        toggleTabOrderMode();
+      // BETA-ONLY: fix-toast-spec-fantasma-v2 — a guarda original (v1) checava
+      // window._tabOrderModeOn/toggleTabOrderMode, que existiam no fluxo
+      // ANTIGO de Ordem de Tabulação (selo desenhado direto no elemento). A
+      // reformulação "a11y-tabordem-copia-frame" trocou esses globais por
+      // window._tabOrderCaptureMode ('continuous'/'single'/null) + o modal
+      // #a11y-tab-order-review-modal — a guarda ficou checando uma variável
+      // que não existe mais e nunca mais disparava (sempre undefined),
+      // silenciosamente. Sem isso, trocar para "Especificações" com a escuta
+      // de clique ainda ativa deixava o backend postando
+      // tab-order-selection-changed às cegas nessa outra aba: qualquer clique
+      // no canvas para só navegar virava um item pendente + highlight sem o
+      // designer perceber (o modal de revisão não está nem visível aqui).
+      // navigate() (core.js) tinha a mesma guarda quebrada — corrigida junto.
+      if (!isA11y && window._tabOrderCaptureMode && typeof cancelTabOrderReview === 'function') {
+        cancelTabOrderReview();
       }
 
       const btnSpecs = document.getElementById('specs-maintab-specs');

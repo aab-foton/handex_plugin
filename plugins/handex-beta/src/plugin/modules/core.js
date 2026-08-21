@@ -1710,6 +1710,21 @@ function closeModal(id) {
 // Fecha o modal visível com maior z-index ao pressionar Escape (topo em caso de sobreposição).
 // Focus trap completo (ciclagem via Tab) não foi implementado nesta correção — apenas foco
 // inicial, devolução de foco e Escape, por limitação de tempo.
+//
+// BETA-ONLY: fix-toast-spec-fantasma-v2 — antes chamava sempre closeModal(id) genérico,
+// que só esconde o elemento (classList.add('hidden')). Vários modais têm uma função de
+// fechamento DEDICADA que faz limpeza de estado além de esconder (ex:
+// cancelTabOrderReview desliga a escuta de clique sequencial de Ordem de Tabulação —
+// window._tabOrderCaptureMode — e limpa a lista pendente; closeSpecNewExceptionModal
+// deveria [mas não precisa, ver abaixo] limpar window._pendingSpecOpts). Fechar via
+// Escape pulava essa limpeza porque chamava closeModal(id) direto, nunca a função
+// dedicada — o mesmo bug que já tinha sido corrigido para o clique no botão "X"/backdrop
+// de cada modal (que já usam a função dedicada, ver onclick nos backdrops em
+// modals.html), só que Escape tinha um caminho de saída próprio que não passava por lá.
+// Resolvido de forma genérica: lê o onclick do backdrop do modal (mesma função que já
+// roda no clique fora do modal) e invoca ela mesma em vez de closeModal(id) direto —
+// não precisa de um mapa manual por modal, e cobre automaticamente qualquer modal novo
+// que já siga o padrão existente (backdrop com onclick="closeXyz()").
 document.addEventListener('keydown', function (e) {
   if (e.key !== 'Escape') return;
   const visibleModals = Array.from(document.querySelectorAll('[id$="-modal"]:not(.hidden)'));
@@ -1720,7 +1735,14 @@ document.addEventListener('keydown', function (e) {
     const z = parseInt(getComputedStyle(m).zIndex, 10) || 0;
     if (z >= topZ) { topZ = z; topModal = m; }
   }
-  closeModal(topModal.id);
+  const backdrop = topModal.querySelector(':scope > .absolute.inset-0[onclick]');
+  const backdropOnclick = backdrop && backdrop.getAttribute('onclick');
+  const fnMatch = backdropOnclick && backdropOnclick.match(/^([A-Za-z_$][\w$]*)\(\)$/);
+  if (fnMatch && typeof window[fnMatch[1]] === 'function') {
+    window[fnMatch[1]]();
+  } else {
+    closeModal(topModal.id);
+  }
 });
 
 function startHandoff() {
@@ -1753,13 +1775,16 @@ function navigate(viewId) {
     syncAndRenderSpecs();
     renderExcecoesView();
     populateFrameSelector('spec-frame-selector');
-  } else if (window._tabOrderModeOn && typeof toggleTabOrderMode === 'function') {
-    // BETA-ONLY: a11y-ordem-tabulacao — só entra quando o modo de clique
-    // sequencial está ativo ao navegar pra fora de Anotar Specs.
-    // Sair da tela de Anotar Specs com o modo de clique sequencial ainda
-    // ativo deixaria o backend postando tab-order-selection-changed às
-    // cegas em qualquer outra tela — desliga por segurança ao navegar.
-    toggleTabOrderMode();
+  } else if (window._tabOrderCaptureMode && typeof cancelTabOrderReview === 'function') {
+    // BETA-ONLY: fix-toast-spec-fantasma-v2 — mesma guarda quebrada
+    // corrigida em switchSpecsMainTab (specifications.js): window._tabOrderModeOn/
+    // toggleTabOrderMode eram do fluxo ANTIGO de Ordem de Tabulação e não
+    // existem mais desde a reformulação "a11y-tabordem-copia-frame"
+    // (window._tabOrderCaptureMode + #a11y-tab-order-review-modal) — a
+    // guarda nunca disparava (variável sempre undefined). Sair da tela de
+    // Anotar Specs com a escuta de clique ainda ativa deixaria o backend
+    // postando tab-order-selection-changed às cegas em qualquer outra tela.
+    cancelTabOrderReview();
   }
   if (viewId === 'view-flows') renderFlowsList();
   if (viewId === 'view-measurement') {

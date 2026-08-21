@@ -548,6 +548,16 @@
         }
       }
 
+      // BETA-ONLY: a11y-copia-antecipada-tabordem — resposta de
+      // 'start-tab-order-copy' (code.js): a cópia rascunho do frame já foi
+      // criada (sem selos ainda) e o mapa original→clone já foi calculado no
+      // backend. handleTabOrderCopyStarted só guarda o id/mapa localmente.
+      if (msg.type === "tab-order-copy-started") {
+        if (typeof handleTabOrderCopyStarted === 'function') {
+          handleTabOrderCopyStarted(msg.cloneId, msg.nodeMap);
+        }
+      }
+
       // Geração automática por varredura de camadas (generate-tab-order-
       // from-layers em code.js) — BETA-ONLY: a11y-tabordem-copia-frame:
       // responde só com os CANDIDATOS ({nodeId, nodeName}[], já ordenados

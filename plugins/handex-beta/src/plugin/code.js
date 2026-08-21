@@ -14,6 +14,20 @@ figma.showUI(__html__, { width: 480, height: 750 });
 
 let activeHighlightNode = null;
 
+// BETA-ONLY: a11y-copia-antecipada-tabordem — cópia "rascunho" do frame,
+// criada já ao clicar "Iniciar Ordem de Tabulação" (start-tab-order-copy),
+// antes de qualquer selo ser desenhado. Mantida em memória do módulo (não só
+// no canvas via pluginData) porque o highlight temporário durante o fluxo
+// manual (highlight-tab-order-copy-node) precisa resolver, a cada clique, o
+// nó ORIGINAL clicado pro nó EQUIVALENTE dentro dessa cópia — sem depender
+// de reconstruir o mapa a cada clique. `_activeTabOrderCloneMap` é um Map
+// nodeId-original → node (objeto real do Figma), nunca serializado como tal
+// pro frontend (ver start-tab-order-copy, que devolve só um objeto plano de
+// ids). Zerado ao aplicar no canvas de fato (apply-tab-order-to-canvas) ou ao
+// cancelar o fluxo (delete-tab-order-draft-copy).
+let _activeTabOrderCloneMap = null;
+let _activeTabOrderCloneAreaId = null;
+
 figma.on('close', () => {
   if (activeHighlightNode) {
     try { activeHighlightNode.remove(); } catch (e) { }
@@ -170,15 +184,31 @@ function _getDscFrameToA11yMap() {
   return _dscFrameToA11yMap;
 }
 
-// Retorna { containingFrame, a11yCategory, confidence } ou null.
+// Retorna { containingFrame, a11yCategory, confidence } (match normal),
+// { containingFrame, a11yCategory: null, confidence: null, isUnmapped: true }
+// (componente DSC real, mas SEM categoria de a11y catalogada — ver BETA-ONLY
+// abaixo) ou null (componentKey não corresponde a nenhum componente DSC
+// catalogado — não é um caso de a11y de jeito nenhum).
 // componentKey deve ser o mainComp.key de uma INSTANCE remote (mesma
 // condição que já decide "conforme ao DSC" hoje) — chamador garante isso.
+//
+// BETA-ONLY: a11y-outro-componentes-sem-match — antes, um componente DSC
+// real sem entrada em _getDscFrameToA11yMap (ex: "[dsc] Alert" — existe
+// "snackbar" na lib "Design Acessível", mas é semanticamente diferente:
+// notificação temporária vs. card de aviso fixo) virava `null` e era
+// descartado silenciosamente do lote de Detecção Automática. Decisão
+// confirmada com o designer: esse caso deve virar sugestão "Outro" no lote
+// (mesma opção que já existe no formulário manual de "Elementos e Imagens").
+// `isUnmapped: true` é o sinal que o frontend usa pra diferenciar esse caso
+// do match normal (a11yCategory truthy) e do "não é DSC" (retorno null).
 function _resolveDscComponentA11yMatch(componentKey) {
   if (!componentKey) return null;
   const containingFrame = _getDscComponentKeyToFrameMap().get(componentKey);
   if (!containingFrame) return null;
   const a11yMatch = _getDscFrameToA11yMap().get(containingFrame);
-  if (!a11yMatch) return null;
+  if (!a11yMatch) {
+    return { containingFrame, a11yCategory: null, confidence: null, isUnmapped: true };
+  }
   return {
     containingFrame,
     a11yCategory: a11yMatch.shortName,
@@ -5835,6 +5865,151 @@ figma.ui.onmessage = async (msg) => {
     return map;
   }
 
+  // BETA-ONLY: a11y-copia-antecipada-tabordem — extraído de
+  // apply-tab-order-to-canvas pra ser reaproveitado também por
+  // start-tab-order-copy (cópia antecipada, criada já ao "Iniciar"). Remove
+  // qualquer cópia anterior da MESMA área (pluginData, nunca por nome — o
+  // designer pode renomear), clona `root`, posiciona ao lado, nomeia e marca
+  // pluginData. Não desenha nenhum selo — isso é responsabilidade exclusiva
+  // de quem chama (apply-tab-order-to-canvas).
+  function _createTabOrderCloneForArea(root, areaId) {
+    for (const sibling of figma.currentPage.children) {
+      try {
+        if (sibling.getPluginData && sibling.getPluginData('handexTabOrderCopyForArea') === areaId) {
+          sibling.remove();
+        }
+      } catch (e) { }
+    }
+
+    const clone = root.clone();
+    figma.currentPage.appendChild(clone);
+    const _TAB_ORDER_COPY_GAP = 80;
+    clone.x = Math.round(root.absoluteBoundingBox.x + root.absoluteBoundingBox.width + _TAB_ORDER_COPY_GAP);
+    clone.y = Math.round(root.absoluteBoundingBox.y);
+    clone.name = `[Ordem de Tabulação] ${root.name}`;
+    clone.locked = false;
+    // handexCategory: 'a11y' garante que "Apagar Tudo" (ver
+    // matchCategory/toggle 'a11y' mais acima no arquivo) reconhece e
+    // remove esta cópia mesmo ela vivendo FORA da Section de
+    // Acessibilidade (_getOrCreateA11ySection) — matchCategory prioriza a
+    // pluginData sobre o prefixo de nome, então não depende do nome
+    // `[Ordem de Tabulação] ...` estar cadastrado ali.
+    clone.setPluginData('handexCategory', 'a11y');
+    clone.setPluginData('handexTabOrderCopyForArea', areaId || '');
+
+    const nodeMap = _buildOriginalToCloneMap(root, clone);
+    return { clone, nodeMap };
+  }
+
+  // BETA-ONLY: a11y-copia-antecipada-tabordem — "Iniciar Ordem de Tabulação"
+  // (startTabOrderManualMode, accessibility.js) dispara isto ANTES de abrir a
+  // escuta de cliques. Clona o frame da área IMEDIATAMENTE (cópia vazia,
+  // sem nenhum selo ainda) — o frame ORIGINAL fica intocado durante todo o
+  // fluxo manual; o highlight temporário de cada clique passa a ser
+  // desenhado sobre o node equivalente dentro desta cópia (ver
+  // highlight-tab-order-copy-node), nunca mais sobre o original. O mapa
+  // original→clone fica em memória do módulo (_activeTabOrderCloneMap) —
+  // quem resolve o nodeId original pro node da cópia é sempre o BACKEND,
+  // nunca o frontend (que só conhece ids, não objetos de node reais).
+  if (msg.type === "start-tab-order-copy") {
+    (async () => {
+      const root = await figma.getNodeByIdAsync(msg.targetNodeId);
+      if (!root || !root.absoluteBoundingBox) {
+        figma.notify("Área não encontrada no canvas — marque novamente.");
+        figma.ui.postMessage({ type: "tab-order-copy-started", cloneId: null, nodeMap: {} });
+        return;
+      }
+      if (typeof root.clone !== 'function') {
+        figma.notify("Este elemento não pode ser copiado — marque a área sobre um frame/grupo.");
+        figma.ui.postMessage({ type: "tab-order-copy-started", cloneId: null, nodeMap: {} });
+        return;
+      }
+
+      const { clone, nodeMap } = _createTabOrderCloneForArea(root, msg.areaId);
+      _activeTabOrderCloneMap = nodeMap;
+      _activeTabOrderCloneAreaId = msg.areaId || null;
+
+      // Serializa o mapa como {nodeId-original: nodeId-do-clone} — só ids,
+      // nunca os nodes inteiros (o frontend não tem uso pra eles, e nodes do
+      // Figma não são serializáveis via postMessage de qualquer forma).
+      const plainNodeMap = {};
+      nodeMap.forEach((clonedNode, originalId) => { plainNodeMap[originalId] = clonedNode.id; });
+
+      figma.ui.postMessage({ type: "tab-order-copy-started", cloneId: clone.id, nodeMap: plainNodeMap });
+    })();
+  }
+
+  // BETA-ONLY: a11y-copia-antecipada-tabordem — variante dedicada de
+  // highlight-node pro fluxo de Ordem de Tabulação: recebe o nodeId
+  // ORIGINAL (o que o designer de fato clicou no canvas) e resolve
+  // internamente, via _activeTabOrderCloneMap, pro node equivalente dentro
+  // da cópia rascunho — só então desenha o contorno de highlight, sempre na
+  // CÓPIA, nunca no original. Handler dedicado (em vez de sobrecarregar
+  // highlight-node genérico com mais uma condicional) pra não misturar
+  // lógica específica de a11y num handler compartilhado com outras partes do
+  // plugin. Sem cópia ativa (ex: designer usou só "+ Adicionar item" fora de
+  // um fluxo "Iniciar" — não deveria acontecer no fluxo atual, mas é
+  // guarda-corpo barato) cai de volta pro highlight direto no original, pra
+  // nunca deixar o clique sem NENHUM feedback visual.
+  if (msg.type === "highlight-tab-order-copy-node") {
+    (async () => {
+      if (activeHighlightNode) {
+        try { activeHighlightNode.remove(); } catch (e) { }
+        activeHighlightNode = null;
+      }
+
+      let targetId = msg.id;
+      if (_activeTabOrderCloneMap && _activeTabOrderCloneMap.has(msg.id)) {
+        targetId = _activeTabOrderCloneMap.get(msg.id).id;
+      }
+
+      const node = await figma.getNodeByIdAsync(targetId);
+      if (!node || !node.visible || !_nodeOnCurrentPage(node) || !node.absoluteBoundingBox) return;
+
+      const hexToRgbLocal = (hex) => {
+        const h = (hex || '#0891B2').replace('#', '');
+        return {
+          r: parseInt(h.substring(0, 2), 16) / 255,
+          g: parseInt(h.substring(2, 4), 16) / 255,
+          b: parseInt(h.substring(4, 6), 16) / 255,
+        };
+      };
+      const strokeColor = hexToRgbLocal(msg.color);
+      const bb = node.absoluteBoundingBox;
+      const strokeRect = figma.createRectangle();
+      strokeRect.name = '[HighlightStroke]';
+      strokeRect.x = bb.x;
+      strokeRect.y = bb.y;
+      strokeRect.resize(Math.max(1, bb.width), Math.max(1, bb.height));
+      strokeRect.fills = [];
+      strokeRect.strokes = [{ type: 'SOLID', color: strokeColor }];
+      strokeRect.strokeWeight = 2;
+      strokeRect.strokeAlign = 'OUTSIDE';
+      strokeRect.locked = true;
+      strokeRect.cornerRadius = node.cornerRadius && typeof node.cornerRadius === 'number' ? node.cornerRadius : 0;
+      figma.currentPage.appendChild(strokeRect);
+      activeHighlightNode = strokeRect;
+    })();
+  }
+
+  // BETA-ONLY: a11y-copia-antecipada-tabordem — cancelamento do fluxo manual
+  // (cancelTabOrderReview, accessibility.js): a cópia rascunho criada por
+  // start-tab-order-copy fica órfã (vazia, sem selos) se o designer desistir
+  // — remove pelo mesmo pluginData de sempre e zera o estado em memória.
+  if (msg.type === "delete-tab-order-draft-copy") {
+    for (const sibling of figma.currentPage.children) {
+      try {
+        if (sibling.getPluginData && sibling.getPluginData('handexTabOrderCopyForArea') === msg.areaId) {
+          sibling.remove();
+        }
+      } catch (e) { }
+    }
+    if (_activeTabOrderCloneAreaId === msg.areaId) {
+      _activeTabOrderCloneMap = null;
+      _activeTabOrderCloneAreaId = null;
+    }
+  }
+
   if (msg.type === "apply-tab-order-to-canvas") {
     (async () => {
       const root = await figma.getNodeByIdAsync(msg.targetNodeId);
@@ -5849,45 +6024,38 @@ figma.ui.onmessage = async (msg) => {
         return;
       }
 
-      // Passo 1 — remove cópia anterior da MESMA área, se existir (nunca
-      // acumular cópias órfãs). Procura por pluginData, não só por nome (o
-      // designer pode ter renomeado a cópia).
-      for (const sibling of figma.currentPage.children) {
-        try {
-          if (sibling.getPluginData && sibling.getPluginData('handexTabOrderCopyForArea') === msg.areaId) {
-            sibling.remove();
-          }
-        } catch (e) { }
+      // BETA-ONLY: a11y-copia-antecipada-tabordem — reaproveita a cópia já
+      // criada por start-tab-order-copy (fluxo "Iniciar") quando ela ainda
+      // está ativa PRA ESTA MESMA área, em vez de clonar de novo do zero.
+      // Fallback pro comportamento antigo (clonar na hora) quando não há
+      // cópia ativa — ex: designer usou só o fluxo automático
+      // (generate-tab-order-from-layers), que não passa por "Iniciar" — ou
+      // quando a cópia ativa foi removida do canvas por fora (ex: designer
+      // apagou manualmente).
+      let clone = null;
+      let nodeMap = null;
+      if (_activeTabOrderCloneMap && _activeTabOrderCloneAreaId === msg.areaId) {
+        const existingCloneEntry = _activeTabOrderCloneMap.get(root.id);
+        const existingClone = existingCloneEntry ? await figma.getNodeByIdAsync(existingCloneEntry.id) : null;
+        if (existingClone) {
+          clone = existingClone;
+          nodeMap = _activeTabOrderCloneMap;
+        }
       }
-
-      const clone = root.clone();
-      figma.currentPage.appendChild(clone);
-      const _TAB_ORDER_COPY_GAP = 80;
-      clone.x = Math.round(root.absoluteBoundingBox.x + root.absoluteBoundingBox.width + _TAB_ORDER_COPY_GAP);
-      clone.y = Math.round(root.absoluteBoundingBox.y);
-      clone.name = `[Ordem de Tabulação] ${root.name}`;
-      clone.locked = false;
-      // handexCategory: 'a11y' garante que "Apagar Tudo" (ver
-      // matchCategory/toggle 'a11y' mais acima no arquivo) reconhece e
-      // remove esta cópia mesmo ela vivendo FORA da Section de
-      // Acessibilidade (_getOrCreateA11ySection) — matchCategory prioriza a
-      // pluginData sobre o prefixo de nome, então não depende do nome
-      // `[Ordem de Tabulação] ...` estar cadastrado ali.
-      clone.setPluginData('handexCategory', 'a11y');
-      clone.setPluginData('handexTabOrderCopyForArea', msg.areaId || '');
-
-      // Passo 2 — mapa original→clone por correspondência estrutural
-      // (índice de filho a filho), única forma confiável já que nomes de
-      // camada podem se repetir dentro da mesma área.
-      const nodeMap = _buildOriginalToCloneMap(root, clone);
+      if (!clone) {
+        const created = _createTabOrderCloneForArea(root, msg.areaId);
+        clone = created.clone;
+        nodeMap = created.nodeMap;
+      }
+      _activeTabOrderCloneMap = null;
+      _activeTabOrderCloneAreaId = null;
 
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
 
-      // Passo 3 — desenha os selos na cópia, usando o node MAPEADO (dentro
-      // do clone) como alvo de posicionamento — nunca o original. Item cujo
-      // nodeId não resolve no mapa (ex: elemento apagado entre a captura no
-      // canvas e a confirmação no modal) é pulado com aviso, sem abortar o
-      // lote inteiro.
+      // Desenha os selos na cópia, usando o node MAPEADO (dentro do clone)
+      // como alvo de posicionamento — nunca o original. Item cujo nodeId não
+      // resolve no mapa (ex: elemento apagado entre a captura no canvas e a
+      // confirmação no modal) é pulado com aviso, sem abortar o lote inteiro.
       const items = [];
       const createdGroups = [];
       let skipped = 0;

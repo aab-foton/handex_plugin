@@ -616,6 +616,58 @@ Novo modal `#a11y-tab-order-review-modal` — segue o padrão visual dos demais 
 
 ---
 
+## `fix-tag-heading-lote`
+
+**O que é.** A tag/identificador de uma spec de "Nível de Título" precisa sempre refletir o próprio nível (H1..H6), nunca a letra sequencial usada pelas outras 4 categorias (Elementos, Estrutura, Decorativo, Informações). O fluxo MANUAL (`confirmA11ySpec`, branch `category === 'titulo'`) já fazia isso corretamente desde antes desta sessão (`letter = nivel === 'mobile' ? 'H' : nivel.toUpperCase()`), mas o LOTE automático (`confirmA11yBatchGenerate`) não replicava essa regra — usava a letra sequencial calculada pra todo o lote (ex: uma spec de título podia nascer com tag "AO" em vez de "H5"), confirmado pelo designer testando a build.
+
+**Correção.** `_buildA11yTituloPayload` (`accessibility.js`) deixou de receber `letter` como parâmetro — agora deriva a tag internamente a partir do nível (`suggestedLevel`, já inferido pela Fase 1 do mapeamento profundo — ver seção de inferência de nível de título), com a mesma regra do fluxo manual. O loop do lote (`confirmA11yBatchGenerate`) também parou de avançar `nextLetterIndex` para itens de categoria `titulo`/`decorativo` (que não consomem letra sequencial — título usa o nível como tag, decorativo já usava um badge fixo pré-existente) — sem essa correção, um lote intercalado (ex: 2 títulos + 1 botão) faria o botão nascer com uma letra "furada" (pulando posições que os títulos/decorativos não usaram de fato).
+
+**Risco de migração:** baixo. Mudança de assinatura de uma função interna (`_buildA11yTituloPayload`), único chamador já ajustado junto.
+
+---
+
+## `a11y-copia-antecipada-tabordem`
+
+**Revisão de `a11y-tabordem-copia-frame`** (ver seção acima) — mesma feature, ajuste de quando a cópia do frame nasce.
+
+**O que é.** Na reformulação original (`a11y-tabordem-copia-frame`), a cópia do frame só era criada no momento de "Aplicar no Canvas" (`apply-tab-order-to-canvas`). Durante o fluxo MANUAL (clique sequencial), cada clique aplicava um highlight temporário (`highlight-node`/`clear-highlight`) sobre o elemento no **frame original** — o designer testou e apontou que isso ainda competia visualmente com as specs de a11y já desenhadas ali, mesmo sendo temporário.
+
+**Correção.** Ao clicar "Iniciar Ordem de Tabulação" (`startTabOrderManualMode`, `accessibility.js`), o plugin agora clona o frame **imediatamente** (cópia vazia, sem selos) — o frame original fica intocado durante todo o fluxo manual, e o highlight temporário passa a ser desenhado sobre o node equivalente dentro da cópia.
+
+- **Novo handler `start-tab-order-copy`** (`code.js`) — reaproveita `_createTabOrderCloneForArea` (função extraída de dentro de `apply-tab-order-to-canvas`, mesma lógica de remover cópia anterior + clonar + posicionar + nomear + pluginData + construir `_buildOriginalToCloneMap`) mas **sem desenhar nenhum selo**. Responde `tab-order-copy-started` com `{ cloneId, nodeMap }`, onde `nodeMap` é serializado como objeto plano `{ [nodeIdOriginal]: nodeIdDoClone }` (só ids — nunca os nodes reais do Figma, que não são serializáveis via `postMessage`).
+- **Estado em memória do backend:** `let _activeTabOrderCloneMap = null` e `let _activeTabOrderCloneAreaId = null` (módulo `code.js`) guardam o `Map` completo (`nodeId-original → node real`) e a área associada — é o BACKEND quem resolve original→clone a cada highlight, nunca o frontend (que só recebe/guarda ids).
+- **Novo handler dedicado `highlight-tab-order-copy-node`** (em vez de sobrecarregar o `highlight-node` genérico com uma condicional de a11y) — recebe o `nodeId` ORIGINAL clicado, resolve via `_activeTabOrderCloneMap` pro node equivalente na cópia (fallback pro id recebido direto se não houver cópia ativa, pra nunca deixar o clique sem feedback visual nenhum) e desenha o contorno lá. Duplica a lógica de desenho de `highlight-node` (rect com stroke, sem fill) propositalmente — decisão de manter os dois handlers desacoplados em vez de misturar lógica de a11y num handler compartilhado com o resto do plugin.
+- **Frontend (`accessibility.js`):** `startTabOrderManualMode` dispara `start-tab-order-copy` antes de abrir a escuta de cliques; `handleTabOrderCopyStarted` (nova, roteada em `messages.js`) guarda `window._tabOrderActiveCloneId`/`window._tabOrderActiveCloneNodeMap`. `handleTabOrderSelectionChanged` passou a chamar `highlight-tab-order-copy-node` em vez de `highlight-node` direto.
+- **`apply-tab-order-to-canvas` ajustado** para reaproveitar a cópia já ativa desta mesma área (`_activeTabOrderCloneMap`/`_activeTabOrderCloneAreaId`), validando que o node do clone ainda existe no canvas antes de reaproveitar — só desenha os selos nela. Sem cópia ativa (ex: designer usou só o fluxo automático via "Gerar Automaticamente", que não passa por "Iniciar"), cai no fallback de clonar na hora (comportamento antigo, preservado via `_createTabOrderCloneForArea`).
+- **Novo handler `delete-tab-order-draft-copy`** — remove a cópia rascunho (por pluginData `handexTabOrderCopyForArea`, igual ao `delete-tab-order-copy-for-area` já existente) e zera o estado em memória. Disparado por `cancelTabOrderReview` (`accessibility.js`) quando o designer cancela/fecha o modal de revisão sem aplicar, só se havia de fato uma cópia ativa (`window._tabOrderActiveCloneId`) — evita mensagem à toa em fluxos que nunca passaram por "Iniciar".
+
+**Decisões tomadas sem pedido explícito:**
+1. `highlight-tab-order-copy-node` duplica a lógica de desenho de retângulo de `highlight-node` em vez de fatorar num helper compartilhado — os dois handlers já divergem no critério de resolução do node-alvo (direto vs. via mapa), fatorar agora pareceu prematuro.
+2. Validação de "cópia ainda ativa" em `apply-tab-order-to-canvas` checa se o node do clone raiz ainda existe via `getNodeByIdAsync` antes de reaproveitar — cobre o caso do designer apagar a cópia rascunho manualmente entre o "Iniciar" e o "Aplicar".
+
+**Risco de migração:** médio — toca o fluxo assíncrono de clonagem já sinalizado como risco médio-alto na seção `a11y-tabordem-copia-frame` original; esta revisão adiciona um segundo ponto de clonagem (`start-tab-order-copy`) que precisa ficar consistente com o de `apply-tab-order-to-canvas`. Não testado no Figma real nesta sessão (só `node --check` de sintaxe + leitura cuidadosa). Migrar as duas seções (`a11y-tabordem-copia-frame` + esta) juntas, nunca uma sem a outra.
+
+---
+
+## `a11y-outro-componentes-sem-match`
+
+**O que é.** `_resolveDscComponentA11yMatch(componentKey)` (`code.js`) retornava `null` em dois casos distintos, sem diferenciá-los: (a) `componentKey` não corresponde a nenhum componente DSC catalogado no skeleton — não é um caso de a11y; (b) o componente É um componente DSC real (`containingFrame` encontrado, ex: `[dsc] Alert`), mas não tem entrada em `_getDscFrameToA11yMap` — não está mapeado pra nenhuma das 16 categorias da lib "Design Acessível" (caso confirmado: `Alert` não tem categoria correspondente — só existe `snackbar`, semanticamente diferente: notificação temporária vs. card de aviso fixo). No caso (b), o componente era descartado silenciosamente da Detecção Automática de a11y.
+
+**Correção.** Caso (b) agora vira sugestão **"Outro"** no lote — a mesma opção que já existe no formulário manual de "Elementos e Imagens" (`<select>` com opção "outro" → campo de texto livre `componenteOutro`).
+
+- **`_resolveDscComponentA11yMatch`** — quando `containingFrame` existe mas não há `a11yMatch`, retorna `{ containingFrame, a11yCategory: null, confidence: null, isUnmapped: true }` em vez de `null`. Caso (a) continua retornando `null` sem mudança.
+- **`_filterA11yBatchEligible`** (`accessibility.js`) — elegibilidade passou a incluir `dscComponentMatch.isUnmapped === true`, além do critério existente (`a11yCategory` truthy).
+- **Novo `_buildA11yElementoOutroPayload(letter, containingFrame, label)`** (`accessibility.js`) — replica exatamente o formato que o branch `isOutro` de `confirmA11ySpec` monta no fluxo manual: `properties: [{key:'componente', value: <nome limpo>}, {key:'label', value: label}]` (sem descrição/nota/toggles) e `a11ySubtype: { componente: null, isOutro: true, tipo: null }`. Usa o novo helper `_cleanDscContainingFrameName` para limpar o prefixo `[dsc]`/colchetes do nome do component set (ex: `"[dsc] Alert"` → `"Alert"`).
+- **`confirmA11yBatchGenerate`** (loop do lote) — chama `_buildA11yElementoOutroPayload` quando `item.dscComponentMatch.isUnmapped`; a tag ainda consome uma letra sequencial (mesmo comportamento de "elemento" normal); `needsReview` é sempre `true` nesse caso (é literalmente um "Outro" sem categoria conhecida).
+- **`openA11yBatchSummaryModal`** (agrupamento visual do resumo do lote) — itens `isUnmapped` agrupam por `containingFrame` (não por `a11yCategory`, que vem `null`), sempre com confiança "baixa", e exibem label `"Outro (<nome limpo>)"` em vez de tentar buscar em `A11Y_COMPONENTE_LABELS` um shortName inexistente.
+- `_prefillA11ySpecForEdit` **não precisou de mudança** — já lida genericamente com `sub.isOutro` (lê `getProp('componente')`), e o payload novo segue exatamente esse formato.
+
+**Decisão consciente de volume:** qualquer componente DSC real sem categoria de a11y (Select, Slider, Datepicker, Chips, Tag, Badge, Card, Header, Footer etc.) agora gera sugestão "Outro" — confirmado com o designer como intencional (cobertura maior > precisão), não restringido a uma lista menor.
+
+**Risco de migração:** baixo — mudança aditiva e bem isolada (um shape de retorno novo + 3 pontos de consumo no frontend), sem alterar o caminho feliz existente (match normal continua idêntico).
+
+---
+
 ## Ordem de migração recomendada
 
 1. **Dados/refs primeiro:** `refs/design-acessivel-component-properties.json`, `refs/dsc-component-a11y-mapping.json` — sem eles nada do bloco de a11y funciona.
