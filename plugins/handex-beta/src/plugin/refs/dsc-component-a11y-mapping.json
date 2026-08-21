@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Fundação de dados (fase 1) para detecção automática de componente DSC → categoria de handoff de a11y. Gerado por build-dsc-a11y-mapping.cjs a partir de refs/web-angular-react.json (dados reais da REST API do Figma, sem valores inventados). NÃO usado em runtime — é insumo para revisão humana antes de qualquer fase de detecção/UI.",
-    "generatedAt": "2026-08-20T20:50:59.366Z",
+    "generatedAt": "2026-08-21T18:51:38.407Z",
     "generator": "build-dsc-a11y-mapping.cjs",
     "sourceFile": "web-angular-react.json",
     "sourceFileKey": "8QvOeTODSBi3PquJT5CISP",
@@ -32,12 +32,12 @@
         "variantCount": 646
       },
       "baixaConfianca": {
-        "families": 19,
-        "variantCount": 689
+        "families": 22,
+        "variantCount": 743
       },
       "semMatch": {
-        "families": 25,
-        "variantCount": 558
+        "families": 22,
+        "variantCount": 504
       },
       "pctFamiliesAlta": 27.9,
       "pctVariantsAlta": 34.1
@@ -104,8 +104,12 @@
         "variantCount": 88
       },
       "imagem": {
-        "families": 0,
-        "variantCount": 0
+        "families": 1,
+        "variantCount": 36
+      },
+      "estrutura": {
+        "families": 2,
+        "variantCount": 18
       }
     }
   },
@@ -518,6 +522,20 @@
       }
     },
     {
+      "containingFrame": "[dsc] Logotipo",
+      "variantCount": 36,
+      "sampleKeys": [
+        "ea56159696e33a98cdc0834ce5965af1932d5609",
+        "0f7a79660b01659b216701aa5b956920a35f94a3",
+        "ce0efe58277d4c6cebaf3d62a6d6c35a82919499"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "conteúdo de imagem/marca — precisa de texto alternativo"
+      }
+    },
+    {
       "containingFrame": "[dsc] Menu item",
       "variantCount": 36,
       "sampleKeys": [
@@ -543,6 +561,20 @@
         "shortName": "inputs",
         "confidence": "baixa",
         "reason": "sinônimo \"slider\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Footer",
+      "variantCount": 16,
+      "sampleKeys": [
+        "1c68f825551b0a52a7f4aa671074c57add906697",
+        "30d9b9328bbab424f60ac9667b8e0a6796c9bf96",
+        "3895dc9bc14bf6c48bf9b097dffef4183cf74a45"
+      ],
+      "match": {
+        "shortName": "estrutura",
+        "confidence": "baixa",
+        "reason": "estrutura de página — marco de navegação \"footer\""
       }
     },
     {
@@ -614,6 +646,19 @@
         "confidence": "baixa",
         "reason": "sinônimo \"input\""
       }
+    },
+    {
+      "containingFrame": "[dsc] Header",
+      "variantCount": 2,
+      "sampleKeys": [
+        "1f2f30971a809f97fd8f7ff103575cfc266aba6d",
+        "f394208b007750ee0fa6ff3b64e63d70dec411d6"
+      ],
+      "match": {
+        "shortName": "estrutura",
+        "confidence": "baixa",
+        "reason": "estrutura de página — marco de navegação \"header\""
+      }
     }
   ],
   "semMatch": [
@@ -634,16 +679,6 @@
         "00bb9ae744462140f253a63678c254fcd3715fa2",
         "00df9c38ab2f37c57d30705bb847979d71d5ad92",
         "0263517508e9cd2788051ff383f520865f7eaeae"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Logotipo",
-      "variantCount": 36,
-      "sampleKeys": [
-        "ea56159696e33a98cdc0834ce5965af1932d5609",
-        "0f7a79660b01659b216701aa5b956920a35f94a3",
-        "ce0efe58277d4c6cebaf3d62a6d6c35a82919499"
       ],
       "match": null
     },
@@ -684,16 +719,6 @@
         "022eae81d8c4a1e1b33bf7b15d755b2ac4fa912a",
         "23b476c357f6e59d985d6b65bd7f05f3c2be7e4b",
         "54dd907079c9ae669885fa5dd40e463457717b6b"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Footer",
-      "variantCount": 16,
-      "sampleKeys": [
-        "1c68f825551b0a52a7f4aa671074c57add906697",
-        "30d9b9328bbab424f60ac9667b8e0a6796c9bf96",
-        "3895dc9bc14bf6c48bf9b097dffef4183cf74a45"
       ],
       "match": null
     },
@@ -833,15 +858,6 @@
       "sampleKeys": [
         "2fa0fee13b225321cbe4e6df6e4d54fdca3f848b",
         "94808d8b6a05820f450a45b61d2a2b0e505ffbdf"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Header",
-      "variantCount": 2,
-      "sampleKeys": [
-        "1f2f30971a809f97fd8f7ff103575cfc266aba6d",
-        "f394208b007750ee0fa6ff3b64e63d70dec411d6"
       ],
       "match": null
     },

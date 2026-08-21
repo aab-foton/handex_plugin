@@ -511,6 +511,14 @@ function _bestEffortSyncA11yBadgeLetter(root, letter) {
 // segundo nível (conteúdo fixo); variação "customizavel" (nível 1) e
 // "customizavel" dentro de marco de navegação não têm conteúdo catalogado —
 // caem no fallback procedural.
+// BETA-ONLY: a11y-outro-wrapper-real — EXCEÇÃO a essa regra: "elemento"
+// isOutro (componente DSC real detectado, mas sem categoria de a11y
+// catalogada) NÃO lança mais — usa o wrapper real com a property
+// "componente" no valor DEFAULT da instância aninhada (não corresponde ao
+// componente real detectado), documentando o restante via texto em
+// Observações. Decisão confirmada com o designer: "Outro" precisa aparecer
+// no padrão visual da lib, mesmo com a discrepância — o badge "Verificar" já
+// avisa que precisa de revisão manual.
 async function _tryImportA11yComponent(opts) {
   const type = opts.a11yType;
 
@@ -521,14 +529,44 @@ async function _tryImportA11yComponent(opts) {
   let defaultEntry = null;
   let propCandidates = null;
   let propValue = null;
+  // BETA-ONLY: a11y-outro-wrapper-real — quando true, pula por completo o
+  // passo de achar a instância aninhada de "componente" e chamar
+  // setProperties nela (não existe componente real catalogado pra ajustar).
+  // O wrapper ainda é importado e instanciado normalmente logo abaixo — a
+  // instância aninhada interna fica no valor DEFAULT dela (ex: um mini-
+  // Accordion), o que é esperado e aceito pelo designer: o badge "Verificar"
+  // + o texto "Componente: <nome>" (escrito em Observações mais abaixo, ver
+  // _infoLines) já avisam que aquele card específico precisa de revisão
+  // manual. Só a categoria 'elemento' tem esse caso (as outras 4 categorias
+  // sempre têm subtipo real catalogado, nunca "Outro").
+  let skipNestedComponentProp = false;
 
   if (type === 'elemento') {
-    if (sub.isOutro || !sub.componente) throw new Error('a11y-elemento-outro-sem-componente-real');
-    defaultEntry = catData.componentes[sub.componente];
-    if (!defaultEntry) throw new Error('a11y-elemento-componente-desconhecido: ' + sub.componente);
-    // Nome confirmado no material da vertical (ver accessibility-specialist.md).
-    propCandidates = ['componente'];
-    propValue = sub.componente;
+    if (sub.isOutro) {
+      // BETA-ONLY: a11y-outro-wrapper-real — antes lançava aqui
+      // ('a11y-elemento-outro-sem-componente-real'), forçando o chamador a
+      // cair no fallback procedural (retângulo+texto desenhado à mão, fora do
+      // padrão visual da lib). Decisão confirmada com o designer: "Outro"
+      // precisa ser documentado mesmo sem categoria perfeita — segue em
+      // frente usando o WRAPPER REAL da lib, só sem trocar a property
+      // "componente" da instância aninhada (fica no default dela).
+      skipNestedComponentProp = true;
+      // defaultEntry seria usado mais abaixo pra achar o TEXT node de
+      // Observações pelo valor-padrão atual (_findTextNodeByCurrentValue) —
+      // sem um componente real escolhido não há defaultEntry.observacoes
+      // catalogado; o texto "Componente: <nome>"/"Label: <valor>" (já
+      // montado em opts.properties por _buildA11yElementoOutroPayload/
+      // confirmA11ySpec) precisa achar o campo por outro caminho, ver bloco
+      // "_infoLines" mais abaixo (fallback adicional só pro caso isOutro).
+      defaultEntry = null;
+    } else {
+      if (!sub.componente) throw new Error('a11y-elemento-outro-sem-componente-real');
+      defaultEntry = catData.componentes[sub.componente];
+      if (!defaultEntry) throw new Error('a11y-elemento-componente-desconhecido: ' + sub.componente);
+      // Nome confirmado no material da vertical (ver accessibility-specialist.md).
+      propCandidates = ['componente'];
+      propValue = sub.componente;
+    }
   } else if (type === 'titulo') {
     if (sub.nivel === 'mobile') throw new Error('a11y-titulo-mobile-sem-variante-real');
     defaultEntry = catData.niveis && catData.niveis[sub.nivel];
@@ -581,22 +619,36 @@ async function _tryImportA11yComponent(opts) {
   const wrapperComponent = await figma.importComponentByKeyAsync(catData.wrapperComponentKey);
   const instance = wrapperComponent.createInstance();
 
-  let found = _findNestedInstanceWithAnyProp(instance, propCandidates); // BETA-ONLY: a11y-formulario-dinamico — era `const`, virou `let` pra permitir reatribuição no bloco de nível 2 abaixo
-  if (!found) {
-    instance.remove();
-    throw new Error('a11y-instancia-aninhada-nao-encontrada: prop~=' + propCandidates.join('|'));
-  }
+  // BETA-ONLY: a11y-outro-wrapper-real — caso isOutro pula por completo a
+  // busca/setProperties da property "componente": não há valor real pra
+  // setar, e a instância aninhada interna (ex: um mini-Accordion) fica no
+  // default dela mesmo (aceito pelo designer, ver comentário acima). `found`
+  // aponta pro NÍVEL 1 (o próprio wrapper, sem key de property) só pra manter
+  // o resto da função (nível 2 de "elemento" logo abaixo, badge, etc.)
+  // funcionando sem precisar de um `if` extra em cada uso — os trechos que
+  // dependem de `found.key`/setProperties de nível 1 já não rodam nesse
+  // ramo porque `propCandidates`/`propValue` continuam null.
+  let found;
+  if (skipNestedComponentProp) {
+    found = { instance, key: null };
+  } else {
+    found = _findNestedInstanceWithAnyProp(instance, propCandidates); // BETA-ONLY: a11y-formulario-dinamico — era `const`, virou `let` pra permitir reatribuição no bloco de nível 2 abaixo
+    if (!found) {
+      instance.remove();
+      throw new Error('a11y-instancia-aninhada-nao-encontrada: prop~=' + propCandidates.join('|'));
+    }
 
-  // Validação combinada com o pedido da tarefa: loga a property completa uma
-  // vez por import pra facilitar conferir ao vivo no Figma (nome exato,
-  // sufixo #id, opções aceitas) sem precisar de outro ciclo de debug.
-  console.log('[a11y-import] propriedade encontrada:', found.key, JSON.stringify(instance.componentProperties));
+    // Validação combinada com o pedido da tarefa: loga a property completa uma
+    // vez por import pra facilitar conferir ao vivo no Figma (nome exato,
+    // sufixo #id, opções aceitas) sem precisar de outro ciclo de debug.
+    console.log('[a11y-import] propriedade encontrada:', found.key, JSON.stringify(instance.componentProperties));
 
-  try {
-    found.instance.setProperties({ [found.key]: propValue });
-  } catch (e) {
-    instance.remove();
-    throw new Error('a11y-set-properties-falhou: ' + (e && e.message ? e.message : e));
+    try {
+      found.instance.setProperties({ [found.key]: propValue });
+    } catch (e) {
+      instance.remove();
+      throw new Error('a11y-set-properties-falhou: ' + (e && e.message ? e.message : e));
+    }
   }
 
   // ══ BETA-ONLY: a11y-formulario-dinamico (início do trecho intercalado em
@@ -789,7 +841,24 @@ async function _tryImportA11yComponent(opts) {
     .filter(p => p && p.value && p.key !== 'descricao' && p.key !== 'notaCodigo' && !_dynamicToggleKeys.has(p.key)) // BETA-ONLY: a11y-formulario-dinamico — exclusão de _dynamicToggleKeys
     .map(p => `${p.label}: ${p.value}`)
     .join('\n');
-  if (_infoLines && defaultEntry.observacoes) {
+  // BETA-ONLY: a11y-outro-wrapper-real — caso isOutro não tem defaultEntry
+  // (não há componente real escolhido, ver acima), então não existe texto-
+  // padrão catalogado pra achar o TEXT node de Observações por valor atual
+  // (_findTextNodeByCurrentValue precisa saber o texto ANTES da edição). Cai
+  // num fallback best-effort por NOME DE CAMADA (mesmo padrão de
+  // _bestEffortSyncA11yBadgeLetter) — se não achar, a spec real ainda é
+  // criada, só sem o texto "Componente: <nome>" sincronizado no campo.
+  if (_infoLines && skipNestedComponentProp) {
+    try {
+      const obsNode = instance.findOne
+        ? instance.findOne(n => n.type === 'TEXT' && /observ/i.test(n.name))
+        : null;
+      if (obsNode) {
+        await figma.loadFontAsync(obsNode.fontName);
+        obsNode.characters = _infoLines;
+      }
+    } catch (e) { /* best-effort — nunca bloqueia a criação da spec */ }
+  } else if (_infoLines && defaultEntry && defaultEntry.observacoes) {
     const obsNode = _findTextNodeByCurrentValue(instance, defaultEntry.observacoes);
     if (obsNode) {
       try {
@@ -4547,6 +4616,21 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === "create-unified-spec") {
+    // BETA-ONLY: fix-toast-spec-fantasma-v3 — diagnóstico temporário de
+    // timing. Hipótese: o toast "fantasma" reportado pelo designer não é
+    // causado por selectionchange (investigação v1/v2 já descartou os únicos
+    // 2 pontos que reagem a toda mudança de seleção — flow-selection-bounds/
+    // tab-order-selection-changed — e nenhum alcança create-unified-spec).
+    // A suspeita agora é atraso real: os dois modais (Anotar Specs normal e
+    // A11y) fecham IMEDIATAMENTE ao clicar em "Criar"/"Aplicar", sem spinner
+    // nenhum, enquanto o backend ainda tem de 3 a 4 chamadas assíncronas de
+    // rede/IO pela frente (loadFontAsync x3 + importComponentByKeyAsync para
+    // specs de A11y). Se esse trecho levar segundos (rede lenta, cache frio
+    // da lib), o "Especificação criada" só aparece bem depois do clique —
+    // tempo em que o designer já pode ter clicado em outra coisa na árvore de
+    // camadas, criando a falsa impressão de causalidade. Log removível assim
+    // que confirmado/descartado ao vivo no Figma (ver resumo da tarefa).
+    const _t0 = Date.now();
     (async () => {
       const opts = msg.opts;
       // Suporte a targetNodeId (spec gerada a partir de exceção de frame)
@@ -4566,6 +4650,8 @@ figma.ui.onmessage = async (msg) => {
       try { await figma.loadFontAsync({ family: "Inter", style: "Regular" }); } catch (e) { }
       try { await figma.loadFontAsync({ family: "Inter", style: "Medium" }); } catch (e) { }
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
+      // BETA-ONLY: fix-toast-spec-fantasma-v3
+      console.log('[fantasma-v3] fontes carregadas em', Date.now() - _t0, 'ms desde a mensagem create-unified-spec');
 
       // Convert hex color to rgb (stroke = themeColor, fill = themeFill)
       const themeColor = hexToRgb(opts.color || '#005ca9');
@@ -4595,7 +4681,10 @@ figma.ui.onmessage = async (msg) => {
       let _a11yImportFailReason = null;
       if (opts.a11yType) {
         try {
+          // BETA-ONLY: fix-toast-spec-fantasma-v3
+          console.log('[fantasma-v3] iniciando importComponentByKeyAsync em', Date.now() - _t0, 'ms desde a mensagem');
           specCard = await _tryImportA11yComponent(opts);
+          console.log('[fantasma-v3] importComponentByKeyAsync concluído em', Date.now() - _t0, 'ms desde a mensagem');
           specCard.name = 'Spec Notes';
           // Fundo branco garantido — o componente real já nasce branco na
           // maioria dos casos, mas força explicitamente pra não depender
@@ -4618,6 +4707,16 @@ figma.ui.onmessage = async (msg) => {
         }
       }
 
+      // BETA-ONLY: a11y-outro-wrapper-real — 'a11y-elemento-outro-sem-
+      // componente-real' fica praticamente ÓRFÃ pro caso isOutro específico:
+      // _tryImportA11yComponent não lança mais esse erro quando sub.isOutro
+      // === true (segue em frente usando o wrapper real, ver comentário lá).
+      // Mantida na lista porque o mesmo texto de erro ainda é lançado num
+      // segundo cenário, bem mais raro — sub.isOutro === false MAS
+      // sub.componente vazio/undefined (estado inconsistente do payload que
+      // não deveria acontecer no fluxo normal, mas o guard continua
+      // defensivo) — nesse caso ainda é um fallback esperado, não uma falha
+      // real de biblioteca.
       const _A11Y_EXPECTED_FALLBACK_PREFIXES = [
         'a11y-elemento-outro-sem-componente-real',
         'a11y-titulo-mobile-sem-variante-real',
@@ -5304,6 +5403,12 @@ figma.ui.onmessage = async (msg) => {
       // Se o Spec Notes caiu no fallback ESPERADO (variação sem componente
       // real catalogado), avisa que o card foi desenhado — não é erro, mas o
       // designer deve saber que essa combinação ainda não tem cobertura real.
+      // BETA-ONLY: fix-toast-spec-fantasma-v3 — log com o tempo TOTAL entre a
+      // mensagem chegar e este notify disparar. Se o designer reportar "cliquei
+      // na árvore de camadas e o toast apareceu" e este número for de vários
+      // segundos, confirma a hipótese de atraso assíncrono (não causalidade
+      // com o clique) — ver comentário no topo do handler create-unified-spec.
+      console.log('[fantasma-v3] figma.notify disparado', Date.now() - _t0, 'ms após a mensagem create-unified-spec ter chegado');
       if (opts.a11yType && _isExpectedFallback) {
         figma.notify(`Especificação criada com card desenhado (sem componente real catalogado para esta variação: ${_a11yImportFailReason}). Arraste para posicionar.`);
       } else {

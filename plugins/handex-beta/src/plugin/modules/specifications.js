@@ -1866,6 +1866,15 @@
       closeSpecNewExceptionModal();
       closeSpecFormModal();
       _duplicateSpecSourceProps = null;
+      // BETA-ONLY: fix-toast-spec-fantasma-v3 — o modal fecha instantaneamente
+      // ao clicar, mas o backend ainda tem trabalho assíncrono pela frente
+      // (loadFontAsync x3, e importComponentByKeyAsync quando é spec de A11y)
+      // antes de mostrar "Especificação criada". Sem nenhum feedback nesse
+      // meio-tempo, um designer que já clicou em outro elemento da árvore de
+      // camadas enquanto esperava pode atribuir o toast (quando finalmente
+      // aparece) a esse clique, achando que foi ele quem criou a spec por
+      // engano. Este toast imediato fecha essa lacuna de percepção.
+      showToast('Criando especificação…');
       parent.postMessage({ pluginMessage: { type: 'create-unified-spec', opts } }, '*');
 
       window._pendingSpecOpts = null;

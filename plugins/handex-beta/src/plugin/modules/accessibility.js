@@ -1197,6 +1197,51 @@ function _buildA11yDecorativoPayload(label) {
   ].filter(p => p.value);
   return { letter: A11Y_CATEGORIES.decorativo.badge, properties, a11ySubtype: { tipo } };
 }
+
+// BETA-ONLY: a11y-mapeamento-header-footer-logo
+// Deduz o "tipo" de marco de navegação (header/nav/main/aside/footer) a
+// partir do containingFrame do componente DSC real detectado no canvas — por
+// ora só "[dsc] Header" → 'header' e "[dsc] Footer" → 'footer' têm
+// correspondência curada (ver A11Y_STRUCTURAL_EXACT_OVERRIDES,
+// build-dsc-a11y-mapping.cjs). Fallback 'header' quando o nome não é
+// reconhecido (não deveria acontecer hoje, já que só essas duas famílias
+// resolvem para shortName 'estrutura', mas evita `undefined` chegando em
+// A11Y_CONTENT.estrutura.marco[tipo] se o mapeamento crescer no futuro sem
+// atualizar esta função).
+function _inferA11yEstruturaTipoFromContainingFrame(containingFrame) {
+  const name = String(containingFrame || '').toLowerCase();
+  if (name.includes('footer')) return 'footer';
+  if (name.includes('header')) return 'header';
+  return 'header';
+}
+
+// Payload puro pra categoria "estrutura" (Estrutura da Página) no lote —
+// mesmo espírito de _buildA11yElementoPayload. Diferente de "titulo"/
+// "decorativo" (badge fixo, ver A11Y_CATEGORIES), "estrutura" usa TAG MANUAL
+// sequencial (A, B, C...) igual a "elemento"/"informacoes" (A11Y_CATEGORIES.
+// estrutura.badge === null) — por isso recebe `letter` como parâmetro, já
+// calculado pelo chamador (confirmA11yBatchGenerate), em vez de derivar um
+// badge fixo internamente.
+// "estrutura" tem DOIS níveis de subtipo (variacao → tipo); no lote, a
+// variacao é sempre fixada em "marco de navegacao" (o único subtipo com
+// correspondência DSC detectável hoje — "idiomas"/"titulo da pagina" não têm
+// componente real associável a um nó do canvas). `tipo` vem de
+// _inferA11yEstruturaTipoFromContainingFrame, a partir do componente DSC real
+// reconhecido (ex: "[dsc] Header" → 'header').
+function _buildA11yEstruturaPayload(letter, label, containingFrame) {
+  const variacao = 'marco de navegacao';
+  const tipo = _inferA11yEstruturaTipoFromContainingFrame(containingFrame);
+  const entry = A11Y_CONTENT.estrutura.marco[tipo];
+  const properties = [
+    { key: 'descricao', label: 'Descrição', value: (entry && entry.descricao) || '' },
+    { key: 'label', label: 'Label', value: label },
+  ].filter(p => p.value);
+  return {
+    letter,
+    properties,
+    a11ySubtype: { variacao, tipo, idioma: null },
+  };
+}
 // ══ BETA-ONLY: a11y-deteccao-automatica (pausa — confirmA11ySpec abaixo é pré-existente) ══
 
 function confirmA11ySpec() {
@@ -1357,6 +1402,14 @@ function confirmA11ySpec() {
   }
 
   closeA11yModal();
+  // BETA-ONLY: fix-toast-spec-fantasma-v3 — mesmo raciocínio de
+  // finalizeSpecCreation (specifications.js): o modal fecha na hora, mas o
+  // backend ainda precisa de figma.loadFontAsync (x3) + importComponentByKeyAsync
+  // (import real da lib "Design Acessível") antes de notificar. Isso pode
+  // levar segundos sem NENHUM feedback visível, criando a falsa impressão de
+  // que um clique posterior (ex: na árvore de camadas) foi o que disparou o
+  // toast "Especificação criada" quando ele finalmente aparece.
+  showToast('Criando especificação de acessibilidade…');
 
   // Reversão da Fase 3 (2026-07-23): confirmar o formulário volta a criar o
   // nó de verdade no canvas na hora — mesmo handler 'create-unified-spec' das
@@ -2226,8 +2279,15 @@ function openA11yBatchSummaryModal() {
     const isUnmapped = item.dscComponentMatch.isUnmapped === true;
     const shortName = isUnmapped ? null : item.dscComponentMatch.a11yCategory;
     const confidence = isUnmapped ? 'baixa' : (item.dscComponentMatch.confidence === 'alta' ? 'alta' : 'baixa');
-    const containingFrame = isUnmapped ? item.dscComponentMatch.containingFrame : null;
-    const key = isUnmapped ? ('outro|' + containingFrame) : (shortName + '|' + confidence);
+    const containingFrame = item.dscComponentMatch.containingFrame;
+    // BETA-ONLY: a11y-mapeamento-header-footer-logo — 'estrutura' agrupa por
+    // containingFrame também no caso mapeado (não só isUnmapped): "[dsc]
+    // Header" e "[dsc] Footer" resolvem pro mesmo shortName 'estrutura', mas
+    // são marcos de navegação DIFERENTES — misturá-los num único grupo
+    // "Estrutura" escondia a distinção do designer no resumo do lote.
+    const key = isUnmapped ? ('outro|' + containingFrame)
+      : shortName === 'estrutura' ? ('estrutura|' + confidence + '|' + containingFrame)
+      : (shortName + '|' + confidence);
     if (!groups[key]) groups[key] = { shortName, confidence, containingFrame, isUnmapped, count: 0 };
     groups[key].count++;
   });
@@ -2243,6 +2303,10 @@ function openA11yBatchSummaryModal() {
     groupsWrap.innerHTML = groupList.map(g => {
       const label = g.isUnmapped
         ? `Outro (${_cleanDscContainingFrameName(g.containingFrame)})`
+        // BETA-ONLY: a11y-mapeamento-header-footer-logo — mostra o nome real
+        // do componente DSC (ex: "Header"/"Footer") em vez do shortName
+        // genérico "Estrutura", já que o grupo agora é por containingFrame.
+        : g.shortName === 'estrutura' ? `Estrutura da Página (${_cleanDscContainingFrameName(g.containingFrame)})`
         : (A11Y_COMPONENTE_LABELS[g.shortName] || _capitalizeFirst(g.shortName));
       const isBaixa = g.confidence !== 'alta';
       return `
@@ -2486,6 +2550,10 @@ async function confirmA11yBatchGenerate() {
     // de fato a letra sequencial calculada aqui. Sem essa checagem, um lote
     // intercalado (ex: título + botão + decorativo) pularia letras à toa
     // pro próximo elemento real.
+    // BETA-ONLY: a11y-mapeamento-header-footer-logo — "estrutura" também
+    // consome letra sequencial (A11Y_CATEGORIES.estrutura.badge === null,
+    // mesmo padrão de "elemento"/"informacoes" — diferente de "titulo"/
+    // "decorativo", que têm badge fixo real).
     const usesSequentialLetter = shortName !== 'titulo' && shortName !== 'decorativo';
     const letter = usesSequentialLetter ? toLetters(startIndex + nextLetterIndex) : null;
     if (usesSequentialLetter) nextLetterIndex++;
@@ -2503,7 +2571,13 @@ async function confirmA11yBatchGenerate() {
     // 'elemento'. Cada categoria nasce com o default mais comum (H1, subtipo
     // "gerais") — decisão consciente do usuário de priorizar velocidade,
     // revisão manual depois.
-    const a11yType = (shortName === 'titulo' || shortName === 'decorativo') ? shortName : 'elemento';
+    // BETA-ONLY: a11y-mapeamento-header-footer-logo — 'estrutura' é mais um
+    // shortName que já É o a11yType (mesmo grupo de 'titulo'/'decorativo'
+    // nesse sentido), vindo de A11Y_STRUCTURAL_EXACT_OVERRIDES
+    // (build-dsc-a11y-mapping.cjs) pra componentes DSC reais de
+    // Header/Footer — mas, diferente deles, usa tag manual sequencial (ver
+    // usesSequentialLetter acima), não badge fixo.
+    const a11yType = (shortName === 'titulo' || shortName === 'decorativo' || shortName === 'estrutura') ? shortName : 'elemento';
     // BETA-ONLY: a11y-inferencia-variante-lote — pré-seleciona a variante
     // secundária quando o componente real no canvas já sinaliza um estado/
     // variação com correspondência DSC conhecida (ver _inferA11yVariantFromDsc).
@@ -2515,6 +2589,7 @@ async function confirmA11yBatchGenerate() {
     const built = isUnmapped ? _buildA11yElementoOutroPayload(letter, item.dscComponentMatch.containingFrame, item.name || 'Elemento')
       : a11yType === 'titulo' ? _buildA11yTituloPayload(item.name || 'Elemento', item.dscComponentMatch.suggestedLevel)
       : a11yType === 'decorativo' ? _buildA11yDecorativoPayload(item.name || 'Elemento')
+      : a11yType === 'estrutura' ? _buildA11yEstruturaPayload(letter, item.name || 'Elemento', item.dscComponentMatch.containingFrame)
       : _buildA11yElementoPayload(letter, shortName, item.name || 'Elemento', {
         tipo: _inferA11yVariantFromDsc(shortName, item.variants) || undefined,
       });

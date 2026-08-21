@@ -72,6 +72,30 @@ const A11Y_SYNONYMS = {
   table: ['tabela', 'table'],
 };
 
+// BETA-ONLY: a11y-mapeamento-header-footer-logo
+// Correspondências indiretas para famílias DSC que representam ESTRUTURA de
+// página (não um dos 16 componentes interativos catalogados em
+// A11Y_SHORTNAMES) ou conteúdo de imagem/marca. Tratadas à parte de
+// A11Y_SYNONYMS porque os shortNames de destino ('estrutura', 'imagem') não
+// fazem parte da lista de 16 componentes de "Elementos e Imagens" — 'estrutura'
+// é uma das 5 categorias FIXAS de a11y (Estrutura da Página, subtipo "marco de
+// navegação"), e 'imagem' já existe em A11Y_SHORTNAMES mas usa sinônimos
+// específicos aqui por precisão (match por NOME EXATO do containingFrame, não
+// substring — "[dsc] Header"/"[dsc] Footer" são nomes curtos demais para
+// substring seguro sem gerar falso-positivo em outras famílias, ex: "[dsc-tc]
+// Footer Template", que é um template de documentação e não deve casar).
+// Confiança sempre 'baixa' — é correspondência indireta/curada por nós, não o
+// nome literal de um shortName. Confirmado com o designer (2026-08-21): Header
+// e Footer têm marco de navegação real na lib "Design Acessível"
+// (EE marco de navegacao → tipo header/footer); Logotipo não tem componente
+// próprio, mas semanticamente precisa de texto alternativo (categoria
+// "Elementos e Imagens" → 'imagem').
+const A11Y_STRUCTURAL_EXACT_OVERRIDES = {
+  '[dsc] Header': { shortName: 'estrutura', reason: 'estrutura de página — marco de navegação "header"' },
+  '[dsc] Footer': { shortName: 'estrutura', reason: 'estrutura de página — marco de navegação "footer"' },
+  '[dsc] Logotipo': { shortName: 'imagem', reason: 'conteúdo de imagem/marca — precisa de texto alternativo' },
+};
+
 function normalize(str) {
   return String(str || '')
     .normalize('NFD').replace(/[̀-ͯ]/g, '') // remove acentos
@@ -99,6 +123,19 @@ function squash(str) {
 function matchShortName(containingFrameName) {
   const norm = normalize(containingFrameName);
   const sq = squash(containingFrameName);
+
+  // BETA-ONLY: a11y-mapeamento-header-footer-logo — checagem por NOME EXATO
+  // (não substring) do containingFrame cru, antes de qualquer outro teste.
+  // Precisa vir primeiro porque 'estrutura'/'imagem' (destinos aqui) não
+  // seguem o mesmo vocabulário de shortName "família de componente
+  // interativo" do restante da função, e usar substring nesses nomes curtos
+  // ("Header"/"Footer") arriscaria casar por engano outras famílias (ex:
+  // "[dsc-tc] Footer Template", que é um template de doc, não uma instância
+  // real de rodapé — não deve mudar de bucket).
+  const override = A11Y_STRUCTURAL_EXACT_OVERRIDES[String(containingFrameName || '').trim()];
+  if (override) {
+    return { shortName: override.shortName, confidence: 'baixa', reason: override.reason };
+  }
 
   // Casos ambíguos conhecidos que precisam de tratamento explícito ANTES do
   // teste genérico de substring, senão geram falso-positivo de alta confiança:
@@ -199,8 +236,15 @@ function main() {
   // não deste agregado. BETA-ONLY: a11y-mapeamento-interativo — antes só
   // somava `alta`, escondendo famílias reais classificadas via sinônimo
   // (ex.: "inputs" aparecia zerado mesmo com 10 famílias em baixaConfianca).
+  // BETA-ONLY: a11y-mapeamento-header-footer-logo — 'estrutura' não é um dos
+  // 16 shortNames de A11Y_SHORTNAMES (é uma das 5 categorias FIXAS de a11y,
+  // não um componente de "Elementos e Imagens"), mas pode aparecer como
+  // match.shortName via A11Y_STRUCTURAL_EXACT_OVERRIDES — sem essa entrada
+  // extra, o incremento abaixo quebraria com "Cannot read properties of
+  // undefined" na primeira família de Header/Footer.
   const byShortName = {};
   for (const s of A11Y_SHORTNAMES) byShortName[s] = { families: 0, variantCount: 0 };
+  byShortName['estrutura'] = { families: 0, variantCount: 0 };
   for (const entry of [...alta, ...baixa]) {
     byShortName[entry.match.shortName].families += 1;
     byShortName[entry.match.shortName].variantCount += entry.variantCount;
