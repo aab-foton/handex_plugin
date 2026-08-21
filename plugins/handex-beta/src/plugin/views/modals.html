@@ -1194,20 +1194,21 @@
              estes dois campos e do handler 'create-a11y-area' (code.js:
              A11Y_AREA_CONECTOR_KEYS). Ver MIGRATION-BETA-TO-MAIN.md. -->
         <!-- BETA-ONLY: fix-modal-marcar-area-rolagem — Conector/Número
-             recolhidos por padrão num accordion (toggleAccordion genérico,
-             core.js): são os dois campos mais prováveis de já estar corretos
-             no default na maioria dos casos, então escondê-los reduz a altura
-             visível do caso comum sem perder o campo — sugestão do design-ux
-             ao avaliar se valia separar Automático/Manual num 2º modal
-             (recomendação foi manter modal único, ver a11y-marcar-area-unificado,
-             e recolher aqui em vez disso). -->
+             agrupados num accordion (toggleAccordion genérico, core.js) que
+             nasce ABERTO por padrão (o designer pediu explicitamente pra não
+             ficar recolhido — a tentativa inicial de recolher por padrão pra
+             economizar altura não pegou bem no teste real). O accordion em
+             si continua existindo (pode ser recolhido manualmente), só não
+             começa fechado. Resolve o problema de rolagem original via
+             max-h-[85vh] + corpo rolável no container do modal, não pelo
+             recolhimento. -->
         <div class="rounded-xl border border-gray-200 dark:border-dark-line overflow-hidden">
-          <button type="button" onclick="toggleAccordion(this)" aria-expanded="false"
+          <button type="button" onclick="toggleAccordion(this)" aria-expanded="true"
             class="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors">
-            <span class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Configurações do selo — Topo · Nº automático</span>
-            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:rotate(0deg)"></i>
+            <span class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Configurações do selo</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:rotate(180deg)"></i>
           </button>
-          <div class="accordion-content hidden px-3 pb-3 space-y-4">
+          <div class="accordion-content px-3 pb-3 space-y-4">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Posição do conector</label>
           <div class="grid grid-cols-5 gap-1.5">
