@@ -1671,6 +1671,30 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
       <i data-lucide="chevron-down" id="chevron-${uid}" class="w-4 h-4 text-gray-400 transition-transform shrink-0" style="transform:${expand ? 'rotate(180deg)' : 'rotate(0deg)'}"></i>
     </div>
     <div id="body-${uid}" class="accordion-content ${expand ? '' : 'hidden'} border-t border-gray-50 dark:border-dark-line p-2 space-y-2">
+      <!-- BETA-ONLY: a11y-switch-modo-visualizacao — segmented control de 3
+           posições escopado a ESTA área, substituindo os 2 botões
+           independentes de a11y-reducao-ruido-visual. Linha discreta no
+           início do body expandido — o cabeçalho do accordion já está cheio
+           (Nova spec/Focar/Remover/chevron). -->
+      ${(() => {
+        const curMode = window._a11yAreaViewMode[area.id] || 'specs';
+        const opts = [
+          { mode: 'specs', label: 'Specs' },
+          { mode: 'tabOrder', label: 'Tabulação' },
+          { mode: 'ambos', label: 'Ambos' }
+        ];
+        return `
+      <div class="flex items-center gap-0.5 p-0.5 rounded-full bg-gray-100 dark:bg-dark-line/40 w-fit mb-1" role="group" aria-label="Modo de visualização das marcações desta área">
+        ${opts.map(o => `
+        <button type="button" onclick="setAreaViewMode('${area.id}', '${o.mode}')"
+          aria-pressed="${curMode === o.mode}"
+          class="px-2.5 h-6 rounded-full text-[10px] font-bold transition-colors ${curMode === o.mode
+            ? 'bg-white dark:bg-dark-surface text-[#0070AF] dark:text-cyan-400 shadow-sm'
+            : 'text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300'}">
+          ${o.label}
+        </button>`).join('')}
+      </div>`;
+      })()}
       <!-- BETA-ONLY: a11y-subaccordions — antes era areaSpecs.map(_a11ySpecItemHtml)
            direto, sem agrupar por categoria dentro da área. -->
       ${areaSpecs.length > 0
@@ -1788,8 +1812,18 @@ function renderA11yGroupedList() {
     .map((s, i) => (s ? Object.assign({}, s, { originalIndex: i }) : null))
     .filter(Boolean);
 
-  const hint = document.getElementById('hint-a11y-areas');
-  if (hint) hint.classList.toggle('hidden', areas.length > 0);
+  // BETA-ONLY: a11y-reducao-ruido-visual — banner azul fixo (#hint-a11y-areas)
+  // virou um snackbar (showToast), reaproveitando o mesmo componente usado em
+  // dezenas de outras notificações do plugin (ver #toast-container, core.js).
+  // Antes ocupava espaço permanente no layout enquanto não havia área
+  // nenhuma marcada, competindo com o parágrafo fixo logo acima do título
+  // (mesma explicação, duas vezes). Dispara só 1x por sessão do plugin —
+  // um toast a cada re-render da lista (que pode acontecer com frequência)
+  // seria irritante. Flag em memória, não persiste entre sessões.
+  if (areas.length === 0 && !window._a11yEmptyAreasHintShown) {
+    window._a11yEmptyAreasHintShown = true;
+    showToast('As especificações de acessibilidade nascem dentro de uma área marcada.');
+  }
 
   // Marcar Área é pré-requisito: sem nenhuma área, nem mostramos a lista —
   // orienta a marcar a primeira antes de anotar qualquer spec.
@@ -2486,40 +2520,46 @@ function toggleA11ySpecVisibility(originalIndex) {
 }
 window.toggleA11ySpecVisibility = toggleA11ySpecVisibility;
 
-// BETA-ONLY: a11y-toggle-visibilidade-tipo — dois atalhos de "tudo de uma
-// vez" por TIPO de marcação no canvas, independentes do toggle por item
-// acima (toggleA11ySpecVisibility): um pra todas as specs de leitor de tela
-// (áreas marcadas + cards de a11y) e outro só pros selos de Ordem de
-// Tabulação. A distinção de quem é o quê é feita no BACKEND direto no canvas
-// (handler 'toggle-a11y-category-visibility', code.js), nunca a partir de
-// a11ySpecs/tabOrderItems locais — que podem estar desatualizados se o
-// designer mexeu manualmente no canvas. Estado local aqui só controla
-// ícone/label do botão (efêmero, não persiste entre sessões).
-let _a11ySpecsHiddenAll = false;
-let _a11yTabOrderHiddenAll = false;
+// BETA-ONLY: a11y-switch-modo-visualizacao — controle de visibilidade POR
+// ÁREA, agora como switch de 3 posições ('specs' | 'tabOrder' | 'ambos') em
+// vez dos 2 toggles independentes anteriores (a11y-reducao-ruido-visual).
+// Motivo da troca: 1 clique pra trocar de lente é mais direto que 2 cliques
+// pra sair de "specs visíveis" e chegar em "tab order visível". Default
+// 'specs' (fluxo primário/mais frequente da vertical) quando a área não tem
+// entrada no mapa ainda. Mesmo raciocínio de antes pro backend: canvas não
+// guarda vínculo de área nas specs/badges, então a decisão de visível/oculto
+// é sempre recalculada no dado local e aplicada nó a nó via hide-node/
+// show-node (sem handler de "lote" novo). Estado é efêmero (objeto em
+// memória), não persiste entre sessões.
+window._a11yAreaViewMode = window._a11yAreaViewMode || {};
 
-function _setA11yCategoryToggleBtnState(btnId, hidden, label) {
-  const btn = document.getElementById(btnId);
-  if (!btn) return;
-  btn.innerHTML = hidden
-    ? `<i data-lucide="eye" class="w-3.5 h-3.5"></i> Mostrar ${label}`
-    : `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i> Ocultar ${label}`;
-  _refreshIcons();
-}
+function setAreaViewMode(areaId, mode) {
+  const validModes = ['specs', 'tabOrder', 'ambos'];
+  const safeMode = validModes.includes(mode) ? mode : 'specs';
+  window._a11yAreaViewMode[areaId] = safeMode;
 
-function toggleAllA11ySpecsVisibility() {
-  _a11ySpecsHiddenAll = !_a11ySpecsHiddenAll;
-  _setA11yCategoryToggleBtnState('btn-hide-all-a11y-specs', _a11ySpecsHiddenAll, 'Specs');
-  parent.postMessage({ pluginMessage: { type: 'toggle-a11y-category-visibility', category: 'specs', visible: !_a11ySpecsHiddenAll } }, '*');
-}
-window.toggleAllA11ySpecsVisibility = toggleAllA11ySpecsVisibility;
+  const specsVisible = safeMode === 'specs' || safeMode === 'ambos';
+  const tabOrderVisible = safeMode === 'tabOrder' || safeMode === 'ambos';
 
-function toggleAllTabOrderVisibility() {
-  _a11yTabOrderHiddenAll = !_a11yTabOrderHiddenAll;
-  _setA11yCategoryToggleBtnState('btn-hide-all-tab-order', _a11yTabOrderHiddenAll, 'Ordem de Tabulação');
-  parent.postMessage({ pluginMessage: { type: 'toggle-a11y-category-visibility', category: 'tabOrder', visible: !_a11yTabOrderHiddenAll } }, '*');
+  (a11ySpecs || [])
+    .filter(s => s && s.a11yAreaId === areaId && s.id)
+    .forEach(spec => {
+      spec.visible = specsVisible;
+      parent.postMessage({ pluginMessage: { type: specsVisible ? 'show-node' : 'hide-node', id: spec.id } }, '*');
+    });
+
+  _currentTabOrderItems(areaId)
+    .filter(it => it && it.id)
+    .forEach(item => {
+      item.visible = tabOrderVisible;
+      parent.postMessage({ pluginMessage: { type: tabOrderVisible ? 'show-node' : 'hide-node', id: item.id } }, '*');
+    });
+
+  saveToStorage();
+  saveSpecsToStorage();
+  renderA11yGroupedList();
 }
-window.toggleAllTabOrderVisibility = toggleAllTabOrderVisibility;
+window.setAreaViewMode = setAreaViewMode;
 
 // "Concluir posicionamento" — trava o specGroup no canvas (lock-spec já
 // aceita o prefixo '[SpecA11y | ...]', ver regex em code.js). A UI só some o

@@ -1701,44 +1701,13 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
-  // BETA-ONLY: a11y-toggle-visibilidade-tipo — toggle de visibilidade em
-  // massa por TIPO, dentro da Section de Acessibilidade: 'specs' (leitor de
-  // tela — tudo com handexCategory 'a11y' que NÃO seja selo de Ordem de
-  // Tabulação) vs 'tabOrder' (só os selos '[TabOrder | N] ...'). Mesma
-  // distinção por prefixo de nome que delete-canvas-content já usa acima —
-  // fonte de verdade é o canvas em tempo real, não os arrays locais
-  // (a11ySpecs/tabOrderItems), que podem estar desatualizados se o designer
-  // mexeu manualmente no canvas.
-  if (msg.type === 'toggle-a11y-category-visibility') {
-    try {
-      const category = msg.category === 'tabOrder' ? 'tabOrder' : 'specs';
-      const visible = !!msg.visible;
-      const section = figma.currentPage.children.find(
-        n => n.type === 'SECTION' && n.name === A11Y_SECTION_NAME
-      );
-      const isTabOrder = (node) => !!(node.name && node.name.startsWith('[TabOrder'));
-      const isA11ySpec = (node) => {
-        if (isTabOrder(node)) return false;
-        const tag = node.getPluginData('handexCategory');
-        if (tag) return tag === 'a11y';
-        return !!(node.name && (node.name.startsWith('[SpecA11y') || node.name.startsWith('[A11yArea')));
-      };
-      const matcher = category === 'tabOrder' ? isTabOrder : isA11ySpec;
-      let changed = 0;
-      if (section) {
-        (section.children || []).forEach(node => {
-          if (matcher(node)) {
-            try { node.visible = visible; changed++; } catch (e) { }
-          }
-        });
-      }
-      figma.ui.postMessage({ type: 'a11y-category-visibility-toggled', category, visible, changed });
-    } catch (e) {
-      console.error('toggle-a11y-category-visibility failed:', e);
-      figma.notify('Erro ao alternar visibilidade no canvas', { error: true });
-    }
-    return;
-  }
+  // BETA-ONLY: a11y-reducao-ruido-visual — handler 'toggle-a11y-category-visibility'
+  // removido (órfão): operava sobre a Section de Acessibilidade inteira, sem
+  // distinguir área, e não tinha mais chamador depois que o controle de
+  // visibilidade virou POR ÁREA (setAreaViewMode, accessibility.js —
+  // BETA-ONLY: a11y-switch-modo-visualizacao), que reaproveita os handlers
+  // singulares 'hide-node'/'show-node' já existentes abaixo, um nó por vez,
+  // iterando os ids da área no frontend. Ver MIGRATION-BETA-TO-MAIN.md.
 
   if (msg.type === 'scan-cache-save') {
     figma.clientStorage.setAsync('handex-scan-cache-v1', msg.data).catch(e =>

@@ -283,18 +283,13 @@
         return;
       }
 
-      // BETA-ONLY: a11y-toggle-visibilidade-tipo — confirmação do backend
-      // (toggle-a11y-category-visibility, code.js). O clique já é otimista
-      // no frontend (toggleAllA11ySpecsVisibility/toggleAllTabOrderVisibility,
-      // accessibility.js); esta resposta só cobre o caso de 0 nós afetados
-      // (ex: nada criado ainda), avisando o designer em vez de ficar silencioso.
-      if (msg.type === 'a11y-category-visibility-toggled') {
-        if (!msg.changed) {
-          const label = msg.category === 'tabOrder' ? 'selo de Ordem de Tabulação' : 'especificação de leitor de tela';
-          showToast(`Nenhum(a) ${label} encontrado(a) no canvas.`);
-        }
-        return;
-      }
+      // BETA-ONLY: a11y-reducao-ruido-visual — removido o handler de
+      // 'a11y-category-visibility-toggled' (confirmação do antigo toggle
+      // global por TIPO no canvas inteiro). Substituído pelo controle por
+      // ÁREA (setAreaViewMode, accessibility.js — BETA-ONLY:
+      // a11y-switch-modo-visualizacao), que usa hide-node/show-node — sem
+      // handler de "lote" no backend, logo sem mensagem de confirmação a
+      // tratar aqui. Ver MIGRATION-BETA-TO-MAIN.md.
 
       if (msg.type === 'scan-cache-loaded') {
         if (msg.data && msg.data.specs) {
