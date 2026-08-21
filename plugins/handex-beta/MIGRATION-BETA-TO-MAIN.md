@@ -525,6 +525,97 @@ Três correções pontuais no scan/detecção de a11y, investigadas e com causa 
 
 ---
 
+## 26. `a11y-tabordem-copia-frame`
+
+Reformulação de arquitetura da Ordem de Tabulação (não um ajuste pontual): os selos numerados **pararam de ser desenhados sobre os elementos de trabalho reais** e passaram a ser desenhados numa **CÓPIA separada do frame da área**, clonada e posicionada ao lado do frame original. **Substitui por completo** o comportamento de desenho/exibição descrito nos itens 5 (`a11y-ordem-tabulacao-por-area`) e 24 (`a11y-switch-modo-visualizacao`, sub-revisão documentada dentro do item 24 `a11y-reducao-ruido-visual`) — o restante desses dois itens (escopo por área, subaccordion, drag-and-drop de reordenação, geração automática por varredura de camadas) continua válido e é reaproveitado, só a MECÂNICA de onde/quando os selos são desenhados mudou.
+
+### Contexto que motivou a mudança
+
+Nos dois fluxos antigos (clique manual e geração automática), o selo nascia direto no canvas de trabalho no instante da captura/varredura — o que gerava ruído visual sobre o design real (motivo de várias correções anteriores: subaccordion recolhível, switch "Specs ⇄ Ordem de Tabulação" pra alternar visibilidade). A reformulação elimina o ruído na raiz: **nada é desenhado no canvas de trabalho**; a Ordem de Tabulação vira um artefato à parte (a cópia), e o switch de visibilidade (item 24) perdeu a razão de existir porque os dois tipos de marcação (Specs e Ordem de Tabulação) agora vivem em canvas fisicamente diferentes e nunca competem visualmente.
+
+### Arquitetura de dados nova
+
+- **`window._tabOrderPendingList`** (array, frontend, `accessibility.js`) — lista PENDENTE, nunca persiste em `handoffData`/`saveSpecsToStorage`, reinicia a cada novo fluxo (manual ou automático). Item: `{ nodeId, nodeName, tempId }` — `nodeId` é sempre do elemento ORIGINAL (nunca da cópia, que ainda não existe nesta fase); `tempId` (`tmp-N`, contador incremental em memória) serve de chave estável pro drag-and-drop/exclusão antes de existir um `id` real de node no canvas.
+- **`window._tabOrderPendingAreaId` / `window._tabOrderPendingTargetNodeId`** — contexto da sessão pendente atual (qual área, qual node raiz clonar). Limpo em `cancelTabOrderReview` e ao aplicar com sucesso.
+- **`window._tabOrderCaptureMode`** (`'continuous' | 'single' | null`) — estado da escuta de seleção do canvas. `'continuous'`: todo clique único vira item pendente (fluxo manual, ativo enquanto o modal está "escutando"). `'single'`: aguardando exatamente 1 clique (via "+ Adicionar item" dentro do modal), depois volta ao modo anterior (`window._tabOrderResumeCaptureMode`) ou desliga de vez. As duas modalidades reaproveitam o MESMO par de mensagens `start-tab-order-mode`/`stop-tab-order-mode` e o MESMO listener de backend (`figma.on('selectionchange')`, já compartilhado com `flows-mini-mapa-conector-criacao`) — a diferença de comportamento é decidida inteiramente no front, em `handleTabOrderSelectionChanged`.
+- **`tabOrderItems`/`frame.tabOrderItems`** (schema já existente, `core.js`) — continuam sendo a fonte de verdade dos itens JÁ APLICADOS no canvas (na cópia), sem mudança de formato. `a11yAreaId` continua escopando por área.
+- **PluginData novo `handexTabOrderCopyForArea`** (gravado no FRAME/GROUP da cópia clonada, não nos selos) — chave usada pra localizar/substituir a cópia de uma área específica sem depender do nome (que o designer pode editar livremente). Complementa `handexCategory: 'a11y'` (já existente), que continua garantindo que "Apagar Tudo" reconheça a cópia mesmo ela vivendo fora da Section de Acessibilidade.
+
+### Fluxo manual reformulado
+
+1. "Iniciar Ordem de Tabulação" (`startTabOrderManualMode`, `accessibility.js`) reinicia `_tabOrderPendingList`, abre o modal de revisão (`openTabOrderReviewModal`) e liga a escuta contínua (`_tabOrderSetCaptureMode('continuous')`).
+2. Cada clique subsequente no canvas chega via `tab-order-selection-changed` (mesma mensagem/listener de sempre) e cai em `handleTabOrderSelectionChanged`, que: (a) empurra `{nodeId, nodeName, tempId}` pra lista pendente; (b) aplica um highlight temporário reaproveitando o mecanismo JÁ EXISTENTE `highlight-node`/`clear-highlight` (`code.js` — o mesmo usado por outros pontos do plugin pra "piscar" um elemento; desenha um `strokeRect` de contorno por cima do elemento, removido depois) — **decisão técnica**: não foi criado handler novo de highlight; `figma.currentPage.selection` sozinho foi descartado como alternativa porque mudar a seleção real do canvas a cada clique interferiria com o próprio clique seguinte do designer (o Figma trata seleção como estado importante pro usuário, não como sinalização efêmera) — o contorno desenhado é puramente visual e não haria esse conflito. (c) re-renderiza a lista pendente no modal.
+3. Nada é criado no canvas nesta fase — só ao clicar "Aplicar no Canvas".
+
+### Fluxo automático reformulado
+
+1. "Gerar Automaticamente" chama `_confirmGenerateTabOrderFromLayers` → `generate-tab-order-from-layers` (`code.js`) — o handler continua fazendo a MESMA varredura/filtro/ordenação espacial de sempre (critério de elegibilidade via `A11Y_INTERACTIVE_SHORTNAMES`, tolerância de 24px pra "mesma linha"), mas **parou de desenhar qualquer coisa**: devolve só `{nodeId, nodeName}[]` já ordenado espacialmente.
+2. `addTabOrderItemsFromLayers` (front) popula `_tabOrderPendingList` com os candidatos e abre o modal de revisão JÁ PREENCHIDO.
+3. Dentro do modal, "+ Adicionar item" (`startTabOrderAddItemWait`) liga a escuta em modo `'single'`: o botão muda de rótulo ("Selecione um elemento no canvas…") e desabilita; o próximo clique cai no MESMO `handleTabOrderSelectionChanged` do fluxo manual, adiciona o item, e a escuta volta ao estado anterior (nenhuma, no caso do automático puro).
+4. Drag-and-drop pra reordenar reaproveita a MESMA UX visual do drag-and-drop antigo (`_tabOrderDragOver`/`_tabOrderDragEnd` compartilhados), mas com um par novo `_tabOrderPendingDragStart`/`_tabOrderPendingDrop` que opera sobre `_tabOrderPendingList` por `tempId`/índice, já que não existe posição real no canvas ainda pra esses itens.
+
+### Decisão de UX: modal único, sempre aberto durante o manual também
+
+A tarefa deixou explícito que essa decisão cabia a mim, com justificativa documentada. Optei por manter o modal de revisão **aberto durante TODO o fluxo manual**, não só ao final. Motivos:
+1. O requisito já exigia que "+ Adicionar item" colocasse o modal num estado de espera de clique — ou seja, o mecanismo de "modal + escuta de canvas" já precisava existir de qualquer forma.
+2. Abrir o modal desde o início do fluxo manual dá o feedback "ao vivo" pedido explicitamente na tarefa ("renderização visual dessa lista sendo montada em tempo real") sem duplicar UI: só existe UMA lista visual (dentro do modal), nunca duas (uma no accordion, outra no modal) fazendo a mesma coisa em paralelo.
+3. Simplifica o código: um único caminho (`abrir modal → popular lista pendente via cliques → revisar/reordenar → aplicar`) serve os dois fluxos, em vez de manter uma lista "ao vivo" dentro do accordion pro manual e migrar pra dentro do modal só quando o automático precisar dela.
+
+Efeito colateral aceito: durante o fluxo manual, a UI do plugin fica "tomada" pelo modal (o designer não navega outras abas/áreas enquanto captura a sequência) — julgado aceitável porque o fluxo de captura sequencial já exige atenção focada no canvas mesmo hoje.
+
+### Algoritmo de mapeamento original → clone (parte mais delicada)
+
+Ao clicar "Aplicar no Canvas" (`applyTabOrderToCanvas`, front → `apply-tab-order-to-canvas`, `code.js`):
+
+1. **Remove cópia anterior da mesma área**, se existir — varre `figma.currentPage.children` procurando `getPluginData('handexTabOrderCopyForArea') === areaId` (nunca por nome) e remove. Garante que nunca acumula cópias órfãs.
+2. **Clona** o node raiz da área (`root.clone()`) e posiciona a cópia à direita do frame original (`root.absoluteBoundingBox.x + width + gap`, gap de 80px — maior que o `_TAB_ORDER_GAP`/`_A11Y_AREA_GAP` de 24px usados pros selos individuais, porque aqui é uma cópia de frame inteiro, precisa de mais respiro visual). Nome: `` `[Ordem de Tabulação] ${root.name}` ``. Grava `handexCategory: 'a11y'` + `handexTabOrderCopyForArea: areaId`.
+3. **Constrói o mapa nodeId-original → node-do-clone** (`_buildOriginalToCloneMap`, `code.js`) percorrendo as duas árvores EM PARALELO, **por índice de filho a filho** (`origNode.children[i]` ↔ `cloneNode.children[i]`), recursivamente, começando do par `(root, clone)`. **Por que índice e não nome:** `node.clone()` na Plugin API do Figma preserva exatamente a mesma estrutura de árvore do original — mesma contagem de filhos, mesma ordem, mesmo aninhamento — então a correspondência posicional é determinística; nomes de camada, ao contrário, podem se repetir dentro da mesma área (cenário comum e explicitamente citado na tarefa), então nome NUNCA é usado como critério de correspondência. O mapa cobre TODOS os nós da árvore (não só os interativos), simplesmente porque é mais barato mapear tudo de uma vez percorrendo a árvore 1x do que filtrar antes.
+4. **Desenha os selos na cópia**: para cada item da lista final (já com `number` recalculado por posição, `1..N`), busca `mappedNode = nodeMap.get(item.nodeId)`; se não encontrar (guarda-corpo: elemento apagado entre a captura no canvas e a confirmação no modal) pula o item com aviso, sem abortar o lote inteiro. Reaproveita `_createTabOrderBadge` (mesma função de sempre, mesma lógica geométrica relativa a `absoluteBoundingBox`), agora com um 6º parâmetro novo `reparentToSection` (default `true`, preserva compatibilidade) — passado como `false` aqui, porque o selo precisa ficar posicionado relativo à CÓPIA (fora da Section de Acessibilidade); reparentar pra Section quebraria esse posicionamento.
+5. Responde `tab-order-applied-to-canvas` com os itens já criados (mesmo formato de sempre, `id` = grupo do selo real) + `copyName`. O front (`handleTabOrderAppliedToCanvas`) descarta do array de dados QUALQUER item antigo desta mesma área antes de inserir os novos (a cópia anterior inteira já foi apagada no passo 1, então ids antigos apontariam pra nós inexistentes) e reaproveita `addTabOrderItem` item a item, mesmo padrão de sempre.
+
+### Exclusão em cascata (`deleteA11yArea`) — ajuste necessário
+
+Excluir uma Área Marcada agora também remove: os itens de Ordem de Tabulação já aplicados daquela área (nós na cópia, apagados um a um) E a própria cópia do frame (handler novo `delete-tab-order-copy-for-area`, localiza só por `handexTabOrderCopyForArea === areaId`). Sem isso a cópia ficaria órfã no canvas — um gap que já existia de forma mais discreta no modelo antigo (selos soltos não removidos ao excluir área), mas que ficou mais visível/impactante agora que a Ordem de Tabulação é um frame inteiro clonado.
+
+### Handlers de backend (`code.js`)
+
+- **Removido** `create-tab-order-item` (órfão — desenhava o selo imediatamente a cada clique do fluxo manual antigo; nenhum chamador depois da reformulação). `_createTabOrderBadge` (função interna que ele usava) foi mantida e ganhou o parâmetro `reparentToSection`.
+- **`generate-tab-order-from-layers`** — contrato de resposta mudou: `items` agora é `{nodeId, nodeName}[]` (candidatos), nunca itens já desenhados. Mantém toda a lógica de filtro/ordenação espacial anterior.
+- **Novo `apply-tab-order-to-canvas`** — clona, mapeia, desenha (ver algoritmo acima). Responde `tab-order-applied-to-canvas`.
+- **Novo `delete-tab-order-copy-for-area`** — remove a cópia de uma área por pluginData, usado pela exclusão em cascata.
+- `renumber-tab-order-items` — inalterado (segue operando sobre selos já aplicados, agora na cópia em vez do frame original, mas a lógica de `setProperties` não muda).
+
+### Frontend (`accessibility.js`)
+
+- Bloco novo grande marcado `BETA-ONLY: a11y-tabordem-copia-frame`: `startTabOrderManualMode`, `openTabOrderReviewModal`, `_tabOrderSetCaptureMode`, `startTabOrderAddItemWait`/`_tabOrderResetAddItemButton`, `handleTabOrderSelectionChanged` (reescrita — não cria mais nada, só popula lista pendente + highlight), `_renderTabOrderPendingList`, `_tabOrderPendingDragStart`/`_tabOrderPendingDrop`, `deleteTabOrderPendingItem`, `cancelTabOrderReview`, `applyTabOrderToCanvas`, `handleTabOrderAppliedToCanvas`.
+- **Removidas por completo:** `toggleTabOrderMode` (fluxo manual antigo, criava direto) e o switch de visibilidade `setAreaViewMode`/`window._a11yAreaViewMode` (`a11y-switch-modo-visualizacao`, dentro do item 24) — o segmented control "Specs ⇄ Tabulação" foi removido do corpo expandido de `_a11yAreaAccordionEl` sem deixar órfãos (confirmado via grep; `hide-node`/`show-node`, reaproveitados por aquele switch, continuam existindo genericamente pra outros usos, não foram tocados).
+- `_confirmGenerateTabOrderFromLayers`/`addTabOrderItemsFromLayers` — reescritas pro novo contrato (candidatos → lista pendente → modal), não mais push direto em `tabOrderItems`.
+- **Mantidas sem mudança de comportamento:** `_currentTabOrderItems`, `addTabOrderItem`, `_renderTabOrderListForArea` (+ seu próprio drag-and-drop `_tabOrderDrag*`/`_tabOrderDrop`), `updateTabOrderNumbering`, `deleteTabOrderItem` — todas continuam operando sobre itens JÁ APLICADOS no canvas (agora na cópia), exibidos dentro do accordion da área (não no modal).
+- `_tabOrderSectionHtml` — os 2 botões ("Iniciar Ordem de Tabulação"/"Gerar Automaticamente") agora chamam `startTabOrderManualMode`/`_confirmGenerateTabOrderFromLayers` (ambos abrem o modal), em vez de alternar um modo local com mudança de cor/texto do próprio botão.
+
+### Views (`modals.html`)
+
+Novo modal `#a11y-tab-order-review-modal` — segue o padrão visual dos demais modais de a11y (`#a11y-batch-summary-modal` como referência mais próxima: header com ícone+título+X, corpo com lista scrollável, footer com 2 botões). Contém: parágrafo de instrução, botão "+ Adicionar item", `<ul>` da lista pendente + estado vazio, footer "Cancelar"/"Aplicar no Canvas" (desabilitado enquanto a lista está vazia).
+
+### Decisões tomadas sem pedido explícito (documentar se for revisitar)
+
+1. **Highlight temporário reaproveita `highlight-node`/`clear-highlight` existentes**, sem handler novo — ver justificativa na seção "Fluxo manual reformulado" acima (por que não usar `figma.currentPage.selection` como highlight nativo).
+2. **Gap da cópia de frame: 80px** (vs. 24px dos selos individuais) — julgamento de que uma cópia de frame inteiro precisa de mais respiro visual do que um selo pequeno; não validado com a vertical de a11y, ajustar se o designer achar deslocado.
+3. **Mapa original→clone cobre a árvore inteira**, não só os nós interativos — mais simples de implementar (uma passada só) e mais barato do que filtrar durante a construção do mapa.
+4. **Numeração ao aplicar sempre reinicia em `1..N`** para a lista completa sendo aplicada (não continua de uma numeração anterior) — consistente com o fato de que a cópia inteira é recriada do zero a cada "Aplicar no Canvas" (item 6 abaixo).
+5. **"Aplicar no Canvas" sempre substitui a cópia inteira da área**, nunca faz merge incremental com uma cópia já existente — mais simples e mais previsível (o designer sempre vê o resultado final coerente da lista que revisou), ao custo de não poder "adicionar mais um item numa cópia já aplicada" sem reabrir o fluxo do zero (reabrir "Iniciar"/"Gerar Automaticamente" de novo já cobre esse caso, só que recomeçando a lista pendente vazia — limitação aceita, não pedida explicitamente pra resolver).
+
+### Risco de migração e limitações conhecidas
+
+**Risco:** médio-alto, concentrado inteiramente no algoritmo de mapeamento original→clone (`_buildOriginalToCloneMap`) — não testado no Figma real nesta sessão (só verificado por leitura cuidadosa + `node --check` de sintaxe). Pontos de atenção pra quem for validar/migrar:
+- Depende do comportamento documentado de `node.clone()` preservar estrutura/ordem de filhos idêntica ao original — comportamento esperado da Plugin API, mas nunca custa confirmar num teste real antes de dar como certo.
+- Se o frame da área tiver `INSTANCE`s com overrides que alteram a contagem de filhos visíveis dinamicamente (raro, mas existe na Plugin API em casos de variant swap complexo), o mapeamento por índice pode desalinhar — não investigado a fundo, sinalizar se acontecer.
+- `root.clone()` falha (guard já implementado) se `root` não tiver `.clone()` — praticamente todo tipo de node tem, exceto alguns tipos especiais; o guard evita crash mas não foi exercitado com um caso real de falha.
+
+**Dependências que a main não tem hoje.** As mesmas do bloco de a11y como um todo — depende de `a11y-marcar-area` (item 3), `a11y-ordem-tabulacao-por-area` (item 5) e `a11y-subaccordions` (item 7) já migrados (este item reformula o comportamento de desenho deles, não os substitui por inteiro). Depende também de `a11y-mapeamento-interativo` (item 16, critério de elegibilidade da varredura automática) e `a11y-ordenacao-espacial` (item 17, ordenação por leitura visual). Se `a11y-reducao-ruido-visual`/`a11y-switch-modo-visualizacao` (item 24) já estiver na main, este item deve remover o switch de visibilidade por completo ao ser aplicado — não deixar os dois coexistindo.
+
+---
+
 ## Ordem de migração recomendada
 
 1. **Dados/refs primeiro:** `refs/design-acessivel-component-properties.json`, `refs/dsc-component-a11y-mapping.json` — sem eles nada do bloco de a11y funciona.
@@ -540,5 +631,6 @@ Três correções pontuais no scan/detecção de a11y, investigadas e com causa 
 11. **`finalizar-registros-condicional`** + **`apagar-tudo`** — confirmar primeiro se `main` já tem parte disso via commit `931febe` (paridade main→beta anterior) antes de migrar às cegas.
 12. **`flows-mini-mapa-conector-criacao`** — migrar a mudança de contrato de `_buildFlowConnection` e os 4 chamadores como unidade atômica (função + 3 pontos de chamada pré-existentes + `resync-all-flows` novo).
 13. **`ficha-atualiza-sem-duplicar`** + **`ficha-specs-avulsas-sem-frame`** + **`ficha-a11y-agrupada-por-area`** — migrar juntas por último, já que vivem no mesmo handler grande de geração de ficha e a arquitetura `_hd*` de `main` diverge da beta aqui. Validar a Ficha gerada manualmente no Figma depois.
+14. **`a11y-tabordem-copia-frame`** (item 26) — migrar por ÚLTIMO dentro do grupo de a11y, depois de 7/8 (`a11y-ordem-tabulacao-por-area`/`a11y-subaccordions`) e de 24 (`a11y-reducao-ruido-visual`/`a11y-switch-modo-visualizacao`) já estarem no lugar — este item reformula/substitui parte do comportamento deles e remove o switch de visibilidade do item 24 por completo. **Validar manualmente no Figma antes de dar como concluído**: é a sub-feature de maior risco técnico deste documento (algoritmo de mapeamento original→clone nunca testado num arquivo real, só verificado por leitura — ver seção "Risco de migração e limitações conhecidas" no item 26).
 
 Depois de cada bloco migrado, rodar `npm run bundle:ui && npm run bundle:code` em `main` e testar no Figma antes de prosseguir pro próximo — não empilhar múltiplas features sem validação intermediária, dado o volume de interdependências mapeadas acima.

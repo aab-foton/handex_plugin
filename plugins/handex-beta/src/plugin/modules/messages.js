@@ -530,33 +530,42 @@
       }
 
       // ══ BETA-ONLY: a11y-ordem-tabulacao (início) ═══════════════════════
-      // Depende de: handlers 'start-tab-order-mode'/'create-tab-order-item'/
-      // 'generate-tab-order-from-layers'/'renumber-tab-order-items' em
-      // code.js, e handleTabOrderSelectionChanged/addTabOrderItem/
-      // addTabOrderItemsFromLayers em accessibility.js. Ver
+      // Depende de: handlers 'start-tab-order-mode'/'generate-tab-order-from-layers'/
+      // 'apply-tab-order-to-canvas'/'renumber-tab-order-items' em code.js, e
+      // handleTabOrderSelectionChanged/addTabOrderItem/addTabOrderItemsFromLayers/
+      // handleTabOrderAppliedToCanvas em accessibility.js. Ver
       // MIGRATION-BETA-TO-MAIN.md.
       // --- Acessibilidade --- "Ordem de Tabulação": chega a cada mudança de
-      // seleção enquanto o modo de clique sequencial está ativo (ver
-      // start-tab-order-mode/figma.on('selectionchange') em code.js).
-      // handleTabOrderSelectionChanged já faz o early-return se o modo tiver
-      // sido desligado nesse meio tempo.
+      // seleção enquanto alguma escuta está ativa (contínua no fluxo manual,
+      // ou de 1 clique só via "+ Adicionar item" — ver start-tab-order-mode/
+      // figma.on('selectionchange') em code.js). handleTabOrderSelectionChanged
+      // já faz o early-return se a escuta tiver sido desligada nesse meio
+      // tempo. BETA-ONLY: a11y-tabordem-copia-frame — não cria mais nada no
+      // canvas aqui, só empurra pra lista pendente do modal de revisão.
       if (msg.type === "tab-order-selection-changed") {
         if (typeof handleTabOrderSelectionChanged === 'function') {
           handleTabOrderSelectionChanged(msg.nodeId, msg.nodeName);
         }
       }
 
-      if (msg.type === "tab-order-item-created") {
-        if (typeof addTabOrderItem === 'function') addTabOrderItem(msg.item);
-        if (window._toastSaved) _toastSaved();
-      }
-
       // Geração automática por varredura de camadas (generate-tab-order-
-      // from-layers em code.js) — responde de uma vez com todos os itens
-      // criados; addTabOrderItemsFromLayers reaproveita addTabOrderItem
-      // item a item pra manter o mesmo merge avulsa/por-frame.
+      // from-layers em code.js) — BETA-ONLY: a11y-tabordem-copia-frame:
+      // responde só com os CANDIDATOS ({nodeId, nodeName}[], já ordenados
+      // espacialmente), nunca itens já desenhados. addTabOrderItemsFromLayers
+      // popula a lista pendente e abre o modal de revisão.
       if (msg.type === "tab-order-generated-from-layers") {
         if (typeof addTabOrderItemsFromLayers === 'function') addTabOrderItemsFromLayers(msg.items);
+      }
+
+      // BETA-ONLY: a11y-tabordem-copia-frame — resposta de
+      // 'apply-tab-order-to-canvas' (code.js): a cópia do frame já foi criada
+      // e os selos já foram desenhados nela; os itens vêm com id real
+      // (grupo do selo, na cópia) prontos pro mesmo tratamento de
+      // addTabOrderItem que os fluxos antigos já usavam.
+      if (msg.type === "tab-order-applied-to-canvas") {
+        if (typeof handleTabOrderAppliedToCanvas === 'function') {
+          handleTabOrderAppliedToCanvas(msg.items, msg.copyName);
+        }
       }
 
       // Confirmação de renumber-tab-order-items — os números já foram

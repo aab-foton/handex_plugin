@@ -1310,6 +1310,53 @@
        chama _confirmGenerateTabOrderFromLayers(area.id, area.targetNodeId)
        direto, sem perguntar qual área. Ver MIGRATION-BETA-TO-MAIN.md. ══ -->
 
+  <!-- ══ BETA-ONLY: a11y-tabordem-copia-frame (início) ══
+       Modal único de revisão da Ordem de Tabulação — serve TANTO o fluxo
+       manual (clique sequencial no canvas) QUANTO o automático (varredura de
+       camadas). Decisão de UX: o modal fica aberto durante TODO o fluxo
+       manual também (não só ao final) — ver _tabOrderPendingOpenManual em
+       accessibility.js e MIGRATION-BETA-TO-MAIN.md pra justificativa. Nada é
+       desenhado no canvas (exceto o highlight temporário do item recém-
+       clicado) até o clique em "Aplicar no Canvas" — só então a cópia do
+       frame é criada e os selos são desenhados nela (ver handler
+       apply-tab-order-to-canvas, code.js). Fechar/Cancelar descarta a lista
+       pendente sem nenhum efeito colateral no canvas. -->
+  <div id="a11y-tab-order-review-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-tab-order-review-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="cancelTabOrderReview()" aria-hidden="true"></div>
+    <div class="relative w-full max-w-sm max-h-[88vh] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
+        <h3 id="a11y-tab-order-review-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
+          <i data-lucide="list-ordered" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i> Ordem de Tabulação
+        </h3>
+        <button onclick="cancelTabOrderReview()" title="Cancelar" aria-label="Cancelar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="p-4 pb-2 shrink-0">
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mb-3">
+          Clique nos elementos do canvas, em sequência, ou use "Adicionar item". Arraste para reordenar. Nada é desenhado no canvas até "Aplicar no Canvas".
+        </p>
+        <button type="button" id="btn-tab-order-add-item" onclick="startTabOrderAddItemWait()"
+          class="w-full flex items-center justify-center gap-2 h-8 rounded-xl text-[10.5px] font-bold transition-all border border-cyan-200 dark:border-cyan-800/40 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99]">
+          <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
+          <span data-tab-order-add-item-label>Adicionar item</span>
+        </button>
+      </div>
+      <div class="px-4 overflow-y-auto flex-1 min-h-0" onscroll="handleScroll(this)">
+        <ul id="a11y-tab-order-pending-list" class="flex flex-col gap-1.5 min-h-[10px] pb-2"></ul>
+        <p id="a11y-tab-order-pending-empty" class="text-[10px] text-slate-400 dark:text-dark-muted text-center py-6">Nenhum item ainda — clique num elemento do canvas para começar.</p>
+      </div>
+      <div class="p-4 border-t border-gray-100 dark:border-dark-line shrink-0 flex gap-2">
+        <button onclick="cancelTabOrderReview()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Cancelar</button>
+        <button id="btn-tab-order-apply" onclick="applyTabOrderToCanvas()" disabled
+          class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl transition-colors shadow-lg shadow-cyan-500/20">
+          Aplicar no Canvas
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- ══ BETA-ONLY: a11y-tabordem-copia-frame (fim) ══ -->
+
   <!-- ══ BETA-ONLY: a11y-deteccao-automatica (início, modal de lote) ══
        Depende de: openA11yBatchSummaryModal/closeA11yBatchSummaryModal/
        confirmA11yBatchGenerate (accessibility.js). Ver

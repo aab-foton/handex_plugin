@@ -5581,7 +5581,13 @@ figma.ui.onmessage = async (msg) => {
   // ecoado no item retornado (não influencia o desenho no canvas). É o que
   // permite ao frontend escopar a numeração por Área Marcada em vez de uma
   // sequência única por frame. Ver MIGRATION-BETA-TO-MAIN.md.
-  async function _createTabOrderBadge(node, number, label, conector, areaId) {
+  // BETA-ONLY: a11y-tabordem-copia-frame — parâmetro reparentToSection
+  // (default true, preserva o comportamento antigo pra qualquer chamador que
+  // ainda não passe nada). apply-tab-order-to-canvas passa `false`: o selo
+  // precisa ficar posicionado relativo à CÓPIA do frame (fora da Section de
+  // Acessibilidade), não junto das specs — reparentar pra Section quebraria
+  // esse posicionamento relativo.
+  async function _createTabOrderBadge(node, number, label, conector, areaId, reparentToSection) {
     const _conectorOptions = ['desativado', 'inferior', 'superior', 'esquerda', 'direita'];
     // "Direita" é o padrão: mantém o selo visível ao lado do elemento sem
     // sobrepor o conteúdo, mesma convenção adotada em create-a11y-area.
@@ -5642,7 +5648,9 @@ figma.ui.onmessage = async (msg) => {
     group.locked = false;
     group.setPluginData('handexCategory', 'a11y');
 
-    _reparentIntoA11ySection(group);
+    if (reparentToSection !== false) {
+      _reparentIntoA11ySection(group);
+    }
 
     return {
       group,
@@ -5659,37 +5667,26 @@ figma.ui.onmessage = async (msg) => {
     };
   }
 
-  if (msg.type === "create-tab-order-item") {
-    (async () => {
-      const node = await figma.getNodeByIdAsync(msg.targetNodeId);
-      if (!node || !node.absoluteBoundingBox) {
-        figma.notify("Elemento não encontrado no canvas — selecione novamente.");
-        return;
-      }
-      try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
-
-      // BETA-ONLY: a11y-ordem-tabulacao-por-area — msg.areaId agora é
-      // obrigatório no fluxo normal (front bloqueia início do modo sem área
-      // ativa), mas o handler continua tolerante a undefined por segurança.
-      const { group, usedRealComponent, item } = await _createTabOrderBadge(node, msg.number, msg.label, msg.conector, msg.areaId);
-
-      figma.currentPage.selection = [group];
-      figma.viewport.scrollAndZoomIntoView([group]);
-
-      figma.ui.postMessage({ type: "tab-order-item-created", item });
-
-      figma.notify(usedRealComponent
-        ? "Elemento marcado na ordem de tabulação."
-        : 'Elemento marcado — não foi possível usar o selo real da lib "Design Acessível" (modo simplificado).');
-    })();
-  }
+  // BETA-ONLY: a11y-tabordem-copia-frame — handler "create-tab-order-item"
+  // (desenhava o selo IMEDIATAMENTE sobre o elemento original a cada clique
+  // do fluxo manual) removido: órfão desde que startTabOrderManualMode/
+  // handleTabOrderSelectionChanged (accessibility.js) pararam de chamá-lo —
+  // o fluxo manual agora só popula a lista pendente do modal de revisão.
+  // _createTabOrderBadge (acima) continua em uso, reaproveitado por
+  // apply-tab-order-to-canvas (abaixo). Ver MIGRATION-BETA-TO-MAIN.md.
 
   // --- Acessibilidade --- "Ordem de Tabulação" — geração automática varrendo
   // a árvore de camadas de uma Área Marcada já existente, em profundidade
   // (ordem real de node.children, a mesma do painel Layers do Figma — não
-  // posição visual X/Y). Complementar ao modo de clique manual acima, não um
-  // substituto: o designer pode reordenar depois via drag-and-drop na lista
-  // e clicar "Atualizar" (renumber-tab-order-items) pra ajustar os selos.
+  // posição visual X/Y). Complementar ao fluxo manual acima, não um
+  // substituto: o designer pode reordenar/adicionar itens no modal de
+  // revisão antes de "Aplicar no Canvas".
+  //
+  // BETA-ONLY: a11y-tabordem-copia-frame — este handler PAROU de desenhar
+  // qualquer coisa no canvas. Devolve só {nodeId, nodeName} de cada
+  // candidato, já ordenado espacialmente — quem desenha de fato é o handler
+  // apply-tab-order-to-canvas, só quando o designer confirma no modal de
+  // revisão (front: openTabOrderReviewModal/addTabOrderItemsFromLayers).
   //
   // BETA-ONLY: a11y-mapeamento-interativo — critério de elegibilidade deixou
   // de ser puramente estrutural (qualquer INSTANCE/COMPONENT). A lib "Design
@@ -5763,27 +5760,15 @@ figma.ui.onmessage = async (msg) => {
         return boundsA.x - boundsB.x;
       });
 
-      try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
-
-      const items = [];
-      const createdGroups = [];
-      let baseNumber = typeof msg.startNumber === 'number' ? msg.startNumber : 1;
-      for (let i = 0; i < collected.length; i++) {
-        const node = collected[i];
-        if (!node.absoluteBoundingBox) continue;
-        // BETA-ONLY: a11y-ordem-tabulacao-por-area — areaId ecoado no item.
-        const { group, item } = await _createTabOrderBadge(node, baseNumber + i, '', 'direita', msg.areaId);
-        createdGroups.push(group);
-        items.push(item);
-      }
-
-      if (createdGroups.length > 0) {
-        figma.currentPage.selection = createdGroups;
-        figma.viewport.scrollAndZoomIntoView(createdGroups);
-      }
+      // BETA-ONLY: a11y-tabordem-copia-frame — items agora é só a lista de
+      // candidatos {nodeId, nodeName}, na ordem espacial já calculada acima.
+      // Nada é criado/selecionado/scrollado no canvas aqui.
+      const items = collected
+        .filter(node => !!node.absoluteBoundingBox)
+        .map(node => ({ nodeId: node.id, nodeName: node.name }));
 
       figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items });
-      figma.notify(`${items.length} elemento${items.length === 1 ? '' : 's'} numerado${items.length === 1 ? '' : 's'} automaticamente.`);
+      figma.notify(`${items.length} elemento${items.length === 1 ? '' : 's'} encontrado${items.length === 1 ? '' : 's'} — revise no modal antes de aplicar.`);
     })();
   }
 
@@ -5810,6 +5795,139 @@ figma.ui.onmessage = async (msg) => {
       figma.ui.postMessage({ type: "tab-order-renumbered", updated });
     })();
   }
+  // ══ BETA-ONLY: a11y-tabordem-copia-frame (início) ══
+  // "Aplicar no Canvas" — única etapa do fluxo reformulado de Ordem de
+  // Tabulação que de fato desenha algo. Recebe a lista final (já revisada/
+  // reordenada no modal) com o nodeId do elemento ORIGINAL de cada item, e:
+  //   1. Localiza/recria a CÓPIA do frame da área (nunca acumula cópias
+  //      órfãs — se já existe uma cópia anterior desta MESMA área, remove
+  //      antes de criar a nova).
+  //   2. Constrói um mapa nodeId-original → node-equivalente-no-clone,
+  //      percorrendo as duas árvores (original e clone) EM PARALELO, índice
+  //      a índice de `children` — `node.clone()` preserva exatamente a
+  //      mesma estrutura/ordem/contagem de filhos que o original, então a
+  //      correspondência por índice é determinística mesmo com nomes
+  //      duplicados (não dá pra confiar em nome pra desempatar). Ver
+  //      _buildOriginalToCloneMap abaixo.
+  //   3. Desenha os selos na CÓPIA, usando a mesma _createTabOrderBadge de
+  //      sempre, mas passando o node MAPEADO (dentro do clone) como alvo de
+  //      posicionamento — nunca o original.
+  //
+  // PluginData 'handexTabOrderCopyForArea' (gravado no FRAME da cópia, não
+  // nos selos) é o que permite localizar/remover a cópia anterior da mesma
+  // área da próxima vez, sem depender só do nome (que o designer pode
+  // editar).
+  function _buildOriginalToCloneMap(originalRoot, clonedRoot) {
+    const map = new Map();
+    map.set(originalRoot.id, clonedRoot);
+    (function walkPair(origNode, cloneNode) {
+      const origChildren = origNode.children || [];
+      const cloneChildren = cloneNode.children || [];
+      // Mesma árvore/mesma origem (clone recém-criado, nunca editado) —
+      // comprimento sempre deveria bater; guarda-corpo defensivo, não erro
+      // esperado no fluxo normal.
+      const len = Math.min(origChildren.length, cloneChildren.length);
+      for (let i = 0; i < len; i++) {
+        map.set(origChildren[i].id, cloneChildren[i]);
+        walkPair(origChildren[i], cloneChildren[i]);
+      }
+    })(originalRoot, clonedRoot);
+    return map;
+  }
+
+  if (msg.type === "apply-tab-order-to-canvas") {
+    (async () => {
+      const root = await figma.getNodeByIdAsync(msg.targetNodeId);
+      if (!root || !root.absoluteBoundingBox) {
+        figma.notify("Área não encontrada no canvas — marque novamente.");
+        figma.ui.postMessage({ type: "tab-order-applied-to-canvas", items: [] });
+        return;
+      }
+      if (typeof root.clone !== 'function') {
+        figma.notify("Este elemento não pode ser copiado — marque a área sobre um frame/grupo.");
+        figma.ui.postMessage({ type: "tab-order-applied-to-canvas", items: [] });
+        return;
+      }
+
+      // Passo 1 — remove cópia anterior da MESMA área, se existir (nunca
+      // acumular cópias órfãs). Procura por pluginData, não só por nome (o
+      // designer pode ter renomeado a cópia).
+      for (const sibling of figma.currentPage.children) {
+        try {
+          if (sibling.getPluginData && sibling.getPluginData('handexTabOrderCopyForArea') === msg.areaId) {
+            sibling.remove();
+          }
+        } catch (e) { }
+      }
+
+      const clone = root.clone();
+      figma.currentPage.appendChild(clone);
+      const _TAB_ORDER_COPY_GAP = 80;
+      clone.x = Math.round(root.absoluteBoundingBox.x + root.absoluteBoundingBox.width + _TAB_ORDER_COPY_GAP);
+      clone.y = Math.round(root.absoluteBoundingBox.y);
+      clone.name = `[Ordem de Tabulação] ${root.name}`;
+      clone.locked = false;
+      // handexCategory: 'a11y' garante que "Apagar Tudo" (ver
+      // matchCategory/toggle 'a11y' mais acima no arquivo) reconhece e
+      // remove esta cópia mesmo ela vivendo FORA da Section de
+      // Acessibilidade (_getOrCreateA11ySection) — matchCategory prioriza a
+      // pluginData sobre o prefixo de nome, então não depende do nome
+      // `[Ordem de Tabulação] ...` estar cadastrado ali.
+      clone.setPluginData('handexCategory', 'a11y');
+      clone.setPluginData('handexTabOrderCopyForArea', msg.areaId || '');
+
+      // Passo 2 — mapa original→clone por correspondência estrutural
+      // (índice de filho a filho), única forma confiável já que nomes de
+      // camada podem se repetir dentro da mesma área.
+      const nodeMap = _buildOriginalToCloneMap(root, clone);
+
+      try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
+
+      // Passo 3 — desenha os selos na cópia, usando o node MAPEADO (dentro
+      // do clone) como alvo de posicionamento — nunca o original. Item cujo
+      // nodeId não resolve no mapa (ex: elemento apagado entre a captura no
+      // canvas e a confirmação no modal) é pulado com aviso, sem abortar o
+      // lote inteiro.
+      const items = [];
+      const createdGroups = [];
+      let skipped = 0;
+      for (const entry of (msg.items || [])) {
+        const mappedNode = nodeMap.get(entry.nodeId);
+        if (!mappedNode || !mappedNode.absoluteBoundingBox) {
+          skipped++;
+          continue;
+        }
+        const { group, item } = await _createTabOrderBadge(mappedNode, entry.number, '', 'direita', msg.areaId, false);
+        createdGroups.push(group);
+        items.push(item);
+      }
+
+      if (createdGroups.length > 0) {
+        figma.currentPage.selection = [clone, ...createdGroups];
+        figma.viewport.scrollAndZoomIntoView([clone, ...createdGroups]);
+      }
+
+      figma.ui.postMessage({ type: "tab-order-applied-to-canvas", items, copyName: clone.name });
+      figma.notify(skipped > 0
+        ? `Ordem de tabulação aplicada (${items.length} de ${items.length + skipped} — ${skipped} elemento${skipped === 1 ? '' : 's'} não encontrado${skipped === 1 ? '' : 's'}).`
+        : `Ordem de tabulação aplicada em "${clone.name}".`);
+    })();
+  }
+  // Exclusão em cascata da área (deleteA11yArea, accessibility.js) — remove
+  // a cópia do frame gerada por "Aplicar no Canvas" pra esta área, se
+  // existir. Localiza só por pluginData (handexTabOrderCopyForArea), nunca
+  // por nome (o designer pode ter renomeado a cópia livremente).
+  if (msg.type === "delete-tab-order-copy-for-area") {
+    for (const sibling of figma.currentPage.children) {
+      try {
+        if (sibling.getPluginData && sibling.getPluginData('handexTabOrderCopyForArea') === msg.areaId) {
+          sibling.remove();
+        }
+      } catch (e) { }
+    }
+  }
+  // ══ BETA-ONLY: a11y-tabordem-copia-frame (fim) ══
+
   // ══ BETA-ONLY: a11y-ordem-tabulacao (fim — handlers do backend) ══
 
   // --- Acessibilidade --- "Gerar Ficha de Acessibilidade" no canvas foi

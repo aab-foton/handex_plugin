@@ -1619,16 +1619,28 @@ function _tabOrderSectionHtml(uid, area) {
         <i data-lucide="chevron-down" id="tab-order-chevron-${uid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:${chevronStyle}"></i>
       </div>
       <div id="tab-order-body-${uid}" class="accordion-content ${bodyHiddenClass} border-t border-gray-50 dark:border-dark-line p-1.5 space-y-1.5">
-        <button type="button" data-tab-order-btn-toggle="${escapeHtml(areaIdAttr)}" onclick="event.stopPropagation(); toggleTabOrderMode('${escapeHtml(areaIdAttr)}', this)"
+        <!-- BETA-ONLY: a11y-tabordem-copia-frame — os 2 botões abaixo não
+             desenham mais nada diretamente no canvas de trabalho: ambos
+             abrem o MESMO modal de revisão (#a11y-tab-order-review-modal),
+             que só desenha os selos numa CÓPIA do frame ao clicar "Aplicar
+             no Canvas". Ver openTabOrderReviewModal/startTabOrderManualMode/
+             _confirmGenerateTabOrderFromLayers mais abaixo. -->
+        <button type="button" onclick="event.stopPropagation(); startTabOrderManualMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
           class="w-full flex items-center justify-center gap-2 h-8 rounded-xl text-[10.5px] font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
           <i data-lucide="list-ordered" class="w-3.5 h-3.5" aria-hidden="true"></i>
-          <span data-tab-order-toggle-label>Iniciar Ordem de Tabulação</span>
+          Iniciar Ordem de Tabulação
         </button>
         <button type="button" onclick="event.stopPropagation(); _confirmGenerateTabOrderFromLayers('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
           class="w-full flex items-center justify-center gap-2 h-8 rounded-xl text-[10.5px] font-bold transition-all border border-cyan-200 dark:border-cyan-800/40 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99]">
           <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Gerar Automaticamente
         </button>
+        <!-- BETA-ONLY: a11y-tabordem-copia-frame — lista abaixo mostra os
+             itens JÁ APLICADOS no canvas (na cópia do frame) nesta área, se
+             houver uma cópia gerada anteriormente — não a lista pendente
+             (essa vive só dentro do modal enquanto não aplicada). Continua
+             usando _renderTabOrderListForArea/drag-and-drop/Atualizar, sem
+             mudança de comportamento pra itens já aplicados. -->
         <ul id="${ulId}" class="flex flex-col gap-1.5 min-h-[10px]"></ul>
         <button type="button" onclick="event.stopPropagation(); updateTabOrderNumbering('${escapeHtml(areaIdAttr)}')"
           class="w-full flex items-center justify-center gap-2 h-7 mt-1 rounded-2xl text-[10.5px] font-bold border border-gray-200 dark:border-dark-line text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all">
@@ -1674,32 +1686,14 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
       <i data-lucide="chevron-down" id="chevron-${uid}" class="w-4 h-4 text-gray-400 transition-transform shrink-0" style="transform:${expand ? 'rotate(180deg)' : 'rotate(0deg)'}"></i>
     </div>
     <div id="body-${uid}" class="accordion-content ${expand ? '' : 'hidden'} border-t border-gray-50 dark:border-dark-line p-2 space-y-2">
-      <!-- BETA-ONLY: a11y-switch-modo-visualizacao — segmented control de 2
-           posições escopado a ESTA área, substituindo os 2 botões
-           independentes de a11y-reducao-ruido-visual. Sempre exatamente um
-           modo ativo — o designer nunca precisa ver Specs e Ordem de
-           Tabulação juntos no canvas (decisão confirmada: "Ambos" removido,
-           era o 3º estado original). Linha discreta no início do body
-           expandido — o cabeçalho do accordion já está cheio (Nova spec/
-           Focar/Remover/chevron). -->
-      ${(() => {
-        const curMode = window._a11yAreaViewMode[area.id] || 'specs';
-        const opts = [
-          { mode: 'specs', label: 'Specs' },
-          { mode: 'tabOrder', label: 'Tabulação' }
-        ];
-        return `
-      <div class="flex items-center gap-0.5 p-0.5 rounded-full bg-gray-100 dark:bg-dark-line/40 w-fit mb-1" role="group" aria-label="Modo de visualização das marcações desta área">
-        ${opts.map(o => `
-        <button type="button" onclick="setAreaViewMode('${area.id}', '${o.mode}')"
-          aria-pressed="${curMode === o.mode}"
-          class="px-2.5 h-6 rounded-full text-[10px] font-bold transition-colors ${curMode === o.mode
-            ? 'bg-white dark:bg-dark-surface text-[#0070AF] dark:text-cyan-400 shadow-sm'
-            : 'text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300'}">
-          ${o.label}
-        </button>`).join('')}
-      </div>`;
-      })()}
+      <!-- BETA-ONLY: a11y-tabordem-copia-frame — segmented control
+           "Specs ⇄ Ordem de Tabulação" (a11y-switch-modo-visualizacao)
+           removido: a Ordem de Tabulação agora é desenhada numa cópia
+           separada do frame (ver _tabOrderSectionHtml/handler
+           apply-tab-order-to-canvas), nunca mais sobre os elementos de
+           trabalho reais — os dois tipos de marcação não competem mais
+           visualmente no mesmo canvas, então alternar visibilidade deixou
+           de fazer sentido. Ver MIGRATION-BETA-TO-MAIN.md. -->
       <!-- BETA-ONLY: a11y-subaccordions — antes era areaSpecs.map(_a11ySpecItemHtml)
            direto, sem agrupar por categoria dentro da área. -->
       ${areaSpecs.length > 0
@@ -2525,48 +2519,13 @@ function toggleA11ySpecVisibility(originalIndex) {
 }
 window.toggleA11ySpecVisibility = toggleA11ySpecVisibility;
 
-// BETA-ONLY: a11y-switch-modo-visualizacao — controle de visibilidade POR
-// ÁREA, switch de 2 posições ('specs' | 'tabOrder') em vez dos 2 toggles
-// independentes anteriores (a11y-reducao-ruido-visual). Motivo da troca: 1
-// clique pra trocar de lente é mais direto que 2 cliques pra sair de "specs
-// visíveis" e chegar em "tab order visível". Sempre exatamente um modo ativo
-// — decisão confirmada do designer: nunca precisa ver os dois juntos no
-// canvas, então o 3º estado original ('ambos') foi removido. Default 'specs'
-// (fluxo primário/mais frequente da vertical) quando a área não tem entrada
-// no mapa ainda. Mesmo raciocínio de antes pro backend: canvas não guarda
-// vínculo de área nas specs/badges, então a decisão de visível/oculto é
-// sempre recalculada no dado local e aplicada nó a nó via hide-node/
-// show-node (sem handler de "lote" novo). Estado é efêmero (objeto em
-// memória), não persiste entre sessões.
-window._a11yAreaViewMode = window._a11yAreaViewMode || {};
-
-function setAreaViewMode(areaId, mode) {
-  const validModes = ['specs', 'tabOrder'];
-  const safeMode = validModes.includes(mode) ? mode : 'specs';
-  window._a11yAreaViewMode[areaId] = safeMode;
-
-  const specsVisible = safeMode === 'specs';
-  const tabOrderVisible = safeMode === 'tabOrder';
-
-  (a11ySpecs || [])
-    .filter(s => s && s.a11yAreaId === areaId && s.id)
-    .forEach(spec => {
-      spec.visible = specsVisible;
-      parent.postMessage({ pluginMessage: { type: specsVisible ? 'show-node' : 'hide-node', id: spec.id } }, '*');
-    });
-
-  _currentTabOrderItems(areaId)
-    .filter(it => it && it.id)
-    .forEach(item => {
-      item.visible = tabOrderVisible;
-      parent.postMessage({ pluginMessage: { type: tabOrderVisible ? 'show-node' : 'hide-node', id: item.id } }, '*');
-    });
-
-  saveToStorage();
-  saveSpecsToStorage();
-  renderA11yGroupedList();
-}
-window.setAreaViewMode = setAreaViewMode;
+// BETA-ONLY: a11y-tabordem-copia-frame — setAreaViewMode/window._a11yAreaViewMode
+// (a11y-switch-modo-visualizacao) removidos por completo. Motivo: a Ordem de
+// Tabulação passou a ser desenhada numa CÓPIA separada do frame da área (ver
+// bloco "Ordem de Tabulação" mais abaixo), nunca mais sobre os elementos de
+// trabalho reais — Specs e Ordem de Tabulação vivem em canvas fisicamente
+// diferentes e nunca mais competem visualmente, então o switch perdeu a
+// razão de existir. Ver MIGRATION-BETA-TO-MAIN.md.
 
 // "Concluir posicionamento" — trava o specGroup no canvas (lock-spec já
 // aceita o prefixo '[SpecA11y | ...]', ver regex em code.js). A UI só some o
@@ -2802,6 +2761,27 @@ function deleteA11yArea(originalIndex) {
   }
   // ══ BETA-ONLY: bugfixes-a11y-diversos (fim) ══
 
+  // BETA-ONLY: a11y-tabordem-copia-frame — exclusão em cascata também cobre
+  // a Ordem de Tabulação desta área: os itens já aplicados (selos na cópia
+  // do frame) E a própria cópia (identificada só pelo pluginData
+  // handexTabOrderCopyForArea, já que o nome pode ter sido editado pelo
+  // designer) — senão a cópia ficava órfã no canvas, sem nenhuma área que a
+  // justifique, e os itens sumiam da listagem sem seus selos serem
+  // removidos de fato.
+  const tabItemsToRemove = _currentTabOrderItems(area.id);
+  tabItemsToRemove.forEach(it => {
+    if (it.id) parent.postMessage({ pluginMessage: { type: 'delete-node', id: it.id } }, '*');
+  });
+  if (tabItemsToRemove.length > 0) {
+    tabOrderItems = (tabOrderItems || []).filter(it => !(it && it.a11yAreaId === area.id));
+    (handoffData.frames || []).forEach(frame => {
+      if (frame.tabOrderItems) {
+        frame.tabOrderItems = frame.tabOrderItems.filter(it => !(it && it.a11yAreaId === area.id));
+      }
+    });
+  }
+  parent.postMessage({ pluginMessage: { type: 'delete-tab-order-copy-for-area', areaId: area.id } }, '*');
+
   if (area.id) {
     parent.postMessage({ pluginMessage: { type: 'delete-node', id: area.id } }, '*');
   }
@@ -2816,9 +2796,9 @@ window.deleteA11yArea = deleteA11yArea;
 // completo da feature, reformulado pra viver dentro do accordion de cada
 // Área Marcada) (início) ══
 // Depende de: tabOrderItems (core.js, campo a11yAreaId por item), handlers
-// 'start-tab-order-mode'/'stop-tab-order-mode'/'create-tab-order-item'/
-// 'generate-tab-order-from-layers'/'renumber-tab-order-items' (code.js —
-// já aceitam/ecoam areaId, ver comentários lá), roteamento em messages.js,
+// 'start-tab-order-mode'/'stop-tab-order-mode'/'generate-tab-order-from-layers'/
+// 'apply-tab-order-to-canvas'/'renumber-tab-order-items' (code.js — já
+// aceitam/ecoam areaId, ver comentários lá), roteamento em messages.js,
 // _a11yAreaAccordionEl/_a11ySemAreaAccordionEl/renderA11yGroupedList (mais
 // acima neste arquivo). NÃO depende mais de #tab-order-* fixo em
 // views/specifications.html (seção removida) nem de
@@ -2843,68 +2823,275 @@ window.deleteA11yArea = deleteA11yArea;
 // só como vitrine read-only (sem botões de criação — não há área real pra
 // escopar/varrer).
 //
-// Fluxo de "clique sequencial": ativar o modo (start-tab-order-mode) faz o
-// backend estender o listener global de selectionchange (code.js) para
-// postar tab-order-selection-changed a cada elemento único selecionado. Cada
-// mensagem dispara automaticamente create-tab-order-item com o próximo
-// número (calculado só dentro da área ativa) — sem formulário, sem clique de
-// confirmação extra. O item some da sequência corrente só ao excluir
-// (deleteTabOrderItem), que renumera localmente os posteriores DA MESMA
-// ÁREA e propaga pro canvas via renumber-tab-order-items.
-window._tabOrderModeOn = false;
-// Área escopada do modo de clique manual ativo no momento — setada por
-// toggleTabOrderMode ao ligar (o botão "Iniciar" vive dentro do accordion de
-// uma área específica, então a área já é conhecida pelo contexto, sem
-// select). handleTabOrderSelectionChanged lê daqui a cada elemento clicado.
-window._tabOrderActiveAreaId = null;
+// ══ BETA-ONLY: a11y-tabordem-copia-frame (início — reformulação do fluxo
+// manual + automático) ══
+// Arquitetura nova: nenhum selo é desenhado sobre os elementos de trabalho
+// reais. Clique manual e varredura automática agora só POPULAM uma LISTA
+// PENDENTE em memória (window._tabOrderPendingList) revisável no modal
+// #a11y-tab-order-review-modal — só ao clicar "Aplicar no Canvas"
+// (applyTabOrderToCanvas) é que o backend clona o frame da área e desenha os
+// selos na cópia (handler apply-tab-order-to-canvas, code.js). Ver
+// MIGRATION-BETA-TO-MAIN.md pra decisões de design completas.
+//
+// Decisão de UX (documentada por pedido explícito da tarefa): o modal de
+// revisão fica aberto durante TODO o fluxo manual, não só ao final — abrir o
+// modal já no início do clique sequencial dá feedback "ao vivo" da lista
+// sendo montada (pedido explícito da tarefa) e evita ter 2 UIs de lista
+// diferentes (uma dentro do accordion, outra dentro do modal) fazendo a
+// mesma coisa. "+ Adicionar item" (usado só no automático, mas disponível
+// nos dois) reaproveita exatamente o mesmo mecanismo de captura de clique
+// que o manual já usa por baixo — só muda se o modo fica "sempre ouvindo"
+// (manual) ou "ouve um clique e para" (adicionar item avulso).
+window._tabOrderPendingList = [];
+window._tabOrderPendingAreaId = null;
+window._tabOrderPendingTargetNodeId = null;
+// 'continuous' (fluxo manual, ouve toda seleção enquanto o modal estiver
+// aberto) | 'single' (aguardando exatamente 1 clique via "+ Adicionar item")
+// | null (parado).
+window._tabOrderCaptureMode = null;
+let _tabOrderTempIdSeq = 1;
 
-// areaId é obrigatório no fluxo normal — o botão "Iniciar Ordem de
-// Tabulação" agora vive dentro do accordion de uma Área Marcada específica
-// (ver _a11yAreaAccordionEl), nunca solto. btnEl é o próprio elemento
-// clicado, pra alternar estilo sem depender de um id fixo (cada área tem o
-// seu).
-function toggleTabOrderMode(areaId, btnEl) {
-  if (!window._tabOrderModeOn && !areaId) {
+function _tabOrderNextTempId() {
+  return `tmp-${_tabOrderTempIdSeq++}`;
+}
+
+// Ativado pelo botão "Iniciar Ordem de Tabulação" — reinicia a lista
+// pendente (fluxo novo, nunca acumula com uma sessão anterior não aplicada)
+// e abre o modal já em modo de escuta contínua.
+function startTabOrderManualMode(areaId, targetNodeId) {
+  if (!areaId || !targetNodeId) {
     showToast('Marque uma área da tela antes de iniciar a ordem de tabulação.');
     return;
   }
-
-  window._tabOrderModeOn = !window._tabOrderModeOn;
-  const btn = btnEl || null;
-  const label = btn ? btn.querySelector('[data-tab-order-toggle-label]') : null;
-
-  if (window._tabOrderModeOn) {
-    window._tabOrderActiveAreaId = areaId;
-    parent.postMessage({ pluginMessage: { type: 'start-tab-order-mode' } }, '*');
-    if (label) label.textContent = 'Clique nos elementos em ordem — Encerrar';
-    if (btn) {
-      btn.classList.remove('bg-[#0891B2]', 'hover:bg-cyan-700');
-      btn.classList.add('bg-red-500', 'hover:bg-red-600');
-    }
-    showToast('Modo ativo: clique nos elementos do canvas, em sequência.');
-  } else {
-    parent.postMessage({ pluginMessage: { type: 'stop-tab-order-mode' } }, '*');
-    if (label) label.textContent = 'Iniciar Ordem de Tabulação';
-    if (btn) {
-      btn.classList.remove('bg-red-500', 'hover:bg-red-600');
-      btn.classList.add('bg-[#0891B2]', 'hover:bg-cyan-700');
-    }
-    window._tabOrderActiveAreaId = null;
-  }
-  _refreshIcons();
+  window._tabOrderPendingList = [];
+  window._tabOrderPendingAreaId = areaId;
+  window._tabOrderPendingTargetNodeId = targetNodeId;
+  openTabOrderReviewModal();
+  _tabOrderSetCaptureMode('continuous');
+  showToast('Clique nos elementos do canvas, em sequência.');
 }
-window.toggleTabOrderMode = toggleTabOrderMode;
+window.startTabOrderManualMode = startTabOrderManualMode;
+
+// Abre o modal de revisão vazio/pré-populado — chamado tanto pelo início do
+// fluxo manual quanto pela chegada do resultado da varredura automática
+// (addTabOrderItemsFromLayers). Idempotente: reabrir com o modal já aberto
+// só re-renderiza a lista.
+function openTabOrderReviewModal() {
+  openModal('a11y-tab-order-review-modal');
+  _renderTabOrderPendingList();
+}
+window.openTabOrderReviewModal = openTabOrderReviewModal;
+
+// Liga/desliga a escuta de seleção do canvas no backend. 'continuous' e
+// 'single' usam o MESMO listener/mensagem do backend (start-tab-order-mode);
+// a diferença de comportamento (adicionar 1x vs. continuamente) é decidida
+// aqui no front, em handleTabOrderSelectionChanged, olhando
+// window._tabOrderCaptureMode.
+function _tabOrderSetCaptureMode(mode) {
+  const wasOff = !window._tabOrderCaptureMode;
+  window._tabOrderCaptureMode = mode;
+  if (mode && wasOff) {
+    parent.postMessage({ pluginMessage: { type: 'start-tab-order-mode' } }, '*');
+  } else if (!mode && !wasOff) {
+    parent.postMessage({ pluginMessage: { type: 'stop-tab-order-mode' } }, '*');
+  }
+}
+
+// Botão "+ Adicionar item" dentro do modal — entra em modo de escuta única:
+// o próximo clique no canvas vira item pendente e a escuta volta ao modo
+// anterior (contínuo, se o fluxo manual ainda estiver "aberto"; ou some de
+// vez, se veio do automático puro). O botão muda de rótulo/estado enquanto
+// espera, pra dar feedback claro de "modo à espera".
+function startTabOrderAddItemWait() {
+  const btn = document.getElementById('btn-tab-order-add-item');
+  const label = btn ? btn.querySelector('[data-tab-order-add-item-label]') : null;
+  window._tabOrderResumeCaptureMode = window._tabOrderCaptureMode;
+  _tabOrderSetCaptureMode('single');
+  if (label) label.textContent = 'Selecione um elemento no canvas…';
+  if (btn) btn.disabled = true;
+}
+window.startTabOrderAddItemWait = startTabOrderAddItemWait;
+
+function _tabOrderResetAddItemButton() {
+  const btn = document.getElementById('btn-tab-order-add-item');
+  const label = btn ? btn.querySelector('[data-tab-order-add-item-label]') : null;
+  if (label) label.textContent = 'Adicionar item';
+  if (btn) btn.disabled = false;
+}
 
 // Chamado por messages.js a cada tab-order-selection-changed recebido do
-// backend enquanto o modo está ativo — cria o próximo item da sequência sem
-// nenhuma etapa intermediária, numerado só dentro da área ativa.
+// backend enquanto alguma escuta está ativa (contínua ou de 1 clique só).
+// NUNCA cria nada no canvas aqui — só empurra pra lista pendente e aplica o
+// highlight temporário (feedback "isso foi capturado").
 function handleTabOrderSelectionChanged(nodeId, nodeName) {
-  if (!window._tabOrderModeOn || !nodeId) return;
-  const areaId = window._tabOrderActiveAreaId;
-  const number = _currentTabOrderItems(areaId).length + 1;
-  parent.postMessage({ pluginMessage: { type: 'create-tab-order-item', targetNodeId: nodeId, number, conector: 'direita', areaId } }, '*');
+  if (!window._tabOrderCaptureMode || !nodeId) return;
+
+  const wasSingle = window._tabOrderCaptureMode === 'single';
+  window._tabOrderPendingList.push({ nodeId, nodeName: nodeName || '', tempId: _tabOrderNextTempId() });
+  // Reaproveita o mecanismo já existente de highlight temporário
+  // (highlight-node/clear-highlight, code.js — o mesmo usado por outros
+  // pontos do plugin pra "piscar" um elemento) em vez de um handler novo:
+  // desenha um contorno cyan por cima do elemento capturado, sem selecionar
+  // nem dar scroll (o designer está de olho no canvas, não na UI).
+  parent.postMessage({ pluginMessage: { type: 'highlight-node', id: nodeId, highlight: true, color: '#0891B2', selectNode: false, shouldScroll: false } }, '*');
+
+  if (wasSingle) {
+    _tabOrderSetCaptureMode(window._tabOrderResumeCaptureMode || null);
+    window._tabOrderResumeCaptureMode = null;
+    _tabOrderResetAddItemButton();
+  }
+
+  _renderTabOrderPendingList();
 }
 window.handleTabOrderSelectionChanged = handleTabOrderSelectionChanged;
+
+// Renderiza a lista PENDENTE (ainda não aplicada no canvas) dentro do modal
+// de revisão — reaproveita o mesmo padrão visual/drag-and-drop de
+// _renderTabOrderListForArea, mas opera sobre window._tabOrderPendingList
+// (tempId em vez de originalIndex/id real, já que não existe node no canvas
+// ainda pra esses itens).
+function _renderTabOrderPendingList() {
+  const containerEl = document.getElementById('a11y-tab-order-pending-list');
+  const emptyEl = document.getElementById('a11y-tab-order-pending-empty');
+  const applyBtn = document.getElementById('btn-tab-order-apply');
+  if (!containerEl) return;
+
+  const items = window._tabOrderPendingList || [];
+  if (emptyEl) emptyEl.classList.toggle('hidden', items.length > 0);
+  if (applyBtn) applyBtn.disabled = items.length === 0;
+
+  containerEl.innerHTML = items.map((it, listIndex) => `
+    <li class="list-none flex items-center gap-2 px-2.5 py-1.5 bg-white dark:bg-dark-surface rounded-lg border border-gray-100 dark:border-dark-line"
+      draggable="true"
+      data-list-index="${listIndex}"
+      ondragstart="_tabOrderPendingDragStart(event, ${listIndex})"
+      ondragover="_tabOrderDragOver(event)"
+      ondrop="_tabOrderPendingDrop(event, ${listIndex})"
+      ondragend="_tabOrderDragEnd(event)">
+      <span class="text-gray-300 dark:text-dark-muted cursor-grab active:cursor-grabbing shrink-0" title="Arrastar para reordenar" aria-hidden="true">
+        <i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i>
+      </span>
+      <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0" style="background-color:#0891B2">${listIndex + 1}</div>
+      <p class="flex-1 min-w-0 text-[11px] text-slate-700 dark:text-white truncate">${escapeHtml(it.nodeName || '')}</p>
+      <button type="button" title="Remover da lista" aria-label="Remover da lista"
+        onclick="deleteTabOrderPendingItem('${escapeHtml(it.tempId)}')"
+        class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shrink-0">
+        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+      </button>
+    </li>
+  `).join('');
+
+  _refreshIcons();
+}
+window._renderTabOrderPendingList = _renderTabOrderPendingList;
+
+let _tabOrderPendingDragIndex = null;
+
+function _tabOrderPendingDragStart(ev, listIndex) {
+  _tabOrderPendingDragIndex = listIndex;
+  ev.dataTransfer.effectAllowed = 'move';
+  try { ev.dataTransfer.setData('text/plain', String(listIndex)); } catch (e) { }
+  ev.currentTarget.classList.add('opacity-50');
+}
+window._tabOrderPendingDragStart = _tabOrderPendingDragStart;
+
+function _tabOrderPendingDrop(ev, targetListIndex) {
+  ev.preventDefault();
+  const sourceListIndex = _tabOrderPendingDragIndex;
+  if (sourceListIndex === null || sourceListIndex === targetListIndex) return;
+  const list = window._tabOrderPendingList;
+  const [moved] = list.splice(sourceListIndex, 1);
+  list.splice(targetListIndex, 0, moved);
+  _tabOrderPendingDragIndex = null;
+  _renderTabOrderPendingList();
+}
+window._tabOrderPendingDrop = _tabOrderPendingDrop;
+
+function deleteTabOrderPendingItem(tempId) {
+  window._tabOrderPendingList = (window._tabOrderPendingList || []).filter(it => it.tempId !== tempId);
+  _renderTabOrderPendingList();
+}
+window.deleteTabOrderPendingItem = deleteTabOrderPendingItem;
+
+// Fecha o modal sem aplicar nada — descarta a lista pendente por completo
+// (nenhum node foi criado no canvas ainda, então não há nada pra desfazer)
+// e limpa o highlight temporário, se ainda visível.
+function cancelTabOrderReview() {
+  _tabOrderSetCaptureMode(null);
+  window._tabOrderResumeCaptureMode = null;
+  window._tabOrderPendingList = [];
+  window._tabOrderPendingAreaId = null;
+  window._tabOrderPendingTargetNodeId = null;
+  _tabOrderResetAddItemButton();
+  parent.postMessage({ pluginMessage: { type: 'clear-highlight' } }, '*');
+  closeModal('a11y-tab-order-review-modal');
+}
+window.cancelTabOrderReview = cancelTabOrderReview;
+
+// "Aplicar no Canvas" — única ação que de fato toca o canvas neste fluxo.
+// Backend clona o frame da área, mapeia cada nodeId pendente pro node
+// equivalente dentro do clone, e desenha os selos lá (ver
+// apply-tab-order-to-canvas, code.js). Resposta tratada em
+// handleTabOrderAppliedToCanvas (messages.js → aqui).
+function applyTabOrderToCanvas() {
+  const areaId = window._tabOrderPendingAreaId;
+  const targetNodeId = window._tabOrderPendingTargetNodeId;
+  const items = window._tabOrderPendingList || [];
+  if (!areaId || !targetNodeId || items.length === 0) return;
+
+  const applyBtn = document.getElementById('btn-tab-order-apply');
+  if (applyBtn) { applyBtn.disabled = true; applyBtn.textContent = 'Aplicando…'; }
+
+  _tabOrderSetCaptureMode(null);
+  parent.postMessage({ pluginMessage: { type: 'clear-highlight' } }, '*');
+  parent.postMessage({
+    pluginMessage: {
+      type: 'apply-tab-order-to-canvas',
+      areaId,
+      targetNodeId,
+      items: items.map((it, i) => ({ nodeId: it.nodeId, nodeName: it.nodeName, number: i + 1 })),
+    },
+  }, '*');
+}
+window.applyTabOrderToCanvas = applyTabOrderToCanvas;
+
+// Resposta de 'tab-order-applied-to-canvas' (messages.js) — os itens já
+// vêm com id real (grupo do selo, na cópia) prontos pro mesmo tratamento de
+// addTabOrderItem (push avulso/por-frame + persistência), reaproveitado
+// item a item. Antes de inserir os novos, descarta do array de dados
+// QUALQUER item antigo desta MESMA área — o backend já apagou a cópia
+// anterior inteira (handexTabOrderCopyForArea) e recriou do zero, então os
+// ids antigos apontam pra nós que não existem mais; sem essa limpeza a
+// listagem acumularia entradas órfãs (canvas mostraria só os novos selos,
+// mas o dado guardado teria os dois conjuntos).
+function handleTabOrderAppliedToCanvas(items, copyName) {
+  const applyBtn = document.getElementById('btn-tab-order-apply');
+  if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = 'Aplicar no Canvas'; }
+
+  if (!Array.isArray(items) || items.length === 0) {
+    showToast('Não foi possível aplicar a ordem de tabulação — tente novamente.');
+    return;
+  }
+
+  const areaId = window._tabOrderPendingAreaId;
+  if (areaId) {
+    tabOrderItems = (tabOrderItems || []).filter(it => it && it.a11yAreaId !== areaId);
+    (handoffData.frames || []).forEach(frame => {
+      if (frame.tabOrderItems) {
+        frame.tabOrderItems = frame.tabOrderItems.filter(it => it && it.a11yAreaId !== areaId);
+      }
+    });
+  }
+
+  items.forEach(item => addTabOrderItem(item));
+  window._tabOrderPendingList = [];
+  window._tabOrderPendingAreaId = null;
+  window._tabOrderPendingTargetNodeId = null;
+  closeModal('a11y-tab-order-review-modal');
+  showToast(`Ordem de tabulação aplicada em "${copyName || 'cópia do frame'}".`);
+}
+window.handleTabOrderAppliedToCanvas = handleTabOrderAppliedToCanvas;
+// ══ BETA-ONLY: a11y-tabordem-copia-frame (fim) ══
 
 // Defensivo: itens salvos antes da introdução de canvasNumber (reordenação
 // via drag-and-drop) não têm o campo — assume-se sincronizado com o canvas
@@ -2951,33 +3138,38 @@ function addTabOrderItem(item) {
 window.addTabOrderItem = addTabOrderItem;
 
 // ── Geração automática por varredura de camadas ─────────────────────────
-// Complementar ao clique sequencial acima: varre a árvore de uma Área
-// Marcada já existente e cria os selos de uma vez, na ordem real das
-// camadas (profundidade, node.children — ver generate-tab-order-from-layers
-// em code.js). Fluxo real esperado (confirmado pelo designer): gera
-// automático, reordena via drag-and-drop se a ordem não ficar perfeita, e
-// clica "Atualizar" pra aplicar no canvas — os itens entram na MESMA lista
-// dos criados por clique manual, nunca uma lista à parte.
-// Cada botão "Gerar Automaticamente" já nasce dentro do accordion de uma
-// área específica — não há mais modal de escolha de área (removido de
-// modals.html); chama direto com a área do próprio accordion.
+// BETA-ONLY: a11y-tabordem-copia-frame — reformulado. Complementar ao fluxo
+// manual acima: varre a árvore de uma Área Marcada já existente (na ordem
+// espacial calculada em code.js) e POPULA a lista pendente com os
+// candidatos, abrindo o modal de revisão já preenchido — não desenha mais
+// nada direto no canvas (isso só acontece em applyTabOrderToCanvas). O
+// designer pode reordenar via drag-and-drop, remover itens, ou complementar
+// com "+ Adicionar item" antes de "Aplicar no Canvas". Cada botão "Gerar
+// Automaticamente" já nasce dentro do accordion de uma área específica —
+// chama direto com a área do próprio accordion, sem modal de escolha.
 function _confirmGenerateTabOrderFromLayers(areaId, targetNodeId) {
   if (!areaId || !targetNodeId) return;
-  const startNumber = _currentTabOrderItems(areaId).length + 1;
-  parent.postMessage({ pluginMessage: { type: 'generate-tab-order-from-layers', areaId, targetNodeId, startNumber } }, '*');
+  window._tabOrderPendingList = [];
+  window._tabOrderPendingAreaId = areaId;
+  window._tabOrderPendingTargetNodeId = targetNodeId;
+  parent.postMessage({ pluginMessage: { type: 'generate-tab-order-from-layers', areaId, targetNodeId } }, '*');
+  showToast('Varrendo elementos interativos da área…');
 }
 window._confirmGenerateTabOrderFromLayers = _confirmGenerateTabOrderFromLayers;
 
-// Resposta de tab-order-generated-from-layers (messages.js) — mesmo padrão
-// de push (avulso vs. por-frame) que addTabOrderItem já usa, reaproveitado
-// item a item pra não duplicar a lógica de merge.
+// Resposta de tab-order-generated-from-layers (messages.js) — items agora é
+// {nodeId, nodeName}[] (candidatos, ver generate-tab-order-from-layers em
+// code.js), nunca itens já desenhados. Popula a lista pendente e abre o
+// modal de revisão já preenchido; o designer confirma explicitamente pelo
+// botão "Aplicar no Canvas" (applyTabOrderToCanvas).
 function addTabOrderItemsFromLayers(items) {
   if (!Array.isArray(items) || items.length === 0) {
     showToast('Nenhum elemento interativo (instância ou componente) encontrado dentro dessa área.');
     return;
   }
-  items.forEach(item => addTabOrderItem(item));
-  showToast(`${items.length} elemento${items.length === 1 ? '' : 's'} numerado${items.length === 1 ? '' : 's'} automaticamente — reordene se precisar e clique em "Atualizar".`);
+  window._tabOrderPendingList = items.map(it => ({ nodeId: it.nodeId, nodeName: it.nodeName || '', tempId: _tabOrderNextTempId() }));
+  openTabOrderReviewModal();
+  showToast(`${items.length} elemento${items.length === 1 ? '' : 's'} encontrado${items.length === 1 ? '' : 's'} — revise a ordem e clique em "Aplicar no Canvas".`);
 }
 window.addTabOrderItemsFromLayers = addTabOrderItemsFromLayers;
 
