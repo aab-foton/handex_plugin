@@ -668,6 +668,22 @@ Novo modal `#a11y-tab-order-review-modal` — segue o padrão visual dos demais 
 
 ---
 
+## `fix-modal-marcar-area-rolagem`
+
+**O que é.** O modal "Marcar Área" (`#a11y-area-modal`, `views/modals.html`) cresceu ao longo de rodadas de trabalho (rótulo → escolha Automático/Manual → posição do conector → número) e passou a extrapolar a altura visível do plugin, cortando o botão "Marcar" sem permitir rolar até ele — reportado pelo designer com captura de tela.
+
+**Correção.** Container ganhou `max-h-[85vh]` (mesmo padrão já usado em outros modais do plugin, ex: `#a11y-post-area-detect-modal`); o corpo (`p-6`) virou a única área rolável (`overflow-y-auto flex-1 min-h-0`, com `onscroll="handleScroll(this)"`); header e footer ficaram fixos (`shrink-0`).
+
+**Consulta ao design-ux.** Antes de corrigir só tecnicamente, o designer sugeriu uma alternativa: separar a escolha Automático/Manual num modal próprio (2ª etapa). Consultado, o design-ux recomendou **não separar** — a fusão em modal único já foi uma decisão deliberada anterior (existia um 2º modal separado antes, fundido justamente pra eliminar um clique extra numa ação de altíssima frequência: "Marcar Área" se repete uma vez por seção de tela, várias vezes por sessão). Reverter reintroduziria o atrito que a fusão original resolveu.
+
+**Melhoria complementar adotada (sugestão do design-ux).** "Posição do conector" e "Número" — os dois campos mais prováveis de já estar corretos no default na maioria dos casos — foram recolhidos num accordion fechado por padrão (`toggleAccordion`, `core.js`, já genérico e reaproveitado sem mudança), com resumo estático no cabeçalho ("Configurações do selo — Topo · Nº automático"). Reduz a altura visível no caso comum sem exigir um segundo modal nem perder o campo pra quem precisa customizá-lo.
+
+**Arquivos e blocos afetados.** `src/plugin/views/modals.html` — `#a11y-area-modal` (container, corpo, footer, accordion novo envolvendo conector+número).
+
+**Risco de migração:** baixo. Mudança de layout isolada a um modal, reaproveita `toggleAccordion`/`handleScroll` já existentes — nenhuma mudança de comportamento de dado (os campos continuam os mesmos, só a exibição inicial muda).
+
+---
+
 ## Ordem de migração recomendada
 
 1. **Dados/refs primeiro:** `refs/design-acessivel-component-properties.json`, `refs/dsc-component-a11y-mapping.json` — sem eles nada do bloco de a11y funciona.
