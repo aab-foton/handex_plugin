@@ -195,12 +195,41 @@ function _resolveDscComponentA11yMatch(componentKey) {
 // INSTANCE/COMPONENT solto no canvas (ícone decorativo, card, imagem, badge).
 // Decisão de produto (confirmada pelo designer): inclui 'inputs' (após
 // achado 2 cobre select/slider/datepicker/etc.), 'accordion' (cabeçalho é
-// focável) e 'breadcrumb' (é composto por links). NÃO inclui 'dialog',
-// 'snackbar', 'table', 'listas' (não são o elemento focável em si) nem
-// 'imagem'/'titulo'/'decorativo' (nunca focáveis).
+// focável) e 'breadcrumb' (é composto por links).
+//
+// BETA-ONLY: a11y-revisao-mapeamento-profundo (correção 3 — revisão completa
+// das 16 categorias, critério: "essa categoria, quando existe como instância
+// real no canvas, é algo que um usuário de teclado alcançaria com Tab?")
+// - 'listas' ADICIONADA (bug confirmado): cobre [dsc] Menu item/Menu Lateral
+//   (ver refs/dsc-component-a11y-mapping.json) — itens de menu de navegação
+//   são links de navegação reais, focáveis via Tab em qualquer app real.
+//   Antes ficavam de fora e a Ordem de Tabulação nunca os detectava.
+// - 'link' incluída por consistência semântica: não existe componente [dsc]
+//   Link publicado na lib real hoje (lacuna de biblioteca já confirmada em
+//   rodada anterior), então isso não muda comportamento algum na prática —
+//   _resolveDscComponentA11yMatch nunca vai casar 'link' contra um
+//   componentKey real. Mantida no Set porque, semanticamente, um link SEMPRE
+//   seria alvo de Tab se a lib um dia publicar esse componente.
+// - 'dialog' FORA: o container do diálogo em si não é o alvo de foco — as
+//   ações/botões internos (fechar, confirmar) já são instâncias próprias de
+//   'button', capturadas separadamente. Incluir o dialog duplicaria o alvo
+//   de foco sem necessidade.
+// - 'snackbar' FORA: notificação efêmera, não faz parte do fluxo de
+//   navegação principal por Tab (aparece e some sozinha, sem foco
+//   intencional do usuário). Eventual botão de ação/dispensar dentro dela já
+//   é uma instância própria de 'button'.
+// - 'table' FORA: a tabela como container não é o elemento focável — células
+//   com controles interativos (checkbox de seleção, input de edição inline)
+//   já são capturadas pelas categorias 'checkbox'/'inputs' quando são
+//   instâncias reais desses componentes. Incluir 'table' inteira geraria
+//   ruído (a tabela toda "roubando" um passo de Tab que não existe de fato).
+// - 'imagem' confirmado FORA (sem mudança): nunca é foco de Tab, é conteúdo.
+// NÃO inclui também 'titulo'/'decorativo' (nunca focáveis — mesma razão de
+// sempre, não são componentes reais interativos).
 const A11Y_INTERACTIVE_SHORTNAMES = new Set([
   'button', 'checkbox', 'radio button', 'switch', 'inputs',
-  'paginator', 'stepper', 'tab group', 'accordion', 'breadcrumb'
+  'paginator', 'stepper', 'tab group', 'accordion', 'breadcrumb',
+  'listas', 'link'
 ]);
 // ══ BETA-ONLY: a11y-mapeamento-interativo (fim) ══
 
@@ -220,11 +249,40 @@ const A11Y_INTERACTIVE_SHORTNAMES = new Set([
 // Nome de estilo de texto nomeado (styleName, quando o TEXT usa um Text
 // Style do Figma) ou nome da própria camada — sinal fraco, mas suficiente
 // pra sugerir (nunca afirmar) que um texto é um "Nível de Título". Não
-// analisa tamanho de fonte, peso ou posição — isso seria heurística visual
-// elaborada, fora de escopo (ver tarefa). Também não tenta advinhar o nível
-// (h1..h6): o designer escolhe o nível certo no formulário depois de "Usar
-// sugestão"; aqui só decidimos SE parece um título, não QUAL nível.
+// analisa tamanho de fonte, peso ou posição pra decidir SE é título — isso
+// seria heurística visual elaborada, fora de escopo (ver tarefa original).
+// QUAL nível (h1..h6), no entanto, É inferido a partir do token de
+// tipografia real aplicado — ver _inferHeadingLevelFromTypography logo
+// abaixo (BETA-ONLY: a11y-revisao-mapeamento-profundo, correção 2).
 const _A11Y_HEADING_NAME_REGEX = /\bh[1-6]\b|título|titulo|heading|headline/i;
+
+// BETA-ONLY: a11y-revisao-mapeamento-profundo (correção 2 — inferência de
+// nível de título a partir da escala de tokens do DSC)
+// Escala real confirmada em refs/_skeleton.json → libraries['fundamentos-
+// visuais'].styleTokens.typography (39 tokens, formato "categoria tamanho/
+// peso (variante)", ex: "heading large/700 (bold)"). Categorias, da mais
+// pra menos proeminente: display > heading > text (texto de corpo, fora da
+// escala de heading) > link/caption (nunca heading). Direção do mapeamento:
+// token maior/mais proeminente → H1, menor → H6. `display *` sempre vira H1
+// (maior destaque possível). Dentro de `text *`/`link/*`/`caption *`, mesmo
+// que o NOME da camada/estilo tenha batido na regex de heading (falso
+// positivo comum: camada chamada "Heading" com estilo de corpo aplicado),
+// não inferimos nível — sinal fraco demais, aplicar heading semanticamente
+// errado seria pior que não sugerir nada. Retorna null quando não há
+// styleName (estilo "solto"/customizado, sem token real aplicado) ou quando
+// a categoria do token não pertence à escala de heading/display.
+function _inferHeadingLevelFromTypography(styleName) {
+  if (!styleName) return null;
+  const tokenName = String(styleName).split('/')[0].trim().toLowerCase();
+  if (/^display\b/.test(tokenName)) return 'h1';
+  if (/^heading\s+huge\b/.test(tokenName)) return 'h2';
+  if (/^heading\s+big\b/.test(tokenName)) return 'h2';
+  if (/^heading\s+large\b/.test(tokenName)) return 'h3';
+  if (/^heading\s+standard\b/.test(tokenName)) return 'h4';
+  if (/^heading\s+small\b/.test(tokenName)) return 'h5';
+  if (/^heading\s+tiny\b/.test(tokenName)) return 'h6';
+  return null; // text/link/caption/estilo desconhecido — sinal fraco demais
+}
 
 function _resolveTypographyA11yMatch(node, typoProp) {
   const styleName = (typoProp && typoProp.styleKey && typoProp.name) ? typoProp.name : null;
@@ -232,11 +290,16 @@ function _resolveTypographyA11yMatch(node, typoProp) {
   const signal = (styleName && _A11Y_HEADING_NAME_REGEX.test(styleName)) ? styleName
     : (_A11Y_HEADING_NAME_REGEX.test(layerName) ? layerName : null);
   if (!signal) return null;
+  // suggestedLevel só é calculado a partir do TOKEN de tipografia real
+  // (styleName), nunca do nome da camada — nome de camada não carrega
+  // tamanho/peso, só o styleKey do DSC permite inferir nível com segurança.
+  const suggestedLevel = styleName ? _inferHeadingLevelFromTypography(styleName) : null;
   return {
     containingFrame: null,
     a11yCategory: 'titulo',
     confidence: 'baixa',
-    source: styleName && signal === styleName ? 'text-style-name' : 'layer-name'
+    source: styleName && signal === styleName ? 'text-style-name' : 'layer-name',
+    suggestedLevel: suggestedLevel || null
   };
 }
 
@@ -4041,8 +4104,22 @@ figma.ui.onmessage = async (msg) => {
         .filter(p => p.type === "variant")
         .map(p => ({ name: p.name, value: p.value }));
 
+      // BETA-ONLY: a11y-revisao-mapeamento-profundo (correção 1 — dedupe por
+      // node.id na Detecção Automática de a11y)
+      // `map` é indexado por `name` (nome da CAMADA) por design, pro scan de
+      // tokens normal: agrega "tipos de elemento" repetidos numa única linha
+      // de conformidade (ex: 6 instâncias de "[dsc] Alert" com o mesmo nome
+      // de camada viram 1 item + Set de camadas). Isso é correto pro scan de
+      // tokens, mas quebra a Detecção Automática de a11y — só a 1ª instância
+      // vira um item detectável (com nodeId/dscComponentMatch próprios); as
+      // outras 5 eram descartadas silenciosamente. Quando origin ===
+      // 'a11y-detection', usa node.id (sempre único por node) como chave em
+      // vez de name — cada instância real vira uma detecção própria. Fora
+      // desse origin, comportamento idêntico ao anterior (chave = name).
+      const useNodeIdKey = msg.origin === 'a11y-detection';
+      const mapKey = useNodeIdKey ? node.id : name;
       const map = specs[category];
-      if (!map.has(name)) {
+      if (!map.has(mapKey)) {
         const itemObj = {
           name: name,
           type: category,
@@ -4060,7 +4137,7 @@ figma.ui.onmessage = async (msg) => {
           layers: new Set([name]),
           properties: props
         };
-        map.set(name, itemObj);
+        map.set(mapKey, itemObj);
         frameJson.elements[category].push({
           name: name,
           type: category,
@@ -4077,7 +4154,7 @@ figma.ui.onmessage = async (msg) => {
           properties: props
         });
       } else {
-        const item = map.get(name);
+        const item = map.get(mapKey);
         item.layers.add(name);
       }
     }

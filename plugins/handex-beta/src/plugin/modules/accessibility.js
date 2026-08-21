@@ -1128,13 +1128,16 @@ function _buildA11yElementoPayload(letter, componenteKey, label, options) {
 }
 
 // Payload puro pra categoria "titulo" no lote automatizado — mesmo espírito
-// de _buildA11yElementoPayload, mas com nível FIXO em "h1" (default): a
-// heurística de detecção de texto/título não sabe distinguir H1 de H3, então
-// todo item detectado nasce como H1 e o designer corrige o nível manualmente
-// depois (decisão consciente do usuário, ver pedido de incluir titulo/
-// decorativo no lote "com os defaults").
-function _buildA11yTituloPayload(letter, label) {
-  const nivel = 'h1';
+// de _buildA11yElementoPayload. BETA-ONLY: a11y-revisao-mapeamento-profundo
+// (correção 2) — nível agora é inferido a partir do token de tipografia real
+// (dscComponentMatch.suggestedLevel, calculado em
+// _resolveTypographyA11yMatch/_inferHeadingLevelFromTypography, code.js), com
+// fallback pro default fixo 'h1' quando não há styleKey aplicado (texto
+// "solto") ou o token não pertence à escala de heading/display — mesmo
+// comportamento de antes nesses casos. O designer ainda revisa/corrige o
+// nível manualmente depois quando necessário.
+function _buildA11yTituloPayload(letter, label, suggestedLevel) {
+  const nivel = suggestedLevel || 'h1';
   const entry = A11Y_CONTENT.titulo.niveis[nivel];
   const properties = [
     { key: 'descricao', label: 'Descrição', value: (entry && entry.descricao) || '' },
@@ -1671,17 +1674,19 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
       <i data-lucide="chevron-down" id="chevron-${uid}" class="w-4 h-4 text-gray-400 transition-transform shrink-0" style="transform:${expand ? 'rotate(180deg)' : 'rotate(0deg)'}"></i>
     </div>
     <div id="body-${uid}" class="accordion-content ${expand ? '' : 'hidden'} border-t border-gray-50 dark:border-dark-line p-2 space-y-2">
-      <!-- BETA-ONLY: a11y-switch-modo-visualizacao — segmented control de 3
+      <!-- BETA-ONLY: a11y-switch-modo-visualizacao — segmented control de 2
            posições escopado a ESTA área, substituindo os 2 botões
-           independentes de a11y-reducao-ruido-visual. Linha discreta no
-           início do body expandido — o cabeçalho do accordion já está cheio
-           (Nova spec/Focar/Remover/chevron). -->
+           independentes de a11y-reducao-ruido-visual. Sempre exatamente um
+           modo ativo — o designer nunca precisa ver Specs e Ordem de
+           Tabulação juntos no canvas (decisão confirmada: "Ambos" removido,
+           era o 3º estado original). Linha discreta no início do body
+           expandido — o cabeçalho do accordion já está cheio (Nova spec/
+           Focar/Remover/chevron). -->
       ${(() => {
         const curMode = window._a11yAreaViewMode[area.id] || 'specs';
         const opts = [
           { mode: 'specs', label: 'Specs' },
-          { mode: 'tabOrder', label: 'Tabulação' },
-          { mode: 'ambos', label: 'Ambos' }
+          { mode: 'tabOrder', label: 'Tabulação' }
         ];
         return `
       <div class="flex items-center gap-0.5 p-0.5 rounded-full bg-gray-100 dark:bg-dark-line/40 w-fit mb-1" role="group" aria-label="Modo de visualização das marcações desta área">
@@ -2439,7 +2444,7 @@ async function confirmA11yBatchGenerate() {
     // variação com correspondência DSC conhecida (ver _inferA11yVariantFromDsc).
     // undefined (não null) pra cair no comportamento padrão já existente em
     // _buildA11yElementoPayload quando não há correspondência.
-    const built = a11yType === 'titulo' ? _buildA11yTituloPayload(letter, item.name || 'Elemento')
+    const built = a11yType === 'titulo' ? _buildA11yTituloPayload(letter, item.name || 'Elemento', item.dscComponentMatch.suggestedLevel)
       : a11yType === 'decorativo' ? _buildA11yDecorativoPayload(item.name || 'Elemento')
       : _buildA11yElementoPayload(letter, shortName, item.name || 'Elemento', {
         tipo: _inferA11yVariantFromDsc(shortName, item.variants) || undefined,
@@ -2521,25 +2526,27 @@ function toggleA11ySpecVisibility(originalIndex) {
 window.toggleA11ySpecVisibility = toggleA11ySpecVisibility;
 
 // BETA-ONLY: a11y-switch-modo-visualizacao — controle de visibilidade POR
-// ÁREA, agora como switch de 3 posições ('specs' | 'tabOrder' | 'ambos') em
-// vez dos 2 toggles independentes anteriores (a11y-reducao-ruido-visual).
-// Motivo da troca: 1 clique pra trocar de lente é mais direto que 2 cliques
-// pra sair de "specs visíveis" e chegar em "tab order visível". Default
-// 'specs' (fluxo primário/mais frequente da vertical) quando a área não tem
-// entrada no mapa ainda. Mesmo raciocínio de antes pro backend: canvas não
-// guarda vínculo de área nas specs/badges, então a decisão de visível/oculto
-// é sempre recalculada no dado local e aplicada nó a nó via hide-node/
+// ÁREA, switch de 2 posições ('specs' | 'tabOrder') em vez dos 2 toggles
+// independentes anteriores (a11y-reducao-ruido-visual). Motivo da troca: 1
+// clique pra trocar de lente é mais direto que 2 cliques pra sair de "specs
+// visíveis" e chegar em "tab order visível". Sempre exatamente um modo ativo
+// — decisão confirmada do designer: nunca precisa ver os dois juntos no
+// canvas, então o 3º estado original ('ambos') foi removido. Default 'specs'
+// (fluxo primário/mais frequente da vertical) quando a área não tem entrada
+// no mapa ainda. Mesmo raciocínio de antes pro backend: canvas não guarda
+// vínculo de área nas specs/badges, então a decisão de visível/oculto é
+// sempre recalculada no dado local e aplicada nó a nó via hide-node/
 // show-node (sem handler de "lote" novo). Estado é efêmero (objeto em
 // memória), não persiste entre sessões.
 window._a11yAreaViewMode = window._a11yAreaViewMode || {};
 
 function setAreaViewMode(areaId, mode) {
-  const validModes = ['specs', 'tabOrder', 'ambos'];
+  const validModes = ['specs', 'tabOrder'];
   const safeMode = validModes.includes(mode) ? mode : 'specs';
   window._a11yAreaViewMode[areaId] = safeMode;
 
-  const specsVisible = safeMode === 'specs' || safeMode === 'ambos';
-  const tabOrderVisible = safeMode === 'tabOrder' || safeMode === 'ambos';
+  const specsVisible = safeMode === 'specs';
+  const tabOrderVisible = safeMode === 'tabOrder';
 
   (a11ySpecs || [])
     .filter(s => s && s.a11yAreaId === areaId && s.id)

@@ -32,6 +32,18 @@
       if (panelMain) panelMain.classList.toggle('hidden', isA11y);
       if (panelA11y) panelA11y.classList.toggle('hidden', !isA11y);
 
+      // BETA-ONLY: fix-toast-spec-fantasma — trocar para a aba "Especificações"
+      // com o modo de clique sequencial da Ordem de Tabulação ainda ativo
+      // deixava o backend postando tab-order-selection-changed às cegas
+      // nessa outra aba: qualquer clique no canvas para só navegar/inspecionar
+      // (sem nenhuma intenção de criar spec) virava silenciosamente um novo
+      // selo de Ordem de Tabulação + toast. navigate() já tinha essa mesma
+      // salvaguarda ao sair da tela "Anotar Specs" inteira (ver navigate,
+      // core.js) — faltava replicar ao trocar de aba SEM sair da tela.
+      if (!isA11y && window._tabOrderModeOn && typeof toggleTabOrderMode === 'function') {
+        toggleTabOrderMode();
+      }
+
       const btnSpecs = document.getElementById('specs-maintab-specs');
       const btnA11y = document.getElementById('specs-maintab-a11y');
       if (btnSpecs) {
