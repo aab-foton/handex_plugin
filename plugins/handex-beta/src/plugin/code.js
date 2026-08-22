@@ -281,26 +281,35 @@ const A11Y_INTERACTIVE_SHORTNAMES = new Set([
 // pra sugerir (nunca afirmar) que um texto é um "Nível de Título". Não
 // analisa tamanho de fonte, peso ou posição pra decidir SE é título — isso
 // seria heurística visual elaborada, fora de escopo (ver tarefa original).
-// QUAL nível (h1..h6), no entanto, É inferido a partir do token de
-// tipografia real aplicado — ver _inferHeadingLevelFromTypography logo
-// abaixo (BETA-ONLY: a11y-revisao-mapeamento-profundo, correção 2).
+// QUAL nível (h1..h6) NÃO é inferido automaticamente — ver histórico e
+// reversão logo abaixo (BETA-ONLY: fix-titulo-h1-default).
 const _A11Y_HEADING_NAME_REGEX = /\bh[1-6]\b|título|titulo|heading|headline/i;
 
-// BETA-ONLY: a11y-revisao-mapeamento-profundo (correção 2 — inferência de
-// nível de título a partir da escala de tokens do DSC)
-// Escala real confirmada em refs/_skeleton.json → libraries['fundamentos-
-// visuais'].styleTokens.typography (39 tokens, formato "categoria tamanho/
-// peso (variante)", ex: "heading large/700 (bold)"). Categorias, da mais
-// pra menos proeminente: display > heading > text (texto de corpo, fora da
-// escala de heading) > link/caption (nunca heading). Direção do mapeamento:
-// token maior/mais proeminente → H1, menor → H6. `display *` sempre vira H1
-// (maior destaque possível). Dentro de `text *`/`link/*`/`caption *`, mesmo
-// que o NOME da camada/estilo tenha batido na regex de heading (falso
-// positivo comum: camada chamada "Heading" com estilo de corpo aplicado),
-// não inferimos nível — sinal fraco demais, aplicar heading semanticamente
-// errado seria pior que não sugerir nada. Retorna null quando não há
-// styleName (estilo "solto"/customizado, sem token real aplicado) ou quando
-// a categoria do token não pertence à escala de heading/display.
+// HISTÓRICO (BETA-ONLY: a11y-revisao-mapeamento-profundo, correção 2) —
+// tentamos inferir o nível H1-H6 a partir do TAMANHO do token de tipografia
+// do DSC aplicado (display→H1, heading huge/big→H2, ... heading tiny→H6).
+// REVERTIDO (BETA-ONLY: fix-titulo-h1-default) — o designer encontrou um
+// caso real errado: textos do cabeçalho institucional (nome do sistema/
+// marca) saíram marcados como H5/H6 por serem visualmente pequenos, quando
+// deveriam ser H1 (são os títulos de maior importância lógica da página).
+// Confirmado que a abordagem é estruturalmente errada, não um bug pontual:
+// a diretriz do W3C WAI sobre estrutura de headings
+// (https://www.w3.org/WAI/tutorials/page-structure/headings/) deixa claro
+// que o NÍVEL de heading é definido pela HIERARQUIA LÓGICA do conteúdo (o
+// que é sub-assunto de quê), nunca pelo tamanho visual da fonte — o mesmo
+// tamanho de token pode ser H1 numa página e H3 em outra, dependendo só da
+// estrutura que apenas o autor/designer conhece. Os arquivos de referência
+// da própria lib "Design Acessível" (refs/design-acessivel-component-
+// properties.json, refs/design-acessivel-content.json) também nunca
+// definiram correspondência entre tamanho de token e nível — só documentam
+// a semântica de cada nível (H1 = único por página, H2 = sub-assunto de H1
+// etc.), sem regra de tamanho. Decisão: a Detecção Automática volta a
+// sempre sugerir H1 como default (comportamento anterior à introdução desta
+// inferência); o designer revisa/ajusta pro nível lógico real depois. A
+// função de inferência por tamanho fica definida abaixo, mas SEM CHAMADORES
+// — mantida só como referência histórica caso a escala do DSC volte a ser
+// relevante para outra heurística no futuro; não usar sem repensar o
+// critério (ver aviso acima).
 function _inferHeadingLevelFromTypography(styleName) {
   if (!styleName) return null;
   const tokenName = String(styleName).split('/')[0].trim().toLowerCase();
@@ -320,16 +329,16 @@ function _resolveTypographyA11yMatch(node, typoProp) {
   const signal = (styleName && _A11Y_HEADING_NAME_REGEX.test(styleName)) ? styleName
     : (_A11Y_HEADING_NAME_REGEX.test(layerName) ? layerName : null);
   if (!signal) return null;
-  // suggestedLevel só é calculado a partir do TOKEN de tipografia real
-  // (styleName), nunca do nome da camada — nome de camada não carrega
-  // tamanho/peso, só o styleKey do DSC permite inferir nível com segurança.
-  const suggestedLevel = styleName ? _inferHeadingLevelFromTypography(styleName) : null;
+  // BETA-ONLY: fix-titulo-h1-default — suggestedLevel removido (voltou a
+  // não ser calculado; ver histórico acima de _inferHeadingLevelFromTypography).
+  // O consumidor (_buildA11yTituloPayload, accessibility.js) já tem fallback
+  // `suggestedLevel || 'h1'`, então a ausência do campo é coberta sem
+  // precisar alterar aquele ponto.
   return {
     containingFrame: null,
     a11yCategory: 'titulo',
     confidence: 'baixa',
-    source: styleName && signal === styleName ? 'text-style-name' : 'layer-name',
-    suggestedLevel: suggestedLevel || null
+    source: styleName && signal === styleName ? 'text-style-name' : 'layer-name'
   };
 }
 
@@ -4165,11 +4174,24 @@ figma.ui.onmessage = async (msg) => {
       let needsA11yTokenReview = false; // BETA-ONLY: a11y-aviso-titulo-sem-token
       if (node.type === 'INSTANCE' && mainComp && mainComp.remote && componentKey) {
         dscComponentMatch = _resolveDscComponentA11yMatch(componentKey);
-      } else if ((category === 'icons' || category === 'vectors') && !dscComponentMatch) {
-        // Ícone/vetor solto sem correspondência de biblioteca real — heurística
+      }
+      // BETA-ONLY: fix-icone-decorativo-instancia-dsc — bug anterior: este
+      // bloco era `else if`, então um ícone/vetor que fosse INSTANCE remota
+      // de um componente DSC sem categoria de a11y catalogada (ex: ícone
+      // genérico dentro de uma Tab) "gastava" a decisão no if acima —
+      // _resolveDscComponentA11yMatch retornava null e o fluxo nunca caía no
+      // fallback de "decorativo", mesmo sendo um ícone genuinamente
+      // redundante (o label da Tab já transmite a informação pro leitor de
+      // tela). Corrigido: agora é um `if` independente, condicionado só a
+      // `!dscComponentMatch` (continua null DEPOIS da tentativa real, seja a
+      // origem uma instância remota sem mapeamento ou um vetor solto) — ou
+      // seja, ícones que JÁ têm categoria real via _resolveDscComponentA11yMatch
+      // (ex: Button, parte de um Accordion catalogado) continuam intocados.
+      if (!dscComponentMatch && (category === 'icons' || category === 'vectors')) {
+        // Ícone/vetor sem correspondência de biblioteca real — heurística
         // conservadora de "Elemento Decorativo" (ver _resolveDecorativeA11yMatch).
         dscComponentMatch = _resolveDecorativeA11yMatch(node);
-      } else if (category === 'images' && !dscComponentMatch) {
+      } else if (!dscComponentMatch && category === 'images') {
         // BETA-ONLY: a11y-mapeamento-interativo — imagem de conteúdo real
         // (fill IMAGE), ver _resolveImageA11yMatch.
         dscComponentMatch = _resolveImageA11yMatch(node);

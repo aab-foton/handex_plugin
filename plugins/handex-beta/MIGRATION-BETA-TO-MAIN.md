@@ -859,6 +859,63 @@ Não usa fontSize, posição na árvore ou qualquer heurística visual nova (ava
 
 ---
 
+## `fix-titulo-h1-default`
+
+**REVERTE a sub-feature (b) do item 25 (`a11y-revisao-mapeamento-profundo`), acima.** Quem for migrar deve seguir esta versão (H1 sempre como default), NÃO a inferência por tamanho de token documentada no item 25(b) — aquela abordagem foi testada, considerada estruturalmente errada e desfeita nesta correção. Este bloco não invalida o restante do item 25 (sub-features (a) e (c) continuam válidas e devem ser migradas normalmente).
+
+**O que é.** O item 25(b) introduziu `_inferHeadingLevelFromTypography(styleName)` (`code.js`): inferia o nível H1-H6 a partir do TAMANHO do token de tipografia do DSC aplicado ao texto (`display *` → H1, `heading huge/big` → H2, `heading large` → H3, `heading standard` → H4, `heading small` → H5, `heading tiny` → H6). O designer testou em caso real e encontrou erro: textos do cabeçalho institucional (nome do sistema/marca) saíram marcados como H5/H6 — visualmente pequenos, mas logicamente os títulos de maior importância da página (deveriam ser H1).
+
+**Por que é um erro estrutural, não um bug pontual.** A diretriz do W3C WAI sobre estrutura de headings (https://www.w3.org/WAI/tutorials/page-structure/headings/) confirma que o NÍVEL de heading é definido pela HIERARQUIA LÓGICA do conteúdo (o que é sub-assunto de quê), nunca pelo tamanho visual da fonte — o mesmo token de tipografia pode legitimamente ser H1 numa página e H3 em outra, dependendo só da estrutura lógica que apenas o autor/designer conhece. Revisão dos arquivos de referência da própria lib "Design Acessível" (`refs/design-acessivel-component-properties.json`, `refs/design-acessivel-content.json`) confirmou que a lib NUNCA definiu correspondência entre tamanho de token e nível — documenta só a semântica de cada nível (H1 = único por página, H2 = sub-assunto de H1 etc.), sem nenhuma regra de tamanho. Ou seja: a escala de 39 tokens do DSC bater "exatamente" com 6 categorias de heading (observação feita no item 25) foi coincidência de contagem, não evidência de que a correspondência fosse semanticamente válida.
+
+**Implementação da reversão.**
+- `_resolveTypographyA11yMatch` (`code.js`) não chama mais `_inferHeadingLevelFromTypography` — o objeto retornado não tem mais o campo `suggestedLevel`.
+- `_inferHeadingLevelFromTypography` continua **definida** no arquivo (não foi removida), mas sem nenhum chamador — mantida comentada como referência histórica, com aviso explícito de não reusar sem repensar o critério. Decisão de manter a função (em vez de apagar): não há custo de manter código morto pequeno e documentado, e preserva a lógica caso uma heurística futura precise da mesma escala de tokens por outro motivo — mas não é chamada em lugar nenhum hoje.
+- `_buildA11yTituloPayload` (`accessibility.js`) **não precisou de alteração**: já tinha `const nivel = suggestedLevel || 'h1';` como fallback desde o item 25(b) — com `suggestedLevel` voltando a ser sempre `undefined`, o fallback cobre a reversão automaticamente, restaurando o comportamento "sempre sugere H1, designer revisa depois" que existia antes do item 25.
+
+**Arquivos alterados:** `src/plugin/code.js` (comentários + corpo de `_resolveTypographyA11yMatch`; `_inferHeadingLevelFromTypography` mantida, sem chamador).
+
+**Risco de migração:** baixo — remoção pura de um campo opcional (`suggestedLevel`) cujo único consumidor já tinha fallback. Nenhuma mudança de schema salvo, nenhum contrato de mensagem alterado.
+
+---
+
+## `fix-icone-decorativo-instancia-dsc`
+
+**O que é.** Bug no bloco de enriquecimento do scan de a11y (`code.js`, mesmo trecho introduzido pelo item 4 `a11y-deteccao-automatica`): a cadeia de decisão de `dscComponentMatch` era um `if/else if` encadeado —
+
+```js
+if (node.type === 'INSTANCE' && mainComp && mainComp.remote && componentKey) {
+  dscComponentMatch = _resolveDscComponentA11yMatch(componentKey);
+} else if ((category === 'icons' || category === 'vectors') && !dscComponentMatch) {
+  dscComponentMatch = _resolveDecorativeA11yMatch(node);
+} else if (category === 'images' && !dscComponentMatch) {
+  ...
+}
+```
+
+Um ícone que fosse uma INSTANCE remota de um componente DSC genérico (sem categoria de a11y catalogada nas 16 categorias de "Elementos interativos e imagens" — ex.: ícone dentro de uma Tab) entrava no primeiro `if`, `_resolveDscComponentA11yMatch` retornava `null` (não há match real), e o fluxo **nunca chegava** ao `else if` de "decorativo" — porque a decisão já tinha sido "gasta" no primeiro ramo, independente do resultado ter sido `null`. Na prática, ícones remotos sem mapeamento nunca recebiam a sugestão "Elemento Decorativo", mesmo sendo genuinamente decorativos (ex.: ícone redundante ao lado de um label de Tab que já transmite a mesma informação pro leitor de tela) — só vetores soltos (não-instância) chegavam a acionar o fallback.
+
+**Correção.** A cadeia deixou de encadear `icons`/`vectors` como `else if` do primeiro bloco — agora é um `if` independente, condicionado só a `!dscComponentMatch` continuar falso DEPOIS da tentativa de match real (não importa se a origem foi uma instância remota sem mapeamento ou um vetor solto sem instância):
+
+```js
+let dscComponentMatch = null;
+if (node.type === 'INSTANCE' && mainComp && mainComp.remote && componentKey) {
+  dscComponentMatch = _resolveDscComponentA11yMatch(componentKey);
+}
+if (!dscComponentMatch && (category === 'icons' || category === 'vectors')) {
+  dscComponentMatch = _resolveDecorativeA11yMatch(node);
+} else if (!dscComponentMatch && category === 'images') {
+  dscComponentMatch = _resolveImageA11yMatch(node);
+}
+```
+
+Ícones que JÁ recebem categoria real via `_resolveDscComponentA11yMatch` (ex.: um ícone que é de fato instância de um `Button` ou parte de um `Accordion` catalogado) continuam intocados — a mudança só afeta o caso em que a tentativa real resultou em `null`.
+
+**Arquivos alterados:** `src/plugin/code.js` (bloco de enriquecimento do scan, `category === 'icons' || category === 'vectors'`).
+
+**Risco de migração:** baixo — a mudança só amplia os casos que caem no fallback de "decorativo" (de "vetor solto apenas" para "vetor solto OU instância remota sem mapeamento"); não retira nenhuma sugestão que já funcionava antes, e não altera `_resolveDecorativeA11yMatch`/`_resolveImageA11yMatch` em si. Pré-requisito: `a11y-deteccao-automatica` (item 4) precisa estar migrado (é onde este bloco vive).
+
+---
+
 ## Ordem de migração recomendada
 
 1. **Dados/refs primeiro:** `refs/design-acessivel-component-properties.json`, `refs/dsc-component-a11y-mapping.json` — sem eles nada do bloco de a11y funciona.
