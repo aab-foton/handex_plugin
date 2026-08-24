@@ -4785,7 +4785,18 @@ figma.ui.onmessage = async (msg) => {
       ];
       const _isExpectedFallback = _a11yImportFailReason && _A11Y_EXPECTED_FALLBACK_PREFIXES.some(p => _a11yImportFailReason.startsWith(p));
       if (opts.a11yType && _a11yImportFailReason && !_isExpectedFallback) {
-        figma.notify('Não foi possível criar a especificação — a lib "Design Acessível" precisa estar habilitada neste arquivo. (' + _a11yImportFailReason + ')', { error: true });
+        // BETA-ONLY: fix-toast-lib-desabilitada-generico — antes o texto
+        // sempre afirmava "a lib precisa estar habilitada", mesmo quando a
+        // causa real era outra (ex: a11y-set-properties-falhou, quando a
+        // instância da lib já foi importada com sucesso mas a variante local
+        // não bate com o valor que o Handex tentou aplicar — sintoma de
+        // catálogo desatualizado, não de lib desabilitada). Reportado pelo
+        // designer: a lib aparecia "Added" no Manage Libraries e o erro
+        // insistia em pedir pra habilitar. Mensagem agora é neutra sobre a
+        // causa, deixando o motivo técnico entre parênteses fazer esse
+        // trabalho — evita afirmar algo falso que manda o usuário checar o
+        // lugar errado.
+        figma.notify('Não foi possível criar a especificação de acessibilidade. (' + _a11yImportFailReason + ')', { error: true });
         return;
       }
 
@@ -5013,7 +5024,10 @@ figma.ui.onmessage = async (msg) => {
               : await _tryImportA11yAgrupamento(opts);
           } catch (e) {
             try { specCard.remove(); } catch (_) { }
-            figma.notify('Não foi possível criar o marcador — a lib "Design Acessível" precisa estar habilitada neste arquivo. (' + (e && e.message ? e.message : String(e)) + ')', { error: true });
+            // BETA-ONLY: fix-toast-lib-desabilitada-generico — mesma correção
+            // do toast acima (linha ~4788): não afirmar "lib precisa estar
+            // habilitada" quando a causa pode ser outra.
+            figma.notify('Não foi possível criar o marcador de acessibilidade. (' + (e && e.message ? e.message : String(e)) + ')', { error: true });
             return;
           }
         }

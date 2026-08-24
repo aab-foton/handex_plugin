@@ -822,6 +822,8 @@ Não usa fontSize, posição na árvore ou qualquer heurística visual nova (ava
 
 **Risco de migração:** baixo — aditivo em todos os pontos (campo novo no payload do scan, coleta separada no frontend, bloco de UI condicional). Não altera o comportamento de `_resolveTypographyA11yMatch` nem de `_filterA11yBatchEligible`; itens com `needsA11yTokenReview` nunca entram no lote nem geram spec. Único ponto de atenção: a mudança em `openA11yBatchSummaryModal` (abrir o modal mesmo com `detections.length === 0`) precisa ser revisada junto se a estrutura desse modal mudar antes da migração.
 
+**Revisão — `fix-accordion-titulo-sem-token` (2026-08-24).** Designer reportou que o bloco, sempre aberto, criava ruído visual no modal quando havia muitos candidatos (empurrava o botão "Criar Especificações" pra baixo, competindo visualmente com a ação principal). Consultado design-ux: recomendação foi transformar em accordion **recolhido por padrão** (disclosure progressivo — prática estabelecida pra informação secundária/não-bloqueante de volume variável), não um mecanismo de "migração entre categorias" (essa segunda ideia, levantada pelo designer, ficou descartada por exigir schema novo e responder perguntas de produto em aberto — conta como spec documentada? aparece na Ficha final?). Aprovado pelo designer. Implementação: `modals.html` — `#a11y-token-review-block` ganhou um `<button onclick="toggleAccordion(this)">` de cabeçalho (reaproveita o mesmo helper genérico de `core.js` usado em outros accordions do plugin, ex. "Configurações do selo") envolvendo o texto explicativo + `#a11y-token-review-list` num `.accordion-content` que nasce `hidden`. `accessibility.js` (`openA11yBatchSummaryModal`) ganhou: (1) contador no título (`#a11y-token-review-title` → "Possíveis títulos sem token DSC (N)"); (2) reset explícito do estado do accordion (fechado + chevron neutro) toda vez que o modal reabre, pra não herdar o estado aberto de um lote anterior. Risco de migração: baixo, aditivo, mesma dependência de `toggleAccordion` (já em main) que outros accordions do plugin já usam.
+
 ---
 
 ## `fix-ordem-tags-lote-a11y`
@@ -913,6 +915,18 @@ if (!dscComponentMatch && (category === 'icons' || category === 'vectors')) {
 **Arquivos alterados:** `src/plugin/code.js` (bloco de enriquecimento do scan, `category === 'icons' || category === 'vectors'`).
 
 **Risco de migração:** baixo — a mudança só amplia os casos que caem no fallback de "decorativo" (de "vetor solto apenas" para "vetor solto OU instância remota sem mapeamento"); não retira nenhuma sugestão que já funcionava antes, e não altera `_resolveDecorativeA11yMatch`/`_resolveImageA11yMatch` em si. Pré-requisito: `a11y-deteccao-automatica` (item 4) precisa estar migrado (é onde este bloco vive).
+
+---
+
+## `fix-toast-lib-desabilitada-generico`
+
+**O que é.** Correção de mensagem enganosa. Os dois toasts de erro da criação de spec/marcador de a11y (`code.js`, ~linha 4788 e ~linha 5027) sempre afirmavam "a lib 'Design Acessível' precisa estar habilitada neste arquivo", mesmo quando a causa real era outra — reportado pelo designer com captura de tela real: a lib já aparecia com selo "Added" no modal "Manage libraries" do Figma, mas o toast insistia em pedir pra habilitá-la. Causa raiz do caso investigado: `a11y-set-properties-falhou` — a instância do componente da lib foi importada com sucesso (`importComponentByKeyAsync` concluído), mas `setProperties` na property de variante (`variacao`/`componente`/`nivel`, a depender da categoria) falhou porque o valor que o Handex tentou aplicar não bate com nenhuma variante existente no componente real (sintoma de catálogo local desatualizado em relação à lib publicada, não de lib desabilitada).
+
+**Decisão.** O texto genérico "a lib precisa estar habilitada" é uma entre várias causas possíveis agrupadas no mesmo `if` (`opts.a11yType && _a11yImportFailReason && !_isExpectedFallback`) — cobre também `a11y-instancia-aninhada-nao-encontrada`, `a11y-estrutura-set-tipo-falhou`, etc. Afirmar categoricamente uma causa específica quando o código não sabe qual delas ocorreu manda o usuário investigar o lugar errado. A mensagem virou neutra sobre a causa ("Não foi possível criar a especificação/o marcador de acessibilidade."), deixando o motivo técnico entre parênteses (já existia, ex: `a11y-set-properties-falhou: ...`) comunicar o resto. Não resolve a causa raiz de catálogo desatualizado em si — isso depende de confirmar ao vivo no Figma quais variantes cada componente realmente aceita hoje e ajustar `refs/design-acessivel-component-properties.json`/os mapas em `code.js` de acordo, trabalho não coberto por esta correção.
+
+**Arquivos alterados:** `src/plugin/code.js` (dois toasts de erro, dentro do handler de `create-unified-spec`).
+
+**Risco de migração:** trivial — mudança de string, nenhuma lógica alterada.
 
 ---
 

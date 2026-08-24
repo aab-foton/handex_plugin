@@ -6167,7 +6167,7 @@
         ];
         const _isExpectedFallback = _a11yImportFailReason && _A11Y_EXPECTED_FALLBACK_PREFIXES.some((p) => _a11yImportFailReason.startsWith(p));
         if (opts.a11yType && _a11yImportFailReason && !_isExpectedFallback) {
-          figma.notify('N\xE3o foi poss\xEDvel criar a especifica\xE7\xE3o \u2014 a lib "Design Acess\xEDvel" precisa estar habilitada neste arquivo. (' + _a11yImportFailReason + ")", { error: true });
+          figma.notify("N\xE3o foi poss\xEDvel criar a especifica\xE7\xE3o de acessibilidade. (" + _a11yImportFailReason + ")", { error: true });
           return;
         }
         if (!specCard) {
@@ -6367,7 +6367,7 @@
                 specCard.remove();
               } catch (_) {
               }
-              figma.notify('N\xE3o foi poss\xEDvel criar o marcador \u2014 a lib "Design Acess\xEDvel" precisa estar habilitada neste arquivo. (' + (e && e.message ? e.message : String(e)) + ")", { error: true });
+              figma.notify("N\xE3o foi poss\xEDvel criar o marcador de acessibilidade. (" + (e && e.message ? e.message : String(e)) + ")", { error: true });
               return;
             }
           }

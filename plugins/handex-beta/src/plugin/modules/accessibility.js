@@ -2431,12 +2431,22 @@ function openA11yBatchSummaryModal() {
   // listas do plugin) — nenhuma ação de criação de spec aqui.
   const tokenReviewBlock = document.getElementById('a11y-token-review-block');
   const tokenReviewList = document.getElementById('a11y-token-review-list');
+  const tokenReviewTitle = document.getElementById('a11y-token-review-title');
   if (tokenReviewBlock && tokenReviewList) {
     if (tokenReviewCandidates.length === 0) {
       tokenReviewBlock.classList.add('hidden');
       tokenReviewList.innerHTML = '';
     } else {
       tokenReviewBlock.classList.remove('hidden');
+      if (tokenReviewTitle) tokenReviewTitle.textContent = `Possíveis títulos sem token DSC (${tokenReviewCandidates.length})`;
+      // BETA-ONLY: fix-accordion-titulo-sem-token — sempre reabre fechado
+      // (estado do accordion não deve persistir entre lotes diferentes).
+      const tokenReviewToggleBtn = tokenReviewBlock.querySelector('button[onclick^="toggleAccordion"]');
+      const tokenReviewContent = tokenReviewBlock.querySelector('.accordion-content');
+      const tokenReviewChevron = tokenReviewToggleBtn ? tokenReviewToggleBtn.querySelector('[data-lucide="chevron-down"]') : null;
+      if (tokenReviewContent) tokenReviewContent.classList.add('hidden');
+      if (tokenReviewToggleBtn) tokenReviewToggleBtn.setAttribute('aria-expanded', 'false');
+      if (tokenReviewChevron) tokenReviewChevron.style.transform = 'rotate(0deg)';
       tokenReviewList.innerHTML = tokenReviewCandidates.map(item => `
         <div class="flex items-center gap-2 px-3 py-2 rounded-xl border bg-amber-50/60 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40">
           <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true"></i>

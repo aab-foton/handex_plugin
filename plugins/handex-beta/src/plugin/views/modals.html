@@ -1419,19 +1419,32 @@
 
         <p id="a11y-batch-summary-skipped-notice" class="hidden text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl px-3 py-2 mb-4 leading-relaxed"></p>
 
-        <!-- BETA-ONLY: a11y-aviso-titulo-sem-token — bloco de avisos, visualmente
-             separado da lista de grupos elegíveis ao lote (não gera spec, só
-             sinaliza candidato a título sem token DSC vinculado). Fica oculto
-             (via classList 'hidden' no JS) quando não há nenhum candidato. -->
-        <div id="a11y-token-review-block" class="hidden mb-1">
-          <div class="flex items-center gap-1.5 mb-2">
-            <i data-lucide="link-2-off" class="w-3.5 h-3.5 text-amber-500" aria-hidden="true"></i>
-            <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Possíveis títulos sem token DSC</p>
+        <!-- BETA-ONLY: fix-accordion-titulo-sem-token — bloco de avisos virou
+             accordion RECOLHIDO por padrão (antes ficava sempre aberto,
+             empurrando a ação principal do modal "Criar Especificações" pra
+             baixo em telas com muitos itens sem token). Decisão validada com
+             design-ux: informação secundária/não-bloqueante de volume
+             variável deve ficar atrás de disclosure progressivo, não competir
+             visualmente com a ação primária. Reaproveita toggleAccordion
+             genérico (core.js) — mesmo padrão de outros accordions do plugin.
+             Fica oculto por completo (via classList 'hidden' no JS) quando
+             não há nenhum candidato; contador no cabeçalho atualizado em
+             _renderA11yTokenReviewList (accessibility.js). -->
+        <div id="a11y-token-review-block" class="hidden mb-1 rounded-xl border border-amber-200 dark:border-amber-800/40 overflow-hidden">
+          <button type="button" onclick="toggleAccordion(this)" aria-expanded="false"
+            class="w-full flex items-center justify-between gap-2 px-3 py-2 text-left bg-amber-50/60 dark:bg-amber-900/10 hover:bg-amber-100/60 dark:hover:bg-amber-900/20 transition-colors">
+            <span class="flex items-center gap-1.5 min-w-0">
+              <i data-lucide="link-2-off" class="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true"></i>
+              <span id="a11y-token-review-title" class="text-[10px] font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wider truncate">Possíveis títulos sem token DSC</span>
+            </span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-amber-500 transition-transform shrink-0" style="transform:rotate(0deg)"></i>
+          </button>
+          <div class="accordion-content hidden px-3 pb-3 pt-2 space-y-2">
+            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
+              Estes textos podem ser títulos de página, mas não têm nenhum estilo do DSC vinculado — por isso não entram na detecção automática. Vincule um Text Style do DSC no Figma e escaneie de novo pra gerar a sugestão de "Nível de Título" automaticamente.
+            </p>
+            <div id="a11y-token-review-list" class="space-y-1.5"></div>
           </div>
-          <p class="text-[11px] text-slate-500 dark:text-dark-muted mb-2 leading-relaxed">
-            Estes textos podem ser títulos de página, mas não têm nenhum estilo do DSC vinculado — por isso não entram na detecção automática. Vincule um Text Style do DSC no Figma e escaneie de novo pra gerar a sugestão de "Nível de Título" automaticamente.
-          </p>
-          <div id="a11y-token-review-list" class="space-y-1.5"></div>
         </div>
       </div>
       <div class="p-4 border-t border-gray-100 dark:border-dark-line shrink-0">
