@@ -1415,7 +1415,22 @@
           Serão criadas especificações de "Elementos e Imagens" para cada componente detectado — as de baixa confiança precisam de revisão manual depois. O <strong>Label</strong> de cada uma usa o nome do elemento no canvas como texto inicial; ajuste depois pelo botão de editar.
         </p>
 
-        <div id="a11y-batch-summary-groups" class="space-y-1.5 mb-4"></div>
+        <!-- BETA-ONLY: fix-accordion-resumo-lote — grupos do resumo (Accordion,
+             Button, Table...) viraram accordion RECOLHIDO por padrão, mesmo
+             padrão de #a11y-token-review-block: são puramente informativos
+             (nenhuma ação por linha), então competiam à toa com "Criar N
+             Especificações" quando havia muitos grupos. Cabeçalho mostra a
+             contagem total (grupos + itens) mesmo fechado. -->
+        <div id="a11y-batch-summary-groups-block" class="mb-4 rounded-xl border border-gray-100 dark:border-dark-line overflow-hidden">
+          <button type="button" onclick="toggleAccordion(this)" aria-expanded="false"
+            class="w-full flex items-center justify-between gap-2 px-3 py-2 text-left bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-line/40 transition-colors">
+            <span id="a11y-batch-summary-groups-title" class="text-[10px] font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wider truncate">Componentes detectados</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-500 transition-transform shrink-0" style="transform:rotate(0deg)"></i>
+          </button>
+          <div class="accordion-content hidden px-3 pb-3 pt-2 space-y-1.5">
+            <div id="a11y-batch-summary-groups" class="space-y-1.5"></div>
+          </div>
+        </div>
 
         <p id="a11y-batch-summary-skipped-notice" class="hidden text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl px-3 py-2 mb-4 leading-relaxed"></p>
 

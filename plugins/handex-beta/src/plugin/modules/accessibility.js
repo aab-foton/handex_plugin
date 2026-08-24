@@ -2361,6 +2361,22 @@ function openA11yBatchSummaryModal() {
     return labelA.localeCompare(labelB);
   });
 
+  // BETA-ONLY: fix-accordion-resumo-lote — reseta o accordion pra fechado a
+  // cada abertura do modal (não deve herdar o estado de um lote anterior) e
+  // atualiza o contador do cabeçalho com o total agregado de grupos+itens.
+  const groupsBlock = document.getElementById('a11y-batch-summary-groups-block');
+  const groupsTitle = document.getElementById('a11y-batch-summary-groups-title');
+  if (groupsBlock && groupsTitle) {
+    const totalItems = groupList.reduce((sum, g) => sum + g.count, 0);
+    groupsTitle.textContent = `Componentes detectados (${groupList.length} grupo${groupList.length === 1 ? '' : 's'}, ${totalItems} item${totalItems === 1 ? '' : 'ns'})`;
+    const groupsToggleBtn = groupsBlock.querySelector('button[onclick^="toggleAccordion"]');
+    const groupsContent = groupsBlock.querySelector('.accordion-content');
+    const groupsChevron = groupsToggleBtn ? groupsToggleBtn.querySelector('[data-lucide="chevron-down"]') : null;
+    if (groupsContent) groupsContent.classList.add('hidden');
+    if (groupsToggleBtn) groupsToggleBtn.setAttribute('aria-expanded', 'false');
+    if (groupsChevron) groupsChevron.style.transform = 'rotate(0deg)';
+  }
+
   const groupsWrap = document.getElementById('a11y-batch-summary-groups');
   if (groupsWrap) {
     groupsWrap.innerHTML = groupList.map(g => {
