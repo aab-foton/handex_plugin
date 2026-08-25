@@ -93,7 +93,7 @@ ${css}
     class="relative flex items-center justify-between px-4 py-2 border-b border-light-line dark:border-dark-line shrink-0 bg-light-surface dark:bg-dark-bg z-50">
     <div id="header-home" class="flex items-center justify-between w-full">
       <div class="flex items-center gap-2">
-        <i data-lucide="accessibility" class="w-5 h-5 text-[#0070af]" aria-hidden="true"></i>
+        <i data-lucide="person-standing" class="w-5 h-5 text-[#0070af]" aria-hidden="true"></i>
         <h1 class="font-bold text-[#1E293B] dark:text-white text-[12px] tracking-[0.15em] uppercase">
           HAC
         </h1>

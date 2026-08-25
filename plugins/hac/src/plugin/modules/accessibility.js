@@ -1285,6 +1285,12 @@ function confirmA11ySpec() {
     // Chave crua da subvariante — usada pelo backend pra tentar o import real
     // do componente da lib (ver code.js, _tryImportA11yComponent).
     a11ySubtype,
+    // Fluxo MANUAL (formulário, sem detecção automática prévia) não tem como
+    // saber se o componente é web ou mobile — default 'web' (caso mais
+    // comum). Sem seletor manual de origem na UI por decisão de escopo desta
+    // entrega; se um designer precisar de marcador mobile no fluxo manual,
+    // isso fica pra uma entrega futura.
+    a11yOrigin: 'web',
     // Área Marcada onde a spec nasceu — associação explícita, escolhida no
     // momento da criação. O backend ecoa esse campo de volta em spec-created
     // pra spec.a11yAreaId continuar presente no objeto salvo localmente.
@@ -1482,23 +1488,41 @@ function _a11ySetAllSubaccordions(btn, expand) {
 window._a11ySetAllSubaccordions = _a11ySetAllSubaccordions;
 
 // Subaccordion por categoria (elemento/estrutura/titulo/decorativo/informacoes)
-// dentro de cada Área. Nasce expandido por padrão — diferente do accordion de
-// Área (que lembra estado via _a11yExpandedAreaIds), aqui não persistimos
-// estado entre re-renders porque normalmente uma área tem poucas categorias
-// populadas e o designer quer ver tudo de cara ao abrir a área.
+// dentro de cada Área. Nasce RECOLHIDO por padrão (mudou em 2026-08-25, avaliação
+// design-ux + accessibility-specialist sobre densidade do card de Área — antes
+// nascia sempre expandido sem memória de estado). Estado próprio em
+// window._a11yExpandedCategoryIds, mesmo padrão de _a11yExpandedTabOrderIds/
+// _a11yExpandedUndocumentedIds — chaveado por uid (categoria dentro de uma
+// área específica), não por catKey sozinho (a mesma categoria em áreas
+// diferentes tem estado independente).
+window._a11yExpandedCategoryIds = window._a11yExpandedCategoryIds || new Set();
+
+function toggleA11yCategoryAccordion(uid) {
+  const body = document.getElementById(`body-${uid}`);
+  const chevron = document.getElementById(`chevron-${uid}`);
+  if (!body) return;
+  const isHidden = body.classList.contains('hidden');
+  body.classList.toggle('hidden', !isHidden);
+  if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+  if (isHidden) window._a11yExpandedCategoryIds.add(uid);
+  else window._a11yExpandedCategoryIds.delete(uid);
+}
+window.toggleA11yCategoryAccordion = toggleA11yCategoryAccordion;
+
 function _a11yCategoryAccordionEl(uid, catKey, catSpecs) {
   const meta = A11Y_CATEGORIES[catKey] || { label: _capitalizeFirst(catKey), icon: 'accessibility', color: '#0891B2', fill: '#E0F5FA' };
+  const expand = window._a11yExpandedCategoryIds.has(uid);
   return `
     <div class="rounded-lg border border-gray-100 dark:border-dark-line overflow-hidden ml-1" data-a11y-subcat="${escapeHtml(catKey)}">
       <div class="flex items-center gap-2 px-2 py-1.5 cursor-pointer select-none bg-gray-50/60 dark:bg-dark-bg/30 hover:bg-gray-100/60 dark:hover:bg-dark-line/20 transition-colors"
-        onclick="toggleA11yAreaAccordion('${uid}')">
+        onclick="toggleA11yCategoryAccordion('${uid}')">
         <div class="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0" style="background-color:${meta.fill}">
           <i data-lucide="${meta.icon}" class="w-2.5 h-2.5" style="color:${meta.color}"></i>
         </div>
         <p class="flex-1 min-w-0 text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wide truncate">${escapeHtml(meta.label)} (${catSpecs.length})</p>
-        <i data-lucide="chevron-down" id="chevron-${uid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:rotate(180deg)"></i>
+        <i data-lucide="chevron-down" id="chevron-${uid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:${expand ? 'rotate(180deg)' : 'rotate(0deg)'}"></i>
       </div>
-      <div id="body-${uid}" class="accordion-content border-t border-gray-50 dark:border-dark-line p-1.5 space-y-1.5">
+      <div id="body-${uid}" class="accordion-content ${expand ? '' : 'hidden'} border-t border-gray-50 dark:border-dark-line p-1.5 space-y-1.5">
         ${catSpecs.map(_a11ySpecItemHtml).join('')}
       </div>
     </div>
@@ -1668,6 +1692,15 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
   const uid = `a11y-area-${area.originalIndex}`;
   const expand = window._a11yExpandedAreaIds.has(area.id);
   const undocumentedEntries = _collectA11yUndocumentedForArea(area.id);
+  // Status agregado da Ordem de Tabulação, visível no header do card ao lado
+  // do contador de especificações — antes ficava só implícito, enterrada
+  // como último accordion (avaliação de design-ux + accessibility-specialist,
+  // 2026-08-25: separar em card próprio fragmentaria a Área, que é a unidade
+  // real de organização — a correção certa é dar visibilidade, não fragmentar).
+  // "Aplicada" = já existem itens no canvas para esta área (tabOrderItems),
+  // "Pendente" caso contrário. Não há estado de "rascunho" persistido — a
+  // lista fica só em memória enquanto o modal de revisão não é confirmado.
+  const tabOrderCount = _currentTabOrderItems(area.id).length;
   const li = document.createElement('li');
   li.className = 'list-none bg-white dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line overflow-hidden';
   li.setAttribute('data-a11y-area', area.id);
@@ -1678,7 +1711,14 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
       <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold text-white shrink-0" style="background-color:#0070AF">${escapeHtml(String(area.number))}</div>
       <div class="flex-1 min-w-0">
         <p class="text-[11px] font-semibold text-slate-700 dark:text-white break-words leading-snug">${escapeHtml(area.label || '')}</p>
-        <p class="text-[9px] text-slate-400 dark:text-dark-muted">${areaSpecs.length} especificaç${areaSpecs.length === 1 ? 'ão' : 'ões'}</p>
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <p class="text-[9px] text-slate-400 dark:text-dark-muted">${areaSpecs.length} especificaç${areaSpecs.length === 1 ? 'ão' : 'ões'}</p>
+          <span class="text-[9px] text-gray-300 dark:text-dark-line">·</span>
+          <p class="text-[9px] font-semibold flex items-center gap-1" style="color:${tabOrderCount > 0 ? '#16a34a' : '#94a3b8'}">
+            <i data-lucide="${tabOrderCount > 0 ? 'check-circle-2' : 'circle-dashed'}" class="w-2.5 h-2.5 shrink-0"></i>
+            Tabulação${tabOrderCount > 0 ? ` (${tabOrderCount})` : ' pendente'}
+          </p>
+        </div>
       </div>
       <button type="button" title="Nova especificação nesta área" aria-label="Nova especificação nesta área"
         onclick="event.stopPropagation(); openA11yCategoryPickerModal('${area.id}')"
@@ -1713,6 +1753,7 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
         <button type="button" onclick="event.stopPropagation(); _a11ySetAllSubaccordions(this, false)"
           class="text-[9.5px] font-bold text-slate-500 dark:text-dark-muted hover:underline px-1">Recolher todos</button>
       </div>` : ''}
+      ${_tabOrderSectionHtml(uid, area)}
       ${areaSpecs.length > 0
         ? Object.keys(A11Y_CATEGORIES)
             .map(catKey => ({ catKey, catSpecs: areaSpecs.filter(s => s.a11yType === catKey) }))
@@ -1721,7 +1762,6 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
             .join('')
         : (undocumentedEntries.length === 0 ? `<p class="text-[10px] text-slate-400 dark:text-dark-muted text-center py-3">Nenhuma especificação nesta área ainda. Use o botão "+" acima.</p>` : '')}
       ${_a11yUndocumentedAccordionEl(`${uid}-undoc`, area.id, undocumentedEntries)}
-      ${_tabOrderSectionHtml(uid, area)}
     </div>
   `;
   return li;
@@ -2193,6 +2233,24 @@ function handleA11yPostAreaDetectionResult(detections, tokenReviewCandidates) {
     window._a11yTokenReviewByArea = window._a11yTokenReviewByArea || {};
     window._a11yDetectionsByArea[pendingAreaId] = detections || [];
     window._a11yTokenReviewByArea[pendingAreaId] = tokenReviewCandidates || [];
+
+    // Origem (web/mobile) da ÁREA — voto de maioria entre os componentes com
+    // origin conhecido que a Detecção Automática encontrou nesta área. Usada
+    // pela Ordem de Tabulação (applyTabOrderToCanvas) pra escolher entre
+    // A11Y_ITEM_NUMBER_KEYS[_MOBILE] no backend, já que uma Área não tem
+    // "categoria" própria pra derivar origem de um único componente como as
+    // specs individuais fazem. Reescanear a área recalcula do zero (não
+    // acumula votos de scans anteriores).
+    const originCounts = { web: 0, mobile: 0 };
+    (detections || []).forEach(d => {
+      const o = d && d.dscComponentMatch && d.dscComponentMatch.origin;
+      if (o === 'web' || o === 'mobile') originCounts[o]++;
+    });
+    const area = _findA11yAreaById(pendingAreaId);
+    if (area) {
+      area.origin = originCounts.mobile > originCounts.web ? 'mobile' : 'web';
+      saveToStorage();
+    }
   }
 
   const eligible = _filterA11yBatchEligible(detections);
@@ -2639,6 +2697,12 @@ async function confirmA11yBatchGenerate() {
       drawConnection: false,
       a11yType,
       a11ySubtype: built.a11ySubtype,
+      // Origem (web/mobile) vem do componente DETECTADO — item.dscComponentMatch.origin,
+      // resolvido no backend a partir de qual das duas libs DSC (Web Angular
+      // & React ou DSC | Super App) a componentKey da instância pertence.
+      // Default 'web' só como rede de segurança (heurísticas de texto/ícone
+      // — título/decorativo sem match de componente real — não têm origin).
+      a11yOrigin: item.dscComponentMatch.origin || 'web',
       a11yAreaId: areaId,
       // Recalculado a cada volta do loop sequencial — a11ySpecs já reflete a
       // spec anterior do próprio lote assim que 'spec-created' responde,
@@ -3239,12 +3303,21 @@ function applyTabOrderToCanvas() {
 
   _tabOrderSetCaptureMode(null);
   parent.postMessage({ pluginMessage: { type: 'clear-highlight' } }, '*');
+  // Origem (web/mobile) da Ordem de Tabulação é por ÁREA, não por spec —
+  // uma Área não tem "categoria" própria pra derivar origem de um único
+  // componente. area.origin é setado em confirmA11yArea a partir da maioria
+  // dos componentes que a Detecção Automática daquela área encontrou (ver
+  // _allA11yAreas/confirmA11yArea) — default 'web' se a área nunca passou
+  // por detecção ou não achou nenhum componente com origem conhecida.
+  const area = _findA11yAreaById(areaId);
+  const a11yOrigin = (area && area.origin) || 'web';
   parent.postMessage({
     pluginMessage: {
       type: 'apply-tab-order-to-canvas',
       areaId,
       targetNodeId,
       items: items.map((it, i) => ({ nodeId: it.nodeId, nodeName: it.nodeName, number: i + 1 })),
+      a11yOrigin,
     },
   }, '*');
 }

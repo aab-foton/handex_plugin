@@ -17,6 +17,7 @@
 import A11Y_CONTENT from './refs/design-acessivel-content.json';
 import A11Y_COMPONENT_PROPERTIES_RAW from './refs/design-acessivel-component-properties.json';
 import DSC_A11Y_MAPPING from './refs/dsc-component-a11y-mapping.json';
+import DSC_A11Y_MAPPING_MOBILE from './refs/dsc-component-a11y-mapping-mobile.json';
 import REF_SKELETON from './refs/_skeleton.json';
 
 figma.showUI(__html__, { width: 480, height: 750 });
@@ -102,37 +103,55 @@ function _compareSpecTags(tagA, tagB) {
 // ============================================================
 
 // key (componentKey resolvido via getMainComponentAsync/mainComp.key) →
-// containingFrame (nome do component set real, ex: "[dsc] Accordion").
-// Construído uma única vez a partir de REF_SKELETON.libraries
-// (slug "web-angular-react" → componentsDetailed), não de
-// DSC_A11Y_MAPPING.*.sampleKeys (que são só amostras de 3 chaves por
-// família, insuficientes para resolver qualquer instância real).
+// { containingFrame, origin } — origin é 'web' (lib "Web Angular & React")
+// ou 'mobile' (lib "DSC | Super App"). Construído uma única vez a partir de
+// REF_SKELETON.libraries (componentsDetailed de CADA lib do manifest — ver
+// build-skeleton.cjs, estendido em 2026-08-25 para também gerar
+// componentsDetailed de 'super-app'), não de DSC_A11Y_MAPPING*.sampleKeys
+// (que são só amostras de 3 chaves por família, insuficientes para resolver
+// qualquer instância real). Component keys NUNCA colidem entre libs
+// diferentes (são globais no Figma) — não há risco de uma key de 'web'
+// sobrescrever uma de 'mobile' ou vice-versa, mesmo que os NOMES de
+// containingFrame se repitam entre as duas libs (ex: "[dsc] Button" existe
+// nas duas, cada uma com suas próprias component keys).
 let _dscComponentKeyToFrameMap = null;
 function _getDscComponentKeyToFrameMap() {
   if (_dscComponentKeyToFrameMap) return _dscComponentKeyToFrameMap;
   _dscComponentKeyToFrameMap = new Map();
-  const lib = (REF_SKELETON && Array.isArray(REF_SKELETON.libraries))
-    ? REF_SKELETON.libraries.find(l => l.slug === 'web-angular-react')
-    : null;
-  if (lib && Array.isArray(lib.componentsDetailed)) {
+  const libs = (REF_SKELETON && Array.isArray(REF_SKELETON.libraries)) ? REF_SKELETON.libraries : [];
+  const ORIGIN_BY_SLUG = { 'web-angular-react': 'web', 'super-app': 'mobile' };
+  libs.forEach(lib => {
+    const origin = lib && ORIGIN_BY_SLUG[lib.slug];
+    if (!origin || !Array.isArray(lib.componentsDetailed)) return;
     lib.componentsDetailed.forEach(c => {
-      if (c && c.key && c.containingFrame) _dscComponentKeyToFrameMap.set(c.key, c.containingFrame);
+      if (c && c.key && c.containingFrame) {
+        _dscComponentKeyToFrameMap.set(c.key, { containingFrame: c.containingFrame, origin });
+      }
     });
-  }
+  });
   return _dscComponentKeyToFrameMap;
 }
 
 // containingFrame → { shortName, confidence } (só alta/baixa confiança;
 // famílias sem match não entram no mapa e resultam em dscComponentMatch: null).
+// Combina DSC_A11Y_MAPPING (desktop) e DSC_A11Y_MAPPING_MOBILE — os NOMES de
+// containingFrame podem se repetir entre as duas libs (ex: "[dsc] Button"
+// mapeado pra 'button' nas duas), o que é esperado e não é conflito: a
+// resolução de CATEGORIA por nome é a mesma para as duas origens, só a
+// ORIGEM (de qual componentKey→containingFrame o match veio, resolvida em
+// _getDscComponentKeyToFrameMap) precisa ser diferenciada.
 let _dscFrameToA11yMap = null;
 function _getDscFrameToA11yMap() {
   if (_dscFrameToA11yMap) return _dscFrameToA11yMap;
   _dscFrameToA11yMap = new Map();
-  const buckets = [DSC_A11Y_MAPPING.altaConfianca, DSC_A11Y_MAPPING.baixaConfianca];
+  const buckets = [
+    DSC_A11Y_MAPPING.altaConfianca, DSC_A11Y_MAPPING.baixaConfianca,
+    DSC_A11Y_MAPPING_MOBILE.altaConfianca, DSC_A11Y_MAPPING_MOBILE.baixaConfianca
+  ];
   buckets.forEach(bucket => {
     if (!Array.isArray(bucket)) return;
     bucket.forEach(entry => {
-      if (entry && entry.containingFrame && entry.match) {
+      if (entry && entry.containingFrame && entry.match && !_dscFrameToA11yMap.has(entry.containingFrame)) {
         _dscFrameToA11yMap.set(entry.containingFrame, {
           shortName: entry.match.shortName,
           confidence: entry.match.confidence
@@ -143,24 +162,28 @@ function _getDscFrameToA11yMap() {
   return _dscFrameToA11yMap;
 }
 
-// Retorna { containingFrame, a11yCategory, confidence } (match normal),
-// { containingFrame, a11yCategory: null, confidence: null, isUnmapped: true }
-// (componente DSC real, mas SEM categoria de a11y catalogada — vira sugestão
-// "Outro" no lote de Detecção Automática) ou null (componentKey não
-// corresponde a nenhum componente DSC catalogado — não é caso de a11y).
+// Retorna { containingFrame, a11yCategory, confidence, origin } (match
+// normal), { containingFrame, a11yCategory: null, confidence: null,
+// isUnmapped: true, origin } (componente DSC real, mas SEM categoria de
+// a11y catalogada — vira sugestão "Outro" no lote de Detecção Automática)
+// ou null (componentKey não corresponde a nenhum componente DSC catalogado
+// em nenhuma das duas libs — não é caso de a11y). origin é 'web' ou
+// 'mobile', conforme a lib de onde a componentKey resolvida veio.
 // componentKey deve ser o mainComp.key de uma INSTANCE remote — chamador garante isso.
 function _resolveDscComponentA11yMatch(componentKey) {
   if (!componentKey) return null;
-  const containingFrame = _getDscComponentKeyToFrameMap().get(componentKey);
-  if (!containingFrame) return null;
+  const resolved = _getDscComponentKeyToFrameMap().get(componentKey);
+  if (!resolved) return null;
+  const { containingFrame, origin } = resolved;
   const a11yMatch = _getDscFrameToA11yMap().get(containingFrame);
   if (!a11yMatch) {
-    return { containingFrame, a11yCategory: null, confidence: null, isUnmapped: true };
+    return { containingFrame, a11yCategory: null, confidence: null, isUnmapped: true, origin };
   }
   return {
     containingFrame,
     a11yCategory: a11yMatch.shortName,
-    confidence: a11yMatch.confidence
+    confidence: a11yMatch.confidence,
+    origin
   };
 }
 
@@ -653,14 +676,117 @@ const A11Y_AGRUPAMENTO_KEYS = {
     inferior: 'faa943c3ccdec90b2fb06e6e58aaaa9ba0cbb867',
   },
 };
+
+// ── Integração com a lib mobile "[a11y mob]" (2026-08-25) ──────────────────
+// Segunda lib DSC ("DSC | Super App", mobile/React Native) mapeada para a11y
+// — ver dsc-component-a11y-mapping-mobile.json e REF_SKELETON.libraries
+// (slug 'super-app'). A Detecção Automática agora reconhece sozinha se um
+// componente do canvas é web ou mobile via a componentKey (única por lib de
+// origem — nunca colide entre libs), sem o designer escolher manualmente
+// (ver _resolveDscComponentA11yMatch acima, campo `origin`).
+//
+// KEYS CONFIRMADAS via REST API em 2026-08-25 (GET /v1/files/
+// 3zdtN13YvPlCGPdXeL0Y2i/components, fileKey da lib "[a11y mob]" — arquivo
+// DIFERENTE da lib de componentes reais 'super-app', que é o template/
+// handoff de marcadores visuais). A lib mobile tem só 39 componentes reais
+// no total (varredura completa, não amostra) e, DIFERENTE da lib desktop
+// "[a11y]" (25 = 5 categorias × 5 direções em cada modo), tem LACUNAS REAIS:
+//
+//   [a11y mob] Agrupamento: só 3 categorias (elemento/estrutura/decorativo)
+//     × 4 orientações = 12 componentes. NÃO existe "titulo" nem
+//     "informacoes" no Agrupamento mobile — confirmado, não é lacuna de
+//     amostragem.
+//   [a11y mob] Conectores: só 3 categorias (elemento/titulo/decorativo) × 5
+//     direções (incluindo "desativado") = 15 componentes. NÃO existe
+//     "estrutura" nem "informacoes" no modo Conectores/Linha mobile —
+//     também confirmado por varredura completa.
+//   [a11y mob] Número da tela: 5 componentes (4 direções + desativado),
+//     paridade completa com A11Y_ITEM_NUMBER_KEYS desktop.
+//
+// FALLBACK (decisão de produto, não questionar sem alinhamento): quando uma
+// categoria/orientação não existir no dicionário mobile (typeKeys
+// undefined, ou key da orientação específica undefined), cai pro
+// dicionário DESKTOP equivalente ANTES de lançar erro — nunca quebra a
+// criação da spec. Implementado em _tryImportA11yAgrupamento/
+// _tryImportA11yConectorLinha logo abaixo. Como as 5 categorias fixas do
+// hac (elemento/estrutura/titulo/decorativo/informacoes) SEMPRE existem
+// completas nos dicionários desktop, esse fallback nunca deveria de fato
+// lançar — é uma segunda rede de segurança, não o caminho esperado na
+// prática (a maioria das specs mobile usa elemento/decorativo, que TÊM
+// marcador mobile próprio).
+const A11Y_AGRUPAMENTO_KEYS_MOBILE = {
+  elemento: {
+    esquerda: 'd93c8cf698d12840af7f3c3ea0bda4b9cd5a0728',
+    direita:  'de08af167290b5220aa75ae757603a26b48c6a68',
+    superior: '55144e19b4306199ceb1de0dff2abd4f01c01b72',
+    inferior: '01acc2917e26866d5b468f8aef3a8bfb99881202',
+  },
+  estrutura: {
+    esquerda: '9b25c0b70cb75cc162ad2f2bb9ed34fe52f32f0f',
+    direita:  '584e699ec0cf98c45ea17d5a9615932f81aa1e8a',
+    superior: 'd78117bfb35d40e98dd4071e772413b959d37c3e',
+    inferior: 'a74142992e0968ade98fbe97590d45b31fc3f35a',
+  },
+  decorativo: {
+    esquerda: '1cecb187f29bfed5c7d6648dd227b3f852b4ebb5',
+    direita:  'c1c3ba0100e3315569a4ed75cd5ee6922d7150d4',
+    superior: 'f93ce3228aa430bde1858891eae64b78c957b781',
+    inferior: 'c266a6bab1277efdac43ecea9171efb60961ed47',
+  },
+  // titulo/informacoes: SEM key mobile (lacuna real da lib) — typeKeys
+  // undefined, _tryImportA11yAgrupamento cai no dicionário desktop.
+};
+
+const A11Y_CONECTOR_LINHA_KEYS_MOBILE = {
+  elemento: {
+    esquerda: '8e397918ad10aeb63b2e747d2834c8105a0aa1d1',
+    direita:  '90bbec6996ca447f3594497f0a35854544de3021',
+    superior: 'a6c7e7dab90b9b23a06b072331c246fd4392b749',
+    inferior: '978a6433237eefdf540d82bcba40e74e39aeecba',
+    desativado: '4c060718da4b3350ee5f290742a3a6cd1db23618',
+  },
+  titulo: {
+    esquerda: 'd9d79daa2318b2b6758376123899a40329222b48',
+    direita:  'b52cb9d60f6ca81eaf82492d4b110b105bc76305',
+    superior: '1bd8c85dbdc47d3bef93ac9b71ad5f6d875d810b',
+    inferior: '66c4100b5d1b1432ebeb3e9202fca08d173a02be',
+    desativado: '966f90f2fc56afdb7e2b8025ba83b48a9622a698',
+  },
+  decorativo: {
+    esquerda: '2709c008c084daaba24063ccf42da4a8c1db0745',
+    direita:  '1865f8ed37ac6a33cccbcd874f02238c39b0ff39',
+    superior: '06c9ac2cae9926e57456ddad6eda7a70ffc9bca0',
+    inferior: '638d682d97a2f82bc35cbb76ae9f6b05132a7176',
+    desativado: '4f478e385d22c92b1df3b53883a9a97abe61be6f',
+  },
+  // estrutura/informacoes: SEM key mobile (lacuna real da lib) — typeKeys
+  // undefined, _tryImportA11yConectorLinha cai no dicionário desktop.
+};
+
+// "[a11y mob] Número da tela" — equivalente mobile de A11Y_ITEM_NUMBER_KEYS
+// (ver handler apply-tab-order-to-canvas/_createTabOrderBadge mais abaixo).
+const A11Y_ITEM_NUMBER_KEYS_MOBILE = {
+  superior:   '8165d5888c8a03c7affb955a9b5364cec563ee63',
+  inferior:   '4b03dd0857a71158da36bab09707538ecf047620',
+  esquerda:   'aebd2221d0238799706e54521cccd7bcee24733d',
+  direita:    'f7977c26c71f36e05bf2b92e645ecd1d1491d458',
+  desativado: 'd88850d40989bbd99cdc98b29a1f2cc516278699',
+};
+
 const _A11Y_SIDE_TO_ORIENTACAO = { left: 'esquerda', right: 'direita', top: 'superior', bottom: 'inferior' };
 
-// Tenta importar o marcador real (ver A11Y_AGRUPAMENTO_KEYS) em vez de
-// desenhar o contorno tracejado + chip procedural. Lança em qualquer ponto de
-// incerteza — quem chama trata a exceção como "cai no marcador desenhado".
+// Tenta importar o marcador real (ver A11Y_AGRUPAMENTO_KEYS[_MOBILE]) em vez
+// de desenhar o contorno tracejado + chip procedural. Lança em qualquer ponto
+// de incerteza — quem chama trata a exceção como "cai no marcador desenhado".
+// opts.a11yOrigin ('web'|'mobile', propagado desde a criação da spec no
+// frontend) escolhe o dicionário mobile quando disponível; se a categoria ou
+// a orientação específica não existir nele (lacuna real da lib mobile — ver
+// comentário acima de A11Y_AGRUPAMENTO_KEYS_MOBILE), cai pro dicionário
+// desktop equivalente ANTES de lançar erro.
 async function _tryImportA11yAgrupamento(opts) {
   const orientacao = _A11Y_SIDE_TO_ORIENTACAO[opts.guideSide || 'right'];
-  const typeKeys = A11Y_AGRUPAMENTO_KEYS[opts.a11yType];
+  const mobileTypeKeys = opts.a11yOrigin === 'mobile' ? A11Y_AGRUPAMENTO_KEYS_MOBILE[opts.a11yType] : null;
+  const typeKeys = (mobileTypeKeys && mobileTypeKeys[orientacao]) ? mobileTypeKeys : A11Y_AGRUPAMENTO_KEYS[opts.a11yType];
   if (!typeKeys) throw new Error('a11y-agrupamento-tipo-desconhecido: ' + opts.a11yType);
   const key = typeKeys[orientacao];
   if (!key) throw new Error('a11y-agrupamento-orientacao-desconhecida: ' + orientacao);
@@ -738,12 +864,18 @@ const A11Y_CONECTOR_LINHA_KEYS = {
   },
 };
 
-// Tenta importar o conector-linha real (ver A11Y_CONECTOR_LINHA_KEYS) em vez
-// de desenhar o vetor procedural (linha tracejada + dots). Lança em qualquer
-// ponto de incerteza — quem chama trata a exceção como "cai no vetor desenhado".
+// Tenta importar o conector-linha real (ver A11Y_CONECTOR_LINHA_KEYS[_MOBILE])
+// em vez de desenhar o vetor procedural (linha tracejada + dots). Lança em
+// qualquer ponto de incerteza — quem chama trata a exceção como "cai no vetor
+// desenhado". Mesmo fallback mobile→desktop de _tryImportA11yAgrupamento: a
+// lib mobile só cobre "elementos e imagens"/"títulos"/"decorativo" no modo
+// Linha (falta estrutura/informacoes) — se a categoria ou a orientação
+// específica não existir no dicionário mobile, cai pro desktop ANTES de
+// lançar erro.
 async function _tryImportA11yConectorLinha(opts) {
   const orientacao = _A11Y_SIDE_TO_ORIENTACAO[opts.guideSide || 'right'];
-  const typeKeys = A11Y_CONECTOR_LINHA_KEYS[opts.a11yType];
+  const mobileTypeKeys = opts.a11yOrigin === 'mobile' ? A11Y_CONECTOR_LINHA_KEYS_MOBILE[opts.a11yType] : null;
+  const typeKeys = (mobileTypeKeys && mobileTypeKeys[orientacao]) ? mobileTypeKeys : A11Y_CONECTOR_LINHA_KEYS[opts.a11yType];
   if (!typeKeys) throw new Error('a11y-conector-linha-tipo-desconhecido: ' + opts.a11yType);
   const key = typeKeys[orientacao];
   if (!key) throw new Error('a11y-conector-linha-orientacao-desconhecida: ' + orientacao);
@@ -1766,6 +1898,7 @@ figma.ui.onmessage = async (msg) => {
           cardH: _absCardH,
           a11yType: opts.a11yType || null,
           a11ySubtype: opts.a11ySubtype || null,
+          a11yOrigin: opts.a11yOrigin || 'web',
           a11yAreaId: opts.a11yAreaId || null,
           drawMode: opts.drawMode || 'contorno',
           needsReview: !!opts.needsReview,
@@ -1936,6 +2069,15 @@ figma.ui.onmessage = async (msg) => {
     desativado: '71719f112ec0135b16df0deb6584fbc44af3aff2',
   };
 
+  // Origem (web/mobile) da Ordem de Tabulação é decidida por ÁREA MARCADA,
+  // não por spec individual — diferente das specs de categoria (elemento/
+  // titulo/etc.), uma Área não tem "categoria" própria, é só um agrupamento
+  // espacial. O backend (aqui) não tem acesso a hacData/a11yAreas[] (isso
+  // vive só no frontend); o frontend resolve a origem da área e manda
+  // pronta em msg.a11yOrigin ao chamar apply-tab-order-to-canvas — ver
+  // accessibility.js (applyTabOrderToCanvas) e A11Y_ITEM_NUMBER_KEYS_MOBILE
+  // (topo do arquivo).
+
   if (msg.type === "start-tab-order-mode") {
     _tabOrderModeActive = true;
     return;
@@ -1951,15 +2093,22 @@ figma.ui.onmessage = async (msg) => {
   // — as duas vias criam exatamente o mesmo selo "[a11y] Item Number" real
   // (ou o fallback círculo+texto). Não faz appendChild na seleção nem scroll
   // de viewport (quem chama decide isso).
-  async function _createTabOrderBadge(node, number, label, conector, areaId, reparentToSection) {
+  async function _createTabOrderBadge(node, number, label, conector, areaId, reparentToSection, origin) {
     const _conectorOptions = ['desativado', 'inferior', 'superior', 'esquerda', 'direita'];
     const _conector = _conectorOptions.includes(conector) ? conector : 'direita';
     const hasLabel = !!label;
 
+    // Mesmo fallback mobile→desktop das specs: se a origem for mobile mas a
+    // key daquela direção não existir no dicionário mobile (não deveria
+    // acontecer — [a11y mob] Número da tela tem as 5 direções completas —,
+    // mas mantém a mesma rede de segurança por consistência), cai pro
+    // dicionário desktop.
+    const numberKeys = (origin === 'mobile' && A11Y_ITEM_NUMBER_KEYS_MOBILE[_conector]) ? A11Y_ITEM_NUMBER_KEYS_MOBILE : A11Y_ITEM_NUMBER_KEYS;
+
     let badge = null;
     let usedRealComponent = true;
     try {
-      const comp = await figma.importComponentByKeyAsync(A11Y_ITEM_NUMBER_KEYS[_conector]);
+      const comp = await figma.importComponentByKeyAsync(numberKeys[_conector]);
       badge = comp.createInstance();
       badge.setProperties({
         'number#1478:0': String(number),
@@ -2327,7 +2476,7 @@ figma.ui.onmessage = async (msg) => {
           skipped++;
           continue;
         }
-        const { group, item } = await _createTabOrderBadge(mappedNode, entry.number, '', 'direita', msg.areaId, false);
+        const { group, item } = await _createTabOrderBadge(mappedNode, entry.number, '', 'direita', msg.areaId, false, msg.a11yOrigin);
         createdGroups.push(group);
         items.push(item);
       }

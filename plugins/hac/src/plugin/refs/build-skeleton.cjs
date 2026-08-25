@@ -99,13 +99,15 @@ for (const libMeta of manifest.libraries) {
       .map(c => c.key);
   }
 
-  // componentsDetailed: key + name + containingFrame, só para a lib
-  // "web-angular-react" — é onde vive a correspondência componente DSC →
-  // categoria de handoff de a11y (ver refs/build-dsc-a11y-mapping.cjs e
-  // refs/dsc-component-a11y-mapping.json). No hac, na prática, é a
-  // ÚNICA lib presente no manifest — mas mantém a checagem explícita de
-  // slug por paridade com o Handex, caso o manifest cresça no futuro.
-  if (libMeta.slug === 'web-angular-react' && Array.isArray(lib.components)) {
+  // componentsDetailed: key + name + containingFrame — necessário para
+  // QUALQUER lib que participe do matching componente DSC → categoria de
+  // a11y (ver refs/build-dsc-a11y-mapping.cjs e
+  // refs/dsc-component-a11y-mapping*.json). Estendido em 2026-08-25 de
+  // "só web-angular-react" para também cobrir "super-app" (lib mobile/RN),
+  // integrando a detecção automática de a11y mobile — ver
+  // _getDscComponentKeyToFrameMap em code.js, que agora consulta as duas
+  // libs e devolve a origem (web/mobile) junto do containingFrame.
+  if ((libMeta.slug === 'web-angular-react' || libMeta.slug === 'super-app') && Array.isArray(lib.components)) {
     entry.componentsDetailed = lib.components
       .filter(c => c && c.key)
       .map(c => ({ key: c.key, name: clean(c.name || ''), containingFrame: clean(c.containingFrame || '') }));
@@ -131,5 +133,6 @@ if (totalVarColors || totalVarNumbers) {
   console.log(`   ${totalVarColors} color variables • ${totalVarNumbers} number variables`);
 }
 if (totalDetailed) {
-  console.log(`   ${totalDetailed} componentsDetailed (web-angular-react only)`);
+  const detailedLibs = skeleton.libraries.filter(l => Array.isArray(l.componentsDetailed)).map(l => l.slug).join(', ');
+  console.log(`   ${totalDetailed} componentsDetailed (${detailedLibs})`);
 }
