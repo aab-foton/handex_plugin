@@ -1,0 +1,28 @@
+{
+  "name": "hac",
+  "private": true,
+  "version": "0.1.0-beta.1",
+  "type": "commonjs",
+  "scripts": {
+    "lint": "tsc --noEmit && npm run lint:figma-api",
+    "lint:figma-api": "node scripts/check-figma-api-usage.cjs",
+    "refs:fetch": "node src/plugin/refs/fetch-design-refs.cjs",
+    "refs:a11y-mapping": "node src/plugin/refs/build-dsc-a11y-mapping.cjs",
+    "refs:rebuild": "npm run refs:fetch && node src/plugin/refs/build-skeleton.cjs && npm run refs:a11y-mapping",
+    "refs:update": "npm run refs:rebuild && npm run bundle:ui && npm run bundle:code",
+    "bundle:refs": "node src/plugin/refs/build-skeleton.cjs",
+    "bundle:css": "node node_modules/tw3/lib/cli.js --config src/plugin/styles/tailwind.config.cjs -i src/plugin/styles/tailwind-input.css -o src/plugin/styles/tailwind-compiled.css --minify",
+    "bundle:ui": "npm run bundle:css && npm run bundle:refs && node src/plugin/build.cjs",
+    "bundle:code": "node scripts/bundle-code.cjs",
+    "export:plugin": "cp src/plugin/manifest.json hac-plugin/ && cp src/plugin/code.bundle.js hac-plugin/ && cp src/plugin/ui.html hac-plugin/ && echo 'hac-plugin/ atualizada'",
+    "version:patch": "npm version patch --no-git-tag-version",
+    "version:minor": "npm version minor --no-git-tag-version",
+    "version:major": "npm version major --no-git-tag-version"
+  },
+  "devDependencies": {
+    "tw3": "npm:tailwindcss@^3.4.17",
+    "@types/node": "^22.14.0",
+    "esbuild": "^0.28.0",
+    "typescript": "~5.8.2"
+  }
+}

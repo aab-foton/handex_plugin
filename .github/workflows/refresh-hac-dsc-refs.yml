@@ -1,0 +1,75 @@
+# Equivalente do refresh-dsc-skeleton.yml (Handex) para o hac. Mesma
+# arquitetura: busca style/component keys das libs DSC via REST API do
+# Figma, regenera o skeleton + os mapeamentos DSC→a11y, e abre PR pra
+# revisão humana — nunca push direto em main.
+#
+# Diferente do Handex, o hac busca DUAS libs DSC (web-angular-react +
+# super-app, ver src/plugin/refs/_manifest.json) e regenera DOIS
+# mapeamentos de a11y (dsc-component-a11y-mapping.json para desktop,
+# dsc-component-a11y-mapping-mobile.json para mobile/React Native) —
+# adicionado em 2026-08-25 quando a lib "DSC | Super App" foi mapeada.
+name: refresh-hac-dsc-refs
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # toda segunda, 09:00 UTC = 06:00 America/Sao_Paulo
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh-hac-dsc-refs:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: plugins/hac
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instala dependencias
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: Busca refs da Figma (ambas as libs) + regenera skeleton
+        env:
+          FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
+        run: |
+          node src/plugin/refs/fetch-design-refs.cjs
+          node src/plugin/refs/build-skeleton.cjs
+
+      - name: Regenera mapeamento DSC→a11y (desktop + mobile)
+        run: |
+          node src/plugin/refs/build-dsc-a11y-mapping.cjs
+          node src/plugin/refs/build-dsc-a11y-mapping.cjs --src super-app.json --out dsc-component-a11y-mapping-mobile.json
+
+      - name: Verifica se algo mudou
+        id: diff
+        run: |
+          if git diff --quiet -- src/plugin/refs/; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Abre PR
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.email "hac-bot@users.noreply.github.com"
+          git config user.name "hac Refs Bot"
+          BRANCH="bot/hac-dsc-refs-$(date -u +%Y%m%d-%H%M)"
+          git checkout -b "$BRANCH"
+          git add src/plugin/refs/
+          git commit -m "chore(hac/dsc): atualiza refs DSC (desktop + mobile) e mapeamentos de a11y ($(date -u +%Y-%m-%d))"
+          git push origin "$BRANCH"
+          gh pr create \
+            --title "chore(hac/dsc): atualização automática das refs DSC — $(date -u +%Y-%m-%d)" \
+            --body "Atualização automática das refs DSC (\`src/plugin/refs/\`) para as duas libs (web-angular-react + super-app), buscadas via REST API do Figma, e regeneração dos dois mapeamentos DSC→a11y. Revisar o diff e aprovar se OK." \
+            --base main \
+            --head "$BRANCH"

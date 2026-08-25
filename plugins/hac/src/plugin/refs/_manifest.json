@@ -1,0 +1,36 @@
+{
+  "_meta": {
+    "description": "Adaptação/redução do Handex Beta (refs/_manifest.json) para o hac, 2026-08-24. Enxuto: só a lib DSC 'Web Angular & React' é necessária, porque é a única fonte de 'componentsDetailed' (key + name + containingFrame) usada em runtime para resolver componente do canvas -> containingFrame -> categoria de a11y (ver _getDscComponentKeyToFrameMap em code.js do Handex, e build-skeleton.cjs). A lib 'Design Acessível' (componentes reais de a11y: Agrupamento, Conectores, Item Number) NÃO precisa de entrada aqui — suas component keys estão hardcoded como literais em code.js (A11Y_AGRUPAMENTO_KEYS, A11Y_CONECTOR_LINHA_KEYS, A11Y_AREA_CONECTOR_KEYS, A11Y_ITEM_NUMBER_KEYS), e seu conteúdo textual/properties vem de JSONs curados à parte (design-acessivel-content.json, design-acessivel-component-properties.json), não deste manifest nem do skeleton.",
+    "confirmedBy": "leitura de build-skeleton.cjs (componentsDetailed só é gerado quando libMeta.slug === 'web-angular-react') e grep em code.js (nenhuma das 4 constantes A11Y_*_KEYS depende de _manifest.json/_skeleton.json)"
+  },
+  "generatedAt": "2026-08-25T02:01:20.551Z",
+  "libraries": [
+    {
+      "slug": "web-angular-react",
+      "name": "Web Angular & React",
+      "fileKey": "8QvOeTODSBi3PquJT5CISP",
+      "file": "web-angular-react.json",
+      "counts": {
+        "variables": 7,
+        "colors": 0,
+        "typography": 0,
+        "effects": 0,
+        "components": 1893
+      }
+    },
+    {
+      "slug": "super-app",
+      "name": "DSC | Super App",
+      "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+      "file": "super-app.json",
+      "_note": "Lib mobile/React Native, adicionada em 2026-08-25 a pedido do usuário — investigar se os componentes reais (70 component sets [dsc], ex: Button/Card/Switch/Input) podem ser mapeados pra categoria de a11y como já feito pra web-angular-react. Ver dsc-component-a11y-mapping-mobile.json (gerado à parte, ainda não integrado ao runtime do hac).",
+      "counts": {
+        "variables": 291,
+        "colors": 0,
+        "typography": 36,
+        "effects": 3,
+        "components": 4455
+      }
+    }
+  ]
+}

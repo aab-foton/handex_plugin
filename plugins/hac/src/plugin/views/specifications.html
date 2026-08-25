@@ -1,0 +1,98 @@
+<!-- VIEW: SPECIFICATIONS -->
+<!-- Adaptado de views/specifications.html (Handex Beta), aba "Acessibilidade"
+     (#specs-panel-a11y) — aqui é a VIEW INTEIRA, não uma aba dentro de
+     "Anotar Specs": sem tab switcher Specs|Acessibilidade (hac não tem
+     specs normais), sem seletor "Frames Mapeados" (hac não tem conceito
+     de frame). O painel #a11y-groups-results + busca/filtro do Handex vira
+     o conteúdo principal desta view. -->
+<main id="view-specifications" class="view flex p-0 flex-col h-full overflow-hidden">
+  <!-- Header -->
+  <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex flex-col shrink-0 shadow-md">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2 min-w-0">
+        <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial" class="w-10 h-10 flex items-center justify-center bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
+          <i data-lucide="arrow-left" class="w-5 h-5 text-white" aria-hidden="true"></i>
+        </button>
+        <h2 class="text-white font-bold text-[18px] truncate min-w-0">Acessibilidade</h2>
+        <button type="button" onclick="openOnboarding('especificar')"
+          class="w-10 h-10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors shrink-0"
+          title="Rever passo a passo" aria-label="Rever passo a passo do fluxo de acessibilidade">
+          <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+        </button>
+        <button type="button" onclick="openA11yCategoriesHelp()"
+          class="w-10 h-10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors shrink-0"
+          title="Ver guia de categorias" aria-label="Ver guia de categorias de especificação">
+          <i data-lucide="circle-help" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('specs-scroll-container'))" title="Recolher/expandir todos" aria-label="Recolher ou expandir todos os accordions"
+          class="w-10 h-10 flex items-center justify-center hover:bg-white/20 rounded-xl transition-colors text-white/80 hover:text-white">
+          <i data-lucide="chevrons-up-down" class="w-5 h-5" aria-hidden="true"></i>
+        </button>
+        <button type="button" onclick="openA11yAreaModal()" class="fab-inline" title="Marcar área da tela" aria-label="Marcar área da tela">
+          <i data-lucide="map-pin" class="w-4 h-4 shrink-0"></i>
+          <span>Marcar Área</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scrollable content -->
+  <div id="specs-scroll-container" class="flex-1 overflow-y-auto pt-6 px-4 pb-4" onscroll="handleScroll(this)">
+    <div class="space-y-4 w-full mx-auto">
+
+      <!-- Onboarding banner (primeira visita) -->
+      <div id="onboarding-banner-especificar" class="hidden flex items-start gap-2.5 bg-[#0891B2]/5 dark:bg-cyan-900/10 border border-[#0891B2]/20 dark:border-cyan-800/30 rounded-2xl p-3.5">
+        <i data-lucide="sparkles" class="w-4 h-4 text-[#0891B2] dark:text-cyan-300 shrink-0 mt-0.5"></i>
+        <div class="flex-1 min-w-0">
+          <p class="text-[11px] font-bold text-[#0891B2] dark:text-cyan-300">Primeira vez aqui?</p>
+          <p class="text-[10px] text-[#0891B2]/80 dark:text-cyan-300/80 leading-relaxed mt-0.5">Veja o passo a passo: marcar área, especificar e documentar a ordem de tabulação.</p>
+        </div>
+        <div class="flex items-center gap-1 shrink-0">
+          <button type="button" onclick="openOnboarding('especificar', { markSeenOnOpen: true })" class="px-2.5 py-1 bg-[#0891B2] hover:bg-cyan-700 text-white text-[10px] font-bold rounded-lg transition-colors">Ver agora</button>
+          <button type="button" onclick="dismissOnboardingBanner('especificar')" title="Dispensar" aria-label="Dispensar" class="p-1 text-[#0891B2]/60 hover:text-[#0891B2] dark:text-cyan-300/60 dark:hover:text-cyan-300 transition-colors">
+            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-[0.15em]">Áreas Marcadas</h4>
+        </div>
+        <p class="text-[10px] text-slate-400 dark:text-dark-muted mb-2 leading-tight">
+          Marque uma área da tela (selo numerado) e crie as especificações dentro dela, usando o botão "+" no cabeçalho de cada área.
+        </p>
+
+        <!-- Busca + filtro por categoria — filtro só de exibição sobre a
+             lista já renderizada (ver applyA11ySearchFilter em
+             modules/accessibility.js). -->
+        <div id="a11y-search-bar" class="hidden flex items-center gap-2 mb-3">
+          <div class="relative flex-1 min-w-0">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            <input type="text" id="a11y-search-input"
+              placeholder="Buscar por elemento, área ou tag..."
+              oninput="applyA11ySearchFilter(this.value)"
+              class="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl text-[11px] text-slate-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none focus:ring-2 focus:ring-[#0891B2]/20 focus:border-[#0891B2] transition-all" />
+          </div>
+          <select id="a11y-category-filter" onchange="applyA11yCategoryFilter(this.value)"
+            class="shrink-0 max-w-[40%] bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl px-2.5 py-2 text-[11px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-[#0891B2]/20 focus:border-[#0891B2] transition-all">
+            <option value="">Todas as categorias</option>
+          </select>
+        </div>
+
+        <ul id="a11y-groups-results" class="flex flex-col gap-2 min-h-[10px] mb-1">
+          <!-- Preenchido por renderA11yGroupedList() em modules/accessibility.js -->
+        </ul>
+        <div id="a11y-search-empty" class="hidden flex flex-col items-center justify-center py-10">
+          <i data-lucide="search-x" class="w-10 h-10 text-slate-200 dark:text-slate-700 mb-3" style="opacity:0.4"></i>
+          <p class="text-[11px] font-bold text-slate-500 dark:text-dark-muted text-center px-4">Nenhuma especificação encontrada</p>
+          <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6 mt-0.5">Ajuste a busca ou o filtro de categoria.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>

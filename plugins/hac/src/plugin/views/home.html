@@ -1,0 +1,61 @@
+<!-- VIEW: HOME -->
+<!-- hac é 100% dedicado a acessibilidade — sem grid de 6 ferramentas
+     (como no Handex). Home vira uma tela de intro curta com um resumo do
+     fluxo (Marcar Área → Especificar → Ordem de Tabulação) e um botão único
+     "Começar", que navega pra view-specifications (onde vive toda a
+     funcionalidade real). Decisão de produto: uma tela de passagem, mesmo
+     mínima, orienta melhor um designer que abre o plugin pela primeira vez
+     do que pular direto pra uma lista vazia sem contexto nenhum — o Handex
+     resolve isso com o card "Como usar o plugin" dentro do grid de
+     ferramentas; aqui, sem grid, a introdução vira a própria Home. -->
+<main id="view-home" class="view active flex flex-col h-full overflow-hidden">
+  <div class="flex-1 overflow-y-auto px-5 py-6" onscroll="handleScroll(this)">
+    <div class="max-w-sm mx-auto space-y-6">
+
+      <div class="text-center space-y-2">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-[#0891B2]/10 dark:bg-cyan-900/20 flex items-center justify-center">
+          <i data-lucide="accessibility" class="w-7 h-7 text-[#0891B2]" aria-hidden="true"></i>
+        </div>
+        <h2 class="text-[16px] font-bold text-slate-800 dark:text-white">Documentação de Acessibilidade</h2>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed px-2">
+          Mapeie áreas da tela, especifique como cada elemento deve ser lido por leitores de tela e documente a ordem de tabulação — tudo direto no canvas do Figma.
+        </p>
+      </div>
+
+      <div class="space-y-2.5">
+        <div class="flex items-start gap-3 p-3 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl">
+          <div class="w-7 h-7 rounded-full bg-[#0070AF] text-white flex items-center justify-center text-[11px] font-extrabold shrink-0">1</div>
+          <div class="min-w-0">
+            <p class="text-[12px] font-bold text-slate-700 dark:text-white">Marque uma área</p>
+            <p class="text-[10.5px] text-slate-500 dark:text-dark-muted leading-snug">Selecione uma seção da tela e dê um rótulo — organiza as especificações em grupos.</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3 p-3 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl">
+          <div class="w-7 h-7 rounded-full bg-[#0891B2] text-white flex items-center justify-center shrink-0">
+            <i data-lucide="accessibility" class="w-3.5 h-3.5" aria-hidden="true"></i>
+          </div>
+          <div class="min-w-0">
+            <p class="text-[12px] font-bold text-slate-700 dark:text-white">Especifique cada elemento</p>
+            <p class="text-[10.5px] text-slate-500 dark:text-dark-muted leading-snug">5 categorias — Elementos e Imagens, Estrutura da Página, Nível de Título, Elemento Decorativo e Informações Adicionais. Use a Detecção Automática para agilizar.</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3 p-3 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl">
+          <div class="w-7 h-7 rounded-full bg-[#0891B2] text-white flex items-center justify-center shrink-0">
+            <i data-lucide="list-ordered" class="w-3.5 h-3.5" aria-hidden="true"></i>
+          </div>
+          <div class="min-w-0">
+            <p class="text-[12px] font-bold text-slate-700 dark:text-white">Documente a ordem de tabulação</p>
+            <p class="text-[10.5px] text-slate-500 dark:text-dark-muted leading-snug">Clique nos elementos em sequência (ou gere automaticamente) e aplique numa cópia do frame, sem tocar no original.</p>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" onclick="navigate('view-specifications')"
+        class="w-full flex items-center justify-center gap-2 h-11 rounded-2xl text-[13px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 active:scale-[0.99] shadow-lg shadow-cyan-500/20 transition-all">
+        Começar
+        <i data-lucide="arrow-right" class="w-4 h-4" aria-hidden="true"></i>
+      </button>
+
+    </div>
+  </div>
+</main>

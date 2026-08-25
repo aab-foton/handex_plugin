@@ -1,0 +1,13 @@
+{
+  "name": "hac — Handoff de Acessibilidade CAIXA",
+  "id": "9000000000000002",
+  "api": "1.0.0",
+  "main": "code.bundle.js",
+  "ui": "ui.html",
+  "editorType": ["figma", "dev"],
+  "permissions": ["currentuser"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["https://unpkg.com", "https://cdnjs.cloudflare.com"]
+  }
+}
