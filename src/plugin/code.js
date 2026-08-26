@@ -564,6 +564,14 @@ function rgbToHex(r, g, b) {
 /* global __HANDEX_VERSION__ */
 const PLUGIN_VERSION = (typeof __HANDEX_VERSION__ !== 'undefined') ? __HANDEX_VERSION__ : 'dev';
 
+// FEATURE OCULTA (2026-08) — handoff de contexto pra plugins de handoff
+// especializado (ex: hac, foco em a11y), via pluginData no próprio frame.
+// Implementada e pronta, mas deliberadamente DESLIGADA até o hac estar
+// consolidado o suficiente para consumir esse dado — ativar trocando este
+// valor pra true (sem outra mudança de código necessária). Ver
+// _writeDscHandoffSummary().
+const DSC_HANDOFF_SUMMARY_ENABLED = false;
+
 // â”€â”€ Shared Plugin Data (MCP / REST API readable) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Usa setSharedPluginData (namespace 'handex') para que agentes externos
 // (MCP, REST API) consigam ler o contexto de negócio embutido nos nodes.
@@ -614,9 +622,37 @@ async function _writeSharedPluginData(data) {
           spec:   s.name   || ''
         })))
       }));
+      if (DSC_HANDOFF_SUMMARY_ENABLED) _writeDscHandoffSummary(node, frame);
     } catch (e) {
       // Node pode ter sido deletado — ignorar silenciosamente
     }
+  }
+}
+
+// Handoff pra outros plugins de handoff especializado (ex: hac, foco em
+// a11y) — namespace/key dedicados, sem herdar semântica de 'handex'/
+// 'context' acima (consumidor e propósito diferentes). Exporta só o FATO
+// BRUTO de quais componentes o scan já identificou no frame (componentKey
+// + name + nodeType) -- o Handex não resolve lib de origem/categoria de
+// a11y por design: essa lógica já existe e é mantida no lado consumidor,
+// duplicá-la aqui criaria duas cópias divergentes da mesma resolução.
+// Consumidor decide o que fazer com o dado; ausência do campo (frame nunca
+// escaneado) é tratada como caso normal, não erro -- ver frame.specs null.
+function _writeDscHandoffSummary(node, frame) {
+  if (!frame.specs) return;
+  try {
+    const toEntry = (c) => ({ componentKey: c.componentKey, name: c.name, nodeType: c.nodeType });
+    const summary = {
+      schemaVersion: 1,
+      writerPlugin: `handex@${PLUGIN_VERSION}`,
+      updatedAt: new Date().toISOString(),
+      frameId: frame.figmaId,
+      components: (frame.specs.components || []).filter(c => c.componentKey).map(toEntry),
+      icons: (frame.specs.icons || []).filter(c => c.componentKey).map(toEntry)
+    };
+    node.setSharedPluginData('dsc-handoff', 'frame-summary', JSON.stringify(summary));
+  } catch (e) {
+    // Não deve impedir o resto do save -- é dado complementar opcional
   }
 }
 
