@@ -1,6 +1,7 @@
 {
   "_meta": {
-    "note": "Migração de design system em andamento (2026-08-26): 'web-angular-react' (fileKey 8QvOeTODSBi3PquJT5CISP) é o DSC legado. A lib antes chamada 'Super Gerenciador' foi reaproveitada/expandida pela equipe de design e renomeada para 'Super DSC | Web' (mesmo fileKey erkqbRKIbaFWbkHe51BeiZ, slug super-gerenciador mantido por compatibilidade) — é a sucessora oficial do legado. As duas COEXISTEM enquanto a migração não termina: um mesmo projeto pode ter componentes das duas libs simultaneamente. Não desativar/remover nenhuma das duas sem confirmação explícita."
+    "note": "Migração de design system em andamento (2026-08-26): 'web-angular-react' (fileKey 8QvOeTODSBi3PquJT5CISP) é o DSC legado. A lib antes chamada 'Super Gerenciador' foi reaproveitada/expandida pela equipe de design e renomeada para 'Super DSC | Web' (mesmo fileKey erkqbRKIbaFWbkHe51BeiZ, slug super-gerenciador mantido por compatibilidade) — é a sucessora oficial do legado. As duas COEXISTEM enquanto a migração não termina: um mesmo projeto pode ter componentes das duas libs simultaneamente. Não desativar/remover nenhuma das duas sem confirmação explícita.",
+    "dscAndroidRemoved": "A lib 'DSC | Android' (fileKey W8GUeHypdco1I3dneN6P3H, slug dsc-android) foi cadastrada em 2026-08-26 e removida por completo no mesmo dia, a pedido explícito do usuário ('não usaremos isso') — decisão de produto: o Handex não audita/escaneia projetos Android nativo. Entrada do manifest, refs/dsc-android.json e a entrada correspondente em code-mappings.json foram todos removidos, não só ocultados. Se precisar mapear no futuro, tratar como trabalho novo (recadastrar no manifest + rodar fetch-design-refs.cjs de novo) — ver histórico de commit deste arquivo só como referência do fileKey/contagens que existiam."
   },
   "generatedAt": "2026-08-26T18:28:20.496Z",
   "libraries": [
@@ -54,20 +55,6 @@
         "typography": 36,
         "effects": 3,
         "components": 4455
-      }
-    },
-    {
-      "slug": "dsc-android",
-      "name": "DSC | Android",
-      "fileKey": "W8GUeHypdco1I3dneN6P3H",
-      "file": "dsc-android.json",
-      "_note": "Lib mobile Android nativo (Material Design), adicionada em 2026-08-26 a pedido do usuário — distinta tanto das libs desktop (web-angular-react, super-gerenciador/Super DSC | Web) quanto da lib mobile React Native já cadastrada (super-app). Mesmo fileKey já mapeado no plugin hac (slug dsc-android lá também) — se o conteúdo divergir entre os dois projetos no futuro, confirmar se é intencional antes de reconciliar.",
-      "counts": {
-        "variables": 63,
-        "colors": 0,
-        "typography": 0,
-        "effects": 0,
-        "components": 1063
       }
     },
     {

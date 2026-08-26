@@ -30,12 +30,6 @@
       "docs": "https://design.caixa/web",
       "notes": "Biblioteca dual-target. Use o subpath conforme stack do projeto."
     },
-    "DSC | Android": {
-      "import": "com.caixa.dsc.android",
-      "language": "kotlin",
-      "docs": "https://design.caixa/android",
-      "notes": "Componentes nativos Android (Material Design), distintos da lib mobile React Native (DSC | Super App)."
-    },
     "Design Acessível": {
       "import": "@dsc/a11y",
       "language": "ts",
