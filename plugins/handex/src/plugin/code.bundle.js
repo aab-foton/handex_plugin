@@ -748,6 +748,7 @@
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
   var PLUGIN_VERSION = true ? "6.6.0" : "dev";
+  var DSC_HANDOFF_SUMMARY_ENABLED = false;
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
     const NS = "handex";
@@ -792,8 +793,25 @@
             spec: s.name || ""
           })))
         }));
+        if (DSC_HANDOFF_SUMMARY_ENABLED) _writeDscHandoffSummary(node, frame);
       } catch (e) {
       }
+    }
+  }
+  function _writeDscHandoffSummary(node, frame) {
+    if (!frame.specs) return;
+    try {
+      const toEntry = (c) => ({ componentKey: c.componentKey, name: c.name, nodeType: c.nodeType });
+      const summary = {
+        schemaVersion: 1,
+        writerPlugin: `handex@${PLUGIN_VERSION}`,
+        updatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+        frameId: frame.figmaId,
+        components: (frame.specs.components || []).filter((c) => c.componentKey).map(toEntry),
+        icons: (frame.specs.icons || []).filter((c) => c.componentKey).map(toEntry)
+      };
+      node.setSharedPluginData("dsc-handoff", "frame-summary", JSON.stringify(summary));
+    } catch (e) {
     }
   }
   async function _moveFlowEndpointMarker(targetNode, isStart, nextFlowNumber) {
