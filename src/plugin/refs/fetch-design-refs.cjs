@@ -23,6 +23,11 @@ const path = require('path');
 const REFS_DIR = __dirname;
 const MANIFEST_PATH = path.join(REFS_DIR, '_manifest.json');
 const TOKEN = process.env.FIGMA_TOKEN;
+// Fallback opcional caso FIGMA_TOKEN não tenha escopo file_variables:read
+// (já aconteceu neste projeto — um token de leitura retornava 403 só nesse
+// endpoint, mesmo funcionando normal em /styles e /components). Se
+// FIGMA_TOKEN_VARIABLES não estiver setado, usa o mesmo TOKEN de sempre.
+const TOKEN_VARIABLES = process.env.FIGMA_TOKEN_VARIABLES || TOKEN;
 
 if (!TOKEN) {
   console.error('⛔  FIGMA_TOKEN environment variable not set.');
@@ -36,9 +41,9 @@ const onlySlug = onlyIdx >= 0 ? args[onlyIdx + 1] : null;
 
 const FIGMA_API = 'https://api.figma.com';
 
-async function figmaGet(pathName) {
+async function figmaGet(pathName, token = TOKEN) {
   const url = FIGMA_API + pathName;
-  const res = await fetch(url, { headers: { 'X-Figma-Token': TOKEN } });
+  const res = await fetch(url, { headers: { 'X-Figma-Token': token } });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     throw new Error(`GET ${pathName} → HTTP ${res.status}: ${body.slice(0, 200)}`);
@@ -100,7 +105,7 @@ async function fetchLibrary(libMeta) {
 
   // 2. Variables with resolved values (COLOR → hex, FLOAT → number)
   try {
-    const varsResp = await figmaGet(`/v1/files/${libMeta.fileKey}/variables/local`);
+    const varsResp = await figmaGet(`/v1/files/${libMeta.fileKey}/variables/local`, TOKEN_VARIABLES);
     const meta = (varsResp && varsResp.meta) || varsResp || {};
     const variablesObj  = meta.variables           || {};
     const collectionsObj = meta.variableCollections || {};

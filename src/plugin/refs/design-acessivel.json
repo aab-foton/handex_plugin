@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Design Acessível",
     "figmaFileKey": "Wy0IhXRVZMSOOr8E609UqI",
-    "exportedAt": "2026-07-24T20:02:12.560Z",
+    "exportedAt": "2026-08-26T18:09:14.940Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -942,18 +942,18 @@
         "value": "É um elemento que oferece um local centralizado para informações importantes para serem acessadas facilmente."
       },
       {
-        "key": "f4cffb7e6b130dc20dee93887059f7fc68264134",
-        "name": "itens interativos/lista/de definição/nota",
-        "resolvedType": "STRING",
-        "collection": "[a11y]specification",
-        "value": "Em HTML utilize a tag <dl>."
-      },
-      {
         "key": "2cacfd2766356cba69327f85d9b015f7d33bd399",
         "name": "estruturais/marcos/footer/nota",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
         "value": " Em HTML use a tag <footer> para agrupar informações relacionadas à parte inferior de uma página ou seção."
+      },
+      {
+        "key": "f4cffb7e6b130dc20dee93887059f7fc68264134",
+        "name": "itens interativos/lista/de definição/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML utilize a tag <dl>."
       },
       {
         "key": "0dbec947265d6d739987db9fedca81d9d42fed2b",

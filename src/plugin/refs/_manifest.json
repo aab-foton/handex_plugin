@@ -1,5 +1,8 @@
 {
-  "generatedAt": "2026-07-24T20:02:28.791Z",
+  "_meta": {
+    "note": "Migração de design system em andamento (2026-08-26): 'web-angular-react' (fileKey 8QvOeTODSBi3PquJT5CISP) é o DSC legado. A lib antes chamada 'Super Gerenciador' foi reaproveitada/expandida pela equipe de design e renomeada para 'Super DSC | Web' (mesmo fileKey erkqbRKIbaFWbkHe51BeiZ, slug super-gerenciador mantido por compatibilidade) — é a sucessora oficial do legado. As duas COEXISTEM enquanto a migração não termina: um mesmo projeto pode ter componentes das duas libs simultaneamente. Não desativar/remover nenhuma das duas sem confirmação explícita."
+  },
+  "generatedAt": "2026-08-26T18:09:23.162Z",
   "libraries": [
     {
       "slug": "fundamentos-visuais",
@@ -24,12 +27,12 @@
         "colors": 0,
         "typography": 0,
         "effects": 0,
-        "components": 1885
+        "components": 1893
       }
     },
     {
       "slug": "super-gerenciador",
-      "name": "Super Gerenciador",
+      "name": "Super DSC | Web",
       "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
       "file": "super-gerenciador.json",
       "counts": {
@@ -37,20 +40,20 @@
         "colors": 0,
         "typography": 36,
         "effects": 2,
-        "components": 4636
+        "components": 4665
       }
     },
     {
       "slug": "super-app",
-      "name": "Super App",
+      "name": "DSC | Super App",
       "fileKey": "epCGtlKQxedDxQVlK3lNcN",
       "file": "super-app.json",
       "counts": {
         "variables": 291,
         "colors": 0,
         "typography": 36,
-        "effects": 2,
-        "components": 4391
+        "effects": 3,
+        "components": 4455
       }
     },
     {

@@ -8,17 +8,17 @@
       "docs": "https://design.caixa/foundations",
       "notes": "Tokens base (cores, tipografia, espaçamento, sombras)."
     },
-    "Super App": {
+    "DSC | Super App": {
       "import": "@dsc/super-app",
       "language": "ts",
       "docs": "https://design.caixa/super-app",
       "notes": "Componentes React do Super App."
     },
-    "Super Gerenciador": {
+    "Super DSC | Web": {
       "import": "@dsc/super-gerenciador",
       "language": "ts",
       "docs": "https://design.caixa/super-gerenciador",
-      "notes": "Componentes React do Super Gerenciador."
+      "notes": "Componentes React do Super Gerenciador (Web)."
     },
     "Web Angular & React": {
       "import": "@dsc/web",
