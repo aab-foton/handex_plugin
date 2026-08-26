@@ -2286,10 +2286,69 @@ figma.ui.onmessage = async (msg) => {
     };
   }
 
+  // Reordena candidatos já coletados (DFS de generate-tab-order-from-layers)
+  // seguindo um padrão de leitura visual em zigue-zague ("boustrophedon"):
+  // linha 1 esquerda→direita, linha 2 direita→esquerda, linha 3
+  // esquerda→direita, e assim por diante. Esse é o critério confirmado pela
+  // vertical de acessibilidade do produto como referência real de reading
+  // order para Ordem de Tabulação em telas com múltiplas colunas (ex:
+  // extrato bancário, grids de cards) — NÃO é convenção nativa de leitor de
+  // tela (que lê top-to-bottom/DOM order) nem ordem de camadas do Figma; é
+  // um critério de produto documentado pela vertical de a11y. Não
+  // "simplificar" de volta para top-to-bottom ou ordem de DFS.
+  //
+  // Agrupamento em linhas: dois nós pertencem à mesma linha visual quando
+  // suas faixas verticais (absoluteBoundingBox.y → y+height) SE SOBREPÕEM —
+  // não é uma tolerância fixa em pixels, porque elementos de alturas
+  // diferentes na mesma linha (ex: label pequeno ao lado de um input maior)
+  // não teriam o mesmo y exato. Comparação contra QUALQUER nó já acumulado
+  // na linha atual (não só o último) para tolerar leve desalinhamento
+  // vertical entre elementos da mesma linha.
+  function _orderNodesInZigzagReadingOrder(nodes) {
+    const sortedByY = nodes.slice().sort((a, b) => a.absoluteBoundingBox.y - b.absoluteBoundingBox.y);
+
+    const rows = [];
+    let currentRow = [];
+    function _overlapsRow(node, row) {
+      const nodeTop = node.absoluteBoundingBox.y;
+      const nodeBottom = nodeTop + node.absoluteBoundingBox.height;
+      return row.some(other => {
+        const otherTop = other.absoluteBoundingBox.y;
+        const otherBottom = otherTop + other.absoluteBoundingBox.height;
+        return nodeTop < otherBottom && otherTop < nodeBottom;
+      });
+    }
+    for (const node of sortedByY) {
+      if (currentRow.length === 0 || _overlapsRow(node, currentRow)) {
+        currentRow.push(node);
+      } else {
+        rows.push(currentRow);
+        currentRow = [node];
+      }
+    }
+    if (currentRow.length > 0) rows.push(currentRow);
+
+    rows.sort((rowA, rowB) => {
+      const minYA = Math.min(...rowA.map(n => n.absoluteBoundingBox.y));
+      const minYB = Math.min(...rowB.map(n => n.absoluteBoundingBox.y));
+      return minYA - minYB;
+    });
+
+    const ordered = [];
+    rows.forEach((row, rowIndex) => {
+      const sortedRow = row.slice().sort((a, b) => a.absoluteBoundingBox.x - b.absoluteBoundingBox.x);
+      if (rowIndex % 2 === 1) sortedRow.reverse();
+      ordered.push(...sortedRow);
+    });
+    return ordered;
+  }
+
   // Geração automática varrendo a árvore de camadas de uma Área Marcada já
   // existente, em profundidade (ordem real de node.children, a mesma do
-  // painel Layers do Figma — não posição visual X/Y). Devolve só
-  // {nodeId, nodeName} de cada candidato — quem desenha de fato é
+  // painel Layers do Figma), só para DESCOBERTA dos candidatos elegíveis —
+  // não importa em que ordem o DFS os encontra, pois a ordem final é
+  // recalculada por posição visual logo abaixo (_orderNodesInZigzagReadingOrder).
+  // Devolve só {nodeId, nodeName} de cada candidato — quem desenha de fato é
   // apply-tab-order-to-canvas, só quando o designer confirma no modal de
   // revisão.
   //
@@ -2347,12 +2406,11 @@ figma.ui.onmessage = async (msg) => {
         return;
       }
 
-      // `collected` já nasce na ordem de camadas/DFS (mesma ordem do painel
-      // Layers) — a árvore de camadas do Figma é a fonte de verdade
-      // estrutural do documento; não aplica nenhuma heurística espacial
-      // (x/y) por cima.
-      const items = collected
-        .filter(node => !!node.absoluteBoundingBox)
+      // `collected` nasce na ordem de camadas/DFS, mas a ordem que importa
+      // pro designer é a leitura visual em zigue-zague por linha — ver
+      // _orderNodesInZigzagReadingOrder.
+      const withBounds = collected.filter(node => !!node.absoluteBoundingBox);
+      const items = _orderNodesInZigzagReadingOrder(withBounds)
         .map(node => ({ nodeId: node.id, nodeName: node.name }));
 
       figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items });

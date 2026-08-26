@@ -2245,21 +2245,34 @@ function _collectA11yTokenReviewCandidates(data) {
 }
 window._collectA11yTokenReviewCandidates = _collectA11yTokenReviewCandidates;
 
-// Une as duas fontes de candidato do scan que hoje ficam presas dentro do
-// modal de lote (window._a11yDetectionsByArea/_a11yTokenReviewByArea) e
-// devolve só quem AINDA não virou spec nesta área — candidato do scan MENOS
-// quem já tem spec confirmada pro mesmo nó. A correspondência "já
-// documentado" é por targetNodeId: toda spec de a11y nasce com targetNodeId
-// = nodeId real do elemento no canvas, então basta checar se algum item de
-// a11ySpecs da área tem esse mesmo id. Não guarda flag nenhuma — recalculado
-// a cada render de _a11yAreaAccordionEl.
-function _collectA11yUndocumentedForArea(areaId) {
-  if (!areaId) return [];
-  const documentedNodeIds = new Set(
+// nodeId (real, do canvas) de toda spec de a11y JÁ CONFIRMADA na área — toda
+// spec nasce com targetNodeId = nodeId do elemento que a originou, então
+// basta cruzar contra a11ySpecs pra saber "esse elemento já foi documentado
+// nesta área?". Fonte única de verdade de dedupe por elemento, usada tanto
+// pelo accordion "Não Documentados" quanto pelo filtro de elegibilidade do
+// lote (ver _filterA11yBatchEligible) — extraída depois de um bug real em
+// que as duas listas divergiam: o lote não cruzava contra a11ySpecs, então
+// Detecção Automática + Reescanear reapresentava os MESMOS elementos já
+// documentados como candidatos elegíveis, e confirmar de novo criava specs
+// duplicadas sobre o mesmo targetNodeId (visualmente sobrepostas no canvas).
+function _getDocumentedNodeIdsForArea(areaId) {
+  if (!areaId) return new Set();
+  return new Set(
     (a11ySpecs || [])
       .filter(s => s && s.a11yAreaId === areaId && s.targetNodeId)
       .map(s => s.targetNodeId)
   );
+}
+window._getDocumentedNodeIdsForArea = _getDocumentedNodeIdsForArea;
+
+// Une as duas fontes de candidato do scan que hoje ficam presas dentro do
+// modal de lote (window._a11yDetectionsByArea/_a11yTokenReviewByArea) e
+// devolve só quem AINDA não virou spec nesta área — candidato do scan MENOS
+// quem já tem spec confirmada pro mesmo nó (_getDocumentedNodeIdsForArea).
+// Não guarda flag nenhuma — recalculado a cada render de _a11yAreaAccordionEl.
+function _collectA11yUndocumentedForArea(areaId) {
+  if (!areaId) return [];
+  const documentedNodeIds = _getDocumentedNodeIdsForArea(areaId);
 
   const byArea = (window._a11yDetectionsByArea && window._a11yDetectionsByArea[areaId]) || [];
   const tokenByArea = (window._a11yTokenReviewByArea && window._a11yTokenReviewByArea[areaId]) || [];
@@ -2431,7 +2444,7 @@ function handleA11yPostAreaDetectionResult(detections, tokenReviewCandidates) {
     }
   }
 
-  const eligible = _filterA11yBatchEligible(detections);
+  const eligible = _filterA11yBatchEligible(detections, pendingAreaId);
   const hasTokenReviewCandidates = window._a11yTokenReviewCandidates.length > 0;
 
   if ((!detections || detections.length === 0 || eligible.length === 0) && !hasTokenReviewCandidates) {
@@ -2476,9 +2489,17 @@ function _allA11yAreas() {
 // Também elegível quando dscComponentMatch.isUnmapped === true (componente
 // DSC real reconhecido, mas sem categoria de a11y catalogada) — vira
 // sugestão "Outro" em elemento.
-function _filterA11yBatchEligible(detections) {
+// `areaId` opcional: quando informado, exclui candidatos cujo nodeId já tem
+// spec confirmada NESSA área (_getDocumentedNodeIdsForArea) — sem isso, um
+// Reescanear (ou reabrir o resumo) sobre uma área que já teve specs criadas
+// reapresenta os mesmos elementos como elegíveis, e confirmar de novo nasce
+// specs duplicadas sobre o mesmo targetNodeId (ver bug real documentado em
+// _getDocumentedNodeIdsForArea).
+function _filterA11yBatchEligible(detections, areaId) {
+  const documentedNodeIds = areaId ? _getDocumentedNodeIdsForArea(areaId) : null;
   return (detections || []).filter(d => d && d.dscComponentMatch
-    && (d.dscComponentMatch.a11yCategory || d.dscComponentMatch.isUnmapped === true));
+    && (d.dscComponentMatch.a11yCategory || d.dscComponentMatch.isUnmapped === true)
+    && !(documentedNodeIds && d.nodeId && documentedNodeIds.has(d.nodeId)));
 }
 
 // Fonte das detecções pro lote — hac não tem frame, sempre a última
@@ -2512,7 +2533,21 @@ window.rescanA11yBatchArea = rescanA11yBatchArea;
 
 function openA11yBatchSummaryModal() {
   const allDetections = _currentA11yDetectionsSource();
-  const detections = _filterA11yBatchEligible(allDetections);
+  // areaId usado pro dedupe de elegibilidade é o MESMO que pré-seleciona o
+  // <select> mais abaixo (window._a11yPendingDetectionArea.areaId, com
+  // fallback pra primeira área ordenada) — o <select> não tem onchange (não
+  // há re-render dinâmico da lista ao trocar de área neste modal hoje), por
+  // isso a lista exibida já nasce filtrada contra a área de destino real.
+  // Trocar de área no dropdown sem reabrir o modal é um caso não coberto
+  // aqui; a rede de segurança do loop de criação (confirmA11yBatchGenerate)
+  // cobre esse cenário além de qualquer outro caminho que não passe por
+  // este modal.
+  const pendingAreaIdForFilter = window._a11yPendingDetectionArea && window._a11yPendingDetectionArea.areaId;
+  const sortedAreasForFilter = [..._allA11yAreas()].sort((a, b) => (a.number || 0) - (b.number || 0));
+  const filterAreaId = pendingAreaIdForFilter && sortedAreasForFilter.some(a => a.id === pendingAreaIdForFilter)
+    ? pendingAreaIdForFilter
+    : (sortedAreasForFilter[0] ? sortedAreasForFilter[0].id : null);
+  const detections = _filterA11yBatchEligible(allDetections, filterAreaId);
   const skippedCount = allDetections.length - detections.length;
   const tokenReviewCandidates = window._a11yTokenReviewCandidates || [];
   if (detections.length === 0 && tokenReviewCandidates.length === 0) return;
@@ -2612,10 +2647,10 @@ function openA11yBatchSummaryModal() {
     confirmBtn.disabled = detections.length === 0;
   }
 
-  // Hoje _filterA11yBatchEligible não exclui mais nenhuma categoria (titulo/
-  // decorativo entram no lote com defaults) — skippedCount deve ficar
-  // sempre 0, mas mantém o aviso condicional caso uma categoria futura
-  // precise de exclusão de novo.
+  // _filterA11yBatchEligible não exclui mais categoria nenhuma (titulo/
+  // decorativo entram no lote com defaults) — skippedCount só fica > 0 hoje
+  // quando o Reescanear reencontra elementos que já viraram spec confirmada
+  // nesta área (dedupe por targetNodeId, ver _getDocumentedNodeIdsForArea).
   const skippedNotice = document.getElementById('a11y-batch-summary-skipped-notice');
   if (skippedNotice) {
     if (skippedCount > 0) {
@@ -2803,11 +2838,16 @@ async function confirmA11yBatchGenerate() {
   if (loadingText) loadingText.textContent = 'Criando especificações…';
   openModal('a11y-post-area-detect-modal');
 
+  window._a11yBatchCancelled = false;
+  const cancelBtn = document.getElementById('btn-a11y-batch-cancel');
+  if (cancelBtn) cancelBtn.classList.remove('hidden');
+
   window._a11yExpandedAreaIds = window._a11yExpandedAreaIds || new Set();
   window._a11yExpandedAreaIds.add(areaId);
 
   let created = 0;
   let failed = 0;
+  let skippedDuplicate = 0;
   // Tag sequencial: começa na próxima letra livre da área e avança uma por
   // item criado — reaproveita _suggestNextA11yTagForArea pro ponto de
   // partida, mas não recalcula a cada iteração (o awaiting sequencial já
@@ -2827,6 +2867,23 @@ async function confirmA11yBatchGenerate() {
   const startIndex = startTag.length === 1 ? startTag.charCodeAt(0) - 65 : 0;
 
   for (const item of detections) {
+    // Checado no INÍCIO da iteração, nunca no meio de um await pendente: a
+    // spec já em criação no momento do clique termina normalmente (backend
+    // já recebeu create-unified-spec, abortar no meio deixaria canvas/
+    // a11ySpecs inconsistentes), só a PRÓXIMA do array deixa de disparar.
+    if (window._a11yBatchCancelled) break;
+    // Rede de segurança final contra duplicidade: mesmo que a lista exibida
+    // no modal de resumo já tenha vindo filtrada (_filterA11yBatchEligible
+    // com areaId), recalcula aqui porque a11ySpecs pode ter mudado desde a
+    // abertura do modal (specs anteriores do próprio loop sequencial, ou o
+    // designer trocou a área de destino no <select> pra uma que não foi a
+    // usada no filtro de exibição — ver decisão documentada em
+    // openA11yBatchSummaryModal). Sem isso, esse item nasceria como spec
+    // duplicada sobre o mesmo targetNodeId.
+    if (item.nodeId && _getDocumentedNodeIdsForArea(areaId).has(item.nodeId)) {
+      skippedDuplicate++;
+      continue;
+    }
     const isUnmapped = item.dscComponentMatch.isUnmapped === true;
     const shortName = item.dscComponentMatch.a11yCategory;
     // Título e decorativo não consomem uma letra da sequência: título usa o
@@ -2921,15 +2978,36 @@ async function confirmA11yBatchGenerate() {
   // precisa fechar os dois.
   if (typeof closeA11yPostAreaDetectModal === 'function') closeA11yPostAreaDetectModal();
 
-  if (created > 0 && failed === 0) {
-    showToast(`${created} especifica${created === 1 ? 'ção criada' : 'ções criadas'} — revise as de baixa confiança.`);
+  const cancelBtnEl = document.getElementById('btn-a11y-batch-cancel');
+  if (cancelBtnEl) cancelBtnEl.classList.add('hidden');
+
+  // skippedDuplicate só existe pela rede de segurança contra duplicidade
+  // (ver comentário no loop acima) — não compete com o toast de sucesso
+  // "limpo", só entra na mensagem quando de fato descartou algo.
+  const duplicateSuffix = skippedDuplicate > 0
+    ? ` (${skippedDuplicate} já documentado${skippedDuplicate === 1 ? '' : 's'}, ignorado${skippedDuplicate === 1 ? '' : 's'})`
+    : '';
+  if (window._a11yBatchCancelled) {
+    showToast(`${created} especifica${created === 1 ? 'ção criada' : 'ções criadas'} antes do cancelamento.${duplicateSuffix}`);
+  } else if (created > 0 && failed === 0) {
+    showToast(`${created} especifica${created === 1 ? 'ção criada' : 'ções criadas'} — revise as de baixa confiança.${duplicateSuffix}`);
   } else if (created > 0 && failed > 0) {
-    showToast(`${created} especifica${created === 1 ? 'ção criada' : 'ções criadas'}, ${failed} falharam — tente criar essas manualmente.`);
+    showToast(`${created} especifica${created === 1 ? 'ção criada' : 'ções criadas'}, ${failed} falharam — tente criar essas manualmente.${duplicateSuffix}`);
+  } else if (skippedDuplicate > 0 && created === 0 && failed === 0) {
+    showToast(`Nenhuma especificação criada — todos os itens já estavam documentados nesta área.`);
   } else {
     showToast('Não foi possível criar as especificações do lote.');
   }
+  window._a11yBatchCancelled = false;
 }
 window.confirmA11yBatchGenerate = confirmA11yBatchGenerate;
+
+// Só sinaliza a intenção — o loop em confirmA11yBatchGenerate é quem lê a
+// flag no início da próxima iteração e decide parar.
+function cancelA11yBatchGenerate() {
+  window._a11yBatchCancelled = true;
+}
+window.cancelA11yBatchGenerate = cancelA11yBatchGenerate;
 
 // Remover a entrada também remove o nó no canvas (mesmo padrão de
 // deleteA11yArea logo abaixo) — specs de A11y têm nó real desde a criação.
