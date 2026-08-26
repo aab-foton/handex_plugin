@@ -103,29 +103,49 @@ function _compareSpecTags(tagA, tagB) {
 // ============================================================
 
 // key (componentKey resolvido via getMainComponentAsync/mainComp.key) →
-// { containingFrame, origin } — origin é 'web' (lib "Web Angular & React")
-// ou 'mobile' (lib "DSC | Super App"). Construído uma única vez a partir de
-// REF_SKELETON.libraries (componentsDetailed de CADA lib do manifest — ver
-// build-skeleton.cjs, estendido em 2026-08-25 para também gerar
-// componentsDetailed de 'super-app'), não de DSC_A11Y_MAPPING*.sampleKeys
-// (que são só amostras de 3 chaves por família, insuficientes para resolver
-// qualquer instância real). Component keys NUNCA colidem entre libs
-// diferentes (são globais no Figma) — não há risco de uma key de 'web'
-// sobrescrever uma de 'mobile' ou vice-versa, mesmo que os NOMES de
-// containingFrame se repitam entre as duas libs (ex: "[dsc] Button" existe
-// nas duas, cada uma com suas próprias component keys).
+// { containingFrame, origin, sourceLib } — origin é 'web' (libs "Web
+// Angular & React" e "Super DSC | Web", ambas desktop) ou 'mobile' (lib
+// "DSC | Super App"). origin decide só qual FAMÍLIA de marcador visual
+// (A11Y_*_KEYS vs A11Y_*_KEYS_MOBILE) é instanciada — não confundir com
+// sourceLib. Construído uma única vez a partir de REF_SKELETON.libraries
+// (componentsDetailed de CADA lib do manifest — ver build-skeleton.cjs,
+// estendido em 2026-08-25 para também gerar componentsDetailed de
+// 'super-app', e em 2026-08-26 para 'super-dsc-web'), não de
+// DSC_A11Y_MAPPING*.sampleKeys (que são só amostras de 3 chaves por
+// família, insuficientes para resolver qualquer instância real). Component
+// keys NUNCA colidem entre libs diferentes (são globais no Figma) — não há
+// risco de uma key de 'web' sobrescrever uma de 'mobile' ou vice-versa,
+// mesmo que os NOMES de containingFrame se repitam entre libs (ex:
+// "[dsc] Button" existe em mais de uma, cada uma com suas próprias
+// component keys).
+//
+// sourceLib é um campo PARALELO e não-destrutivo a origin — carrega a
+// IDENTIDADE EXATA da lib de origem (não só a plataforma), para uso futuro
+// de UI (badge "Super DSC | Web" vs. "DSC Legado" vs. "DSC | Super App").
+// 'web-angular-react' e 'super-dsc-web' são as DUAS libs desktop que
+// coexistem hoje (migração de design system em andamento — ver
+// refs/_manifest.json) e por isso compartilham origin: 'web', mas têm
+// sourceLib.id diferente. Nunca usar sourceLib para decidir dicionário de
+// marcador — essa decisão é exclusivamente de origin (ver
+// _createA11yAgrupamento/_createA11yConectorLinha).
 let _dscComponentKeyToFrameMap = null;
 function _getDscComponentKeyToFrameMap() {
   if (_dscComponentKeyToFrameMap) return _dscComponentKeyToFrameMap;
   _dscComponentKeyToFrameMap = new Map();
   const libs = (REF_SKELETON && Array.isArray(REF_SKELETON.libraries)) ? REF_SKELETON.libraries : [];
-  const ORIGIN_BY_SLUG = { 'web-angular-react': 'web', 'super-app': 'mobile' };
+  const ORIGIN_BY_SLUG = { 'web-angular-react': 'web', 'super-app': 'mobile', 'super-dsc-web': 'web' };
+  const SOURCE_LIB_BY_SLUG = {
+    'web-angular-react': { id: 'web-angular-react', label: 'DSC Legado' },
+    'super-dsc-web': { id: 'super-dsc-web', label: 'Super DSC | Web' },
+    'super-app': { id: 'super-app', label: 'DSC | Super App' }
+  };
   libs.forEach(lib => {
     const origin = lib && ORIGIN_BY_SLUG[lib.slug];
     if (!origin || !Array.isArray(lib.componentsDetailed)) return;
+    const sourceLib = SOURCE_LIB_BY_SLUG[lib.slug] || null;
     lib.componentsDetailed.forEach(c => {
       if (c && c.key && c.containingFrame) {
-        _dscComponentKeyToFrameMap.set(c.key, { containingFrame: c.containingFrame, origin });
+        _dscComponentKeyToFrameMap.set(c.key, { containingFrame: c.containingFrame, origin, sourceLib });
       }
     });
   });
@@ -162,28 +182,35 @@ function _getDscFrameToA11yMap() {
   return _dscFrameToA11yMap;
 }
 
-// Retorna { containingFrame, a11yCategory, confidence, origin } (match
-// normal), { containingFrame, a11yCategory: null, confidence: null,
-// isUnmapped: true, origin } (componente DSC real, mas SEM categoria de
-// a11y catalogada — vira sugestão "Outro" no lote de Detecção Automática)
-// ou null (componentKey não corresponde a nenhum componente DSC catalogado
-// em nenhuma das duas libs — não é caso de a11y). origin é 'web' ou
-// 'mobile', conforme a lib de onde a componentKey resolvida veio.
+// Retorna { containingFrame, a11yCategory, confidence, origin, sourceLib }
+// (match normal), { containingFrame, a11yCategory: null, confidence: null,
+// isUnmapped: true, origin, sourceLib } (componente DSC real, mas SEM
+// categoria de a11y catalogada — vira sugestão "Outro" no lote de Detecção
+// Automática; é o caso hoje de TODO componente de 'super-dsc-web', já que a
+// curadoria do mapeamento componente→categoria para essa lib ainda não foi
+// feita) ou null (componentKey não corresponde a nenhum componente DSC
+// catalogado em nenhuma lib — não é caso de a11y). origin é 'web' ou
+// 'mobile', conforme a PLATAFORMA da lib de onde a componentKey resolvida
+// veio (decide só a família de marcador visual — ver comentário de
+// _getDscComponentKeyToFrameMap). sourceLib é a IDENTIDADE exata da lib
+// ({id, label}), paralela a origin, para uso futuro de badge de UI —
+// propagada tal como veio do Map, sem lógica própria aqui.
 // componentKey deve ser o mainComp.key de uma INSTANCE remote — chamador garante isso.
 function _resolveDscComponentA11yMatch(componentKey) {
   if (!componentKey) return null;
   const resolved = _getDscComponentKeyToFrameMap().get(componentKey);
   if (!resolved) return null;
-  const { containingFrame, origin } = resolved;
+  const { containingFrame, origin, sourceLib } = resolved;
   const a11yMatch = _getDscFrameToA11yMap().get(containingFrame);
   if (!a11yMatch) {
-    return { containingFrame, a11yCategory: null, confidence: null, isUnmapped: true, origin };
+    return { containingFrame, a11yCategory: null, confidence: null, isUnmapped: true, origin, sourceLib };
   }
   return {
     containingFrame,
     a11yCategory: a11yMatch.shortName,
     confidence: a11yMatch.confidence,
-    origin
+    origin,
+    sourceLib
   };
 }
 
@@ -594,11 +621,15 @@ async function _tryImportA11yComponent(opts) {
     }
   }
 
-  // O componente real só tem campos de Descrição/Observações/Notas de Código
-  // (mais Nome Acessível, quando o componente tem) — não tem onde encaixar
-  // Componente/Variante/Label/Hint separadamente. Injeta o que sobrar (exceto
-  // Descrição/Notas/os 3 toggles dinâmicos já tratados acima) dentro do campo
-  // Observações, uma linha por propriedade.
+  // O componente real (wrapper DESKTOP, único importado aqui hoje — não há
+  // wrapper mobile "[a11y mob] Box specs leitor de tela" cadastrado em
+  // A11Y_CONTENT ainda) só tem campos de Descrição/Observações/Notas de
+  // Código (mais Nome Acessível, quando o componente tem) — não tem onde
+  // encaixar Componente/Variante/Label/accessibilityHint/Link do Componente
+  // separadamente. Injeta o que sobrar (exceto Descrição/Notas/os 3 toggles
+  // dinâmicos já tratados acima) dentro do campo Observações, uma linha por
+  // propriedade — cobre também specs de origem mobile (opts.a11yOrigin),
+  // porque _tryImportA11yComponent hoje não distingue origem ao importar.
   const _infoLines = (opts.properties || [])
     .filter(p => p && p.value && p.key !== 'descricao' && p.key !== 'notaCodigo' && !_dynamicToggleKeys.has(p.key))
     .map(p => `${p.label}: ${p.value}`)
@@ -1085,6 +1116,25 @@ async function _a11yScanArea(rootNode) {
 }
 
 // ============================================================
+// Escopo de clientStorage por arquivo
+//
+// Bug real confirmado: figma.clientStorage é vinculado ao PLUGIN (instalação),
+// não ao arquivo — é global entre todos os arquivos Figma onde o plugin roda
+// na mesma máquina/conta. Usar a chave fixa 'hacData' fazia dados de um
+// arquivo vazarem/sobrescreverem os de outro quando o hac estava aberto em
+// mais de um arquivo (ou alternado entre eles). Escopamos por figma.fileKey.
+// Arquivos nunca salvos na nuvem (raro) não têm fileKey — nesse caso caem
+// numa chave de fallback compartilhada; múltiplos arquivos não-salvos vão
+// dividir essa chave entre si, limitação residual aceita (não é o bug
+// principal, que era o vazamento entre arquivos JÁ salvos).
+const HAC_DATA_LEGACY_KEY = 'hacData';
+const HAC_DATA_UNSAVED_FALLBACK_KEY = 'hacData:unsaved';
+
+function _getHacDataStorageKey() {
+  return figma.fileKey ? `hacData:${figma.fileKey}` : HAC_DATA_UNSAVED_FALLBACK_KEY;
+}
+
+// ============================================================
 // Dispatcher principal
 // ============================================================
 
@@ -1095,7 +1145,23 @@ figma.ui.onmessage = async (msg) => {
       : null;
     const theme = figma.ui.theme || 'light';
     try {
-      const savedState = await figma.clientStorage.getAsync('hacData');
+      const scopedKey = _getHacDataStorageKey();
+      let savedState = await figma.clientStorage.getAsync(scopedKey);
+
+      // Migração automática da chave global legada para a chave por-arquivo.
+      // Só roda se a chave nova ainda estiver vazia (arquivo nunca migrado)
+      // E a antiga tiver dado — condição que deixa de ser satisfeita assim
+      // que a migração acontece uma vez, então não reaplica em aberturas
+      // seguintes (nem neste arquivo, nem em nenhum outro).
+      if (!savedState) {
+        const legacyState = await figma.clientStorage.getAsync(HAC_DATA_LEGACY_KEY);
+        if (legacyState) {
+          await figma.clientStorage.setAsync(scopedKey, legacyState);
+          await figma.clientStorage.setAsync(HAC_DATA_LEGACY_KEY, null);
+          savedState = legacyState;
+        }
+      }
+
       // Onboarding "visto" fica em chave própria — por instalação do plugin,
       // não por projeto/hacData, e sobrevive a "Limpar Cache" (mesmo padrão
       // do onboarding do Handex).
@@ -1134,7 +1200,7 @@ figma.ui.onmessage = async (msg) => {
 
   if (msg.type === 'save-storage') {
     try {
-      await figma.clientStorage.setAsync('hacData', msg.data);
+      await figma.clientStorage.setAsync(_getHacDataStorageKey(), msg.data);
     } catch (err) {
       console.warn("Storage save failed (possivelmente falta o plugin ID no manifest):", err);
     }
@@ -1152,7 +1218,7 @@ figma.ui.onmessage = async (msg) => {
 
   if (msg.type === 'clear-cache') {
     try {
-      await figma.clientStorage.setAsync('hacData', null);
+      await figma.clientStorage.setAsync(_getHacDataStorageKey(), null);
       figma.ui.postMessage({ type: 'cache-cleared' });
     } catch (e) {
       console.error("clear-cache failed:", e);
@@ -1357,6 +1423,12 @@ figma.ui.onmessage = async (msg) => {
       group.name = `[A11yArea | ${msg.number}] ${msg.label}`;
       group.locked = false;
       group.setPluginData('hacCategory', 'a11y');
+      // Guardamos o id do frame ORIGINAL (não-injetado pelo hac, então
+      // invisível pro filtro hacCategory) pra que o cálculo de posição livre
+      // da cópia de Ordem de Tabulação (_findFreeTabOrderCopyPosition)
+      // consiga localizar e evitar sobrepor o frame de QUALQUER área, não só
+      // da área sendo processada no momento.
+      group.setPluginData('hacAreaTargetNodeId', node.id);
 
       _reparentIntoA11ySection(group);
 
@@ -1424,6 +1496,14 @@ figma.ui.onmessage = async (msg) => {
   // a11yType null/normal como no Handex (aqui opts.a11yType é sempre uma das
   // 5 categorias). Mantém o nome do tipo de mensagem para não introduzir um
   // contrato paralelo sem necessidade.
+  //
+  // opts.a11ySourceLib (novo, 2026-08-26): repasse puro, sem lógica própria
+  // aqui — é o mesmo objeto {id, label} (ver SOURCE_LIB_BY_SLUG em
+  // _getDscComponentKeyToFrameMap) que o frontend recebeu em
+  // dscComponentMatch.sourceLib ao detectar o componente (scan-result) e
+  // reenvia ao criar a spec, análogo a opts.a11yOrigin. Usado só para o
+  // badge de origem de UI (accessibility.js, _a11ySpecItemHtml) — nunca
+  // decide marcador/dicionário de import, só opts.a11yOrigin faz isso.
   if (msg.type === "create-unified-spec") {
     (async () => {
       const opts = msg.opts;
@@ -1899,6 +1979,8 @@ figma.ui.onmessage = async (msg) => {
           a11yType: opts.a11yType || null,
           a11ySubtype: opts.a11ySubtype || null,
           a11yOrigin: opts.a11yOrigin || 'web',
+          a11ySourceLib: opts.a11ySourceLib || null,
+          a11yDscComponentName: opts.a11yDscComponentName || null,
           a11yAreaId: opts.a11yAreaId || null,
           drawMode: opts.drawMode || 'contorno',
           needsReview: !!opts.needsReview,
@@ -2093,7 +2175,7 @@ figma.ui.onmessage = async (msg) => {
   // — as duas vias criam exatamente o mesmo selo "[a11y] Item Number" real
   // (ou o fallback círculo+texto). Não faz appendChild na seleção nem scroll
   // de viewport (quem chama decide isso).
-  async function _createTabOrderBadge(node, number, label, conector, areaId, reparentToSection, origin) {
+  async function _createTabOrderBadge(node, number, label, conector, areaId, reparentToSection, origin, tabOrderClone) {
     const _conectorOptions = ['desativado', 'inferior', 'superior', 'esquerda', 'direita'];
     const _conector = _conectorOptions.includes(conector) ? conector : 'direita';
     const hasLabel = !!label;
@@ -2159,7 +2241,33 @@ figma.ui.onmessage = async (msg) => {
     group.locked = false;
     group.setPluginData('hacCategory', 'a11y');
 
-    if (reparentToSection !== false) {
+    // O selo nasce em figma.currentPage (precisa de posição absoluta livre
+    // pra calcular contra a bounding box do nó-alvo, que também é absoluta).
+    // Reparentar pra dentro da CÓPIA do frame da Ordem de Tabulação (não pra
+    // Section) é o que torna o agrupamento real: sem isso, o selo só parece
+    // "dentro" do frame por coincidência de posição, mas é irmão solto na
+    // página — não acompanha o clone se ele for movido/selecionado depois.
+    // _reparentIntoA11ySection não serve aqui: ela reparenta pra Section
+    // (nível página), não pro clone (nível frame) — mesmo cálculo de
+    // x/y-relativo-ao-novo-pai, mas com pai diferente.
+    // Best-effort, mesmo padrão de _reparentIntoA11ySection: root da área
+    // pode em tese ser um node que aceita .clone() mas não children (ex.
+    // TEXT/VECTOR soltos — "Marcar Área" não restringe o tipo na UI). Sem o
+    // try/catch, um appendChild que falhasse no meio do loop de criação dos
+    // selos (apply-tab-order-to-canvas) interromperia os selos seguintes sem
+    // aviso — o selo já criado e corretamente posicionado não deve se perder
+    // por causa de uma falha só na organização/agrupamento.
+    if (tabOrderClone) {
+      try {
+        const _origX = group.x;
+        const _origY = group.y;
+        tabOrderClone.appendChild(group);
+        group.x = Math.round(_origX - tabOrderClone.x);
+        group.y = Math.round(_origY - tabOrderClone.y);
+      } catch (e) {
+        if (reparentToSection !== false) _reparentIntoA11ySection(group);
+      }
+    } else if (reparentToSection !== false) {
       _reparentIntoA11ySection(group);
     }
 
@@ -2294,11 +2402,119 @@ figma.ui.onmessage = async (msg) => {
     return map;
   }
 
+  // Gap entre a faixa ocupada (áreas/specs/cópias já existentes) e a nova
+  // linha de cópias de Ordem de Tabulação — mesmo valor de _SPEC_GAP (linha
+  // ~1789) por consistência visual com o restante do canvas injetado pelo
+  // hac. Gap horizontal entre cópias que dividem a mesma faixa reaproveita
+  // _SPEC_COL_GAP (~64) pelo mesmo motivo.
+  const _TAB_ORDER_ROW_GAP = 32;
+  const _TAB_ORDER_COL_GAP = 64;
+
+  // Varre TUDO que o hac já colocou/referencia no canvas — Section
+  // organizadora (áreas/specs já reparentadas nela) + filhos soltos de
+  // figma.currentPage com hacCategory 'a11y' (cópias de Ordem de Tabulação e
+  // seus selos NUNCA são reparentados pra dentro da Section, ver
+  // apply-tab-order-to-canvas/_createTabOrderBadge com reparentToSection
+  // false) — e também os frames ORIGINAIS de cada Área Marcada (não são
+  // injetados pelo hac, então não têm hacCategory; resolvidos via
+  // hacAreaTargetNodeId guardado no selo da área em create-a11y-area).
+  // Devolve o Y mais baixo ocupado (bottom) e o X mais à esquerda (left)
+  // entre tudo isso, sempre a partir de absoluteBoundingBox/
+  // absoluteRenderBounds (nunca node.x/y crus — um node dentro da Section
+  // tem x/y relativos a ela, não à página).
+  async function _collectA11yOccupiedBounds() {
+    const bounds = [];
+    const seen = new Set();
+    const addNode = (n) => {
+      if (!n || seen.has(n.id)) return;
+      seen.add(n.id);
+      const bb = n.absoluteBoundingBox || n.absoluteRenderBounds;
+      if (!bb) return;
+      bounds.push({ left: bb.x, top: bb.y, right: bb.x + bb.width, bottom: bb.y + bb.height });
+    };
+
+    const section = _getOrCreateA11ySection();
+    const sectionChildren = section.children || [];
+    sectionChildren.forEach(addNode);
+
+    const areaTargetIds = [];
+    for (const sibling of figma.currentPage.children) {
+      try {
+        if (sibling.getPluginData && sibling.getPluginData('hacCategory') === 'a11y') {
+          addNode(sibling);
+        }
+        const areaTargetId = sibling.getPluginData && sibling.getPluginData('hacAreaTargetNodeId');
+        if (areaTargetId) areaTargetIds.push(areaTargetId);
+      } catch (e) { }
+    }
+    for (const child of sectionChildren) {
+      try {
+        const areaTargetId = child.getPluginData && child.getPluginData('hacAreaTargetNodeId');
+        if (areaTargetId) areaTargetIds.push(areaTargetId);
+      } catch (e) { }
+    }
+
+    for (const areaTargetId of areaTargetIds) {
+      try {
+        const areaRoot = await figma.getNodeByIdAsync(areaTargetId);
+        if (areaRoot) addNode(areaRoot);
+      } catch (e) { }
+    }
+
+    return bounds;
+  }
+
+  // Cópias de Ordem de Tabulação (e tudo mais que o hac injeta) crescem numa
+  // única "faixa" horizontal abaixo de todo o conteúdo já ocupado na página:
+  // simples, previsível, e nunca sobrepõe nada — nem o frame original de
+  // qualquer Área Marcada, nem specs, nem cópias de Ordem de Tabulação já
+  // existentes (de qualquer área). Dentro da faixa mais recente (mesmo Y,
+  // identificável pelas cópias já marcadas com hacTabOrderCopyForArea), a
+  // nova cópia entra à direita da última — mesmo raciocínio de "empilha ao
+  // lado do que já existe" usado pelas specs (_SPEC_COL_GAP), só que aqui
+  // não há sub-colunas por categoria: a faixa inteira é uma única linha.
+  // cloneWidth/cloneHeight não entram no cálculo hoje (a faixa cresce pra
+  // baixo/direita sem limite, então não há "encaixe" a verificar) — ficam no
+  // assinatura só como reserva caso um layout com quebra de linha por
+  // largura máxima seja necessário no futuro.
+  async function _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight) {
+    const occupied = await _collectA11yOccupiedBounds();
+    if (occupied.length === 0) {
+      return { x: 0, y: 0 };
+    }
+
+    const lowestBottom = occupied.reduce((max, b) => Math.max(max, b.bottom), -Infinity);
+    const leftmost = occupied.reduce((min, b) => Math.min(min, b.left), Infinity);
+    const rowY = Math.round(lowestBottom + _TAB_ORDER_ROW_GAP);
+
+    let rowRightmost = null;
+    for (const sibling of figma.currentPage.children) {
+      try {
+        if (!sibling.getPluginData || !sibling.getPluginData('hacTabOrderCopyForArea')) continue;
+        const bb = sibling.absoluteBoundingBox || sibling.absoluteRenderBounds;
+        if (!bb) continue;
+        if (Math.abs(bb.y - rowY) > _TAB_ORDER_ROW_GAP) continue;
+        const right = bb.x + bb.width;
+        if (rowRightmost === null || right > rowRightmost) rowRightmost = right;
+      } catch (e) { }
+    }
+
+    const rowX = rowRightmost !== null
+      ? Math.round(rowRightmost + _TAB_ORDER_COL_GAP)
+      : Math.round(leftmost);
+
+    return { x: rowX, y: rowY };
+  }
+
   // Remove qualquer cópia anterior da MESMA área (via pluginData, nunca por
-  // nome — o designer pode renomear), clona `root`, posiciona ao lado,
+  // nome — o designer pode renomear), clona `root`, posiciona numa faixa
+  // livre (nunca sobrepondo o que o hac já colocou/referencia no canvas),
   // nomeia e marca pluginData. Não desenha nenhum selo — isso é
-  // responsabilidade exclusiva de quem chama.
-  function _createTabOrderCloneForArea(root, areaId) {
+  // responsabilidade exclusiva de quem chama. A remoção da cópia antiga
+  // acontece ANTES do cálculo de posição livre de propósito: se a
+  // recriação for da MESMA área, o espaço que ela ocupava deve contar como
+  // livre de novo.
+  async function _createTabOrderCloneForArea(root, areaId) {
     for (const sibling of figma.currentPage.children) {
       try {
         if (sibling.getPluginData && sibling.getPluginData('hacTabOrderCopyForArea') === areaId) {
@@ -2307,11 +2523,14 @@ figma.ui.onmessage = async (msg) => {
       } catch (e) { }
     }
 
+    const cloneWidth = root.absoluteBoundingBox.width;
+    const cloneHeight = root.absoluteBoundingBox.height;
+    const { x, y } = await _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight);
+
     const clone = root.clone();
     figma.currentPage.appendChild(clone);
-    const _TAB_ORDER_COPY_GAP = 80;
-    clone.x = Math.round(root.absoluteBoundingBox.x + root.absoluteBoundingBox.width + _TAB_ORDER_COPY_GAP);
-    clone.y = Math.round(root.absoluteBoundingBox.y);
+    clone.x = x;
+    clone.y = y;
     clone.name = `[Ordem de Tabulação] ${root.name}`;
     clone.locked = false;
     clone.setPluginData('hacCategory', 'a11y');
@@ -2343,7 +2562,7 @@ figma.ui.onmessage = async (msg) => {
         return;
       }
 
-      const { clone, nodeMap } = _createTabOrderCloneForArea(root, msg.areaId);
+      const { clone, nodeMap } = await _createTabOrderCloneForArea(root, msg.areaId);
       _activeTabOrderCloneMap = nodeMap;
       _activeTabOrderCloneAreaId = msg.areaId || null;
 
@@ -2458,7 +2677,7 @@ figma.ui.onmessage = async (msg) => {
         }
       }
       if (!clone) {
-        const created = _createTabOrderCloneForArea(root, msg.areaId);
+        const created = await _createTabOrderCloneForArea(root, msg.areaId);
         clone = created.clone;
         nodeMap = created.nodeMap;
       }
@@ -2476,7 +2695,7 @@ figma.ui.onmessage = async (msg) => {
           skipped++;
           continue;
         }
-        const { group, item } = await _createTabOrderBadge(mappedNode, entry.number, '', 'direita', msg.areaId, false, msg.a11yOrigin);
+        const { group, item } = await _createTabOrderBadge(mappedNode, entry.number, '', 'direita', msg.areaId, false, msg.a11yOrigin, clone);
         createdGroups.push(group);
         items.push(item);
       }

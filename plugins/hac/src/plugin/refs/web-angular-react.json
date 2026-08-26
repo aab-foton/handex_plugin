@@ -2,8 +2,8 @@
   "meta": {
     "libraryName": "Web Angular & React",
     "figmaFileKey": "8QvOeTODSBi3PquJT5CISP",
-    "exportedAt": "2026-08-19T19:30:35.293Z",
-    "generator": "fetch-design-refs.cjs",
+    "exportedAt": "2026-08-26T18:00:08.957Z",
+    "generator": "fetch-design-refs.cjs (hac)",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
     ]

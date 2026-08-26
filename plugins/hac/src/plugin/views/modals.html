@@ -159,6 +159,14 @@
           <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
           <div id="a11y-el-toggles-list" class="space-y-2"></div>
         </div>
+        <!-- Exclusivos de spec mobile (React Native) — o wrapper real
+             desktop "[a11y] Box specs LT" não tem esses 2 campos. Visível só
+             quando modal.dataset.a11yOrigin === 'mobile' (Detecção Automática
+             ou edição de spec já mobile), ver _renderA11yElementoMobileFields. -->
+        <div id="a11y-el-mobile-toggles-wrap" class="hidden space-y-2.5">
+          <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos exclusivos mobile</p>
+          <div id="a11y-el-mobile-toggles-list" class="space-y-2"></div>
+        </div>
       </div>
 
       <!-- Estrutura da Página -->
@@ -712,6 +720,7 @@
       <div class="pt-3 mt-1 border-t border-gray-100 dark:border-dark-line">
         <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5">Estrutura padrão de cada spec</p>
         <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Toda categoria segue os mesmos campos — <strong>Descrição</strong> (como o elemento deve ou não ser lido) e <strong>Notas de Código</strong> (apontamento técnico pro dev), quando aplicável à variante escolhida.</p>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Elementos e Imagens mobile</strong> (React Native) tem 2 campos a mais: <strong>Dica para Leitor de Tela</strong> (accessibilityHint — o que acontece após interagir com o componente) e <strong>Link do Componente</strong> (URL do componente no DSC | Super App).</p>
       </div>
 
       <div class="pt-3 mt-1 border-t border-gray-100 dark:border-dark-line space-y-2">

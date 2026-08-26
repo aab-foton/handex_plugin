@@ -106,8 +106,16 @@ for (const libMeta of manifest.libraries) {
   // "só web-angular-react" para também cobrir "super-app" (lib mobile/RN),
   // integrando a detecção automática de a11y mobile — ver
   // _getDscComponentKeyToFrameMap em code.js, que agora consulta as duas
-  // libs e devolve a origem (web/mobile) junto do containingFrame.
-  if ((libMeta.slug === 'web-angular-react' || libMeta.slug === 'super-app') && Array.isArray(lib.components)) {
+  // libs e devolve a origem (web/mobile) junto do containingFrame. Estendido
+  // em 2026-08-26 para também cobrir "super-dsc-web" (lib desktop nova,
+  // sucessora do legado, coexistindo com ele) — a curadoria do mapeamento
+  // componente→categoria de a11y desta lib é trabalho futuro à parte
+  // (build-dsc-a11y-mapping.cjs); aqui só garantimos que o dado bruto
+  // (componentsDetailed) está disponível em runtime para quando a curadoria
+  // existir. Até lá, componentes desta lib resolvem via
+  // _resolveDscComponentA11yMatch como "componente DSC real, sem categoria
+  // catalogada" (isUnmapped: true) — comportamento esperado.
+  if ((libMeta.slug === 'web-angular-react' || libMeta.slug === 'super-app' || libMeta.slug === 'super-dsc-web') && Array.isArray(lib.components)) {
     entry.componentsDetailed = lib.components
       .filter(c => c && c.key)
       .map(c => ({ key: c.key, name: clean(c.name || ''), containingFrame: clean(c.containingFrame || '') }));

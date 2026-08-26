@@ -3,7 +3,7 @@
     "description": "Adaptação/redução do Handex Beta (refs/_manifest.json) para o hac, 2026-08-24. Duas libs DSC de COMPONENTES REAIS (web + mobile) são fonte de 'componentsDetailed' (key + name + containingFrame) usada em runtime para resolver componente do canvas -> containingFrame -> categoria de a11y (ver _getDscComponentKeyToFrameMap em code.js, e build-skeleton.cjs — estendido em 2026-08-25 para gerar componentsDetailed também para 'super-app'). A lib 'Design Acessível' (marcadores visuais REAIS: Agrupamento, Conectores, Item Number, web + mobile) NÃO precisa de entrada aqui — suas component keys estão hardcoded como literais em code.js (A11Y_AGRUPAMENTO_KEYS[_MOBILE], A11Y_CONECTOR_LINHA_KEYS[_MOBILE], A11Y_ITEM_NUMBER_KEYS[_MOBILE]), e seu conteúdo textual/properties vem de JSONs curados à parte (design-acessivel-content.json, design-acessivel-component-properties.json), não deste manifest nem do skeleton. O fileKey da lib de marcadores mobile (3zdtN13YvPlCGPdXeL0Y2i) é DIFERENTE do fileKey 'super-app' abaixo (epCGtlKQxedDxQVlK3lNcN, componentes reais) — não confundir: um é o template/handoff visual, o outro é a lib de componentes do produto.",
     "confirmedBy": "leitura de build-skeleton.cjs e grep em code.js"
   },
-  "generatedAt": "2026-08-25T02:01:20.551Z",
+  "generatedAt": "2026-08-26T18:02:55.881Z",
   "libraries": [
     {
       "slug": "web-angular-react",
@@ -30,6 +30,20 @@
         "typography": 36,
         "effects": 3,
         "components": 4455
+      }
+    },
+    {
+      "slug": "super-dsc-web",
+      "name": "Super DSC | Web",
+      "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+      "file": "super-dsc-web.json",
+      "_note": "Lib desktop NOVA, adicionada em 2026-08-26 a pedido do usuário — é a versão sucessora do 'Web Angular & React' legado (fileKey 8QvOeTODSBi3PquJT5CISP acima), mas as duas COEXISTEM enquanto a migração de design system não termina: uma mesma tela pode ter componentes legado e novo misturados, então o hac precisa reconhecer as DUAS libs simultaneamente — esta entrada não substitui/desativa 'web-angular-react'. Estrutura confirmada via REST API (/v1/files/erkqbRKIbaFWbkHe51BeiZ?depth=1) como o MESMO padrão do legado: um CANVAS por componente (prefixo '⚙️ | Nome do Componente', ex: '⚙️ | Button', '⚙️ | Card', '⚙️ | Checkbox'), mais canvases de Tokens/Icons/Templates que não interessam ao mapeamento. Curadoria do matching componente→categoria de a11y (build-dsc-a11y-mapping.cjs) e a integração em code.js (_resolveDscComponentA11yMatch, A11Y_*_KEYS) ainda NÃO foram feitas para esta lib — ver dsc-component-a11y-mapping.json (só web-angular-react) e -mobile.json (só super-app); uma terceira variante equivalente para esta lib é trabalho futuro deliberado, fora do escopo do cadastro inicial.",
+      "counts": {
+        "variables": 400,
+        "colors": 0,
+        "typography": 36,
+        "effects": 2,
+        "components": 4665
       }
     }
   ]

@@ -161,7 +161,37 @@ const A11Y_TOGGLE_LABELS = {
   nomeAcessivel: 'Nome Acessível',
   observacoes: 'Observações',
   notas: 'Notas de Código',
+  // Exclusivos do wrapper mobile "[a11y mob] Box specs leitor de tela"
+  // (fileKey 3zdtN13YvPlCGPdXeL0Y2i, node 5413:1262, variante "Conector=
+  // Elementos e imagens") — confirmados via REST API, NÃO existem no
+  // wrapper desktop equivalente ("[a11y] Box specs LT"). Ver
+  // A11Y_MOBILE_ONLY_TOGGLES abaixo.
+  accessibilityHint: 'Dica para Leitor de Tela',
+  linkComponente: 'Link do Componente',
 };
+
+// Toggles que só existem no wrapper mobile — nunca renderizados quando a
+// spec é de origem web (o componente real desktop não tem esses campos).
+// Chave própria, fora de A11Y_COMPONENT_PROPERTIES (catálogo desktop): a
+// origem desses 2 campos é o texto oficial da lib mobile
+// ("📍 Instruções (comece por aqui)", node 811:866), não uma property
+// BOOLEAN de um component set "[a11y base]" desktop.
+//
+// Divergência conhecida vs. o componente Figma real (confirmada via REST API
+// no wrapper "[a11y mob] Box specs leitor de tela", variante "Elementos e
+// imagens"): "Dica para Leitor de Tela" tem toggle BOOLEAN real (default
+// desligado, opcional) — bate com o checkbox aqui. "Link do componente" NÃO
+// tem toggle no componente publicado, é sempre presente/obrigatório na lib
+// real. Tratamos os dois como igualmente opcionais porque hoje o hac nunca
+// importa o wrapper mobile real (sempre cai no card procedural — ver
+// _tryImportA11yComponent em code.js), então a diferença não tem efeito
+// prático agora. Se um dia o import real do wrapper mobile for implementado,
+// revisitar isso: "Link do Componente" deveria provavelmente virar
+// sempre-visível, sem checkbox, para casar com o componente real.
+const A11Y_MOBILE_ONLY_TOGGLES = [
+  { key: 'accessibilityHint', label: 'Dica para Leitor de Tela', placeholder: 'Inserir o seguinte accessibilityHint: [explicação sobre o que acontecerá após a ação].' },
+  { key: 'linkComponente', label: 'Link do Componente', placeholder: 'Cole aqui o link do componente no DSC | Super App.' },
+];
 
 // Properties VARIANT que já são controladas pelo próprio <select> de
 // "Componente" (nível 1, wrapper "componentes/icones/imagens") — nunca viram
@@ -312,11 +342,25 @@ function openA11yModal(category, options) {
   // vez de só a categoria.
   const presetEstruturaTipo = options && options.presetEstruturaTipo;
   const presetTituloNivel = options && options.presetTituloNivel;
+  // Origem (web/mobile) da spec sendo criada/editada — decide se os 2 campos
+  // exclusivos do wrapper mobile (Dica para Leitor de Tela/Link do
+  // Componente) aparecem em "Elementos e Imagens" (ver
+  // _renderA11yElementoMobileFields). Default 'web': sem isto, o fluxo
+  // manual "+ Nova spec" (sem detecção prévia) nunca saberia a origem.
+  const a11yOrigin = (options && options.a11yOrigin) || 'web';
+  // Nome cru do component set DSC real (containingFrame, ex: "[dsc] Button")
+  // já resolvido pelo scan que abriu este formulário via
+  // openA11yFormFromUndocumented — mesmo raciocínio do a11yOrigin acima.
+  // O fluxo manual "+ Nova spec" nunca passa isto, então cai em null.
+  const dscComponentName = (options && options.dscComponentName) || null;
 
   const modal = document.getElementById('a11y-spec-modal');
   if (!modal) return;
   modal.dataset.category = category;
   modal.dataset.areaId = window._a11yPendingAreaId || '';
+  modal.dataset.a11yOrigin = a11yOrigin;
+  if (dscComponentName) modal.dataset.dscComponentName = dscComponentName;
+  else delete modal.dataset.dscComponentName;
   // Usado pelo lote automatizado pra pré-selecionar o componente sugerido no
   // <select>.
   if (presetComponente) modal.dataset.presetComponente = presetComponente;
@@ -462,6 +506,7 @@ function updateA11yElementoFields() {
   if (previewWrap) previewWrap.classList.toggle('hidden', isOutro);
   _renderA11yElementoVariants(isOutro ? null : select.value);
   _renderA11yElementoToggles(isOutro ? null : select.value);
+  _renderA11yElementoMobileFields();
   if (isOutro) return;
 
   const entry = A11Y_CONTENT.elemento.componentes[select.value];
@@ -615,6 +660,83 @@ function _restoreA11yElementoToggles(props) {
   const canonicalKeys = new Set(Object.keys(A11Y_TOGGLE_LABELS));
   (props || []).forEach(p => {
     if (!p || !canonicalKeys.has(p.key)) return;
+    const checkbox = list.querySelector(`[data-a11y-toggle-key="${p.key}"]`);
+    if (!checkbox) return;
+    checkbox.checked = true;
+    const row = checkbox.closest('div');
+    const wrap = row ? row.querySelector('[data-a11y-toggle-textarea-wrap]') : null;
+    if (wrap) {
+      wrap.classList.remove('hidden');
+      const ta = wrap.querySelector('[data-a11y-toggle-value]');
+      if (ta) ta.value = p.value || '';
+    }
+  });
+}
+
+// Campos exclusivos de "Elementos e Imagens" mobile (Dica para Leitor de
+// Tela / Link do Componente) — mesmo padrão visual de
+// _renderA11yElementoToggles, mas fora do catálogo A11Y_COMPONENT_PROPERTIES
+// (esse é 100% desktop). Visibilidade decidida por modal.dataset.a11yOrigin
+// ('mobile'), setado por openA11yModal — nunca aparecem em specs web, porque
+// o wrapper real desktop ("[a11y] Box specs LT") não tem esses 2 campos.
+function _renderA11yElementoMobileFields() {
+  const modal = document.getElementById('a11y-spec-modal');
+  const wrap = document.getElementById('a11y-el-mobile-toggles-wrap');
+  const list = document.getElementById('a11y-el-mobile-toggles-list');
+  if (!wrap || !list) return;
+  const isMobile = modal && modal.dataset.a11yOrigin === 'mobile';
+  wrap.classList.toggle('hidden', !isMobile);
+  if (!isMobile) { list.innerHTML = ''; return; }
+  if (list.childElementCount > 0) return; // já renderizado — não perde o texto digitado
+
+  A11Y_MOBILE_ONLY_TOGGLES.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl overflow-hidden';
+    row.innerHTML = `
+      <label class="flex items-center gap-2 px-3 py-2.5 cursor-pointer select-none">
+        <input type="checkbox" data-a11y-toggle-key="${t.key}"
+          onchange="_onA11yElementoToggleChange(this)"
+          class="w-4 h-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500 cursor-pointer shrink-0" />
+        <span class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(t.label)}</span>
+      </label>
+      <div class="hidden px-3 pb-3" data-a11y-toggle-textarea-wrap>
+        <textarea data-a11y-toggle-value rows="2" placeholder="${escapeHtml(t.placeholder)}"
+          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg px-2.5 py-2 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+// Lê os 2 toggles mobile ligados com texto preenchido de volta em
+// properties[] — mesma mecânica de _collectA11yElementoToggleProperties.
+function _collectA11yElementoMobileToggleProperties() {
+  const list = document.getElementById('a11y-el-mobile-toggles-list');
+  if (!list) return [];
+  const result = [];
+  list.querySelectorAll('[data-a11y-toggle-key]').forEach(checkbox => {
+    if (!checkbox.checked) return;
+    const row = checkbox.closest('div');
+    const wrap = row ? row.querySelector('[data-a11y-toggle-textarea-wrap]') : null;
+    const ta = wrap ? wrap.querySelector('[data-a11y-toggle-value]') : null;
+    const value = ta ? ta.value.trim() : '';
+    if (!value) return;
+    const key = checkbox.getAttribute('data-a11y-toggle-key');
+    result.push({ key, label: A11Y_TOGGLE_LABELS[key] || key, value });
+  });
+  return result;
+}
+
+// Inverso de _collectA11yElementoMobileToggleProperties — usado em
+// _prefillA11ySpecForEdit. Precisa que _renderA11yElementoMobileFields já
+// tenha rodado (o formulário de edição já é aberto com dataset.a11yOrigin
+// setado, ver editA11ySpec) pra achar os checkboxes na DOM.
+function _restoreA11yElementoMobileToggles(props) {
+  const list = document.getElementById('a11y-el-mobile-toggles-list');
+  if (!list) return;
+  const mobileKeys = new Set(A11Y_MOBILE_ONLY_TOGGLES.map(t => t.key));
+  (props || []).forEach(p => {
+    if (!p || !mobileKeys.has(p.key)) return;
     const checkbox = list.querySelector(`[data-a11y-toggle-key="${p.key}"]`);
     if (!checkbox) return;
     checkbox.checked = true;
@@ -1155,6 +1277,11 @@ function confirmA11ySpec() {
       properties = [
         { key: 'componente', label: 'Componente', value: componenteOutro },
         { key: 'label', label: 'Label', value: label },
+        // Dica para Leitor de Tela/Link do Componente — só existem no
+        // wrapper mobile, mas "Outro" (componente fora do catálogo) também
+        // pode ser mobile (ex: componente novo do DSC | Super App ainda sem
+        // mapeamento de a11y curado).
+        ..._collectA11yElementoMobileToggleProperties(),
       ].filter(p => p.value);
     } else {
       if (!label) {
@@ -1172,7 +1299,14 @@ function confirmA11ySpec() {
       // instância aninhada certa.
       const built = _buildA11yElementoPayload(tag, select.value, label, {
         tipo,
-        toggleProperties: _collectA11yElementoToggleProperties(),
+        // Toggles do catálogo desktop (Nome Acessível/Observações/Notas)
+        // concatenados com os 2 exclusivos mobile (Dica para Leitor de
+        // Tela/Link do Componente) — _buildA11yElementoPayload não distingue
+        // origem, só empilha o que vier em toggleProperties.
+        toggleProperties: [
+          ..._collectA11yElementoToggleProperties(),
+          ..._collectA11yElementoMobileToggleProperties(),
+        ],
       });
       letter = built.letter;
       properties = built.properties;
@@ -1285,12 +1419,29 @@ function confirmA11ySpec() {
     // Chave crua da subvariante — usada pelo backend pra tentar o import real
     // do componente da lib (ver code.js, _tryImportA11yComponent).
     a11ySubtype,
-    // Fluxo MANUAL (formulário, sem detecção automática prévia) não tem como
-    // saber se o componente é web ou mobile — default 'web' (caso mais
-    // comum). Sem seletor manual de origem na UI por decisão de escopo desta
-    // entrega; se um designer precisar de marcador mobile no fluxo manual,
-    // isso fica pra uma entrega futura.
-    a11yOrigin: 'web',
+    // Origem já resolvida por quem abriu o modal (Detecção Automática via
+    // openA11yFormFromUndocumented, ou edição de uma spec existente via
+    // editA11ySpec — ver openA11yModal). O botão "+ Nova spec" (sem detecção
+    // prévia) não tem como saber se o componente é web ou mobile — cai no
+    // default 'web' que openA11yModal já aplica. Sem seletor manual de
+    // origem na UI por decisão de escopo; se um designer precisar de
+    // marcador mobile nesse fluxo puramente manual, fica pra uma entrega
+    // futura.
+    a11yOrigin: (modal && modal.dataset.a11yOrigin) || 'web',
+    // Mesmo raciocínio do a11yOrigin acima: fluxo manual não passou pela
+    // Detecção Automática, então não há componentKey resolvido pra apontar
+    // uma lib DSC de origem. Explícito null (em vez de omitir o campo) pra
+    // deixar claro, na leitura do payload, que o campo existe e foi
+    // conscientemente deixado sem valor. Sobrescrito abaixo quando é edição
+    // de uma spec que já tinha origem resolvida — editar não deve apagar o
+    // badge de lib de origem que a Detecção Automática já tinha resolvido.
+    a11ySourceLib: null,
+    // Nome real do component set DSC (ex: "[dsc] Button"), resolvido pelo
+    // scan e propagado via modal.dataset.dscComponentName (ver openA11yModal/
+    // openA11yFormFromUndocumented). Mesmo raciocínio do a11ySourceLib acima:
+    // null explícito no fluxo manual, sobrescrito abaixo na edição pra não
+    // apagar o badge de componente que a Detecção Automática já tinha resolvido.
+    a11yDscComponentName: (modal && modal.dataset.dscComponentName) || null,
     // Área Marcada onde a spec nasceu — associação explícita, escolhida no
     // momento da criação. O backend ecoa esse campo de volta em spec-created
     // pra spec.a11yAreaId continuar presente no objeto salvo localmente.
@@ -1330,6 +1481,13 @@ function confirmA11ySpec() {
     if (typeof editingSpec.cardX === 'number' && typeof editingSpec.cardY === 'number') {
       opts.pinnedPosition = { x: editingSpec.cardX, y: editingSpec.cardY };
     }
+    // Editar reusa este fluxo manual, que por padrão não conhece a origem
+    // DSC (ver a11yOrigin/a11ySourceLib acima). Sem isto, editar uma spec
+    // criada via Detecção Automática apagaria o badge de lib de origem dela
+    // — a edição muda texto/variante, não deveria mudar a proveniência.
+    if (editingSpec.a11yOrigin) opts.a11yOrigin = editingSpec.a11yOrigin;
+    if (editingSpec.a11ySourceLib) opts.a11ySourceLib = editingSpec.a11ySourceLib;
+    if (editingSpec.a11yDscComponentName) opts.a11yDscComponentName = editingSpec.a11yDscComponentName;
     parent.postMessage({ pluginMessage: { type: 'delete-node', id: editingSpecId } }, '*');
     // Guarda a posição original pra spec-created (messages.js) reinserir no
     // mesmo lugar em vez de só empilhar no fim do array — evita que ela
@@ -1355,8 +1513,10 @@ function _a11ySpecItemHtml(spec) {
   const isHidden = spec.visible === false;
   const isUnlocked = spec.locked === false;
 
+  const dscComponentLabel = spec.a11yDscComponentName ? _cleanDscContainingFrameName(spec.a11yDscComponentName) : null;
+
   const searchText = _normalizeSearchText(
-    [spec.letter, spec.targetNodeName, spec.name, meta.label, spec.a11yType]
+    [spec.letter, spec.targetNodeName, spec.name, meta.label, spec.a11yType, spec.a11ySourceLib?.label, dscComponentLabel]
       .concat(props.flatMap(p => [p.label, p.value]))
       .filter(Boolean)
       .join(' ')
@@ -1373,6 +1533,14 @@ function _a11ySpecItemHtml(spec) {
             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[9px] font-bold" style="background-color:${fill};border-color:${color};color:${color};">
               <i data-lucide="${meta.icon}" class="w-2.5 h-2.5"></i> ${meta.label}
             </span>
+            ${spec.a11ySourceLib ? `
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full border text-[9px] font-medium bg-slate-50 dark:bg-dark-bg/60 border-slate-200 dark:border-dark-line text-slate-500 dark:text-dark-muted">
+              ${escapeHtml(spec.a11ySourceLib.label)}
+            </span>` : ''}
+            ${dscComponentLabel ? `
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[9px] font-medium bg-slate-50 dark:bg-dark-bg/60 border-slate-200 dark:border-dark-line text-slate-500 dark:text-dark-muted">
+              <i data-lucide="component" class="w-2.5 h-2.5"></i> ${escapeHtml(dscComponentLabel)}
+            </span>` : ''}
             ${spec.needsReview ? `
             <button type="button" title="Criado em lote com baixa confiança — clique para revisar" aria-label="Verificar especificação — criada em lote com baixa confiança"
               onclick="editA11ySpec(${spec.originalIndex})"
@@ -2139,6 +2307,16 @@ function openA11yFormFromUndocumented(areaId, kind, encodedItem) {
     const isUnmapped = match.isUnmapped === true;
     const shortName = match.a11yCategory;
     const category = (shortName === 'titulo' || shortName === 'decorativo' || shortName === 'estrutura') ? shortName : 'elemento';
+    // Origem do componente DETECTADO — mesma fonte que o lote usa
+    // (item.dscComponentMatch.origin). Só é relevante em "elemento" hoje
+    // (Dica para Leitor de Tela/Link do Componente), mas passar sempre
+    // mantém o dataset do modal consistente com a spec que vai nascer.
+    const a11yOrigin = match.origin || 'web';
+    // Nome real do component set DSC (ex: "[dsc] Button") — null nas
+    // heurísticas de texto/ícone (titulo/decorativo/imagem não têm
+    // componente DSC real por trás, ver _resolveTypographyA11yMatch/
+    // _resolveDecorativeA11yMatch/_resolveImageA11yMatch em code.js).
+    const dscComponentName = match.containingFrame || null;
 
     if (isUnmapped) {
       // "Outro" dentro de Elementos e Imagens — mesmo componente sem
@@ -2147,16 +2325,16 @@ function openA11yFormFromUndocumented(areaId, kind, encodedItem) {
       // presetComponente é inválido/ausente, e o campo de texto livre
       // "Componente" fica vazio pro designer preencher) — o designer
       // confirma manualmente, igual seria digitando do zero.
-      openA11yModal('elemento', { pendingTargetNodeId: item.nodeId });
+      openA11yModal('elemento', { pendingTargetNodeId: item.nodeId, a11yOrigin, dscComponentName });
     } else if (category === 'titulo') {
-      openA11yModal('titulo', { pendingTargetNodeId: item.nodeId, presetTituloNivel: match.suggestedLevel });
+      openA11yModal('titulo', { pendingTargetNodeId: item.nodeId, presetTituloNivel: match.suggestedLevel, a11yOrigin, dscComponentName });
     } else if (category === 'decorativo') {
-      openA11yModal('decorativo', { pendingTargetNodeId: item.nodeId });
+      openA11yModal('decorativo', { pendingTargetNodeId: item.nodeId, a11yOrigin, dscComponentName });
     } else if (category === 'estrutura') {
       const tipo = _inferA11yEstruturaTipoFromContainingFrame(match.containingFrame);
-      openA11yModal('estrutura', { pendingTargetNodeId: item.nodeId, presetEstruturaTipo: tipo });
+      openA11yModal('estrutura', { pendingTargetNodeId: item.nodeId, presetEstruturaTipo: tipo, a11yOrigin, dscComponentName });
     } else {
-      openA11yModal('elemento', { pendingTargetNodeId: item.nodeId, presetComponente: shortName });
+      openA11yModal('elemento', { pendingTargetNodeId: item.nodeId, presetComponente: shortName, a11yOrigin, dscComponentName });
     }
   };
 
@@ -2703,6 +2881,16 @@ async function confirmA11yBatchGenerate() {
       // Default 'web' só como rede de segurança (heurísticas de texto/ícone
       // — título/decorativo sem match de componente real — não têm origin).
       a11yOrigin: item.dscComponentMatch.origin || 'web',
+      // Lib DSC de origem (legado/Super DSC/mobile) já resolvida no backend
+      // por componentKey — propagação direta, sem fallback: null significa
+      // componente não catalogado em nenhuma lib, não deve virar um chute.
+      a11ySourceLib: item.dscComponentMatch.sourceLib || null,
+      // Nome real do component set DSC (ex: "[dsc] Button") pro badge de
+      // componente no card — null nas heurísticas de texto/ícone
+      // (titulo/decorativo/imagem), que já chegam com containingFrame null
+      // (ver _resolveTypographyA11yMatch/_resolveDecorativeA11yMatch/
+      // _resolveImageA11yMatch em code.js).
+      a11yDscComponentName: item.dscComponentMatch.containingFrame || null,
       a11yAreaId: areaId,
       // Recalculado a cada volta do loop sequencial — a11ySpecs já reflete a
       // spec anterior do próprio lote assim que 'spec-created' responde,
@@ -2829,7 +3017,7 @@ function editA11ySpec(originalIndex) {
   const spec = a11ySpecs[originalIndex];
   if (!spec || !spec.a11yType) return;
   window._a11yPendingAreaId = spec.a11yAreaId || null;
-  openA11yModal(spec.a11yType);
+  openA11yModal(spec.a11yType, { a11yOrigin: spec.a11yOrigin || 'web' });
   const modal = document.getElementById('a11y-spec-modal');
   if (modal) {
     modal.dataset.editingSpecId = spec.id || '';
@@ -2878,6 +3066,11 @@ function _prefillA11ySpecForEdit(spec) {
     // Restaura os toggles dinâmicos salvos (Nome Acessível/Observações/Notas
     // de Código).
     _restoreA11yElementoToggles(props);
+    // Restaura Dica para Leitor de Tela/Link do Componente (só existem em
+    // specs mobile — updateA11yElementoFields acima já rendereu o bloco
+    // condicional a partir de modal.dataset.a11yOrigin, setado por
+    // editA11ySpec antes desta chamada).
+    _restoreA11yElementoMobileToggles(props);
   } else if (category === 'estrutura') {
     const subtipoSelect = document.getElementById('a11y-estrutura-subtipo-select');
     if (subtipoSelect) subtipoSelect.value = sub.variacao || 'idiomas';
