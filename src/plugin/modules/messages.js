@@ -237,6 +237,15 @@
       }
 
       if (msg.type === 'canvas-content-deleted') {
+        // Ação combinada "Apagar tudo" dispara este mesmo delete-canvas-content
+        // por baixo (com os 4 tipos marcados) e sinaliza via _isClearingEverything
+        // -- nesse caso quem termina o fluxo (fecha modal, limpa o registro do
+        // plugin, mostra um toast único cobrindo os dois) é _finishClearEverything,
+        // não este handler.
+        if (typeof window._isClearingEverything === 'function' && window._isClearingEverything()) {
+          window._finishClearEverything(msg.counts);
+          return;
+        }
         closeModal('confirm-clear-modal');
         const c = msg.counts || {};
         const parts = [];
@@ -475,11 +484,11 @@
             currentScannedProps.forEach(prop => {
               const id = 'prop-' + prop.key;
               const iconName = iconMap[prop.key] || (prop.key.startsWith('variant-') ? 'component' : 'settings');
-              const tokenBadge = prop.token ? `<span class="ml-2 px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/40 text-[9px] text-[#3d3dff] dark:text-blue-400 font-bold border border-blue-100 dark:border-blue-800 shadow-sm">${prop.token}</span>` : '';
+              const tokenBadge = prop.token ? `<span class="ml-2 px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/40 text-[9px] text-[#005ca9] dark:text-blue-400 font-bold border border-blue-100 dark:border-blue-800 shadow-sm">${prop.token}</span>` : '';
               list.innerHTML += `
                 <label class="flex items-center justify-between p-3 hover:bg-slate-50 dark:hover:bg-dark-surface/50 rounded-2xl cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-800 transition-all group">
                   <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-dark-bg flex items-center justify-center text-slate-500 dark:text-dark-muted group-hover:text-[#3d3dff] transition-colors">
+                    <div class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-dark-bg flex items-center justify-center text-slate-500 dark:text-dark-muted group-hover:text-[#005ca9] transition-colors">
                       <i data-lucide="${iconName}" class="w-4 h-4"></i>
                     </div>
                     <div>
@@ -490,7 +499,7 @@
                       ${!prop.token ? `<span class="block text-[11px] text-slate-500 dark:text-dark-muted font-mono">${prop.value}</span>` : ''}
                     </div>
                   </div>
-                  <input type="checkbox" id="${id}" value="${prop.key}" checked class="w-5 h-5 rounded-lg border-gray-200 text-[#3d3dff] focus:ring-[#3d3dff] transition-all cursor-pointer" />
+                  <input type="checkbox" id="${id}" value="${prop.key}" checked class="w-5 h-5 rounded-lg border-gray-200 text-[#005ca9] focus:ring-[#005ca9] transition-all cursor-pointer" />
                 </label>
               `;
             });

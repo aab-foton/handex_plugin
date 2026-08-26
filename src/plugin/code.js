@@ -1073,7 +1073,22 @@ figma.ui.onmessage = async (msg) => {
     const sel = figma.currentPage.selection;
     const projectName = figma.root.name || figma.currentPage.name || '';
     try {
-      const savedState = await figma.clientStorage.getAsync('handoffData');
+      const fileKey = (figma.root && figma.root.id) ? figma.root.id : "default";
+      let savedState = await figma.clientStorage.getAsync('handoffData_' + fileKey);
+      if (!savedState) {
+        // Migração única: versões anteriores gravavam handoffData numa chave
+        // global (sem fileKey), compartilhada entre TODOS os arquivos .fig
+        // abertos pelo mesmo usuário/dispositivo — dados de um projeto
+        // vazavam para dentro de outro. Se a chave nova ainda não existe
+        // mas a antiga tem dado, assume que pertence a este arquivo (era o
+        // último salvo) e migra, sem perder o projeto em andamento.
+        const legacyState = await figma.clientStorage.getAsync('handoffData');
+        if (legacyState) {
+          savedState = legacyState;
+          await figma.clientStorage.setAsync('handoffData_' + fileKey, legacyState);
+          await figma.clientStorage.setAsync('handoffData', null);
+        }
+      }
       // Onboarding é por instalação do plugin, não por handoffData/projeto —
       // chave própria, sobrevive a "Limpar Dados do plugin" de propósito.
       const onboardingSeen = await figma.clientStorage.getAsync('handex-onboarding-seen');
@@ -1292,9 +1307,11 @@ figma.ui.onmessage = async (msg) => {
   if (msg.type === 'clear-cache') {
     const fileKey = (figma.root && figma.root.id) ? figma.root.id : "default";
     const keys = [
-      'handoffData',
+      'handoffData_' + fileKey,
+      'handoffData', // chave legada global — limpa também caso ainda não tenha migrado
       'handex-audit-refs-v1',
-      'handex-scan-cache-v1',
+      'handex-scan-cache-v1_' + fileKey,
+      'handex-scan-cache-v1', // idem
       'handex-history-' + fileKey,
     ];
     try {
@@ -1362,7 +1379,8 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === 'scan-cache-save') {
-    figma.clientStorage.setAsync('handex-scan-cache-v1', msg.data).catch(e =>
+    const scanFileKey = (figma.root && figma.root.id) ? figma.root.id : "default";
+    figma.clientStorage.setAsync('handex-scan-cache-v1_' + scanFileKey, msg.data).catch(e =>
       console.warn("scan-cache-save failed:", e)
     );
     return;
@@ -1370,7 +1388,8 @@ figma.ui.onmessage = async (msg) => {
 
   if (msg.type === 'scan-cache-load') {
     try {
-      const cached = await figma.clientStorage.getAsync('handex-scan-cache-v1');
+      const scanFileKey = (figma.root && figma.root.id) ? figma.root.id : "default";
+      const cached = await figma.clientStorage.getAsync('handex-scan-cache-v1_' + scanFileKey);
       figma.ui.postMessage({ type: 'scan-cache-loaded', data: cached || null });
     } catch (e) {
       figma.ui.postMessage({ type: 'scan-cache-loaded', data: null });
@@ -1628,7 +1647,7 @@ figma.ui.onmessage = async (msg) => {
       const _containerName = `${_handoffBase} | ${_ts}${_versaoLabel ? ' | ' + _versaoLabel : ''}`;
 
       // MAIN CONTAINER
-      const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb("#181875"));
+      const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb("#00325b"));
       mainContainer.name = _containerName;
       mainContainer.counterAxisAlignItems = "MIN"; // Top align
       mainContainer.primaryAxisSizingMode = "AUTO"; // Hug children width
@@ -1656,12 +1675,12 @@ figma.ui.onmessage = async (msg) => {
         <g transform="translate(-284.78446,-475.51214)">
           <g transform="matrix(1.25,0,0,-1.25,15.493106,1024.9702)">
             <g transform="scale(0.24,0.24)">
-              <path d="m 1107.19,1780.04 -17.74,-44.21 24.55,0 -6.73,44.39 -0.08,-0.18 z m -93.98,-101.49 72.77,149.83 55.02,0 30.68,-149.83 -48.3,0 -3.56,19.97 -46.86,0 -10.78,-19.97 -48.97,0 z m 181.34,0 21.08,149.83 48.67,0 -21.07,-149.83 -48.68,0 z m 323.71,101.67 -17.81,-44.39 24.54,0 -6.73,44.39 z m -94.06,-101.67 72.78,149.83 55.01,0 30.69,-149.83 -48.31,0 -3.55,19.97 -46.87,0 -10.78,-19.97 -48.97,0" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none" />
-              <path d="m 1316.6,1748.61 60.99,0 41.79,-69.21 -61,0 -41.78,69.21" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none" />
-              <path d="m 1322.94,1759.24 63.04,0 54.75,68.92 -63.04,0 -54.75,-68.92" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none" />
-              <path d="m 1259.91,1678.98 63.03,0 54.75,69.76 -63.04,0 -54.74,-69.76" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none" />
-              <path d="m 1282.64,1829 58.83,0 40.31,-69.76 -58.84,0 -40.3,69.76" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none" />
-              <path d="m 1014.65,1823.02 -4.68,-44.07 c -17.939,24.75 -59.517,7.67 -62.782,-23.16 -4.149,-39.13 35.867,-48.25 57.642,-25.21 l -4.69,-44.17 c -6.499,-3.19 -12.855,-5.67 -19.128,-7.34 -6.239,-1.68 -12.492,-2.57 -18.696,-2.7 -7.8,-0.17 -14.867,0.65 -21.234,2.44 -6.367,1.76 -12.129,4.56 -17.227,8.34 -9.832,7.19 -16.941,16.33 -21.32,27.45 -4.379,11.16 -5.82,23.75 -4.328,37.82 1.203,11.31 4.051,21.62 8.59,30.97 4.5,9.34 10.734,17.84 18.672,25.54 7.504,7.34 15.676,12.88 24.519,16.64 8.809,3.73 18.422,5.72 28.813,5.94 6.207,0.13 12.297,-0.49 18.207,-1.92 5.942,-1.42 11.802,-3.64 17.642,-6.57" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1107.19,1780.04 -17.74,-44.21 24.55,0 -6.73,44.39 -0.08,-0.18 z m -93.98,-101.49 72.77,149.83 55.02,0 30.68,-149.83 -48.3,0 -3.56,19.97 -46.86,0 -10.78,-19.97 -48.97,0 z m 181.34,0 21.08,149.83 48.67,0 -21.07,-149.83 -48.68,0 z m 323.71,101.67 -17.81,-44.39 24.54,0 -6.73,44.39 z m -94.06,-101.67 72.78,149.83 55.01,0 30.69,-149.83 -48.31,0 -3.55,19.97 -46.87,0 -10.78,-19.97 -48.97,0" style="fill:#005ca9;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1316.6,1748.61 60.99,0 41.79,-69.21 -61,0 -41.78,69.21" style="fill:#005ca9;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1322.94,1759.24 63.04,0 54.75,68.92 -63.04,0 -54.75,-68.92" style="fill:#f39200;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1259.91,1678.98 63.03,0 54.75,69.76 -63.04,0 -54.74,-69.76" style="fill:#f39200;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1282.64,1829 58.83,0 40.31,-69.76 -58.84,0 -40.3,69.76" style="fill:#005ca9;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+              <path d="m 1014.65,1823.02 -4.68,-44.07 c -17.939,24.75 -59.517,7.67 -62.782,-23.16 -4.149,-39.13 35.867,-48.25 57.642,-25.21 l -4.69,-44.17 c -6.499,-3.19 -12.855,-5.67 -19.128,-7.34 -6.239,-1.68 -12.492,-2.57 -18.696,-2.7 -7.8,-0.17 -14.867,0.65 -21.234,2.44 -6.367,1.76 -12.129,4.56 -17.227,8.34 -9.832,7.19 -16.941,16.33 -21.32,27.45 -4.379,11.16 -5.82,23.75 -4.328,37.82 1.203,11.31 4.051,21.62 8.59,30.97 4.5,9.34 10.734,17.84 18.672,25.54 7.504,7.34 15.676,12.88 24.519,16.64 8.809,3.73 18.422,5.72 28.813,5.94 6.207,0.13 12.297,-0.49 18.207,-1.92 5.942,-1.42 11.802,-3.64 17.642,-6.57" style="fill:#005ca9;fill-opacity:1;fill-rule:evenodd;stroke:none" />
             </g>
           </g>
         </g>
@@ -3527,7 +3546,7 @@ figma.ui.onmessage = async (msg) => {
     const node = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
     const bounds = node && (node.absoluteBoundingBox || node.absoluteRenderBounds);
 
-    const themeColor = hexToRgb(msg.color || '#2e2ee0');
+    const themeColor = hexToRgb(msg.color || '#004d8d');
     // Sem texto real -- só a moldura, no tamanho ESTIMADO do card final
     // (título sempre existe; categoria e nota somam altura quando
     // preenchidas), o suficiente pra dar noção de onde ele vai caber sem
@@ -3607,7 +3626,7 @@ figma.ui.onmessage = async (msg) => {
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
 
       // Convert hex color to rgb (stroke = themeColor, fill = themeFill)
-      const themeColor = hexToRgb(opts.color || '#2e2ee0');
+      const themeColor = hexToRgb(opts.color || '#004d8d');
       const themeFill  = hexToRgb(opts.fillColor || opts.color || '#EBF4FB');
 
       const _specSide = opts.guideSide || 'right';
@@ -3631,7 +3650,9 @@ figma.ui.onmessage = async (msg) => {
       specCard.strokes = [{ type: "SOLID", color: themeColor }];
       specCard.strokeWeight = 1.5;
       specCard.primaryAxisSizingMode = "AUTO";
-      specCard.counterAxisSizingMode = "AUTO";
+      specCard.counterAxisSizingMode = "FIXED";
+      const SPEC_CARD_WIDTH = 480;
+      specCard.resize(SPEC_CARD_WIDTH, specCard.height);
 
       // Header row with Tag
       const headerRow = figma.createFrame();
@@ -3640,6 +3661,7 @@ figma.ui.onmessage = async (msg) => {
       headerRow.fills = [];
       headerRow.primaryAxisSizingMode = "AUTO";
       headerRow.counterAxisSizingMode = "AUTO";
+      headerRow.layoutAlign = "STRETCH";
 
       const tagCircle = figma.createFrame();
       tagCircle.name = 'Tag';
@@ -3668,7 +3690,9 @@ figma.ui.onmessage = async (msg) => {
       title.fontSize = 12;
       title.fills = [{ type: "SOLID", color: { r: 0.1, g: 0.1, b: 0.1 } }];
       title.characters = node.name;
+      title.textAutoResize = "HEIGHT";
       headerRow.appendChild(title);
+      title.layoutAlign = "STRETCH";
       specCard.appendChild(headerRow);
 
       if (opts.categoryLabel) {
@@ -3699,8 +3723,9 @@ figma.ui.onmessage = async (msg) => {
         desc.fontSize = 11;
         desc.fills = [{ type: "SOLID", color: { r: 0.4, g: 0.4, b: 0.4 } }];
         desc.characters = opts.note;
-        desc.textAutoResize = "WIDTH_AND_HEIGHT";
+        desc.textAutoResize = "HEIGHT";
         specCard.appendChild(desc);
+        desc.layoutAlign = "STRETCH";
       }
 
       // Add properties list
@@ -3712,7 +3737,7 @@ figma.ui.onmessage = async (msg) => {
         propsFrame.primaryAxisSizingMode = "AUTO";
         propsFrame.counterAxisSizingMode = "AUTO";
         propsFrame.name = 'Propriedades';
-        propsFrame.layoutAlign = "INHERIT";
+        propsFrame.layoutAlign = "STRETCH";
 
         opts.properties.forEach(p => {
           const row = figma.createFrame();
@@ -3722,7 +3747,7 @@ figma.ui.onmessage = async (msg) => {
           row.fills = [];
           row.primaryAxisSizingMode = "AUTO";
           row.counterAxisSizingMode = "AUTO";
-          row.layoutAlign = "INHERIT";
+          row.layoutAlign = "STRETCH";
           row.counterAxisAlignItems = "CENTER";
 
           const pLabel = figma.createText();
@@ -3737,10 +3762,11 @@ figma.ui.onmessage = async (msg) => {
           pVal.fontSize = 11;
           pVal.fills = [{ type: "SOLID", color: p.token ? themeColor : { r: 0.1, g: 0.1, b: 0.1 } }];
           pVal.characters = p.token || String(p.value);
-          pVal.textAutoResize = "WIDTH_AND_HEIGHT";
+          pVal.textAutoResize = "HEIGHT";
 
           row.appendChild(pLabel);
           row.appendChild(pVal);
+          pVal.layoutAlign = "STRETCH";
 
           propsFrame.appendChild(row);
         });
@@ -3761,6 +3787,7 @@ figma.ui.onmessage = async (msg) => {
         excFrame.cornerRadius = 6;
         excFrame.primaryAxisSizingMode = "AUTO";
         excFrame.counterAxisSizingMode = "AUTO";
+        excFrame.layoutAlign = "STRETCH";
         const excTitle = figma.createText();
         excTitle.fontName = { family: "Inter", style: "Bold" };
         excTitle.fontSize = 9;
@@ -3782,6 +3809,7 @@ figma.ui.onmessage = async (msg) => {
           excRow.fills = [];
           excRow.primaryAxisSizingMode = "AUTO";
           excRow.counterAxisSizingMode = "AUTO";
+          excRow.layoutAlign = "STRETCH";
           excRow.counterAxisAlignItems = "CENTER";
           const typeColor = _excTypeRgb[exc.tipo] || { r: 0.4, g: 0.4, b: 0.4 };
           const typeLabel = figma.createText();
@@ -3795,9 +3823,10 @@ figma.ui.onmessage = async (msg) => {
           titleLabel.fontSize = 10;
           titleLabel.fills = [{ type: "SOLID", color: { r: 0.2, g: 0.2, b: 0.2 } }];
           titleLabel.characters = `${exc.titulo || ''}${exc.notas ? ' — ' + exc.notas : ''}`;
-          titleLabel.textAutoResize = "WIDTH_AND_HEIGHT";
+          titleLabel.textAutoResize = "HEIGHT";
           excRow.appendChild(typeLabel);
           excRow.appendChild(titleLabel);
+          titleLabel.layoutAlign = "STRETCH";
           excFrame.appendChild(excRow);
         });
         specCard.appendChild(excFrame);
@@ -4246,7 +4275,7 @@ figma.ui.onmessage = async (msg) => {
 
       if (msg.highlight && node.absoluteBoundingBox) {
         const hexToRgbLocal = (hex) => {
-          const h = (hex || '#3d3dff').replace('#', '');
+          const h = (hex || '#005ca9').replace('#', '');
           return {
             r: parseInt(h.substring(0, 2), 16) / 255,
             g: parseInt(h.substring(2, 4), 16) / 255,
@@ -4430,7 +4459,7 @@ figma.ui.onmessage = async (msg) => {
       connectorPath = `M ${startPt.x} ${startPt.y} Q ${ctrlX} ${ctrlY} ${endPt.x} ${endPt.y}`;
     }
 
-    const themeColor = hexToRgb(msg.color || '#2e2ee0');
+    const themeColor = hexToRgb(msg.color || '#004d8d');
 
     const oldLineNodes = specGroup.findChildren(n => n.name === 'Conector' || n.name === 'DotInicio' || n.name === 'DotFim');
     oldLineNodes.forEach(n => n.remove());
@@ -4658,7 +4687,8 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === 'save-storage') {
-    figma.clientStorage.setAsync('handoffData', msg.data).catch(err => {
+    const fileKey = (figma.root && figma.root.id) ? figma.root.id : "default";
+    figma.clientStorage.setAsync('handoffData_' + fileKey, msg.data).catch(err => {
       console.warn("Storage save failed (possibly missing plugin ID in manifest):", err);
     });
     await _writeSharedPluginData(msg.data);
@@ -5025,7 +5055,7 @@ figma.ui.onmessage = async (msg) => {
         try { await figma.loadFontAsync(font); } catch(e) {}
       }
 
-      const CAIXA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 205.51265 46.553631"><g transform="translate(-284.78446,-475.51214)"><g transform="matrix(1.25,0,0,-1.25,15.493106,1024.9702)"><g transform="scale(0.24,0.24)"><path d="m 1107.19,1780.04 -17.74,-44.21 24.55,0 -6.73,44.39 -0.08,-0.18 z m -93.98,-101.49 72.77,149.83 55.02,0 30.68,-149.83 -48.3,0 -3.56,19.97 -46.86,0 -10.78,-19.97 -48.97,0 z m 181.34,0 21.08,149.83 48.67,0 -21.07,-149.83 -48.68,0 z m 323.71,101.67 -17.81,-44.39 24.54,0 -6.73,44.39 z m -94.06,-101.67 72.78,149.83 55.01,0 30.69,-149.83 -48.31,0 -3.55,19.97 -46.87,0 -10.78,-19.97 -48.97,0" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1316.6,1748.61 60.99,0 41.79,-69.21 -61,0 -41.78,69.21" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1322.94,1759.24 63.04,0 54.75,68.92 -63.04,0 -54.75,-68.92" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1259.91,1678.98 63.03,0 54.75,69.76 -63.04,0 -54.74,-69.76" style="fill:#f6822a;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1282.64,1829 58.83,0 40.31,-69.76 -58.84,0 -40.3,69.76" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1014.65,1823.02 -4.68,-44.07 c -17.939,24.75 -59.517,7.67 -62.782,-23.16 -4.149,-39.13 35.867,-48.25 57.642,-25.21 l -4.69,-44.17 c -6.499,-3.19 -12.855,-5.67 -19.128,-7.34 -6.239,-1.68 -12.492,-2.57 -18.696,-2.7 -7.8,-0.17 -14.867,0.65 -21.234,2.44 -6.367,1.76 -12.129,4.56 -17.227,8.34 -9.832,7.19 -16.941,16.33 -21.32,27.45 -4.379,11.16 -5.82,23.75 -4.328,37.82 1.203,11.31 4.051,21.62 8.59,30.97 4.5,9.34 10.734,17.84 18.672,25.54 7.504,7.34 15.676,12.88 24.519,16.64 8.809,3.73 18.422,5.72 28.813,5.94 6.207,0.13 12.297,-0.49 18.207,-1.92 5.942,-1.42 11.802,-3.64 17.642,-6.57" style="fill:#3d3dff;fill-opacity:1;fill-rule:evenodd;stroke:none"/></g></g></g></svg>`;
+      const CAIXA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 205.51265 46.553631"><g transform="translate(-284.78446,-475.51214)"><g transform="matrix(1.25,0,0,-1.25,15.493106,1024.9702)"><g transform="scale(0.24,0.24)"><path d="m 1107.19,1780.04 -17.74,-44.21 24.55,0 -6.73,44.39 -0.08,-0.18 z m -93.98,-101.49 72.77,149.83 55.02,0 30.68,-149.83 -48.3,0 -3.56,19.97 -46.86,0 -10.78,-19.97 -48.97,0 z m 181.34,0 21.08,149.83 48.67,0 -21.07,-149.83 -48.68,0 z m 323.71,101.67 -17.81,-44.39 24.54,0 -6.73,44.39 z m -94.06,-101.67 72.78,149.83 55.01,0 30.69,-149.83 -48.31,0 -3.55,19.97 -46.87,0 -10.78,-19.97 -48.97,0" style="fill:#005ca9;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1316.6,1748.61 60.99,0 41.79,-69.21 -61,0 -41.78,69.21" style="fill:#005ca9;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1322.94,1759.24 63.04,0 54.75,68.92 -63.04,0 -54.75,-68.92" style="fill:#f39200;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1259.91,1678.98 63.03,0 54.75,69.76 -63.04,0 -54.74,-69.76" style="fill:#f39200;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1282.64,1829 58.83,0 40.31,-69.76 -58.84,0 -40.3,69.76" style="fill:#005ca9;fill-opacity:1;fill-rule:evenodd;stroke:none"/><path d="m 1014.65,1823.02 -4.68,-44.07 c -17.939,24.75 -59.517,7.67 -62.782,-23.16 -4.149,-39.13 35.867,-48.25 57.642,-25.21 l -4.69,-44.17 c -6.499,-3.19 -12.855,-5.67 -19.128,-7.34 -6.239,-1.68 -12.492,-2.57 -18.696,-2.7 -7.8,-0.17 -14.867,0.65 -21.234,2.44 -6.367,1.76 -12.129,4.56 -17.227,8.34 -9.832,7.19 -16.941,16.33 -21.32,27.45 -4.379,11.16 -5.82,23.75 -4.328,37.82 1.203,11.31 4.051,21.62 8.59,30.97 4.5,9.34 10.734,17.84 18.672,25.54 7.504,7.34 15.676,12.88 24.519,16.64 8.809,3.73 18.422,5.72 28.813,5.94 6.207,0.13 12.297,-0.49 18.207,-1.92 5.942,-1.42 11.802,-3.64 17.642,-6.57" style="fill:#005ca9;fill-opacity:1;fill-rule:evenodd;stroke:none"/></g></g></g></svg>`;
 
       const mkLogo = (h) => {
         try {

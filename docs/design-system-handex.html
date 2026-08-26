@@ -1,0 +1,848 @@
+<title>Design System do Handex</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg: #eef2f7;
+    --surface: #ffffff;
+    --surface-2: #f7f9fc;
+    --line: #dde3ec;
+    --text: #1e293b;
+    --text-2: #56657a;
+    --muted: #8394a8;
+    --accent: #005ca9;
+    --accent-strong: #004d8d;
+    --accent-soft: #eaf5fd;
+    --warn: #f39200;
+    --warn-soft: #fffbea;
+    --warn-text: #8a6d00;
+    --danger: #d1435b;
+    --danger-soft: #fdf1f3;
+    --ok: #1a9c72;
+    --ok-soft: #eafbf4;
+    --canon: #004d8d;
+    --canon-soft: #eaf5fd;
+    --shadow: 0 1px 2px rgba(15,23,42,.04), 0 8px 24px -12px rgba(15,23,42,.10);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #0f172a;
+      --surface: #1a2436;
+      --surface-2: #16202f;
+      --line: #2c3a50;
+      --text: #f1f5f9;
+      --text-2: #b4c6d8;
+      --muted: #7c8ba0;
+      --accent: #479de6;
+      --accent-strong: #8cc8fb;
+      --accent-soft: #00325b;
+      --warn: #fec774;
+      --warn-soft: #2b2408;
+      --warn-text: #8a6d00;
+      --danger: #ff8298;
+      --danger-soft: #3a1420;
+      --ok: #5fe3ae;
+      --ok-soft: #0d2a20;
+      --canon: #8cc8fb;
+      --canon-soft: #00325b;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #0f172a;
+    --surface: #1a2436;
+    --surface-2: #16202f;
+    --line: #2c3a50;
+    --text: #f1f5f9;
+    --text-2: #b4c6d8;
+    --muted: #7c8ba0;
+    --accent: #479de6;
+    --accent-strong: #8cc8fb;
+    --accent-soft: #00325b;
+    --warn: #fec774;
+    --warn-soft: #2b2408;
+    --warn-text: #8a6d00;
+    --danger: #ff8298;
+    --danger-soft: #3a1420;
+    --ok: #5fe3ae;
+    --ok-soft: #0d2a20;
+    --canon: #8cc8fb;
+    --canon-soft: #00325b;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  code, .mono, .tok{
+    font-family:'JetBrains Mono','SF Mono',Consolas,monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  a{color:var(--accent);}
+
+  .shell{
+    display:grid;
+    grid-template-columns: 240px 1fr;
+    min-height:100vh;
+  }
+
+  /* ---------- SIDEBAR ---------- */
+  nav.side{
+    position:sticky; top:0; align-self:start;
+    height:100vh;
+    overflow-y:auto;
+    border-right:1px solid var(--line);
+    background:var(--surface);
+    padding:20px 14px 40px;
+  }
+  .brand{
+    display:flex; align-items:center; gap:8px;
+    padding:4px 10px 18px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:14px;
+  }
+  .brand-mark{
+    width:26px;height:26px;border-radius:8px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-strong));
+    display:flex;align-items:center;justify-content:center;
+    color:white; font-weight:800; font-size:12px;
+    flex-shrink:0;
+  }
+  .brand-text{ line-height:1.15; }
+  .brand-text .t1{ font-weight:800; font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; }
+  .brand-text .t2{ font-size:10.5px; color:var(--muted); }
+
+  nav.side a{
+    display:block;
+    text-decoration:none;
+    color:var(--text-2);
+    font-size:12.5px;
+    font-weight:600;
+    padding:7px 10px;
+    border-radius:8px;
+    margin-bottom:1px;
+  }
+  nav.side a:hover{ background:var(--surface-2); color:var(--text); }
+  nav.side a.active{ background:var(--accent-soft); color:var(--accent-strong); }
+  nav.side .grp{
+    font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--muted); padding:16px 10px 6px;
+  }
+  nav.side .grp:first-of-type{ padding-top:2px; }
+
+  .theme-toggle{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:16px; padding:8px 10px;
+    border:1px solid var(--line); border-radius:10px;
+    font-size:11px; color:var(--muted);
+  }
+  .theme-toggle button{
+    font: inherit; font-size:11px; font-weight:700;
+    padding:4px 9px; border-radius:7px; border:1px solid var(--line);
+    background:var(--surface-2); color:var(--text); cursor:pointer;
+  }
+  .theme-toggle button:focus-visible, nav.side a:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  /* ---------- MAIN ---------- */
+  main{ padding:40px 48px 120px; max-width:1080px; }
+  header.hero{ margin-bottom:44px; }
+  header.hero .eyebrow{
+    font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--accent-strong); margin-bottom:10px;
+  }
+  header.hero h1{ font-size:32px; font-weight:800; letter-spacing:-.02em; margin:0 0 10px; text-wrap:balance; }
+  header.hero p{ font-size:14.5px; color:var(--text-2); max-width:640px; margin:0; }
+  header.hero .scope-note{
+    margin-top:18px; font-size:12.5px; color:var(--text-2);
+    background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--accent);
+    border-radius:10px; padding:12px 14px;
+  }
+  header.hero .scope-note b{ color:var(--text); }
+  header.hero .norm-note{
+    margin-top:10px; font-size:12.5px; color:var(--text-2);
+    background:var(--canon-soft); border:1px solid var(--line); border-left:3px solid var(--canon);
+    border-radius:10px; padding:12px 14px;
+  }
+  header.hero .norm-note b{ color:var(--text); }
+
+  section.block{ margin-bottom:64px; scroll-margin-top:24px; }
+  section.block h2{
+    font-size:20px; font-weight:800; letter-spacing:-.01em; margin:0 0 6px;
+    display:flex; align-items:center; gap:10px;
+  }
+  section.block h2 .n{
+    font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600;
+    color:var(--muted);
+  }
+  section.block > .desc{ font-size:13px; color:var(--text-2); margin:0 0 22px; max-width:640px; }
+
+  h3.sub{ font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-2); margin:28px 0 12px; }
+
+  /* ---------- SWATCH GRID ---------- */
+  .swatch-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; }
+  .swatch{
+    border:1px solid var(--line); border-radius:12px; overflow:hidden;
+    background:var(--surface); box-shadow:var(--shadow);
+  }
+  .swatch .fill{ height:64px; }
+  .swatch .meta{ padding:10px 12px; }
+  .swatch .name{ font-size:12px; font-weight:700; margin-bottom:2px; }
+  .swatch .hex{ font-size:11px; color:var(--text-2); }
+  .swatch .use{ font-size:10.5px; color:var(--muted); margin-top:5px; line-height:1.4; }
+
+  /* ---------- REFERENCE TABLE ---------- */
+  .ref-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:14px; background:var(--surface); box-shadow:var(--shadow); }
+  table.ref{ border-collapse:collapse; width:100%; min-width:520px; font-size:12.5px; }
+  table.ref th, table.ref td{ text-align:left; padding:12px 14px; border-bottom:1px solid var(--line); }
+  table.ref th{ font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:700; background:var(--surface-2); }
+  table.ref tr:last-child td{ border-bottom:none; }
+  .chip{ display:inline-flex; align-items:center; gap:6px; padding:3px 9px 3px 3px; border-radius:999px; font-size:11px; font-weight:600; }
+  .chip .dot{ width:16px; height:16px; border-radius:5px; display:inline-block; border:1px solid rgba(0,0,0,.08); }
+  .cat-info .dot{ background:#f1f5f9 } .cat-info{ color:#475569; background:#f1f5f920; }
+  .cat-comp .dot{ background:#fdf2f8 } .cat-comp{ color:#be185d; background:#fdf2f820; }
+  .cat-regra .dot{ background:#eff6ff } .cat-regra{ color:#1d4ed8; background:#eff6ff20; }
+  .cat-api .dot{ background:#F5FEC1 } .cat-api{ color:#6D8000; background:#F5FEC120; }
+  .cat-ok .dot{ background:#22c55e } .cat-ok{ color:#15803d; background:#22c55e20; }
+
+  /* ---------- TYPE SPECIMEN ---------- */
+  .type-row{
+    display:flex; align-items:baseline; gap:18px;
+    padding:14px 0; border-bottom:1px solid var(--line);
+  }
+  .type-row:last-child{ border-bottom:none; }
+  .type-row .px{ width:88px; flex-shrink:0; font-size:11px; color:var(--muted); }
+  .type-row .sample{ flex:1; }
+  .type-row .label{ width:220px; flex-shrink:0; font-size:11.5px; color:var(--text-2); text-align:right; }
+
+  /* ---------- SPACING ---------- */
+  .space-row{ display:flex; align-items:center; gap:14px; padding:8px 0; }
+  .space-row .bar{ background:var(--accent); border-radius:4px; height:14px; }
+  .space-row .px{ width:52px; font-size:11px; color:var(--muted); flex-shrink:0; }
+  .space-row .cls{ width:120px; font-size:11.5px; color:var(--text-2); flex-shrink:0; }
+
+  /* ---------- RADIUS ---------- */
+  .radius-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px; }
+  .radius-card{
+    border:1px solid var(--line); background:var(--surface); box-shadow:var(--shadow);
+    padding:18px; text-align:center;
+  }
+  .radius-demo{
+    width:100%; height:52px; background:var(--accent-soft); border:1.5px dashed var(--accent);
+    margin-bottom:12px;
+  }
+  .radius-card .name{ font-size:12px; font-weight:700; }
+  .radius-card .val{ font-size:11px; color:var(--text-2); }
+  .radius-card .use{ font-size:10.5px; color:var(--muted); margin-top:4px; }
+  .radius-card.flag{ border-color: var(--warn); }
+  .radius-card.flag .radius-demo{ border-color: var(--warn); background: var(--warn-soft); }
+
+  /* ---------- COMPONENT CARDS ---------- */
+  .comp-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width: 720px){ .comp-grid{ grid-template-columns:1fr; } }
+  .comp-card{
+    border:1px solid var(--line); border-radius:14px; background:var(--surface);
+    box-shadow:var(--shadow); padding:18px;
+  }
+  .comp-card .head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; gap:10px; }
+  .comp-card h4{ margin:0; font-size:13.5px; font-weight:700; }
+  .status{
+    font-size:10px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+    padding:3px 8px; border-radius:999px; white-space:nowrap;
+  }
+  .status.ok{ background:var(--ok-soft); color:var(--ok); }
+  .status.canon{ background:var(--canon-soft); color:var(--canon); }
+  .status.warn{ background:var(--warn-soft); color:var(--warn-text); }
+  .status.danger{ background:var(--danger-soft); color:var(--danger); }
+  .comp-card p.note{ font-size:12px; color:var(--text-2); margin:8px 0 0; line-height:1.55; }
+  .comp-card .demo{ background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:14px; margin-top:4px; }
+
+  /* demo widgets */
+  .btn{
+    font: inherit; font-weight:700; font-size:12px; border:none; cursor:pointer;
+    padding:9px 16px; border-radius:16px; background:var(--accent); color:#fff;
+  }
+  .btn.ghost{ background:transparent; border:1px solid var(--line); color:var(--text); }
+  .btn.danger{ background:var(--danger); }
+  .btn:disabled{ pointer-events:none; }
+  .btn.icon{
+    width:40px; height:40px; padding:0; display:inline-flex; align-items:center; justify-content:center;
+    border-radius:16px; background:var(--surface); border:1px solid var(--line); color:var(--text-2); font-size:16px;
+  }
+  .acc{ border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .acc summary{ padding:10px 12px; font-size:12.5px; font-weight:600; cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between; }
+  .acc summary::-webkit-details-marker{ display:none; }
+  .acc summary .chev{ transition: transform .15s ease; color:var(--muted); }
+  .acc[open] summary .chev{ transform:rotate(180deg); }
+  .acc .body{ padding:0 12px 12px; font-size:12px; color:var(--text-2); }
+  .badge-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .pill{ font-size:11px; font-weight:600; padding:4px 10px; border-radius:999px; }
+
+  .toggle-row{ display:flex; align-items:center; gap:10px; font-size:12.5px; }
+  .switch{ position:relative; width:34px; height:20px; flex-shrink:0; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .slider{ position:absolute; inset:0; background:var(--line); border-radius:999px; transition:.15s; }
+  .slider:before{ content:""; position:absolute; width:16px; height:16px; left:2px; top:2px; background:white; border-radius:50%; transition:.15s; }
+  input:checked + .slider{ background:var(--accent); }
+  input:checked + .slider:before{ transform:translateX(14px); }
+
+  .empty{ text-align:center; padding:20px 10px; color:var(--text-2); }
+  .empty i{ display:block; font-size:26px; opacity:.35; margin-bottom:8px; font-style: normal; }
+  .empty .cta{ color:var(--accent); text-decoration:underline; cursor:pointer; font-weight:600; }
+
+  /* ---------- DEBT LIST ---------- */
+  .debt{
+    display:grid; grid-template-columns:28px 1fr; gap:12px;
+    padding:16px 0; border-bottom:1px solid var(--line);
+  }
+  .debt:last-child{ border-bottom:none; }
+  .debt .idx{
+    width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    font-size:11.5px; font-weight:800; color:var(--warn-text); background:var(--warn-soft); margin-top:1px;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .debt h4{ margin:0 0 4px; font-size:13px; font-weight:700; }
+  .debt p{ margin:0; font-size:12.5px; color:var(--text-2); line-height:1.55; }
+  .debt .loc{ font-size:11px; color:var(--muted); margin-top:6px; }
+
+  footer.page{
+    margin-top:60px; padding-top:20px; border-top:1px solid var(--line);
+    font-size:11px; color:var(--muted);
+  }
+
+  ::selection{ background:var(--accent-soft); color:var(--accent-strong); }
+</style>
+
+<div class="shell">
+  <nav class="side" aria-label="Navegação do documento">
+    <div class="brand">
+      <div class="brand-mark">H</div>
+      <div class="brand-text">
+        <div class="t1">Handex</div>
+        <div class="t2">Design System · v1.5</div>
+      </div>
+    </div>
+
+    <div class="grp">Fundamentos</div>
+    <a href="#cores">Cores</a>
+    <a href="#tipografia">Tipografia</a>
+    <a href="#espacamento">Espaçamento</a>
+    <a href="#radius">Radius</a>
+
+    <div class="grp">Componentes</div>
+    <a href="#botoes">Botões</a>
+    <a href="#accordions">Accordions</a>
+    <a href="#badges">Badges &amp; pills</a>
+    <a href="#toggles">Toggles</a>
+    <a href="#empty-states">Empty states</a>
+    <a href="#modais">Modais</a>
+
+    <div class="grp">Governança</div>
+    <a href="#nomenclatura">Nomenclatura</a>
+    <a href="#divida">Dívida técnica</a>
+
+    <div class="theme-toggle">
+      <span>Tema</span>
+      <button id="theme-btn" type="button" onclick="cycleTheme()">Sistema</button>
+    </div>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Referência normativa · fechado em 2026-08-25 · revisado em 2026-08-26</div>
+      <h1>Design System do Handex</h1>
+      <p>Catálogo de tokens e componentes da interface do próprio plugin Handex. Toda nova tela ou variante visual segue o que está definido aqui — onde o código atual diverge, é dívida técnica a corrigir, não uma segunda opção válida.</p>
+      <div class="scope-note">
+        <b>Escopo:</b> isto é o design system <b>do plugin</b> — a linguagem visual da ferramenta que a Fóton usa para documentar handoff. Não confundir com o <b>DSC</b> (Design System Corporativo da CAIXA), que é o design system externo que o Handex audita e referencia nos scans de conformidade.
+      </div>
+      <div class="norm-note">
+        <b>Como ler este documento:</b> selo <span class="status canon" style="vertical-align:1px;">Canônico</span> marca o padrão a seguir. Selo <span class="status warn" style="vertical-align:1px;">Migrar</span> marca uso legado que ainda existe no código mas não deve ser replicado em telas novas — ver seção "Dívida técnica" para a lista completa com localização.
+      </div>
+    </header>
+
+    <!-- ===================== CORES ===================== -->
+    <section class="block" id="cores">
+      <h2>Cores <span class="n">01</span></h2>
+      <p class="desc">Paleta "Uau CAIXA" (2026) — hex extraídos por leitura visual de posts oficiais, sem manual de marca disponível. Calibrar quando houver fonte oficial.</p>
+
+      <h3 class="sub">Marca institucional CAIXA (vigente)</h3>
+      <p class="desc" style="margin-bottom:14px;">Extraída de <code>refs/fundamentos-visuais.json</code> (DSC). A paleta "Uau CAIXA" (<code>#3d3dff</code>/<code>#f5b400</code>) antecipava um rebranding ainda não publicado oficialmente — reservada para quando isso acontecer (ver Histórico de decisões).</p>
+      <div class="swatch-grid">
+        <div class="swatch">
+          <div class="fill" style="background:#005ca9"></div>
+          <div class="meta"><div class="name">blue-500</div><div class="hex mono">#005ca9</div><div class="use">Ação primária / brand — "azul cx", primary 90</div></div>
+        </div>
+        <div class="swatch">
+          <div class="fill" style="background:#004d8d"></div>
+          <div class="meta"><div class="name">blue-600</div><div class="hex mono">#004d8d</div><div class="use">Hover / estado ativo</div></div>
+        </div>
+        <div class="swatch">
+          <div class="fill" style="background:#004075"></div>
+          <div class="meta"><div class="name">blue-700</div><div class="hex mono">#004075</div><div class="use">Texto sobre fundo claro com mais contraste</div></div>
+        </div>
+        <div class="swatch">
+          <div class="fill" style="background:#f39200"></div>
+          <div class="meta"><div class="name">orange-500</div><div class="hex mono">#f39200</div><div class="use">Acento secundário, alertas não-críticos — "laranja cx", secondary 70</div></div>
+        </div>
+        <div class="swatch">
+          <div class="fill" style="background:#22c55e"></div>
+          <div class="meta"><div class="name">green-500</div><div class="hex mono">#22c55e</div><div class="use">Sucesso / confirmação — oficial</div></div>
+        </div>
+      </div>
+      <p class="desc" style="margin-top:12px;margin-bottom:0;">Sempre usar a classe nomeada (<code>bg-blue-500</code>, <code>hover:bg-blue-600</code>) em código novo — hex arbitrário (<code>bg-[#005ca9]</code>) é tolerado só no legado listado em Dívida técnica. Não usar <code>#3d3dff</code>, <code>#2e2ee0</code>, <code>#f5b400</code> ou qualquer variação da paleta "Uau CAIXA".</p>
+
+      <h3 class="sub">Superfícies (light / dark)</h3>
+      <div class="swatch-grid">
+        <div class="swatch"><div class="fill" style="background:#eef2f7"></div><div class="meta"><div class="name">light.bg</div><div class="hex mono">#eef2f7</div></div></div>
+        <div class="swatch"><div class="fill" style="background:#ffffff;border-bottom:1px solid #eee"></div><div class="meta"><div class="name">light.surface</div><div class="hex mono">#ffffff</div></div></div>
+        <div class="swatch"><div class="fill" style="background:#dde3ec"></div><div class="meta"><div class="name">light.line</div><div class="hex mono">#dde3ec</div></div></div>
+        <div class="swatch"><div class="fill" style="background:#8394a8"></div><div class="meta"><div class="name">light.muted</div><div class="hex mono">#8394a8</div></div></div>
+        <div class="swatch"><div class="fill" style="background:#0f172a"></div><div class="meta"><div class="name">dark.bg</div><div class="hex mono">#0f172a</div></div></div>
+        <div class="swatch"><div class="fill" style="background:#1e293b"></div><div class="meta"><div class="name">dark.surface</div><div class="hex mono">#1e293b</div></div></div>
+        <div class="swatch"><div class="fill" style="background:#334155"></div><div class="meta"><div class="name">dark.line</div><div class="hex mono">#334155</div></div></div>
+        <div class="swatch"><div class="fill" style="background:#b4c6d8"></div><div class="meta"><div class="name">dark.muted</div><div class="hex mono">#b4c6d8</div></div></div>
+      </div>
+
+      <h3 class="sub">Categorias de spec — canônico</h3>
+      <p class="desc" style="margin-bottom:14px;">A paleta da <b>Ficha exportada</b> é a fonte única para as 4 categorias (<code>info</code>, <code>comportamento</code>, <code>regra</code>, <code>api</code>) — é o que o desenvolvedor final vê na entrega. Card no canvas e modal de ajuda devem convergir para estes valores (ver Dívida técnica, item 1).</p>
+      <div class="ref-wrap">
+        <table class="ref">
+          <thead><tr><th>Categoria</th><th>Fill</th><th>Texto / borda</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>info</td>
+              <td><span class="chip cat-info"><span class="dot"></span>#f1f5f9</span></td>
+              <td class="mono">#475569</td>
+            </tr>
+            <tr>
+              <td>comportamento</td>
+              <td><span class="chip cat-comp"><span class="dot"></span>#fdf2f8</span></td>
+              <td class="mono">#be185d</td>
+            </tr>
+            <tr>
+              <td>regra</td>
+              <td><span class="chip cat-regra"><span class="dot"></span>#eff6ff</span></td>
+              <td class="mono">#1d4ed8</td>
+            </tr>
+            <tr>
+              <td>api</td>
+              <td><span class="chip cat-api"><span class="dot"></span>#F5FEC1</span></td>
+              <td class="mono">#6D8000</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== TIPOGRAFIA ===================== -->
+    <section class="block" id="tipografia">
+      <h2>Tipografia <span class="n">02</span></h2>
+      <p class="desc">Fonte única <code>Inter</code>. Escala nomeada — os px abaixo são o valor correto até os tokens equivalentes entrarem no <code>tailwind.config.cjs</code> (ver Dívida técnica, item 3).</p>
+
+      <div class="type-row"><div class="px mono">18px · xl</div><div class="sample" style="font-size:18px;font-weight:800;">Título de modal grande</div><div class="label">Wizard / confirmação crítica</div></div>
+      <div class="type-row"><div class="px mono">15–16px · lg</div><div class="sample" style="font-size:16px;font-weight:800;">Título de modal padrão</div><div class="label">Maioria dos modais</div></div>
+      <div class="type-row"><div class="px mono">14px · md</div><div class="sample" style="font-size:14px;font-weight:800;">Título de modal pequeno / view</div><div class="label">Header de view, modal leve</div></div>
+      <div class="type-row"><div class="px mono">12–13px · sm</div><div class="sample" style="font-size:13px;font-weight:700;">Corpo de botão, texto de card</div><div class="label">Padrão de corpo</div></div>
+      <div class="type-row"><div class="px mono">11px · xs-plus</div><div class="sample" style="font-size:11px;color:var(--text-2);">Subtítulo de header, label de modal</div><div class="label">Texto secundário</div></div>
+      <div class="type-row"><div class="px mono">10px · 2xs</div><div class="sample" style="font-size:10px;color:var(--muted);">Hint, descrição de card, badge</div><div class="label">Texto de apoio</div></div>
+      <div class="type-row"><div class="px mono">9px · 3xs</div><div class="sample" style="font-size:9px;color:var(--muted);">Contador de caractere 0/240</div><div class="label">Menor nível do sistema</div></div>
+
+      <h3 class="sub">Pesos</h3>
+      <p class="desc" style="margin-bottom:0;"><code>font-bold</code> é o padrão de botão/label. <code>font-extrabold</code> reservado a títulos de destaque e CTAs primários. <code>font-semibold</code>/<code>font-medium</code> para ênfase secundária.</p>
+    </section>
+
+    <!-- ===================== ESPAÇAMENTO ===================== -->
+    <section class="block" id="espacamento">
+      <h2>Espaçamento <span class="n">03</span></h2>
+      <p class="desc">Passo base <code>gap-2</code> / <code>space-y-2</code>; meios-passos são aceitos para ajuste fino — não é preciso forçar múltiplos exatos do Tailwind.</p>
+      <div>
+        <div class="space-row"><div class="px mono">6px</div><div class="cls">gap-1.5</div><div class="bar" style="width:6px"></div></div>
+        <div class="space-row"><div class="px mono">8px</div><div class="cls">gap-2 (base)</div><div class="bar" style="width:8px"></div></div>
+        <div class="space-row"><div class="px mono">10px</div><div class="cls">gap-2.5 / py-2.5</div><div class="bar" style="width:10px"></div></div>
+        <div class="space-row"><div class="px mono">12px</div><div class="cls">p-3</div><div class="bar" style="width:12px"></div></div>
+        <div class="space-row"><div class="px mono">14px</div><div class="cls">p-3.5</div><div class="bar" style="width:14px"></div></div>
+        <div class="space-row"><div class="px mono">16px</div><div class="cls">p-4 / px-4</div><div class="bar" style="width:16px"></div></div>
+        <div class="space-row"><div class="px mono">24px</div><div class="cls">p-6 (modal grande)</div><div class="bar" style="width:24px"></div></div>
+        <div class="space-row"><div class="px mono">40px</div><div class="cls">área de toque</div><div class="bar" style="width:40px;background:var(--canon)"></div></div>
+      </div>
+      <p class="desc" style="margin-top:16px;margin-bottom:0;"><b>Área de toque mínima de botão-ícone interativo: 40×40px</b> — glifo visível cresce proporcionalmente, não fica pequeno dentro de uma hit-area invisível. Ver seção Botões.</p>
+    </section>
+
+    <!-- ===================== RADIUS ===================== -->
+    <section class="block" id="radius">
+      <h2>Radius &amp; bordas <span class="n">04</span></h2>
+      <p class="desc"><code>rounded-2xl</code> (16px) é o único radius padrão — universal em botão, card, modal e input. <code>rounded-xl</code> (12px) não é uma segunda variante intencional; é dívida a migrar.</p>
+      <div class="radius-grid">
+        <div class="radius-card">
+          <div class="radius-demo" style="border-radius:16px;"></div>
+          <div class="name">rounded-2xl · 16px</div>
+          <div class="val">Padrão universal — botões, cards, modais, inputs</div>
+        </div>
+        <div class="radius-card flag">
+          <div class="radius-demo" style="border-radius:12px;"></div>
+          <div class="name">rounded-xl · 12px</div>
+          <div class="use">⚠ Migrar para rounded-2xl — não usar em telas novas</div>
+        </div>
+        <div class="radius-card">
+          <div class="radius-demo" style="border-radius:999px;width:64px;margin:0 auto 12px;"></div>
+          <div class="name">rounded-full</div>
+          <div class="val">Pills / badges de categoria</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== BOTÕES ===================== -->
+    <section class="block" id="botoes">
+      <h2>Botões <span class="n">05</span></h2>
+      <p class="desc">6 variantes cobrem todo botão do Handex. Não criar uma 7ª sem atualizar este catálogo primeiro.</p>
+      <div class="comp-grid">
+        <div class="comp-card">
+          <div class="head"><h4>Primária</h4><span class="status canon">Canônico</span></div>
+          <div class="demo"><button class="btn">Gerar Ficha de Handoff</button></div>
+          <p class="note"><code>bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-bold</code> — ação de fluxo/confirmação.</p>
+        </div>
+        <div class="comp-card">
+          <div class="head"><h4>Secundária / ghost (sobre header)</h4><span class="status canon">Canônico</span></div>
+          <div class="demo" style="background:var(--accent);border-radius:10px;padding:10px;"><button class="btn ghost" style="border-color:rgba(255,255,255,.3);color:#fff;">Cancelar</button></div>
+          <p class="note">Ação alternativa dentro do header azul — fundo transparente ou <code>bg-white/10</code>, <code>hover:bg-white/20</code>, mesmo radius da primária.</p>
+        </div>
+        <div class="comp-card">
+          <div class="head"><h4>Branco / outline neutro</h4><span class="status canon">Canônico</span></div>
+          <div class="demo"><button class="btn ghost" style="width:100%;">Importar JSON</button></div>
+          <p class="note">Ação secundária com texto fora do header — <code>py-3 text-[12px] font-bold</code>, borda cinza. Sub-variante <b>link externo</b>: mesma dimensão, borda/texto na cor de marca quando leva a um destino fora do plugin (ex: site do DSC).</p>
+        </div>
+        <div class="comp-card">
+          <div class="head"><h4>Destrutiva</h4><span class="status canon">Canônico</span></div>
+          <div class="demo"><button class="btn danger">Excluir Projeto</button></div>
+          <p class="note"><code>bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold</code> — ação irreversível (excluir, limpar dados).</p>
+        </div>
+        <div class="comp-card">
+          <div class="head"><h4>Ícone interativo</h4><span class="status canon">Canônico</span></div>
+          <div class="demo"><button class="btn icon" aria-label="Fechar">✕</button></div>
+          <p class="note">Container <code>w-10 h-10 flex items-center justify-center rounded-2xl</code> — área de toque real 40×40px, glifo interno visível e proporcional (não reduzido a uma hit-area invisível). Botões-ícone adjacentes usam o <code>gap</code> do container flex — nunca margem negativa nos dois lados de botões vizinhos.</p>
+        </div>
+        <div class="comp-card">
+          <div class="head"><h4>Ícone utilitário com fundo</h4><span class="status canon">Canônico</span></div>
+          <div class="demo"><button class="btn icon" aria-label="Excluir" style="width:auto;padding:0 12px;gap:6px;font-size:11px;font-weight:700;">🗑 Excluir</button></div>
+          <p class="note">Ação secundária de rodapé/lista, só ícone sem texto (download, lixeira) — fundo <code>bg-white</code>/<code>dark:bg-dark-surface</code> com borda, cor de hover semântica.</p>
+        </div>
+        <div class="comp-card">
+          <div class="head"><h4>Estado disabled</h4><span class="status canon">Canônico — todas as variantes</span></div>
+          <div class="demo"><button class="btn" disabled style="opacity:.4;cursor:not-allowed;">Salvar Cenário</button></div>
+          <p class="note"><code>disabled:opacity-40 disabled:cursor-not-allowed</code> — regra única para qualquer cor de botão. Não trocar o fundo por cinza sólido.</p>
+        </div>
+      </div>
+      <p class="desc" style="margin-top:14px;margin-bottom:0;">Fora deste catálogo, por serem estruturalmente diferentes de um botão de texto linear: os cards seletores de opção em grid (ex: modal de medidas — ícone grande + label embaixo, <code>border-2</code>) não seguem esta padronização; são um componente de seleção visual, não uma ação.</p>
+
+      <h3 class="sub">Migrar</h3>
+      <div class="comp-grid">
+        <div class="comp-card">
+          <div class="head"><h4>rounded-xl (utilidade)</h4><span class="status warn">Migrar</span></div>
+          <div class="demo"><button class="btn icon" aria-label="Fechar" style="border-radius:12px">✕</button></div>
+          <p class="note">Segunda família de radius sem justificativa documentada — migrar para <code>rounded-2xl</code> (Dívida técnica, item 4).</p>
+        </div>
+        <div class="comp-card">
+          <div class="head"><h4>disabled:bg-gray-300</h4><span class="status warn">Migrar</span></div>
+          <div class="demo"><button class="btn" disabled style="background:#d1d5db;">Salvar Cenário</button></div>
+          <p class="note">Cinza sólido no estado disabled em vez do padrão único de opacidade — migrar (Dívida técnica, item 15).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== ACCORDIONS ===================== -->
+    <section class="block" id="accordions">
+      <h2>Accordions <span class="n">06</span></h2>
+      <p class="desc"><code>toggleAccordion(btn, nodeId)</code> é o único padrão oficial. Sempre seta <code>aria-expanded</code>; <code>nodeId</code> habilita exclusividade entre irmãos quando aplicável. Estado inicial padrão: <b>fechado</b>, salvo decisão explícita de UX para a tela (ex.: Briefing Estratégico nasce aberto).</p>
+      <div class="comp-grid">
+        <div class="comp-card">
+          <div class="head"><h4>toggleAccordion() — padrão único</h4><span class="status canon">Canônico</span></div>
+          <details class="acc" open>
+            <summary>Regras e Histórias de Usuário <span class="chev">⌄</span></summary>
+            <div class="body">Todo accordion novo usa esta função. Seta <code>aria-expanded</code> no container que controla a expansão.</div>
+          </details>
+        </div>
+        <div class="comp-card">
+          <div class="head"><h4>Onclick inline — guide.html</h4><span class="status warn">Migrar</span></div>
+          <details class="acc">
+            <summary>Como usar: Anotar Specs <span class="chev">⌄</span></summary>
+            <div class="body">8 instâncias usam JS solto no atributo <code>onclick</code>, sem <code>aria-expanded</code> — migrar para <code>toggleAccordion</code> (Dívida técnica, item 7).</div>
+          </details>
+        </div>
+        <div class="comp-card">
+          <div class="head"><h4>div role="button" — Briefing</h4><span class="status warn">Migrar</span></div>
+          <details class="acc">
+            <summary>Briefing Estratégico <span class="chev">⌄</span></summary>
+            <div class="body">Área clicável hoje restrita ao ícone/texto central — migrar para <code>toggleAccordion</code>, que cobre a faixa inteira.</div>
+          </details>
+        </div>
+        <div class="comp-card">
+          <div class="head"><h4>Dialetos de chevron</h4><span class="status warn">Migrar</span></div>
+          <div class="demo" style="font-size:12px;color:var(--text-2);">
+            <code>.frame-chevron-{id}</code>, <code>.journey-chevron</code>, <code>.group-chevron</code> — três seletores paralelos que <code>collapseAllAccordions()</code> precisa reconhecer à parte do padrão <code>aria-expanded</code>. Não usar como referência para accordions novos.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== BADGES ===================== -->
+    <section class="block" id="badges">
+      <h2>Badges &amp; pills <span class="n">07</span></h2>
+      <p class="desc">11 cores rotativas para categorias de scan (por índice, não semântica fixa) + 4 cores fixas para categoria de spec (ver Cores).</p>
+      <div class="badge-row">
+        <span class="pill" style="background:#f1f5f9;color:#475569">slate</span>
+        <span class="pill" style="background:#fdf2f8;color:#be185d">pink</span>
+        <span class="pill" style="background:#eff6ff;color:#1d4ed8">blue</span>
+        <span class="pill" style="background:#f7fee7;color:#4d7c0f">lime</span>
+        <span class="pill" style="background:#eef2ff;color:#4338ca">indigo</span>
+        <span class="pill" style="background:#fff1f2;color:#e11d48">rose</span>
+        <span class="pill" style="background:#ecfdf5;color:#047857">emerald</span>
+        <span class="pill" style="background:#fefce8;color:#a16207">yellow</span>
+        <span class="pill" style="background:#f0fdfa;color:#0d9488">teal</span>
+        <span class="pill" style="background:#faf5ff;color:#9333ea">purple</span>
+        <span class="pill" style="background:#ecfeff;color:#0e7490">cyan</span>
+      </div>
+    </section>
+
+    <!-- ===================== TOGGLES ===================== -->
+    <section class="block" id="toggles">
+      <h2>Toggles <span class="n">08</span></h2>
+      <p class="desc">O switch estilizado é o padrão oficial para escolha binária habilitado/desabilitado. Checkbox nativo continua correto para seleção múltipla em listas — são componentes com papéis diferentes, não uma substituição 1:1.</p>
+      <div class="comp-grid">
+        <div class="comp-card">
+          <div class="head"><h4>Switch estilizado</h4><span class="status canon">Canônico — liga/desliga</span></div>
+          <div class="demo">
+            <label class="toggle-row">
+              <span class="switch"><input type="checkbox" checked><span class="slider"></span></span>
+              Briefing habilitado
+            </label>
+          </div>
+          <p class="note">Padrão oficial para qualquer escolha binária habilitado/desabilitado em telas novas.</p>
+        </div>
+        <div class="comp-card">
+          <div class="head"><h4>Checkbox com accent</h4><span class="status canon">Canônico — seleção múltipla</span></div>
+          <div class="demo" style="display:flex;flex-direction:column;gap:10px;">
+            <label class="toggle-row"><input type="checkbox" checked style="accent-color:#005ca9"> Ficha (azul)</label>
+            <label class="toggle-row"><input type="checkbox" checked style="accent-color:#4f46e5"> Specs (indigo)</label>
+            <label class="toggle-row"><input type="checkbox" style="accent-color:#ef4444"> Limpar tudo (red — destrutivo)</label>
+          </div>
+          <p class="note">Correto para seleção múltipla (import/limpeza de dados) — não para toggle liga/desliga.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== EMPTY STATES ===================== -->
+    <section class="block" id="empty-states">
+      <h2>Empty states <span class="n">09</span></h2>
+      <p class="desc">Ícone a 25% de opacidade + título + CTA inline sublinhado, gerado via função JS compartilhada — não HTML estático duplicado por tela.</p>
+      <div class="comp-card" style="max-width:360px;">
+        <div class="empty">
+          <i>▭</i>
+          <div style="font-weight:700;font-size:12.5px;margin-bottom:4px;">Nenhuma spec registrada ainda</div>
+          <div style="font-size:11.5px;">Selecione um elemento no canvas e <span class="cta">crie a primeira spec</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== MODAIS ===================== -->
+    <section class="block" id="modais">
+      <h2>Modais <span class="n">10</span></h2>
+      <p class="desc">Shell único: <code>role="dialog" aria-modal="true"</code> + overlay + <code>bg-white dark:bg-dark-surface rounded-2xl shadow-2xl</code>. Focus trap global via <code>core.js:2365-2408</code> — reaproveitar, nunca reimplementar por modal.</p>
+      <div class="ref-wrap">
+        <table class="ref">
+          <thead><tr><th>z-index</th><th>Uso</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">z-[200]</td><td>Confirmação leve (ex.: limpar dados)</td></tr>
+            <tr><td class="mono">z-[1000]</td><td>Padrão — maioria dos modais</td></tr>
+            <tr><td class="mono">z-[1200]</td><td>Modal empilhado sobre outro modal</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="desc" style="margin-top:10px;margin-bottom:0;">Ainda são valores mágicos sem constante nomeada no código — esta tabela é a referência até a extração do token (Dívida técnica, item 6).</p>
+
+      <h3 class="sub">Títulos</h3>
+      <div class="ref-wrap">
+        <table class="ref">
+          <thead><tr><th>Tamanho de modal</th><th>Classe</th></tr></thead>
+          <tbody>
+            <tr><td>Pequeno</td><td class="mono">text-[14px] font-bold</td></tr>
+            <tr><td>Médio</td><td class="mono">text-[15px]/[16px] font-extrabold</td></tr>
+            <tr><td>Grande</td><td class="mono">text-[18px] font-bold</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== NOMENCLATURA ===================== -->
+    <section class="block" id="nomenclatura">
+      <h2>Nomenclatura de tela <span class="n">11</span></h2>
+      <p class="desc">A tela hoje referenciada por 3 nomes diferentes tem nome canônico definido — reflete o papel real da tela, não só a ação de escanear.</p>
+      <div class="comp-card" style="max-width:520px;">
+        <div class="head"><h4>Hub de frame</h4><span class="status canon">Canônico: "Handoff"</span></div>
+        <p class="note">Card na home diz "Escanear Tokens", id é <code>view-frames</code>, arquivo é <code>handoff.html</code> — "Handoff" é o nome que reflete o papel real da tela (scan + medidas + specs + conformidade). Card na home, título interno e documentação devem convergir para este nome (Dívida técnica, item 9).</p>
+      </div>
+    </section>
+
+    <!-- ===================== DÍVIDA TÉCNICA ===================== -->
+    <section class="block" id="divida">
+      <h2>Dívida técnica <span class="n">12</span></h2>
+      <p class="desc">Código a migrar para bater com este DS — cada item é uma correção pontual, não um redesenho. Ordem de prioridade.</p>
+
+      <div class="debt">
+        <div class="idx">1</div>
+        <div>
+          <h4>Paleta de categoria de spec triplicada</h4>
+          <p>Unificar <code>specifications.js</code> (card no canvas) e <code>modals.html</code> (modal de ajuda) para usar o par de valores canônico da Ficha exportada.</p>
+          <div class="loc mono">specifications.js:449 · handoff.js:726 · modals.html:396</div>
+        </div>
+      </div>
+      <div class="debt">
+        <div class="idx">2</div>
+        <div>
+          <h4>Bug adormecido de verde/laranja</h4>
+          <p>Botão verde herda a cor exata do laranja de alerta. Corrigir antes que um botão verde real seja criado.</p>
+          <div class="loc mono">plugin.css:114-134</div>
+        </div>
+      </div>
+      <div class="debt">
+        <div class="idx">3</div>
+        <div>
+          <h4>Escala tipográfica sem token nomeado</h4>
+          <p>Adicionar <code>3xs</code>/<code>2xs</code>/<code>xs-plus</code>/<code>md</code> ao <code>fontSize</code> do <code>tailwind.config.cjs</code>.</p>
+          <div class="loc mono">tailwind.config.cjs</div>
+        </div>
+      </div>
+      <div class="debt">
+        <div class="idx">4</div>
+        <div>
+          <h4><code>rounded-xl</code> residual</h4>
+          <p>Migrar para <code>rounded-2xl</code> nos botões-ícone de utilidade e na versão "editar" do <code>flow-type-card-modal</code>.</p>
+          <div class="loc mono">modals.html</div>
+        </div>
+      </div>
+      <div class="debt">
+        <div class="idx">5</div>
+        <div>
+          <h4>Radius de card via seletor de id</h4>
+          <p>Mover para classe Tailwind direta no HTML em vez de regra global por sufixo de id — hoje frágil a renomeações silenciosas.</p>
+          <div class="loc mono">plugin.css:451-465</div>
+        </div>
+      </div>
+      <div class="debt">
+        <div class="idx">6</div>
+        <div>
+          <h4>z-index de modal sem constante nomeada</h4>
+          <p>Extrair constante nomeada em vez dos 3 valores mágicos hoje espalhados pelo código.</p>
+          <div class="loc mono">modals.html</div>
+        </div>
+      </div>
+      <div class="debt">
+        <div class="idx">7</div>
+        <div>
+          <h4>4 dialetos de accordion → 1</h4>
+          <p>Migrar <code>guide.html</code>, Briefing Estratégico e os chevrons próprios para <code>toggleAccordion</code>.</p>
+          <div class="loc mono">guide.html · dados-projeto.html · core.js:2696</div>
+        </div>
+      </div>
+      <div class="debt">
+        <div class="idx">8</div>
+        <div>
+          <h4>Empty state do hub de Frames</h4>
+          <p>Hoje é HTML estático em vez de usar a função JS compartilhada das outras 3 ferramentas.</p>
+          <div class="loc mono">handoff.html:66-72</div>
+        </div>
+      </div>
+      <div class="debt">
+        <div class="idx">9</div>
+        <div>
+          <h4>Nomenclatura "Escanear Tokens/Frames/Handoff"</h4>
+          <p>Convergir card, título interno e referências de documentação para "Handoff".</p>
+          <div class="loc mono">home.html:88 · handoff.html:10</div>
+        </div>
+      </div>
+      <div class="debt">
+        <div class="idx">10</div>
+        <div>
+          <h4>Hex de brand direto no HTML</h4>
+          <p>Migrar <code>bg-[#005ca9]</code>/<code>hover:bg-[#004d8d]</code> para as classes nomeadas — maior volume da lista, não precisa ser feito de uma vez; todo código novo já nasce usando a classe nomeada.</p>
+          <div class="loc mono">views/*.html (300+ ocorrências)</div>
+        </div>
+      </div>
+      <div class="debt">
+        <div class="idx">11</div>
+        <div>
+          <h4>Código morto de wizard sequencial</h4>
+          <p>Funções de navegação por step e um modal órfão sem tela viva que os alimente — remover antes de acumular mais uma geração de UI em cima.</p>
+          <div class="loc mono">core.js:2092-2181 · modals.html:984-1014</div>
+        </div>
+      </div>
+      <div class="debt">
+        <div class="idx">12</div>
+        <div>
+          <h4>Onboarding duplicado</h4>
+          <p><code>guide.html</code> e <code>onboarding.js</code> mantêm conteúdo quase idêntico por disciplina manual — já divergiram uma vez.</p>
+          <div class="loc mono">guide.html · onboarding.js</div>
+        </div>
+      </div>
+      <div class="debt">
+        <div class="idx">15</div>
+        <div>
+          <h4><code>disabled:bg-gray-300</code> residual</h4>
+          <p>Botão "Salvar Cenário" usa cinza sólido no estado disabled em vez do padrão único <code>disabled:opacity-40</code> — migrar.</p>
+          <div class="loc mono">modals.html:1115</div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="page">
+      Referência normativa · v1.5, revisada em 2026-08-26 (reversão de paleta de marca, auditoria de contraste WCAG, padronização de botões brancos, peso e tamanho de ícones) · v1.0 fechada em 2026-08-25, a partir do levantamento de 2026-08-24 · ver <code>docs/design-system-handex.md</code> para o texto completo com histórico de decisões.
+    </footer>
+  </main>
+</div>
+
+<script>
+  (function(){
+    var order = ['system','light','dark'];
+    var labels = {system:'Sistema', light:'Claro', dark:'Escuro'};
+    function getStored(){
+      try { return localStorage.getItem('handex-ds-theme') || 'system'; } catch(e){ return 'system'; }
+    }
+    function setStored(v){
+      try { localStorage.setItem('handex-ds-theme', v); } catch(e){}
+    }
+    function apply(v){
+      if(v === 'system'){ document.documentElement.removeAttribute('data-theme'); }
+      else { document.documentElement.setAttribute('data-theme', v); }
+      var btn = document.getElementById('theme-btn');
+      if(btn) btn.textContent = labels[v];
+    }
+    var current = getStored();
+    apply(current);
+    window.cycleTheme = function(){
+      var idx = order.indexOf(current);
+      current = order[(idx + 1) % order.length];
+      setStored(current);
+      apply(current);
+    };
+  })();
+
+  (function(){
+    var sections = Array.prototype.slice.call(document.querySelectorAll('section.block'));
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.side a'));
+    function onScroll(){
+      var pos = window.scrollY + 120;
+      var activeId = sections[0] && sections[0].id;
+      sections.forEach(function(s){ if(s.offsetTop <= pos) activeId = s.id; });
+      links.forEach(function(l){
+        l.classList.toggle('active', l.getAttribute('href') === '#' + activeId);
+      });
+    }
+    document.addEventListener('scroll', onScroll, {passive:true});
+    onScroll();
+  })();
+</script>

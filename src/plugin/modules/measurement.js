@@ -51,8 +51,8 @@
               <div class="relative mb-4">
                 <i data-lucide="ruler" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
               </div>
-              <p class="text-[12px] font-bold text-slate-500 dark:text-dark-muted text-center px-4 mb-1">Nenhuma medida criada ainda</p>
-              <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6">Selecione elementos no canvas e toque em <button type="button" onclick="openMeasureModal()" class="font-bold text-[#2e2ee0] dark:text-[#4da3e0] hover:underline">Inserir medida</button></p>
+              <p class="text-[12px] font-bold text-slate-600 dark:text-dark-muted text-center px-4 mb-1">Nenhuma medida criada ainda</p>
+              <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6">Selecione elementos no canvas e toque em <button type="button" onclick="openMeasureModal()" class="font-bold text-[#004d8d] dark:text-[#4da3e0] hover:underline">Inserir medida</button></p>
             </li>
           `;
           _refreshIcons();
@@ -76,7 +76,7 @@
           <span class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wide">${data.length} medida${data.length !== 1 ? 's' : ''}</span>
           <button type="button" title="${isGroupVisible ? 'Ocultar todas as medidas' : 'Exibir todas as medidas'}"
             onclick="toggleMeasurementsGroup('${frameId}')"
-            class="flex items-center gap-1 px-2 py-0.5 rounded-xl text-[10px] font-bold ${isGroupVisible ? 'text-[#3d3dff]' : 'text-gray-500'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+            class="flex items-center gap-1 px-2 py-0.5 rounded-xl text-[10px] font-bold ${isGroupVisible ? 'text-[#005ca9]' : 'text-gray-500'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
             <i data-lucide="${isGroupVisible ? 'eye' : 'eye-off'}" class="w-3 h-3"></i>
             ${isGroupVisible ? 'Ocultar todas' : 'Exibir todas'}
           </button>`;
@@ -103,12 +103,13 @@
         btn.onclick = () => toggleAccordion(btn, item.nodeId, item.number || (index + 1));
 
         const chevronClass = isExpanded ? "rotate-180" : "";
+        const chevronColorClass = isExpanded ? "text-[#005ca9] dark:text-blue-300" : "text-gray-500 dark:text-dark-muted";
         btn.innerHTML = `
-          <div class="w-5 h-5 flex items-center justify-center bg-[#2e2ee0] text-white text-[10px] font-bold rounded-full shrink-0">${item.number || (index + 1)}</div>
+          <div class="w-5 h-5 flex items-center justify-center bg-[#004d8d] text-white text-[10px] font-bold rounded-full shrink-0">${item.number || (index + 1)}</div>
           <div class="flex-1 min-w-0 text-left">
             <span class="text-[12px] font-bold text-[#1E293B] dark:text-white truncate block" title="${item.name}">${item.name}</span>
           </div>
-          <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform ${chevronClass} shrink-0"></i>
+          <i data-lucide="chevron-down" class="w-4 h-4 ${chevronColorClass} transition-transform ${chevronClass} shrink-0"></i>
         `;
 
         // Visibility Toggle
@@ -124,7 +125,7 @@
 
         const isVisible = item.visible !== false;
         visBtn.innerHTML = isVisible ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
-        visBtn.classList.toggle("text-[#2e2ee0]", isVisible);
+        visBtn.classList.toggle("text-[#004d8d]", isVisible);
         visBtn.classList.toggle("text-gray-400", !isVisible);
         visBtn.setAttribute('aria-label', isVisible ? 'Ocultar medida no canvas' : 'Exibir medida no canvas');
 
@@ -134,7 +135,7 @@
           item.visible = nowVisible;
 
           visBtn.innerHTML = nowVisible ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
-          visBtn.classList.toggle("text-[#2e2ee0]", nowVisible);
+          visBtn.classList.toggle("text-[#004d8d]", nowVisible);
           visBtn.classList.toggle("text-gray-400", !nowVisible);
           visBtn.setAttribute('aria-label', nowVisible ? 'Ocultar medida no canvas' : 'Exibir medida no canvas');
 
@@ -282,7 +283,7 @@
       // Atualiza botões de visibilidade em todos os containers (global + por frame)
       document.querySelectorAll('[data-node-id] [data-vis-btn]').forEach(visBtn => {
         visBtn.innerHTML = targetState ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
-        visBtn.classList.toggle("text-[#2e2ee0]", targetState);
+        visBtn.classList.toggle("text-[#004d8d]", targetState);
         visBtn.classList.toggle("text-gray-400", !targetState);
       });
 
@@ -307,16 +308,16 @@
     function resetMeasureSelection() {
       currentMeasureTypes = [];
       document.querySelectorAll('.measure-btn').forEach(btn => {
-        btn.classList.remove('border-[#3d3dff]', 'bg-blue-50', 'dark:bg-blue-900/20', 'outline', 'outline-2', 'outline-offset-2', 'outline-[#3d3dff]');
+        btn.classList.remove('border-[#005ca9]', 'bg-blue-50', 'dark:bg-blue-900/20', 'outline', 'outline-2', 'outline-offset-2', 'outline-[#005ca9]');
         btn.classList.add('border-gray-100', 'dark:border-dark-line', 'hover:bg-gray-50', 'dark:hover:bg-slate-700');
         const icon = btn.querySelector('.measure-icon');
         if (icon) {
-          icon.classList.remove('text-[#3d3dff]', 'dark:text-blue-400');
+          icon.classList.remove('text-[#005ca9]', 'dark:text-blue-400');
           icon.classList.add('text-slate-500');
         }
         const label = btn.querySelector('.measure-label');
         if (label) {
-          label.classList.remove('text-[#3d3dff]', 'dark:text-blue-400', 'font-bold');
+          label.classList.remove('text-[#005ca9]', 'dark:text-blue-400', 'font-bold');
           label.classList.add('text-slate-500', 'dark:text-dark-text');
         }
       });
@@ -336,28 +337,28 @@
 
         if (isActive) {
           btn.classList.remove('border-gray-100', 'dark:border-dark-line', 'hover:bg-gray-50', 'dark:hover:bg-slate-700');
-          btn.classList.add('border-[#3d3dff]', 'bg-blue-50', 'dark:bg-blue-900/20', 'outline', 'outline-2', 'outline-offset-2', 'outline-[#3d3dff]');
+          btn.classList.add('border-[#005ca9]', 'bg-blue-50', 'dark:bg-blue-900/20', 'outline', 'outline-2', 'outline-offset-2', 'outline-[#005ca9]');
           const icon = btn.querySelector('.measure-icon');
           if (icon) {
             icon.classList.remove('text-slate-500');
-            icon.classList.add('text-[#3d3dff]', 'dark:text-blue-400');
+            icon.classList.add('text-[#005ca9]', 'dark:text-blue-400');
           }
           const label = btn.querySelector('.measure-label');
           if (label) {
             label.classList.remove('text-slate-500', 'dark:text-dark-text');
-            label.classList.add('text-[#3d3dff]', 'dark:text-blue-400', 'font-bold');
+            label.classList.add('text-[#005ca9]', 'dark:text-blue-400', 'font-bold');
           }
         } else {
-          btn.classList.remove('border-[#3d3dff]', 'bg-blue-50', 'dark:bg-blue-900/20', 'outline', 'outline-2', 'outline-offset-2', 'outline-[#3d3dff]');
+          btn.classList.remove('border-[#005ca9]', 'bg-blue-50', 'dark:bg-blue-900/20', 'outline', 'outline-2', 'outline-offset-2', 'outline-[#005ca9]');
           btn.classList.add('border-gray-100', 'dark:border-dark-line', 'hover:bg-gray-50', 'dark:hover:bg-slate-700');
           const icon = btn.querySelector('.measure-icon');
           if (icon) {
-            icon.classList.remove('text-[#3d3dff]', 'dark:text-blue-400');
+            icon.classList.remove('text-[#005ca9]', 'dark:text-blue-400');
             icon.classList.add('text-slate-500');
           }
           const label = btn.querySelector('.measure-label');
           if (label) {
-            label.classList.remove('text-[#3d3dff]', 'dark:text-blue-400', 'font-bold');
+            label.classList.remove('text-[#005ca9]', 'dark:text-blue-400', 'font-bold');
             label.classList.add('text-slate-500', 'dark:text-dark-text');
           }
         }

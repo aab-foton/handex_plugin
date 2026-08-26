@@ -10,38 +10,44 @@ module.exports = {
     extend: {
       colors: {
         blue: {
-          // Nova identidade visual CAIXA (2026-08) — azul-roxo vibrante do
-          // Uau CAIXA em vez do azul institucional marinho anterior
-          // (#005ca9). Hex extraídos por leitura visual de posts do
-          // Instagram @uaucaixa (não há manual de marca oficial disponível
-          // no momento) — calibrar com hex exato se/quando disponível.
-          50:  '#eef0ff',
-          100: '#dcdfff',
-          200: '#c3c7ff',
-          300: '#8b8fff',
-          400: '#868bff',
-          500: '#3d3dff',
-          600: '#2e2ee0',
-          700: '#2323a8',
-          800: '#181875',
-          900: '#0d0d40',
-          950: '#060620',
+          // Azul institucional CAIXA — revertido em 2026-08-26. A paleta
+          // "Uau CAIXA" (azul-roxo #3d3dff) usada entre 2026-08 e esta data
+          // era uma antecipação de rebranding que a CAIXA ainda não
+          // publicou oficialmente; até a publicação, o Handex usa a marca
+          // vigente. Extraído de refs/fundamentos-visuais.json
+          // (color/bg/highlight, escala "primary" do DSC) — 500 ancorado em
+          // "azul cx" (primary 90, #005ca9), degraus interpolados a partir
+          // dos 7 valores reais do DSC (10/30/50/70/90/110/130).
+          50:  '#f7fbfe',
+          100: '#eaf5fd',
+          200: '#c2e2fc',
+          300: '#8cc8fb',
+          400: '#479de6',
+          500: '#005ca9',
+          600: '#004d8d',
+          700: '#004075',
+          800: '#00325b',
+          900: '#002442',
+          950: '#00182a',
         },
         orange: {
-          // Amarelo/dourado dos ícones hexagonais do Uau CAIXA — ocupa o
-          // papel de acento secundário que o laranja institucional tinha
-          // antes. Mesma ressalva de origem (leitura visual) do azul acima.
-          50:  '#fffbea',
-          100: '#fff3c4',
-          200: '#ffe388',
-          300: '#ffd24d',
-          400: '#ffc940',
-          500: '#f5b400',
-          600: '#cc9500',
-          700: '#a37600',
-          800: '#7a5800',
-          900: '#523a00',
-          950: '#291d00',
+          // Laranja institucional CAIXA — revertido em 2026-08-26 junto com
+          // o azul (ver comentário acima). Extraído de
+          // refs/fundamentos-visuais.json (color/bg/accent, escala
+          // "secondary" do DSC) — 500 ancorado em "laranja cx" (secondary
+          // 70, #f39200), degraus interpolados a partir dos 7 valores reais
+          // do DSC (10/30/50/70/90/110/130).
+          50:  '#fff9ee',
+          100: '#fff2dd',
+          200: '#ffe1b4',
+          300: '#fec774',
+          400: '#f9a72b',
+          500: '#f39200',
+          600: '#e08200',
+          700: '#bf6c00',
+          800: '#935300',
+          900: '#5f3600',
+          950: '#3d2300',
         },
         light: {
           bg:      '#eef2f7',

@@ -16,10 +16,10 @@
   <div id="handoff-loading-overlay" class="hidden fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 backdrop-blur-sm">
     <div class="bg-white dark:bg-dark-bg rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line p-8 flex flex-col items-center gap-5 w-[260px] mx-4">
       <div class="relative w-14 h-14">
-        <div class="absolute inset-0 rounded-full border-4 border-[#3d3dff]/20"></div>
-        <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-[#3d3dff] animate-spin"></div>
+        <div class="absolute inset-0 rounded-full border-4 border-[#005ca9]/20"></div>
+        <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-[#005ca9] animate-spin"></div>
         <div class="absolute inset-0 flex items-center justify-center">
-          <i data-lucide="layout-dashboard" class="w-6 h-6 text-[#3d3dff]"></i>
+          <i data-lucide="layout-dashboard" class="w-6 h-6 text-[#005ca9]"></i>
         </div>
       </div>
       <div class="text-center space-y-1">
@@ -27,12 +27,12 @@
         <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-snug">Montando o documento no canvas do Figma</p>
       </div>
       <div class="flex gap-1.5">
-        <span class="w-1.5 h-1.5 rounded-full bg-[#3d3dff] animate-bounce" style="animation-delay:0ms"></span>
-        <span class="w-1.5 h-1.5 rounded-full bg-[#3d3dff] animate-bounce" style="animation-delay:150ms"></span>
-        <span class="w-1.5 h-1.5 rounded-full bg-[#3d3dff] animate-bounce" style="animation-delay:300ms"></span>
+        <span class="w-1.5 h-1.5 rounded-full bg-[#005ca9] animate-bounce" style="animation-delay:0ms"></span>
+        <span class="w-1.5 h-1.5 rounded-full bg-[#005ca9] animate-bounce" style="animation-delay:150ms"></span>
+        <span class="w-1.5 h-1.5 rounded-full bg-[#005ca9] animate-bounce" style="animation-delay:300ms"></span>
       </div>
       <div id="handoff-loading-hint" class="hidden w-full px-3 py-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 text-center">
-        <p class="text-[11px] font-bold text-[#3d3dff]">Ainda processando...</p>
+        <p class="text-[11px] font-bold text-[#005ca9]">Ainda processando...</p>
         <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug mt-0.5">Você pode minimizar o plugin e continuar no Figma. A ficha aparecerá quando estiver pronta.</p>
       </div>
     </div>
@@ -48,8 +48,8 @@
           <h3 class="text-[15px] font-extrabold text-slate-800 dark:text-white">Versionar Ficha de Projeto</h3>
           <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5">Já existe uma ficha gerada. Escolha o tipo de atualização.</p>
         </div>
-        <button onclick="closeModal('versioning-modal')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 dark:text-dark-muted">
-          <i data-lucide="x" class="w-4 h-4"></i>
+        <button onclick="closeModal('versioning-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 dark:text-dark-muted">
+          <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
@@ -57,28 +57,28 @@
       <div class="px-5 py-4 space-y-2.5">
 
         <!-- Major -->
-        <label class="version-option-card flex items-start gap-3 p-3.5 border-2 border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:border-[#3d3dff]/40 transition-colors has-[:checked]:border-[#3d3dff] has-[:checked]:bg-[#3d3dff]/5">
-          <input type="radio" name="version-type" value="major" class="mt-0.5 accent-[#3d3dff] shrink-0" onchange="_versionTypeChanged()">
+        <label class="version-option-card flex items-start gap-3 p-3.5 border-2 border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:border-[#005ca9]/40 transition-colors has-[:checked]:border-[#005ca9] has-[:checked]:bg-[#005ca9]/5">
+          <input type="radio" name="version-type" value="major" class="mt-0.5 accent-[#005ca9] shrink-0" onchange="_versionTypeChanged()">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-0.5">
               <span class="text-[12px] font-extrabold text-slate-800 dark:text-white">Nova Versão</span>
               <span class="px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-[9px] font-bold rounded uppercase tracking-wide">v2.0</span>
             </div>
             <p class="text-[11px] text-slate-500 dark:text-dark-muted">Redesenho ou mudança estrutural significativa.</p>
-            <p id="version-preview-major" class="text-[11px] font-bold text-[#3d3dff] mt-1"></p>
+            <p id="version-preview-major" class="text-[11px] font-bold text-[#005ca9] mt-1"></p>
           </div>
         </label>
 
         <!-- Minor -->
-        <label class="version-option-card flex items-start gap-3 p-3.5 border-2 border-[#3d3dff] bg-[#3d3dff]/5 dark:border-blue-600 dark:bg-blue-900/10 rounded-xl cursor-pointer hover:border-[#3d3dff] transition-colors">
-          <input type="radio" name="version-type" value="minor" checked class="mt-0.5 accent-[#3d3dff] shrink-0" onchange="_versionTypeChanged()">
+        <label class="version-option-card flex items-start gap-3 p-3.5 border-2 border-[#005ca9] bg-[#005ca9]/5 dark:border-blue-600 dark:bg-blue-900/10 rounded-xl cursor-pointer hover:border-[#005ca9] transition-colors">
+          <input type="radio" name="version-type" value="minor" checked class="mt-0.5 accent-[#005ca9] shrink-0" onchange="_versionTypeChanged()">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-0.5">
               <span class="text-[12px] font-extrabold text-slate-800 dark:text-white">Atualização</span>
               <span class="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[9px] font-bold rounded uppercase tracking-wide">v1.1</span>
             </div>
             <p class="text-[11px] text-slate-500 dark:text-dark-muted">Novo conteúdo, frames, specs ou fluxos adicionados.</p>
-            <p id="version-preview-minor" class="text-[11px] font-bold text-[#3d3dff] mt-1"></p>
+            <p id="version-preview-minor" class="text-[11px] font-bold text-[#005ca9] mt-1"></p>
           </div>
         </label>
 
@@ -88,7 +88,7 @@
       <div class="px-5 pb-4">
         <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wide block mb-1.5">Versão final (editável)</label>
         <input type="text" id="versioning-final-input"
-          class="w-full px-3 py-2.5 bg-slate-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl text-[13px] font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-[#3d3dff]/30 transition-all font-mono"
+          class="w-full px-3 py-2.5 bg-slate-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl text-[13px] font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-[#005ca9]/30 transition-all font-mono"
           placeholder="v1.1" />
       </div>
 
@@ -99,7 +99,7 @@
           Cancelar
         </button>
         <button onclick="confirmHandoffVersion()"
-          class="flex-1 py-2.5 bg-[#2e2ee0] hover:bg-[#004d8f] text-white text-[13px] font-extrabold rounded-2xl transition-colors flex items-center justify-center gap-2">
+          class="flex-1 py-2.5 bg-[#004d8d] hover:bg-[#004d8f] text-white text-[13px] font-extrabold rounded-2xl transition-colors flex items-center justify-center gap-2">
           <i data-lucide="send" class="w-4 h-4"></i>
           Gerar
         </button>
@@ -112,8 +112,8 @@
       <div class="bg-white dark:bg-dark-bg w-full max-w-[440px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line animate-in fade-in zoom-in duration-200 overflow-hidden">
         <div class="p-6 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
           <h3 id="flow-modal-title" class="text-[#1E293B] dark:text-white font-extrabold text-[18px] tracking-tight">Configurar Conexão</h3>
-          <button onclick="closeModal('flow-form-modal')" aria-label="Fechar modal" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
-            <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+          <button onclick="closeModal('flow-form-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
+            <i data-lucide="x" class="w-6 h-6" aria-hidden="true"></i>
           </button>
         </div>
         
@@ -128,7 +128,7 @@
             </div>
             <input type="text" id="flow-name-input" placeholder="Ex: Cadastro de conta" maxlength="70"
               oninput="_updateCharCount(this, 70)"
-              class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all" />
+              class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all" />
             <p class="text-[9px] text-slate-400 dark:text-dark-muted px-1 -mt-1">Se a seleção estender uma jornada já existente, deixe em branco para manter o nome atual.</p>
           </div>
 
@@ -141,7 +141,7 @@
                movido, nunca duplicado. -->
           <div class="space-y-2">
             <label class="flex items-center gap-2.5 cursor-pointer">
-              <input type="checkbox" id="flow-auto-mark-endpoints" class="w-4 h-4 rounded accent-[#3d3dff]" />
+              <input type="checkbox" id="flow-auto-mark-endpoints" class="w-4 h-4 rounded accent-[#005ca9]" />
               <span class="text-[11px] font-bold text-slate-600 dark:text-dark-muted">Marcar início e fim automaticamente</span>
             </label>
             <p class="text-[9px] text-slate-400 dark:text-dark-muted pl-6 leading-snug">O primeiro elemento selecionado recebe o marcador de Início; o último recebe o de Fim.</p>
@@ -153,28 +153,28 @@
             <div class="grid grid-cols-2 gap-3">
               <button onclick="selectFlowType('line_solid')" id="form-flow-line_solid" title="Conecta telas em sequência direta — selecione 2 ou mais elementos (3+ conecta em cadeia)" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center group">
                 <div class="w-10 h-10 bg-white dark:bg-dark-surface rounded-xl flex items-center justify-center shrink-0 shadow-sm">
-                  <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 dark:text-dark-muted group-hover:text-[#3d3dff]"></i>
+                  <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 dark:text-dark-muted group-hover:text-[#005ca9]"></i>
                 </div>
                 <span class="text-[10px] font-bold text-slate-700 dark:text-white uppercase tracking-wider">Sequência</span>
               </button>
 
               <button onclick="selectFlowType('line_dashed')" id="form-flow-line_dashed" title="Indica uma troca assíncrona (ex: notificação, e-mail) entre as telas — selecione 2 ou mais elementos (3+ conecta em cadeia)" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center group">
                 <div class="w-10 h-10 bg-white dark:bg-dark-surface rounded-xl flex items-center justify-center shrink-0 shadow-sm">
-                  <i data-lucide="move-right" class="w-5 h-5 text-slate-500 dark:text-dark-muted group-hover:text-[#3d3dff]"></i>
+                  <i data-lucide="move-right" class="w-5 h-5 text-slate-500 dark:text-dark-muted group-hover:text-[#005ca9]"></i>
                 </div>
                 <span class="text-[10px] font-bold text-slate-700 dark:text-white uppercase tracking-wider">Mensagem</span>
               </button>
 
               <button onclick="selectFlowType('diamond')" id="form-flow-diamond" title="Marca um ponto de decisão do usuário (ex: Sim/Não) — selecione 2 elementos" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center group">
                 <div class="w-10 h-10 bg-white dark:bg-dark-surface rounded-xl flex items-center justify-center shrink-0 shadow-sm">
-                  <div class="w-5 h-5 rotate-45 border-2 border-slate-400 dark:border-slate-500 group-hover:border-[#3d3dff]"></div>
+                  <div class="w-5 h-5 rotate-45 border-2 border-slate-400 dark:border-slate-500 group-hover:border-[#005ca9]"></div>
                 </div>
                 <span class="text-[10px] font-bold text-slate-700 dark:text-white uppercase tracking-wider">Decisão</span>
               </button>
 
               <button onclick="selectFlowType('diamond_dashed')" id="form-flow-diamond_dashed" title="Marca uma decisão condicional/opcional, não obrigatória no fluxo principal — selecione 2 elementos" class="flow-type-card-modal flex flex-col items-center gap-2 p-3 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center group">
                 <div class="w-10 h-10 bg-white dark:bg-dark-surface rounded-xl flex items-center justify-center shrink-0 shadow-sm">
-                  <div class="w-5 h-5 rotate-45 border-2 border-dashed border-slate-400 dark:border-slate-500 group-hover:border-[#3d3dff]"></div>
+                  <div class="w-5 h-5 rotate-45 border-2 border-dashed border-slate-400 dark:border-slate-500 group-hover:border-[#005ca9]"></div>
                 </div>
                 <span class="text-[10px] font-bold text-slate-700 dark:text-white uppercase">Decisão (Opcional)</span>
               </button>
@@ -229,22 +229,22 @@
                  ilegível/estourava a forma no canvas. -->
             <textarea id="flow-chip-text" placeholder="Ex: Sim, Não, Enviar..." maxlength="20"
               oninput="_updateCharCount(this, 20)"
-              class="w-full h-20 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none resize-none transition-all"></textarea>
+              class="w-full h-20 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none resize-none transition-all"></textarea>
           </div>
 
           <!-- Estilo do conector (só linha sólida/tracejada -- diamond/evento têm forma própria, não se molda) -->
           <div id="flow-connector-style-container" class="hidden space-y-3 pt-4 border-t border-gray-50 dark:border-dark-line/50">
             <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Estilo da Linha</label>
             <div class="grid grid-cols-2 gap-2">
-              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
                 <input type="radio" name="flow-connector-style" value="straight" checked onchange="_flowConnectorStyleManuallySet = true; _renderFlowAnchorPreview()" class="sr-only" />
-                <i data-lucide="minus" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-                <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Reta</span>
+                <i data-lucide="minus" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]"></i>
+                <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]">Reta</span>
               </label>
-              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+              <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
                 <input type="radio" name="flow-connector-style" value="elbow" onchange="_flowConnectorStyleManuallySet = true; _renderFlowAnchorPreview()" class="sr-only" />
-                <i data-lucide="corner-down-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-                <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Angular</span>
+                <i data-lucide="corner-down-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]"></i>
+                <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]">Angular</span>
               </label>
             </div>
           </div>
@@ -262,15 +262,15 @@
       <div class="bg-white dark:bg-dark-bg w-full max-w-[400px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line animate-in fade-in zoom-in duration-200">
         <div class="p-6 border-b border-gray-100 dark:border-dark-line flex items-center justify-between">
           <h3 id="decision-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[16px]">Texto da Decisão</h3>
-          <button onclick="closeModal('decision-modal')" aria-label="Fechar modal" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
-            <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+          <button onclick="closeModal('decision-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
+            <i data-lucide="x" class="w-6 h-6" aria-hidden="true"></i>
           </button>
         </div>
         <div class="p-6 space-y-4">
           <div class="space-y-2">
             <label for="decision-text-input" class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Descreva a condição (IF)</label>
             <textarea id="decision-text-input" placeholder="Ex: Usuário logado? ou Saldo > 0?" 
-              class="w-full h-24 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 focus:border-[#3d3dff] outline-none transition-all resize-none"></textarea>
+              class="w-full h-24 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 focus:border-[#005ca9] outline-none transition-all resize-none"></textarea>
           </div>
           <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-relaxed italic">
             Dica: Use frases curtas para melhor legibilidade dentro do losango.
@@ -278,7 +278,7 @@
         </div>
         <div class="p-4 border-t border-gray-100 dark:border-dark-line flex justify-end gap-3">
           <button onclick="closeModal('decision-modal')" class="px-4 py-2 text-[13px] font-bold text-gray-500 dark:text-dark-muted hover:text-gray-700">Cancelar</button>
-          <button onclick="confirmDecisionConnection()" class="px-6 py-2 bg-[#3d3dff] text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md">Confirmar</button>
+          <button onclick="confirmDecisionConnection()" class="px-6 py-2 bg-[#005ca9] text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md">Confirmar</button>
         </div>
       </div>
     </div>
@@ -288,8 +288,8 @@
       <div class="bg-white dark:bg-dark-bg w-full max-w-[400px] max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-dark-line flex flex-col animate-in fade-in zoom-in duration-200">
         <div class="p-6 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
           <h3 id="frame-status-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[18px]">Status do frame</h3>
-          <button onclick="closeModal('frame-status-modal')" aria-label="Fechar modal" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
-            <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+          <button onclick="closeModal('frame-status-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
+            <i data-lucide="x" class="w-6 h-6" aria-hidden="true"></i>
           </button>
         </div>
         <div class="flex-1 overflow-y-auto p-6 space-y-3.5" onscroll="handleScroll(this)">
@@ -317,8 +317,8 @@
       <div class="bg-white dark:bg-dark-bg w-full max-w-[500px] max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-dark-line flex flex-col animate-in fade-in zoom-in duration-200">
         <div class="p-6 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
           <h3 id="help-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[18px]">Tipo de especificação</h3>
-          <button onclick="closeModal('spec-types-help-modal')" aria-label="Fechar modal" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
-            <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+          <button onclick="closeModal('spec-types-help-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
+            <i data-lucide="x" class="w-6 h-6" aria-hidden="true"></i>
           </button>
         </div>
         <div class="flex-1 overflow-y-auto p-6 space-y-6" onscroll="handleScroll(this)">
@@ -328,21 +328,21 @@
             <button type="button" onclick="toggleAccordion(this)" aria-expanded="false"
               class="w-full p-4 flex items-center justify-between gap-2 hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
               <div class="flex items-center gap-2 min-w-0">
-                <i data-lucide="tag" class="w-4 h-4 shrink-0 text-[#2e2ee0] dark:text-blue-300"></i>
-                <span class="text-[13px] font-bold text-[#2e2ee0] dark:text-blue-300">Como funcionam as Tags</span>
+                <i data-lucide="tag" class="w-4 h-4 shrink-0 text-[#004d8d] dark:text-blue-300"></i>
+                <span class="text-[13px] font-bold text-[#004d8d] dark:text-blue-300">Como funcionam as Tags</span>
               </div>
-              <i data-lucide="chevron-down" class="w-4 h-4 shrink-0 text-[#2e2ee0] dark:text-blue-300 transition-transform"></i>
+              <i data-lucide="chevron-down" class="w-4 h-4 shrink-0 text-[#004d8d] dark:text-blue-300 transition-transform"></i>
             </button>
             <div class="accordion-content hidden p-4 pt-0 space-y-3">
               <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Cada especificação recebe uma <strong>Tag</strong> (A, B, C…) que define o grupo ao qual pertence no canvas. Use a mesma tag para specs relacionadas ao mesmo elemento ou contexto.</p>
               <div class="space-y-2">
                 <div class="flex items-start gap-2">
-                  <span class="mt-0.5 w-5 h-5 rounded flex items-center justify-center text-[9px] font-bold text-white shrink-0" style="background:#2e2ee0">A</span>
+                  <span class="mt-0.5 w-5 h-5 rounded flex items-center justify-center text-[9px] font-bold text-white shrink-0" style="background:#004d8d">A</span>
                   <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Mesma tag</strong> — ao criar, a spec fica solta no canvas para você arrastar para onde quiser. Ao clicar em <strong>Concluir posicionamento</strong>, ela se junta ao grupo da tag, na direção do lado escolhido (topo empilha para cima; demais lados empilham para baixo).</p>
                 </div>
                 <div class="flex items-start gap-2">
                   <div class="flex gap-0.5 shrink-0 mt-0.5">
-                    <span class="w-4 h-5 rounded flex items-center justify-center text-[9px] font-bold text-white" style="background:#2e2ee0">A</span>
+                    <span class="w-4 h-5 rounded flex items-center justify-center text-[9px] font-bold text-white" style="background:#004d8d">A</span>
                     <span class="w-4 h-5 rounded flex items-center justify-center text-[9px] font-bold text-white" style="background:#93537D">B</span>
                   </div>
                   <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Tags diferentes</strong> — grupos aparecem lado a lado no canvas, sem sobreposição.</p>
@@ -360,10 +360,10 @@
             <button type="button" onclick="toggleAccordion(this)" aria-expanded="false"
               class="w-full p-4 flex items-center justify-between gap-2 hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
               <div class="flex items-center gap-2 min-w-0">
-                <i data-lucide="sliders-horizontal" class="w-4 h-4 shrink-0 text-[#2e2ee0] dark:text-blue-300"></i>
-                <span class="text-[13px] font-bold text-[#2e2ee0] dark:text-blue-300">Controles do grupo</span>
+                <i data-lucide="sliders-horizontal" class="w-4 h-4 shrink-0 text-[#004d8d] dark:text-blue-300"></i>
+                <span class="text-[13px] font-bold text-[#004d8d] dark:text-blue-300">Controles do grupo</span>
               </div>
-              <i data-lucide="chevron-down" class="w-4 h-4 shrink-0 text-[#2e2ee0] dark:text-blue-300 transition-transform"></i>
+              <i data-lucide="chevron-down" class="w-4 h-4 shrink-0 text-[#004d8d] dark:text-blue-300 transition-transform"></i>
             </button>
             <div class="accordion-content hidden p-4 pt-0 space-y-3">
               <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Na lista de specs, o cabeçalho de cada grupo (tag) tem botões para organizar o que aparece no canvas.</p>
@@ -394,7 +394,7 @@
 
               <!-- Informação extra -->
               <div class="rounded-lg p-3 space-y-1.5 bg-[#EBF1F2] dark:bg-slate-700/20 border border-[#64747A] dark:border-slate-500/40">
-                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#EBF1F2] dark:bg-slate-700/30 border border-[#64747A] dark:border-slate-500/40 text-[#64747A] dark:text-slate-300">Informação extra</span>
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#EBF1F2] dark:bg-slate-700/30 border border-[#64747A] dark:border-slate-500/40 text-[#475569] dark:text-slate-300">Informação extra</span>
                 <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Informações que não se encaixam nos demais tipos — pendências, decisões de reunião ou contexto adicional.</p>
                 <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Alertas, observações, pendências, componente legado ou fora do DSC.</p>
               </div>
@@ -408,14 +408,14 @@
 
               <!-- Regra de Negócio -->
               <div class="rounded-lg p-3 space-y-1.5 bg-[#E5F5F8] dark:bg-cyan-900/20 border border-[#008CB2] dark:border-cyan-800/40">
-                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#E5F5F8] dark:bg-cyan-900/30 border border-[#008CB2] dark:border-cyan-800/40 text-[#008CB2] dark:text-cyan-300">Regra de Negócio</span>
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#E5F5F8] dark:bg-cyan-900/30 border border-[#008CB2] dark:border-cyan-800/40 text-[#006884] dark:text-cyan-300">Regra de Negócio</span>
                 <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Lógica do sistema não visível na interface — campos obrigatórios, validações e restrições de ações.</p>
                 <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Campos obrigatórios, combinações válidas/inválidas, processos condicionais.</p>
               </div>
 
               <!-- Dados da API -->
               <div class="rounded-lg p-3 space-y-1.5 bg-[#F5FEC1] dark:bg-lime-900/20 border border-[#6D8000] dark:border-lime-800/40">
-                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#F5FEC1] dark:bg-lime-900/30 border border-[#6D8000] dark:border-lime-800/40 text-[#6D8000] dark:text-lime-300">Dados da API</span>
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#F5FEC1] dark:bg-lime-900/30 border border-[#6D8000] dark:border-lime-800/40 text-[#556600] dark:text-lime-300">Dados da API</span>
                 <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Descrição:</strong> Informações técnicas para integração com o backend — endpoints, campos esperados, estados de carregamento.</p>
                 <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Exemplo:</strong> Tela dependente de resposta de API, dados mockados, informações temporárias.</p>
               </div>
@@ -443,7 +443,7 @@
           </div>
         </div>
         <div class="p-4 border-t border-gray-100 dark:border-dark-line flex justify-end">
-          <button onclick="closeHelpAndReturn()" class="px-6 py-2 bg-[#3d3dff] hover:bg-[#2e2ee0] text-white font-bold rounded-xl transition-all">Entendi</button>
+          <button onclick="closeHelpAndReturn()" class="px-6 py-2 bg-[#005ca9] hover:bg-[#004d8d] text-white font-bold rounded-xl transition-all">Entendi</button>
         </div>
       </div>
     </div>
@@ -454,8 +454,8 @@
         <div class="p-6 pb-4 border-b border-gray-100 dark:border-dark-line shrink-0">
           <div class="flex items-center justify-between mb-3">
             <h3 id="briefing-guide-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[18px]">Guia do Briefing Estratégico</h3>
-            <button onclick="closeModal('briefing-guide-modal')" aria-label="Fechar modal" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
-              <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+            <button onclick="closeModal('briefing-guide-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
+              <i data-lucide="x" class="w-6 h-6" aria-hidden="true"></i>
             </button>
           </div>
           <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mb-3">
@@ -464,7 +464,7 @@
           <div class="relative mb-3">
             <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
             <input type="text" id="briefing-guide-search" oninput="filterBriefingGuide()" placeholder="Buscar por tema ou palavra-chave..."
-              class="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl text-[12px] text-slate-700 dark:text-white outline-none focus:border-[#3d3dff]/50 transition-colors placeholder:text-slate-400" />
+              class="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl text-[12px] text-slate-700 dark:text-white outline-none focus:border-[#005ca9]/50 transition-colors placeholder:text-slate-400" />
           </div>
           <div id="briefing-guide-axis-filters" class="flex flex-wrap gap-1.5">
             <!-- Chips de eixo, populados por openBriefingGuideModal() -->
@@ -484,14 +484,14 @@
             <h3 id="briefing-question-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[18px]">Adicionar pergunta</h3>
             <p id="briefing-question-modal-axis" class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5"></p>
           </div>
-          <button onclick="closeBriefingQuestionModal()" aria-label="Fechar modal" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white shrink-0">
-            <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+          <button onclick="closeBriefingQuestionModal()" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white shrink-0">
+            <i data-lucide="x" class="w-6 h-6" aria-hidden="true"></i>
           </button>
         </div>
         <div class="flex-1 overflow-y-auto p-6 space-y-4" onscroll="handleScroll(this)">
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <label class="text-[11px] font-bold text-[#3d3dff] uppercase">Pergunta</label>
+              <label class="text-[11px] font-bold text-[#005ca9] uppercase">Pergunta</label>
               <span id="briefing-question-modal-question-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/250</span>
             </div>
             <textarea id="briefing-question-modal-question" placeholder="Digite sua pergunta estratégica..." maxlength="250"
@@ -500,7 +500,7 @@
           </div>
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <label class="text-[11px] font-bold text-[#3d3dff] uppercase">Resposta</label>
+              <label class="text-[11px] font-bold text-[#005ca9] uppercase">Resposta</label>
               <span id="briefing-question-modal-answer-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/600</span>
             </div>
             <textarea id="briefing-question-modal-answer" placeholder="Insira aqui a resposta ou direcionamento..." maxlength="600"
@@ -510,7 +510,7 @@
         </div>
         <div class="p-4 border-t border-gray-100 dark:border-dark-line flex justify-end gap-2 shrink-0">
           <button onclick="closeBriefingQuestionModal()" class="px-4 py-2 text-slate-500 dark:text-dark-muted font-bold text-[12px] rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
-          <button onclick="confirmBriefingQuestionModal()" class="px-6 py-2 bg-[#3d3dff] hover:bg-[#2e2ee0] text-white font-bold text-[12px] rounded-xl transition-all">Adicionar</button>
+          <button onclick="confirmBriefingQuestionModal()" class="px-6 py-2 bg-[#005ca9] hover:bg-[#004d8d] text-white font-bold text-[12px] rounded-xl transition-all">Adicionar</button>
         </div>
       </div>
     </div>
@@ -523,8 +523,8 @@
             <i id="onboarding-modal-icon" class="w-4.5 h-4.5"></i>
           </div>
           <h3 id="onboarding-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[16px] flex-1 min-w-0"></h3>
-          <button onclick="closeOnboarding()" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white shrink-0">
-            <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+          <button onclick="closeOnboarding()" aria-label="Fechar" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white shrink-0">
+            <i data-lucide="x" class="w-6 h-6" aria-hidden="true"></i>
           </button>
         </div>
         <div id="onboarding-modal-body" class="flex-1 overflow-y-auto p-6" onscroll="handleScroll(this)"></div>
@@ -538,10 +538,10 @@
     <div class="relative w-full max-w-[360px] max-h-full bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
       <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
         <h3 id="spec-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
-          <i data-lucide="plus-circle" class="w-4 h-4 text-[#2e2ee0]" aria-hidden="true"></i> Criar Especificação/Nota
+          <i data-lucide="plus-circle" class="w-4 h-4 text-[#004d8d]" aria-hidden="true"></i> Criar Especificação/Nota
         </h3>
-        <button onclick="closeSpecFormModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
-          <i data-lucide="x" class="w-4 h-4"></i>
+        <button onclick="closeSpecFormModal()" title="Fechar" aria-label="Fechar" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+          <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
       <!-- Elemento vinculado -- capturado na abertura do modal (ver
@@ -562,16 +562,16 @@
               <input type="text" id="spec-letter-input" maxlength="8" value="A" placeholder="A, A1, A1.1..."
                 oninput="validateSpecLetterInput()"
                 class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl pl-3 pr-8 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-100 outline-none transition-all uppercase" />
-              <span id="spec-color-swatch" class="absolute right-2 w-5 h-5 rounded-full border border-white/30 shrink-0" style="background-color:#2e2ee0" title="Cor definida pela categoria"></span>
-              <input type="hidden" id="spec-color-input" value="#2e2ee0" />
+              <span id="spec-color-swatch" class="absolute right-2 w-5 h-5 rounded-full border border-white/30 shrink-0" style="background-color:#004d8d" title="Cor definida pela categoria"></span>
+              <input type="hidden" id="spec-color-input" value="#004d8d" />
             </div>
             <p id="spec-letter-error" class="hidden text-[10px] text-red-500 mt-1 ml-1">Formato: A, B, A1, A2, A1.1, A1.2...</p>
           </div>
           <div class="col-span-3">
             <div class="flex items-center gap-1.5 mb-1.5 px-1">
               <label for="ann-category" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Categoria</label>
-              <button onclick="openHelp('spec-form-modal')" title="Ajuda" aria-label="Ajuda" class="text-slate-400 hover:text-[#3d3dff] transition-colors">
-                <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
+              <button onclick="openHelp('spec-form-modal')" title="Ajuda" aria-label="Ajuda" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-[#005ca9] transition-colors">
+                <i data-lucide="help-circle" class="w-4.5 h-4.5"></i>
               </button>
             </div>
             <div class="relative" id="cs-ann-cat">
@@ -605,7 +605,7 @@
         <div class="mb-3 flex items-center gap-2 px-1">
           <input type="checkbox" id="chk-draw-connection" checked
             onchange="_toggleSpecConnectionCurvature(this.checked)"
-            class="w-4 h-4 rounded border-gray-300 text-[#3d3dff] focus:ring-[#3d3dff] cursor-pointer" />
+            class="w-4 h-4 rounded border-gray-300 text-[#005ca9] focus:ring-[#005ca9] cursor-pointer" />
           <label for="chk-draw-connection" class="text-[12px] font-bold text-slate-700 dark:text-white cursor-pointer select-none">Inserir linhas de conexão no canvas</label>
         </div>
 
@@ -613,15 +613,15 @@
         <div id="spec-connection-curvature-container" class="mb-4 space-y-3 px-1">
           <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Estilo da Linha</label>
           <div class="grid grid-cols-2 gap-2">
-            <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+            <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
               <input type="radio" name="spec-connector-style" value="straight" checked class="sr-only" />
-              <i data-lucide="minus" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-              <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Reta</span>
+              <i data-lucide="minus" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]"></i>
+              <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]">Reta</span>
             </label>
-            <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+            <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
               <input type="radio" name="spec-connector-style" value="elbow" class="sr-only" />
-              <i data-lucide="corner-down-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-              <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Angular</span>
+              <i data-lucide="corner-down-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]"></i>
+              <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]">Angular</span>
             </label>
           </div>
         </div>
@@ -629,7 +629,7 @@
         <!-- Checkbox for Link -->
         <div class="mb-4 flex items-center gap-2 px-1">
           <input type="checkbox" id="chk-has-link" onchange="toggleLinkInput(this.checked)"
-            class="w-4 h-4 rounded border-gray-300 text-[#3d3dff] focus:ring-[#3d3dff] cursor-pointer" />
+            class="w-4 h-4 rounded border-gray-300 text-[#005ca9] focus:ring-[#005ca9] cursor-pointer" />
           <label for="chk-has-link" class="text-[12px] font-bold text-slate-700 dark:text-white cursor-pointer select-none">Incluir link de referência?</label>
         </div>
 
@@ -645,7 +645,7 @@
       </div>
       <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2 shrink-0">
         <button onclick="closeSpecFormModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Cancelar</button>
-        <button id="btn-spec-form-confirm" onclick="requestSpecProperties()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#2e2ee0] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Ir para Propriedades</button>
+        <button id="btn-spec-form-confirm" onclick="requestSpecProperties()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#004d8d] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Ir para Propriedades</button>
       </div>
     </div>
   </div>
@@ -703,17 +703,17 @@
     <div class="relative w-full max-w-sm bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
       <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line">
         <h3 id="props-modal-title" class="font-extrabold text-[15px] text-slate-800 dark:text-white flex items-center gap-2 tracking-tight">
-          <i data-lucide="layers" class="w-4 h-4 text-[#2e2ee0]" aria-hidden="true"></i> Propriedades Técnicas
+          <i data-lucide="layers" class="w-4 h-4 text-[#004d8d]" aria-hidden="true"></i> Propriedades Técnicas
         </h3>
-        <button onclick="closeSpecPropertiesModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
-          <i data-lucide="x" class="w-4 h-4" aria-hidden="true"></i>
+        <button onclick="closeSpecPropertiesModal()" title="Fechar" aria-label="Fechar" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+          <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
         </button>
       </div>
       <div class="p-4 max-h-[60vh] overflow-y-auto" onscroll="handleScroll(this)">
         <p class="text-[12px] text-slate-500 dark:text-dark-muted mb-6 leading-relaxed">Selecione as propriedades detectadas no elemento para incluir na anotação.</p>
         
         <div class="flex items-center justify-between mb-4 px-1">
-          <button onclick="toggleAllSpecProperties(true)" class="text-[10px] font-bold text-[#3d3dff] hover:underline uppercase tracking-wider">Marcar todos</button>
+          <button onclick="toggleAllSpecProperties(true)" class="text-[10px] font-bold text-[#005ca9] hover:underline uppercase tracking-wider">Marcar todos</button>
           <button onclick="toggleAllSpecProperties(false)" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted hover:text-slate-600 uppercase tracking-wider">Desmarcar todos</button>
         </div>
 
@@ -723,7 +723,7 @@
       </div>
       <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
         <button onclick="closeSpecPropertiesModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Voltar</button>
-        <button onclick="advanceToSpecPositionStep()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#2e2ee0] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Avançar</button>
+        <button onclick="advanceToSpecPositionStep()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#004d8d] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Avançar</button>
       </div>
     </div>
   </div>
@@ -741,10 +741,10 @@
     <div class="relative w-full max-w-sm bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
       <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line">
         <h3 id="spec-position-modal-title" class="font-extrabold text-[15px] text-slate-800 dark:text-white flex items-center gap-2 tracking-tight">
-          <i data-lucide="move" class="w-4 h-4 text-[#3d3dff]" aria-hidden="true"></i> Posição no Canvas
+          <i data-lucide="move" class="w-4 h-4 text-[#005ca9]" aria-hidden="true"></i> Posição no Canvas
         </h3>
-        <button onclick="closeSpecPositionModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
-          <i data-lucide="x" class="w-4 h-4" aria-hidden="true"></i>
+        <button onclick="closeSpecPositionModal()" title="Fechar" aria-label="Fechar" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+          <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
         </button>
       </div>
       <!-- Elemento vinculado -- mesmo indicador fixo das outras etapas
@@ -778,7 +778,7 @@
       </div>
       <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
         <button id="spec-position-back-btn" onclick="backToSpecPropertiesFromPosition()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Voltar</button>
-        <button id="spec-position-advance-btn" onclick="advanceToSpecExceptionStep()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#2e2ee0] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Avançar</button>
+        <button id="spec-position-advance-btn" onclick="advanceToSpecExceptionStep()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#004d8d] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Avançar</button>
         <button id="spec-position-confirm-btn" onclick="confirmSpecPosition()" class="hidden flex-1 py-2.5 text-[12px] font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-2xl transition-colors shadow-lg shadow-amber-500/20">Usar esta posição</button>
         <button id="spec-position-skip-btn" onclick="skipSpecPosition()" class="hidden flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Pular</button>
       </div>
@@ -793,8 +793,8 @@
         <h3 id="new-exc-modal-title" class="font-extrabold text-[15px] text-slate-800 dark:text-white flex items-center gap-2 tracking-tight">
           <i data-lucide="alert-triangle" class="w-4 h-4 text-orange-700" aria-hidden="true"></i> Cenário de Exceção
         </h3>
-        <button onclick="closeSpecNewExceptionModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
-          <i data-lucide="x" class="w-4 h-4" aria-hidden="true"></i>
+        <button onclick="closeSpecNewExceptionModal()" title="Fechar" aria-label="Fechar" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+          <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
         </button>
       </div>
       <!-- Elemento vinculado -- mesmo indicador fixo do primeiro modal (ver
@@ -842,7 +842,7 @@
           </div>
           <input type="text" id="new-exc-titulo" placeholder="Ex: Usuário sem permissão de acesso" maxlength="80"
             oninput="_updateCharCount(this, 80)"
-            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all" />
+            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all" />
         </div>
 
         <div>
@@ -852,12 +852,12 @@
           </div>
           <textarea id="new-exc-obs" rows="3" placeholder="Contexto adicional, comportamento esperado..." maxlength="400"
             oninput="_updateCharCount(this, 400)"
-            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none resize-none transition-all"></textarea>
+            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none resize-none transition-all"></textarea>
         </div>
       </div>
       <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
         <button onclick="backToSpecPositionFromException()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Voltar</button>
-        <button onclick="finalizeSpecCreation()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#2e2ee0] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Criar Especificação</button>
+        <button onclick="finalizeSpecCreation()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#004d8d] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Criar Especificação</button>
       </div>
     </div>
   </div>
@@ -868,10 +868,10 @@
     <div class="relative w-full max-w-sm bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
       <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line">
         <h3 id="measure-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
-          <i data-lucide="scaling" class="w-4 h-4 text-[#2e2ee0]" aria-hidden="true"></i> Configurar Medidas
+          <i data-lucide="scaling" class="w-4 h-4 text-[#004d8d]" aria-hidden="true"></i> Configurar Medidas
         </h3>
-        <button onclick="closeMeasureModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
-          <i data-lucide="x" class="w-4 h-4" aria-hidden="true"></i>
+        <button onclick="closeMeasureModal()" title="Fechar" aria-label="Fechar" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+          <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
         </button>
       </div>
       <div class="p-6 overflow-y-auto max-h-[80vh]" onscroll="handleScroll(this)">
@@ -908,7 +908,7 @@
       </div>
       <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
         <button onclick="closeMeasureModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Cancelar</button>
-        <button onclick="executeMeasurement()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#2e2ee0] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Inserir</button>
+        <button onclick="executeMeasurement()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#004d8d] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Inserir</button>
       </div>
     </div>
   </div>
@@ -918,56 +918,56 @@
     <div class="relative w-full max-w-[400px] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
       <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-dark-line">
         <h3 id="scan-modal-title" class="text-[#1E293B] dark:text-white font-extrabold text-[15px] tracking-tight">Selecionar Categorias</h3>
-        <button onclick="closeModal('scan-categories-modal')" aria-label="Fechar modal" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white transition-colors">
-          <i data-lucide="x" class="w-5 h-5"></i>
+        <button onclick="closeModal('scan-categories-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white transition-colors">
+          <i data-lucide="x" class="w-6 h-6"></i>
         </button>
       </div>
       <div class="p-6 overflow-y-auto max-h-[70vh]" onscroll="handleScroll(this)">
         <div class="mb-5 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-3">
-          <i data-lucide="info" class="w-5 h-5 text-[#3d3dff] shrink-0"></i>
+          <i data-lucide="info" class="w-5 h-5 text-[#005ca9] shrink-0"></i>
           <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-relaxed">
             <strong>Dica de desempenho:</strong> Selecione apenas as categorias necessárias para um escaneamento mais rápido.
           </p>
         </div>
 
         <div class="flex items-center justify-between mb-4 px-1">
-          <button onclick="toggleAllScanCategories(true)" class="text-[11px] font-bold text-[#3d3dff] hover:underline uppercase tracking-wider">Marcar todos</button>
+          <button onclick="toggleAllScanCategories(true)" class="text-[11px] font-bold text-[#005ca9] hover:underline uppercase tracking-wider">Marcar todos</button>
           <button onclick="toggleAllScanCategories(false)" class="text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:text-slate-600 uppercase tracking-wider">Desmarcar todos</button>
         </div>
 
         <div id="scan-categories-list" class="space-y-2">
           <label class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:bg-white dark:hover:bg-slate-800 transition-all group">
-            <input type="checkbox" name="scan-cat" value="components" checked class="w-4 h-4 rounded border-gray-300 text-[#3d3dff] focus:ring-[#3d3dff]" />
+            <input type="checkbox" name="scan-cat" value="components" checked class="w-4 h-4 rounded border-gray-300 text-[#005ca9] focus:ring-[#005ca9]" />
             <div class="flex flex-col">
-              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#3d3dff]">Componentes</span>
+              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#005ca9]">Componentes</span>
               <span class="text-[10px] text-gray-500 dark:text-dark-muted">Botões, Inputs, Cards e Áreas clicáveis</span>
             </div>
           </label>
           <label class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:bg-white dark:hover:bg-slate-800 transition-all group">
-            <input type="checkbox" name="scan-cat" value="icons" checked class="w-4 h-4 rounded border-gray-300 text-[#3d3dff] focus:ring-[#3d3dff]" />
+            <input type="checkbox" name="scan-cat" value="icons" checked class="w-4 h-4 rounded border-gray-300 text-[#005ca9] focus:ring-[#005ca9]" />
             <div class="flex flex-col">
-              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#3d3dff]">Ícones</span>
+              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#005ca9]">Ícones</span>
               <span class="text-[10px] text-gray-500 dark:text-dark-muted">Vetores e elementos de iconografia</span>
             </div>
           </label>
           <label class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:bg-white dark:hover:bg-slate-800 transition-all group">
-            <input type="checkbox" name="scan-cat" value="typography" checked class="w-4 h-4 rounded border-gray-300 text-[#3d3dff] focus:ring-[#3d3dff]" />
+            <input type="checkbox" name="scan-cat" value="typography" checked class="w-4 h-4 rounded border-gray-300 text-[#005ca9] focus:ring-[#005ca9]" />
             <div class="flex flex-col">
-              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#3d3dff]">Tipografia</span>
+              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#005ca9]">Tipografia</span>
               <span class="text-[10px] text-gray-500 dark:text-dark-muted">Textos, Títulos e Parágrafos</span>
             </div>
           </label>
           <label class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:bg-white dark:hover:bg-slate-800 transition-all group">
-            <input type="checkbox" name="scan-cat" value="containers" checked class="w-4 h-4 rounded border-gray-300 text-[#3d3dff] focus:ring-[#3d3dff]" />
+            <input type="checkbox" name="scan-cat" value="containers" checked class="w-4 h-4 rounded border-gray-300 text-[#005ca9] focus:ring-[#005ca9]" />
             <div class="flex flex-col">
-              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#3d3dff]">Frames e Layouts</span>
+              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#005ca9]">Frames e Layouts</span>
               <span class="text-[10px] text-gray-500 dark:text-dark-muted">Containers, Seções e Grids</span>
             </div>
           </label>
           <label class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:bg-white dark:hover:bg-slate-800 transition-all group">
-            <input type="checkbox" name="scan-cat" value="shapes" checked class="w-4 h-4 rounded border-gray-300 text-[#3d3dff] focus:ring-[#3d3dff]" />
+            <input type="checkbox" name="scan-cat" value="shapes" checked class="w-4 h-4 rounded border-gray-300 text-[#005ca9] focus:ring-[#005ca9]" />
             <div class="flex flex-col">
-              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#3d3dff]">Vetores</span>
+              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#005ca9]">Vetores</span>
               <span class="text-[10px] text-gray-500 dark:text-dark-muted">Formas, Ilustrações e paths complexos</span>
             </div>
           </label>
@@ -976,7 +976,7 @@
       </div>
       <div class="p-5 border-t border-gray-100 dark:border-dark-line flex gap-3">
         <button onclick="closeModal('scan-categories-modal')" class="flex-1 py-3 text-[13px] font-bold text-gray-500 dark:text-dark-muted bg-gray-50 hover:bg-gray-100 dark:bg-dark-bg dark:hover:bg-slate-800 rounded-2xl transition-colors">Cancelar</button>
-        <button onclick="executeScanFrameWithCategories()" class="flex-1 py-3 text-[13px] font-bold text-white bg-[#3d3dff] hover:bg-blue-700 rounded-2xl transition-all shadow-lg shadow-blue-500/20 active:scale-95">Escanear Agora</button>
+        <button onclick="executeScanFrameWithCategories()" class="flex-1 py-3 text-[13px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 rounded-2xl transition-all shadow-lg shadow-blue-500/20 active:scale-95">Escanear Agora</button>
       </div>
     </div>
   </div>
@@ -987,8 +987,8 @@
     <div class="relative w-full max-w-[340px] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
 
       <div class="p-6 text-center">
-        <div class="w-14 h-14 bg-[#3d3dff]/10 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <i data-lucide="shield-check" class="w-7 h-7 text-[#3d3dff]"></i>
+        <div class="w-14 h-14 bg-[#005ca9]/10 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <i data-lucide="shield-check" class="w-7 h-7 text-[#005ca9]"></i>
         </div>
         <h3 class="text-[16px] font-extrabold text-slate-800 dark:text-white mb-2">Verificar Conformidade</h3>
         <p class="text-[12px] text-slate-500 dark:text-dark-muted leading-relaxed mb-2">
@@ -1001,7 +1001,7 @@
 
       <div class="px-5 pb-5 flex flex-col gap-2">
         <button onclick="toggleCollapse(); closeModal('check-designs-modal')"
-          class="w-full py-3 bg-[#2e2ee0] hover:bg-[#004d8f] text-white text-[13px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-2 active:scale-95">
+          class="w-full py-3 bg-[#004d8d] hover:bg-[#004d8f] text-white text-[13px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-2 active:scale-95">
           <i data-lucide="minimize-2" class="w-4 h-4"></i>
           Recolher e verificar agora
         </button>
@@ -1021,8 +1021,8 @@
         <h3 id="exc-modal-title" class="font-extrabold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
           <i data-lucide="alert-triangle" class="w-4 h-4 text-orange-700"></i> Cenário de Exceção
         </h3>
-        <button onclick="closeModal('exception-modal')" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
-          <i data-lucide="x" class="w-4 h-4"></i>
+        <button onclick="closeModal('exception-modal')" aria-label="Fechar" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+          <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
@@ -1067,9 +1067,9 @@
           <div class="flex gap-2">
             <input type="text" id="exc-modal-vinc" placeholder="Ex: Usuário sem permissão de acesso" maxlength="80"
               oninput="_updateCharCount(this, 80)"
-              class="flex-1 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all" />
+              class="flex-1 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all" />
             <button onclick="linkExcModalVinc()" title="Usar nome e link do frame selecionado no canvas"
-              class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-[#3d3dff] hover:text-white text-slate-500 dark:text-dark-muted rounded-2xl text-[11px] font-bold transition-all flex items-center gap-1.5 shrink-0">
+              class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-[#005ca9] hover:text-white text-slate-500 dark:text-dark-muted rounded-2xl text-[11px] font-bold transition-all flex items-center gap-1.5 shrink-0">
               <i data-lucide="crosshair" class="w-3.5 h-3.5"></i> Vincular
             </button>
           </div>
@@ -1082,7 +1082,7 @@
           <div class="relative">
             <i data-lucide="link" class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 dark:text-dark-muted"></i>
             <input type="text" id="exc-modal-anchor" placeholder="https://..." onblur="validateUrl(this)"
-              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl pl-9 pr-3 py-2.5 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all" />
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl pl-9 pr-3 py-2.5 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all" />
           </div>
         </div>
 
@@ -1091,19 +1091,19 @@
           <div class="flex items-center justify-between mb-2">
             <label class="flex items-center gap-2 cursor-pointer group">
               <input type="checkbox" id="exc-modal-has-obs" onchange="toggleExcModalObs(this.checked)"
-                class="w-4 h-4 rounded border-gray-300 text-[#3d3dff] focus:ring-[#3d3dff] cursor-pointer" />
-              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#3d3dff] transition-colors select-none">Incluir observações</span>
+                class="w-4 h-4 rounded border-gray-300 text-[#005ca9] focus:ring-[#005ca9] cursor-pointer" />
+              <span class="text-[12px] font-bold text-slate-700 dark:text-white group-hover:text-[#005ca9] transition-colors select-none">Incluir observações</span>
             </label>
             <span id="exc-modal-obs-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/400</span>
           </div>
           <textarea id="exc-modal-obs" rows="3" maxlength="400"
             oninput="_updateCharCount(this, 400)"
             placeholder="Contexto adicional, link de API, comportamento esperado..."
-            class="hidden w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-4 py-3 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none resize-none transition-all animate-in slide-in-from-top-1 duration-200"></textarea>
+            class="hidden w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-4 py-3 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none resize-none transition-all animate-in slide-in-from-top-1 duration-200"></textarea>
           <label id="exc-modal-inject-wrap" class="hidden mt-2 flex items-center gap-2 cursor-pointer group">
             <input type="checkbox" id="exc-modal-inject-spec"
-              class="w-4 h-4 rounded border-gray-300 text-[#3d3dff] focus:ring-[#3d3dff] cursor-pointer" />
-            <span class="text-[11px] text-slate-500 dark:text-dark-muted group-hover:text-[#3d3dff] transition-colors select-none">Injetar observação no frame de especificação</span>
+              class="w-4 h-4 rounded border-gray-300 text-[#005ca9] focus:ring-[#005ca9] cursor-pointer" />
+            <span class="text-[11px] text-slate-500 dark:text-dark-muted group-hover:text-[#005ca9] transition-colors select-none">Injetar observação no frame de especificação</span>
           </label>
         </div>
 
@@ -1112,7 +1112,7 @@
       <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
         <button onclick="closeModal('exception-modal')" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-2xl transition-colors">Cancelar</button>
         <button id="exc-modal-confirm" onclick="confirmException()" disabled
-          class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#2e2ee0] hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Salvar Cenário</button>
+          class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#004d8d] hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Salvar Cenário</button>
       </div>
     </div>
   </div>
@@ -1168,15 +1168,15 @@
 
     <!-- Header -->
     <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-line flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-[#3d3dff]/10 flex items-center justify-center shrink-0">
-        <i data-lucide="file-check" class="w-5 h-5 text-[#3d3dff]"></i>
+      <div class="w-9 h-9 rounded-xl bg-[#005ca9]/10 flex items-center justify-center shrink-0">
+        <i data-lucide="file-check" class="w-5 h-5 text-[#005ca9]"></i>
       </div>
       <div class="flex-1 min-w-0">
         <h3 class="text-[14px] font-extrabold text-slate-800 dark:text-white leading-tight">Dados importados!</h3>
         <p id="import-modal-subtitle" class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5 leading-tight">Versão importada com sucesso.</p>
       </div>
-      <button onclick="closeModal('import-apply-modal')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 dark:text-dark-muted shrink-0">
-        <i data-lucide="x" class="w-4 h-4"></i>
+      <button onclick="closeModal('import-apply-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 dark:text-dark-muted shrink-0">
+        <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
 
@@ -1204,8 +1204,8 @@
     <div class="px-5 pb-2 space-y-2">
       <p class="text-[11px] font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wide">Aplicar no canvas</p>
 
-      <label class="flex items-start gap-3 p-3 border-2 border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:border-[#3d3dff]/40 transition-colors has-[:checked]:border-[#3d3dff] has-[:checked]:bg-[#3d3dff]/5">
-        <input type="checkbox" id="import-opt-ficha" class="mt-0.5 w-4 h-4 accent-[#3d3dff] shrink-0" checked>
+      <label class="flex items-start gap-3 p-3 border-2 border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:border-[#005ca9]/40 transition-colors has-[:checked]:border-[#005ca9] has-[:checked]:bg-[#005ca9]/5">
+        <input type="checkbox" id="import-opt-ficha" class="mt-0.5 w-4 h-4 accent-[#005ca9] shrink-0" checked>
         <div>
           <p class="text-[12px] font-bold text-slate-800 dark:text-white leading-tight">Gerar Ficha Técnica</p>
           <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug mt-0.5">Cria o documento completo no canvas do Figma com todos os dados importados.</p>
@@ -1242,7 +1242,7 @@
       <button onclick="closeModal('import-apply-modal')" class="flex-1 px-4 py-2.5 border border-gray-200 dark:border-dark-line text-slate-600 dark:text-dark-muted text-[12px] font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
         Apenas restaurar
       </button>
-      <button onclick="applyImportedDataToCanvas()" class="flex-1 px-4 py-2.5 bg-[#3d3dff] text-white text-[12px] font-bold rounded-2xl hover:bg-[#005a8e] transition-colors flex items-center justify-center gap-2">
+      <button onclick="applyImportedDataToCanvas()" class="flex-1 px-4 py-2.5 bg-[#005ca9] text-white text-[12px] font-bold rounded-2xl hover:bg-[#005a8e] transition-colors flex items-center justify-center gap-2">
         <i data-lucide="zap" class="w-3.5 h-3.5"></i>
         Aplicar no canvas
       </button>
@@ -1299,7 +1299,7 @@
     <div class="border border-gray-200 dark:border-dark-line rounded-2xl p-3.5 flex flex-col gap-2.5">
       <div class="flex items-center justify-between">
         <p class="text-[11px] font-bold text-slate-700 dark:text-white">Apagar conteúdo do canvas</p>
-        <button onclick="toggleSelectAllCanvasDelete()" class="text-[10px] font-bold text-[#3d3dff] hover:underline">Selecionar tudo</button>
+        <button onclick="toggleSelectAllCanvasDelete()" class="text-[10px] font-bold text-[#005ca9] hover:underline">Selecionar tudo</button>
       </div>
       <p class="text-[10.5px] text-slate-500 dark:text-dark-muted leading-relaxed">Remove de verdade os elementos criados pelo Handex no canvas do Figma (esta página). Escolha o que apagar:</p>
 
@@ -1328,6 +1328,26 @@
       </button>
     </div>
 
+    <!-- Bloco 3: tudo de uma vez (registro do plugin + canvas desta página) -->
+    <div class="border border-red-200 dark:border-red-800/40 rounded-2xl p-3.5 flex flex-col gap-2.5 bg-red-50/40 dark:bg-red-900/10">
+      <p class="text-[11px] font-bold text-red-700 dark:text-red-400">Apagar tudo</p>
+      <p class="text-[10.5px] text-slate-500 dark:text-dark-muted leading-relaxed">Combina as duas ações acima: reseta o registro do Handex e remove todo o conteúdo criado por ele nesta página do Figma.</p>
+      <button id="clear-everything-btn" onclick="requestClearEverything()"
+        class="w-full py-2 rounded-2xl bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold transition-colors">
+        Apagar tudo
+      </button>
+      <div id="clear-everything-confirm-step" class="hidden space-y-2 pt-1 border-t border-red-100 dark:border-red-800/30">
+        <p class="text-[10.5px] text-red-600 dark:text-red-400 font-bold leading-relaxed">Isso remove o registro do plugin e todo o conteúdo do Handex nesta página. Digite APAGAR para confirmar.</p>
+        <input type="text" id="clear-everything-confirm-input" placeholder="Digite APAGAR"
+          oninput="_updateClearEverythingConfirmState()"
+          class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2 text-[12px] text-slate-700 dark:text-white focus:ring-2 focus:ring-red-200 outline-none transition-all" />
+        <button id="clear-everything-confirm-btn" onclick="confirmClearEverything()" disabled
+          class="w-full py-2 rounded-2xl bg-red-500 hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-500 text-white text-[11px] font-bold transition-colors">
+          Confirmar exclusão definitiva
+        </button>
+      </div>
+    </div>
+
     <button onclick="closeModal('confirm-clear-modal')"
       class="w-full py-2 rounded-2xl border border-gray-200 dark:border-dark-line text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
       Fechar
@@ -1342,13 +1362,13 @@
     <!-- Header -->
     <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-line flex items-center justify-between">
       <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-[#3d3dff]/10 rounded-xl flex items-center justify-center">
-          <i data-lucide="send" class="w-4 h-4 text-[#3d3dff]"></i>
+        <div class="w-8 h-8 bg-[#005ca9]/10 rounded-xl flex items-center justify-center">
+          <i data-lucide="send" class="w-4 h-4 text-[#005ca9]"></i>
         </div>
         <h3 class="text-[14px] font-extrabold text-slate-800 dark:text-white">Gerar Ficha de Handoff</h3>
       </div>
-      <button onclick="closeModal('handoff-inject-modal')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 dark:text-dark-muted">
-        <i data-lucide="x" class="w-4 h-4"></i>
+      <button onclick="closeModal('handoff-inject-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 dark:text-dark-muted">
+        <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
 
@@ -1361,7 +1381,7 @@
       <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Preencha os campos indicados em Informações do Projeto para que a ficha seja identificada corretamente.</p>
       <div class="pt-1">
         <button onclick="closeModal('handoff-inject-modal'); navigate('view-dados-projeto')"
-          class="w-full py-2.5 bg-[#3d3dff] hover:bg-[#2e2ee0] text-white text-[12px] font-bold rounded-2xl transition-colors">
+          class="w-full py-2.5 bg-[#005ca9] hover:bg-[#004d8d] text-white text-[12px] font-bold rounded-2xl transition-colors">
           Continuar documentando
         </button>
       </div>
@@ -1380,7 +1400,7 @@
           Continuar documentando
         </button>
         <button onclick="closeModal('handoff-inject-modal'); createHandoffOnCanvas()"
-          class="flex-1 py-2.5 bg-[#3d3dff] hover:bg-[#2e2ee0] text-white text-[12px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-1.5">
+          class="flex-1 py-2.5 bg-[#005ca9] hover:bg-[#004d8d] text-white text-[12px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-1.5">
           <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
           Gerar assim mesmo
         </button>
@@ -1391,17 +1411,17 @@
     <div id="inject-state-multi" class="hidden px-5 py-5 space-y-3">
       <p class="text-[11px] text-slate-500 dark:text-dark-muted">Selecione o que deseja incluir na ficha:</p>
 
-      <label id="inject-chk-info-row" class="hidden flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line cursor-pointer hover:border-[#3d3dff]/30 transition-colors">
+      <label id="inject-chk-info-row" class="hidden flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line cursor-pointer hover:border-[#005ca9]/30 transition-colors">
         <div class="flex items-center gap-2.5">
           <div class="w-7 h-7 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center shrink-0">
-            <i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-[#3d3dff]"></i>
+            <i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-[#005ca9]"></i>
           </div>
           <div>
             <p class="text-[12px] font-bold text-slate-800 dark:text-white">Informações do Projeto</p>
             <p id="inject-info-count" class="text-[10px] text-slate-500 dark:text-dark-muted"></p>
           </div>
         </div>
-        <input type="checkbox" id="inject-chk-info" checked class="w-4 h-4 rounded border-gray-300 text-[#3d3dff] focus:ring-[#3d3dff]" />
+        <input type="checkbox" id="inject-chk-info" checked class="w-4 h-4 rounded border-gray-300 text-[#005ca9] focus:ring-[#005ca9]" />
       </label>
 
       <label id="inject-chk-specs-row" class="hidden flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line cursor-pointer hover:border-indigo-300 transition-colors">
@@ -1449,7 +1469,7 @@
           Cancelar
         </button>
         <button onclick="_confirmHandoffInject()"
-          class="flex-1 py-2.5 bg-[#3d3dff] hover:bg-[#2e2ee0] text-white text-[12px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-1.5">
+          class="flex-1 py-2.5 bg-[#005ca9] hover:bg-[#004d8d] text-white text-[12px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-1.5">
           <i data-lucide="send" class="w-3.5 h-3.5"></i>
           Gerar Ficha
         </button>
@@ -1465,13 +1485,13 @@
 
     <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-line flex items-center justify-between">
       <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-[#3d3dff]/10 rounded-xl flex items-center justify-center">
-          <i data-lucide="spline" class="w-4 h-4 text-[#3d3dff]"></i>
+        <div class="w-8 h-8 bg-[#005ca9]/10 rounded-xl flex items-center justify-center">
+          <i data-lucide="spline" class="w-4 h-4 text-[#005ca9]"></i>
         </div>
         <h3 class="text-[14px] font-extrabold text-slate-800 dark:text-white">Editar Conexão</h3>
       </div>
-      <button onclick="closeEditFlowModal()" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 dark:text-dark-muted">
-        <i data-lucide="x" class="w-4 h-4"></i>
+      <button onclick="closeEditFlowModal()" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 dark:text-dark-muted">
+        <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
 
@@ -1485,7 +1505,7 @@
         </div>
         <input type="text" id="edit-flow-name-input" maxlength="20" placeholder="Ex: Conexão 5..."
           oninput="_updateCharCount(this, 20)"
-          class="w-full bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all" />
+          class="w-full bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all" />
       </div>
 
       <!-- Tipo da conexão -- permite trocar Sequência/Mensagem/Decisão numa
@@ -1523,21 +1543,21 @@
         </div>
         <textarea id="edit-flow-chip-text" placeholder="Ex: Sim, Não, Enviar..." maxlength="20"
           oninput="_updateCharCount(this, 20)"
-          class="w-full h-20 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#3d3dff]/20 outline-none resize-none transition-all"></textarea>
+          class="w-full h-20 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none resize-none transition-all"></textarea>
       </div>
 
       <div class="space-y-3">
         <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Estilo da Linha</label>
         <div class="grid grid-cols-2 gap-2">
-          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
             <input type="radio" name="edit-flow-connector-style" value="straight" class="sr-only" />
-            <i data-lucide="minus" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Reta</span>
+            <i data-lucide="minus" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]"></i>
+            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]">Reta</span>
           </label>
-          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
             <input type="radio" name="edit-flow-connector-style" value="elbow" class="sr-only" />
-            <i data-lucide="corner-down-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Angular</span>
+            <i data-lucide="corner-down-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]"></i>
+            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]">Angular</span>
           </label>
         </div>
       </div>
@@ -1548,7 +1568,7 @@
           Cancelar
         </button>
         <button id="edit-flow-save-btn" onclick="confirmEditFlow()"
-          class="flex-1 py-2.5 bg-[#3d3dff] hover:bg-[#2e2ee0] text-white text-[12px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-1.5">
+          class="flex-1 py-2.5 bg-[#005ca9] hover:bg-[#004d8d] text-white text-[12px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-1.5">
           <i data-lucide="check" class="w-3.5 h-3.5"></i>
           Salvar
         </button>
@@ -1564,13 +1584,13 @@
 
     <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-line flex items-center justify-between">
       <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-[#3d3dff]/10 rounded-xl flex items-center justify-center">
-          <i data-lucide="pencil-ruler" class="w-4 h-4 text-[#3d3dff]"></i>
+        <div class="w-8 h-8 bg-[#005ca9]/10 rounded-xl flex items-center justify-center">
+          <i data-lucide="pencil-ruler" class="w-4 h-4 text-[#005ca9]"></i>
         </div>
         <h3 class="text-[14px] font-extrabold text-slate-800 dark:text-white">Editar Linha da Spec</h3>
       </div>
-      <button onclick="closeEditSpecConnectorModal()" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 dark:text-dark-muted">
-        <i data-lucide="x" class="w-4 h-4"></i>
+      <button onclick="closeEditSpecConnectorModal()" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 dark:text-dark-muted">
+        <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
 
@@ -1578,15 +1598,15 @@
       <div class="space-y-3">
         <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Estilo da Linha</label>
         <div class="grid grid-cols-2 gap-2">
-          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
             <input type="radio" name="edit-spec-connector-style" value="straight" class="sr-only" onchange="_editSpecConnectorStyleManuallySet = true" />
-            <i data-lucide="minus" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Reta</span>
+            <i data-lucide="minus" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]"></i>
+            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]">Reta</span>
           </label>
-          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#3d3dff] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
             <input type="radio" name="edit-spec-connector-style" value="elbow" class="sr-only" onchange="_editSpecConnectorStyleManuallySet = true" />
-            <i data-lucide="corner-down-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]"></i>
-            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#3d3dff]">Angular</span>
+            <i data-lucide="corner-down-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]"></i>
+            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]">Angular</span>
           </label>
         </div>
       </div>
@@ -1597,7 +1617,7 @@
           Cancelar
         </button>
         <button id="edit-spec-connector-save-btn" onclick="confirmEditSpecConnector()"
-          class="flex-1 py-2.5 bg-[#3d3dff] hover:bg-[#2e2ee0] text-white text-[12px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-1.5">
+          class="flex-1 py-2.5 bg-[#005ca9] hover:bg-[#004d8d] text-white text-[12px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-1.5">
           <i data-lucide="check" class="w-3.5 h-3.5"></i>
           Salvar
         </button>
@@ -1613,10 +1633,10 @@
   <div class="relative w-full max-w-sm bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
     <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line">
       <h3 id="spec-note-modal-title" class="font-extrabold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
-        <i data-lucide="sticky-note" class="w-4 h-4 text-[#2e2ee0]"></i> Nota da Especificação
+        <i data-lucide="sticky-note" class="w-4 h-4 text-[#004d8d]"></i> Nota da Especificação
       </h3>
-      <button onclick="closeModal('spec-note-modal')" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
-        <i data-lucide="x" class="w-4 h-4"></i>
+      <button onclick="closeModal('spec-note-modal')" aria-label="Fechar" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+        <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
 
@@ -1636,7 +1656,7 @@
         Cancelar
       </button>
       <button onclick="confirmSpecNote()"
-        class="flex-1 py-2.5 bg-[#3d3dff] hover:bg-[#2e2ee0] text-white text-[12px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-1.5">
+        class="flex-1 py-2.5 bg-[#005ca9] hover:bg-[#004d8d] text-white text-[12px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-1.5">
         <i data-lucide="check" class="w-3.5 h-3.5"></i>
         Salvar
       </button>

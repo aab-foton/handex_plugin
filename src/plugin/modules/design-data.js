@@ -268,7 +268,7 @@
               opts: {
                 targetNodeId: resolvedNodeId,
                 letter: spec.letter || 'A',
-                color: spec.color || '#3d3dff',
+                color: spec.color || '#005ca9',
                 note: spec.note || '',
                 properties: spec.properties || [],
                 categoryLabel: spec.type || ''
@@ -427,6 +427,12 @@
       if (step) step.classList.add('hidden');
       const input = document.getElementById('clear-plugin-confirm-input');
       if (input) input.value = '';
+      const everythingBtn = document.getElementById('clear-everything-btn');
+      if (everythingBtn) everythingBtn.classList.remove('hidden');
+      const everythingStep = document.getElementById('clear-everything-confirm-step');
+      if (everythingStep) everythingStep.classList.add('hidden');
+      const everythingInput = document.getElementById('clear-everything-confirm-input');
+      if (everythingInput) everythingInput.value = '';
       openModal('confirm-clear-modal');
     }
 
@@ -463,8 +469,12 @@
     }
     window._updateClearPluginConfirmState = _updateClearPluginConfirmState;
 
-    function confirmClearAllData() {
-      closeModal('confirm-clear-modal');
+    function confirmClearAllData(opts) {
+      opts = opts || {};
+      // combinedFlow: true quando chamada por _finishClearEverything, que já
+      // cuida de fechar o modal/navegar/mostrar um toast único cobrindo
+      // canvas+registro -- evita fechar duas vezes e mostrar dois toasts.
+      if (!opts.combinedFlow) closeModal('confirm-clear-modal');
       // Reset da UI de confirmação (botão/step) fica em clearAllData(), que
       // roda toda vez que a modal ABRE -- cobre também os caminhos de saída
       // sem confirmar (Fechar, Esc), que não passam por esta função.
@@ -507,9 +517,66 @@
       // Sem isso, o reset só vive na sessão atual -- o figma.clientStorage
       // continua com os dados antigos e eles voltam ao reabrir o plugin.
       saveToStorage();
+      if (opts.combinedFlow) return;
       navigate('view-home');
       showToast('Dados do plugin removidos.');
     }
+
+    // "Apagar tudo" combina as duas ações acima (registro do plugin +
+    // conteúdo do canvas) numa confirmação só -- existiam lado a lado no
+    // modal mas nunca conectadas, deixando o registro do plugin ser
+    // resetado sem o canvas acompanhar (ou vice-versa), o que é o cenário
+    // exato que já causou bug de dado órfão nesta base (ver comentário em
+    // confirmClearAllData). Reaproveita a mesma trava de digitar "APAGAR".
+    let _clearingEverything = false;
+
+    function requestClearEverything() {
+      const btn = document.getElementById('clear-everything-btn');
+      if (btn) btn.classList.add('hidden');
+      const step = document.getElementById('clear-everything-confirm-step');
+      if (step) step.classList.remove('hidden');
+      const input = document.getElementById('clear-everything-confirm-input');
+      if (input) { input.value = ''; input.focus(); }
+      _updateClearEverythingConfirmState();
+    }
+    window.requestClearEverything = requestClearEverything;
+
+    function _updateClearEverythingConfirmState() {
+      const input = document.getElementById('clear-everything-confirm-input');
+      const btn = document.getElementById('clear-everything-confirm-btn');
+      if (!input || !btn) return;
+      btn.disabled = input.value.trim().toUpperCase() !== 'APAGAR';
+    }
+    window._updateClearEverythingConfirmState = _updateClearEverythingConfirmState;
+
+    function confirmClearEverything() {
+      _clearingEverything = true;
+      parent.postMessage({
+        pluginMessage: { type: 'delete-canvas-content', ficha: true, specs: true, medidas: true, fluxos: true }
+      }, '*');
+    }
+    window.confirmClearEverything = confirmClearEverything;
+
+    // Chamado pelo handler de 'canvas-content-deleted' em messages.js quando
+    // _clearingEverything está ativo -- roda depois da limpeza do canvas
+    // confirmar, pra não deixar o registro apontando pra nós que já não
+    // existem mais caso a limpeza do canvas falhe no meio do caminho.
+    function _finishClearEverything(canvasCounts) {
+      _clearingEverything = false;
+      closeModal('confirm-clear-modal');
+      confirmClearAllData({ combinedFlow: true });
+      navigate('view-home');
+      const c = canvasCounts || {};
+      const parts = [];
+      if (c.ficha) parts.push(`${c.ficha} ficha${c.ficha > 1 ? 's' : ''}`);
+      if (c.spec) parts.push(`${c.spec} spec${c.spec > 1 ? 's' : ''}`);
+      if (c.medida) parts.push(`${c.medida} medida${c.medida > 1 ? 's' : ''}`);
+      if (c.fluxo) parts.push(`${c.fluxo} fluxo${c.fluxo > 1 ? 's' : ''}`);
+      const canvasMsg = parts.length ? `, ${parts.join(', ')} removido(s) do canvas` : '';
+      showToast(`Registro do plugin apagado${canvasMsg}.`);
+    }
+    window._finishClearEverything = _finishClearEverything;
+    window._isClearingEverything = () => _clearingEverything;
 
     function toggleSelectAllCanvasDelete() {
       const ids = ['clear-canvas-ficha', 'clear-canvas-specs', 'clear-canvas-medidas', 'clear-canvas-fluxos'];

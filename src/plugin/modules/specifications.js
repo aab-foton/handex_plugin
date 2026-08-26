@@ -95,7 +95,10 @@
       const chev = document.getElementById(`sub-chev-${type}-${frameId}`);
       if (body && body.classList.contains('hidden')) {
         body.classList.remove('hidden');
-        if (chev) chev.style.transform = 'rotate(90deg)';
+        if (chev) {
+          chev.style.transform = 'rotate(90deg)';
+          chev.classList.add('text-[#005ca9]', 'dark:text-blue-300');
+        }
       }
     }
     window.showFrameSection = showFrameSection;
@@ -237,7 +240,7 @@
               onclick="focusNode('${frame.figmaId}')"
               title="Focar no elemento no canvas"
               aria-label="Focar no elemento no canvas"
-              class="w-7 h-7 flex items-center justify-center rounded-xl text-[#3d3dff] hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors shrink-0">
+              class="w-7 h-7 flex items-center justify-center rounded-xl text-[#005ca9] hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors shrink-0">
               <i data-lucide="locate" class="w-3.5 h-3.5"></i>
             </button>
             <button type="button"
@@ -296,7 +299,7 @@
               <span class="flex-1 text-[12px] font-bold text-slate-700 dark:text-white">Tokens Escaneados</span>
               <span id="sub-count-tokens-${fid}" class="text-[10px] text-slate-500 dark:text-dark-muted mr-1"></span>
               <span id="sub-spinner-tokens-${fid}" class="hidden mr-1.5">
-                <i data-lucide="loader-2" class="w-3 h-3 text-[#3d3dff] animate-spin"></i>
+                <i data-lucide="loader-2" class="w-3 h-3 text-[#005ca9] animate-spin"></i>
               </span>
               <i data-lucide="chevron-right" id="sub-chev-tokens-${fid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0"></i>
             </button>
@@ -319,7 +322,7 @@
                 <input type="checkbox" id="check-done-${fid}" class="sr-only peer"
                   ${frame.audit && frame.audit.checkDone ? 'checked' : ''}
                   onchange="setFrameCheckDone('${fid}', this.checked)">
-                <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#3d3dff]"></div>
+                <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#005ca9]"></div>
               </label>
             </div>
 
@@ -330,7 +333,7 @@
                 <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug">Re-escaneia o frame após ajustes</p>
               </div>
               <button onclick="scanFrame('${fid}')"
-                class="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#3d3dff]/8 hover:bg-[#3d3dff]/15 border border-[#3d3dff]/20 rounded-xl text-[#3d3dff] dark:text-blue-400 text-[10px] font-bold transition-colors shrink-0">
+                class="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#005ca9]/8 hover:bg-[#005ca9]/15 border border-[#005ca9]/20 rounded-xl text-[#005ca9] dark:text-blue-400 text-[10px] font-bold transition-colors shrink-0">
                 <i data-lucide="refresh-cw" class="w-3 h-3"></i>
                 Escanear
               </button>
@@ -362,7 +365,7 @@
               <textarea id="audit-obs-${fid}" rows="2" maxlength="500"
                 placeholder="Descreva os desvios encontrados ou o motivo da não conformidade com o DSC..."
                 oninput="setFrameAuditObs('${fid}', this.value); _updateCharCount(this, 500)"
-                class="${_shouldShowAuditObs(frame) ? '' : 'hidden'} w-full bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl px-3 py-2 text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 resize-none focus:ring-2 focus:ring-[#3d3dff]/20 outline-none transition-all">${frame.audit && frame.audit.observacoes ? frame.audit.observacoes : ''}</textarea>
+                class="${_shouldShowAuditObs(frame) ? '' : 'hidden'} w-full bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl px-3 py-2 text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 resize-none focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all">${frame.audit && frame.audit.observacoes ? frame.audit.observacoes : ''}</textarea>
             </div>
           </div>
 
@@ -513,7 +516,7 @@
 
       Object.keys(grouped).sort().forEach(letter => {
         const specs = grouped[letter];
-        const color = specs[0].color || '#2e2ee0';
+        const color = specs[0].color || '#004d8d';
         const groupEl = document.createElement('div');
         groupEl.className = 'mb-3';
 
@@ -534,7 +537,7 @@
           <input type="text" id="spec-group-name-${frameId}-${letter}" value="${groupName.replace(/"/g, '&quot;')}"
             placeholder="Nomear grupo..."
             title="Nome do grupo" maxlength="40"
-            class="flex-1 min-w-0 text-[10px] font-bold text-slate-500 dark:text-dark-muted bg-transparent border border-transparent focus:border-[#3d3dff]/30 focus:ring-1 focus:ring-[#3d3dff]/20 rounded px-1 py-0.5 outline-none placeholder:text-gray-400 transition-all"
+            class="flex-1 min-w-0 text-[10px] font-bold text-slate-500 dark:text-dark-muted bg-transparent border border-transparent focus:border-[#005ca9]/30 focus:ring-1 focus:ring-[#005ca9]/20 rounded px-1 py-0.5 outline-none placeholder:text-gray-400 transition-all"
             onchange="updateSpecGroupName('${frameId}', '${letter}', this.value)"
             oninput="_updateCharCount(this, 40)"
             onclick="event.stopPropagation()" />
@@ -548,19 +551,19 @@
           <button type="button" title="${isLinesHidden ? 'Exibir linhas' : 'Ocultar linhas'}"
             aria-label="${isLinesHidden ? 'Exibir linhas' : 'Ocultar linhas'}"
             onclick="event.stopPropagation(); toggleSpecLinesVisibility('${frameId}', '${letter}')"
-            class="w-5 h-5 flex items-center justify-center ${isLinesHidden ? 'text-gray-400' : 'text-slate-500'} hover:text-[#3d3dff] transition-colors shrink-0">
+            class="w-5 h-5 flex items-center justify-center ${isLinesHidden ? 'text-gray-400' : 'text-[#004d8d]'} hover:text-[#005ca9] transition-colors shrink-0">
             <i data-lucide="spline" class="w-3 h-3"></i>
           </button>
           <button type="button" title="${isGroupHidden ? 'Exibir grupo' : 'Ocultar grupo'}"
             aria-label="${isGroupHidden ? 'Exibir grupo' : 'Ocultar grupo'}"
             onclick="event.stopPropagation(); toggleSpecGroupVisibility('${frameId}', '${letter}')"
-            class="w-5 h-5 flex items-center justify-center ${isGroupHidden ? 'text-gray-400' : 'text-slate-500'} hover:text-[#3d3dff] transition-colors shrink-0">
+            class="w-5 h-5 flex items-center justify-center ${isGroupHidden ? 'text-gray-400' : 'text-slate-500'} hover:text-[#005ca9] transition-colors shrink-0">
             <i data-lucide="${isGroupHidden ? 'eye-off' : 'eye'}" class="w-3 h-3"></i>
           </button>
           <button type="button" title="${isGroupUnlocked ? 'Travar grupo' : 'Destravar grupo'}"
             aria-label="${isGroupUnlocked ? 'Travar grupo' : 'Destravar grupo'}"
             onclick="event.stopPropagation(); toggleSpecGroupLock('${frameId}', '${letter}')"
-            class="w-5 h-5 flex items-center justify-center ${isGroupUnlocked ? 'text-amber-500' : 'text-slate-500'} hover:text-[#3d3dff] transition-colors shrink-0">
+            class="w-5 h-5 flex items-center justify-center ${isGroupUnlocked ? 'text-amber-500' : 'text-slate-500'} hover:text-[#005ca9] transition-colors shrink-0">
             <i data-lucide="${isGroupUnlocked ? 'lock-open' : 'lock'}" class="w-3 h-3"></i>
           </button>`;
         groupEl.appendChild(groupHeader);
@@ -640,7 +643,7 @@
               <div class="flex-1 min-w-0">
                 <input type="text" id="spec-title-${frameId}-${spec._idx}" value="${(spec.name || '').replace(/"/g, '&quot;')}"
                   title="Clique para editar o título" maxlength="80"
-                  class="w-full text-[11px] font-semibold text-slate-700 dark:text-white bg-transparent border border-transparent focus:border-[#3d3dff]/30 focus:ring-1 focus:ring-[#3d3dff]/20 rounded px-1 py-0 outline-none cursor-text transition-all"
+                  class="w-full text-[11px] font-semibold text-slate-700 dark:text-white bg-transparent border border-transparent focus:border-[#005ca9]/30 focus:ring-1 focus:ring-[#005ca9]/20 rounded px-1 py-0 outline-none cursor-text transition-all"
                   onchange="updateSpecTitle('${frameId}', ${spec._idx}, this.value)"
                   oninput="_updateCharCount(this, 80)"
                   onclick="event.stopPropagation()" />
@@ -653,22 +656,22 @@
               <span id="exc-badge-${frameId}-${specIdx}" class="px-1 py-0.5 rounded bg-orange-50 text-[9px] font-bold text-orange-800 shrink-0 ${excCount > 0 ? '' : 'hidden'}">${excCount} exc</span>
               <button type="button" title="Focar no elemento no canvas" aria-label="Focar no elemento no canvas"
                 onclick="event.stopPropagation(); focusNode('${spec.id}')"
-                class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-[#3d3dff] transition-colors shrink-0">
+                class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
                 <i data-lucide="locate" class="w-3 h-3"></i>
               </button>
               <button type="button" title="${isHidden ? 'Mostrar' : 'Ocultar'} no canvas"
                 aria-label="${isHidden ? 'Mostrar' : 'Ocultar'} no canvas"
                 onclick="event.stopPropagation(); toggleSpecVisibility('${frameId}', ${spec._idx})"
-                class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-[#3d3dff] transition-colors shrink-0">
+                class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
                 <i data-lucide="${isHidden ? 'eye-off' : 'eye'}" class="w-3 h-3"></i>
               </button>
               <button type="button" title="${spec.linesHidden ? 'Exibir linhas' : 'Ocultar linhas'}"
                 aria-label="${spec.linesHidden ? 'Exibir linhas' : 'Ocultar linhas'}"
                 onclick="event.stopPropagation(); toggleSpecItemLines('${frameId}', ${spec._idx})"
-                class="w-5 h-5 flex items-center justify-center ${spec.linesHidden ? 'text-gray-400' : 'text-slate-500'} hover:text-[#3d3dff] transition-colors shrink-0">
+                class="w-5 h-5 flex items-center justify-center ${spec.linesHidden ? 'text-gray-400' : 'text-[#004d8d]'} hover:text-[#005ca9] transition-colors shrink-0">
                 <i data-lucide="spline" class="w-3 h-3"></i>
               </button>
-              <i data-lucide="chevron-down" id="chev-${detailsId}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0"></i>
+              <i data-lucide="chevron-down" id="chev-${detailsId}" class="w-3 h-3 text-gray-400 transition-transform shrink-0"></i>
               <button type="button" title="Excluir especificação" aria-label="Excluir especificação"
                 onclick="event.stopPropagation(); deleteSpecFromFrame('${frameId}', ${spec._idx}, '${spec.id}')"
                 class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shrink-0">
@@ -682,7 +685,7 @@
               <!-- Observations -->
               <div class="mb-3">
                 <textarea placeholder="Observações sobre esta spec..."
-                  class="w-full text-[11px] text-slate-600 dark:text-slate-300 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg px-2 py-1.5 resize-none outline-none placeholder:text-gray-300 focus:border-[#3d3dff]/30 transition-all"
+                  class="w-full text-[11px] text-slate-600 dark:text-slate-300 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg px-2 py-1.5 resize-none outline-none placeholder:text-gray-300 focus:border-[#005ca9]/30 transition-all"
                   rows="2"
                   onchange="updateSpecObs('${frameId}', ${spec._idx}, this.value)">${spec.obs || ''}</textarea>
               </div>
@@ -750,7 +753,11 @@
       if (!el) return;
       const isHidden = el.classList.toggle('hidden');
       const chev = document.getElementById('chev-' + id);
-      if (chev) chev.style.transform = isHidden ? '' : 'rotate(180deg)';
+      if (chev) {
+        chev.style.transform = isHidden ? '' : 'rotate(180deg)';
+        chev.classList.toggle('text-[#005ca9]', !isHidden);
+        chev.classList.toggle('dark:text-blue-300', !isHidden);
+      }
       _refreshIcons();
     }
     window.toggleSpecDetails = toggleSpecDetails;
@@ -1071,7 +1078,7 @@
           // fica obsoleto assim que o card é arrastado pra longe (mesma
           // lógica já usada em toggleSpecLock/unlock-spec-group -- editar
           // o estilo aqui não deveria usar uma premissa diferente).
-          color: spec.color || '#2e2ee0',
+          color: spec.color || '#004d8d',
           connectorStyle,
           connectorCurvature
         }
@@ -1104,7 +1111,7 @@
       const isGroupVisible = specs.some(s => s.visible !== false);
       
       groupVisBtn.innerHTML = isGroupVisible ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
-      groupVisBtn.classList.toggle('text-[#2e2ee0]', isGroupVisible);
+      groupVisBtn.classList.toggle('text-[#004d8d]', isGroupVisible);
       groupVisBtn.classList.toggle('text-gray-500', !isGroupVisible);
       
       _refreshIcons();
@@ -1132,14 +1139,14 @@
         const groupBtns = container.querySelectorAll('[data-group-vis-btn]');
         groupBtns.forEach(gBtn => {
           gBtn.innerHTML = targetState ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
-          gBtn.classList.toggle('text-[#2e2ee0]', targetState);
+          gBtn.classList.toggle('text-[#004d8d]', targetState);
           gBtn.classList.toggle('text-gray-500', !targetState);
         });
 
         const specBtns = container.querySelectorAll('[data-spec-vis-btn]');
         specBtns.forEach(sBtn => {
           sBtn.innerHTML = targetState ? `<i data-lucide="eye" class="w-3.5 h-3.5"></i>` : `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>`;
-          sBtn.classList.toggle("text-[#2e2ee0]", targetState);
+          sBtn.classList.toggle("text-[#004d8d]", targetState);
           sBtn.classList.toggle("text-gray-400", !targetState);
         });
       }
@@ -1207,7 +1214,7 @@
               id="${searchId}"
               type="text"
               placeholder="Buscar em ${section.title}..."
-              class="token-search-input w-full pl-8 pr-3 py-1.5 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#3d3dff]/30 focus:border-[#3d3dff] transition-all"
+              class="token-search-input w-full pl-8 pr-3 py-1.5 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg text-[11px] text-slate-700 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#005ca9]/30 focus:border-[#005ca9] transition-all"
               oninput="filterSpecItems('${gridId}', '${emptyId}', this.value)"
             />
           </div>
@@ -1220,7 +1227,7 @@
              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAccordion(this);}"
              class="w-full px-4 py-3 hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors cursor-pointer select-none">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-[#3d3dff] dark:text-blue-400 shrink-0">
+            <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-[#005ca9] dark:text-blue-400 shrink-0">
               <i data-lucide="${section.icon}" class="w-4 h-4"></i>
             </div>
             <div class="flex-1 min-w-0 flex items-center gap-2">
@@ -1383,7 +1390,7 @@
             ? chainSegments.map((seg, i) => {
                 const isLast = i === chainSegments.length - 1;
                 return isLast
-                  ? `<span class="font-bold text-[#3d3dff] dark:text-blue-400">${seg}</span>`
+                  ? `<span class="font-bold text-[#005ca9] dark:text-blue-400">${seg}</span>`
                   : `<span class="text-gray-500 dark:text-gray-400">${seg}</span><span class="text-gray-500 dark:text-gray-400 mx-0.5">›</span>`;
               }).join('')
             : '';
@@ -1448,23 +1455,23 @@
                 ? '<i data-lucide=\\'chevron-up\\' class=\\'w-2.5 h-2.5\\'></i> Ocultar inativas'
                 : '<i data-lucide=\\'eye-off\\' class=\\'w-2.5 h-2.5\\'></i> ${toggleLabel}';
               _refreshIcons()"
-            class="mt-1.5 flex items-center gap-1 text-[9px] text-gray-500 dark:text-gray-400 hover:text-[#3d3dff] dark:hover:text-blue-400 transition-colors font-medium">
+            class="mt-1.5 flex items-center gap-1 text-[9px] text-gray-500 dark:text-gray-400 hover:text-[#005ca9] dark:hover:text-blue-400 transition-colors font-medium">
             <i data-lucide="eye-off" class="w-2.5 h-2.5"></i>
             ${toggleLabel}
           </button>`
         : '';
 
       return `
-        <div role="button" tabindex="0" class="col-span-2 p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#3d3dff] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();focusNode('${item.nodeId}');}" title="Focar no elemento no Figma" aria-label="Focar em ${escapeHtml(item.name)} no Figma">
+        <div role="button" tabindex="0" class="col-span-2 p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#005ca9] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();focusNode('${item.nodeId}');}" title="Focar no elemento no Figma" aria-label="Focar em ${escapeHtml(item.name)} no Figma">
           <div class="flex items-center gap-2 mb-1 pointer-events-none">
             ${preview}
             <div class="flex-1 min-w-0">
-              <p class="text-[10px] font-bold text-slate-700 dark:text-white truncate group-hover:text-[#3d3dff] transition-colors">${item.name}</p>
+              <p class="text-[10px] font-bold text-slate-700 dark:text-white truncate group-hover:text-[#005ca9] transition-colors">${item.name}</p>
               <div class="text-[9px] uppercase tracking-wider font-medium">
                 ${dsStatus}
               </div>
             </div>
-            <i data-lucide="locate" class="w-3 h-3 text-gray-400 dark:text-gray-600 group-hover:text-[#3d3dff] dark:group-hover:text-blue-400 transition-colors shrink-0"></i>
+            <i data-lucide="locate" class="w-3 h-3 text-gray-400 dark:text-gray-600 group-hover:text-[#005ca9] dark:group-hover:text-blue-400 transition-colors shrink-0"></i>
           </div>
           ${appliedHtml}
           ${inactiveHtml}
@@ -1543,7 +1550,7 @@
     ];
 
     function getCategoryColor(value) {
-      if (!value) return '#2e2ee0';
+      if (!value) return '#004d8d';
       const pair = CATEGORY_COLORS[value];
       if (pair) return pair.stroke;
       const idx = annCategories.findIndex(c => c.value === value);
@@ -1745,7 +1752,7 @@
         category: selCat ? selCat.value : "",
         categoryLabel: selCat && selCat.options[selCat.selectedIndex] ? selCat.options[selCat.selectedIndex].text : "",
         letter: g('spec-letter-input') ? g('spec-letter-input').value.toUpperCase().slice(0, 8) : "A",
-        color: g('spec-color-input') ? g('spec-color-input').value : "#2e2ee0",
+        color: g('spec-color-input') ? g('spec-color-input').value : "#004d8d",
         fillColor: getCategoryFill(selCat ? selCat.value : ""),
         link: g('spec-link-input') ? g('spec-link-input').value : "",
         note: g('ann-note') ? g('ann-note').value.slice(0, 500) : "",
@@ -1914,8 +1921,8 @@
             <div class="relative mb-4">
               <i data-lucide="file-text" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
             </div>
-            <p class="text-[12px] font-bold text-slate-500 dark:text-dark-muted text-center px-4 mb-1">Nenhuma especificação criada ainda</p>
-            <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6">Selecione um elemento no canvas e toque em <button type="button" onclick="openSpecFormModal()" class="font-bold text-[#2e2ee0] dark:text-[#4da3e0] hover:underline">Nova spec</button></p>
+            <p class="text-[12px] font-bold text-slate-600 dark:text-dark-muted text-center px-4 mb-1">Nenhuma especificação criada ainda</p>
+            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6">Selecione um elemento no canvas e toque em <button type="button" onclick="openSpecFormModal()" class="font-bold text-[#004d8d] dark:text-[#4da3e0] hover:underline">Nova spec</button></p>
           </li>
         `;
         if (exportBtn) exportBtn.classList.add('hidden');
@@ -1949,7 +1956,7 @@
       // Renderizar cada grupo
       Object.keys(groupedSpecs).sort().forEach(letter => {
         const specs = groupedSpecs[letter];
-        const groupColor = specs[0].color || '#2e2ee0';
+        const groupColor = specs[0].color || '#004d8d';
         
         // Contêiner do Grupo
         const groupWrapper = document.createElement('li');
@@ -1959,6 +1966,7 @@
         // recolhido (corpo com altura mínima, pouca margem antes do corte).
         groupWrapper.className = 'mb-4 border-l-4 rounded-r-xl bg-gray-50/30 dark:bg-slate-900/20';
         groupWrapper.style.borderColor = groupColor;
+        groupWrapper.setAttribute('data-spec-group', letter);
 
         // Cabeçalho do Grupo — nome, ações e chevron na mesma linha
         const groupHeader = document.createElement('div');
@@ -1976,7 +1984,7 @@
           <div class="flex flex-col overflow-hidden flex-1">
              <div class="flex items-center gap-1.5 overflow-hidden">
                <span class="text-[12px] font-bold text-slate-700 dark:text-slate-200 group-title-text truncate">${currentGroupName}</span>
-               <button type="button" title="Renomear grupo" aria-label="Renomear grupo" class="edit-group-btn p-1 text-gray-500 hover:text-[#2e2ee0] transition-colors shrink-0">
+               <button type="button" title="Renomear grupo" aria-label="Renomear grupo" class="edit-group-btn p-1 text-gray-500 hover:text-[#004d8d] transition-colors shrink-0">
                  <i data-lucide="pencil" class="w-3 h-3"></i>
                </button>
              </div>
@@ -2047,7 +2055,10 @@
         headerInfo.onclick = () => {
           const isHidden = groupContent.classList.contains('hidden');
           groupContent.classList.toggle('hidden');
-          groupHeader.querySelector('.group-chevron').classList.toggle('rotate-180', !isHidden);
+          const _gc = groupHeader.querySelector('.group-chevron');
+          _gc.classList.toggle('rotate-180', !isHidden);
+          _gc.classList.toggle('text-[#005ca9]', !isHidden);
+          _gc.classList.toggle('dark:text-blue-300', !isHidden);
         };
 
         const groupActionsRow = document.createElement('div');
@@ -2060,8 +2071,11 @@
         const isLinesHidden = handoffData.specLinesVisible && handoffData.specLinesVisible[letter] === false;
         groupLinesBtn.title = isLinesHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo';
         groupLinesBtn.setAttribute('aria-label', groupLinesBtn.title);
-        groupLinesBtn.className = 'p-2 hover:bg-white/50 dark:hover:bg-slate-700 rounded-lg transition-colors shrink-0 text-gray-500 dark:text-dark-muted';
+        groupLinesBtn.className = 'p-2 hover:bg-white/50 dark:hover:bg-slate-700 rounded-lg transition-colors shrink-0';
         groupLinesBtn.innerHTML = '<i data-lucide="spline" class="w-3.5 h-3.5"></i>';
+        groupLinesBtn.classList.toggle('text-[#004d8d]', !isLinesHidden);
+        groupLinesBtn.classList.toggle('text-gray-500', isLinesHidden);
+        groupLinesBtn.classList.toggle('dark:text-dark-muted', isLinesHidden);
 
         groupLinesBtn.onclick = (e) => {
           e.stopPropagation();
@@ -2073,6 +2087,9 @@
           saveSpecsToStorage();
           groupLinesBtn.title = nowHidden ? 'Exibir linhas do grupo' : 'Ocultar linhas do grupo';
           groupLinesBtn.setAttribute('aria-label', groupLinesBtn.title);
+          groupLinesBtn.classList.toggle('text-[#004d8d]', !nowHidden);
+          groupLinesBtn.classList.toggle('text-gray-500', nowHidden);
+          groupLinesBtn.classList.toggle('dark:text-dark-muted', nowHidden);
         };
 
         const groupDeleteBtn = document.createElement('button');
@@ -2105,7 +2122,7 @@
 
         const isGroupVisible = specs.some(s => s.visible !== false);
         groupVisBtn.innerHTML = isGroupVisible ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
-        groupVisBtn.classList.toggle('text-[#2e2ee0]', isGroupVisible);
+        groupVisBtn.classList.toggle('text-[#004d8d]', isGroupVisible);
         groupVisBtn.classList.toggle('text-gray-500', !isGroupVisible);
 
         groupVisBtn.onclick = (e) => {
@@ -2125,13 +2142,13 @@
           saveSpecsToStorage();
           
           groupVisBtn.innerHTML = targetState ? `<i data-lucide="eye" class="w-4 h-4"></i>` : `<i data-lucide="eye-off" class="w-4 h-4"></i>`;
-          groupVisBtn.classList.toggle('text-[#2e2ee0]', targetState);
+          groupVisBtn.classList.toggle('text-[#004d8d]', targetState);
           groupVisBtn.classList.toggle('text-gray-500', !targetState);
 
           const childBtns = groupWrapper.querySelectorAll('[data-spec-vis-btn]');
           childBtns.forEach(btnEl => {
             btnEl.innerHTML = targetState ? `<i data-lucide="eye" class="w-3.5 h-3.5"></i>` : `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>`;
-            btnEl.classList.toggle("text-[#2e2ee0]", targetState);
+            btnEl.classList.toggle("text-[#004d8d]", targetState);
             btnEl.classList.toggle("text-gray-400", !targetState);
           });
           
@@ -2172,6 +2189,14 @@
           if (spec.id) {
             section.setAttribute('data-spec-id', spec.id);
           }
+          // Consumido por _applySpecsFilters (busca + filtro de categoria).
+          section.setAttribute('data-spec-category', spec.category || '');
+          section.setAttribute('data-spec-search', _normalizeSearchText(
+            [spec.letter, spec.name, spec.type, spec.categoryLabel, spec.obs, spec.note]
+              .concat((spec.properties || []).flatMap(p => [p.label, p.value, p.token]))
+              .filter(Boolean)
+              .join(' ')
+          ));
 
           const header = document.createElement("div");
           header.className = "flex items-center gap-1 p-2 bg-white dark:bg-slate-800 rounded-lg";
@@ -2188,7 +2213,11 @@
             const isHidden = contentEl.classList.contains('hidden');
             contentEl.classList.toggle('hidden');
             const icon = header.querySelector('[data-lucide="chevron-down"]');
-            if (icon) icon.style.transform = isHidden ? 'rotate(180deg)' : '';
+            if (icon) {
+              icon.style.transform = isHidden ? 'rotate(180deg)' : '';
+              icon.classList.toggle('text-[#005ca9]', isHidden);
+              icon.classList.toggle('dark:text-blue-300', isHidden);
+            }
             // Só foca ao EXPANDIR (isHidden=true antes do toggle) -- recolher
             // não deveria mexer no canvas, e "Expandir/Recolher todos"
             // (collapseAllAccordions) nunca chama esta função, então não há
@@ -2226,7 +2255,7 @@
           }
           const isVisible = spec.visible !== false;
           visBtn.innerHTML = isVisible ? `<i data-lucide="eye" class="w-3.5 h-3.5"></i>` : `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>`;
-          visBtn.classList.toggle("text-[#2e2ee0]", isVisible);
+          visBtn.classList.toggle("text-[#004d8d]", isVisible);
           visBtn.classList.toggle("text-gray-400", !isVisible);
 
           visBtn.onclick = (e) => {
@@ -2239,7 +2268,7 @@
             }
 
             visBtn.innerHTML = nowVisible ? `<i data-lucide="eye" class="w-3.5 h-3.5"></i>` : `<i data-lucide="eye-off" class="w-3.5 h-3.5"></i>`;
-            visBtn.classList.toggle("text-[#2e2ee0]", nowVisible);
+            visBtn.classList.toggle("text-[#004d8d]", nowVisible);
             visBtn.classList.toggle("text-gray-400", !nowVisible);
 
             if (spec.id) {
@@ -2373,7 +2402,7 @@
           
           if (spec.note) {
             const noteRow = document.createElement('div');
-            noteRow.className = 'flex items-start gap-1.5 text-[10px] text-slate-600 dark:text-dark-text p-2 bg-white dark:bg-dark-bg rounded border border-gray-100 dark:border-dark-line italic cursor-pointer hover:border-[#2e2ee0]/30 transition-colors';
+            noteRow.className = 'flex items-start gap-1.5 text-[10px] text-slate-600 dark:text-dark-text p-2 bg-white dark:bg-dark-bg rounded border border-gray-100 dark:border-dark-line italic cursor-pointer hover:border-[#004d8d]/30 transition-colors';
             noteRow.title = 'Clique para editar a nota';
             noteRow.innerHTML = `<i data-lucide="sticky-note" class="w-3 h-3 text-slate-400 shrink-0 mt-0.5"></i><span class="flex-1">${escapeHtml(spec.note)}</span>`;
             noteRow.onclick = (e) => { e.stopPropagation(); openSpecNoteModal(spec.originalIndex); };
@@ -2384,10 +2413,10 @@
             spec.properties.forEach(p => {
               const detEl = document.createElement("div");
               detEl.className = "flex justify-between text-[10px] bg-white dark:bg-dark-bg p-1.5 rounded border border-gray-100 dark:border-dark-line";
-              const valStr = p.token ? `<span class="text-[8px] text-[#3d3dff] dark:text-blue-400 font-medium mr-1 px-1 bg-blue-50 dark:bg-blue-900/20 rounded-sm border border-blue-100 dark:border-blue-800">${escapeHtml(p.token)}</span>${escapeHtml(p.value)}` : escapeHtml(p.value);
+              const valStr = p.token ? `<span class="text-[8px] text-[#005ca9] dark:text-blue-400 font-medium mr-1 px-1 bg-blue-50 dark:bg-blue-900/20 rounded-sm border border-blue-100 dark:border-blue-800">${escapeHtml(p.token)}</span>${escapeHtml(p.value)}` : escapeHtml(p.value);
               const displayVal = p.token || p.value;
               const valStr2 = p.token
-                ? `<span class="text-[9px] text-[#3d3dff] dark:text-blue-400 font-medium px-1 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-100 dark:border-blue-800">${escapeHtml(p.token)}</span>`
+                ? `<span class="text-[9px] text-[#005ca9] dark:text-blue-400 font-medium px-1 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-100 dark:border-blue-800">${escapeHtml(p.token)}</span>`
                 : `<span class="font-mono">${escapeHtml(p.value)}</span>`;
               detEl.innerHTML = `<span class="text-slate-500">${escapeHtml(p.label)}</span><span class="font-bold text-slate-700 dark:text-white flex items-center">${valStr2}</span>`;
               content.appendChild(detEl);
@@ -2403,11 +2432,11 @@
           actionsRow.className = 'flex items-center gap-2 pt-1';
           actionsRow.innerHTML = `
             <button type="button" onclick="event.stopPropagation(); openGlobalSpecException(${spec.originalIndex})"
-              class="flex-1 flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-orange-800 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/30 rounded-2xl hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors">
+              class="flex-1 flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-orange-800 dark:text-orange-400 bg-white dark:bg-dark-surface border border-orange-200 dark:border-orange-800/30 rounded-2xl hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Cenário de Exceção${(spec.excecoes || []).length > 0 ? ` (${(spec.excecoes || []).length})` : ''}
             </button>
             <button type="button" onclick="event.stopPropagation(); openSpecNoteModal(${spec.originalIndex})"
-              class="flex-1 flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-[#2e2ee0] dark:text-[#4da3e0] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-2xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+              class="flex-1 flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-[#004d8d] dark:text-[#4da3e0] bg-white dark:bg-dark-surface border border-blue-200 dark:border-blue-800/30 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
               <i data-lucide="sticky-note" class="w-3.5 h-3.5"></i> ${spec.note ? 'Editar Nota' : 'Incluir Nota'}
             </button>
           `;
@@ -2442,7 +2471,10 @@
           if (contentEl && contentEl.classList.contains('hidden')) {
             contentEl.classList.remove('hidden');
             const chevron = contentEl.closest('.border')?.querySelector('[data-lucide="chevron-down"]');
-            if (chevron) chevron.style.transform = 'rotate(180deg)';
+            if (chevron) {
+              chevron.style.transform = 'rotate(180deg)';
+              chevron.classList.add('text-[#005ca9]', 'dark:text-blue-300');
+            }
           }
           if (contentEl) contentEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }, 50);
@@ -2456,7 +2488,10 @@
               if (contentEl && contentEl.classList.contains('hidden')) {
                 contentEl.classList.remove('hidden');
                 const chevron = contentEl.closest('.border')?.querySelector('[data-lucide="chevron-down"]');
-                if (chevron) chevron.style.transform = 'rotate(180deg)';
+                if (chevron) {
+                  chevron.style.transform = 'rotate(180deg)';
+                  chevron.classList.add('text-[#005ca9]', 'dark:text-blue-300');
+                }
               }
               autoScrollToNewItem('specs-scroll-container');
             }, 50);
@@ -2465,9 +2500,102 @@
         lastSpecsCount = createdSpecs.length;
       }
       updateHideAllSpecsButtonState();
+      _setupSpecsSearchBar();
     }
     let lastSpecsCount = 0;
 
+    // ── Busca + filtro por categoria (aba Specs) ────────────────────────
+    // Filtro puramente de EXIBIÇÃO sobre a lista já renderizada por
+    // renderSpecsList() — não persiste entre sessões (reseta a cada
+    // navegação pra esta view, ver navigate() em core.js) e não altera
+    // createdSpecs/handoffData.specs.
+    function _resetSpecsSearchInputs() {
+      const searchInput = document.getElementById('specs-search-input');
+      const sel = document.getElementById('specs-category-filter');
+      if (searchInput) searchInput.value = '';
+      if (sel) sel.value = '';
+    }
+    window._resetSpecsSearchInputs = _resetSpecsSearchInputs;
+
+    function _normalizeSearchText(str) {
+      return String(str || '')
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .toLowerCase()
+        .trim();
+    }
+    window._normalizeSearchText = _normalizeSearchText;
+
+    // Mostra a barra de busca só quando há specs (evita ruído visual no
+    // estado vazio) e repopula o <select> de categorias a partir de
+    // annCategories — dinâmico porque o usuário pode renomear/criar/excluir
+    // categorias.
+    function _setupSpecsSearchBar() {
+      const bar = document.getElementById('specs-search-bar');
+      if (!bar) return;
+      const hasSpecs = createdSpecs && createdSpecs.length > 0;
+      bar.classList.toggle('hidden', !hasSpecs);
+      if (!hasSpecs) return;
+
+      const sel = document.getElementById('specs-category-filter');
+      if (sel) {
+        const current = sel.value;
+        sel.innerHTML = '<option value="">Todas as categorias</option>';
+        annCategories.forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat.value;
+          opt.textContent = cat.label;
+          sel.appendChild(opt);
+        });
+        const semCatOpt = document.createElement('option');
+        semCatOpt.value = '__sem_categoria__';
+        semCatOpt.textContent = 'Sem categoria';
+        sel.appendChild(semCatOpt);
+        if ([...sel.options].some(o => o.value === current)) sel.value = current;
+      }
+
+      const searchInput = document.getElementById('specs-search-input');
+      _applySpecsFilters(searchInput ? searchInput.value : '', sel ? sel.value : '');
+    }
+
+    function applySpecsSearchFilter(query) {
+      const sel = document.getElementById('specs-category-filter');
+      _applySpecsFilters(query, sel ? sel.value : '');
+    }
+    window.applySpecsSearchFilter = applySpecsSearchFilter;
+
+    function applySpecsCategoryFilter(category) {
+      const searchInput = document.getElementById('specs-search-input');
+      _applySpecsFilters(searchInput ? searchInput.value : '', category);
+    }
+    window.applySpecsCategoryFilter = applySpecsCategoryFilter;
+
+    function _applySpecsFilters(query, category) {
+      const list = document.getElementById('specs-results');
+      const emptyMsg = document.getElementById('specs-search-empty');
+      if (!list) return;
+
+      const term = _normalizeSearchText(query);
+      let visibleTotal = 0;
+
+      list.querySelectorAll('[data-spec-group]').forEach(groupEl => {
+        let visibleInGroup = 0;
+        groupEl.querySelectorAll('[data-spec-search]').forEach(itemEl => {
+          const text = itemEl.getAttribute('data-spec-search') || '';
+          const cat = itemEl.getAttribute('data-spec-category') || '';
+          const matchText = !term || text.includes(term);
+          const matchCat = !category
+            || (category === '__sem_categoria__' ? !cat : cat === category);
+          const show = matchText && matchCat;
+          itemEl.style.display = show ? '' : 'none';
+          if (show) visibleInGroup++;
+        });
+        groupEl.style.display = visibleInGroup > 0 ? '' : 'none';
+        visibleTotal += visibleInGroup;
+      });
+
+      const hasAnyFilter = term || category;
+      if (emptyMsg) emptyMsg.classList.toggle('hidden', !hasAnyFilter || visibleTotal > 0);
+    }
 
     function hideNode(id) {
       parent.postMessage({ pluginMessage: { type: 'hide-node', id } }, '*');
@@ -2754,8 +2882,8 @@
         const letter = FLOW_CHAIN_LETTERS[i] || '?';
         const name = escapeXml((nodes[i].name || letter).trim());
         const fill = isFirst ? 'rgba(61,61,255,0.12)' : 'rgba(148,163,184,0.15)';
-        const stroke = isFirst ? '#3d3dff' : '#94a3b8';
-        const textFill = isFirst ? '#2e2ee0' : '#64748b';
+        const stroke = isFirst ? '#005ca9' : '#94a3b8';
+        const textFill = isFirst ? '#004d8d' : '#64748b';
         return `
           <rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="4" fill="${fill}" stroke="${stroke}" stroke-width="1.5"><title>${name}</title></rect>
           <text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + 3}" text-anchor="middle" font-size="9" font-weight="700" fill="${textFill}">${letter}</text>
@@ -2844,15 +2972,15 @@
           const p = seg.pts[s];
           const isActive = chosenSide === s;
           const rad = isActive ? 8 : 6;
-          return `<circle cx="${p.x}" cy="${p.y}" r="${rad}" fill="${isActive ? '#3d3dff' : '#ffffff'}" stroke="#3d3dff" stroke-width="${isActive ? 2 : 1.5}" style="cursor:pointer" onclick="_setFlowAnchorSide(${i}, '${s}')" />`;
+          return `<circle cx="${p.x}" cy="${p.y}" r="${rad}" fill="${isActive ? '#005ca9' : '#ffffff'}" stroke="#005ca9" stroke-width="${isActive ? 2 : 1.5}" style="cursor:pointer" onclick="_setFlowAnchorSide(${i}, '${s}')" />`;
         }).join('');
         if (seg.activePoint && seg.target) {
           if (isAngularStyle) {
             const elbow = _computeElbowPoints(seg.activePoint, seg.target);
             const path = [seg.activePoint, ...elbow, seg.target].map(p => `${p.x} ${p.y}`).join(' L ');
-            linesHtml += `<path d="M ${path}" fill="none" stroke="#3d3dff" stroke-width="1.5" stroke-dasharray="4 3" />`;
+            linesHtml += `<path d="M ${path}" fill="none" stroke="#005ca9" stroke-width="1.5" stroke-dasharray="4 3" />`;
           } else {
-            linesHtml += `<line x1="${seg.activePoint.x}" y1="${seg.activePoint.y}" x2="${seg.target.x}" y2="${seg.target.y}" stroke="#3d3dff" stroke-width="1.5" stroke-dasharray="4 3" />`;
+            linesHtml += `<line x1="${seg.activePoint.x}" y1="${seg.activePoint.y}" x2="${seg.target.x}" y2="${seg.target.y}" stroke="#005ca9" stroke-width="1.5" stroke-dasharray="4 3" />`;
           }
         }
       });
@@ -2877,7 +3005,7 @@
           const p = lastPts[s];
           const isActive = chosenEndSide === s;
           const rad = isActive ? 8 : 6;
-          return `<circle cx="${p.x}" cy="${p.y}" r="${rad}" fill="${isActive ? '#3d3dff' : '#ffffff'}" stroke="#3d3dff" stroke-width="${isActive ? 2 : 1.5}" style="cursor:pointer" onclick="_setFlowAnchorSide('end', '${s}')" />`;
+          return `<circle cx="${p.x}" cy="${p.y}" r="${rad}" fill="${isActive ? '#005ca9' : '#ffffff'}" stroke="#005ca9" stroke-width="${isActive ? 2 : 1.5}" style="cursor:pointer" onclick="_setFlowAnchorSide('end', '${s}')" />`;
         }).join('');
       }
 
@@ -2915,11 +3043,11 @@
       const btn = document.getElementById('flow-anchor-auto-btn');
       if (!track || !knob) return;
       const isAuto = Object.keys(_flowAnchorSideByIdx).length === 0;
-      track.classList.toggle('bg-[#3d3dff]', isAuto);
+      track.classList.toggle('bg-[#005ca9]', isAuto);
       track.classList.toggle('bg-gray-300', !isAuto);
       track.classList.toggle('dark:bg-slate-600', !isAuto);
       knob.style.transform = isAuto ? 'translateX(0.625rem)' : 'translateX(0)';
-      if (btn) btn.classList.toggle('text-[#3d3dff]', isAuto);
+      if (btn) btn.classList.toggle('text-[#005ca9]', isAuto);
       if (btn) btn.classList.toggle('text-slate-400', !isAuto);
     }
 
@@ -2959,12 +3087,12 @@
       // Highlight selected card
       const activeCard = document.getElementById(`form-flow-${type}`) || document.getElementById(`flow-${type}`);
       if (activeCard) {
-        activeCard.style.borderColor = '#3d3dff';
+        activeCard.style.borderColor = '#005ca9';
         activeCard.style.backgroundColor = 'rgba(61, 61, 255, 0.08)';
         const icon = activeCard.querySelector('i[data-lucide]');
-        if (icon) icon.style.color = '#3d3dff';
+        if (icon) icon.style.color = '#005ca9';
         const diamond = activeCard.querySelector('.rotate-45');
-        if (diamond) diamond.style.borderColor = '#3d3dff';
+        if (diamond) diamond.style.borderColor = '#005ca9';
       }
 
       const chipContainer = document.getElementById('flow-chip-container');
@@ -2988,7 +3116,7 @@
       const btn = document.getElementById('btn-confirm-flow');
       if (btn) {
         btn.disabled = false;
-        btn.style.backgroundColor = '#3d3dff';
+        btn.style.backgroundColor = '#005ca9';
         btn.style.cursor = 'pointer';
         btn.classList.remove('bg-gray-300', 'cursor-not-allowed');
       }
@@ -3095,7 +3223,7 @@
         btn.style.backgroundColor = '';
         btn.style.cursor = '';
         btn.classList.add('bg-gray-300', 'cursor-not-allowed');
-        btn.classList.remove('bg-[#3d3dff]', 'hover:bg-blue-700');
+        btn.classList.remove('bg-[#005ca9]', 'hover:bg-blue-700');
       }
     }
 
@@ -3192,8 +3320,8 @@
             <div class="relative mb-4">
               <i data-lucide="git-branch" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
             </div>
-            <p class="text-[12px] font-bold text-slate-500 dark:text-dark-muted text-center px-4 mb-1">Nenhum fluxo criado ainda</p>
-            <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6">Selecione 2 elementos no canvas e toque em <button type="button" onclick="openFlowFormModal()" class="font-bold text-[#2e2ee0] dark:text-[#4da3e0] hover:underline">Conectar Frames</button></p>
+            <p class="text-[12px] font-bold text-slate-600 dark:text-dark-muted text-center px-4 mb-1">Nenhum fluxo criado ainda</p>
+            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6">Selecione 2 elementos no canvas e toque em <button type="button" onclick="openFlowFormModal()" class="font-bold text-[#004d8d] dark:text-[#4da3e0] hover:underline">Conectar Frames</button></p>
           </li>
         `;
         containers.forEach(c => c.innerHTML = emptyHtml);
@@ -3242,7 +3370,7 @@
                onclick="focusNode('${flow.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();focusNode('${flow.id}');}" aria-label="Focar na conexão ${escapeHtml(flow.name || defaultName)} no Figma">
             <div class="flex items-center gap-3 w-full">
               <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-800/50">
-                <i data-lucide="${flow.type.includes('diamond') ? 'help-circle' : (flow.type === 'gateway_parallel' ? 'git-fork' : (flow.type.includes('event') ? 'circle' : 'arrow-right'))}" class="w-4 h-4 text-[#3d3dff] dark:text-blue-400"></i>
+                <i data-lucide="${flow.type.includes('diamond') ? 'help-circle' : (flow.type === 'gateway_parallel' ? 'git-fork' : (flow.type.includes('event') ? 'circle' : 'arrow-right'))}" class="w-4 h-4 text-[#005ca9] dark:text-blue-400"></i>
               </div>
 
               <div class="flex-1 overflow-hidden">
@@ -3254,11 +3382,11 @@
                   <div class="flex items-center gap-2 shrink-0">
                     ${!isEndpoint ? `
                     <button onclick="event.stopPropagation(); openEditFlowModal(${idx})" title="Editar nome, tipo e estilo" aria-label="Editar conexão"
-                      class="w-7 h-7 rounded-xl flex items-center justify-center ${isVisible ? 'text-[#3d3dff]' : 'text-gray-400'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all">
+                      class="w-7 h-7 rounded-xl flex items-center justify-center ${isVisible ? 'text-[#005ca9]' : 'text-gray-400'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all">
                       <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
                     </button>` : ''}
                     <button onclick="event.stopPropagation(); toggleFlowVisibility('${flow.id}', ${idx})"
-                      class="w-7 h-7 rounded-xl flex items-center justify-center ${isVisible ? 'text-[#3d3dff]' : 'text-gray-400'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                      class="w-7 h-7 rounded-xl flex items-center justify-center ${isVisible ? 'text-[#005ca9]' : 'text-gray-400'} hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
                       title="${isVisible ? 'Ocultar fluxo' : 'Exibir fluxo'}" aria-label="Alterar visibilidade">
                       <i data-lucide="${isVisible ? 'eye' : 'eye-off'}" class="w-3.5 h-3.5"></i>
                     </button>
@@ -3295,7 +3423,7 @@
         <li class="border border-gray-100 dark:border-dark-line rounded-2xl shadow-sm bg-gray-50/30 dark:bg-slate-900/20">
           <div class="p-3 flex items-center gap-2 bg-gray-100/50 dark:bg-slate-800/50 rounded-t-2xl">
             <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-800/50">
-              <i data-lucide="git-branch" class="w-4 h-4 text-[#3d3dff] dark:text-blue-400"></i>
+              <i data-lucide="git-branch" class="w-4 h-4 text-[#005ca9] dark:text-blue-400"></i>
             </div>
             <div role="button" tabindex="0" class="flex-1 min-w-0 flex items-center gap-1.5 cursor-pointer" onclick="toggleFlowJourneyAccordion(this)" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===event.currentTarget){event.preventDefault();toggleFlowJourneyAccordion(this);}" aria-label="Expandir/recolher jornada ${journey.isUnnamed ? 'sem nome' : escapeHtml(journey.nome)}">
               <input type="text"
@@ -3329,7 +3457,7 @@
               <i data-lucide="chevron-down" class="journey-chevron w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform shrink-0"></i>
             </button>
           </div>
-          <ul data-accordion-content class="divide-y divide-gray-50 dark:divide-dark-line/50 border-l-2 border-dashed border-[#3d3dff]/40 ml-5 rounded-b-2xl overflow-hidden">${itemsHtml}</ul>
+          <ul data-accordion-content class="divide-y divide-gray-50 dark:divide-dark-line/50 border-l-2 border-dashed border-[#005ca9]/40 ml-5 rounded-b-2xl overflow-hidden">${itemsHtml}</ul>
         </li>
       `;
       }).join('');
@@ -3349,6 +3477,8 @@
       if (!body || !chevron) return;
       body.classList.toggle('hidden');
       chevron.classList.toggle('rotate-180');
+      chevron.classList.toggle('text-[#005ca9]');
+      chevron.classList.toggle('dark:text-blue-300');
     }
     window.toggleFlowJourneyAccordion = toggleFlowJourneyAccordion;
 
@@ -3486,11 +3616,11 @@
       });
       const activeCard = document.getElementById(`edit-flow-type-${type}`);
       if (activeCard) {
-        activeCard.style.borderColor = '#3d3dff';
+        activeCard.style.borderColor = '#005ca9';
         const icon = activeCard.querySelector('i[data-lucide]');
-        if (icon) icon.style.color = '#3d3dff';
+        if (icon) icon.style.color = '#005ca9';
         const diamond = activeCard.querySelector('.rotate-45');
-        if (diamond) diamond.style.borderColor = '#3d3dff';
+        if (diamond) diamond.style.borderColor = '#005ca9';
       }
     }
     window._selectEditFlowType = _selectEditFlowType;
@@ -3629,7 +3759,7 @@ function toggleLinkInput(show) {
         parent.postMessage({ pluginMessage: { type: 'get-selection-id-for-spec' } }, '*');
       }
       document.getElementById('spec-letter-input').value = typeof _suggestNextSpecTag === 'function' ? _suggestNextSpecTag(activeFrameId) : 'A';
-      document.getElementById('spec-color-input').value = '#2e2ee0';
+      document.getElementById('spec-color-input').value = '#004d8d';
       if (typeof validateSpecLetterInput === 'function') validateSpecLetterInput();
       document.getElementById('ann-category').value = '';
       if (typeof _csSyncLabel === 'function') _csSyncLabel('cs-ann-cat');
@@ -3650,7 +3780,7 @@ function toggleLinkInput(show) {
 
       const modalTitle = document.querySelector('#spec-form-modal h3');
       if (modalTitle) {
-        modalTitle.innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 text-[#2e2ee0]"></i> Criar Especificação/Nota';
+        modalTitle.innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 text-[#004d8d]"></i> Criar Especificação/Nota';
       }
       const confirmBtn = document.getElementById('btn-spec-form-confirm');
       if (confirmBtn) {
@@ -3752,7 +3882,7 @@ function toggleLinkInput(show) {
         pluginMessage: {
           type: 'create-position-ghost',
           targetNodeId: window._pendingSpecTargetNodeId,
-          color: g('spec-color-input') ? g('spec-color-input').value : '#2e2ee0',
+          color: g('spec-color-input') ? g('spec-color-input').value : '#004d8d',
           // Só sinalizadores de presença (pra estimar a altura do
           // fantasma no backend) -- sem enviar o conteúdo em si.
           hasCategory: !!(selCat && selCat.value),

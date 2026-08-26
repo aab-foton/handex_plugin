@@ -19,7 +19,7 @@ Plugin Figma que automatiza o handoff de design. Permite ao designer:
 - Mapear fluxos de tela
 - Gerar uma ficha técnica completa no canvas do Figma
 
-**Versão atual:** v6.5.0  
+**Versão atual:** v6.6.0  
 **Documentação:** `BUSINESS_RULES.md` (regras de negócio) · `CHANGELOG.md` (histórico)
 
 ---
@@ -156,10 +156,24 @@ git push origin main && git push gitlab main
 
 ---
 
+## Design System do Handex (leitura obrigatória antes de mudança visual)
+
+`docs/design-system-handex.md` é a **referência normativa** de tokens (cor, tipografia, espaçamento, radius) e catálogo de componentes (variantes de botão, accordion, modal, ícone) da UI do plugin — não confundir com o DSC da CAIXA, que é outro documento (ver seção "Arquitetura" acima, `refs/_manifest.json`).
+
+**Antes de criar ou alterar qualquer componente visual** (botão, card, modal, ícone, cor, espaçamento): consultar esse arquivo primeiro. Se o padrão já existe lá, seguir — não inventar uma variante nova sem necessidade. Se a mudança que você está fazendo torna uma regra do documento desatualizada (novo token, variante nova, correção de contraste, etc.), **atualizar o `.md` no mesmo commit** — nunca deixar código e documento divergirem silenciosamente, é exatamente esse tipo de duplicidade sem sincronização que já causou bugs reais neste projeto (ver "Bugs corrigidos relevantes").
+
+Onde o código atual diverge do que o documento define, isso é dívida técnica listada na seção 9 do próprio `.md` — não uma segunda opção válida a copiar.
+
+Há também uma versão navegável publicada como Artifact (link não fixo, buscar via `Artifact action:"list"` se precisar) — é gerada manualmente a partir do `.md`, não é fonte, só vitrine. Se o `.md` mudar, o artifact deveria ser republicado para não ficar defasado.
+
+---
+
 ## Estrutura da home (referência visual)
 
+**Corrigido em 2026-08-24** — a versão anterior deste bloco descrevia um header com "Gerar Ficha" e busca que não existe mais no código (`src/plugin/ui.html:616-667`); ficou desatualizada silenciosamente por pelo menos uma versão e induziu análise incorreta numa auditoria de UX. Verificar contra `ui.html` antes de confiar neste bloco em revisões futuras.
+
 ```
-Header: [Logo CAIXA | HANDEX v4.x]  [📋]  [✈ Gerar Ficha]  [🔍]  [☀]  [⇱]
+Header: [Logo | HANDEX vX]  [📋 Dados do Projeto]  [🔍− zoom out (oculto por padrão)]  [🔍+ zoom in]  [☀/🌙 tema]  [⇱ minimizar]
 
 Grid 2×3 (flex-1, preenche altura disponível):
   [Como usar o plugin]   [Informações do Projeto]
@@ -170,6 +184,8 @@ Footer:
   [▶ Gerar Ficha de Handoff]
   [↑ Importar JSON]  [🗑]
 ```
+
+"Gerar Ficha" não está mais no header global — hoje só é acionável de dentro de `view-dados-projeto` (`dados-projeto.html:314`) ou `view-handoff-summary` (`handoff-summary.html:146`), ambos chamando `openHandoffInjectModal()`.
 
 ---
 

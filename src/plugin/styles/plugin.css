@@ -89,8 +89,8 @@ body {
     }
 
     .checklist-pill:has(input:checked) {
-      background: #2e2ee0;
-      border-color: #2e2ee0;
+      background: #004d8d;
+      border-color: #004d8d;
       color: white;
       box-shadow: 0 4px 12px rgba(46, 46, 224, 0.2);
     }
@@ -100,61 +100,61 @@ body {
       border-radius: 8px !important; /* rounded-lg equivalent — fallback apenas para botões sem classe de raio explícita */
     }
 
-    button.bg-\[\#3d3dff\], button.bg-blue-600, button.bg-blue-500 {
-      background-color: #2e2ee0 !important;
+    button.bg-\[\#005ca9\], button.bg-blue-600, button.bg-blue-500 {
+      background-color: #004d8d !important;
       color: #ffffff !important;
       font-weight: 700 !important;
       border: none !important;
       transition: background-color 0.2s ease !important;
     }
-    button.bg-\[\#3d3dff\]:hover, button.bg-blue-600:hover, button.bg-blue-500:hover {
-      background-color: #2323a8 !important;
+    button.bg-\[\#005ca9\]:hover, button.bg-blue-600:hover, button.bg-blue-500:hover {
+      background-color: #004075 !important;
     }
 
     button.bg-orange-500, button.bg-orange-600 {
-      background-color: #7a5800 !important;
+      background-color: #935300 !important;
       color: #ffffff !important;
       font-weight: 700 !important;
       border: none !important;
       transition: background-color 0.2s ease !important;
     }
     button.bg-orange-500:hover, button.bg-orange-600:hover {
-      background-color: #523a00 !important;
+      background-color: #5f3600 !important;
     }
 
     button.bg-green-600, button.bg-green-500 {
-      background-color: #7a5800 !important;
+      background-color: #935300 !important;
       color: #ffffff !important;
       font-weight: 700 !important;
       border: none !important;
       transition: background-color 0.2s ease !important;
     }
     button.bg-green-600:hover, button.bg-green-500:hover {
-      background-color: #523a00 !important;
+      background-color: #5f3600 !important;
     }
 
-    button.border-\[\#3d3dff\], button.border-blue-500 {
+    button.border-\[\#005ca9\], button.border-blue-500 {
       background-color: #ffffff !important;
-      color: #2e2ee0 !important;
-      border: 1.5px solid #2e2ee0 !important;
+      color: #004d8d !important;
+      border: 1.5px solid #004d8d !important;
       font-weight: 700 !important;
       transition: all 0.2s ease !important;
     }
-    button.border-\[\#3d3dff\]:hover, button.border-blue-500:hover {
-      background-color: #eef0ff !important;
+    button.border-\[\#005ca9\]:hover, button.border-blue-500:hover {
+      background-color: #f7fbfe !important;
     }
 
     /* Dark mode support for primary buttons */
-    .dark button.bg-\[\#3d3dff\], .dark button.bg-blue-600, .dark button.bg-blue-500 {
-      background-color: #2e2ee0 !important;
+    .dark button.bg-\[\#005ca9\], .dark button.bg-blue-600, .dark button.bg-blue-500 {
+      background-color: #004d8d !important;
     }
     .dark button.bg-orange-500, .dark button.bg-orange-600 {
-      background-color: #7a5800 !important;
+      background-color: #935300 !important;
     }
-    .dark button.border-\[\#3d3dff\], .dark button.border-blue-500 {
+    .dark button.border-\[\#005ca9\], .dark button.border-blue-500 {
       background-color: #1e293b !important;
-      color: #8b8fff !important;
-      border-color: #8b8fff !important;
+      color: #8cc8fb !important;
+      border-color: #8cc8fb !important;
     }
     
     /* Enhanced focus states for accessibility */
@@ -162,11 +162,11 @@ body {
     input:focus-visible, 
     select:focus-visible, 
     textarea:focus-visible {
-      outline: 2px solid #2e2ee0;
+      outline: 2px solid #004d8d;
       outline-offset: 2px;
     }
     .dark button:focus-visible {
-      outline-color: #8b8fff;
+      outline-color: #8cc8fb;
     }
 
     /* Inline action button (sits in view header) — ícone + label sempre visíveis. */
@@ -180,7 +180,7 @@ body {
       border-radius: 999px;
       background: rgba(61, 61, 255, 0.13);
       border: 1px solid rgba(61, 61, 255, 0.28);
-      color: #3d3dff;
+      color: #005ca9;
       cursor: pointer;
       flex-shrink: 0;
       transition: background 0.18s ease, transform 0.15s ease, padding 0.18s ease, gap 0.18s ease;
@@ -208,7 +208,7 @@ body {
     .dark .subheader-brand .fab-inline {
       background: #ffffff;
       border-color: #ffffff;
-      color: #3d3dff;
+      color: #005ca9;
     }
     .subheader-brand .fab-inline:hover,
     .dark .subheader-brand .fab-inline:hover {
@@ -491,7 +491,7 @@ body {
     }
 
     /* 2. Uniform Typography & Hierarchy */
-    h1, h2, h3, .text-\[\#3d3dff\], .text-slate-800 {
+    h1, h2, h3, .text-\[\#005ca9\], .text-slate-800 {
       font-family: 'Inter', sans-serif !important;
       letter-spacing: -0.01em !important;
     }
@@ -522,14 +522,14 @@ body {
     }
 
     input[type="text"]:focus, input[type="search"]:focus, select:focus, textarea:focus {
-      border-color: #2e2ee0 !important;
+      border-color: #004d8d !important;
       background-color: #ffffff !important;
       box-shadow: 0 0 0 3px rgba(46, 46, 224, 0.15) !important;
       outline: none !important;
     }
 
     .dark input[type="text"]:focus, .dark input[type="search"]:focus, .dark select:focus, .dark textarea:focus {
-      border-color: #8b8fff !important;
+      border-color: #8cc8fb !important;
       background-color: #0f172a !important;
       box-shadow: 0 0 0 3px rgba(56, 169, 248, 0.15) !important;
     }
@@ -582,4 +582,16 @@ body {
       border-top: none !important;
       border-left: none !important;
       border-right: none !important;
+    }
+
+    /* Peso visual uniforme entre ícones Lucide -- todos usam o mesmo
+       stroke-width nativo (2), mas o plugin usa ~7 tamanhos diferentes
+       (w-2.5 a w-6) no mesmo viewBox de 24px, então o mesmo traço de 2px
+       parece mais grosso nos ícones pequenos e mais fino nos grandes.
+       Compensa por faixa de tamanho para o peso percebido ficar constante. */
+    svg[class~="w-2.5"], svg[class~="w-3"] {
+      stroke-width: 2.5;
+    }
+    svg[class~="w-3.5"], svg[class~="w-4"] {
+      stroke-width: 2.25;
     }
