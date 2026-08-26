@@ -1,11 +1,11 @@
 <!-- VIEW: HANDOFF SUMMARY -->
 <main id="view-handoff-summary" class="view flex p-0 flex-col h-full overflow-hidden">
   <!-- Header -->
-  <div class="subheader-brand px-4 py-3 bg-[#3d3dff] dark:bg-[#00335c] flex items-center justify-between shrink-0 shadow-md">
+  <div class="subheader-brand px-4 py-3 bg-[#005ca9] dark:bg-[#00335c] flex items-center justify-between shrink-0 shadow-md">
     <div class="flex items-center gap-2">
       <button onclick="navigate('view-home')" aria-label="Voltar"
-        class="p-2 bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
-        <i data-lucide="arrow-left" class="w-4 h-4 text-white" aria-hidden="true"></i>
+        class="min-w-[40px] min-h-[40px] flex items-center justify-center bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
+        <i data-lucide="arrow-left" class="w-5 h-5 text-white" aria-hidden="true"></i>
       </button>
       <div>
         <h2 class="text-white font-bold text-[16px]">Handoff</h2>
@@ -13,8 +13,8 @@
       </div>
     </div>
     <button type="button" onclick="openOnboarding('handoffSummary')" title="Como funciona esta etapa" aria-label="Como funciona esta etapa"
-      class="w-7 h-7 flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0">
-      <i data-lucide="circle-help" class="w-4 h-4"></i>
+      class="min-w-[40px] min-h-[40px] -m-2 flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0">
+      <i data-lucide="circle-help" class="w-4.5 h-4.5"></i>
     </button>
   </div>
 
@@ -22,16 +22,16 @@
   <div class="flex-1 overflow-y-auto pt-3 px-4 space-y-4 pb-6" onscroll="handleScroll(this)">
 
     <!-- Onboarding banner (primeira visita) -->
-    <div id="onboarding-banner-handoffSummary" class="hidden flex items-start gap-2.5 bg-[#3d3dff]/5 dark:bg-blue-900/10 border border-[#3d3dff]/20 dark:border-blue-800/30 rounded-2xl p-3.5">
-      <i data-lucide="sparkles" class="w-4 h-4 text-[#3d3dff] dark:text-blue-300 shrink-0 mt-0.5"></i>
+    <div id="onboarding-banner-handoffSummary" class="hidden flex items-start gap-2.5 bg-[#005ca9]/5 dark:bg-blue-900/10 border border-[#005ca9]/20 dark:border-blue-800/30 rounded-2xl p-3.5">
+      <i data-lucide="sparkles" class="w-4 h-4 text-[#005ca9] dark:text-blue-300 shrink-0 mt-0.5"></i>
       <div class="flex-1 min-w-0">
-        <p class="text-[11px] font-bold text-[#2e2ee0] dark:text-blue-300">Primeira vez aqui?</p>
-        <p class="text-[10px] text-[#2e2ee0]/80 dark:text-blue-300/80 leading-relaxed mt-0.5">Veja como gerar e exportar a Ficha de Handoff.</p>
+        <p class="text-[11px] font-bold text-[#004d8d] dark:text-blue-300">Primeira vez aqui?</p>
+        <p class="text-[10px] text-[#004d8d]/80 dark:text-blue-300/80 leading-relaxed mt-0.5">Veja como gerar e exportar a Ficha de Handoff.</p>
       </div>
       <div class="flex items-center gap-1 shrink-0">
-        <button type="button" onclick="openOnboarding('handoffSummary', { markSeenOnOpen: true })" class="px-2.5 py-1 bg-[#3d3dff] hover:bg-[#2e2ee0] text-white text-[10px] font-bold rounded-lg transition-colors">Ver agora</button>
-        <button type="button" onclick="dismissOnboardingBanner('handoffSummary')" title="Dispensar" aria-label="Dispensar" class="p-1 text-[#3d3dff]/60 hover:text-[#3d3dff] dark:text-blue-300/60 dark:hover:text-blue-300 transition-colors">
-          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+        <button type="button" onclick="openOnboarding('handoffSummary', { markSeenOnOpen: true })" class="px-2.5 py-1 bg-[#005ca9] hover:bg-[#004d8d] text-white text-[10px] font-bold rounded-lg transition-colors">Ver agora</button>
+        <button type="button" onclick="dismissOnboardingBanner('handoffSummary')" title="Dispensar" aria-label="Dispensar" class="min-w-[40px] min-h-[40px] flex items-center justify-center -mr-[13px] text-[#005ca9]/80 hover:text-[#005ca9] dark:text-blue-300/60 dark:hover:text-blue-300 transition-colors">
+          <i data-lucide="x" class="w-4.5 h-4.5"></i>
         </button>
       </div>
     </div>
@@ -145,7 +145,7 @@
     <!-- Gerar Ficha no Canvas -->
     <button onclick="openHandoffInjectModal()"
       title="Gerar Ficha no Canvas" aria-label="Gerar Ficha no Canvas"
-      class="w-full flex items-center justify-center gap-2 py-3.5 bg-[#3d3dff] hover:bg-[#2e2ee0] rounded-2xl text-[13px] font-bold text-white transition-all shadow-md">
+      class="w-full flex items-center justify-center gap-2 py-3.5 bg-[#005ca9] hover:bg-[#004d8d] rounded-2xl text-[13px] font-bold text-white transition-all shadow-md">
       <i data-lucide="sparkles" class="w-4 h-4" aria-hidden="true"></i>
       Gerar Ficha
     </button>

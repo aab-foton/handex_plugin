@@ -38,7 +38,7 @@ const ONBOARDING_TOOLS = {
     view: 'view-dados-projeto',
     title: 'Informações do Projeto',
     icon: 'clipboard-list',
-    color: '#3d3dff',
+    color: '#005ca9',
     format: 'single',
     purpose: 'Registra o contexto do que está sendo entregue — título, objetivo, equipe responsável e, opcionalmente, o briefing estratégico e as regras de negócio. Esse contexto aparece no topo da ficha final, para o dev entender o "porquê" da entrega antes de mergulhar no "como".',
     steps: [
@@ -141,7 +141,7 @@ const ONBOARDING_TOOLS = {
     view: 'view-handoff-summary',
     title: 'Gerar Ficha de Handoff',
     icon: 'send',
-    color: '#2e2ee0',
+    color: '#004d8d',
     format: 'single',
     purpose: 'Consolida tudo que foi documentado — specs, medidas, fluxos e conformidade com o DSC — num documento único e versionado no canvas, pronto para a entrega ao time de desenvolvimento.',
     steps: [

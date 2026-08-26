@@ -482,15 +482,15 @@ function renderBriefingAxisAccordions() {
           ${axis.name}
           <span id="briefing-axis-count-${axis.id}" class="hidden px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-dark-muted text-[10px] font-bold rounded-full leading-none"></span>
         </span>
-        <i data-lucide="chevron-down" id="briefing-axis-arrow-${axis.id}" class="w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform ${isOpen ? 'rotate-180' : ''}"></i>
+        <i data-lucide="chevron-down" id="briefing-axis-arrow-${axis.id}" class="w-4 h-4 ${isOpen ? 'text-[#005ca9] dark:text-blue-300' : 'text-gray-500 dark:text-dark-muted'} transition-transform ${isOpen ? 'rotate-180' : ''}"></i>
       </button>
       <div id="briefing-axis-body-${axis.id}" class="${isOpen ? '' : 'hidden'} p-3 bg-white dark:bg-dark-bg/10 border-t border-gray-100 dark:border-dark-line">
         <div class="flex gap-2">
-          <select id="${selectId}" class="flex-1 min-w-0 text-[12px] bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2 text-slate-700 dark:text-white outline-none focus:border-[#3d3dff]/50 transition-colors">
+          <select id="${selectId}" class="flex-1 min-w-0 text-[12px] bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2 text-slate-700 dark:text-white outline-none focus:border-[#005ca9]/50 transition-colors">
             <option value="${BRIEFING_CUSTOM_VALUE}">Pergunta customizada</option>
           </select>
           <button type="button" onclick="confirmBriefingAxisSelection('${axis.id}')" title="Adicionar pergunta" aria-label="Adicionar pergunta deste eixo"
-            class="shrink-0 px-3 py-2 bg-[#3d3dff] hover:bg-blue-700 rounded-xl text-[11px] font-bold text-white transition-colors">
+            class="shrink-0 px-3 py-2 bg-[#005ca9] hover:bg-blue-700 rounded-xl text-[11px] font-bold text-white transition-colors">
             Adicionar
           </button>
         </div>
@@ -510,6 +510,8 @@ function toggleBriefingAxisAccordion(axisId) {
   const isHidden = body.classList.contains('hidden');
   body.classList.toggle('hidden');
   arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+  arrow.classList.toggle('text-[#005ca9]', isHidden);
+  arrow.classList.toggle('dark:text-blue-300', isHidden);
 }
 
 function confirmBriefingAxisSelection(axisId) {
@@ -612,9 +614,9 @@ function _briefingCardHTML(q, index) {
   const hasAnswer = q.answer && q.answer.trim();
   return `
     <div class="flex items-start justify-between gap-3 mb-3">
-      <span class="text-[#3d3dff] font-bold text-[14px] shrink-0">#${index}</span>
+      <span class="text-[#005ca9] font-bold text-[14px] shrink-0">#${index}</span>
       <div class="flex items-center gap-1 shrink-0">
-        <button onclick="editBriefingQuestion('${q.id}')" title="Editar pergunta" aria-label="Editar pergunta" class="p-1.5 text-gray-400 hover:text-[#3d3dff] transition-colors rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20">
+        <button onclick="editBriefingQuestion('${q.id}')" title="Editar pergunta" aria-label="Editar pergunta" class="p-1.5 text-gray-400 hover:text-[#005ca9] transition-colors rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20">
           <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
         </button>
         <button onclick="removeBriefingQuestion('${q.id}')" title="Excluir pergunta" aria-label="Excluir pergunta" class="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-md hover:bg-red-50 dark:hover:bg-red-900/20">
@@ -1017,7 +1019,7 @@ function _renderBriefingGuideAxisFilters() {
 
 function _briefingGuideChipClass(active) {
   return active
-    ? 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#3d3dff] text-white transition-colors'
+    ? 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#005ca9] text-white transition-colors'
     : 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-dark-muted hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors';
 }
 
@@ -1088,7 +1090,7 @@ function _renderBriefingGuideResults(query) {
         insertBtn.type = 'button';
         insertBtn.title = 'Inserir esta pergunta no briefing';
         insertBtn.setAttribute('aria-label', `Inserir "${q.label}" no briefing`);
-        insertBtn.className = 'shrink-0 p-1.5 text-[#3d3dff] hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors';
+        insertBtn.className = 'shrink-0 p-1.5 text-[#005ca9] hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors';
         insertBtn.innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4"></i>';
         insertBtn.onclick = () => {
           // Não fecha o Guia -- só sobrepõe o modal "Adicionar pergunta" por
@@ -1112,7 +1114,7 @@ function _renderBriefingGuideResults(query) {
       <div class="flex flex-col items-center justify-center py-10">
         <i data-lucide="search-x" class="w-10 h-10 text-slate-200 dark:text-slate-700 mb-3" style="opacity:0.5"></i>
         <p class="text-[11px] font-bold text-slate-500 dark:text-dark-muted text-center">Nenhuma pergunta encontrada</p>
-        <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center mt-1">Tente outro termo ou remova o filtro de eixo.</p>
+        <p class="text-[10px] text-slate-500 dark:text-dark-muted text-center mt-1">Tente outro termo ou remova o filtro de eixo.</p>
       </div>
     `;
   }
@@ -1223,7 +1225,11 @@ function toggleSubAccordion(key) {
   const chev = document.getElementById(`sub-chev-${key}`);
   if (!body) return;
   const isHidden = body.classList.toggle('hidden');
-  if (chev) chev.style.transform = isHidden ? '' : 'rotate(90deg)';
+  if (chev) {
+    chev.style.transform = isHidden ? '' : 'rotate(90deg)';
+    chev.classList.toggle('text-[#005ca9]', !isHidden);
+    chev.classList.toggle('dark:text-blue-300', !isHidden);
+  }
 }
 
 // ── Exception modal ────────────────────────────────────────────────────
@@ -1451,7 +1457,11 @@ function toggleFrameAccordion(frameId) {
   if (!body) return;
   const isHidden = body.classList.contains('hidden');
   body.classList.toggle('hidden', !isHidden);
-  if (arrow) arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+  if (arrow) {
+    arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+    arrow.classList.toggle('text-[#005ca9]', isHidden);
+    arrow.classList.toggle('dark:text-blue-300', isHidden);
+  }
   if (header) {
     header.setAttribute('aria-expanded', String(isHidden));
     const frame = typeof getFrame === 'function' ? getFrame(frameId) : null;
@@ -1581,7 +1591,7 @@ function _csSyncLabel(wid) {
   const sel = hiddenSel.options[hiddenSel.selectedIndex];
   if (!sel) return;
   if (wid === 'cs-ann-cat' && sel.value) {
-    const color = typeof getCategoryColor === 'function' ? getCategoryColor(sel.value) : '#2e2ee0';
+    const color = typeof getCategoryColor === 'function' ? getCategoryColor(sel.value) : '#004d8d';
     labelEl.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${color};margin-right:6px;vertical-align:middle;flex-shrink:0"></span>${escapeHtml(sel.text)}`;
   } else {
     labelEl.textContent = sel.text;
@@ -1599,11 +1609,11 @@ function _csMarkActive(wid, value) {
     const active = btn.dataset.csOpt === String(value);
     btn.classList.toggle('bg-blue-50',         active);
     btn.classList.toggle('dark:bg-blue-900/20', active);
-    btn.classList.toggle('text-[#3d3dff]',      active);
+    btn.classList.toggle('text-[#005ca9]',      active);
     btn.classList.toggle('font-bold',           active);
     // Remove active from inactive
     if (!active) {
-      btn.classList.remove('bg-blue-50', 'dark:bg-blue-900/20', 'text-[#3d3dff]', 'font-bold');
+      btn.classList.remove('bg-blue-50', 'dark:bg-blue-900/20', 'text-[#005ca9]', 'font-bold');
     }
   });
 }
@@ -1627,7 +1637,7 @@ function _csSyncPanel(wid) {
     btn.className = `w-full text-left flex items-center gap-2 px-3 py-2 text-[12px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors${isActive ? ' bg-blue-50 dark:bg-blue-900/20 font-bold' : ''}`;
     if (isCatPanel && opt.value) {
       const dot = document.createElement('span');
-      const color = typeof getCategoryColor === 'function' ? getCategoryColor(opt.value) : '#2e2ee0';
+      const color = typeof getCategoryColor === 'function' ? getCategoryColor(opt.value) : '#004d8d';
       dot.style.cssText = `width:8px;height:8px;border-radius:50%;background-color:${color};flex-shrink:0`;
       btn.appendChild(dot);
     }
@@ -1667,7 +1677,10 @@ function _closeStatusPanel() {
   const panel = document.getElementById('s1-status-panel');
   const chev  = document.getElementById('s1-status-chev');
   if (panel) { panel.classList.add('hidden'); panel.style.cssText = ''; }
-  if (chev)  chev.style.transform = '';
+  if (chev)  {
+    chev.style.transform = '';
+    chev.classList.remove('text-[#005ca9]', 'dark:text-blue-300');
+  }
 }
 
 function toggleStatusDropdown(e) {
@@ -1686,7 +1699,10 @@ function toggleStatusDropdown(e) {
       panel.style.cssText = `position:fixed;top:${r.bottom + 2}px;left:${r.left}px;width:${r.width}px;z-index:9999;`;
     }
     panel.classList.remove('hidden');
-    if (chev) chev.style.transform = 'rotate(180deg)';
+    if (chev) {
+      chev.style.transform = 'rotate(180deg)';
+      chev.classList.add('text-[#005ca9]', 'dark:text-blue-300');
+    }
     // Fecha ao clicar fora
     const close = (ev) => {
       const wrapper = document.getElementById('s1-status-wrapper');
@@ -1759,12 +1775,12 @@ function addTeamMember(papel = "Designer", nome = "", email = "", skipScroll = f
           <option value="Outro"    ${papel === "Outro"    ? "selected" : ""}>Outro</option>
         </select>
         <button type="button" onclick="_csToggle('cs-role-${id}', event)"
-          class="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl text-[11px] font-bold text-slate-700 dark:text-white cursor-pointer hover:border-gray-300 focus:ring-1 focus:ring-[#3d3dff]/30 outline-none transition-all">
+          class="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl text-[11px] font-bold text-slate-700 dark:text-white cursor-pointer hover:border-gray-300 focus:ring-1 focus:ring-[#005ca9]/30 outline-none transition-all">
           <span data-cs-label>${papel}</span>
           <i data-lucide="chevron-down" data-cs-chev class="w-3 h-3 text-gray-500 dark:text-dark-muted transition-transform"></i>
         </button>
         <div data-cs-panel class="hidden absolute top-full left-0 mt-1 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg shadow-lg z-50 overflow-hidden py-1 min-w-[110px]">
-          ${['Designer','DEV','PO','QA','Outro'].map(r => `<button type="button" onclick="_csSelect('cs-role-${id}','${r}')" data-cs-opt="${r}" class="w-full text-left px-3 py-2 text-[11px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors${papel === r ? ' bg-blue-50 dark:bg-blue-900/20 text-[#3d3dff] font-bold' : ''}">${r}</button>`).join('')}
+          ${['Designer','DEV','PO','QA','Outro'].map(r => `<button type="button" onclick="_csSelect('cs-role-${id}','${r}')" data-cs-opt="${r}" class="w-full text-left px-3 py-2 text-[11px] text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors${papel === r ? ' bg-blue-50 dark:bg-blue-900/20 text-[#005ca9] font-bold' : ''}">${r}</button>`).join('')}
         </div>
       </div>
       <button onclick="removeTeamMember('${id}')" title="Remover membro" class="text-gray-400 hover:text-red-500 transition-colors">
@@ -2115,7 +2131,7 @@ function updateNavigationUI() {
   for (let i = 1; i <= totalSteps; i++) {
     const dot = document.getElementById("dot-" + i);
     if (dot) {
-      dot.classList.toggle("bg-[#3d3dff]", i === currentStep);
+      dot.classList.toggle("bg-[#005ca9]", i === currentStep);
       dot.classList.toggle("bg-gray-200", i !== currentStep);
       dot.classList.toggle("dark:bg-dark-surface", i !== currentStep);
       dot.classList.toggle("w-3", i === currentStep);
@@ -2174,7 +2190,7 @@ function updateFooterButtons() {
     btnNext.classList.remove("hidden");
     btnNext.innerHTML = '<span>Próximo</span> <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>';
     btnNext.classList.remove("bg-green-600");
-    btnNext.classList.add("bg-[#3d3dff]");
+    btnNext.classList.add("bg-[#005ca9]");
     btnNext.onclick = () => nextStep();
   }
   _refreshIcons();
@@ -2362,11 +2378,29 @@ function _topmostVisibleModal() {
   return topModal;
 }
 
+// Alguns modais têm função de fechamento dedicada (ex: closeSpecFormModal,
+// closeMeasureModal) que limpa estado extra além de esconder o modal -- não
+// só closeModal(id) genérico. Escape chamava sempre o genérico, então fechar
+// via teclado (em vez de clicar no X/botão Cancelar) podia deixar esse
+// estado (ex: _pendingSpecPosition) pendurado pra próxima abertura. Acha o
+// onclick real a partir do botão "Fechar"/"Fechar modal" do próprio modal
+// (mesmo padrão usado em toda a UI) e o invoca; cai pro backdrop, depois
+// pro closeModal(id) genérico se nenhum dos dois existir.
+function _closeHandlerForModal(modalEl) {
+  // .onclick (não getAttribute) pega a função já parseada pelo navegador a
+  // partir do atributo inline -- evita reconstruir a string manualmente.
+  const closeBtn = modalEl.querySelector('button[aria-label="Fechar"], button[aria-label="Fechar modal"]');
+  if (closeBtn && typeof closeBtn.onclick === 'function') return () => closeBtn.onclick();
+  const backdrop = modalEl.querySelector('.absolute.inset-0[onclick]');
+  if (backdrop && typeof backdrop.onclick === 'function') return () => backdrop.onclick();
+  return () => closeModal(modalEl.id);
+}
+
 // Fecha o modal visível com maior z-index ao pressionar Escape (topo em caso de sobreposição).
 document.addEventListener('keydown', function (e) {
   if (e.key !== 'Escape') return;
   const topModal = _topmostVisibleModal();
-  if (topModal) closeModal(topModal.id);
+  if (topModal) _closeHandlerForModal(topModal)();
 });
 
 // Focus trap: com o modal aberto, o Tab não tem mais nenhuma borda real do
@@ -2438,6 +2472,7 @@ function navigate(viewId) {
   }
   document.getElementById("header-home")?.classList.remove("hidden");
   if (viewId === 'view-specifications') {
+    if (typeof _resetSpecsSearchInputs === 'function') _resetSpecsSearchInputs();
     syncAndRenderSpecs();
     populateFrameSelector('spec-frame-selector');
   }
@@ -2716,7 +2751,10 @@ function toggleAccordion(btn, nodeId = null) {
           otherContent.classList.add('hidden');
           otherBtn.setAttribute('aria-expanded', 'false');
           const otherIcon = otherBtn.querySelector('[data-lucide="chevron-down"]');
-          if (otherIcon) otherIcon.style.transform = "rotate(0deg)";
+          if (otherIcon) {
+            otherIcon.style.transform = "rotate(0deg)";
+            otherIcon.classList.remove('text-[#005ca9]', 'dark:text-blue-300');
+          }
         }
       });
     }
@@ -2724,7 +2762,11 @@ function toggleAccordion(btn, nodeId = null) {
 
   content.classList.toggle("hidden");
   btn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
-  if (icon) icon.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
+  if (icon) {
+    icon.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
+    icon.classList.toggle('text-[#005ca9]', isHidden);
+    icon.classList.toggle('dark:text-blue-300', isHidden);
+  }
   if (nodeId) {
     if (isHidden) {
       // Expandir seleciona e rola até o elemento, mas sem o retângulo de
@@ -2757,24 +2799,34 @@ function collapseAllAccordions(containerEl) {
     if (c.id && c.id.startsWith('frame-body-')) {
       const frameId = c.id.replace('frame-body-', '');
       const chevron = document.getElementById(`frame-chevron-${frameId}`);
-      if (chevron) chevron.style.transform = shouldCollapse ? 'rotate(180deg)' : 'rotate(0deg)';
+      if (chevron) {
+        chevron.style.transform = shouldCollapse ? 'rotate(180deg)' : 'rotate(0deg)';
+        chevron.classList.toggle('text-[#005ca9]', !shouldCollapse);
+        chevron.classList.toggle('dark:text-blue-300', !shouldCollapse);
+      }
     } else if (c.matches('[data-accordion-content]') && c.previousElementSibling && c.previousElementSibling.querySelector('.journey-chevron')) {
       // Card de jornada de fluxo (renderFlowsList) — chevron próprio
       // (.journey-chevron), não usa toggleAccordion/aria-expanded.
       const chevron = c.previousElementSibling.querySelector('.journey-chevron');
       chevron.classList.toggle('rotate-180', shouldCollapse);
+      chevron.classList.toggle('text-[#005ca9]', !shouldCollapse);
+      chevron.classList.toggle('dark:text-blue-300', !shouldCollapse);
     } else if (c.matches('[data-accordion-content]') && c.previousElementSibling && c.previousElementSibling.querySelector('.group-chevron')) {
       // Grupo de tag em Anotar Specs (renderSpecsList) — chevron próprio
       // (.group-chevron), toggle feito via headerInfo.onclick, não
       // toggleAccordion/aria-expanded.
       const chevron = c.previousElementSibling.querySelector('.group-chevron');
       chevron.classList.toggle('rotate-180', shouldCollapse);
+      chevron.classList.toggle('text-[#005ca9]', !shouldCollapse);
+      chevron.classList.toggle('dark:text-blue-300', !shouldCollapse);
     } else if (c.id && document.getElementById('chev-' + c.id)) {
       // Item individual de spec (renderSpecsList/toggleSpecDetails) —
       // chevron com id="chev-{detailsId}", rotacionado via style.transform
       // inline (mesmo padrão de toggleSpecDetails), não classList/aria.
       const chevron = document.getElementById('chev-' + c.id);
       chevron.style.transform = shouldCollapse ? '' : 'rotate(180deg)';
+      chevron.classList.toggle('text-[#005ca9]', !shouldCollapse);
+      chevron.classList.toggle('dark:text-blue-300', !shouldCollapse);
     } else if (c.id && c.id.startsWith('sub-body-') && document.getElementById('sub-chev-' + c.id.replace('sub-body-', ''))) {
       // Sub-accordion aninhado dentro do card de frame (ex: Tokens
       // Escaneados, toggleSubAccordion em core.js) — chevron com
@@ -2782,6 +2834,8 @@ function collapseAllAccordions(containerEl) {
       // inline, mesmo padrão de toggleSubAccordion.
       const chevron = document.getElementById('sub-chev-' + c.id.replace('sub-body-', ''));
       chevron.style.transform = shouldCollapse ? '' : 'rotate(90deg)';
+      chevron.classList.toggle('text-[#005ca9]', !shouldCollapse);
+      chevron.classList.toggle('dark:text-blue-300', !shouldCollapse);
     } else {
       // Regular accordion — find toggle button
       const parent = c.closest('.border, .rounded-xl, .mb-3');
@@ -2789,7 +2843,11 @@ function collapseAllAccordions(containerEl) {
       if (btn) {
         btn.setAttribute('aria-expanded', shouldCollapse ? 'false' : 'true');
         const icon = btn.querySelector('[data-lucide="chevron-down"]');
-        if (icon) icon.style.transform = shouldCollapse ? 'rotate(0deg)' : 'rotate(180deg)';
+        if (icon) {
+          icon.style.transform = shouldCollapse ? 'rotate(0deg)' : 'rotate(180deg)';
+          icon.classList.toggle('text-[#005ca9]', !shouldCollapse);
+          icon.classList.toggle('dark:text-blue-300', !shouldCollapse);
+        }
       }
     }
   });
@@ -2968,7 +3026,7 @@ function autoScrollToNewItem(containerId, targetElement = null) {
 }
 
 function focusNode(id) {
-  parent.postMessage({ pluginMessage: { type: 'highlight-node', id, highlight: true, shouldScroll: true, color: '#3d3dff' } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'highlight-node', id, highlight: true, shouldScroll: true, color: '#005ca9' } }, '*');
 }
 
 // Destaque transitório (retângulo HighlightStroke) pra qualquer lista que
@@ -2978,7 +3036,7 @@ function focusNode(id) {
 // qualquer accordion/lista que precise desse preview (hoje: medidas).
 function sendHighlight(figmaId) {
   if (figmaId) {
-    parent.postMessage({ pluginMessage: { type: 'highlight-node', id: figmaId, highlight: true, shouldScroll: false, selectNode: false, color: '#3d3dff' } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'highlight-node', id: figmaId, highlight: true, shouldScroll: false, selectNode: false, color: '#005ca9' } }, '*');
   }
 }
 function clearHighlight() {
