@@ -708,8 +708,10 @@ ${(handoffData.createdFlows || []).length === 0
       const regras = handoffData.step2.regras || [];
       const uploadedFileNames = (handoffData.step2.anexos || []).map(a => a.name);
 
-      // Auditoria: habilitada se pelo menos um frame tem audit.enabled
-      const isAuditEnabled = (handoffData.frames || []).some(f => f.audit && f.audit.enabled);
+      // Auditoria: habilitada se pelo menos um frame já foi escaneado (specs
+      // com isDS calculado) -- audit.enabled nunca é gravado por nenhum
+      // fluxo do plugin, era campo morto de uma arquitetura anterior.
+      const isAuditEnabled = (handoffData.frames || []).some(f => f.specs && Object.keys(f.specs).length > 0);
 
       const protoLink = (docs.proto && docs.proto.link) || '#';
       const protoTarget = (docs.proto && docs.proto.link) ? 'target="_blank"' : '';

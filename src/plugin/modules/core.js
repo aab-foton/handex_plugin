@@ -47,6 +47,34 @@ let currentSpecTab = 'specs-form';
 let lastAuditResults = null;
 let activeFrameId = null; // frame em foco para operações de modal
 
+// ── Conformidade automática por item/propriedade (batimento contra o DSC) ──
+// Complementa a declaração humana por frame (checkDone/semDesvios/observacoes,
+// ver specifications.js) -- não a substitui. Cada item/propriedade já chega
+// do scan (code.js) com isDS calculado (true/"warning"/false); aqui só
+// agregamos esse dado para exibição. isDS é uma FOTO do momento do scan --
+// não recalcula sozinho se o elemento mudar no Figma depois; precisa rodar
+// "Atualizar escaneamento" de novo para refletir edições (ver
+// _isFrameScanStale em specifications.js).
+const AUDIT_LABEL = { ok: 'Em conformidade', warning: 'Necessita revisão', error: 'Fora do padrão' };
+
+function computeItemAuditStatus(item) {
+  if (!item) return 'error';
+  if (item.isDS === true) return 'ok';
+  if (item.isDS === 'warning') return 'warning';
+  return 'error';
+}
+
+function getItemAuditBreakdown(item) {
+  const props = (item && item.properties) || [];
+  const out = { total: props.length, ok: 0, warning: 0, error: 0 };
+  props.forEach(p => {
+    if (p.isDS === true) out.ok++;
+    else if (p.isDS === 'warning') out.warning++;
+    else out.error++;
+  });
+  return out;
+}
+
 let handoffData = {
   _schemaVersion: 2,
   step1: {
@@ -104,11 +132,19 @@ function _updateFrameAuditSubtitle(frameId) {
     return;
   }
 
+  // Critério exigente: item sem token vinculado nunca é "conforme" por
+  // omissão. Marcar "Sem desvios" sem justificar por escrito o que o scan
+  // encontrou fora do padrão não move o status pra amarelo -- continua
+  // vermelho até existir uma observação de fato explicando o desvio.
   const hasUnlinked = _computeFrameHasUnlinked(frame);
-  if (frame.audit.semDesvios && hasUnlinked) {
+  const hasJustification = !!(frame.audit.observacoes && frame.audit.observacoes.trim());
+  if (hasUnlinked && hasJustification) {
     subtitle.className = 'text-[10px] text-amber-500 font-medium';
-    subtitle.textContent = 'Conforme com ressalvas';
-  } else if (frame.audit.semDesvios && !hasUnlinked) {
+    subtitle.textContent = 'Em revisão';
+  } else if (hasUnlinked && !hasJustification) {
+    subtitle.className = 'text-[10px] text-red-500 font-medium';
+    subtitle.textContent = 'Não Conforme';
+  } else if (frame.audit.semDesvios) {
     subtitle.className = 'text-[10px] text-green-600 font-medium';
     subtitle.textContent = 'Conforme';
   } else {
@@ -136,8 +172,6 @@ function setFrameCheckDone(frameId, checked) {
   frame.audit.checkDone = checked;
   const el = document.getElementById(`audit-result-${frameId}`);
   if (el) el.classList.toggle('hidden', !checked);
-  const rescanRow = document.getElementById(`rescan-row-${frameId}`);
-  if (rescanRow) rescanRow.classList.toggle('hidden', !checked);
   _updateFrameAuditSubtitle(frameId);
   saveToStorage();
 }
@@ -204,8 +238,13 @@ function setFrameAuditObs(frameId, value) {
   // Debounced — sem isso, cada tecla digitada dispara save-storage completo
   // (serializa handoffData inteiro + _writeSharedPluginData percorre todos
   // os frames do projeto no backend), pesado em projetos com muitos frames.
+  // _updateFrameAuditSubtitle no mesmo debounce: status (vermelho/amarelo)
+  // depende de haver justificativa escrita ou não, ver ali.
   clearTimeout(setFrameAuditObs._t);
-  setFrameAuditObs._t = setTimeout(saveToStorage, 600);
+  setFrameAuditObs._t = setTimeout(() => {
+    saveToStorage();
+    _updateFrameAuditSubtitle(frameId);
+  }, 600);
 }
 
 function _refreshAuditView() {}
