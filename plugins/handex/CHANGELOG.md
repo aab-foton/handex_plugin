@@ -2,6 +2,67 @@
 
 ---
 
+## v6.6.0 — 2026-08-26
+
+### Adicionado — Design System do Handex fechado como referência normativa
+`docs/design-system-handex.md` (v1.5) deixa de ser um levantamento solto e passa a ser a fonte de verdade de tokens e componentes da UI do plugin: catálogo de 6 variantes de botão (primária, secundária/ghost, branco/outline neutro, destrutiva, ícone interativo, ícone utilitário), radius único (`rounded-2xl`), accordion único, área de toque de 40×40px em todo ícone interativo, peso visual uniforme entre ícones de tamanhos diferentes, e auditoria de contraste WCAG 2.1 AA em toda a interface (14 correções aplicadas). `CLAUDE.md` passa a apontar esse documento como leitura obrigatória antes de qualquer mudança visual.
+
+### Alterado — Paleta de marca revertida para a identidade institucional CAIXA
+A paleta "Uau CAIXA" (azul-roxo `#3d3dff`) usada desde a v6.3.0 antecipava um rebranding que a CAIXA ainda não publicou oficialmente. Revertido para a marca institucional vigente (`#005ca9`/`#f39200`, extraída diretamente do Design System Corporativo real) em toda a interface do plugin, incluindo a logo exibida no header e na Ficha gerada no canvas.
+
+### Corrigido — Dados de um projeto apareciam ao abrir o plugin em outro arquivo Figma
+`handoffData` e o cache de scan de tokens eram salvos numa chave compartilhada por instalação do plugin, não por arquivo — ao alternar entre projetos `.fig` diferentes no Figma Desktop, título, especificações e medidas de um projeto podiam aparecer dentro de outro. Corrigido isolando o armazenamento por arquivo, com migração automática do que já estava salvo (nenhum projeto em andamento é perdido na atualização).
+
+### Ajustado — Card de especificação no canvas com largura fixa
+O card de spec inserido no canvas agora tem largura travada em 480px, com todo o conteúdo interno (nota, propriedades, cenários de exceção) ajustado para quebrar linha dentro desse limite em vez de crescer indefinidamente para os lados.
+
+### Ajustado — Bibliotecas DSC monitoradas
+Biblioteca "Super Gerenciador" (agora renomeada pela equipe de design para "Super DSC | Web") reconhecida como sucessora do DSC legado "Web Angular & React" — as duas continuam sendo escaneadas em paralelo enquanto a migração de design system estiver em andamento.
+
+### Nota
+Esta versão inclui também uma correção pontual do token de acesso usado para sincronizar as bibliotecas do DSC (sem efeito visível na interface do plugin).
+
+---
+
+## v6.5.0 — 2026-08-17
+
+### Adicionado — Nova etapa "Posição no Canvas" na criação de especificação
+Um card fantasma arrastável (do tamanho real do card final, sem o texto) substitui a escolha manual de lado da guia — com zoom automático no elemento e o modal permanecendo aberto durante o arraste, para o designer posicionar a spec vendo o resultado em tempo real.
+
+### Corrigido — Linha do conector de spec desalinhada após editar estilo ou reposicionar
+Duas causas raiz distintas: a origem da linha era calculada antes do grupo se redimensionar (jogando a linha para longe ao trocar o estilo do card), e a posição do lado da guia salva na criação não era atualizada depois de um arraste manual. Corrigido com roteamento ortogonal unificado (sempre sai reto da origem e entra reto no destino) compartilhado entre Fluxos de Tela e Specs.
+
+### Adicionado — Focus trap completo em modais
+Navegação por Tab, Escape e clique-fora agora fica contida dentro do modal aberto, em qualquer modal do plugin.
+
+---
+
+## v6.4.0 — 2026-08-14
+
+### Reformulado — Fluxos de Tela
+A ordem da cadeia de conexão passa a respeitar o clique real do usuário (antes seguia só a ordem de camadas do Figma). O mini-mapa passa a refletir a posição relativa real dos elementos no canvas, em vez de um trilho horizontal fixo. Cada card pode escolher seu próprio lado de ancoragem. O nome do fluxo passa a ser o nome da Jornada — um agrupamento automático de conexões que se tocam, refletido também na Ficha exportada. Adicionados marcadores automáticos de Início/Fim (opcionais) e a possibilidade de trocar o tipo de uma conexão já criada sem precisar apagar e reconectar. Corrigido um travamento do Figma ao conectar 3 ou mais frames em sequência.
+
+### Adicionado — "Para que serve" no onboarding de cada ferramenta
+Cada ferramenta com onboarding contextual ganhou uma explicação de propósito antes do passo a passo — tanto no modal quanto no guia de uso.
+
+### Ajustado — Home com cards reorganizáveis
+Os cards de ferramenta na tela inicial podem ser reordenados por arrastar-e-soltar; a ordem escolhida é lembrada.
+
+### Ajustado — Limite de caracteres visível em campos de texto livre
+Cerca de 20 campos de texto do plugin ganharam contador de caracteres com limite.
+
+---
+
+## v6.3.0 — 2026-08-07
+
+### Alterado — Paleta de cores institucional CAIXA
+Migração de `#0070af`/`#005ca9` para `#3d3dff`/`#2e2ee0` (identidade "Uau CAIXA" 2026) na interface do plugin e no ícone. *Nota: esta paleta foi revertida na v6.6.0 — ver acima.*
+
+### Alterado — Fluxo de finalização de especificações
+Botão "Salvar e Voltar" substituído por "Finalizar Registros", desacoplando o fim do registro de specs da navegação para a tela inicial.
+
+---
+
 ## v6.2.0 — 2026-08-04
 
 ### Corrigido — Especificação excluída "ressuscitava" ao navegar entre telas
