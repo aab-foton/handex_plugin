@@ -1,6 +1,6 @@
 # Handex — Handoff Express · v5.0.0
 
-Plugin Figma da Fóton, desenvolvido por Augusto Brasil. Automatiza o processo de handoff de design, gerando fichas técnicas no canvas, escaneando tokens de UI, anotando specs e medidas, mapeando fluxos e auditando aderência ao Design System Corporativo (DSC).
+Plugin Figma da Fóton, desenvolvido por Augusto Brasil. Automatiza o processo de handoff de design, gerando fichas técnicas no canvas, escaneando tokens de UI, anotando specs e medidas, mapeando fluxos e auditando aderência ao Design System CAIXA (DSC).
 
 ---
 
@@ -164,7 +164,7 @@ plugins/handex/
         │   ├── tailwind-compiled.css  # CSS gerado (não editar)
         │   └── tailwind.config.cjs    # Tema e safelist do Tailwind
         │
-        └── refs/              # Referências do Design System Corporativo
+        └── refs/              # Referências do Design System CAIXA
             ├── _manifest.json         # Lista curada das libs DSC (FONTE DE VERDADE)
             ├── _skeleton.json         # Bundle agregado de todas as libs (GERADO)
             ├── fundamentos-visuais.json

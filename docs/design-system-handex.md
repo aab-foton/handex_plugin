@@ -2,7 +2,7 @@
 
 **Versão do DS:** 1.5
 **Data de fechamento:** 2026-08-25 · última revisão: 2026-08-26 (auditoria de contraste WCAG + padronização de botões brancos + peso visual de ícones + tamanho de ícones-irmãos)
-**Escopo:** a linguagem visual da própria interface do plugin Handex (tokens, componentes, padrões de interação). **Não é o DSC** (Design System Corporativo da CAIXA) — esse é o design system externo que o Handex audita/referencia via `refs/_manifest.json` e os scans de conformidade. Os dois domínios não devem ser confundidos: o DSC é fonte de verdade de conformidade de produto CAIXA; este documento é sobre a ferramenta interna que a Fóton usa para produzir handoff.
+**Escopo:** a linguagem visual da própria interface do plugin Handex (tokens, componentes, padrões de interação). **Não é o DSC** (Design System CAIXA) — esse é o design system externo que o Handex audita/referencia via `refs/_manifest.json` e os scans de conformidade. Os dois domínios não devem ser confundidos: o DSC é fonte de verdade de conformidade de produto CAIXA; este documento é sobre a ferramenta interna que a Fóton usa para produzir handoff.
 
 **Este é o arquivo de referência normativo.** Toda nova tela, componente ou variante visual do Handex deve seguir o que está definido aqui. Quando o código atual diverge do que está documentado, isso é dívida técnica a ser corrigida — não uma segunda opção válida. A seção 9 lista essa dívida.
 
