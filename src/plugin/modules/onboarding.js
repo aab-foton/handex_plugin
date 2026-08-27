@@ -45,7 +45,8 @@ const ONBOARDING_TOOLS = {
       { text: 'Clique em <strong>Informações do Projeto</strong> na home — o modal abre sobre qualquer tela, sem precisar sair do que está fazendo.' },
       { text: 'Preencha <strong>Título</strong>, <strong>Versão</strong> e <strong>Objetivo</strong> — esses três campos são obrigatórios para gerar a ficha.' },
       { text: 'Adicione ao menos <strong>1 membro de equipe</strong> com nome preenchido — sem isso o botão de gerar ficha fica bloqueado. O e-mail é opcional.' },
-      { text: '<em>Opcional:</em> ative o <strong>Briefing Estratégico</strong> para responder perguntas de contexto (escopo, stakeholders, UX), adicione <strong>Regras de Negócio</strong> e cole links de protótipo, acessibilidade e pesquisa.' },
+      { text: '<em>Opcional:</em> o <strong>Briefing Estratégico</strong> vem aberto por padrão, organizado em 5 eixos — Contexto do Projeto, Escopo e Riscos, Usuários e Stakeholders, UX e Design, Pesquisa e Evidências — cada um com perguntas sugeridas para responder. Use o ícone <strong>?</strong> no cabeçalho do card para abrir o Guia do Briefing e consultar/buscar todas as perguntas por eixo.' },
+      { text: 'Adicione <strong>Regras de Negócio</strong> e cole links de protótipo, acessibilidade e pesquisa.' },
       { text: 'Tudo é <strong>salvo automaticamente</strong> a cada alteração — não é preciso clicar em nenhum botão para não perder o que preencheu.' }
     ]
   },
@@ -75,12 +76,29 @@ const ONBOARDING_TOOLS = {
     steps: [
       { text: '<strong>Selecione um elemento</strong> no canvas do Figma — pode ser um componente, texto, ícone ou qualquer elemento.' },
       { text: 'Clique no <strong>botão +</strong> no topo da view. O formulário abre com o elemento vinculado, mostrado em <strong>"Especificando: [nome]"</strong> no topo — essa referência fica fixa do início ao fim do fluxo.' },
-      { text: 'Defina a <strong>Letra</strong> (tag de referência, ex: A, B, C1), a <strong>Categoria</strong> e a <strong>Cor</strong> do grupo. Adicione uma <strong>Nota técnica</strong> e, em <strong>Propriedades</strong>, os atributos técnicos: nome, token do Design System e valor aplicado.' },
+      { text: 'Defina a <strong>Tag</strong> (referência do grupo, ex: A, B, A1) e a <strong>Categoria</strong> — Informação extra, Comportamento, Regra de Negócio ou Dados da API; a cor do grupo vem automaticamente da categoria. Adicione uma <strong>Nota personalizada</strong> (opcional), escolha se quer inserir linha de conexão no canvas e, em <strong>Propriedades</strong>, marque os atributos técnicos identificados no scan.' },
       { text: 'Ao avançar, você entra direto na etapa <strong>Posição no Canvas</strong>: o modal continua aberto e uma prévia tracejada já aparece no canvas — arraste-a até onde quiser e clique em <strong>Usar esta posição</strong>. O fluxo já segue direto para a próxima etapa (Cenário de Exceção). Não quer marcar? Clique em <strong>Pular</strong> e a spec nasce solta à direita do elemento.' },
       { text: 'Sem marcar posição, arraste o card pra onde quiser depois e use <strong>Travar especificação</strong> no menu "..." para concluir: a linha guia é recalculada automaticamente a partir de onde o card ficou. Mesma letra empilha verticalmente; letra diferente abre nova coluna.' },
       { text: 'No cabeçalho de cada grupo, você pode <strong>nomear o grupo</strong>, <strong>ocultar as linhas</strong> de conexão, <strong>ocultar o grupo</strong> inteiro, ou usar o menu "..." para travar/destravar e excluir o grupo todo.' },
       { text: 'Para cenários alternativos, expanda uma spec e clique em <strong>+ Exceção</strong> — Erro, Sucesso, Alerta ou Confirmação.' }
-    ]
+    ],
+    // Conteúdo migrado do popover "Tipo de especificação" (circle-help do
+    // header e do modal de criação — ver spec-types-help-modal em
+    // modals.html, que continua existindo como segundo ponto de acesso
+    // com o mesmo conteúdo). Referência de consulta, sempre visível abaixo
+    // dos steps.
+    reference: {
+      title: 'Tags, controles de grupo e tipos de especificação',
+      items: [
+        { icon: 'tag', text: '<strong>Tags:</strong> mesma tag empilha specs no mesmo grupo do canvas; tags diferentes ficam lado a lado, sem sobreposição. Renomeie o grupo pelo ícone de lápis na lista.' },
+        { icon: 'sliders-horizontal', text: '<strong>Controles do grupo:</strong> ocultar linhas (esconde só os conectores), ocultar grupo (esconde as specs sem apagar) e cadeado (trava a posição no canvas).' },
+        { icon: 'info', text: '<strong>Informação extra:</strong> o que não se encaixa nos demais tipos — pendências, decisões de reunião, componente legado ou fora do DSC.' },
+        { icon: 'zap', text: '<strong>Comportamento:</strong> reação do sistema além do padrão do DSC — microinterações, abertura de modais, transições de estado.' },
+        { icon: 'scale', text: '<strong>Regra de Negócio:</strong> lógica não visível na interface — campos obrigatórios, validações, restrições de ações.' },
+        { icon: 'database', text: '<strong>Dados da API:</strong> informações técnicas de integração — endpoints, campos esperados, estados de carregamento.' },
+        { icon: 'alert-triangle', text: '<strong>Cenário de Exceção</strong> não é uma categoria — é um registro à parte dentro da própria spec, com 4 subtipos: Sucesso, Erro, Alerta, Confirmação.' }
+      ]
+    }
   },
   medidas: {
     view: 'view-measurement',

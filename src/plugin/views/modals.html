@@ -540,9 +540,14 @@
         <h3 id="spec-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
           <i data-lucide="plus-circle" class="w-4 h-4 text-[#004d8d]" aria-hidden="true"></i> Criar Especificação/Nota
         </h3>
-        <button onclick="closeSpecFormModal()" title="Fechar" aria-label="Fechar" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
+        <div class="flex items-center gap-1 shrink-0">
+          <button onclick="openHelp('spec-form-modal')" title="Ajuda" aria-label="Ajuda" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-[#005ca9] transition-colors">
+            <i data-lucide="help-circle" class="w-4.5 h-4.5"></i>
+          </button>
+          <button onclick="closeSpecFormModal()" title="Fechar" aria-label="Fechar" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
       </div>
       <!-- Elemento vinculado -- capturado na abertura do modal (ver
            openSpecFormModal), fixo durante toda a edição. Nunca some, mesmo
@@ -570,9 +575,6 @@
           <div class="col-span-3">
             <div class="flex items-center gap-1.5 mb-1.5 px-1">
               <label for="ann-category" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Categoria</label>
-              <button onclick="openHelp('spec-form-modal')" title="Ajuda" aria-label="Ajuda" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-[#005ca9] transition-colors">
-                <i data-lucide="help-circle" class="w-4.5 h-4.5"></i>
-              </button>
             </div>
             <div class="relative" id="cs-ann-cat">
               <select id="ann-category" class="hidden" onchange="syncSpecColorFromCategory()">
