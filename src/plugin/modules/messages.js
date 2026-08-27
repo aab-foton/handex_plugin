@@ -295,21 +295,25 @@
 
       if (msg.type === "spec-created") {
         const newSpec = Object.assign({ pendingConfirmation: true }, msg.spec || msg.data);
-        if (activeFrameId) {
-          const frame = getFrame(activeFrameId);
-          if (frame) {
-            if (!frame.createdSpecs) frame.createdSpecs = [];
-            frame.createdSpecs.push(newSpec);
-            renderSpecsListForFrame(activeFrameId);
-            if (typeof syncAndRenderSpecs === 'function') syncAndRenderSpecs();
-            if (typeof showFrameSection === 'function') showFrameSection(activeFrameId, 'specs');
-            setTimeout(() => {
-              const list = document.getElementById(`specs-list-${activeFrameId}`);
-              const last = list && list.lastElementChild;
-              if (last) autoScrollToNewItem('handoff-scroll-container', last);
-            }, 100);
-          }
+        // activeFrameId é estado do módulo, nunca resetado por navegação --
+        // pode sobreviver "fantasma" apontando pra um frame já excluído
+        // (ou de outro arquivo .fig). Sem este else, a spec não caía em
+        // nenhum array (nem frame.createdSpecs, nem createdSpecs global) e
+        // sumia silenciosamente da lista, mesmo com toast de sucesso.
+        const frame = activeFrameId ? getFrame(activeFrameId) : null;
+        if (frame) {
+          if (!frame.createdSpecs) frame.createdSpecs = [];
+          frame.createdSpecs.push(newSpec);
+          renderSpecsListForFrame(activeFrameId);
+          if (typeof syncAndRenderSpecs === 'function') syncAndRenderSpecs();
+          if (typeof showFrameSection === 'function') showFrameSection(activeFrameId, 'specs');
+          setTimeout(() => {
+            const list = document.getElementById(`specs-list-${activeFrameId}`);
+            const last = list && list.lastElementChild;
+            if (last) autoScrollToNewItem('handoff-scroll-container', last);
+          }, 100);
         } else {
+          if (activeFrameId) activeFrameId = null;
           createdSpecs.push(newSpec);
           renderSpecsList();
         }

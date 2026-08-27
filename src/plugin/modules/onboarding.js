@@ -56,14 +56,15 @@ const ONBOARDING_TOOLS = {
     icon: 'scan-line',
     color: '#0284c7',
     format: 'stepper',
-    purpose: 'Mapeia os elementos de um frame — cores, tipografia, componentes, espaçamentos — e confere cada um contra o Design System Corporativo, mostrando o que já está em conformidade e o que ainda não tem vínculo com um token. Quando o frame traz um componente inédito, ainda fora do DSC, a ferramenta também registra as propriedades dele como referência para uma futura incorporação ao Design System.',
+    purpose: 'Não é uma leitura automática que basta rodar uma vez: o scan traz cores, tipografia, componentes e vetores do frame, e cabe a você revisar item por item se cada um está de fato vinculado a um token do Design System Corporativo — como no Check Designs nativo do Figma, mas aqui a conferência final é sua, não do plugin. Quando o frame traz um componente inédito, ainda fora do DSC, a ferramenta registra as propriedades dele como referência para uma futura incorporação.',
     steps: [
-      { text: '<strong>Selecione um Frame</strong> (ou Componente, Seção, Grupo) diretamente no canvas do Figma antes de abrir esta ferramenta.' },
-      { text: 'Clique em <strong>+ Registrar Frame</strong> — o plugin captura o ID e o nome do elemento selecionado e cria um card de frame.' },
-      { text: 'Dentro do card, escolha as <strong>categorias de scan</strong> (Componentes, Ícones, Tipografia, Frames/Layouts, Vetores) e confirme.' },
-      { text: 'O resultado aparece agrupado por tipo. Clique em qualquer item para <strong>focar no elemento no canvas</strong>.' },
-      { text: 'Declare a <strong>Conformidade DSC</strong>: marque "Check Designs realizado", informe se há desvios e adicione observações. Desvios são salvos como ressalvas e aparecem na ficha.' },
-      { text: 'Se o frame é um <strong>Novo Componente</strong>, ative o toggle — a seção de conformidade é ocultada e o frame é destacado na ficha.' }
+      { text: 'Com esta ferramenta aberta, <strong>selecione um Frame</strong> (ou Componente, Seção, Grupo) no canvas do Figma.' },
+      { text: 'Clique em <strong>+ Registrar Frame</strong> — o plugin captura o ID e o nome do elemento selecionado, cria um card e escaneia automaticamente Componentes, Ícones, Tipografia e Vetores.' },
+      { text: 'O resultado aparece agrupado por tipo em <strong>Tokens Escaneados</strong>. <strong>Este é o passo que exige sua revisão:</strong> expanda cada item para ver o token aplicado (trilha completa, ex: <em>cor › primária › 500</em>) e clique nele para <strong>focar o elemento correspondente no canvas</strong> e confirmar visualmente se o vínculo faz sentido.' },
+      { text: 'Se algum item não tem token vinculado ou está fora do padrão, ele aparece destacado. O painel <strong>"Itens para revisar"</strong>, no topo do card, reúne todos esses casos num só lugar — clique em qualquer um para ir direto ao elemento.' },
+      { text: 'Mudou algo no frame depois do primeiro scan? Use <strong>Atualizar escaneamento</strong> para re-scanear sem perder o que já foi declarado.' },
+      { text: 'Só depois de revisar, declare a <strong>Conformidade DSC</strong>: marque "Check Designs realizado", informe se há desvios e adicione observações. Desvios são salvos como ressalvas e aparecem na ficha.' },
+      { text: 'Se o frame é um <strong>Novo Componente</strong>, ative o toggle — a seção de conformidade é ocultada (não se aplica a componentes inéditos) e o frame é destacado na ficha.' }
     ]
   },
   specs: {
