@@ -56,7 +56,7 @@ const ONBOARDING_TOOLS = {
     icon: 'scan-line',
     color: '#0284c7',
     format: 'stepper',
-    purpose: 'Não é uma leitura automática que basta rodar uma vez: o scan traz cores, tipografia, componentes e vetores do frame, já com um batimento automático contra o Design System Corporativo — mas o critério é exigente. Sem token vinculado, o item conta como fora do padrão, sem meio-termo. Cabe a você revisar cada caso, como no Check Designs nativo do Figma, e decidir: ajustar o elemento ou justificar o desvio por escrito. Quando o frame traz um componente inédito, ainda fora do DSC, a ferramenta registra as propriedades dele como referência para uma futura incorporação.',
+    purpose: 'Não é uma leitura automática que basta rodar uma vez: o scan traz cores, tipografia, componentes e vetores do frame, já com um batimento automático contra o Design System CAIXA — mas o critério é exigente. Sem token vinculado, o item conta como fora do padrão, sem meio-termo. Cabe a você revisar cada caso, como no Check Designs nativo do Figma, e decidir: ajustar o elemento ou justificar o desvio por escrito. Quando o frame traz um componente inédito, ainda fora do DSC, a ferramenta registra as propriedades dele como referência para uma futura incorporação.',
     steps: [
       { text: 'Com esta ferramenta aberta, <strong>selecione um Frame</strong> (ou Componente, Seção, Grupo) no canvas do Figma.' },
       { text: 'Clique em <strong>+ Registrar Frame</strong> — o plugin captura o ID e o nome do elemento selecionado, cria um card e escaneia automaticamente Componentes, Ícones, Tipografia e Vetores.' },
