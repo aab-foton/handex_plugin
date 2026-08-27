@@ -1043,16 +1043,17 @@ body {
           </button>
           <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
             <div class="rounded-xl p-3 mb-3 bg-sky-50 dark:bg-sky-900/10">
-              <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Mapeia os elementos de um frame — cores, tipografia, componentes, espaçamentos — e confere cada um contra o Design System Corporativo, mostrando o que já está em conformidade e o que ainda não tem vínculo com um token. Quando o frame traz um componente inédito, ainda fora do DSC, a ferramenta também registra as propriedades dele como referência para uma futura incorporação ao Design System.</p>
+              <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Não é uma leitura automática que basta rodar uma vez: o scan traz cores, tipografia, componentes e vetores do frame, e cabe a você revisar item por item se cada um está de fato vinculado a um token do Design System Corporativo — como no Check Designs nativo do Figma, mas aqui a conferência final é sua, não do plugin. Quando o frame traz um componente inédito, ainda fora do DSC, a ferramenta registra as propriedades dele como referência para uma futura incorporação.</p>
             </div>
             <ol class="space-y-2.5 text-[11px] text-slate-600 dark:text-slate-300 leading-snug list-none">
-              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">1</span><span><strong>Selecione um Frame</strong> (ou Componente, Seção, Grupo) diretamente no canvas do Figma antes de abrir esta ferramenta.</span></li>
-              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">2</span><span>Clique em <strong>+ Registrar Frame</strong> — o plugin captura o ID e o nome do elemento selecionado e cria um card de frame.</span></li>
-              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">3</span><span>Dentro do card, escolha as <strong>categorias de scan</strong> (Componentes, Ícones, Tipografia, Frames/Layouts, Vetores) e confirme.</span></li>
-              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">4</span><span>O resultado aparece agrupado por tipo. Clique em qualquer item para <strong>focar no elemento no canvas</strong>.</span></li>
-              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">5</span><span>Declare a <strong>Conformidade DSC</strong>: marque "Check Designs realizado", informe se há desvios e adicione observações. Desvios são salvos como ressalvas e aparecem na ficha.</span></li>
-              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">6</span><span>Se o frame é um <strong>Novo Componente</strong>, ative o toggle — a seção de conformidade é ocultada (não se aplica a componentes inéditos) e o frame é destacado na ficha.</span></li>
-              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">7</span><span>Repita para cada frame do projeto. Você pode ter <strong>múltiplos frames documentados</strong> em paralelo.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">1</span><span>Com esta ferramenta aberta, <strong>selecione um Frame</strong> (ou Componente, Seção, Grupo) no canvas do Figma.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">2</span><span>Clique em <strong>+ Registrar Frame</strong> — o plugin captura o ID e o nome do elemento selecionado, cria um card e escaneia automaticamente Componentes, Ícones, Tipografia e Vetores.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">3</span><span>O resultado aparece agrupado por tipo em <strong>Tokens Escaneados</strong>. <strong>Este é o passo que exige sua revisão:</strong> expanda cada item para ver o token aplicado (trilha completa, ex: <em>cor › primária › 500</em>) e clique nele para <strong>focar o elemento correspondente no canvas</strong> e confirmar visualmente se o vínculo faz sentido.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">4</span><span>Se algum item não tem token vinculado ou está fora do padrão, ele aparece destacado. O painel <strong>"Itens para revisar"</strong>, no topo do card, reúne todos esses casos num só lugar — clique em qualquer um para ir direto ao elemento.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">5</span><span>Mudou algo no frame depois do primeiro scan? Use <strong>Atualizar escaneamento</strong> para re-scanear sem perder o que já foi declarado.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">6</span><span>Só depois de revisar, declare a <strong>Conformidade DSC</strong>: marque "Check Designs realizado", informe se há desvios e adicione observações. Desvios são salvos como ressalvas e aparecem na ficha.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">7</span><span>Se o frame é um <strong>Novo Componente</strong>, ative o toggle — a seção de conformidade é ocultada (não se aplica a componentes inéditos) e o frame é destacado na ficha.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-sky-500/10 text-sky-600 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">8</span><span>Repita para cada frame do projeto. Você pode ter <strong>múltiplos frames documentados</strong> em paralelo.</span></li>
             </ol>
           </div>
         </div>
@@ -7424,21 +7425,25 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
 
       if (msg.type === "spec-created") {
         const newSpec = Object.assign({ pendingConfirmation: true }, msg.spec || msg.data);
-        if (activeFrameId) {
-          const frame = getFrame(activeFrameId);
-          if (frame) {
-            if (!frame.createdSpecs) frame.createdSpecs = [];
-            frame.createdSpecs.push(newSpec);
-            renderSpecsListForFrame(activeFrameId);
-            if (typeof syncAndRenderSpecs === 'function') syncAndRenderSpecs();
-            if (typeof showFrameSection === 'function') showFrameSection(activeFrameId, 'specs');
-            setTimeout(() => {
-              const list = document.getElementById(`specs-list-${activeFrameId}`);
-              const last = list && list.lastElementChild;
-              if (last) autoScrollToNewItem('handoff-scroll-container', last);
-            }, 100);
-          }
+        // activeFrameId é estado do módulo, nunca resetado por navegação --
+        // pode sobreviver "fantasma" apontando pra um frame já excluído
+        // (ou de outro arquivo .fig). Sem este else, a spec não caía em
+        // nenhum array (nem frame.createdSpecs, nem createdSpecs global) e
+        // sumia silenciosamente da lista, mesmo com toast de sucesso.
+        const frame = activeFrameId ? getFrame(activeFrameId) : null;
+        if (frame) {
+          if (!frame.createdSpecs) frame.createdSpecs = [];
+          frame.createdSpecs.push(newSpec);
+          renderSpecsListForFrame(activeFrameId);
+          if (typeof syncAndRenderSpecs === 'function') syncAndRenderSpecs();
+          if (typeof showFrameSection === 'function') showFrameSection(activeFrameId, 'specs');
+          setTimeout(() => {
+            const list = document.getElementById(`specs-list-${activeFrameId}`);
+            const last = list && list.lastElementChild;
+            if (last) autoScrollToNewItem('handoff-scroll-container', last);
+          }, 100);
         } else {
+          if (activeFrameId) activeFrameId = null;
           createdSpecs.push(newSpec);
           renderSpecsList();
         }
@@ -12246,14 +12251,15 @@ const ONBOARDING_TOOLS = {
     icon: 'scan-line',
     color: '#0284c7',
     format: 'stepper',
-    purpose: 'Mapeia os elementos de um frame — cores, tipografia, componentes, espaçamentos — e confere cada um contra o Design System Corporativo, mostrando o que já está em conformidade e o que ainda não tem vínculo com um token. Quando o frame traz um componente inédito, ainda fora do DSC, a ferramenta também registra as propriedades dele como referência para uma futura incorporação ao Design System.',
+    purpose: 'Não é uma leitura automática que basta rodar uma vez: o scan traz cores, tipografia, componentes e vetores do frame, e cabe a você revisar item por item se cada um está de fato vinculado a um token do Design System Corporativo — como no Check Designs nativo do Figma, mas aqui a conferência final é sua, não do plugin. Quando o frame traz um componente inédito, ainda fora do DSC, a ferramenta registra as propriedades dele como referência para uma futura incorporação.',
     steps: [
-      { text: '<strong>Selecione um Frame</strong> (ou Componente, Seção, Grupo) diretamente no canvas do Figma antes de abrir esta ferramenta.' },
-      { text: 'Clique em <strong>+ Registrar Frame</strong> — o plugin captura o ID e o nome do elemento selecionado e cria um card de frame.' },
-      { text: 'Dentro do card, escolha as <strong>categorias de scan</strong> (Componentes, Ícones, Tipografia, Frames/Layouts, Vetores) e confirme.' },
-      { text: 'O resultado aparece agrupado por tipo. Clique em qualquer item para <strong>focar no elemento no canvas</strong>.' },
-      { text: 'Declare a <strong>Conformidade DSC</strong>: marque "Check Designs realizado", informe se há desvios e adicione observações. Desvios são salvos como ressalvas e aparecem na ficha.' },
-      { text: 'Se o frame é um <strong>Novo Componente</strong>, ative o toggle — a seção de conformidade é ocultada e o frame é destacado na ficha.' }
+      { text: 'Com esta ferramenta aberta, <strong>selecione um Frame</strong> (ou Componente, Seção, Grupo) no canvas do Figma.' },
+      { text: 'Clique em <strong>+ Registrar Frame</strong> — o plugin captura o ID e o nome do elemento selecionado, cria um card e escaneia automaticamente Componentes, Ícones, Tipografia e Vetores.' },
+      { text: 'O resultado aparece agrupado por tipo em <strong>Tokens Escaneados</strong>. <strong>Este é o passo que exige sua revisão:</strong> expanda cada item para ver o token aplicado (trilha completa, ex: <em>cor › primária › 500</em>) e clique nele para <strong>focar o elemento correspondente no canvas</strong> e confirmar visualmente se o vínculo faz sentido.' },
+      { text: 'Se algum item não tem token vinculado ou está fora do padrão, ele aparece destacado. O painel <strong>"Itens para revisar"</strong>, no topo do card, reúne todos esses casos num só lugar — clique em qualquer um para ir direto ao elemento.' },
+      { text: 'Mudou algo no frame depois do primeiro scan? Use <strong>Atualizar escaneamento</strong> para re-scanear sem perder o que já foi declarado.' },
+      { text: 'Só depois de revisar, declare a <strong>Conformidade DSC</strong>: marque "Check Designs realizado", informe se há desvios e adicione observações. Desvios são salvos como ressalvas e aparecem na ficha.' },
+      { text: 'Se o frame é um <strong>Novo Componente</strong>, ative o toggle — a seção de conformidade é ocultada (não se aplica a componentes inéditos) e o frame é destacado na ficha.' }
     ]
   },
   specs: {

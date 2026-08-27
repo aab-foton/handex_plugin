@@ -2,6 +2,16 @@
 
 ---
 
+## v6.6.1 — 2026-08-27
+
+### Corrigido — Especificação criada em "Anotar Specs" podia sumir da lista sem aviso
+Em determinadas sessões — geralmente após trocar de arquivo Figma ou excluir um frame mapeado com o plugin ainda aberto — uma nova especificação era criada normalmente no canvas e o plugin confirmava com a mensagem de sucesso, mas o item não aparecia na lista da tela. Causa raiz: uma referência interna ao frame ativo podia ficar "presa" apontando para um frame que não existia mais; nesse caso, a especificação não era registrada em nenhuma lista interna do plugin, apesar do card já estar no canvas. Corrigido para que, quando essa referência não corresponder a um frame válido, a especificação seja tratada como avulsa e apareça normalmente na lista.
+
+### Ajustado — Instruções de "Escanear Tokens" reforçam a etapa de revisão
+O texto de onboarding e o guia "Como usar o plugin" deixavam a etapa de escaneamento parecer uma leitura automática e definitiva. Ambos foram reescritos para deixar explícito que o scan é o ponto de partida — cabe ao designer revisar cada item escaneado (expandir, conferir o token aplicado, focar no canvas) antes de declarar conformidade, no mesmo espírito do Check Designs nativo do Figma. Também corrigida a ordem descrita no primeiro passo, que sugeria selecionar o frame antes de abrir a ferramenta — a seleção acontece com a ferramenta já aberta.
+
+---
+
 ## v6.6.0 — 2026-08-26
 
 ### Adicionado — Design System do Handex fechado como referência normativa

@@ -19,7 +19,7 @@ Plugin Figma que automatiza o handoff de design. Permite ao designer:
 - Mapear fluxos de tela
 - Gerar uma ficha técnica completa no canvas do Figma
 
-**Versão atual:** v6.6.0  
+**Versão atual:** v6.6.1  
 **Documentação:** `BUSINESS_RULES.md` (regras de negócio) · `CHANGELOG.md` (histórico)
 
 ---
@@ -142,6 +142,7 @@ git push origin main && git push gitlab main
 - **`setSvgColor` pintava o FRAME container do SVG** — `figma.createNodeFromSvg()` retorna um FRAME envolvendo VECTORs. A função aplicava cor no container, deixando tudo cinza. Corrigido para limpar fills do container e colorir só os nós folha.
 - **`toggleFrameAccordion` buscava `frame-arrow-{id}`** — o HTML renderiza `frame-chevron-{id}`. Corrigido em v4.1.6.
 - **`handoffData.docs` não inicializado no schema v2** — acessos como `handoffData.docs.proto.link` quebravam. Corrigido com null-guards.
+- **Spec criada em "Anotar Specs" sumia da lista sem erro visível** — handler `spec-created` (`messages.js`) tinha `if (activeFrameId) { const frame = getFrame(activeFrameId); if (frame) { ...push... } }` sem `else` para o caso `frame === null`. `activeFrameId` é estado do módulo, nunca resetado por navegação — se ficasse "fantasma" apontando pra um frame excluído (ou de sessão anterior com outro arquivo `.fig` aberto), a spec não caía em nenhum array (nem `frame.createdSpecs`, nem `createdSpecs` global), mas `saveSpecsToStorage()` e o toast "Especificação criada" rodavam do mesmo jeito — o card era criado normalmente no canvas (responsabilidade do backend, independente do frontend), mascarando a falha por completo. Corrigido em 2026-08-27: adicionado `else` tratando `activeFrameId` truthy + frame inexistente como spec avulsa, e resetando `activeFrameId = null` pra não repetir o problema na spec seguinte. **Padrão a vigiar:** qualquer `if (algumEstadoDeModulo) { const x = lookup(...); if (x) { ... } }` sem `else` no nível de fora é um candidato a falha silenciosa — o `if` externo garante execução, mas o `if` interno pode abortar sem sinalizar nada ao usuário.
 
 **Nota sobre a arquitetura de spec (GROUP + nó solto) — vigente:** o marcador ("Destaque") vive FORA do `specGroup`, como nó irmão travado na página, vinculado por pluginData (`handexSpecMarkerFor`/`handexSpecMarkerId`). Não é escolha estética, é a única solução dada uma limitação real da Figma Plugin API: a posição de um filho é sempre relativa ao pai (tanto em GROUP quanto em FRAME), e `locked = true` num filho não o desacopla de transformações do container pai — mover/redimensionar o container sempre move todos os filhos, travados ou não. Como o usuário sempre seleciona e arrasta o `specGroup` inteiro como unidade com um clique simples (nunca duplo-clique para "entrar" no container), qualquer filho do mesmo grupo se moveria junto, mesmo travado. Em 2026-08 essa arquitetura foi migrada para FRAME único (contour+dots dentro do mesmo container, exigindo duplo-clique do usuário para mover Conector/card sem arrastar o marcador) e depois **revertida** — o gesto de duplo-clique não funcionou bem na prática. Não remigrar sem alinhamento explícito.
 
