@@ -17,8 +17,12 @@
 // saveToStorage, focusNode, openModal/closeModal, showToast
 // ============================================================
 
+    // Batimento automático por item/propriedade contra o DSC -- sempre
+    // ligado, complementar à declaração humana por frame (Conformidade DSC,
+    // mais abaixo neste arquivo). Ver computeItemAuditStatus/
+    // getItemAuditBreakdown/AUDIT_LABEL em core.js.
     function isCurrentFrameAuditEnabled() {
-      return false;
+      return true;
     }
 
     function scanFrame(frameId, categories = null, selectedLibSlugs = null) {
@@ -139,31 +143,41 @@
         });
       }
 
+      // Sem token vinculado nunca é "conforme" por omissão -- painel fica
+      // vermelho até existir justificativa escrita (frame.audit.observacoes);
+      // com justificativa, vira amarelo (revisão registrada, não mais um
+      // alerta em aberto). Ver _updateFrameAuditSubtitle em core.js, mesma regra.
+      const hasJustification = !!(frame.audit.observacoes && frame.audit.observacoes.trim());
+      const isUrgent = items.length > 0 && !hasJustification;
+      const palette = isUrgent
+        ? { bg: 'bg-red-50 dark:bg-red-900/15', border: 'border-red-100 dark:border-red-800/30', text: 'text-red-700 dark:text-red-400', icon: 'text-red-600' }
+        : { bg: 'bg-amber-50 dark:bg-amber-900/15', border: 'border-amber-100 dark:border-amber-800/30', text: 'text-amber-700 dark:text-amber-400', icon: 'text-amber-600' };
+
       if (items.length === 0) {
-        return `<div class="flex items-start gap-2 px-3 py-2.5 bg-amber-50 dark:bg-amber-900/15 rounded-xl border border-amber-100 dark:border-amber-800/30">
-          <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5"></i>
-          <p class="text-[11px] text-amber-700 dark:text-amber-300 leading-snug">Desvios declarados. Descreva abaixo quais adequações são necessárias.</p>
+        return `<div class="flex items-start gap-2 px-3 py-2.5 ${palette.bg} rounded-xl border ${palette.border}">
+          <i data-lucide="alert-triangle" class="w-3.5 h-3.5 ${palette.icon} shrink-0 mt-0.5"></i>
+          <p class="text-[11px] ${palette.text} leading-relaxed">Desvios declarados. Descreva abaixo quais adequações são necessárias.</p>
         </div>`;
       }
 
       const rows = items.map(it => {
         const icon = it.status === 'error' ? 'x-circle' : 'alert-triangle';
-        const cls  = 'text-amber-600 dark:text-amber-400';
+        const cls  = it.status === 'error' ? 'text-red-500 dark:text-red-400' : 'text-amber-600 dark:text-amber-400';
         const clickable = it.nodeId
-          ? `onclick="focusNode('${it.nodeId}')" title="Focar no elemento no Figma" class="flex items-center gap-1.5 min-w-0 w-full cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded px-1 py-0.5 transition-colors group"`
+          ? `onclick="focusNode('${it.nodeId}')" title="Focar no elemento no Figma" class="flex items-center gap-1.5 min-w-0 w-full cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 rounded px-1 py-0.5 transition-colors group"`
           : `class="flex items-center gap-1.5 min-w-0 w-full px-1 py-0.5"`;
         return `<li ${clickable}>
           <i data-lucide="${icon}" class="w-3 h-3 ${cls} shrink-0"></i>
           <span class="text-[10px] text-slate-500 dark:text-dark-muted shrink-0">${it.label}</span>
           <span class="text-[10px] font-medium text-slate-700 dark:text-white truncate flex-1">${it.name}</span>
-          ${it.nodeId ? `<i data-lucide="locate" class="w-3 h-3 text-slate-400 dark:text-slate-600 group-hover:text-amber-500 shrink-0 transition-colors"></i>` : ''}
+          ${it.nodeId ? `<i data-lucide="locate" class="w-3 h-3 text-slate-400 dark:text-slate-600 group-hover:${palette.icon} shrink-0 transition-colors"></i>` : ''}
         </li>`;
       }).join('');
 
-      return `<div class="px-3 py-2.5 bg-amber-50 dark:bg-amber-900/15 rounded-xl border border-amber-100 dark:border-amber-800/30 space-y-1.5">
+      return `<div class="px-3 py-2.5 ${palette.bg} rounded-xl border ${palette.border} space-y-1.5">
         <div class="flex items-center gap-1.5">
-          <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-600 shrink-0"></i>
-          <p class="text-[11px] font-bold text-amber-700 dark:text-amber-400">Itens para revisar:</p>
+          <i data-lucide="alert-triangle" class="w-3.5 h-3.5 ${palette.icon} shrink-0"></i>
+          <p class="text-[11px] font-bold ${palette.text}">${isUrgent ? 'Itens fora do padrão — justifique abaixo:' : 'Itens em revisão:'}</p>
         </div>
         <ul class="space-y-1 pl-0.5">${rows}</ul>
       </div>`;
@@ -291,18 +305,28 @@
 
           <!-- ── Tokens Escaneados (oculto até escanear) ── -->
           <div id="sub-sec-tokens-${fid}" class="hidden border-b border-gray-50 dark:border-dark-line">
-            <button type="button" onclick="event.stopPropagation(); toggleSubAccordion('tokens-${fid}')"
-              class="w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors text-left">
-              <div class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
-                <i data-lucide="scan-line" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted"></i>
-              </div>
-              <span class="flex-1 text-[12px] font-bold text-slate-700 dark:text-white">Tokens Escaneados</span>
-              <span id="sub-count-tokens-${fid}" class="text-[10px] text-slate-500 dark:text-dark-muted mr-1"></span>
-              <span id="sub-spinner-tokens-${fid}" class="hidden mr-1.5">
+            <div class="w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors">
+              <button type="button" onclick="event.stopPropagation(); toggleSubAccordion('tokens-${fid}')"
+                class="flex-1 flex items-center gap-2.5 text-left min-w-0">
+                <div class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
+                  <i data-lucide="scan-line" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted"></i>
+                </div>
+                <span class="flex-1 text-[12px] font-bold text-slate-700 dark:text-white truncate">Tokens Escaneados</span>
+                <span id="sub-count-tokens-${fid}" class="text-[10px] text-slate-500 dark:text-dark-muted mr-1 shrink-0"></span>
+              </button>
+              <span id="sub-spinner-tokens-${fid}" class="hidden mr-0.5 shrink-0">
                 <i data-lucide="loader-2" class="w-3 h-3 text-[#005ca9] animate-spin"></i>
               </span>
-              <i data-lucide="chevron-right" id="sub-chev-tokens-${fid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0"></i>
-            </button>
+              <button type="button" onclick="event.stopPropagation(); scanFrame('${fid}')"
+                title="Atualizar escaneamento" aria-label="Atualizar escaneamento — re-escaneia o frame após ajustes"
+                class="min-w-[28px] min-h-[28px] flex items-center justify-center rounded-lg text-[#005ca9] dark:text-blue-400 hover:bg-[#005ca9]/10 transition-colors shrink-0">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              </button>
+              <button type="button" onclick="event.stopPropagation(); toggleSubAccordion('tokens-${fid}')"
+                class="p-0.5 shrink-0">
+                <i data-lucide="chevron-right" id="sub-chev-tokens-${fid}" class="w-3.5 h-3.5 text-gray-400 transition-transform"></i>
+              </button>
+            </div>
             <div id="sub-body-tokens-${fid}" data-accordion-content class="hidden bg-gray-50/30 dark:bg-dark-bg/20">
               <div id="scan-results-${fid}" class="p-1"></div>
             </div>
@@ -324,19 +348,6 @@
                   onchange="setFrameCheckDone('${fid}', this.checked)">
                 <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#005ca9]"></div>
               </label>
-            </div>
-
-            <!-- Re-escanear (visível só quando checkDone) -->
-            <div id="rescan-row-${fid}" class="${frame.audit && frame.audit.checkDone ? '' : 'hidden'} flex items-center justify-between py-1 border-t border-gray-50 dark:border-dark-line pt-2">
-              <div>
-                <p class="text-[11px] font-medium text-slate-600 dark:text-dark-muted">Atualizar escaneamento</p>
-                <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug">Re-escaneia o frame após ajustes</p>
-              </div>
-              <button onclick="scanFrame('${fid}')"
-                class="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#005ca9]/8 hover:bg-[#005ca9]/15 border border-[#005ca9]/20 rounded-xl text-[#005ca9] dark:text-blue-400 text-[10px] font-bold transition-colors shrink-0">
-                <i data-lucide="refresh-cw" class="w-3 h-3"></i>
-                Escanear
-              </button>
             </div>
 
             <!-- Resultado (visível só quando checkDone) -->
