@@ -1912,6 +1912,7 @@
       const exportBtn = document.getElementById('btn-export-specs');
       const hideAllBtn = document.getElementById('btn-hide-all-specs');
       const collapseBtn = document.querySelector('#view-specifications [data-collapse-toggle]');
+      const moreActionsBtn = document.getElementById('btn-specs-more-actions');
       const finalizeWrap = document.getElementById('btn-finalize-specs-wrap');
       const sectionTitle = document.getElementById('specs-section-title');
 
@@ -1928,14 +1929,19 @@
         if (exportBtn) exportBtn.classList.add('hidden');
         if (hideAllBtn) hideAllBtn.classList.add('hidden');
         if (collapseBtn) collapseBtn.classList.add('hidden');
+        if (moreActionsBtn) moreActionsBtn.classList.add('hidden');
         if (finalizeWrap) finalizeWrap.classList.add('hidden');
         if (sectionTitle) sectionTitle.classList.add('hidden');
+        closeSpecsMoreActions();
+        const bar = document.getElementById('specs-search-bar');
+        if (bar) bar.classList.add('hidden');
         _refreshIcons();
         return;
       }
       if (exportBtn) exportBtn.classList.remove('hidden');
       if (hideAllBtn) hideAllBtn.classList.remove('hidden');
       if (collapseBtn) collapseBtn.classList.remove('hidden');
+      if (moreActionsBtn) moreActionsBtn.classList.remove('hidden');
       if (finalizeWrap) finalizeWrap.classList.remove('hidden');
       if (sectionTitle) {
         sectionTitle.classList.remove('hidden');
@@ -2514,6 +2520,8 @@
       const sel = document.getElementById('specs-category-filter');
       if (searchInput) searchInput.value = '';
       if (sel) sel.value = '';
+      const bar = document.getElementById('specs-search-bar');
+      if (bar) bar.classList.add('hidden');
     }
     window._resetSpecsSearchInputs = _resetSpecsSearchInputs;
 
@@ -2525,16 +2533,19 @@
     }
     window._normalizeSearchText = _normalizeSearchText;
 
-    // Mostra a barra de busca só quando há specs (evita ruído visual no
-    // estado vazio) e repopula o <select> de categorias a partir de
-    // annCategories — dinâmico porque o usuário pode renomear/criar/excluir
-    // categorias.
+    // Repopula o <select> de categorias a partir de annCategories — dinâmico
+    // porque o usuário pode renomear/criar/excluir categorias. NÃO controla
+    // visibilidade da barra (isso é opt-in do usuário via "Mais ações" >
+    // "Buscar e filtrar", ver toggleSpecsSearchBar) — só garante que o
+    // conteúdo esteja correto para quando a barra for aberta.
     function _setupSpecsSearchBar() {
       const bar = document.getElementById('specs-search-bar');
       if (!bar) return;
       const hasSpecs = createdSpecs && createdSpecs.length > 0;
-      bar.classList.toggle('hidden', !hasSpecs);
-      if (!hasSpecs) return;
+      if (!hasSpecs) {
+        bar.classList.add('hidden');
+        return;
+      }
 
       const sel = document.getElementById('specs-category-filter');
       if (sel) {
@@ -2556,6 +2567,58 @@
       const searchInput = document.getElementById('specs-search-input');
       _applySpecsFilters(searchInput ? searchInput.value : '', sel ? sel.value : '');
     }
+
+    // Menu "Mais ações" (Ocultar tudo / Recolher todos / Buscar e filtrar) —
+    // agrupa ações de usuário avançado atrás de um único botão, em vez de
+    // ficarem sempre visíveis na linha de "Specs Criadas".
+    function toggleSpecsMoreActions(e) {
+      if (e) e.stopPropagation();
+      const panel = document.getElementById('specs-more-actions-panel');
+      const chev = document.getElementById('specs-more-actions-chev');
+      if (!panel) return;
+      const isOpen = !panel.classList.contains('hidden');
+      if (isOpen) {
+        closeSpecsMoreActions();
+        return;
+      }
+      panel.classList.remove('hidden');
+      if (chev) chev.classList.add('rotate-180');
+      const close = (ev) => {
+        const wrap = document.getElementById('specs-more-actions-wrap');
+        if (wrap && !wrap.contains(ev.target)) {
+          closeSpecsMoreActions();
+          document.removeEventListener('click', close, true);
+        }
+      };
+      setTimeout(() => document.addEventListener('click', close, true), 0);
+    }
+    window.toggleSpecsMoreActions = toggleSpecsMoreActions;
+
+    function closeSpecsMoreActions() {
+      const panel = document.getElementById('specs-more-actions-panel');
+      const chev = document.getElementById('specs-more-actions-chev');
+      if (panel) panel.classList.add('hidden');
+      if (chev) chev.classList.remove('rotate-180');
+    }
+    window.closeSpecsMoreActions = closeSpecsMoreActions;
+
+    // Revela/esconde a barra de busca+filtro sob demanda (opt-in do
+    // usuário) -- oculta por padrão mesmo com specs criadas.
+    function toggleSpecsSearchBar() {
+      const bar = document.getElementById('specs-search-bar');
+      if (!bar) return;
+      const willShow = bar.classList.contains('hidden');
+      bar.classList.toggle('hidden', !willShow);
+      if (willShow) {
+        _setupSpecsSearchBar();
+        const input = document.getElementById('specs-search-input');
+        if (input) input.focus();
+      } else {
+        _resetSpecsSearchInputs();
+        _applySpecsFilters('', '');
+      }
+    }
+    window.toggleSpecsSearchBar = toggleSpecsSearchBar;
 
     function applySpecsSearchFilter(query) {
       const sel = document.getElementById('specs-category-filter');
