@@ -2,6 +2,13 @@
 
 ---
 
+## v6.6.2 — 2026-08-28
+
+### Corrigido — Tab "preso" no plugin depois de clicar no canvas
+O focus trap dos modais (v6.5.0) forçava o foco de volta ao modal sempre que ele não estava mais dentro dele — inclusive depois de um clique no canvas do Figma, fora do iframe do plugin. Na prática, o primeiro Tab pressionado depois de interagir com o canvas era "roubado" de volta para o plugin, mesmo com a intenção clara de continuar navegando no Figma. Corrigido: o trap agora só intercepta Tab quando o foco já estava dentro do modal antes de pressioná-lo — nunca puxa o foco de volta à força.
+
+---
+
 ## v6.6.1 — 2026-08-27
 
 ### Corrigido — Especificação criada em "Anotar Specs" podia sumir da lista sem aviso
