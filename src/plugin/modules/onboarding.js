@@ -40,13 +40,15 @@ const ONBOARDING_TOOLS = {
     icon: 'clipboard-list',
     color: '#005ca9',
     format: 'single',
-    purpose: 'Registra o contexto do que está sendo entregue — título, objetivo, equipe responsável e, opcionalmente, o briefing estratégico e as regras de negócio. Esse contexto aparece no topo da ficha final, para o dev entender o "porquê" da entrega antes de mergulhar no "como".',
+    purpose: 'Registra o contexto do que está sendo entregue — título, objetivo, equipe responsável e, dentro de Contexto de Negócio, o briefing estratégico, as regras de negócio/HUs e os links de referência. Esse contexto aparece no topo da ficha final, para o dev entender o "porquê" da entrega antes de mergulhar no "como" — sem precisar te perguntar no Slack ou adivinhar pelo protótipo.',
     steps: [
       { text: 'Clique em <strong>Informações do Projeto</strong> na home — o modal abre sobre qualquer tela, sem precisar sair do que está fazendo.' },
       { text: 'Preencha <strong>Título</strong>, <strong>Versão</strong> e <strong>Objetivo</strong> — esses três campos são obrigatórios para gerar a ficha.' },
       { text: 'Adicione ao menos <strong>1 membro de equipe</strong> com nome preenchido — sem isso o botão de gerar ficha fica bloqueado. O e-mail é opcional.' },
-      { text: '<em>Opcional:</em> o <strong>Briefing Estratégico</strong> vem aberto por padrão, organizado em 5 eixos — Contexto do Projeto, Escopo e Riscos, Usuários e Stakeholders, UX e Design, Pesquisa e Evidências — cada um com perguntas sugeridas para responder. Use o ícone <strong>?</strong> no cabeçalho do card para abrir o Guia do Briefing e consultar/buscar todas as perguntas por eixo.' },
-      { text: 'Adicione <strong>Regras de Negócio</strong> e cole links de protótipo, acessibilidade e pesquisa.' },
+      { text: 'As três seções de <strong>Contexto de Negócio</strong> são opcionais e vêm ativadas por padrão — cada uma tem seu próprio toggle no cabeçalho: desativar esconde a seção sem apagar nada já preenchido, útil quando ela não se aplica a este projeto.' },
+      { text: '<strong>Briefing Estratégico:</strong> perguntas de negócio organizadas em 5 eixos (Contexto do Projeto, Escopo e Riscos, Usuários e Stakeholders, UX e Design, Pesquisa e Evidências) — o lugar de registrar o "porquê" da entrega, decisões de escopo e riscos conhecidos, para o dev não perder esse contexto quando o design já estiver pronto. Use o ícone <strong>?</strong> para abrir o Guia e inserir perguntas sugeridas com um clique; o menu <strong>⋮</strong> reúne baixar template em branco, importar/exportar em .md e limpar tudo.' },
+      { text: '<strong>Regras de Negócio e HUs:</strong> lógica que não aparece no design em si — campos obrigatórios, validações, condições de exibição, histórias de usuário vinculadas. Sem isso documentado, o dev tem que adivinhar essas regras só olhando a tela ou te interromper para perguntar.' },
+      { text: '<strong>Links de Referência:</strong> URLs de Protótipo Navegável, Handoff de Acessibilidade e Pesquisa de UX — cada um vira um link clicável direto na ficha final, levando o dev para a fonte original sem precisar pedir de novo.' },
       { text: 'Tudo é <strong>salvo automaticamente</strong> a cada alteração — não é preciso clicar em nenhum botão para não perder o que preencheu.' }
     ]
   },

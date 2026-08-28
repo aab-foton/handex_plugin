@@ -174,10 +174,15 @@
     <div class="px-4 pb-6 space-y-3">
 
       <!-- Briefing -->
-      <div class="bg-white dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line overflow-hidden">
-        <div aria-expanded="true" class="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-dark-line/10 transition-colors">
-          <div role="button" tabindex="0" onclick="toggleAccordion(this.parentElement)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAccordion(this.parentElement);}"
-            class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+      <!-- Sem overflow-hidden aqui de propósito: o menu "Mais ações"
+           (#briefing-more-actions-panel) é position:absolute e "vaza" para
+           fora da caixa do card ao abrir -- overflow-hidden no container
+           cortava o painel, sobretudo com o corpo (#briefing-card) oculto
+           (toggle desativado), quando sobra menos altura visível de card
+           antes do corte acontecer. -->
+      <div class="bg-white dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line">
+        <div class="w-full px-5 py-4 flex items-center justify-between">
+          <div class="flex items-center gap-3 flex-1 min-w-0">
             <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-[#005ca9] shrink-0">
               <i data-lucide="message-square-plus" class="w-4 h-4"></i>
             </div>
@@ -190,56 +195,79 @@
             </div>
           </div>
           <div class="flex items-center gap-2 shrink-0">
-            <button type="button" onclick="event.stopPropagation(); openBriefingGuideModal();" title="Ver guia dos eixos e perguntas" aria-label="Ver guia dos eixos e perguntas do briefing"
+            <button type="button" onclick="openBriefingGuideModal()" title="Ver guia dos eixos e perguntas" aria-label="Ver guia dos eixos e perguntas do briefing"
               class="min-w-[40px] min-h-[40px] flex items-center justify-center text-gray-400 hover:text-[#005ca9] dark:text-dark-muted dark:hover:text-blue-400 transition-colors">
               <i data-lucide="circle-help" class="w-4.5 h-4.5"></i>
             </button>
-            <button type="button" onclick="toggleAccordion(this.closest('[aria-expanded]'))" title="Expandir/recolher" aria-label="Expandir ou recolher Briefing Estratégico"
-              class="min-w-[40px] min-h-[40px] -mr-2 flex items-center justify-center text-gray-500 dark:text-dark-muted transition-colors">
-              <i data-lucide="chevron-down" class="w-5 h-5 text-[#005ca9] dark:text-blue-300 transition-transform shrink-0 cursor-pointer rotate-180 pointer-events-none"></i>
-            </button>
+            <!-- Mais ações: Baixar template/Importar/Exportar/Limpar são
+                 operações menos frequentes que preencher perguntas —
+                 agrupadas atrás de um único botão, mesmo padrão de Anotar
+                 Specs (ver btn-specs-more-actions em specifications.html). -->
+            <div class="relative" id="briefing-more-actions-wrap">
+              <button type="button" onclick="toggleBriefingMoreActions(event)" title="Mais ações" aria-label="Mais ações do briefing"
+                aria-haspopup="true" aria-expanded="false"
+                class="min-w-[40px] min-h-[40px] flex items-center justify-center text-gray-400 hover:text-[#005ca9] dark:text-dark-muted dark:hover:text-blue-400 transition-colors">
+                <i data-lucide="more-vertical" class="w-4.5 h-4.5"></i>
+              </button>
+              <div id="briefing-more-actions-panel" class="hidden absolute top-full right-0 mt-1 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl shadow-lg z-50 overflow-hidden py-1 min-w-[200px]">
+                <button onclick="exportBriefingTemplateMD(); closeBriefingMoreActions();"
+                  class="w-full flex items-center gap-2 text-left px-3 py-2 text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                  <i data-lucide="file-down" class="w-3.5 h-3.5"></i> Baixar template
+                </button>
+                <button onclick="importBriefingMD(); closeBriefingMoreActions();"
+                  class="w-full flex items-center gap-2 text-left px-3 py-2 text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                  <i data-lucide="upload" class="w-3.5 h-3.5"></i> Importar
+                </button>
+                <button onclick="exportBriefingMD(); closeBriefingMoreActions();"
+                  class="w-full flex items-center gap-2 text-left px-3 py-2 text-[11px] font-bold text-slate-600 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                  <i data-lucide="download" class="w-3.5 h-3.5"></i> Exportar
+                </button>
+                <button onclick="openClearBriefingModal(); closeBriefingMoreActions();"
+                  class="w-full flex items-center gap-2 text-left px-3 py-2 text-[11px] font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Limpar
+                </button>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer" title="Ativar/desativar Briefing Estratégico">
+              <input type="checkbox" id="chk-briefing-enabled" class="sr-only peer" checked
+                onchange="toggleBriefingSection(this.checked)">
+              <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#005ca9]"></div>
+            </label>
           </div>
         </div>
-        <div id="briefing-card" class="accordion-content p-5 pt-0 border-t border-gray-50 dark:border-dark-line">
-          <div class="flex items-center justify-end gap-3 mt-4">
-            <button type="button" onclick="exportBriefingTemplateMD()" title="Baixar molde em branco com todas as perguntas sugeridas" aria-label="Baixar template do briefing"
-              class="text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors flex items-center gap-1">
-              <i data-lucide="file-down" class="w-3.5 h-3.5"></i> Baixar template
-            </button>
-            <button type="button" onclick="importBriefingMD()" title="Importar briefing de arquivo .md/.txt" aria-label="Importar briefing"
-              class="text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors flex items-center gap-1">
-              <i data-lucide="upload" class="w-3.5 h-3.5"></i> Importar
-            </button>
-            <button type="button" onclick="exportBriefingMD()" title="Exportar briefing em .md" aria-label="Exportar briefing"
-              class="text-[11px] font-bold text-[#005ca9] dark:text-blue-400 hover:underline flex items-center gap-1">
-              <i data-lucide="download" class="w-3.5 h-3.5"></i> Exportar
-            </button>
-          </div>
-          <p id="briefing-total-count" class="hidden text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider mt-3 mb-2"></p>
+        <div id="briefing-card" class="p-5 pt-0 border-t border-gray-50 dark:border-dark-line">
+          <p id="briefing-total-count" class="hidden text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider mt-4 mb-2"></p>
           <!-- Um accordion por eixo -- select com as perguntas sugeridas do eixo
                (+ "Pergunta customizada" no fim), botão "Adicionar" que confirma
                a escolha, e as perguntas já criadas daquele eixo logo abaixo.
-               Montado por renderBriefingAxisAccordions() em core.js. -->
-          <div class="space-y-2" id="briefing-axes-container"></div>
+               Montado por renderBriefingAxisAccordions() em core.js. mt-4
+               cria respiro entre o header do card e o primeiro accordion de
+               eixo (ações de Baixar/Importar/Exportar/Limpar agora vivem no
+               menu "Mais ações" do header, não mais como linha de botões
+               aqui dentro). -->
+          <div class="space-y-2 mt-4" id="briefing-axes-container"></div>
         </div>
       </div>
 
       <!-- Regras e HUs -->
       <div class="bg-white dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line overflow-hidden">
-        <button onclick="toggleAccordion(this)" aria-expanded="false"
-          class="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-dark-line/10 transition-colors">
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600">
+        <div class="w-full px-5 py-4 flex items-center justify-between">
+          <div class="flex items-center gap-3 flex-1 min-w-0">
+            <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 shrink-0">
               <i data-lucide="shield-check" class="w-4 h-4"></i>
             </div>
-            <div class="text-left">
+            <div class="text-left min-w-0">
               <p class="text-[13px] font-bold text-slate-800 dark:text-white">Regras de Negócio e HUs</p>
               <p class="text-[10px] text-gray-500 dark:text-dark-muted" id="count-regras-s2">0 itens</p>
             </div>
           </div>
-          <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform shrink-0"></i>
-        </button>
-        <div class="accordion-content hidden p-5 pt-0 border-t border-gray-50 dark:border-dark-line">
+          <label class="relative inline-flex items-center cursor-pointer shrink-0" title="Ativar/desativar Regras de Negócio e HUs">
+            <input type="checkbox" id="chk-regras-enabled" class="sr-only peer" checked
+              onchange="toggleRegrasSection(this.checked)">
+            <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#005ca9]"></div>
+          </label>
+        </div>
+        <div id="regras-s2-card" class="p-5 pt-0 border-t border-gray-50 dark:border-dark-line">
           <div id="list-regras-s2" class="space-y-3 mt-4"></div>
           <button onclick="addRegra()"
             class="w-full mt-3 py-2 border-2 border-dashed border-indigo-100 dark:border-indigo-900/30 rounded-xl text-indigo-400 text-[11px] font-bold hover:border-indigo-200 transition-all">
@@ -250,20 +278,23 @@
 
       <!-- Links de Referência -->
       <div class="bg-white dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line overflow-hidden">
-        <button onclick="toggleAccordion(this)" aria-expanded="false"
-          class="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-dark-line/10 transition-colors">
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-purple-600">
+        <div class="w-full px-5 py-4 flex items-center justify-between">
+          <div class="flex items-center gap-3 flex-1 min-w-0">
+            <div class="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-purple-600 shrink-0">
               <i data-lucide="link" class="w-4 h-4"></i>
             </div>
-            <div class="text-left">
+            <div class="text-left min-w-0">
               <p class="text-[13px] font-bold text-slate-800 dark:text-white">Links de Referência</p>
               <p class="text-[10px] text-gray-500 dark:text-dark-muted">Protótipo, acessibilidade, pesquisa...</p>
             </div>
           </div>
-          <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform shrink-0"></i>
-        </button>
-        <div class="accordion-content hidden p-5 pt-0 border-t border-gray-50 dark:border-dark-line">
+          <label class="relative inline-flex items-center cursor-pointer shrink-0" title="Ativar/desativar Links de Referência">
+            <input type="checkbox" id="chk-links-enabled" class="sr-only peer" checked
+              onchange="toggleLinksSection(this.checked)">
+            <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#005ca9]"></div>
+          </label>
+        </div>
+        <div id="links-referencia-card" class="p-5 pt-0 border-t border-gray-50 dark:border-dark-line">
           <div class="space-y-4 mt-4">
 
             <div class="space-y-2">

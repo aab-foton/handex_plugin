@@ -570,6 +570,15 @@ const PLUGIN_VERSION = (typeof __HANDEX_VERSION__ !== 'undefined') ? __HANDEX_VE
 // consolidado o suficiente para consumir esse dado — ativar trocando este
 // valor pra true (sem outra mudança de código necessária). Ver
 // _writeDscHandoffSummary().
+//
+// ANTES DE ATIVAR (checado em 2026-08-28, ainda vale): confirmar no
+// repositório de CÓDIGO-FONTE real do hac (não a pasta de distribuição
+// hac-plugin/, que é só bundle compilado) se existe consumo real de
+// getSharedPluginData('dsc-handoff', 'frame-summary') — nesta data não foi
+// encontrado. Não presumir que o hac evoluiu sem checar o source; se não
+// achar o source no ambiente, perguntar o caminho antes de concluir a
+// partir do bundle. Ver memória "handex_hac_handoff_oculto" para o
+// histórico completo dessa checagem.
 const DSC_HANDOFF_SUMMARY_ENABLED = false;
 
 // â”€â”€ Shared Plugin Data (MCP / REST API readable) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

@@ -93,36 +93,30 @@
       </div>
     </div>
 
+    <!-- Gerar Ficha no Canvas -- vem antes de Exportar de propósito: exportar
+         (sobretudo o JSON, usado como backup/restauração) deveria refletir um
+         estado que já foi de fato materializado no canvas, não um snapshot
+         gerado antes da ficha existir. -->
+    <button onclick="openHandoffInjectModal()"
+      title="Gerar Ficha no Canvas" aria-label="Gerar Ficha no Canvas"
+      class="w-full flex items-center justify-center gap-2 py-3.5 bg-[#005ca9] hover:bg-[#004d8d] rounded-2xl text-[13px] font-bold text-white transition-all shadow-md">
+      <i data-lucide="sparkles" class="w-4 h-4" aria-hidden="true"></i>
+      Gerar Ficha
+    </button>
+
     <!-- Ações de Exportação -->
     <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-sm p-4">
       <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-3">Exportar</h4>
+
+      <!-- Hint didático: MD e JSON são frequentemente confundidos -- MD é
+           leitura humana (compartilhar sem precisar abrir o Figma), JSON é
+           o dado bruto completo, só ele é reimportável no plugin. -->
+      <div class="flex items-start gap-2 mb-3 px-3 py-2.5 bg-blue-50 dark:bg-blue-900/15 rounded-xl border border-blue-100 dark:border-blue-800/30">
+        <i data-lucide="info" class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5"></i>
+        <p class="text-[10px] text-blue-800 dark:text-blue-300 leading-relaxed"><strong>MD</strong> é documentação pronta pra ler — envie para quem não tem acesso ao Figma. <strong>JSON</strong> é o dado bruto completo do projeto — é o único que pode ser reimportado no plugin depois (backup ou transferência entre máquinas).</p>
+      </div>
+
       <div class="space-y-2.5">
-
-        <!-- Exportar .MD -->
-        <button onclick="exportHandoffMD()"
-          class="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-2xl transition-colors text-left">
-          <div class="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-lg shrink-0">
-            <i data-lucide="file-text" class="w-4 h-4 text-slate-600 dark:text-slate-300"></i>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-[12px] font-bold text-slate-800 dark:text-white">Exportar como Markdown</p>
-            <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5">Documentação técnica em formato .MD</p>
-          </div>
-          <i data-lucide="download" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0"></i>
-        </button>
-
-        <!-- Exportar .JSON -->
-        <button onclick="exportHandoffData()"
-          class="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-2xl transition-colors text-left">
-          <div class="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-lg shrink-0">
-            <i data-lucide="braces" class="w-4 h-4 text-slate-600 dark:text-slate-300"></i>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-[12px] font-bold text-slate-800 dark:text-white">Exportar como JSON</p>
-            <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5">Backup completo dos dados do projeto</p>
-          </div>
-          <i data-lucide="download" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0"></i>
-        </button>
 
         <!-- Exportar Briefing .MD -->
         <button onclick="exportBriefingMD()"
@@ -137,18 +131,36 @@
           <i data-lucide="download" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0"></i>
         </button>
 
+        <!-- Exportar .MD -->
+        <button onclick="exportHandoffMD()"
+          class="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-2xl transition-colors text-left">
+          <div class="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-lg shrink-0">
+            <i data-lucide="file-text" class="w-4 h-4 text-slate-600 dark:text-slate-300"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-[12px] font-bold text-slate-800 dark:text-white">Exportar como Markdown</p>
+            <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5">Documentação de leitura — para compartilhar sem o Figma</p>
+          </div>
+          <i data-lucide="download" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0"></i>
+        </button>
+
+        <!-- Exportar .JSON -->
+        <button onclick="exportHandoffData()"
+          class="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-2xl transition-colors text-left">
+          <div class="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-lg shrink-0">
+            <i data-lucide="braces" class="w-4 h-4 text-slate-600 dark:text-slate-300"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-[12px] font-bold text-slate-800 dark:text-white">Exportar como JSON</p>
+            <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5">Backup completo e reimportável dos dados do projeto</p>
+          </div>
+          <i data-lucide="download" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0"></i>
+        </button>
+
         <!-- Publicar no Sharepoint (oculto — integração em discussão técnica) -->
 
       </div>
     </div>
-
-    <!-- Gerar Ficha no Canvas -->
-    <button onclick="openHandoffInjectModal()"
-      title="Gerar Ficha no Canvas" aria-label="Gerar Ficha no Canvas"
-      class="w-full flex items-center justify-center gap-2 py-3.5 bg-[#005ca9] hover:bg-[#004d8d] rounded-2xl text-[13px] font-bold text-white transition-all shadow-md">
-      <i data-lucide="sparkles" class="w-4 h-4" aria-hidden="true"></i>
-      Gerar Ficha
-    </button>
 
   </div>
 </main>
