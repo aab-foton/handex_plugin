@@ -1384,6 +1384,81 @@
   </div>
 </div>
 
+<!-- MODAL: DADOS RÁPIDOS DO PROJETO — atalho do ícone 📋 no header
+     principal (acessível de qualquer tela). Só os 4 campos mais consultados
+     (Título/Versão/Status/Objetivo), com IDs próprios (qp-*) para não
+     colidir com os mesmos campos em view-dados-projeto.html (s1-*) — os
+     dois lugares editam o mesmo handoffData.step1, sincronizados na
+     abertura/gravação, nunca compartilhando elemento DOM. Equipe, Briefing,
+     Regras e Links continuam só na tela completa (edição mais extensa) —
+     "Editar tudo" leva pra lá. Status aqui é um <select> nativo simples, não
+     o dropdown customizado da tela completa (ver s1-status-btn/panel em
+     dados-projeto.html) — evita duplicar aquela lógica só para a modal. -->
+<div id="quick-project-modal" role="dialog" aria-modal="true" aria-labelledby="quick-project-modal-title" class="modal-overlay hidden fixed inset-0 z-[1000] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+  <div class="modal-content bg-white dark:bg-dark-surface rounded-2xl shadow-2xl w-full max-w-sm flex flex-col max-h-[85vh]">
+    <div class="flex items-center justify-between p-5 pb-0 shrink-0">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-[#005ca9]/10 flex items-center justify-center shrink-0">
+          <i data-lucide="clipboard-list" class="w-4.5 h-4.5 text-[#005ca9]"></i>
+        </div>
+        <p id="quick-project-modal-title" class="text-[13px] font-bold text-slate-800 dark:text-white">Dados do Projeto</p>
+      </div>
+      <button onclick="closeModal('quick-project-modal')" title="Fechar" aria-label="Fechar"
+        class="min-w-[40px] min-h-[40px] flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors -mr-2">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+    <div class="p-5 pt-4 space-y-3 overflow-y-auto">
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label for="qp-titulo" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Título do Projeto <span class="text-red-400">*</span></label>
+          <span id="qp-titulo-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/100</span>
+        </div>
+        <input type="text" id="qp-titulo" placeholder="Nome do projeto" maxlength="100"
+          oninput="updateData('step1', 'titulo', this.value); _updateCharCount(this, 100); validateStep1();"
+          class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[13px] text-slate-800 dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="qp-status" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5">Status</label>
+          <select id="qp-status" onchange="selectStatus(this.value)"
+            class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-800 dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all">
+            <option value="rascunho">Rascunho</option>
+            <option value="em-revisao">Em Revisão</option>
+            <option value="pronto-para-dev">Pronto para Dev</option>
+            <option value="finalizado">Finalizado</option>
+          </select>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="qp-versao" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Versão <span class="text-red-400">*</span></label>
+            <span id="qp-versao-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/15</span>
+          </div>
+          <input type="text" id="qp-versao" placeholder="v1.0" maxlength="15"
+            oninput="updateData('step1', 'versao', this.value); _updateCharCount(this, 15)"
+            class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-800 dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all placeholder:text-gray-300" />
+        </div>
+      </div>
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label for="qp-objetivo" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Objetivo da entrega <span class="text-red-400">*</span></label>
+          <span id="qp-objetivo-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/500</span>
+        </div>
+        <textarea id="qp-objetivo" placeholder="Descreva o que está sendo entregue e qual o contexto geral..." maxlength="500"
+          oninput="updateData('step1', 'objetivo', this.value); _updateCharCount(this, 500)"
+          class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-800 dark:text-white min-h-[80px] focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all resize-none placeholder:text-gray-300"></textarea>
+      </div>
+    </div>
+    <div class="p-5 pt-2 shrink-0">
+      <button onclick="closeModal('quick-project-modal'); navigate('view-dados-projeto');"
+        class="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl border border-gray-200 dark:border-dark-line text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+        Editar tudo (equipe, briefing, regras, links)
+        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: INJETAR FICHA — seleção de seções -->
 <div id="handoff-inject-modal" role="dialog" aria-modal="true" class="hidden fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
   <div class="bg-white dark:bg-dark-bg w-full max-w-[380px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line overflow-hidden animate-in zoom-in-95 duration-200">

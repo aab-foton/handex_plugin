@@ -42,7 +42,7 @@ const ONBOARDING_TOOLS = {
     format: 'single',
     purpose: 'Registra o contexto do que está sendo entregue — título, objetivo, equipe responsável e, dentro de Contexto de Negócio, o briefing estratégico, as regras de negócio/HUs e os links de referência. Esse contexto aparece no topo da ficha final, para o dev entender o "porquê" da entrega antes de mergulhar no "como" — sem precisar te perguntar no Slack ou adivinhar pelo protótipo.',
     steps: [
-      { text: 'Clique em <strong>Informações do Projeto</strong> na home — o modal abre sobre qualquer tela, sem precisar sair do que está fazendo.' },
+      { text: 'Clique em <strong>Informações do Projeto</strong> na home para abrir esta tela completa. Para uma consulta ou edição rápida de Título/Versão/Status/Objetivo sem sair de onde você está, use o ícone <strong>📋</strong> no header principal — ele abre uma modal leve, com um atalho para vir até aqui se precisar editar Equipe, Briefing, Regras ou Links.' },
       { text: 'Preencha <strong>Título</strong>, <strong>Versão</strong> e <strong>Objetivo</strong> — esses três campos são obrigatórios para gerar a ficha.' },
       { text: 'Adicione ao menos <strong>1 membro de equipe</strong> com nome preenchido — sem isso o botão de gerar ficha fica bloqueado. O e-mail é opcional.' },
       { text: 'As três seções de <strong>Contexto de Negócio</strong> são opcionais e vêm ativadas por padrão — cada uma tem seu próprio toggle no cabeçalho: desativar esconde a seção sem apagar nada já preenchido, útil quando ela não se aplica a este projeto.' },

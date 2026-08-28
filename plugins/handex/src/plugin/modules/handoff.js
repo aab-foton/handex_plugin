@@ -219,7 +219,15 @@ ${(handoffData.createdFlows || []).length === 0
           ? `Preencha o ${missing[0]} antes de gerar a ficha.`
           : `Preencha antes de gerar a ficha: ${missing.join(', ')}.`;
         showToast(label, 'error');
-        if (typeof openDadosProjetoModal === 'function') openDadosProjetoModal();
+        // "nome do designer" vem da Equipe, que a modal rápida (Título/
+        // Versão/Status/Objetivo) não edita -- se estiver entre os
+        // faltantes, vai direto pra tela completa em vez de abrir uma modal
+        // que não resolveria o problema.
+        if (missing.includes('nome do designer')) {
+          navigate('view-dados-projeto');
+        } else if (typeof openDadosProjetoModal === 'function') {
+          openDadosProjetoModal();
+        }
         return;
       }
 

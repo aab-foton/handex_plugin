@@ -4,9 +4,12 @@ Texto pronto para colar no campo de descrição de cada publicação em Communit
 
 ---
 
-## Version [preencher] — v6.7.0 (2026-08-28)
+## Version [preencher] — v6.8.0 (2026-08-28)
 
 **Novidades**
+
+**Modal rápida de Dados do Projeto**
+O ícone 📋 no header principal agora abre uma janela rápida com Título, Versão, Status e Objetivo — edite sem sair da tela em que você está. Um botão leva direto para a tela completa quando precisar mexer em Equipe, Briefing, Regras ou Links.
 
 **Toggles no Contexto de Negócio**
 Briefing Estratégico, Regras de Negócio e HUs e Links de Referência agora têm um interruptor próprio — vêm ativados por padrão, e você pode desligar qualquer um deles quando não fizer sentido para o projeto, sem perder o que já preencheu.

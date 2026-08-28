@@ -1031,7 +1031,14 @@ function _hasValidTeamMember(equipe) {
 }
 
 function validateStep1() {
-  const titulo = (document.getElementById('s1-titulo')?.value || '').trim().slice(0, STEP1_FIELD_MAX.titulo);
+  // Título pode vir do campo da tela completa (s1-titulo) OU do campo
+  // espelho na modal rápida do header (qp-titulo, ver openDadosProjetoModal)
+  // -- só um dos dois existe no DOM a cada momento (nunca os dois montados
+  // juntos), então lê o que estiver presente em vez de assumir s1-titulo
+  // sempre existe. Sem isso, chamar validateStep1() a partir do oninput do
+  // campo da modal sobrescrevia o título com string vazia.
+  const tituloInput = document.getElementById('s1-titulo') || document.getElementById('qp-titulo');
+  const titulo = (tituloInput?.value || '').trim().slice(0, STEP1_FIELD_MAX.titulo);
   handoffData.step1.titulo = titulo;
   clearTimeout(validateStep1._t);
   validateStep1._t = setTimeout(saveToStorage, 600);
@@ -1773,8 +1780,22 @@ function startHandoff() {
   parent.postMessage({ pluginMessage: { type: 'get-project-name' } }, '*');
 }
 
+// Ícone 📋 no header principal -- atalho de consulta/edição rápida dos 4
+// campos mais consultados (Título/Versão/Status/Objetivo), sem sair da tela
+// atual. Antes navegava direto para view-dados-projeto (nome da função é
+// resíduo dessa versão anterior); "Editar tudo" dentro da modal continua
+// levando para lá quando o usuário precisa de Equipe/Briefing/Regras/Links.
 function openDadosProjetoModal() {
-  navigate('view-dados-projeto');
+  const s1 = handoffData.step1 || {};
+  const qpTitulo = document.getElementById('qp-titulo');
+  if (qpTitulo) { qpTitulo.value = s1.titulo || ''; _updateCharCount(qpTitulo, 100); }
+  const qpVersao = document.getElementById('qp-versao');
+  if (qpVersao) { qpVersao.value = s1.versao || 'v1.0'; _updateCharCount(qpVersao, 15); }
+  const qpObjetivo = document.getElementById('qp-objetivo');
+  if (qpObjetivo) { qpObjetivo.value = s1.objetivo || ''; _updateCharCount(qpObjetivo, 500); }
+  const qpStatus = document.getElementById('qp-status');
+  if (qpStatus) qpStatus.value = s1.status || 'rascunho';
+  openModal('quick-project-modal');
 }
 
 function navigate(viewId) {
