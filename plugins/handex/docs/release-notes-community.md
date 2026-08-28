@@ -4,7 +4,15 @@ Texto pronto para colar no campo de descrição de cada publicação em Communit
 
 ---
 
-## Version [preencher] — v6.6.3 (2026-08-28)
+## Version [preencher] — v6.7.0 (2026-08-28)
+
+**Novidades**
+
+**Toggles no Contexto de Negócio**
+Briefing Estratégico, Regras de Negócio e HUs e Links de Referência agora têm um interruptor próprio — vêm ativados por padrão, e você pode desligar qualquer um deles quando não fizer sentido para o projeto, sem perder o que já preencheu.
+
+**Limpar Briefing**
+Novo botão para apagar todas as perguntas do Briefing de uma vez, com uma confirmação simples — não precisa mais remover pergunta por pergunta.
 
 **Correções e melhorias**
 
@@ -25,6 +33,15 @@ Depois de abrir um modal e clicar no canvas do Figma, o teclado podia ficar "pre
 
 **Rodapé da home reorganizado**
 "Gerar Ficha de Handoff" agora ocupa a linha inteira, sozinho, como ação principal. Abaixo, os botões de Baixar, Importar e Limpar ficaram do mesmo tamanho, distribuídos lado a lado.
+
+**Tela de resumo do Handoff reorganizada**
+"Gerar Ficha" agora vem antes das opções de exportação, para que o que você exporta sempre reflita o que já foi gerado no canvas. Um aviso explica a diferença entre exportar em Markdown (para ler) e em JSON (backup completo, o único que pode ser reimportado depois).
+
+**Instruções mais claras em Informações do Projeto**
+O guia agora explica o "porquê" de preencher o Briefing Estratégico, as Regras de Negócio e HUs, e os Links de Referência — não só o "como".
+
+**Nomenclatura corrigida**
+"DSC" agora aparece corretamente como "Design System CAIXA" em todo o plugin.
 
 ---
 

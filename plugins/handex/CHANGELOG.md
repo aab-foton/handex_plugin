@@ -2,6 +2,43 @@
 
 ---
 
+## v6.7.0 — 2026-08-28
+
+### Adicionado — Toggles no grupo Contexto de Negócio
+Briefing Estratégico, Regras de Negócio e HUs e Links de Referência ganharam um toggle próprio no cabeçalho de cada card — vêm ativados por padrão, e desativar esconde o conteúdo sem apagar nada já preenchido (útil quando a seção não se aplica ao projeto). Importar um briefing (.md) com a seção desativada reativa o toggle automaticamente, para o resultado nunca ficar escondido sem explicação.
+
+### Adicionado — Limpar Briefing
+Novo botão para apagar todas as perguntas do Briefing Estratégico de uma vez, com confirmação leve (modal com contagem de perguntas) — escopo menor que "Limpar Dados" do projeto inteiro, sem exigir digitar uma palavra de confirmação.
+
+### Ajustado — Ações do Briefing reunidas em "Mais ações"
+Baixar template, Importar, Exportar e Limpar saíram da linha de botões dentro do card e foram para um menu no cabeçalho (ícone ⋮, ao lado do "?" de ajuda) — mesmo padrão já usado em Anotar Specs.
+
+### Corrigido — Menu "Mais ações" do Briefing cortado visualmente
+O painel do menu ficava cortado pelo arredondamento do card quando o corpo do Briefing estava oculto (toggle desativado) — causa era `overflow-hidden` no container do card, não lógica do toggle. Corrigido, e o restante do plugin foi auditado em busca do mesmo padrão (nenhum outro caso encontrado).
+
+### Ajustado — Rodapé da home reorganizado
+"Gerar Ficha de Handoff" passa a ocupar a largura total do rodapé, sozinho, como ação primária. Baixar, Importar e Limpar viraram três botões de largura igual com ícone e label, na ordem Baixar → Importar → Limpar (do mais frequente/reversível ao mais raro/destrutivo).
+
+### Ajustado — Tela de resumo do Handoff reorganizada
+"Gerar Ficha" agora vem antes do bloco "Exportar" — gerar a ficha primeiro garante que um JSON exportado depois já reflita o que foi de fato materializado no canvas. O bloco de exportação ganhou um hint explicando a diferença entre Markdown (documentação de leitura) e JSON (backup completo, único reimportável), e a ordem dos botões passou a ser Briefing → Markdown → JSON.
+
+### Ajustado — Instruções mais didáticas em Informações do Projeto
+Onboarding e guia "Como usar o plugin" explicam agora o "como" e o "porquê" de cada seção de Contexto de Negócio: o que o Briefing Estratégico resolve, por que documentar Regras de Negócio e HUs evita que o dev tenha que adivinhar, e como cada Link de Referência vira um link clicável direto na ficha final.
+
+### Alterado — Módulo Briefing extraído para arquivo próprio
+Toda a lógica do Briefing Estratégico (eixos, perguntas, import/export .md, Guia de busca) saiu de `core.js` e passou a viver em `modules/briefing.js` — mudança interna de organização de código, sem efeito no comportamento do plugin.
+
+### Corrigido — Toast de feedback ao inserir pergunta do Guia
+Inserir uma pergunta sugerida pelo Guia do Briefing não mostrava nenhuma confirmação visual. Agora exibe "Pergunta inserida no briefing." (ou "Pergunta atualizada." ao editar).
+
+### Corrigido — Chevron nativo do navegador no select de eixo do Briefing
+O campo de pergunta sugerida de cada eixo usava o menu suspenso padrão do sistema operacional, com espaçamento inconsistente com o resto do plugin. Corrigido para o mesmo padrão visual usado nos outros seletores.
+
+### Corrigido — Nomenclatura DSC
+"DSC" foi corrigido de "Design System Corporativo" para "Design System CAIXA" em todas as referências do plugin (onboarding, guia, documentação).
+
+---
+
 ## v6.6.3 — 2026-08-28
 
 ### Ajustado — Rodapé da home reorganizado

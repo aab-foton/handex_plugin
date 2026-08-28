@@ -493,7 +493,7 @@
         _schemaVersion: 2,
         _projectId: null,
         step1: { titulo: '', versao: 'v1.0', objetivo: '', status: 'rascunho', jornada: '', feature: '', equipe: [] },
-        step2: { briefingEnabled: false, briefingQuestions: [], regras: [], anexos: [], auditAutoBundle: null, selectedLibSlugs: [], auditReferences: [] },
+        step2: { briefingEnabled: true, regrasEnabled: true, linksEnabled: true, briefingQuestions: [], regras: [], anexos: [], auditAutoBundle: null, selectedLibSlugs: [], auditReferences: [] },
         frames: [],
         specs: [],
         tagNames: {},

@@ -27,6 +27,7 @@ function read(relPath) {
 const tailwindCSS = read('styles/tailwind-compiled.css');
 const css         = read('styles/plugin.css');
 const modCore    = read('modules/core.js');
+const modBriefing = read('modules/briefing.js');
 const modHomeCards = read('modules/home-cards.js');
 const modHandoff = read('modules/handoff.js');
 const modMeasure = read('modules/measurement.js');
@@ -182,6 +183,11 @@ ${modalsShared}
 // MODULE: core.js
 // ============================================================
 ${modCore}
+
+// ============================================================
+// MODULE: briefing.js
+// ============================================================
+${modBriefing}
 
 // ============================================================
 // MODULE: home-cards.js

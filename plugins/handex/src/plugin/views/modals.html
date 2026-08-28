@@ -1357,6 +1357,33 @@
   </div>
 </div>
 
+<!-- MODAL: LIMPAR BRIEFING — escopo menor que "Limpar Dados" (só as perguntas
+     do Briefing, nada mais do projeto), confirmação leve por clique em vez
+     de digitar APAGAR -- proporcional ao risco. -->
+<div id="clear-briefing-modal" role="dialog" aria-modal="true" aria-labelledby="clear-briefing-modal-title" class="modal-overlay hidden fixed inset-0 z-[1200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+  <div class="modal-content bg-white dark:bg-dark-surface rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center shrink-0">
+        <i data-lucide="trash-2" class="w-5 h-5 text-red-500"></i>
+      </div>
+      <div>
+        <p id="clear-briefing-modal-title" class="text-[13px] font-bold text-slate-800 dark:text-white">Limpar Briefing Estratégico</p>
+        <p id="clear-briefing-modal-desc" class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5">Remove todas as perguntas respondidas. O restante do projeto (frames, specs, medidas, fluxos) não é afetado.</p>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="closeModal('clear-briefing-modal')"
+        class="flex-1 py-2 rounded-2xl border border-gray-200 dark:border-dark-line text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+        Cancelar
+      </button>
+      <button onclick="confirmClearBriefing()"
+        class="flex-1 py-2 rounded-2xl bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold transition-colors">
+        Limpar Briefing
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: INJETAR FICHA — seleção de seções -->
 <div id="handoff-inject-modal" role="dialog" aria-modal="true" class="hidden fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
   <div class="bg-white dark:bg-dark-bg w-full max-w-[380px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line overflow-hidden animate-in zoom-in-95 duration-200">
