@@ -167,9 +167,9 @@ const ONBOARDING_TOOLS = {
     purpose: 'Consolida tudo que foi documentado — specs, medidas, fluxos e conformidade com o DSC — num documento único e versionado no canvas, pronto para a entrega ao time de desenvolvimento.',
     steps: [
       { text: 'Verifique os <strong>pré-requisitos</strong>: título, objetivo, ao menos 1 membro de equipe com nome preenchido.' },
-      { text: 'Clique em <strong>Gerar Ficha</strong> no topo. Se já existe uma ficha, o plugin pergunta se a nova versão é <strong>Minor</strong> (ajuste) ou <strong>Major</strong> (redesenho).' },
+      { text: 'Clique em <strong>Gerar Ficha</strong> — vem antes das opções de exportação de propósito: gere primeiro, para que o que você exportar depois já reflita o que foi de fato materializado no canvas. Se já existe uma ficha, o plugin pergunta se a nova versão é <strong>Minor</strong> (ajuste) ou <strong>Major</strong> (redesenho).' },
       { text: 'A ficha é criada no canvas, posicionada fora dos frames existentes, e nasce <strong>desbloqueada</strong> para você organizar à vontade.' },
-      { text: 'Você também pode exportar a documentação como <strong>Markdown</strong> ou <strong>JSON</strong> — útil para compartilhar com devs sem acesso ao Figma.' }
+      { text: 'Em <strong>Exportar</strong>, a ordem é Briefing → Markdown → JSON. <strong>Markdown</strong> é documentação de leitura — envie para quem não tem acesso ao Figma. <strong>JSON</strong> é o dado bruto completo e o único reimportável no plugin (backup ou transferência entre máquinas).' }
     ]
   }
 };

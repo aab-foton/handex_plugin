@@ -2,6 +2,13 @@
 
 ---
 
+## v6.8.1 — 2026-08-28
+
+### Corrigido — Guia "Importar/Exportar dados" desatualizado
+O item "Exportar" do guia "Como usar o plugin" ainda descrevia a tela de resumo do Handoff como exportando só Markdown/JSON — atualizado para mencionar também o Briefing, que ganhou seu próprio botão de exportação nesta mesma leva de mudanças. Onboarding de "Gerar Ficha de Handoff" também sincronizado com a nova ordem Gerar Ficha → Exportar.
+
+---
+
 ## v6.8.0 — 2026-08-28
 
 ### Adicionado — Modal rápida de "Dados do Projeto" no header
