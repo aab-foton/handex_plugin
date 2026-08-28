@@ -59,7 +59,12 @@
       class="home-card-draggable relative group/card"
       ondragstart="_onHomeCardDragStart(event)" ondragover="_onHomeCardDragOver(event)"
       ondrop="_onHomeCardDrop(event)" ondragend="_onHomeCardDragEnd(event)">
-      <button onclick="openDadosProjetoModal()" aria-label="Dados do Projeto"
+      <!-- Card leva direto pra tela completa (edição intencional de Título,
+           Versão, Equipe, Briefing, Regras, Links) -- diferente do ícone 📋
+           no header principal, que abre a modal rápida (ver
+           openDadosProjetoModal em core.js) por ser um atalho de consulta
+           acessível de qualquer tela, não uma entrada dedicada. -->
+      <button onclick="navigate('view-dados-projeto')" aria-label="Informações do Projeto"
         class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-[#005ca9] hover:bg-[#005ca9]/15 dark:hover:bg-blue-900/40 dark:hover:border-blue-500 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-[#005ca9]/30 outline-none group text-left">
         <div class="w-10 h-10 flex items-center justify-center bg-blue-50 dark:bg-blue-900/20 rounded-xl shrink-0">
           <i data-lucide="clipboard-list" class="w-5 h-5 text-[#005ca9] dark:text-blue-400" aria-hidden="true"></i>

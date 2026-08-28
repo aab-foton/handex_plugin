@@ -2,6 +2,16 @@
 
 ---
 
+## v6.8.0 — 2026-08-28
+
+### Adicionado — Modal rápida de "Dados do Projeto" no header
+O ícone 📋 no header principal deixou de navegar direto para a tela "Informações do Projeto" e passou a abrir uma modal leve — Título, Versão, Status e Objetivo, editáveis sem sair de onde você está. Um botão "Editar tudo" leva para a tela completa quando for preciso mexer em Equipe, Briefing, Regras ou Links. O card "Informações do Projeto" na home continua levando direto para a tela completa, como já era.
+
+### Corrigido — Aviso ao gerar ficha sem "nome do designer"
+Se o único campo obrigatório faltando for o nome do designer (que vem da Equipe), o plugin agora leva direto para a tela completa em vez de abrir a modal rápida, que não tem esse campo.
+
+---
+
 ## v6.7.0 — 2026-08-28
 
 ### Adicionado — Toggles no grupo Contexto de Negócio
