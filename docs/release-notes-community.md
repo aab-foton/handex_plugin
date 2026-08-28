@@ -4,6 +4,27 @@ Texto pronto para colar no campo de descrição de cada publicação em Communit
 
 ---
 
+## Version [preencher] — v6.6.2 (2026-08-28)
+
+**Correções e melhorias**
+
+**Especificação criada podia não aparecer na lista**
+Em algumas sessões — geralmente depois de trocar de arquivo Figma ou excluir um frame com o plugin ainda aberto — uma nova especificação era criada normalmente no canvas, mas não aparecia na lista de "Anotar Specs" dentro do plugin. Corrigido — a especificação agora aparece sempre, mesmo nesses casos.
+
+**Conformidade com o Design System volta a ser verificada automaticamente**
+Na etapa "Escanear Tokens", cada item escaneado (componente, ícone, tipografia) agora mostra de novo se está "Em conformidade", "Necessita revisão" ou "Fora do padrão" em relação ao Design System CAIXA — com a contagem de propriedades em cada situação. O critério é rigoroso: um item sem token vinculado é tratado como fora do padrão, mesmo que você marque "Sem desvios" — só passa para "Em revisão" depois que você escreve uma justificativa no campo de observações.
+
+**Botão de atualizar escaneamento mais fácil de encontrar**
+Antes, o botão para re-escanear um frame só aparecia depois de declarar a conformidade — dificultando revisar e escanear de novo antes de decidir. Agora ele fica sempre visível, ao lado do título "Tokens Escaneados".
+
+**Instruções de "Escanear Tokens" mais claras**
+O onboarding e o guia "Como usar o plugin" foram reescritos para deixar explícito que o scan é um ponto de partida, não uma aprovação automática — cabe a você revisar cada item antes de declarar conformidade.
+
+**Clique no canvas não trava mais o Tab dentro do plugin**
+Depois de abrir um modal e clicar no canvas do Figma, o teclado podia ficar "preso" tentando voltar para o plugin em vez de navegar no Figma normalmente. Corrigido — clicar fora do plugin agora funciona como esperado, sem interferência do plugin.
+
+---
+
 ## Version 11 — v6.2.0 (2026-08-04)
 
 **Correções e melhorias**
