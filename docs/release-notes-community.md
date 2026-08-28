@@ -4,7 +4,7 @@ Texto pronto para colar no campo de descrição de cada publicação em Communit
 
 ---
 
-## Version [preencher] — v6.6.2 (2026-08-28)
+## Version [preencher] — v6.6.3 (2026-08-28)
 
 **Correções e melhorias**
 
@@ -22,6 +22,9 @@ O onboarding e o guia "Como usar o plugin" foram reescritos para deixar explíci
 
 **Clique no canvas não trava mais o Tab dentro do plugin**
 Depois de abrir um modal e clicar no canvas do Figma, o teclado podia ficar "preso" tentando voltar para o plugin em vez de navegar no Figma normalmente. Corrigido — clicar fora do plugin agora funciona como esperado, sem interferência do plugin.
+
+**Rodapé da home reorganizado**
+"Gerar Ficha de Handoff" agora ocupa a linha inteira, sozinho, como ação principal. Abaixo, os botões de Baixar, Importar e Limpar ficaram do mesmo tamanho, distribuídos lado a lado.
 
 ---
 

@@ -2,6 +2,13 @@
 
 ---
 
+## v6.6.3 — 2026-08-28
+
+### Ajustado — Rodapé da home reorganizado
+"Gerar Ficha de Handoff" passa a ocupar a largura total do rodapé, sozinho, como ação primária — antes dividia espaço com o ícone de "Baixar backup", o que fazia os dois botões terem tamanhos diferentes por engano. Abaixo, "Baixar", "Importar" e "Limpar" viraram três botões de largura igual (com ícone + label), distribuídos na mesma linha em vez de agrupados à esquerda com espaço vazio sobrando. Ordem também revista: Baixar (mais frequente e reversível) → Importar → Limpar (mais raro e destrutivo, por último).
+
+---
+
 ## v6.6.2 — 2026-08-28
 
 ### Corrigido — Tab "preso" no plugin depois de clicar no canvas
