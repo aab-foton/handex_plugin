@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Super DSC | Web",
     "figmaFileKey": "erkqbRKIbaFWbkHe51BeiZ",
-    "exportedAt": "2026-08-26T18:07:10.796Z",
+    "exportedAt": "2026-08-31T16:44:48.744Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -88,18 +88,18 @@
         "value": "#03453b"
       },
       {
-        "key": "178b280421e2efa7a88bfd25cbec1b305fc16f1c",
-        "name": "dsc/color/decorative/decorativeOutlined",
-        "resolvedType": "COLOR",
-        "collection": "dsc",
-        "value": "#d0f2ed"
-      },
-      {
         "key": "d042013351a71c7c1dc19ece7754c20590d1fbc2",
         "name": "dsc/color/accent/accentBg",
         "resolvedType": "COLOR",
         "collection": "dsc",
         "value": "#ffefd6"
+      },
+      {
+        "key": "178b280421e2efa7a88bfd25cbec1b305fc16f1c",
+        "name": "dsc/color/decorative/decorativeOutlined",
+        "resolvedType": "COLOR",
+        "collection": "dsc",
+        "value": "#d0f2ed"
       },
       {
         "key": "6da4e0966193e5e4d85e5a60812822577f8c8460",
@@ -781,15 +781,15 @@
         "value": "#ffffff"
       },
       {
-        "key": "e6b75fec7f7bd7659b054937dc29c9923f44c2f5",
-        "name": "dsc/icon/color/highlight 1 [color 9]",
+        "key": "7a79b9c773da353bc342e9e3d26f1390d18ef748",
+        "name": "dsc/color/state/highlight/hover2",
         "resolvedType": "COLOR",
         "collection": "dsc",
         "value": "#005194"
       },
       {
-        "key": "7a79b9c773da353bc342e9e3d26f1390d18ef748",
-        "name": "dsc/color/state/highlight/hover2",
+        "key": "e6b75fec7f7bd7659b054937dc29c9923f44c2f5",
+        "name": "dsc/icon/color/highlight 1 [color 9]",
         "resolvedType": "COLOR",
         "collection": "dsc",
         "value": "#005194"
@@ -1852,6 +1852,230 @@
         "value": "Usar em outro banco"
       },
       {
+        "key": "e683b329fedb23d423b5daf08762ceb825932b17",
+        "name": "breakpoint 🔒",
+        "resolvedType": "STRING",
+        "collection": "responsive",
+        "value": "extra large"
+      },
+      {
+        "key": "5a252b9f4d10a79cb6a71f922d7c0d359e08b671",
+        "name": "device 🔒",
+        "resolvedType": "STRING",
+        "collection": "responsive",
+        "value": "desktop"
+      },
+      {
+        "key": "342dc2e8338a4bf48cf67858012acaac8f51b0dd",
+        "name": "device/width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
+      },
+      {
+        "key": "0c58f7f1c8bdee1fae04b483016807839d8bbeef",
+        "name": "device/min-width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
+      },
+      {
+        "key": "15b13fffa9bd485c000a60cf7352aeec864ac5cd",
+        "name": "device/max-width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1920
+      },
+      {
+        "key": "8c1c494e3d2189c0cda1a8b246a222679d4e7188",
+        "name": "device/min-height",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 900
+      },
+      {
+        "key": "b6fa6d7ea224162fc26bcd4feb3593a071c72aef",
+        "name": "grid/grid-column",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 12
+      },
+      {
+        "key": "b357d9876a6487bc6585ff05d6d34049168a686b",
+        "name": "show/device/desktop",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "f1fa37adfa4cfe8c8e83b226e2c309d2756590a8",
+        "name": "show/device/mobile",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "c656eb4c5adbf1f4d10d36ecc529a62d6ba847cb",
+        "name": "show/breakpoint/extra large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "eb8218a3b520b76e4c9c5394b34a28e90b9381be",
+        "name": "show/breakpoint/large +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "de2f0274cba20369986d7eba540f66fed2f66cda",
+        "name": "show/breakpoint/large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "f62abf263d76b9cb8859e065b36df4f4a092440d",
+        "name": "show/breakpoint/medium +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "55341000b43c6871ba95e3e9612136dbbd2a06ed",
+        "name": "show/breakpoint/medium",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "2a1182e3ade1087d17e5a4ed3202d0c3a77b2588",
+        "name": "show/breakpoint/small +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "0f238f4ba74855b4056b568dfee5c2f3a114445c",
+        "name": "show/breakpoint/small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "3cf82aef55e2701ed26738822a1848886287a5ae",
+        "name": "show/breakpoint/extra small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "d349b296f58c9f5cc80e92c1043cc59a4a3b79f2",
+        "name": "grid/grid-margin",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 48
+      },
+      {
+        "key": "e2c5440e36fc09559af6d652fa8bd67db3e11dbd",
+        "name": "grid/grid-gap",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 24
+      },
+      {
+        "key": "d5f0eddd47d5e547747cbd2f6b83c1170cfe6c7f",
+        "name": "hide/device/desktop",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "bbb5487ef1c40e5ddf426a45dc9a79c1c61a08f4",
+        "name": "components/container/width-compact",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 720
+      },
+      {
+        "key": "ba362c47468f7ffc3f4bacadc489386abdd3eaff",
+        "name": "components/container/width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1080
+      },
+      {
+        "key": "d5f604b4641b0f25ed4f4e86454f9c1597343fbc",
+        "name": "components/container/width-wide",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
+      },
+      {
+        "key": "353f9e9a3a815706dcc7bf54d116db9f23285fe2",
+        "name": "hide/device/mobile",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "5cdf1997b0429ef16bd6c1be5bab9a2b12eda469",
+        "name": "hide/breakpoint/extra large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "4f95e11f7498f15bd862c964ea6d213f77eacb04",
+        "name": "hide/breakpoint/large +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "2568ea599dbb0f5c54ba2e241554507f75f26411",
+        "name": "hide/breakpoint/large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "759e7e9fc237cc7cf071ed04b65b5d280e884f26",
+        "name": "hide/breakpoint/medium +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "d3676bfcd938342e798fe2301907f26fe42fc5a0",
+        "name": "hide/breakpoint/medium",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "d18bfc2be43c65657374a7518a55295ea586102c",
+        "name": "hide/breakpoint/small +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "080f2ce8fe0de800c7174126adaeaac75e322b54",
+        "name": "hide/breakpoint/small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "1b813038bcb7e2224d055ba5952e55add8faec73",
+        "name": "hide/breakpoint/extra small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
         "key": "9c7fc4880bebc37c156e9bdf87c2ef6354bc2a6e",
         "name": "Texts/ComponentDescription",
         "resolvedType": "STRING",
@@ -2585,230 +2809,6 @@
         "resolvedType": "FLOAT",
         "collection": "GOSTPlugin",
         "value": 256
-      },
-      {
-        "key": "e683b329fedb23d423b5daf08762ceb825932b17",
-        "name": "breakpoint 🔒",
-        "resolvedType": "STRING",
-        "collection": "responsive",
-        "value": "extra large"
-      },
-      {
-        "key": "5a252b9f4d10a79cb6a71f922d7c0d359e08b671",
-        "name": "device 🔒",
-        "resolvedType": "STRING",
-        "collection": "responsive",
-        "value": "desktop"
-      },
-      {
-        "key": "342dc2e8338a4bf48cf67858012acaac8f51b0dd",
-        "name": "device/width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "0c58f7f1c8bdee1fae04b483016807839d8bbeef",
-        "name": "device/min-width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "15b13fffa9bd485c000a60cf7352aeec864ac5cd",
-        "name": "device/max-width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1920
-      },
-      {
-        "key": "8c1c494e3d2189c0cda1a8b246a222679d4e7188",
-        "name": "device/min-height",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 900
-      },
-      {
-        "key": "b6fa6d7ea224162fc26bcd4feb3593a071c72aef",
-        "name": "grid/grid-column",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 12
-      },
-      {
-        "key": "b357d9876a6487bc6585ff05d6d34049168a686b",
-        "name": "show/device/desktop",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "f1fa37adfa4cfe8c8e83b226e2c309d2756590a8",
-        "name": "show/device/mobile",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "c656eb4c5adbf1f4d10d36ecc529a62d6ba847cb",
-        "name": "show/breakpoint/extra large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "eb8218a3b520b76e4c9c5394b34a28e90b9381be",
-        "name": "show/breakpoint/large +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "de2f0274cba20369986d7eba540f66fed2f66cda",
-        "name": "show/breakpoint/large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "f62abf263d76b9cb8859e065b36df4f4a092440d",
-        "name": "show/breakpoint/medium +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "55341000b43c6871ba95e3e9612136dbbd2a06ed",
-        "name": "show/breakpoint/medium",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "2a1182e3ade1087d17e5a4ed3202d0c3a77b2588",
-        "name": "show/breakpoint/small +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "0f238f4ba74855b4056b568dfee5c2f3a114445c",
-        "name": "show/breakpoint/small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "3cf82aef55e2701ed26738822a1848886287a5ae",
-        "name": "show/breakpoint/extra small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "d349b296f58c9f5cc80e92c1043cc59a4a3b79f2",
-        "name": "grid/grid-margin",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 48
-      },
-      {
-        "key": "e2c5440e36fc09559af6d652fa8bd67db3e11dbd",
-        "name": "grid/grid-gap",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 24
-      },
-      {
-        "key": "d5f0eddd47d5e547747cbd2f6b83c1170cfe6c7f",
-        "name": "hide/device/desktop",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "bbb5487ef1c40e5ddf426a45dc9a79c1c61a08f4",
-        "name": "components/container/width-compact",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 720
-      },
-      {
-        "key": "ba362c47468f7ffc3f4bacadc489386abdd3eaff",
-        "name": "components/container/width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1080
-      },
-      {
-        "key": "d5f604b4641b0f25ed4f4e86454f9c1597343fbc",
-        "name": "components/container/width-wide",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "353f9e9a3a815706dcc7bf54d116db9f23285fe2",
-        "name": "hide/device/mobile",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "5cdf1997b0429ef16bd6c1be5bab9a2b12eda469",
-        "name": "hide/breakpoint/extra large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "4f95e11f7498f15bd862c964ea6d213f77eacb04",
-        "name": "hide/breakpoint/large +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "2568ea599dbb0f5c54ba2e241554507f75f26411",
-        "name": "hide/breakpoint/large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "759e7e9fc237cc7cf071ed04b65b5d280e884f26",
-        "name": "hide/breakpoint/medium +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "d3676bfcd938342e798fe2301907f26fe42fc5a0",
-        "name": "hide/breakpoint/medium",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "d18bfc2be43c65657374a7518a55295ea586102c",
-        "name": "hide/breakpoint/small +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "080f2ce8fe0de800c7174126adaeaac75e322b54",
-        "name": "hide/breakpoint/small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "1b813038bcb7e2224d055ba5952e55add8faec73",
-        "name": "hide/breakpoint/extra small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
       }
     ]
   },

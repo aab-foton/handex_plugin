@@ -3,7 +3,7 @@
     "note": "Migração de design system em andamento (2026-08-26): 'web-angular-react' (fileKey 8QvOeTODSBi3PquJT5CISP) é o DSC legado. A lib antes chamada 'Super Gerenciador' foi reaproveitada/expandida pela equipe de design e renomeada para 'Super DSC | Web' (mesmo fileKey erkqbRKIbaFWbkHe51BeiZ, slug super-gerenciador mantido por compatibilidade) — é a sucessora oficial do legado. As duas COEXISTEM enquanto a migração não termina: um mesmo projeto pode ter componentes das duas libs simultaneamente. Não desativar/remover nenhuma das duas sem confirmação explícita.",
     "dscAndroidRemoved": "A lib 'DSC | Android' (fileKey W8GUeHypdco1I3dneN6P3H, slug dsc-android) foi cadastrada em 2026-08-26 e removida por completo no mesmo dia, a pedido explícito do usuário ('não usaremos isso') — decisão de produto: o Handex não audita/escaneia projetos Android nativo. Entrada do manifest, refs/dsc-android.json e a entrada correspondente em code-mappings.json foram todos removidos, não só ocultados. Se precisar mapear no futuro, tratar como trabalho novo (recadastrar no manifest + rodar fetch-design-refs.cjs de novo) — ver histórico de commit deste arquivo só como referência do fileKey/contagens que existiam."
   },
-  "generatedAt": "2026-08-26T18:28:20.496Z",
+  "generatedAt": "2026-08-31T16:47:02.136Z",
   "libraries": [
     {
       "slug": "fundamentos-visuais",
