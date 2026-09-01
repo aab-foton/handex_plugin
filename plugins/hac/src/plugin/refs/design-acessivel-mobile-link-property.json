@@ -1,0 +1,166 @@
+{
+  "_meta": {
+    "description": "Extração REAL via REST API (2026-08-31) das componentPropertyDefinitions do wrapper mobile \"[a11y mob] Box specs leitor de tela\" (fileKey 3zdtN13YvPlCGPdXeL0Y2i) — em especial a property \"Link\", cuja existência/tipo/valores nunca haviam sido consultados diretamente na API antes desta extração. Objetivo: confirmar/corrigir o schema de A11Y_MOBILE_ONLY_TOGGLES em src/plugin/modules/accessibility.js (linhas ~160-194) e o comentário em src/plugin/code.js (linhas ~624-628, ~711-740). NÃO confundir com design-acessivel-component-properties.json (fileKey Wy0IhXRVZMSOOr8E609UqI, lib DESKTOP 'Design Acessível', 25 component sets '[NÃO UTILIZAR][a11y base] *').",
+    "fileKey": "3zdtN13YvPlCGPdXeL0Y2i",
+    "extractedAt": "2026-08-31T17:48:08.602Z",
+    "extractedBy": "augusto.brasil@saude.gov.br",
+    "method": "GET /v1/files/:key/component_sets (lista top-level) + GET /v1/files/:key (árvore completa, para achar component sets ANINHADOS que não aparecem em /component_sets — ver achado principal abaixo) + GET /v1/files/:key/nodes?ids=... (componentPropertyDefinitions/componentProperties/componentPropertyReferences por node)",
+    "achadoPrincipal": "'Link' NÃO é property do wrapper publicado '[a11y mob] Box specs leitor de tela' (node 5413:1262) nem da instância exposta '.[a11y mob base] Elementos e imagens' (node 5362:961) — está um nível mais fundo, no component set interno '.[a11y mob base] Link do Componente' (node 5536:8553), que é o mainComponent da instância nomeada 'Link do componente' dentro de 'Elementos e imagens'. Esse component set NÃO aparece em GET /component_sets (só é visível varrendo a árvore completa do documento via GET /files/:key) porque tem prefixo '.' (convenção Figma de node oculto da lista de assets) e não tem 'key' publicada — não é importável via figma.importComponentByKeyAsync, mesma situação dos 25 '[NÃO UTILIZAR][a11y base] *' da lib desktop.",
+    "warnings": [
+      "'.[a11y mob base] Link do Componente' e '.[a11y mob base] Elementos e imagens' não têm campo 'key' na resposta da API (confirmado via GET /nodes — data.components e data.componentSets vieram undefined para esses ids) — não são componentes publicados/importáveis, só nós internos usados via instância aninhada dentro do wrapper publicado.",
+      "A instância 'Link do componente' dentro de 'Conector=Elementos e imagens' (node I5365:1347;5536:9151) NÃO tem componentPropertyReferences — ou seja, no wrapper publicado a variante VARIANT 'Link' já vem fixada em 'Personalizado' e não é exposta/trocável pelo usuário que insere o componente pronto no canvas. A lista completa de 64 opções só é visível consultando o component set base diretamente (o que fizemos aqui), não a instância do wrapper."
+    ]
+  },
+
+  "linkProperty": {
+    "componentSetNode": "5536:8553",
+    "componentSetName": ".[a11y mob base] Link do Componente",
+    "parentPage": "Specs - Link do componente [Handoff] (5536:8509)",
+    "propertyName": "Link",
+    "type": "VARIANT",
+    "defaultValue": "Personalizado",
+    "publishedKey": null,
+    "totalOptions": 64,
+    "variantOptions": [
+      "Accordion", "Account Select", "Alert Dialog", "Avatar", "Avatar Hero",
+      "Badge", "Badge Notification", "Badge Text", "Button", "Card",
+      "Card Account", "Card Alert", "Card Carousel Horizontal", "Card Carousel Vertical",
+      "Card Notification", "Card Product Offer", "Card Wallet", "Card Widget",
+      "Checkbox", "Chips", "Comparison Table", "Credit Card Button", "Date Picker",
+      "Icon Button", "Icon Button Text", "Image Media", "Input/Text Field - Single",
+      "Input/Text Field - Form", "Input Money", "Input Pin", "Input Stepper",
+      "List Accordion", "List Heading", "List Item", "List Item Transaction",
+      "Loading Animation", "Menu", "Navigation Bar", "Page Controller", "Page Header",
+      "Popover", "Progress", "Radio", "Search Bar", "Selectable Media",
+      "Segmented Button", "Separator/Divider", "Sheet", "Skeleton/Shimmer", "Slider",
+      "Spinner", "Swap Preview", "Switch", "Tabs", "Tile Button", "Text",
+      "Timeline", "Toast/Snackbar", "Toolbar", "Tooltip", "Top App Bar",
+      "Value Section", "Wheel Picker", "Personalizado"
+    ],
+    "companionTextProperty": {
+      "rawKey": "Texto#7157:0",
+      "name": "Texto",
+      "type": "TEXT",
+      "defaultValue": "[insira aqui o link do componente]."
+    },
+    "notaSobreInstanceSwap": "Apesar do nome 'Link' e da lista de opções ser nomes de componentes do DSC Super App, o type real é VARIANT (texto/rótulo escolhido dentre nomes fixos), NÃO é INSTANCE_SWAP (não há vínculo de component key por opção). A variante escolhida não troca o componente vinculado — só rotula textualmente qual componente do DSC está sendo referenciado; o link real (URL) fica no campanion TEXT 'Texto#7157:0', preenchido manualmente pelo designer com o texto padrão '[insira aqui o link do componente].'"
+  },
+
+  "elementosEImagensWrapper": {
+    "componentSetNode": "5362:961",
+    "componentSetName": ".[a11y mob base] Elementos e imagens",
+    "parentPage": "Specs - Elementos interativos e imagens [Handoff] (51:1282)",
+    "publishedKey": null,
+    "properties": [
+      {
+        "rawKey": "Descrição#7111:0",
+        "name": "Descrição",
+        "syncId": "7111:0",
+        "type": "BOOLEAN",
+        "defaultValue": true
+      },
+      {
+        "rawKey": "Nome acessível#5366:0",
+        "name": "Nome acessível",
+        "syncId": "5366:0",
+        "type": "BOOLEAN",
+        "defaultValue": true
+      },
+      {
+        "rawKey": "Dica Leitor de Tela#5405:0",
+        "name": "Dica Leitor de Tela",
+        "syncId": "5405:0",
+        "type": "BOOLEAN",
+        "defaultValue": true
+      },
+      {
+        "rawKey": "Observação#5365:0",
+        "name": "Observação",
+        "syncId": "5365:0",
+        "type": "BOOLEAN",
+        "defaultValue": true
+      },
+      {
+        "rawKey": "Variante",
+        "name": "Variante",
+        "syncId": null,
+        "type": "VARIANT",
+        "defaultValue": "componente",
+        "variantOptions": ["componente", "link", "texto alternativo"]
+      }
+    ],
+    "correcaoVsCodigoAtual": "accessibility.js linha ~182 afirma que 'Dica para Leitor de Tela' e 'Observação' têm default 'desligado'/opcional — a definição REAL do component set base (.[a11y mob base] Elementos e imagens, aqui) tem defaultValue true para AS QUATRO properties BOOLEAN (Descrição, Nome acessível, Dica Leitor de Tela, Observação). O default false observado antes (Dica Leitor de Tela=false, Observação=false) era da INSTÂNCIA já configurada dentro do wrapper publicado 'Conector=Elementos e imagens' (node I5365:1347, ver instanceOverridesInWrapper abaixo), não da definição do componente base. Ou seja: o componente aceita os 4 campos ligados por padrão, mas o wrapper de exemplo publicado já vem com 2 deles desligados por curadoria manual.",
+    "instanceOverridesInWrapper": {
+      "nodeId": "5365:1347",
+      "note": "Valores efetivos da instância 'Elementos e imagens' dentro do wrapper publicado 'Conector=Elementos e imagens' — o que o designer vê ao inserir o componente do wrapper, antes de qualquer edição.",
+      "componentProperties": {
+        "Descrição#7111:0": { "type": "BOOLEAN", "value": true },
+        "Nome acessível#5366:0": { "type": "BOOLEAN", "value": true },
+        "Dica Leitor de Tela#5405:0": { "type": "BOOLEAN", "value": false },
+        "Observação#5365:0": { "type": "BOOLEAN", "value": false },
+        "Variante": { "type": "VARIANT", "value": "componente" }
+      }
+    }
+  },
+
+  "boxSpecsWrapper": {
+    "componentSetNode": "5413:1262",
+    "componentSetName": "[a11y mob] Box specs leitor de tela",
+    "publishedKey": "e0951b67672ab4961c0efab838564797881f6cf7",
+    "parentPage": "Specs - Estrutura [Handoff] (45:3389)",
+    "componentPropertyDefinitions": {
+      "Conector": {
+        "type": "VARIANT",
+        "defaultValue": "Elementos e imagens",
+        "variantOptions": ["Elementos e imagens", "Títulos", "Elementos decorativos"]
+      }
+    },
+    "nota": "Este é o ÚNICO component set publicado com 'key' real (importável). A property de nível-1 dele é só 'Conector' (que variante do wrapper mostrar) — Descrição/Nome acessível/Dica/Observação/Link vêm de dentro das instâncias aninhadas específicas de cada variante, não deste nível."
+  },
+
+  "estruturaCompletaVarianteElementosEImagens": {
+    "descricao": "Árvore de nós dentro da variante 'Conector=Elementos e imagens' do wrapper publicado, profundidade completa — confirma que 'Link do componente' é uma instância SEMPRE PRESENTE (sem toggle de visibilidade), diferente de Descrição/Nome acessível/Dica/Observação que têm 'visible' vinculado a um BOOLEAN.",
+    "children": [
+      { "instance": "Descrição",              "componentId": "31:230",   "componentPropertyReferences": { "visible": "Descrição#7111:0" } },
+      { "instance": "Nome acessível",          "componentId": "31:230",   "componentPropertyReferences": { "visible": "Nome acessível#5366:0" } },
+      { "instance": "Dica para Leitor de Tela", "componentId": "31:230",  "componentPropertyReferences": { "visible": "Dica Leitor de Tela#5405:0" } },
+      { "instance": "Observações",             "componentId": "31:230",   "componentPropertyReferences": { "visible": "Observação#5365:0" } },
+      { "instance": "Link do componente",      "componentId": "5536:8552", "componentPropertyReferences": null, "nota": "sem 'visible' referenciado — sempre visível, não tem toggle de liga/desliga no wrapper publicado" }
+    ]
+  },
+
+  "outrosComponentSetsAninhadosEncontrados": [
+    {
+      "id": "1:465",
+      "name": ".[a11y mob base] Legenda",
+      "parentPage": "Outros Elementos (87:1271)",
+      "publishedKey": null,
+      "properties": {
+        "função e valor#6833:0": { "type": "BOOLEAN", "defaultValue": true },
+        "decorativo#6833:2": { "type": "BOOLEAN", "defaultValue": true },
+        "elementos estruturais#6833:4": { "type": "BOOLEAN", "defaultValue": true },
+        "ordem de foco#6899:0": { "type": "BOOLEAN", "defaultValue": true },
+        "variação": { "type": "VARIANT", "defaultValue": "ordem de tabulação e tabulação web", "variantOptions": ["web", "ordem de tabulação e tabulação web", "ordem de tabulação e tabulação DS"] }
+      },
+      "nota": "Não referenciado em accessibility.js/code.js hoje — fora do escopo desta tarefa, listado apenas porque apareceu na varredura completa do arquivo."
+    },
+    {
+      "id": "7100:1424",
+      "name": ".[a11y mob base] Cabeçalho Template",
+      "parentPage": "Outros Elementos (87:1271)",
+      "publishedKey": null,
+      "properties": {
+        "Status": { "type": "VARIANT", "defaultValue": "Finalizado", "variantOptions": ["Finalizado", "Em construção", "Pausado", "Personalizado"] }
+      },
+      "nota": "Parece ser um template de cabeçalho de página de handoff, não um componente de spec de a11y — não referenciado em accessibility.js/code.js hoje."
+    }
+  ],
+
+  "componentSetsPublicadosTopLevel": [
+    { "node_id": "1:50",     "name": "[a11y mob] Conectores" },
+    { "node_id": "13:479",   "name": "[a11y mob] Número da tela" },
+    { "node_id": "1:169",    "name": "[a11y mob] Agrupamento" },
+    { "node_id": "5222:4270","name": "[a11y mob] Ordenação" },
+    { "node_id": "5413:1262","name": "[a11y mob] Box specs leitor de tela" }
+  ]
+}

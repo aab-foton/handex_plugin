@@ -159,10 +159,34 @@
           <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
           <div id="a11y-el-toggles-list" class="space-y-2"></div>
         </div>
-        <!-- Exclusivos de spec mobile (React Native) — o wrapper real
-             desktop "[a11y] Box specs LT" não tem esses 2 campos. Visível só
-             quando modal.dataset.a11yOrigin === 'mobile' (Detecção Automática
-             ou edição de spec já mobile), ver _renderA11yElementoMobileFields. -->
+        <!-- Sub-variante mobile ("Variante" real do component set
+             ".[a11y mob base] Elementos e imagens") — 3 opções mutuamente
+             exclusivas que mudam quais campos aparecem abaixo. Visível só
+             quando modal.dataset.a11yOrigin === 'mobile'. Valores internos
+             batem 1:1 com A11Y_ELEMENTO_MOBILE_VARIANTS (strings exatas da
+             property real do Figma). -->
+        <div id="a11y-el-mobile-variant-wrap" class="hidden space-y-2">
+          <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Variante (mobile)</p>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border border-gray-200 dark:border-dark-line text-[11px] font-bold text-slate-700 dark:text-white cursor-pointer has-[:checked]:border-cyan-400 has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/20">
+              <input type="radio" name="a11y-el-mobile-variant" value="componente" checked onchange="updateA11yElementoMobileVariant()" class="w-3.5 h-3.5 text-cyan-600 focus:ring-cyan-500" />
+              Componente
+            </label>
+            <label class="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border border-gray-200 dark:border-dark-line text-[11px] font-bold text-slate-700 dark:text-white cursor-pointer has-[:checked]:border-cyan-400 has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/20">
+              <input type="radio" name="a11y-el-mobile-variant" value="link" onchange="updateA11yElementoMobileVariant()" class="w-3.5 h-3.5 text-cyan-600 focus:ring-cyan-500" />
+              Link
+            </label>
+            <label class="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border border-gray-200 dark:border-dark-line text-[11px] font-bold text-slate-700 dark:text-white cursor-pointer has-[:checked]:border-cyan-400 has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/20">
+              <input type="radio" name="a11y-el-mobile-variant" value="texto alternativo" onchange="updateA11yElementoMobileVariant()" class="w-3.5 h-3.5 text-cyan-600 focus:ring-cyan-500" />
+              Texto Alternativo
+            </label>
+          </div>
+        </div>
+        <!-- Campos exclusivos de spec mobile (React Native) — conjunto muda
+             conforme a sub-variante escolhida acima (ver
+             _renderA11yElementoMobileFields). O wrapper real desktop
+             "[a11y] Box specs LT" não tem nenhum desses campos. Visível só
+             quando modal.dataset.a11yOrigin === 'mobile'. -->
         <div id="a11y-el-mobile-toggles-wrap" class="hidden space-y-2.5">
           <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos exclusivos mobile</p>
           <div id="a11y-el-mobile-toggles-list" class="space-y-2"></div>
@@ -721,7 +745,7 @@
       <div class="pt-3 mt-1 border-t border-gray-100 dark:border-dark-line">
         <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5">Estrutura padrão de cada spec</p>
         <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Toda categoria segue os mesmos campos — <strong>Descrição</strong> (como o elemento deve ou não ser lido) e <strong>Notas de Código</strong> (apontamento técnico pro dev), quando aplicável à variante escolhida.</p>
-        <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Elementos e Imagens mobile</strong> (React Native) tem 2 campos a mais: <strong>Dica para Leitor de Tela</strong> (accessibilityHint — o que acontece após interagir com o componente) e <strong>Link do Componente</strong> (URL do componente no DSC | Super App).</p>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Elementos e Imagens mobile</strong> (React Native) tem 3 sub-variantes exclusivas: <strong>Componente</strong> (Descrição/Nome Acessível/Dica para Leitor de Tela/Observação opcionais + Link do Componente, sempre visível, com o nome do componente do DSC | Super App e a URL); <strong>Link</strong> (Descrição fixa de identificação como link, Nome Acessível/Observação opcionais); e <strong>Texto Alternativo</strong> (Descrição livre obrigatória com o alt-text da mídia + Observação opcional).</p>
       </div>
 
       <div class="pt-3 mt-1 border-t border-gray-100 dark:border-dark-line space-y-2">

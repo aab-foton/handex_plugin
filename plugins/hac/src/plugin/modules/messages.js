@@ -57,6 +57,15 @@
           hacData = mergedState;
           a11yAreas = hacData.a11yAreas || [];
           a11ySpecs = hacData.a11ySpecs || [];
+          // Migração silenciosa e aditiva (não sobe _schemaVersion): specs
+          // "elemento" mobile criadas antes da introdução das 3 sub-variantes
+          // (componente/link/texto alternativo) ganham a11ySubtype.variant
+          // por inferência. Idempotente — specs já migradas ou de origem
+          // desktop nunca são tocadas. Ver _migrateA11yElementoMobileVariants
+          // em accessibility.js.
+          if (typeof _migrateA11yElementoMobileVariants === 'function') {
+            a11ySpecs = _migrateA11yElementoMobileVariants(a11ySpecs);
+          }
           tabOrderItems = hacData.tabOrderItems || [];
           if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
         }

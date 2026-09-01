@@ -76,6 +76,16 @@ const A11Y_CONTENT = {
       'tab group':   { descricao: 'Agrupar e identificar como tab. Deve-se ler o seu rótulo visível junto de sua localização no grupo. A exemplo: "1 de 3". Também considerar o status do componente quando estiver "selecionado".', notasCodigo: 'Em HTML, deve ser fornecido a role="tablist" por padrão, role="tab" quando selecionado e role="tabpanel" quando expandindo. O atributo aria-selected é definido automaticamente com base na alteração da seleção.' },
       imagem:        { descricao: 'Inserir o seguinte texto alternativo no elemento: [insira aqui o texto alternativo].', notasCodigo: 'Insira seu texto com as anotações necessárias para o pessoal de desenvolvimento.' },
     },
+    // Conteúdo exclusivo da sub-variante mobile "link" (ver
+    // A11Y_ELEMENTO_MOBILE_VARIANTS) — Descrição fixa e travada (não
+    // editável), texto igual ao já usado no catálogo desktop pro componente
+    // "link" (A11Y_CONTENT.elemento.componentes.link), mas com a menção
+    // explícita de abertura de nova janela/foco que a doc da vertical exige
+    // aqui. Chave própria em vez de reutilizar 'link' pra não colidir com o
+    // catálogo de 16 componentes indexado por nome.
+    mobileLink: {
+      descricao: 'Identificar como link e anunciar que o link abre uma nova janela e direciona o foco para ela.',
+    },
   },
   estrutura: {
     idiomas: {
@@ -170,28 +180,120 @@ const A11Y_TOGGLE_LABELS = {
   linkComponente: 'Link do Componente',
 };
 
-// Toggles que só existem no wrapper mobile — nunca renderizados quando a
-// spec é de origem web (o componente real desktop não tem esses campos).
-// Chave própria, fora de A11Y_COMPONENT_PROPERTIES (catálogo desktop): a
-// origem desses 2 campos é o texto oficial da lib mobile
-// ("📍 Instruções (comece por aqui)", node 811:866), não uma property
-// BOOLEAN de um component set "[a11y base]" desktop.
+// Toggle que só existe no wrapper mobile, na sub-variante "componente" —
+// nunca renderizado quando a spec é de origem web (o componente real
+// desktop não tem esse campo). Chave própria, fora de
+// A11Y_COMPONENT_PROPERTIES (catálogo desktop): a origem desse campo é o
+// texto oficial da lib mobile ("📍 Instruções (comece por aqui)", node
+// 811:866), não uma property BOOLEAN de um component set "[a11y base]"
+// desktop.
 //
-// Divergência conhecida vs. o componente Figma real (confirmada via REST API
-// no wrapper "[a11y mob] Box specs leitor de tela", variante "Elementos e
-// imagens"): "Dica para Leitor de Tela" tem toggle BOOLEAN real (default
-// desligado, opcional) — bate com o checkbox aqui. "Link do componente" NÃO
-// tem toggle no componente publicado, é sempre presente/obrigatório na lib
-// real. Tratamos os dois como igualmente opcionais porque hoje o hac nunca
-// importa o wrapper mobile real (sempre cai no card procedural — ver
-// _tryImportA11yComponent em code.js), então a diferença não tem efeito
-// prático agora. Se um dia o import real do wrapper mobile for implementado,
-// revisitar isso: "Link do Componente" deveria provavelmente virar
-// sempre-visível, sem checkbox, para casar com o componente real.
+// Confirmado via REST API em 2026-08-31 (ver
+// refs/design-acessivel-mobile-link-property.json) no wrapper "[a11y mob]
+// Box specs leitor de tela", variante "Elementos e imagens": "Dica Leitor de
+// Tela" tem toggle BOOLEAN real (defaultValue true na definição do
+// component set base; a instância do wrapper publicado usa false —
+// replicado aqui como default desligado). "Link do componente" NÃO tem
+// toggle no componente publicado (instância sempre presente, sem
+// componentPropertyReferences de visible) — por isso NÃO está mais nesta
+// lista de toggles opcionais, virou campo sempre-visível na sub-variante
+// "componente" (ver A11Y_MOBILE_LINK_OPTIONS/_renderA11yElementoMobileFields).
 const A11Y_MOBILE_ONLY_TOGGLES = [
   { key: 'accessibilityHint', label: 'Dica para Leitor de Tela', placeholder: 'Inserir o seguinte accessibilityHint: [explicação sobre o que acontecerá após a ação].' },
-  { key: 'linkComponente', label: 'Link do Componente', placeholder: 'Cole aqui o link do componente no DSC | Super App.' },
 ];
+
+// As 3 sub-variantes mutuamente exclusivas de "Elementos e Imagens" mobile —
+// strings EXATAS da property VARIANT real "Variante" do component set
+// ".[a11y mob base] Elementos e imagens" (fileKey 3zdtN13YvPlCGPdXeL0Y2i,
+// node 5362:961), confirmadas via REST API em 2026-08-31 (ver
+// refs/design-acessivel-mobile-link-property.json). Não usar camelCase
+// aqui — o valor persistido em a11ySubtype.variant precisa bater 1:1 com a
+// nomenclatura real do Figma, ainda que as chaves deste objeto (JS) usem
+// nomes mais convenientes.
+const A11Y_ELEMENTO_MOBILE_VARIANTS = {
+  componente: 'componente',
+  link: 'link',
+  textoAlternativo: 'texto alternativo',
+};
+
+// As 64 opções reais do dropdown VARIANT "Link" do component set interno
+// ".[a11y mob base] Link do Componente" (node 5536:8553) — nomes exatos, na
+// mesma ordem retornada pela API (ver refs/
+// design-acessivel-mobile-link-property.json, linkProperty.variantOptions).
+// "Personalizado" é o default (última opção da lista real). Este dropdown é
+// só um RÓTULO textual (type VARIANT, não INSTANCE_SWAP) — não há vínculo de
+// componente real por trás de cada opção.
+const A11Y_MOBILE_LINK_COMPONENT_OPTIONS = [
+  'Accordion', 'Account Select', 'Alert Dialog', 'Avatar', 'Avatar Hero',
+  'Badge', 'Badge Notification', 'Badge Text', 'Button', 'Card',
+  'Card Account', 'Card Alert', 'Card Carousel Horizontal', 'Card Carousel Vertical',
+  'Card Notification', 'Card Product Offer', 'Card Wallet', 'Card Widget',
+  'Checkbox', 'Chips', 'Comparison Table', 'Credit Card Button', 'Date Picker',
+  'Icon Button', 'Icon Button Text', 'Image Media', 'Input/Text Field - Single',
+  'Input/Text Field - Form', 'Input Money', 'Input Pin', 'Input Stepper',
+  'List Accordion', 'List Heading', 'List Item', 'List Item Transaction',
+  'Loading Animation', 'Menu', 'Navigation Bar', 'Page Controller', 'Page Header',
+  'Popover', 'Progress', 'Radio', 'Search Bar', 'Selectable Media',
+  'Segmented Button', 'Separator/Divider', 'Sheet', 'Skeleton/Shimmer', 'Slider',
+  'Spinner', 'Swap Preview', 'Switch', 'Tabs', 'Tile Button', 'Text',
+  'Timeline', 'Toast/Snackbar', 'Toolbar', 'Tooltip', 'Top App Bar',
+  'Value Section', 'Wheel Picker', 'Personalizado',
+];
+const A11Y_MOBILE_LINK_URL_PLACEHOLDER = '[insira aqui o link do componente].';
+
+// ── Migração aditiva: specs "elemento" mobile pré-existentes ganham
+// a11ySubtype.variant ──────────────────────────────────────────────────────
+// Chamada uma única vez em messages.js (handler 'init-plugin'), logo após
+// a11ySpecs ser restaurado de hacData.a11ySpecs — silenciosa, sem toast, sem
+// subir _schemaVersion (aditiva por-spec, não estrutural). Idempotente: só
+// toca specs que ainda não têm a11ySubtype.variant, então rodar de novo em
+// specs já migradas (ou em specs desktop, que nunca ganham essa chave) é
+// no-op.
+//
+// Regra de inferência (decisão de produto, ver conversa que introduziu esta
+// migração — 2026-08-31):
+//   1. properties[key:'linkComponente'] preenchido → 'componente' (tinha o
+//      campo de link preenchido, é claramente um componente real).
+//   2. properties[key:'descricao'] preenchido E a11ySubtype.componente
+//      null/ausente E a11ySubtype.isOutro falso/ausente (só tinha descrição
+//      livre, sem componente do catálogo escolhido) → 'texto alternativo'.
+//   3. Fallback mais seguro: 'componente'. Quando cai neste fallback E não
+//      havia link preenchido, marca spec.needsReview = true (campo que já
+//      existe no schema, ver code.js create-unified-spec) pro designer
+//      completar o Link do Componente manualmente depois.
+function _migrateA11yElementoMobileVariants(specs) {
+  return (specs || []).map(spec => {
+    if (!spec || spec.a11yType !== 'elemento' || spec.a11yOrigin !== 'mobile') return spec;
+    if (spec.a11ySubtype && spec.a11ySubtype.variant) return spec; // já migrada — idempotente
+
+    const props = spec.properties || [];
+    const getProp = key => {
+      const p = props.find(x => x && x.key === key);
+      return p ? p.value : '';
+    };
+    const linkComponente = getProp('linkComponente');
+    const descricao = getProp('descricao');
+    const sub = spec.a11ySubtype || {};
+
+    let variant;
+    let needsReview = false;
+    if (linkComponente && String(linkComponente).trim()) {
+      variant = A11Y_ELEMENTO_MOBILE_VARIANTS.componente;
+    } else if (descricao && String(descricao).trim() && !sub.componente && !sub.isOutro) {
+      variant = A11Y_ELEMENTO_MOBILE_VARIANTS.textoAlternativo;
+    } else {
+      variant = A11Y_ELEMENTO_MOBILE_VARIANTS.componente;
+      needsReview = true; // sem link preenchido — designer precisa completar depois
+    }
+
+    return {
+      ...spec,
+      a11ySubtype: { ...sub, variant },
+      needsReview: needsReview ? true : !!spec.needsReview,
+    };
+  });
+}
+window._migrateA11yElementoMobileVariants = _migrateA11yElementoMobileVariants;
 
 // Properties VARIANT que já são controladas pelo próprio <select> de
 // "Componente" (nível 1, wrapper "componentes/icones/imagens") — nunca viram
@@ -425,6 +527,13 @@ function openA11yModal(category, options) {
       const validPreset = presetComponente && A11Y_CONTENT.elemento.componentes[presetComponente];
       select.value = validPreset ? presetComponente : Object.keys(A11Y_CONTENT.elemento.componentes)[0];
     }
+    // Reset do seletor de sub-variante mobile pro default real da property
+    // ("componente") — editA11ySpec restaura o valor salvo depois, via
+    // _prefillA11ySpecForEdit/_restoreA11yElementoMobileVariant.
+    const mobileVariantDefault = document.querySelector('input[name="a11y-el-mobile-variant"][value="componente"]');
+    if (mobileVariantDefault) mobileVariantDefault.checked = true;
+    const mobileList = document.getElementById('a11y-el-mobile-toggles-list');
+    if (mobileList) { delete mobileList.dataset.renderedVariant; mobileList.innerHTML = ''; }
     updateA11yElementoFields();
   } else if (category === 'estrutura') {
     const subtipoSelect = document.getElementById('a11y-estrutura-subtipo-select');
@@ -439,7 +548,7 @@ function openA11yModal(category, options) {
     updateA11yEstruturaFields();
   } else if (category === 'titulo') {
     const nivelSelect = document.getElementById('a11y-titulo-nivel-select');
-    if (nivelSelect) nivelSelect.value = presetTituloNivel || 'h1';
+    if (nivelSelect) nivelSelect.value = presetTituloNivel || _defaultTituloNivelForOrigin(a11yOrigin);
     updateA11yTituloFields();
   } else if (category === 'decorativo') {
     const subtipoSelect = document.getElementById('a11y-decorativo-subtipo-select');
@@ -673,43 +782,162 @@ function _restoreA11yElementoToggles(props) {
   });
 }
 
-// Campos exclusivos de "Elementos e Imagens" mobile (Dica para Leitor de
-// Tela / Link do Componente) — mesmo padrão visual de
-// _renderA11yElementoToggles, mas fora do catálogo A11Y_COMPONENT_PROPERTIES
-// (esse é 100% desktop). Visibilidade decidida por modal.dataset.a11yOrigin
-// ('mobile'), setado por openA11yModal — nunca aparecem em specs web, porque
-// o wrapper real desktop ("[a11y] Box specs LT") não tem esses 2 campos.
+// Lê o seletor de sub-variante mobile (radio a11y-el-mobile-variant) — só
+// existe/é relevante quando modal.dataset.a11yOrigin === 'mobile'. Default
+// 'componente' (mesmo default da property VARIANT real "Variante" no
+// component set base, ver A11Y_ELEMENTO_MOBILE_VARIANTS).
+function _getA11yElementoMobileVariant() {
+  const checked = document.querySelector('input[name="a11y-el-mobile-variant"]:checked');
+  return checked ? checked.value : A11Y_ELEMENTO_MOBILE_VARIANTS.componente;
+}
+
+// onchange do radio de sub-variante mobile — força o rerender do bloco
+// condicional (limpa o guard de dataset.renderedVariant pra
+// _renderA11yElementoMobileFields não pular a reconstrução).
+function updateA11yElementoMobileVariant() {
+  const list = document.getElementById('a11y-el-mobile-toggles-list');
+  if (list) delete list.dataset.renderedVariant;
+  _renderA11yElementoMobileFields();
+}
+window.updateA11yElementoMobileVariant = updateA11yElementoMobileVariant;
+
+// Campos exclusivos de "Elementos e Imagens" mobile — bloco inteiro
+// reconstruído a cada troca de sub-variante (componente / link / texto
+// alternativo), refletindo a árvore real do component set mobile (ver
+// refs/design-acessivel-mobile-link-property.json):
+//   - "componente": Descrição/Nome Acessível/Dica Leitor de Tela/Observação
+//     (toggles opcionais, cada um com textarea) + Link do Componente
+//     (SEMPRE visível, sem toggle — dropdown de 64 nomes + URL obrigatória).
+//   - "link": Descrição fixa e travada (A11Y_CONTENT.elemento.mobileLink) +
+//     Nome Acessível/Observação opcionais. Sem Dica Leitor de Tela, sem Link
+//     do Componente (não existem nessa variante na lib real).
+//   - "texto alternativo": Descrição é textarea LIVRE OBRIGATÓRIA (o alt-text
+//     real da mídia) + Observação opcional. Sem Nome Acessível, sem Dica,
+//     sem Link do Componente.
+// Visibilidade do bloco inteiro decidida por modal.dataset.a11yOrigin
+// ('mobile'), setado por openA11yModal — nunca aparece em specs web, porque
+// o wrapper real desktop ("[a11y] Box specs LT") não tem essa sub-variação.
 function _renderA11yElementoMobileFields() {
   const modal = document.getElementById('a11y-spec-modal');
   const wrap = document.getElementById('a11y-el-mobile-toggles-wrap');
   const list = document.getElementById('a11y-el-mobile-toggles-list');
+  const variantWrap = document.getElementById('a11y-el-mobile-variant-wrap');
   if (!wrap || !list) return;
   const isMobile = modal && modal.dataset.a11yOrigin === 'mobile';
   wrap.classList.toggle('hidden', !isMobile);
+  if (variantWrap) variantWrap.classList.toggle('hidden', !isMobile);
   if (!isMobile) { list.innerHTML = ''; return; }
-  if (list.childElementCount > 0) return; // já renderizado — não perde o texto digitado
 
-  A11Y_MOBILE_ONLY_TOGGLES.forEach(t => {
-    const row = document.createElement('div');
-    row.className = 'bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl overflow-hidden';
-    row.innerHTML = `
+  const variant = _getA11yElementoMobileVariant();
+  // Componente do catálogo desktop atualmente escolhido no <select> de
+  // nível 1 — usado só na sub-variante "componente" pra não duplicar
+  // Nome Acessível/Observações quando o próprio catálogo já oferece esses
+  // toggles pra aquele componente específico (ex: Button tem "nome
+  // acessivel" catalogado — mostrar os dois deixaria 2 entradas com a
+  // mesma key 'nomeAcessivel' em properties[], e o backend faria
+  // setProperties 2x no mesmo campo).
+  const catalogSelect = document.getElementById('a11y-el-componente-select');
+  const catalogInfo = (catalogSelect && catalogSelect.value !== 'outro')
+    ? _getA11yComponentToggles(catalogSelect.value) : null;
+  const catalogToggleKeys = new Set((catalogInfo && catalogInfo.toggles || []).map(t => t.key));
+  // Reconstrói sempre que a variante (ou o componente do catálogo, que muda
+  // quais toggles ficariam duplicados) mudar de fato — guarda no dataset da
+  // própria lista pra não perder o texto digitado em rerenders triviais.
+  const renderKey = variant + '::' + (catalogSelect ? catalogSelect.value : '');
+  if (list.dataset.renderedVariant === renderKey && list.childElementCount > 0) return;
+  list.dataset.renderedVariant = renderKey;
+  list.innerHTML = '';
+
+  const toggleRowHtml = (key, label, placeholder) => `
+    <div class="bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl overflow-hidden">
       <label class="flex items-center gap-2 px-3 py-2.5 cursor-pointer select-none">
-        <input type="checkbox" data-a11y-toggle-key="${t.key}"
+        <input type="checkbox" data-a11y-toggle-key="${key}"
           onchange="_onA11yElementoToggleChange(this)"
           class="w-4 h-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500 cursor-pointer shrink-0" />
-        <span class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(t.label)}</span>
+        <span class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(label)}</span>
       </label>
       <div class="hidden px-3 pb-3" data-a11y-toggle-textarea-wrap>
-        <textarea data-a11y-toggle-value rows="2" placeholder="${escapeHtml(t.placeholder)}"
+        <textarea data-a11y-toggle-value rows="2" placeholder="${escapeHtml(placeholder)}"
           class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg px-2.5 py-2 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
       </div>
+    </div>`;
+
+  if (variant === A11Y_ELEMENTO_MOBILE_VARIANTS.link) {
+    const wrapDiv = document.createElement('div');
+    wrapDiv.className = 'space-y-2.5';
+    wrapDiv.innerHTML = `
+      <div class="p-3 bg-gray-50 dark:bg-dark-bg rounded-xl border border-gray-200 dark:border-dark-line">
+        <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição (fixa)</p>
+        <p class="text-[12px] text-slate-700 dark:text-white leading-snug">${escapeHtml(A11Y_CONTENT.elemento.mobileLink.descricao)}</p>
+      </div>
+      ${catalogToggleKeys.has('nomeAcessivel') ? '' : toggleRowHtml('nomeAcessivel', A11Y_TOGGLE_LABELS.nomeAcessivel, 'Insira seu texto de nome acessível.')}
+      ${catalogToggleKeys.has('observacoes') ? '' : toggleRowHtml('observacoes', A11Y_TOGGLE_LABELS.observacoes, 'Insira seu texto de observações.')}
     `;
-    list.appendChild(row);
-  });
+    list.appendChild(wrapDiv);
+  } else if (variant === A11Y_ELEMENTO_MOBILE_VARIANTS.textoAlternativo) {
+    const wrapDiv = document.createElement('div');
+    wrapDiv.className = 'space-y-2.5';
+    wrapDiv.innerHTML = `
+      <div>
+        <label for="a11y-el-mobile-alt-descricao" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Descrição (texto alternativo) *</label>
+        <textarea id="a11y-el-mobile-alt-descricao" rows="2" placeholder="Insira aqui o texto alternativo da imagem/mídia."
+          class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
+      </div>
+      ${catalogToggleKeys.has('observacoes') ? '' : toggleRowHtml('observacoes', A11Y_TOGGLE_LABELS.observacoes, 'Insira seu texto de observações.')}
+    `;
+    list.appendChild(wrapDiv);
+  } else {
+    // "componente" — toggles opcionais (Dica Leitor de Tela vem de
+    // A11Y_MOBILE_ONLY_TOGGLES; Nome Acessível/Observação reaproveitam os
+    // rótulos canônicos do catálogo desktop, MAS só entram aqui se o
+    // componente escolhido no catálogo NÃO já os tiver catalogados — ver
+    // catalogToggleKeys acima, evita duplicidade de key em properties[])
+    // + Link do Componente sempre visível.
+    const wrapDiv = document.createElement('div');
+    wrapDiv.className = 'space-y-2.5';
+    wrapDiv.innerHTML = [
+      catalogToggleKeys.has('nomeAcessivel') ? '' : toggleRowHtml('nomeAcessivel', A11Y_TOGGLE_LABELS.nomeAcessivel, 'Insira seu texto de nome acessível.'),
+      ...A11Y_MOBILE_ONLY_TOGGLES.map(t => toggleRowHtml(t.key, t.label, t.placeholder)),
+      catalogToggleKeys.has('observacoes') ? '' : toggleRowHtml('observacoes', A11Y_TOGGLE_LABELS.observacoes, 'Insira seu texto de observações.'),
+    ].join('');
+    list.appendChild(wrapDiv);
+
+    // Link do Componente — sempre visível, sem toggle (reflete a árvore real
+    // do Figma: a instância "Link do componente" não tem visible vinculado a
+    // nenhum BOOLEAN, ver estruturaCompletaVarianteElementosEImagens no JSON
+    // extraído). Dropdown de 64 nomes fixos (default "Personalizado") + URL
+    // obrigatória (o designer cola o link manualmente).
+    const linkOptionsHtml = A11Y_MOBILE_LINK_COMPONENT_OPTIONS
+      .map(name => `<option value="${escapeHtml(name)}"${name === 'Personalizado' ? ' selected' : ''}>${escapeHtml(name)}</option>`)
+      .join('');
+    const linkRow = document.createElement('div');
+    linkRow.className = 'bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl p-3 space-y-2';
+    linkRow.innerHTML = `
+      <p class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(A11Y_TOGGLE_LABELS.linkComponente)}</p>
+      <div>
+        <label for="a11y-el-mobile-link-select" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Componente do DSC</label>
+        <select id="a11y-el-mobile-link-select"
+          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg px-2.5 py-2 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
+          ${linkOptionsHtml}
+        </select>
+      </div>
+      <div>
+        <label for="a11y-el-mobile-link-url" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Link do componente *</label>
+        <input type="text" id="a11y-el-mobile-link-url" placeholder="${escapeHtml(A11Y_MOBILE_LINK_URL_PLACEHOLDER)}"
+          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg px-2.5 py-2 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+      </div>
+    `;
+    list.appendChild(linkRow);
+  }
 }
 
-// Lê os 2 toggles mobile ligados com texto preenchido de volta em
-// properties[] — mesma mecânica de _collectA11yElementoToggleProperties.
+// Lê os toggles mobile ligados com texto preenchido de volta em
+// properties[], mais o campo de Descrição livre (variante "texto
+// alternativo") e o Link do Componente (variante "componente", sempre
+// visível) — chamado por confirmA11ySpec. `linkComponente` só entra quando o
+// campo de URL está preenchido (obrigatório na variante "componente"); o
+// `select` de nome do componente vai junto como `linkComponenteNome`, mesmo
+// no default "Personalizado".
 function _collectA11yElementoMobileToggleProperties() {
   const list = document.getElementById('a11y-el-mobile-toggles-list');
   if (!list) return [];
@@ -724,28 +952,58 @@ function _collectA11yElementoMobileToggleProperties() {
     const key = checkbox.getAttribute('data-a11y-toggle-key');
     result.push({ key, label: A11Y_TOGGLE_LABELS[key] || key, value });
   });
+
+  const altDescricao = document.getElementById('a11y-el-mobile-alt-descricao');
+  if (altDescricao && altDescricao.value.trim()) {
+    result.push({ key: 'descricao', label: 'Descrição', value: altDescricao.value.trim() });
+  }
+
+  const linkSelect = document.getElementById('a11y-el-mobile-link-select');
+  const linkUrl = document.getElementById('a11y-el-mobile-link-url');
+  if (linkUrl && linkUrl.value.trim()) {
+    if (linkSelect) result.push({ key: 'linkComponenteNome', label: 'Componente do DSC (Link)', value: linkSelect.value });
+    result.push({ key: 'linkComponente', label: A11Y_TOGGLE_LABELS.linkComponente, value: linkUrl.value.trim() });
+  }
+
   return result;
 }
 
 // Inverso de _collectA11yElementoMobileToggleProperties — usado em
 // _prefillA11ySpecForEdit. Precisa que _renderA11yElementoMobileFields já
 // tenha rodado (o formulário de edição já é aberto com dataset.a11yOrigin
-// setado, ver editA11ySpec) pra achar os checkboxes na DOM.
+// setado, ver editA11ySpec) pra achar os campos na DOM.
 function _restoreA11yElementoMobileToggles(props) {
   const list = document.getElementById('a11y-el-mobile-toggles-list');
   if (!list) return;
-  const mobileKeys = new Set(A11Y_MOBILE_ONLY_TOGGLES.map(t => t.key));
+  const mobileToggleKeys = new Set(A11Y_MOBILE_ONLY_TOGGLES.map(t => t.key).concat(['nomeAcessivel', 'observacoes']));
   (props || []).forEach(p => {
-    if (!p || !mobileKeys.has(p.key)) return;
-    const checkbox = list.querySelector(`[data-a11y-toggle-key="${p.key}"]`);
-    if (!checkbox) return;
-    checkbox.checked = true;
-    const row = checkbox.closest('div');
-    const wrap = row ? row.querySelector('[data-a11y-toggle-textarea-wrap]') : null;
-    if (wrap) {
-      wrap.classList.remove('hidden');
-      const ta = wrap.querySelector('[data-a11y-toggle-value]');
-      if (ta) ta.value = p.value || '';
+    if (!p) return;
+    if (mobileToggleKeys.has(p.key)) {
+      const checkbox = list.querySelector(`[data-a11y-toggle-key="${p.key}"]`);
+      if (!checkbox) return;
+      checkbox.checked = true;
+      const row = checkbox.closest('div');
+      const wrap = row ? row.querySelector('[data-a11y-toggle-textarea-wrap]') : null;
+      if (wrap) {
+        wrap.classList.remove('hidden');
+        const ta = wrap.querySelector('[data-a11y-toggle-value]');
+        if (ta) ta.value = p.value || '';
+      }
+      return;
+    }
+    if (p.key === 'descricao') {
+      const altDescricao = document.getElementById('a11y-el-mobile-alt-descricao');
+      if (altDescricao) altDescricao.value = p.value || '';
+      return;
+    }
+    if (p.key === 'linkComponente') {
+      const linkUrl = document.getElementById('a11y-el-mobile-link-url');
+      if (linkUrl) linkUrl.value = p.value || '';
+      return;
+    }
+    if (p.key === 'linkComponenteNome') {
+      const linkSelect = document.getElementById('a11y-el-mobile-link-select');
+      if (linkSelect) linkSelect.value = p.value || 'Personalizado';
     }
   });
 }
@@ -1115,6 +1373,15 @@ window._getA11ySelectionInfo = _getA11ySelectionInfo;
 //                  DSC conhecida, senão null.
 //   toggleProperties  array já no formato properties[] ({key,label,value})
 //                  dos toggles dinâmicos ligados — no lote sempre [].
+//   overrideDescricao  string opcional que substitui a Descrição do catálogo
+//                  desktop (usado pela sub-variante mobile "link", que tem
+//                  Descrição fixa e travada própria — ver
+//                  A11Y_CONTENT.elemento.mobileLink). null/undefined mantém o
+//                  comportamento padrão (Descrição do catálogo).
+//   suppressCatalogDescricao  quando true, não inclui a Descrição do
+//                  catálogo nem overrideDescricao — usado pela sub-variante
+//                  mobile "texto alternativo", cuja Descrição livre já entra
+//                  via toggleProperties (key 'descricao', vindo do textarea).
 function _buildA11yElementoPayload(letter, componenteKey, label, options) {
   const opts = options || {};
   const tipo = opts.tipo != null ? opts.tipo : null;
@@ -1126,7 +1393,9 @@ function _buildA11yElementoPayload(letter, componenteKey, label, options) {
     { key: 'label', label: 'Label', value: label },
   ];
   const entry = A11Y_CONTENT.elemento.componentes[componenteKey];
-  if (entry && entry.descricao) properties.push({ key: 'descricao', label: 'Descrição', value: entry.descricao });
+  const suppressCatalogDescricao = !!opts.suppressCatalogDescricao;
+  const descricaoValue = opts.overrideDescricao != null ? opts.overrideDescricao : (entry && entry.descricao);
+  if (!suppressCatalogDescricao && descricaoValue) properties.push({ key: 'descricao', label: 'Descrição', value: descricaoValue });
   if (entry && entry.notasCodigo) properties.push({ key: 'notaCodigo', label: 'Nota de Código', value: entry.notasCodigo });
   properties.push(...toggleProperties);
   properties = properties.filter(p => p.value);
@@ -1162,19 +1431,30 @@ function _buildA11yElementoOutroPayload(letter, containingFrame, label) {
   };
 }
 
+// Default de nível de título quando não há sugestão prévia. O WAI recomenda
+// nunca inferir nível pelo tamanho visual da fonte — por isso não existe
+// heurística real aqui, só um fallback fixo. A única variação é por origem:
+// mobile (React Native) não tem escala H1..H6, só um identificador único de
+// título ('mobile', ver A11Y_CONTENT.titulo.mobile) — então o default pra
+// specs mobile é essa opção, não 'h1'.
+function _defaultTituloNivelForOrigin(origin) {
+  return origin === 'mobile' ? 'mobile' : 'h1';
+}
+
 // Payload puro pra categoria "titulo" no lote automatizado — mesmo espírito
 // de _buildA11yElementoPayload. Nível inferido a partir do token de
 // tipografia real (dscComponentMatch.suggestedLevel, calculado em
 // _resolveTypographyA11yMatch/_inferHeadingLevelFromTypography, code.js), com
-// fallback pro default fixo 'h1' quando não há styleKey aplicado (texto
-// "solto") ou o token não pertence à escala de heading/display. O designer
-// ainda revisa/corrige o nível manualmente depois quando necessário.
+// fallback pro default (ver _defaultTituloNivelForOrigin) quando não há
+// styleKey aplicado (texto "solto") ou o token não pertence à escala de
+// heading/display. O designer ainda revisa/corrige o nível manualmente
+// depois quando necessário.
 // A tag de uma spec de "Nível de Título" precisa SEMPRE refletir o próprio
 // nível (H1..H6), nunca a letra sequencial usada pelas outras 4 categorias
 // — mesma regra do fluxo MANUAL. `letter` é sempre DERIVADO do nível aqui
 // dentro, pra não haver dois lugares divergentes calculando a mesma coisa.
-function _buildA11yTituloPayload(label, suggestedLevel) {
-  const nivel = suggestedLevel || 'h1';
+function _buildA11yTituloPayload(label, suggestedLevel, origin) {
+  const nivel = suggestedLevel || _defaultTituloNivelForOrigin(origin);
   const entry = A11Y_CONTENT.titulo.niveis[nivel];
   const letter = nivel === 'mobile' ? 'H' : nivel.toUpperCase();
   const properties = [
@@ -1262,6 +1542,29 @@ function confirmA11ySpec() {
     const select = document.getElementById('a11y-el-componente-select');
     const isOutro = select && select.value === 'outro';
     const label = g('a11y-el-label');
+    const isMobile = (modal && modal.dataset.a11yOrigin) === 'mobile';
+    // Sub-variante mobile ('componente' | 'link' | 'texto alternativo') — só
+    // relevante/lida quando a origem é mobile; ausente em specs web (ver
+    // A11Y_ELEMENTO_MOBILE_VARIANTS).
+    const mobileVariant = isMobile ? _getA11yElementoMobileVariant() : null;
+
+    // Validações obrigatórias exclusivas de cada sub-variante mobile — a doc
+    // da vertical exige esses campos antes de confirmar a spec.
+    if (isMobile && mobileVariant === A11Y_ELEMENTO_MOBILE_VARIANTS.componente) {
+      const linkUrl = document.getElementById('a11y-el-mobile-link-url');
+      if (!linkUrl || !linkUrl.value.trim()) {
+        showToast('Informe o Link do Componente.');
+        return;
+      }
+    }
+    if (isMobile && mobileVariant === A11Y_ELEMENTO_MOBILE_VARIANTS.textoAlternativo) {
+      const altDescricao = document.getElementById('a11y-el-mobile-alt-descricao');
+      if (!altDescricao || !altDescricao.value.trim()) {
+        showToast('Informe a Descrição (texto alternativo).');
+        return;
+      }
+    }
+
     if (isOutro) {
       const componenteOutro = g('a11y-el-componente-outro');
       if (!componenteOutro) {
@@ -1273,14 +1576,20 @@ function confirmA11ySpec() {
         return;
       }
       letter = tag;
-      a11ySubtype = { componente: null, isOutro: true, tipo: null };
+      a11ySubtype = { componente: null, isOutro: true, tipo: null, variant: mobileVariant };
       properties = [
         { key: 'componente', label: 'Componente', value: componenteOutro },
         { key: 'label', label: 'Label', value: label },
-        // Dica para Leitor de Tela/Link do Componente — só existem no
-        // wrapper mobile, mas "Outro" (componente fora do catálogo) também
-        // pode ser mobile (ex: componente novo do DSC | Super App ainda sem
-        // mapeamento de a11y curado).
+        // Descrição fixa da variante "link" — "Outro" (componente fora do
+        // catálogo) também pode ser mobile (ex: componente novo do DSC |
+        // Super App ainda sem mapeamento de a11y curado).
+        ...(isMobile && mobileVariant === A11Y_ELEMENTO_MOBILE_VARIANTS.link
+          ? [{ key: 'descricao', label: 'Descrição', value: A11Y_CONTENT.elemento.mobileLink.descricao }]
+          : []),
+        // Dica para Leitor de Tela/Nome Acessível/Observações/Link do
+        // Componente/Descrição (texto alternativo) — coletados conforme a
+        // sub-variante mobile ativa (_renderA11yElementoMobileFields já
+        // renderizou só os campos pertinentes).
         ..._collectA11yElementoMobileToggleProperties(),
       ].filter(p => p.value);
     } else {
@@ -1292,6 +1601,20 @@ function confirmA11ySpec() {
       // "de icone") — null quando o componente não tem nenhuma variante
       // catalogada além de "componente".
       const tipo = _collectA11yElementoVariantValue();
+      // Descrição fixa da variante mobile "link" — sobrescreve a Descrição
+      // do catálogo desktop quando a spec é mobile e a variante é "link"
+      // (ver A11Y_CONTENT.elemento.mobileLink). Nas demais variantes mobile
+      // ou em specs web, _buildA11yElementoPayload usa a descrição normal do
+      // catálogo (variante "componente") ou nenhuma (variante "texto
+      // alternativo", que usa a descrição livre coletada abaixo).
+      const overrideDescricao = isMobile && mobileVariant === A11Y_ELEMENTO_MOBILE_VARIANTS.link
+        ? A11Y_CONTENT.elemento.mobileLink.descricao
+        : null;
+      // "texto alternativo" tem Descrição LIVRE (textarea), coletada abaixo
+      // via _collectA11yElementoMobileToggleProperties (key 'descricao') —
+      // suprime a Descrição fixa do catálogo desktop pra não duplicar/
+      // conflitar.
+      const suppressCatalogDescricao = isMobile && mobileVariant === A11Y_ELEMENTO_MOBILE_VARIANTS.textoAlternativo;
       // Toggles dinâmicos do componente real (Nome Acessível/Observações/
       // Notas de Código, conforme disponíveis naquele componente específico).
       // Só entram os que o designer ligou E preencheu; o backend usa
@@ -1299,10 +1622,13 @@ function confirmA11ySpec() {
       // instância aninhada certa.
       const built = _buildA11yElementoPayload(tag, select.value, label, {
         tipo,
+        overrideDescricao,
+        suppressCatalogDescricao,
         // Toggles do catálogo desktop (Nome Acessível/Observações/Notas)
-        // concatenados com os 2 exclusivos mobile (Dica para Leitor de
-        // Tela/Link do Componente) — _buildA11yElementoPayload não distingue
-        // origem, só empilha o que vier em toggleProperties.
+        // concatenados com os campos mobile (Dica para Leitor de Tela/Nome
+        // Acessível/Observações/Link do Componente/Descrição livre) — a
+        // sub-variante mobile ativa já filtrou o que foi renderizado, então
+        // não há duplicidade real entre as duas fontes.
         toggleProperties: [
           ..._collectA11yElementoToggleProperties(),
           ..._collectA11yElementoMobileToggleProperties(),
@@ -1311,6 +1637,7 @@ function confirmA11ySpec() {
       letter = built.letter;
       properties = built.properties;
       a11ySubtype = built.a11ySubtype;
+      if (isMobile) a11ySubtype.variant = mobileVariant;
     }
   } else if (category === 'estrutura') {
     const tag = g('a11y-estrutura-tag-input').toUpperCase();
@@ -1542,7 +1869,7 @@ function _a11ySpecItemHtml(spec) {
               <i data-lucide="component" class="w-2.5 h-2.5"></i> ${escapeHtml(dscComponentLabel)}
             </span>` : ''}
             ${spec.needsReview ? `
-            <button type="button" title="Criado em lote com baixa confiança — clique para revisar" aria-label="Verificar especificação — criada em lote com baixa confiança"
+            <button type="button" title="Especificação precisa de revisão — clique para verificar" aria-label="Verificar especificação — precisa de revisão"
               onclick="editA11ySpec(${spec.originalIndex})"
               class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[9px] font-bold bg-amber-50/60 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/20 transition-colors">
               <i data-lucide="alert-triangle" class="w-2.5 h-2.5"></i> Verificar
@@ -2913,7 +3240,7 @@ async function confirmA11yBatchGenerate() {
     // conhecida. isUnmapped monta o payload "Outro", com o nome do
     // component set DSC real (containingFrame) como valor de "Componente".
     const built = isUnmapped ? _buildA11yElementoOutroPayload(letter, item.dscComponentMatch.containingFrame, item.name || 'Elemento')
-      : a11yType === 'titulo' ? _buildA11yTituloPayload(item.name || 'Elemento', item.dscComponentMatch.suggestedLevel)
+      : a11yType === 'titulo' ? _buildA11yTituloPayload(item.name || 'Elemento', item.dscComponentMatch.suggestedLevel, item.dscComponentMatch.origin)
       : a11yType === 'decorativo' ? _buildA11yDecorativoPayload(item.name || 'Elemento')
       : a11yType === 'estrutura' ? _buildA11yEstruturaPayload(letter, item.name || 'Elemento', item.dscComponentMatch.containingFrame)
       : _buildA11yElementoPayload(letter, shortName, item.name || 'Elemento', {
@@ -3135,6 +3462,17 @@ function _prefillA11ySpecForEdit(spec) {
     } else if (sub.componente && select) {
       select.value = sub.componente;
     }
+    // Restaura a sub-variante mobile salva (componente/link/texto
+    // alternativo) ANTES de updateA11yElementoFields — _renderA11yElemento
+    // MobileFields (chamada de dentro dela) lê o radio marcado pra decidir
+    // qual bloco condicional montar. Specs desktop (sub.variant ausente)
+    // não têm esse radio no DOM relevante (bloco fica escondido por origem).
+    if (sub.variant) {
+      const mobileVariantRadio = document.querySelector(`input[name="a11y-el-mobile-variant"][value="${sub.variant}"]`);
+      if (mobileVariantRadio) mobileVariantRadio.checked = true;
+    }
+    const mobileList = document.getElementById('a11y-el-mobile-toggles-list');
+    if (mobileList) delete mobileList.dataset.renderedVariant; // força reconstrução do bloco certo
     updateA11yElementoFields();
     setVal('a11y-el-label', getProp('label'));
     // Restaura a variante secundária salva (ex: Button → "de icone") —
@@ -3144,10 +3482,11 @@ function _prefillA11ySpecForEdit(spec) {
     // Restaura os toggles dinâmicos salvos (Nome Acessível/Observações/Notas
     // de Código).
     _restoreA11yElementoToggles(props);
-    // Restaura Dica para Leitor de Tela/Link do Componente (só existem em
-    // specs mobile — updateA11yElementoFields acima já rendereu o bloco
-    // condicional a partir de modal.dataset.a11yOrigin, setado por
-    // editA11ySpec antes desta chamada).
+    // Restaura os campos exclusivos mobile (Dica para Leitor de Tela/Nome
+    // Acessível/Observações/Link do Componente/Descrição livre — conforme a
+    // sub-variante) — só existem em specs mobile; updateA11yElementoFields
+    // acima já rendereu o bloco certo a partir do radio de variante e de
+    // modal.dataset.a11yOrigin, setados antes desta chamada.
     _restoreA11yElementoMobileToggles(props);
   } else if (category === 'estrutura') {
     const subtipoSelect = document.getElementById('a11y-estrutura-subtipo-select');
