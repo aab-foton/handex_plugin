@@ -114,8 +114,13 @@ for (const libMeta of manifest.libraries) {
   // (componentsDetailed) está disponível em runtime para quando a curadoria
   // existir. Até lá, componentes desta lib resolvem via
   // _resolveDscComponentA11yMatch como "componente DSC real, sem categoria
-  // catalogada" (isUnmapped: true) — comportamento esperado.
-  if ((libMeta.slug === 'web-angular-react' || libMeta.slug === 'super-app' || libMeta.slug === 'super-dsc-web') && Array.isArray(lib.components)) {
+  // catalogada" (isUnmapped: true) — comportamento esperado. Estendido em
+  // 2026-09-02 para também cobrir "dsc-android" (lib mobile/Material
+  // Design nativo, recadastrada a pedido do usuário após bug real
+  // confirmado: "[dsc] Icon Button" desta lib era classificado como
+  // "Elemento Decorativo" pela Detecção Automática por a lib não ser
+  // reconhecida — ver _manifest.json e dsc-component-a11y-mapping-android.json).
+  if ((libMeta.slug === 'web-angular-react' || libMeta.slug === 'super-app' || libMeta.slug === 'super-dsc-web' || libMeta.slug === 'dsc-android') && Array.isArray(lib.components)) {
     entry.componentsDetailed = lib.components
       .filter(c => c && c.key)
       .map(c => ({ key: c.key, name: clean(c.name || ''), containingFrame: clean(c.containingFrame || '') }));

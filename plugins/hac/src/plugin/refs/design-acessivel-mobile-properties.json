@@ -1,0 +1,519 @@
+{
+  "_meta": {
+    "description": "Component property definitions (VARIANT/BOOLEAN/TEXT/INSTANCE_SWAP, com opções e defaults) de cada component set \"^\\.?\\[a11y mob(?:ile)?(?: base)?\\]\\s*\" da lib \"Design Acessível (mobile)\". Gerado por fetch-component-properties.cjs (generalização de fetch-a11y-component-properties.cjs para as 5 libs DSC do hac). Unidade de extração é o COMPONENT SET (família), não a variante individual — ver cabeçalho do script para justificativa.",
+    "slug": "design-acessivel-mobile",
+    "libraryName": "Design Acessível (mobile)",
+    "fileKey": "3zdtN13YvPlCGPdXeL0Y2i",
+    "generatedAt": "2026-09-01T18:12:50.373Z",
+    "generator": "fetch-component-properties.cjs",
+    "deepScan": true,
+    "discoverySignature": "82569e4fe5663c5ac06c050863cd9b5c32c54f5db5e14d6fdb4772f203a9ff09",
+    "counts": {
+      "totalComponentSets": 9,
+      "resolved": 9,
+      "failed": 0
+    },
+    "schema": {
+      "components": "array — um item por component set real da lib",
+      "components[].nodeId": "node_id do component set no arquivo Figma (usado em GET /v1/files/:key/nodes)",
+      "components[].key": "component key publicada (null se o set não tiver key — ex: sets ocultos \".\" encontrados via --deep-scan)",
+      "components[].fullName": "nome completo do node no Figma, incluindo prefixo (se prefixRe aplicável)",
+      "components[].shortName": "nome sem o prefixo (se prefixRe aplicável) — chave amigável para UI",
+      "components[].source": "\"component_sets\" (via GET /component_sets) ou \"tree-walk\" (via --deep-scan, set oculto)",
+      "components[].properties": "array flat de todas as component property definitions do set",
+      "components[].properties[].rawKey": "chave exata como retornada pela API, ex: \"observacoes#7489:0\"",
+      "components[].properties[].name": "nome legível sem o sufixo #id — usar para casar com componentProperties em runtime",
+      "components[].properties[].syncId": "sufixo #id (sync key), null se a property não tiver um",
+      "components[].properties[].type": "\"VARIANT\" | \"BOOLEAN\" | \"TEXT\" | \"INSTANCE_SWAP\"",
+      "components[].properties[].defaultValue": "valor padrão retornado pela API",
+      "components[].properties[].variantOptions": "presente só quando type === \"VARIANT\" — lista de valores aceitos",
+      "components[].properties[].preferredValues": "presente só quando type === \"INSTANCE_SWAP\" — lista de {type, key} de componentes preferidos",
+      "components[].propertiesByType": "mesmos dados de properties, separados por type e reduzidos a nomes",
+      "warnings": "lista de avisos não fatais — JSON pode estar parcial se não vazio (ver counts.failed)"
+    },
+    "warnings": []
+  },
+  "components": [
+    {
+      "nodeId": "1:50",
+      "key": "907037f5556473e34b93ca073606b2f9420481b8",
+      "fullName": "[a11y mob] Conectores",
+      "shortName": "Conectores",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "letra / número#7187:0",
+          "name": "letra / número",
+          "syncId": "7187:0",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "elementos e imagens",
+          "variantOptions": [
+            "decorativo",
+            "elementos e imagens",
+            "títulos"
+          ]
+        },
+        {
+          "rawKey": "conector",
+          "name": "conector",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "desativado",
+          "variantOptions": [
+            "desativado",
+            "inferior",
+            "superior",
+            "esquerda",
+            "direita"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "letra / número"
+        ],
+        "variants": [
+          "tipo",
+          "conector"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "13:479",
+      "key": "dda5b5b1aa3fb88f5e8675569c9d46c981f74459",
+      "fullName": "[a11y mob] Número da tela",
+      "shortName": "Número da tela",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "mostrar label#733:0",
+          "name": "mostrar label",
+          "syncId": "733:0",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "label#733:6",
+          "name": "label",
+          "syncId": "733:6",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "número#1478:0",
+          "name": "número",
+          "syncId": "1478:0",
+          "type": "TEXT",
+          "defaultValue": "1"
+        },
+        {
+          "rawKey": "conector",
+          "name": "conector",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "desativado",
+          "variantOptions": [
+            "desativado",
+            "inferior",
+            "superior",
+            "esquerda",
+            "direita"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "mostrar label"
+        ],
+        "texts": [
+          "label",
+          "número"
+        ],
+        "variants": [
+          "conector"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "1:169",
+      "key": "17407c22fadeb0c9234e73a70f3c3e1b8e02c9a6",
+      "fullName": "[a11y mob] Agrupamento",
+      "shortName": "Agrupamento",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "letra / número#7165:65",
+          "name": "letra / número",
+          "syncId": "7165:65",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "elementos interativos e imagens",
+          "variantOptions": [
+            "elementos interativos e imagens",
+            "decorativo",
+            "estrutura da página"
+          ]
+        },
+        {
+          "rawKey": "orientação",
+          "name": "orientação",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "esquerda",
+          "variantOptions": [
+            "esquerda",
+            "direita",
+            "inferior",
+            "superior"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "letra / número"
+        ],
+        "variants": [
+          "tipo",
+          "orientação"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "5222:4270",
+      "key": "32b11696d518425df4fe6a0335af325e1c9dd596",
+      "fullName": "[a11y mob] Ordenação",
+      "shortName": "Ordenação",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "número#5265:3",
+          "name": "número",
+          "syncId": "5265:3",
+          "type": "TEXT",
+          "defaultValue": "1"
+        },
+        {
+          "rawKey": "tamanho",
+          "name": "tamanho",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "pequeno",
+          "variantOptions": [
+            "grande",
+            "pequeno"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "número"
+        ],
+        "variants": [
+          "tamanho"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "5413:1262",
+      "key": "e0951b67672ab4961c0efab838564797881f6cf7",
+      "fullName": "[a11y mob] Box specs leitor de tela",
+      "shortName": "Box specs leitor de tela",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "Conector",
+          "name": "Conector",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "Elementos e imagens",
+          "variantOptions": [
+            "Elementos e imagens",
+            "Títulos",
+            "Elementos decorativos"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "Conector"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "5362:961",
+      "key": null,
+      "fullName": ".[a11y mob base] Elementos e imagens",
+      "shortName": "Elementos e imagens",
+      "source": "tree-walk",
+      "properties": [
+        {
+          "rawKey": "Observação#5365:0",
+          "name": "Observação",
+          "syncId": "5365:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "Nome acessível#5366:0",
+          "name": "Nome acessível",
+          "syncId": "5366:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "Dica Leitor de Tela#5405:0",
+          "name": "Dica Leitor de Tela",
+          "syncId": "5405:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "Descrição#7111:0",
+          "name": "Descrição",
+          "syncId": "7111:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "Variante",
+          "name": "Variante",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "componente",
+          "variantOptions": [
+            "componente",
+            "link",
+            "texto alternativo"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "Observação",
+          "Nome acessível",
+          "Dica Leitor de Tela",
+          "Descrição"
+        ],
+        "texts": [],
+        "variants": [
+          "Variante"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "5536:8553",
+      "key": null,
+      "fullName": ".[a11y mob base] Link do Componente",
+      "shortName": "Link do Componente",
+      "source": "tree-walk",
+      "properties": [
+        {
+          "rawKey": "Texto#7157:0",
+          "name": "Texto",
+          "syncId": "7157:0",
+          "type": "TEXT",
+          "defaultValue": "[insira aqui o link do componente]."
+        },
+        {
+          "rawKey": "Link",
+          "name": "Link",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "Personalizado",
+          "variantOptions": [
+            "Accordion",
+            "Account Select",
+            "Alert Dialog",
+            "Avatar",
+            "Avatar Hero",
+            "Badge",
+            "Badge Notification",
+            "Badge Text",
+            "Button",
+            "Card",
+            "Card Account",
+            "Card Alert",
+            "Card Carousel Horizontal",
+            "Card Carousel Vertical",
+            "Card Notification",
+            "Card Product Offer",
+            "Card Wallet",
+            "Card Widget",
+            "Checkbox",
+            "Chips",
+            "Comparison Table",
+            "Credit Card Button",
+            "Date Picker",
+            "Icon Button",
+            "Icon Button Text",
+            "Image Media",
+            "Input/Text Field - Single",
+            "Input/Text Field - Form",
+            "Input Money",
+            "Input Pin",
+            "Input Stepper",
+            "List Accordion",
+            "List Heading",
+            "List Item",
+            "List Item Transaction",
+            "Loading Animation",
+            "Menu",
+            "Navigation Bar",
+            "Page Controller",
+            "Page Header",
+            "Popover",
+            "Progress",
+            "Radio",
+            "Search Bar",
+            "Selectable Media",
+            "Segmented Button",
+            "Separator/Divider",
+            "Sheet",
+            "Skeleton/Shimmer",
+            "Slider",
+            "Spinner",
+            "Swap Preview",
+            "Switch",
+            "Tabs",
+            "Tile Button",
+            "Text",
+            "Timeline",
+            "Toast/Snackbar",
+            "Toolbar",
+            "Tooltip",
+            "Top App Bar",
+            "Value Section",
+            "Wheel Picker",
+            "Personalizado"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "Texto"
+        ],
+        "variants": [
+          "Link"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "1:465",
+      "key": null,
+      "fullName": ".[a11y mob base] Legenda",
+      "shortName": "Legenda",
+      "source": "tree-walk",
+      "properties": [
+        {
+          "rawKey": "função e valor#6833:0",
+          "name": "função e valor",
+          "syncId": "6833:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "decorativo#6833:2",
+          "name": "decorativo",
+          "syncId": "6833:2",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "elementos estruturais#6833:4",
+          "name": "elementos estruturais",
+          "syncId": "6833:4",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "ordem de foco#6899:0",
+          "name": "ordem de foco",
+          "syncId": "6899:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "variação",
+          "name": "variação",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "ordem de tabulação e tabulação web",
+          "variantOptions": [
+            "web",
+            "ordem de tabulação e tabulação web",
+            "ordem de tabulação e tabulação DS"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "função e valor",
+          "decorativo",
+          "elementos estruturais",
+          "ordem de foco"
+        ],
+        "texts": [],
+        "variants": [
+          "variação"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "7100:1424",
+      "key": null,
+      "fullName": ".[a11y mob base] Cabeçalho Template",
+      "shortName": "Cabeçalho Template",
+      "source": "tree-walk",
+      "properties": [
+        {
+          "rawKey": "Status",
+          "name": "Status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "Finalizado",
+          "variantOptions": [
+            "Finalizado",
+            "Em construção",
+            "Pausado",
+            "Personalizado"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "Status"
+        ],
+        "instanceSwaps": []
+      }
+    }
+  ]
+}

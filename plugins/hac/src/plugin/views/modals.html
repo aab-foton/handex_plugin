@@ -49,33 +49,77 @@
 <div id="a11y-spec-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeA11yModal()" aria-hidden="true"></div>
   <div class="relative w-full max-w-sm max-h-[92vh] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-    <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
-      <div class="min-w-0">
-        <h3 id="a11y-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
-          <span id="a11y-modal-title-icon" class="shrink-0 flex"><i data-lucide="person-standing" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i></span>
-          <span id="a11y-modal-title-text">Especificação de Acessibilidade</span>
-        </h3>
-        <p id="a11y-modal-area-label" class="hidden text-[10px] font-bold text-cyan-600 dark:text-cyan-400 mt-0.5 ml-6 truncate"></p>
+    <div class="border-b border-gray-100 dark:border-dark-line shrink-0">
+      <div class="flex items-center justify-between p-4 pb-3">
+        <div class="min-w-0">
+          <h3 id="a11y-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
+            <span id="a11y-modal-title-icon" class="shrink-0 flex"><i data-lucide="person-standing" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i></span>
+            <span id="a11y-modal-title-text">Especificação de Acessibilidade</span>
+            <!-- Corrigir categoria sugerida (só durante o wizard de revisão da
+                 Detecção Automática, ver openA11yModal/toggleA11yWizardCategoryPicker
+                 em accessibility.js) -->
+            <button type="button" id="a11y-modal-category-edit-btn" onclick="toggleA11yWizardCategoryPicker()" title="Corrigir categoria" aria-label="Corrigir categoria" class="hidden shrink-0 text-slate-400 hover:text-[#0891B2] dark:hover:text-cyan-400">
+              <i data-lucide="pencil" class="w-3.5 h-3.5" aria-hidden="true"></i>
+            </button>
+            <select id="a11y-modal-category-picker" onchange="switchA11yWizardCategory(this.value)" aria-label="Corrigir categoria da especificação" class="hidden text-[13px] font-bold text-slate-800 dark:text-white bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-cyan-100">
+              <option value="elemento">Elementos e Imagens</option>
+              <option value="estrutura">Estrutura da Página</option>
+              <option value="titulo">Nível de Título</option>
+              <option value="decorativo">Elemento Decorativo</option>
+              <option value="informacoes">Informações Adicionais</option>
+            </select>
+          </h3>
+          <p id="a11y-modal-area-label" class="hidden text-[10px] font-bold text-cyan-600 dark:text-cyan-400 mt-0.5 ml-6 truncate"></p>
+          <!-- Só visível durante o wizard de revisão da Detecção Automática —
+               progresso "Item N de M" (ver _applyA11yWizardModalUi). -->
+          <p id="a11y-modal-wizard-progress" class="hidden text-[10px] font-bold text-slate-400 dark:text-dark-muted mt-0.5 ml-6 truncate"></p>
+        </div>
+        <div class="flex items-center gap-1 shrink-0">
+          <!-- Só visível durante o wizard — centraliza/dá zoom no elemento do
+               item atual no canvas (ver focusA11yWizardCurrentNode). Reaproveita
+               o nodeId já guardado em modal.dataset.pendingTargetNodeId. -->
+          <button id="btn-a11y-wizard-focus" onclick="focusA11yWizardCurrentNode()" title="Localizar no canvas" aria-label="Localizar no canvas" class="hidden inline-flex items-center gap-1.5 h-8 px-3 rounded-2xl bg-[#0891B2]/10 border border-[#0891B2]/30 text-[#0891B2] dark:bg-cyan-900/20 dark:border-cyan-700/40 dark:text-cyan-400 hover:bg-[#0891B2]/20 dark:hover:bg-cyan-900/30 transition-colors">
+            <i data-lucide="locate" class="w-4 h-4 shrink-0"></i>
+            <span class="text-[11px] font-bold whitespace-nowrap">Focar</span>
+          </button>
+          <button onclick="closeA11yModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300 shrink-0">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
       </div>
-      <button onclick="closeA11yModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300 shrink-0">
-        <i data-lucide="x" class="w-4 h-4"></i>
-      </button>
+      <!-- Paginador do wizard de revisão — só visível durante o wizard
+           (modal.dataset.wizardActive === '1'). Navegação livre: clicar em
+           qualquer posição pula direto pra aquele item (ver
+           jumpToA11yWizardItem/_renderA11yWizardPaginator em
+           accessibility.js). Cor por status: atual (cyan), documentado
+           (verde), descartado (cinza), pendente (neutro). -->
+      <div id="a11y-modal-wizard-paginator" class="hidden flex items-center gap-1 px-4 pb-3 overflow-x-auto"></div>
     </div>
-    <div class="p-5 overflow-y-auto flex-1 min-h-0" onscroll="handleScroll(this)">
-      <p class="text-[11px] text-slate-500 dark:text-dark-muted mb-4 leading-relaxed">
-        Selecione o elemento no canvas antes de aplicar — a especificação nasce travada, já posicionada ao lado dele e associada à área marcada. Use o cadeado na listagem se precisar destravar e ajustar depois.
-      </p>
-
+    <div class="p-5 overflow-y-auto min-h-0" onscroll="handleScroll(this)">
+      <!-- Dados já capturados pelo plugin sobre o nó selecionado no canvas —
+           read-only, comuns às 5 categorias (não fazem parte do payload da
+           spec, só contexto pro designer durante o preenchimento). Populados
+           em prefillA11yComponentName (modules/accessibility.js). -->
+      <div class="mb-4 space-y-1">
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted truncate">
+          <span class="font-bold text-slate-600 dark:text-white">Camada no canvas:</span>
+          <span id="a11y-modal-target-node-name">—</span>
+        </p>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted truncate">
+          <span class="font-bold text-slate-600 dark:text-white">Componente DSC:</span>
+          <span id="a11y-modal-dsc-component-name">—</span>
+        </p>
+      </div>
       <!-- Elementos e Imagens -->
       <div id="a11y-fields-elemento" class="hidden space-y-4">
         <div class="grid grid-cols-4 gap-3">
-          <div class="col-span-1">
-            <label for="a11y-el-tag-input" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Tag</label>
-            <input type="text" id="a11y-el-tag-input" maxlength="8" value="A" placeholder="A, A1..."
-              oninput="validateA11yTagInput()"
-              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-2 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-cyan-100 outline-none transition-all uppercase" />
-          </div>
-          <div class="col-span-3 relative">
+          <!-- Bloco desktop (16 categorias) — escondido por completo em specs
+               mobile (modal.dataset.a11yOrigin === 'mobile'), ver
+               updateA11yElementoFields/_toggleA11yElementoDesktopBlock em
+               accessibility.js. A origem filtra tudo: lib mobile nunca
+               compartilha tela com o catálogo desktop. Tag foi movida pra
+               ficar ao lado do Label (accessibilityLabel), mais abaixo. -->
+          <div id="a11y-el-desktop-componente-col" class="col-span-4 relative">
             <label for="a11y-el-componente-trigger" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Componente</label>
             <button type="button" id="a11y-el-componente-trigger" onclick="toggleA11yComponenteMenu(event)"
               aria-haspopup="listbox" aria-expanded="false"
@@ -124,37 +168,62 @@
             </div>
           </div>
         </div>
+        <!-- Bloco desktop (16 categorias): "Outro", preview de Descrição/Nota
+             de Código, variantes secundárias e toggles do catálogo — tudo
+             escondido junto quando a origem é mobile, ver
+             _toggleA11yElementoDesktopBlock em accessibility.js. -->
+        <div id="a11y-el-desktop-block" class="space-y-4">
+          <div id="a11y-el-componente-outro-wrap" class="hidden">
+            <div class="flex items-center justify-between mb-1.5 ml-1">
+              <label for="a11y-el-componente-outro" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Nome do componente</label>
+              <span id="a11y-el-componente-outro-counter" class="text-[9px] text-slate-400 dark:text-dark-muted shrink-0">0/80</span>
+            </div>
+            <input type="text" id="a11y-el-componente-outro" maxlength="80" placeholder="Ex: Botão primário"
+              oninput="updateA11yCharCounter(this)"
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+          </div>
+          <div id="a11y-el-preview" class="p-3 bg-gray-50 dark:bg-dark-bg rounded-xl border border-gray-200 dark:border-dark-line space-y-2.5">
+            <div>
+              <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição</p>
+              <p id="a11y-el-preview-descricao" class="text-[12px] text-slate-700 dark:text-white leading-snug"></p>
+            </div>
+            <div id="a11y-el-preview-nota-wrap">
+              <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
+              <p id="a11y-el-preview-nota" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <div class="w-12 shrink-0">
+            <label for="a11y-el-tag-input" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Tag</label>
+            <input type="text" id="a11y-el-tag-input" maxlength="8" value="A" placeholder="A, A1..."
+              oninput="validateA11yTagInput(); updateA11yCharCounter(this)"
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-1 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-cyan-100 outline-none transition-all uppercase" />
+            <span id="a11y-el-tag-input-counter" class="block text-center text-[9px] text-slate-400 dark:text-dark-muted mt-0.5">1/8</span>
+          </div>
+          <div class="flex-1 min-w-[10rem]">
+            <div class="flex items-center justify-between mb-1.5 ml-1">
+              <label for="a11y-el-label" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Label (accessibilityLabel)</label>
+              <span id="a11y-el-label-counter" class="text-[9px] text-slate-400 dark:text-dark-muted shrink-0">0/100</span>
+            </div>
+            <input type="text" id="a11y-el-label" maxlength="100" placeholder="Ex: Botão de enviar formulário"
+              oninput="updateA11yCharCounter(this)"
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+          </div>
+        </div>
         <p id="a11y-el-tag-error" class="hidden text-[10px] text-red-500 -mt-2.5 ml-1">Formato: A, B, A1, A2, A1.1, A1.2...</p>
-        <div id="a11y-el-componente-outro-wrap" class="hidden">
-          <label for="a11y-el-componente-outro" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Nome do componente</label>
-          <input type="text" id="a11y-el-componente-outro" placeholder="Ex: Botão primário"
-            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
-        </div>
-        <div id="a11y-el-preview" class="p-3 bg-gray-50 dark:bg-dark-bg rounded-xl border border-gray-200 dark:border-dark-line space-y-2.5">
-          <div>
-            <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição</p>
-            <p id="a11y-el-preview-descricao" class="text-[12px] text-slate-700 dark:text-white leading-snug"></p>
-          </div>
-          <div id="a11y-el-preview-nota-wrap">
-            <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
-            <p id="a11y-el-preview-nota" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
-          </div>
-        </div>
-        <div>
-          <label for="a11y-el-label" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Label (accessibilityLabel)</label>
-          <input type="text" id="a11y-el-label" placeholder="Ex: Botão de enviar formulário"
-            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
-        </div>
         <!-- Variante secundária real do componente (ex: Button → "tipo":
              default/desabilitado/de icone...) — não confundir com o
              <select> de "Componente" (nível 1, controla qual dos 16
              componentes é usado). Só aparece se o componente ESCOLHIDO
-             tiver essa property catalogada na lib. -->
+             tiver essa property catalogada na lib. Também faz parte do
+             bloco desktop — escondida junto em specs mobile. -->
         <div id="a11y-el-variants-wrap" class="hidden space-y-2.5">
           <div id="a11y-el-variants-list" class="space-y-3"></div>
         </div>
         <!-- Campos dinâmicos por componente — só aparecem os toggles que o
-             componente ESCOLHIDO realmente tem na lib. -->
+             componente ESCOLHIDO realmente tem na lib. Também faz parte do
+             bloco desktop — escondida junto em specs mobile. -->
         <div id="a11y-el-toggles-wrap" class="hidden space-y-2.5">
           <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
           <div id="a11y-el-toggles-list" class="space-y-2"></div>
@@ -199,8 +268,9 @@
           <div class="col-span-1">
             <label for="a11y-estrutura-tag-input" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Tag</label>
             <input type="text" id="a11y-estrutura-tag-input" maxlength="8" value="A" placeholder="A, A1..."
-              oninput="validateA11yTagInput()"
+              oninput="validateA11yTagInput(); updateA11yCharCounter(this)"
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-2 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-cyan-100 outline-none transition-all uppercase" />
+            <span id="a11y-estrutura-tag-input-counter" class="block text-center text-[9px] text-slate-400 dark:text-dark-muted mt-0.5">1/8</span>
           </div>
           <div class="col-span-3">
             <label for="a11y-estrutura-subtipo-select" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Subtipo</label>
@@ -238,8 +308,12 @@
         </div>
 
         <div>
-          <label for="a11y-estrutura-descricao" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Descrição</label>
-          <input type="text" id="a11y-estrutura-descricao" readonly
+          <div class="flex items-center justify-between mb-1.5 ml-1">
+            <label for="a11y-estrutura-descricao" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Descrição</label>
+            <span id="a11y-estrutura-descricao-counter" class="hidden text-[9px] text-slate-400 dark:text-dark-muted shrink-0">0/200</span>
+          </div>
+          <input type="text" id="a11y-estrutura-descricao" readonly maxlength="200"
+            oninput="updateA11yCharCounter(this)"
             class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
         </div>
         <div id="a11y-estrutura-nota-wrap" class="p-3 bg-gray-50 dark:bg-dark-bg rounded-xl border border-gray-200 dark:border-dark-line">
@@ -323,8 +397,9 @@
           <div class="col-span-1">
             <label for="a11y-informacoes-tag-input" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Tag</label>
             <input type="text" id="a11y-informacoes-tag-input" maxlength="8" value="A" placeholder="A, A1..."
-              oninput="validateA11yTagInput()"
+              oninput="validateA11yTagInput(); updateA11yCharCounter(this)"
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-2 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-cyan-100 outline-none transition-all uppercase" />
+            <span id="a11y-informacoes-tag-input-counter" class="block text-center text-[9px] text-slate-400 dark:text-dark-muted mt-0.5">1/8</span>
           </div>
           <div class="col-span-3">
             <label for="a11y-informacoes-subtipo-select" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Subtipo</label>
@@ -338,8 +413,12 @@
         </div>
         <p id="a11y-informacoes-tag-error" class="hidden text-[10px] text-red-500 -mt-2.5 ml-1">Formato: A, B, A1, A2, A1.1, A1.2...</p>
         <div>
-          <label for="a11y-informacoes-descricao" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Descrição</label>
-          <input type="text" id="a11y-informacoes-descricao" readonly
+          <div class="flex items-center justify-between mb-1.5 ml-1">
+            <label for="a11y-informacoes-descricao" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Descrição</label>
+            <span id="a11y-informacoes-descricao-counter" class="hidden text-[9px] text-slate-400 dark:text-dark-muted shrink-0">0/200</span>
+          </div>
+          <input type="text" id="a11y-informacoes-descricao" readonly maxlength="200"
+            oninput="updateA11yCharCounter(this)"
             class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
         </div>
         <!-- Campo dinâmico real do set "informações adicionais" (só
@@ -355,12 +434,12 @@
       <div class="mt-4">
         <label class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Modo de marcação</label>
         <div class="grid grid-cols-2 gap-2">
-          <label class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
+          <label class="relative flex items-center gap-2 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
             <input type="radio" name="a11y-draw-mode" value="contorno" checked class="sr-only" />
             <i data-lucide="square-dashed" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2] shrink-0"></i>
             <span class="text-[11px] font-bold text-gray-600 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Contorno</span>
           </label>
-          <label class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
+          <label class="relative flex items-center gap-2 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
             <input type="radio" name="a11y-draw-mode" value="linha" class="sr-only" />
             <i data-lucide="spline" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2] shrink-0"></i>
             <span class="text-[11px] font-bold text-gray-600 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Linha</span>
@@ -373,22 +452,22 @@
       <div class="mt-3 mb-1">
         <label class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Lado da Guia</label>
         <div class="grid grid-cols-4 gap-2">
-          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
+          <label class="relative flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
             <input type="radio" name="a11y-guide-side" value="right" checked class="sr-only" />
             <i data-lucide="arrow-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]"></i>
             <span class="text-[9px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Dir.</span>
           </label>
-          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
+          <label class="relative flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
             <input type="radio" name="a11y-guide-side" value="left" class="sr-only" />
             <i data-lucide="arrow-left" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]"></i>
             <span class="text-[9px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Esq.</span>
           </label>
-          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
+          <label class="relative flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
             <input type="radio" name="a11y-guide-side" value="top" class="sr-only" />
             <i data-lucide="arrow-up" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]"></i>
             <span class="text-[9px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Topo</span>
           </label>
-          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
+          <label class="relative flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
             <input type="radio" name="a11y-guide-side" value="bottom" class="sr-only" />
             <i data-lucide="arrow-down" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]"></i>
             <span class="text-[9px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Base</span>
@@ -397,7 +476,12 @@
       </div>
     </div>
     <div class="p-3 border-t border-gray-100 dark:border-dark-line flex gap-2 shrink-0">
-      <button onclick="closeA11yModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Cancelar</button>
+      <button onclick="cancelA11yModalExplicit()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Cancelar</button>
+      <!-- Só visível durante o wizard de revisão da Detecção Automática
+           (modal.dataset.wizardActive === '1', ver startA11yBatchWizard/
+           _advanceA11yBatchWizard em accessibility.js) — descarta o item
+           corrente da fila sem criar spec e avança pro próximo. -->
+      <button id="btn-a11y-wizard-discard" onclick="discardCurrentA11yBatchWizardItem()" class="hidden flex-1 py-2.5 text-[12px] font-bold text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/20 rounded-2xl transition-colors">Descartar</button>
       <button id="btn-a11y-confirm" onclick="confirmA11ySpec()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 rounded-2xl transition-colors shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed">Aplicar</button>
     </div>
   </div>
@@ -429,7 +513,9 @@
           </button>
         </div>
         <input type="text" id="a11y-area-label-input" placeholder="Ex: Home Portal DSC" maxlength="80"
+          oninput="updateA11yCharCounter(this)"
           class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all" />
+        <span id="a11y-area-label-input-counter" class="block text-right text-[9px] text-slate-400 dark:text-dark-muted mt-1">0/80</span>
       </div>
       <div>
         <label class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Como documentar esta área?</label>
@@ -503,8 +589,21 @@
 </div>
 
 <!-- MODAL: DETECÇÃO AUTOMÁTICA PÓS-ÁREA -->
-<!-- Sem footer, sem fechar manual: é transitório (abre já em loading e some
-     sozinho quando a varredura/criação em lote termina). -->
+<!-- Dois estados internos (nunca os dois visíveis ao mesmo tempo, alternados
+     via classList.add/remove('hidden') em accessibility.js):
+       1) #a11y-post-area-origin — pergunta bloqueante "Web ou Mobile?" antes
+          de QUALQUER varredura (Detecção Automática e Reescanear passam
+          por aqui sempre, mesmo repetindo a mesma área — ver
+          openA11yPostAreaDetectModal/rescanA11yBatchArea). Sem X/backdrop
+          fechando: a escolha é obrigatória pra decidir o dicionário de
+          marcador real (desktop vs mobile) usado nesta passada.
+       2) #a11y-post-area-loading — spinner "Detectando componentes…",
+          mostrado só depois da escolha. Também reaproveitado como indicador
+          de "Salvando…" entre um item e o próximo do wizard
+          (_createA11ySpecAndWait/_advanceA11yBatchWizard) — texto trocado
+          dinamicamente, ver showA11yWizardSavingIndicator em
+          accessibility.js (esse segundo uso pula direto pro estado 2, não
+          passa pela pergunta de novo). -->
 <div id="a11y-post-area-detect-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-post-area-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true"></div>
   <div class="relative w-full max-w-sm max-h-[85vh] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
@@ -514,11 +613,30 @@
       </h3>
     </div>
 
-    <!-- Único estado: carregando (varredura, depois criação do lote) -->
-    <div id="a11y-post-area-loading" class="p-6 flex flex-col items-center gap-3">
+    <!-- Estado 1: pergunta de origem (bloqueante, sem opção de fechar). -->
+    <div id="a11y-post-area-origin" class="p-5 flex flex-col gap-3">
+      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
+        Este handoff usa qual biblioteca de componentes?
+      </p>
+      <div class="grid grid-cols-2 gap-2.5">
+        <button type="button" onclick="chooseA11yDetectionOrigin('web')"
+          class="flex flex-col items-center gap-2 py-4 rounded-2xl border-2 border-gray-200 dark:border-dark-line hover:border-[#0070af] hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors">
+          <i data-lucide="monitor" class="w-5 h-5 text-[#0070af]" aria-hidden="true"></i>
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Web</span>
+        </button>
+        <button type="button" onclick="chooseA11yDetectionOrigin('mobile')"
+          class="flex flex-col items-center gap-2 py-4 rounded-2xl border-2 border-gray-200 dark:border-dark-line hover:border-[#0070af] hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors">
+          <i data-lucide="smartphone" class="w-5 h-5 text-[#0070af]" aria-hidden="true"></i>
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Mobile</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Estado 2: carregando (varredura da área, ou "salvando" entre itens
+         do wizard — texto trocado via JS, ver comentário acima). -->
+    <div id="a11y-post-area-loading" class="hidden p-6 flex-col items-center gap-3">
       <i data-lucide="loader-2" class="w-6 h-6 text-[#0070af] animate-spin" aria-hidden="true"></i>
-      <p class="text-[11px] text-slate-500 dark:text-dark-muted">Detectando componentes…</p>
-      <button id="btn-a11y-batch-cancel" onclick="cancelA11yBatchGenerate()" class="hidden mt-1 px-4 py-2 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Cancelar</button>
+      <p id="a11y-post-area-loading-text" class="text-[11px] text-slate-500 dark:text-dark-muted">Detectando componentes…</p>
     </div>
   </div>
 </div>
@@ -573,7 +691,7 @@
     </div>
     <div class="p-4 pb-2 shrink-0">
       <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mb-3">
-        Clique nos elementos do canvas, em sequência, ou use "Adicionar item". Arraste para reordenar. Nada é desenhado no canvas até "Aplicar no Canvas".
+        Clique nos elementos do canvas, em sequência, ou use "Adicionar item" — qualquer elemento clicado entra na lista, sem restrição automática. Arraste para reordenar. Nada é desenhado no canvas até "Aplicar no Canvas".
       </p>
       <button type="button" id="btn-tab-order-add-item" onclick="startTabOrderAddItemWait()"
         class="w-full flex items-center justify-center gap-2 h-8 rounded-xl text-[10.5px] font-bold transition-all border border-cyan-200 dark:border-cyan-800/40 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99]">
@@ -596,7 +714,12 @@
 </div>
 
 <!-- MODAL: RESUMO DO LOTE "GERAR HANDOFF AUTOMATIZADO" -->
-<!-- Controlado por modules/accessibility.js: openA11yBatchSummaryModal, closeA11yBatchSummaryModal, confirmA11yBatchGenerate -->
+<!-- Controlado por modules/accessibility.js: openA11yBatchSummaryModal,
+     closeA11yBatchSummaryModal, startA11yBatchWizard. Deixou de criar specs
+     direto (confirmA11yBatchGenerate foi removida) — agora é só a tela de
+     entrada do wizard de revisão individual: escolher a Área de destino e
+     iniciar a revisão sequencial (abre o modal de especificação item a
+     item, ver startA11yBatchWizard/_advanceA11yBatchWizard). -->
 <div id="a11y-batch-summary-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-batch-summary-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeA11yBatchSummaryModal()" aria-hidden="true"></div>
   <div class="relative w-full max-w-sm max-h-[88vh] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
@@ -627,15 +750,15 @@
         <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-1.5 leading-tight">Todas as especificações do lote nascem dentro desta área.</p>
       </div>
 
-      <p class="text-[11px] text-slate-500 dark:text-dark-muted mb-4 leading-relaxed">
-        Serão criadas especificações de "Elementos e Imagens" para cada componente detectado — as de baixa confiança precisam de revisão manual depois. O <strong>Label</strong> de cada uma usa o nome do elemento no canvas como texto inicial; ajuste depois pelo botão de editar.
+      <p class="text-[11px] text-slate-600 dark:text-dark-muted mb-4 leading-snug">
+        Os itens abrem um a um para revisão — nenhum vira especificação sem sua confirmação.
       </p>
 
       <!-- Grupos do resumo (Accordion, Button, Table...) — accordion
            RECOLHIDO por padrão: são puramente informativos (nenhuma ação
-           por linha), não devem competir com "Criar N Especificações"
-           quando há muitos grupos. Cabeçalho mostra a contagem total
-           (grupos + itens) mesmo fechado. -->
+           por linha), não devem competir com "Iniciar Revisão" quando há
+           muitos grupos. Cabeçalho mostra a contagem total (grupos + itens)
+           mesmo fechado. -->
       <div id="a11y-batch-summary-groups-block" class="mb-4 rounded-xl border border-gray-100 dark:border-dark-line overflow-hidden">
         <button type="button" onclick="toggleAccordion(this)" aria-expanded="false"
           class="w-full flex items-center justify-between gap-2 px-3 py-2 text-left bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-line/40 transition-colors">
@@ -664,17 +787,18 @@
           <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-amber-500 transition-transform shrink-0" style="transform:rotate(0deg)"></i>
         </button>
         <div class="accordion-content hidden px-3 pb-3 pt-2 space-y-2">
-          <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
-            Estes textos podem ser títulos de página, mas não têm nenhum estilo do DSC vinculado — por isso não entram na detecção automática. Vincule um Text Style do DSC no Figma e escaneie de novo pra gerar a sugestão de "Nível de Título" automaticamente.
+          <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-snug">
+            Sem estilo do DSC vinculado, a detecção automática não pega.
+            <span class="block text-slate-500 dark:text-dark-muted mt-1">Pra resolver, vincule um Text Style do DSC no Figma e escaneie de novo.</span>
           </p>
           <div id="a11y-token-review-list" class="space-y-1.5"></div>
         </div>
       </div>
     </div>
     <div class="p-4 border-t border-gray-100 dark:border-dark-line shrink-0">
-      <button id="btn-a11y-batch-confirm" onclick="confirmA11yBatchGenerate()"
+      <button id="btn-a11y-batch-confirm" onclick="startA11yBatchWizard()"
         class="w-full py-2.5 text-[12px] font-bold text-white bg-[#0070af] hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl transition-colors">
-        Criar Especificações
+        Iniciar Revisão
       </button>
     </div>
   </div>
@@ -702,7 +826,7 @@
         </div>
         <div class="space-y-1">
           <p class="text-[13px] font-bold text-slate-800 dark:text-white">Estrutura da página</p>
-          <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">São elementos semânticos que estruturam o "esqueleto" de uma página, indicando as seções de conteúdo e para que servem. Exemplo: &lt;header&gt;, &lt;main&gt;, &lt;footer&gt;, etc. Listas também estão incluídas.</p>
+          <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">São elementos semânticos que estruturam o "esqueleto" de uma página, indicando as seções de conteúdo e para que servem. Exemplo: &lt;header&gt;, &lt;main&gt;, &lt;footer&gt;, etc. Listas também estão incluídas. <strong>No mobile</strong>, esta categoria não tem componente equivalente na lib atual — landmarks semânticos não fazem parte do vocabulário "Design Acessível | Super App".</p>
         </div>
       </div>
 
@@ -710,7 +834,7 @@
         <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center text-[12px] font-extrabold shrink-0" style="border-color:#AFCA0B;color:#AFCA0B;">H</div>
         <div class="space-y-1">
           <p class="text-[13px] font-bold text-slate-800 dark:text-white">Nível de título (heading)</p>
-          <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Cabeçalhos (H1-H6) estruturam a página logicamente. O H1 é o título principal (único por página), seguido por H2, H3 e assim por diante. Essa ordem permite que usuários de leitores de tela entendam o sumário do conteúdo. <strong>No mobile</strong> (React Native), essa semântica de nível não existe — use o marcador único "H".</p>
+          <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Cabeçalhos (H1-H6) estruturam a página logicamente. O H1 é o título principal (único por página), seguido por H2, H3 e assim por diante. Essa ordem permite que usuários de leitores de tela entendam o sumário do conteúdo. <strong>No mobile</strong> (React Native), não existe hierarquia de níveis — todo título usa o mesmo marcador "H", sem H1-H6.</p>
         </div>
       </div>
 
@@ -718,7 +842,7 @@
         <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center text-[12px] font-extrabold shrink-0" style="border-color:#FCBE05;color:#FCBE05;">A</div>
         <div class="space-y-1">
           <p class="text-[13px] font-bold text-slate-800 dark:text-white">Elementos interativos e imagens</p>
-          <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Elementos interativos (como botões e links) executam ações. Se usam apenas ícones, necessitam de texto alternativo que descreva sua função (ex: "buscar") e não a aparência ("Lupa"). Para imagens estáticas, também use esse grupo.</p>
+          <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Elementos interativos (como botões e links) executam ações. Se usam apenas ícones, necessitam de texto alternativo que descreva sua função (ex: "buscar") e não a aparência ("Lupa"). Para imagens estáticas, também use esse grupo. <strong>No mobile</strong>, esta categoria tem 3 sub-variantes: <strong>Componente</strong> (com campo Link do Componente, apontando pro nome/URL do componente no DSC | Super App), <strong>Link</strong> e <strong>Texto Alternativo</strong> (alt-text de mídia).</p>
         </div>
       </div>
 
@@ -745,7 +869,6 @@
       <div class="pt-3 mt-1 border-t border-gray-100 dark:border-dark-line">
         <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5">Estrutura padrão de cada spec</p>
         <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Toda categoria segue os mesmos campos — <strong>Descrição</strong> (como o elemento deve ou não ser lido) e <strong>Notas de Código</strong> (apontamento técnico pro dev), quando aplicável à variante escolhida.</p>
-        <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Elementos e Imagens mobile</strong> (React Native) tem 3 sub-variantes exclusivas: <strong>Componente</strong> (Descrição/Nome Acessível/Dica para Leitor de Tela/Observação opcionais + Link do Componente, sempre visível, com o nome do componente do DSC | Super App e a URL); <strong>Link</strong> (Descrição fixa de identificação como link, Nome Acessível/Observação opcionais); e <strong>Texto Alternativo</strong> (Descrição livre obrigatória com o alt-text da mídia + Observação opcional).</p>
       </div>
 
       <div class="pt-3 mt-1 border-t border-gray-100 dark:border-dark-line space-y-2">
@@ -774,5 +897,55 @@
     </div>
     <div id="onboarding-modal-body" class="flex-1 overflow-y-auto p-6" onscroll="handleScroll(this)"></div>
     <div id="onboarding-modal-footer" class="p-4 border-t border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0"></div>
+  </div>
+</div>
+
+<!-- MODAL: SOBRE O HAC — aberta ao clicar no logo CAIXA + "HAC" no header
+     global. Substitui a badge de versão fixa que existia no header (a
+     informação de versão passou a viver só aqui). #about-hac-version é
+     preenchido em runtime por modules/messages.js a partir de
+     msg.version (mensagem 'init-plugin' vinda de code.js / PLUGIN_VERSION,
+     que por sua vez é injetada em build-time — ver scripts/bundle-code.cjs). -->
+<div id="about-hac-modal" role="dialog" aria-modal="true" aria-labelledby="about-hac-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('about-hac-modal')" aria-hidden="true"></div>
+  <div class="relative w-full max-w-sm bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+    <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line">
+      <h3 id="about-hac-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
+        <i data-lucide="person-standing" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Sobre o hac
+      </h3>
+      <button onclick="closeModal('about-hac-modal')" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div class="p-6 space-y-4">
+      <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">
+        <strong>HAC</strong> — Handoff de Acessibilidade CAIXA. Documenta, direto no canvas do Figma, como cada elemento da tela deve ser interpretado por um leitor de tela e em que ordem o teclado deve navegá-la.
+      </p>
+      <dl class="text-[11px] leading-relaxed space-y-2.5">
+        <div>
+          <dt class="text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider">Versão</dt>
+          <dd id="about-hac-version" class="text-slate-700 dark:text-white font-semibold">—</dd>
+        </div>
+        <div>
+          <dt class="text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider">Vertical responsável</dt>
+          <dd class="text-slate-700 dark:text-white font-semibold">Acessibilidade</dd>
+        </div>
+        <div class="flex items-center justify-between gap-2">
+          <div>
+            <dt class="text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider">Plataforma do projeto</dt>
+            <dd id="about-hac-project-origin" class="text-slate-700 dark:text-white font-semibold">—</dd>
+          </div>
+          <button type="button" onclick="openA11yProjectOriginPrompt()"
+            class="shrink-0 px-3 py-1.5 text-[10px] font-bold text-[#0070af] bg-[#0070af]/10 hover:bg-[#0070af]/20 rounded-xl transition-colors">Trocar</button>
+        </div>
+        <div>
+          <dt class="text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider">Desenvolvido por</dt>
+          <dd class="text-slate-700 dark:text-white font-semibold">Fóton</dd>
+        </div>
+      </dl>
+    </div>
+    <div class="p-4 border-t border-gray-100 dark:border-dark-line">
+      <button onclick="closeModal('about-hac-modal')" class="w-full py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Fechar</button>
+    </div>
   </div>
 </div>

@@ -134,11 +134,15 @@ const A11Y_COMPONENTE_LABELS = {
 };
 
 // ── Component properties reais dos 25 component sets internos "[a11y base]"
-// da lib "Design Acessível" — extraído via REST API. Copiado como literal JS
-// aqui pelo mesmo motivo de A11Y_CONTENT acima: o bundle do frontend é um
-// único <script> concatenado sem require/import, não há como ler o JSON em
-// runtime. Usado só pela categoria "elemento" (Elementos e Imagens) por ora.
-const A11Y_COMPONENT_PROPERTIES = [{"shortName":"niveis de titulo","properties":[{"name":"observacoes","syncId":"7489:0","type":"BOOLEAN"},{"name":"nivel","syncId":null,"type":"VARIANT","variantOptions":["h1","h2","h3","h4","h5","h6"],"defaultValue":"h1"}]},{"shortName":"ED gerais","properties":[{"name":"observacoes","syncId":"7489:0","type":"BOOLEAN"},{"name":"notas","syncId":"7489:18","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["ignorar pelo LT","customizável"],"defaultValue":"ignorar pelo LT"}]},{"shortName":"estrutura da página","properties":[{"name":"variacao","syncId":null,"type":"VARIANT","variantOptions":["idiomas","marco de navegacao","titulo da pagina"],"defaultValue":"marco de navegacao"}]},{"shortName":"tab group","properties":[{"name":"nome acessivel","syncId":"742:10","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1327:115","type":"BOOLEAN"},{"name":"notas","syncId":"1327:118","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["tabs","customizável"],"defaultValue":"tabs"}]},{"shortName":"breadcrumb","properties":[{"name":"nome acessível","syncId":"741:15","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacao","syncId":"1325:19","type":"BOOLEAN"},{"name":"notas","syncId":"1325:25","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["link inicio","link secundario","texto truncado","pagina atual","customizável"],"defaultValue":"link inicio"}]},{"shortName":"stepper","properties":[{"name":"nome acessivel","syncId":"742:22","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1327:93","type":"BOOLEAN"},{"name":"notas","syncId":"1327:99","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["atual","editavel","preenchido","inativo","customizável"],"defaultValue":"atual"}]},{"shortName":"EE marco de navegacao","properties":[{"name":"observacoes","syncId":"7489:0","type":"BOOLEAN"},{"name":"letter","syncId":"7500:37","type":"TEXT"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["header","nav","main","aside","footer","customizável"],"defaultValue":"header"}]},{"shortName":"button","properties":[{"name":"nome acessivel","syncId":"742:67","type":"BOOLEAN"},{"name":"observacoes","syncId":"7489:0","type":"BOOLEAN"},{"name":"letter","syncId":"7489:9","type":"TEXT"},{"name":"notas","syncId":"7489:18","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["default","desabilitado","com expansao","agrupado","de icone","de icone com expansao","com nome acessivel","customizável"],"defaultValue":"default"}]},{"shortName":"inputs","properties":[{"name":"nome acessivel","syncId":"742:0","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1325:49","type":"BOOLEAN"},{"name":"notas","syncId":"1325:59","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["default","tipo numero","tipo data","tipo selecao","tipo senha","somente leitura","botao (i) e tooltip","botao visualizar senha","customizável"],"defaultValue":"default"}]},{"shortName":"paginator","properties":[{"name":"nome acessivel","syncId":"742:31","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1327:69","type":"BOOLEAN"},{"name":"notas","syncId":"1327:73","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["caixa de selecao","listagem","customizável"],"defaultValue":"caixa de selecao"}]},{"shortName":"snackbar","properties":[{"name":"nome acessivel","syncId":"742:28","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1327:87","type":"BOOLEAN"},{"name":"notas de codigo","syncId":"1327:90","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["notificacao imediata","customizável"],"defaultValue":"notificacao imediata"}]},{"shortName":"checkbox","properties":[{"name":"nome acessivel","syncId":"742:46","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1325:31","type":"BOOLEAN"},{"name":"notas","syncId":"1325:37","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["somente caixa","Indeterminada em grupo","caixa e rotulo","customizável"],"defaultValue":"somente caixa"}]},{"shortName":"listas","properties":[{"name":"observacoes","syncId":"7489:0","type":"BOOLEAN"},{"name":"letter","syncId":"7500:37","type":"TEXT"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["ordenada","nao ordenada","de definicao","customizável"],"defaultValue":"ordenada"}]},{"shortName":"EE idiomas","properties":[{"name":"notas","syncId":"1417:0","type":"BOOLEAN"},{"name":"observacoes","syncId":"7489:0","type":"BOOLEAN"},{"name":"letter","syncId":"7500:37","type":"TEXT"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["da pagina","das partes","customizável"],"defaultValue":"da pagina"}]},{"shortName":"table","properties":[{"name":"nome acessivel","syncId":"742:16","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1327:121","type":"BOOLEAN"},{"name":"notas","syncId":"1327:127","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["estruturada","cabecalho","celula","botao de ordenacao","customizável"],"defaultValue":"estruturada"}]},{"shortName":"accordion","properties":[{"name":"nome acessivel","syncId":"742:51","type":"BOOLEAN"},{"name":"notas de codigo","syncId":"742:54","type":"BOOLEAN"},{"name":"observacoes","syncId":"742:57","type":"BOOLEAN"},{"name":"letter","syncId":"1325:12","type":"TEXT"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["default","customizável"],"defaultValue":"default"}]},{"shortName":"informações adicionais","properties":[{"name":"observacoes","syncId":"7489:0","type":"BOOLEAN"},{"name":"letter","syncId":"7500:37","type":"TEXT"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["handoffs","conteudo extra","customizável"],"defaultValue":"handoffs"}]},{"shortName":"radio button","properties":[{"name":"nome acessivel","syncId":"742:42","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1327:77","type":"BOOLEAN"},{"name":"notas","syncId":"1327:82","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["Somente rádio","radio e rotulo","customizável"],"defaultValue":"Somente rádio"}]},{"shortName":"switch","properties":[{"name":"nome acesivel","syncId":"742:38","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1327:105","type":"BOOLEAN"},{"name":"notas","syncId":"1327:110","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["Somente switch","switch e rotulo","customizável"],"defaultValue":"Somente switch"}]},{"shortName":"texto alternativo para imagens","properties":[{"name":"nome acesivel","syncId":"742:13","type":"BOOLEAN"},{"name":"observacoes","syncId":"7500:34","type":"BOOLEAN"},{"name":"notas","syncId":"7500:35","type":"BOOLEAN"},{"name":"letter","syncId":"7500:36","type":"TEXT"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["texto alternativo","customizável"],"defaultValue":"texto alternativo"}]},{"shortName":"link","properties":[{"name":"nome acessivel","syncId":"742:60","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"notas","syncId":"1325:0","type":"BOOLEAN"},{"name":"observacoes","syncId":"1325:6","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["default","nova janela","com nome acessivel","agrupado","enviar email","customizável"],"defaultValue":"default"}]},{"shortName":"dialog","properties":[{"name":"nome acessivel","syncId":"742:35","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1325:43","type":"BOOLEAN"},{"name":"notas","syncId":"1325:46","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["default","customizável"],"defaultValue":"default"}]},{"shortName":"ED imagem","properties":[{"name":"observacoes","syncId":"7500:31","type":"BOOLEAN"},{"name":"notas","syncId":"7500:32","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["texto alternativo","customizável"],"defaultValue":"texto alternativo"}]},{"shortName":"componentes/icones/imagens","properties":[{"name":"variante","syncId":null,"type":"VARIANT","variantOptions":["componente","texto alternativo para imagens"],"defaultValue":"componente"},{"name":"componente","syncId":null,"type":"VARIANT","variantOptions":["accordion","breadcrumb","button","checkbox","dialog","inputs","link","listas","paginator","radio button","snackbar","stepper","switch","tab group","table","imagem"],"defaultValue":"accordion"}]},{"shortName":"elementos decorativos","properties":[{"name":"variacao","syncId":null,"type":"VARIANT","variantOptions":["gerais","imagem"],"defaultValue":"gerais"}]}];
+// da lib "Design Acessível" — extraído via REST API. Fonte de verdade agora é
+// o arquivo GERADO refs/_a11y-constants.generated.js (concatenado no bundle
+// ANTES deste módulo, ver build.cjs), produzido por
+// refs/build-a11y-constants.cjs a partir de refs/design-acessivel-
+// properties.json. Alias mantido com o nome histórico para não exigir
+// alterar todos os pontos de consumo já espalhados neste arquivo. Regenerar
+// via: npm run refs:a11y-constants (NÃO editar A11Y_COMPONENT_PROPERTIES à
+// mão — a fonte real é o JSON extraído da API).
+const A11Y_COMPONENT_PROPERTIES = A11Y_COMPONENT_PROPERTIES_GENERATED;
 
 // O <select> de "Elementos e Imagens" usa a chave "imagem" (mesma de
 // A11Y_CONTENT.elemento.componentes), mas o component set real correspondente
@@ -180,6 +184,19 @@ const A11Y_TOGGLE_LABELS = {
   linkComponente: 'Link do Componente',
 };
 
+// Limite de caracteres dos textareas de toggle dinâmico (Observações/Notas de
+// Código/Dica para Leitor de Tela) — anotações livres pro dev, podem ser mais
+// longas que um label, mas ainda devem caber num card de spec sem virar bloco
+// de texto. "notas" (Notas de Código) usa um teto maior por poder incluir
+// referência técnica (ex: nome de prop/atributo) junto da explicação.
+const A11Y_TOGGLE_MAXLENGTH = {
+  notas: 500,
+  observacoes: 400,
+  accessibilityHint: 300,
+  linkComponente: 300,
+};
+const A11Y_TOGGLE_MAXLENGTH_DEFAULT = 400;
+
 // Toggle que só existe no wrapper mobile, na sub-variante "componente" —
 // nunca renderizado quando a spec é de origem web (o componente real
 // desktop não tem esse campo). Chave própria, fora de
@@ -218,28 +235,121 @@ const A11Y_ELEMENTO_MOBILE_VARIANTS = {
 
 // As 64 opções reais do dropdown VARIANT "Link" do component set interno
 // ".[a11y mob base] Link do Componente" (node 5536:8553) — nomes exatos, na
-// mesma ordem retornada pela API (ver refs/
-// design-acessivel-mobile-link-property.json, linkProperty.variantOptions).
-// "Personalizado" é o default (última opção da lista real). Este dropdown é
-// só um RÓTULO textual (type VARIANT, não INSTANCE_SWAP) — não há vínculo de
-// componente real por trás de cada opção.
-const A11Y_MOBILE_LINK_COMPONENT_OPTIONS = [
-  'Accordion', 'Account Select', 'Alert Dialog', 'Avatar', 'Avatar Hero',
-  'Badge', 'Badge Notification', 'Badge Text', 'Button', 'Card',
-  'Card Account', 'Card Alert', 'Card Carousel Horizontal', 'Card Carousel Vertical',
-  'Card Notification', 'Card Product Offer', 'Card Wallet', 'Card Widget',
-  'Checkbox', 'Chips', 'Comparison Table', 'Credit Card Button', 'Date Picker',
-  'Icon Button', 'Icon Button Text', 'Image Media', 'Input/Text Field - Single',
-  'Input/Text Field - Form', 'Input Money', 'Input Pin', 'Input Stepper',
-  'List Accordion', 'List Heading', 'List Item', 'List Item Transaction',
-  'Loading Animation', 'Menu', 'Navigation Bar', 'Page Controller', 'Page Header',
-  'Popover', 'Progress', 'Radio', 'Search Bar', 'Selectable Media',
-  'Segmented Button', 'Separator/Divider', 'Sheet', 'Skeleton/Shimmer', 'Slider',
-  'Spinner', 'Swap Preview', 'Switch', 'Tabs', 'Tile Button', 'Text',
-  'Timeline', 'Toast/Snackbar', 'Toolbar', 'Tooltip', 'Top App Bar',
-  'Value Section', 'Wheel Picker', 'Personalizado',
-];
-const A11Y_MOBILE_LINK_URL_PLACEHOLDER = '[insira aqui o link do componente].';
+// mesma ordem retornada pela API. Fonte de verdade agora é o arquivo GERADO
+// refs/_a11y-constants.generated.js (concatenado no bundle ANTES deste
+// módulo, ver build.cjs), produzido por refs/build-a11y-constants.cjs a
+// partir de refs/design-acessivel-mobile-properties.json. Alias mantido com
+// o nome histórico para não exigir alterar todos os pontos de consumo já
+// espalhados neste arquivo. "Personalizado" é o default (última opção da
+// lista real). Este dropdown é só um RÓTULO textual (type VARIANT, não
+// INSTANCE_SWAP) — não há vínculo de componente real por trás de cada
+// opção. Regenerar via: npm run refs:a11y-constants (NÃO editar
+// A11Y_MOBILE_LINK_COMPONENT_OPTIONS à mão).
+const A11Y_MOBILE_LINK_COMPONENT_OPTIONS = A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED;
+const A11Y_MOBILE_LINK_URL_PLACEHOLDER = '[insira aqui o link do componente]. Se o componente não estiver na lista acima, escreva o nome real dele aqui — é assim que a vertical de a11y sabe que falta mapear esse componente na lib.';
+
+// Tabela nome-do-dropdown -> node_id do component set REAL na lib "DSC |
+// Super App" (fileKey abaixo) — só os nomes com match EXATO e sem
+// ambiguidade contra os containingFrame reais (hoje 46 dos 64; os outros 18,
+// incl. "Personalizado", não têm correspondência segura e ficam de fora,
+// mantendo o preenchimento manual). Gerada 100% a partir do dado extraído
+// via REST API (refs/super-app.json + refs/_manifest.json) por
+// refs/build-a11y-constants.cjs — NÃO editar à mão, e nunca usar como tabela
+// estática: se o componente mudar de nodeId/for renomeado na lib real, o
+// próximo refresh do skeleton (fetch-design-refs.cjs → build-skeleton.cjs →
+// build-a11y-constants.cjs, o mesmo pipeline do CI semanal) já atualiza este
+// arquivo gerado. Consumida por _autofillA11yMobileLinkUrlFromComponentName.
+const A11Y_MOBILE_COMPONENT_LINK_NODE_IDS = A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED;
+const A11Y_SUPER_APP_FILE_KEY = A11Y_SUPER_APP_FILE_KEY_GENERATED;
+const A11Y_SUPER_APP_FILE_NAME = A11Y_SUPER_APP_FILE_NAME_GENERATED;
+
+// Monta o deep-link real do Figma para o node_id de um component set da lib
+// "DSC | Super App". type: 'URL' (não 'NODE' — NODE não suporta link
+// cross-file a partir de um plugin rodando em outro arquivo). O Figma não
+// valida o segmento de nome do arquivo na URL — funciona com qualquer
+// string —, mas usamos o nome real (slugificado) da lib por clareza.
+function _buildA11yMobileComponentDeepLink(nodeId) {
+  if (!nodeId || !A11Y_SUPER_APP_FILE_KEY) return '';
+  return `https://www.figma.com/design/${A11Y_SUPER_APP_FILE_KEY}/${A11Y_SUPER_APP_FILE_NAME}?node-id=${encodeURIComponent(nodeId)}`;
+}
+
+// Handler do <select> "Componente do DSC" (dropdown "Link do Componente") —
+// se o nome escolhido tiver nodeId real conhecido (um dos 46 com match
+// seguro), preenche AUTOMATICAMENTE o campo de texto companheiro com a URL
+// do deep-link real. Nunca sobrescreve um valor que o designer já tenha
+// digitado manualmente (nem ao trocar de opção depois) — só entra quando o
+// campo de URL está vazio. Nomes sem match seguro (18 restantes, incl.
+// "Personalizado") não alteram o campo: comportamento manual de sempre.
+// Renderiza "Componente DSC: <nome>" no cabeçalho do modal — vira link
+// clicável (deep-link real do Figma pra lib "DSC | Super App") só quando dá
+// pra resolver um nodeId com confiança: origem mobile + nome limpo batendo
+// EXATO contra A11Y_MOBILE_COMPONENT_LINK_NODE_IDS (mesmo critério/mesma
+// tabela usada em _autofillA11yMobileLinkUrlFromComponentName — 46/64 nomes
+// reais cobertos). A lib desktop ("Web Angular & React"/"Super DSC Web") não
+// entra aqui: o dado extraído dela (refs/web-angular-react.json,
+// refs/super-dsc-web.json) não tem containingFrameNodeId, só componentKey de
+// variante — sem nodeId real de component set não dá pra montar um deep-link
+// confiável, então cai sempre no texto puro (fallback seguro, sem link
+// quebrado). target="_blank" abre a lib publicada numa aba nova do
+// navegador; o Figma intercepta e trata normalmente dentro do iframe da UI
+// do plugin, sem precisar de postMessage/figma.openExternal (que é API de
+// backend e não existe pra esse caso de link estático).
+function _renderA11yModalDscComponentName(elId, dscComponentNameRaw, a11yOrigin) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (!dscComponentNameRaw) { el.innerHTML = 'Não identificado'; return; }
+  const clean = _cleanDscContainingFrameName(dscComponentNameRaw);
+  const cleanKey = clean.trim().toLowerCase();
+  let nodeId = null;
+  if (a11yOrigin === 'mobile') {
+    const matchName = Object.keys(A11Y_MOBILE_COMPONENT_LINK_NODE_IDS)
+      .find(name => name.trim().toLowerCase() === cleanKey);
+    if (matchName) nodeId = A11Y_MOBILE_COMPONENT_LINK_NODE_IDS[matchName];
+  }
+  const url = nodeId ? _buildA11yMobileComponentDeepLink(nodeId) : '';
+  if (url) {
+    el.innerHTML = `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" title="Abrir componente na lib DSC" class="text-[#0891B2] dark:text-cyan-400 underline decoration-dotted hover:decoration-solid">${escapeHtml(clean)}</a>`;
+  } else {
+    el.textContent = clean;
+  }
+}
+
+function _autofillA11yMobileLinkUrlFromComponentName() {
+  const select = document.getElementById('a11y-el-mobile-link-select');
+  const linkUrl = document.getElementById('a11y-el-mobile-link-url');
+  if (!select || !linkUrl) return;
+  if (!linkUrl.value.trim()) {
+    const nodeId = A11Y_MOBILE_COMPONENT_LINK_NODE_IDS[select.value];
+    if (nodeId) {
+      const url = _buildA11yMobileComponentDeepLink(nodeId);
+      if (url) { linkUrl.value = url; updateA11yCharCounter(linkUrl); }
+    }
+  }
+  _syncA11yMobileLinkUrlLockState();
+}
+
+// Trava #a11y-el-mobile-link-url sempre que o <select> companheiro aponta
+// para um componente real conhecido (qualquer opção != "Personalizado") —
+// nesses casos o texto já foi resolvido automaticamente (ou é a escolha
+// deliberada do designer dentre as 64 opções reais) e não deve divergir do
+// nome escolhido. Só fica editável quando "Personalizado" está selecionado
+// (equivalente ao "Outro" desktop: único jeito de documentar componente fora
+// do catálogo). readOnly em vez de disabled: mantém o valor acessível via
+// .value no submit (_collectA11yElementoMobileToggleProperties) e visível
+// pro designer, só bloqueia edição — disabled removeria o campo do fluxo de
+// leitura normal e teria semântica de "campo indisponível", não é o caso.
+function _syncA11yMobileLinkUrlLockState() {
+  const select = document.getElementById('a11y-el-mobile-link-select');
+  const linkUrl = document.getElementById('a11y-el-mobile-link-url');
+  const lockHint = document.getElementById('a11y-el-mobile-link-url-lock-hint');
+  if (!select || !linkUrl) return;
+  const isLocked = select.value !== 'Personalizado';
+  linkUrl.readOnly = isLocked;
+  linkUrl.classList.toggle('bg-gray-50', isLocked);
+  linkUrl.classList.toggle('dark:bg-dark-bg', isLocked);
+  linkUrl.classList.toggle('cursor-not-allowed', isLocked);
+  if (lockHint) lockHint.classList.toggle('hidden', !isLocked);
+}
 
 // ── Migração aditiva: specs "elemento" mobile pré-existentes ganham
 // a11ySubtype.variant ──────────────────────────────────────────────────────
@@ -249,6 +359,11 @@ const A11Y_MOBILE_LINK_URL_PLACEHOLDER = '[insira aqui o link do componente].';
 // toca specs que ainda não têm a11ySubtype.variant, então rodar de novo em
 // specs já migradas (ou em specs desktop, que nunca ganham essa chave) é
 // no-op.
+//
+// Cobre só o legado ANTERIOR à existência de a11ySubtype.variant — specs
+// criadas/editadas depois da correção "a origem filtra tudo" (2026-09) já
+// nascem com variant preenchido (inclusive no branch isOutro legado), então
+// nunca mais entram neste caminho de inferência por heurística.
 //
 // Regra de inferência (decisão de produto, ver conversa que introduziu esta
 // migração — 2026-08-31):
@@ -409,7 +524,13 @@ window.retryA11yLibraryCheck = retryA11yLibraryCheck;
 
 function chooseA11yType(category) {
   closeA11yCategoryPickerModal();
-  openA11yModal(category);
+  // Origem da spec manual "+ Nova spec": lê a origem já configurada do
+  // projeto (definida antes, no mínimo em Marcar Área — toda spec pertence a
+  // uma Área) em vez de assumir 'web' sempre. Só lê o valor já persistido
+  // (getA11yProjectOrigin) — não chama ensureA11yProjectOriginThen aqui, que
+  // abriria uma modal bloqueante; a esta altura do fluxo a origem já deveria
+  // estar definida. Fallback 'web' cobre só o caso raro de ainda não estar.
+  openA11yModal(category, { a11yOrigin: getA11yProjectOrigin() || 'web' });
 }
 window.chooseA11yType = chooseA11yType;
 
@@ -447,8 +568,10 @@ function openA11yModal(category, options) {
   // Origem (web/mobile) da spec sendo criada/editada — decide se os 2 campos
   // exclusivos do wrapper mobile (Dica para Leitor de Tela/Link do
   // Componente) aparecem em "Elementos e Imagens" (ver
-  // _renderA11yElementoMobileFields). Default 'web': sem isto, o fluxo
-  // manual "+ Nova spec" (sem detecção prévia) nunca saberia a origem.
+  // _renderA11yElementoMobileFields). O fluxo manual "+ Nova spec"
+  // (chooseA11yType) já resolve isto lendo getA11yProjectOrigin() antes de
+  // chamar este modal; default 'web' aqui cobre só o caso raro de a origem
+  // do projeto ainda não estar definida.
   const a11yOrigin = (options && options.a11yOrigin) || 'web';
   // Nome cru do component set DSC real (containingFrame, ex: "[dsc] Button")
   // já resolvido pelo scan que abriu este formulário via
@@ -458,6 +581,22 @@ function openA11yModal(category, options) {
 
   const modal = document.getElementById('a11y-spec-modal');
   if (!modal) return;
+  // Instrução antes fixa no corpo do modal virou snackbar — mas o modal
+  // reabre repetidamente item a item no wizard de lote (potencialmente 50+
+  // vezes numa revisão grande), então só mostra na primeira vez de todas
+  // (persistido via figma.clientStorage, mesmo padrão do onboarding —
+  // window._a11ySpecModalInstructionShown já chega setada a partir de
+  // msg.specModalInstructionSeen em init-plugin, ver messages.js). O
+  // conteúdo continua coberto pelo hint fixo do rodapé do modal (ver
+  // modals.html) e pelo onboarding, então não se perde depois da 1ª vez.
+  // showSnackbar (não showToast) porque o texto tem 3 informações e precisa
+  // de mais tempo de leitura — permanece até fechamento manual (X) em vez
+  // de sumir sozinho em 3s.
+  if (!window._a11ySpecModalInstructionShown) {
+    window._a11ySpecModalInstructionShown = true;
+    parent.postMessage({ pluginMessage: { type: 'save-spec-modal-instruction-seen' } }, '*');
+    showSnackbar('Selecione o elemento no canvas antes de aplicar. A especificação nasce travada e posicionada ao lado dele — use o cadeado na listagem para destravar depois.');
+  }
   modal.dataset.category = category;
   modal.dataset.areaId = window._a11yPendingAreaId || '';
   modal.dataset.a11yOrigin = a11yOrigin;
@@ -481,6 +620,13 @@ function openA11yModal(category, options) {
   delete modal.dataset.editingOriginalIndex;
   const confirmBtnReset = document.getElementById('btn-a11y-confirm');
   if (confirmBtnReset) confirmBtnReset.textContent = 'Aplicar';
+  // Reset defensivo do estado visual do wizard (botões "Localizar no
+  // canvas"/"Descartar", progresso "N de M") — abrir o formulário fora do wizard
+  // (botão "+ Nova spec"/pendências avulsas) nunca deve herdar UI de uma
+  // revisão anterior. _advanceA11yBatchWizard reativa o dataset/UI logo
+  // depois desta chamada quando de fato é o wizard quem está abrindo.
+  delete modal.dataset.wizardActive;
+  _resetA11yBatchWizardUi();
 
   const areaLabelEl = document.getElementById('a11y-modal-area-label');
   if (areaLabelEl) {
@@ -493,6 +639,20 @@ function openA11yModal(category, options) {
     }
   }
 
+  // "Camada no canvas"/"Componente DSC" — read-only, comuns às 5 categorias
+  // (ver bloco correspondente em modals.html). "Camada no canvas" só chega
+  // depois, via get-selection-name/prefillA11yComponentName (fluxo manual) ou
+  // já no options.targetNodeName do lote (fluxo automático) — resetado aqui
+  // pra nunca herdar o nó da spec anterior enquanto a resposta não chega.
+  // "Componente DSC" já pode estar disponível de imediato no fluxo
+  // automático (dscComponentName resolvido antes de abrir o modal).
+  const targetNodeNameEl = document.getElementById('a11y-modal-target-node-name');
+  if (targetNodeNameEl) {
+    const presetTargetNodeName = (options && options.targetNodeName) || null;
+    targetNodeNameEl.textContent = presetTargetNodeName || '—';
+  }
+  _renderA11yModalDscComponentName('a11y-modal-dsc-component-name', dscComponentName, a11yOrigin);
+
   const title = document.getElementById('a11y-modal-title-text');
   if (title) title.textContent = A11Y_MODAL_TITLE[category] || 'Especificação de Acessibilidade';
 
@@ -501,6 +661,13 @@ function openA11yModal(category, options) {
     titleIconWrap.innerHTML = `<i data-lucide="${meta.icon}" class="w-4 h-4" style="color:${meta.color}" aria-hidden="true"></i>`;
     _refreshIcons(titleIconWrap);
   }
+
+  // Correção de categoria (ícone de editar + <select> inline) só existe
+  // durante a revisão do wizard — fora dele, categoria errada é resolvida
+  // apagando e recriando a spec (edição normal não tem esse atalho).
+  toggleA11yWizardCategoryPicker(false);
+  const categoryEditBtn = document.getElementById('a11y-modal-category-edit-btn');
+  if (categoryEditBtn) categoryEditBtn.classList.toggle('hidden', !window._a11yBatchWizardState);
 
   ['elemento', 'estrutura', 'titulo', 'decorativo', 'informacoes'].forEach(c => {
     const block = document.getElementById(`a11y-fields-${c}`);
@@ -512,16 +679,30 @@ function openA11yModal(category, options) {
     'a11y-el-componente-outro',
   ].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.value = '';
+    if (el) { el.value = ''; updateA11yCharCounter(el); }
   });
 
   const drawModeDefault = document.querySelector('input[name="a11y-draw-mode"][value="contorno"]');
   if (drawModeDefault) drawModeDefault.checked = true;
 
-  if (category === 'elemento') {
-    // Pré-preenche via seleção do canvas — puramente cosmético, ver
-    // prefillA11yComponentName (mensagem 'get-selection-name' assíncrona).
+  // Resolve "Camada no canvas"/"Componente DSC" (campos read-only, comuns às
+  // 5 categorias) a partir da seleção atual do canvas — só no fluxo manual
+  // "+ Nova spec". O fluxo automático já chega com targetNodeName/
+  // dscComponentName via options (resolvidos em memória pelo scan, ver
+  // _resolveA11yFormPresetFromItem), e o modo edição (options.editing, ver
+  // editA11ySpec) já populou os 2 campos com os dados salvos da spec — nos
+  // dois casos, a seleção atual do canvas é irrelevante e não pode pisar por
+  // cima assim que a resposta assíncrona chegar. Não usar
+  // modal.dataset.editingSpecId aqui: editA11ySpec só grava esse dataset
+  // DEPOIS desta chamada retornar, tarde demais pra este check síncrono
+  // (prefillA11yComponentName, chamado bem mais tarde de forma assíncrona,
+  // já enxerga o dataset correto e por isso usa ele em vez de options.editing).
+  const isPresetOpen = !!(options && (options.editing || options.targetNodeName));
+  if (!isPresetOpen) {
     parent.postMessage({ pluginMessage: { type: 'get-selection-name' } }, '*');
+  }
+
+  if (category === 'elemento') {
     const select = document.getElementById('a11y-el-componente-select');
     if (select) {
       const validPreset = presetComponente && A11Y_CONTENT.elemento.componentes[presetComponente];
@@ -571,6 +752,82 @@ function openA11yModal(category, options) {
 }
 window.openA11yModal = openA11yModal;
 
+// Corrige a categoria sugerida pela Detecção Automática sem descartar o item
+// (ver botão de editar no cabeçalho, toggleA11yWizardCategoryPicker) —
+// reabre o mesmo formulário só que com outra categoria, preservando
+// targetNodeId/origem/componente DSC/nome de camada do item atual (o que
+// _resolveA11yFormPresetFromItem já resolveu pra ele); presetComponente/
+// presetTituloNivel/presetEstruturaTipo não se aplicam à nova categoria, por
+// isso não são repassados — cada categoria nasce no próprio default.
+function switchA11yWizardCategory(newCategory) {
+  const modal = document.getElementById('a11y-spec-modal');
+  if (!modal || !A11Y_CATEGORIES[newCategory]) return;
+  if (newCategory === modal.dataset.category) { toggleA11yWizardCategoryPicker(false); return; }
+  const options = {
+    pendingTargetNodeId: modal.dataset.pendingTargetNodeId || null,
+    a11yOrigin: modal.dataset.a11yOrigin || 'web',
+    dscComponentName: modal.dataset.dscComponentName || null,
+    targetNodeName: document.getElementById('a11y-modal-target-node-name').textContent,
+  };
+  openA11yModal(newCategory, options);
+  const state = window._a11yBatchWizardState;
+  if (state) _applyA11yWizardModalUi(state);
+  toggleA11yWizardCategoryPicker(false);
+}
+window.switchA11yWizardCategory = switchA11yWizardCategory;
+
+// Alterna o cabeçalho da modal entre o título estático (ícone + nome da
+// categoria) e o <select> de correção manual — só existe/faz sentido durante
+// o wizard de revisão (fora dele, categoria errada = apagar e recriar a
+// spec, orientação já documentada no guia). show=true força abrir mesmo
+// clicando de novo no ícone; false força fechar (ex: depois de escolher uma
+// categoria).
+function toggleA11yWizardCategoryPicker(show) {
+  const titleText = document.getElementById('a11y-modal-title-text');
+  const picker = document.getElementById('a11y-modal-category-picker');
+  if (!titleText || !picker) return;
+  const next = typeof show === 'boolean' ? show : picker.classList.contains('hidden');
+  titleText.classList.toggle('hidden', next);
+  picker.classList.toggle('hidden', !next);
+  if (next) {
+    const modal = document.getElementById('a11y-spec-modal');
+    picker.value = modal ? modal.dataset.category : '';
+    picker.focus();
+  }
+}
+window.toggleA11yWizardCategoryPicker = toggleA11yWizardCategoryPicker;
+
+// Contador de caracteres genérico e reaproveitável — usado por TODOS os
+// campos de texto livre da spec de a11y (estáticos em modals.html e
+// dinâmicos gerados via template string aqui neste arquivo). Convenção:
+// todo campo com contador tem um <span id="{id-do-campo}-counter"> logo ao
+// lado (irmão no mesmo wrapper) mostrando "N/limite". `oninput` chama esta
+// função passando `this` — nenhuma lógica por campo, só lê maxlength do
+// próprio elemento. Chamada também on-render (ver chamadas logo após cada
+// innerHTML dinâmico) pra refletir valores já restaurados em modo edição.
+function updateA11yCharCounter(el) {
+  if (!el) return;
+  const counter = document.getElementById(el.id + '-counter');
+  if (!counter) return;
+  const max = el.getAttribute('maxlength');
+  const len = (el.value || '').length;
+  counter.textContent = max ? `${len}/${max}` : String(len);
+}
+window.updateA11yCharCounter = updateA11yCharCounter;
+
+// Igual updateA11yCharCounter, mas para contadores dinâmicos sem id fixo —
+// usado nos toggles renderizados em loop (Observações/Notas de Código por
+// componente), onde vários textareas compartilham o mesmo padrão mas não têm
+// id único prático. `el` é o textarea/input; `counterEl` é o <span> irmão
+// direto já resolvido pelo chamador (ver _renderA11yElementoToggles e afins).
+function updateA11yCharCounterEl(el, counterEl) {
+  if (!el || !counterEl) return;
+  const max = el.getAttribute('maxlength');
+  const len = (el.value || '').length;
+  counterEl.textContent = max ? `${len}/${max}` : String(len);
+}
+window.updateA11yCharCounterEl = updateA11yCharCounterEl;
+
 // Tag manual (A, A1, A1.1...) — mesmo formato e mesma lógica de validação das
 // specs normais. Resolve o input/erro certo a partir da categoria aberta no
 // momento (modal.dataset.category). Título e Elemento Decorativo usam selo
@@ -588,6 +845,7 @@ function validateA11yTagInput() {
   const input = document.getElementById(inputId);
   const error = document.getElementById(A11Y_TAG_ERROR_ID[category]);
   if (!input) return true;
+  updateA11yCharCounter(input);
   const value = input.value.toUpperCase();
   const isValid = /^[A-Z]\d*(\.\d+)*$/.test(value);
   if (error) error.classList.toggle('hidden', isValid);
@@ -596,11 +854,49 @@ function validateA11yTagInput() {
 }
 window.validateA11yTagInput = validateA11yTagInput;
 
+// A origem filtra tudo (decisão de produto, 2026-09): specs mobile de
+// "Elementos e Imagens" nunca compartilham tela com o catálogo desktop de 16
+// categorias. Esconde/mostra de uma vez só o bloco do <select> "Componente"
+// (trigger + menu, coluna inteira do grid) e o bloco #a11y-el-desktop-block
+// ("Outro", preview de Descrição/Nota de Código) + variantes/toggles do
+// catálogo (#a11y-el-variants-wrap/#a11y-el-toggles-wrap, que já têm sua
+// própria lógica condicional de "tem conteúdo catalogado" — aqui só
+// sobrepomos com 'hidden' por cima quando mobile). Chamada sempre do topo de
+// updateA11yElementoFields, antes de qualquer outra decisão.
+function _toggleA11yElementoDesktopBlock(isMobile) {
+  const componenteCol = document.getElementById('a11y-el-desktop-componente-col');
+  const desktopBlock = document.getElementById('a11y-el-desktop-block');
+  const variantsWrap = document.getElementById('a11y-el-variants-wrap');
+  const togglesWrap = document.getElementById('a11y-el-toggles-wrap');
+  if (componenteCol) componenteCol.classList.toggle('hidden', isMobile);
+  if (desktopBlock) desktopBlock.classList.toggle('hidden', isMobile);
+  if (isMobile) {
+    // Sobrepõe o 'hidden' condicional que _renderA11yElementoVariants/
+    // _renderA11yElementoToggles já controlam (baseado no componente
+    // desktop escolhido) — em mobile nenhum dos dois deve aparecer, mesmo
+    // que o <select> escondido ainda guarde um valor residual de sessão
+    // anterior.
+    if (variantsWrap) variantsWrap.classList.add('hidden');
+    if (togglesWrap) togglesWrap.classList.add('hidden');
+  }
+}
+
 // ── Elementos e Imagens ──────────────────────────────────────────────────
 // Select com o catálogo real de 16 componentes do DSC + "Outro" (texto
 // livre, pra telas com componentes fora do catálogo). Ao escolher um item do
 // catálogo, mostra preview somente-leitura de Descrição/Nota de Código.
+// Specs mobile (modal.dataset.a11yOrigin === 'mobile') pulam esse catálogo
+// inteiro — só a lib de Acessibilidade MOBILE alimenta essas specs, nunca a
+// desktop (ver _toggleA11yElementoDesktopBlock acima).
 function updateA11yElementoFields() {
+  const modal = document.getElementById('a11y-spec-modal');
+  const isMobile = !!modal && modal.dataset.a11yOrigin === 'mobile';
+  _toggleA11yElementoDesktopBlock(isMobile);
+  if (isMobile) {
+    _renderA11yElementoMobileFields();
+    return;
+  }
+
   const select = document.getElementById('a11y-el-componente-select');
   const outroWrap = document.getElementById('a11y-el-componente-outro-wrap');
   const previewWrap = document.getElementById('a11y-el-preview');
@@ -705,6 +1001,7 @@ function _renderA11yElementoToggles(selectValue) {
   if (toggles.length === 0) return;
 
   toggles.forEach(t => {
+    const max = A11Y_TOGGLE_MAXLENGTH[t.key] || A11Y_TOGGLE_MAXLENGTH_DEFAULT;
     const row = document.createElement('div');
     row.className = 'bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl overflow-hidden';
     row.innerHTML = `
@@ -715,8 +1012,10 @@ function _renderA11yElementoToggles(selectValue) {
         <span class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(t.label)}</span>
       </label>
       <div class="hidden px-3 pb-3" data-a11y-toggle-textarea-wrap>
-        <textarea data-a11y-toggle-value rows="2" placeholder="Insira seu texto de ${escapeHtml(t.label.toLowerCase())}."
+        <textarea data-a11y-toggle-value maxlength="${max}" rows="2" placeholder="Insira seu texto de ${escapeHtml(t.label.toLowerCase())}."
+          oninput="updateA11yCharCounterEl(this, this.nextElementSibling)"
           class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg px-2.5 py-2 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
+        <span class="block text-right text-[9px] text-slate-400 dark:text-dark-muted mt-0.5">0/${max}</span>
       </div>
     `;
     list.appendChild(row);
@@ -733,10 +1032,11 @@ function _onA11yElementoToggleChange(checkbox) {
   const wrap = row ? row.querySelector('[data-a11y-toggle-textarea-wrap]') : null;
   if (!wrap) return;
   wrap.classList.toggle('hidden', !checkbox.checked);
+  const ta = wrap.querySelector('[data-a11y-toggle-value]');
   if (!checkbox.checked) {
-    const ta = wrap.querySelector('[data-a11y-toggle-value]');
     if (ta) ta.value = '';
   }
+  if (ta) updateA11yCharCounterEl(ta, ta.nextElementSibling);
 }
 window._onA11yElementoToggleChange = _onA11yElementoToggleChange;
 
@@ -777,7 +1077,7 @@ function _restoreA11yElementoToggles(props) {
     if (wrap) {
       wrap.classList.remove('hidden');
       const ta = wrap.querySelector('[data-a11y-toggle-value]');
-      if (ta) ta.value = p.value || '';
+      if (ta) { ta.value = p.value || ''; updateA11yCharCounterEl(ta, ta.nextElementSibling); }
     }
   });
 }
@@ -804,16 +1104,19 @@ window.updateA11yElementoMobileVariant = updateA11yElementoMobileVariant;
 // Campos exclusivos de "Elementos e Imagens" mobile — bloco inteiro
 // reconstruído a cada troca de sub-variante (componente / link / texto
 // alternativo), refletindo a árvore real do component set mobile (ver
-// refs/design-acessivel-mobile-link-property.json):
-//   - "componente": Descrição/Nome Acessível/Dica Leitor de Tela/Observação
-//     (toggles opcionais, cada um com textarea) + Link do Componente
-//     (SEMPRE visível, sem toggle — dropdown de 64 nomes + URL obrigatória).
+// refs/design-acessivel-mobile-link-property.json). O toggle "Nome
+// Acessível" que existia aqui até 2026-09 foi REMOVIDO (duplicava o campo
+// "Label (accessibilityLabel)" sempre visível no topo do formulário,
+// #a11y-el-label — ver comentário em _renderA11yElementoMobileFields):
+//   - "componente": Descrição/Dica Leitor de Tela/Observação (toggles
+//     opcionais, cada um com textarea) + Link do Componente (SEMPRE
+//     visível, sem toggle — dropdown de 64 nomes + URL obrigatória).
 //   - "link": Descrição fixa e travada (A11Y_CONTENT.elemento.mobileLink) +
-//     Nome Acessível/Observação opcionais. Sem Dica Leitor de Tela, sem Link
-//     do Componente (não existem nessa variante na lib real).
+//     Observação opcional. Sem Dica Leitor de Tela, sem Link do Componente
+//     (não existem nessa variante na lib real).
 //   - "texto alternativo": Descrição é textarea LIVRE OBRIGATÓRIA (o alt-text
-//     real da mídia) + Observação opcional. Sem Nome Acessível, sem Dica,
-//     sem Link do Componente.
+//     real da mídia) + Observação opcional. Sem Dica, sem Link do
+//     Componente.
 // Visibilidade do bloco inteiro decidida por modal.dataset.a11yOrigin
 // ('mobile'), setado por openA11yModal — nunca aparece em specs web, porque
 // o wrapper real desktop ("[a11y] Box specs LT") não tem essa sub-variação.
@@ -829,26 +1132,35 @@ function _renderA11yElementoMobileFields() {
   if (!isMobile) { list.innerHTML = ''; return; }
 
   const variant = _getA11yElementoMobileVariant();
-  // Componente do catálogo desktop atualmente escolhido no <select> de
-  // nível 1 — usado só na sub-variante "componente" pra não duplicar
-  // Nome Acessível/Observações quando o próprio catálogo já oferece esses
-  // toggles pra aquele componente específico (ex: Button tem "nome
-  // acessivel" catalogado — mostrar os dois deixaria 2 entradas com a
-  // mesma key 'nomeAcessivel' em properties[], e o backend faria
-  // setProperties 2x no mesmo campo).
-  const catalogSelect = document.getElementById('a11y-el-componente-select');
-  const catalogInfo = (catalogSelect && catalogSelect.value !== 'outro')
-    ? _getA11yComponentToggles(catalogSelect.value) : null;
-  const catalogToggleKeys = new Set((catalogInfo && catalogInfo.toggles || []).map(t => t.key));
-  // Reconstrói sempre que a variante (ou o componente do catálogo, que muda
-  // quais toggles ficariam duplicados) mudar de fato — guarda no dataset da
+  // O bloco desktop (catálogo de 16 categorias) nunca fica visível/ativo
+  // simultaneamente a este bloco (ver _toggleA11yElementoDesktopBlock) —
+  // decisão de produto "a origem filtra tudo" (2026-09): a lib mobile é a
+  // única fonte pra specs mobile. Os toggles mobile (Descrição/Dica Leitor
+  // de Tela/Observação) são sempre renderizados, sem checagem de duplicidade
+  // contra o catálogo desktop — catalogToggleKeys foi removido junto com
+  // essa checagem.
+  //
+  // "Nome Acessível" NÃO é mais renderizado aqui (removido em 2026-09):
+  // duplicava o campo "Label (accessibilityLabel)" sempre visível no topo do
+  // formulário (#a11y-el-label) — os dois alimentavam o mesmo conceito de
+  // texto acessível do elemento (aria-label/accessibilityLabel) e, no
+  // fallback procedural (que é o caminho real hoje pra specs mobile
+  // "elemento" comuns, já que não existe wrapper mobile real cadastrado em
+  // A11Y_CONTENT — ver _tryImportA11yComponent, code.js), apareciam como
+  // DUAS linhas separadas e redundantes no card. Ver
+  // _restoreA11yElementoMobileToggles/_prefillA11ySpecForEdit para a
+  // migração que herda o valor salvo de specs antigas com
+  // properties['nomeAcessivel'] de volta pro campo Label do topo.
+  // Reconstrói sempre que a variante mudar de fato — guarda no dataset da
   // própria lista pra não perder o texto digitado em rerenders triviais.
-  const renderKey = variant + '::' + (catalogSelect ? catalogSelect.value : '');
+  const renderKey = variant;
   if (list.dataset.renderedVariant === renderKey && list.childElementCount > 0) return;
   list.dataset.renderedVariant = renderKey;
   list.innerHTML = '';
 
-  const toggleRowHtml = (key, label, placeholder) => `
+  const toggleRowHtml = (key, label, placeholder) => {
+    const max = A11Y_TOGGLE_MAXLENGTH[key] || A11Y_TOGGLE_MAXLENGTH_DEFAULT;
+    return `
     <div class="bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl overflow-hidden">
       <label class="flex items-center gap-2 px-3 py-2.5 cursor-pointer select-none">
         <input type="checkbox" data-a11y-toggle-key="${key}"
@@ -857,10 +1169,13 @@ function _renderA11yElementoMobileFields() {
         <span class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(label)}</span>
       </label>
       <div class="hidden px-3 pb-3" data-a11y-toggle-textarea-wrap>
-        <textarea data-a11y-toggle-value rows="2" placeholder="${escapeHtml(placeholder)}"
+        <textarea data-a11y-toggle-value maxlength="${max}" rows="2" placeholder="${escapeHtml(placeholder)}"
+          oninput="updateA11yCharCounterEl(this, this.nextElementSibling)"
           class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg px-2.5 py-2 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
+        <span class="block text-right text-[9px] text-slate-400 dark:text-dark-muted mt-0.5">0/${max}</span>
       </div>
     </div>`;
+  };
 
   if (variant === A11Y_ELEMENTO_MOBILE_VARIANTS.link) {
     const wrapDiv = document.createElement('div');
@@ -870,8 +1185,7 @@ function _renderA11yElementoMobileFields() {
         <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição (fixa)</p>
         <p class="text-[12px] text-slate-700 dark:text-white leading-snug">${escapeHtml(A11Y_CONTENT.elemento.mobileLink.descricao)}</p>
       </div>
-      ${catalogToggleKeys.has('nomeAcessivel') ? '' : toggleRowHtml('nomeAcessivel', A11Y_TOGGLE_LABELS.nomeAcessivel, 'Insira seu texto de nome acessível.')}
-      ${catalogToggleKeys.has('observacoes') ? '' : toggleRowHtml('observacoes', A11Y_TOGGLE_LABELS.observacoes, 'Insira seu texto de observações.')}
+      ${toggleRowHtml('observacoes', A11Y_TOGGLE_LABELS.observacoes, 'Insira seu texto de observações.')}
     `;
     list.appendChild(wrapDiv);
   } else if (variant === A11Y_ELEMENTO_MOBILE_VARIANTS.textoAlternativo) {
@@ -879,55 +1193,113 @@ function _renderA11yElementoMobileFields() {
     wrapDiv.className = 'space-y-2.5';
     wrapDiv.innerHTML = `
       <div>
-        <label for="a11y-el-mobile-alt-descricao" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Descrição (texto alternativo) *</label>
-        <textarea id="a11y-el-mobile-alt-descricao" rows="2" placeholder="Insira aqui o texto alternativo da imagem/mídia."
+        <div class="flex items-center justify-between mb-1.5 ml-1">
+          <label for="a11y-el-mobile-alt-descricao" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Descrição (texto alternativo) *</label>
+          <span id="a11y-el-mobile-alt-descricao-counter" class="text-[9px] text-slate-400 dark:text-dark-muted shrink-0">0/180</span>
+        </div>
+        <textarea id="a11y-el-mobile-alt-descricao" maxlength="180" rows="2" placeholder="Insira aqui o texto alternativo da imagem/mídia."
+          oninput="updateA11yCharCounter(this)"
           class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
       </div>
-      ${catalogToggleKeys.has('observacoes') ? '' : toggleRowHtml('observacoes', A11Y_TOGGLE_LABELS.observacoes, 'Insira seu texto de observações.')}
+      ${toggleRowHtml('observacoes', A11Y_TOGGLE_LABELS.observacoes, 'Insira seu texto de observações.')}
     `;
     list.appendChild(wrapDiv);
   } else {
     // "componente" — toggles opcionais (Dica Leitor de Tela vem de
-    // A11Y_MOBILE_ONLY_TOGGLES; Nome Acessível/Observação reaproveitam os
-    // rótulos canônicos do catálogo desktop, MAS só entram aqui se o
-    // componente escolhido no catálogo NÃO já os tiver catalogados — ver
-    // catalogToggleKeys acima, evita duplicidade de key em properties[])
-    // + Link do Componente sempre visível.
+    // A11Y_MOBILE_ONLY_TOGGLES; Observação reaproveita o rótulo canônico do
+    // catálogo desktop, sempre renderizado, já que o catálogo desktop nunca
+    // compartilha tela com este bloco) + Link do Componente sempre visível.
     const wrapDiv = document.createElement('div');
     wrapDiv.className = 'space-y-2.5';
     wrapDiv.innerHTML = [
-      catalogToggleKeys.has('nomeAcessivel') ? '' : toggleRowHtml('nomeAcessivel', A11Y_TOGGLE_LABELS.nomeAcessivel, 'Insira seu texto de nome acessível.'),
       ...A11Y_MOBILE_ONLY_TOGGLES.map(t => toggleRowHtml(t.key, t.label, t.placeholder)),
-      catalogToggleKeys.has('observacoes') ? '' : toggleRowHtml('observacoes', A11Y_TOGGLE_LABELS.observacoes, 'Insira seu texto de observações.'),
+      toggleRowHtml('observacoes', A11Y_TOGGLE_LABELS.observacoes, 'Insira seu texto de observações.'),
     ].join('');
     list.appendChild(wrapDiv);
 
     // Link do Componente — sempre visível, sem toggle (reflete a árvore real
     // do Figma: a instância "Link do componente" não tem visible vinculado a
     // nenhum BOOLEAN, ver estruturaCompletaVarianteElementosEImagens no JSON
-    // extraído). Dropdown de 64 nomes fixos (default "Personalizado") + URL
-    // obrigatória (o designer cola o link manualmente).
+    // extraído). Dropdown de 64 nomes fixos (default "Personalizado") + campo
+    // de texto livre obrigatório (companheiro do dropdown).
+    // "Personalizado" (default real da property, confirmado via REST API em
+    // refs/design-acessivel-mobile-link-property.json) É o equivalente mobile
+    // do "Outro (fora do catálogo)" desktop: quando o designer não encontra o
+    // componente real nas 64 opções, deixa "Personalizado" selecionado e usa
+    // o campo de texto livre abaixo pra documentar o NOME REAL do componente
+    // não mapeado — sinal formal pra vertical de a11y criar essa spec na lib.
+    // Reaproveita a mesma key 'linkComponente'/'linkComponenteNome' de sempre
+    // (ver _collectA11yElementoMobileToggleProperties) — não precisou criar
+    // campo novo, só deixar o rótulo/placeholder explícitos sobre esse uso.
+    // Pré-seleção automática (UX, 2026-09): se o nome do componente DSC já
+    // resolvido pelo backend (modal.dataset.dscComponentName, ex: "[dsc] Top
+    // App Bar") bater EXATAMENTE — após limpar o prefixo "[dsc]" — com uma
+    // das 64 opções fixas, usa essa opção como default em vez de
+    // "Personalizado". Match exato apenas (case-insensitive/trim, sem
+    // aproximação por substring: nomes reais divergem editorialmente da
+    // lista curada em vários casos — ex. "[dsc] Chip" vs "Chips", "[dsc]
+    // Text Field Single" vs "Input/Text Field - Single" — e não há como
+    // resolver isso com heurística segura, mesma razão pela qual
+    // A11Y_MOBILE_COMPONENT_LINK_NODE_IDS também só cobre 46/64 por nome
+    // exato). Só entra em specs NOVAS: em edição, _restoreA11yElementoMobileToggles
+    // roda DEPOIS deste render e sobrescreve linkSelect.value com o dado
+    // salvo (sub.linkComponenteNome), então a escolha do designer sempre
+    // prevalece.
+    const dscNameRaw = modal ? modal.dataset.dscComponentName : '';
+    const dscNameClean = dscNameRaw ? _cleanDscContainingFrameName(dscNameRaw).trim().toLowerCase() : '';
+    const autoMatchedOption = dscNameClean
+      ? A11Y_MOBILE_LINK_COMPONENT_OPTIONS.find(name => name.trim().toLowerCase() === dscNameClean) || null
+      : null;
     const linkOptionsHtml = A11Y_MOBILE_LINK_COMPONENT_OPTIONS
-      .map(name => `<option value="${escapeHtml(name)}"${name === 'Personalizado' ? ' selected' : ''}>${escapeHtml(name)}</option>`)
+      .map(name => {
+        const isSelected = autoMatchedOption ? name === autoMatchedOption : name === 'Personalizado';
+        return `<option value="${escapeHtml(name)}"${isSelected ? ' selected' : ''}>${escapeHtml(name)}</option>`;
+      })
       .join('');
     const linkRow = document.createElement('div');
     linkRow.className = 'bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl p-3 space-y-2';
     linkRow.innerHTML = `
       <p class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(A11Y_TOGGLE_LABELS.linkComponente)}</p>
       <div>
-        <label for="a11y-el-mobile-link-select" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Componente do DSC</label>
+        <label for="a11y-el-mobile-link-select" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Componente do DSC (escolha "Personalizado" se não encontrar)</label>
         <select id="a11y-el-mobile-link-select"
           class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg px-2.5 py-2 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
           ${linkOptionsHtml}
         </select>
       </div>
       <div>
-        <label for="a11y-el-mobile-link-url" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Link do componente *</label>
-        <input type="text" id="a11y-el-mobile-link-url" placeholder="${escapeHtml(A11Y_MOBILE_LINK_URL_PLACEHOLDER)}"
+        <div class="flex items-center justify-between mb-1.5 ml-1">
+          <label for="a11y-el-mobile-link-url" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Link ou nome do componente *</label>
+          <span id="a11y-el-mobile-link-url-counter" class="text-[9px] text-slate-400 dark:text-dark-muted shrink-0">0/300</span>
+        </div>
+        <input type="text" id="a11y-el-mobile-link-url" maxlength="300" placeholder="${escapeHtml(A11Y_MOBILE_LINK_URL_PLACEHOLDER)}"
+          oninput="updateA11yCharCounter(this)"
           class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg px-2.5 py-2 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+        <p id="a11y-el-mobile-link-url-lock-hint" class="hidden flex items-center gap-1 mt-1 ml-1 text-[9px] text-slate-400 dark:text-dark-muted">
+          <i data-lucide="lock" class="w-2.5 h-2.5"></i> Preenchido automaticamente a partir do componente do DSC — escolha "Personalizado" acima para editar.
+        </p>
       </div>
     `;
     list.appendChild(linkRow);
+    _refreshIcons(linkRow);
+
+    // Auto-preenchimento do link a partir do nome escolhido (ver
+    // _autofillA11yMobileLinkUrlFromComponentName) — só reage a interação
+    // real do usuário: atribuição direta de select.value (ex: restauração em
+    // modo edição, _restoreA11yElementoMobileToggles) NÃO dispara 'change',
+    // então não sobrescreve valores salvos. O listener também reavalia o
+    // lock (_syncA11yMobileLinkUrlLockState) a cada troca manual do select.
+    const linkSelectEl = linkRow.querySelector('#a11y-el-mobile-link-select');
+    if (linkSelectEl) linkSelectEl.addEventListener('change', _autofillA11yMobileLinkUrlFromComponentName);
+
+    // Se a pré-seleção automática encontrou match, preenche a URL de bônus
+    // já nesta primeira renderização (equivalente a disparar o 'change' que
+    // o designer disparia manualmente). Em modo edição isso é inofensivo: a
+    // restauração de dados salvos (_restoreA11yElementoMobileToggles, ver
+    // openA11yModal/editA11ySpec) roda DEPOIS, sobrescreve select/URL com os
+    // valores da spec original e reaplica o lock por conta própria.
+    if (autoMatchedOption) _autofillA11yMobileLinkUrlFromComponentName();
+    else _syncA11yMobileLinkUrlLockState();
   }
 }
 
@@ -971,13 +1343,27 @@ function _collectA11yElementoMobileToggleProperties() {
 // Inverso de _collectA11yElementoMobileToggleProperties — usado em
 // _prefillA11ySpecForEdit. Precisa que _renderA11yElementoMobileFields já
 // tenha rodado (o formulário de edição já é aberto com dataset.a11yOrigin
-// setado, ver editA11ySpec) pra achar os campos na DOM.
+// setado, ver editA11ySpec) pra achar os campos na DOM. Chamada DEPOIS de
+// `setVal('a11y-el-label', getProp('label'))` (ver _prefillA11ySpecForEdit)
+// — ordem relevante pro fallback de 'nomeAcessivel' abaixo.
 function _restoreA11yElementoMobileToggles(props) {
   const list = document.getElementById('a11y-el-mobile-toggles-list');
   if (!list) return;
-  const mobileToggleKeys = new Set(A11Y_MOBILE_ONLY_TOGGLES.map(t => t.key).concat(['nomeAcessivel', 'observacoes']));
+  const mobileToggleKeys = new Set(A11Y_MOBILE_ONLY_TOGGLES.map(t => t.key).concat(['observacoes']));
   (props || []).forEach(p => {
     if (!p) return;
+    // Migração: specs mobile ANTIGAS podiam ter properties['nomeAcessivel']
+    // preenchido pelo toggle "Nome Acessível" removido em 2026-09 (duplicava
+    // o campo "Label (accessibilityLabel)" sempre visível no topo do
+    // formulário). Ao reabrir pra edição, o valor volta a aparecer — agora
+    // no campo Label do topo — sem perder dado. Só entra se o Label ainda
+    // estiver vazio (não sobrescreve um valor de Label já salvo na mesma
+    // spec — cenário legado em que os dois campos coexistiam preenchidos).
+    if (p.key === 'nomeAcessivel') {
+      const labelInput = document.getElementById('a11y-el-label');
+      if (labelInput && !labelInput.value.trim()) { labelInput.value = p.value || ''; updateA11yCharCounter(labelInput); }
+      return;
+    }
     if (mobileToggleKeys.has(p.key)) {
       const checkbox = list.querySelector(`[data-a11y-toggle-key="${p.key}"]`);
       if (!checkbox) return;
@@ -987,18 +1373,18 @@ function _restoreA11yElementoMobileToggles(props) {
       if (wrap) {
         wrap.classList.remove('hidden');
         const ta = wrap.querySelector('[data-a11y-toggle-value]');
-        if (ta) ta.value = p.value || '';
+        if (ta) { ta.value = p.value || ''; updateA11yCharCounterEl(ta, ta.nextElementSibling); }
       }
       return;
     }
     if (p.key === 'descricao') {
       const altDescricao = document.getElementById('a11y-el-mobile-alt-descricao');
-      if (altDescricao) altDescricao.value = p.value || '';
+      if (altDescricao) { altDescricao.value = p.value || ''; updateA11yCharCounter(altDescricao); }
       return;
     }
     if (p.key === 'linkComponente') {
       const linkUrl = document.getElementById('a11y-el-mobile-link-url');
-      if (linkUrl) linkUrl.value = p.value || '';
+      if (linkUrl) { linkUrl.value = p.value || ''; updateA11yCharCounter(linkUrl); }
       return;
     }
     if (p.key === 'linkComponenteNome') {
@@ -1006,6 +1392,11 @@ function _restoreA11yElementoMobileToggles(props) {
       if (linkSelect) linkSelect.value = p.value || 'Personalizado';
     }
   });
+  // Atribuição direta de .value acima não dispara 'change' — reaplica o
+  // lock aqui pra refletir o estado final restaurado (select.value pode ter
+  // sido setado antes ou depois de linkUrl.value neste forEach, dependendo
+  // da ordem em que a spec salvou 'linkComponenteNome'/'linkComponente').
+  _syncA11yMobileLinkUrlLockState();
 }
 
 // Menu customizado do "Componente" — o <select> nativo escondido continua
@@ -1060,9 +1451,20 @@ function selectA11yComponente(value) {
 }
 window.selectA11yComponente = selectA11yComponente;
 
-function prefillA11yComponentName(name, mainText) {
+function prefillA11yComponentName(name, mainText, dscComponentName) {
   const modal = document.getElementById('a11y-spec-modal');
   if (!modal || modal.classList.contains('hidden')) return;
+  // "Camada no canvas"/"Componente DSC" (read-only, comuns às 5 categorias) —
+  // populados aqui independente da categoria aberta, ao contrário do restante
+  // desta função (Label/Componente do select), que só existe em "elemento".
+  // Resposta assíncrona de get-selection-name (fluxo manual); fluxo
+  // automático já resolve os 2 no momento de abrir o modal (openA11yModal),
+  // sem passar por aqui.
+  const targetNodeNameEl = document.getElementById('a11y-modal-target-node-name');
+  if (targetNodeNameEl && name) targetNodeNameEl.textContent = name;
+  if (dscComponentName) {
+    _renderA11yModalDscComponentName('a11y-modal-dsc-component-name', dscComponentName, modal.dataset.a11yOrigin || 'web');
+  }
   if (modal.dataset.category !== 'elemento') return;
   // Label a partir do texto real do elemento (ver _findMainTextContent,
   // code.js) — independente do Componente ter sido reconhecido ou não, e
@@ -1079,6 +1481,11 @@ function prefillA11yComponentName(name, mainText) {
   // canvas não pode trocar o select pra "Outro" por cima da sugestão já
   // escolhida.
   if (modal.dataset.presetComponente) return;
+  // Specs mobile não usam mais o select/"Outro" desktop (bloco escondido, ver
+  // _toggleA11yElementoDesktopBlock) — nada aqui pra pré-preencher a partir
+  // do nome do canvas; o designer identifica o componente pelo dropdown
+  // "Link do Componente" mobile manualmente.
+  if (modal.dataset.a11yOrigin === 'mobile') return;
   const outro = document.getElementById('a11y-el-componente-outro');
   const select = document.getElementById('a11y-el-componente-select');
   // Nome do canvas raramente bate com uma chave do catálogo — cai sempre em
@@ -1087,6 +1494,7 @@ function prefillA11yComponentName(name, mainText) {
   if (select && outro && !outro.value && name) {
     select.value = 'outro';
     outro.value = name;
+    updateA11yCharCounter(outro);
     updateA11yElementoFields();
   }
 }
@@ -1098,7 +1506,7 @@ window.prefillA11yComponentName = prefillA11yComponentName;
 function _fillA11yLabelIfEmpty(mainText) {
   if (!mainText) return;
   const labelInput = document.getElementById('a11y-el-label');
-  if (labelInput && !labelInput.value.trim()) labelInput.value = mainText;
+  if (labelInput && !labelInput.value.trim()) { labelInput.value = mainText; updateA11yCharCounter(labelInput); }
 }
 
 // Resposta de 'get-node-main-text' — mesmo preenchimento condicional de
@@ -1137,6 +1545,7 @@ function _renderA11yFixedToggles(wrapId, listId, shortName) {
   if (toggles.length === 0) return;
 
   toggles.forEach(t => {
+    const max = A11Y_TOGGLE_MAXLENGTH[t.key] || A11Y_TOGGLE_MAXLENGTH_DEFAULT;
     const row = document.createElement('div');
     row.className = 'bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl overflow-hidden';
     row.innerHTML = `
@@ -1147,8 +1556,10 @@ function _renderA11yFixedToggles(wrapId, listId, shortName) {
         <span class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(t.label)}</span>
       </label>
       <div class="hidden px-3 pb-3" data-a11y-toggle-textarea-wrap>
-        <textarea data-a11y-toggle-value rows="2" placeholder="Insira seu texto de ${escapeHtml(t.label.toLowerCase())}."
+        <textarea data-a11y-toggle-value maxlength="${max}" rows="2" placeholder="Insira seu texto de ${escapeHtml(t.label.toLowerCase())}."
+          oninput="updateA11yCharCounterEl(this, this.nextElementSibling)"
           class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg px-2.5 py-2 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
+        <span class="block text-right text-[9px] text-slate-400 dark:text-dark-muted mt-0.5">0/${max}</span>
       </div>
     `;
     list.appendChild(row);
@@ -1190,7 +1601,7 @@ function _restoreA11yFixedToggles(listId, props) {
     if (wrap) {
       wrap.classList.remove('hidden');
       const ta = wrap.querySelector('[data-a11y-toggle-value]');
-      if (ta) ta.value = p.value || '';
+      if (ta) { ta.value = p.value || ''; updateA11yCharCounterEl(ta, ta.nextElementSibling); }
     }
   });
 }
@@ -1237,6 +1648,11 @@ function updateA11yEstruturaFields() {
     // customizável não sobrescreve o que o designer já digitou.
     if (!isCustomizavel) descInput.value = (entry && entry.descricao) || '';
     else if (!descInput.value) descInput.value = (entry && entry.descricao) || '';
+    // Contador só faz sentido quando o campo é digitável (customizável) — nos
+    // demais subtipos o texto é curado pela lib, sem limite prático de UX.
+    const counter = document.getElementById('a11y-estrutura-descricao-counter');
+    if (counter) counter.classList.toggle('hidden', !isCustomizavel);
+    updateA11yCharCounter(descInput);
   }
   if (notaWrap) notaWrap.classList.toggle('hidden', !(entry && entry.notasCodigo));
   if (notaEl) notaEl.textContent = (entry && entry.notasCodigo) || '';
@@ -1314,6 +1730,9 @@ function updateA11yInformacoesFields() {
     descInput.classList.toggle('dark:bg-dark-bg', !isCustomizavel);
     if (!isCustomizavel) descInput.value = (entry && entry.descricao) || '';
     else if (!descInput.value) descInput.value = (entry && entry.descricao) || '';
+    const counter = document.getElementById('a11y-informacoes-descricao-counter');
+    if (counter) counter.classList.toggle('hidden', !isCustomizavel);
+    updateA11yCharCounter(descInput);
   }
 
   // "Customizável" não tem componente real catalogado — sem sentido mostrar
@@ -1322,10 +1741,40 @@ function updateA11yInformacoesFields() {
 }
 window.updateA11yInformacoesFields = updateA11yInformacoesFields;
 
+// Ponto único de fechamento do modal — X, clique no backdrop e Esc (genérico,
+// ver core.js) chamam esta função diretamente. Também é chamada pelo
+// caminho de SUCESSO em confirmA11ySpec (botão "Aplicar"), que por isso
+// limpa modal.dataset.wizardActive ANTES de chamar closeA11yModal — só
+// quando o dataset ainda diz '1' aqui é que o fechamento é "externo"
+// (usuário abandonando o formulário sem confirmar), e é isso que deve
+// acionar stopA11yBatchWizard.
+// O botão "Cancelar" do formulário NÃO chama mais isto direto — chama
+// cancelA11yModalExplicit() logo abaixo, que repassa viaExplicitCancelButton
+// = true pra stopA11yBatchWizard. Essa distinção existe só pra decidir se o
+// snackbar de retomada da revisão aparece: clique em "Cancelar" é intenção
+// clara de parar (sem oferta de retomar); X/backdrop/Esc podem ser
+// acidentais (oferece retomar via snackbar). Ver stopA11yBatchWizard.
 function closeA11yModal() {
+  const modal = document.getElementById('a11y-spec-modal');
+  const wasWizardActive = modal && modal.dataset.wizardActive === '1';
   closeModal('a11y-spec-modal');
+  if (wasWizardActive && window._a11yBatchWizardState) {
+    stopA11yBatchWizard(false);
+  }
 }
 window.closeA11yModal = closeA11yModal;
+
+// Chamado só pelo botão "Cancelar" do formulário — ver comentário acima de
+// closeA11yModal pra por que a distinção existe.
+function cancelA11yModalExplicit() {
+  const modal = document.getElementById('a11y-spec-modal');
+  const wasWizardActive = modal && modal.dataset.wizardActive === '1';
+  closeModal('a11y-spec-modal');
+  if (wasWizardActive && window._a11yBatchWizardState) {
+    stopA11yBatchWizard(true);
+  }
+}
+window.cancelA11yModalExplicit = cancelA11yModalExplicit;
 
 // Ponte de request/response com o backend para pegar {id, name} da seleção
 // atual no canvas — usada por "Marcar Área" (confirmA11yArea, que cria um
@@ -1354,34 +1803,25 @@ function _getA11ySelectionInfo() {
 }
 window._getA11ySelectionInfo = _getA11ySelectionInfo;
 
-// ── Payload puro de "Elementos e Imagens" ───────────────────────────────
-// Extraído de confirmA11ySpec (fluxo manual) pra ser reaproveitado também
-// pelo lote de "Gerar Handoff Automatizado" (confirmA11yBatchGenerate) — a
-// ÚNICA categoria relevante pro lote, já que é a única com correspondência
-// DSC detectável. Recebe os dados JÁ RESOLVIDOS (nunca lê do DOM) e devolve
-// { letter, properties, a11ySubtype } no mesmo formato que confirmA11ySpec
-// monta pra 'create-unified-spec'.
+// ── Payload puro de "Elementos e Imagens" (fluxo WEB) ───────────────────
+// Usado pelo fluxo manual (confirmA11ySpec, categoria 'elemento', origem
+// web, fora do caso "Outro") — recebe os dados JÁ RESOLVIDOS (nunca lê do
+// DOM) e devolve { letter, properties, a11ySubtype } no mesmo formato que
+// confirmA11ySpec monta pra 'create-unified-spec'. O wizard de revisão da
+// Detecção Automática NÃO usa este builder — ele reaproveita o próprio
+// formulário manual (openA11yModal/confirmA11ySpec) item a item, então os
+// dados vêm sempre do DOM preenchido pelo designer, igual ao fluxo manual
+// normal. Specs mobile não passam mais por aqui (ver branch `isMobile` em
+// confirmA11ySpec, que monta o payload direto a partir de
+// linkComponente/variant, sem depender do catálogo desktop).
 //
 // options:
-//   componenteKey  chave do catálogo (ex: 'accordion') — nunca "outro" aqui,
-//                  o lote só lida com componentes que o scan já reconheceu.
-//   label          valor de accessibilityLabel. No fluxo manual é o que o
-//                  designer digitou; no lote é o NOME DO NÓ no canvas como
-//                  placeholder.
-//   tipo           variante secundária (ex: Button → "de icone") — no lote
-//                  vem de _inferA11yVariantFromDsc quando há correspondência
-//                  DSC conhecida, senão null.
+//   componenteKey  chave do catálogo (ex: 'accordion') — nunca "outro" aqui.
+//   label          valor de accessibilityLabel digitado pelo designer.
+//   tipo           variante secundária (ex: Button → "de icone"), lida do
+//                  <select> dinâmico correspondente quando existe.
 //   toggleProperties  array já no formato properties[] ({key,label,value})
-//                  dos toggles dinâmicos ligados — no lote sempre [].
-//   overrideDescricao  string opcional que substitui a Descrição do catálogo
-//                  desktop (usado pela sub-variante mobile "link", que tem
-//                  Descrição fixa e travada própria — ver
-//                  A11Y_CONTENT.elemento.mobileLink). null/undefined mantém o
-//                  comportamento padrão (Descrição do catálogo).
-//   suppressCatalogDescricao  quando true, não inclui a Descrição do
-//                  catálogo nem overrideDescricao — usado pela sub-variante
-//                  mobile "texto alternativo", cuja Descrição livre já entra
-//                  via toggleProperties (key 'descricao', vindo do textarea).
+//                  dos toggles dinâmicos ligados.
 function _buildA11yElementoPayload(letter, componenteKey, label, options) {
   const opts = options || {};
   const tipo = opts.tipo != null ? opts.tipo : null;
@@ -1393,22 +1833,13 @@ function _buildA11yElementoPayload(letter, componenteKey, label, options) {
     { key: 'label', label: 'Label', value: label },
   ];
   const entry = A11Y_CONTENT.elemento.componentes[componenteKey];
-  const suppressCatalogDescricao = !!opts.suppressCatalogDescricao;
-  const descricaoValue = opts.overrideDescricao != null ? opts.overrideDescricao : (entry && entry.descricao);
-  if (!suppressCatalogDescricao && descricaoValue) properties.push({ key: 'descricao', label: 'Descrição', value: descricaoValue });
+  if (entry && entry.descricao) properties.push({ key: 'descricao', label: 'Descrição', value: entry.descricao });
   if (entry && entry.notasCodigo) properties.push({ key: 'notaCodigo', label: 'Nota de Código', value: entry.notasCodigo });
   properties.push(...toggleProperties);
   properties = properties.filter(p => p.value);
   return { letter, properties, a11ySubtype };
 }
 
-// Variante de _buildA11yElementoPayload pro caso "Outro" no lote: componente
-// DSC real reconhecido (dscComponentMatch.isUnmapped === true), mas sem
-// categoria de a11y catalogada. Replica EXATAMENTE o formato que o branch
-// isOutro de confirmA11ySpec monta no fluxo manual (properties sem toggles/
-// descrição/nota — só componente + label — e a11ySubtype com componente/tipo
-// nulos), pra _prefillA11ySpecForEdit continuar funcionando sem distinguir
-// origem manual vs. lote.
 // containingFrame chega como o nome cru do component set (ex: "[dsc]
 // Alert") — remove o prefixo "[dsc]"/colchetes pra virar um nome legível no
 // campo "Componente" (ex: "Alert").
@@ -1418,18 +1849,6 @@ function _cleanDscContainingFrameName(containingFrame) {
     .trim() || (containingFrame || 'Componente');
 }
 window._cleanDscContainingFrameName = _cleanDscContainingFrameName;
-
-function _buildA11yElementoOutroPayload(letter, containingFrame, label) {
-  const componenteOutro = _cleanDscContainingFrameName(containingFrame);
-  return {
-    letter,
-    properties: [
-      { key: 'componente', label: 'Componente', value: componenteOutro },
-      { key: 'label', label: 'Label', value: label },
-    ].filter(p => p.value),
-    a11ySubtype: { componente: null, isOutro: true, tipo: null },
-  };
-}
 
 // Default de nível de título quando não há sugestão prévia. O WAI recomenda
 // nunca inferir nível pelo tamanho visual da fonte — por isso não existe
@@ -1441,42 +1860,6 @@ function _defaultTituloNivelForOrigin(origin) {
   return origin === 'mobile' ? 'mobile' : 'h1';
 }
 
-// Payload puro pra categoria "titulo" no lote automatizado — mesmo espírito
-// de _buildA11yElementoPayload. Nível inferido a partir do token de
-// tipografia real (dscComponentMatch.suggestedLevel, calculado em
-// _resolveTypographyA11yMatch/_inferHeadingLevelFromTypography, code.js), com
-// fallback pro default (ver _defaultTituloNivelForOrigin) quando não há
-// styleKey aplicado (texto "solto") ou o token não pertence à escala de
-// heading/display. O designer ainda revisa/corrige o nível manualmente
-// depois quando necessário.
-// A tag de uma spec de "Nível de Título" precisa SEMPRE refletir o próprio
-// nível (H1..H6), nunca a letra sequencial usada pelas outras 4 categorias
-// — mesma regra do fluxo MANUAL. `letter` é sempre DERIVADO do nível aqui
-// dentro, pra não haver dois lugares divergentes calculando a mesma coisa.
-function _buildA11yTituloPayload(label, suggestedLevel, origin) {
-  const nivel = suggestedLevel || _defaultTituloNivelForOrigin(origin);
-  const entry = A11Y_CONTENT.titulo.niveis[nivel];
-  const letter = nivel === 'mobile' ? 'H' : nivel.toUpperCase();
-  const properties = [
-    { key: 'descricao', label: 'Descrição', value: (entry && entry.descricao) || '' },
-    { key: 'label', label: 'Label', value: label },
-  ].filter(p => p.value);
-  return { letter, properties, a11ySubtype: { nivel } };
-}
-
-// Payload puro pra categoria "decorativo" no lote — subtipo fixo em "gerais"
-// (o mais comum; "imagem" exige saber se é <img> ou background, o que a
-// heurística de ícone/vetor não determina).
-function _buildA11yDecorativoPayload(label) {
-  const tipo = 'gerais';
-  const entry = A11Y_CONTENT.decorativo[tipo];
-  const properties = [
-    { key: 'descricao', label: 'Descrição', value: (entry && entry.descricao) || '' },
-    { key: 'label', label: 'Label', value: label },
-  ].filter(p => p.value);
-  return { letter: A11Y_CATEGORIES.decorativo.badge, properties, a11ySubtype: { tipo } };
-}
-
 // Deduz o "tipo" de marco de navegação (header/nav/main/aside/footer) a
 // partir do containingFrame do componente DSC real detectado no canvas — por
 // ora só "[dsc] Header" → 'header' e "[dsc] Footer" → 'footer' têm
@@ -1486,29 +1869,6 @@ function _inferA11yEstruturaTipoFromContainingFrame(containingFrame) {
   if (name.includes('footer')) return 'footer';
   if (name.includes('header')) return 'header';
   return 'header';
-}
-
-// Payload puro pra categoria "estrutura" (Estrutura da Página) no lote —
-// mesmo espírito de _buildA11yElementoPayload. Diferente de "titulo"/
-// "decorativo" (badge fixo), "estrutura" usa TAG MANUAL sequencial (A, B,
-// C...) igual a "elemento"/"informacoes" — por isso recebe `letter` como
-// parâmetro, já calculado pelo chamador. "estrutura" tem DOIS níveis de
-// subtipo (variacao → tipo); no lote, a variacao é sempre fixada em "marco
-// de navegacao" (o único subtipo com correspondência DSC detectável hoje).
-// `tipo` vem de _inferA11yEstruturaTipoFromContainingFrame.
-function _buildA11yEstruturaPayload(letter, label, containingFrame) {
-  const variacao = 'marco de navegacao';
-  const tipo = _inferA11yEstruturaTipoFromContainingFrame(containingFrame);
-  const entry = A11Y_CONTENT.estrutura.marco[tipo];
-  const properties = [
-    { key: 'descricao', label: 'Descrição', value: (entry && entry.descricao) || '' },
-    { key: 'label', label: 'Label', value: label },
-  ].filter(p => p.value);
-  return {
-    letter,
-    properties,
-    a11ySubtype: { variacao, tipo, idioma: null },
-  };
 }
 
 function confirmA11ySpec() {
@@ -1540,9 +1900,18 @@ function confirmA11ySpec() {
       return;
     }
     const select = document.getElementById('a11y-el-componente-select');
-    const isOutro = select && select.value === 'outro';
-    const label = g('a11y-el-label');
     const isMobile = (modal && modal.dataset.a11yOrigin) === 'mobile';
+    // Em specs mobile este select fica escondido e travado no default (ver
+    // _toggleA11yElementoDesktopBlock) — isOutro é sempre false pra specs
+    // mobile NOVAS. O equivalente mobile de "Outro" é escolher "Personalizado"
+    // no dropdown "Link do Componente" (default real da property) e descrever
+    // o nome do componente não mapeado no campo de texto livre companheiro —
+    // ver A11Y_MOBILE_LINK_COMPONENT_OPTIONS/_renderA11yElementoMobileFields.
+    // O branch `if (isOutro)` abaixo continua existindo só pra edição de
+    // specs mobile ANTIGAS que já nasceram com isOutro=true (antes desta
+    // correção) — não é mais alcançável a partir do formulário mobile atual.
+    const isOutro = !isMobile && select && select.value === 'outro';
+    const label = g('a11y-el-label');
     // Sub-variante mobile ('componente' | 'link' | 'texto alternativo') — só
     // relevante/lida quando a origem é mobile; ausente em specs web (ver
     // A11Y_ELEMENTO_MOBILE_VARIANTS).
@@ -1586,10 +1955,37 @@ function confirmA11ySpec() {
         ...(isMobile && mobileVariant === A11Y_ELEMENTO_MOBILE_VARIANTS.link
           ? [{ key: 'descricao', label: 'Descrição', value: A11Y_CONTENT.elemento.mobileLink.descricao }]
           : []),
-        // Dica para Leitor de Tela/Nome Acessível/Observações/Link do
-        // Componente/Descrição (texto alternativo) — coletados conforme a
-        // sub-variante mobile ativa (_renderA11yElementoMobileFields já
-        // renderizou só os campos pertinentes).
+        // Dica para Leitor de Tela/Observações/Link do Componente/Descrição
+        // (texto alternativo) — coletados conforme a sub-variante mobile ativa
+        // (_renderA11yElementoMobileFields já renderizou só os campos
+        // pertinentes).
+        ..._collectA11yElementoMobileToggleProperties(),
+      ].filter(p => p.value);
+    } else if (isMobile) {
+      // Specs mobile não-"Outro" nunca passam pelo catálogo desktop (select
+      // fica escondido/travado no default, ver _toggleA11yElementoDesktopBlock)
+      // — a origem filtra tudo, fonte de verdade aqui é só a sub-variante
+      // mobile (linkComponente/variant), nunca select.value. a11ySubtype.
+      // componente fica null (não existe "componente do catálogo desktop"
+      // pra essa spec); linkComponente/linkComponenteNome (variante
+      // "componente") é quem de fato identifica o componente real
+      // documentado, coletado via _collectA11yElementoMobileToggleProperties.
+      if (!label) {
+        showToast('Informe o Label (accessibilityLabel) do elemento.');
+        return;
+      }
+      letter = tag;
+      a11ySubtype = { componente: null, isOutro: false, tipo: null, variant: mobileVariant };
+      const overrideDescricao = mobileVariant === A11Y_ELEMENTO_MOBILE_VARIANTS.link
+        ? A11Y_CONTENT.elemento.mobileLink.descricao
+        : null;
+      properties = [
+        { key: 'label', label: 'Label', value: label },
+        ...(overrideDescricao ? [{ key: 'descricao', label: 'Descrição', value: overrideDescricao }] : []),
+        // Dica para Leitor de Tela/Observações/Link do Componente/Descrição
+        // (texto alternativo) — coletados conforme a sub-variante mobile ativa
+        // (_renderA11yElementoMobileFields já renderizou só os campos
+        // pertinentes).
         ..._collectA11yElementoMobileToggleProperties(),
       ].filter(p => p.value);
     } else {
@@ -1601,20 +1997,6 @@ function confirmA11ySpec() {
       // "de icone") — null quando o componente não tem nenhuma variante
       // catalogada além de "componente".
       const tipo = _collectA11yElementoVariantValue();
-      // Descrição fixa da variante mobile "link" — sobrescreve a Descrição
-      // do catálogo desktop quando a spec é mobile e a variante é "link"
-      // (ver A11Y_CONTENT.elemento.mobileLink). Nas demais variantes mobile
-      // ou em specs web, _buildA11yElementoPayload usa a descrição normal do
-      // catálogo (variante "componente") ou nenhuma (variante "texto
-      // alternativo", que usa a descrição livre coletada abaixo).
-      const overrideDescricao = isMobile && mobileVariant === A11Y_ELEMENTO_MOBILE_VARIANTS.link
-        ? A11Y_CONTENT.elemento.mobileLink.descricao
-        : null;
-      // "texto alternativo" tem Descrição LIVRE (textarea), coletada abaixo
-      // via _collectA11yElementoMobileToggleProperties (key 'descricao') —
-      // suprime a Descrição fixa do catálogo desktop pra não duplicar/
-      // conflitar.
-      const suppressCatalogDescricao = isMobile && mobileVariant === A11Y_ELEMENTO_MOBILE_VARIANTS.textoAlternativo;
       // Toggles dinâmicos do componente real (Nome Acessível/Observações/
       // Notas de Código, conforme disponíveis naquele componente específico).
       // Só entram os que o designer ligou E preencheu; o backend usa
@@ -1622,22 +2004,11 @@ function confirmA11ySpec() {
       // instância aninhada certa.
       const built = _buildA11yElementoPayload(tag, select.value, label, {
         tipo,
-        overrideDescricao,
-        suppressCatalogDescricao,
-        // Toggles do catálogo desktop (Nome Acessível/Observações/Notas)
-        // concatenados com os campos mobile (Dica para Leitor de Tela/Nome
-        // Acessível/Observações/Link do Componente/Descrição livre) — a
-        // sub-variante mobile ativa já filtrou o que foi renderizado, então
-        // não há duplicidade real entre as duas fontes.
-        toggleProperties: [
-          ..._collectA11yElementoToggleProperties(),
-          ..._collectA11yElementoMobileToggleProperties(),
-        ],
+        toggleProperties: _collectA11yElementoToggleProperties(),
       });
       letter = built.letter;
       properties = built.properties;
       a11ySubtype = built.a11ySubtype;
-      if (isMobile) a11ySubtype.variant = mobileVariant;
     }
   } else if (category === 'estrutura') {
     const tag = g('a11y-estrutura-tag-input').toUpperCase();
@@ -1715,14 +2086,25 @@ function confirmA11ySpec() {
     a11ySubtype = { subtipo: infoSelect ? infoSelect.value : 'handoffs' };
   }
 
+  // Lido ANTES de limpar o dataset — este é sempre o caminho de SUCESSO
+  // (botão "Aplicar"), diferente do fechamento "externo" (X/Esc/backdrop/
+  // "Cancelar") que aciona stopA11yBatchWizard dentro de closeA11yModal.
+  // Limpa wizardActive ANTES de chamar closeA11yModal() propositalmente:
+  // sem isso, closeA11yModal interpretaria este fechamento como abandono e
+  // encerraria o wizard no meio de uma confirmação bem-sucedida.
+  const isWizardActive = modal && modal.dataset.wizardActive === '1';
+  if (modal) delete modal.dataset.wizardActive;
+
   closeA11yModal();
   // O modal fecha na hora, mas o backend ainda precisa de figma.loadFontAsync
   // (x3) + importComponentByKeyAsync (import real da lib "Design Acessível")
   // antes de notificar. Isso pode levar segundos sem NENHUM feedback visível,
   // criando a falsa impressão de que um clique posterior (ex: na árvore de
   // camadas) foi o que disparou o toast "Especificação criada" quando ele
-  // finalmente aparece.
-  showToast('Criando especificação de acessibilidade…');
+  // finalmente aparece. No wizard o toast por item é suprimido (silent:
+  // true, ver opts abaixo) — o resumo agregado do fim (_advanceA11yBatchWizard)
+  // já cobre o feedback.
+  if (!isWizardActive) showToast('Criando especificação de acessibilidade…');
 
   const guideSideEl = document.querySelector('input[name="a11y-guide-side"]:checked');
   const drawModeEl = document.querySelector('input[name="a11y-draw-mode"]:checked');
@@ -1746,14 +2128,12 @@ function confirmA11ySpec() {
     // Chave crua da subvariante — usada pelo backend pra tentar o import real
     // do componente da lib (ver code.js, _tryImportA11yComponent).
     a11ySubtype,
-    // Origem já resolvida por quem abriu o modal (Detecção Automática via
-    // openA11yFormFromUndocumented, ou edição de uma spec existente via
-    // editA11ySpec — ver openA11yModal). O botão "+ Nova spec" (sem detecção
-    // prévia) não tem como saber se o componente é web ou mobile — cai no
-    // default 'web' que openA11yModal já aplica. Sem seletor manual de
-    // origem na UI por decisão de escopo; se um designer precisar de
-    // marcador mobile nesse fluxo puramente manual, fica pra uma entrega
-    // futura.
+    // Origem já resolvida por quem abriu o modal: Detecção Automática via
+    // openA11yFormFromUndocumented, edição de uma spec existente via
+    // editA11ySpec, ou o botão "+ Nova spec" via chooseA11yType (que lê
+    // getA11yProjectOrigin() — a origem já configurada do projeto). Default
+    // 'web' aqui cobre só o caso raro de modal.dataset.a11yOrigin não ter
+    // sido setado.
     a11yOrigin: (modal && modal.dataset.a11yOrigin) || 'web',
     // Mesmo raciocínio do a11yOrigin acima: fluxo manual não passou pela
     // Detecção Automática, então não há componentKey resolvido pra apontar
@@ -1782,6 +2162,19 @@ function confirmA11ySpec() {
     // categoria acima é nova na área, pra decidir ao lado de qual sub-coluna
     // existente posicionar a nova.
     existingAreaAllSpecIds: _collectAreaAllSpecIds(areaId),
+    // Specs criadas pelo wizard de revisão da Detecção Automática SEMPRE
+    // nascem com needsReview: false — mesmo que a detecção original tivesse
+    // confiança baixa ou fosse um componente não catalogado (isUnmapped),
+    // já que passaram por configuração/confirmação humana item a item. Fora
+    // do wizard, o fluxo manual nunca setava este campo (nasce false por
+    // omissão) — explícito aqui só reforça a mesma regra nos dois casos.
+    needsReview: false,
+    // Suprime o toast individual de create-unified-spec (code.js) durante o
+    // wizard: com N itens revisados em sequência, N toasts do caso feliz só
+    // competiriam com o resumo agregado disparado no fim
+    // (_advanceA11yBatchWizard). Fora do wizard, continua notificando item a
+    // item normalmente (showToast acima já cobre o "Criando…").
+    silent: isWizardActive,
   };
 
   if (areaId) {
@@ -1824,7 +2217,64 @@ function confirmA11ySpec() {
     a11ySpecs.splice(editingOriginalIndex, 1);
   }
 
-  parent.postMessage({ pluginMessage: { type: 'create-unified-spec', opts } }, '*');
+  // Fora do wizard: fire-and-forget, igual sempre foi. Dentro do wizard:
+  // espera a resposta real 'spec-created' (_createA11ySpecAndWait, mesmo
+  // padrão de serialização já usado pelo antigo loop de lote) antes de
+  // avançar pro próximo item da fila — evita duas criações concorrentes
+  // colidindo (o backend calcula posição/import da lib de forma assíncrona
+  // por chamada).
+  //
+  // Rede de segurança contra duplicidade: recalcula _getDocumentedNodeIdsForArea
+  // NA HORA (não usa um snapshot tirado na montagem da fila) — mesma checagem
+  // que o antigo loop de lote (confirmA11yBatchGenerate, removido) fazia a
+  // cada iteração. Mesmo com revisão humana item a item reduzindo o risco, o
+  // hac já teve bug de spec duplicada 4x em sessões anteriores (duplicidade
+  // avulso-vs-por-frame); o nó revisado no item corrente pode ter ganhado
+  // spec por outra via (edição concorrente, outro item do mesmo lote apontando
+  // pro mesmo nó) enquanto o wizard estava parado neste modal. Se o nó já
+  // está documentado nesta área, trata como descarte automático e silencioso
+  // — não chama o backend, não mostra o toast genérico de falha.
+  if (isWizardActive) {
+    const wizardState = window._a11yBatchWizardState;
+    // Índice capturado agora — navegação livre significa que o designer
+    // pode pular pra outro item enquanto o _createA11ySpecAndWait abaixo
+    // ainda está em voo (await); sem isso, o .then() marcaria como
+    // confirmado/descartado o item que estiver em state.currentIndex NO
+    // MOMENTO em que a resposta chegar, não o item que de fato foi
+    // confirmado.
+    const confirmingIndex = wizardState ? wizardState.currentIndex : -1;
+    const dedupeNodeId = opts.targetNodeId || pendingTargetNodeId;
+    const alreadyDocumented = wizardState
+      && dedupeNodeId
+      && _getDocumentedNodeIdsForArea(areaId).has(dedupeNodeId);
+    if (alreadyDocumented) {
+      wizardState.discarded.add(confirmingIndex);
+      showToast('Item já documentado nesta área — pulado automaticamente.');
+      _advanceA11yBatchWizard();
+      return;
+    }
+    showA11yWizardSavingIndicator();
+    _createA11ySpecAndWait(opts).then(ok => {
+      // Lê window._a11yBatchWizardState de novo (não uma cópia capturada
+      // antes do await) — se stopA11yBatchWizard() rodou enquanto esta
+      // Promise estava pendente, a variável global já foi zerada e esta
+      // resposta tardia não deve reviver/mutar um wizard que o usuário já
+      // encerrou.
+      const state = window._a11yBatchWizardState;
+      hideA11yWizardSavingIndicator();
+      if (!state) return;
+      if (ok) state.confirmed.add(confirmingIndex);
+      else showToast('Não foi possível criar esta especificação — item pulado.');
+      // Só avança automaticamente pro próximo pendente se o designer ainda
+      // está olhando pro item que acabou de confirmar — se ele já pulou pra
+      // outro item enquanto isso, o avanço aconteceria por baixo do formulário
+      // aberto, trocando o conteúdo sem ação do usuário.
+      if (state.currentIndex === confirmingIndex) _advanceA11yBatchWizard();
+      else _refreshA11yWizardPaginator(state);
+    });
+  } else {
+    parent.postMessage({ pluginMessage: { type: 'create-unified-spec', opts } }, '*');
+  }
 }
 window.confirmA11ySpec = confirmA11ySpec;
 
@@ -1905,9 +2355,9 @@ function _a11ySpecItemHtml(spec) {
       ${props.length > 0 ? `
       <div class="px-2.5 pb-2.5 space-y-1">
         ${props.map(p => `
-          <div class="flex items-center justify-between gap-2 px-2 py-1 bg-white dark:bg-dark-surface rounded-lg">
-            <span class="text-[9px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">${escapeHtml(p.label)}</span>
-            <span class="text-[10px] font-semibold text-slate-700 dark:text-white text-right">${escapeHtml(String(p.value))}</span>
+          <div class="flex items-start justify-between gap-2 px-2 py-1 bg-white dark:bg-dark-surface rounded-lg">
+            <span class="text-[9px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider shrink-0 pt-px">${escapeHtml(p.label)}</span>
+            <span class="text-[10px] font-semibold text-slate-700 dark:text-white text-right break-all min-w-0">${escapeHtml(String(p.value))}</span>
           </div>`).join('')}
       </div>` : ''}
     </div>
@@ -2132,8 +2582,15 @@ function _a11yUndocumentedItemHtml(areaId, entry) {
   const { kind, item } = entry;
   const label = _a11yUndocumentedItemLabel(kind, item);
   const name = item.layerName || item.name || 'Elemento';
-  const isBaixa = kind === 'tokenReview' || item.dscComponentMatch.isUnmapped === true
-    || (item.dscComponentMatch.confidence && item.dscComponentMatch.confidence !== 'alta');
+  // Único destaque de aviso (fundo âmbar) que sobrevive nesta lista: "token
+  // sem DSC vinculado" (kind === 'tokenReview'), o único caso em que a
+  // detecção genuinamente não tem nada pra trabalhar. "Outro" (isUnmapped —
+  // componente DSC real, mas sem categoria de a11y catalogada) e a antiga
+  // distinção de confiança alta/baixa foram removidos deste destaque: com o
+  // wizard sequencial, todo item passa por revisão humana individual de
+  // qualquer forma, então a distinção de confiança virou ruído sem efeito
+  // prático (decisão de produto, 2026-09-02).
+  const isBaixa = kind === 'tokenReview';
   // encodeURIComponent pro item sobreviver dentro do atributo onclick (nomes
   // de camada podem ter aspas/caracteres especiais) — decodificado de volta
   // em openA11yFormFromUndocumented.
@@ -2255,7 +2712,7 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
             .filter(({ catSpecs }) => catSpecs.length > 0)
             .map(({ catKey, catSpecs }) => _a11yCategoryAccordionEl(`${uid}-cat-${catKey}`, catKey, catSpecs))
             .join('')
-        : (undocumentedEntries.length === 0 ? `<p class="text-[10px] text-slate-400 dark:text-dark-muted text-center py-3">Nenhuma especificação nesta área ainda. Use o botão "+" acima.</p>` : '')}
+        : (undocumentedEntries.length === 0 ? `<p class="text-[10px] text-slate-400 dark:text-dark-muted text-center py-3">Nenhuma especificação nesta área ainda. Use o botão "Nova spec" acima.</p>` : '')}
       ${_a11yUndocumentedAccordionEl(`${uid}-undoc`, area.id, undocumentedEntries)}
     </div>
   `;
@@ -2275,7 +2732,7 @@ function _a11ySemAreaAccordionEl(specs, tabItemsCount) {
   li.setAttribute('data-a11y-area', '__sem_area__');
   li.setAttribute('data-a11y-area-search', 'sem area');
   const parts = [`${specs.length} especificaç${specs.length === 1 ? 'ão' : 'ões'}`];
-  if (tabItemsCount > 0) parts.push(`${tabItemsCount} item${tabItemsCount === 1 ? '' : 'ns'} de ordem de tabulação`);
+  if (tabItemsCount > 0) parts.push(`${tabItemsCount} ${tabItemsCount === 1 ? 'item' : 'itens'} de ordem de tabulação`);
   li.innerHTML = `
     <div class="flex items-center gap-2 px-2.5 py-2 cursor-pointer select-none hover:bg-amber-50/50 dark:hover:bg-amber-900/10 transition-colors"
       onclick="toggleA11yAreaAccordion('${uid}')">
@@ -2369,7 +2826,7 @@ function renderA11yGroupedList() {
           <i data-lucide="map-pin" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
         </div>
         <p class="text-[12px] font-bold text-slate-500 dark:text-dark-muted text-center px-4 mb-1">Nenhuma área marcada ainda</p>
-        <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6">Toque em "Marcar Área" no topo para identificar a primeira seção da tela — as especificações de acessibilidade nascem dentro de uma área.</p>
+        <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6">Toque em <button type="button" onclick="openA11yAreaModal()" class="font-bold underline text-[#0070af] dark:text-cyan-400 hover:text-[#005a8c] dark:hover:text-cyan-300">"Marcar Área"</button> para identificar a primeira seção da tela — as especificações de acessibilidade nascem dentro de uma área.</p>
       </li>
     `;
     _refreshIcons();
@@ -2502,34 +2959,200 @@ window.renderA11ySpecsList = renderA11ySpecsList;
 function renderA11yAreasList() { renderA11yGroupedList(); }
 window.renderA11yAreasList = renderA11yAreasList;
 
+// ── Origem do projeto (web/mobile) — pergunta única por arquivo ─────────
+// Decisão de produto (2026-09-02, REVERTE a decisão de 2026-09-01 abaixo):
+// a origem web/mobile voltou a ser uma característica do ARQUIVO/PROJETO
+// inteiro (nunca misto — confirmado repetidamente pelo usuário), perguntada
+// UMA ÚNICA VEZ e persistida em hacData.projectOrigin (core.js), sobrevivendo
+// a reaberturas do plugin (mesmo save-storage/clientStorage escopado por
+// fileKey de todo o resto do hacData).
+//
+// Motivo da reversão: perguntar a cada ação (Marcar Área, Detecção
+// Automática, Ordem de Tabulação) fazia a MESMA pergunta aparecer duas vezes
+// em sequência imediata quando autoDetect está ligado (Marcar Área → abre a
+// Detecção Automática automaticamente) — parecia um loop/bug pro designer.
+//
+// ensureA11yProjectOriginThen(onReady) é o ponto único que toda ação que
+// precisa da origem deve chamar: se hacData.projectOrigin já está definido,
+// chama onReady(origin) DIRETO (sem abrir modal nenhuma); se não, abre a
+// mesma modal bloqueante já existente (#a11y-post-area-detect-modal, estado
+// #a11y-post-area-origin) e, na escolha, persiste em hacData.projectOrigin
+// (setA11yProjectOrigin) antes de chamar onReady — daí em diante nenhuma
+// outra ação nesse arquivo pergunta de novo.
+function getA11yProjectOrigin() {
+  return (hacData && hacData.projectOrigin) || null;
+}
+window.getA11yProjectOrigin = getA11yProjectOrigin;
+
+// silent: true evita o toast (usado no fluxo de primeira pergunta, onde o
+// toast seria ruído — a confirmação visual já é o modal fechando e a ação
+// prosseguindo). false é usado pela troca manual via "Sobre o hac".
+function setA11yProjectOrigin(origin, opts) {
+  if (origin !== 'web' && origin !== 'mobile') return;
+  hacData.projectOrigin = origin;
+  saveToStorage();
+  if (!opts || !opts.silent) {
+    showToast(`Plataforma do projeto definida como ${origin === 'mobile' ? 'Mobile' : 'Web'}.`);
+  }
+}
+window.setA11yProjectOrigin = setA11yProjectOrigin;
+
+// #a11y-post-area-origin visível / #a11y-post-area-loading escondido —
+// reaproveitado tanto pela pergunta de origem quanto pelo indicador de
+// progresso da Detecção Automática/salvamento do wizard (ver
+// showA11yWizardSavingIndicator, mais abaixo).
+function _setA11yPostAreaModalStage(stage) {
+  const originStage = document.getElementById('a11y-post-area-origin');
+  const loadingStage = document.getElementById('a11y-post-area-loading');
+  if (originStage) originStage.classList.toggle('hidden', stage !== 'origin');
+  if (loadingStage) loadingStage.classList.toggle('hidden', stage !== 'loading');
+}
+
+// Ponto único que qualquer ação (Marcar Área, Detecção Automática, Ordem de
+// Tabulação, e futuras) deve chamar antes de precisar saber a origem
+// web/mobile do arquivo. Nunca pergunta mais de uma vez por arquivo — só
+// reabre a modal quando hacData.projectOrigin ainda é null (arquivo novo, ou
+// arquivo salvo antes desta versão, sem o campo — migração por ausência).
+function ensureA11yProjectOriginThen(onReady) {
+  const known = getA11yProjectOrigin();
+  if (known) {
+    onReady(known);
+    return;
+  }
+  window._a11yPendingOriginCallback = (origin) => {
+    setA11yProjectOrigin(origin, { silent: true });
+    onReady(origin);
+  };
+  const originTitle = document.getElementById('a11y-post-area-title');
+  if (originTitle) originTitle.innerHTML = '<i data-lucide="smartphone" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Plataforma do Projeto';
+  _setA11yPostAreaModalStage('origin');
+  openModal('a11y-post-area-detect-modal');
+  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+}
+window.ensureA11yProjectOriginThen = ensureA11yProjectOriginThen;
+
+// Reabre a pergunta sob demanda (botão "Trocar" na modal "Sobre o hac") —
+// única forma de mudar hacData.projectOrigin depois de já definido. Ignora
+// o valor atual (não é ensureA11yProjectOriginThen) e mostra a modal sempre.
+function openA11yProjectOriginPrompt() {
+  if (typeof closeModal === 'function') closeModal('about-hac-modal');
+  window._a11yPendingOriginCallback = (origin) => {
+    setA11yProjectOrigin(origin, { silent: false });
+  };
+  const originTitle = document.getElementById('a11y-post-area-title');
+  if (originTitle) originTitle.innerHTML = '<i data-lucide="smartphone" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Plataforma do Projeto';
+  _setA11yPostAreaModalStage('origin');
+  openModal('a11y-post-area-detect-modal');
+  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+}
+window.openA11yProjectOriginPrompt = openA11yProjectOriginPrompt;
+
+// Abre a modal "Sobre o hac" (botão CAIXA|HAC no header) já preenchendo
+// #about-hac-project-origin com a plataforma atual do arquivo (ou "Não
+// definida" nos arquivos legados/ainda não perguntados) — o botão "Trocar"
+// ao lado chama openA11yProjectOriginPrompt acima.
+function openAboutHacModal() {
+  const originLabelEl = document.getElementById('about-hac-project-origin');
+  if (originLabelEl) {
+    const origin = getA11yProjectOrigin();
+    originLabelEl.textContent = origin === 'mobile' ? 'Mobile' : origin === 'web' ? 'Web' : 'Não definida';
+  }
+  openModal('about-hac-modal');
+}
+window.openAboutHacModal = openAboutHacModal;
+
 // ── Detecção Automática pós-Marcar-Área ─────────────────────────────────
 // A detecção nasce escopada ao elemento que ACABOU de virar Área
 // (targetNodeId, já resolvido no backend em create-a11y-area).
 // a11y-area-created (messages.js) só chama isto quando area.autoDetect é
-// truthy (Manual não abre modal nenhum). Abre #a11y-post-area-detect-modal
-// JÁ no estado de loading e dispara a varredura na sequência — a escolha
-// "Automático" feita no modal "Marcar Área" já é o consentimento do
-// designer, sem pergunta intermediária.
+// truthy (Manual não abre modal nenhum).
+//
+// A origem web/mobile usada pra retropreencher Título/Decorativo desta
+// varredura vem de hacData.projectOrigin (ensureA11yProjectOriginThen),
+// nunca mais perguntada aqui isoladamente — ver bloco "Origem do projeto"
+// acima para o histórico da decisão.
 function openA11yPostAreaDetectModal(area) {
   if (!area || !area.targetNodeId) return;
   window._a11yPendingDetectionArea = {
     targetNodeId: area.targetNodeId,
     areaId: area.id,
     label: area.label,
+    declaredOrigin: null,
   };
-  const loading = document.getElementById('a11y-post-area-loading');
-  const loadingText = loading ? loading.querySelector('p') : null;
-  if (loadingText) loadingText.textContent = 'Detectando componentes…';
-  openModal('a11y-post-area-detect-modal');
-  runA11yPostAreaDetection();
+  ensureA11yProjectOriginThen((origin) => {
+    const pending = window._a11yPendingDetectionArea;
+    if (!pending) return;
+    pending.declaredOrigin = origin;
+    const loadingText = document.getElementById('a11y-post-area-loading-text');
+    if (loadingText) loadingText.textContent = 'Detectando componentes…';
+    _setA11yPostAreaModalStage('loading');
+    openModal('a11y-post-area-detect-modal');
+    runA11yPostAreaDetection();
+  });
 }
 window.openA11yPostAreaDetectModal = openA11yPostAreaDetectModal;
+
+// Resposta do designer à pergunta bloqueante de origem — único jeito de sair
+// do estado de pergunta da modal #a11y-post-area-detect-modal. Reaproveitada
+// por ensureA11yProjectOriginThen/openA11yProjectOriginPrompt (window.
+// _a11yPendingOriginCallback sempre setado por quem abriu a pergunta).
+function chooseA11yDetectionOrigin(origin) {
+  if (origin !== 'web' && origin !== 'mobile') return;
+  if (typeof window._a11yPendingOriginCallback !== 'function') return;
+  const callback = window._a11yPendingOriginCallback;
+  window._a11yPendingOriginCallback = null;
+  closeModal('a11y-post-area-detect-modal');
+  _restoreA11yPostAreaModalTitle();
+  callback(origin);
+}
+window.chooseA11yDetectionOrigin = chooseA11yDetectionOrigin;
+
+// Restaura o título/ícone padrão ("Detecção Automática") da modal
+// reaproveitada — chamado depois que openA11yProjectOriginPrompt (troca
+// manual via "Sobre o hac") troca temporariamente esse título.
+function _restoreA11yPostAreaModalTitle() {
+  const originTitle = document.getElementById('a11y-post-area-title');
+  if (originTitle) originTitle.innerHTML = '<i data-lucide="radar" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Detecção Automática';
+  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+}
+
+// (Removida em 2026-09-02: _askTabOrderOriginThen, que perguntava a origem
+// web/mobile de novo, do zero, toda vez que a Ordem de Tabulação rodava —
+// decisão de 2026-09-01. Substituída por ensureA11yProjectOriginThen
+// (bloco "Origem do projeto" acima), que reaproveita hacData.projectOrigin
+// já respondido pela primeira ação do arquivo. startTabOrderManualMode e
+// _confirmGenerateTabOrderFromLayers chamam ensureA11yProjectOriginThen
+// diretamente; window._tabOrderDeclaredOrigin continua existindo como cache
+// da origem durante a sessão de revisão, lido por _tabOrderRequestPreview e
+// applyTabOrderToCanvas — só a pergunta repetida foi eliminada.)
 
 function closeA11yPostAreaDetectModal() {
   closeModal('a11y-post-area-detect-modal');
   window._a11yPendingDetectionArea = null;
 }
 window.closeA11yPostAreaDetectModal = closeA11yPostAreaDetectModal;
+
+// Achado de QA (wizard de revisão individual): entre o clique em "Aplicar"
+// (fecha #a11y-spec-modal de forma síncrona) e a resposta 'spec-created'
+// chegando (pode levar segundos — fontes + import de componente real da
+// lib), não havia NENHUM feedback visual: o plugin parecia travado.
+// Reaproveita o mesmo modal/spinner já usado pela varredura pós-Marcar-Área
+// (#a11y-post-area-detect-modal) só trocando o texto — não é um estado novo
+// de produto, só um indicador de "isto está processando". Chamado em
+// confirmA11ySpec logo depois de fechar o modal individual; escondido em
+// _advanceA11yBatchWizard, no mesmo instante em que o próximo item abre (ou
+// em que o wizard termina/é interrompido). Pula direto pro estado de
+// loading — não é uma nova varredura, não faz sentido perguntar origem de
+// novo aqui.
+function showA11yWizardSavingIndicator() {
+  const loadingText = document.getElementById('a11y-post-area-loading-text');
+  if (loadingText) loadingText.textContent = 'Salvando especificação…';
+  _setA11yPostAreaModalStage('loading');
+  openModal('a11y-post-area-detect-modal');
+}
+function hideA11yWizardSavingIndicator() {
+  closeModal('a11y-post-area-detect-modal');
+}
 
 // Agrega os 5 buckets do scan (components/icons/typography/vectors/images)
 // que vierem com dscComponentMatch preenchido — components/icons cobrem os
@@ -2628,54 +3251,80 @@ window._collectA11yUndocumentedForArea = _collectA11yUndocumentedForArea;
 // bem-sucedida da checagem pro formulário direto, pulando o seletor de
 // categoria — a categoria aqui já é conhecida, perguntar de novo seria
 // redundante.
+// Resolve categoria + preset (options de openA11yModal) a partir de um item
+// de detecção/pendência JÁ EM MEMÓRIA — extraído de openA11yFormFromUndocumented
+// pra ser reaproveitado tanto por ela (item chega serializado num onclick de
+// HTML) quanto pelo wizard de revisão da Detecção Automática
+// (_advanceA11yBatchWizard, item já vive na fila em memória, sem precisar
+// serializar/desserializar). Única fonte de verdade do mapeamento
+// categoria/preset — nunca duplicar esta lógica em outro lugar.
+// `kind` é 'tokenReview' (texto sem token DSC, sem dscComponentMatch) ou
+// 'detection' (default, com dscComponentMatch).
+function _resolveA11yFormPresetFromItem(item, kind) {
+  // Nome da camada do canvas (item.name === item.layerName, ver
+  // _a11yScanArea/code.js) — já em memória desde o scan, sem precisar de
+  // round-trip a mais pro backend. Alimenta o campo read-only "Camada no
+  // canvas" do formulário (ver openA11yModal/prefillA11yComponentName).
+  const targetNodeName = item.name || null;
+
+  if (kind === 'tokenReview') {
+    // needsA11yTokenReview nunca tem dscComponentMatch — é só um texto sem
+    // token DSC vinculado, sem componente real reconhecido. "Informações
+    // Adicionais" é a categoria mais plausível pra um texto solto sem
+    // função de título/componente clara — o designer troca de categoria
+    // manualmente se o texto for na verdade outra coisa.
+    return { category: 'informacoes', options: { pendingTargetNodeId: item.nodeId, targetNodeName } };
+  }
+
+  const match = item.dscComponentMatch;
+  const isUnmapped = match.isUnmapped === true;
+  const shortName = match.a11yCategory;
+  const category = (shortName === 'titulo' || shortName === 'decorativo' || shortName === 'estrutura') ? shortName : 'elemento';
+  // Origem do componente DETECTADO — mesma fonte que o lote usa
+  // (item.dscComponentMatch.origin). Em "elemento"/"estrutura" vem da lib do
+  // componente DSC real (_resolveDscComponentA11yMatch, code.js). Em
+  // "titulo"/"decorativo" (heurística de texto/ícone, sem componente real)
+  // vem retropreenchida com a origin da Área Marcada
+  // (handleA11yPostAreaDetectionResult, acima) — nunca fica undefined depois
+  // do retropreenchimento, mas o fallback 'web' é mantido por segurança
+  // (ex: item avulso fora do fluxo de Detecção Automática por Área).
+  const a11yOrigin = match.origin || 'web';
+  // Nome real do component set DSC (ex: "[dsc] Button") — null nas
+  // heurísticas de texto/ícone (titulo/decorativo/imagem não têm
+  // componente DSC real por trás, ver _resolveTypographyA11yMatch/
+  // _resolveDecorativeA11yMatch/_resolveImageA11yMatch em code.js).
+  const dscComponentName = match.containingFrame || null;
+
+  if (isUnmapped) {
+    // "Outro" dentro de Elementos e Imagens — mesmo componente sem
+    // categoria catalogada que o lote usa. openA11yModal não tem preset
+    // pronto pro caso "Outro" (select cai em 'outro' só quando
+    // presetComponente é inválido/ausente, e o campo de texto livre
+    // "Componente" fica vazio pro designer preencher) — o designer
+    // confirma manualmente, igual seria digitando do zero.
+    return { category: 'elemento', options: { pendingTargetNodeId: item.nodeId, a11yOrigin, dscComponentName, targetNodeName } };
+  }
+  if (category === 'titulo') {
+    return { category: 'titulo', options: { pendingTargetNodeId: item.nodeId, presetTituloNivel: match.suggestedLevel, a11yOrigin, dscComponentName, targetNodeName } };
+  }
+  if (category === 'decorativo') {
+    return { category: 'decorativo', options: { pendingTargetNodeId: item.nodeId, a11yOrigin, dscComponentName, targetNodeName } };
+  }
+  if (category === 'estrutura') {
+    const tipo = _inferA11yEstruturaTipoFromContainingFrame(match.containingFrame);
+    return { category: 'estrutura', options: { pendingTargetNodeId: item.nodeId, presetEstruturaTipo: tipo, a11yOrigin, dscComponentName, targetNodeName } };
+  }
+  return { category: 'elemento', options: { pendingTargetNodeId: item.nodeId, presetComponente: shortName, a11yOrigin, dscComponentName, targetNodeName } };
+}
+window._resolveA11yFormPresetFromItem = _resolveA11yFormPresetFromItem;
+
 function openA11yFormFromUndocumented(areaId, kind, encodedItem) {
   const item = JSON.parse(decodeURIComponent(encodedItem));
   window._a11yPendingAreaId = areaId || null;
 
   const openForm = () => {
-    if (kind === 'tokenReview') {
-      // needsA11yTokenReview nunca tem dscComponentMatch — é só um texto sem
-      // token DSC vinculado, sem componente real reconhecido. "Informações
-      // Adicionais" é a categoria mais plausível pra um texto solto sem
-      // função de título/componente clara — o designer troca de categoria
-      // manualmente se o texto for na verdade outra coisa.
-      openA11yModal('informacoes', { pendingTargetNodeId: item.nodeId });
-      return;
-    }
-
-    const match = item.dscComponentMatch;
-    const isUnmapped = match.isUnmapped === true;
-    const shortName = match.a11yCategory;
-    const category = (shortName === 'titulo' || shortName === 'decorativo' || shortName === 'estrutura') ? shortName : 'elemento';
-    // Origem do componente DETECTADO — mesma fonte que o lote usa
-    // (item.dscComponentMatch.origin). Só é relevante em "elemento" hoje
-    // (Dica para Leitor de Tela/Link do Componente), mas passar sempre
-    // mantém o dataset do modal consistente com a spec que vai nascer.
-    const a11yOrigin = match.origin || 'web';
-    // Nome real do component set DSC (ex: "[dsc] Button") — null nas
-    // heurísticas de texto/ícone (titulo/decorativo/imagem não têm
-    // componente DSC real por trás, ver _resolveTypographyA11yMatch/
-    // _resolveDecorativeA11yMatch/_resolveImageA11yMatch em code.js).
-    const dscComponentName = match.containingFrame || null;
-
-    if (isUnmapped) {
-      // "Outro" dentro de Elementos e Imagens — mesmo componente sem
-      // categoria catalogada que o lote usa. openA11yModal não tem preset
-      // pronto pro caso "Outro" (select cai em 'outro' só quando
-      // presetComponente é inválido/ausente, e o campo de texto livre
-      // "Componente" fica vazio pro designer preencher) — o designer
-      // confirma manualmente, igual seria digitando do zero.
-      openA11yModal('elemento', { pendingTargetNodeId: item.nodeId, a11yOrigin, dscComponentName });
-    } else if (category === 'titulo') {
-      openA11yModal('titulo', { pendingTargetNodeId: item.nodeId, presetTituloNivel: match.suggestedLevel, a11yOrigin, dscComponentName });
-    } else if (category === 'decorativo') {
-      openA11yModal('decorativo', { pendingTargetNodeId: item.nodeId, a11yOrigin, dscComponentName });
-    } else if (category === 'estrutura') {
-      const tipo = _inferA11yEstruturaTipoFromContainingFrame(match.containingFrame);
-      openA11yModal('estrutura', { pendingTargetNodeId: item.nodeId, presetEstruturaTipo: tipo, a11yOrigin, dscComponentName });
-    } else {
-      openA11yModal('elemento', { pendingTargetNodeId: item.nodeId, presetComponente: shortName, a11yOrigin, dscComponentName });
-    }
+    const { category, options } = _resolveA11yFormPresetFromItem(item, kind);
+    openA11yModal(category, options);
   };
 
   window._a11yLibCheckOnSuccess = openForm;
@@ -2688,8 +3337,15 @@ window.openA11yFormFromUndocumented = openA11yFormFromUndocumented;
 // Dispara o mesmo scan de conformidade DSC, escopado ao targetNodeId da área
 // (não a um frame) e com origin: 'a11y-detection' — o backend só repassa
 // esse campo de volta na resposta; é o handler scan-result (messages.js)
-// que usa esse campo pra rotear a resposta pra cá. O modal já abre no
-// estado de loading, não precisa alternar visibilidade de estados aqui.
+// que usa esse campo pra rotear a resposta pra cá. Só é chamada depois que
+// o designer já respondeu a pergunta de origem (chooseA11yDetectionOrigin já
+// trocou a modal pro estado de loading antes de chamar esta função) — exceto
+// no reaproveitamento como indicador de "salvando" do wizard
+// (showA11yWizardSavingIndicator), que não passa por aqui.
+// declaredOrigin viaja no payload só como registro/depuração do lado
+// backend — quem de fato consome a escolha do designer é o frontend, em
+// handleA11yPostAreaDetectionResult (retropreenchimento de Título/
+// Decorativo desta passada).
 function runA11yPostAreaDetection() {
   const pending = window._a11yPendingDetectionArea;
   if (!pending || !pending.targetNodeId) return;
@@ -2703,7 +3359,8 @@ function runA11yPostAreaDetection() {
       referenceTokens: null,
       selectedLibSlugs: null,
       categories: null,
-      origin: 'a11y-detection'
+      origin: 'a11y-detection',
+      declaredOrigin: pending.declaredOrigin || null
     }
   }, '*');
 }
@@ -2752,29 +3409,35 @@ function handleA11yPostAreaDetectionResult(detections, tokenReviewCandidates) {
     window._a11yDetectionsByArea[pendingAreaId] = detections || [];
     window._a11yTokenReviewByArea[pendingAreaId] = tokenReviewCandidates || [];
 
-    // Origem (web/mobile) da ÁREA — voto de maioria entre os componentes com
-    // origin conhecido que a Detecção Automática encontrou nesta área. Usada
-    // pela Ordem de Tabulação (applyTabOrderToCanvas) pra escolher entre
-    // A11Y_ITEM_NUMBER_KEYS[_MOBILE] no backend, já que uma Área não tem
-    // "categoria" própria pra derivar origem de um único componente como as
-    // specs individuais fazem. Reescanear a área recalcula do zero (não
-    // acumula votos de scans anteriores).
-    const originCounts = { web: 0, mobile: 0 };
+    // Origem (web/mobile) desta PASSADA de scan — declarada explicitamente
+    // pelo designer na pergunta bloqueante que abre a modal
+    // (chooseA11yDetectionOrigin), NUNCA mais calculada por voto de maioria
+    // entre os componentes detectados. Não é persistida em area.origin (esse
+    // campo de schema deixou de ser escrito automaticamente aqui) — vale só
+    // pra retropreencher Título/Decorativo desta execução do scan.
+    // Título/Decorativo (heurística de texto/ícone, sem componente DSC real
+    // por trás) nunca têm como calcular a própria origin no backend — ver
+    // _resolveTypographyA11yMatch/_resolveDecorativeA11yMatch (code.js).
+    // Retropreenche aqui, no frontend, com a origem declarada nesta rodada.
+    // Muta os itens em `detections` in-place — o mesmo array já foi guardado
+    // em window._a11yDetectionsByArea[pendingAreaId] acima, então o
+    // retropreenchimento vale também pro accordion "Não Documentados", não
+    // só pro lote desta passada.
+    const declaredOrigin = window._a11yPendingDetectionArea.declaredOrigin || 'web';
     (detections || []).forEach(d => {
-      const o = d && d.dscComponentMatch && d.dscComponentMatch.origin;
-      if (o === 'web' || o === 'mobile') originCounts[o]++;
+      if (d && d.dscComponentMatch && !d.dscComponentMatch.origin) {
+        d.dscComponentMatch.origin = declaredOrigin;
+      }
     });
-    const area = _findA11yAreaById(pendingAreaId);
-    if (area) {
-      area.origin = originCounts.mobile > originCounts.web ? 'mobile' : 'web';
-      saveToStorage();
-    }
+
+    saveToStorage();
   }
 
   const eligible = _filterA11yBatchEligible(detections, pendingAreaId);
   const hasTokenReviewCandidates = window._a11yTokenReviewCandidates.length > 0;
 
   if ((!detections || detections.length === 0 || eligible.length === 0) && !hasTokenReviewCandidates) {
+    window._a11yResumeWizardAfterScan = false;
     closeA11yPostAreaDetectModal();
     // Se esta resposta veio de um reescaneio (modal de resumo já aberto com
     // dados do scan anterior), fecha também o resumo — sem isso ele ficaria
@@ -2795,6 +3458,16 @@ function handleA11yPostAreaDetectionResult(detections, tokenReviewCandidates) {
   // modais visíveis ao mesmo tempo sem perder esse dado.
   openA11yBatchSummaryModal();
   closeModal('a11y-post-area-detect-modal');
+
+  // Retomada via snackbar de "Revisão interrompida" (_resumeA11yBatchWizardForArea)
+  // — pula direto pro wizard com o resultado do NOVO scan, sem exigir que o
+  // designer veja o resumo e clique em "Iniciar Revisão" de novo.
+  // openA11yBatchSummaryModal (acima) já populou window._a11yBatchDetections
+  // e pré-selecionou a área no <select>, que é o que startA11yBatchWizard lê.
+  if (window._a11yResumeWizardAfterScan) {
+    window._a11yResumeWizardAfterScan = false;
+    if (eligible.length > 0) startA11yBatchWizard();
+  }
 }
 window.handleA11yPostAreaDetectionResult = handleA11yPostAreaDetectionResult;
 
@@ -2839,9 +3512,13 @@ function _currentA11yDetectionsSource() {
 // designer vincula um Text Style do DSC num item do bloco "Possíveis
 // títulos sem token DSC" (ou corrige qualquer outra coisa no Figma) e quer
 // ver o resultado atualizado sem perder o contexto (área selecionada,
-// scroll, etc.). Reaproveita runA11yPostAreaDetection — que já lê de
-// window._a11yPendingDetectionArea, mantido vivo enquanto o modal de resumo
-// está aberto.
+// scroll, etc.). Passa pela MESMA pergunta bloqueante de origem que a
+// Detecção Automática inicial — decisão explícita do usuário: a modal
+// aparece toda vez que o scan roda, mesmo reescaneando uma área já
+// respondida antes (a lib pode até ter mudado entre uma passada e outra).
+// Empilha #a11y-post-area-detect-modal por cima de #a11y-batch-summary-modal
+// (ambos ficam tecnicamente abertos; o de resumo só é fechado/reaberto por
+// handleA11yPostAreaDetectionResult quando a resposta do scan chega).
 function rescanA11yBatchArea() {
   const pending = window._a11yPendingDetectionArea;
   if (!pending || !pending.targetNodeId) {
@@ -2854,7 +3531,11 @@ function rescanA11yBatchArea() {
     btn.classList.add('animate-spin');
   }
   window._a11yBatchRescanBtnPending = true;
-  runA11yPostAreaDetection();
+  pending.declaredOrigin = null;
+  const loadingText = document.getElementById('a11y-post-area-loading-text');
+  if (loadingText) loadingText.textContent = 'Detectando componentes…';
+  _setA11yPostAreaModalStage('origin');
+  openModal('a11y-post-area-detect-modal');
 }
 window.rescanA11yBatchArea = rescanA11yBatchArea;
 
@@ -2866,9 +3547,14 @@ function openA11yBatchSummaryModal() {
   // há re-render dinâmico da lista ao trocar de área neste modal hoje), por
   // isso a lista exibida já nasce filtrada contra a área de destino real.
   // Trocar de área no dropdown sem reabrir o modal é um caso não coberto
-  // aqui; a rede de segurança do loop de criação (confirmA11yBatchGenerate)
-  // cobre esse cenário além de qualquer outro caminho que não passe por
-  // este modal.
+  // aqui — startA11yBatchWizard lê areaSelect.value no momento em que o
+  // wizard é iniciado, então usa a área realmente selecionada (mesmo que
+  // diferente de filterAreaId usado só pra esta exibição). O dedupe contra
+  // specs já confirmadas (_getDocumentedNodeIdsForArea) só acontece aqui, na
+  // montagem da lista exibida — diferente do antigo loop de lote, o wizard
+  // NÃO recalcula esse dedupe a cada item confirmado, já que cada item passa
+  // por revisão humana individual antes de virar spec (o próprio designer
+  // vê o elemento e decide se já foi documentado).
   const pendingAreaIdForFilter = window._a11yPendingDetectionArea && window._a11yPendingDetectionArea.areaId;
   const sortedAreasForFilter = [..._allA11yAreas()].sort((a, b) => (a.number || 0) - (b.number || 0));
   const filterAreaId = pendingAreaIdForFilter && sortedAreasForFilter.some(a => a.id === pendingAreaIdForFilter)
@@ -2885,28 +3571,32 @@ function openA11yBatchSummaryModal() {
     return;
   }
 
-  // Agrupa por shortName de componente + confiança, pra mostrar contagem
-  // agregada ("2 Accordion (alta confiança)") em vez de listar item a item.
-  // Itens com dscComponentMatch.isUnmapped agrupam por containingFrame (nome
-  // do component set DSC real, ex: "[dsc] Alert") em vez de a11yCategory
-  // (que vem null nesse caso) — sempre confiança "baixa". 'estrutura' agrupa
-  // por containingFrame também no caso mapeado (não só isUnmapped): "[dsc]
-  // Header" e "[dsc] Footer" resolvem pro mesmo shortName 'estrutura', mas
-  // são marcos de navegação DIFERENTES.
+  // Agrupa por shortName de componente, pra mostrar contagem agregada ("2
+  // Accordion") em vez de listar item a item. A antiga distinção de
+  // confiança alta/baixa foi removida do agrupamento e da exibição: com o
+  // wizard sequencial, todo item passa por revisão humana individual de
+  // qualquer forma, então a distinção virou ruído sem efeito prático
+  // (decisão de produto, 2026-09-02) — o campo dscComponentMatch.confidence
+  // continua existindo no dado bruto (ver _resolveDscComponentA11yMatch,
+  // code.js), só não influencia mais nada visível pro designer aqui. Itens
+  // com dscComponentMatch.isUnmapped agrupam por containingFrame (nome do
+  // component set DSC real, ex: "[dsc] Alert") em vez de a11yCategory (que
+  // vem null nesse caso). 'estrutura' agrupa por containingFrame também no
+  // caso mapeado (não só isUnmapped): "[dsc] Header" e "[dsc] Footer"
+  // resolvem pro mesmo shortName 'estrutura', mas são marcos de navegação
+  // DIFERENTES.
   const groups = {};
   detections.forEach(item => {
     const isUnmapped = item.dscComponentMatch.isUnmapped === true;
     const shortName = isUnmapped ? null : item.dscComponentMatch.a11yCategory;
-    const confidence = isUnmapped ? 'baixa' : (item.dscComponentMatch.confidence === 'alta' ? 'alta' : 'baixa');
     const containingFrame = item.dscComponentMatch.containingFrame;
     const key = isUnmapped ? ('outro|' + containingFrame)
-      : shortName === 'estrutura' ? ('estrutura|' + confidence + '|' + containingFrame)
-      : (shortName + '|' + confidence);
-    if (!groups[key]) groups[key] = { shortName, confidence, containingFrame, isUnmapped, count: 0 };
+      : shortName === 'estrutura' ? ('estrutura|' + containingFrame)
+      : shortName;
+    if (!groups[key]) groups[key] = { shortName, containingFrame, isUnmapped, count: 0 };
     groups[key].count++;
   });
   const groupList = Object.values(groups).sort((a, b) => {
-    if (a.confidence !== b.confidence) return a.confidence === 'alta' ? -1 : 1;
     const labelA = a.isUnmapped ? _cleanDscContainingFrameName(a.containingFrame) : (A11Y_COMPONENTE_LABELS[a.shortName] || a.shortName);
     const labelB = b.isUnmapped ? _cleanDscContainingFrameName(b.containingFrame) : (A11Y_COMPONENTE_LABELS[b.shortName] || b.shortName);
     return labelA.localeCompare(labelB);
@@ -2919,7 +3609,7 @@ function openA11yBatchSummaryModal() {
   const groupsTitle = document.getElementById('a11y-batch-summary-groups-title');
   if (groupsBlock && groupsTitle) {
     const totalItems = groupList.reduce((sum, g) => sum + g.count, 0);
-    groupsTitle.textContent = `Componentes detectados (${groupList.length} grupo${groupList.length === 1 ? '' : 's'}, ${totalItems} item${totalItems === 1 ? '' : 'ns'})`;
+    groupsTitle.textContent = `Componentes detectados (${groupList.length} grupo${groupList.length === 1 ? '' : 's'}, ${totalItems} ${totalItems === 1 ? 'item' : 'itens'})`;
     const groupsToggleBtn = groupsBlock.querySelector('button[onclick^="toggleAccordion"]');
     const groupsContent = groupsBlock.querySelector('.accordion-content');
     const groupsChevron = groupsToggleBtn ? groupsToggleBtn.querySelector('[data-lucide="chevron-down"]') : null;
@@ -2935,12 +3625,10 @@ function openA11yBatchSummaryModal() {
         ? `Outro (${_cleanDscContainingFrameName(g.containingFrame)})`
         : g.shortName === 'estrutura' ? `Estrutura da Página (${_cleanDscContainingFrameName(g.containingFrame)})`
         : (A11Y_COMPONENTE_LABELS[g.shortName] || _capitalizeFirst(g.shortName));
-      const isBaixa = g.confidence !== 'alta';
       return `
-        <div class="flex items-center gap-2 px-3 py-2 rounded-xl border ${isBaixa ? 'bg-amber-50/60 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40' : 'bg-gray-50 dark:bg-dark-bg border-gray-100 dark:border-dark-line'}">
-          <div class="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-extrabold ${isBaixa ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' : 'bg-[#FFF6DC] text-[#FCBE05]'}">${g.count}</div>
+        <div class="flex items-center gap-2 px-3 py-2 rounded-xl border bg-gray-50 dark:bg-dark-bg border-gray-100 dark:border-dark-line">
+          <div class="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-extrabold bg-[#FFF6DC] text-[#FCBE05]">${g.count}</div>
           <p class="flex-1 text-[11px] font-semibold text-slate-700 dark:text-white">${escapeHtml(label)}</p>
-          <span class="shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${isBaixa ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-dark-muted'}">${isBaixa ? 'Baixa confiança' : 'Alta confiança'}</span>
         </div>
       `;
     }).join('');
@@ -2967,10 +3655,14 @@ function openA11yBatchSummaryModal() {
     else if (areaSelect) areaSelect.disabled = false;
   }
 
+  // Botão passou de "Criar N Especificações" (criação direta em lote) pra
+  // "Iniciar Revisão (N itens)" — chama startA11yBatchWizard, que abre o
+  // wizard sequencial de confirmação individual (ver decisão de produto:
+  // todo item detectado exige confirmação, sem exceção de categoria).
   const confirmBtn = document.getElementById('btn-a11y-batch-confirm');
   if (confirmBtn) {
     confirmBtn.classList.toggle('hidden', detections.length === 0);
-    confirmBtn.textContent = `Criar ${detections.length} Especifica${detections.length === 1 ? 'ção' : 'ções'}`;
+    confirmBtn.textContent = `Iniciar Revisão (${detections.length} ${detections.length === 1 ? 'item' : 'itens'})`;
     confirmBtn.disabled = detections.length === 0;
   }
 
@@ -2981,7 +3673,7 @@ function openA11yBatchSummaryModal() {
   const skippedNotice = document.getElementById('a11y-batch-summary-skipped-notice');
   if (skippedNotice) {
     if (skippedCount > 0) {
-      skippedNotice.textContent = `${skippedCount} item${skippedCount === 1 ? '' : 'ns'} não ${skippedCount === 1 ? 'entra' : 'entram'} neste lote.`;
+      skippedNotice.textContent = `${skippedCount} ${skippedCount === 1 ? 'item' : 'itens'} não ${skippedCount === 1 ? 'entra' : 'entram'} nesta revisão.`;
       skippedNotice.classList.remove('hidden');
     } else {
       skippedNotice.classList.add('hidden');
@@ -3037,7 +3729,10 @@ window.closeA11yBatchSummaryModal = closeA11yBatchSummaryModal;
 // 'create-unified-spec' antes de disparar a próxima — necessário porque o
 // backend calcula posição/import da lib de forma assíncrona por chamada;
 // sem serializar, duas criações concorrentes poderiam colidir. Timeout de
-// segurança evita travar o lote inteiro se uma resposta nunca chegar.
+// segurança evita travar o wizard inteiro se uma resposta nunca chegar.
+// Reaproveitado por confirmA11ySpec quando modal.dataset.wizardActive === '1'
+// (decisão de produto: só o wizard precisa serializar — o fluxo manual
+// normal continua fire-and-forget, um modal por vez).
 function _createA11ySpecAndWait(opts) {
   return new Promise(resolve => {
     let settled = false;
@@ -3047,7 +3742,7 @@ function _createA11ySpecAndWait(opts) {
       window._a11yBatchCreateResolve = null;
       resolve(ok);
     };
-    const timeoutId = setTimeout(() => finish(false), 8000);
+    const timeoutId = setTimeout(() => finish(false), 15000);
     window._a11yBatchCreateResolve = (ok) => { clearTimeout(timeoutId); finish(ok); };
     parent.postMessage({ pluginMessage: { type: 'create-unified-spec', opts } }, '*');
   });
@@ -3111,38 +3806,42 @@ function _suggestNextA11yTagForArea(areaId) {
   return candidate;
 }
 
-// Fase 1 do "mapeamento profundo": cruza as variantes REAIS do componente
-// DSC detectado no canvas (item.variants, já vêm do scan) com a variante
-// secundária ("tipo") do catálogo de a11y, pra não deixar todo item do lote
-// nascer com o default (ex: um Button já desabilitado no canvas vira spec
-// "default" em vez de "desabilitado"). Só cobre os pares com correspondência
-// CLARA e confirmada contra a lib real.
-function _inferA11yVariantFromDsc(shortName, itemVariants) {
-  const variants = Array.isArray(itemVariants) ? itemVariants : [];
-  const has = (propName, propValue) => variants.some(v =>
-    v && String(v.name || '').trim().toLowerCase() === propName
-      && String(v.value || '').trim().toLowerCase() === propValue
-  );
-
-  if (shortName === 'button') {
-    // Prioridade: estado tem precedência sobre variação visual — um botão
-    // desabilitado E de ícone documenta-se primeiro como "desabilitado" (é
-    // a informação mais crítica pro leitor de tela).
-    if (has('state', 'disabled')) return 'desabilitado';
-    if (has('icon only', 'true')) return 'de icone';
-    return null;
-  }
-  if (shortName === 'inputs') {
-    if (has('state', 'readonly')) return 'somente leitura';
-    return null;
-  }
-  return null;
+// ── Wizard de revisão individual (Detecção Automática) ──────────────────
+// Substitui o antigo confirmA11yBatchGenerate (criação em lote sem
+// confirmação item a item, removido nesta entrega). Decisão de produto:
+// TODO item detectado exige configuração/confirmação individual antes de
+// virar spec real — sem exceção de categoria (título e decorativo também
+// passam a exigir confirmação, ao contrário do comportamento antigo).
+//
+// window._a11yBatchWizardState é um SNAPSHOT em memória, não persistido —
+// nunca consome/apaga a fonte bruta (window._a11yDetectionsByArea[areaId]/
+// window._a11yLooseDetections, que alimentam _collectA11yUndocumentedForArea).
+// Por isso cancelar no meio (stopA11yBatchWizard) é de graça: os itens ainda
+// não vistos continuam na fonte bruta e voltam a aparecer no accordion "Não
+// Documentados" automaticamente, sem nenhuma ação extra aqui. Os já
+// confirmados já são specs reais (persistidas via create-unified-spec/
+// spec-created) — nada a fazer com eles na hora de parar.
+// Ver docs/architecture-state.md pra mais contexto desta decisão.
+function _resetA11yBatchWizardUi() {
+  const focusBtn = document.getElementById('btn-a11y-wizard-focus');
+  if (focusBtn) focusBtn.classList.add('hidden');
+  const discardBtn = document.getElementById('btn-a11y-wizard-discard');
+  if (discardBtn) discardBtn.classList.add('hidden');
+  const progress = document.getElementById('a11y-modal-wizard-progress');
+  if (progress) progress.classList.add('hidden');
+  const paginator = document.getElementById('a11y-modal-wizard-paginator');
+  if (paginator) { paginator.classList.add('hidden'); paginator.innerHTML = ''; }
+  const confirmBtn = document.getElementById('btn-a11y-confirm');
+  if (confirmBtn) confirmBtn.disabled = false;
+  const modal = document.getElementById('a11y-spec-modal');
+  if (modal) delete modal.dataset.wizardActive;
 }
 
-// Confirma o lote: para cada detecção, monta letra sequencial + payload puro
-// (_buildA11yElementoPayload) e chama create-unified-spec SEQUENCIALMENTE
-// (await uma de cada vez, ver _createA11ySpecAndWait) — nunca em paralelo.
-async function confirmA11yBatchGenerate() {
+// Abre a tela de entrada do wizard: monta a fila a partir do MESMO array já
+// filtrado que openA11yBatchSummaryModal exibe (window._a11yBatchDetections)
+// como um snapshot próprio — trocar de área no meio do wizard não é
+// suportado (mesma limitação que o resumo já tinha).
+function startA11yBatchWizard() {
   const detections = window._a11yBatchDetections || [];
   const areaSelect = document.getElementById('a11y-batch-area-select');
   const areaId = areaSelect ? areaSelect.value : null;
@@ -3150,191 +3849,286 @@ async function confirmA11yBatchGenerate() {
     showToast('Selecione a área de destino.');
     return;
   }
+  if (detections.length === 0) return;
 
-  const confirmBtn = document.getElementById('btn-a11y-batch-confirm');
-  if (confirmBtn) confirmBtn.disabled = true;
-  closeA11yBatchSummaryModal();
-
-  // O modal de Detecção Automática reabre por baixo enquanto o loop
-  // sequencial abaixo cria uma spec de cada vez (pode levar vários segundos
-  // em lotes grandes); sem isso o designer via a tela "parada" sem nenhum
-  // feedback. Reaproveita o mesmo elemento/estrutura visual do estado de
-  // loading já usado durante a varredura inicial — só troca o texto.
-  const loading = document.getElementById('a11y-post-area-loading');
-  const loadingText = loading ? loading.querySelector('p') : null;
-  if (loadingText) loadingText.textContent = 'Criando especificações…';
-  openModal('a11y-post-area-detect-modal');
-
-  window._a11yBatchCancelled = false;
-  const cancelBtn = document.getElementById('btn-a11y-batch-cancel');
-  if (cancelBtn) cancelBtn.classList.remove('hidden');
+  window._a11yBatchWizardState = {
+    areaId,
+    queue: detections.slice(),
+    // -1: _advanceA11yBatchWizard busca o próximo pendente a partir de
+    // currentIndex + 1, então -1 faz a primeira busca começar no índice 0.
+    currentIndex: -1,
+    // Sets de ÍNDICES da queue (não dos itens) — permite navegação livre
+    // (paginador) consultar o status de qualquer posição em O(1) sem
+    // depender de currentIndex ter passado por ali em ordem. Reempurrar o
+    // mesmo índice (ex: descartar de novo um item já descartado, ao
+    // reabri-lo pelo paginador) é idempotente por construção de Set.
+    confirmed: new Set(),
+    discarded: new Set(),
+  };
 
   window._a11yExpandedAreaIds = window._a11yExpandedAreaIds || new Set();
   window._a11yExpandedAreaIds.add(areaId);
 
-  let created = 0;
-  let failed = 0;
-  let skippedDuplicate = 0;
-  // Tag sequencial: começa na próxima letra livre da área e avança uma por
-  // item criado — reaproveita _suggestNextA11yTagForArea pro ponto de
-  // partida, mas não recalcula a cada iteração (o awaiting sequencial já
-  // garante que a11ySpecs reflete a spec anterior antes da próxima).
-  let nextLetterIndex = 0;
-  const toLetters = (n) => {
-    let s = '';
-    n += 1;
-    while (n > 0) {
-      const rem = (n - 1) % 26;
-      s = String.fromCharCode(65 + rem) + s;
-      n = Math.floor((n - 1) / 26);
-    }
-    return s;
-  };
-  const startTag = _suggestNextA11yTagForArea(areaId);
-  const startIndex = startTag.length === 1 ? startTag.charCodeAt(0) - 65 : 0;
+  closeA11yBatchSummaryModal();
+  _advanceA11yBatchWizard();
+}
+window.startA11yBatchWizard = startA11yBatchWizard;
 
-  for (const item of detections) {
-    // Checado no INÍCIO da iteração, nunca no meio de um await pendente: a
-    // spec já em criação no momento do clique termina normalmente (backend
-    // já recebeu create-unified-spec, abortar no meio deixaria canvas/
-    // a11ySpecs inconsistentes), só a PRÓXIMA do array deixa de disparar.
-    if (window._a11yBatchCancelled) break;
-    // Rede de segurança final contra duplicidade: mesmo que a lista exibida
-    // no modal de resumo já tenha vindo filtrada (_filterA11yBatchEligible
-    // com areaId), recalcula aqui porque a11ySpecs pode ter mudado desde a
-    // abertura do modal (specs anteriores do próprio loop sequencial, ou o
-    // designer trocou a área de destino no <select> pra uma que não foi a
-    // usada no filtro de exibição — ver decisão documentada em
-    // openA11yBatchSummaryModal). Sem isso, esse item nasceria como spec
-    // duplicada sobre o mesmo targetNodeId.
-    if (item.nodeId && _getDocumentedNodeIdsForArea(areaId).has(item.nodeId)) {
-      skippedDuplicate++;
-      continue;
-    }
-    const isUnmapped = item.dscComponentMatch.isUnmapped === true;
-    const shortName = item.dscComponentMatch.a11yCategory;
-    // Título e decorativo não consomem uma letra da sequência: título usa o
-    // próprio nível como tag (H1..H6) e decorativo já usava um badge fixo —
-    // só "elemento" usa de fato a letra sequencial calculada aqui.
-    // "estrutura" também consome letra sequencial (badge === null, mesmo
-    // padrão de "elemento"/"informacoes").
-    const usesSequentialLetter = shortName !== 'titulo' && shortName !== 'decorativo';
-    const letter = usesSequentialLetter ? toLetters(startIndex + nextLetterIndex) : null;
-    if (usesSequentialLetter) nextLetterIndex++;
-    // Itens de baixa confiança nascem marcados pra revisão (badge
-    // "Verificar" na listagem) já que não passam mais por confirmação item
-    // a item. isUnmapped sempre precisa de revisão — é literalmente um
-    // "Outro" sem categoria conhecida.
-    const needsReview = isUnmapped || item.dscComponentMatch.confidence !== 'alta';
+// Índice do primeiro item pendente (nem confirmado, nem descartado) a
+// partir de `from` — usado tanto pra decidir o próximo item ao avançar
+// quanto pra saber se a fila inteira já foi resolvida. Navegação livre
+// (paginador) significa que "pendente" não é mais só "ainda não alcançado
+// por currentIndex": qualquer posição da fila pode estar pendente,
+// confirmada ou descartada independente de onde o cursor está agora.
+function _findNextA11yWizardPendingIndex(state, from) {
+  for (let i = from; i < state.queue.length; i++) {
+    if (!state.confirmed.has(i) && !state.discarded.has(i)) return i;
+  }
+  for (let i = 0; i < from; i++) {
+    if (!state.confirmed.has(i) && !state.discarded.has(i)) return i;
+  }
+  return -1;
+}
 
-    // 'titulo'/'decorativo' vêm da heurística de texto/ícone — o shortName
-    // JÁ É a11yType nesses casos, diferente de 'elemento' onde shortName é
-    // o componente (button/checkbox/...) dentro da categoria fixa
-    // 'elemento'. Cada categoria nasce com o default mais comum (H1,
-    // subtipo "gerais"). 'estrutura' é mais um shortName que já É o
-    // a11yType, vindo de correspondência curada pra componentes DSC reais
-    // de Header/Footer — mas, diferente deles, usa tag manual sequencial.
-    const a11yType = (shortName === 'titulo' || shortName === 'decorativo' || shortName === 'estrutura') ? shortName : 'elemento';
-    // Pré-seleciona a variante secundária quando o componente real no
-    // canvas já sinaliza um estado/variação com correspondência DSC
-    // conhecida. isUnmapped monta o payload "Outro", com o nome do
-    // component set DSC real (containingFrame) como valor de "Componente".
-    const built = isUnmapped ? _buildA11yElementoOutroPayload(letter, item.dscComponentMatch.containingFrame, item.name || 'Elemento')
-      : a11yType === 'titulo' ? _buildA11yTituloPayload(item.name || 'Elemento', item.dscComponentMatch.suggestedLevel, item.dscComponentMatch.origin)
-      : a11yType === 'decorativo' ? _buildA11yDecorativoPayload(item.name || 'Elemento')
-      : a11yType === 'estrutura' ? _buildA11yEstruturaPayload(letter, item.name || 'Elemento', item.dscComponentMatch.containingFrame)
-      : _buildA11yElementoPayload(letter, shortName, item.name || 'Elemento', {
-        tipo: _inferA11yVariantFromDsc(shortName, item.variants) || undefined,
-      });
-    const catMeta = A11Y_CATEGORIES[a11yType];
-    const opts = {
-      category: 'acessibilidade',
-      categoryLabel: catMeta.label,
-      letter: built.letter,
-      color: catMeta.color,
-      fillColor: catMeta.fill,
-      properties: built.properties,
-      guideSide: 'right',
-      drawMode: 'contorno',
-      drawConnection: false,
-      a11yType,
-      a11ySubtype: built.a11ySubtype,
-      // Origem (web/mobile) vem do componente DETECTADO — item.dscComponentMatch.origin,
-      // resolvido no backend a partir de qual das duas libs DSC (Web Angular
-      // & React ou DSC | Super App) a componentKey da instância pertence.
-      // Default 'web' só como rede de segurança (heurísticas de texto/ícone
-      // — título/decorativo sem match de componente real — não têm origin).
-      a11yOrigin: item.dscComponentMatch.origin || 'web',
-      // Lib DSC de origem (legado/Super DSC/mobile) já resolvida no backend
-      // por componentKey — propagação direta, sem fallback: null significa
-      // componente não catalogado em nenhuma lib, não deve virar um chute.
-      a11ySourceLib: item.dscComponentMatch.sourceLib || null,
-      // Nome real do component set DSC (ex: "[dsc] Button") pro badge de
-      // componente no card — null nas heurísticas de texto/ícone
-      // (titulo/decorativo/imagem), que já chegam com containingFrame null
-      // (ver _resolveTypographyA11yMatch/_resolveDecorativeA11yMatch/
-      // _resolveImageA11yMatch em code.js).
-      a11yDscComponentName: item.dscComponentMatch.containingFrame || null,
-      a11yAreaId: areaId,
-      // Recalculado a cada volta do loop sequencial — a11ySpecs já reflete a
-      // spec anterior do próprio lote assim que 'spec-created' responde,
-      // então o card seguinte já enxerga a sub-coluna certa (mesma área +
-      // mesma categoria).
-      existingAreaSpecIds: _collectAreaSiblingSpecIds(areaId, a11yType),
-      existingAreaAllSpecIds: _collectAreaAllSpecIds(areaId),
-      targetNodeId: item.nodeId || null,
-      needsReview,
-      // Suprime o toast individual de create-unified-spec (code.js) pra
-      // cada item do loop: com N specs criadas em sequência, N toasts do
-      // caso feliz só competem com o resumo único disparado no fim desta
-      // função. O fluxo manual (confirmA11ySpec) não seta este campo, então
-      // continua notificando item a item normalmente.
-      silent: true,
-    };
-    const ok = await _createA11ySpecAndWait(opts);
-    if (ok) created++; else failed++;
+// Avança pro próximo item pendente da fila (ou encerra, se não sobrar
+// nenhum). Chamada tanto pelo início do wizard quanto depois de cada
+// confirmação/descarte feitos no item corrente.
+function _advanceA11yBatchWizard() {
+  const state = window._a11yBatchWizardState;
+  if (!state) return;
+
+  const nextIndex = _findNextA11yWizardPendingIndex(state, state.currentIndex + 1);
+  if (nextIndex === -1) {
+    const confirmedCount = state.confirmed.size;
+    const discardedCount = state.discarded.size;
+    window._a11yBatchWizardState = null;
+    // closeModal direto (não closeA11yModal) — a fila já terminou
+    // normalmente, não é um fechamento "externo"/abandono, não deve
+    // reacionar stopA11yBatchWizard (que já checaria _a11yBatchWizardState
+    // === null e não faria nada, mas ainda assim é mais claro fechar direto
+    // aqui e resetar a UI do wizard explicitamente).
+    closeModal('a11y-spec-modal');
+    _resetA11yBatchWizardUi();
+    if (typeof closeA11yPostAreaDetectModal === 'function') closeA11yPostAreaDetectModal();
+    if (confirmedCount === 0 && discardedCount === 0) return;
+    if (confirmedCount > 0 && discardedCount === 0) {
+      showToast(`${confirmedCount} especifica${confirmedCount === 1 ? 'ção criada' : 'ções criadas'}.`);
+    } else if (confirmedCount === 0 && discardedCount > 0) {
+      showToast(`Revisão concluída — ${discardedCount} ${discardedCount === 1 ? 'item' : 'itens'} descartado${discardedCount === 1 ? '' : 's'}, nenhuma especificação criada.`);
+    } else {
+      showToast(`${confirmedCount} especifica${confirmedCount === 1 ? 'ção criada' : 'ções criadas'}, ${discardedCount} descartado${discardedCount === 1 ? '' : 's'}.`);
+    }
+    return;
   }
 
-  window._a11yBatchDetections = null;
+  _openA11yWizardItemAt(nextIndex);
+}
+window._advanceA11yBatchWizard = _advanceA11yBatchWizard;
 
-  // Fecha o modal de Detecção Automática (pós-Marcar-Área) que ficava
-  // aberto por cima da tela depois do lote terminar — o usuário criava as
-  // specs mas continuava preso atrás do modal, sem ver o resultado na
-  // listagem de Áreas Marcadas (que já reabre a área expandida). É um modal
-  // diferente do "resumo do lote" (já fechado no início desta função) —
-  // precisa fechar os dois.
+// Abre o formulário pra um item específico da fila por índice — usada tanto
+// por _advanceA11yBatchWizard (sequencial) quanto pelo paginador (navegação
+// livre, qualquer índice, em qualquer direção, revisado ou não).
+function _openA11yWizardItemAt(index) {
+  const state = window._a11yBatchWizardState;
+  if (!state || index < 0 || index >= state.queue.length) return;
+  state.currentIndex = index;
+  // window._a11yBatchDetections (fonte da fila, ver startA11yBatchWizard) só
+  // contém itens com dscComponentMatch (_filterA11yBatchEligible) — nunca
+  // candidatos de 'tokenReview' (esses só aparecem como aviso informativo no
+  // resumo, nunca entram no lote/wizard). 'detection' é sempre o kind aqui.
+  const rawItem = state.queue[index];
+  const { category, options } = _resolveA11yFormPresetFromItem(rawItem, 'detection');
+  window._a11yPendingAreaId = state.areaId;
+  openA11yModal(category, options);
+  _applyA11yWizardModalUi(state);
+}
+window._openA11yWizardItemAt = _openA11yWizardItemAt;
+
+// Pulo direto pra qualquer posição do paginador, em qualquer direção,
+// revisado ou não. Itens já confirmados reabrem normalmente (pra
+// visualização), mas com "Aplicar" trocado por "Documentado"
+// (desabilitado) — ver _applyA11yWizardModalUi — pra nunca duplicar spec
+// sobre o mesmo nó. Descartados reabrem totalmente editáveis: navegação
+// livre inclui poder reconsiderar um descarte e aplicar depois.
+function jumpToA11yWizardItem(index) {
+  const state = window._a11yBatchWizardState;
+  if (!state) return;
+  _openA11yWizardItemAt(index);
+}
+window.jumpToA11yWizardItem = jumpToA11yWizardItem;
+
+// Reaplica o "modo wizard" da modal (dataset.wizardActive, botões
+// Focar/Descartar, progresso "N de M") — openA11yModal sempre reseta esse
+// estado no início (ver _resetA11yBatchWizardUi ali dentro), então tanto
+// avançar pra um novo item quanto trocar a categoria do item atual (ver
+// switchA11yWizardCategory) precisam reaplicar por cima depois de chamar
+// openA11yModal.
+function _applyA11yWizardModalUi(state) {
+  const modal = document.getElementById('a11y-spec-modal');
+  if (modal) modal.dataset.wizardActive = '1';
+  const focusBtn = document.getElementById('btn-a11y-wizard-focus');
+  if (focusBtn) focusBtn.classList.remove('hidden');
+  const progress = document.getElementById('a11y-modal-wizard-progress');
+  if (progress) {
+    progress.textContent = `Item ${state.currentIndex + 1} de ${state.queue.length}`;
+    progress.classList.remove('hidden');
+  }
+
+  const isConfirmed = state.confirmed.has(state.currentIndex);
+  const discardBtn = document.getElementById('btn-a11y-wizard-discard');
+  if (discardBtn) discardBtn.classList.toggle('hidden', isConfirmed);
+  const confirmBtn = document.getElementById('btn-a11y-confirm');
+  if (confirmBtn) {
+    confirmBtn.textContent = isConfirmed ? 'Documentado' : 'Aplicar';
+    confirmBtn.disabled = isConfirmed;
+  }
+
+  const paginator = document.getElementById('a11y-modal-wizard-paginator');
+  if (paginator) paginator.classList.remove('hidden');
+  _renderA11yWizardPaginator(state);
+}
+
+// Só o essencial pra refletir status novo (Set confirmed/discarded mudou)
+// sem reabrir o formulário — usado quando uma confirmação assíncrona chega
+// pra um item que não é mais o exibido (o designer já pulou pra outro).
+function _refreshA11yWizardPaginator(state) {
+  if (!state) return;
+  _renderA11yWizardPaginator(state);
+}
+window._refreshA11yWizardPaginator = _refreshA11yWizardPaginator;
+
+// Paginador compacto (padrão "1 2 [3] 4 5 … N"): sempre mostra a primeira e
+// a última posição, uma janela ao redor do item atual, com "…" resumindo o
+// que fica de fora. Cada botão reflete o status real daquele índice —
+// consultado ao vivo nos Sets (confirmed/discarded), não um valor herdado do
+// momento em que a fila foi montada.
+function _buildA11yWizardPaginatorPages(total, current) {
+  const windowSize = 1;
+  const pages = new Set([0, total - 1]);
+  for (let i = current - windowSize; i <= current + windowSize; i++) {
+    if (i >= 0 && i < total) pages.add(i);
+  }
+  const sorted = Array.from(pages).sort((a, b) => a - b);
+  const withGaps = [];
+  sorted.forEach((page, i) => {
+    if (i > 0 && page - sorted[i - 1] > 1) withGaps.push('gap');
+    withGaps.push(page);
+  });
+  return withGaps;
+}
+
+function _renderA11yWizardPaginator(state) {
+  const wrap = document.getElementById('a11y-modal-wizard-paginator');
+  if (!wrap) return;
+  const total = state.queue.length;
+  const pages = _buildA11yWizardPaginatorPages(total, state.currentIndex);
+  wrap.innerHTML = pages.map(page => {
+    if (page === 'gap') return '<span class="w-4 text-center text-[10px] text-slate-300 dark:text-dark-muted shrink-0">…</span>';
+    const isCurrent = page === state.currentIndex;
+    const isConfirmed = state.confirmed.has(page);
+    const isDiscarded = state.discarded.has(page);
+    let classes = 'min-w-[20px] h-5 px-1 shrink-0 rounded-full text-[9px] font-extrabold flex items-center justify-center transition-colors ';
+    if (isCurrent) {
+      classes += 'bg-[#0891B2] text-white shadow-sm shadow-cyan-500/30';
+    } else if (isConfirmed) {
+      classes += 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400';
+    } else if (isDiscarded) {
+      classes += 'bg-gray-100 text-gray-400 hover:bg-gray-200 dark:bg-dark-bg dark:text-dark-muted';
+    } else {
+      classes += 'bg-gray-50 text-slate-500 hover:bg-cyan-50 hover:text-[#0891B2] dark:bg-dark-bg dark:text-dark-muted dark:hover:bg-cyan-900/20';
+    }
+    const title = isConfirmed ? 'Documentado' : isDiscarded ? 'Descartado' : 'Pendente';
+    return `<button type="button" onclick="jumpToA11yWizardItem(${page})" title="Item ${page + 1} — ${title}" aria-label="Item ${page + 1} — ${title}" aria-current="${isCurrent ? 'true' : 'false'}" class="${classes}">${page + 1}</button>`;
+  }).join('');
+}
+
+// Centraliza/dá zoom no elemento do item atual do wizard no canvas — reusa o
+// mesmo nodeId que openA11yModal já grava em modal.dataset.pendingTargetNodeId
+// (ver _advanceA11yBatchWizard acima) em vez de duplicar estado próprio do
+// wizard. Mesma função focusNode(id) (core.js) usada na listagem de specs.
+function focusA11yWizardCurrentNode() {
+  const modal = document.getElementById('a11y-spec-modal');
+  const nodeId = modal ? modal.dataset.pendingTargetNodeId : '';
+  if (!nodeId) return;
+  focusNode(nodeId);
+}
+window.focusA11yWizardCurrentNode = focusA11yWizardCurrentNode;
+
+// Descarta o item corrente sem criar spec — nunca chama create-unified-spec.
+// Idempotente por índice (Set): reabrir pelo paginador um item já
+// confirmado nunca chega aqui (botão vira "Documentado", ver
+// _applyA11yWizardModalUi), então não há risco de descartar algo que já
+// virou spec real.
+function discardCurrentA11yBatchWizardItem() {
+  const state = window._a11yBatchWizardState;
+  if (!state) return;
+  state.discarded.add(state.currentIndex);
+  _advanceA11yBatchWizard();
+}
+window.discardCurrentA11yBatchWizardItem = discardCurrentA11yBatchWizardItem;
+
+// Encerra o wizard a qualquer momento — X, backdrop e Esc chamam via
+// closeA11yModal (viaExplicitCancelButton = false); o botão "Cancelar" chama
+// via cancelA11yModalExplicit (viaExplicitCancelButton = true). Itens já
+// confirmados permanecem como specs reais; os pendentes (nem confirmados,
+// nem descartados — navegação livre significa que isso não é mais só "do
+// currentIndex em diante") voltam automaticamente pra "Não Documentados" —
+// não precisam de nenhum tratamento aqui, a fonte bruta nunca foi tocada.
+//
+// Quando o fechamento NÃO veio do botão "Cancelar" (pode ter sido
+// acidental — clique perdido no X/backdrop, Esc sem querer) e ainda restam
+// itens na fila, oferece retomar via snackbar com ação: reabrir a revisão
+// dispara um NOVO scan da área (não reaproveita a fila antiga em memória),
+// porque o canvas pode ter mudado entre o cancelamento e a retomada.
+// Reaproveita o mesmo caminho de scan que a Detecção Automática usa
+// (openA11yPostAreaDetectModal), então o dedupe por targetNodeId contra
+// specs já confirmadas continua valendo automaticamente — ver
+// _filterA11yBatchEligible/_getDocumentedNodeIdsForArea.
+function stopA11yBatchWizard(viaExplicitCancelButton) {
+  const state = window._a11yBatchWizardState;
+  window._a11yBatchWizardState = null;
+  _resetA11yBatchWizardUi();
+  closeModal('a11y-spec-modal');
   if (typeof closeA11yPostAreaDetectModal === 'function') closeA11yPostAreaDetectModal();
-
-  const cancelBtnEl = document.getElementById('btn-a11y-batch-cancel');
-  if (cancelBtnEl) cancelBtnEl.classList.add('hidden');
-
-  // skippedDuplicate só existe pela rede de segurança contra duplicidade
-  // (ver comentário no loop acima) — não compete com o toast de sucesso
-  // "limpo", só entra na mensagem quando de fato descartou algo.
-  const duplicateSuffix = skippedDuplicate > 0
-    ? ` (${skippedDuplicate} já documentado${skippedDuplicate === 1 ? '' : 's'}, ignorado${skippedDuplicate === 1 ? '' : 's'})`
-    : '';
-  if (window._a11yBatchCancelled) {
-    showToast(`${created} especifica${created === 1 ? 'ção criada' : 'ções criadas'} antes do cancelamento.${duplicateSuffix}`);
-  } else if (created > 0 && failed === 0) {
-    showToast(`${created} especifica${created === 1 ? 'ção criada' : 'ções criadas'} — revise as de baixa confiança.${duplicateSuffix}`);
-  } else if (created > 0 && failed > 0) {
-    showToast(`${created} especifica${created === 1 ? 'ção criada' : 'ções criadas'}, ${failed} falharam — tente criar essas manualmente.${duplicateSuffix}`);
-  } else if (skippedDuplicate > 0 && created === 0 && failed === 0) {
-    showToast(`Nenhuma especificação criada — todos os itens já estavam documentados nesta área.`);
-  } else {
-    showToast('Não foi possível criar as especificações do lote.');
+  if (!state) return;
+  const confirmedCount = state.confirmed.size;
+  const remaining = state.queue.length - state.confirmed.size - state.discarded.size;
+  const areaId = state.areaId;
+  if (!viaExplicitCancelButton && remaining > 0 && areaId) {
+    const message = confirmedCount > 0
+      ? `Revisão interrompida — ${confirmedCount} especifica${confirmedCount === 1 ? 'ção criada' : 'ções criadas'}, ${remaining} ${remaining === 1 ? 'item' : 'itens'} de volta pra "Não Documentados".`
+      : `Revisão interrompida — ${remaining} ${remaining === 1 ? 'item' : 'itens'} continua${remaining === 1 ? '' : 'm'} em "Não Documentados".`;
+    showSnackbar(message, {
+      actionLabel: 'Continuar revisão',
+      onAction: () => _resumeA11yBatchWizardForArea(areaId),
+    });
+    return;
   }
-  window._a11yBatchCancelled = false;
+  if (confirmedCount > 0) {
+    showToast(`Revisão interrompida — ${confirmedCount} especifica${confirmedCount === 1 ? 'ção criada' : 'ções criadas'}, ${remaining} ${remaining === 1 ? 'item' : 'itens'} de volta pra "Não Documentados".`);
+  } else {
+    showToast(`Revisão interrompida — ${remaining} ${remaining === 1 ? 'item' : 'itens'} continua${remaining === 1 ? '' : 'm'} em "Não Documentados".`);
+  }
 }
-window.confirmA11yBatchGenerate = confirmA11yBatchGenerate;
+window.stopA11yBatchWizard = stopA11yBatchWizard;
 
-// Só sinaliza a intenção — o loop em confirmA11yBatchGenerate é quem lê a
-// flag no início da próxima iteração e decide parar.
-function cancelA11yBatchGenerate() {
-  window._a11yBatchCancelled = true;
+// Dispara um novo scan da área (mesmo caminho que a Detecção Automática
+// inicial usa) e, quando o resultado chegar, reabre o wizard direto — sem
+// passar pelo modal de resumo agregado, pra ser o mais próximo possível de
+// "retomar de onde parou" com um clique só. handleA11yPostAreaDetectionResult
+// (fluxo normal de scan) já monta window._a11yBatchDetections/
+// window._a11yPendingDetectionArea; aqui só marcamos a intenção de pular
+// direto pro wizard quando esse resultado chegar.
+function _resumeA11yBatchWizardForArea(areaId) {
+  const area = _findA11yAreaById(areaId);
+  if (!area || !area.targetNodeId) {
+    showToast('Não foi possível localizar a área para retomar — reescaneie manualmente.');
+    return;
+  }
+  window._a11yResumeWizardAfterScan = true;
+  openA11yPostAreaDetectModal(area);
 }
-window.cancelA11yBatchGenerate = cancelA11yBatchGenerate;
+window._resumeA11yBatchWizardForArea = _resumeA11yBatchWizardForArea;
 
 // Remover a entrada também remove o nó no canvas (mesmo padrão de
 // deleteA11yArea logo abaixo) — specs de A11y têm nó real desde a criação.
@@ -3422,7 +4216,20 @@ function editA11ySpec(originalIndex) {
   const spec = a11ySpecs[originalIndex];
   if (!spec || !spec.a11yType) return;
   window._a11yPendingAreaId = spec.a11yAreaId || null;
-  openA11yModal(spec.a11yType, { a11yOrigin: spec.a11yOrigin || 'web' });
+  // targetNodeName/dscComponentName (já salvos na spec) populam os 2 campos
+  // read-only do topo do formulário também em modo edição — mesmos dados que
+  // a criação exibe, sem depender de nova resolução via canvas/scan.
+  openA11yModal(spec.a11yType, {
+    a11yOrigin: spec.a11yOrigin || 'web',
+    targetNodeName: spec.targetNodeName || null,
+    dscComponentName: spec.a11yDscComponentName || null,
+    // Sinaliza pra openA11yModal não disparar get-selection-name — os 2
+    // campos read-only já foram resolvidos acima a partir da spec salva, sem
+    // depender da seleção atual do canvas (que é irrelevante aqui e mudaria
+    // silenciosamente o conteúdo exibido quando a resposta assíncrona
+    // chegasse). Ver comentário em openA11yModal.
+    editing: true,
+  });
   const modal = document.getElementById('a11y-spec-modal');
   if (modal) {
     modal.dataset.editingSpecId = spec.id || '';
@@ -3448,19 +4255,43 @@ function _prefillA11ySpecForEdit(spec) {
   };
   const setVal = (id, val) => {
     const el = document.getElementById(id);
-    if (el && val) el.value = val;
+    if (el && val) { el.value = val; updateA11yCharCounter(el); }
   };
 
   const tagInputId = A11Y_TAG_INPUT_ID[category];
   if (tagInputId) setVal(tagInputId, spec.letter || 'A');
 
   if (category === 'elemento') {
+    const modal = document.getElementById('a11y-spec-modal');
+    const isMobile = !!modal && modal.dataset.a11yOrigin === 'mobile';
     const select = document.getElementById('a11y-el-componente-select');
-    if (sub.isOutro) {
-      if (select) select.value = 'outro';
-      setVal('a11y-el-componente-outro', getProp('componente'));
-    } else if (sub.componente && select) {
-      select.value = sub.componente;
+    // Specs mobile nunca restauram o select desktop (bloco fica escondido,
+    // ver _toggleA11yElementoDesktopBlock) — mesmo specs mobile ANTIGAS que
+    // tenham sub.componente preenchido (resquício de quando o bug de
+    // exclusão mútua existia) simplesmente ignoram esse campo aqui, sem
+    // quebrar o resto do formulário.
+    if (!isMobile) {
+      if (sub.isOutro) {
+        if (select) select.value = 'outro';
+        setVal('a11y-el-componente-outro', getProp('componente'));
+      } else if (sub.componente && select) {
+        select.value = sub.componente;
+      }
+    } else if (sub.isOutro) {
+      // Spec mobile ANTIGA que nasceu com isOutro=true (antes desta correção,
+      // quando o "Outro" desktop ainda convivia com o bloco mobile) — o nome
+      // real do componente documentado estava em properties['componente'].
+      // Reabrir pra edição precisa recuperar esse valor sem quebrar: joga no
+      // campo de texto livre "Link ou nome do componente" mobile (mesmo
+      // espírito do "Personalizado", ver A11Y_MOBILE_LINK_COMPONENT_OPTIONS),
+      // só se o campo de link real ainda não tiver um valor próprio salvo.
+      // _renderA11yElementoMobileFields (chamada por updateA11yElementoFields
+      // logo abaixo) precisa já ter recriado #a11y-el-mobile-link-url antes
+      // deste valor ser aplicado — por isso este preenchimento acontece de
+      // novo, redundante, depois de updateA11yElementoFields mais adiante
+      // (ver bloco _restoreA11yElementoMobileToggles/fallback isOutro logo
+      // após).
+      window._a11yPrefillMobileOutroComponente = getProp('componente') || '';
     }
     // Restaura a sub-variante mobile salva (componente/link/texto
     // alternativo) ANTES de updateA11yElementoFields — _renderA11yElemento
@@ -3488,6 +4319,14 @@ function _prefillA11ySpecForEdit(spec) {
     // acima já rendereu o bloco certo a partir do radio de variante e de
     // modal.dataset.a11yOrigin, setados antes desta chamada.
     _restoreA11yElementoMobileToggles(props);
+    // Fallback pra specs mobile ANTIGAS com isOutro=true (ver bloco acima) —
+    // só preenche se o campo real de link ainda estiver vazio (spec antiga
+    // não tinha linkComponente, então não há conflito de valor).
+    if (window._a11yPrefillMobileOutroComponente) {
+      const linkUrl = document.getElementById('a11y-el-mobile-link-url');
+      if (linkUrl && !linkUrl.value.trim()) linkUrl.value = window._a11yPrefillMobileOutroComponente;
+      delete window._a11yPrefillMobileOutroComponente;
+    }
   } else if (category === 'estrutura') {
     const subtipoSelect = document.getElementById('a11y-estrutura-subtipo-select');
     if (subtipoSelect) subtipoSelect.value = sub.variacao || 'idiomas';
@@ -3537,7 +4376,7 @@ function _prefillA11ySpecForEdit(spec) {
 // reaproveita número de área excluída).
 function openA11yAreaModal() {
   const input = document.getElementById('a11y-area-label-input');
-  if (input) input.value = '';
+  if (input) { input.value = ''; updateA11yCharCounter(input); }
   const conectorDefault = document.querySelector('input[name="a11y-area-conector"][value="superior"]');
   if (conectorDefault) conectorDefault.checked = true;
   // Sugere o próximo número livre, mas deixa editável — o designer pode
@@ -3551,7 +4390,7 @@ function openA11yAreaModal() {
   _getA11ySelectionInfo().then(sel => {
     const modal = document.getElementById('a11y-area-modal');
     if (!modal || modal.classList.contains('hidden')) return;
-    if (input && !input.value && sel && sel.name) input.value = sel.name;
+    if (input && !input.value && sel && sel.name) { input.value = sel.name; updateA11yCharCounter(input); }
   });
 }
 window.openA11yAreaModal = openA11yAreaModal;
@@ -3566,7 +4405,7 @@ function refreshA11yAreaLabelFromSelection() {
       showToast('Selecione um elemento no canvas antes de atualizar o nome.');
       return;
     }
-    if (input) input.value = sel.name;
+    if (input) { input.value = sel.name; updateA11yCharCounter(input); }
   });
 }
 window.refreshA11yAreaLabelFromSelection = refreshA11yAreaLabelFromSelection;
@@ -3581,6 +4420,15 @@ function _nextA11yAreaNumber() {
   return max + 1;
 }
 
+// A origem web/mobile também é necessária aqui, na criação da própria
+// Área — o selo de número da Área (A11Y_AREA_CONECTOR_KEYS no backend)
+// precisa saber se importa o componente desktop ou mobile da lib Design
+// Acessível, e esse momento é ANTES de qualquer Detecção Automática rodar
+// (ela só é disparada depois que a área já existe, se autoDetect estiver
+// ligado). Usa ensureA11yProjectOriginThen (ver bloco "Origem do projeto"
+// acima): se hacData.projectOrigin já foi respondido nesta sessão do
+// arquivo, segue direto sem perguntar de novo — decisão de produto de
+// 2026-09-02, que substitui a pergunta independente por área (2026-09-01).
 function confirmA11yArea() {
   const input = document.getElementById('a11y-area-label-input');
   const label = input ? input.value.trim() : '';
@@ -3602,7 +4450,9 @@ function confirmA11yArea() {
       showToast('Selecione um elemento no canvas antes de marcar a área.');
       return;
     }
-    parent.postMessage({ pluginMessage: { type: 'create-a11y-area', targetNodeId: sel.id, label, number, conector, autoDetect } }, '*');
+    ensureA11yProjectOriginThen((origin) => {
+      parent.postMessage({ pluginMessage: { type: 'create-a11y-area', targetNodeId: sel.id, label, number, conector, autoDetect, origin } }, '*');
+    });
   });
 }
 window.confirmA11yArea = confirmA11yArea;
@@ -3706,15 +4556,18 @@ function startTabOrderManualMode(areaId, targetNodeId) {
     showToast('Marque uma área da tela antes de iniciar a ordem de tabulação.');
     return;
   }
-  window._tabOrderPendingList = [];
-  window._tabOrderPendingAreaId = areaId;
-  window._tabOrderPendingTargetNodeId = targetNodeId;
-  window._tabOrderActiveCloneId = null;
-  window._tabOrderActiveCloneNodeMap = null;
-  parent.postMessage({ pluginMessage: { type: 'start-tab-order-copy', areaId, targetNodeId } }, '*');
-  openTabOrderReviewModal();
-  _tabOrderSetCaptureMode('continuous');
-  showToast('Clique nos elementos do canvas, em sequência.');
+  ensureA11yProjectOriginThen((origin) => {
+    window._tabOrderDeclaredOrigin = origin;
+    window._tabOrderPendingList = [];
+    window._tabOrderPendingAreaId = areaId;
+    window._tabOrderPendingTargetNodeId = targetNodeId;
+    window._tabOrderActiveCloneId = null;
+    window._tabOrderActiveCloneNodeMap = null;
+    parent.postMessage({ pluginMessage: { type: 'start-tab-order-copy', areaId, targetNodeId } }, '*');
+    openTabOrderReviewModal();
+    _tabOrderSetCaptureMode('continuous');
+    showToast('Cópia da área criada — clique nos elementos dela, em sequência.');
+  });
 }
 window.startTabOrderManualMode = startTabOrderManualMode;
 
@@ -3781,6 +4634,14 @@ function _tabOrderResetAddItemButton() {
 // backend enquanto alguma escuta está ativa (contínua ou de 1 clique só).
 // NUNCA cria nada no canvas aqui — só empurra pra lista pendente e aplica o
 // highlight temporário (feedback "isso foi capturado").
+//
+// SEM BLOQUEIO (decisão de produto revertida em 2026-09-02): o reconhecimento
+// automático de "acionável" via matching DSC (_isA11yInteractiveComponentKey)
+// não é confiável o suficiente — falha em Icon Buttons de libs não mapeadas e
+// em cards customizados sem match no catálogo (ex.: "Meus cartões",
+// "Carteiras digitais", "Click to Pay"). Como não há garantia real de
+// reconhecimento, qualquer clique no modo de captura entra direto na lista
+// pendente, sem checagem nem aviso — o designer decide 100% nesse fluxo.
 function handleTabOrderSelectionChanged(nodeId, nodeName) {
   if (!window._tabOrderCaptureMode || !nodeId) return;
 
@@ -3802,6 +4663,20 @@ function handleTabOrderSelectionChanged(nodeId, nodeName) {
 }
 window.handleTabOrderSelectionChanged = handleTabOrderSelectionChanged;
 
+// Destaca um item da lista PENDENTE no canvas — usa o mesmo handler dedicado
+// highlight-tab-order-copy-node (code.js) que o clique direto no canvas em
+// handleTabOrderSelectionChanged já usa, em vez do sendHighlight genérico
+// (que dispara highlight-node contra o node ORIGINAL). A lista pendente só
+// existe enquanto a cópia rascunho está ativa, então o destaque tem que
+// resolver original→clone como todo o resto do fluxo de Ordem de
+// Tabulação — senão o retângulo aparece no frame errado (o original, nunca
+// tocado por esse fluxo).
+function _highlightTabOrderListItem(nodeId) {
+  if (!nodeId) return;
+  parent.postMessage({ pluginMessage: { type: 'highlight-tab-order-copy-node', id: nodeId, highlight: true, color: '#0891B2', selectNode: false, shouldScroll: false } }, '*');
+}
+window._highlightTabOrderListItem = _highlightTabOrderListItem;
+
 // Renderiza a lista PENDENTE (ainda não aplicada no canvas) dentro do modal
 // de revisão — reaproveita o mesmo padrão visual/drag-and-drop de
 // _renderTabOrderListForArea, mas opera sobre window._tabOrderPendingList
@@ -3818,9 +4693,11 @@ function _renderTabOrderPendingList() {
   if (applyBtn) applyBtn.disabled = items.length === 0;
 
   containerEl.innerHTML = items.map((it, listIndex) => `
-    <li class="list-none flex items-center gap-2 px-2.5 py-1.5 bg-white dark:bg-dark-surface rounded-lg border border-gray-100 dark:border-dark-line"
+    <li class="list-none flex items-center gap-2 px-2.5 py-1.5 bg-white dark:bg-dark-surface rounded-lg border border-gray-100 dark:border-dark-line cursor-pointer"
+      title="Destacar este elemento no canvas"
       draggable="true"
       data-list-index="${listIndex}"
+      onclick="_highlightTabOrderListItem('${escapeHtml(it.nodeId)}')"
       ondragstart="_tabOrderPendingDragStart(event, ${listIndex})"
       ondragover="_tabOrderDragOver(event)"
       ondrop="_tabOrderPendingDrop(event, ${listIndex})"
@@ -3831,7 +4708,7 @@ function _renderTabOrderPendingList() {
       <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0" style="background-color:#0891B2">${listIndex + 1}</div>
       <p class="flex-1 min-w-0 text-[11px] text-slate-700 dark:text-white truncate">${escapeHtml(it.nodeName || '')}</p>
       <button type="button" title="Remover da lista" aria-label="Remover da lista"
-        onclick="deleteTabOrderPendingItem('${escapeHtml(it.tempId)}')"
+        onclick="event.stopPropagation(); deleteTabOrderPendingItem('${escapeHtml(it.tempId)}')"
         class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shrink-0">
         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
       </button>
@@ -3839,8 +4716,31 @@ function _renderTabOrderPendingList() {
   `).join('');
 
   _refreshIcons();
+  _tabOrderRequestPreview();
 }
 window._renderTabOrderPendingList = _renderTabOrderPendingList;
+
+// Pede ao backend pra (re)desenhar a numeração fantasma refletindo a ordem
+// ATUAL de window._tabOrderPendingList — chamada ao final de TODA
+// re-renderização da lista pendente (adicionar item, remover item,
+// reordenar por drag-and-drop), então a prévia nunca fica dessincronizada
+// da lista. Funciona igual nos dois fluxos: tanto start-tab-order-copy
+// (manual) quanto generate-tab-order-from-layers (automático) já deixam uma
+// cópia ativa no backend (_activeTabOrderCloneMap/_activeTabOrderCloneAreaId)
+// antes da lista pendente existir. O backend ignora silenciosamente se por
+// algum motivo não houver cópia ativa pra esta área (ver
+// preview-tab-order-numbers em code.js).
+function _tabOrderRequestPreview() {
+  const areaId = window._tabOrderPendingAreaId;
+  if (!areaId) return;
+  const items = (window._tabOrderPendingList || []).map((it, i) => ({ nodeId: it.nodeId, number: i + 1 }));
+  // window._tabOrderDeclaredOrigin já foi respondido no início da revisão
+  // (ver ensureA11yProjectOriginThen, chamado por startTabOrderManualMode/
+  // _confirmGenerateTabOrderFromLayers) — não há mais area.origin calculado
+  // pra reaproveitar aqui.
+  const a11yOrigin = window._tabOrderDeclaredOrigin || 'web';
+  parent.postMessage({ pluginMessage: { type: 'preview-tab-order-numbers', areaId, items, a11yOrigin } }, '*');
+}
 
 let _tabOrderPendingDragIndex = null;
 
@@ -3874,13 +4774,13 @@ window.deleteTabOrderPendingItem = deleteTabOrderPendingItem;
 // (nenhum selo foi desenhado ainda, então não há nada pra desfazer) e limpa
 // o highlight temporário, se ainda visível.
 //
-// A cópia "rascunho" do frame (criada em startTabOrderManualMode, ANTES de
-// qualquer selo) fica órfã se o designer desistir aqui — sem selo nenhum,
-// não faz sentido deixá-la no canvas. Dispara 'delete-tab-order-draft-copy'
-// pra removê-la, só quando havia de fato uma cópia ativa desta área
-// (window._tabOrderActiveCloneId) — evita mandar a mensagem à toa em
-// fluxos que nunca passaram por "Iniciar" (ex: só usou "Gerar
-// Automaticamente", que não cria cópia antecipada).
+// A cópia "rascunho" do frame (criada em startTabOrderManualMode OU
+// _confirmGenerateTabOrderFromLayers, ANTES de qualquer selo) fica órfã se o
+// designer desistir aqui — sem selo nenhum, não faz sentido deixá-la no
+// canvas. Dispara 'delete-tab-order-draft-copy' pra removê-la, só quando
+// havia de fato uma cópia ativa desta área (window._tabOrderActiveCloneId)
+// — guarda de defesa pro caso raro de o backend não ter conseguido criar a
+// cópia (área não encontrada/não clonável).
 function cancelTabOrderReview() {
   _tabOrderSetCaptureMode(null);
   window._tabOrderResumeCaptureMode = null;
@@ -3892,6 +4792,7 @@ function cancelTabOrderReview() {
   window._tabOrderPendingList = [];
   window._tabOrderPendingAreaId = null;
   window._tabOrderPendingTargetNodeId = null;
+  window._tabOrderDeclaredOrigin = null;
   _tabOrderResetAddItemButton();
   parent.postMessage({ pluginMessage: { type: 'clear-highlight' } }, '*');
   closeModal('a11y-tab-order-review-modal');
@@ -3902,6 +4803,12 @@ window.cancelTabOrderReview = cancelTabOrderReview;
 // Backend clona o frame da área, mapeia cada nodeId pendente pro node
 // equivalente dentro do clone, e desenha os selos lá. Resposta tratada em
 // handleTabOrderAppliedToCanvas (messages.js → aqui).
+//
+// window._tabOrderDeclaredOrigin já foi respondido no INÍCIO da revisão
+// (startTabOrderManualMode/_confirmGenerateTabOrderFromLayers, via
+// ensureA11yProjectOriginThen) — não pergunta de novo aqui. Ver bloco
+// "Origem do projeto" (2026-09-02) pra decisão completa de por que a
+// pergunta acontece uma única vez por arquivo, não mais por ação.
 function applyTabOrderToCanvas() {
   const areaId = window._tabOrderPendingAreaId;
   const targetNodeId = window._tabOrderPendingTargetNodeId;
@@ -3913,21 +4820,13 @@ function applyTabOrderToCanvas() {
 
   _tabOrderSetCaptureMode(null);
   parent.postMessage({ pluginMessage: { type: 'clear-highlight' } }, '*');
-  // Origem (web/mobile) da Ordem de Tabulação é por ÁREA, não por spec —
-  // uma Área não tem "categoria" própria pra derivar origem de um único
-  // componente. area.origin é setado em confirmA11yArea a partir da maioria
-  // dos componentes que a Detecção Automática daquela área encontrou (ver
-  // _allA11yAreas/confirmA11yArea) — default 'web' se a área nunca passou
-  // por detecção ou não achou nenhum componente com origem conhecida.
-  const area = _findA11yAreaById(areaId);
-  const a11yOrigin = (area && area.origin) || 'web';
   parent.postMessage({
     pluginMessage: {
       type: 'apply-tab-order-to-canvas',
       areaId,
       targetNodeId,
       items: items.map((it, i) => ({ nodeId: it.nodeId, nodeName: it.nodeName, number: i + 1 })),
-      a11yOrigin,
+      a11yOrigin: window._tabOrderDeclaredOrigin || 'web',
     },
   }, '*');
 }
@@ -3958,6 +4857,7 @@ function handleTabOrderAppliedToCanvas(items, copyName) {
   window._tabOrderPendingList = [];
   window._tabOrderPendingAreaId = null;
   window._tabOrderPendingTargetNodeId = null;
+  window._tabOrderDeclaredOrigin = null;
   // A cópia rascunho (se havia) já foi reaproveitada/finalizada pelo
   // backend (apply-tab-order-to-canvas zera o mapa interno); limpa o
   // espelho local.
@@ -4014,26 +4914,48 @@ window.addTabOrderItem = addTabOrderItem;
 // accordion, sem modal de escolha.
 function _confirmGenerateTabOrderFromLayers(areaId, targetNodeId) {
   if (!areaId || !targetNodeId) return;
-  window._tabOrderPendingList = [];
-  window._tabOrderPendingAreaId = areaId;
-  window._tabOrderPendingTargetNodeId = targetNodeId;
-  parent.postMessage({ pluginMessage: { type: 'generate-tab-order-from-layers', areaId, targetNodeId } }, '*');
-  showToast('Varrendo elementos interativos da área…');
+  ensureA11yProjectOriginThen((origin) => {
+    window._tabOrderDeclaredOrigin = origin;
+    window._tabOrderPendingList = [];
+    window._tabOrderPendingAreaId = areaId;
+    window._tabOrderPendingTargetNodeId = targetNodeId;
+    window._tabOrderActiveCloneId = null;
+    window._tabOrderActiveCloneNodeMap = null;
+    parent.postMessage({ pluginMessage: { type: 'generate-tab-order-from-layers', areaId, targetNodeId } }, '*');
+    showToast('Varrendo elementos interativos da área…');
+  });
 }
 window._confirmGenerateTabOrderFromLayers = _confirmGenerateTabOrderFromLayers;
 
-// Resposta de tab-order-generated-from-layers (messages.js) — items agora é
-// {nodeId, nodeName}[] (candidatos), nunca itens já desenhados. Popula a
-// lista pendente e abre o modal de revisão já preenchido; o designer
-// confirma explicitamente pelo botão "Aplicar no Canvas".
-function addTabOrderItemsFromLayers(items) {
-  if (!Array.isArray(items) || items.length === 0) {
-    showToast('Nenhum elemento interativo (instância ou componente) encontrado dentro dessa área.');
+// Resposta de tab-order-generated-from-layers (messages.js) — items é
+// {nodeId, nodeName}[] (candidatos, referenciando o frame ORIGINAL, nunca
+// itens já desenhados); cloneId/nodeMap vêm porque o backend já criou e
+// focou a cópia da área ANTES de varrer (mesmo padrão do fluxo manual, ver
+// handleTabOrderCopyStarted) — guarda os dois pra que "Cancelar" e a prévia
+// de selos fantasma (preview-tab-order-numbers) funcionem igual ao fluxo
+// manual. Popula a lista pendente e abre o modal de revisão já preenchido;
+// o designer confirma explicitamente pelo botão "Aplicar no Canvas".
+function addTabOrderItemsFromLayers(items, cloneId, nodeMap) {
+  window._tabOrderActiveCloneId = cloneId || null;
+  window._tabOrderActiveCloneNodeMap = nodeMap || null;
+
+  // Sem cloneId, o backend nem chegou a criar a cópia (área não encontrada
+  // ou não clonável) — nesse caso não há onde marcar nada, então não abre o
+  // modal, só avisa (figma.notify do backend já cobriu o motivo).
+  if (!cloneId) {
+    window._tabOrderPendingList = [];
     return;
   }
-  window._tabOrderPendingList = items.map(it => ({ nodeId: it.nodeId, nodeName: it.nodeName || '', tempId: _tabOrderNextTempId() }));
+
+  window._tabOrderPendingList = Array.isArray(items)
+    ? items.map(it => ({ nodeId: it.nodeId, nodeName: it.nodeName || '', tempId: _tabOrderNextTempId() }))
+    : [];
   openTabOrderReviewModal();
-  showToast(`${items.length} elemento${items.length === 1 ? '' : 's'} encontrado${items.length === 1 ? '' : 's'} — revise a ordem e clique em "Aplicar no Canvas".`);
+  if (window._tabOrderPendingList.length === 0) {
+    showToast('Nenhum elemento interativo encontrado automaticamente — a cópia da área já está pronta para marcação manual ("+ Adicionar item").');
+  } else {
+    showToast(`${window._tabOrderPendingList.length} elemento${window._tabOrderPendingList.length === 1 ? '' : 's'} encontrado${window._tabOrderPendingList.length === 1 ? '' : 's'} — revise a ordem e clique em "Aplicar no Canvas".`);
+  }
 }
 window.addTabOrderItemsFromLayers = addTabOrderItemsFromLayers;
 

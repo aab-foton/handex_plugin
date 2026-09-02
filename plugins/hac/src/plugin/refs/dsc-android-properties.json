@@ -1,0 +1,4226 @@
+{
+  "_meta": {
+    "description": "Component property definitions (VARIANT/BOOLEAN/TEXT/INSTANCE_SWAP, com opções e defaults) de cada component set da lib \"DSC | Android\". Gerado por fetch-component-properties.cjs (generalização de fetch-a11y-component-properties.cjs para as 5 libs DSC do hac). Unidade de extração é o COMPONENT SET (família), não a variante individual — ver cabeçalho do script para justificativa.",
+    "slug": "dsc-android",
+    "libraryName": "DSC | Android",
+    "fileKey": "W8GUeHypdco1I3dneN6P3H",
+    "generatedAt": "2026-09-02T12:37:07.029Z",
+    "generator": "fetch-component-properties.cjs",
+    "deepScan": false,
+    "discoverySignature": "3f222b4146247c575610e458ba14f39a1a385bb03a3ae470237c247a61ccab90",
+    "counts": {
+      "totalComponentSets": 71,
+      "resolved": 71,
+      "failed": 0
+    },
+    "schema": {
+      "components": "array — um item por component set real da lib",
+      "components[].nodeId": "node_id do component set no arquivo Figma (usado em GET /v1/files/:key/nodes)",
+      "components[].key": "component key publicada (null se o set não tiver key — ex: sets ocultos \".\" encontrados via --deep-scan)",
+      "components[].fullName": "nome completo do node no Figma, incluindo prefixo (se prefixRe aplicável)",
+      "components[].shortName": "nome sem o prefixo (se prefixRe aplicável) — chave amigável para UI",
+      "components[].source": "\"component_sets\" (via GET /component_sets) ou \"tree-walk\" (via --deep-scan, set oculto)",
+      "components[].properties": "array flat de todas as component property definitions do set",
+      "components[].properties[].rawKey": "chave exata como retornada pela API, ex: \"observacoes#7489:0\"",
+      "components[].properties[].name": "nome legível sem o sufixo #id — usar para casar com componentProperties em runtime",
+      "components[].properties[].syncId": "sufixo #id (sync key), null se a property não tiver um",
+      "components[].properties[].type": "\"VARIANT\" | \"BOOLEAN\" | \"TEXT\" | \"INSTANCE_SWAP\"",
+      "components[].properties[].defaultValue": "valor padrão retornado pela API",
+      "components[].properties[].variantOptions": "presente só quando type === \"VARIANT\" — lista de valores aceitos",
+      "components[].properties[].preferredValues": "presente só quando type === \"INSTANCE_SWAP\" — lista de {type, key} de componentes preferidos",
+      "components[].propertiesByType": "mesmos dados de properties, separados por type e reduzidos a nomes",
+      "warnings": "lista de avisos não fatais — JSON pode estar parcial se não vazio (ver counts.failed)"
+    },
+    "warnings": []
+  },
+  "components": [
+    {
+      "nodeId": "4454:2570",
+      "key": "77169a5b92f243e6f920bff82e5b58d0126751a6",
+      "fullName": "[base] Neutral Navigation Action",
+      "shortName": "[base] Neutral Navigation Action",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "icon",
+          "name": "icon",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "arrow back",
+          "variantOptions": [
+            "arrow back",
+            "menu"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "icon"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "261:3542",
+      "key": "357025fc8474937f8a34c13450fddd70b189866a",
+      "fullName": "[dsc] Circular Progress Indeterminate",
+      "shortName": "[dsc] Circular Progress Indeterminate",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "motion step",
+          "name": "motion step",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "1",
+          "variantOptions": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "motion step"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "4:2448",
+      "key": "b1ad66409a3615a660933c7ea81eba22a030f6e2",
+      "fullName": "[dsc] Logotipo",
+      "shortName": "[dsc] Logotipo",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "brand",
+          "name": "brand",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "CAIXA",
+          "variantOptions": [
+            "CAIXA"
+          ]
+        },
+        {
+          "rawKey": "application",
+          "name": "application",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "inverse",
+          "variantOptions": [
+            "default",
+            "inverse"
+          ]
+        },
+        {
+          "rawKey": "logotipo",
+          "name": "logotipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "full",
+          "variantOptions": [
+            "full",
+            "synthesis element"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "brand",
+          "application",
+          "logotipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "292:12201",
+      "key": "0390b5c68d1ef3d0aeccb7f3f48931228afa7d10",
+      "fullName": "[base] Base Icon Neutral",
+      "shortName": "[base] Base Icon Neutral",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "change icon#2129:3",
+          "name": "change icon",
+          "syncId": "2129:3",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "badge",
+          "name": "badge",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "off",
+          "variantOptions": [
+            "off",
+            "large",
+            "small"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "badge"
+        ],
+        "instanceSwaps": [
+          "change icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "912:6838",
+      "key": "cf70d105998557324cb980980f59f847b258020a",
+      "fullName": "[base] Primary  Highlight Icon Only",
+      "shortName": "[base] Primary  Highlight Icon Only",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "status",
+          "name": "status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unselected",
+          "variantOptions": [
+            "unselected",
+            "selected"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "state",
+          "status"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "261:3521",
+      "key": "69377b4432a5112061ae76efbb36492308f62d47",
+      "fullName": "[dsc] Circular Progress Determinate",
+      "shortName": "[dsc] Circular Progress Determinate",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "progress",
+          "name": "progress",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "0",
+          "variantOptions": [
+            "0",
+            "20",
+            "40",
+            "60",
+            "80",
+            "100",
+            "empty"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "progress"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "1151:35051",
+      "key": "e362154fca7e734eb42596fb63e7c61fdd2ac970",
+      "fullName": "[dsc] Navigation Bar",
+      "shortName": "[dsc] Navigation Bar",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "Item 4#5176:0",
+          "name": "Item 4",
+          "syncId": "5176:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "Item 5#5176:5",
+          "name": "Item 5",
+          "syncId": "5176:5",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "neutral",
+          "variantOptions": [
+            "neutral",
+            "highlight"
+          ]
+        },
+        {
+          "rawKey": "content",
+          "name": "content",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "label + icon",
+          "variantOptions": [
+            "label + icon",
+            "icon only"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "Item 4",
+          "Item 5"
+        ],
+        "texts": [],
+        "variants": [
+          "variant",
+          "content"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "286:2393",
+      "key": "5882012af25f723a492072ad9f75afda43cb6702",
+      "fullName": "[dsc] Divider",
+      "shortName": "[dsc] Divider",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "color",
+          "name": "color",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "gray",
+          "variantOptions": [
+            "gray",
+            "highlight",
+            "white"
+          ]
+        },
+        {
+          "rawKey": "width",
+          "name": "width",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "hairline (1px)",
+          "variantOptions": [
+            "hairline (1px)",
+            "thin (2px)"
+          ]
+        },
+        {
+          "rawKey": "direction",
+          "name": "direction",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "horizontal",
+          "variantOptions": [
+            "horizontal",
+            "vertical"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "color",
+          "width",
+          "direction"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "1023:22266",
+      "key": "a5c6c9a8448ba757f50ddc7a0499aba45c8447f7",
+      "fullName": "[dsc] Modal Date Picker",
+      "shortName": "[dsc] Modal Date Picker",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "supporting text#4117:2",
+          "name": "supporting text",
+          "syncId": "4117:2",
+          "type": "TEXT",
+          "defaultValue": "Data de início - Data de fim"
+        },
+        {
+          "rawKey": "date range#4117:6",
+          "name": "date range",
+          "syncId": "4117:6",
+          "type": "TEXT",
+          "defaultValue": "17 Ago – 23 Ago"
+        },
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "day",
+          "variantOptions": [
+            "day",
+            "year",
+            "fullscreen date range"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "supporting text",
+          "date range"
+        ],
+        "variants": [
+          "variant"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "566:8312",
+      "key": "3c49a01cb4d9c57a570742759469149d1fd01675",
+      "fullName": "[base] User Images",
+      "shortName": "[base] User Images",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "style",
+          "name": "style",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "monogram",
+          "variantOptions": [
+            "avatar",
+            "monogram",
+            "check",
+            "image"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "style"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "5598:25160",
+      "key": "c59ea066c2aca55a8c3de09767fdb8528ba5697e",
+      "fullName": "[dsc] Menu",
+      "shortName": "[dsc] Menu",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "scrollbar#5670:0",
+          "name": "scrollbar",
+          "syncId": "5670:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "item size",
+          "name": "item size",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "standard",
+          "variantOptions": [
+            "standard",
+            "large"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "scrollbar"
+        ],
+        "texts": [],
+        "variants": [
+          "item size"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "5598:63531",
+      "key": "cebdf1211885e857e87e7210c5834e177b4dc50c",
+      "fullName": "[dsc] Centered Slider",
+      "shortName": "[dsc] Centered Slider",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "tooltip#5650:76",
+          "name": "tooltip",
+          "syncId": "5650:76",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "dragged",
+            "disabled"
+          ]
+        },
+        {
+          "rawKey": "value",
+          "name": "value",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "0",
+          "variantOptions": [
+            "0",
+            "-50",
+            "+50"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "tooltip"
+        ],
+        "texts": [],
+        "variants": [
+          "state",
+          "value"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "5598:64007",
+      "key": "83d85fa89695ab0f58ce0870bc238061fbb027f5",
+      "fullName": "[dsc] Continuous Slider",
+      "shortName": "[dsc] Continuous Slider",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "tooltip#5650:19",
+          "name": "tooltip",
+          "syncId": "5650:19",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "dragged",
+            "disabled"
+          ]
+        },
+        {
+          "rawKey": "value",
+          "name": "value",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "0",
+          "variantOptions": [
+            "0",
+            "50",
+            "100"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "tooltip"
+        ],
+        "texts": [],
+        "variants": [
+          "state",
+          "value"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "274:3725",
+      "key": "0698b6613c2258d98b802c0abf9a55eaf119db94",
+      "fullName": "[dsc] Plain Tooltip",
+      "shortName": "[dsc] Plain Tooltip",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "label#2152:0",
+          "name": "label",
+          "syncId": "2152:0",
+          "type": "TEXT",
+          "defaultValue": "Use para descrever ou identificar um elemento."
+        },
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "neutral",
+          "variantOptions": [
+            "neutral",
+            "highlight"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "variant"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "141:5010",
+      "key": "0bab9ad627b0094c7fc6fbeb1ef8ccf96f8aaed4",
+      "fullName": "[base] Selectors Label Semibold",
+      "shortName": "[base] Selectors Label Semibold",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "label#1677:59",
+          "name": "label",
+          "syncId": "1677:59",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "size",
+          "name": "size",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "standard",
+          "variantOptions": [
+            "standard",
+            "large"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "size"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "914:6588",
+      "key": "0cbd997c8bf93fa371913239895a0eeb40b1b1c4",
+      "fullName": "[base] Secondary  Neutral Label Only",
+      "shortName": "[base] Secondary  Neutral Label Only",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "status",
+          "name": "status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unselected",
+          "variantOptions": [
+            "unselected",
+            "selected"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "state",
+          "status"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "1151:34961",
+      "key": "38a62fe2476f50b9c9a619db7306c90d7e17e61f",
+      "fullName": "[base] Neutral Label + icon",
+      "shortName": "[base] Neutral Label + icon",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "label#4321:0",
+          "name": "label",
+          "syncId": "4321:0",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "selected",
+          "name": "selected",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "state",
+          "selected"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "1151:35159",
+      "key": "7e855163b59618cc8a4183f097c4ca5e24ff2dc0",
+      "fullName": "[base] Highlight Icon Only",
+      "shortName": "[base] Highlight Icon Only",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "label#5105:11",
+          "name": "label",
+          "syncId": "5105:11",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "selected",
+          "name": "selected",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "state",
+          "selected"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "539:7193",
+      "key": "7f20cb59fd40f832e089271ec0e7b2d0f9166aed",
+      "fullName": "[base] Actions",
+      "shortName": "[base] Actions",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "clear button",
+          "variantOptions": [
+            "clear button",
+            "visibility",
+            "visibility off",
+            "info",
+            "arrow up",
+            "arrow down",
+            "calendar"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "variant"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "4454:2564",
+      "key": "82c87cdff8a87fb0c41f861ab8d665574cbced5f",
+      "fullName": "[base] Highlight Navigation Action",
+      "shortName": "[base] Highlight Navigation Action",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "icon",
+          "name": "icon",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "arrow back",
+          "variantOptions": [
+            "arrow back",
+            "menu"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "icon"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "1023:22640",
+      "key": "aaefb55aeaf60f5c1815ad2fa0e19d4f916e0d2d",
+      "fullName": "[base]Swap Modal Icon",
+      "shortName": "[base]Swap Modal Icon",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "textfield",
+          "variantOptions": [
+            "textfield",
+            "calendar"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "variant"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "914:6667",
+      "key": "b5e64a020dac82de0bad599dbb8fa7672fb97e73",
+      "fullName": "[base] Secondary  Highlight Icon Only",
+      "shortName": "[base] Secondary  Highlight Icon Only",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "status",
+          "name": "status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unselected",
+          "variantOptions": [
+            "unselected",
+            "selected"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "state",
+          "status"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "292:12326",
+      "key": "ba86bedb41d61593f037e02347411c2f73b8ddec",
+      "fullName": "[base] Secondary  Neutral Label + Icon",
+      "shortName": "[base] Secondary  Neutral Label + Icon",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "change icon#2129:33",
+          "name": "change icon",
+          "syncId": "2129:33",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "status",
+          "name": "status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unselected",
+          "variantOptions": [
+            "unselected",
+            "selected"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "state",
+          "status"
+        ],
+        "instanceSwaps": [
+          "change icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "914:6549",
+      "key": "c8b850a2c40ba55a84b4245bed91d64111b5909e",
+      "fullName": "[base] Secondary  Highlight Label Only",
+      "shortName": "[base] Secondary  Highlight Label Only",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "status",
+          "name": "status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unselected",
+          "variantOptions": [
+            "unselected",
+            "selected"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "state",
+          "status"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "5598:38854",
+      "key": "c92e2e92744335fdfa454182bbd57cff627b9d5f",
+      "fullName": "[base] Item Label",
+      "shortName": "[base] Item Label",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "label#5320:9",
+          "name": "label",
+          "syncId": "5320:9",
+          "type": "TEXT",
+          "defaultValue": "Item label"
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "selected",
+          "name": "selected",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "state",
+          "selected"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "459:6391",
+      "key": "cb00f9fa17a5300e9f8bf895fd21dd0918369e98",
+      "fullName": "[base] Middle item",
+      "shortName": "[base] Middle item",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "label#3110:201",
+          "name": "label",
+          "syncId": "3110:201",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "show icon#3110:202",
+          "name": "show icon",
+          "syncId": "3110:202",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "change icon#3110:203",
+          "name": "change icon",
+          "syncId": "3110:203",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "status",
+          "name": "status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "disabled"
+          ]
+        },
+        {
+          "rawKey": "selected",
+          "name": "selected",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "show icon"
+        ],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "status",
+          "selected"
+        ],
+        "instanceSwaps": [
+          "change icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "912:6676",
+      "key": "e8f0d146511618fe35cde449df7d2b1da646bd9f",
+      "fullName": "[base] Primary  Highlight Label Only",
+      "shortName": "[base] Primary  Highlight Label Only",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "status",
+          "name": "status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unselected",
+          "variantOptions": [
+            "unselected",
+            "selected"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "state",
+          "status"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "292:12273",
+      "key": "f8b61f7b2b0f91492517e824c53ef2ce0610b288",
+      "fullName": "[base] Primary  Highlight Label + Icon",
+      "shortName": "[base] Primary  Highlight Label + Icon",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "status",
+          "name": "status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unselected",
+          "variantOptions": [
+            "unselected",
+            "selected"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "state",
+          "status"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "141:5003",
+      "key": "fdf8ce2d4ce91b9fc8f9c302df13f8d5e0d39358",
+      "fullName": "[base] Selectors Label Regular",
+      "shortName": "[base] Selectors Label Regular",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "label#376:148",
+          "name": "label",
+          "syncId": "376:148",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "size",
+          "name": "size",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "standard",
+          "variantOptions": [
+            "standard",
+            "large"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "size"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "5598:24992",
+      "key": "1f1c90999425268f12d8f821d9057c1baead0f15",
+      "fullName": "[base] Menu item",
+      "shortName": "[base] Menu item",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "show icon#4887:5",
+          "name": "show icon",
+          "syncId": "4887:5",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "change icon#4887:10",
+          "name": "change icon",
+          "syncId": "4887:10",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "supporting text#4887:20",
+          "name": "supporting text",
+          "syncId": "4887:20",
+          "type": "TEXT",
+          "defaultValue": "Supporting Text"
+        },
+        {
+          "rawKey": "show supporting text#4887:25",
+          "name": "show supporting text",
+          "syncId": "4887:25",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "label#4887:30",
+          "name": "label",
+          "syncId": "4887:30",
+          "type": "TEXT",
+          "defaultValue": "Option label"
+        },
+        {
+          "rawKey": "divider#5640:0",
+          "name": "divider",
+          "syncId": "5640:0",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "size",
+          "name": "size",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "standard",
+          "variantOptions": [
+            "standard",
+            "large"
+          ]
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "disabled"
+          ]
+        },
+        {
+          "rawKey": "selected",
+          "name": "selected",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "show icon",
+          "show supporting text",
+          "divider"
+        ],
+        "texts": [
+          "supporting text",
+          "label"
+        ],
+        "variants": [
+          "size",
+          "state",
+          "selected"
+        ],
+        "instanceSwaps": [
+          "change icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "912:6891",
+      "key": "32f8b44bc676741f00cb839b8834731669b18cd9",
+      "fullName": "[base] Primary  Neutral Icon Only",
+      "shortName": "[base] Primary  Neutral Icon Only",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "status",
+          "name": "status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unselected",
+          "variantOptions": [
+            "unselected",
+            "selected"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "state",
+          "status"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "1151:35112",
+      "key": "3642ef5c37d616fb8461ed024b253a522a9026a2",
+      "fullName": "[base] Highlight Label + Icon",
+      "shortName": "[base] Highlight Label + Icon",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "label#4321:9",
+          "name": "label",
+          "syncId": "4321:9",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "selected",
+          "name": "selected",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "state",
+          "selected"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "141:5017",
+      "key": "3728756bce5cffd31e1eadc37db007242396d784",
+      "fullName": "[dsc] Checkbox",
+      "shortName": "[dsc] Checkbox",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "show label#1676:0",
+          "name": "show label",
+          "syncId": "1676:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "highlight",
+          "variantOptions": [
+            "highlight",
+            "accent",
+            "danger"
+          ]
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "disabled"
+          ]
+        },
+        {
+          "rawKey": "status",
+          "name": "status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unselected",
+          "variantOptions": [
+            "unselected",
+            "indeterminate",
+            "selected"
+          ]
+        },
+        {
+          "rawKey": "hug content",
+          "name": "hug content",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "show label"
+        ],
+        "texts": [],
+        "variants": [
+          "variant",
+          "state",
+          "status",
+          "hug content"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "859:7590",
+      "key": "50dca8ef54b84ad5869ee77e066ca5c45af9045f",
+      "fullName": "[base] Label On Dark",
+      "shortName": "[base] Label On Dark",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "text#859:0",
+          "name": "text",
+          "syncId": "859:0",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "badge",
+          "name": "badge",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "small",
+          "variantOptions": [
+            "off",
+            "large",
+            "small"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "text"
+        ],
+        "variants": [
+          "badge"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "261:3646",
+      "key": "5b1312eaf0c9a206425f448cdca374e33b7e8fa4",
+      "fullName": "[dsc] Linear Progress Determinate",
+      "shortName": "[dsc] Linear Progress Determinate",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "text#2004:0",
+          "name": "text",
+          "syncId": "2004:0",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "show label#2093:8",
+          "name": "show label",
+          "syncId": "2093:8",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "progress",
+          "name": "progress",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "0",
+          "variantOptions": [
+            "0",
+            "20",
+            "40",
+            "60",
+            "80",
+            "100",
+            "empty"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "show label"
+        ],
+        "texts": [
+          "text"
+        ],
+        "variants": [
+          "progress"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "1023:22229",
+      "key": "613dbf387a45d3101fa9372d040c9a455df041a6",
+      "fullName": "[base] Date Picker Menu",
+      "shortName": "[base] Date Picker Menu",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "label#4102:0",
+          "name": "label",
+          "syncId": "4102:0",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "disabled"
+          ]
+        },
+        {
+          "rawKey": "opened",
+          "name": "opened",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "state",
+          "opened"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "936:15701",
+      "key": "ac34e0571473ba347f010cbf4c9cafb3ab53bdb6",
+      "fullName": "[base] Base Icon White",
+      "shortName": "[base] Base Icon White",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "change icon#936:0",
+          "name": "change icon",
+          "syncId": "936:0",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "badge",
+          "name": "badge",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "off",
+          "variantOptions": [
+            "off",
+            "large",
+            "small"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "badge"
+        ],
+        "instanceSwaps": [
+          "change icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "459:6343",
+      "key": "ce5c8a412c100de37d32f2dc1b8fbdeca9d8be46",
+      "fullName": "[base] Start item",
+      "shortName": "[base] Start item",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "label#3098:0",
+          "name": "label",
+          "syncId": "3098:0",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "show icon#3098:28",
+          "name": "show icon",
+          "syncId": "3098:28",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "change icon#4197:56",
+          "name": "change icon",
+          "syncId": "4197:56",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "disabled"
+          ]
+        },
+        {
+          "rawKey": "selected",
+          "name": "selected",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "true",
+            "false"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "show icon"
+        ],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "state",
+          "selected"
+        ],
+        "instanceSwaps": [
+          "change icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "1023:22106",
+      "key": "d7a0f3232214e5e403fbe4c3365a1d0b67647dc6",
+      "fullName": "[base] Date Picker Day",
+      "shortName": "[base] Date Picker Day",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "date#4038:4",
+          "name": "date",
+          "syncId": "4038:4",
+          "type": "TEXT",
+          "defaultValue": "00"
+        },
+        {
+          "rawKey": "start range#4077:38",
+          "name": "start range",
+          "syncId": "4077:38",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "end range#4077:57",
+          "name": "end range",
+          "syncId": "4077:57",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "extend left range#4580:56",
+          "name": "extend left range",
+          "syncId": "4580:56",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "extend right range#4580:76",
+          "name": "extend right range",
+          "syncId": "4580:76",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unselected",
+          "variantOptions": [
+            "unselected",
+            "current",
+            "selected",
+            "range middle",
+            "empty"
+          ]
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "disabled"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "start range",
+          "end range",
+          "extend left range",
+          "extend right range"
+        ],
+        "texts": [
+          "date"
+        ],
+        "variants": [
+          "variant",
+          "state"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "261:3561",
+      "key": "ff41198e6868303802268957bd16964b9646b35b",
+      "fullName": "[dsc] Linear Progress Indeterminate",
+      "shortName": "[dsc] Linear Progress Indeterminate",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "text#2004:11",
+          "name": "text",
+          "syncId": "2004:11",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "show label#2093:0",
+          "name": "show label",
+          "syncId": "2093:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "motion step",
+          "name": "motion step",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "1",
+          "variantOptions": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "show label"
+        ],
+        "texts": [
+          "text"
+        ],
+        "variants": [
+          "motion step"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "5598:63694",
+      "key": "0a08251fe42adc91a5a6ff48b8fc07e85d006a37",
+      "fullName": "[dsc] Discrete Slider",
+      "shortName": "[dsc] Discrete Slider",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "tooltip#5650:38",
+          "name": "tooltip",
+          "syncId": "5650:38",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "dragged",
+            "disabled"
+          ]
+        },
+        {
+          "rawKey": "value",
+          "name": "value",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "0",
+          "variantOptions": [
+            "0",
+            "50",
+            "100"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "tooltip"
+        ],
+        "texts": [],
+        "variants": [
+          "state",
+          "value"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "914:6706",
+      "key": "62007968d4563e88a4fc8f32b9fc2254736207be",
+      "fullName": "[base] Secondary  Neutral Icon Only",
+      "shortName": "[base] Secondary  Neutral Icon Only",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "status",
+          "name": "status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unselected",
+          "variantOptions": [
+            "unselected",
+            "selected"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "state",
+          "status"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "5598:25157",
+      "key": "7a3900b6c7a0b208916938374925a88ce01134f4",
+      "fullName": "[base] Menu background",
+      "shortName": "[base] Menu background",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "floating box",
+          "variantOptions": [
+            "floating box"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "variant"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "936:15702",
+      "key": "8e1292757a4c5e4f6c5e2419bedacd91a8ffaa2d",
+      "fullName": "[base] Base Icon Highlight",
+      "shortName": "[base] Base Icon Highlight",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "change icon#936:1",
+          "name": "change icon",
+          "syncId": "936:1",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "badge",
+          "name": "badge",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "off",
+          "variantOptions": [
+            "off",
+            "large",
+            "small"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "badge"
+        ],
+        "instanceSwaps": [
+          "change icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "459:6434",
+      "key": "9254b4d983f6bef6a3465d905970aa0edba0b9b4",
+      "fullName": "[base] End item",
+      "shortName": "[base] End item",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "show icon#3110:204",
+          "name": "show icon",
+          "syncId": "3110:204",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "change icon#3110:205",
+          "name": "change icon",
+          "syncId": "3110:205",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "label#3110:206",
+          "name": "label",
+          "syncId": "3110:206",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "status",
+          "name": "status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "disabled"
+          ]
+        },
+        {
+          "rawKey": "selected",
+          "name": "selected",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "show icon"
+        ],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "status",
+          "selected"
+        ],
+        "instanceSwaps": [
+          "change icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "292:12220",
+      "key": "a993cfb26965eab18a6ea77fcd6f8d0d5bcc88f8",
+      "fullName": "[base] Primary  Neutral Label + Icon",
+      "shortName": "[base] Primary  Neutral Label + Icon",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "status",
+          "name": "status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unselected",
+          "variantOptions": [
+            "unselected",
+            "selected"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "state",
+          "status"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "1023:22195",
+      "key": "bfadf308fea627f9e162a350e63cd005af618ec6",
+      "fullName": "[base] Date Picker Year",
+      "shortName": "[base] Date Picker Year",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "year#4077:76",
+          "name": "year",
+          "syncId": "4077:76",
+          "type": "TEXT",
+          "defaultValue": "2023"
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "disabled"
+          ]
+        },
+        {
+          "rawKey": "selected",
+          "name": "selected",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "year"
+        ],
+        "variants": [
+          "state",
+          "selected"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "292:12404",
+      "key": "d2f09e39d2df7d02a0853db041c28ccaf4c589dd",
+      "fullName": "[base] Label On Light",
+      "shortName": "[base] Label On Light",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "text#2129:18",
+          "name": "text",
+          "syncId": "2129:18",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "badge",
+          "name": "badge",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "small",
+          "variantOptions": [
+            "off",
+            "large",
+            "small"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "text"
+        ],
+        "variants": [
+          "badge"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "566:8322",
+      "key": "00e15459a5f642bbcb46149ee428560a5353faab",
+      "fullName": "[dsc] Assist Chip",
+      "shortName": "[dsc] Assist Chip",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "swap slot#3572:25",
+          "name": "swap slot",
+          "syncId": "3572:25",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "566:8321",
+          "preferredValues": [
+            {
+              "type": "COMPONENT_SET",
+              "key": "992893325b643686ccd39307f7230cdb7e84ec51"
+            }
+          ]
+        },
+        {
+          "rawKey": "change icon#3583:49",
+          "name": "change icon",
+          "syncId": "3583:49",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "label#53923:151",
+          "name": "label",
+          "syncId": "53923:151",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "label only",
+          "variantOptions": [
+            "label only",
+            "icon and label",
+            "image and label",
+            "slot and label"
+          ]
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "dragged",
+            "disabled"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "variant",
+          "state"
+        ],
+        "instanceSwaps": [
+          "swap slot",
+          "change icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "1151:35008",
+      "key": "01c4d9b3b6554c644091e1c350053635afe8f071",
+      "fullName": "[base] Neutral Icon Only",
+      "shortName": "[base] Neutral Icon Only",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "label#5105:2",
+          "name": "label",
+          "syncId": "5105:2",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "selected",
+          "name": "selected",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "state",
+          "selected"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "5598:48224",
+      "key": "1f3ff2c1d3e4bc99cd80b1eb2a2c4f6ddeeee84d",
+      "fullName": "[dsc] Navigation Rail",
+      "shortName": "[dsc] Navigation Rail",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "menu#5350:0",
+          "name": "menu",
+          "syncId": "5350:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "fab#5350:7",
+          "name": "fab",
+          "syncId": "5350:7",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "menu+fab#5350:14",
+          "name": "menu+fab",
+          "syncId": "5350:14",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "item 4#5402:0",
+          "name": "item 4",
+          "syncId": "5402:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "item 5#5402:7",
+          "name": "item 5",
+          "syncId": "5402:7",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "item 6#5402:14",
+          "name": "item 6",
+          "syncId": "5402:14",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "item 7#5402:21",
+          "name": "item 7",
+          "syncId": "5402:21",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "divider#5423:0",
+          "name": "divider",
+          "syncId": "5423:0",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "aligned",
+          "name": "aligned",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "top",
+          "variantOptions": [
+            "top",
+            "middle",
+            "bottom"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "menu",
+          "fab",
+          "menu+fab",
+          "item 4",
+          "item 5",
+          "item 6",
+          "item 7",
+          "divider"
+        ],
+        "texts": [],
+        "variants": [
+          "aligned"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "566:8522",
+      "key": "292d330230a7b07d22fc2ef67fb16a6811c54354",
+      "fullName": "[dsc] Filter Chip",
+      "shortName": "[dsc] Filter Chip",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "change left icon#3583:0",
+          "name": "change left icon",
+          "syncId": "3583:0",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "change action icon#3614:73",
+          "name": "change action icon",
+          "syncId": "3614:73",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "539:3113",
+          "preferredValues": [
+            {
+              "type": "COMPONENT_SET",
+              "key": "75f1761bb29182e92b33bc4a1b7da95651e67103"
+            },
+            {
+              "type": "COMPONENT_SET",
+              "key": "33d381099593e16e60b9d5e42109dff5d37d6503"
+            },
+            {
+              "type": "COMPONENT_SET",
+              "key": "15230a3604af621bad1f574faa10ddda78243a92"
+            }
+          ]
+        },
+        {
+          "rawKey": "label#53923:200",
+          "name": "label",
+          "syncId": "53923:200",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "dragged",
+            "disabled"
+          ]
+        },
+        {
+          "rawKey": "selected",
+          "name": "selected",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        },
+        {
+          "rawKey": "show left icon",
+          "name": "show left icon",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        },
+        {
+          "rawKey": "show action icon",
+          "name": "show action icon",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "state",
+          "selected",
+          "show left icon",
+          "show action icon"
+        ],
+        "instanceSwaps": [
+          "change left icon",
+          "change action icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "5598:63322",
+      "key": "4c6b507f27de15ebaeb3e7762bf08980cdad13b4",
+      "fullName": "[dsc] Range Selection Slider",
+      "shortName": "[dsc] Range Selection Slider",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "tooltip#5650:57",
+          "name": "tooltip",
+          "syncId": "5650:57",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "dragged",
+            "disabled"
+          ]
+        },
+        {
+          "rawKey": "value",
+          "name": "value",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "50",
+          "variantOptions": [
+            "25 to 50",
+            "50",
+            "50 to 75"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "tooltip"
+        ],
+        "texts": [],
+        "variants": [
+          "state",
+          "value"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "5598:38877",
+      "key": "5951d1403b366eac96b669485e5a686797b1b88f",
+      "fullName": "[dsc] Navigation Drawer",
+      "shortName": "[dsc] Navigation Drawer",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "show title#5321:36",
+          "name": "show title",
+          "syncId": "5321:36",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "divider 3#5461:0",
+          "name": "divider 3",
+          "syncId": "5461:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "divider 2#5461:3",
+          "name": "divider 2",
+          "syncId": "5461:3",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "divider 1#5461:6",
+          "name": "divider 1",
+          "syncId": "5461:6",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "show section label 3#5461:9",
+          "name": "show section label 3",
+          "syncId": "5461:9",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "show section label 2#5461:12",
+          "name": "show section label 2",
+          "syncId": "5461:12",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "show section label 1#5461:15",
+          "name": "show section label 1",
+          "syncId": "5461:15",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "show menu#5509:0",
+          "name": "show menu",
+          "syncId": "5509:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "menu + title#5509:3",
+          "name": "menu + title",
+          "syncId": "5509:3",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "content",
+          "name": "content",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "label + icon",
+          "variantOptions": [
+            "label + icon",
+            "label only"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "show title",
+          "divider 3",
+          "divider 2",
+          "divider 1",
+          "show section label 3",
+          "show section label 2",
+          "show section label 1",
+          "show menu",
+          "menu + title"
+        ],
+        "texts": [],
+        "variants": [
+          "content"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "1023:22645",
+      "key": "7951e266cfbba932505a18e105ed9453c9e7b675",
+      "fullName": "[dsc] Modal Date Input",
+      "shortName": "[dsc] Modal Date Input",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "single input",
+          "variantOptions": [
+            "single input",
+            "range"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "variant"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "566:8751",
+      "key": "92b13980517f9c3875e023ddd4f3f8dc3ce7c1fb",
+      "fullName": "[dsc] Input Chip",
+      "shortName": "[dsc] Input Chip",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "change icon#3583:74",
+          "name": "change icon",
+          "syncId": "3583:74",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "label#53923:102",
+          "name": "label",
+          "syncId": "53923:102",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "label only",
+          "variantOptions": [
+            "label only",
+            "icon and label",
+            "avatar and label"
+          ]
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "dragged",
+            "disabled"
+          ]
+        },
+        {
+          "rawKey": "selected",
+          "name": "selected",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        },
+        {
+          "rawKey": "show remove icon",
+          "name": "show remove icon",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "variant",
+          "state",
+          "selected",
+          "show remove icon"
+        ],
+        "instanceSwaps": [
+          "change icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "912:6729",
+      "key": "daa34d265486168a4c0e8e92490ceae2a02bd419",
+      "fullName": "[base] Primary  Neutral Label Only",
+      "shortName": "[base] Primary  Neutral Label Only",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "status",
+          "name": "status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unselected",
+          "variantOptions": [
+            "unselected",
+            "selected"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "state",
+          "status"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "292:12365",
+      "key": "eaeb69727416a4931f52a78c2e6140f8ead1f0c8",
+      "fullName": "[base] Secondary  Highlight Label + Icon",
+      "shortName": "[base] Secondary  Highlight Label + Icon",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "change icon#2129:33",
+          "name": "change icon",
+          "syncId": "2129:33",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "status",
+          "name": "status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unselected",
+          "variantOptions": [
+            "unselected",
+            "selected"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "state",
+          "status"
+        ],
+        "instanceSwaps": [
+          "change icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "858:1587",
+      "key": "0c3ac4069a2610b314800700bf831abc7943cf26",
+      "fullName": "[dsc] Dialog",
+      "shortName": "[dsc] Dialog",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "subtitle#4203:9",
+          "name": "subtitle",
+          "syncId": "4203:9",
+          "type": "TEXT",
+          "defaultValue": "Subtitle"
+        },
+        {
+          "rawKey": "title#4203:10",
+          "name": "title",
+          "syncId": "4203:10",
+          "type": "TEXT",
+          "defaultValue": "Title"
+        },
+        {
+          "rawKey": "swap slot#4203:11",
+          "name": "swap slot",
+          "syncId": "4203:11",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "10177:2993",
+          "preferredValues": [
+            {
+              "type": "COMPONENT_SET",
+              "key": "c494dc794f8a986209d4f2f984b904ada5a4372b"
+            }
+          ]
+        },
+        {
+          "rawKey": "message#4203:12",
+          "name": "message",
+          "syncId": "4203:12",
+          "type": "TEXT",
+          "defaultValue": "Troque este conteúdo pelo texto de sua preferência."
+        },
+        {
+          "rawKey": "show icon#4203:13",
+          "name": "show icon",
+          "syncId": "4203:13",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "show message#4203:14",
+          "name": "show message",
+          "syncId": "4203:14",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "change icon#4203:15",
+          "name": "change icon",
+          "syncId": "4203:15",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "slot#4203:16",
+          "name": "slot",
+          "syncId": "4203:16",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "show subtitle#4203:17",
+          "name": "show subtitle",
+          "syncId": "4203:17",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "show secondary action#4273:0",
+          "name": "show secondary action",
+          "syncId": "4273:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "basic",
+          "variantOptions": [
+            "basic",
+            "fullscreen"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "show icon",
+          "show message",
+          "slot",
+          "show subtitle",
+          "show secondary action"
+        ],
+        "texts": [
+          "subtitle",
+          "title",
+          "message"
+        ],
+        "variants": [
+          "variant"
+        ],
+        "instanceSwaps": [
+          "swap slot",
+          "change icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "544:4006",
+      "key": "2f5a1077fda3f8afe8caffa3610be9cdbfe109ec",
+      "fullName": "[dsc] Top App Bar",
+      "shortName": "[dsc] Top App Bar",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "show actions#3785:0",
+          "name": "show actions",
+          "syncId": "3785:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "show action 1#3785:5",
+          "name": "show action 1",
+          "syncId": "3785:5",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "show action 2#3785:10",
+          "name": "show action 2",
+          "syncId": "3785:10",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "show action 3#3785:15",
+          "name": "show action 3",
+          "syncId": "3785:15",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "title#3785:20",
+          "name": "title",
+          "syncId": "3785:20",
+          "type": "TEXT",
+          "defaultValue": "Title"
+        },
+        {
+          "rawKey": "show navigation#3791:0",
+          "name": "show navigation",
+          "syncId": "3791:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "neutral",
+          "variantOptions": [
+            "neutral",
+            "highlight"
+          ]
+        },
+        {
+          "rawKey": "size",
+          "name": "size",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "small center-aligned",
+          "variantOptions": [
+            "small center-aligned",
+            "small",
+            "medium",
+            "large"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "show actions",
+          "show action 1",
+          "show action 2",
+          "show action 3",
+          "show navigation"
+        ],
+        "texts": [
+          "title"
+        ],
+        "variants": [
+          "variant",
+          "size"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "405:11521",
+      "key": "b74955d21d93adad057527e08f9d6991f013e451",
+      "fullName": "[dsc] Icon Button",
+      "shortName": "[dsc] Icon Button",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "change icon#2765:242",
+          "name": "change icon",
+          "syncId": "2765:242",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "primary",
+          "variantOptions": [
+            "primary",
+            "secondary",
+            "secondary outlined",
+            "secondary icon",
+            "secondary icon inverse",
+            "danger",
+            "danger outlined",
+            "danger icon"
+          ]
+        },
+        {
+          "rawKey": "size",
+          "name": "size",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "standard",
+          "variantOptions": [
+            "standard",
+            "large"
+          ]
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "disabled"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "variant",
+          "size",
+          "state"
+        ],
+        "instanceSwaps": [
+          "change icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "539:6568",
+      "key": "c817c13895b3f6f5467ac4727b5fda614311cc75",
+      "fullName": "[dsc] Text Field",
+      "shortName": "[dsc] Text Field",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "show extra line#3438:52",
+          "name": "show extra line",
+          "syncId": "3438:52",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "show label#3438:88",
+          "name": "show label",
+          "syncId": "3438:88",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "placeholder#3520:9",
+          "name": "placeholder",
+          "syncId": "3520:9",
+          "type": "TEXT",
+          "defaultValue": "Placeholder. Lorem ipsum dolor sit amet consectetur. "
+        },
+        {
+          "rawKey": "show action#3520:18",
+          "name": "show action",
+          "syncId": "3520:18",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "supporting text#3529:39",
+          "name": "supporting text",
+          "syncId": "3529:39",
+          "type": "TEXT",
+          "defaultValue": "Supporting Text"
+        },
+        {
+          "rawKey": "show supporting text#3529:66",
+          "name": "show supporting text",
+          "syncId": "3529:66",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "counter#3529:93",
+          "name": "counter",
+          "syncId": "3529:93",
+          "type": "TEXT",
+          "defaultValue": "0/45"
+        },
+        {
+          "rawKey": "show counter#3529:120",
+          "name": "show counter",
+          "syncId": "3529:120",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "label#3529:147",
+          "name": "label",
+          "syncId": "3529:147",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "error message#3549:0",
+          "name": "error message",
+          "syncId": "3549:0",
+          "type": "TEXT",
+          "defaultValue": "Error message"
+        },
+        {
+          "rawKey": "show left icon#3563:0",
+          "name": "show left icon",
+          "syncId": "3563:0",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "change icon#3563:53",
+          "name": "change icon",
+          "syncId": "3563:53",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "size",
+          "name": "size",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "standard",
+          "variantOptions": [
+            "standard",
+            "large"
+          ]
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "focus",
+            "disabled",
+            "readonly",
+            "readonly+focus"
+          ]
+        },
+        {
+          "rawKey": "filled",
+          "name": "filled",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        },
+        {
+          "rawKey": "multi line",
+          "name": "multi line",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        },
+        {
+          "rawKey": "feedback",
+          "name": "feedback",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "show extra line",
+          "show label",
+          "show action",
+          "show supporting text",
+          "show counter",
+          "show left icon"
+        ],
+        "texts": [
+          "placeholder",
+          "supporting text",
+          "counter",
+          "label",
+          "error message"
+        ],
+        "variants": [
+          "size",
+          "state",
+          "filled",
+          "multi line",
+          "feedback"
+        ],
+        "instanceSwaps": [
+          "change icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "404:6409",
+      "key": "3bbc998e4ad39d1af4daa80b3fbbb9559173f54b",
+      "fullName": "[dsc] Button",
+      "shortName": "[dsc] Button",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "label#2765:0",
+          "name": "label",
+          "syncId": "2765:0",
+          "type": "TEXT",
+          "defaultValue": "Button"
+        },
+        {
+          "rawKey": "show left icon#2765:121",
+          "name": "show left icon",
+          "syncId": "2765:121",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "change icon#2765:242",
+          "name": "change icon",
+          "syncId": "2765:242",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "show right icon#2767:363",
+          "name": "show right icon",
+          "syncId": "2767:363",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "primary",
+          "variantOptions": [
+            "primary",
+            "secondary",
+            "secondary outlined",
+            "secondary text",
+            "secondary text inverse",
+            "danger",
+            "danger outlined",
+            "danger text"
+          ]
+        },
+        {
+          "rawKey": "size",
+          "name": "size",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "standard",
+          "variantOptions": [
+            "standard",
+            "large"
+          ]
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "disabled"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "show left icon",
+          "show right icon"
+        ],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "variant",
+          "size",
+          "state"
+        ],
+        "instanceSwaps": [
+          "change icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "5598:38823",
+      "key": "4970a6527da2742244f2c67e971d9d6fdd3c60bd",
+      "fullName": "[base] Item Label + Icon",
+      "shortName": "[base] Item Label + Icon",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "change icon#5320:0",
+          "name": "change icon",
+          "syncId": "5320:0",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "label#5320:9",
+          "name": "label",
+          "syncId": "5320:9",
+          "type": "TEXT",
+          "defaultValue": "Item label"
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "selected",
+          "name": "selected",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "state",
+          "selected"
+        ],
+        "instanceSwaps": [
+          "change icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "292:12411",
+      "key": "bd8b71f0847f55231b54adc9220f0562c59ca30b",
+      "fullName": "[dsc] Tabs",
+      "shortName": "[dsc] Tabs",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "tab 3#2160:44",
+          "name": "tab 3",
+          "syncId": "2160:44",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tab 4#2160:49",
+          "name": "tab 4",
+          "syncId": "2160:49",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tab 5#2160:54",
+          "name": "tab 5",
+          "syncId": "2160:54",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tab 6#2160:59",
+          "name": "tab 6",
+          "syncId": "2160:59",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "tab 7#2160:64",
+          "name": "tab 7",
+          "syncId": "2160:64",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "tab 8#2160:69",
+          "name": "tab 8",
+          "syncId": "2160:69",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        },
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "neutral",
+          "variantOptions": [
+            "highlight",
+            "neutral"
+          ]
+        },
+        {
+          "rawKey": "style",
+          "name": "style",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "primary",
+          "variantOptions": [
+            "primary",
+            "secondary"
+          ]
+        },
+        {
+          "rawKey": "content",
+          "name": "content",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "label + icon",
+          "variantOptions": [
+            "label + icon",
+            "label only",
+            "icon only"
+          ]
+        },
+        {
+          "rawKey": "type",
+          "name": "type",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "fixed",
+          "variantOptions": [
+            "fixed",
+            "scrollable"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "tab 3",
+          "tab 4",
+          "tab 5",
+          "tab 6",
+          "tab 7",
+          "tab 8"
+        ],
+        "texts": [],
+        "variants": [
+          "variant",
+          "style",
+          "content",
+          "type"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "204:4452",
+      "key": "5b6124756b16f00d4059164b9526ea6967d840ae",
+      "fullName": "[dsc] Badge",
+      "shortName": "[dsc] Badge",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "number#378:159",
+          "name": "number",
+          "syncId": "378:159",
+          "type": "TEXT",
+          "defaultValue": "0"
+        },
+        {
+          "rawKey": "size",
+          "name": "size",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "small",
+          "variantOptions": [
+            "small",
+            "large"
+          ]
+        },
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "danger",
+          "variantOptions": [
+            "danger",
+            "highlight",
+            "accent"
+          ]
+        },
+        {
+          "rawKey": "application",
+          "name": "application",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "on light",
+          "variantOptions": [
+            "on light",
+            "on dark"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "number"
+        ],
+        "variants": [
+          "size",
+          "variant",
+          "application"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "566:8425",
+      "key": "6faa7a4a1595e7b08533feed7a6e919273c7862d",
+      "fullName": "[dsc] Suggestion Chip",
+      "shortName": "[dsc] Suggestion Chip",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "change icon#3574:50",
+          "name": "change icon",
+          "syncId": "3574:50",
+          "type": "INSTANCE_SWAP",
+          "defaultValue": "186:1168",
+          "preferredValues": [
+            {
+              "type": "COMPONENT",
+              "key": "92b736148d9dda18943e2b2e82662e66c1f9ecc5"
+            }
+          ]
+        },
+        {
+          "rawKey": "label#53923:297",
+          "name": "label",
+          "syncId": "53923:297",
+          "type": "TEXT",
+          "defaultValue": "Label"
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "dragged",
+            "disabled"
+          ]
+        },
+        {
+          "rawKey": "selected",
+          "name": "selected",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        },
+        {
+          "rawKey": "show icon",
+          "name": "show icon",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "state",
+          "selected",
+          "show icon"
+        ],
+        "instanceSwaps": [
+          "change icon"
+        ]
+      }
+    },
+    {
+      "nodeId": "253:5262",
+      "key": "82739a34a7738c5f4a2c53c52592c3fc554c56dc",
+      "fullName": "[dsc] Switch",
+      "shortName": "[dsc] Switch",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "show label#1947:0",
+          "name": "show label",
+          "syncId": "1947:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "highlight",
+          "variantOptions": [
+            "highlight",
+            "accent"
+          ]
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "disabled"
+          ]
+        },
+        {
+          "rawKey": "status",
+          "name": "status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unselected",
+          "variantOptions": [
+            "unselected",
+            "selected"
+          ]
+        },
+        {
+          "rawKey": "hug content",
+          "name": "hug content",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        },
+        {
+          "rawKey": "show icon",
+          "name": "show icon",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "show label"
+        ],
+        "texts": [],
+        "variants": [
+          "variant",
+          "state",
+          "status",
+          "hug content",
+          "show icon"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "5598:48185",
+      "key": "a017e814a7a409c05c982d11ecc22e155986aa87",
+      "fullName": "[base] Item",
+      "shortName": "[base] Item",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "label#5404:28",
+          "name": "label",
+          "syncId": "5404:28",
+          "type": "TEXT",
+          "defaultValue": "Item label"
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus"
+          ]
+        },
+        {
+          "rawKey": "selected",
+          "name": "selected",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "label"
+        ],
+        "variants": [
+          "state",
+          "selected"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "186:11663",
+      "key": "e4f8145abab378145d35fa30bd7ac0e0d0a1c6fb",
+      "fullName": "[dsc] Radio Button",
+      "shortName": "[dsc] Radio Button",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "show label#1676:0",
+          "name": "show label",
+          "syncId": "1676:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "highlight",
+          "variantOptions": [
+            "highlight",
+            "accent",
+            "danger"
+          ]
+        },
+        {
+          "rawKey": "state",
+          "name": "state",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "hover",
+            "pressed",
+            "focus",
+            "disabled"
+          ]
+        },
+        {
+          "rawKey": "status",
+          "name": "status",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "unselected",
+          "variantOptions": [
+            "unselected",
+            "selected"
+          ]
+        },
+        {
+          "rawKey": "hug content",
+          "name": "hug content",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "false",
+          "variantOptions": [
+            "false",
+            "true"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "show label"
+        ],
+        "texts": [],
+        "variants": [
+          "variant",
+          "state",
+          "status",
+          "hug content"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "5598:38936",
+      "key": "f3be854f381362a8d633c426f637aa4e781df2d6",
+      "fullName": "[base] Notification badge",
+      "shortName": "[base] Notification badge",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "text#5800:0",
+          "name": "text",
+          "syncId": "5800:0",
+          "type": "TEXT",
+          "defaultValue": "100+"
+        },
+        {
+          "rawKey": "variant",
+          "name": "variant",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "text",
+          "variantOptions": [
+            "text"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "text"
+        ],
+        "variants": [
+          "variant"
+        ],
+        "instanceSwaps": []
+      }
+    }
+  ]
+}

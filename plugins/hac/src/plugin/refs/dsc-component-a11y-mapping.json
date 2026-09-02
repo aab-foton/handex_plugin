@@ -1,10 +1,19 @@
 {
   "_meta": {
     "description": "Mapa containingFrame -> categoria de a11y, ESSENCIAL EM RUNTIME no hac (consumido por _getDscFrameToA11yMap em code.js para a Detecção Automática de a11y). Gerado por build-dsc-a11y-mapping.cjs a partir de refs/web-angular-react.json (dados reais da REST API do Figma, sem valores inventados). Adaptação do Handex Beta (onde este mesmo formato de arquivo é descrito como \"fundação de dados, não usado em runtime\" — desatualizado lá, mas aqui no hac o consumo em runtime é o desenho intencional desde o início).",
-    "generatedAt": "2026-08-25T02:03:14.013Z",
+    "generatedAt": "2026-09-01T19:34:02.952Z",
     "generator": "build-dsc-a11y-mapping.cjs (hac)",
     "sourceFile": "web-angular-react.json",
     "sourceFileKey": "8QvOeTODSBi3PquJT5CISP",
+    "libSlug": "web-angular-react",
+    "dscFramePrefixesApplied": [
+      "^\\[dsc\\]",
+      "^\\[dsc-tc\\]",
+      "^\\[dsc-ts\\]",
+      "^\\[dsc-ult\\]",
+      "^\\[dsc doc\\]",
+      "^\\[chart\\]"
+    ],
     "unit": "containingFrame (nome do component set/família — não o nome da variante individual, ver comentário de cabeçalho do script)",
     "a11yShortNames": [
       "accordion",
@@ -32,12 +41,12 @@
         "variantCount": 646
       },
       "baixaConfianca": {
-        "families": 22,
-        "variantCount": 743
+        "families": 19,
+        "variantCount": 692
       },
       "semMatch": {
-        "families": 22,
-        "variantCount": 504
+        "families": 25,
+        "variantCount": 555
       },
       "pctFamiliesAlta": 27.9,
       "pctVariantsAlta": 34.1
@@ -64,16 +73,16 @@
         "variantCount": 4
       },
       "inputs": {
-        "families": 16,
-        "variantCount": 570
+        "families": 15,
+        "variantCount": 558
       },
       "link": {
         "families": 0,
         "variantCount": 0
       },
       "listas": {
-        "families": 2,
-        "variantCount": 39
+        "families": 0,
+        "variantCount": 0
       },
       "paginator": {
         "families": 1,
@@ -125,7 +134,7 @@
       "match": {
         "shortName": "button",
         "confidence": "alta",
-        "reason": "substring \"button\""
+        "reason": "palavra \"button\""
       }
     },
     {
@@ -139,7 +148,7 @@
       "match": {
         "shortName": "checkbox",
         "confidence": "alta",
-        "reason": "substring \"checkbox\""
+        "reason": "palavra \"checkbox\""
       }
     },
     {
@@ -153,7 +162,7 @@
       "match": {
         "shortName": "table",
         "confidence": "alta",
-        "reason": "substring \"table\""
+        "reason": "palavra \"table\""
       }
     },
     {
@@ -167,7 +176,7 @@
       "match": {
         "shortName": "radio button",
         "confidence": "alta",
-        "reason": "substring \"radio button\""
+        "reason": "palavra \"radio button\""
       }
     },
     {
@@ -181,7 +190,7 @@
       "match": {
         "shortName": "switch",
         "confidence": "alta",
-        "reason": "substring \"switch\""
+        "reason": "palavra \"switch\""
       }
     },
     {
@@ -195,7 +204,7 @@
       "match": {
         "shortName": "stepper",
         "confidence": "alta",
-        "reason": "substring \"stepper\""
+        "reason": "palavra \"stepper\""
       }
     },
     {
@@ -209,7 +218,7 @@
       "match": {
         "shortName": "table",
         "confidence": "alta",
-        "reason": "substring \"table\""
+        "reason": "palavra \"table\""
       }
     },
     {
@@ -223,7 +232,7 @@
       "match": {
         "shortName": "accordion",
         "confidence": "alta",
-        "reason": "substring \"accordion\""
+        "reason": "palavra \"accordion\""
       }
     },
     {
@@ -237,7 +246,7 @@
       "match": {
         "shortName": "stepper",
         "confidence": "alta",
-        "reason": "substring \"stepper\""
+        "reason": "palavra \"stepper\""
       }
     },
     {
@@ -251,7 +260,7 @@
       "match": {
         "shortName": "tab group",
         "confidence": "alta",
-        "reason": "substring \"tab group\""
+        "reason": "palavra \"tab group\""
       }
     },
     {
@@ -265,7 +274,7 @@
       "match": {
         "shortName": "breadcrumb",
         "confidence": "alta",
-        "reason": "substring \"breadcrumb\""
+        "reason": "palavra \"breadcrumb\""
       }
     },
     {
@@ -279,7 +288,7 @@
       "match": {
         "shortName": "table",
         "confidence": "alta",
-        "reason": "substring \"table\""
+        "reason": "palavra \"table\""
       }
     },
     {
@@ -293,7 +302,7 @@
       "match": {
         "shortName": "dialog",
         "confidence": "alta",
-        "reason": "substring \"dialog\""
+        "reason": "palavra \"dialog\""
       }
     },
     {
@@ -307,7 +316,7 @@
       "match": {
         "shortName": "stepper",
         "confidence": "alta",
-        "reason": "substring \"stepper\""
+        "reason": "palavra \"stepper\""
       }
     },
     {
@@ -321,7 +330,7 @@
       "match": {
         "shortName": "snackbar",
         "confidence": "alta",
-        "reason": "substring \"snackbar\""
+        "reason": "palavra \"snackbar\""
       }
     },
     {
@@ -335,7 +344,7 @@
       "match": {
         "shortName": "paginator",
         "confidence": "alta",
-        "reason": "substring \"paginator\""
+        "reason": "palavra \"paginator\""
       }
     },
     {
@@ -348,7 +357,7 @@
       "match": {
         "shortName": "accordion",
         "confidence": "alta",
-        "reason": "substring \"accordion\""
+        "reason": "palavra \"accordion\""
       }
     }
   ],
@@ -378,7 +387,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"select\""
+        "reason": "tabela curada (web-angular-react) \"Select\""
       }
     },
     {
@@ -392,7 +401,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"input\""
+        "reason": "tabela curada (web-angular-react) \"Input\""
       }
     },
     {
@@ -406,7 +415,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"slider\""
+        "reason": "tabela curada (web-angular-react) \"Range Slider\""
       }
     },
     {
@@ -420,7 +429,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"input\""
+        "reason": "tabela curada (web-angular-react) \"Input\""
       }
     },
     {
@@ -434,7 +443,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"input\""
+        "reason": "tabela curada (web-angular-react) \"Input\""
       }
     },
     {
@@ -448,7 +457,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"datepicker\""
+        "reason": "tabela curada (web-angular-react) \"Datepicker\""
       }
     },
     {
@@ -462,7 +471,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"select\""
+        "reason": "tabela curada (web-angular-react) \"Select\""
       }
     },
     {
@@ -476,7 +485,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"input\""
+        "reason": "tabela curada (web-angular-react) \"Input\""
       }
     },
     {
@@ -490,7 +499,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"input\""
+        "reason": "tabela curada (web-angular-react) \"Input\""
       }
     },
     {
@@ -504,7 +513,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"datepicker\""
+        "reason": "tabela curada (web-angular-react) \"Datepicker\""
       }
     },
     {
@@ -518,7 +527,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"timepicker\""
+        "reason": "tabela curada (web-angular-react) \"Timepicker\""
       }
     },
     {
@@ -536,20 +545,6 @@
       }
     },
     {
-      "containingFrame": "[dsc] Menu item",
-      "variantCount": 36,
-      "sampleKeys": [
-        "066212db92dc155d01b49114e6483c6a390eb52e",
-        "069235c99487d16e8075add0d7bda27d0de7d5b7",
-        "08ad6750c4258d4133975a3d0df160d2fb0a3ea0"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"menuitem\""
-      }
-    },
-    {
       "containingFrame": "[dsc] Slider",
       "variantCount": 30,
       "sampleKeys": [
@@ -560,7 +555,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"slider\""
+        "reason": "tabela curada (web-angular-react) \"Slider\""
       }
     },
     {
@@ -578,20 +573,6 @@
       }
     },
     {
-      "containingFrame": "Sliders Template",
-      "variantCount": 12,
-      "sampleKeys": [
-        "97ec08926b9cffdd5934e3d3f6fc584f259cde78",
-        "1643a75964fedd56f624e66e9ab429f07c05df3d",
-        "200284f18a69f1210b28242400fceefd6d03d86f"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"slider\""
-      }
-    },
-    {
       "containingFrame": "[dsc] Dropdown Select with Chips",
       "variantCount": 6,
       "sampleKeys": [
@@ -602,21 +583,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"select\""
-      }
-    },
-    {
-      "containingFrame": "[dsc] Menu Lateral",
-      "variantCount": 3,
-      "sampleKeys": [
-        "1d1ae77aa876123913c0dae00930f7b8b3453bf3",
-        "44471d19afb555faab954e4b99ec536bab22804a",
-        "c6e499a016c196c58edfdbee99f97a857839adf9"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"menulateral\""
+        "reason": "tabela curada (web-angular-react) \"Dropdown Select with Chips\""
       }
     },
     {
@@ -630,7 +597,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"datepicker\""
+        "reason": "tabela curada (web-angular-react) \"Datepicker\""
       }
     },
     {
@@ -644,7 +611,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"input\""
+        "reason": "tabela curada (web-angular-react) \"Input\""
       }
     },
     {
@@ -679,6 +646,16 @@
         "00bb9ae744462140f253a63678c254fcd3715fa2",
         "00df9c38ab2f37c57d30705bb847979d71d5ad92",
         "0263517508e9cd2788051ff383f520865f7eaeae"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Menu item",
+      "variantCount": 36,
+      "sampleKeys": [
+        "066212db92dc155d01b49114e6483c6a390eb52e",
+        "069235c99487d16e8075add0d7bda27d0de7d5b7",
+        "08ad6750c4258d4133975a3d0df160d2fb0a3ea0"
       ],
       "match": null
     },
@@ -729,6 +706,16 @@
         "9f35761337054df2f09e447ad79c792df08abf58",
         "ade0646bdb7d335254509fe6d655dd76718722fe",
         "f51cd76e3004e97f2379e682d91c8c930e342d88"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "Sliders Template",
+      "variantCount": 12,
+      "sampleKeys": [
+        "97ec08926b9cffdd5934e3d3f6fc584f259cde78",
+        "1643a75964fedd56f624e66e9ab429f07c05df3d",
+        "200284f18a69f1210b28242400fceefd6d03d86f"
       ],
       "match": null
     },
@@ -839,6 +826,16 @@
         "620e108d65d60e46fff7af0e19a5af83b9a5744d",
         "7bd433a1e4a5c30395cbe560e3ee66ee173e867a",
         "6b4cb2ca6130fb511c20ee15368e3f78cfb6dfc5"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Menu Lateral",
+      "variantCount": 3,
+      "sampleKeys": [
+        "1d1ae77aa876123913c0dae00930f7b8b3453bf3",
+        "44471d19afb555faab954e4b99ec536bab22804a",
+        "c6e499a016c196c58edfdbee99f97a857839adf9"
       ],
       "match": null
     },

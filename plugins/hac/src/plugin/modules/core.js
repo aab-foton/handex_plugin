@@ -50,7 +50,20 @@ let hacData = {
   a11yAreas: [],
   a11ySpecs: [],
   tabOrderItems: [],
-  currentUser: null
+  currentUser: null,
+  // Origem (web/mobile) do PROJETO/ARQUIVO inteiro — não por-área. Decisão
+  // de produto de 2026-09-02: reverte a pergunta bloqueante repetida (que
+  // rodava em Marcar Área, Detecção Automática E Ordem de Tabulação,
+  // gerando a impressão de loop quando essas ações rodam em sequência).
+  // O designer confirma "web ou mobile" UMA VEZ por arquivo; a resposta
+  // persiste aqui (mesmo hacData, mesmo save-storage/clientStorage escopado
+  // por fileKey já usado por tudo mais) e é reaproveitada por todo ponto que
+  // precisar da origem. null = ainda não perguntado (inclusive hacData de
+  // arquivos salvos antes desta versão, que não têm o campo — migração é
+  // automática por ausência, sem precisar tocar em _schemaVersion).
+  // Editável a qualquer momento na modal "Sobre o hac" (ver
+  // setProjectOrigin/openA11yProjectOriginPrompt em accessibility.js).
+  projectOrigin: null
 };
 
 // Expose functions to window IMMEDIATELY
@@ -156,17 +169,85 @@ function toggleTheme() {
   _refreshIcons();
 }
 
-function showToast(message) {
+function showToast(message, variant) {
   const container = document.getElementById('toast-container');
   if (!container) return;
+  const isError = variant === 'error';
   const toast = document.createElement('div');
-  toast.className = 'bg-slate-800 text-white px-4 py-2 rounded-lg shadow-xl text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-300 flex items-center gap-2';
-  toast.innerHTML = `<i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-400"></i>`;
+  // Variante de erro (bloqueio ativo, ex.: clique rejeitado na Ordem de
+  // Tabulação) precisa ser visualmente distinta do toast padrão de
+  // sucesso/informação — mesmo fundo escuro base do padrão do plugin, mas
+  // com borda/ícone em vermelho (mesma paleta de erro usada em
+  // modals.html, ex. text-red-500/border-red-500) em vez do check verde.
+  toast.className = isError
+    ? 'bg-slate-800 text-white px-4 py-2 rounded-lg shadow-xl text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-300 flex items-center gap-2 border border-red-500'
+    : 'bg-slate-800 text-white px-4 py-2 rounded-lg shadow-xl text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-300 flex items-center gap-2';
+  toast.innerHTML = isError
+    ? `<i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-red-500"></i>`
+    : `<i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-400"></i>`;
   const _tn = document.createTextNode(' ' + message);
   toast.appendChild(_tn);
   container.appendChild(toast);
   try { _refreshIcons(); } catch(e) {}
   setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+// Snackbar — variante mais persistente do toast, para mensagens longas que
+// precisam de mais tempo de leitura (ex.: instrução com múltiplas
+// informações). Diferenças em relação a showToast: botão de fechar (X)
+// explícito, sem timeout automático por padrão (permanece até o usuário
+// fechar), largura maior para acomodar texto extenso, e cor de destaque do
+// hac (cyan) em vez do check verde/erro vermelho do toast padrão — sinaliza
+// visualmente que é uma instrução, não uma confirmação ou erro. Segue o
+// padrão GOV.BR de snackbar: mensagem + ação/fechamento manual quando o
+// conteúdo exige leitura mais atenta em vez de sumir sozinho.
+// options.duration: se informado (ms), some sozinho após esse tempo (além
+// do botão de fechar continuar disponível); default undefined = permanece
+// até fechamento manual.
+// options.actionLabel/options.onAction: botão de ação opcional entre o texto
+// e o fechar (ex.: "Continuar revisão"). Clicar nele também fecha o
+// snackbar — chama o mesmo dismiss() do botão de fechar, não só o callback.
+function showSnackbar(message, options) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const duration = options && options.duration;
+  const actionLabel = options && options.actionLabel;
+  const onAction = options && options.onAction;
+  const snackbar = document.createElement('div');
+  snackbar.className = 'bg-slate-800 text-white px-4 py-3 rounded-2xl shadow-xl text-xs font-medium animate-in fade-in slide-in-from-bottom-4 duration-300 flex items-start gap-2 border border-cyan-600 max-w-sm pointer-events-auto';
+  snackbar.innerHTML = `<i data-lucide="info" class="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0"></i>`;
+  const dismiss = () => {
+    snackbar.classList.add('fade-out');
+    setTimeout(() => snackbar.remove(), 300);
+  };
+  const contentCol = document.createElement('div');
+  contentCol.className = 'flex-1 min-w-0 flex flex-col gap-1.5';
+  const textSpan = document.createElement('span');
+  textSpan.className = 'leading-relaxed';
+  textSpan.appendChild(document.createTextNode(message));
+  contentCol.appendChild(textSpan);
+  if (actionLabel && typeof onAction === 'function') {
+    const actionBtn = document.createElement('button');
+    actionBtn.type = 'button';
+    actionBtn.className = 'self-start text-cyan-400 hover:text-cyan-300 font-bold underline transition-colors';
+    actionBtn.textContent = actionLabel;
+    actionBtn.addEventListener('click', () => {
+      dismiss();
+      onAction();
+    });
+    contentCol.appendChild(actionBtn);
+  }
+  snackbar.appendChild(contentCol);
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.setAttribute('aria-label', 'Fechar aviso');
+  closeBtn.className = 'flex-shrink-0 text-slate-400 hover:text-white transition-colors';
+  closeBtn.innerHTML = `<i data-lucide="x" class="w-3.5 h-3.5"></i>`;
+  closeBtn.addEventListener('click', dismiss);
+  snackbar.appendChild(closeBtn);
+  container.appendChild(snackbar);
+  try { _refreshIcons(); } catch(e) {}
+  if (duration) setTimeout(dismiss, duration);
 }
 
 const FOCUSABLE_SELECTOR = 'input, button, select, textarea, a[href], [tabindex]:not([tabindex="-1"])';

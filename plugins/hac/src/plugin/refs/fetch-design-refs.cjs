@@ -205,11 +205,23 @@ async function fetchLibrary(libMeta) {
         const frame = c.containing_frame || {};
         const setNodeId = frame.containingComponentSet && frame.containingComponentSet.nodeId;
         const containingFrame = clean(frame.name) || componentSetNameByNodeId[setNodeId] || '';
+        // containingFrameNodeId: node_id do COMPONENT SET (não da variante
+        // individual) que originou containingFrame acima — persistido para
+        // permitir gerar deep-links reais do Figma
+        // (https://www.figma.com/design/{fileKey}/{fileName}?node-id={nodeId})
+        // a partir do nome do componente, sem tabela estática escrita à mão.
+        // Só é preenchido quando o nome veio do fallback componentSetNameByNodeId
+        // (setNodeId conhecido); quando containingFrame veio de frame.name (caso
+        // da lib desktop, onde containing_frame já é o frame visual, não o
+        // component set), fica null — resolução de nodeId nesse caso é trabalho
+        // futuro à parte, fora do escopo desta extensão (mobile only por ora).
+        const containingFrameNodeId = (clean(frame.name) ? null : (setNodeId || null));
         out.components.push({
           key: c.key,
           name: clean(c.name || ''),
           description: clean(c.description || ''),
-          containingFrame
+          containingFrame,
+          containingFrameNodeId
         });
       }
       total += components.length;

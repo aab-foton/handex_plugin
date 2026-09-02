@@ -1,0 +1,176 @@
+# Companheiro do refresh-dsc-refs.yml (mesmo diretório) — NÃO dispara por
+# schedule, só reage a merge de PR nesta pasta (plugins/hac dentro do
+# monorepo design-foton; raiz do repositório quando publicado via
+# `git subtree push --prefix=plugins/hac hac_plugin main` para
+# aab-foton/hac_plugin, onde este arquivo efetivamente roda).
+#
+# refresh-dsc-refs.yml não aplica nenhuma label ao PR que abre — a única
+# forma estável de identificar "isso é um PR de atualização de refs DSC" é
+# o prefixo do nome de branch que ele cria (`bot/dsc-refs-<timestamp>`,
+# hardcoded em refresh-dsc-refs.yml). Se o prefixo do branch mudar lá,
+# mudar aqui também (os dois arquivos não compartilham essa constante).
+#
+# Duas ações quando o PR de refs é mergeado em main:
+#   1) Release com tag "refs-YYYY-MM-DD" (não usa o número de versão do
+#      plugin como tag principal — ver nota no job release) contendo a
+#      versão atual do plugin + quais libs DSC mudaram, se identificável.
+#   2) Abre/atualiza uma issue com a label "refs-update" avisando os
+#      designers que usam o hac para reimportar a pasta/zip local (o hac é
+#      distribuído por import manual, sem Figma Community, então não há
+#      atualização automática do lado de quem já tem o plugin instalado).
+name: notify-hac-refs-update
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  notify:
+    if: >
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == 'main' &&
+      startsWith(github.event.pull_request.head.ref, 'bot/dsc-refs-')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Le a versao do plugin
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Identifica quais libs DSC mudaram neste PR
+        id: libs
+        shell: bash
+        run: |
+          # Nomes de arquivo reais em src/plugin/refs/ (ver _manifest.json).
+          # Se uma lib nova for cadastrada no manifest, adicionar aqui tambem
+          # -- esta lista nao e lida dinamicamente do manifest de proposito,
+          # pra nao arriscar quebrar o workflow se o manifest mudar de forma
+          # inesperada (falha aberta: lib nao mapeada aqui so nao aparece
+          # nomeada no changelog, sem quebrar o resto do job).
+          declare -A LIB_NAMES=(
+            ["src/plugin/refs/web-angular-react.json"]="Web Angular & React"
+            ["src/plugin/refs/super-app.json"]="DSC | Super App"
+            ["src/plugin/refs/super-dsc-web.json"]="Super DSC | Web"
+          )
+
+          CHANGED_FILES=$(git diff --name-only \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.merge_commit_sha }}" \
+            -- src/plugin/refs/)
+
+          LIBS_CHANGED=""
+          for FILE in "${!LIB_NAMES[@]}"; do
+            if echo "$CHANGED_FILES" | grep -qF "$FILE"; then
+              LIBS_CHANGED="${LIBS_CHANGED}- ${LIB_NAMES[$FILE]}\n"
+            fi
+          done
+
+          if [ -z "$LIBS_CHANGED" ]; then
+            LIBS_CHANGED="- (não foi possível identificar libs específicas a partir do diff — ver o PR #${{ github.event.pull_request.number }} para o detalhe)\n"
+          fi
+
+          {
+            echo "libs_changed<<EOF"
+            echo -e "$LIBS_CHANGED"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Cria Release
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # PR_TITLE/PR_NUMBER vem de evento externo (titulo de PR e texto
+          # livre) -- passado via env, nunca interpolado direto no template
+          # do `run:`, pra nao abrir brecha de script injection (ver aviso
+          # oficial do GitHub sobre "Understanding the risk of script
+          # injection" em workflows que usam github.event.*.title/body).
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PLUGIN_VERSION: ${{ steps.version.outputs.version }}
+          LIBS_CHANGED: ${{ steps.libs.outputs.libs_changed }}
+        run: |
+          # Tag propositalmente distinta de uma tag de versao "de verdade"
+          # do plugin (ex: v0.1.0-beta.1) -- um refresh semanal de refs DSC
+          # nao e um lancamento de funcionalidade, e nomear a tag so com a
+          # versao do plugin sugeriria isso incorretamente e colidiria se
+          # dois refreshes acontecessem sem bump de versao no meio.
+          DATE="$(date -u +%Y-%m-%d)"
+          TAG="refs-${DATE}"
+
+          NOTES="Atualização automática das referências DSC (\`src/plugin/refs/\`), mergeada via PR #${PR_NUMBER} (\"${PR_TITLE}\").
+
+          **Versão do plugin no momento deste refresh:** ${PLUGIN_VERSION}
+
+          **Libs DSC possivelmente alteradas:**
+          ${LIBS_CHANGED}
+
+          Este release marca apenas a atualização de dados de referência (skeleton + mapeamentos DSC→a11y), não uma nova versão funcional do plugin. Para a versão instalável mais recente, ver a pasta \`hac-plugin/\` no branch \`main\`."
+
+          gh release create "$TAG" \
+            --title "Atualização de refs DSC — ${DATE}" \
+            --notes "$NOTES"
+
+      - name: Verifica se ja existe issue aberta de aviso
+        id: existing_issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUMBER=$(gh issue list \
+            --label "refs-update" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
+          echo "number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: Atualiza issue existente
+        if: steps.existing_issue.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          ISSUE_NUMBER: ${{ steps.existing_issue.outputs.number }}
+          PLUGIN_VERSION: ${{ steps.version.outputs.version }}
+          LIBS_CHANGED: ${{ steps.libs.outputs.libs_changed }}
+        run: |
+          BODY="Nova atualização de refs DSC disponível ($(date -u +%Y-%m-%d), PR #${PR_NUMBER}).
+
+          Versão atual do plugin: ${PLUGIN_VERSION}
+
+          Libs possivelmente alteradas:
+          ${LIBS_CHANGED}
+
+          Lembrete: o hac é distribuído por import manual de pasta/zip a partir deste repositório (sem publicação automática via Figma Community) — reimporte a versão mais recente de \`hac-plugin/\` para ter as refs DSC atualizadas no Figma."
+
+          gh issue comment "$ISSUE_NUMBER" --body "$BODY"
+
+      - name: Cria issue nova
+        if: steps.existing_issue.outputs.number == ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PLUGIN_VERSION: ${{ steps.version.outputs.version }}
+          LIBS_CHANGED: ${{ steps.libs.outputs.libs_changed }}
+        run: |
+          BODY="Nova atualização de refs DSC disponível ($(date -u +%Y-%m-%d), PR #${PR_NUMBER}).
+
+          Versão atual do plugin: ${PLUGIN_VERSION}
+
+          Libs possivelmente alteradas:
+          ${LIBS_CHANGED}
+
+          Lembrete: o hac é distribuído por import manual de pasta/zip a partir deste repositório (sem publicação automática via Figma Community) — reimporte a versão mais recente de \`hac-plugin/\` para ter as refs DSC atualizadas no Figma.
+
+          Esta issue é reaproveitada (comentada, não duplicada) nas próximas atualizações de refs enquanto permanecer aberta e com a label \`refs-update\`. Fechar quando não fizer mais sentido acompanhar."
+
+          gh issue create \
+            --title "Nova versão de refs DSC disponível para reimportar" \
+            --label "refs-update" \
+            --body "$BODY"

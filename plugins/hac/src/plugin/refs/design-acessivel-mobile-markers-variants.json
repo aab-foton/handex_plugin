@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "description": "Extração REAL via REST API (2026-09-02) de TODAS as variantes (componentes individuais, não só a component property definition do set) dos 3 component sets de marcadores visuais REALMENTE IMPORTADOS pelo hac no runtime (figma.importComponentByKeyAsync) a partir da lib 'Design Acessível (mobile)' — [a11y mob] Agrupamento, [a11y mob] Conectores, [a11y mob] Número da tela. Objetivo: dar suporte auditável (key real de cada variante rastreável até a REST API) às constantes hardcoded A11Y_AGRUPAMENTO_KEYS_MOBILE, A11Y_CONECTOR_LINHA_KEYS_MOBILE e A11Y_ITEM_NUMBER_KEYS_MOBILE em src/plugin/code.js. NÃO confundir com design-acessivel-mobile-properties.json (9 component sets '[a11y mob(ile)( base)] *', que documenta as component property DEFINITIONS por família, não a key de cada variante) nem com design-acessivel-mobile-link-property.json (achado específico da property 'Link' dentro do wrapper 'Box specs leitor de tela').",
+    "fileKey": "3zdtN13YvPlCGPdXeL0Y2i",
+    "libraryName": "Design Acessível (mobile)",
+    "extractedAt": "2026-09-02T00:00:00.000Z",
+    "extractedBy": "augusto.brasil@saude.gov.br",
+    "method": "GET /v1/files/3zdtN13YvPlCGPdXeL0Y2i/component_sets (para localizar node_id + nome dos 3 sets alvo, entre os 5 component sets publicados do arquivo) + GET /v1/files/3zdtN13YvPlCGPdXeL0Y2i/nodes?ids={setNodeId}&depth=2 (para obter, no campo top-level `components` da resposta por node consultado, a key publicada + nome completo `Prop1=Valor1, Prop2=Valor2` de cada variante filha do component set).",
+    "achadoPrincipal": "IMPORTANTE — este achado CONTRADIZ a premissa de auditoria anterior desta sessão (que afirmava A11Y_ITEM_NUMBER_KEYS_MOBILE '100% errado, nenhuma key bate com a real'): a extração real via API, verificada de forma independente duas vezes nesta rodada (uma vez agregada com os outros 2 sets, outra vez isolada, só este set), mostra as 5 keys de A11Y_ITEM_NUMBER_KEYS_MOBILE batendo 100% com o component set '[a11y mob] Número da tela' (fileKey 3zdtN13YvPlCGPdXeL0Y2i, nodeId 13:479). As outras 2 constantes mobile (Agrupamento: 12/12, Conectores: 15/15) também batem 100%. Não foi encontrada NENHUMA key divergente nas 3 constantes mobile nesta extração — resultado a ser comunicado explicitamente como divergência da premissa recebida, não descartado silenciosamente. Ver seção 'contradicaoComPremissaAnterior' abaixo para possíveis explicações.",
+    "contradicaoComPremissaAnterior": {
+      "premissaRecebida": "Pelo menos 1 conjunto (A11Y_ITEM_NUMBER_KEYS_MOBILE, 5 keys) está 100% errado — nenhuma bate com a key real.",
+      "resultadoDestaExtracao": "5/5 batem. Verificado 2x (extração em lote com os outros sets + chamada isolada extra só para 13:479, ambas no fileKey 3zdtN13YvPlCGPdXeL0Y2i, sem cache entre as chamadas).",
+      "hipotesesParaAConflitoNaoInvestigadas": [
+        "A checagem anterior pode ter comparado contra o fileKey errado (ex: 'super-app' epCGtlKQxedDxQVlK3lNcN, que é a lib de COMPONENTES REAIS do produto, não a lib de MARCADORES 'Design Acessível mobile' — os dois fileKeys são frequentemente confundidos, ver aviso já existente em _manifest.json).",
+        "A checagem anterior pode ter usado um nodeId ou component set diferente (ex: um dos '[EXCLUSIVO DSC]' equivalentes, se essa variante também existir na lib mobile).",
+        "A checagem anterior pode ter sido feita antes de uma republicação da lib no Figma que trocou as keys (nesse caso as keys atuais em code.js já estariam desatualizadas por definição, mas coincidentemente batendo com O QUE HOJE está publicado) — não verificável sem acesso ao log/versionamento da lib no momento da checagem anterior.",
+        "A premissa pode ter se originado de um engano de leitura/transcrição em uma sessão anterior não persistida em arquivo desta sessão."
+      ],
+      "recomendacao": "Antes de aplicar qualquer correção em code.js com base na premissa de '100% errado', re-confirmar com quem fez a checagem anterior QUAL fileKey/nodeId foi de fato consultado. Esta extração é reprodutível (rodar o mesmo GET novamente deve retornar o mesmo resultado, dado que 'remote: false' e sem indicação de key rotacionada)."
+    },
+    "nomesDosSetsReaisConfirmados": {
+      "agrupamento": "[a11y mob] Agrupamento (nodeId 1:169, key de família 17407c22fadeb0c9234e73a70f3c3e1b8e02c9a6 — confirmada previamente pelo usuário, batida nesta extração)",
+      "conectores": "[a11y mob] Conectores (nodeId 1:50, key de família 907037f5556473e34b93ca073606b2f9420481b8 — confirmada previamente pelo usuário, batida nesta extração)",
+      "numeroDaTela": "[a11y mob] Número da tela (nodeId 13:479, key de família dda5b5b1aa3fb88f5e8675569c9d46c981f74459 — confirmada previamente pelo usuário, batida nesta extração)"
+    }
+  },
+  "agrupamento": {
+    "componentSetName": "[a11y mob] Agrupamento",
+    "componentSetNodeId": "1:169",
+    "totalVariants": 12,
+    "expectedShape": "3 categorias (tipo) × 4 orientações — lacuna real confirmada: NÃO existem variantes 'nível de título' nem 'informações adicionais' nesta lib mobile (só 'elementos interativos e imagens', 'decorativo', 'estrutura da página')",
+    "variants": [
+      { "nodeId": "1:170", "key": "d93c8cf698d12840af7f3c3ea0bda4b9cd5a0728", "fullName": "tipo=elementos interativos e imagens, orientação=esquerda", "categoriaCode": "elemento", "orientacaoCode": "esquerda" },
+      { "nodeId": "300:358", "key": "de08af167290b5220aa75ae757603a26b48c6a68", "fullName": "tipo=elementos interativos e imagens, orientação=direita", "categoriaCode": "elemento", "orientacaoCode": "direita" },
+      { "nodeId": "1:174", "key": "01acc2917e26866d5b468f8aef3a8bfb99881202", "fullName": "tipo=elementos interativos e imagens, orientação=inferior", "categoriaCode": "elemento", "orientacaoCode": "inferior" },
+      { "nodeId": "301:396", "key": "55144e19b4306199ceb1de0dff2abd4f01c01b72", "fullName": "tipo=elementos interativos e imagens, orientação=superior", "categoriaCode": "elemento", "orientacaoCode": "superior" },
+      { "nodeId": "1:188", "key": "1cecb187f29bfed5c7d6648dd227b3f852b4ebb5", "fullName": "tipo=decorativo, orientação=esquerda", "categoriaCode": "decorativo", "orientacaoCode": "esquerda" },
+      { "nodeId": "1:192", "key": "c1c3ba0100e3315569a4ed75cd5ee6922d7150d4", "fullName": "tipo=decorativo, orientação=direita", "categoriaCode": "decorativo", "orientacaoCode": "direita" },
+      { "nodeId": "301:429", "key": "f93ce3228aa430bde1858891eae64b78c957b781", "fullName": "tipo=decorativo, orientação=superior", "categoriaCode": "decorativo", "orientacaoCode": "superior" },
+      { "nodeId": "301:433", "key": "c266a6bab1277efdac43ecea9171efb60961ed47", "fullName": "tipo=decorativo, orientação=inferior", "categoriaCode": "decorativo", "orientacaoCode": "inferior" },
+      { "nodeId": "1:196", "key": "9b25c0b70cb75cc162ad2f2bb9ed34fe52f32f0f", "fullName": "tipo=estrutura da página, orientação=esquerda", "categoriaCode": "estrutura", "orientacaoCode": "esquerda" },
+      { "nodeId": "1:201", "key": "584e699ec0cf98c45ea17d5a9615932f81aa1e8a", "fullName": "tipo=estrutura da página, orientação=direita", "categoriaCode": "estrutura", "orientacaoCode": "direita" },
+      { "nodeId": "301:437", "key": "d78117bfb35d40e98dd4071e772413b959d37c3e", "fullName": "tipo=estrutura da página, orientação=superior", "categoriaCode": "estrutura", "orientacaoCode": "superior" },
+      { "nodeId": "301:442", "key": "a74142992e0968ade98fbe97590d45b31fc3f35a", "fullName": "tipo=estrutura da página, orientação=inferior", "categoriaCode": "estrutura", "orientacaoCode": "inferior" }
+    ],
+    "comparisonWithHardcodedConstants": {
+      "constantName": "A11Y_AGRUPAMENTO_KEYS_MOBILE (code.js linhas ~866-887)",
+      "match": 12,
+      "mismatch": 0,
+      "diffs": []
+    }
+  },
+  "conectores": {
+    "componentSetName": "[a11y mob] Conectores",
+    "componentSetNodeId": "1:50",
+    "totalVariants": 16,
+    "expectedShape": "3 categorias (tipo) × 5 direções (incluindo 'desativado') = 15 esperado — encontrado 1 nó adicional fora da matriz (ver 'nodeOrfaoExcluido' abaixo), então 15 relevantes para o matching + 1 órfão ignorado",
+    "variants": [
+      { "nodeId": "1:51", "key": "4c060718da4b3350ee5f290742a3a6cd1db23618", "fullName": "tipo=elementos e imagens, conector=desativado", "categoriaCode": "elemento", "conectorCode": "desativado" },
+      { "nodeId": "1:65", "key": "8e397918ad10aeb63b2e747d2834c8105a0aa1d1", "fullName": "tipo=elementos e imagens, conector=esquerda", "categoriaCode": "elemento", "conectorCode": "esquerda" },
+      { "nodeId": "1:91", "key": "90bbec6996ca447f3594497f0a35854544de3021", "fullName": "tipo=elementos e imagens, conector=direita", "categoriaCode": "elemento", "conectorCode": "direita" },
+      { "nodeId": "1:117", "key": "978a6433237eefdf540d82bcba40e74e39aeecba", "fullName": "tipo=elementos e imagens, conector=inferior", "categoriaCode": "elemento", "conectorCode": "inferior" },
+      { "nodeId": "1:143", "key": "a6c7e7dab90b9b23a06b072331c246fd4392b749", "fullName": "tipo=elementos e imagens, conector=superior", "categoriaCode": "elemento", "conectorCode": "superior" },
+      { "nodeId": "1:55", "key": "966f90f2fc56afdb7e2b8025ba83b48a9622a698", "fullName": "tipo=títulos, conector=desativado", "categoriaCode": "titulo", "conectorCode": "desativado" },
+      { "nodeId": "1:73", "key": "d9d79daa2318b2b6758376123899a40329222b48", "fullName": "tipo=títulos, conector=esquerda", "categoriaCode": "titulo", "conectorCode": "esquerda" },
+      { "nodeId": "1:99", "key": "b52cb9d60f6ca81eaf82492d4b110b105bc76305", "fullName": "tipo=títulos, conector=direita", "categoriaCode": "titulo", "conectorCode": "direita" },
+      { "nodeId": "1:125", "key": "66c4100b5d1b1432ebeb3e9202fca08d173a02be", "fullName": "tipo=títulos, conector=inferior", "categoriaCode": "titulo", "conectorCode": "inferior" },
+      { "nodeId": "1:151", "key": "1bd8c85dbdc47d3bef93ac9b71ad5f6d875d810b", "fullName": "tipo=títulos, conector=superior", "categoriaCode": "titulo", "conectorCode": "superior" },
+      { "nodeId": "1:60", "key": "4f478e385d22c92b1df3b53883a9a97abe61be6f", "fullName": "tipo=decorativo, conector=desativado", "categoriaCode": "decorativo", "conectorCode": "desativado" },
+      { "nodeId": "1:82", "key": "2709c008c084daaba24063ccf42da4a8c1db0745", "fullName": "tipo=decorativo, conector=esquerda", "categoriaCode": "decorativo", "conectorCode": "esquerda" },
+      { "nodeId": "1:108", "key": "1865f8ed37ac6a33cccbcd874f02238c39b0ff39", "fullName": "tipo=decorativo, conector=direita", "categoriaCode": "decorativo", "conectorCode": "direita" },
+      { "nodeId": "1:134", "key": "638d682d97a2f82bc35cbb76ae9f6b05132a7176", "fullName": "tipo=decorativo, conector=inferior", "categoriaCode": "decorativo", "conectorCode": "inferior" },
+      { "nodeId": "1:160", "key": "06c9ac2cae9926e57456ddad6eda7a70ffc9bca0", "fullName": "tipo=decorativo, conector=superior", "categoriaCode": "decorativo", "conectorCode": "superior" }
+    ],
+    "nodeOrfaoExcluido": {
+      "nodeId": "1248:2330",
+      "key": "0dc8a0d13a64cf043fc7bfe55e74644ff971dbe6",
+      "fullName": ".[a11y mob] Conector títulos",
+      "nota": "Nó filho do component set com prefixo '.' (convenção Figma de node não listado nos assets), sem propriedades 'tipo'/'conector' no nome — não pertence à matriz 3×5 categoriaCode×conectorCode usada pelo matching atual. Não referenciado por nenhuma constante hardcoded hoje em code.js. Registrado aqui só para rastreabilidade total do que a API retornou; não requer ação."
+    },
+    "comparisonWithHardcodedConstants": {
+      "constantName": "A11Y_CONECTOR_LINHA_KEYS_MOBILE (code.js linhas ~889-913)",
+      "match": 15,
+      "mismatch": 0,
+      "diffs": []
+    }
+  },
+  "numeroDaTela": {
+    "componentSetName": "[a11y mob] Número da tela",
+    "componentSetNodeId": "13:479",
+    "totalVariants": 5,
+    "expectedShape": "1 propriedade (conector) × 5 opções (4 direções + desativado) — sem dimensão de categoria/tipo, paridade estrutural com '[a11y] Item Number' desktop",
+    "variants": [
+      { "nodeId": "13:480", "key": "d88850d40989bbd99cdc98b29a1f2cc516278699", "fullName": "conector=desativado", "conectorCode": "desativado" },
+      { "nodeId": "13:484", "key": "aebd2221d0238799706e54521cccd7bcee24733d", "fullName": "conector=esquerda", "conectorCode": "esquerda" },
+      { "nodeId": "13:492", "key": "f7977c26c71f36e05bf2b92e645ecd1d1491d458", "fullName": "conector=direita", "conectorCode": "direita" },
+      { "nodeId": "13:500", "key": "4b03dd0857a71158da36bab09707538ecf047620", "fullName": "conector=inferior", "conectorCode": "inferior" },
+      { "nodeId": "13:508", "key": "8165d5888c8a03c7affb955a9b5364cec563ee63", "fullName": "conector=superior", "conectorCode": "superior" }
+    ],
+    "comparisonWithHardcodedConstants": {
+      "constantName": "A11Y_ITEM_NUMBER_KEYS_MOBILE (code.js linhas ~917-923)",
+      "match": 5,
+      "mismatch": 0,
+      "diffs": [],
+      "avisoImportante": "Ver _meta.contradicaoComPremissaAnterior no topo deste arquivo — este resultado contradiz a premissa recebida de que esta constante estaria 100% errada."
+    }
+  }
+}

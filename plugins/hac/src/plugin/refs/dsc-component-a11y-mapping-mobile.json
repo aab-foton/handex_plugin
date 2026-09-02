@@ -1,10 +1,19 @@
 {
   "_meta": {
     "description": "Mapa containingFrame -> categoria de a11y, ESSENCIAL EM RUNTIME no hac (consumido por _getDscFrameToA11yMap em code.js para a Detecção Automática de a11y). Gerado por build-dsc-a11y-mapping.cjs a partir de refs/web-angular-react.json (dados reais da REST API do Figma, sem valores inventados). Adaptação do Handex Beta (onde este mesmo formato de arquivo é descrito como \"fundação de dados, não usado em runtime\" — desatualizado lá, mas aqui no hac o consumo em runtime é o desenho intencional desde o início).",
-    "generatedAt": "2026-08-25T02:03:14.159Z",
+    "generatedAt": "2026-09-02T13:41:43.443Z",
     "generator": "build-dsc-a11y-mapping.cjs (hac)",
     "sourceFile": "super-app.json",
     "sourceFileKey": "epCGtlKQxedDxQVlK3lNcN",
+    "libSlug": "super-app",
+    "dscFramePrefixesApplied": [
+      "^\\[dsc\\]",
+      "^\\[dsc-tc\\]",
+      "^\\[dsc-ts\\]",
+      "^\\[dsc-ult\\]",
+      "^\\[dsc doc\\]",
+      "^\\[chart\\]"
+    ],
     "unit": "containingFrame (nome do component set/família — não o nome da variante individual, ver comentário de cabeçalho do script)",
     "a11yShortNames": [
       "accordion",
@@ -28,19 +37,19 @@
       "totalComponentsVariants": 4455,
       "totalFamilies": 1550,
       "altaConfianca": {
-        "families": 39,
-        "variantCount": 570
+        "families": 14,
+        "variantCount": 494
       },
       "baixaConfianca": {
-        "families": 63,
-        "variantCount": 347
+        "families": 29,
+        "variantCount": 302
       },
       "semMatch": {
-        "families": 1448,
-        "variantCount": 3538
+        "families": 1507,
+        "variantCount": 3659
       },
-      "pctFamiliesAlta": 2.5,
-      "pctVariantsAlta": 12.8
+      "pctFamiliesAlta": 0.9,
+      "pctVariantsAlta": 11.1
     },
     "byShortName": {
       "accordion": {
@@ -52,28 +61,28 @@
         "variantCount": 0
       },
       "button": {
-        "families": 10,
-        "variantCount": 424
+        "families": 8,
+        "variantCount": 420
       },
       "checkbox": {
         "families": 1,
         "variantCount": 30
       },
       "dialog": {
+        "families": 2,
+        "variantCount": 12
+      },
+      "inputs": {
+        "families": 11,
+        "variantCount": 123
+      },
+      "link": {
         "families": 0,
         "variantCount": 0
       },
-      "inputs": {
-        "families": 29,
-        "variantCount": 163
-      },
-      "link": {
-        "families": 6,
-        "variantCount": 12
-      },
       "listas": {
-        "families": 22,
-        "variantCount": 125
+        "families": 5,
+        "variantCount": 76
       },
       "paginator": {
         "families": 0,
@@ -84,28 +93,28 @@
         "variantCount": 20
       },
       "snackbar": {
-        "families": 0,
-        "variantCount": 0
+        "families": 1,
+        "variantCount": 3
       },
       "stepper": {
         "families": 1,
         "variantCount": 6
       },
       "switch": {
-        "families": 5,
-        "variantCount": 18
+        "families": 1,
+        "variantCount": 10
       },
       "table": {
-        "families": 10,
-        "variantCount": 35
+        "families": 0,
+        "variantCount": 0
       },
       "tab group": {
-        "families": 3,
-        "variantCount": 6
+        "families": 1,
+        "variantCount": 2
       },
       "imagem": {
-        "families": 11,
-        "variantCount": 50
+        "families": 8,
+        "variantCount": 66
       },
       "estrutura": {
         "families": 0,
@@ -125,7 +134,7 @@
       "match": {
         "shortName": "button",
         "confidence": "alta",
-        "reason": "substring \"button\""
+        "reason": "palavra \"button\""
       }
     },
     {
@@ -139,7 +148,7 @@
       "match": {
         "shortName": "button",
         "confidence": "alta",
-        "reason": "substring \"button\""
+        "reason": "palavra \"button\""
       }
     },
     {
@@ -153,7 +162,7 @@
       "match": {
         "shortName": "button",
         "confidence": "alta",
-        "reason": "substring \"button\""
+        "reason": "palavra \"button\""
       }
     },
     {
@@ -167,7 +176,7 @@
       "match": {
         "shortName": "checkbox",
         "confidence": "alta",
-        "reason": "substring \"checkbox\""
+        "reason": "palavra \"checkbox\""
       }
     },
     {
@@ -181,7 +190,7 @@
       "match": {
         "shortName": "button",
         "confidence": "alta",
-        "reason": "substring \"button\""
+        "reason": "palavra \"button\""
       }
     },
     {
@@ -195,7 +204,7 @@
       "match": {
         "shortName": "button",
         "confidence": "alta",
-        "reason": "substring \"button\""
+        "reason": "palavra \"button\""
       }
     },
     {
@@ -209,21 +218,7 @@
       "match": {
         "shortName": "accordion",
         "confidence": "alta",
-        "reason": "substring \"accordion\""
-      }
-    },
-    {
-      "containingFrame": "[dsc] Selectable Media",
-      "variantCount": 12,
-      "sampleKeys": [
-        "1f83f9f8456d9555a9a63a4f61c95a2a16675f31",
-        "05f2747333d756677e6cec9740a04e4e2fd65cde",
-        "44e69bbc4d14d77648a36f6b46d0313ccb8789c3"
-      ],
-      "match": {
-        "shortName": "table",
-        "confidence": "alta",
-        "reason": "substring \"table\""
+        "reason": "palavra \"accordion\""
       }
     },
     {
@@ -237,7 +232,7 @@
       "match": {
         "shortName": "switch",
         "confidence": "alta",
-        "reason": "substring \"switch\""
+        "reason": "palavra \"switch\""
       }
     },
     {
@@ -251,35 +246,7 @@
       "match": {
         "shortName": "accordion",
         "confidence": "alta",
-        "reason": "substring \"accordion\""
-      }
-    },
-    {
-      "containingFrame": "[dsc] Image Media",
-      "variantCount": 9,
-      "sampleKeys": [
-        "e620efda54c5ab698431d39e04427488c02d037b",
-        "117d98adec6bb28fc1428612de6ed644b5d37593",
-        "4451ad24d88c5e57de5a0e52e3e3ed361aa99c4f"
-      ],
-      "match": {
-        "shortName": "imagem",
-        "confidence": "alta",
-        "reason": "substring \"imagem\""
-      }
-    },
-    {
-      "containingFrame": "[dsc-tc] Sortable List",
-      "variantCount": 7,
-      "sampleKeys": [
-        "a56f2080affd2acffaabe74c75383d8380f1edfd",
-        "16883ae348b44cdfb3c258811952f8e3e880e451",
-        "188b1286e655b542d703356d74012536c4457e41"
-      ],
-      "match": {
-        "shortName": "table",
-        "confidence": "alta",
-        "reason": "substring \"table\""
+        "reason": "palavra \"accordion\""
       }
     },
     {
@@ -293,7 +260,7 @@
       "match": {
         "shortName": "stepper",
         "confidence": "alta",
-        "reason": "substring \"stepper\""
+        "reason": "palavra \"stepper\""
       }
     },
     {
@@ -307,7 +274,7 @@
       "match": {
         "shortName": "button",
         "confidence": "alta",
-        "reason": "substring \"button\""
+        "reason": "palavra \"button\""
       }
     },
     {
@@ -321,21 +288,7 @@
       "match": {
         "shortName": "accordion",
         "confidence": "alta",
-        "reason": "substring \"accordion\""
-      }
-    },
-    {
-      "containingFrame": "[dsc] Input Slider",
-      "variantCount": 6,
-      "sampleKeys": [
-        "44e13d68ffa484ed7bcf105a5ce9f5dc64dd6b71",
-        "115eb68320f4538758992d095c971d7b6f8a6dde",
-        "95e9b8b58b60d57459335bc6a5b8e1727db87809"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "alta",
-        "reason": "substring \"inputs\""
+        "reason": "palavra \"accordion\""
       }
     },
     {
@@ -349,7 +302,7 @@
       "match": {
         "shortName": "button",
         "confidence": "alta",
-        "reason": "substring \"button\""
+        "reason": "palavra \"button\""
       }
     },
     {
@@ -363,280 +316,7 @@
       "match": {
         "shortName": "button",
         "confidence": "alta",
-        "reason": "substring \"button\""
-      }
-    },
-    {
-      "containingFrame": "mouse-button-left",
-      "variantCount": 2,
-      "sampleKeys": [
-        "c1e6b90365920158dcf42e0611060ea06706e99f",
-        "ec3dba6c9aaf66d37348ee8c3c45abe1965b92f6"
-      ],
-      "match": {
-        "shortName": "button",
-        "confidence": "alta",
-        "reason": "substring \"button\""
-      }
-    },
-    {
-      "containingFrame": "nintendo-switch",
-      "variantCount": 2,
-      "sampleKeys": [
-        "8534295f2b771152af45afb7764042a702f71a77",
-        "f5ceb53e70b04cc5337556df86adfc8ebe1b6705"
-      ],
-      "match": {
-        "shortName": "switch",
-        "confidence": "alta",
-        "reason": "substring \"switch\""
-      }
-    },
-    {
-      "containingFrame": "pen-tablet-connect-usb",
-      "variantCount": 2,
-      "sampleKeys": [
-        "b55449019692581f143ec6e28bb8adc6595cb5be",
-        "d4f412a8b4fb95918f019c31cc760723d161c417"
-      ],
-      "match": {
-        "shortName": "table",
-        "confidence": "alta",
-        "reason": "substring \"table\""
-      }
-    },
-    {
-      "containingFrame": "link-xmark",
-      "variantCount": 2,
-      "sampleKeys": [
-        "2564beb3c5d46cd0d3d79aa8133e1b25b32484a4",
-        "ebfd98dd6e83fa0a283162b13c126b2033a8b056"
-      ],
-      "match": {
-        "shortName": "link",
-        "confidence": "alta",
-        "reason": "substring \"link\""
-      }
-    },
-    {
-      "containingFrame": "dimmer-switch",
-      "variantCount": 2,
-      "sampleKeys": [
-        "9dc0a00b815377d981fa65cf61fb6920d56890bb",
-        "b3081fbb3606a32ade2111412a82382cbc8de9f5"
-      ],
-      "match": {
-        "shortName": "switch",
-        "confidence": "alta",
-        "reason": "substring \"switch\""
-      }
-    },
-    {
-      "containingFrame": "link-slash",
-      "variantCount": 2,
-      "sampleKeys": [
-        "51c1207a1ad0ce2d238eb462daa5a3692c1c87a8",
-        "e57b0c320e0363227ed5f15ba2febd0e30e97e46"
-      ],
-      "match": {
-        "shortName": "link",
-        "confidence": "alta",
-        "reason": "substring \"link\""
-      }
-    },
-    {
-      "containingFrame": "table-rows",
-      "variantCount": 2,
-      "sampleKeys": [
-        "77f894baefa82dfc3bef5eabbc641f79dbd301e5",
-        "d03780c43fd4816e15fc8ebd0d6eb09bee94b75c"
-      ],
-      "match": {
-        "shortName": "table",
-        "confidence": "alta",
-        "reason": "substring \"table\""
-      }
-    },
-    {
-      "containingFrame": "table2-columns",
-      "variantCount": 2,
-      "sampleKeys": [
-        "8d8231bf3026b1554c5169de6d9adf589808d2f7",
-        "4796eaa48b806138800584aa9bf0b2e924b75568"
-      ],
-      "match": {
-        "shortName": "table",
-        "confidence": "alta",
-        "reason": "substring \"table\""
-      }
-    },
-    {
-      "containingFrame": "home-table",
-      "variantCount": 2,
-      "sampleKeys": [
-        "50e04b0b0818128bbb8c2c1749b048efe39f4bf2",
-        "805d334e25f34711ba295342641839ccb18c4269"
-      ],
-      "match": {
-        "shortName": "table",
-        "confidence": "alta",
-        "reason": "substring \"table\""
-      }
-    },
-    {
-      "containingFrame": "mouse-button-right",
-      "variantCount": 2,
-      "sampleKeys": [
-        "4d07ed82e67b9e02d51503c2df6f4a524cbbd412",
-        "52c2bd5e74fab2f1d9a13eff87b84b8062fa072d"
-      ],
-      "match": {
-        "shortName": "button",
-        "confidence": "alta",
-        "reason": "substring \"button\""
-      }
-    },
-    {
-      "containingFrame": "[dsc-tc] Selectable Media Grid",
-      "variantCount": 2,
-      "sampleKeys": [
-        "89cf6d509c44a04a28793a8c6848cc39800e654d",
-        "e153acba558790a4b40eea60c4f2805267278274"
-      ],
-      "match": {
-        "shortName": "table",
-        "confidence": "alta",
-        "reason": "substring \"table\""
-      }
-    },
-    {
-      "containingFrame": "linkedin",
-      "variantCount": 2,
-      "sampleKeys": [
-        "134d5011957e6fa3f91cd2ab5cb0c8cbef24c346",
-        "542e69731b2e1bdf527ec0747d79e24135672d8c"
-      ],
-      "match": {
-        "shortName": "link",
-        "confidence": "alta",
-        "reason": "substring \"link\""
-      }
-    },
-    {
-      "containingFrame": "switch-on",
-      "variantCount": 2,
-      "sampleKeys": [
-        "60c079e13e99eef7f744499cbc8691b1a277516c",
-        "ea05772b79f78ff4dafec39907ca0a1f9bfeb46a"
-      ],
-      "match": {
-        "shortName": "switch",
-        "confidence": "alta",
-        "reason": "substring \"switch\""
-      }
-    },
-    {
-      "containingFrame": "switch-off",
-      "variantCount": 2,
-      "sampleKeys": [
-        "6a2c3ed44c5da50bf7c43eb417462b840c37da5c",
-        "d888b9e2afee3390e667e4ffecfb9ab8210d7ce1"
-      ],
-      "match": {
-        "shortName": "switch",
-        "confidence": "alta",
-        "reason": "substring \"switch\""
-      }
-    },
-    {
-      "containingFrame": "link",
-      "variantCount": 2,
-      "sampleKeys": [
-        "67a3a57f4116afc7b07ad10794a2e939e2766cbd",
-        "e0035134d6c50cb9f9510529fc239bb7e683a50e"
-      ],
-      "match": {
-        "shortName": "link",
-        "confidence": "alta",
-        "reason": "substring \"link\""
-      }
-    },
-    {
-      "containingFrame": "input-search",
-      "variantCount": 2,
-      "sampleKeys": [
-        "71ff087c5e595896918dafe15f0e80a6211b5ec0",
-        "a64d5eec2234abbdbc43a75fd018ac49582551d8"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "alta",
-        "reason": "substring \"inputs\""
-      }
-    },
-    {
-      "containingFrame": "table",
-      "variantCount": 2,
-      "sampleKeys": [
-        "0e0c312ef5a7cd3198a41bafad8248aa4328d2ab",
-        "7bb96bb6e8723ed33686b82a914459d5476ade2c"
-      ],
-      "match": {
-        "shortName": "table",
-        "confidence": "alta",
-        "reason": "substring \"table\""
-      }
-    },
-    {
-      "containingFrame": "emoji-blink-right",
-      "variantCount": 2,
-      "sampleKeys": [
-        "21adab10a9923a48d6025402d41309fd31a29b28",
-        "4f6dcc4464326ec4e0374557cdab2d0c4217d1bf"
-      ],
-      "match": {
-        "shortName": "link",
-        "confidence": "alta",
-        "reason": "substring \"link\""
-      }
-    },
-    {
-      "containingFrame": "emoji-blink-left",
-      "variantCount": 2,
-      "sampleKeys": [
-        "5793bfaa8e273c71dc4ece1029f2ed91187fc3cc",
-        "be53af16ec21638f6958bd2a28ad16de17bb4b08"
-      ],
-      "match": {
-        "shortName": "link",
-        "confidence": "alta",
-        "reason": "substring \"link\""
-      }
-    },
-    {
-      "containingFrame": "pen-tablet",
-      "variantCount": 2,
-      "sampleKeys": [
-        "1acdfdbf94917677831006198d74e5d7122bd93f",
-        "74bdfbb9133b71dc29d4b2c1dbacef6450e136dc"
-      ],
-      "match": {
-        "shortName": "table",
-        "confidence": "alta",
-        "reason": "substring \"table\""
-      }
-    },
-    {
-      "containingFrame": "pen-tablet-connect-wifi",
-      "variantCount": 2,
-      "sampleKeys": [
-        "928f60fcc5d57c85dbaa662711a9acabb877ba7a",
-        "e1dcd8b7c59f8c48dfd370543bcdc99f8f9d468e"
-      ],
-      "match": {
-        "shortName": "table",
-        "confidence": "alta",
-        "reason": "substring \"table\""
+        "reason": "palavra \"button\""
       }
     }
   ],
@@ -652,7 +332,7 @@
       "match": {
         "shortName": "listas",
         "confidence": "baixa",
-        "reason": "sinônimo \"list\""
+        "reason": "tabela curada (super-app) \"List Item\""
       }
     },
     {
@@ -666,7 +346,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"textfield\""
+        "reason": "tabela curada (super-app) \"Text Field Form\""
       }
     },
     {
@@ -680,7 +360,7 @@
       "match": {
         "shortName": "radio button",
         "confidence": "baixa",
-        "reason": "sinônimo \"radio\""
+        "reason": "tabela curada (super-app) \"Radio\""
       }
     },
     {
@@ -694,7 +374,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"textfield\""
+        "reason": "tabela curada (super-app) \"Text Field Single\""
       }
     },
     {
@@ -708,7 +388,21 @@
       "match": {
         "shortName": "listas",
         "confidence": "baixa",
-        "reason": "sinônimo \"list\""
+        "reason": "tabela curada (super-app) \"List Item\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Search Bar",
+      "variantCount": 15,
+      "sampleKeys": [
+        "d047d7725d7a621f7e1c36eef2e9903342a1c49a",
+        "25c2e9da2dc5a0df04990f77d120c26daed49514",
+        "32e4fe9078a5a32bc5fcebdfa551ab704fe6e0d3"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Search Bar\""
       }
     },
     {
@@ -722,35 +416,7 @@
       "match": {
         "shortName": "imagem",
         "confidence": "baixa",
-        "reason": "sinônimo \"avatar\""
-      }
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen Input",
-      "variantCount": 12,
-      "sampleKeys": [
-        "b2e227f22736ecc849d14c525e252340a59482c7",
-        "cc4b0610c74546f34eee5917295d0c9aa432da3c",
-        "e9590df263d25cf2816020490be8ba2a0b78bf06"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"input\""
-      }
-    },
-    {
-      "containingFrame": "[dsc-tc] Transactions List",
-      "variantCount": 12,
-      "sampleKeys": [
-        "01d35d10abf5d82fbce79e8a4f0a94cc4b5e2d59",
-        "eb8bafcb445d9c90b4c3d168c962426c7290d93d",
-        "fbbbcbe087c2450410814486afe88143fccc9741"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"list\""
+        "reason": "tabela curada (super-app) \"Avatar\""
       }
     },
     {
@@ -764,7 +430,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"input\""
+        "reason": "tabela curada (super-app) \"Input Money\""
       }
     },
     {
@@ -778,7 +444,21 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"select\""
+        "reason": "tabela curada (super-app) \"Account Select\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Banking Logos",
+      "variantCount": 11,
+      "sampleKeys": [
+        "0e9f6d76d7cc2cc6b4c99b551dfafa8e572e192d",
+        "f60937d611d3df364f59361c59e0bc789e782a17",
+        "062d567ca6383e87bb1b5b367c0d6a76efcfe00e"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Banking Logos\""
       }
     },
     {
@@ -792,7 +472,21 @@
       "match": {
         "shortName": "imagem",
         "confidence": "baixa",
-        "reason": "sinônimo \"avatar\""
+        "reason": "tabela curada (super-app) \"Avatar\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Image Media",
+      "variantCount": 9,
+      "sampleKeys": [
+        "e620efda54c5ab698431d39e04427488c02d037b",
+        "117d98adec6bb28fc1428612de6ed644b5d37593",
+        "4451ad24d88c5e57de5a0e52e3e3ed361aa99c4f"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Image Media\""
       }
     },
     {
@@ -806,7 +500,21 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"input\""
+        "reason": "tabela curada (super-app) \"Input Chat\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] National Flags",
+      "variantCount": 8,
+      "sampleKeys": [
+        "e118eb674f65a4cd4ead7ac9f7df491d9e65025b",
+        "0a6759e7a6925c46c99a42a8cd81e6bce46a9549",
+        "1029fc8ed004b74a06f31d66417c550346f95916"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"National Flags\""
       }
     },
     {
@@ -820,21 +528,63 @@
       "match": {
         "shortName": "listas",
         "confidence": "baixa",
-        "reason": "sinônimo \"list\""
+        "reason": "tabela curada (super-app) \"List Heading\""
       }
     },
     {
-      "containingFrame": "[dsc-tc] Select Group List",
+      "containingFrame": "[dsc-ts] Sheet - Single Filter",
+      "variantCount": 8,
+      "sampleKeys": [
+        "18577626f3ef8b98e4cdb293f86e1dc48ddbad4a",
+        "577bccc24c4d38d1f9dc6bd0f7eb8e40dfb2cafe",
+        "6c265dee70e4ae69c0007ef6ac4260fc912a0461"
+      ],
+      "match": {
+        "shortName": "dialog",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Sheet\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Social Programs Logos",
+      "variantCount": 7,
+      "sampleKeys": [
+        "0621de1823e9661a6c6d783dad582a526b3848b9",
+        "171f6c2b64296209e73ecc9df38061d6a99e5c2e",
+        "34ecb907057849f38d8ea617edcbbeb0ed719eb5"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Social Programs Logos\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Logo CAIXA",
       "variantCount": 6,
       "sampleKeys": [
-        "03f9f4834483d689506855cce1decc0f86d900a3",
-        "32b96e6413f4ceffd65127b6ac0f9945d59304dd",
-        "47f86f2c35370f782f573294adb6cfe9f0ebcf76"
+        "1fb7b09192e55cb8593f03522f76a959c47998b9",
+        "4db0a55e1fad204218fe243b677992dd9da140d8",
+        "6019fe2326ddf493e782370118e15834581cd79f"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Logo CAIXA\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Input Slider",
+      "variantCount": 6,
+      "sampleKeys": [
+        "44e13d68ffa484ed7bcf105a5ce9f5dc64dd6b71",
+        "115eb68320f4538758992d095c971d7b6f8a6dde",
+        "95e9b8b58b60d57459335bc6a5b8e1727db87809"
       ],
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"select\""
+        "reason": "tabela curada (super-app) \"Input Slider\""
       }
     },
     {
@@ -848,7 +598,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"datepicker\""
+        "reason": "tabela curada (super-app) \"Date Picker\""
       }
     },
     {
@@ -862,21 +612,21 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"datepicker\""
+        "reason": "tabela curada (super-app) \"Date Picker\""
       }
     },
     {
-      "containingFrame": "[dsc-ult] Image Swap Slot",
+      "containingFrame": "[dsc] Sheet",
       "variantCount": 4,
       "sampleKeys": [
-        "c3d59433b65e0fd9decdaec28a8c5bbc391119e7",
-        "4b3a5ebc02571ef874bd85045c200e44c5d4b4ec",
-        "bc6dbee4b5ae648cfbddc95553b82e151c6df08a"
+        "24a9daa937af8ba21aea80ab76fe8e51271566e4",
+        "6ca2b8873a2c2e8fe0e2dfe608225f51685f9e23",
+        "187634a2867d577e6979a496eb005fa45cb043e0"
       ],
       "match": {
-        "shortName": "imagem",
+        "shortName": "dialog",
         "confidence": "baixa",
-        "reason": "sinônimo \"image\""
+        "reason": "tabela curada (super-app) \"Sheet\""
       }
     },
     {
@@ -890,7 +640,7 @@
       "match": {
         "shortName": "listas",
         "confidence": "baixa",
-        "reason": "sinônimo \"list\""
+        "reason": "tabela curada (super-app) \"List Footer\""
       }
     },
     {
@@ -904,21 +654,21 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"input\""
+        "reason": "tabela curada (super-app) \"Input Money\""
       }
     },
     {
-      "containingFrame": "[dsc-ts] Screen Digital Wallet List",
-      "variantCount": 4,
+      "containingFrame": "[dsc] Toast",
+      "variantCount": 3,
       "sampleKeys": [
-        "0896895902cdaa9c134993e8577c597c4df896cd",
-        "1c36f6eb2c1e001b2ec7c03aa42f257b6bf271cf",
-        "5ef0cef3ca495a231253015f99170c50610602c2"
+        "87b75d6db45b74358d06ed049d92834541f38a1b",
+        "d167e7c3dbb5cba4fe2c3ec99ac0486f8b6cb264",
+        "2440beaa0f2111005bd7d1227aced2633041ccd6"
       ],
       "match": {
-        "shortName": "listas",
+        "shortName": "snackbar",
         "confidence": "baixa",
-        "reason": "sinônimo \"list\""
+        "reason": "tabela curada (super-app) \"Toast\""
       }
     },
     {
@@ -930,51 +680,9 @@
         "fa4ace8b8449628b4bcf5f493b0e33d2565bbfbf"
       ],
       "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"select\""
-      }
-    },
-    {
-      "containingFrame": "[dsc-tc] Actions List",
-      "variantCount": 3,
-      "sampleKeys": [
-        "14bfdf64a18d4ecc7b699eb3dac7b64ba1f3d381",
-        "3ee3d8eed8a3ee003bf3775f7117e73b587af07a",
-        "419befb3e02d92ae95600a1cf3a7179f0d468f91"
-      ],
-      "match": {
         "shortName": "listas",
         "confidence": "baixa",
-        "reason": "sinônimo \"list\""
-      }
-    },
-    {
-      "containingFrame": "[dsc-tc] Feedback - List",
-      "variantCount": 3,
-      "sampleKeys": [
-        "657809bb1adbe99b6b2b5b0db74576ee68fed6f9",
-        "c2f0b562622765c58cb315d5daed888500392bea",
-        "ef54d32a88ea4287313a002ef42b8643b9c07db1"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"list\""
-      }
-    },
-    {
-      "containingFrame": "[dsc-tc] Options List",
-      "variantCount": 3,
-      "sampleKeys": [
-        "658fe79f58b520d7b3fa6eb9c7009365023638fb",
-        "6ac32c7199259c219c140222899ae490d9449fdb",
-        "ee7fd7efb856328e3eda95e09f315c482ccc1d2e"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"list\""
+        "reason": "tabela curada (super-app) \"List Item\""
       }
     },
     {
@@ -988,49 +696,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "sinônimo \"input\""
-      }
-    },
-    {
-      "containingFrame": "[dsc-tc] Card Product Offer List",
-      "variantCount": 3,
-      "sampleKeys": [
-        "1813282659132506205f2e672a419d867ba57280",
-        "342d4d24f062c1dced3c51951403fe6c468caedc",
-        "f7848656a94dee76ab09dafb2b27e9db3b64986f"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"list\""
-      }
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen Select",
-      "variantCount": 3,
-      "sampleKeys": [
-        "091964f7b312d82ed275241a6827de26b6e7332f",
-        "43d7a24ec9aa5da9d3a14ff646b558b3a2623c11",
-        "a8e612ed085d37b09fd2441b2afe7de217f97fd3"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"select\""
-      }
-    },
-    {
-      "containingFrame": "[dsc-tc] Multi-select - List",
-      "variantCount": 3,
-      "sampleKeys": [
-        "1450dcac3e14001c0637116278d28db57b1d9128",
-        "90dc423d5e63061efe06701874dc677b8c3eed83",
-        "9294e4f534749644dfc87dd6d92145bbfe246cde"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"select\""
+        "reason": "tabela curada (super-app) \"Input Pin\""
       }
     },
     {
@@ -1044,267 +710,7 @@
       "match": {
         "shortName": "imagem",
         "confidence": "baixa",
-        "reason": "sinônimo \"avatar\""
-      }
-    },
-    {
-      "containingFrame": "3d-select-face",
-      "variantCount": 2,
-      "sampleKeys": [
-        "0aa9210bcf16978261b58ab983f2a442425b65b1",
-        "40ea54f5571042dabc62de945bca7322585ba9ff"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"select\""
-      }
-    },
-    {
-      "containingFrame": "list",
-      "variantCount": 2,
-      "sampleKeys": [
-        "8495503f9bfb1d624b975e2702a6a2210e0dc076",
-        "83613265ab5c81e309e986d62e76760924371473"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"list\""
-      }
-    },
-    {
-      "containingFrame": "frame-select",
-      "variantCount": 2,
-      "sampleKeys": [
-        "1470135afaff4bd7eb6ef072484239d01f09009d",
-        "264912d8776b4707ea4604016b2dda6fa0e66087"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"select\""
-      }
-    },
-    {
-      "containingFrame": "open-select-hand-gesture",
-      "variantCount": 2,
-      "sampleKeys": [
-        "e350282af989a6430c38d928f388ed78b13f8e03",
-        "ea35abba40d0acdb98d26b152f37565d2aa3906b"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"select\""
-      }
-    },
-    {
-      "containingFrame": "playlist",
-      "variantCount": 2,
-      "sampleKeys": [
-        "611eba58173ae93d828392ffc0a1811fa2f35e27",
-        "9431a1ca88dba33c461d362036cc72e29c4b0b12"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"list\""
-      }
-    },
-    {
-      "containingFrame": "numbered-list-right",
-      "variantCount": 2,
-      "sampleKeys": [
-        "4edc3b9838c01be033b355ce6ea2ca0db0f27382",
-        "5ef271c4637dd88fefd647458acbefa408b77ee3"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"list\""
-      }
-    },
-    {
-      "containingFrame": "one-finger-select-hand-gesture",
-      "variantCount": 2,
-      "sampleKeys": [
-        "0d22619b239547cb46573f585ce0feb1c5501c0d",
-        "e7c7740ca74c8621608269df1bbe4706eae3b612"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"select\""
-      }
-    },
-    {
-      "containingFrame": "media-image-plus",
-      "variantCount": 2,
-      "sampleKeys": [
-        "e59e177a2f8759e0ee5e11c35ada68eba30d1f61",
-        "1f3b0bc225952b710ad57a56a852c92ae67a3767"
-      ],
-      "match": {
-        "shortName": "imagem",
-        "confidence": "baixa",
-        "reason": "sinônimo \"image\""
-      }
-    },
-    {
-      "containingFrame": "input-output",
-      "variantCount": 2,
-      "sampleKeys": [
-        "4222cf6634a349736a4c4d5ecb997dd6adfae3b6",
-        "8d0d59cbe8fc57ee1c10c15a7045c14913b2dd8a"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"input\""
-      }
-    },
-    {
-      "containingFrame": "select-window",
-      "variantCount": 2,
-      "sampleKeys": [
-        "46ab2297f9ccb91cab18351d816806748fd7ecba",
-        "8dbb8ece25c2be5577c4f6334063b5984142760c"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"select\""
-      }
-    },
-    {
-      "containingFrame": "input-field",
-      "variantCount": 2,
-      "sampleKeys": [
-        "60849a2fbffde66439b2b2e18edf8074902bcdc7",
-        "c7df0c5f21078d57be11fe67b6a0224ff88507be"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"input\""
-      }
-    },
-    {
-      "containingFrame": "numbered-list-left",
-      "variantCount": 2,
-      "sampleKeys": [
-        "009635218476743f6730a1321c66aa4d431958f0",
-        "fcbd5901410db83257a49f768ab563b6d5f8dfbc"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"list\""
-      }
-    },
-    {
-      "containingFrame": "list-select",
-      "variantCount": 2,
-      "sampleKeys": [
-        "7516a0b6bd11d4a1ca700b9050874d14666a3f35",
-        "0596368edbef2a3303e26d5e6154f5cf9f87202d"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"select\""
-      }
-    },
-    {
-      "containingFrame": "task-list",
-      "variantCount": 2,
-      "sampleKeys": [
-        "be9c8eb429c50fa003c0b12c3afad9f7841c0711",
-        "9d60f085c9145e56ecf3ac222cfefbdb108fed6c"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"list\""
-      }
-    },
-    {
-      "containingFrame": "media-image",
-      "variantCount": 2,
-      "sampleKeys": [
-        "c7276eae446ffd620126adecfb6e308d71656699",
-        "eb9397d2eca224cbfe8421ed2482401a87e172a1"
-      ],
-      "match": {
-        "shortName": "imagem",
-        "confidence": "baixa",
-        "reason": "sinônimo \"image\""
-      }
-    },
-    {
-      "containingFrame": "3d-select-edge",
-      "variantCount": 2,
-      "sampleKeys": [
-        "23c4ada3479a586e1888243048806493abdca9ba",
-        "71388141a503d98b37b771f286477b58dc29d963"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"select\""
-      }
-    },
-    {
-      "containingFrame": "media-image-list",
-      "variantCount": 2,
-      "sampleKeys": [
-        "0e1c4451c5dd11c7a1d8b2a6160afdb9658971f0",
-        "e22e15ae1486124d5f8c91c8afd5eff888ee1879"
-      ],
-      "match": {
-        "shortName": "imagem",
-        "confidence": "baixa",
-        "reason": "sinônimo \"image\""
-      }
-    },
-    {
-      "containingFrame": "filter-list-circle",
-      "variantCount": 2,
-      "sampleKeys": [
-        "4758a98c63238db5f50562c2fdb7dd9cc952638d",
-        "6d1bdb83edb7f3f20c4cb39f4fecfc6125a90ad3"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"list\""
-      }
-    },
-    {
-      "containingFrame": "selective-tool",
-      "variantCount": 2,
-      "sampleKeys": [
-        "b919569433bd52ab8c96b20678eb9cde9f7a36f1",
-        "385aa8b5bec19b6b3cde5e76366b70fb7f35dc84"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"select\""
-      }
-    },
-    {
-      "containingFrame": "[dsc] Slider",
-      "variantCount": 2,
-      "sampleKeys": [
-        "0706593148fc93daf35f8bfd9f92c2580c44018e",
-        "556d6f8cdf02e744db626757b9d6fa7150d6e9e4"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"slider\""
+        "reason": "tabela curada (super-app) \"Avatar\""
       }
     },
     {
@@ -1317,176 +723,7 @@
       "match": {
         "shortName": "tab group",
         "confidence": "baixa",
-        "reason": "sinônimo \"tabs\""
-      }
-    },
-    {
-      "containingFrame": "window-tabs",
-      "variantCount": 2,
-      "sampleKeys": [
-        "84af51414ac1b5d4a214cfd56cc3b06cc1ccc59f",
-        "ee6d403ef1cdbbf665e4d894dc3f8386e314226f"
-      ],
-      "match": {
-        "shortName": "tab group",
-        "confidence": "baixa",
-        "reason": "sinônimo \"tabs\""
-      }
-    },
-    {
-      "containingFrame": "peerlist",
-      "variantCount": 2,
-      "sampleKeys": [
-        "12580ef57a605e0bde62f3e8e2219d06599c253a",
-        "6b30f779b9f8644f0c371a83e99ea14a4afdf188"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"list\""
-      }
-    },
-    {
-      "containingFrame": "control-slider",
-      "variantCount": 2,
-      "sampleKeys": [
-        "1c83edce8cc5258dee211b1cdcf8b4959da434c6",
-        "8811d1f093a3825901d080fa21af9a2d25fa7ae4"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"slider\""
-      }
-    },
-    {
-      "containingFrame": "new-tab",
-      "variantCount": 2,
-      "sampleKeys": [
-        "8f063e766d56e53f4cbc1856682a0ec4438a1754",
-        "aa6f86c062d2c1921080d8fe7f6ac88b1b160cc6"
-      ],
-      "match": {
-        "shortName": "tab group",
-        "confidence": "baixa",
-        "reason": "\"tab\" isolado, sem \"group\" no nome — pode ser aba individual do Tab Group"
-      }
-    },
-    {
-      "containingFrame": "media-image-folder",
-      "variantCount": 2,
-      "sampleKeys": [
-        "42daa123ee44108b883c0bb2f7ae073522351f43",
-        "e7931ecae53ef018170363cdbff216bd18003453"
-      ],
-      "match": {
-        "shortName": "imagem",
-        "confidence": "baixa",
-        "reason": "sinônimo \"image\""
-      }
-    },
-    {
-      "containingFrame": "media-video-list",
-      "variantCount": 2,
-      "sampleKeys": [
-        "46051f151ddfc3b4db189b4933047c48f0f5597d",
-        "526107e87f2f0572651b824e8e3340bcad2daaa3"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"list\""
-      }
-    },
-    {
-      "containingFrame": "media-image-xmark",
-      "variantCount": 2,
-      "sampleKeys": [
-        "6925d3b9f4c8a9bd1797641ecbf8f80760d67b6e",
-        "eb80248cf9d714c25175606171c03abdcab34b5b"
-      ],
-      "match": {
-        "shortName": "imagem",
-        "confidence": "baixa",
-        "reason": "sinônimo \"image\""
-      }
-    },
-    {
-      "containingFrame": "playlist-play",
-      "variantCount": 2,
-      "sampleKeys": [
-        "28dd2c2d241461ff41f4dd6aadf9eab352579cef",
-        "7800096974a7358cd9a41ca7670b0267eecc9697"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"list\""
-      }
-    },
-    {
-      "containingFrame": "filter-list",
-      "variantCount": 2,
-      "sampleKeys": [
-        "29cbac6d62b74b0da44dbc7377c97b20a6c0da37",
-        "944a78807dc0bc13b031ebebd933e42453a438b6"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"list\""
-      }
-    },
-    {
-      "containingFrame": "album-list",
-      "variantCount": 2,
-      "sampleKeys": [
-        "398e052f1fef6ae6a3aaf816c5fd90a752c45213",
-        "fa8c4a969ae3eaccd410faa20b3b5762cd719e56"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"list\""
-      }
-    },
-    {
-      "containingFrame": "playlist-plus",
-      "variantCount": 2,
-      "sampleKeys": [
-        "46520985ae99d8c0e895a34825aeec1f9b3ae56c",
-        "dcd26e1665c65461a736febf41d45e09a1424b61"
-      ],
-      "match": {
-        "shortName": "listas",
-        "confidence": "baixa",
-        "reason": "sinônimo \"list\""
-      }
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen Crop Image",
-      "variantCount": 2,
-      "sampleKeys": [
-        "3766ce767dc0795b909b759b1dcf1500f4aeefcf",
-        "91818f3f8912a6512b96beeabec11042f2cbe49e"
-      ],
-      "match": {
-        "shortName": "imagem",
-        "confidence": "baixa",
-        "reason": "sinônimo \"image\""
-      }
-    },
-    {
-      "containingFrame": "3d-select-point",
-      "variantCount": 2,
-      "sampleKeys": [
-        "1143e7a4eed7ddfde98816173d856f253832a883",
-        "124fc06b4fb292ff36e27d0dc7c888ba33716e23"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "sinônimo \"select\""
+        "reason": "tabela curada (super-app) \"Tabs\""
       }
     }
   ],
@@ -1602,12 +839,22 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] Search Bar",
-      "variantCount": 15,
+      "containingFrame": "[dsc-ts] Screen Input",
+      "variantCount": 12,
       "sampleKeys": [
-        "d047d7725d7a621f7e1c36eef2e9903342a1c49a",
-        "25c2e9da2dc5a0df04990f77d120c26daed49514",
-        "32e4fe9078a5a32bc5fcebdfa551ab704fe6e0d3"
+        "b2e227f22736ecc849d14c525e252340a59482c7",
+        "cc4b0610c74546f34eee5917295d0c9aa432da3c",
+        "e9590df263d25cf2816020490be8ba2a0b78bf06"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-tc] Transactions List",
+      "variantCount": 12,
+      "sampleKeys": [
+        "01d35d10abf5d82fbce79e8a4f0a94cc4b5e2d59",
+        "eb8bafcb445d9c90b4c3d168c962426c7290d93d",
+        "fbbbcbe087c2450410814486afe88143fccc9741"
       ],
       "match": null
     },
@@ -1628,6 +875,16 @@
         "0bf717133f4fe45be450bf5de34a340cc16ebe80",
         "2fdd415ff264e06254ea9914c5f538aab3ce1308",
         "4f0b13a2b66bda7deb01b6707e3f0b01341adda0"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Selectable Media",
+      "variantCount": 12,
+      "sampleKeys": [
+        "1f83f9f8456d9555a9a63a4f61c95a2a16675f31",
+        "05f2747333d756677e6cec9740a04e4e2fd65cde",
+        "44e69bbc4d14d77648a36f6b46d0313ccb8789c3"
       ],
       "match": null
     },
@@ -1658,16 +915,6 @@
         "3f415277f663087e3b8bf0600c1494fb065c3a74",
         "5632590f21249b9f3a754768f34f09ecbc69e270",
         "6290ec47faafad85b6c8ae35e0085c8adb7a1b14"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Banking Logos",
-      "variantCount": 11,
-      "sampleKeys": [
-        "0e9f6d76d7cc2cc6b4c99b551dfafa8e572e192d",
-        "f60937d611d3df364f59361c59e0bc789e782a17",
-        "062d567ca6383e87bb1b5b367c0d6a76efcfe00e"
       ],
       "match": null
     },
@@ -1742,16 +989,6 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] National Flags",
-      "variantCount": 8,
-      "sampleKeys": [
-        "e118eb674f65a4cd4ead7ac9f7df491d9e65025b",
-        "0a6759e7a6925c46c99a42a8cd81e6bce46a9549",
-        "1029fc8ed004b74a06f31d66417c550346f95916"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "[dsc-ts] Screen Document Capture",
       "variantCount": 8,
       "sampleKeys": [
@@ -1778,16 +1015,6 @@
         "1c0412edfce4106ee080b5344f9e68e6631279cd",
         "5dccc90e8c3348d4ce68a24db32606c7d2d32e63",
         "7db2956746bc6babaea4d74ce692a1138b1e4fa7"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-ts] Sheet - Single Filter",
-      "variantCount": 8,
-      "sampleKeys": [
-        "18577626f3ef8b98e4cdb293f86e1dc48ddbad4a",
-        "577bccc24c4d38d1f9dc6bd0f7eb8e40dfb2cafe",
-        "6c265dee70e4ae69c0007ef6ac4260fc912a0461"
       ],
       "match": null
     },
@@ -1822,16 +1049,6 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] Social Programs Logos",
-      "variantCount": 7,
-      "sampleKeys": [
-        "0621de1823e9661a6c6d783dad582a526b3848b9",
-        "171f6c2b64296209e73ecc9df38061d6a99e5c2e",
-        "34ecb907057849f38d8ea617edcbbeb0ed719eb5"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "[dsc] Icon",
       "variantCount": 7,
       "sampleKeys": [
@@ -1852,6 +1069,16 @@
       "match": null
     },
     {
+      "containingFrame": "[dsc-tc] Sortable List",
+      "variantCount": 7,
+      "sampleKeys": [
+        "a56f2080affd2acffaabe74c75383d8380f1edfd",
+        "16883ae348b44cdfb3c258811952f8e3e880e451",
+        "188b1286e655b542d703356d74012536c4457e41"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "[dsc] Badge Text",
       "variantCount": 6,
       "sampleKeys": [
@@ -1862,22 +1089,22 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] Logo CAIXA",
-      "variantCount": 6,
-      "sampleKeys": [
-        "1fb7b09192e55cb8593f03522f76a959c47998b9",
-        "4db0a55e1fad204218fe243b677992dd9da140d8",
-        "6019fe2326ddf493e782370118e15834581cd79f"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "[dsc-tc] Screen Footer",
       "variantCount": 6,
       "sampleKeys": [
         "08411991aac6c67d7b89508a88a66b0db7b7d0ba",
         "182c0bef5a25c6ef8400dd9facae39a9b8f08ca6",
         "cb74f376e6fcfd4140e7c71b04a0661cb1de1d65"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-tc] Select Group List",
+      "variantCount": 6,
+      "sampleKeys": [
+        "03f9f4834483d689506855cce1decc0f86d900a3",
+        "32b96e6413f4ceffd65127b6ac0f9945d59304dd",
+        "47f86f2c35370f782f573294adb6cfe9f0ebcf76"
       ],
       "match": null
     },
@@ -1992,12 +1219,12 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] Sheet",
+      "containingFrame": "[dsc-ult] Image Swap Slot",
       "variantCount": 4,
       "sampleKeys": [
-        "24a9daa937af8ba21aea80ab76fe8e51271566e4",
-        "6ca2b8873a2c2e8fe0e2dfe608225f51685f9e23",
-        "187634a2867d577e6979a496eb005fa45cb043e0"
+        "c3d59433b65e0fd9decdaec28a8c5bbc391119e7",
+        "4b3a5ebc02571ef874bd85045c200e44c5d4b4ec",
+        "bc6dbee4b5ae648cfbddc95553b82e151c6df08a"
       ],
       "match": null
     },
@@ -2082,12 +1309,42 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] Toast",
+      "containingFrame": "[dsc-ts] Screen Digital Wallet List",
+      "variantCount": 4,
+      "sampleKeys": [
+        "0896895902cdaa9c134993e8577c597c4df896cd",
+        "1c36f6eb2c1e001b2ec7c03aa42f257b6bf271cf",
+        "5ef0cef3ca495a231253015f99170c50610602c2"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-tc] Actions List",
       "variantCount": 3,
       "sampleKeys": [
-        "87b75d6db45b74358d06ed049d92834541f38a1b",
-        "d167e7c3dbb5cba4fe2c3ec99ac0486f8b6cb264",
-        "2440beaa0f2111005bd7d1227aced2633041ccd6"
+        "14bfdf64a18d4ecc7b699eb3dac7b64ba1f3d381",
+        "3ee3d8eed8a3ee003bf3775f7117e73b587af07a",
+        "419befb3e02d92ae95600a1cf3a7179f0d468f91"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-tc] Feedback - List",
+      "variantCount": 3,
+      "sampleKeys": [
+        "657809bb1adbe99b6b2b5b0db74576ee68fed6f9",
+        "c2f0b562622765c58cb315d5daed888500392bea",
+        "ef54d32a88ea4287313a002ef42b8643b9c07db1"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-tc] Options List",
+      "variantCount": 3,
+      "sampleKeys": [
+        "658fe79f58b520d7b3fa6eb9c7009365023638fb",
+        "6ac32c7199259c219c140222899ae490d9449fdb",
+        "ee7fd7efb856328e3eda95e09f315c482ccc1d2e"
       ],
       "match": null
     },
@@ -2158,6 +1415,36 @@
         "861f07244f8eab9341f6d585fcbe2c54c1ae1aa7",
         "a15e21478cccf57e363e31b1e6f249bb92effcc0",
         "17d953eae4b857a7b49dc24557b406ec522bdd91"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-tc] Card Product Offer List",
+      "variantCount": 3,
+      "sampleKeys": [
+        "1813282659132506205f2e672a419d867ba57280",
+        "342d4d24f062c1dced3c51951403fe6c468caedc",
+        "f7848656a94dee76ab09dafb2b27e9db3b64986f"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-ts] Screen Select",
+      "variantCount": 3,
+      "sampleKeys": [
+        "091964f7b312d82ed275241a6827de26b6e7332f",
+        "43d7a24ec9aa5da9d3a14ff646b558b3a2623c11",
+        "a8e612ed085d37b09fd2441b2afe7de217f97fd3"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-tc] Multi-select - List",
+      "variantCount": 3,
+      "sampleKeys": [
+        "1450dcac3e14001c0637116278d28db57b1d9128",
+        "90dc423d5e63061efe06701874dc677b8c3eed83",
+        "9294e4f534749644dfc87dd6d92145bbfe246cde"
       ],
       "match": null
     },
@@ -2398,6 +1685,15 @@
       "match": null
     },
     {
+      "containingFrame": "3d-select-face",
+      "variantCount": 2,
+      "sampleKeys": [
+        "0aa9210bcf16978261b58ab983f2a442425b65b1",
+        "40ea54f5571042dabc62de945bca7322585ba9ff"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "sphere",
       "variantCount": 2,
       "sampleKeys": [
@@ -2614,6 +1910,15 @@
       "match": null
     },
     {
+      "containingFrame": "list",
+      "variantCount": 2,
+      "sampleKeys": [
+        "8495503f9bfb1d624b975e2702a6a2210e0dc076",
+        "83613265ab5c81e309e986d62e76760924371473"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "plug-type-g",
       "variantCount": 2,
       "sampleKeys": [
@@ -2691,6 +1996,15 @@
       "sampleKeys": [
         "3569e3afbaff33e29cb8596fcdc1223fc799bf86",
         "642d38e37817a888f393e870e502a82187df61e5"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "mouse-button-left",
+      "variantCount": 2,
+      "sampleKeys": [
+        "c1e6b90365920158dcf42e0611060ea06706e99f",
+        "ec3dba6c9aaf66d37348ee8c3c45abe1965b92f6"
       ],
       "match": null
     },
@@ -3046,6 +2360,15 @@
       "match": null
     },
     {
+      "containingFrame": "nintendo-switch",
+      "variantCount": 2,
+      "sampleKeys": [
+        "8534295f2b771152af45afb7764042a702f71a77",
+        "f5ceb53e70b04cc5337556df86adfc8ebe1b6705"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "stat-up",
       "variantCount": 2,
       "sampleKeys": [
@@ -3208,6 +2531,15 @@
       "match": null
     },
     {
+      "containingFrame": "pen-tablet-connect-usb",
+      "variantCount": 2,
+      "sampleKeys": [
+        "b55449019692581f143ec6e28bb8adc6595cb5be",
+        "d4f412a8b4fb95918f019c31cc760723d161c417"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "pen-connect-bluetooth",
       "variantCount": 2,
       "sampleKeys": [
@@ -3249,6 +2581,15 @@
       "sampleKeys": [
         "0c06a227e0b6f9d83b48ae3e6a52079d8c4fb9a8",
         "b7c1169398de78cad89f70066b996165d3803d8a"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "frame-select",
+      "variantCount": 2,
+      "sampleKeys": [
+        "1470135afaff4bd7eb6ef072484239d01f09009d",
+        "264912d8776b4707ea4604016b2dda6fa0e66087"
       ],
       "match": null
     },
@@ -3640,6 +2981,15 @@
       "match": null
     },
     {
+      "containingFrame": "open-select-hand-gesture",
+      "variantCount": 2,
+      "sampleKeys": [
+        "e350282af989a6430c38d928f388ed78b13f8e03",
+        "ea35abba40d0acdb98d26b152f37565d2aa3906b"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "dice-six",
       "variantCount": 2,
       "sampleKeys": [
@@ -3690,6 +3040,15 @@
       "sampleKeys": [
         "46ada98c4d577ff627f71ddab6ee351222f6eaae",
         "4bdcdb3d09d1fdeef2aa6d1f6c445bfda9057293"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "playlist",
+      "variantCount": 2,
+      "sampleKeys": [
+        "611eba58173ae93d828392ffc0a1811fa2f35e27",
+        "9431a1ca88dba33c461d362036cc72e29c4b0b12"
       ],
       "match": null
     },
@@ -4270,6 +3629,15 @@
       "match": null
     },
     {
+      "containingFrame": "numbered-list-right",
+      "variantCount": 2,
+      "sampleKeys": [
+        "4edc3b9838c01be033b355ce6ea2ca0db0f27382",
+        "5ef271c4637dd88fefd647458acbefa408b77ee3"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "font-question",
       "variantCount": 2,
       "sampleKeys": [
@@ -4347,6 +3715,15 @@
       "sampleKeys": [
         "d5ecf5b1268a48a54de5dc13238a1c789232464f",
         "8a5b4c05a539b8f90c0207cadd01684306ce3e52"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "link-xmark",
+      "variantCount": 2,
+      "sampleKeys": [
+        "2564beb3c5d46cd0d3d79aa8133e1b25b32484a4",
+        "ebfd98dd6e83fa0a283162b13c126b2033a8b056"
       ],
       "match": null
     },
@@ -4527,6 +3904,15 @@
       "sampleKeys": [
         "9b69904ea605b27c5c9104b4c5be01e863053174",
         "7ef8ef1f31f18ed09e6ed30ec738d11e4c70846f"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "dimmer-switch",
+      "variantCount": 2,
+      "sampleKeys": [
+        "9dc0a00b815377d981fa65cf61fb6920d56890bb",
+        "b3081fbb3606a32ade2111412a82382cbc8de9f5"
       ],
       "match": null
     },
@@ -4900,6 +4286,15 @@
       "match": null
     },
     {
+      "containingFrame": "one-finger-select-hand-gesture",
+      "variantCount": 2,
+      "sampleKeys": [
+        "0d22619b239547cb46573f585ce0feb1c5501c0d",
+        "e7c7740ca74c8621608269df1bbe4706eae3b612"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "arrow-down-right-circle",
       "variantCount": 2,
       "sampleKeys": [
@@ -4941,6 +4336,15 @@
       "sampleKeys": [
         "c4cf787564950e03d6d82fff32ed39c95299041b",
         "b52c27e4088aa7aea403b058de75cc53bf732bb6"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "media-image-plus",
+      "variantCount": 2,
+      "sampleKeys": [
+        "e59e177a2f8759e0ee5e11c35ada68eba30d1f61",
+        "1f3b0bc225952b710ad57a56a852c92ae67a3767"
       ],
       "match": null
     },
@@ -5512,11 +4916,29 @@
       "match": null
     },
     {
+      "containingFrame": "input-output",
+      "variantCount": 2,
+      "sampleKeys": [
+        "4222cf6634a349736a4c4d5ecb997dd6adfae3b6",
+        "8d0d59cbe8fc57ee1c10c15a7045c14913b2dd8a"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "bin-half",
       "variantCount": 2,
       "sampleKeys": [
         "46371b712e89703c3e128cb9560fcb294116fc33",
         "ad95f22dc417739d30de50d03b5ec00ab324ae96"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "select-window",
+      "variantCount": 2,
+      "sampleKeys": [
+        "46ab2297f9ccb91cab18351d816806748fd7ecba",
+        "8dbb8ece25c2be5577c4f6334063b5984142760c"
       ],
       "match": null
     },
@@ -5598,6 +5020,15 @@
       "sampleKeys": [
         "58929157b835765c945423c84c93a292e6b4423f",
         "de766ee59c7066b86e8cfc346634bac020e53b4f"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "input-field",
+      "variantCount": 2,
+      "sampleKeys": [
+        "60849a2fbffde66439b2b2e18edf8074902bcdc7",
+        "c7df0c5f21078d57be11fe67b6a0224ff88507be"
       ],
       "match": null
     },
@@ -6192,6 +5623,15 @@
       "sampleKeys": [
         "5673ce8ab3ea9b57421625db93056921b781f0cf",
         "5702ad332e5833e719196f41c934f8ffb7b29b68"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "link-slash",
+      "variantCount": 2,
+      "sampleKeys": [
+        "51c1207a1ad0ce2d238eb462daa5a3692c1c87a8",
+        "e57b0c320e0363227ed5f15ba2febd0e30e97e46"
       ],
       "match": null
     },
@@ -6808,6 +6248,15 @@
       "match": null
     },
     {
+      "containingFrame": "table-rows",
+      "variantCount": 2,
+      "sampleKeys": [
+        "77f894baefa82dfc3bef5eabbc641f79dbd301e5",
+        "d03780c43fd4816e15fc8ebd0d6eb09bee94b75c"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "view-grid",
       "variantCount": 2,
       "sampleKeys": [
@@ -6831,6 +6280,15 @@
       "sampleKeys": [
         "8cef432a632e6a65ea813c719657280a250cab6d",
         "dec8f6ca20c2d8a34eefefb2bd742c375d9322ff"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "table2-columns",
+      "variantCount": 2,
+      "sampleKeys": [
+        "8d8231bf3026b1554c5169de6d9adf589808d2f7",
+        "4796eaa48b806138800584aa9bf0b2e924b75568"
       ],
       "match": null
     },
@@ -7029,6 +6487,15 @@
       "sampleKeys": [
         "694483fc8f3120ad289e6757bd9f0afbb811e390",
         "9520b0311c0774235d70cef0eab9715ff3d22a3d"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "home-table",
+      "variantCount": 2,
+      "sampleKeys": [
+        "50e04b0b0818128bbb8c2c1749b048efe39f4bf2",
+        "805d334e25f34711ba295342641839ccb18c4269"
       ],
       "match": null
     },
@@ -7447,6 +6914,15 @@
       "match": null
     },
     {
+      "containingFrame": "numbered-list-left",
+      "variantCount": 2,
+      "sampleKeys": [
+        "009635218476743f6730a1321c66aa4d431958f0",
+        "fcbd5901410db83257a49f768ab563b6d5f8dfbc"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "soil",
       "variantCount": 2,
       "sampleKeys": [
@@ -7600,6 +7076,15 @@
       "match": null
     },
     {
+      "containingFrame": "list-select",
+      "variantCount": 2,
+      "sampleKeys": [
+        "7516a0b6bd11d4a1ca700b9050874d14666a3f35",
+        "0596368edbef2a3303e26d5e6154f5cf9f87202d"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "percentage-square",
       "variantCount": 2,
       "sampleKeys": [
@@ -7659,6 +7144,15 @@
       "sampleKeys": [
         "b9210f6d85b1a64a4b6792b9b32bbcecee4561f7",
         "1ca63527c6498eabd9dd9421d080df0b3f33f79c"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "task-list",
+      "variantCount": 2,
+      "sampleKeys": [
+        "be9c8eb429c50fa003c0b12c3afad9f7841c0711",
+        "9d60f085c9145e56ecf3ac222cfefbdb108fed6c"
       ],
       "match": null
     },
@@ -8599,6 +8093,15 @@
       "match": null
     },
     {
+      "containingFrame": "media-image",
+      "variantCount": 2,
+      "sampleKeys": [
+        "c7276eae446ffd620126adecfb6e308d71656699",
+        "eb9397d2eca224cbfe8421ed2482401a87e172a1"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "message-alert",
       "variantCount": 2,
       "sampleKeys": [
@@ -9184,6 +8687,15 @@
       "match": null
     },
     {
+      "containingFrame": "3d-select-edge",
+      "variantCount": 2,
+      "sampleKeys": [
+        "23c4ada3479a586e1888243048806493abdca9ba",
+        "71388141a503d98b37b771f286477b58dc29d963"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "nav-arrow-left",
       "variantCount": 2,
       "sampleKeys": [
@@ -9279,6 +8791,15 @@
       "sampleKeys": [
         "2d7e42ae9db7ea0bbafadee98fba84e7908eb320",
         "6db7114edaf73845de0458a01480e894d3c84797"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "mouse-button-right",
+      "variantCount": 2,
+      "sampleKeys": [
+        "4d07ed82e67b9e02d51503c2df6f4a524cbbd412",
+        "52c2bd5e74fab2f1d9a13eff87b84b8062fa072d"
       ],
       "match": null
     },
@@ -9639,6 +9160,15 @@
       "sampleKeys": [
         "03229fb55e58a9a3946861424f7deddabebf7483",
         "e11592885df19de8671b67a0cc7fb538836ac0c7"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "media-image-list",
+      "variantCount": 2,
+      "sampleKeys": [
+        "0e1c4451c5dd11c7a1d8b2a6160afdb9658971f0",
+        "e22e15ae1486124d5f8c91c8afd5eff888ee1879"
       ],
       "match": null
     },
@@ -10026,6 +9556,15 @@
       "sampleKeys": [
         "2b4487dd873faf56e045b7591d0c24fedcf47231",
         "86c48e9396172705a5e66c64c434851fbb972949"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "filter-list-circle",
+      "variantCount": 2,
+      "sampleKeys": [
+        "4758a98c63238db5f50562c2fdb7dd9cc952638d",
+        "6d1bdb83edb7f3f20c4cb39f4fecfc6125a90ad3"
       ],
       "match": null
     },
@@ -10462,6 +10001,15 @@
       "match": null
     },
     {
+      "containingFrame": "selective-tool",
+      "variantCount": 2,
+      "sampleKeys": [
+        "b919569433bd52ab8c96b20678eb9cde9f7a36f1",
+        "385aa8b5bec19b6b3cde5e76366b70fb7f35dc84"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "[dsc-tc] Content - Swap Preview",
       "variantCount": 2,
       "sampleKeys": [
@@ -10543,6 +10091,15 @@
       "match": null
     },
     {
+      "containingFrame": "[dsc] Slider",
+      "variantCount": 2,
+      "sampleKeys": [
+        "0706593148fc93daf35f8bfd9f92c2580c44018e",
+        "556d6f8cdf02e744db626757b9d6fa7150d6e9e4"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "[dsc-ult] Swap Slot",
       "variantCount": 2,
       "sampleKeys": [
@@ -10593,6 +10150,15 @@
       "sampleKeys": [
         "3136d738a651ef98b74a22e64913ebc04979d3a4",
         "8166dd9a5a77c22715f046f0933279e2066aa935"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-tc] Selectable Media Grid",
+      "variantCount": 2,
+      "sampleKeys": [
+        "89cf6d509c44a04a28793a8c6848cc39800e654d",
+        "e153acba558790a4b40eea60c4f2805267278274"
       ],
       "match": null
     },
@@ -11191,6 +10757,15 @@
       "match": null
     },
     {
+      "containingFrame": "window-tabs",
+      "variantCount": 2,
+      "sampleKeys": [
+        "84af51414ac1b5d4a214cfd56cc3b06cc1ccc59f",
+        "ee6d403ef1cdbbf665e4d894dc3f8386e314226f"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "train",
       "variantCount": 2,
       "sampleKeys": [
@@ -11299,11 +10874,29 @@
       "match": null
     },
     {
+      "containingFrame": "peerlist",
+      "variantCount": 2,
+      "sampleKeys": [
+        "12580ef57a605e0bde62f3e8e2219d06599c253a",
+        "6b30f779b9f8644f0c371a83e99ea14a4afdf188"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "rss-feed-tag",
       "variantCount": 2,
       "sampleKeys": [
         "12a05cbde725dc3fa5fb61f78a1c6488da00cd0f",
         "af95a5d1dc2a48c986db57a6121f2ff68b927dc0"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "linkedin",
+      "variantCount": 2,
+      "sampleKeys": [
+        "134d5011957e6fa3f91cd2ab5cb0c8cbef24c346",
+        "542e69731b2e1bdf527ec0747d79e24135672d8c"
       ],
       "match": null
     },
@@ -11340,6 +10933,15 @@
       "sampleKeys": [
         "183f4b07fb81c59daf4841898a6aa5ed602944b9",
         "3aa70bdb392eb1c00a41cdb3319b8c874b89a9cb"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "control-slider",
+      "variantCount": 2,
+      "sampleKeys": [
+        "1c83edce8cc5258dee211b1cdcf8b4959da434c6",
+        "8811d1f093a3825901d080fa21af9a2d25fa7ae4"
       ],
       "match": null
     },
@@ -11506,11 +11108,29 @@
       "match": null
     },
     {
+      "containingFrame": "switch-on",
+      "variantCount": 2,
+      "sampleKeys": [
+        "60c079e13e99eef7f744499cbc8691b1a277516c",
+        "ea05772b79f78ff4dafec39907ca0a1f9bfeb46a"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "google-circle",
       "variantCount": 2,
       "sampleKeys": [
         "6692c01db684d536b112119d184f0bd6427bc313",
         "f254232b29a5d709627ba369f7d4e0e05545bb19"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "switch-off",
+      "variantCount": 2,
+      "sampleKeys": [
+        "6a2c3ed44c5da50bf7c43eb417462b840c37da5c",
+        "d888b9e2afee3390e667e4ffecfb9ab8210d7ce1"
       ],
       "match": null
     },
@@ -11556,6 +11176,15 @@
       "sampleKeys": [
         "88fc5db336b00a97dfee4a7d114d3cb1b26d9d2b",
         "b2eb07659b2e542780af26775835c6b1235bc4d7"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "new-tab",
+      "variantCount": 2,
+      "sampleKeys": [
+        "8f063e766d56e53f4cbc1856682a0ec4438a1754",
+        "aa6f86c062d2c1921080d8fe7f6ac88b1b160cc6"
       ],
       "match": null
     },
@@ -11659,11 +11288,29 @@
       "match": null
     },
     {
+      "containingFrame": "media-image-folder",
+      "variantCount": 2,
+      "sampleKeys": [
+        "42daa123ee44108b883c0bb2f7ae073522351f43",
+        "e7931ecae53ef018170363cdbff216bd18003453"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "rotate-camera-left",
       "variantCount": 2,
       "sampleKeys": [
         "4539df2d3ad1f4c08fe8213ea9e2fa581f16d452",
         "522b47e28e0ff78248d4369ba01ccc29211b7184"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "media-video-list",
+      "variantCount": 2,
+      "sampleKeys": [
+        "46051f151ddfc3b4db189b4933047c48f0f5597d",
+        "526107e87f2f0572651b824e8e3340bcad2daaa3"
       ],
       "match": null
     },
@@ -11745,6 +11392,15 @@
       "sampleKeys": [
         "67084e678e92f2d47ccb3d55a2682cf9470a0ecf",
         "c331359dbe678924f45cece5f93d7fd47b7c82cb"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "media-image-xmark",
+      "variantCount": 2,
+      "sampleKeys": [
+        "6925d3b9f4c8a9bd1797641ecbf8f80760d67b6e",
+        "eb80248cf9d714c25175606171c03abdcab34b5b"
       ],
       "match": null
     },
@@ -11956,6 +11612,24 @@
       "match": null
     },
     {
+      "containingFrame": "link",
+      "variantCount": 2,
+      "sampleKeys": [
+        "67a3a57f4116afc7b07ad10794a2e939e2766cbd",
+        "e0035134d6c50cb9f9510529fc239bb7e683a50e"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "input-search",
+      "variantCount": 2,
+      "sampleKeys": [
+        "71ff087c5e595896918dafe15f0e80a6211b5ec0",
+        "a64d5eec2234abbdbc43a75fd018ac49582551d8"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "number-4-square",
       "variantCount": 2,
       "sampleKeys": [
@@ -12118,11 +11792,47 @@
       "match": null
     },
     {
+      "containingFrame": "playlist-play",
+      "variantCount": 2,
+      "sampleKeys": [
+        "28dd2c2d241461ff41f4dd6aadf9eab352579cef",
+        "7800096974a7358cd9a41ca7670b0267eecc9697"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "filter-list",
+      "variantCount": 2,
+      "sampleKeys": [
+        "29cbac6d62b74b0da44dbc7377c97b20a6c0da37",
+        "944a78807dc0bc13b031ebebd933e42453a438b6"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "shortcut-square",
       "variantCount": 2,
       "sampleKeys": [
         "29e1eebfeeb1ce8ddc852f925a10501a2a32294e",
         "67987cfafc091b18790042c3772c07be425b0819"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "album-list",
+      "variantCount": 2,
+      "sampleKeys": [
+        "398e052f1fef6ae6a3aaf816c5fd90a752c45213",
+        "fa8c4a969ae3eaccd410faa20b3b5762cd719e56"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "playlist-plus",
+      "variantCount": 2,
+      "sampleKeys": [
+        "46520985ae99d8c0e895a34825aeec1f9b3ae56c",
+        "dcd26e1665c65461a736febf41d45e09a1424b61"
       ],
       "match": null
     },
@@ -12249,6 +11959,15 @@
       "sampleKeys": [
         "0af08cf8853269db9e001aacaf18fbd9dbda28bb",
         "26ec2426d6dc9dffc7175a07844208ecf5215698"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "table",
+      "variantCount": 2,
+      "sampleKeys": [
+        "0e0c312ef5a7cd3198a41bafad8248aa4328d2ab",
+        "7bb96bb6e8723ed33686b82a914459d5476ade2c"
       ],
       "match": null
     },
@@ -12694,6 +12413,15 @@
       "match": null
     },
     {
+      "containingFrame": "[dsc-ts] Screen Crop Image",
+      "variantCount": 2,
+      "sampleKeys": [
+        "3766ce767dc0795b909b759b1dcf1500f4aeefcf",
+        "91818f3f8912a6512b96beeabec11042f2cbe49e"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "dice-four",
       "variantCount": 2,
       "sampleKeys": [
@@ -12856,6 +12584,15 @@
       "match": null
     },
     {
+      "containingFrame": "emoji-blink-right",
+      "variantCount": 2,
+      "sampleKeys": [
+        "21adab10a9923a48d6025402d41309fd31a29b28",
+        "4f6dcc4464326ec4e0374557cdab2d0c4217d1bf"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "edit-pencil",
       "variantCount": 2,
       "sampleKeys": [
@@ -12897,6 +12634,15 @@
       "sampleKeys": [
         "422668b57f885648b010a34639b03da2b561965a",
         "a42391cc6402bf56234c0887c4faa7731e8ebd38"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "emoji-blink-left",
+      "variantCount": 2,
+      "sampleKeys": [
+        "5793bfaa8e273c71dc4ece1029f2ed91187fc3cc",
+        "be53af16ec21638f6958bd2a28ad16de17bb4b08"
       ],
       "match": null
     },
@@ -13018,6 +12764,15 @@
       "match": null
     },
     {
+      "containingFrame": "pen-tablet",
+      "variantCount": 2,
+      "sampleKeys": [
+        "1acdfdbf94917677831006198d74e5d7122bd93f",
+        "74bdfbb9133b71dc29d4b2c1dbacef6450e136dc"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "bug",
       "variantCount": 2,
       "sampleKeys": [
@@ -13113,6 +12868,15 @@
       "sampleKeys": [
         "91419884c354ee5576d7395acf2cf7f3c3a9aee3",
         "cf2e7e3bdeb533185283baadfd95809ebb8c550c"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "pen-tablet-connect-wifi",
+      "variantCount": 2,
+      "sampleKeys": [
+        "928f60fcc5d57c85dbaa662711a9acabb877ba7a",
+        "e1dcd8b7c59f8c48dfd370543bcdc99f8f9d468e"
       ],
       "match": null
     },
@@ -13986,6 +13750,15 @@
       "sampleKeys": [
         "1063ba89f37aa46c60916d8be0efe85f3df1ccdb",
         "54c600f145d127b668c82feeff8af7b1ec43a788"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "3d-select-point",
+      "variantCount": 2,
+      "sampleKeys": [
+        "1143e7a4eed7ddfde98816173d856f253832a883",
+        "124fc06b4fb292ff36e27d0dc7c888ba33716e23"
       ],
       "match": null
     },

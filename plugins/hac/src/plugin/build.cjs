@@ -27,6 +27,7 @@ function read(relPath) {
 const tailwindCSS = read('styles/tailwind-compiled.css');
 const css         = read('styles/plugin.css');
 const modCore    = read('modules/core.js');
+const modA11yConstantsGenerated = read('refs/_a11y-constants.generated.js');
 const modA11y    = read('modules/accessibility.js');
 const modOnboard = read('modules/onboarding.js');
 const modMsgs    = read('modules/messages.js');
@@ -92,7 +93,8 @@ ${css}
   <header
     class="relative flex items-center justify-between px-4 py-2 border-b border-light-line dark:border-dark-line shrink-0 bg-light-surface dark:bg-dark-bg z-50">
     <div id="header-home" class="flex items-center justify-between w-full">
-      <div class="flex items-center gap-2">
+      <button type="button" onclick="openAboutHacModal()" title="Sobre o hac" aria-label="Sobre o hac — versão, vertical responsável e desenvolvimento"
+        class="flex items-center gap-2 rounded-2xl -mx-1 px-1 py-1 hover:bg-light-line dark:hover:bg-dark-surface transition-colors cursor-pointer">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 205.51265 46.553631" class="h-5 w-auto shrink-0" aria-label="CAIXA">
           <g transform="translate(-284.78446,-475.51214)">
             <g transform="matrix(1.25,0,0,-1.25,15.493106,1024.9702)">
@@ -112,8 +114,7 @@ ${css}
         <h1 class="font-bold text-[#1E293B] dark:text-white text-[12px] tracking-[0.15em] uppercase">
           HAC
         </h1>
-        <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v0.1.0-beta.1</span>
-      </div>
+      </button>
       <div class="flex items-center gap-2 shrink-0">
         <button id="btn-zoom-out" onclick="ensureExpanded(); zoomOut()" title="Diminuir escala" aria-label="Diminuir escala da interface"
           class="hidden p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
@@ -165,6 +166,15 @@ ${modCore}
 // MODULE: messages.js
 // ============================================================
 ${modMsgs}
+
+// ============================================================
+// GENERATED: refs/_a11y-constants.generated.js
+// (fonte de verdade de A11Y_COMPONENT_PROPERTIES_GENERATED e
+// A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED — precisa vir ANTES de
+// accessibility.js, que referencia essas constantes. Regenerar via:
+// npm run refs:a11y-constants)
+// ============================================================
+${modA11yConstantsGenerated}
 
 // ============================================================
 // MODULE: accessibility.js

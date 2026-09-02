@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "description": "GERADO AUTOMATICAMENTE por build-a11y-constants.cjs — não editar à mão. Component set \"[a11y mob] Box specs leitor de tela\" (fileKey 3zdtN13YvPlCGPdXeL0Y2i) — componentKeyByA11yType traz a key IMPORTÁVEL de cada VARIANTE filha (elemento/titulo/decorativo), extraídas via REST API em 2026-09-02 (a key do component set em si NÃO é importável via figma.importComponentByKeyAsync). Cobre só 3 das 5 categorias — sem equivalente mobile publicado para estrutura/informacoes.",
+    "source": "refs/design-acessivel-mobile-properties.json + extração pontual REST API 2026-09-02 (ver MOBILE_WRAPPER_VARIANT_KEYS_BY_A11Y_TYPE em build-a11y-constants.cjs)",
+    "generatedAt": "2026-09-02T22:02:47.883Z"
+  },
+  "wrapper": {
+    "componentKeyByA11yType": {
+      "elemento": "dc9a3b3d903b4d89ca1173bca5eb0537c9afd136",
+      "titulo": "2e2ed48f6e4574a873bbb2d9a4391cc63572a6d2",
+      "decorativo": "7d3ccfcea95ea4159d78244f6f6c84963dd54adf"
+    }
+  }
+}

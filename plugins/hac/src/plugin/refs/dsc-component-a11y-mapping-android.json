@@ -1,0 +1,533 @@
+{
+  "_meta": {
+    "description": "Mapa containingFrame -> categoria de a11y, ESSENCIAL EM RUNTIME no hac (consumido por _getDscFrameToA11yMap em code.js para a Detecção Automática de a11y). Gerado por build-dsc-a11y-mapping.cjs a partir de refs/web-angular-react.json (dados reais da REST API do Figma, sem valores inventados). Adaptação do Handex Beta (onde este mesmo formato de arquivo é descrito como \"fundação de dados, não usado em runtime\" — desatualizado lá, mas aqui no hac o consumo em runtime é o desenho intencional desde o início).",
+    "generatedAt": "2026-09-02T12:39:50.099Z",
+    "generator": "build-dsc-a11y-mapping.cjs (hac)",
+    "sourceFile": "dsc-android.json",
+    "sourceFileKey": "W8GUeHypdco1I3dneN6P3H",
+    "libSlug": "dsc-android",
+    "dscFramePrefixesApplied": [
+      "^\\[dsc\\]",
+      "^\\[dsc-tc\\]",
+      "^\\[dsc-ts\\]",
+      "^\\[dsc-ult\\]",
+      "^\\[dsc doc\\]",
+      "^\\[chart\\]"
+    ],
+    "unit": "containingFrame (nome do component set/família — não o nome da variante individual, ver comentário de cabeçalho do script)",
+    "a11yShortNames": [
+      "accordion",
+      "breadcrumb",
+      "button",
+      "checkbox",
+      "dialog",
+      "inputs",
+      "link",
+      "listas",
+      "paginator",
+      "radio button",
+      "snackbar",
+      "stepper",
+      "switch",
+      "table",
+      "tab group",
+      "imagem"
+    ],
+    "counts": {
+      "totalComponentsVariants": 1063,
+      "totalFamilies": 35,
+      "altaConfianca": {
+        "families": 6,
+        "variantCount": 382
+      },
+      "baixaConfianca": {
+        "families": 9,
+        "variantCount": 157
+      },
+      "semMatch": {
+        "families": 20,
+        "variantCount": 524
+      },
+      "pctFamiliesAlta": 17.1,
+      "pctVariantsAlta": 35.9
+    },
+    "byShortName": {
+      "accordion": {
+        "families": 0,
+        "variantCount": 0
+      },
+      "breadcrumb": {
+        "families": 0,
+        "variantCount": 0
+      },
+      "button": {
+        "families": 2,
+        "variantCount": 160
+      },
+      "checkbox": {
+        "families": 1,
+        "variantCount": 84
+      },
+      "dialog": {
+        "families": 1,
+        "variantCount": 2
+      },
+      "inputs": {
+        "families": 7,
+        "variantCount": 129
+      },
+      "link": {
+        "families": 0,
+        "variantCount": 0
+      },
+      "listas": {
+        "families": 0,
+        "variantCount": 0
+      },
+      "paginator": {
+        "families": 0,
+        "variantCount": 0
+      },
+      "radio button": {
+        "families": 1,
+        "variantCount": 56
+      },
+      "snackbar": {
+        "families": 0,
+        "variantCount": 0
+      },
+      "stepper": {
+        "families": 0,
+        "variantCount": 0
+      },
+      "switch": {
+        "families": 1,
+        "variantCount": 80
+      },
+      "table": {
+        "families": 0,
+        "variantCount": 0
+      },
+      "tab group": {
+        "families": 1,
+        "variantCount": 24
+      },
+      "imagem": {
+        "families": 1,
+        "variantCount": 4
+      },
+      "estrutura": {
+        "families": 0,
+        "variantCount": 0
+      }
+    }
+  },
+  "altaConfianca": [
+    {
+      "containingFrame": "[dsc] Checkbox",
+      "variantCount": 84,
+      "sampleKeys": [
+        "00c026eff66c124d36eb7d38b6337feacb362755",
+        "052dabd6c0c0ee5e3a6c4c0b32cde56e25f642b5",
+        "0543b9375141b7a028d2e7bd19b7ae59d2e3c700"
+      ],
+      "match": {
+        "shortName": "checkbox",
+        "confidence": "alta",
+        "reason": "palavra \"checkbox\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Switch",
+      "variantCount": 80,
+      "sampleKeys": [
+        "e43895ed26f992bd6ab7b697c3d7cce03ed59853",
+        "e70fd6b69006a3fd385a8e848bc65189eafec6fb",
+        "e98ecf040cf8dc7c289143e318d4b2aae5551e5a"
+      ],
+      "match": {
+        "shortName": "switch",
+        "confidence": "alta",
+        "reason": "palavra \"switch\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Icon Button",
+      "variantCount": 80,
+      "sampleKeys": [
+        "0109d2ca895a8b866be452968fa2f9ef8ffe7328",
+        "039bb9d452049eec6c0c6ae5be38affc74923692",
+        "05d8df98f81029e3fb55b440b2688167674e683c"
+      ],
+      "match": {
+        "shortName": "button",
+        "confidence": "alta",
+        "reason": "palavra \"button\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Button",
+      "variantCount": 80,
+      "sampleKeys": [
+        "0375fb230d384603e2bfc63334e1b5373ac1c236",
+        "04f9a1647bd896d3ddcd3d610359ea9ba5228a14",
+        "09299db10779b6003232a96d78bc5982ce594609"
+      ],
+      "match": {
+        "shortName": "button",
+        "confidence": "alta",
+        "reason": "palavra \"button\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Radio Button",
+      "variantCount": 56,
+      "sampleKeys": [
+        "e682aed5d32cdfb271dee1fd73e5d406a3ab8454",
+        "e81c0164fda45533eeab96d7ecf9dbef409d6ce9",
+        "09191b725683931b186fe4135571ef5c5581ab38"
+      ],
+      "match": {
+        "shortName": "radio button",
+        "confidence": "alta",
+        "reason": "palavra \"radio button\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Dialog",
+      "variantCount": 2,
+      "sampleKeys": [
+        "c6cd4028ff86fc04ccba4386a19190920d4114b4",
+        "d58fd71b3373e74f34e8b74a20e9a856e4970771"
+      ],
+      "match": {
+        "shortName": "dialog",
+        "confidence": "alta",
+        "reason": "palavra \"dialog\""
+      }
+    }
+  ],
+  "baixaConfianca": [
+    {
+      "containingFrame": "[dsc] Text Field",
+      "variantCount": 52,
+      "sampleKeys": [
+        "1149eca77643bf99ecb47caa09717fef8c075ba2",
+        "13ed795f8e99308be188bcd2e2b2b8de44d067e3",
+        "16724658f0acb21ec472533a42c4f1f9bed69c21"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "tabela curada (dsc-android) \"Text Field\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Tabs",
+      "variantCount": 24,
+      "sampleKeys": [
+        "107521ed5f1b19b5818ceb85fed3e390d6ba7ee8",
+        "2dcfe1a304938b71bc692b9ad88c76b40d1ea215",
+        "3fcf7c2a028b8ad908ed9a8e57f3004d617ea1c3"
+      ],
+      "match": {
+        "shortName": "tab group",
+        "confidence": "baixa",
+        "reason": "tabela curada (dsc-android) \"Tabs\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Discrete Slider",
+      "variantCount": 18,
+      "sampleKeys": [
+        "aff3a712202025ae44d8926283be389bc4e87501",
+        "d49f88c9c55bee37a89f27bd48c67d6da05327fb",
+        "fb5b666dcd59cd93589420142b6371ba75683ab5"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "tabela curada (dsc-android) \"Discrete Slider\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Range Selection Slider",
+      "variantCount": 18,
+      "sampleKeys": [
+        "033d5655712abb01490832d11ed9ee3564e7dd66",
+        "14c0e2ad0d6be1a7e7ca3ad6a642ad3923669d7c",
+        "23b71576d326ffe2d3415b0ff06414d2fb6cc324"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "tabela curada (dsc-android) \"Range Selection Slider\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Centered Slider",
+      "variantCount": 18,
+      "sampleKeys": [
+        "06ac96431a1f074c3f2b8a19863b036e42189a03",
+        "37bed6e44ae9413b0ae88e90febf6ff506edc750",
+        "46636982ab09816ab0ef41ba77242bb69ae635f9"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "tabela curada (dsc-android) \"Centered Slider\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Continuous Slider",
+      "variantCount": 18,
+      "sampleKeys": [
+        "08b74844c1b4b72b400abc4c90b5530fc446285c",
+        "1a40b119c4a5a2e1953e10f3dc1865a32333ed69",
+        "269355d94728dbe5e24b1335c675e1e402a34ca4"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "tabela curada (dsc-android) \"Continuous Slider\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Logotipo",
+      "variantCount": 4,
+      "sampleKeys": [
+        "178ed76d4481a576b4f116b175b70f4d540e1f03",
+        "39a4e4168dd1b907d44d4dc33a874488de153ce8",
+        "67e84c6b025b7b52ed1ea40243df457540233b22"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "conteúdo de imagem/marca — precisa de texto alternativo"
+      }
+    },
+    {
+      "containingFrame": "[dsc] Modal Date Picker",
+      "variantCount": 3,
+      "sampleKeys": [
+        "14e01d37795eb1010f3bf9373bc588e4ad82becf",
+        "5c7a0a5d34a76b3b3e861e2682b6b71cac315a5d",
+        "f647aaf5e8105245fb13702e376316c1e23a8617"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "tabela curada (dsc-android) \"Modal Date Picker\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Modal Date Input",
+      "variantCount": 2,
+      "sampleKeys": [
+        "0d59c2f7a06ed114584f6bd34aed382c669c5837",
+        "97ed87374721bcc75204237dc11671d7d9e548f1"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "tabela curada (dsc-android) \"Modal Date Input\""
+      }
+    }
+  ],
+  "semMatch": [
+    {
+      "containingFrame": ".",
+      "variantCount": 275,
+      "sampleKeys": [
+        "33fdc29bd2e3b9fd099b8897f8f596deca4ac88b",
+        "930377d1baabaedd72ca329f543cf255ab473e07",
+        "93d3a40660cdd48d4d92b17446ed95a76c4c6939"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Input Chip",
+      "variantCount": 72,
+      "sampleKeys": [
+        "03e818f544fc94deca77b9c80bae22b6d6e77840",
+        "087fe30d161e84d7cb701d3544f7e63c60a5d048",
+        "12f7901bed285f827bc85fa00826e6e84096b23d"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Filter Chip",
+      "variantCount": 48,
+      "sampleKeys": [
+        "04200d95cb328fd76396704aaee4360548823519",
+        "068dd238fa8aedc6ecfe3a94a9c0349714c92f95",
+        "07739895f57f0708348e6515a084f02b07b8e7e6"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Suggestion Chip",
+      "variantCount": 24,
+      "sampleKeys": [
+        "40c606cb270f8ce3c311024db6231893c1e166bc",
+        "0fb2338d13ced8ef44754d318812dc4ff66890e8",
+        "13548206854a5151739b90030108a5ec27c67dc8"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Assist Chip",
+      "variantCount": 24,
+      "sampleKeys": [
+        "7b252de4c5de0067054322fee2054366f0712339",
+        "0261b6b094cc013dd5fca0677e59b47185a7bcb5",
+        "03dfd8e505c4f82003ba122f133ffbd242f71018"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Badge",
+      "variantCount": 12,
+      "sampleKeys": [
+        "1350e3192583625d43af6f69a6e37ae80a009e09",
+        "1e82700eec25d00e89ff53c717cbcb835af0c09a",
+        "ebf036083774536b8c635a861dc71b46c2046d54"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Divider",
+      "variantCount": 12,
+      "sampleKeys": [
+        "06f6abe42722a1fd4d6fafa4c6deb92beb59d435",
+        "19e851eadea73170e51a2fe7fca6279f426a4808",
+        "3617b48fd16a5d1ca27b3c51882cd088272fc561"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Circular Progress Indeterminate",
+      "variantCount": 9,
+      "sampleKeys": [
+        "12e1a154f9f4b2de95809872c6af06a8b52923ae",
+        "2b3f7694479dd5047a36cb0d4b024ce11267894e",
+        "3f03af2b16b18d45ff0dd2da1bef8ff0822bbe75"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Top App Bar",
+      "variantCount": 8,
+      "sampleKeys": [
+        "ee9c8aa9a9bd3753dc7bd98aac2061725f8aba5f",
+        "0cc5146e13ebfae96783038086d7f398c48588eb",
+        "242acd99e8cd7823ba635accda160c382aea07f0"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Linear Progress Determinate",
+      "variantCount": 7,
+      "sampleKeys": [
+        "03d160b707bc5623a6a2641399ab08f66dffd02b",
+        "acea6d65fc4a986aee5afa31065e3e5e2054b697",
+        "adf453cceaab513dc9f38a72570f8f5926dcfc7b"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Linear Progress Indeterminate",
+      "variantCount": 7,
+      "sampleKeys": [
+        "0bba6ad26685d24ab8f573f608f0297699254d6a",
+        "1ef86232a033b2437d07147b9bf64ef58e3b42fe",
+        "3d794c48eda5d8889888538462a76e40f959ab5b"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Circular Progress Determinate",
+      "variantCount": 7,
+      "sampleKeys": [
+        "0470d9d24eb5acf96e2c7f18ffdadef17a71aabb",
+        "08271e3dd7c322e6507a727fffffecae23d04341",
+        "4f002d855be2d84252efeea84a7a1edf668b221c"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Navigation Bar",
+      "variantCount": 4,
+      "sampleKeys": [
+        "774a4e1fd145dbeb0bc9ca31e20ef3ed9f1e2210",
+        "2515dc13d70282467c9dd00e07b222e40efa5110",
+        "58736f8107908ee0502e7ff8bb0dab6c62b99d30"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Navigation Rail",
+      "variantCount": 3,
+      "sampleKeys": [
+        "8651d2936e345d06477bd7d3d14d876c61049b27",
+        "8ad4be1e070682b4668d242c111cfb7bec2a3865",
+        "aca7bea4dd52b17a280211eb6fd37cccdef8452e"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Menu",
+      "variantCount": 2,
+      "sampleKeys": [
+        "82e8b46ebeccc2ece4267992c2f7b1faf2b40c57",
+        "86f5d8d59c6afdd3082c8ee088048eacd00bdff6"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Plain Tooltip",
+      "variantCount": 2,
+      "sampleKeys": [
+        "5b5a5baa2a3e633ac99c7c5fb5d99f488a059617",
+        "d37f151fd8afae818721a58e852e280e54e0f556"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[base] Neutral Navigation Action",
+      "variantCount": 2,
+      "sampleKeys": [
+        "2352d867c6c58573359349666a274835d6aa1aec",
+        "9ad61cfbb1ba606237e1eaafa77731a228c417fb"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Navigation Drawer",
+      "variantCount": 2,
+      "sampleKeys": [
+        "24ea67ea817058dadacceeeddc2116c3e3614368",
+        "b7b7236d3ce02807f69e70c5a17c6e3f1ee847ea"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[base] Highlight Navigation Action",
+      "variantCount": 2,
+      "sampleKeys": [
+        "156f3c3efdb85a73322943eb8db3afd2315f27f6",
+        "c928d9b38b9addce722e5ec4a5a5855a21a0314b"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "(sem containingFrame)",
+      "variantCount": 2,
+      "sampleKeys": [
+        "2ddd74ef207aa6da7333ee09c0c97899e35101bb",
+        "50505c94c70542dc318fa835e4556b030059bd8f"
+      ],
+      "match": null
+    }
+  ]
+}

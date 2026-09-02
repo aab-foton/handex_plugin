@@ -16,8 +16,11 @@
 
 import A11Y_CONTENT from './refs/design-acessivel-content.json';
 import A11Y_COMPONENT_PROPERTIES_RAW from './refs/design-acessivel-component-properties.json';
+import A11Y_MOBILE_WRAPPER_RAW from './refs/design-acessivel-mobile-wrapper.generated.json';
 import DSC_A11Y_MAPPING from './refs/dsc-component-a11y-mapping.json';
 import DSC_A11Y_MAPPING_MOBILE from './refs/dsc-component-a11y-mapping-mobile.json';
+import DSC_A11Y_MAPPING_SUPERDSCWEB from './refs/dsc-component-a11y-mapping-superdscweb.json';
+import DSC_A11Y_MAPPING_ANDROID from './refs/dsc-component-a11y-mapping-android.json';
 import REF_SKELETON from './refs/_skeleton.json';
 
 figma.showUI(__html__, { width: 480, height: 750 });
@@ -36,10 +39,50 @@ let activeHighlightNode = null;
 let _activeTabOrderCloneMap = null;
 let _activeTabOrderCloneAreaId = null;
 
+// Contador de geração da prévia visual da Ordem de Tabulação
+// (preview-tab-order-numbers) — reordenações rápidas em sequência disparam
+// múltiplas chamadas fire-and-forget sem fila; sem isso, a resposta mais
+// ANTIGA pode terminar de desenhar DEPOIS da mais NOVA (cada await dentro do
+// loop cede o event loop), deixando numeração obsoleta até a próxima
+// mudança. Cada chamada incrementa e captura seu próprio número; antes de
+// cada selo desenhado, confirma que ainda é a geração mais recente — se uma
+// chamada mais nova já começou, aborta o loop da antiga imediatamente.
+let _tabOrderPreviewGeneration = 0;
+
+// Remove (se existir) a cópia rascunho de Ordem de Tabulação da área
+// informada e zera o estado em memória correspondente — mesma lógica usada
+// pelo handler de mensagem "delete-tab-order-draft-copy" (cancelamento
+// manual do fluxo) e pelo handler figma.on('close', ...) logo abaixo
+// (designer fecha o plugin/Figma com a cópia rascunho ainda ativa, sem
+// nunca ter clicado em "Aplicar" ou "Cancelar" — sem isso, a cópia ficava
+// salva permanentemente no .fig). 100% síncrona (getPluginData/remove não
+// retornam Promise) de propósito: figma.on('close', ...) não espera
+// Promises pendentes, então nada aqui pode depender de await.
+function _deleteTabOrderDraftCopy(areaId) {
+  for (const sibling of figma.currentPage.children) {
+    try {
+      if (sibling.getPluginData && sibling.getPluginData('hacTabOrderCopyForArea') === areaId) {
+        sibling.remove();
+      }
+    } catch (e) { }
+  }
+  if (_activeTabOrderCloneAreaId === areaId) {
+    _activeTabOrderCloneMap = null;
+    _activeTabOrderCloneAreaId = null;
+  }
+}
+
 figma.on('close', () => {
   if (activeHighlightNode) {
     try { activeHighlightNode.remove(); } catch (e) { }
     activeHighlightNode = null;
+  }
+  // Gap pré-existente: se o designer fechar o plugin/Figma com uma cópia
+  // rascunho de Ordem de Tabulação ainda ativa (nunca aplicou nem
+  // cancelou), ela ficava órfã e permanente no .fig, sem handler de
+  // limpeza algum. Reaproveita a mesma remoção de sempre.
+  if (_activeTabOrderCloneAreaId) {
+    _deleteTabOrderDraftCopy(_activeTabOrderCloneAreaId);
   }
 });
 
@@ -56,11 +99,31 @@ figma.on('currentpagechange', () => {
 // tab-order-selection-changed. Seleção vazia ou múltipla é ignorada nesse modo.
 let _tabOrderModeActive = false;
 
+// O designer clica fisicamente na CÓPIA rascunho (é o que está focado na
+// tela desde start-tab-order-copy — a instrução de UI já diz "clique nos
+// elementos dela"), então figma.currentPage.selection sempre traz um node
+// que vive DENTRO do clone, nunca o original. Todo o resto do fluxo (o
+// nodeMap guardado pra "Aplicar no Canvas", que é Map<originalId,
+// cloneNode>) espera receber o id do ORIGINAL — sem esta tradução aqui,
+// nodeMap.get(idDoClone) nunca acha nada e TODOS os itens da lista viravam
+// "não encontrado" ao aplicar (bug real confirmado em arquivo de produção,
+// 23 de 23 itens, 2026-09-02). Busca linear no Map ativo (chave=original,
+// valor=node do clone) porque é o único sentido em que ele existe hoje —
+// aceitável para o volume real de nodes de uma Área Marcada.
+function _resolveTabOrderCloneSelectionToOriginalId(cloneNodeId) {
+  if (!_activeTabOrderCloneMap) return cloneNodeId;
+  for (const [originalId, clonedNode] of _activeTabOrderCloneMap) {
+    if (clonedNode.id === cloneNodeId) return originalId;
+  }
+  return cloneNodeId;
+}
+
 figma.on('selectionchange', () => {
   if (_tabOrderModeActive) {
     const sel = figma.currentPage.selection;
     if (sel.length === 1) {
-      figma.ui.postMessage({ type: 'tab-order-selection-changed', nodeId: sel[0].id, nodeName: sel[0].name });
+      const originalId = _resolveTabOrderCloneSelectionToOriginalId(sel[0].id);
+      figma.ui.postMessage({ type: 'tab-order-selection-changed', nodeId: originalId, nodeName: sel[0].name });
     }
   }
 });
@@ -104,40 +167,52 @@ function _compareSpecTags(tagA, tagB) {
 
 // key (componentKey resolvido via getMainComponentAsync/mainComp.key) →
 // { containingFrame, origin, sourceLib } — origin é 'web' (libs "Web
-// Angular & React" e "Super DSC | Web", ambas desktop) ou 'mobile' (lib
-// "DSC | Super App"). origin decide só qual FAMÍLIA de marcador visual
-// (A11Y_*_KEYS vs A11Y_*_KEYS_MOBILE) é instanciada — não confundir com
-// sourceLib. Construído uma única vez a partir de REF_SKELETON.libraries
+// Angular & React" e "Super DSC | Web", ambas desktop) ou 'mobile' (libs
+// "DSC | Super App" e "DSC | Android", ambas mobile — a segunda recadastrada
+// em 2026-09-02, ver nota abaixo). origin decide só qual FAMÍLIA de marcador
+// visual (A11Y_*_KEYS vs A11Y_*_KEYS_MOBILE) é instanciada — não confundir
+// com sourceLib. Construído uma única vez a partir de REF_SKELETON.libraries
 // (componentsDetailed de CADA lib do manifest — ver build-skeleton.cjs,
 // estendido em 2026-08-25 para também gerar componentsDetailed de
-// 'super-app', e em 2026-08-26 para 'super-dsc-web'), não de
-// DSC_A11Y_MAPPING*.sampleKeys (que são só amostras de 3 chaves por
-// família, insuficientes para resolver qualquer instância real). Component
-// keys NUNCA colidem entre libs diferentes (são globais no Figma) — não há
-// risco de uma key de 'web' sobrescrever uma de 'mobile' ou vice-versa,
-// mesmo que os NOMES de containingFrame se repitam entre libs (ex:
-// "[dsc] Button" existe em mais de uma, cada uma com suas próprias
+// 'super-app', em 2026-08-26 para 'super-dsc-web', e em 2026-09-02 para
+// 'dsc-android'), não de DSC_A11Y_MAPPING*.sampleKeys (que são só amostras
+// de 3 chaves por família, insuficientes para resolver qualquer instância
+// real). Component keys NUNCA colidem entre libs diferentes (são globais no
+// Figma) — não há risco de uma key de 'web' sobrescrever uma de 'mobile' ou
+// vice-versa, mesmo que os NOMES de containingFrame se repitam entre libs
+// (ex: "[dsc] Button" existe em mais de uma, cada uma com suas próprias
 // component keys).
 //
 // sourceLib é um campo PARALELO e não-destrutivo a origin — carrega a
 // IDENTIDADE EXATA da lib de origem (não só a plataforma), para uso futuro
-// de UI (badge "Super DSC | Web" vs. "DSC Legado" vs. "DSC | Super App").
-// 'web-angular-react' e 'super-dsc-web' são as DUAS libs desktop que
-// coexistem hoje (migração de design system em andamento — ver
+// de UI (badge "Super DSC | Web" vs. "DSC Legado" vs. "DSC | Super App" vs.
+// "DSC | Android"). 'web-angular-react' e 'super-dsc-web' são as DUAS libs
+// desktop que coexistem hoje (migração de design system em andamento — ver
 // refs/_manifest.json) e por isso compartilham origin: 'web', mas têm
-// sourceLib.id diferente. Nunca usar sourceLib para decidir dicionário de
-// marcador — essa decisão é exclusivamente de origin (ver
+// sourceLib.id diferente — mesmo raciocínio vale para 'super-app' e
+// 'dsc-android', ambas origin: 'mobile' com sourceLib.id diferente (React
+// Native vs. Material Design nativo). Nunca usar sourceLib para decidir
+// dicionário de marcador — essa decisão é exclusivamente de origin (ver
 // _createA11yAgrupamento/_createA11yConectorLinha).
+//
+// 'dsc-android' (Material Design nativo, fileKey W8GUeHypdco1I3dneN6P3H) foi
+// cadastrada e removida no mesmo dia em 2026-08-26 (decisão de produto,
+// ver memória de projeto), e recadastrada em 2026-09-02 após bug real
+// confirmado: "[dsc] Icon Button" desta lib, sem reconhecimento nenhum,
+// caía na Detecção Automática como "Elemento Decorativo" — agora resolve
+// corretamente para a categoria 'button' com confiança alta (ver
+// dsc-component-a11y-mapping-android.json).
 let _dscComponentKeyToFrameMap = null;
 function _getDscComponentKeyToFrameMap() {
   if (_dscComponentKeyToFrameMap) return _dscComponentKeyToFrameMap;
   _dscComponentKeyToFrameMap = new Map();
   const libs = (REF_SKELETON && Array.isArray(REF_SKELETON.libraries)) ? REF_SKELETON.libraries : [];
-  const ORIGIN_BY_SLUG = { 'web-angular-react': 'web', 'super-app': 'mobile', 'super-dsc-web': 'web' };
+  const ORIGIN_BY_SLUG = { 'web-angular-react': 'web', 'super-app': 'mobile', 'super-dsc-web': 'web', 'dsc-android': 'mobile' };
   const SOURCE_LIB_BY_SLUG = {
     'web-angular-react': { id: 'web-angular-react', label: 'DSC Legado' },
     'super-dsc-web': { id: 'super-dsc-web', label: 'Super DSC | Web' },
-    'super-app': { id: 'super-app', label: 'DSC | Super App' }
+    'super-app': { id: 'super-app', label: 'DSC | Super App' },
+    'dsc-android': { id: 'dsc-android', label: 'DSC | Android' }
   };
   libs.forEach(lib => {
     const origin = lib && ORIGIN_BY_SLUG[lib.slug];
@@ -154,42 +229,72 @@ function _getDscComponentKeyToFrameMap() {
 
 // containingFrame → { shortName, confidence } (só alta/baixa confiança;
 // famílias sem match não entram no mapa e resultam em dscComponentMatch: null).
-// Combina DSC_A11Y_MAPPING (desktop) e DSC_A11Y_MAPPING_MOBILE — os NOMES de
-// containingFrame podem se repetir entre as duas libs (ex: "[dsc] Button"
-// mapeado pra 'button' nas duas), o que é esperado e não é conflito: a
-// resolução de CATEGORIA por nome é a mesma para as duas origens, só a
-// ORIGEM (de qual componentKey→containingFrame o match veio, resolvida em
-// _getDscComponentKeyToFrameMap) precisa ser diferenciada.
-let _dscFrameToA11yMap = null;
-function _getDscFrameToA11yMap() {
-  if (_dscFrameToA11yMap) return _dscFrameToA11yMap;
-  _dscFrameToA11yMap = new Map();
-  const buckets = [
-    DSC_A11Y_MAPPING.altaConfianca, DSC_A11Y_MAPPING.baixaConfianca,
-    DSC_A11Y_MAPPING_MOBILE.altaConfianca, DSC_A11Y_MAPPING_MOBILE.baixaConfianca
-  ];
+// Combina DSC_A11Y_MAPPING (desktop, "Web Angular & React"),
+// DSC_A11Y_MAPPING_MOBILE ("DSC | Super App"), DSC_A11Y_MAPPING_SUPERDSCWEB
+// ("Super DSC | Web", curadoria adicionada em 2026-09-01 junto com a correção
+// de matching do build-dsc-a11y-mapping.cjs — filtro de prefixo + palavra
+// completa + tabela por lib, ver comentário de cabeçalho do script) e
+// DSC_A11Y_MAPPING_ANDROID ("DSC | Android", curadoria adicionada em
+// 2026-09-02 — recadastro da lib após bug real confirmado com "[dsc] Icon
+// Button" classificado como "Elemento Decorativo"; ver _manifest.json e
+// dsc-component-a11y-mapping-android.json).
+// Dividido em DOIS mapas por plataforma (web / mobile) — corrigido em
+// 2026-09-02: antes havia um único Map global fundindo as 4 libs, o que
+// permitia colisão silenciosa entre plataformas (ex: nome de frame só
+// catalogado na lib mobile aceito por engano para resolver uma instância
+// web, ou vice-versa). Os NOMES de containingFrame podem se repetir entre as
+// libs de uma MESMA plataforma (ex: "[dsc] Button" mapeado pra 'button' em
+// ambas as libs web), o que é esperado e não é conflito: a resolução de
+// CATEGORIA por nome é a mesma para as libs da mesma origem — mas NUNCA deve
+// atravessar a fronteira web/mobile. A ORIGEM (de qual componentKey→
+// containingFrame o match veio, resolvida em _getDscComponentKeyToFrameMap)
+// decide qual dos dois mapas consultar.
+let _dscFrameToA11yMapWeb = null;
+let _dscFrameToA11yMapMobile = null;
+function _buildDscFrameToA11yMap(buckets) {
+  const map = new Map();
   buckets.forEach(bucket => {
     if (!Array.isArray(bucket)) return;
     bucket.forEach(entry => {
-      if (entry && entry.containingFrame && entry.match && !_dscFrameToA11yMap.has(entry.containingFrame)) {
-        _dscFrameToA11yMap.set(entry.containingFrame, {
+      if (entry && entry.containingFrame && entry.match && !map.has(entry.containingFrame)) {
+        map.set(entry.containingFrame, {
           shortName: entry.match.shortName,
           confidence: entry.match.confidence
         });
       }
     });
   });
-  return _dscFrameToA11yMap;
+  return map;
+}
+function _getDscFrameToA11yMap(origin) {
+  if (origin === 'mobile') {
+    if (!_dscFrameToA11yMapMobile) {
+      _dscFrameToA11yMapMobile = _buildDscFrameToA11yMap([
+        DSC_A11Y_MAPPING_MOBILE.altaConfianca, DSC_A11Y_MAPPING_MOBILE.baixaConfianca,
+        DSC_A11Y_MAPPING_ANDROID.altaConfianca, DSC_A11Y_MAPPING_ANDROID.baixaConfianca
+      ]);
+    }
+    return _dscFrameToA11yMapMobile;
+  }
+  if (!_dscFrameToA11yMapWeb) {
+    _dscFrameToA11yMapWeb = _buildDscFrameToA11yMap([
+      DSC_A11Y_MAPPING.altaConfianca, DSC_A11Y_MAPPING.baixaConfianca,
+      DSC_A11Y_MAPPING_SUPERDSCWEB.altaConfianca, DSC_A11Y_MAPPING_SUPERDSCWEB.baixaConfianca
+    ]);
+  }
+  return _dscFrameToA11yMapWeb;
 }
 
 // Retorna { containingFrame, a11yCategory, confidence, origin, sourceLib }
 // (match normal), { containingFrame, a11yCategory: null, confidence: null,
 // isUnmapped: true, origin, sourceLib } (componente DSC real, mas SEM
 // categoria de a11y catalogada — vira sugestão "Outro" no lote de Detecção
-// Automática; é o caso hoje de TODO componente de 'super-dsc-web', já que a
-// curadoria do mapeamento componente→categoria para essa lib ainda não foi
-// feita) ou null (componentKey não corresponde a nenhum componente DSC
-// catalogado em nenhuma lib — não é caso de a11y). origin é 'web' ou
+// Automática; ex: "[dsc] Card"/"[dsc] Tooltip"/"[dsc] Spinner" em qualquer
+// das 4 libs — componentes DSC reais que genuinamente não correspondem a
+// nenhum dos 16 shortNames de a11y, curadoria confirmada em 2026-09-01
+// (web-angular-react/super-app/super-dsc-web) e 2026-09-02 (dsc-android), ver
+// build-dsc-a11y-mapping.cjs) ou null (componentKey não corresponde a nenhum
+// componente DSC catalogado em nenhuma lib — não é caso de a11y). origin é 'web' ou
 // 'mobile', conforme a PLATAFORMA da lib de onde a componentKey resolvida
 // veio (decide só a família de marcador visual — ver comentário de
 // _getDscComponentKeyToFrameMap). sourceLib é a IDENTIDADE exata da lib
@@ -201,7 +306,7 @@ function _resolveDscComponentA11yMatch(componentKey) {
   const resolved = _getDscComponentKeyToFrameMap().get(componentKey);
   if (!resolved) return null;
   const { containingFrame, origin, sourceLib } = resolved;
-  const a11yMatch = _getDscFrameToA11yMap().get(containingFrame);
+  const a11yMatch = _getDscFrameToA11yMap(origin).get(containingFrame);
   if (!a11yMatch) {
     return { containingFrame, a11yCategory: null, confidence: null, isUnmapped: true, origin, sourceLib };
   }
@@ -236,6 +341,22 @@ const A11Y_INTERACTIVE_SHORTNAMES = new Set([
   'listas', 'link'
 ]);
 
+// Único ponto de verdade de "esse componentKey é um controle real de foco de
+// teclado" — usado pela varredura automática (generate-tab-order-from-layers)
+// como filtro de SUGESTÃO de itens catalogados com certeza. NÃO é mais usado
+// para bloquear o clique manual no canvas (bloqueio revertido em 2026-09-02:
+// o reconhecimento via matching DSC falhava em casos reais — Icon Buttons de
+// libs não mapeadas, cards customizados sem match no catálogo — então o
+// clique manual voltou a aceitar qualquer elemento, sem checagem). Resolve
+// via o mesmo catálogo DSC de sempre (_resolveDscComponentA11yMatch) e checa
+// contra A11Y_INTERACTIVE_SHORTNAMES; componentKey nulo/sem match/isUnmapped
+// conta como não-interativo.
+function _isA11yInteractiveComponentKey(componentKey) {
+  if (!componentKey) return false;
+  const match = _resolveDscComponentA11yMatch(componentKey);
+  return !!(match && !match.isUnmapped && A11Y_INTERACTIVE_SHORTNAMES.has(match.a11yCategory));
+}
+
 // Nome de estilo de texto nomeado (styleName, quando o TEXT usa um Text
 // Style do Figma) ou nome da própria camada — sinal fraco, mas suficiente
 // para sugerir (nunca afirmar) que um texto é um "Nível de Título". QUAL
@@ -245,6 +366,18 @@ const A11Y_INTERACTIVE_SHORTNAMES = new Set([
 // Sempre sugere H1 como default; o designer ajusta pro nível lógico real.
 const _A11Y_HEADING_NAME_REGEX = /\bh[1-6]\b|título|titulo|heading|headline/i;
 
+// origin (web/mobile) NÃO é calculável aqui: diferente de
+// _resolveDscComponentA11yMatch (que descobre a origin pela LIB do
+// componente DSC real detectado), "Título" nasce de heurística de texto
+// solto (estilo de tipografia/nome de camada), sem componente real por trás
+// — não há de onde "puxar" a lib de origem neste ponto do backend, que só
+// enxerga o node isolado, nunca a Área/o schema hacData (que vivem só no
+// frontend). Retorna origin: null de propósito — o frontend
+// (handleA11yPostAreaDetectionResult, accessibility.js) retropreenche este
+// campo com a origin da Área Marcada onde o scan rodou (voto de maioria dos
+// componentes reais detectados na mesma área), fonte de verdade válida
+// porque uma Área representa uma tela inteira, sempre inteiramente web OU
+// mobile. Mesmo raciocínio vale para _resolveDecorativeA11yMatch abaixo.
 function _resolveTypographyA11yMatch(node, typoProp) {
   const styleName = (typoProp && typoProp.styleKey && typoProp.name) ? typoProp.name : null;
   const layerName = node && node.name ? node.name : '';
@@ -255,7 +388,8 @@ function _resolveTypographyA11yMatch(node, typoProp) {
     containingFrame: null,
     a11yCategory: 'titulo',
     confidence: 'baixa',
-    source: styleName && signal === styleName ? 'text-style-name' : 'layer-name'
+    source: styleName && signal === styleName ? 'text-style-name' : 'layer-name',
+    origin: null
   };
 }
 
@@ -265,6 +399,10 @@ function _resolveTypographyA11yMatch(node, typoProp) {
 // rótulo/label/alt/ícone-com-função — conservador, sempre confidence 'baixa'.
 const _A11Y_NON_DECORATIVE_NAME_REGEX = /label|rótulo|rotulo|alt|informativ|funcional|clic[áa]vel|button|botão|botao/i;
 
+// origin: null pelo mesmo motivo documentado acima em
+// _resolveTypographyA11yMatch — heurística de ícone/vetor solto, sem
+// componente DSC real por trás. Retropreenchido pelo frontend com a origin
+// da Área Marcada.
 function _resolveDecorativeA11yMatch(node) {
   const layerName = node && node.name ? node.name : '';
   if (_A11Y_NON_DECORATIVE_NAME_REGEX.test(layerName)) return null;
@@ -272,7 +410,8 @@ function _resolveDecorativeA11yMatch(node) {
     containingFrame: null,
     a11yCategory: 'decorativo',
     confidence: 'baixa',
-    source: 'layer-name'
+    source: 'layer-name',
+    origin: null
   };
 }
 
@@ -347,6 +486,24 @@ function _findNestedInstanceWithAnyProp(root, propNameCandidates) {
   return null;
 }
 
+// Procura, em profundidade, a primeira INSTANCE descendente cujo NOME DE
+// CAMADA bata exatamente com `instanceName` — diferente de
+// _findNestedInstanceWithAnyProp (que busca por nome de componentProperty).
+// Usado quando o campo a preencher é uma sub-instância cujos próprios TEXT
+// filhos têm nomes genéricos ("Label"/"Text", iguais em toda a lib), então
+// só o nome da instância em si identifica qual campo é qual (ver
+// _fillA11yMobileElementosEImagensFields).
+function _findNestedInstanceByName(root, instanceName) {
+  if (root.type === 'INSTANCE' && root.name === instanceName) return root;
+  if ('children' in root) {
+    for (const child of root.children) {
+      const found = _findNestedInstanceByName(child, instanceName);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 // Localiza um TEXT node descendente cujo conteúdo atual bate exatamente com
 // `value` — usado para achar o campo "Observações" (ou "Descrição") dentro
 // do componente real importado, sem depender do nome da camada.
@@ -396,6 +553,298 @@ function _bestEffortSyncA11yBadgeLetter(root, letter) {
   } catch (e) { /* best-effort — nunca bloqueia a criação da spec */ }
 }
 
+// Importa a VARIANTE mobile REAL certa para a categoria (elemento/titulo/
+// decorativo) do component set "[a11y mob] Box specs leitor de tela"
+// (fileKey 3zdtN13YvPlCGPdXeL0Y2i) — key resolvida em
+// wrapperData.componentKeyByA11yType[type] (ver
+// design-acessivel-mobile-wrapper.generated.json). Cada categoria já importa
+// a key da sua própria variante (COMPONENT) diretamente — não a key do
+// component set (essa não é importável via figma.importComponentByKeyAsync,
+// que exige key de COMPONENT individual; era o bug real corrigido em
+// 2026-09-02, "Could not find a published component with the key..."), e
+// por isso não há mais setProperties de "Conector" aqui: a variante já vem
+// fixada por ter importado a key certa.
+// Chamado só por _tryImportA11yComponent quando opts.a11yOrigin === 'mobile'
+// e a categoria é uma das 3 cobertas. Lança em qualquer ponto de incerteza —
+// o chamador de _tryImportA11yComponent já trata isso como "não deu, volta
+// pro card procedural" (mesmo contrato do caminho desktop).
+//
+// Preenchimento fino dos campos internos (Descrição/Nome acessível/Dica
+// Leitor de Tela/Observação, mais a instância "Link do componente") está
+// CONFIRMADO via REST API (ver design-acessivel-mobile-link-property.json)
+// para a variante "Elementos e imagens" — rawKeys reais:
+//   Descrição#7111:0 / Nome acessível#5366:0 / Dica Leitor de Tela#5405:0 /
+//   Observação#5365:0 (todas BOOLEAN, controlam "visible" de sub-instâncias)
+// As variantes "Títulos" e "Elementos decorativos" TIVERAM a árvore interna
+// extraída em profundidade nesta sessão (2026-09-02, GET /v1/files/:key/
+// nodes?ids=5413:1259,5413:1260&depth=10 + componentPropertyDefinitions dos
+// componentIds base 5514:8933/5370:1835) — estrutura real, bem mais enxuta
+// que "Elementos e imagens":
+//   - "Elementos decorativos" (componentId base 5370:1835, instância
+//     "Elementos decorativos" dentro do wrapper): SÓ tem uma property real,
+//     "Observações#5413:0" (BOOLEAN, controla "visible" da sub-instância
+//     "Observações"). Não há "Descrição"/"Nome acessível"/"Dica Leitor de
+//     Tela" nem "Link do componente" nessa variante — a sub-instância
+//     "Descrição" existe no canvas mas é SEMPRE visível, sem toggle.
+//   - "Títulos" (componentId base 5514:8933, instância "Título" dentro do
+//     wrapper): mesma forma, só "Observações#5514:1" (BOOLEAN). A variante
+//     tem DUAS sub-instâncias "Descrição" (uma antes, uma depois da
+//     "Observações") — a primeira mostra "Descrição: Identificar como
+//     título.", a segunda (reaproveitando o MESMO componente base, só com o
+//     TEXT "Label" trocado no default publicado) mostra "Notas de Código:
+//     Aplicar a propriedade accessibilityRole="header"...". Nenhuma das duas
+//     tem property própria (componentId 31:227 "Box conteúdo bloqueado" não
+//     tem componentPropertyDefinitions nenhuma, confirmado via REST API) —
+//     são conteúdo fixo da lib, sem vínculo editável, mesmo padrão do
+//     workaround do TEXT "Number" hardcoded em _tryImportA11yAgrupamento.
+// Por isso, para essas duas variantes, o preenchimento fino cobre SÓ o
+// toggle real "Observações" (liga o BOOLEAN quando o designer marcou
+// "observacoes" no formulário + escreve o texto no TEXT node correspondente
+// via _findTextNodeByCurrentValue, mesma técnica best-effort já usada em
+// outros caminhos deste arquivo). Não há "Nome acessível"/"Dica Leitor de
+// Tela"/"Link do componente" para preencher nessas duas — não existem no
+// componente real. O texto de Descrição/Nota de Código (properties
+// 'descricao'/'notaCodigo' em opts.properties, já coletado e catalogado em
+// A11Y_CONTENT) fica só nas propriedades da SPEC (painel do hac) — são
+// conteúdo fixo da lib publicada, sem property exposta pra sincronizar.
+async function _tryImportA11yMobileWrapperComponent(opts, wrapperData) {
+  const type = opts.a11yType;
+  const componentKey = wrapperData.componentKeyByA11yType && wrapperData.componentKeyByA11yType[type];
+  if (!componentKey) throw new Error('a11y-mobile-wrapper-sem-key-de-variante: ' + type);
+
+  // Importa a key da VARIANTE (COMPONENT) diretamente — a key do component
+  // set "[a11y mob] Box specs leitor de tela" (que existia aqui antes) não é
+  // importável via figma.importComponentByKeyAsync (só aceita key de
+  // COMPONENT individual), causava "Could not find a published component
+  // with the key..." em runtime. Sem setProperties de Conector: a variante
+  // já vem fixada na categoria certa por ter importado a key certa.
+  const variantComponent = await figma.importComponentByKeyAsync(componentKey);
+  const instance = variantComponent.createInstance();
+
+  // Preenchimento fino — best-effort: nunca lança a partir daqui, porque o
+  // wrapper com a variante certa já é um resultado válido por si só.
+  try {
+    if (type === 'elemento') {
+      await _fillA11yMobileElementosEImagensFields(instance, opts);
+    } else if (type === 'titulo') {
+      await _fillA11yMobileTituloFields(instance, opts);
+    } else if (type === 'decorativo') {
+      await _fillA11yMobileDecorativoFields(instance, opts);
+    }
+  } catch (e) { /* best-effort — a instância com a variante certa já foi criada */ }
+
+  return instance;
+}
+
+// Preenche os campos internos REAIS da instância "Elementos e imagens"
+// (component set oculto ".[a11y mob base] Elementos e imagens", node
+// 5362:961) dentro da variante "Conector=Elementos e imagens" do wrapper —
+// rawKeys confirmados via REST API (design-acessivel-mobile-link-property.
+// json): Descrição#7111:0 / Nome acessível#5366:0 / Dica Leitor de Tela#
+// 5405:0 / Observação#5365:0 (BOOLEAN, controlam visibilidade de
+// sub-instâncias de texto), mais a instância sempre-visível "Link do
+// componente" (sem toggle). opts.properties chega no formato coletado por
+// _collectA11yElementoMobileToggleProperties (accessibility.js) MAIS o
+// campo "label" do topo do formulário (accessibilityLabel), sempre incluído
+// em opts.properties como { key: 'label', value } — ver confirmA11ySpec em
+// accessibility.js. Chaves possíveis: 'label', 'descricao',
+// 'accessibilityHint', 'observacoes', 'linkComponente', 'linkComponenteNome'.
+// "Nome acessível" (campo interno BOOLEAN do componente real) é preenchido
+// a partir desse mesmo 'label' — não há campo dedicado no formulário mobile
+// pra isso, o Label do topo é a fonte única de accessibilityLabel.
+async function _fillA11yMobileElementosEImagensFields(wrapperInstance, opts) {
+  const nested = _findNestedInstanceWithAnyProp(wrapperInstance, ['Descrição', 'Nome acessível', 'Dica Leitor de Tela', 'Observação']);
+  if (!nested) return; // best-effort — wrapper com Conector certo já é um resultado válido
+
+  const props = opts.properties || [];
+  const getProp = key => {
+    const p = props.find(x => x && x.key === key);
+    return p ? p.value : '';
+  };
+
+  const rawKeys = Object.keys(nested.instance.componentProperties || {});
+  const findRawKey = (name) => rawKeys.find(k => k.split('#')[0] === name);
+
+  // Descrição — sempre visível por padrão na definição do componente base;
+  // liga explicitamente quando há texto de descrição coletado (variante
+  // "componente" não tem campo de descrição livre próprio no formulário
+  // hoje — best-effort, só ativa o toggle se o valor existir).
+  const descricaoTexto = getProp('descricao');
+  const descricaoKey = findRawKey('Descrição');
+  if (descricaoKey && descricaoTexto) {
+    try { nested.instance.setProperties({ [descricaoKey]: true }); } catch (e) { /* best-effort */ }
+  }
+
+  // Dica Leitor de Tela — toggle real, texto vem de 'accessibilityHint'.
+  const dicaTexto = getProp('accessibilityHint');
+  const dicaKey = findRawKey('Dica Leitor de Tela');
+  if (dicaKey) {
+    try { nested.instance.setProperties({ [dicaKey]: !!dicaTexto }); } catch (e) { /* best-effort */ }
+  }
+
+  // Observação — toggle real, texto vem de 'observacoes'.
+  const observacaoTexto = getProp('observacoes');
+  const observacaoKey = findRawKey('Observação');
+  if (observacaoKey) {
+    try { nested.instance.setProperties({ [observacaoKey]: !!observacaoTexto }); } catch (e) { /* best-effort */ }
+  }
+
+  // Nome acessível — toggle real, texto vem do Label do topo do formulário
+  // ('label' em opts.properties, fonte única de accessibilityLabel desde a
+  // remoção do toggle duplicado "Nome Acessível" da UI mobile).
+  const nomeAcessivelTexto = getProp('label');
+  const nomeAcessivelKey = findRawKey('Nome acessível');
+  if (nomeAcessivelKey) {
+    try { nested.instance.setProperties({ [nomeAcessivelKey]: !!nomeAcessivelTexto }); } catch (e) { /* best-effort */ }
+  }
+
+  // Sincroniza o conteúdo real de cada sub-instância ligada. Bug real
+  // corrigido em 2026-09-02: a versão anterior buscava um TEXT node cujo
+  // NOME DE CAMADA batesse com o campo ("descri"/"dica"/"observ"/"nome
+  // acess") — mas a árvore real (confirmada via REST API,
+  // GET /v1/files/3zdtN13YvPlCGPdXeL0Y2i/nodes?ids=5362:961&depth=10) não
+  // tem TEXT nodes com esses nomes: cada campo é uma INSTANCE aninhada
+  // ("Descrição"/"Nome acessível"/"Dica para Leitor de Tela"/"Observações")
+  // cujos dois TEXT filhos se chamam sempre "Label"/"Text", iguais em todas
+  // — o `findOne` por nome nunca encontrava nada e o card real ficava com o
+  // texto placeholder publicado. O conteúdo de cada sub-instância é uma
+  // component property de texto própria, "Texto#7316:0" — mesmo padrão já
+  // usado abaixo para "Link do componente" — então a sincronização correta é
+  // achar a INSTANCE pelo nome dela e usar setProperties, não findOne+TEXT.
+  const syncNestedInstanceText = (instanceName, text) => {
+    if (!text) return;
+    const target = _findNestedInstanceByName(wrapperInstance, instanceName);
+    if (!target || !target.componentProperties) return;
+    const textoKey = Object.keys(target.componentProperties).find(k => k.split('#')[0] === 'Texto');
+    if (!textoKey) return;
+    try { target.setProperties({ [textoKey]: text }); } catch (e) { /* best-effort */ }
+  };
+  syncNestedInstanceText('Descrição', descricaoTexto);
+  syncNestedInstanceText('Dica para Leitor de Tela', dicaTexto);
+  syncNestedInstanceText('Observações', observacaoTexto);
+  syncNestedInstanceText('Nome acessível', nomeAcessivelTexto);
+
+  // Link do componente — instância SEMPRE presente, sem toggle (ver
+  // estruturaCompletaVarianteElementosEImagens no JSON de referência).
+  // Property real "Link" (VARIANT, rótulo textual) + companheiro TEXT
+  // "Texto#7157:0" com a URL/nome digitado pelo designer.
+  const linkNome = getProp('linkComponenteNome');
+  const linkUrl = getProp('linkComponente');
+  if (linkNome || linkUrl) {
+    const linkFound = _findNestedInstanceWithAnyProp(wrapperInstance, ['Link']);
+    if (linkFound) {
+      if (linkNome) {
+        try { linkFound.instance.setProperties({ [linkFound.key]: linkNome }); } catch (e) { /* best-effort */ }
+      }
+      if (linkUrl) {
+        const textoKey = Object.keys(linkFound.instance.componentProperties || {}).find(
+          k => k.split('#')[0] === 'Texto'
+        );
+        if (textoKey) {
+          // "Texto#7157:0" é TEXT (component property de texto, não TEXT
+          // node direto) — setProperties já cobre esse caso sem precisar de
+          // loadFontAsync/findOne.
+          try { linkFound.instance.setProperties({ [textoKey]: linkUrl }); } catch (e) { /* best-effort */ }
+        }
+      }
+    }
+  }
+}
+
+// Preenche o campo interno REAL da instância "Título" (componentId base
+// 5514:8933, ".[a11y mob base] Títulos") dentro da variante "Conector=
+// Títulos" do wrapper — rawKey confirmado via REST API em 2026-09-02
+// (GET /v1/files/3zdtN13YvPlCGPdXeL0Y2i/nodes?ids=5413:1259,5514:8933):
+// só existe UMA property real, "Observações#5514:1" (BOOLEAN, controla
+// "visible" da sub-instância "Observações"). Não há "Descrição"/"Nome
+// acessível"/"Dica Leitor de Tela"/"Link do componente" nessa variante —
+// as duas sub-instâncias "Descrição" (rótulos "Descrição:"/"Notas de
+// Código:") são conteúdo FIXO da lib publicada (componentId 31:227, "Box
+// conteúdo bloqueado", sem nenhuma componentPropertyDefinition), sempre
+// visíveis, sem vínculo editável — não têm o que sincronizar aqui.
+// opts.properties chega no formato coletado em confirmA11ySpec
+// (accessibility.js, ramo `category === 'titulo'`): 'descricao' (fixo,
+// já documentado na SPEC, sem property pra sincronizar), 'notaCodigo'
+// (idem) e 'observacoes' (toggle real, via _collectA11yFixedToggleProperties
+// com listId 'a11y-titulo-toggles-list') — só este último é preenchido aqui.
+async function _fillA11yMobileTituloFields(wrapperInstance, opts) {
+  const nested = _findNestedInstanceWithAnyProp(wrapperInstance, ['Observações']);
+  if (!nested) return; // best-effort — wrapper com Conector certo já é um resultado válido
+
+  const props = opts.properties || [];
+  const getProp = key => {
+    const p = props.find(x => x && x.key === key);
+    return p ? p.value : '';
+  };
+
+  const observacaoTexto = getProp('observacoes');
+  if (nested.key) {
+    try { nested.instance.setProperties({ [nested.key]: !!observacaoTexto }); } catch (e) { /* best-effort */ }
+  }
+
+  // Sincroniza o TEXT visível da sub-instância "Observações" por valor-padrão
+  // atual ("É um elemento que ajuda a organizar..."), não por nome de camada
+  // (a árvore real tem duas instâncias "Descrição" com o mesmo nome de
+  // camada "Text"/"Label" — buscar por nome colidiria com a errada).
+  if (observacaoTexto) {
+    try {
+      const defaultNode = _findTextNodeByCurrentValue(
+        nested.instance,
+        'É um elemento que ajuda a organizar o conteúdo da página, fornecendo uma estrutura clara e semântica.'
+      );
+      if (defaultNode) {
+        await figma.loadFontAsync(defaultNode.fontName);
+        defaultNode.characters = observacaoTexto;
+      }
+    } catch (e) { /* best-effort */ }
+  }
+}
+
+// Preenche o campo interno REAL da instância "Elementos decorativos"
+// (componentId base 5370:1835, ".[a11y mob base] Elementos decorativos")
+// dentro da variante "Conector=Elementos decorativos" do wrapper — rawKey
+// confirmado via REST API em 2026-09-02 (GET /v1/files/3zdtN13YvPlCGPdXeL0Y2i/
+// nodes?ids=5413:1260,5370:1835): só existe UMA property real, "Observações#
+// 5413:0" (BOOLEAN, controla "visible" da sub-instância "Observações"). Não
+// há "Descrição"/"Nome acessível"/"Dica Leitor de Tela"/"Link do componente"
+// nessa variante — a sub-instância "Descrição" ("Não deve ser anunciado pelo
+// Leitor de Tela.") é conteúdo FIXO da lib publicada (mesmo componentId
+// 31:227 "Box conteúdo bloqueado" de _fillA11yMobileTituloFields, sem
+// nenhuma componentPropertyDefinition), sempre visível, sem vínculo
+// editável. opts.properties segue o mesmo formato do ramo `category ===
+// 'decorativo'` em confirmA11ySpec: 'descricao' (fixo), 'notaCodigo' (fixo)
+// e 'observacoes' (toggle real, via _collectA11yFixedToggleProperties com
+// listId 'a11y-decorativo-toggles-list') — só este último é preenchido aqui.
+async function _fillA11yMobileDecorativoFields(wrapperInstance, opts) {
+  const nested = _findNestedInstanceWithAnyProp(wrapperInstance, ['Observações']);
+  if (!nested) return; // best-effort — wrapper com Conector certo já é um resultado válido
+
+  const props = opts.properties || [];
+  const getProp = key => {
+    const p = props.find(x => x && x.key === key);
+    return p ? p.value : '';
+  };
+
+  const observacaoTexto = getProp('observacoes');
+  if (nested.key) {
+    try { nested.instance.setProperties({ [nested.key]: !!observacaoTexto }); } catch (e) { /* best-effort */ }
+  }
+
+  // Sincroniza o TEXT visível da sub-instância "Observações" por valor-padrão
+  // atual ("Insira seu texto da observação."), não por nome de camada (nomes
+  // de camada "Text"/"Label" se repetem entre "Descrição" e "Observações"
+  // dentro da mesma variante).
+  if (observacaoTexto) {
+    try {
+      const defaultNode = _findTextNodeByCurrentValue(nested.instance, 'Insira seu texto da observação.');
+      if (defaultNode) {
+        await figma.loadFontAsync(defaultNode.fontName);
+        defaultNode.characters = observacaoTexto;
+      }
+    } catch (e) { /* best-effort */ }
+  }
+}
+
 // Tenta reaproveitar o componente REAL da lib "Design Acessível" em vez de
 // desenhar o card do zero. Lança (throw) em qualquer ponto de incerteza —
 // quem chama trata a exceção como "não deu, volta pro card procedural" (ver
@@ -411,6 +860,21 @@ function _bestEffortSyncA11yBadgeLetter(root, letter) {
 // texto em Observações. O badge "Verificar" já avisa que precisa de revisão manual.
 async function _tryImportA11yComponent(opts) {
   const type = opts.a11yType;
+
+  // Origem mobile, categoria coberta pelo wrapper mobile REAL ("[a11y mob]
+  // Box specs leitor de tela") — desvia por completo do wrapper desktop.
+  // "estrutura" e "informacoes" não têm equivalente mobile publicado
+  // conhecido (ver design-acessivel-mobile-wrapper.generated.json._meta) e
+  // caem no `else` abaixo, que mantém o comportamento desktop de sempre —
+  // mesmo raciocínio para origem 'web'. Ver _tryImportA11yMobileWrapper.
+  const MOBILE_WRAPPER_COVERED_TYPES = new Set(['elemento', 'titulo', 'decorativo']);
+  if (
+    opts.a11yOrigin === 'mobile' &&
+    MOBILE_WRAPPER_COVERED_TYPES.has(type) &&
+    A11Y_MOBILE_WRAPPER_RAW && A11Y_MOBILE_WRAPPER_RAW.wrapper
+  ) {
+    return await _tryImportA11yMobileWrapperComponent(opts, A11Y_MOBILE_WRAPPER_RAW.wrapper);
+  }
 
   const catData = A11Y_CONTENT.categories[type];
   if (!catData || !catData.wrapperComponentKey) throw new Error('a11y-sem-wrapper-key: ' + type);
@@ -794,8 +1258,12 @@ const A11Y_CONECTOR_LINHA_KEYS_MOBILE = {
   // undefined, _tryImportA11yConectorLinha cai no dicionário desktop.
 };
 
-// "[a11y mob] Número da tela" — equivalente mobile de A11Y_ITEM_NUMBER_KEYS
-// (ver handler apply-tab-order-to-canvas/_createTabOrderBadge mais abaixo).
+// "[a11y mob] Número da tela" — usado SÓ pro selo de ÁREA MARCADA (ver
+// handler create-a11y-area). Desenha um Connector visual (traço) por
+// direção, igual "[a11y] Item Number" no desktop — confirmado via REST API
+// (children da variante incluem um RECTANGLE "Connector" em toda direção
+// exceto "desativado"). Item de tabulação mobile usa A11Y_TAB_ORDER_ITEM_KEY
+// _MOBILE (abaixo), componente diferente e sem conector.
 const A11Y_ITEM_NUMBER_KEYS_MOBILE = {
   superior:   '8165d5888c8a03c7affb955a9b5364cec563ee63',
   inferior:   '4b03dd0857a71158da36bab09707538ecf047620',
@@ -803,6 +1271,17 @@ const A11Y_ITEM_NUMBER_KEYS_MOBILE = {
   direita:    'f7977c26c71f36e05bf2b92e645ecd1d1491d458',
   desativado: 'd88850d40989bbd99cdc98b29a1f2cc516278699',
 };
+
+// "[a11y mob] Ordenação" (variante tamanho=pequeno) — selo de ITEM dentro da
+// Ordem de Tabulação no mobile. Confirmado via REST API (fileKey
+// 3zdtN13YvPlCGPdXeL0Y2i, node 5222:4270): só tem properties "tamanho"
+// (grande/pequeno) e "número" — SEM variante de direção/conector, porque a
+// posição do selo já é resolvida por x/y absoluto em _createTabOrderBadge
+// (a lib não desenha conector pra esse caso, diferente de "Número da tela").
+// Não tem equivalente separado no desktop — lá "[a11y] Item Number" é o
+// único componente e é reaproveitado também pro selo de Área (mesmas keys
+// de A11Y_AREA_CONECTOR_KEYS), assimetria real entre as duas libs.
+const A11Y_TAB_ORDER_ITEM_KEY_MOBILE = 'a7b50306053bb1a4fb834f26c432dc7613ef9b13';
 
 const _A11Y_SIDE_TO_ORIENTACAO = { left: 'esquerda', right: 'direita', top: 'superior', bottom: 'inferior' };
 
@@ -950,6 +1429,19 @@ function _getOrCreateA11ySection() {
     section.y = 0;
     section.resizeWithoutConstraints(200, 200);
   }
+  // A Section nasce no topo da pilha de figma.currentPage.children (padrão
+  // de figma.create*()), mas isso só vale no instante da criação — depois
+  // disso o design original pode subir acima dela (novo frame colado,
+  // reordenação manual no painel de Layers, duplicar tela etc.), e todo
+  // marcador visual (contorno, conector, selo de Área/Ordem de Tabulação)
+  // que vive dentro da Section passaria a ficar ATRÁS do elemento escaneado.
+  // Reforça o topo aqui — no único ponto de acesso à Section — para que
+  // qualquer chamador (spec nova, Área nova, cálculo de bounds ocupados)
+  // sempre a encontre por cima do restante do canvas.
+  const _lastIndex = figma.currentPage.children.length - 1;
+  if (figma.currentPage.children.indexOf(section) !== _lastIndex) {
+    figma.currentPage.appendChild(section);
+  }
   return section;
 }
 
@@ -1024,9 +1516,18 @@ async function _a11yScanArea(rootNode) {
     if (n.visible === false) return;
 
     try {
+      // Preenchido só quando n é INSTANCE remota resolvida via
+      // _resolveDscComponentA11yMatch — usado abaixo pra decidir se a
+      // recursão nos filhos deve ser interrompida (ver bloco após o push
+      // em results[category]).
+      let _dscRemoteMatch = null;
+
       const nameLower = n.name.toLowerCase();
-      const isIcon = nameLower.includes("icon") || nameLower.includes("ic-") ||
-                     (n.type === "INSTANCE" && n.width <= 32 && n.height <= 32 && !nameLower.includes("button"));
+      const looksLikeButton = nameLower.includes("button");
+      const isIcon = !looksLikeButton && (
+        nameLower.includes("icon") || nameLower.includes("ic-") ||
+        (n.type === "INSTANCE" && n.width <= 32 && n.height <= 32)
+      );
 
       const hasImageFill = Array.isArray(n.fills) &&
         n.fills.some(f => f && f.type === 'IMAGE' && f.visible !== false);
@@ -1067,6 +1568,25 @@ async function _a11yScanArea(rootNode) {
 
         if (n.type === 'INSTANCE' && mainComp && mainComp.remote && componentKey) {
           dscComponentMatch = _resolveDscComponentA11yMatch(componentKey);
+          _dscRemoteMatch = dscComponentMatch;
+        }
+        // [DIAGNÓSTICO TEMPORÁRIO 2026-09-02] Bug do Icon Button classificado
+        // como decorativo persiste em arquivos de projetos diferentes. Log de
+        // instrumentação para descobrir, com dado real, por que o match de
+        // componente DSC não acontece. REMOVER depois de diagnosticar.
+        if (n.type === 'INSTANCE' || category === 'icons') {
+          console.log('[HAC-DIAG]', JSON.stringify({
+            layerName: n.name,
+            nodeType: n.type,
+            category,
+            size: Math.round(n.width) + 'x' + Math.round(n.height),
+            hasMainComp: !!mainComp,
+            mainCompName: mainComp ? mainComp.name : null,
+            isRemote: mainComp ? !!mainComp.remote : null,
+            componentKey: componentKey ? componentKey.slice(0, 12) + '…' : null,
+            matchTried: !!(n.type === 'INSTANCE' && mainComp && mainComp.remote && componentKey),
+            matchResult: dscComponentMatch ? (dscComponentMatch.a11yCategory || 'isUnmapped') : null,
+          }));
         }
         if (!dscComponentMatch && (category === 'icons' || category === 'vectors')) {
           dscComponentMatch = _resolveDecorativeA11yMatch(n);
@@ -1101,7 +1621,19 @@ async function _a11yScanArea(rootNode) {
         });
       }
 
-      if ('children' in n && n.children) {
+      // Instância remota já resolvida com sucesso (componente DSC real
+      // identificado, não isUnmapped): os filhos internos (glifos, textos,
+      // ícones decorativos embutidos) são parte da MESMA unidade já
+      // documentada — descer neles geraria detecções concorrentes e
+      // menores (ex.: o "?" dentro de um Icon Button) que competem com o
+      // resultado correto do pai na agregação final do lote. Nós sem match
+      // (isUnmapped ou sem componentKey remoto) continuam descendo
+      // normalmente — é assim que hoje se descobrem componentes reais
+      // aninhados dentro de containers genéricos sem match direto.
+      const _hasResolvedDscMatch = n.type === 'INSTANCE' &&
+        _dscRemoteMatch && !_dscRemoteMatch.isUnmapped && !!_dscRemoteMatch.a11yCategory;
+
+      if (!_hasResolvedDscMatch && 'children' in n && n.children) {
         for (const child of n.children) {
           await _extract(child, (depth || 0) + 1);
         }
@@ -1123,15 +1655,24 @@ async function _a11yScanArea(rootNode) {
 // na mesma máquina/conta. Usar a chave fixa 'hacData' fazia dados de um
 // arquivo vazarem/sobrescreverem os de outro quando o hac estava aberto em
 // mais de um arquivo (ou alternado entre eles). Escopamos por figma.fileKey.
-// Arquivos nunca salvos na nuvem (raro) não têm fileKey — nesse caso caem
-// numa chave de fallback compartilhada; múltiplos arquivos não-salvos vão
-// dividir essa chave entre si, limitação residual aceita (não é o bug
-// principal, que era o vazamento entre arquivos JÁ salvos).
+//
+// Arquivos ainda não salvos pela primeira vez não têm figma.fileKey — e a
+// API do Figma não expõe nenhum identificador estável para esse estado.
+// Uma chave de fallback fixa ('hacData:unsaved') foi cogitada, mas é
+// compartilhada por TODOS os arquivos não-salvos na mesma instalação do
+// Figma: abrir um segundo arquivo não-salvo carregaria os dados do
+// primeiro, vazando conteúdo entre projetos/clientes diferentes — bug real
+// já confirmado. Um ID de sessão gerado no boot também não resolve: ainda
+// vaza entre arquivos não-salvos abertos na mesma sessão (ex: duplicar o
+// arquivo). Como não há identidade estável possível, a única correção
+// correta é não persistir nem reidratar hacData nesse estado — o arquivo
+// não-salvo sempre abre zerado e não grava em clientStorage. Perder o
+// progresso de uma sessão nesse cenário é preferível a corromper
+// silenciosamente os dados de outro projeto.
 const HAC_DATA_LEGACY_KEY = 'hacData';
-const HAC_DATA_UNSAVED_FALLBACK_KEY = 'hacData:unsaved';
 
 function _getHacDataStorageKey() {
-  return figma.fileKey ? `hacData:${figma.fileKey}` : HAC_DATA_UNSAVED_FALLBACK_KEY;
+  return figma.fileKey ? `hacData:${figma.fileKey}` : null;
 }
 
 // ============================================================
@@ -1146,14 +1687,17 @@ figma.ui.onmessage = async (msg) => {
     const theme = figma.ui.theme || 'light';
     try {
       const scopedKey = _getHacDataStorageKey();
-      let savedState = await figma.clientStorage.getAsync(scopedKey);
+      // scopedKey é null quando o arquivo ainda não foi salvo (sem
+      // figma.fileKey) — nesse caso não há chave própria possível, então
+      // nem lê nem migra nada: o painel sempre nasce vazio.
+      let savedState = scopedKey ? await figma.clientStorage.getAsync(scopedKey) : null;
 
       // Migração automática da chave global legada para a chave por-arquivo.
       // Só roda se a chave nova ainda estiver vazia (arquivo nunca migrado)
       // E a antiga tiver dado — condição que deixa de ser satisfeita assim
       // que a migração acontece uma vez, então não reaplica em aberturas
       // seguintes (nem neste arquivo, nem em nenhum outro).
-      if (!savedState) {
+      if (!savedState && scopedKey) {
         const legacyState = await figma.clientStorage.getAsync(HAC_DATA_LEGACY_KEY);
         if (legacyState) {
           await figma.clientStorage.setAsync(scopedKey, legacyState);
@@ -1166,13 +1710,19 @@ figma.ui.onmessage = async (msg) => {
       // não por projeto/hacData, e sobrevive a "Limpar Cache" (mesmo padrão
       // do onboarding do Handex).
       const onboardingSeen = await figma.clientStorage.getAsync('hac-onboarding-seen');
+      // Instrução do modal de spec ("selecione o elemento antes de aplicar")
+      // — mesma ideia do onboarding (visto uma vez, nunca mais, por
+      // instalação do plugin), mas em chave própria: não é um passo de
+      // onboarding formal, só um snackbar avulso que não deve reaparecer.
+      const specModalInstructionSeen = await figma.clientStorage.getAsync('hac-spec-modal-instruction-seen');
       figma.ui.postMessage({
         type: 'init-plugin',
         version: PLUGIN_VERSION,
         currentUser,
         theme,
         savedState: savedState || null,
-        onboardingSeen: onboardingSeen || null
+        onboardingSeen: onboardingSeen || null,
+        specModalInstructionSeen: !!specModalInstructionSeen
       });
     } catch (err) {
       console.error("Initialization error (continuing without saved state):", err);
@@ -1182,7 +1732,8 @@ figma.ui.onmessage = async (msg) => {
         currentUser,
         theme,
         savedState: null,
-        onboardingSeen: null
+        onboardingSeen: null,
+        specModalInstructionSeen: false
       });
     }
     return;
@@ -1199,8 +1750,14 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === 'save-storage') {
+    const scopedKey = _getHacDataStorageKey();
+    if (!scopedKey) {
+      // Arquivo ainda não salvo: sem identidade estável, não persiste —
+      // ver comentário em _getHacDataStorageKey.
+      return;
+    }
     try {
-      await figma.clientStorage.setAsync(_getHacDataStorageKey(), msg.data);
+      await figma.clientStorage.setAsync(scopedKey, msg.data);
     } catch (err) {
       console.warn("Storage save failed (possivelmente falta o plugin ID no manifest):", err);
     }
@@ -1216,9 +1773,21 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
+  if (msg.type === 'save-spec-modal-instruction-seen') {
+    try {
+      await figma.clientStorage.setAsync('hac-spec-modal-instruction-seen', true);
+    } catch (err) {
+      console.warn("Spec modal instruction state save failed:", err);
+    }
+    return;
+  }
+
   if (msg.type === 'clear-cache') {
     try {
-      await figma.clientStorage.setAsync(_getHacDataStorageKey(), null);
+      const scopedKey = _getHacDataStorageKey();
+      if (scopedKey) {
+        await figma.clientStorage.setAsync(scopedKey, null);
+      }
       figma.ui.postMessage({ type: 'cache-cleared' });
     } catch (e) {
       console.error("clear-cache failed:", e);
@@ -1314,10 +1883,29 @@ figma.ui.onmessage = async (msg) => {
   if (msg.type === "get-selection-name") {
     const sel = figma.currentPage.selection;
     const node = sel.length > 0 ? sel[0] : null;
+    // Resolve o componente DSC real da seleção manual — mesmo padrão do scan
+    // (_a11yScanArea): só INSTANCE com mainComponent remoto é candidato,
+    // nunca lança se getMainComponentAsync falhar. dscComponentName é o nome
+    // cru do component set (containingFrame, ex: "[dsc] Icon Button"); null
+    // quando não é INSTANCE remota reconhecida ou não há match no catálogo
+    // (isUnmapped conta como "sem nome pra exibir" aqui — o campo read-only
+    // do formulário mostra "Não identificado" nesse caso, decisão do
+    // frontend, não deste handler).
+    let dscComponentName = null;
+    if (node && node.type === 'INSTANCE') {
+      try {
+        const mainComp = await node.getMainComponentAsync();
+        if (mainComp && mainComp.remote && mainComp.key) {
+          const resolved = _getDscComponentKeyToFrameMap().get(mainComp.key);
+          if (resolved) dscComponentName = resolved.containingFrame;
+        }
+      } catch (e) { dscComponentName = null; }
+    }
     figma.ui.postMessage({
       type: "selection-name",
       name: node ? node.name : null,
       mainText: node ? _findMainTextContent(node) : null,
+      dscComponentName,
     });
     return;
   }
@@ -1335,6 +1923,7 @@ figma.ui.onmessage = async (msg) => {
   // Usado tanto para confirmar uma spec de A11y (mapeamento puro: só
   // precisamos saber QUAL nó foi selecionado) quanto pela ferramenta "Marcar
   // Área".
+
   if (msg.type === "get-a11y-selection-info") {
     const sel = figma.currentPage.selection;
     figma.ui.postMessage({
@@ -1366,16 +1955,27 @@ figma.ui.onmessage = async (msg) => {
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
 
       const _conector = A11Y_AREA_CONECTOR_KEYS[msg.conector] ? msg.conector : 'superior';
-      const _conectorKey = A11Y_AREA_CONECTOR_KEYS[_conector];
+      // Origem Web/Mobile perguntada no frontend (confirmA11yArea) — não vem
+      // de area.origin (não existe mais como estado persistido), só decide
+      // o componente deste badge. Mesmo fallback mobile→desktop de
+      // _createTabOrderBadge/_tryImportA11yAgrupamento: se a direção não
+      // existir no dicionário mobile, cai pro desktop.
+      const usingMobileKeys = msg.origin === 'mobile' && A11Y_ITEM_NUMBER_KEYS_MOBILE[_conector];
+      const _conectorKey = usingMobileKeys ? A11Y_ITEM_NUMBER_KEYS_MOBILE[_conector] : A11Y_AREA_CONECTOR_KEYS[_conector];
+      // rawKeys divergem entre as duas libs — ver mesmo comentário em
+      // _createTabOrderBadge (só "label#733:6" coincide).
+      const propKeys = usingMobileKeys
+        ? { number: 'número#1478:0', showLabel: 'mostrar label#733:0', label: 'label#733:6' }
+        : { number: 'number#1478:0', showLabel: 'show label#733:0', label: 'label#733:6' };
       let badge = null;
       let usedRealComponent = true;
       try {
         const comp = await figma.importComponentByKeyAsync(_conectorKey);
         badge = comp.createInstance();
         badge.setProperties({
-          'number#1478:0': String(msg.number),
-          'label#733:6': msg.label,
-          'show label#733:0': true,
+          [propKeys.number]: String(msg.number),
+          [propKeys.label]: msg.label,
+          [propKeys.showLabel]: true,
         });
       } catch (e) {
         usedRealComponent = false;
@@ -1706,6 +2306,7 @@ figma.ui.onmessage = async (msg) => {
 
       let groupNodes = [];
       let _absCardX = 0, _absCardY = 0, _absCardW = 0, _absCardH = 0;
+      let _markerImportFailReason = null;
 
       const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
       if (bounds) {
@@ -1715,21 +2316,29 @@ figma.ui.onmessage = async (msg) => {
             ? await _tryImportA11yConectorLinha(opts)
             : await _tryImportA11yAgrupamento(opts);
         } catch (e) {
-          try { specCard.remove(); } catch (_) { }
-          figma.notify('Não foi possível criar o marcador de acessibilidade. (' + (e && e.message ? e.message : String(e)) + ')', { error: true });
-          return;
+          // Fallback brando: NÃO aborta a spec inteira (o card já foi criado
+          // com sucesso acima, seja o componente real ou o procedural). Uma
+          // combinação categoria/orientação sem marcador catalogado — ou uma
+          // falha pontual de importComponentByKeyAsync (rede/lib
+          // desconectada) — não deveria impedir o designer de documentar o
+          // elemento; ele fica sem o contorno/conector visual, mas o card com
+          // toda a informação (nome acessível, observações, notas) já existe
+          // no canvas e pode ser revisado depois. Segue o fluxo com
+          // marker = null; os pontos abaixo já toleram isso.
+          marker = null;
+          _markerImportFailReason = e && e.message ? e.message : String(e);
         }
 
         let _markerAnchorBounds = bounds;
 
-        if (opts.drawMode !== 'linha') {
+        if (marker && opts.drawMode !== 'linha') {
           figma.currentPage.appendChild(marker);
           try {
             marker.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
           } catch (e) { /* variante sem resize livre — segue com o tamanho padrão */ }
           marker.x = Math.round(bounds.x - 16);
           marker.y = Math.round(bounds.y - 16);
-        } else {
+        } else if (marker) {
           // O componente "Conector" NÃO é simétrico: o selo fica numa ponta e
           // a linha se estende até a outra, que é o ponto de contato real com
           // o elemento. A ponta de contato é sempre OPOSTA ao lado indicado
@@ -1741,8 +2350,10 @@ figma.ui.onmessage = async (msg) => {
           else if (_side === 'top') { marker.x = bounds.x + bounds.width / 2 - marker.width / 2; marker.y = bounds.y - marker.height; }
           else { marker.x = bounds.x + bounds.width / 2 - marker.width / 2; marker.y = bounds.y + bounds.height; }
         }
-        groupNodes.push(marker);
-        _markerAnchorBounds = marker.absoluteBoundingBox || _markerAnchorBounds;
+        if (marker) {
+          groupNodes.push(marker);
+          _markerAnchorBounds = marker.absoluteBoundingBox || _markerAnchorBounds;
+        }
 
         figma.currentPage.appendChild(specCard);
 
@@ -1987,7 +2598,13 @@ figma.ui.onmessage = async (msg) => {
         }
       });
 
-      if (_isExpectedFallback) {
+      if (_markerImportFailReason) {
+        // Card criado com sucesso (real ou procedural), mas o marcador visual
+        // (contorno/conector) não pôde ser importado — ver fallback brando
+        // acima. Nunca deixa a spec sumir por causa disso; só avisa que falta
+        // revisar o destaque visual manualmente.
+        figma.notify(`Especificação criada sem o marcador visual (contorno/conector) — não foi possível importá-lo (${_markerImportFailReason}). Revise o destaque manualmente.`, { error: true, timeout: 6000 });
+      } else if (_isExpectedFallback) {
         figma.notify(`Especificação criada com card desenhado (sem componente real catalogado para esta variação: ${_a11yImportFailReason}). Arraste para posicionar.`);
       } else if (!opts.silent) {
         figma.notify("Especificação de acessibilidade criada.");
@@ -2172,32 +2789,48 @@ figma.ui.onmessage = async (msg) => {
 
   // Extraída para ser reaproveitada por generate-tab-order-from-layers
   // (geração automática) e apply-tab-order-to-canvas (fluxo manual/revisão)
-  // — as duas vias criam exatamente o mesmo selo "[a11y] Item Number" real
-  // (ou o fallback círculo+texto). Não faz appendChild na seleção nem scroll
-  // de viewport (quem chama decide isso).
-  async function _createTabOrderBadge(node, number, label, conector, areaId, reparentToSection, origin, tabOrderClone) {
+  // — as duas vias criam exatamente o mesmo selo real (ou o fallback
+  // círculo+texto). Não faz appendChild na seleção nem scroll de viewport
+  // (quem chama decide isso). Só desenha selo de ITEM de tabulação — o selo
+  // de Área (create-a11y-area) tem seu próprio código, não passa por aqui.
+  async function _createTabOrderBadge(node, number, label, conector, areaId, reparentToSection, origin, tabOrderClone, isPreview) {
     const _conectorOptions = ['desativado', 'inferior', 'superior', 'esquerda', 'direita'];
     const _conector = _conectorOptions.includes(conector) ? conector : 'direita';
     const hasLabel = !!label;
 
-    // Mesmo fallback mobile→desktop das specs: se a origem for mobile mas a
-    // key daquela direção não existir no dicionário mobile (não deveria
-    // acontecer — [a11y mob] Número da tela tem as 5 direções completas —,
-    // mas mantém a mesma rede de segurança por consistência), cai pro
-    // dicionário desktop.
-    const numberKeys = (origin === 'mobile' && A11Y_ITEM_NUMBER_KEYS_MOBILE[_conector]) ? A11Y_ITEM_NUMBER_KEYS_MOBILE : A11Y_ITEM_NUMBER_KEYS;
+    // Mobile: "[a11y mob] Ordenação" (tamanho=pequeno) — sem conector
+    // desenhado e sem property de direção (confirmado via REST API), então
+    // _conector só decide o POSICIONAMENTO x/y abaixo, nunca a variante do
+    // componente. Desktop mantém "[a11y] Item Number", que desenha o
+    // conector/traço por direção (mesmo componente reaproveitado pro selo
+    // de Área — não há equivalente "sem conector" na lib desktop).
+    const usingMobile = origin === 'mobile';
 
     let badge = null;
     let usedRealComponent = true;
     try {
-      const comp = await figma.importComponentByKeyAsync(numberKeys[_conector]);
-      badge = comp.createInstance();
-      badge.setProperties({
-        'number#1478:0': String(number),
-        'show label#733:0': hasLabel,
-        'label#733:6': label || 'Label',
-      });
+      if (usingMobile) {
+        const comp = await figma.importComponentByKeyAsync(A11Y_TAB_ORDER_ITEM_KEY_MOBILE);
+        badge = comp.createInstance();
+        badge.setProperties({ 'número#5265:3': String(number) });
+      } else {
+        const comp = await figma.importComponentByKeyAsync(A11Y_ITEM_NUMBER_KEYS[_conector]);
+        badge = comp.createInstance();
+        badge.setProperties({
+          'number#1478:0': String(number),
+          'show label#733:0': hasLabel,
+          'label#733:6': label || 'Label',
+        });
+      }
     } catch (e) {
+      // Nunca deveria cair aqui com as keys atuais (confirmadas via REST API
+      // contra os component sets reais "[a11y] Item Number"/"[a11y mob]
+      // Ordenação") — mas se a lib "Design Acessível" não estiver
+      // disponível como team library no arquivo (ex.: nunca habilitada,
+      // removida), importComponentByKeyAsync falha e caímos aqui. Loga a
+      // causa real em vez de engolir silenciosamente — sem isso, "por que
+      // saiu o círculo azul em vez do selo de verdade" ficava indiagnosticável.
+      console.error('[hac] _createTabOrderBadge: falha ao importar selo real, usando fallback procedural.', e && e.message);
       usedRealComponent = false;
       badge = figma.createEllipse();
       badge.name = 'Selo de Ordem de Tabulação';
@@ -2228,7 +2861,19 @@ figma.ui.onmessage = async (msg) => {
     if (!usedRealComponent) {
       const labelText = figma.createText();
       labelText.name = 'Número';
-      labelText.fontName = { family: "Inter", style: "Bold" };
+      // loadFontAsync("Inter", "Bold") já rodou no chamador (create-a11y-area/
+      // preview-tab-order-numbers/apply-tab-order-to-canvas), mas está dentro
+      // de um try/catch mudo lá — se ele tiver falhado (fonte indisponível
+      // neste documento), esta atribuição síncrona lança fora de qualquer
+      // try/catch e derruba a badge inteira sem nenhum selo, real ou
+      // fallback. Tenta de novo aqui, já dentro do escopo que pode reagir.
+      try {
+        labelText.fontName = { family: "Inter", style: "Bold" };
+      } catch (fontError) {
+        console.error('[hac] _createTabOrderBadge: fonte Inter Bold indisponível, tentando carregar novamente.', fontError && fontError.message);
+        await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+        labelText.fontName = { family: "Inter", style: "Bold" };
+      }
       labelText.fontSize = 12;
       labelText.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
       labelText.characters = String(number);
@@ -2237,9 +2882,27 @@ figma.ui.onmessage = async (msg) => {
       labelText.y = Math.round(badge.y + badge.height / 2 - labelText.height / 2);
       group = figma.group([badge, labelText], figma.currentPage);
     }
-    group.name = `[TabOrder | ${number}] ${node.name}`;
+    group.name = isPreview ? `[TabOrder Preview | ${number}] ${node.name}` : `[TabOrder | ${number}] ${node.name}`;
     group.locked = false;
     group.setPluginData('hacCategory', 'a11y');
+    // Se o pai onde o grupo for reparentado (tabOrderClone ou um frame
+    // intermediário dele) tiver auto-layout ativo — comum em componentes
+    // reais do DSC —, o motor de auto-layout ignora x/y manual e empurra o
+    // item pro final da pilha do eixo primário. Forçar posicionamento
+    // absoluto antes do reparenting evita esse empilhamento indevido, tanto
+    // pro selo real (instância) quanto pro fallback procedural (group).
+    if ('layoutPositioning' in group) group.layoutPositioning = 'ABSOLUTE';
+    // Selo TEMPORÁRIO da prévia visual (lista pendente ainda sendo montada
+    // no modal, antes de "Aplicar no Canvas") — opacidade reduzida pra não
+    // ser confundido com o selo real, e marcado com pluginData próprio
+    // (hacTabOrderPreviewForArea) pra ser localizado e apagado por completo
+    // em QUALQUER caminho de saída do fluxo (reordenar, remover item,
+    // cancelar, aplicar de verdade) por _clearTabOrderPreviewBadges — nunca
+    // reaproveitado como selo real.
+    if (isPreview) {
+      group.setPluginData('hacTabOrderPreviewForArea', areaId || '');
+      if ('opacity' in group) group.opacity = 0.55;
+    }
 
     // O selo nasce em figma.currentPage (precisa de posição absoluta livre
     // pra calcular contra a bounding box do nó-alvo, que também é absoluta).
@@ -2265,7 +2928,19 @@ figma.ui.onmessage = async (msg) => {
         group.x = Math.round(_origX - tabOrderClone.x);
         group.y = Math.round(_origY - tabOrderClone.y);
       } catch (e) {
-        if (reparentToSection !== false) _reparentIntoA11ySection(group);
+        // Selo de PRÉVIA (isPreview=true): nunca deve sobreviver fora do
+        // clone que o originou — se o appendChild falhou (ex.: a cópia
+        // rascunho foi deletada por delete-tab-order-draft-copy enquanto
+        // este loop assíncrono ainda estava em voo), o fallback genérico de
+        // reparentar pra Section oficial (_reparentIntoA11ySection) deixaria
+        // um selo fantasma órfão e permanente lá dentro, sem nenhum código
+        // de limpeza capaz de encontrá-lo (toda limpeza de preview varre só
+        // dentro do clone). Descarta silenciosamente em vez disso.
+        if (isPreview) {
+          try { group.remove(); } catch (e2) { }
+        } else if (reparentToSection !== false) {
+          _reparentIntoA11ySection(group);
+        }
       }
     } else if (reparentToSection !== false) {
       _reparentIntoA11ySection(group);
@@ -2284,6 +2959,32 @@ figma.ui.onmessage = async (msg) => {
         a11yAreaId: areaId || null,
       },
     };
+  }
+
+  // Apaga TODOS os selos de prévia temporária (isPreview=true em
+  // _createTabOrderBadge) de uma área — chamada em todo caminho de saída do
+  // fluxo de revisão da Ordem de Tabulação: reordenar/adicionar/remover item
+  // (redesenha do zero), cancelar o modal, e "Aplicar no Canvas" (os selos
+  // REAIS tomam o lugar). Varre os filhos da cópia rascunho (onde os
+  // previews nascem via tabOrderClone.appendChild) por pluginData — nunca
+  // por nome, mesmo padrão de delete-tab-order-draft-copy.
+  async function _clearTabOrderPreviewBadges(areaId) {
+    let cloneNode = null;
+    if (_activeTabOrderCloneMap && _activeTabOrderCloneAreaId === areaId) {
+      for (const sibling of figma.currentPage.children) {
+        if (sibling.getPluginData && sibling.getPluginData('hacTabOrderCopyForArea') === areaId) {
+          cloneNode = sibling;
+          break;
+        }
+      }
+    }
+    if (!cloneNode) return;
+    const toRemove = cloneNode.findAll
+      ? cloneNode.findAll(n => n.getPluginData && n.getPluginData('hacTabOrderPreviewForArea') === areaId)
+      : [];
+    for (const n of toRemove) {
+      try { n.remove(); } catch (e) { }
+    }
   }
 
   // Reordena candidatos já coletados (DFS de generate-tab-order-from-layers)
@@ -2348,9 +3049,15 @@ figma.ui.onmessage = async (msg) => {
   // painel Layers do Figma), só para DESCOBERTA dos candidatos elegíveis —
   // não importa em que ordem o DFS os encontra, pois a ordem final é
   // recalculada por posição visual logo abaixo (_orderNodesInZigzagReadingOrder).
-  // Devolve só {nodeId, nodeName} de cada candidato — quem desenha de fato é
+  // A varredura em si sempre opera sobre o frame ORIGINAL (nodeIds
+  // devolvidos são os do original, nunca os do clone) — mas antes de
+  // varrer já cria a cópia da área (_createTabOrderCloneForArea, mesma
+  // usada pelo fluxo manual) e foca a viewport nela, pelo mesmo motivo do
+  // fluxo manual: o designer não deve revisar/aplicar em cima da área
+  // original cheia de selos de outras specs. Devolve {nodeId, nodeName} de
+  // cada candidato (referenciando o ORIGINAL) — quem desenha de fato é
   // apply-tab-order-to-canvas, só quando o designer confirma no modal de
-  // revisão.
+  // revisão, reaproveitando a cópia/mapa já ativos aqui.
   //
   // Critério de elegibilidade: só entram componentes que resolvem, via
   // catálogo DSC (_resolveDscComponentA11yMatch), para um shortName de
@@ -2366,55 +3073,93 @@ figma.ui.onmessage = async (msg) => {
   // real, confirmado em arquivo de produção).
   if (msg.type === "generate-tab-order-from-layers") {
     (async () => {
-      const root = await figma.getNodeByIdAsync(msg.targetNodeId);
-      if (!root) {
-        figma.notify("Área não encontrada no canvas — marque novamente.");
-        figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items: [] });
-        return;
-      }
-
-      const collected = [];
-      async function _walk(n) {
-        const children = n.children || [];
-        for (const child of children) {
-          if (child.visible === false) continue;
-          let isInteractiveMatch = false;
-          if (child.type === 'INSTANCE' || child.type === 'COMPONENT') {
-            let componentKey = null;
-            if (child.type === 'INSTANCE') {
-              try {
-                const mainComp = await child.getMainComponentAsync();
-                componentKey = mainComp ? mainComp.key : null;
-              } catch (e) { componentKey = null; }
-            } else {
-              componentKey = child.key || null;
-            }
-            const match = componentKey ? _resolveDscComponentA11yMatch(componentKey) : null;
-            if (match && A11Y_INTERACTIVE_SHORTNAMES.has(match.a11yCategory)) {
-              collected.push(child);
-              isInteractiveMatch = true;
-            }
-          }
-          if (isInteractiveMatch) continue;
-          await _walk(child);
+      // Toda a IIFE precisa deste try/catch envolvendo o corpo inteiro —
+      // sem ele, qualquer rejeição não prevista num dos awaits abaixo
+      // (root.clone() falhando num node aparentemente clonável, um node
+      // bloqueado/removido no meio do caminho etc.) morre como unhandled
+      // rejection: nenhuma mensagem nunca chega no frontend, o modal de
+      // revisão nunca abre, e o designer só vê o toast inicial ("Varrendo
+      // elementos…") para sempre, sem nenhum erro visível — bug real
+      // reproduzido em arquivo de produção (2026-09-02). Qualquer falha
+      // aqui agora sempre responde tab-order-generated-from-layers com
+      // items: [] e avisa via figma.notify, nunca falha em silêncio.
+      try {
+        const root = await figma.getNodeByIdAsync(msg.targetNodeId);
+        if (!root || !root.absoluteBoundingBox) {
+          figma.notify("Área não encontrada no canvas — marque novamente.");
+          figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items: [] });
+          return;
         }
-      }
-      await _walk(root);
+        if (typeof root.clone !== 'function') {
+          figma.notify("Este elemento não pode ser copiado — marque a área sobre um frame/grupo.");
+          figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items: [] });
+          return;
+        }
 
-      if (collected.length === 0) {
+        const { clone, nodeMap } = await _createTabOrderCloneForArea(root, msg.areaId);
+        _activeTabOrderCloneMap = nodeMap;
+        _activeTabOrderCloneAreaId = msg.areaId || null;
+
+        figma.currentPage.selection = [clone];
+        figma.viewport.scrollAndZoomIntoView([clone]);
+
+        const collected = [];
+        // Um await sequencial por INSTANCE/COMPONENT visitado (mesmo padrão
+        // de _a11yScanArea) é rápido o bastante na prática — getMainComponentAsync
+        // roda no runtime local do Figma, não é I/O de rede. Paraleliza por
+        // NÍVEL (Promise.all entre os filhos de um mesmo nó) só para reduzir
+        // ainda mais o tempo total em árvores largas (muitos irmãos), sem
+        // mudar a semântica: cada child ainda decide sozinho se é candidato
+        // interativo antes de decidir descer, preservando a regra de não
+        // numerar sub-elementos internos de um match já capturado.
+        async function _walk(n) {
+          const children = n.children || [];
+          await Promise.all(children.map(async (child) => {
+            if (child.visible === false) return;
+            let isInteractiveMatch = false;
+            if (child.type === 'INSTANCE' || child.type === 'COMPONENT') {
+              let componentKey = null;
+              if (child.type === 'INSTANCE') {
+                try {
+                  const mainComp = await child.getMainComponentAsync();
+                  componentKey = mainComp ? mainComp.key : null;
+                } catch (e) { componentKey = null; }
+              } else {
+                componentKey = child.key || null;
+              }
+              if (_isA11yInteractiveComponentKey(componentKey)) {
+                collected.push(child);
+                isInteractiveMatch = true;
+              }
+            }
+            if (isInteractiveMatch) return;
+            await _walk(child);
+          }));
+        }
+        await _walk(root);
+
+        const plainNodeMap = {};
+        nodeMap.forEach((clonedNode, originalId) => { plainNodeMap[originalId] = clonedNode.id; });
+
+        if (collected.length === 0) {
+          figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items: [], cloneId: clone.id, nodeMap: plainNodeMap });
+          return;
+        }
+
+        // `collected` nasce na ordem de descoberta (agora paralela por
+        // nível, não mais DFS estrito), mas a ordem que importa pro
+        // designer é sempre recalculada pela posição visual em
+        // zigue-zague — ver _orderNodesInZigzagReadingOrder.
+        const withBounds = collected.filter(node => !!node.absoluteBoundingBox);
+        const items = _orderNodesInZigzagReadingOrder(withBounds)
+          .map(node => ({ nodeId: node.id, nodeName: node.name }));
+
+        figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items, cloneId: clone.id, nodeMap: plainNodeMap });
+        figma.notify(`${items.length} elemento${items.length === 1 ? '' : 's'} encontrado${items.length === 1 ? '' : 's'} — revise no modal antes de aplicar.`);
+      } catch (e) {
+        figma.notify("Não foi possível varrer a área automaticamente — tente novamente.");
         figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items: [] });
-        return;
       }
-
-      // `collected` nasce na ordem de camadas/DFS, mas a ordem que importa
-      // pro designer é a leitura visual em zigue-zague por linha — ver
-      // _orderNodesInZigzagReadingOrder.
-      const withBounds = collected.filter(node => !!node.absoluteBoundingBox);
-      const items = _orderNodesInZigzagReadingOrder(withBounds)
-        .map(node => ({ nodeId: node.id, nodeName: node.name }));
-
-      figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items });
-      figma.notify(`${items.length} elemento${items.length === 1 ? '' : 's'} encontrado${items.length === 1 ? '' : 's'} — revise no modal antes de aplicar.`);
     })();
     return;
   }
@@ -2468,18 +3213,20 @@ figma.ui.onmessage = async (msg) => {
   const _TAB_ORDER_ROW_GAP = 32;
   const _TAB_ORDER_COL_GAP = 64;
 
-  // Varre TUDO que o hac já colocou/referencia no canvas — Section
-  // organizadora (áreas/specs já reparentadas nela) + filhos soltos de
-  // figma.currentPage com hacCategory 'a11y' (cópias de Ordem de Tabulação e
-  // seus selos NUNCA são reparentados pra dentro da Section, ver
-  // apply-tab-order-to-canvas/_createTabOrderBadge com reparentToSection
-  // false) — e também os frames ORIGINAIS de cada Área Marcada (não são
-  // injetados pelo hac, então não têm hacCategory; resolvidos via
-  // hacAreaTargetNodeId guardado no selo da área em create-a11y-area).
-  // Devolve o Y mais baixo ocupado (bottom) e o X mais à esquerda (left)
-  // entre tudo isso, sempre a partir de absoluteBoundingBox/
-  // absoluteRenderBounds (nunca node.x/y crus — um node dentro da Section
-  // tem x/y relativos a ela, não à página).
+  // Varre TODO conteúdo de topo de nível da página atual — não só o que o
+  // hac já colocou/referencia. Motivo: a réplica de Ordem de Tabulação não
+  // pode sobrepor NADA no canvas, inclusive telas/frames do designer que o
+  // hac nunca tocou (sem hacCategory, sem virar Área Marcada). Antes desta
+  // correção a varredura considerava só a Section organizadora + siblings
+  // com hacCategory 'a11y' + frames-raiz de Área Marcada via
+  // hacAreaTargetNodeId — qualquer outro conteúdo real do arquivo (outras
+  // telas, componentes soltos etc.) ficava invisível pro cálculo e podia
+  // ser coberto pela cópia. figma.currentPage.children só traz nodes de
+  // TOPO de nível (não desce recursivamente), então o custo é baixo mesmo
+  // em arquivos grandes. Devolve o Y mais baixo ocupado (bottom) e o X mais
+  // à esquerda (left) entre tudo isso, sempre a partir de
+  // absoluteBoundingBox/absoluteRenderBounds (nunca node.x/y crus — um node
+  // dentro da Section tem x/y relativos a ela, não à página).
   async function _collectA11yOccupiedBounds() {
     const bounds = [];
     const seen = new Set();
@@ -2491,21 +3238,17 @@ figma.ui.onmessage = async (msg) => {
       bounds.push({ left: bb.x, top: bb.y, right: bb.x + bb.width, bottom: bb.y + bb.height });
     };
 
-    const section = _getOrCreateA11ySection();
-    const sectionChildren = section.children || [];
-    sectionChildren.forEach(addNode);
+    figma.currentPage.children.forEach(addNode);
 
     const areaTargetIds = [];
     for (const sibling of figma.currentPage.children) {
       try {
-        if (sibling.getPluginData && sibling.getPluginData('hacCategory') === 'a11y') {
-          addNode(sibling);
-        }
         const areaTargetId = sibling.getPluginData && sibling.getPluginData('hacAreaTargetNodeId');
         if (areaTargetId) areaTargetIds.push(areaTargetId);
       } catch (e) { }
     }
-    for (const child of sectionChildren) {
+    const section = _getOrCreateA11ySection();
+    for (const child of (section.children || [])) {
       try {
         const areaTargetId = child.getPluginData && child.getPluginData('hacAreaTargetNodeId');
         if (areaTargetId) areaTargetIds.push(areaTargetId);
@@ -2624,6 +3367,9 @@ figma.ui.onmessage = async (msg) => {
       _activeTabOrderCloneMap = nodeMap;
       _activeTabOrderCloneAreaId = msg.areaId || null;
 
+      figma.currentPage.selection = [clone];
+      figma.viewport.scrollAndZoomIntoView([clone]);
+
       const plainNodeMap = {};
       nodeMap.forEach((clonedNode, originalId) => { plainNodeMap[originalId] = clonedNode.id; });
 
@@ -2681,21 +3427,82 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
+  // Prévia visual TEMPORÁRIA da Ordem de Tabulação — chamada a cada
+  // mudança na lista pendente (item adicionado/removido/reordenado) ENQUANTO
+  // o modal de revisão está aberto, refletindo a ordem ATUAL da lista.
+  // NUNCA toca o frame original: desenha o lote inteiro de selos "fantasma"
+  // (opacidade reduzida) dentro da mesma cópia rascunho já criada por
+  // start-tab-order-copy, reaproveitando _createTabOrderBadge. Redesenha do
+  // zero a cada chamada (apaga os anteriores primeiro) — mais simples e
+  // seguro do que tentar diffar a ordem, e o volume de itens de uma Ordem de
+  // Tabulação (dezenas, não centenas) não justifica otimizar isso.
+  // Requer que start-tab-order-copy já tenha rodado para esta área (fluxo
+  // manual) OU generate-tab-order-from-layers (fluxo automático, que também
+  // passa por _createTabOrderCloneForArea) — sem cópia ativa, não há onde
+  // desenhar a prévia e a chamada é ignorada silenciosamente (a lista
+  // pendente continua funcionando normalmente, só sem prévia no canvas).
+  if (msg.type === "preview-tab-order-numbers") {
+    const myGeneration = ++_tabOrderPreviewGeneration;
+    (async () => {
+      if (!_activeTabOrderCloneMap || _activeTabOrderCloneAreaId !== msg.areaId) return;
+      await _clearTabOrderPreviewBadges(msg.areaId);
+
+      let cloneNode = null;
+      for (const sibling of figma.currentPage.children) {
+        if (sibling.getPluginData && sibling.getPluginData('hacTabOrderCopyForArea') === msg.areaId) {
+          cloneNode = sibling;
+          break;
+        }
+      }
+      if (!cloneNode) return;
+
+      try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
+
+      for (const entry of (msg.items || [])) {
+        // Duas checagens de invariante a cada iteração, não só uma vez no
+        // início do loop — este loop é assíncrono (await dentro dele cede o
+        // event loop a cada volta) e tanto o cancelamento/troca da cópia
+        // rascunho quanto uma chamada mais nova de preview podem acontecer
+        // no meio do caminho:
+        //   1. geração obsoleta — uma chamada mais recente já assumiu.
+        //   2. cópia rascunho foi deletada/trocada (delete-tab-order-draft-
+        //      copy) enquanto este loop ainda rodava.
+        // Em qualquer um dos dois casos, aborta imediatamente sem tentar
+        // criar mais selos.
+        if (myGeneration !== _tabOrderPreviewGeneration) return;
+        if (!_activeTabOrderCloneMap || _activeTabOrderCloneAreaId !== msg.areaId) return;
+        const mappedNode = _activeTabOrderCloneMap.get(entry.nodeId);
+        if (!mappedNode || !mappedNode.absoluteBoundingBox) continue;
+        try {
+          await _createTabOrderBadge(mappedNode, entry.number, '', 'direita', msg.areaId, false, msg.a11yOrigin, cloneNode, true);
+        } catch (e) {
+          // Selo de prévia individual falhou (node removido no meio do loop,
+          // etc.) — não interrompe o resto do lote, mas loga pra não ficar
+          // indiagnosticável (era um catch mudo antes).
+          console.error('[hac] preview-tab-order-numbers: falha ao desenhar selo fantasma para', entry.nodeId, e && e.message);
+        }
+      }
+    })();
+    return;
+  }
+
+  // Limpeza explícita da prévia — chamada ao fechar/cancelar o modal de
+  // revisão e antes de "Aplicar no Canvas" desenhar os selos REAIS (que
+  // tomam o lugar dos temporários). Sem isso os selos fantasma ficariam
+  // órfãos dentro da cópia (delete-tab-order-draft-copy já cobre o caso de
+  // cancelar, já que apaga a cópia inteira — este handler cobre o caso de
+  // "Aplicar no Canvas", onde a cópia SEGUE existindo, só sem os selos
+  // fantasma).
+  if (msg.type === "clear-tab-order-preview-numbers") {
+    (async () => { await _clearTabOrderPreviewBadges(msg.areaId); })();
+    return;
+  }
+
   // Cancelamento do fluxo manual: a cópia rascunho criada por
   // start-tab-order-copy fica órfã (vazia, sem selos) se o designer desistir
   // — remove pelo mesmo pluginData de sempre e zera o estado em memória.
   if (msg.type === "delete-tab-order-draft-copy") {
-    for (const sibling of figma.currentPage.children) {
-      try {
-        if (sibling.getPluginData && sibling.getPluginData('hacTabOrderCopyForArea') === msg.areaId) {
-          sibling.remove();
-        }
-      } catch (e) { }
-    }
-    if (_activeTabOrderCloneAreaId === msg.areaId) {
-      _activeTabOrderCloneMap = null;
-      _activeTabOrderCloneAreaId = null;
-    }
+    _deleteTabOrderDraftCopy(msg.areaId);
     return;
   }
 
@@ -2742,6 +3549,16 @@ figma.ui.onmessage = async (msg) => {
       _activeTabOrderCloneMap = null;
       _activeTabOrderCloneAreaId = null;
 
+      // Os selos fantasma da prévia (se o fluxo passou por
+      // preview-tab-order-numbers) dão lugar aos selos REAIS agora — apaga
+      // pelo mesmo pluginData, direto no clone já resolvido acima (não
+      // depende de _activeTabOrderCloneAreaId, já zerado nesta linha).
+      if (clone.findAll) {
+        for (const n of clone.findAll(n => n.getPluginData && n.getPluginData('hacTabOrderPreviewForArea') === msg.areaId)) {
+          try { n.remove(); } catch (e) { }
+        }
+      }
+
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
 
       const items = [];
@@ -2753,9 +3570,16 @@ figma.ui.onmessage = async (msg) => {
           skipped++;
           continue;
         }
-        const { group, item } = await _createTabOrderBadge(mappedNode, entry.number, '', 'direita', msg.areaId, false, msg.a11yOrigin, clone);
-        createdGroups.push(group);
-        items.push(item);
+        try {
+          const { group, item } = await _createTabOrderBadge(mappedNode, entry.number, '', 'direita', msg.areaId, false, msg.a11yOrigin, clone);
+          createdGroups.push(group);
+          items.push(item);
+        } catch (e) {
+          // Um selo REAL falhando não pode derrubar o lote inteiro (os
+          // itens já desenhados até aqui ficariam perdidos silenciosamente).
+          skipped++;
+          console.error('[hac] apply-tab-order-to-canvas: falha ao desenhar selo para', entry.nodeId, e && e.message);
+        }
       }
 
       if (createdGroups.length > 0) {

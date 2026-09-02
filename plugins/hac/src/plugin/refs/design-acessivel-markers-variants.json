@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "description": "Extração REAL via REST API (2026-09-02) de TODAS as variantes (componentes individuais, não só a component property definition do set) dos 3 component sets de marcadores visuais REALMENTE IMPORTADOS pelo hac no runtime (figma.importComponentByKeyAsync) a partir da lib 'Design Acessível (desktop)' — [a11y] Agrupamento, [a11y] Conectores, [a11y] Item Number. Objetivo: dar suporte auditável (key real de cada variante rastreável até a REST API) às constantes hardcoded A11Y_AGRUPAMENTO_KEYS, A11Y_CONECTOR_LINHA_KEYS, A11Y_ITEM_NUMBER_KEYS e A11Y_AREA_CONECTOR_KEYS em src/plugin/code.js. NÃO confundir com design-acessivel-properties.json (25 component sets '[NÃO UTILIZAR][a11y base] *', que documenta só as component property DEFINITIONS por família, não a key de cada variante — unidades diferentes, propósitos diferentes).",
+    "fileKey": "Wy0IhXRVZMSOOr8E609UqI",
+    "libraryName": "Design Acessível (desktop)",
+    "extractedAt": "2026-09-02T00:00:00.000Z",
+    "extractedBy": "augusto.brasil@saude.gov.br",
+    "method": "GET /v1/files/Wy0IhXRVZMSOOr8E609UqI/component_sets (para localizar node_id + nome dos 3 sets alvo, entre os 39 component sets reais do arquivo) + GET /v1/files/Wy0IhXRVZMSOOr8E609UqI/nodes?ids={setNodeId}&depth=2 (para obter, no campo top-level `components` da resposta por node consultado, a key publicada + nome completo `Prop1=Valor1, Prop2=Valor2` de cada variante filha do component set).",
+    "achadoPrincipal": "As 3 constantes hardcoded em code.js (A11Y_AGRUPAMENTO_KEYS: 20 keys, A11Y_CONECTOR_LINHA_KEYS: 25 keys, A11Y_ITEM_NUMBER_KEYS/A11Y_AREA_CONECTOR_KEYS: 5 keys, mesma family) batem 100% (50/50) com a extração real via API nesta rodada — nenhuma key divergente encontrada. Ver campo `comparisonWithHardcodedConstants` em cada bloco abaixo.",
+    "nomesDosSetsReaisConfirmados": {
+      "agrupamento": "[a11y] Agrupamento (nodeId 1:169, key de família cfa097289584d667e59208c9ba3226dfb5007ab2)",
+      "conectores": "[a11y] Conectores (nodeId 1:50, key de família 3d33a5d23c37720b22761064d9ecfafc5f791f88)",
+      "itemNumber": "[a11y] Item Number (nodeId 13:479, key de família 754e81b72212316d62a33eeaf8d6c273cc0137ed)"
+    },
+    "observacao": "O arquivo tem TAMBÉM variantes '[EXCLUSIVO DSC][a11y] Agrupamento/Conectores/Item Number/Order/Combinados' (nodeIds na faixa 733:xxxx) — sets DIFERENTES, não confundir. Não foram extraídos aqui por não serem os sets referenciados pelas constantes atuais de code.js (confirmado por bater 100% com os sets '[a11y] *' simples, sem prefixo '[EXCLUSIVO DSC]')."
+  },
+  "agrupamento": {
+    "componentSetName": "[a11y] Agrupamento",
+    "componentSetNodeId": "1:169",
+    "totalVariants": 20,
+    "expectedShape": "5 categorias (tipo) × 4 orientações — variação sempre 'unitário' nesta lib (sem par/combinado)",
+    "variants": [
+      { "nodeId": "1:170", "key": "1a32480d314943f85d5bf48e97beda44be37233b", "fullName": "tipo=elementos interativos e imagens, orientação=direita, variação=unitário", "categoriaCode": "elemento", "orientacaoCode": "direita" },
+      { "nodeId": "300:358", "key": "918dc37577a8ba0b0b9b421bbfa4c0e831696b7a", "fullName": "tipo=elementos interativos e imagens, orientação=esquerda, variação=unitário", "categoriaCode": "elemento", "orientacaoCode": "esquerda" },
+      { "nodeId": "301:396", "key": "e58a10ad987b3cc2feb7c7acf4b77e4e132c0b62", "fullName": "tipo=elementos interativos e imagens, orientação=superior, variação=unitário", "categoriaCode": "elemento", "orientacaoCode": "superior" },
+      { "nodeId": "1:174", "key": "f70dae1493341f9839a3a2e11b93855ddb78192b", "fullName": "tipo=elementos interativos e imagens, orientação=inferior, variação=unitário", "categoriaCode": "elemento", "orientacaoCode": "inferior" },
+      { "nodeId": "1:188", "key": "db8057dd5440ba35593fed4823b6b0746d2a5d3a", "fullName": "tipo=decorativo, orientação=direita, variação=unitário", "categoriaCode": "decorativo", "orientacaoCode": "direita" },
+      { "nodeId": "1:192", "key": "a638d41c126fc85074ecfb6b5c013ded77a7ca30", "fullName": "tipo=decorativo, orientação=esquerda, variação=unitário", "categoriaCode": "decorativo", "orientacaoCode": "esquerda" },
+      { "nodeId": "301:429", "key": "625a28708db4453614eb3d18f2163f53a01738fc", "fullName": "tipo=decorativo, orientação=superior, variação=unitário", "categoriaCode": "decorativo", "orientacaoCode": "superior" },
+      { "nodeId": "301:433", "key": "a8abbf67336b205d944ec2a97a62879c7f8a378e", "fullName": "tipo=decorativo, orientação=inferior, variação=unitário", "categoriaCode": "decorativo", "orientacaoCode": "inferior" },
+      { "nodeId": "1:196", "key": "2f62f4c09d769578d3c5f9f7c42de94ea4b5a559", "fullName": "tipo=estrutura da página, orientação=direita, variação=unitário", "categoriaCode": "estrutura", "orientacaoCode": "direita" },
+      { "nodeId": "1:201", "key": "0736255a49a164a93dbe5913925e8cd94474c102", "fullName": "tipo=estrutura da página, orientação=esquerda, variação=unitário", "categoriaCode": "estrutura", "orientacaoCode": "esquerda" },
+      { "nodeId": "301:437", "key": "cb88b4fe2d7a34fa5db191e1e29e99a462eaa88e", "fullName": "tipo=estrutura da página, orientação=superior, variação=unitário", "categoriaCode": "estrutura", "orientacaoCode": "superior" },
+      { "nodeId": "301:442", "key": "d1de84d4afe1d169d51471b049e3b55191319b72", "fullName": "tipo=estrutura da página, orientação=inferior, variação=unitário", "categoriaCode": "estrutura", "orientacaoCode": "inferior" },
+      { "nodeId": "1:206", "key": "4df3d05e26dd4168c7d7de71fe689515c9b1895c", "fullName": "tipo=nível de título, orientação=direita, variação=unitário", "categoriaCode": "titulo", "orientacaoCode": "direita" },
+      { "nodeId": "1:210", "key": "5b759c2904110d3c60891be859e24f64d15833e9", "fullName": "tipo=nível de título, orientação=esquerda, variação=unitário", "categoriaCode": "titulo", "orientacaoCode": "esquerda" },
+      { "nodeId": "301:447", "key": "75e44fd1fc2f346fdaa7c6c59a9af09356bb045f", "fullName": "tipo=nível de título, orientação=superior, variação=unitário", "categoriaCode": "titulo", "orientacaoCode": "superior" },
+      { "nodeId": "301:451", "key": "f18bae60d1e9109c2ecd1b3c5e49bacdb3c6267a", "fullName": "tipo=nível de título, orientação=inferior, variação=unitário", "categoriaCode": "titulo", "orientacaoCode": "inferior" },
+      { "nodeId": "1:214", "key": "42eafe50b7b07e5cdacbbc1845c05af877768337", "fullName": "tipo=informações adicionais, orientação=direita, variação=unitário", "categoriaCode": "informacoes", "orientacaoCode": "direita" },
+      { "nodeId": "1:218", "key": "b1155ae94b549e7de188458b1289b8ba476af73d", "fullName": "tipo=informações adicionais, orientação=esquerda, variação=unitário", "categoriaCode": "informacoes", "orientacaoCode": "esquerda" },
+      { "nodeId": "301:455", "key": "060a2f17dff2dc489fcb1620404eda5269b5e182", "fullName": "tipo=informações adicionais, orientação=superior, variação=unitário", "categoriaCode": "informacoes", "orientacaoCode": "superior" },
+      { "nodeId": "301:459", "key": "faa943c3ccdec90b2fb06e6e58aaaa9ba0cbb867", "fullName": "tipo=informações adicionais, orientação=inferior, variação=unitário", "categoriaCode": "informacoes", "orientacaoCode": "inferior" }
+    ],
+    "comparisonWithHardcodedConstants": {
+      "constantName": "A11Y_AGRUPAMENTO_KEYS (code.js linhas ~796-827)",
+      "match": 20,
+      "mismatch": 0,
+      "diffs": []
+    }
+  },
+  "conectores": {
+    "componentSetName": "[a11y] Conectores",
+    "componentSetNodeId": "1:50",
+    "totalVariants": 25,
+    "expectedShape": "5 categorias (tipo) × 5 direções (incluindo 'desativado')",
+    "variants": [
+      { "nodeId": "1:51", "key": "eb12c7da71c1b661a72438ff4e27462ce798c07e", "fullName": "tipo=elementos interativos e imagens, conector=desativado", "categoriaCode": "elemento", "conectorCode": "desativado" },
+      { "nodeId": "1:65", "key": "9c1f1679ab73055ef68dbcbd11b89fc711629f6a", "fullName": "tipo=elementos interativos e imagens, conector=esquerda", "categoriaCode": "elemento", "conectorCode": "esquerda" },
+      { "nodeId": "1:91", "key": "eec4d7b2153d9eb6bc300787c861b8cfee10dcbf", "fullName": "tipo=elementos interativos e imagens, conector=direita", "categoriaCode": "elemento", "conectorCode": "direita" },
+      { "nodeId": "1:117", "key": "509491cd5e458ec0cf974b00390f8f65d078c326", "fullName": "tipo=elementos interativos e imagens, conector=inferior", "categoriaCode": "elemento", "conectorCode": "inferior" },
+      { "nodeId": "1:143", "key": "fcdb189d2cbdcda11488030e4d4c523d08d95865", "fullName": "tipo=elementos interativos e imagens, conector=superior", "categoriaCode": "elemento", "conectorCode": "superior" },
+      { "nodeId": "1:55", "key": "63e22dc70dde84d0aa43c1592388751e6bb8c44e", "fullName": "tipo=estrutura da página, conector=desativado", "categoriaCode": "estrutura", "conectorCode": "desativado" },
+      { "nodeId": "1:73", "key": "13141fdadb7e8675d8a47ba70be1b6d24d4ed35c", "fullName": "tipo=estrutura da página, conector=esquerda", "categoriaCode": "estrutura", "conectorCode": "esquerda" },
+      { "nodeId": "1:99", "key": "2621f5cdadea32e0802c8196aad03db1da20bf72", "fullName": "tipo=estrutura da página, conector=direita", "categoriaCode": "estrutura", "conectorCode": "direita" },
+      { "nodeId": "1:125", "key": "3021c901640ffb86e8228dd12bd730ee3f770ebb", "fullName": "tipo=estrutura da página, conector=inferior", "categoriaCode": "estrutura", "conectorCode": "inferior" },
+      { "nodeId": "1:151", "key": "76d6ba85e4fed4a5d0bd67c709860877fe236d2f", "fullName": "tipo=estrutura da página, conector=superior", "categoriaCode": "estrutura", "conectorCode": "superior" },
+      { "nodeId": "1:58", "key": "ba1aa8640e1593f93ed1e0ee03cd59ed4ff54ae8", "fullName": "tipo=nível de título / titulo, conector=desativado", "categoriaCode": "titulo", "conectorCode": "desativado" },
+      { "nodeId": "1:78", "key": "670c7c055ed7ebc01a523add5b69499680076419", "fullName": "tipo=nível de título / titulo, conector=esquerda", "categoriaCode": "titulo", "conectorCode": "esquerda" },
+      { "nodeId": "1:104", "key": "f63a82ad250bcc8569d83affbcc39d6f226d64ca", "fullName": "tipo=nível de título / titulo, conector=direita", "categoriaCode": "titulo", "conectorCode": "direita" },
+      { "nodeId": "1:130", "key": "3dafdf7d0543989b82c25686abb88134c879a94c", "fullName": "tipo=nível de título / titulo, conector=inferior", "categoriaCode": "titulo", "conectorCode": "inferior" },
+      { "nodeId": "1:156", "key": "baf0b4ea8417911a42f7d890654ad8dc3d047881", "fullName": "tipo=nível de título / titulo, conector=superior", "categoriaCode": "titulo", "conectorCode": "superior" },
+      { "nodeId": "1:60", "key": "08ec11bff941a75a75bbe248b822da7715140da7", "fullName": "tipo=decorativo, conector=desativado", "categoriaCode": "decorativo", "conectorCode": "desativado" },
+      { "nodeId": "1:82", "key": "4866349b6246fbd45cf493cce308f7da2c312569", "fullName": "tipo=decorativo, conector=esquerda", "categoriaCode": "decorativo", "conectorCode": "esquerda" },
+      { "nodeId": "1:108", "key": "85ff209c592f55cc2149b256909ac65e2e06a66b", "fullName": "tipo=decorativo, conector=direita", "categoriaCode": "decorativo", "conectorCode": "direita" },
+      { "nodeId": "1:134", "key": "a419476ffe6c0b6c10a32c080d624091cf083171", "fullName": "tipo=decorativo, conector=inferior", "categoriaCode": "decorativo", "conectorCode": "inferior" },
+      { "nodeId": "1:160", "key": "ad87c4797c992bfaadbb41d8d05e9c81fc4207c2", "fullName": "tipo=decorativo, conector=superior", "categoriaCode": "decorativo", "conectorCode": "superior" },
+      { "nodeId": "1:53", "key": "cef964a1a1bfa7ea3d0e4d24d005d3a669ca56b2", "fullName": "tipo=informações adicionais, conector=desativado", "categoriaCode": "informacoes", "conectorCode": "desativado" },
+      { "nodeId": "1:69", "key": "edb9fed9e58a7bf279d8804014f8755ffc4e711d", "fullName": "tipo=informações adicionais, conector=esquerda", "categoriaCode": "informacoes", "conectorCode": "esquerda" },
+      { "nodeId": "1:95", "key": "ceff0c518ef33fc326eec74af0320255a6ba53a8", "fullName": "tipo=informações adicionais, conector=direita", "categoriaCode": "informacoes", "conectorCode": "direita" },
+      { "nodeId": "1:121", "key": "c2ef79c032a76ffefcb0a8b3123bf91ff2c8a221", "fullName": "tipo=informações adicionais, conector=inferior", "categoriaCode": "informacoes", "conectorCode": "inferior" },
+      { "nodeId": "1:147", "key": "f8dcedebd882a13e26659b1a614adf16166b996d", "fullName": "tipo=informações adicionais, conector=superior", "categoriaCode": "informacoes", "conectorCode": "superior" }
+    ],
+    "comparisonWithHardcodedConstants": {
+      "constantName": "A11Y_CONECTOR_LINHA_KEYS (code.js linhas ~978-1014)",
+      "match": 25,
+      "mismatch": 0,
+      "diffs": []
+    }
+  },
+  "itemNumber": {
+    "componentSetName": "[a11y] Item Number",
+    "componentSetNodeId": "13:479",
+    "totalVariants": 5,
+    "expectedShape": "1 propriedade (conector) × 5 opções (4 direções + desativado) — sem dimensão de categoria/tipo",
+    "variants": [
+      { "nodeId": "13:480", "key": "71719f112ec0135b16df0deb6584fbc44af3aff2", "fullName": "conector=desativado", "conectorCode": "desativado" },
+      { "nodeId": "13:484", "key": "f9cd4394c0bfc48ae86d3028e836877887d23fcd", "fullName": "conector=esquerda", "conectorCode": "esquerda" },
+      { "nodeId": "13:492", "key": "08ac04391034777646eec9395c6d221189ee6d46", "fullName": "conector=direita", "conectorCode": "direita" },
+      { "nodeId": "13:500", "key": "b355a26c5a89aea074effe28ca6767b08e4a7f99", "fullName": "conector=inferior", "conectorCode": "inferior" },
+      { "nodeId": "13:508", "key": "ff43b15ac0c078b35219984bf035c4c0f0089cf1", "fullName": "conector=superior", "conectorCode": "superior" }
+    ],
+    "usedByTwoConstants": "Confirmado nesta extração: A11Y_ITEM_NUMBER_KEYS (code.js linhas ~2354-2360, Ordem de Tabulação) e A11Y_AREA_CONECTOR_KEYS (code.js linhas ~1543-1549, 'Marcar Área') são a MESMA family '[a11y] Item Number' — não são component sets diferentes, é reaproveitamento intencional confirmado pela extração (5 keys idênticas nas duas constantes, ambas batendo 100% com este set).",
+    "comparisonWithHardcodedConstants": [
+      { "constantName": "A11Y_ITEM_NUMBER_KEYS (code.js linhas ~2354-2360)", "match": 5, "mismatch": 0, "diffs": [] },
+      { "constantName": "A11Y_AREA_CONECTOR_KEYS (code.js linhas ~1543-1549)", "match": 5, "mismatch": 0, "diffs": [] }
+    ]
+  }
+}

@@ -30,8 +30,10 @@
 
       if (msg.type === 'init-plugin') {
         applyFigmaTheme(msg.theme);
-        const badge = document.getElementById('version-badge');
-        if (badge) badge.textContent = 'v' + msg.version;
+        // Versão exibida na modal "Sobre o hac" (aberta ao clicar em CAIXA|HAC
+        // no header) — badge fixa no header foi removida em favor da modal.
+        const aboutVersion = document.getElementById('about-hac-version');
+        if (aboutVersion) aboutVersion.textContent = 'v' + msg.version;
 
         // Armazena o usuário Figma identificado automaticamente (sem login)
         if (msg.currentUser) {
@@ -74,6 +76,7 @@
         // view-specifications (ver navigate() em core.js) — não no boot,
         // que sempre abre em view-home.
         if (typeof setOnboardingSeenState === 'function') setOnboardingSeenState(msg.onboardingSeen);
+        window._a11ySpecModalInstructionShown = !!msg.specModalInstructionSeen;
 
         return;
       }
@@ -89,6 +92,12 @@
           a11ySpecs: [],
           tabOrderItems: [],
           currentUser: hacData.currentUser
+          // projectOrigin NÃO é preservado (decisão revisada): "Limpar Cache"
+          // deve resetar o projeto ao estado zero, incluindo a plataforma
+          // declarada do arquivo — o designer volta a responder Web/Mobile
+          // na próxima ação. Omitido aqui de propósito; o default de
+          // core.js prevalece. Diferente de currentUser, que continua
+          // preservado por ser configuração de ambiente, não do projeto.
         };
         a11yAreas = [];
         a11ySpecs = [];
@@ -149,11 +158,14 @@
         saveToStorage();
         if (window._toastSaved) _toastSaved();
 
-        // Lote "Gerar Handoff Automatizado" (accessibility.js,
-        // _createA11ySpecAndWait/confirmA11yBatchGenerate): resolve a Promise
-        // pendente da chamada atual (serializa a próxima create-unified-spec)
-        // e suprime o toast por item — o lote mostra um único toast agregado
-        // no final, com a contagem real de sucesso/falha.
+        // Wizard de revisão individual da Detecção Automática
+        // (accessibility.js, confirmA11ySpec + _createA11ySpecAndWait):
+        // resolve a Promise pendente da confirmação atual — serializa a
+        // criação (evita duas em paralelo) e deixa confirmA11ySpec avançar
+        // pro próximo item da fila (_advanceA11yBatchWizard) só depois da
+        // resposta real do backend. O toast por item é suprimido (silent:
+        // true no payload) — o wizard mostra um único toast agregado no
+        // final, com a contagem real de confirmados/descartados.
         if (typeof window._a11yBatchCreateResolve === 'function') {
           const resolve = window._a11yBatchCreateResolve;
           window._a11yBatchCreateResolve = null;
@@ -197,7 +209,10 @@
 
       if (msg.type === "selection-name") {
         // msg.mainText: code.js ecoa _findMainTextContent em get-selection-name.
-        if (typeof prefillA11yComponentName === 'function') prefillA11yComponentName(msg.name, msg.mainText);
+        // msg.dscComponentName: nome cru do component set DSC (containingFrame)
+        // resolvido via _getDscComponentKeyToFrameMap quando o nó selecionado é
+        // uma INSTANCE remota reconhecida — null quando não há match.
+        if (typeof prefillA11yComponentName === 'function') prefillA11yComponentName(msg.name, msg.mainText, msg.dscComponentName);
       }
 
       if (msg.type === "node-main-text") {
@@ -260,12 +275,16 @@
       }
 
       // Geração automática por varredura de camadas (generate-tab-order-
-      // from-layers em code.js) — responde só com os CANDIDATOS
-      // ({nodeId, nodeName}[], já ordenados espacialmente), nunca itens já
-      // desenhados. addTabOrderItemsFromLayers popula a lista pendente e
-      // abre o modal de revisão.
+      // from-layers em code.js) — responde com os CANDIDATOS
+      // ({nodeId, nodeName}[], já ordenados espacialmente, nunca itens já
+      // desenhados) e também cloneId/nodeMap: o backend já criou e focou a
+      // cópia da área antes de varrer, mesmo padrão do fluxo manual
+      // (tab-order-copy-started). addTabOrderItemsFromLayers popula a lista
+      // pendente, guarda a cópia ativa e abre o modal de revisão.
       if (msg.type === "tab-order-generated-from-layers") {
-        if (typeof addTabOrderItemsFromLayers === 'function') addTabOrderItemsFromLayers(msg.items);
+        if (typeof addTabOrderItemsFromLayers === 'function') {
+          addTabOrderItemsFromLayers(msg.items, msg.cloneId, msg.nodeMap);
+        }
       }
 
       // Resposta de 'apply-tab-order-to-canvas' (code.js): a cópia do frame

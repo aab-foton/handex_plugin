@@ -1,0 +1,1441 @@
+{
+  "_meta": {
+    "description": "Component property definitions (VARIANT/BOOLEAN/TEXT/INSTANCE_SWAP, com opções e defaults) de cada component set \"^\\[N[ÃA]O UTILIZAR\\]\\[a11y base\\]\\s*\" da lib \"Design Acessível (desktop)\". Gerado por fetch-component-properties.cjs (generalização de fetch-a11y-component-properties.cjs para as 5 libs DSC do hac). Unidade de extração é o COMPONENT SET (família), não a variante individual — ver cabeçalho do script para justificativa.",
+    "slug": "design-acessivel",
+    "libraryName": "Design Acessível (desktop)",
+    "fileKey": "Wy0IhXRVZMSOOr8E609UqI",
+    "generatedAt": "2026-09-01T18:11:41.479Z",
+    "generator": "fetch-component-properties.cjs",
+    "deepScan": false,
+    "discoverySignature": "a37a068e829c9d746e1fc59649e89dbd8ad063f975dfaf84a2fd312b05899f3d",
+    "counts": {
+      "totalComponentSets": 25,
+      "resolved": 25,
+      "failed": 0
+    },
+    "schema": {
+      "components": "array — um item por component set real da lib",
+      "components[].nodeId": "node_id do component set no arquivo Figma (usado em GET /v1/files/:key/nodes)",
+      "components[].key": "component key publicada (null se o set não tiver key — ex: sets ocultos \".\" encontrados via --deep-scan)",
+      "components[].fullName": "nome completo do node no Figma, incluindo prefixo (se prefixRe aplicável)",
+      "components[].shortName": "nome sem o prefixo (se prefixRe aplicável) — chave amigável para UI",
+      "components[].source": "\"component_sets\" (via GET /component_sets) ou \"tree-walk\" (via --deep-scan, set oculto)",
+      "components[].properties": "array flat de todas as component property definitions do set",
+      "components[].properties[].rawKey": "chave exata como retornada pela API, ex: \"observacoes#7489:0\"",
+      "components[].properties[].name": "nome legível sem o sufixo #id — usar para casar com componentProperties em runtime",
+      "components[].properties[].syncId": "sufixo #id (sync key), null se a property não tiver um",
+      "components[].properties[].type": "\"VARIANT\" | \"BOOLEAN\" | \"TEXT\" | \"INSTANCE_SWAP\"",
+      "components[].properties[].defaultValue": "valor padrão retornado pela API",
+      "components[].properties[].variantOptions": "presente só quando type === \"VARIANT\" — lista de valores aceitos",
+      "components[].properties[].preferredValues": "presente só quando type === \"INSTANCE_SWAP\" — lista de {type, key} de componentes preferidos",
+      "components[].propertiesByType": "mesmos dados de properties, separados por type e reduzidos a nomes",
+      "warnings": "lista de avisos não fatais — JSON pode estar parcial se não vazio (ver counts.failed)"
+    },
+    "warnings": []
+  },
+  "components": [
+    {
+      "nodeId": "31:288",
+      "key": "a374c9b532599952aaf3bd202c074ea1765d4c49",
+      "fullName": "[NÃO UTILIZAR][a11y base] niveis de titulo",
+      "shortName": "niveis de titulo",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "observacoes#7489:0",
+          "name": "observacoes",
+          "syncId": "7489:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "nivel",
+          "name": "nivel",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "h1",
+          "variantOptions": [
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "observacoes"
+        ],
+        "texts": [],
+        "variants": [
+          "nivel"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:482",
+      "key": "bbc39f2913ec63be74441a2bb5f5ab958b6f01a7",
+      "fullName": "[NÃO UTILIZAR][a11y base] ED gerais",
+      "shortName": "ED gerais",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "observacoes#7489:0",
+          "name": "observacoes",
+          "syncId": "7489:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "notas#7489:18",
+          "name": "notas",
+          "syncId": "7489:18",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "ignorar pelo LT",
+          "variantOptions": [
+            "ignorar pelo LT",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "observacoes",
+          "notas"
+        ],
+        "texts": [],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:535",
+      "key": "c24ea9d49d68838005f549dc2b4cd4beb53f9b38",
+      "fullName": "[NÃO UTILIZAR][a11y base] estrutura da página",
+      "shortName": "estrutura da página",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "variacao",
+          "name": "variacao",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "marco de navegacao",
+          "variantOptions": [
+            "idiomas",
+            "marco de navegacao",
+            "titulo da pagina"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "variacao"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:865",
+      "key": "f2160926fd295749bfd70073d957e2d1a4d56308",
+      "fullName": "[NÃO UTILIZAR][a11y base] tab group",
+      "shortName": "tab group",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "nome acessivel#742:10",
+          "name": "nome acessivel",
+          "syncId": "742:10",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#1303:0",
+          "name": "letter",
+          "syncId": "1303:0",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "observacoes#1327:115",
+          "name": "observacoes",
+          "syncId": "1327:115",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "notas#1327:118",
+          "name": "notas",
+          "syncId": "1327:118",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "tabs",
+          "variantOptions": [
+            "tabs",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "nome acessivel",
+          "observacoes",
+          "notas"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:598",
+      "key": "ff2d84adec6f49115d61370e6a4de17494cb7cef",
+      "fullName": "[NÃO UTILIZAR][a11y base] breadcrumb",
+      "shortName": "breadcrumb",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "nome acessível#741:15",
+          "name": "nome acessível",
+          "syncId": "741:15",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#1303:0",
+          "name": "letter",
+          "syncId": "1303:0",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "observacao#1325:19",
+          "name": "observacao",
+          "syncId": "1325:19",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "notas#1325:25",
+          "name": "notas",
+          "syncId": "1325:25",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "link inicio",
+          "variantOptions": [
+            "link inicio",
+            "link secundario",
+            "texto truncado",
+            "pagina atual",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "nome acessível",
+          "observacao",
+          "notas"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:632",
+      "key": "0f34645a29585cb540371f7314f495e95fcffd2e",
+      "fullName": "[NÃO UTILIZAR][a11y base] stepper",
+      "shortName": "stepper",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "nome acessivel#742:22",
+          "name": "nome acessivel",
+          "syncId": "742:22",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#1303:0",
+          "name": "letter",
+          "syncId": "1303:0",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "observacoes#1327:93",
+          "name": "observacoes",
+          "syncId": "1327:93",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "notas#1327:99",
+          "name": "notas",
+          "syncId": "1327:99",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "atual",
+          "variantOptions": [
+            "atual",
+            "editavel",
+            "preenchido",
+            "inativo",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "nome acessivel",
+          "observacoes",
+          "notas"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:408",
+      "key": "0e4f8d5a02e9df09ec0f2f7982054ff7fe2af479",
+      "fullName": "[NÃO UTILIZAR][a11y base] EE marco de navegacao",
+      "shortName": "EE marco de navegacao",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "observacoes#7489:0",
+          "name": "observacoes",
+          "syncId": "7489:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#7500:37",
+          "name": "letter",
+          "syncId": "7500:37",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "header",
+          "variantOptions": [
+            "header",
+            "nav",
+            "main",
+            "aside",
+            "footer",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "observacoes"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:233",
+      "key": "1d22f857a920359eac22eb0a1f38b90c5ec446e4",
+      "fullName": "[NÃO UTILIZAR][a11y base] button",
+      "shortName": "button",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "nome acessivel#742:67",
+          "name": "nome acessivel",
+          "syncId": "742:67",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "observacoes#7489:0",
+          "name": "observacoes",
+          "syncId": "7489:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#7489:9",
+          "name": "letter",
+          "syncId": "7489:9",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "notas#7489:18",
+          "name": "notas",
+          "syncId": "7489:18",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "desabilitado",
+            "com expansao",
+            "agrupado",
+            "de icone",
+            "de icone com expansao",
+            "com nome acessivel",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "nome acessivel",
+          "observacoes",
+          "notas"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:702",
+      "key": "63f2a5cd4d9956ce84eca344f1bc7311bf580b1c",
+      "fullName": "[NÃO UTILIZAR][a11y base] inputs",
+      "shortName": "inputs",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "nome acessivel#742:0",
+          "name": "nome acessivel",
+          "syncId": "742:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#1303:0",
+          "name": "letter",
+          "syncId": "1303:0",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "observacoes#1325:49",
+          "name": "observacoes",
+          "syncId": "1325:49",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "notas#1325:59",
+          "name": "notas",
+          "syncId": "1325:59",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "tipo numero",
+            "tipo data",
+            "tipo selecao",
+            "tipo senha",
+            "somente leitura",
+            "botao (i) e tooltip",
+            "botao visualizar senha",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "nome acessivel",
+          "observacoes",
+          "notas"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:880",
+      "key": "dfb0f93c805f1f56bd9b8cf6ec95c8628e5ca2df",
+      "fullName": "[NÃO UTILIZAR][a11y base] paginator",
+      "shortName": "paginator",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "nome acessivel#742:31",
+          "name": "nome acessivel",
+          "syncId": "742:31",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#1303:0",
+          "name": "letter",
+          "syncId": "1303:0",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "observacoes#1327:69",
+          "name": "observacoes",
+          "syncId": "1327:69",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "notas#1327:73",
+          "name": "notas",
+          "syncId": "1327:73",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "caixa de selecao",
+          "variantOptions": [
+            "caixa de selecao",
+            "listagem",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "nome acessivel",
+          "observacoes",
+          "notas"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:850",
+      "key": "283f08aa466b057db4d5cb9e9896855e9a8f6a81",
+      "fullName": "[NÃO UTILIZAR][a11y base] snackbar",
+      "shortName": "snackbar",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "nome acessivel#742:28",
+          "name": "nome acessivel",
+          "syncId": "742:28",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#1303:0",
+          "name": "letter",
+          "syncId": "1303:0",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "observacoes#1327:87",
+          "name": "observacoes",
+          "syncId": "1327:87",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "notas de codigo#1327:90",
+          "name": "notas de codigo",
+          "syncId": "1327:90",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "notificacao imediata",
+          "variantOptions": [
+            "notificacao imediata",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "nome acessivel",
+          "observacoes",
+          "notas de codigo"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:765",
+      "key": "2d3916a2a484cded39e3fad17f6b749d6ddb8f8d",
+      "fullName": "[NÃO UTILIZAR][a11y base] checkbox",
+      "shortName": "checkbox",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "nome acessivel#742:46",
+          "name": "nome acessivel",
+          "syncId": "742:46",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#1303:0",
+          "name": "letter",
+          "syncId": "1303:0",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "observacoes#1325:31",
+          "name": "observacoes",
+          "syncId": "1325:31",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "notas#1325:37",
+          "name": "notas",
+          "syncId": "1325:37",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "somente caixa",
+          "variantOptions": [
+            "somente caixa",
+            "Indeterminada em grupo",
+            "caixa e rotulo",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "nome acessivel",
+          "observacoes",
+          "notas"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:331",
+      "key": "38d757ed967c414da4daa79a94e8c681fb8e6eee",
+      "fullName": "[NÃO UTILIZAR][a11y base] listas",
+      "shortName": "listas",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "observacoes#7489:0",
+          "name": "observacoes",
+          "syncId": "7489:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#7500:37",
+          "name": "letter",
+          "syncId": "7500:37",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "ordenada",
+          "variantOptions": [
+            "ordenada",
+            "nao ordenada",
+            "de definicao",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "observacoes"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:383",
+      "key": "552ae812cc0a92272e17a12fdca3f0ada315255c",
+      "fullName": "[NÃO UTILIZAR][a11y base] EE idiomas",
+      "shortName": "EE idiomas",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "notas#1417:0",
+          "name": "notas",
+          "syncId": "1417:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "observacoes#7489:0",
+          "name": "observacoes",
+          "syncId": "7489:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#7500:37",
+          "name": "letter",
+          "syncId": "7500:37",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "da pagina",
+          "variantOptions": [
+            "da pagina",
+            "das partes",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "notas",
+          "observacoes"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:668",
+      "key": "6f1ed04db3a8b3458ec67947b511a7e55e2d8982",
+      "fullName": "[NÃO UTILIZAR][a11y base] table",
+      "shortName": "table",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "nome acessivel#742:16",
+          "name": "nome acessivel",
+          "syncId": "742:16",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#1303:0",
+          "name": "letter",
+          "syncId": "1303:0",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "observacoes#1327:121",
+          "name": "observacoes",
+          "syncId": "1327:121",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "notas#1327:127",
+          "name": "notas",
+          "syncId": "1327:127",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "estruturada",
+          "variantOptions": [
+            "estruturada",
+            "cabecalho",
+            "celula",
+            "botao de ordenacao",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "nome acessivel",
+          "observacoes",
+          "notas"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:931",
+      "key": "71493bf848263049a17dbdf9f1a0d2f0d8edf9ba",
+      "fullName": "[NÃO UTILIZAR][a11y base] accordion",
+      "shortName": "accordion",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "nome acessivel#742:51",
+          "name": "nome acessivel",
+          "syncId": "742:51",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "notas de codigo#742:54",
+          "name": "notas de codigo",
+          "syncId": "742:54",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "observacoes#742:57",
+          "name": "observacoes",
+          "syncId": "742:57",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#1325:12",
+          "name": "letter",
+          "syncId": "1325:12",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "nome acessivel",
+          "notas de codigo",
+          "observacoes"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:364",
+      "key": "828549d0d7c1ffef682dc3e270433d8ac198600a",
+      "fullName": "[NÃO UTILIZAR][a11y base] informações adicionais",
+      "shortName": "informações adicionais",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "observacoes#7489:0",
+          "name": "observacoes",
+          "syncId": "7489:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#7500:37",
+          "name": "letter",
+          "syncId": "7500:37",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "handoffs",
+          "variantOptions": [
+            "handoffs",
+            "conteudo extra",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "observacoes"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:793",
+      "key": "86346027c8d8795b02b9dd503c69c7ad4142005c",
+      "fullName": "[NÃO UTILIZAR][a11y base] radio button",
+      "shortName": "radio button",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "nome acessivel#742:42",
+          "name": "nome acessivel",
+          "syncId": "742:42",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#1303:0",
+          "name": "letter",
+          "syncId": "1303:0",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "observacoes#1327:77",
+          "name": "observacoes",
+          "syncId": "1327:77",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "notas#1327:82",
+          "name": "notas",
+          "syncId": "1327:82",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "Somente rádio",
+          "variantOptions": [
+            "Somente rádio",
+            "radio e rotulo",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "nome acessivel",
+          "observacoes",
+          "notas"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:814",
+      "key": "9be38e000412e03f158c65336034203a41b280dd",
+      "fullName": "[NÃO UTILIZAR][a11y base] switch",
+      "shortName": "switch",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "nome acesivel#742:38",
+          "name": "nome acesivel",
+          "syncId": "742:38",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#1303:0",
+          "name": "letter",
+          "syncId": "1303:0",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "observacoes#1327:105",
+          "name": "observacoes",
+          "syncId": "1327:105",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "notas#1327:110",
+          "name": "notas",
+          "syncId": "1327:110",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "Somente switch",
+          "variantOptions": [
+            "Somente switch",
+            "switch e rotulo",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "nome acesivel",
+          "observacoes",
+          "notas"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:508",
+      "key": "a17722a39d9c270e2de11ee84f5fb66d0dac5641",
+      "fullName": "[NÃO UTILIZAR][a11y base]texto alternativo para imagens",
+      "shortName": "texto alternativo para imagens",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "nome acesivel#742:13",
+          "name": "nome acesivel",
+          "syncId": "742:13",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "observacoes#7500:34",
+          "name": "observacoes",
+          "syncId": "7500:34",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "notas#7500:35",
+          "name": "notas",
+          "syncId": "7500:35",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#7500:36",
+          "name": "letter",
+          "syncId": "7500:36",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "texto alternativo",
+          "variantOptions": [
+            "texto alternativo",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "nome acesivel",
+          "observacoes",
+          "notas"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:557",
+      "key": "ad0061b9bcf646bf312e01ee84bf5c64c4b790dd",
+      "fullName": "[NÃO UTILIZAR][a11y base] link",
+      "shortName": "link",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "nome acessivel#742:60",
+          "name": "nome acessivel",
+          "syncId": "742:60",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#1303:0",
+          "name": "letter",
+          "syncId": "1303:0",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "notas#1325:0",
+          "name": "notas",
+          "syncId": "1325:0",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "observacoes#1325:6",
+          "name": "observacoes",
+          "syncId": "1325:6",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "nova janela",
+            "com nome acessivel",
+            "agrupado",
+            "enviar email",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "nome acessivel",
+          "notas",
+          "observacoes"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:835",
+      "key": "b1a9add1f8528b475061d58fc4693c370ff9e6a2",
+      "fullName": "[NÃO UTILIZAR][a11y base] dialog",
+      "shortName": "dialog",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "nome acessivel#742:35",
+          "name": "nome acessivel",
+          "syncId": "742:35",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "letter#1303:0",
+          "name": "letter",
+          "syncId": "1303:0",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "observacoes#1325:43",
+          "name": "observacoes",
+          "syncId": "1325:43",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "notas#1325:46",
+          "name": "notas",
+          "syncId": "1325:46",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "default",
+          "variantOptions": [
+            "default",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "nome acessivel",
+          "observacoes",
+          "notas"
+        ],
+        "texts": [
+          "letter"
+        ],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:495",
+      "key": "03eed9609ec62345359991d322f5b8fd79222965",
+      "fullName": "[NÃO UTILIZAR][a11y base] ED imagem",
+      "shortName": "ED imagem",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "observacoes#7500:31",
+          "name": "observacoes",
+          "syncId": "7500:31",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "notas#7500:32",
+          "name": "notas",
+          "syncId": "7500:32",
+          "type": "BOOLEAN",
+          "defaultValue": true
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "texto alternativo",
+          "variantOptions": [
+            "texto alternativo",
+            "customizável"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [
+          "observacoes",
+          "notas"
+        ],
+        "texts": [],
+        "variants": [
+          "tipo"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:902",
+      "key": "0de3ffe1c493d39be6226684a76e0c14207fdbc4",
+      "fullName": "[NÃO UTILIZAR][a11y base] componentes/icones/imagens",
+      "shortName": "componentes/icones/imagens",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "variante",
+          "name": "variante",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "componente",
+          "variantOptions": [
+            "componente",
+            "texto alternativo para imagens"
+          ]
+        },
+        {
+          "rawKey": "componente",
+          "name": "componente",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "accordion",
+          "variantOptions": [
+            "accordion",
+            "breadcrumb",
+            "button",
+            "checkbox",
+            "dialog",
+            "inputs",
+            "link",
+            "listas",
+            "paginator",
+            "radio button",
+            "snackbar",
+            "stepper",
+            "switch",
+            "tab group",
+            "table",
+            "imagem"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "variante",
+          "componente"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
+      "nodeId": "31:530",
+      "key": "545b65b66a19cff4016b32312b7f5691691e712a",
+      "fullName": "[NÃO UTILIZAR][a11y base] elementos decorativos",
+      "shortName": "elementos decorativos",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "variacao",
+          "name": "variacao",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "gerais",
+          "variantOptions": [
+            "gerais",
+            "imagem"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "variacao"
+        ],
+        "instanceSwaps": []
+      }
+    }
+  ]
+}

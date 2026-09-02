@@ -399,7 +399,6 @@ body {
 
     /* --- Responsive Scale Adjustments --- */
     body.scale-high header h1,
-    body.scale-high header #version-badge,
     body.scale-high header .autosave-label,
     body.scale-high footer .footer-signature-text {
       display: none !important;
