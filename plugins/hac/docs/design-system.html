@@ -682,40 +682,50 @@ li { margin: 4px 0; }
     (<code>a11y-category-picker-modal</code>, <code>a11y-spec-modal</code>, <code>a11y-area-modal</code>,
     <code>a11y-post-area-detect-modal</code>, <code>a11y-library-required-modal</code>,
     <code>a11y-tab-order-review-modal</code>, <code>a11y-batch-summary-modal</code>,
-    <code>a11y-categories-help-modal</code>, <code>onboarding-modal</code>, <code>about-hac-modal</code>), todos com a
-    mesma estrutura de 3 blocos. Reprodução abaixo é a estrutura real do modal "Marcar Área"
-    (linhas 507–604) simplificada para caber no palco.</p>
+    <code>a11y-categories-help-modal</code>, <code>onboarding-modal</code>, <code>about-hac-modal</code>). <strong>Padrão
+    revisado em 2026-09-02</strong> (3 iterações no mesmo dia — ver Changelog para o histórico completo):
+    o modal cobre 100% da área de conteúdo do plugin (abaixo do <code>&lt;header&gt;</code> fixo global,
+    acima do <code>&lt;footer id="footer-signature"&gt;</code>), com um <strong>overlay escurecido/desfocado
+    na faixa de respiro</strong> ao redor de um card centralizado — mantendo a proporção original de
+    cada modal (nem todos do mesmo tamanho). Reprodução abaixo é a estrutura real do modal "Marcar Área".</p>
     <div class="stage">
-      <div style="max-width:360px;background:#fff;border-radius:16px;box-shadow:0 20px 25px -5px rgba(0,0,0,.15);overflow:hidden">
-        <div class="flex items-center justify-between p-4 border-b border-gray-100">
-          <h3 class="flex items-center gap-2" style="font-size:14px;font-weight:700;color:#1e293b;margin:0">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0070af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{{ICON:map-pin}}</svg> Marcar Área
-          </h3>
-          <button type="button" style="color:#6b7280" aria-label="Fechar">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{{ICON:x}}</svg>
-          </button>
-        </div>
-        <div class="p-6" style="max-height:220px;overflow-y:auto">
-          <p style="font-size:11px;color:#64748b;line-height:1.5;margin:0 0 12px">Selecione a seção no canvas e dê um rótulo — o selo criado organiza as specs dessa área na listagem.</p>
-          <label style="display:block;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px">Rótulo da área</label>
-          <input type="text" placeholder="Ex: Home Portal DSC" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;font-size:12px;color:#334155">
-          <span style="display:block;text-align:right;font-size:9px;color:#94a3b8;margin-top:4px">0/80</span>
-        </div>
-        <div class="flex gap-2 p-4 border-t border-gray-100">
-          <button type="button" class="rounded-2xl font-bold" style="flex:1;padding:10px 0;font-size:12px;color:#475569;background:#f3f4f6">Cancelar</button>
-          <button type="button" class="rounded-2xl font-bold" style="flex:1;padding:10px 0;font-size:12px;color:#fff;background:#0070af">Marcar</button>
+      <div style="position:relative;width:100%;min-height:320px;background:rgba(0,0,0,.4);backdrop-filter:blur(2px);display:flex;align-items:flex-start;justify-content:center;padding:16px;box-sizing:border-box">
+        <div style="max-width:360px;width:100%;background:#fff;overflow:hidden;border-radius:16px;box-shadow:0 20px 40px rgba(0,0,0,.25)">
+          <div class="flex items-center justify-between p-4 border-b border-gray-100">
+            <h3 class="flex items-center gap-2" style="font-size:14px;font-weight:700;color:#1e293b;margin:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0070af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{{ICON:map-pin}}</svg> Marcar Área
+            </h3>
+            <button type="button" style="color:#6b7280" aria-label="Fechar">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{{ICON:x}}</svg>
+            </button>
+          </div>
+          <div class="p-6" style="max-height:220px;overflow-y:auto">
+            <p style="font-size:11px;color:#64748b;line-height:1.5;margin:0 0 12px">Selecione a seção no canvas e dê um rótulo — o selo criado organiza as specs dessa área na listagem.</p>
+            <label style="display:block;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px">Rótulo da área</label>
+            <input type="text" placeholder="Ex: Home Portal DSC" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;font-size:12px;color:#334155">
+            <span style="display:block;text-align:right;font-size:9px;color:#94a3b8;margin-top:4px">0/80</span>
+          </div>
+          <div class="flex gap-2 p-4 border-t border-gray-100">
+            <button type="button" class="rounded-2xl font-bold" style="flex:1;padding:10px 0;font-size:12px;color:#475569;background:#f3f4f6">Cancelar</button>
+            <button type="button" class="rounded-2xl font-bold" style="flex:1;padding:10px 0;font-size:12px;color:#fff;background:#0070af">Marcar</button>
+          </div>
         </div>
       </div>
-      <p class="caption">Estrutura fixa nos 10 modais: <code>role="dialog"</code> + <code>aria-modal="true"</code> +
-      <code>aria-labelledby</code>; <code>position: absolute</code> (não <code>fixed</code> — <code>fixed</code> quebra sob o
-      <code>zoom</code> usado para escala da UI, ver seção 10 da Documentação Técnica); card com
-      <code>rounded-2xl</code>; header com ícone cyan/azul de 16px + título + botão fechar; corpo sempre
-      scrollável (<code>overflow-y-auto min-h-0</code>); footer fixo com ações, botão principal também em
-      <code>rounded-2xl</code> (mais arredondado que o padrão geral da UI).</p>
+      <p class="caption">Estrutura em 2 camadas dentro de cada <code>role="dialog"</code> + <code>aria-modal="true"</code>:
+      (1) <strong>wrapper externo</strong> <code>absolute inset-0 z-[1000] flex flex-col p-4</code>
+      (<code>items-center justify-center</code> nos modais curtos) — <code>position: absolute</code>, nunca
+      <code>fixed</code> (quebra sob o <code>zoom</code> da escala da UI, ver seção 10 da Documentação
+      Técnica); (2) <strong>backdrop</strong> <code>absolute inset-0 bg-black/40 backdrop-blur-sm
+      onclick="closeXyz()"</code>, clicável — fecha o modal (exceto na pergunta bloqueante Web/Mobile,
+      que não tem fechamento); (3) <strong>card</strong> <code>relative z-10 w-full {max-w} max-h-full
+      rounded-2xl shadow-2xl bg-white dark:bg-dark-surface</code>, com <code>max-w</code> = valor
+      <strong>original</strong> de cada modal (a maioria <code>max-w-sm</code>/384px; <code>max-w-[440px]</code>
+      no guia de categorias; <code>max-w-[420px]</code> no onboarding) — não ficaram todos do mesmo
+      tamanho. Fechar: botão X do cabeçalho, clique no backdrop, ou Esc (ver Documentação Técnica).</p>
     </div>
 
     <h2 id="s9">9. Componentes — Toggles/seletores</h2>
-    <p class="evidence">Fonte: <code>src/plugin/views/modals.html</code> linhas 536–551 (seletor
+    <p class="evidence">Fonte: <code>src/plugin/views/modals.html</code> linhas 524–539 (seletor
     "Detecção Automática / Manual" do modal Marcar Área) — <code>&lt;input type="radio"&gt;</code> visualmente
     oculto (<code>class="sr-only"</code>) dentro de um cartão-<code>&lt;label&gt;</code>, estado marcado lido via
     <code>has-[:checked]</code>.</p>
@@ -739,7 +749,7 @@ li { margin: 4px 0; }
 
     <h2 id="s10">10. Componentes — Contador de caracteres</h2>
     <p class="evidence">Fonte: <code>updateA11yCharCounter</code>, chamado em todo campo com
-    <code>maxlength</code> (<code>src/plugin/views/modals.html</code>, ex. linhas 214–222).</p>
+    <code>maxlength</code> (<code>src/plugin/views/modals.html</code>, ex. linhas 209–217).</p>
     <div class="stage">
       <div class="stage-row" style="align-items:flex-end">
         <div>
@@ -791,7 +801,7 @@ li { margin: 4px 0; }
     </div>
 
     <h2 id="s12">12. Componentes — Paginador do wizard de revisão</h2>
-    <p class="evidence">Fonte: <code>src/plugin/views/modals.html</code> linhas 96–111
+    <p class="evidence">Fonte: <code>src/plugin/views/modals.html</code> linhas 85–100
     (<code>#a11y-modal-wizard-paginator</code>), navegação via <code>_stepA11yWizardItem</code>/
     <code>_commitA11yWizardIndexInput</code> em <code>accessibility.js</code>.</p>
     <div class="stage">

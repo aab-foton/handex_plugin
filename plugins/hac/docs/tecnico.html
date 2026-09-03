@@ -624,7 +624,7 @@ hr {
       vistos voltam para "Não Documentados".
         <ul>
           <li><strong>Distinção Cancelar explícito vs. fechamento acidental</strong>: fechar via
-          X/backdrop/Esc oferece retomada (toast com botão "Continuar revisão",
+          X/Esc oferece retomada (toast com botão "Continuar revisão",
           que dispara um novo scan da área e retoma o wizard); clicar em
           "Cancelar" explicitamente não oferece essa opção.</li>
         </ul>
@@ -752,6 +752,27 @@ hr {
     nascer mais alto do que cabia, cortando o rodapé (botões de ação) para
     fora da área rolável interna. Corrigido trocando por <code>max-h-full</code>, que
     resolve contra o wrapper pai imediato.</p>
+
+    <h3>Modais em tela cheia (2026-09-02)</h3>
+
+    <p>Os 10 modais deixaram de ser um popup pequeno centralizado sobre
+    <code>bg-black/40 backdrop-blur-sm</code> e passaram a ocupar 100% da área de
+    conteúdo do plugin (mesma área de <code>view-home</code>/<code>view-specifications</code>,
+    abaixo do <code>&lt;header&gt;</code> fixo global e acima do
+    <code>&lt;footer id="footer-signature"&gt;</code>) — sem mudar <code>position: absolute</code>
+    (continua a correção da seção acima; nenhum modal voltou a usar <code>fixed</code>). A
+    <code>&lt;div&gt;</code> de backdrop clicável (<code>onclick="closeXyz()"</code>) foi removida de
+    todos os modais; fechar passou a ser só pelo botão X existente no cabeçalho. Ver
+    "Componentes — Modal" em <a href="design-system.html#s8">design-system.html</a> para a
+    estrutura visual atualizada.</p>
+
+    <p><strong>Efeito colateral corrigido</strong>: o handler global de <code>Escape</code>
+    (<code>core.js</code>) decidia entre chamar a função de fechamento "com limpeza de estado"
+    do modal (ex: <code>cancelTabOrderReview()</code>) ou <code>closeModal(id)</code> genérico lendo
+    o <code>onclick</code> do backdrop clicável. Sem backdrop, essa leitura passou a usar o
+    <code>onclick</code> do botão de fechar do cabeçalho
+    (<code>button[title="Fechar"|"Cancelar"][onclick]</code> ou
+    <code>button[aria-label="Fechar"|"Cancelar"][onclick]</code>) — mesmo efeito, nova fonte.</p>
 
     <h2 id="s11">11. Pendências conhecidas</h2>
 

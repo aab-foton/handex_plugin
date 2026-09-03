@@ -570,11 +570,11 @@ configuração/confirmação individual antes de virar spec real:
    **aguarda** a resposta real `spec-created` antes de avançar (evita
    duas criações concorrentes colidindo) — diferente do fluxo manual
    normal, que é fire-and-forget.
-5. Cancelar a revisão (botão "Cancelar", X, backdrop, Esc) preserva as
+5. Cancelar a revisão (botão "Cancelar", X, Esc) preserva as
    specs já confirmadas; itens ainda não vistos voltam automaticamente
    para "Não Documentados" (a fonte bruta nunca foi tocada).
 5.1. **Distinção Cancelar explícito vs. fechamento acidental (2026-09-02)**:
-   `closeA11yModal()` (X, backdrop, Esc) chama `stopA11yBatchWizard(false)`;
+   `closeA11yModal()` (X, Esc) chama `stopA11yBatchWizard(false)`;
    o botão "Cancelar" do formulário chama `cancelA11yModalExplicit()` →
    `stopA11yBatchWizard(true)`. Só o primeiro caso (fechamento não
    explícito) oferece retomada: se ainda restam itens na fila, o toast vira
@@ -953,6 +953,103 @@ quebra com a modal aberta, não consigo ver tudo" ao usar o modal "Marcar
 `max-h-full` nos 5 modais — resolve contra o wrapper pai imediato
 (`absolute inset-0 flex items-center justify-center p-4`), que sempre
 corresponde à área real visível do `body`, em qualquer escala.
+
+### 10.1 Modais com respiro + overlay sobre a área de conteúdo (2026-09-02)
+
+Todos os 10 modais do hac (`modals.html`) passaram a abrir **cobrindo
+toda a área de conteúdo do plugin** — a mesma área que
+`view-home`/`view-specifications` já ocupam (abaixo do `<header>` fixo
+global de logo CAIXA/HAC + zoom + tema, acima do
+`<footer id="footer-signature">`) — em vez do popup pequeno,
+sem respiro, que existia antes desta sessão. O header fixo global
+permanece sempre visível; o modal nunca mais compete visualmente com o
+`<header>` real do plugin nem com o subheader azul "Acessibilidade" de
+`view-specifications` (que é conteúdo da própria view, coberto pelo modal
+como o resto do conteúdo).
+
+Esta seção passou por 3 iterações no mesmo dia, todas a pedido do
+usuário — a versão final (estado atual do código) é a descrita abaixo;
+as duas intermediárias ficam registradas no Changelog.
+
+**Estrutura final de cada modal** (2 camadas, todos os 10 seguem o mesmo
+padrão):
+
+1. **Wrapper externo** — `absolute inset-0 z-[1000] flex flex-col p-4`
+   (ou `flex flex-col items-center justify-center p-4` nos modais
+   pequenos, ver abaixo). `position: absolute` (não `fixed`) foi mantido
+   — ver 10.0 acima sobre o bug de `zoom`. `p-4` (16px) é o respiro
+   visual real entre o modal e a borda da área de conteúdo, revelando o
+   overlay por trás nessa faixa.
+2. **Backdrop** — `<div class="absolute inset-0 bg-black/40
+   backdrop-blur-sm" onclick="closeXyz()">`, primeiro filho do wrapper.
+   Cobre a faixa de respiro (16px) e a área abaixo/ao redor do card
+   quando ele é menor que o wrapper. Clicável — fecha o modal, restaurando
+   o comportamento de "clique fora fecha" que existia antes da sessão.
+   Exceção: `a11y-post-area-detect-modal` (pergunta bloqueante Web/Mobile)
+   tem o backdrop só como elemento visual, sem `onclick` — fechamento
+   continua bloqueado até o designer escolher, comportamento sempre
+   preservado nas 3 iterações.
+3. **Card interno** — `relative z-10 w-full {max-w} max-h-full min-h-0
+   flex flex-col rounded-2xl overflow-hidden shadow-2xl
+   bg-white dark:bg-dark-{surface|bg}`, segundo filho do wrapper.
+   `relative z-10` garante que fica clicável por cima do backdrop (ambos
+   são `absolute inset-0` dentro do mesmo wrapper). `{max-w}` é o valor
+   **original** de cada modal (o mesmo que existia antes de qualquer
+   mudança desta sessão — restaurado, não inventado, ver tabela abaixo)
+   — não ficou tudo do mesmo tamanho: cada modal preserva a proporção que
+   sempre teve.
+
+| Modal | `max-w` | Alinhamento do wrapper |
+|---|---|---|
+| `a11y-category-picker-modal` | `max-w-sm` (384px) | centralizado |
+| `a11y-spec-modal` | `max-w-sm` | topo (formulário longo, scroll) |
+| `a11y-area-modal` | `max-w-sm` | topo |
+| `a11y-post-area-detect-modal` | `max-w-sm` | centralizado |
+| `a11y-library-required-modal` | `max-w-sm` | centralizado |
+| `a11y-tab-order-review-modal` | `max-w-sm` | topo |
+| `a11y-batch-summary-modal` | `max-w-sm` | topo |
+| `a11y-categories-help-modal` | `max-w-[440px]` | centralizado |
+| `onboarding-modal` | `max-w-[420px]` | centralizado |
+| `about-hac-modal` | `max-w-sm` | centralizado |
+
+Modais "topo" mantêm o corpo em `flex-1 overflow-y-auto` (formulário/lista
+que pode crescer); modais "centralizado" usam
+`items-center justify-center` no wrapper externo, pra não ficar "perdido"
+encostado no topo de uma área grande.
+
+Fechar continua possível pelo botão X existente no cabeçalho do modal, e
+agora também pelo clique no backdrop (exceto o modal bloqueante).
+
+**Efeito colateral corrigido em `core.js`**: o handler global de `Escape`
+(fecha o modal visível de maior z-index) lia o `onclick` do backdrop
+clicável para decidir se chamava a função de fechamento "com limpeza de
+estado" do modal (ex: `cancelTabOrderReview()`, que cancela a captura de
+clique sequencial no canvas) ou o `closeModal(id)` genérico. Na iteração
+intermediária (sem backdrop), essa leitura passou a ler o `onclick` do
+**botão de fechar do cabeçalho** (`button[title="Fechar"|"Cancelar"]
+[onclick]` ou `button[aria-label="Fechar"|"Cancelar"][onclick]`) — e essa
+é a fonte que permanece no estado atual do código, mesmo com o backdrop
+de volta (o backdrop clicável fecha direto pela função, sem passar pelo
+handler de Escape; a leitura pelo botão continua sendo a via genérica
+usada tanto por Esc quanto por qualquer fechamento futuro). Nenhum modal
+ficou sem essa limpeza de estado ao fechar via Esc.
+
+**Validação de estrutura**: como o bug histórico real do hac foi um
+`</div>` faltando que fez `onboarding-modal` nascer aninhado DENTRO de
+`a11y-categories-help-modal` (modal "abria" via JS mas ficava invisível
+porque o pai continuava `hidden`), essa migração foi validada com um
+parser de profundidade de `<div>` sobre `modals.html` inteiro
+(contagem de abertura/fechamento por nível, não só total) — confirmando
+que os 10 modais fecham exatamente no nível raiz, nenhum aninhado dentro
+de outro.
+
+**Trade-off aceito**: como `openModal(id)` já esconde qualquer outro
+modal visível antes de abrir um novo (rede de segurança existente em
+`core.js`, não alterada por esta mudança), nunca há dois modais em tela
+cheia sobrepostos ao mesmo tempo — inclusive no caso de
+`openA11yWizardCategoryPickerModal()` (troca de categoria durante o
+wizard de revisão), que reabre o modal de categorias por cima do
+formulário fechando-o primeiro, não empilhando.
 
 ## 11. Pendências conhecidas
 

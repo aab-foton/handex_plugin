@@ -297,10 +297,11 @@ function closeModal(id) {
 // captura de clique sequencial (equivalente a window._tabOrderCaptureMode
 // no Handex) precisa ser cancelado ao fechar, senão o backend continua
 // postando eventos de seleção para uma escuta que a UI já considera
-// encerrada. Resolvido de forma genérica: lê o onclick do backdrop do modal
-// (mesma função que já roda no clique fora do modal) e invoca ela mesma em
-// vez de closeModal(id) direto — cobre automaticamente qualquer modal que
-// siga o padrão existente (backdrop com onclick="closeXyz()").
+// encerrada. Resolvido de forma genérica: lê o onclick do botão "Fechar"/
+// "Cancelar" do cabeçalho do modal e invoca ela mesma em vez de
+// closeModal(id) direto. Antes lia o backdrop clicável (div .absolute
+// atrás do card) — os modais viraram tela cheia sem backdrop (2026-09), então
+// a fonte da verdade do "fluxo de fechamento próprio" passou a ser esse botão.
 document.addEventListener('keydown', function (e) {
   if (e.key !== 'Escape') return;
   const visibleModals = Array.from(document.querySelectorAll('[id$="-modal"]:not(.hidden)'));
@@ -311,9 +312,11 @@ document.addEventListener('keydown', function (e) {
     const z = parseInt(getComputedStyle(m).zIndex, 10) || 0;
     if (z >= topZ) { topZ = z; topModal = m; }
   }
-  const backdrop = topModal.querySelector(':scope > .absolute.inset-0[onclick]');
-  const backdropOnclick = backdrop && backdrop.getAttribute('onclick');
-  const fnMatch = backdropOnclick && backdropOnclick.match(/^([A-Za-z_$][\w$]*)\(\)$/);
+  const closeBtn = topModal.querySelector(
+    'button[title="Fechar"][onclick], button[title="Cancelar"][onclick], button[aria-label="Fechar"][onclick], button[aria-label="Cancelar"][onclick]'
+  );
+  const closeOnclick = closeBtn && closeBtn.getAttribute('onclick');
+  const fnMatch = closeOnclick && closeOnclick.match(/^([A-Za-z_$][\w$]*)\(\)$/);
   if (fnMatch && typeof window[fnMatch[1]] === 'function') {
     window[fnMatch[1]]();
   } else {

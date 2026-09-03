@@ -370,7 +370,7 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
       wizard trocava o formulário sem mover a viewport, obrigando clique manual
       em "Focar" a cada item.</li>
       <li><strong>Snackbar de retomada</strong>: fechar o modal sem confirmar/cancelar
-      explicitamente (X, backdrop, Esc) oferece um botão "Continuar revisão"
+      explicitamente (X, Esc) oferece um botão "Continuar revisão"
       que dispara um novo scan da área e retoma o wizard direto, sem exigir
       que o designer veja o resumo de novo. Cancelar explicitamente não
       oferece essa opção.</li>
@@ -410,6 +410,50 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Todo campo de texto livre do formulário passou a ter <code>maxlength</code> e
     contador visível de caracteres.</p>
+
+    <h3>Modais — 3 iterações no mesmo dia até o padrão final</h3>
+
+    <p><strong>Iteração 1 — tela cheia sem backdrop.</strong> Todos os 10 modais
+    deixaram de ser um card pequeno flutuando centralizado sobre um fundo
+    escurecido/desfocado (<code>bg-black/40 backdrop-blur-sm</code>) e passaram a
+    ocupar 100% da área de conteúdo do plugin — abaixo do <code>&lt;header&gt;</code> fixo
+    global, acima do rodapé de assinatura. Motivo: usuário relatou que o header
+    do plugin (tanto o header global quanto o subheader azul "Acessibilidade" da
+    view de especificações) ficava parcialmente visível/escurecido atrás do
+    modal antigo, competindo visualmente com o conteúdo em primeiro plano. A div
+    de backdrop clicável foi removida — fechar passou a ser só pelo X do
+    cabeçalho. Efeito colateral corrigido: o handler global de <code>Escape</code>, que
+    lia o <code>onclick</code> do backdrop pra decidir qual função de fechamento chamar,
+    passou a ler o <code>onclick</code> do botão de fechar do cabeçalho.</p>
+
+    <p><strong>Iteração 2 — respiro de 16px + overlay de volta.</strong> Sem
+    nenhum espaçamento entre o modal e a borda da área de conteúdo, a tela cheia
+    ficou "colada" nas 4 bordas — usuário pediu respiro visual. Primeira
+    tentativa (<code>p-4</code> no mesmo elemento que tinha o fundo branco) não
+    funcionou: o padding só empurrava o conteúdo <em>interno</em> do card, sem
+    revelar nenhum vão, porque o fundo branco preenchia toda a área <code>inset-0</code>
+    incluindo a região do padding. Corrigido separando em 2 elementos: um
+    wrapper externo transparente (<code>inset-0</code> + <code>p-4</code>) e um card interno
+    com o fundo/bordas arredondadas ocupando o espaço resultante — só então o
+    respiro de 16px ficou visível de verdade. Em seguida, usuário pediu o
+    overlay escurecido/desfocado de volta na faixa de respiro, clicável para
+    fechar (restaurando o comportamento de "clique fora fecha") — reintroduzido
+    como primeiro filho do wrapper externo, com <code>z-10</code> no card garantindo que
+    ele fique clicável por cima. Exceção: a pergunta bloqueante Web/Mobile
+    (<code>a11y-post-area-detect-modal</code>) recebeu o overlay só como elemento
+    visual, sem <code>onclick</code> — continua sem fechamento, por design.</p>
+
+    <p><strong>Iteração 3 — tamanhos restaurados.</strong> Com o overlay de
+    volta, ficou visualmente evidente que todos os 10 modais tinham o mesmo
+    tamanho (<code>w-full h-full</code>) — usuário apontou que "não fazia sentido"
+    um modal de confirmação simples ocupar a tela inteira igual ao formulário
+    de especificação. Investigação via <code>git diff</code> contra o commit anterior
+    revelou que quase todos os modais já eram compactos <em>antes</em> de qualquer
+    mudança desta sessão (a maioria <code>max-w-sm</code>/384px, alguns
+    <code>max-w-[420-440px]</code>) — só <code>a11y-spec-modal</code> tinha conteúdo
+    genuinamente extenso. Restaurados os valores originais de cada modal (ver
+    tabela na Documentação Técnica, seção 10.1) em vez de generalizar todos
+    pro mesmo tamanho.</p>
 
     <hr>
 

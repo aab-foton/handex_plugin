@@ -1767,8 +1767,8 @@ function updateA11yInformacoesFields() {
 }
 window.updateA11yInformacoesFields = updateA11yInformacoesFields;
 
-// Ponto único de fechamento do modal — X, clique no backdrop e Esc (genérico,
-// ver core.js) chamam esta função diretamente. Também é chamada pelo
+// Ponto único de fechamento do modal — X e Esc (genérico, ver core.js)
+// chamam esta função diretamente. Também é chamada pelo
 // caminho de SUCESSO em confirmA11ySpec (botão "Aplicar"), que por isso
 // limpa modal.dataset.wizardActive ANTES de chamar closeA11yModal — só
 // quando o dataset ainda diz '1' aqui é que o fechamento é "externo"
@@ -1778,7 +1778,7 @@ window.updateA11yInformacoesFields = updateA11yInformacoesFields;
 // cancelA11yModalExplicit() logo abaixo, que repassa viaExplicitCancelButton
 // = true pra stopA11yBatchWizard. Essa distinção existe só pra decidir se o
 // snackbar de retomada da revisão aparece: clique em "Cancelar" é intenção
-// clara de parar (sem oferta de retomar); X/backdrop/Esc podem ser
+// clara de parar (sem oferta de retomar); X/Esc podem ser
 // acidentais (oferece retomar via snackbar). Ver stopA11yBatchWizard.
 function closeA11yModal() {
   const modal = document.getElementById('a11y-spec-modal');
@@ -2120,8 +2120,8 @@ function confirmA11ySpec() {
   }
 
   // Lido ANTES de limpar o dataset — este é sempre o caminho de SUCESSO
-  // (botão "Aplicar"), diferente do fechamento "externo" (X/Esc/backdrop/
-  // "Cancelar") que aciona stopA11yBatchWizard dentro de closeA11yModal.
+  // (botão "Aplicar"), diferente do fechamento "externo" (X/Esc/"Cancelar")
+  // que aciona stopA11yBatchWizard dentro de closeA11yModal.
   // Limpa wizardActive ANTES de chamar closeA11yModal() propositalmente:
   // sem isso, closeA11yModal interpretaria este fechamento como abandono e
   // encerraria o wizard no meio de uma confirmação bem-sucedida.
@@ -4110,16 +4110,16 @@ function discardCurrentA11yBatchWizardItem() {
 }
 window.discardCurrentA11yBatchWizardItem = discardCurrentA11yBatchWizardItem;
 
-// Encerra o wizard a qualquer momento — X, backdrop e Esc chamam via
-// closeA11yModal (viaExplicitCancelButton = false); o botão "Cancelar" chama
-// via cancelA11yModalExplicit (viaExplicitCancelButton = true). Itens já
+// Encerra o wizard a qualquer momento — X e Esc chamam via closeA11yModal
+// (viaExplicitCancelButton = false); o botão "Cancelar" chama via
+// cancelA11yModalExplicit (viaExplicitCancelButton = true). Itens já
 // confirmados permanecem como specs reais; os pendentes (nem confirmados,
 // nem descartados — navegação livre significa que isso não é mais só "do
 // currentIndex em diante") voltam automaticamente pra "Não Documentados" —
 // não precisam de nenhum tratamento aqui, a fonte bruta nunca foi tocada.
 //
 // Quando o fechamento NÃO veio do botão "Cancelar" (pode ter sido
-// acidental — clique perdido no X/backdrop, Esc sem querer) e ainda restam
+// acidental — clique perdido no X, Esc sem querer) e ainda restam
 // itens na fila, oferece retomar via snackbar com ação: reabrir a revisão
 // dispara um NOVO scan da área (não reaproveita a fila antiga em memória),
 // porque o canvas pode ter mudado entre o cancelamento e a retomada.
