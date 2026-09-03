@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+(function(){
+  try {
+    var KEY = 'handex-docs-theme';
+    var saved = localStorage.getItem(KEY);
+    var theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  } catch (e) {}
+})();
+</script>
+<title>Arquitetura de Dados · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-right: auto;
+  }
+  header.site-header .brand-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  header.site-header .brand-icon svg {
+    width: 18px;
+    height: 18px;
+    color: #fff;
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 6px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+  #theme-toggle-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: none;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  #theme-toggle-btn:hover { background: rgba(255,255,255,0.22); }
+  #theme-toggle-btn svg { width: 18px; height: 18px; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+
+  .badge-proposta {
+    display: inline-block;
+    background: #fff4e5;
+    color: #8a5300;
+    border: 1px solid #f0cf9a;
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .badge-fato {
+    display: inline-block;
+    background: #eafaf1;
+    color: #1e7e4d;
+    border: 1px solid #a9e3c4;
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  html[data-theme="dark"] {
+    --bg:#0f172a; --surface:#1e293b; --line:#334155; --muted:#b4c6d8; --text:#f1f5f9;
+    --code-bg:#0b1220;
+  }
+  html[data-theme="dark"] body { background: var(--bg); color: var(--text); }
+  html[data-theme="dark"] header.site-header { background:#004075; box-shadow:0 2px 6px rgba(0,0,0,.4); }
+  html[data-theme="dark"] code { background: var(--code-bg); color:#ff8a8f; }
+  html[data-theme="dark"] pre { background:#020617; color:#e2e8f0; border:1px solid var(--line); }
+  html[data-theme="dark"] blockquote { background:#2a2110; color:#f3d9a4; border-left-color: var(--orange-500); }
+  html[data-theme="dark"] th { background:#18243b; color: var(--text); }
+  html[data-theme="dark"] tr:nth-child(even) td { background:#16213a; }
+  html[data-theme="dark"] .home-note { background:#12233d; border-color:#1d3a5f; color:#cfe3ff; }
+  html[data-theme="dark"] .toc { background:#18243b; border-color: var(--line); }
+  html[data-theme="dark"] .doc-card-link:hover { box-shadow:0 2px 8px rgba(0,0,0,.3); }
+  html[data-theme="dark"] a { color:#5ac8fa; }
+  html[data-theme="dark"] h3 { color:#8cc8fb; }
+  html[data-theme="dark"] .toc summary { color:#8cc8fb; }
+  html[data-theme="dark"] .doc-card-link .t { color:#8cc8fb; }
+  html[data-theme="dark"] ::selection { background:#004d8d; color:#fff; }
+  html[data-theme="dark"] .badge-proposta { background: rgba(243,146,0,0.14); color: #f3b158; border-color: rgba(243,146,0,0.35); }
+  html[data-theme="dark"] .badge-fato { background: rgba(30,126,77,0.16); color: #6ee7a8; border-color: rgba(110,231,168,0.35); }
+  #theme-toggle-btn .icon-moon { display:none; }
+  html[data-theme="dark"] #theme-toggle-btn .icon-sun { display:none; }
+  html[data-theme="dark"] #theme-toggle-btn .icon-moon { display:block; }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="brand-group">
+    <span class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg></span>
+    <span class="brand">Handex · Documentação</span>
+  </div>
+  <nav>
+    <a href="index.html">Início</a>
+    <a href="business-rules.html">Regras de Negócio</a>
+    <a href="data-model.html">Modelo de Dados</a>
+    <a href="data-architecture.html" class="active">Arquitetura de Dados</a>
+    <a href="architecture-state.html">Arquitetura</a>
+    <a href="design-system.html">Design System</a>
+    <a href="changelog.html">Changelog</a>
+  </nav>
+  <button type="button" id="theme-toggle-btn" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro">
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
+  </button>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    <details class="toc"><summary>Índice</summary><ul>
+      <li><a href="#s1">1. Por que este documento existe</a></li>
+      <li><a href="#s2">2. Especificações Anotadas (<code>Spec</code>)</a></li>
+      <li><a href="#s3">3. Medidas (<code>Measurement</code>)</a></li>
+      <li><a href="#s4">4. Fluxos de Tela (<code>Flow</code>)</a></li>
+      <li><a href="#s5">5. Conformidade DSC / Tokens Escaneados</a></li>
+      <li><a href="#s6">6. Ficha de Handoff (canvas + exportação)</a></li>
+      <li><a href="#s7">7. Contexto de Negócio e Briefing Estratégico</a></li>
+      <li><a href="#s8">8. Dados de Projeto (<code>step1</code>)</a></li>
+      <li><a href="#s9">9. Usuário identificado (<code>currentUser</code>)</a></li>
+      <li><a href="#s10">10. <code>_aiContext</code> — contexto oculto para geração externa</a></li>
+      <li><a href="#s11">11. Dados que ficam de fora de propósito</a></li>
+      <li><a href="#s12">12. Sobre esta documentação</a></li>
+    </ul></details>
+
+    <h1 id="handex-arquitetura-de-dados">Handex — Arquitetura de Dados</h1>
+    <blockquote><p>Este documento complementa o <a href="data-model.html">Modelo de Dados</a> — lá está o <strong>schema</strong> (campos, tipos, convenção de nomenclatura no canvas); aqui está a <strong>semântica</strong>: o que cada tipo de dado que o Handex gera REPRESENTA no trabalho real de handoff entre design e desenvolvimento, de onde ele nasce no fluxo de uso do plugin, e — só onde fizer sentido real — uma reflexão honesta sobre potencial futuro de aprendizado automático. Não há schema técnico novo aqui; para campos/tipos, ver <a href="data-model.html">data-model.html</a>.</p></blockquote>
+
+    <h2 id="s1">1. Por que este documento existe</h2>
+    <p>O Handex produz, no fim do processo, um <strong>artefato de handoff</strong>: um conjunto de decisões de design documentadas — o que cada elemento de tela deve fazer, como deve se comportar, que medidas e tokens do Design System CAIXA ele usa, como as telas se conectam entre si — prontas para o time de desenvolvimento implementar sem precisar perguntar ao designer no Slack ou adivinhar pelo protótipo. O <a href="data-model.html">Modelo de Dados</a> descreve COMO esse artefato é representado (nomenclatura de nós no canvas, schema de <code>handoffData</code> no <code>localStorage</code>). Este documento descreve O QUE cada peça SIGNIFICA — por que ela existe, que tipo de conhecimento carrega, e de onde vem no fluxo real de trabalho do designer dentro do Figma.</p>
+    <p>Todos os tipos de dado abaixo foram confirmados lendo o código-fonte real em <code>src/plugin/modules/*.js</code> e <code>src/plugin/code.js</code> — não é uma lista aspiracional.</p>
+
+    <h2 id="s2">2. Especificações Anotadas (<code>Spec</code>) <span class="badge-fato">Confirmado no código</span></h2>
+    <p><strong>O que representa:</strong> uma <strong>decisão de comportamento ou aparência</strong> que o designer documentou sobre um elemento específico de uma tela — o que aquele botão faz ao ser clicado, que estado tem quando desabilitado, que regra de negócio governa aquele campo, que exceção pode ocorrer ali. Ao contrário do hac (plugin irmão, focado só em acessibilidade), o Handex usa <strong>categorias livres e customizáveis</strong> pelo próprio time (<code>CATEGORY_COLORS</code>, gerenciadas via "Gerenciar Categorias" — ver <code>src/plugin/modules/specifications.js</code>) — não há um conjunto fixo de 5 categorias como no hac. Isso reflete o escopo mais amplo do Handex: documentar qualquer aspecto de handoff, não só a11y.</p>
+    <p>Cada spec carrega um vínculo posicional (<code>cardX/Y/W/H</code>, <code>guideSide</code>) porque não é só texto solto — é uma anotação ancorada visualmente a um elemento real do design, com conector desenhado no canvas até o elemento anotado (ver seção 3.1 de <a href="data-model.html">data-model.html</a>).</p>
+    <p><strong>De onde vem:</strong> criada manualmente pelo designer ao selecionar um elemento no canvas ("Anotar Specs") e preencher categoria, nota e propriedades — não há hoje sugestão/preenchimento automático de specs no Handex (diferente do hac, que tem Detecção Automática por reconhecimento de componente DSC).</p>
+    <p><strong>Potencial de aprendizado futuro:</strong> uma spec confirmada é, estruturalmente, um par (padrão de elemento → decisão documentada). Se o Handex algum dia ganhasse algum tipo de sugestão automática de categoria/conteúdo (o que não existe hoje), o histórico de specs já escritas seria o material bruto para isso — mas isso hoje é só uma leitura possível da estrutura do dado, não uma proposta em andamento.</p>
+
+    <h2 id="s3">3. Medidas (<code>Measurement</code>) <span class="badge-fato">Confirmado no código</span></h2>
+    <p><strong>O que representa:</strong> uma <strong>medida de espaçamento ou dimensão</strong> extraída de um elemento do design — padding, gap, largura, altura ou raio de borda, sempre com eixo (top/bottom/left/right/horizontal/vertical/all). É a resposta documentada à pergunta "quantos pixels tem esse espaçamento?", sem exigir que o dev abra o Figma e meça manualmente.</p>
+    <p><strong>De onde vem:</strong> duas origens no fluxo de trabalho (<code>src/plugin/modules/measurement.js</code>): seleção manual de um elemento seguida de escolha do tipo/eixo a medir, ou escaneamento automático que lê as propriedades de auto-layout do próprio nó Figma (padding, gap já configurados no elemento) e sugere as medidas — sempre revisável antes de virar anotação definitiva no canvas.</p>
+    <p><strong>Potencial de aprendizado futuro:</strong> pouco aplicável — é um dado quase inteiramente derivado de geometria/propriedades já existentes no arquivo Figma (o auto-layout já "sabe" o valor), não uma decisão de julgamento humano que um modelo precisaria aprender a replicar.</p>
+
+    <h2 id="s4">4. Fluxos de Tela (<code>Flow</code>) <span class="badge-fato">Confirmado no código</span></h2>
+    <p><strong>O que representa:</strong> uma <strong>conexão de navegação</strong> entre duas telas do projeto — "da tela de Login, ao clicar em Entrar, vai para a Home" — incluindo pontos de decisão (gateways condicionais) quando o fluxo se ramifica. Reunidos, os fluxos formam <strong>jornadas</strong> (agrupamento calculado por <code>computeFlowJourneys</code>, reaproveitado tanto pela tela de Fluxos quanto pela Ficha de Handoff — nunca duplicado) — o mapa de navegação completo de um caso de uso, do início ao fim.</p>
+    <p><strong>De onde vem:</strong> desenhado manualmente pelo designer clicando em sequência nos frames do canvas, na ordem real de clique do usuário (não a ordem de criação dos frames) — ver decisão de produto registrada no histórico de mudanças de Fluxos de Tela (reforma de 2026-08). Tipos de conexão incluem <code>line_solid</code>, <code>line_dashed</code>, <code>diamond</code> (decisão) e <code>diamond_dashed</code>; existe ainda um tipo <code>gateway_parallel</code> no código (<code>specifications.js</code>, em torno da linha 3654) que hoje <strong>não é oferecido na criação normal</strong> nem no reaproveitamento entre tipos ao editar uma conexão — o comentário no código não explica o motivo, então fica em aberto se é uma variante BPMN reservada para uso futuro ou resíduo de uma iteração anterior do editor de fluxos.</p>
+    <p><strong>Potencial de aprendizado futuro:</strong> jornadas completas são o tipo de dado mais próximo de "conhecimento de produto" que o Handex acumula — se um mesmo padrão de fluxo (ex: gate de autenticação antes de uma ação sensível) se repete entre projetos, isso poderia em tese informar sugestões de fluxo padrão no futuro. Puramente especulativo hoje: não há mecanismo nenhum, nem proposta formal, que leia fluxos de um projeto para sugerir algo em outro.</p>
+
+    <h2 id="s5">5. Conformidade DSC / Tokens Escaneados <span class="badge-fato">Confirmado no código</span></h2>
+    <p><strong>O que representa:</strong> o resultado de um <strong>batimento automático</strong> entre os elementos de um frame e o catálogo de componentes/tokens do Design System CAIXA (DSC) — para cada item, se ele usa um token reconhecido, se diverge do padrão, ou se está totalmente fora do DSC. É um dado de <strong>auditoria de conformidade</strong>, não de decisão de design: o Handex não decide se o desenho está certo, só relata o que encontrou comparado ao catálogo oficial.</p>
+    <p><strong>De onde vem:</strong> gerado por <code>scanFrame()</code> (<code>src/plugin/modules/specifications.js</code>), que roda automaticamente e complementa (nunca substitui) a declaração humana de conformidade feita pelo designer por frame (campo <code>audit</code>: <code>semDesvios</code>, <code>observacoes</code>, <code>ressalvas</code>) — ver <code>src/plugin/modules/specifications.js:20-21</code>. O escopo do scan (quais libs DSC considerar) é escolhido pelo designer via <code>selectedLibSlugs</code>.</p>
+    <p><strong>Potencial de aprendizado futuro:</strong> este é o tipo de dado mais estruturalmente próximo de treinar algo — cada item escaneado já vem rotulado (conforme / com desvio / fora do DSC) por comparação automática contra um catálogo, mais a confirmação humana por cima. Ainda assim, hoje o batimento já é 100% determinístico (regra de correspondência, não aprendizado), e não existe proposta formal de ir além disso no Handex.</p>
+
+    <h2 id="s6">6. Ficha de Handoff (canvas + exportação) <span class="badge-fato">Confirmado no código — feature ativa, não oculta</span></h2>
+    <p><strong>O que representa:</strong> o <strong>documento consolidado final</strong> que reúne tudo o que foi documentado num projeto — dados do projeto, briefing, especificações, medidas, fluxos e conformidade DSC — num único artefato pronto para entrega ao time de desenvolvimento. É literalmente o produto final do Handex: tudo o mais no plugin existe para alimentar este documento.</p>
+    <p>A Ficha existe em <strong>duas formas</strong>, geradas pelo mesmo botão "Gerar Ficha de Handoff":</p>
+    <ul>
+      <li><strong>Ficha Técnica no canvas</strong> — um frame Figma real, composto de cards (Ficha de Projeto, Briefing, Interface), nomeado <code>Handex | Ficha de Projeto | {título} | {timestamp}</code>, que atualiza em vez de duplicar quando já existe uma versão anterior (<code>src/plugin/code.js</code>, função <code>_hdFindExistingFicha</code>). Nasce destravada, ao contrário de Specs/Medidas/Fluxos individuais, que nascem bloqueados.</li>
+      <li><strong>Ficha Técnica HTML interativa</strong> — um arquivo <code>.html</code> autocontido (Tailwind + Lucide embutidos), gerado por <code>getInteractiveHTMLContent()</code> (<code>src/plugin/modules/handoff.js:676</code>), com abas, acordeões por categoria, lightbox de imagens e chips de Code Connect. Este arquivo é empacotado junto com Markdown e PDF dentro de um único ZIP pelo botão "Exportar Handoff (ZIP)" (<code>exportHandoff()</code>, <code>handoff.js:485</code>).</li>
+    </ul>
+    <p><strong>Sobre a hipótese de uma "Ficha em HTML oculta":</strong> a investigação de código não encontrou nenhuma feature flag, condição sempre-falsa, comentário de "desligado" ou UI ausente relacionada à Ficha em HTML — ela é gerada pelo mesmo botão visível na tela de Resumo do Handoff, documentada passo a passo em <code>guide.html</code>, e aparece em dezenas de commits de correção de bug ao longo do histórico do plugin (não uma feature esquecida). O <code>DATA_MODEL.md</code> tem uma seção chamada "Roadmap HTML/SharePoint" (seção 7) que soa como algo futuro/pendente, mas descreve exatamente esta exportação já implementada — é a documentação técnica que está desatualizada nesse ponto, não a feature que está oculta.</p>
+    <p><strong>De onde vem:</strong> consolidação de todo <code>handoffData</code> no momento em que o designer clica em "Gerar Ficha" — nunca gerada automaticamente ou em segundo plano.</p>
+    <p><strong>Potencial de aprendizado futuro:</strong> a Ficha em si é um dado de <em>saída</em> (agregação do que já existe), não uma nova fonte de sinal — o aprendizado, se algum dia existir, aconteceria sobre os dados de origem (specs, conformidade DSC), não sobre o documento consolidado.</p>
+
+    <h2 id="s7">7. Contexto de Negócio e Briefing Estratégico <span class="badge-fato">Confirmado no código</span></h2>
+    <p><strong>O que representa:</strong> o <strong>"porquê"</strong> por trás da entrega — problema que está sendo resolvido, decisões estratégicas, regras de negócio e histórias de usuário associadas, cenários de exceção previstos. Existe para que o dev entenda a motivação da tela antes de mergulhar na implementação, sem precisar perguntar de novo algo que já foi decidido em outra reunião.</p>
+    <p>O Briefing Estratégico é organizado por <strong>eixos temáticos</strong> (<code>BRIEFING_AXES</code>, ex: Contexto do Projeto) com perguntas sugeridas por eixo mais espaço para perguntas customizadas — módulo extraído para <code>src/plugin/modules/briefing.js</code> em 2026-08 por ter crescido a ponto de justificar arquivo próprio.</p>
+    <p><strong>De onde vem:</strong> preenchido manualmente pelo designer, com opção de importar de um framework de briefing externo em Markdown (<code>importBriefingMD</code>) ou puxar diretamente de um frame já existente no canvas (<code>pullBriefingFromCanvas</code>).</p>
+    <p><strong>Potencial de aprendizado futuro:</strong> não se aplica no mesmo sentido dos dados de specs/DSC — briefing é texto estratégico livre e específico de cada projeto (às vezes sensível: escopo, riscos, contexto pré-lançamento), não um padrão repetitivo com "resposta certa" que um modelo aprenderia a prever. Tratamento equivalente a este já foi avaliado no hac (<a href="data-model.html">ver Modelo de Dados</a>) e descartado como direção de aprendizado de máquina justamente por essa natureza sensível do conteúdo — a mesma ressalva se aplica aqui.</p>
+
+    <h2 id="s8">8. Dados de Projeto (<code>step1</code>) <span class="badge-fato">Confirmado no código</span></h2>
+    <p><strong>O que representa:</strong> a <strong>identidade e metadados administrativos</strong> da entrega — título, versão, objetivo, status do handoff (rascunho / em revisão / pronto para dev / finalizado), jornada, feature e equipe responsável. Não é conhecimento de design nem de negócio propriamente dito — é o cabeçalho que situa tudo o mais: aparece no topo da Ficha final para orientar o dev antes de entrar nos detalhes.</p>
+    <p><strong>De onde vem:</strong> preenchido pelo designer na tela "Dados do Projeto" — <code>Título</code>, <code>Versão</code> e <code>Objetivo</code> são obrigatórios para liberar o botão "Gerar Ficha"; ao menos um membro de equipe com nome preenchido também é exigido (ver <code>guide.html</code>, passo a passo de Dados do Projeto).</p>
+    <p><strong>Potencial de aprendizado futuro:</strong> não se aplica — é metadado administrativo, não uma decisão de padrão replicável.</p>
+
+    <h2 id="s9">9. Usuário identificado (<code>currentUser</code>) <span class="badge-fato">Confirmado no código</span></h2>
+    <p><strong>O que representa:</strong> não é um dado de autoria/histórico de quem editou o quê (o Handex não versiona nem atribui specs a pessoas) — é só a identidade da sessão atual do Figma, capturada para contexto de ambiente (mensagens de boas-vindas, saudação, indicação de quem está com o plugin aberto naquele momento).</p>
+    <p><strong>De onde vem:</strong> lida diretamente da API do Figma (<code>figma.currentUser</code>) no momento em que o plugin abre, sem processo de login próprio do Handex.</p>
+
+    <h2 id="s10">10. <code>_aiContext</code> — contexto oculto para geração externa <span class="badge-fato">Confirmado no código — feature genuinamente oculta</span></h2>
+    <p>Esta é a única feature encontrada na investigação de código que corresponde, de fato, à descrição de "oculta/desligada" — mas não é uma Ficha em HTML. É um <strong>campo JSON</strong>, não um documento visual.</p>
+    <p><strong>O que representa:</strong> um agregador compacto de tudo o que já foi documentado num projeto — briefing respondido, telas documentadas (com contagem de specs/medidas e status de conformidade DSC), tokens DSC usados (ordenados por frequência), cenários de exceção, medidas e jornadas de fluxo — formatado para servir como <strong>material de apoio a colar em ferramentas externas de geração de design por IA</strong> (ex: Figma Make) ao propor uma tela nova dentro do <em>mesmo</em> projeto. Não é geração feita pelo Handex, nem integração automática — é um "prompt pronto" que o designer copia manualmente.</p>
+    <p><strong>Onde fica o código:</strong> <code>src/plugin/modules/design-data.js:14-93</code>, função <code>_buildAiContext()</code>. O próprio comentário no topo do arquivo (linha 14) descreve a feature nestes termos exatos: <em>"FEATURE OCULTA (2026-08), sem UI/botão visível ainda"</em>.</p>
+    <p><strong>Como é exposta hoje:</strong> nunca por um botão próprio — o campo <code>_aiContext</code> é calculado sob demanda e inserido silenciosamente dentro do JSON gerado por "Exportar Handoff" (<code>exportHandoffData()</code>, <code>design-data.js:95-107</code>). É dado <strong>derivado</strong>, nunca persistido dentro do próprio <code>handoffData</code> — ao reimportar um JSON, o campo é deliberadamente removido antes de aplicar o estado (<code>design-data.js:132</code>: <em>"nunca deve entrar em handoffData como estado persistido, senão reexporta/salva um snapshot congelado em vez de recalcular a partir do estado atual"</em>).</p>
+    <p><strong>Por que está oculta — não é dedução, está documentado:</strong> <code>docs/figma-api-roadmap-2026.md</code>, item 4b, registra a decisão de produto por trás disso. Resumo fiel ao documento: não existe hoje nenhuma API que permita um plugin do Figma Design empurrar contexto para dentro do Figma Make — são superfícies de produto separadas, sem canal programático entre elas; o único caminho real é o designer copiar/colar manualmente. A versão mais ambiciosa (agregar briefings de VÁRIOS projetos numa base de conhecimento institucional buscável) foi avaliada e descartada por dois motivos: exigiria uma categoria de infraestrutura diferente (busca semântica/RAG, vector store, pipeline de ingestão), e briefings estratégicos são o conteúdo mais sensível que o Handex coleta (decisões de escopo, riscos de LGPD/compliance ainda não revisados, contexto pré-lançamento) — elevar isso a "fato institucional buscável" sem dono de curadoria é risco de governança que o Handex não deveria decidir sozinho.</p>
+    <p>Em resumo: a feature existe, funciona, e está no JSON exportado hoje — só não tem botão nem menção na UI porque foi implementada de forma deliberadamente contida, como material de apoio para copiar/colar, não como integração.</p>
+
+    <h2 id="s11">11. Dados que ficam de fora de propósito</h2>
+    <p>Nem todo dado salvo pelo Handex é sobre o projeto. A ordem dos 6 cards da home (<code>HOME_CARD_ORDER_KEY</code>, <code>src/plugin/modules/home-cards.js</code>) e a preferência de tema claro/escuro são persistidas em <code>localStorage</code>, mas nunca em <code>handoffData</code> nem em nenhuma exportação — são preferências pessoais de uso do plugin, não conhecimento sobre a entrega. A distinção importa para esta página: um dado só entra na discussão de "potencial de aprendizado futuro" quando representa uma decisão sobre o produto sendo documentado, não uma preferência de interface.</p>
+
+    <h2 id="s12">12. Sobre esta documentação</h2>
+    <p>Este documento complementa o <a href="data-model.html">Modelo de Dados</a> (schema, campos, convenção de nomenclatura) e não deve duplicá-lo — mudanças de schema vão em <code>data-model.html</code>/<code>DATA_MODEL.md</code>; mudanças de significado/uso dos dados (novos tipos de dado, mudança do que uma categoria representa, evolução de qualquer proposta de aprendizado futuro) vão aqui. Ambos vivem como arquivos HTML estáticos dentro de <code>docs/site/</code>, no repositório privado — sem hospedagem pública.</p>
+
+    <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+  </div>
+</div>
+<script>
+(function(){
+  function toggleTheme() {
+    var KEY = 'handex-docs-theme';
+    var html = document.documentElement;
+    var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle-btn');
+    if (btn) btn.addEventListener('click', toggleTheme);
+  });
+})();
+</script>
+</body>
+</html>
