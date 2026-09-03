@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hac — Handoff de Acessibilidade CAIXA</title>
+<style>
+:root {
+  --hac-cyan: #0891B2;
+  --hac-blue: #005ca9;
+  --hac-blue-dark: #004782;
+  --hac-orange: #f39200;
+  --bg: #eef2f7;
+  --surface: #ffffff;
+  --line: #dde3ec;
+  --muted: #64748b;
+  --text: #1e293b;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+header.site-header {
+  background: var(--hac-blue);
+  color: #fff;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+header.site-header .brand {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  margin-right: auto;
+}
+header.site-header nav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+header.site-header nav a {
+  color: #e0effe;
+  text-decoration: none;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+header.site-header nav a:hover {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+}
+header.site-header nav a.active {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  font-weight: 700;
+}
+main {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 28px 32px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+h1 {
+  font-size: 24px;
+  margin-top: 0;
+  color: var(--hac-blue);
+  letter-spacing: -0.01em;
+}
+h2 {
+  font-size: 18px;
+  margin-top: 36px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--hac-blue);
+  letter-spacing: -0.01em;
+}
+h2:first-of-type { border-top: none; padding-top: 0; }
+p { margin: 12px 0; }
+a { color: var(--hac-cyan); }
+a:hover { text-decoration: none; }
+ul { padding-left: 22px; }
+li { margin: 8px 0; }
+.doc-list a { font-weight: 700; }
+.footer-note {
+  margin-top: 48px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+.private-note {
+  background: #fdf1de;
+  border: 1px solid #f7d9a8;
+  color: #7a4a00;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 12.5px;
+  margin-bottom: 24px;
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">hac — Handoff de Acessibilidade CAIXA</span>
+  <nav>
+    <a href="index.html" class="active">Início</a>
+    <a href="tecnico.html">Documentação Técnica</a>
+    <a href="institucional.html">Regras de Negócio</a>
+    <a href="design-system.html">Design System</a>
+    <a href="changelog.html">Changelog</a>
+  </nav>
+</header>
+<main>
+  <div class="card">
+
+    <div class="private-note">
+      Documentação interna do repositório privado <code>aab-foton/hac_plugin</code>.
+      Estes arquivos HTML são estáticos e autocontidos — não há hospedagem pública,
+      nem GitHub Pages, nem qualquer URL externa associada a esta documentação.
+      Abra localmente (<code>file://</code>) após clonar o repositório.
+    </div>
+
+    <h1>hac — Handoff de Acessibilidade CAIXA</h1>
+
+    <p>O <strong>hac</strong> é um plugin do Figma que permite a designers documentar requisitos
+    de acessibilidade diretamente sobre as telas de um projeto, gerando um
+    handoff estruturado para as equipes de desenvolvimento. Ele reconhece,
+    sempre que possível, os componentes reais do Design System da CAIXA (DSC)
+    usados na tela, e vincula a documentação de acessibilidade ao próprio
+    componente oficial — em vez de depender de anotações soltas.</p>
+
+    <p>O hac nasceu em agosto de 2026 como uma extração da funcionalidade de
+    acessibilidade do plugin Handex Beta, tornando-se um produto independente.
+    Desenvolvido pela Fóton para a CAIXA.</p>
+
+    <h2>Documentos disponíveis</h2>
+
+    <ul class="doc-list">
+      <li><a href="tecnico.html">Documentação Técnica</a> — como o plugin está estruturado
+      por dentro: schema de dados, contrato de mensagens entre interface e
+      backend, as 5 categorias de especificação, o matching entre componentes
+      DSC e categorias de acessibilidade, a Ordem de Tabulação, organização do
+      canvas em Sections, e o histórico de decisões de arquitetura (o que foi
+      tentado, revertido, e por quê). Público-alvo: quem for dar manutenção ou
+      continuidade ao código.</li>
+
+      <li><a href="institucional.html">Regras de Negócio (Institucional)</a> — o mesmo
+      conteúdo, em linguagem acessível a públicos não técnicos, para validação
+      pela vertical de Acessibilidade da CAIXA. Cada regra está marcada como
+      <strong>já decidida</strong> ou <strong>pendente de validação técnica</strong>.</li>
+
+      <li><a href="design-system.html">Design System da Interface</a> — a linguagem visual
+      própria da interface do plugin hac: cores, tipografia, ícones, e os
+      padrões de componentes (modais, cards, badges, toggles) reutilizados nas
+      telas do plugin. Não deve ser confundido com o DSC da CAIXA (que o plugin
+      referencia como fonte de componentes reais) — este documento é sobre a UI
+      do próprio hac.</li>
+
+      <li><a href="changelog.html">Changelog</a> — diário de bordo do projeto: decisões
+      técnicas, bugs reais corrigidos e mudanças de arquitetura, em ordem
+      cronológica. Enquanto a Documentação Técnica descreve o estado atual do
+      sistema, o Changelog registra como ele chegou lá.</li>
+    </ul>
+
+    <h2>Fonte de verdade</h2>
+
+    <p>A documentação técnica do hac (Documentação Técnica + Changelog) é mantida
+    nestes arquivos HTML dentro de <code>docs/</code>, versionados junto com o
+    código no mesmo repositório privado. Atualizações de arquitetura, bugs
+    corrigidos e decisões de produto devem ser registradas direto nestas
+    páginas.</p>
+
+    <h2>Repositório</h2>
+
+    <p>Código-fonte em <a href="https://github.com/aab-foton/hac_plugin">github.com/aab-foton/hac_plugin</a>
+    (privado).</p>
+
+    <p class="footer-note">hac — Handoff de Acessibilidade CAIXA · Fóton</p>
+  </div>
+</main>
+</body>
+</html>

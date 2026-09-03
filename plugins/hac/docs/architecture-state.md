@@ -2,19 +2,29 @@
 
 > **AVISO — este arquivo local passou a ser SECUNDÁRIO em 2026-09-02.**
 > A partir desta data, a fonte primária de verdade da documentação técnica
-> do hac é o site publicado em
-> **https://aab-foton.github.io/hac_plugin/** (páginas `tecnico.html` e
-> `changelog.html`) — atualizações de arquitetura, bugs corrigidos e
-> decisões de produto devem ser registradas primeiro lá, não aqui. Este
-> arquivo (`docs/architecture-state.md`) é mantido como espelho/ponto de
-> partida histórico do estado em que a documentação foi migrada, mas não
+> do hac são os arquivos HTML estáticos dentro de `docs/` neste mesmo
+> repositório — em especial `docs/tecnico.html` e `docs/changelog.html`
+> (ver também `docs/index.html`, `docs/institucional.html` e
+> `docs/design-system.html`). Atualizações de arquitetura, bugs corrigidos
+> e decisões de produto devem ser registradas primeiro lá, não aqui.
+>
+> **Não existe nenhuma versão pública ou hospedada dessa documentação.**
+> O repositório `aab-foton/hac_plugin` é privado, e essa documentação deve
+> permanecer restrita a quem tem acesso a ele — nunca publicar via GitHub
+> Pages ou qualquer outro serviço de hospedagem externo. Para consultar,
+> clone/baixe o repositório e abra os arquivos `.html` diretamente no
+> navegador (`file://`), sem necessidade de build ou servidor.
+>
+> Este arquivo (`docs/architecture-state.md`) é mantido como espelho/ponto
+> de partida histórico do estado em que a documentação foi migrada, mas não
 > tem mais obrigação de sincronia automática — se você é uma sessão futura
-> lendo este arquivo, confira o site antes de assumir que este documento
-> reflete o estado atual do código.
+> lendo este arquivo, confira `docs/tecnico.html` antes de assumir que este
+> documento reflete o estado atual do código.
 
 > Documento vivo. Atualize sempre que o schema `hacData`, o contrato de
 > mensagens, ou uma regra de negócio central mudar de forma estrutural —
-> mas priorize atualizar o site (ver aviso acima) como destino principal.
+> mas priorize atualizar `docs/tecnico.html` (ver aviso acima) como destino
+> principal.
 > Última revisão completa: 2026-09-02 (branch `beta/a11y-mobile-handoff`) —
 > reescrito do zero após uma sessão que corrigiu 3 bugs estruturais reais no
 > matching DSC→a11y e mudou a arquitetura de origem web/mobile 3 vezes no

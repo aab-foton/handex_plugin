@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design System da Interface — hac</title>
+<style>
+:root {
+  --hac-cyan: #0891B2;
+  --hac-blue: #005ca9;
+  --hac-blue-dark: #004782;
+  --hac-orange: #f39200;
+  --bg: #eef2f7;
+  --surface: #ffffff;
+  --line: #dde3ec;
+  --muted: #64748b;
+  --text: #1e293b;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+header.site-header {
+  background: var(--hac-blue);
+  color: #fff;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+header.site-header .brand {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  margin-right: auto;
+}
+header.site-header nav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+header.site-header nav a {
+  color: #e0effe;
+  text-decoration: none;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+header.site-header nav a:hover {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+}
+header.site-header nav a.active {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  font-weight: 700;
+}
+main {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 28px 32px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+h1 {
+  font-size: 24px;
+  margin-top: 0;
+  color: var(--hac-blue);
+  letter-spacing: -0.01em;
+}
+h2 {
+  font-size: 18px;
+  margin-top: 36px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--hac-blue);
+  letter-spacing: -0.01em;
+}
+h2:first-of-type { border-top: none; padding-top: 0; }
+h3 { font-size: 15px; margin-top: 24px; color: var(--text); }
+p { margin: 12px 0; }
+a { color: var(--hac-cyan); }
+a:hover { text-decoration: none; }
+code {
+  font-family: "Consolas", "SFMono-Regular", monospace;
+  background: #f1f5f9;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  color: #0f172a;
+}
+pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 14px 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+pre code { background: none; padding: 0; color: inherit; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+}
+th, td {
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+th { background: #f8fafc; font-weight: 700; }
+blockquote {
+  border-left: 3px solid var(--hac-cyan);
+  margin: 16px 0;
+  padding: 4px 16px;
+  background: #f0f9fb;
+  color: #334155;
+  font-size: 14px;
+}
+blockquote p { margin: 8px 0; }
+ul, ol { padding-left: 22px; }
+li { margin: 4px 0; }
+.toc {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+.toc p { margin: 0 0 8px; font-weight: 700; font-size: 13px; }
+.toc ol { margin: 0; }
+.footer-note {
+  margin-top: 48px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+.swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: monospace;
+  font-size: 12px;
+}
+.swatch-color {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.15);
+  vertical-align: middle;
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">hac — Handoff de Acessibilidade CAIXA</span>
+  <nav>
+    <a href="index.html">Início</a>
+    <a href="tecnico.html">Documentação Técnica</a>
+    <a href="institucional.html">Regras de Negócio</a>
+    <a href="design-system.html" class="active">Design System</a>
+    <a href="changelog.html">Changelog</a>
+  </nav>
+</header>
+<main>
+  <div class="card">
+
+    <h1>Design System da Interface do hac</h1>
+
+    <blockquote><p>Este documento é sobre a <strong>linguagem visual da própria interface</strong> do
+    plugin hac (<code>src/plugin/views/*.html</code>, <code>src/plugin/styles/</code>) — não deve
+    ser confundido com o DSC da CAIXA, que o plugin <em>referencia</em> como fonte
+    de componentes reais (isso está coberto na
+    <a href="tecnico.html">Documentação Técnica</a>, seção 6). Aqui o assunto é: como a
+    própria UI do hac é construída e por que ela segue os padrões que segue.</p></blockquote>
+
+    <p>Base técnica: Tailwind CSS (com tema customizado em
+    <code>src/plugin/styles/tailwind.config.cjs</code>) + CSS solto em
+    <code>src/plugin/styles/plugin.css</code> para overrides e componentes que o Tailwind
+    puro não cobre bem (tooltips, FABs, cards uniformes). Tudo compilado para
+    <code>src/plugin/styles/tailwind-compiled.css</code> (não editado à mão).</p>
+
+    <div class="toc">
+      <p>Sumário</p>
+      <ol>
+        <li><a href="#s1">Paleta de cores</a></li>
+        <li><a href="#s2">Cores por categoria de acessibilidade</a></li>
+        <li><a href="#s3">Tipografia</a></li>
+        <li><a href="#s4">Ícones (Lucide)</a></li>
+        <li><a href="#s5">Padrão de modal</a></li>
+        <li><a href="#s6">Cards e containers</a></li>
+        <li><a href="#s7">Inputs, contadores de caracteres e toggles</a></li>
+        <li><a href="#s8">Botões</a></li>
+        <li><a href="#s9">Tema claro/escuro</a></li>
+        <li><a href="#s10">Escala da UI</a></li>
+      </ol>
+    </div>
+
+    <h2 id="s1">1. Paleta de cores</h2>
+
+    <p>O hac usa duas famílias de azul/institucional distintas, além de uma cor
+    de acento própria:</p>
+
+    <table>
+      <tr><th>Uso</th><th>Cor</th><th>Onde aparece</th></tr>
+      <tr>
+        <td>Acento primário do hac (ações, links, ícone central de acessibilidade)</td>
+        <td><span class="swatch"><span class="swatch-color" style="background:#0891B2"></span><code>#0891B2</code> (cyan)</span></td>
+        <td>Botões "Aplicar", ícone <code>person-standing</code> do cabeçalho do modal, badges de contagem, foco de input</td>
+      </tr>
+      <tr>
+        <td>Azul institucional CAIXA (marca, header, botões secundários)</td>
+        <td><span class="swatch"><span class="swatch-color" style="background:#005ca9"></span><code>#005ca9</code></span> / <span class="swatch"><span class="swatch-color" style="background:#0070af"></span><code>#0070af</code></span></td>
+        <td>Logo CAIXA em SVG no header, botões de ação primária global, ícones de "hover" em listas</td>
+      </tr>
+      <tr>
+        <td>Laranja institucional CAIXA</td>
+        <td><span class="swatch"><span class="swatch-color" style="background:#f39200"></span><code>#f39200</code></span></td>
+        <td>Só no logo SVG da CAIXA no header (<code>ui.html</code>) — não usado como cor de ação da UI</td>
+      </tr>
+    </table>
+
+    <p>A escala <code>blue</code> inteira (50 a 950) é redefinida no tema Tailwind
+    (<code>tailwind.config.cjs</code>) para ancorar em <code>#005ca9</code> (blue-500) em vez do azul
+    padrão do Tailwind — ou seja, quando o código usa classes utilitárias como
+    <code>bg-blue-600</code> ou <code>border-blue-500</code>, o resultado já é a cor institucional
+    CAIXA, não um azul genérico:</p>
+
+    <pre><code>blue: {
+  50: '#f0f7ff', 100: '#e0effe', 200: '#bae0fd', 300: '#7cc7fb',
+  400: '#38a9f8', 500: '#005ca9', 600: '#004782', 700: '#00335c',
+  800: '#001f38', 900: '#000c17', 950: '#000308',
+}</code></pre>
+
+    <p>Além disso, <code>plugin.css</code> tem uma camada de <em>override global</em> que
+    força qualquer botão com classes genéricas do Tailwind
+    (<code>bg-blue-600</code>, <code>bg-blue-500</code>, <code>bg-[#0070af]</code>) a usar exatamente
+    <code>#005ca9</code>/<code>#004782</code> (hover) — isto é, mesmo que uma view use a cor "errada"
+    por engano, o CSS resolve para a cor institucional certa. O mesmo
+    mecanismo existe para <code>bg-orange-500</code>/<code>bg-orange-600</code>/<code>bg-green-600</code>/
+    <code>bg-green-500</code>, todos redirecionados para <code>#d36a00</code> (laranja mais escuro
+    que o institucional, usado como cor de destaque/atenção em botões, hover
+    <code>#b25a00</code>). Isso é um comentário explícito no próprio CSS: <em>"Global
+    overrides for buttons matching the Design System"</em>.</p>
+
+    <h3>Tokens de superfície (claro/escuro)</h3>
+
+    <pre><code>light: { bg: '#eef2f7', surface: '#ffffff', line: '#dde3ec', muted: '#8394a8' },
+dark:  { bg: '#0f172a', surface: '#1e293b', line: '#334155', text: '#f1f5f9', muted: '#b4c6d8' },</code></pre>
+
+    <p>Usados via classes <code>bg-light-bg</code>/<code>dark:bg-dark-bg</code>,
+    <code>border-light-line</code>/<code>dark:border-dark-line</code>, etc. — o par claro/escuro é
+    declarado lado a lado nas classes Tailwind em quase todo elemento
+    estrutural (headers, cards, inputs).</p>
+
+    <h2 id="s2">2. Cores por categoria de acessibilidade</h2>
+
+    <p>As 5 categorias de spec (ver <a href="tecnico.html#s2">Documentação Técnica, seção 2</a>)
+    têm cada uma sua própria cor de identidade visual, cor de preenchimento
+    (fundo claro) e ícone Lucide — definidos em <code>A11Y_CATEGORIES</code>
+    (<code>src/plugin/modules/accessibility.js</code>):</p>
+
+    <table>
+      <tr><th>Categoria</th><th>Cor</th><th>Fill (fundo claro)</th><th>Ícone Lucide</th><th>Badge</th></tr>
+      <tr><td>Elementos e Imagens (<code>elemento</code>)</td><td><span class="swatch"><span class="swatch-color" style="background:#FCBE05"></span><code>#FCBE05</code></span></td><td><code>#FFF6DC</code></td><td><code>image</code></td><td>—</td></tr>
+      <tr><td>Estrutura da Página (<code>estrutura</code>)</td><td><span class="swatch"><span class="swatch-color" style="background:#EF765E"></span><code>#EF765E</code></span></td><td><code>#FDEAE6</code></td><td><code>star</code></td><td>—</td></tr>
+      <tr><td>Nível de Título (<code>titulo</code>)</td><td><span class="swatch"><span class="swatch-color" style="background:#AFCA0B"></span><code>#AFCA0B</code></span></td><td><code>#F5F9DA</code></td><td><code>heading</code></td><td><code>H</code></td></tr>
+      <tr><td>Elemento Decorativo (<code>decorativo</code>)</td><td><span class="swatch"><span class="swatch-color" style="background:#D93636"></span><code>#D93636</code></span></td><td><code>#FBE4E4</code></td><td><code>ban</code></td><td><code>Ø</code></td></tr>
+      <tr><td>Informações Adicionais (<code>informacoes</code>)</td><td><span class="swatch"><span class="swatch-color" style="background:#F39200"></span><code>#F39200</code></span></td><td><code>#FEF1DE</code></td><td><code>info</code></td><td>—</td></tr>
+    </table>
+
+    <p>Essas 5 cores são deliberadamente distintas do cyan <code>#0891B2</code> (acento
+    geral do hac) — servem para o designer distinguir visualmente, num
+    relance no canvas ou na lista de specs, a que categoria cada selo/spec
+    pertence, sem precisar ler o texto. <code>color</code>/<code>fillColor</code> de cada spec em
+    <code>a11ySpecs[]</code> são preenchidos a partir dessa tabela no momento da criação.</p>
+
+    <h2 id="s3">3. Tipografia</h2>
+
+    <p>Fonte única: <strong>Inter</strong> (<code>font-family: "Inter", sans-serif</code>), aplicada
+    globalmente no <code>body</code> e reforçada nas regras de "uniformidade" do design
+    system (<code>plugin.css</code>, seção <code>DESIGN SYSTEM UNIFORMITY RULES</code>):</p>
+
+    <ul>
+      <li>Títulos (<code>h1</code>, <code>h2</code>, <code>h3</code>, texto de destaque <code>.text-[#0070af]</code>,
+      <code>.text-slate-800</code>): <code>letter-spacing: -0.01em</code> (leve aperto, comum em
+      títulos de interface densa).</li>
+      <li>Labels e pills (<code>label</code>, textos em <code>10px</code>/<code>11px</code>, <code>.checklist-pill</code>):
+      sempre <code>font-weight: 700</code> + <code>letter-spacing: 0.03em</code> (leve espaçamento,
+      para textos muito pequenos/em caixa alta permanecerem legíveis).</li>
+      <li>Corpo de input/textarea: peso médio (<code>font-weight: 500</code>), mais leve que
+      labels — para diferenciar visualmente "rótulo do campo" de "conteúdo
+      digitado".</li>
+      <li>Placeholder: sempre <code>font-weight: 400</code> + cor <code>#94a3b8</code> (claro) /
+      <code>#64748b</code> (escuro), mais apagado que o texto real digitado.</li>
+    </ul>
+
+    <p>A UI inteira roda em escala tipográfica muito pequena (a maioria dos
+    textos de interface está entre <code>9px</code> e <code>14px</code>, ex.: <code>text-[9.5px]</code>,
+    <code>text-[10px]</code>, <code>text-[11px]</code>, <code>text-[14px]</code> para títulos de modal) — reflexo
+    do espaço reduzido de um painel lateral do Figma.</p>
+
+    <h2 id="s4">4. Ícones (Lucide)</h2>
+
+    <p>O hac usa exclusivamente a biblioteca de ícones <strong>Lucide</strong>
+    (<code>&lt;i data-lucide="..."&gt;</code>, renderizados via <code>lucide.createIcons()</code>), nunca
+    ícones customizados em SVG solto (exceto o logo institucional da CAIXA no
+    header, que é um SVG de marca, não um ícone de interface).</p>
+
+    <p>Ícones com significado semântico fixo, reconhecíveis em todo o plugin:</p>
+
+    <table>
+      <tr><th>Ícone</th><th>Significado</th></tr>
+      <tr><td><code>person-standing</code></td><td>Acessibilidade em geral — ícone padrão do cabeçalho do modal de spec</td></tr>
+      <tr><td><code>map-pin</code></td><td>Área Marcada</td></tr>
+      <tr><td><code>radar</code></td><td>Detecção Automática</td></tr>
+      <tr><td><code>list-ordered</code></td><td>Ordem de Tabulação</td></tr>
+      <tr><td><code>smartphone</code> / <code>monitor</code></td><td>Origem do projeto — Mobile / Web (seletor de plataforma)</td></tr>
+      <tr><td><code>locate</code></td><td>"Focar" — centraliza/destaca o elemento correspondente no canvas</td></tr>
+      <tr><td><code>pencil</code></td><td>Editar (corrigir categoria durante o wizard, editar spec)</td></tr>
+      <tr><td><code>trash-2</code></td><td>Excluir</td></tr>
+      <tr><td><code>lock</code></td><td>Campo travado/read-only (ex.: link do componente pré-selecionado)</td></tr>
+      <tr><td><code>sparkles</code> / <code>wand-2</code></td><td>Sugestão/preenchimento assistido</td></tr>
+      <tr><td><code>grip-vertical</code></td><td>Alça de arrastar (reordenar lista, ex. Ordem de Tabulação)</td></tr>
+      <tr><td><code>crosshair</code> / <code>square-dashed</code></td><td>Modo de captura/seleção no canvas</td></tr>
+      <tr><td><code>library</code></td><td>Vínculo com biblioteca DSC</td></tr>
+      <tr><td><code>component</code></td><td>Referência a componente DSC</td></tr>
+      <tr><td><code>link-2-off</code></td><td>Link/componente não resolvido</td></tr>
+      <tr><td><code>moon</code> / <code>sun</code></td><td>Alternância de tema escuro/claro</td></tr>
+      <tr><td><code>zoom-in</code> / <code>zoom-out</code> / <code>maximize-2</code> / <code>minimize-2</code></td><td>Controles de escala da UI</td></tr>
+      <tr><td><code>check-circle-2</code></td><td>Confirmação/sucesso</td></tr>
+      <tr><td><code>alert-circle</code> / <code>alert-triangle</code></td><td>Aviso/erro</td></tr>
+      <tr><td><code>search</code> / <code>search-x</code></td><td>Busca / busca sem resultado</td></tr>
+      <tr><td><code>graduation-cap</code></td><td>Onboarding/ajuda</td></tr>
+      <tr><td><code>refresh-cw</code></td><td>Reescanear</td></tr>
+    </table>
+
+    <p>Ícones de tamanho <code>w-4 h-4</code> (16px) são o padrão em títulos de modal e
+    botões de ação; <code>w-3.5 h-3.5</code> e menores aparecem em contextos mais densos
+    (ex. botão de editar categoria inline no wizard).</p>
+
+    <h2 id="s5">5. Padrão de modal</h2>
+
+    <p>O hac tem 8 modais (<code>src/plugin/views/modals.html</code>), todos seguindo a
+    mesma estrutura de 3 blocos, sem exceção:</p>
+
+    <pre><code>&lt;div id="..." role="dialog" aria-modal="true" aria-labelledby="..."
+     class="hidden absolute inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"&gt;
+  &lt;!-- backdrop clicável, fecha o modal --&gt;
+  &lt;div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="..." aria-hidden="true"&gt;&lt;/div&gt;
+
+  &lt;!-- card do modal --&gt;
+  &lt;div class="relative w-full max-w-sm max-h-full bg-white dark:bg-dark-surface
+              rounded-2xl shadow-xl flex flex-col overflow-hidden
+              animate-in zoom-in-95 duration-200"&gt;
+
+    &lt;!-- header: ícone + título + botão fechar (X) --&gt;
+    &lt;div class="border-b border-gray-100 dark:border-dark-line shrink-0"&gt; ... &lt;/div&gt;
+
+    &lt;!-- corpo: sempre scrollável, nunca cresce além do card --&gt;
+    &lt;div class="p-5 overflow-y-auto min-h-0" onscroll="handleScroll(this)"&gt; ... &lt;/div&gt;
+
+    &lt;!-- footer: ações (Cancelar / Confirmar), sempre fixo, nunca rola junto --&gt;
+    &lt;div class="p-3 border-t border-gray-100 dark:border-dark-line flex gap-2 shrink-0"&gt; ... &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+    <p>Pontos fixos desse padrão, válidos para os 8 modais:</p>
+    <ul>
+      <li><code>role="dialog"</code> + <code>aria-modal="true"</code> + <code>aria-labelledby</code> sempre
+      presentes (acessibilidade da própria interface do plugin — o hac aplica
+      a si mesmo os cuidados de a11y que documenta para os produtos CAIXA).</li>
+      <li><code>position: absolute</code> (não <code>fixed</code>) — decisão técnica documentada na
+      <a href="tecnico.html#s10">Documentação Técnica, seção 10</a>:
+      <code>fixed</code> quebra sob o <code>zoom</code> usado para a escala da UI.
+      <code>max-h-full</code> no card (não unidades de viewport <code>vh</code>), pelo mesmo motivo.</li>
+      <li><code>rounded-2xl</code> (16px) no card do modal — mesmo raio "premium" reforçado
+      globalmente para cards (seção 6).</li>
+      <li>Botão de ação principal do footer sempre <code>rounded-2xl</code> também (não
+      <code>rounded-lg</code>/<code>rounded-md</code> como os demais botões da UI) — padrão visual
+      específico de footer de modal, mais arredondado que o resto da
+      interface.</li>
+      <li>Título do modal sempre com um ícone Lucide de 16px à esquerda, na cor
+      cyan <code>#0891B2</code> (identidade do hac) — mesmo em modais de categorias
+      específicas de acessibilidade, o ícone do título do modal continua
+      sendo o cyan geral, não a cor da categoria (a cor da categoria aparece
+      em outros elementos do formulário, como o badge do tipo selecionado).</li>
+    </ul>
+
+    <h2 id="s6">6. Cards e containers</h2>
+
+    <p><code>plugin.css</code> define uma seção explícita de "regras de uniformidade" que
+    força, via seletor de atributo/classe global (não por componente
+    individual), que qualquer card/container do plugin siga o mesmo padrão:</p>
+
+    <pre><code>.bg-white.dark\:bg-dark-surface,
+[id$="-card"],
+.view > section > div {
+  border-radius: 16px !important;
+  border: 1px solid #f1f5f9 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
+}</code></pre>
+
+    <p>Ou seja: <strong>qualquer elemento cujo id termine em <code>-card</code></strong>, ou que use as
+    classes padrão de fundo claro/escuro, ou que seja um container direto
+    dentro de uma <code>&lt;section&gt;</code> de view, automaticamente ganha o cantos
+    arredondados de 16px, borda sutil e sombra leve — sem que cada view
+    precise declarar isso manualmente. Ganha também um efeito de hover
+    (sombra mais forte + borda um tom mais escura) em qualquer elemento com
+    esse padrão.</p>
+
+    <p>Esse mecanismo existe para evitar deriva visual entre as várias telas do
+    plugin (<code>specifications.html</code> e as demais views) — um card criado numa
+    tela nova "herda" a aparência padrão automaticamente, mesmo que o
+    desenvolvedor esqueça de aplicar as classes de estilo completas.</p>
+
+    <h2 id="s7">7. Inputs, contadores de caracteres e toggles</h2>
+
+    <p>Todo <code>input[type="text"]</code>, <code>input[type="search"]</code>, <code>select</code> e <code>textarea</code>
+    segue um padrão único forçado globalmente (<code>plugin.css</code>):</p>
+
+    <ul>
+      <li><code>border-radius: 8px</code>, fundo <code>#f8fafc</code> (claro) / <code>#0f172a</code> (escuro),
+      borda <code>#e2e8f0</code>, <code>font-size: 12px</code>.</li>
+      <li>Foco: borda muda para <code>#005ca9</code> (azul institucional) com anel de
+      destaque (<code>box-shadow</code> de 3px na cor do foco em baixa opacidade) — não
+      o cyan do hac, o azul CAIXA.</li>
+      <li><code>textarea</code> tem <code>min-height: 80px</code> fixo.</li>
+    </ul>
+
+    <p><strong>Contador de caracteres</strong>: todo campo de texto livre com <code>maxlength</code> tem
+    um <code>&lt;span&gt;</code> de contador ao lado do label, no formato <code>N/limite</code>
+    (ex.: <code>0/100</code>, <code>1/8</code>), em <code>text-[9px]</code>, cor apagada
+    (<code>text-slate-400</code>/<code>dark:text-dark-muted</code>). Ver a tabela completa de
+    limites reais por campo na
+    <a href="tecnico.html#s2">Documentação Técnica, seção 2</a>.</p>
+
+    <p><strong>Toggles</strong>: implementados como <code>&lt;input type="radio"&gt;</code>/<code>&lt;input
+    type="checkbox"&gt;</code> visualmente escondidos (<code>class="sr-only"</code>) dentro de um
+    <code>&lt;label&gt;</code> estilizado — o estado marcado é lido via seletor CSS
+    <code>has-[:checked]</code>/<code>group-has-[:checked]</code> (Tailwind), sem depender de
+    JavaScript para o estilo visual do toggle em si (só para a lógica de
+    negócio). Ex.: seletor de lado do balão de dica no onboarding (Direita /
+    Esquerda / Topo / Base), cada opção é um botão-cartão com ícone de seta
+    que muda de cor cyan quando selecionado.</p>
+
+    <h2 id="s8">8. Botões</h2>
+
+    <p>Três variantes visuais recorrentes:</p>
+
+    <ul>
+      <li><strong>Primário</strong> (<code>bg-[#0070af]</code>/<code>bg-blue-600</code>/<code>bg-blue-500</code>, resolvido via
+      override global para <code>#005ca9</code>): fundo azul institucional sólido, texto
+      branco, <code>font-weight: 700</code>, sem borda.</li>
+      <li><strong>Secundário/outline</strong> (<code>border-[#0070af]</code>/<code>border-blue-500</code>): fundo
+      branco (ou <code>dark:bg-dark-surface</code>), texto e borda azul institucional.</li>
+      <li><strong>Destaque/atenção</strong> (<code>bg-orange-500</code>/<code>bg-green-600</code> — ambos resolvidos
+      para o mesmo laranja <code>#d36a00</code>): usado para ações que merecem contraste
+      extra, mas não são a ação primária padrão do plugin.</li>
+    </ul>
+
+    <p>Botão-padrão sem classe de raio explícita ganha <code>border-radius: 8px</code>
+    automaticamente (fallback global em <code>plugin.css</code>).</p>
+
+    <p><strong>FAB (Floating Action Button)</strong>: dois padrões nomeados —
+    <code>.fab-main</code> (botão flutuante principal, 48x48px, expande horizontalmente
+    ao passar o mouse revelando um label de texto — animação de
+    <code>width</code>/<code>padding</code> com easing customizado) e <code>.fab-inline</code> (variante
+    menor, 30px de altura, formato pílula, usado dentro de headers de view
+    para ações secundárias como "+ Nova spec"). Ambos têm uma variante
+    "ghost branco" (<code>.subheader-brand .fab-inline</code>) para quando aparecem sobre
+    um header colorido de fundo azul, garantindo contraste.</p>
+
+    <p>Todos os elementos interativos (<code>button</code>, <code>input</code>, <code>select</code>, <code>textarea</code>)
+    têm <code>:focus-visible</code> reforçado com contorno de 2px na cor de acento
+    (<code>#005ca9</code> claro / <code>#38a9f8</code> escuro) — cuidado deliberado de
+    acessibilidade da própria interface do plugin.</p>
+
+    <h2 id="s9">9. Tema claro/escuro</h2>
+
+    <p>Implementado via classe <code>.dark</code> no elemento raiz (padrão Tailwind
+    <code>darkMode: 'class'</code>), alternável pelo ícone <code>moon</code>/<code>sun</code> no header.
+    Praticamente todo elemento estrutural declara o par de classes lado a
+    lado (<code>bg-white dark:bg-dark-surface</code>, <code>text-slate-800 dark:text-white</code>,
+    <code>border-gray-100 dark:border-dark-line</code>) em vez de depender de variáveis
+    CSS — é o padrão idiomático do Tailwind, mas significa que qualquer nova
+    tela precisa lembrar de declarar os dois estados manualmente (não há
+    fallback automático de tema escuro para elementos sem a classe <code>dark:</code>
+    correspondente).</p>
+
+    <p>A cor de acento cyan do hac (<code>#0891B2</code>) permanece a mesma nos dois temas;
+    o que muda é o tom de fundo/texto ao redor dela (ex.: <code>dark:text-cyan-400</code>
+    em vez do hex fixo, para manter contraste suficiente sobre fundo escuro).</p>
+
+    <h2 id="s10">10. Escala da UI</h2>
+
+    <p>Três níveis de zoom da interface (<code>100%</code>, <code>115%</code>, <code>130%</code>), controlados
+    pela variável CSS <code>--ui-scale</code> aplicada via <code>zoom</code> no <code>body</code> (não
+    <code>transform: scale()</code>) — decisão técnica detalhada na
+    <a href="tecnico.html#s10">Documentação Técnica, seção 10</a>.
+    Do ponto de vista puramente visual (sem entrar no "porquê" técnico, já
+    coberto lá): em escala alta (<code>body.scale-high</code>), o título do header e o
+    texto de autosave somem para economizar espaço horizontal, e o padding do
+    header/footer é reduzido — a interface se adapta para caber mais conteúdo
+    útil quando o designer aumenta o zoom para compensar a leitura em telas
+    pequenas ou alta densidade de pixels.</p>
+
+    <p class="footer-note">hac — Design System da Interface · repositório privado, uso interno</p>
+  </div>
+</main>
+</body>
+</html>

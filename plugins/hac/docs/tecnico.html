@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentação Técnica — hac</title>
+<style>
+:root {
+  --hac-cyan: #0891B2;
+  --hac-blue: #005ca9;
+  --hac-blue-dark: #004782;
+  --hac-orange: #f39200;
+  --bg: #eef2f7;
+  --surface: #ffffff;
+  --line: #dde3ec;
+  --muted: #64748b;
+  --text: #1e293b;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+header.site-header {
+  background: var(--hac-blue);
+  color: #fff;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+header.site-header .brand {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  margin-right: auto;
+}
+header.site-header nav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+header.site-header nav a {
+  color: #e0effe;
+  text-decoration: none;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+header.site-header nav a:hover {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+}
+header.site-header nav a.active {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  font-weight: 700;
+}
+main {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 28px 32px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+h1 {
+  font-size: 24px;
+  margin-top: 0;
+  color: var(--hac-blue);
+  letter-spacing: -0.01em;
+}
+h2 {
+  font-size: 18px;
+  margin-top: 36px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--hac-blue);
+  letter-spacing: -0.01em;
+}
+h2:first-of-type { border-top: none; padding-top: 0; }
+h3 {
+  font-size: 15px;
+  margin-top: 24px;
+  color: var(--text);
+}
+p { margin: 12px 0; }
+a { color: var(--hac-cyan); }
+a:hover { text-decoration: none; }
+code {
+  font-family: "Consolas", "SFMono-Regular", monospace;
+  background: #f1f5f9;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  color: #0f172a;
+}
+pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 14px 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+}
+th, td {
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: #f8fafc;
+  font-weight: 700;
+}
+blockquote {
+  border-left: 3px solid var(--hac-cyan);
+  margin: 16px 0;
+  padding: 4px 16px;
+  background: #f0f9fb;
+  color: #334155;
+  font-size: 14px;
+}
+blockquote p { margin: 8px 0; }
+ul, ol { padding-left: 22px; }
+li { margin: 4px 0; }
+hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 32px 0;
+}
+.toc {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+.toc p { margin: 0 0 8px; font-weight: 700; font-size: 13px; }
+.toc ol { margin: 0; }
+.footer-note {
+  margin-top: 48px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">hac — Handoff de Acessibilidade CAIXA</span>
+  <nav>
+    <a href="index.html">Início</a>
+    <a href="tecnico.html" class="active">Documentação Técnica</a>
+    <a href="institucional.html">Regras de Negócio</a>
+    <a href="design-system.html">Design System</a>
+    <a href="changelog.html">Changelog</a>
+  </nav>
+</header>
+<main>
+  <div class="card">
+
+    <h1>Estado da arquitetura — hac</h1>
+
+    <p>Documento vivo — <strong>fonte primária de verdade</strong> a partir de 02/09/2026.
+    Reflete o estado do código na branch de desenvolvimento na mesma data. Para
+    o histórico de como se chegou a este estado (bugs corrigidos, decisões
+    revertidas, evolução de arquitetura), ver o <a href="changelog.html">Changelog</a>.
+    O arquivo <code>docs/architecture-state.md</code>, no repositório, é mantido como
+    espelho/ponto de partida histórico — não é mais o destino principal de
+    atualização (ver nota no topo daquele arquivo).</p>
+
+    <div class="toc">
+      <p>Sumário</p>
+      <ol>
+        <li><a href="#s1">Schema de dados (<code>hacData</code>)</a></li>
+        <li><a href="#s2">As 5 categorias de spec</a></li>
+        <li><a href="#s3">Origem do projeto (web/mobile)</a></li>
+        <li><a href="#s4"><code>needsReview</code></a></li>
+        <li><a href="#s5">Elementos e Imagens mobile — 3 sub-variantes</a></li>
+        <li><a href="#s6">Matching DSC → categoria de acessibilidade</a></li>
+        <li><a href="#s7">Fluxos de criação de spec</a></li>
+        <li><a href="#s8">Ordem de Tabulação</a></li>
+        <li><a href="#s9">Contrato de mensagens (UI ↔ backend)</a></li>
+        <li><a href="#s10">Escala da UI e <code>position</code> dos modais</a></li>
+        <li><a href="#s11">Pendências conhecidas</a></li>
+        <li><a href="#s12">Sobre esta documentação</a></li>
+      </ol>
+    </div>
+
+    <blockquote><p>Para o histórico cronológico de decisões e bugs corrigidos, ver o
+    <a href="changelog.html">Changelog</a>.</p></blockquote>
+
+    <h2 id="s1">1. Schema de dados (<code>hacData</code>)</h2>
+
+    <p>O hac não tem conceito de "frame"/múltiplas telas (diferente do Handex).
+    Existe <strong>um único array de verdade por tipo</strong>, sem duplicação
+    avulso+por-frame — essa duplicação foi a causa raiz de um bug conhecido do
+    Handex (specs "sumindo" por haver duas fontes de verdade divergentes); o
+    hac nasce sem esse padrão por decisão deliberada.</p>
+
+    <pre><code>hacData = {
+  _schemaVersion: 1,
+  a11yAreas: [],        // Áreas Marcadas — agrupamento principal (accordion)
+  a11ySpecs: [],         // Especificações de acessibilidade (5 categorias)
+  tabOrderItems: [],     // Ordem de Tabulação (por área, arquitetura de cópia de frame)
+  currentUser: null,     // Usuário Figma identificado automaticamente (sem login)
+  projectOrigin: null,   // 'web' | 'mobile' | null — ver seção 3
+}</code></pre>
+
+    <p>Definido em <code>src/plugin/modules/core.js</code>, espelhado em variáveis globais
+    soltas (<code>a11yAreas</code>, <code>a11ySpecs</code>, <code>tabOrderItems</code>) que são a fonte de
+    verdade real durante a sessão — <code>hacData</code> é remontado a partir delas só na
+    hora de persistir (<code>saveToStorage()</code>).</p>
+
+    <p><code>_schemaVersion</code> continua fixo em <code>1</code> desde a origem do plugin — todas as
+    mudanças de schema tratadas até aqui (variantes mobile, <code>projectOrigin</code>)
+    foram tratadas como <strong>aditivas</strong>, migração por ausência de campo, não por
+    número de versão.</p>
+
+    <h3><code>a11yAreas[]</code></h3>
+    <p>Selo numerado de seção/tela marcado no canvas. Campos: <code>id</code>, <code>number</code>,
+    <code>label</code>, <code>targetNodeId</code>. Não tem campo <code>origin</code> próprio — a origem
+    web/mobile deixou de ser calculada por área (ver seção 3).</p>
+
+    <h3><code>a11ySpecs[]</code></h3>
+    <p>Cada spec pertence a uma categoria (<code>a11yType</code>: <code>elemento</code> | <code>estrutura</code> |
+    <code>titulo</code> | <code>decorativo</code> | <code>informacoes</code>) e a uma Área Marcada
+    (<code>a11yAreaId</code>). Campos principais: <code>id</code> (nodeId real do specGroup no
+    canvas), <code>targetNodeId</code>, <code>letter</code>, <code>color</code>/<code>fillColor</code>, <code>properties[]</code>
+    (<code>{key,label,value}</code>), <code>a11ySubtype</code> (chave crua da subvariante, usada
+    pelo backend pra ajustar a instância aninhada do componente real
+    importado), <code>a11yOrigin</code> (<code>'web'</code> | <code>'mobile'</code>, gravado no momento da
+    criação — nunca recalculado depois), <code>a11ySourceLib</code>,
+    <code>a11yDscComponentName</code> (nome real do component set DSC, quando resolvido),
+    <code>needsReview</code> (boolean — seção 4), <code>locked</code> (specs de a11y nascem sempre
+    travadas), <code>visible</code>.</p>
+
+    <h3><code>tabOrderItems[]</code></h3>
+    <p>Populado pela arquitetura de cópia de frame (<code>_createTabOrderCloneForArea</code>
+    em <code>code.js</code>) — nunca desenha sobre o design original. A cópia vive dentro
+    de uma Section dedicada no canvas, separada da Section de specs — ver
+    seção 8.</p>
+
+    <h3><code>projectOrigin</code></h3>
+    <p>Ver seção 3 — origem web/mobile do arquivo inteiro, não por área.</p>
+
+    <h3>Persistência</h3>
+    <p><code>saveToStorage()</code> remonta <code>hacData</code> a partir das variáveis globais e envia
+    <code>save-storage</code> pro backend. Isolamento por arquivo real do Figma: chave
+    <code>hacData:${figma.fileKey}</code>.</p>
+
+    <p>Arquivos ainda não salvos não têm <code>figma.fileKey</code>. Uma chave de fallback
+    fixa (<code>hacData:unsaved</code>) existiu até 02/09/2026, mas causava vazamento real
+    de dados entre projetos/clientes diferentes: como <code>clientStorage</code> é
+    escopado por instalação do plugin (não por arquivo/aba), todo arquivo
+    não-salvo lia e escrevia na MESMA chave. <code>_getHacDataStorageKey()</code> agora
+    retorna <code>null</code> nesse cenário: o arquivo não-salvo sempre abre com <code>hacData</code>
+    zerado e nada é gravado até o arquivo ganhar um <code>fileKey</code> real (primeiro
+    save). Consequência aceita: fechar o plugin no meio do trabalho num arquivo
+    nunca salvo perde o progresso da sessão — preferível a corromper
+    silenciosamente dados de outro projeto.</p>
+
+    <p><code>clear-cache</code> reseta <code>a11yAreas</code>/<code>a11ySpecs</code>/<code>tabOrderItems</code> <strong>e também
+    <code>projectOrigin</code></strong> — decisão deliberada: "Limpar Cache" deve simular um
+    arquivo novo por completo, incluindo perguntar a plataforma de novo.
+    <code>currentUser</code> é preservado (identidade/configuração de ambiente, não
+    conteúdo do projeto).</p>
+
+    <h2 id="s2">2. As 5 categorias de spec</h2>
+
+    <table>
+      <tr><th>Categoria (<code>a11yType</code>)</th><th>Label</th><th>Tag manual?</th><th>Equivalente mobile real?</th></tr>
+      <tr><td><code>elemento</code></td><td>Elementos e Imagens</td><td>Sim</td><td>Sim — 3 sub-variantes (seção 5)</td></tr>
+      <tr><td><code>estrutura</code></td><td>Estrutura da Página</td><td>Sim</td><td><strong>Não</strong> — sem landmark semântico na lib mobile</td></tr>
+      <tr><td><code>titulo</code></td><td>Nível de Título</td><td>Não (usa nível como tag)</td><td>Sim — marcador único "H", sem hierarquia</td></tr>
+      <tr><td><code>decorativo</code></td><td>Elemento Decorativo</td><td>Não (badge fixo)</td><td>Sim</td></tr>
+      <tr><td><code>informacoes</code></td><td>Informações Adicionais</td><td>Sim</td><td><strong>Não</strong> — formato livre, web-only</td></tr>
+    </table>
+
+    <p>Regra geral: <strong>a origem (web/mobile) filtra tudo</strong> — não só o marcador
+    visual e o card de spec, mas também qual catálogo de componentes é
+    sugerido/consultado, manual ou automático. Ver seção 6.</p>
+
+    <h3>Diferenças reais web vs. mobile por categoria</h3>
+
+    <ul>
+      <li><strong>Nível de Título</strong>: web usa H1-H6 (hierarquia real); mobile usa um
+      identificador único "H", sem distinção de nível, porque React Native não
+      tem o conceito de hierarquia de heading do HTML.</li>
+      <li><strong>Estrutura da Página</strong>: sem equivalente mobile publicado — a lib
+      "Design Acessível | Super App" não modela landmarks semânticos. Specs
+      dessa categoria em projeto mobile continuam usando o wrapper desktop
+      (comportamento aceito, não é bug).</li>
+      <li><strong>Elementos e Imagens</strong>: mobile tem 3 sub-variantes (Componente, Link,
+      Texto Alternativo) com campos próprios — seção 5. Web usa o catálogo de
+      16 componentes curados da lib "Design Acessível" desktop.</li>
+      <li><strong>Elemento Decorativo</strong>: card real importado nas duas origens; conteúdo
+      textual (Descrição/Notas de Código) é fixo/hardcoded na lib publicada em
+      ambas — limitação real do componente Figma, não do plugin.</li>
+      <li><strong>Informações Adicionais</strong>: formato livre, sem diferenciação documentada
+      mobile/web.</li>
+    </ul>
+
+    <h3>Campos padrão e limites de caracteres</h3>
+
+    <p>Todo campo de texto livre do formulário tem <code>maxlength</code> + contador visível.</p>
+
+    <table>
+      <tr><th>Campo</th><th>Limite</th><th>Observação</th></tr>
+      <tr><td>TAG (<code>elemento</code>/<code>estrutura</code>/<code>informacoes</code>)</td><td>8</td><td>Regex <code>^[A-Z]\d*(\.\d+)*$</code> — formato tipo "A1.1" para sequências longas dentro de uma área</td></tr>
+      <tr><td>Label (accessibilityLabel)</td><td>100</td><td>Deve ser específico da função, não do tipo de componente</td></tr>
+      <tr><td>Componente "Outro" (desktop)</td><td>80</td><td></td></tr>
+      <tr><td>Descrição (Estrutura/Informações, subtipo "Customizável")</td><td>200</td><td>Único ponto com edição livre nessas 2 categorias</td></tr>
+      <tr><td>Label de Área Marcada</td><td>80</td><td></td></tr>
+      <tr><td>Descrição/Texto alternativo (mobile, "Texto Alternativo")</td><td>180</td><td>Alt-text</td></tr>
+      <tr><td>Link/nome do componente (mobile, "Link do Componente")</td><td>300</td><td>URL de deep-link ou nome digitado manualmente</td></tr>
+      <tr><td>Observações (toggle)</td><td>400</td><td></td></tr>
+      <tr><td>Notas de Código (toggle)</td><td>500</td><td></td></tr>
+      <tr><td>Dica para Leitor de Tela / accessibilityHint (mobile)</td><td>300</td><td></td></tr>
+    </table>
+
+    <p>Campos obrigatórios (validados em <code>confirmA11ySpec</code>):</p>
+    <ul>
+      <li>Elemento web, catálogo normal: Label obrigatório.</li>
+      <li>Elemento web, "Outro": Componente documentado + Label obrigatórios.</li>
+      <li>Elemento mobile, variante "Componente": Link do Componente obrigatório.</li>
+      <li>Elemento mobile, variante "Texto Alternativo": Descrição obrigatória.</li>
+      <li>Elemento mobile, qualquer variante: Label sempre obrigatório.</li>
+      <li>Demais categorias: sem obrigatoriedade além da Tag (quando aplicável).</li>
+    </ul>
+
+    <h2 id="s3">3. Origem do projeto (web/mobile) — histórico de 3 decisões no mesmo dia</h2>
+
+    <p><strong>Fase 1 (anterior): voto de maioria por área.</strong> <code>area.origin</code> era
+    calculado a partir da proporção de componentes web vs. mobile detectados
+    dentro de cada Área Marcada, recalculado a cada "Reescanear". Frágil:
+    dependia de haver componentes reais suficientes detectados, e podia mudar
+    retroativamente entre scans da mesma área.</p>
+
+    <p><strong>Fase 2 (revertida no mesmo dia): perguntar a cada ação.</strong> O voto de
+    maioria foi removido e substituído por uma modal bloqueante ("Este handoff
+    usa qual biblioteca?") perguntada toda vez que uma ação precisava saber a
+    origem: Marcar Área, Detecção Automática, Ordem de Tabulação. Problema
+    real: quando "Marcar Área" tem auto-detecção ligada, ela dispara a
+    Detecção Automática em sequência imediata — o designer via a mesma
+    pergunta aparecer duas vezes seguidas, indistinguível de um bug de loop.</p>
+
+    <p><strong>Fase 3 (estado atual): configuração única por projeto.</strong> A origem é uma
+    característica do <strong>arquivo inteiro</strong>, nunca mista (confirmado
+    repetidamente pelo usuário: "se é um projeto mobile, tudo referencia
+    mobile"). Implementação:</p>
+
+    <ul>
+      <li><code>getA11yProjectOrigin()</code> lê <code>hacData.projectOrigin</code>.</li>
+      <li><code>ensureA11yProjectOriginThen(onReady)</code> é o <strong>ponto único</strong> que toda ação
+      que precisa da origem deve chamar: se já definida, chama <code>onReady(origin)</code>
+      direto, sem abrir modal; se não, abre a modal bloqueante uma única vez,
+      persiste a resposta, e só então chama <code>onReady</code>.</li>
+      <li>As 3 ações que precisavam disso (Marcar Área com auto-detecção, Detecção
+      Automática, Ordem de Tabulação manual e automática) foram migradas para
+      <code>ensureA11yProjectOriginThen</code> — nenhuma pergunta de novo depois da
+      primeira vez.</li>
+      <li>O fluxo manual de criação de spec ("+ Nova spec") lê
+      <code>getA11yProjectOrigin()</code> diretamente (sem abrir modal).</li>
+      <li>Editável a qualquer momento via modal "Sobre o hac" → botão "Trocar".</li>
+      <li>Resetada ao "Limpar Cache" (ver seção 1).</li>
+    </ul>
+
+    <p><strong>Exceção deliberada: "Reescanear" dentro do resumo da Detecção
+    Automática.</strong> <code>rescanA11yBatchArea()</code> não chama <code>ensureA11yProjectOriginThen</code>
+    — ela zera <code>pending.declaredOrigin</code> e força a modal de origem a reabrir
+    manualmente, mesmo com <code>hacData.projectOrigin</code> já definido. Decisão
+    explícita: a lib pode ter mudado entre uma varredura e outra, então cada
+    Reescanear pergunta de novo qual plataforma usar para aquela passada
+    específica — a resposta não sobrescreve <code>hacData.projectOrigin</code> (só o
+    campo local usado para retropreencher Título/Decorativo daquela
+    varredura). Não é bug — é a única ação que legitimamente pergunta de novo.</p>
+
+    <h2 id="s4">4. <code>needsReview</code></h2>
+
+    <p>Campo boolean em cada spec. Hoje só é setado <code>true</code> em um cenário real:
+    migração retroativa de "Elementos e Imagens" mobile pré-sub-variantes,
+    quando a heurística de inferência cai no fallback mais arriscado (não
+    consegue determinar a variante com confiança).</p>
+
+    <p>Toda spec criada pelo wizard de revisão individual (Detecção Automática)
+    nasce sempre com <code>needsReview: false</code>, mesmo que a detecção original
+    tivesse baixa confiança — a revisão humana item a item já substitui
+    qualquer necessidade de sinalização automática. O conceito de "confiança
+    alta/baixa" foi removido da UI (badges de confiança no resumo do lote)
+    pela mesma razão: com revisão individual obrigatória, a distinção virou
+    ruído sem efeito prático.</p>
+
+    <h2 id="s5">5. Elementos e Imagens mobile — 3 sub-variantes</h2>
+
+    <p>Estrutura real do componente Figma <code>[a11y mob] Box specs leitor de tela</code>
+    (variante "Conector = Elementos e imagens"), com property <code>Variante</code>
+    (VARIANT): <code>componente</code> | <code>link</code> | <code>texto alternativo</code>.</p>
+
+    <ul>
+      <li><strong>Componente</strong>: Descrição/Nome acessível/Dica Leitor de Tela/Observação
+      (toggles opcionais) + <strong>Link do Componente</strong> (sempre visível). O
+      dropdown de 64 nomes reais de componentes DSC vem pré-selecionado
+      automaticamente quando o <code>dscComponentName</code> resolvido bate por nome
+      exato com um dos 46 nomes que têm <code>nodeId</code> conhecido (gerando também a
+      URL de deep-link); os outros 18 nomes divergem editorialmente entre a
+      lib real e a lista curada — ficam manuais ("Personalizado"). Sempre que
+      o <code>&lt;select&gt;</code> aponta para qualquer opção diferente de "Personalizado", o
+      campo de texto vira <code>readOnly</code>, com hint visual de cadeado — só fica
+      editável quando "Personalizado" está selecionado.</li>
+      <li><strong>Link</strong>: Descrição fixa e travada ("Identificar como link e anunciar
+      que o link abre uma nova janela..."), Nome acessível/Observação
+      opcionais.</li>
+      <li><strong>Texto Alternativo</strong>: Descrição livre <strong>obrigatória</strong> (alt-text real),
+      Observação opcional.</li>
+    </ul>
+
+    <p>O campo <code>Nome acessível</code> foi consolidado: existia como toggle duplicado
+    dentro de "Campos exclusivos mobile" e também como o campo "Label" do topo
+    do formulário — ambos alimentavam o mesmo <code>accessibilityLabel</code>. O toggle
+    mobile foi removido; "Label" do topo é a única fonte, e seu valor liga o
+    toggle BOOLEAN real do componente. <strong>Mesmo padrão aplicado ao desktop/web</strong>:
+    o checkbox dinâmico "Nome Acessível" (renderizado a partir da property
+    BOOLEAN real do componente DSC selecionado) duplicava o campo "Label"
+    sempre visível no topo — foi filtrado fora da lista de toggles renderizados,
+    e o payload passou a injetar <code>{ key: 'nomeAcessivel', value: label }</code>
+    automaticamente a partir do Label do topo, para todo componente. Isso é
+    seguro porque o backend já ignora silenciosamente properties dinâmicas sem
+    <code>toggleDef</code> correspondente no componente.</p>
+
+    <p><strong>Bug real corrigido</strong>: o toggle BOOLEAN ligava corretamente, mas o TEXTO
+    da sub-instância continuava sendo o placeholder publicado da lib, nunca o
+    valor real digitado — mesmo bug nos outros 3 campos desta variante. Causa
+    raiz: o preenchimento buscava um TEXT node cujo nome de CAMADA batesse com
+    um regex — mas a árvore real não tem TEXT nodes com esses nomes: cada
+    campo é uma INSTANCE aninhada cujos dois TEXT filhos se chamam sempre
+    "Label"/"Text" (genéricos). O conteúdo real é uma component property de
+    texto própria de cada sub-instância. Correção: novo helper
+    <code>_findNestedInstanceByName</code> acha a INSTANCE pelo nome dela (não pelo TEXT
+    filho), e o preenchimento passou a usar <code>setProperties</code> na property
+    <code>Texto</code> da sub-instância.</p>
+
+    <h2 id="s6">6. Matching DSC → categoria de acessibilidade</h2>
+
+    <h3>As 6 libs conhecidas</h3>
+
+    <p><strong>Libs de matching/detecção</strong> (categorizam instâncias reais no canvas —
+    servem só como referência de nome/origem, nunca são a fonte do componente
+    importado):</p>
+    <ul>
+      <li><code>web-angular-react</code> → origin <code>web</code></li>
+      <li><code>super-dsc-web</code> → origin <code>web</code></li>
+      <li><code>super-app</code> → origin <code>mobile</code></li>
+      <li><code>dsc-android</code> → origin <code>mobile</code></li>
+    </ul>
+
+    <p><strong>Libs de componentes reais</strong> (fonte de fato dos wrappers/marcadores
+    importados pro canvas):</p>
+    <ul>
+      <li>Desktop: "Design Acessível" (fileKey <code>Wy0IhXRVZMSOOr8E609UqI</code>)</li>
+      <li>Mobile: "Design Acessível | Super App - React Native" (fileKey
+      <code>3zdtN13YvPlCGPdXeL0Y2i</code>)</li>
+    </ul>
+
+    <h3>Filtro por origem</h3>
+
+    <p>O matching de categoria usa dois Maps separados por plataforma
+    (<code>_dscFrameToA11yMapWeb</code>/<code>_dscFrameToA11yMapMobile</code>). A resolução de match
+    já sabe a origem do componente <strong>antes</strong> de consultar o mapa de categoria
+    — consulta só o mapa da própria plataforma. Um componente que só bate por
+    nome na lib da plataforma errada corretamente vira <code>isUnmapped: true</code> em
+    vez de herdar uma categoria da lib errada.</p>
+
+    <h3>Princípio: componente real sempre, procedural só como último recurso</h3>
+
+    <p>A importação de componente real lança exceção em qualquer ponto de
+    incerteza; o chamador trata como "cai no card procedural" só para uma
+    whitelist fixa de razões esperadas. Qualquer outra falha gera erro visível
+    ao designer (nunca falha silenciosa).</p>
+
+    <p><strong>Preenchimento fino de campos internos</strong>: implementado para as 3
+    categorias cobertas pelo wrapper mobile (Elementos e Imagens, Títulos,
+    Elementos Decorativos). Títulos e Elementos Decorativos só expõem uma
+    property <code>Observações</code> (BOOLEAN) internamente — Descrição e Notas de
+    Código são conteúdo fixo hardcoded na lib publicada, sem property exposta
+    (limitação real da lib, confirmada via API).</p>
+
+    <h3>"Componente DSC" como link de referência</h3>
+
+    <p>O campo read-only "Componente DSC" no cabeçalho do modal vira um link
+    clicável para o componente real na lib do Figma, só quando é possível
+    montar um deep-link com confiança via um dicionário de 46/64 nomes que
+    existe <strong>só para a lib mobile</strong> (extraído com <code>containingFrameNodeId</code>) —
+    os JSONs das libs web não têm esse campo. Specs de projeto web nunca
+    ganham link (cai no texto puro), e mesmo em mobile os nomes sem match
+    seguro ficam só como texto.</p>
+
+    <h3>"Outro" (componente não mapeado)</h3>
+
+    <p>Quando um componentKey real é encontrado sem categoria de a11y catalogada
+    (ex: <code>[dsc] Card</code>, <code>[dsc] Tooltip</code>), a Detecção Automática sugere "Outro
+    (nome do componente)" — sinaliza que aquele componente precisa ganhar uma
+    spec formal na lib, mas hoje não existe processo institucional
+    automatizado que capte esse sinal; é só um rótulo visível na tela de
+    revisão do designer.</p>
+
+    <h2 id="s7">7. Fluxos de criação de spec</h2>
+
+    <h3>Manual ("+ Nova spec")</h3>
+    <p>Seleção de elemento → checagem de vínculo da lib → escolha de categoria →
+    formulário. <code>a11yOrigin</code> vem de <code>getA11yProjectOrigin()</code> (configuração já
+    definida do projeto).</p>
+
+    <h3>Detecção Automática (wizard sequencial de revisão)</h3>
+    <p>Todo item detectado — sem exceção de categoria — passa por
+    configuração/confirmação individual antes de virar spec real:</p>
+
+    <ol>
+      <li>Tela de entrada: escolher a Área de destino, ver contagem agregada.</li>
+      <li>Um snapshot em memória é montado (nunca persistido, nunca escreve na
+      fonte bruta de detecções).</li>
+      <li>Cada item abre o formulário normal, com indicador de progresso "Item N
+      de M", botões "Focar" (destaca o elemento no canvas) e "Descartar"
+      (pula sem criar spec).
+        <ul>
+          <li><strong>Correção de categoria durante a revisão</strong>: um ícone de editar
+          permite trocar a categoria sugerida inline, reabrindo o formulário em
+          estado default para a nova categoria — sem migração de campos entre
+          categorias diferentes. Existe só durante o wizard.</li>
+          <li><strong>Navegação livre + campo de posição editável</strong>: a revisão não é
+          mais estritamente sequencial. Botões Voltar/Avançar navegam sempre
+          por posição na fila; um campo numérico central permite pular
+          diretamente para qualquer item. Reabrir um item confirmado mantém o
+          formulário visível mas o botão "Aplicar" vira "Documentado"
+          (desabilitado) — nunca duplica a spec. Reabrir um item descartado
+          reabre totalmente editável.</li>
+          <li><strong>Foco automático no canvas ao trocar de item</strong>: a cada troca de
+          item, a viewport centraliza/destaca o elemento correspondente
+          automaticamente.</li>
+        </ul>
+      </li>
+      <li><code>confirmA11ySpec()</code> no modo wizard força <code>needsReview: false</code> e aguarda
+      a resposta real do backend antes de avançar.</li>
+      <li>Cancelar a revisão preserva as specs já confirmadas; itens ainda não
+      vistos voltam para "Não Documentados".
+        <ul>
+          <li><strong>Distinção Cancelar explícito vs. fechamento acidental</strong>: fechar via
+          X/backdrop/Esc oferece retomada (toast com botão "Continuar revisão",
+          que dispara um novo scan da área e retoma o wizard); clicar em
+          "Cancelar" explicitamente não oferece essa opção.</li>
+        </ul>
+      </li>
+    </ol>
+
+    <h2 id="s8">8. Ordem de Tabulação</h2>
+
+    <h3>Organização em Sections dedicadas</h3>
+    <p>O hac usa <strong>duas Sections distintas</strong> no canvas:</p>
+
+    <ul>
+      <li><code>"hac — Especificações de Acessibilidade"</code>: Áreas Marcadas + specGroups
+      de todas as categorias.</li>
+      <li><code>"hac — Ordem de Tabulação"</code>: só as cópias de frame criadas para revisão
+      de tabulação (uma por Área Marcada já trabalhada) e os selos numerados
+      dentro delas. Separada da Section de specs porque dezenas de
+      selos/conectores de spec se misturariam visualmente, no painel de
+      Layers, com cópias inteiras de tela.</li>
+    </ul>
+
+    <h3>Réplica da área criada e focada antes de marcar</h3>
+    <p>Regra válida para os dois modos (manual e automático): a primeira coisa
+    que acontece é clonar a Área Marcada para um espaço livre do canvas — sem
+    sobrepor nada que já esteja na página. Logo após criar a cópia, o backend
+    seleciona e foca a viewport nela, antes de o modal de revisão abrir — a
+    área original acumula selos de outras specs e ficava visualmente confusa;
+    o designer nunca marca em cima dela.</p>
+
+    <ul>
+      <li><strong>Modo manual</strong>: o designer clica fisicamente na CÓPIA (é o que está
+      focado na tela). A tradução de id do clone para o id do original
+      acontece antes de repassar ao frontend — é assim que a lista pendente
+      sempre guarda ids do original.</li>
+      <li><strong>Modo automático</strong>: a varredura por elementos interativos continua
+      operando sobre o frame ORIGINAL; o backend devolve o mapa
+      original↔clone junto com os itens encontrados.</li>
+    </ul>
+
+    <h3>Modo manual — sem bloqueio</h3>
+    <p>Uma tentativa de bloquear cliques em elementos "não reconhecidos como
+    acionáveis" foi implementada e <strong>revertida no mesmo dia</strong>: o reconhecimento
+    automático falhava em casos reais visíveis (Icon Button de libs não
+    mapeadas, cards customizados sem match) — travar o designer com base num
+    reconhecimento incompleto causava mais dano do que benefício. Decisão
+    final: <strong>qualquer clique no modo de captura entra direto na lista, sem
+    checagem nem aviso</strong>.</p>
+
+    <h3>Modo automático — só sugere itens reconhecidos</h3>
+    <p>A varredura só coleta instâncias cujo componente resolve como interativo
+    (button, checkbox, radio button, switch, inputs, paginator, stepper, tab
+    group, accordion, breadcrumb, listas, link). É uma sugestão, não uma
+    trava — o designer ainda revisa e edita a lista antes de aplicar.</p>
+
+    <h3>Fluxo de revisão obrigatório</h3>
+    <p>Nenhum selo é desenhado sobre os elementos reais em nenhum dos dois modos
+    — clique manual e varredura automática só populam uma lista pendente em
+    memória, revisável (drag-and-drop para reordenar, exclusão individual) no
+    modal. Só "Aplicar no Canvas" desenha de fato, sempre sobre a mesma cópia
+    clonada já criada/focada no início do fluxo.</p>
+
+    <h3>Selo de ITEM de tabulação vs. selo de ÁREA — dois componentes diferentes</h3>
+
+    <ul>
+      <li><code>[a11y] Item Number</code> (desktop) / <code>[a11y mob] Número da tela</code> (mobile)
+      desenham um <code>Connector</code> dentro de cada variante de direção — fazem
+      sentido para o selo de <strong>Área Marcada</strong>, que precisa de uma linha visual
+      até a borda do frame/seção demarcada.</li>
+      <li><code>[a11y mob] Ordenação</code> não desenha conector — os filhos de cada variante
+      são só número + um ícone de seta encostando na borda do próprio selo.
+      Não tem property de direção porque a posição é resolvida por
+      x/y absoluto no código, não por variante do componente. É o componente
+      certo para o selo de <strong>item de Ordem de Tabulação</strong>.</li>
+    </ul>
+
+    <p>Desktop não tem um equivalente "sem conector" — é o único componente
+    disponível na lib "Design Acessível" para selo numerado, e por isso segue
+    reaproveitado tanto para Área quanto para item de tabulação nesse caso
+    (assimetria real entre as duas libs, não um bug do plugin).</p>
+
+    <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
+
+    <p>Toda comunicação passa por <code>postMessage</code>/<code>window.onmessage</code> — o frontend
+    NUNCA chama <code>figma.*</code> diretamente; qualquer manipulação de canvas só roda
+    em <code>code.js</code>.</p>
+
+    <table>
+      <tr><th>Mensagem</th><th>Direção</th><th>Payload relevante</th></tr>
+      <tr><td><code>init-plugin</code></td><td>backend → UI</td><td><code>theme</code>, <code>version</code>, <code>currentUser</code>, <code>savedState</code>, <code>onboardingSeen</code></td></tr>
+      <tr><td><code>save-storage</code></td><td>UI → backend</td><td><code>data</code> (hacData completo)</td></tr>
+      <tr><td><code>cache-cleared</code></td><td>backend → UI</td><td>reseta hacData/arrays em memória, incluindo <code>projectOrigin</code></td></tr>
+      <tr><td><code>create-unified-spec</code></td><td>UI → backend</td><td><code>opts</code> (<code>a11yType</code>, <code>a11ySubtype</code>, <code>a11yOrigin</code>, <code>a11ySourceLib</code>, <code>a11yDscComponentName</code>, <code>a11yAreaId</code>, <code>targetNodeId</code>, <code>needsReview</code>, <code>silent</code>)</td></tr>
+      <tr><td><code>spec-created</code></td><td>backend → UI</td><td><code>spec</code> (objeto já no formato de <code>a11ySpecs[]</code>)</td></tr>
+      <tr><td><code>scan-frame</code></td><td>UI → backend</td><td><code>nodeId</code>, <code>origin: 'a11y-detection'</code></td></tr>
+      <tr><td><code>scan-result</code></td><td>backend → UI</td><td><code>data</code>, <code>origin</code> (ecoado)</td></tr>
+      <tr><td><code>check-a11y-library</code></td><td>UI → backend</td><td><code>token</code></td></tr>
+      <tr><td><code>create-a11y-area</code></td><td>UI → backend</td><td><code>targetNodeId</code>, <code>label</code>, <code>number</code>, <code>conector</code>, <code>autoDetect</code>, <code>origin</code></td></tr>
+    </table>
+
+    <h2 id="s10">10. Escala da UI (<code>--ui-scale</code>) e <code>position</code> dos modais</h2>
+
+    <p><code>body</code> usa <code>zoom</code> (não <code>transform</code>) para os 3 níveis de escala do plugin
+    (<code>[1, 1.15, 1.3]</code>) — mantido deliberadamente: <code>zoom</code> reflui o layout de
+    verdade (afeta scroll, <code>overflow</code>, medidas reais), enquanto
+    <code>transform: scale()</code> só afeta a pintura, exigindo compensação manual e
+    frequentemente quebrando scroll do corpo.</p>
+
+    <p><strong>Bug real corrigido</strong>: todo modal do hac usava <code>fixed inset-0</code>.
+    <code>position: fixed</code> não cria novo containing block sob <code>zoom</code> — o containing
+    block de um elemento <code>fixed</code> continua sendo o viewport real do documento,
+    independente do <code>zoom</code> aplicado a um ancestral, mas o <code>zoom</code> do ancestral
+    ainda é aplicado à pintura final. Resultado: o box do modal nascia do
+    tamanho do viewport real e depois era escalado de novo, ficando maior que
+    a área visível em qualquer escala > 100% (cortado, sem scroll).</p>
+
+    <p><strong>Correção</strong>: todos os <code>fixed inset-0</code> viraram <code>absolute inset-0</code>, e
+    <code>body</code> ganhou <code>position: relative</code> — todo elemento que antes escapava do
+    zoom via <code>fixed</code> agora resolve seu posicionamento contra o próprio <code>body</code>
+    zoomado.</p>
+
+    <p><strong>Bug real adicional</strong>: mesmo depois da correção acima, o card interno de
+    5 modais ainda limitava a própria altura com <code>max-h-[85vh]</code>/<code>max-h-[92vh]</code>
+    — unidade de viewport, calculada contra a viewport real, não contra o
+    <code>body</code> reescalado. Em qualquer escala diferente de 100%, o card podia
+    nascer mais alto do que cabia, cortando o rodapé (botões de ação) para
+    fora da área rolável interna. Corrigido trocando por <code>max-h-full</code>, que
+    resolve contra o wrapper pai imediato.</p>
+
+    <h2 id="s11">11. Pendências conhecidas</h2>
+
+    <p>Pendência de processo (não técnica): não existe mecanismo formal para a
+    vertical de acessibilidade receber o sinal de componentes "Outro" (seção
+    6) — hoje é só um rótulo visível ao designer.</p>
+
+    <h2 id="s12">12. Sobre esta documentação</h2>
+
+    <p>Esta documentação técnica, o <a href="changelog.html">Changelog</a> (histórico
+    cronológico de decisões), as regras de negócio institucionais
+    (<a href="institucional.html">institucional.html</a>, baseado em
+    <code>docs/hac-regras-de-negocio-institucional.docx</code>) e o design system próprio
+    da interface do plugin (<a href="design-system.html">design-system.html</a>) vivem
+    como arquivos HTML estáticos dentro de <code>docs/</code>, no repositório privado —
+    sem hospedagem pública. Ao mudar a arquitetura técnica de forma estrutural:
+    atualize este arquivo (<code>docs/tecnico.html</code>) e registre a mudança em
+    <code>docs/changelog.html</code> — o arquivo local <code>docs/architecture-state.md</code> não
+    precisa mais ser mantido em sincronia obrigatória (é histórico), mas pode
+    ser atualizado por conveniência se a sessão já estiver com ele aberto.</p>
+
+    <p class="footer-note">hac — Documentação Técnica · repositório privado, uso interno</p>
+  </div>
+</main>
+</body>
+</html>
