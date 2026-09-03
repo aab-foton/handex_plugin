@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposta: Posicionamento Manual de Specs · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display:flex; gap: 4px; flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">Handex · Documentação</span>
+  <nav>
+    <a href="index.html">Início</a>
+  </nav>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    
+    <h1 id="handex-proposta-posicionamento-manual-de-specs-confirmacao-explicita">Handex — Proposta: posicionamento manual de Specs (confirmação explícita)</h1>
+<blockquote><p>Status: proposta desenhada, não implementada. Registrado em 2026-07-08 a partir de uma pergunta sobre permitir ao designer escolher onde a spec é criada no canvas.</p></blockquote>
+<h2 id="problema">Problema</h2>
+<p>Hoje (<code>code.js:2973-3117</code>), a posição do <code>specCard</code> é sempre calculada automaticamente a partir de <code>opts.guideSide</code> (right/left/top/bottom, offset fixo de 100px do elemento) ou empilhada por letra (<code>_letterMap</code>). O grupo inteiro (<code>specGroup</code>) é travado (<code>locked = true</code>, linha 3117) na mesma operação síncrona que cria a spec — não existe janela para o designer ajustar a posição antes do lock.</p>
+<p>Em telas densas, o posicionamento automático relativo frequentemente colide com outros elementos ou fica fora da área visível — não há tratamento de overlap/colisão entre múltiplas specs.</p>
+<h2 id="opcao-descartada-selecao-dupla-elemento-marcador-de-posicao">Opção descartada: seleção dupla (elemento + marcador de posição)</h2>
+<p>Considerada e descartada: exigiria que o designer criasse um objeto extra só para marcar "aqui" antes de rodar a spec, adicionando um passo manual e uma convenção de seleção (1º item = alvo, 2º item = destino) que não é auto-explicativa — vai contra a filosofia "handoff express" do produto.</p>
+<h2 id="proposta-escolhida-destravar-com-confirmacao-explicita">Proposta escolhida: destravar com confirmação explícita</h2>
+<p><strong>Fluxo</strong>:</p>
+<ol>
+<li>Designer preenche o formulário de spec normalmente (<code>confirmSpecProperties</code>, <code>specifications.js:1426</code>) e confirma.</li>
+<li>Backend cria a spec <strong>destravada</strong> (<code>specGroup.locked = false</code>, ao invés de <code>true</code> na criação).</li>
+<li>Um toast/notificação aparece: <em>"Especificação criada — arraste para posicionar. Clique em Concluir quando pronto."</em></li>
+<li>A UI do plugin mostra um estado "pendente de confirmação" para aquela spec (ex: badge ou botão "Concluir posicionamento" na lista de specs do hub do frame).</li>
+<li>Ao confirmar, dispara uma nova mensagem <code>lock-spec</code> com o <code>specId</code>, que localiza o grupo (<code>figma.getNodeById</code>) e aplica <code>locked = true</code> especificamente naquele grupo.</li>
+</ol>
+<h2 id="mudancas-necessarias">Mudanças necessárias</h2>
+<h3 id="backend-codejs">Backend (<code>code.js</code>)</h3>
+<ul>
+<li>Linha 3117: trocar <code>specGroup.locked = true</code> por <code>specGroup.locked = false</code> (mudança de 1 linha no comportamento de criação).</li>
+<li>Novo handler <code>lock-spec</code>: recebe <code>{ specId }</code>, localiza o nó (<code>figma.getNodeById(specId)</code>), valida que é um grupo de spec (checar prefixo <code>[Spec | ...]</code> no nome, mesma convenção já usada), aplica <code>.locked = true</code>. Responde com <code>spec-locked</code> para a UI atualizar estado.</li>
+<li>Payload de <code>spec-created</code> (linha 3120-3139) já retorna <code>id: specGroup.id</code> — suficiente para a UI rastrear qual spec está pendente sem mudança adicional aqui.</li>
+</ul>
+<h3 id="frontend-specificationsjs-ui">Frontend (<code>specifications.js</code> / UI)</h3>
+<ul>
+<li>Ao receber <code>spec-created</code>, marcar a spec como <code>pendingConfirmation: true</code> no estado local (<code>createdSpecs</code>) e renderizar um indicador visual (ex: badge amarelo "Posicionando…" + botão "Concluir").</li>
+<li>Botão "Concluir posicionamento" dispara <code>parent.postMessage({pluginMessage: {type: 'lock-spec', specId}})</code>.</li>
+<li>Ao receber <code>spec-locked</code>, remover o indicador de pendência e atualizar o item na lista para o estado normal (travado).</li>
+</ul>
+<h3 id="risco-a-mitigar">Risco a mitigar</h3>
+<ul>
+<li><strong>Specs esquecidas destravadas</strong>: se o designer nunca clicar em "Concluir", a spec fica editável indefinidamente — quebra a garantia de integridade que o lock existe para dar. Mitigação: ao gerar a Ficha de Handoff final (<code>create-handoff</code>), verificar se há specs pendentes de confirmação e travá-las automaticamente nesse momento (fallback de segurança), avisando o usuário que isso ocorreu.</li>
+<li><strong>Múltiplas specs pendentes simultâneas</strong>: se o designer cria várias specs em sequência sem confirmar cada uma, a UI precisa listar todas as pendências claramente, não só a última — evitar que uma fique esquecida sem o designer perceber.</li>
+</ul>
+<h2 id="por-que-essa-opcao-e-nao-a-de-selecao-dupla">Por que essa opção e não a de seleção dupla</h2>
+<p>Mantém o fluxo de criação em um único passo (seleção + formulário, igual hoje), sem exigir que o designer aprenda uma convenção nova de seleção múltipla. O controle de posição fica onde ele já naturalmente aconteceria — arrastando o card no canvas, que é a interação mais direta possível — em vez de forçar a posição via um objeto proxy artificial.</p>
+<h2 id="esforco-estimado">Esforço estimado</h2>
+<p>Baixo-médio: 1 mudança de linha + 1 handler novo simples no backend; no frontend, é principalmente estado de UI (badge, botão, mensagem) reaproveitando o padrão de comunicação <code>postMessage</code> já existente. Não exige nenhuma API nova da Plugin API, nem toca em nenhuma das limitações já mapeadas (ConnectorNode/FigJam etc.).</p>
+  </div>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+</div>
+</body>
+</html>

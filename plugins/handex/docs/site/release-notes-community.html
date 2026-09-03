@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Release Notes — Figma Community · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display:flex; gap: 4px; flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">Handex · Documentação</span>
+  <nav>
+    <a href="index.html">Início</a>
+  </nav>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    
+    <h1 id="release-notes-figma-community">Release notes — Figma Community</h1>
+<p>Texto pronto para colar no campo de descrição de cada publicação em Community → Manage → Publish new version. Mantido separado do <code>CHANGELOG.md</code> (que é técnico/interno) porque este é escrito para o usuário final do plugin, sem jargão de código.</p>
+<hr>
+<h2 id="version-preencher-v680-2026-08-28">Version [preencher] — v6.8.0 (2026-08-28)</h2>
+<p><strong>Novidades</strong></p>
+<p><strong>Modal rápida de Dados do Projeto</strong> O ícone 📋 no header principal agora abre uma janela rápida com Título, Versão, Status e Objetivo — edite sem sair da tela em que você está. Um botão leva direto para a tela completa quando precisar mexer em Equipe, Briefing, Regras ou Links.</p>
+<p><strong>Toggles no Contexto de Negócio</strong> Briefing Estratégico, Regras de Negócio e HUs e Links de Referência agora têm um interruptor próprio — vêm ativados por padrão, e você pode desligar qualquer um deles quando não fizer sentido para o projeto, sem perder o que já preencheu.</p>
+<p><strong>Limpar Briefing</strong> Novo botão para apagar todas as perguntas do Briefing de uma vez, com uma confirmação simples — não precisa mais remover pergunta por pergunta.</p>
+<p><strong>Correções e melhorias</strong></p>
+<p><strong>Especificação criada podia não aparecer na lista</strong> Em algumas sessões — geralmente depois de trocar de arquivo Figma ou excluir um frame com o plugin ainda aberto — uma nova especificação era criada normalmente no canvas, mas não aparecia na lista de "Anotar Specs" dentro do plugin. Corrigido — a especificação agora aparece sempre, mesmo nesses casos.</p>
+<p><strong>Conformidade com o Design System volta a ser verificada automaticamente</strong> Na etapa "Escanear Tokens", cada item escaneado (componente, ícone, tipografia) agora mostra de novo se está "Em conformidade", "Necessita revisão" ou "Fora do padrão" em relação ao Design System CAIXA — com a contagem de propriedades em cada situação. O critério é rigoroso: um item sem token vinculado é tratado como fora do padrão, mesmo que você marque "Sem desvios" — só passa para "Em revisão" depois que você escreve uma justificativa no campo de observações.</p>
+<p><strong>Botão de atualizar escaneamento mais fácil de encontrar</strong> Antes, o botão para re-escanear um frame só aparecia depois de declarar a conformidade — dificultando revisar e escanear de novo antes de decidir. Agora ele fica sempre visível, ao lado do título "Tokens Escaneados".</p>
+<p><strong>Instruções de "Escanear Tokens" mais claras</strong> O onboarding e o guia "Como usar o plugin" foram reescritos para deixar explícito que o scan é um ponto de partida, não uma aprovação automática — cabe a você revisar cada item antes de declarar conformidade.</p>
+<p><strong>Clique no canvas não trava mais o Tab dentro do plugin</strong> Depois de abrir um modal e clicar no canvas do Figma, o teclado podia ficar "preso" tentando voltar para o plugin em vez de navegar no Figma normalmente. Corrigido — clicar fora do plugin agora funciona como esperado, sem interferência do plugin.</p>
+<p><strong>Rodapé da home reorganizado</strong> "Gerar Ficha de Handoff" agora ocupa a linha inteira, sozinho, como ação principal. Abaixo, os botões de Baixar, Importar e Limpar ficaram do mesmo tamanho, distribuídos lado a lado.</p>
+<p><strong>Tela de resumo do Handoff reorganizada</strong> "Gerar Ficha" agora vem antes das opções de exportação, para que o que você exporta sempre reflita o que já foi gerado no canvas. Um aviso explica a diferença entre exportar em Markdown (para ler) e em JSON (backup completo, o único que pode ser reimportado depois).</p>
+<p><strong>Instruções mais claras em Informações do Projeto</strong> O guia agora explica o "porquê" de preencher o Briefing Estratégico, as Regras de Negócio e HUs, e os Links de Referência — não só o "como".</p>
+<p><strong>Nomenclatura corrigida</strong> "DSC" agora aparece corretamente como "Design System CAIXA" em todo o plugin.</p>
+<hr>
+<h2 id="version-11-v620-2026-08-04">Version 11 — v6.2.0 (2026-08-04)</h2>
+<p><strong>Correções e melhorias</strong></p>
+<p><strong>Especificação apagada não volta mais sozinha</strong> Ao excluir uma especificação e depois navegar para outra tela do plugin (ou reabrir o plugin), ela podia reaparecer na lista mesmo já tendo sido apagada. Corrigido — agora a exclusão é definitiva.</p>
+<blockquote><p>Se você já tinha apagado alguma especificação antes desta atualização e ela ainda aparecer uma última vez, é só excluir novamente — a partir daqui ela não volta mais.</p></blockquote>
+<p><strong>Indicação visual no ícone de linhas do grupo de especificações</strong> O ícone que oculta/exibe as linhas de conexão de um grupo de especificações agora fica azul quando as linhas estão visíveis, no mesmo padrão do ícone de olho ao lado.</p>
+<hr>
+<h2 id="version-10-v612-2026-07-29">Version 10 — v6.1.2 (2026-07-29)</h2>
+<p><strong>Novidade</strong></p>
+<p><strong>Sugestão automática de tag ao criar especificação</strong> Ao criar uma nova especificação, o campo de tag já vem preenchido com a próxima letra disponível (A, B, C...), com base nas especificações já existentes no frame. Você continua podendo editar livremente — inclusive para criar sub-níveis como A1 ou B1.1 — a sugestão só poupa o trabalho de digitar do zero toda vez.</p>
+<hr>
+<h2 id="version-9-v611-2026-07-29">Version 9 — v6.1.1 (2026-07-29)</h2>
+<blockquote><p>Publicada sem este texto colado no campo de release notes da Figma — ver nota no <code>CHANGELOG.md</code> v6.1.1. Reaproveitar aqui na próxima publicação, ou adicionar retroativamente se a Figma permitir editar a descrição de uma versão já publicada.</p></blockquote>
+<p><strong>Correções e melhorias</strong></p>
+<p><strong>Especificações sem frame associado agora permanecem salvas</strong> Especificações criadas sem vincular a um frame específico podiam desaparecer da lista ao navegar entre telas do plugin. Corrigido — elas agora persistem normalmente, junto com as especificações vinculadas a frames.</p>
+<p><strong>Ficha de handoff exportada sem mais duplicações</strong> A ficha HTML exportada podia mostrar a mesma especificação duas vezes em seções diferentes. Agora cada especificação aparece uma única vez.</p>
+<p><strong>Importação de backup (JSON) mais confiável</strong> Ao restaurar um backup, especificações e medidas que não estavam vinculadas a um frame específico eram ignoradas — o resumo da importação mostrava contagem zerada e nada era recriado no canvas. Agora esses dados são reconhecidos e recriados corretamente.</p>
+  </div>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+</div>
+</body>
+</html>

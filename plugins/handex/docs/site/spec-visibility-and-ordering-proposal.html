@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Propostas: Visibilidade e Ordenação de Specs · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display:flex; gap: 4px; flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">Handex · Documentação</span>
+  <nav>
+    <a href="index.html">Início</a>
+  </nav>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    
+    <h1 id="handex-propostas-ocultar-linhas-destravar-grupo-e-ordenacao-de-camadas-por-tag">Handex — Propostas: ocultar linhas, destravar grupo e ordenação de camadas por tag</h1>
+<blockquote><p>Status (atualizado 2026-07-09): Propostas 1 e 3 <strong>implementadas</strong> em <code>renderSpecsList()</code> (<code>specifications.js</code>), a função REAL que alimenta <code>#specs-results</code> (view "Anotar Specs"). O desenho original abaixo cita <code>toggleSpecGroupVisibility(frameId, letter)</code>/<code>renderSpecsListForFrame</code> como base de reaproveitamento — essa função é <strong>órfã</strong> (nunca é chamada de fato porque <code>document.getElementById('specs-list-' + frameId)</code> nunca existe no HTML) e opera sobre <code>frame.createdSpecs</code> (specs por frame), um sistema paralelo e não relacionado ao array global <code>createdSpecs</code>/<code>handoffData.specs</code> que <code>renderSpecsList()</code> de fato renderiza. A implementação real não tem <code>frameId</code> disponível (specs globais não são escopadas por frame) — o agrupamento por tag usa apenas <code>spec.letter</code>, e o estado de "linhas ocultas" foi persistido em <code>handoffData.specLinesVisible[letter]</code> (mapa global, análogo ao <code>frame.specLinesVisible</code> da função órfã, mas sem escopo de frame). O cadeado por grupo foi implementado como cadeado <strong>por spec individual</strong> (<code>spec.locked</code>, botão ao lado do olho/lixeira em cada item), não por grupo — decisão tomada porque cada spec já tem seu próprio <code>spec.id</code> de nó no canvas e o handler <code>unlock-spec-group</code> aceita <code>specIds</code> de qualquer tamanho. Proposta 2 (ordenação de camadas) segue não implementada.</p></blockquote>
+<h2 id="contexto-por-que-isso-importa">Contexto: por que isso importa</h2>
+<p>Já documentado em <code>docs/plugin-capabilities/02-criacao-specs.md</code>: a regra de empilhamento de specs (<code>_letterMap</code>, code.js:2924-3009) garante ausência de sobreposição <strong>dentro do par (letra, lado)</strong>, mas não faz nenhuma checagem cruzada entre lados diferentes nem entre specs de tags distintas que colidam visualmente por acaso. Em telas densas com muitas specs, isso gera poluição visual — linhas cruzando cards, sobreposição entre lados.</p>
+<h2 id="proposta-1-ocultar-linhas-por-grupo-de-tag">Proposta 1 — Ocultar linhas por grupo de tag</h2>
+<p><strong>Ideia</strong>: um botão no header de cada agrupamento de letra (na lista do plugin) que oculta <strong>apenas as linhas conectoras</strong> (e dots) daquela tag, mantendo os cards de spec visíveis no canvas.</p>
+<h3 id="o-que-ja-existe-e-pode-ser-reaproveitado">O que já existe e pode ser reaproveitado</h3>
+<p><code>toggleSpecGroupVisibility(frameId, letter)</code> (<code>specifications.js:743-758</code>) já oculta o <strong>spec inteiro</strong> por grupo de letra, via mensagem <code>hide-node</code> para cada <code>spec.id</code>. A infraestrutura de estado (<code>frame.specGroupVisible[letter]</code>) e o botão de UI por grupo já existem — a mudança é uma variante que atinge só os nós filhos nomeados, não o grupo completo.</p>
+<h3 id="desenho-tecnico">Desenho técnico</h3>
+<ul>
+<li>Cada linha/dot já tem nome fixo dentro do grupo da spec: <code>'Conector'</code>, <code>'DotInicio'</code>, <code>'DotFim'</code> (code.js:3058/3071/3082/3092) — são endereçáveis.</li>
+<li>Novo handler no backend, <code>hide-spec-lines</code>: recebe <code>{ specIds: [] }</code> (specs daquela letra), localiza cada <code>specGroup</code> por id, busca filhos por nome (<code>'Conector'</code>, <code>'DotInicio'</code>, <code>'DotFim'</code>) e aplica <code>.visible = false</code>/<code>true</code> só neles — sem tocar no <code>specCard</code>.</li>
+<li>Frontend: novo botão no header do agrupamento (ao lado do já existente <code>toggleSpecGroupVisibility</code>), com estado próprio (<code>frame.specLinesVisible[letter]</code>, análogo ao padrão já usado para <code>specGroupVisible</code>).</li>
+<li>Reaproveita o padrão de mensageria (<code>postMessage</code>) e persistência (<code>saveToStorage</code>) já estabelecido — baixo risco de introduzir um padrão novo.</li>
+</ul>
+<h3 id="esforco-estimado">Esforço estimado</h3>
+<p>Baixo — é uma variação direta de uma função já existente, sem tocar em geometria/cálculo de posição.</p>
+<h2 id="proposta-2-ordem-de-camadas-z-index-alfabetica-entre-tags">Proposta 2 — Ordem de camadas (z-index) alfabética entre tags</h2>
+<p><strong>Ideia</strong>: quando linhas de tags diferentes se cruzam visualmente, a linha da tag B deve sempre aparecer visualmente "atrás"/abaixo da linha da tag A, C abaixo de B, e assim sucessivamente — uma ordem de empilhamento previsível, não dependente da ordem em que o designer criou cada spec.</p>
+<h3 id="como-o-figma-decide-profundidade-z-index-hoje">Como o Figma decide profundidade (z-index) hoje</h3>
+<p>Cada <code>create-unified-spec</code> cria seu próprio grupo (<code>specGroup</code>) diretamente em <code>figma.currentPage</code> (code.js:3115) — a ordem de empilhamento entre grupos de specs diferentes é simplesmente a ordem de inserção na lista de filhos da página. <strong>Não há reordenamento por letra hoje</strong>: a spec criada por último sempre fica visualmente por cima das anteriores, independente da tag.</p>
+<h3 id="desenho-tecnico">Desenho técnico</h3>
+<blockquote><p><strong>Depende da correção do bug de tags alfanuméricas</strong> (<code>docs/spec-alphanumeric-tags-bug.md</code>) — a regex <code>[A-Z]</code> usada aqui precisa ser a mesma regex corrigida (<code>[A-Z]\d*(?:\.\d+)*</code>), e a comparação de ordem precisa ser "natural sort" hierárquico (A &lt; A1 &lt; A1.1 &lt; A1.2 &lt; A2 &lt; B), não comparação de string ingênua — do contrário "A10" ordenaria antes de "A2".</p></blockquote>
+<p>Após criar <code>specGroup</code> (code.js:3115-3117), antes ou logo depois do <code>.locked = true</code>, inserir uma etapa de reordenação:</p>
+<ol>
+<li>Buscar todos os grupos de spec existentes na página (mesmo padrão de varredura já usado em <code>_letterMap</code>, via regex corrigida que reconhece tags hierárquicas no nome).</li>
+<li>Parsear cada tag em componentes comparáveis (ex: <code>"A1.1"</code> → <code>["A", 1, 1]</code>) e determinar o índice de inserção correto por comparação natural, não alfabética simples: o novo <code>specGroup</code> deve ficar posicionado <strong>antes</strong> (mais abaixo na pilha, <code>insertChild</code> com índice menor) dos grupos de tag hierarquicamente posterior, e <strong>depois</strong> dos de tag anterior.</li>
+<li>Usar <code>figma.currentPage.insertChild(index, specGroup)</code> para reposicionar o grupo na ordem correta, em vez de deixá-lo simplesmente no topo da pilha (comportamento padrão de <code>appendChild</code>/<code>figma.group</code>).</li>
+</ol>
+<h3 id="ressalva-importante">Ressalva importante</h3>
+<p>Isso reordena a <strong>profundidade</strong> (o que aparece visualmente por cima/por baixo quando há sobreposição), não a <strong>posição X/Y</strong> — os cards continuam nas mesmas coordenadas calculadas pela regra de empilhamento já existente. É uma correção de camadas, não de layout.</p>
+<h3 id="esforco-estimado">Esforço estimado</h3>
+<p>Baixo-médio — a lógica de varredura já existe (reaproveitando o padrão de <code>_letterMap</code>); a novidade é o cálculo de índice de inserção e a chamada a <code>insertChild</code>, que precisa ser testada com cuidado para não quebrar a ordem em casos com muitas letras/specs.</p>
+<h2 id="proposta-3-desbloquear-grupo-de-spec-por-tag-companion-da-proposta-1">Proposta 3 — Desbloquear grupo de spec por tag (companion da Proposta 1)</h2>
+<p><strong>Ideia</strong> (trazida em 2026-07-08): assim como o botão de ocultar linhas por grupo, um botão no mesmo header de agrupamento para <strong>destravar o grupo inteiro</strong> (<code>specCard</code> + linha + dots) de todas as specs daquela tag de uma vez — hoje a única forma de editar uma spec travada é destravar manualmente pelo painel de camadas do Figma, nó por nó.</p>
+<h3 id="o-que-ja-existe">O que já existe</h3>
+<p><code>specGroup.locked = true</code> é aplicado por spec individual no momento da criação (<code>code.js:3117</code>). Não há hoje nenhum mecanismo de destravamento em lote — nem por grupo, nem geral.</p>
+<h3 id="desenho-tecnico">Desenho técnico</h3>
+<ul>
+<li>Novo handler no backend, <code>unlock-spec-group</code>: recebe <code>{ specIds: [] }</code> (todas as specs daquela letra/tag, mesmo padrão de agrupamento já usado nas Propostas 1 e 2), localiza cada <code>specGroup</code> por id via <code>figma.getNodeById</code>, aplica <code>.locked = false</code>.</li>
+<li>Frontend: terceiro botão no header do agrupamento (ao lado dos de ocultar linhas e ocultar grupo), ícone de cadeado aberto/fechado — dispara a mensagem e mostra um toast de confirmação, já que destravar é uma ação que reduz a garantia de integridade do handoff (deve ser deliberada, não acidental).</li>
+<li><strong>Re-lock</strong>: se o designer editar manualmente e quiser re-travar depois, um segundo clique no mesmo botão (toggle) ou uma ação explícita "Concluir edição" deve rechamar o handler com <code>.locked = true</code> — não deixar specs destravadas indefinidamente sem sinalização visual clara de que aquele grupo está fora do estado padrão "protegido".</li>
+<li>Reaproveita exatamente o mesmo padrão de mensageria/varredura por tag das Propostas 1 e 2 — os três botões podem, inclusive, compartilhar a mesma função de "encontrar specs da tag X", parametrizada pela ação (ocultar linha / ocultar grupo / travar-destravar).</li>
+</ul>
+<h3 id="risco-a-mitigar">Risco a mitigar</h3>
+<p>Igual ao risco já identificado na proposta de posicionamento manual (<code>docs/spec-positioning-proposal.md</code>): specs destravadas e esquecidas quebram a garantia de integridade do handoff. Mitigação: indicador visual persistente (badge no agrupamento) enquanto qualquer spec daquela tag estiver destravada, e o mesmo fallback de segurança já proposto — travar automaticamente tudo ao gerar a Ficha de Handoff final, avisando o usuário se algo foi travado nesse momento.</p>
+<h3 id="esforco-estimado">Esforço estimado</h3>
+<p>Baixo — mesmo padrão técnico das Propostas 1 e 2, só troca a propriedade manipulada (<code>visible</code> → <code>locked</code>).</p>
+<h2 id="relacao-entre-as-tres-propostas">Relação entre as três propostas</h2>
+<p>Todas complementares, não dependentes umas das outras — dá para implementar qualquer uma isoladamente, mas o desenho ideal é como um <strong>conjunto de 3 ações por grupo de tag</strong> no mesmo header (ocultar linhas, ocultar grupo inteiro, travar/destravar), compartilhando a mesma lógica de varredura por tag. Prioridade sugerida: Proposta 1 (ocultar linhas) e Proposta 3 (destravar grupo) primeiro — são as mais baratas e dão controle direto ao usuário; Proposta 2 (ordenação de camadas) é polimento automático que pode vir depois, e depende da correção do bug de tags alfanuméricas (<code>docs/spec-alphanumeric-tags-bug.md</code>).</p>
+  </div>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposta: Governança e Evidência · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display:flex; gap: 4px; flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">Handex · Documentação</span>
+  <nav>
+    <a href="index.html">Início</a>
+  </nav>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    
+    <h1 id="proposta-handex-como-camada-de-evidencia-formal-do-handoff-2026-07-09">Proposta: Handex como camada de evidência formal do handoff (2026-07-09)</h1>
+<blockquote><p>Status: <strong>proposta estratégica, não priorizada para implementação imediata</strong>. Nasceu da pergunta "o que nos deixaria à frente do Figma, não só evitando ficar atrás?". Reposicionamento de nível gestão/produto, não backlog operacional — ver <code>handex-operacional-designer-dev-2026-07.md</code> para a versão focada no dia a dia de designer/dev.</p></blockquote>
+<h2 id="tese">Tese</h2>
+<p>Os problemas reais de handoff design→dev relatados pela indústria em 2025-2026 não são falta de anotação — Figma, Zeplin e Zeroheight já resolvem bem "colocar informação sobre um elemento". As dores que persistem sem solução boa em nenhuma ferramenta são: perda do "porquê" por trás de uma decisão, specs que ficam desatualizadas assim que o dev começa a implementar, e — em contexto regulado como a CAIXA — a falta de evidência formal e imutável de que o processo de aprovação aconteceu.</p>
+<p>Nenhuma ferramenta de design genérica ataca essa última dor de propósito, porque nenhuma delas foi desenhada para compliance bancário/governamental. É um nicho estruturalmente defensável: copiar exigiria da Figma redesenhar sua proposta central (colaboração fluida, tudo editável), o que é improvável.</p>
+<h2 id="as-5-apostas">As 5 apostas</h2>
+<h3 id="1-motivo-obrigatorio-em-excecoes-e-ressalvas">1. Motivo obrigatório em exceções e ressalvas</h3>
+<p>Baixo esforço. <code>excecoes[]</code>/<code>ressalvas[]</code> já existem no schema; falta um campo obrigatório curto de "por que essa exceção existe", hoje texto livre opcional que na prática fica em branco.</p>
+<h3 id="2-selo-de-evidencia-imutavel-hash-timestamp-na-ficha-exportada">2. Selo de evidência imutável (hash + timestamp) na Ficha exportada</h3>
+<p>Baixo-médio esforço. Hash SHA-256 (Web Crypto API, nativa) do conteúdo da ficha no momento da exportação, embutido no PDF/MD — qualquer alteração posterior fica detectável. Sem blockchain, sem infra nova. Não é assinatura digital juridicamente vinculante — é evidência de integridade.</p>
+<h3 id="3-trilha-de-auditoria-de-sessao">3. Trilha de auditoria de sessão</h3>
+<p>Esforço médio. Log de eventos-chave (abertura do plugin, scan, declaração de auditoria, exportação de ficha) com timestamp e <code>figma.currentUser</code>, usando <code>setSharedPluginData</code> já implementado. Restrito a 5-8 tipos de evento com significado auditável — não log genérico de clique.</p>
+<h3 id="4-confirmacao-obrigatoria-ao-reexportar-ficha-ja-entregue">4. Confirmação obrigatória ao reexportar ficha já entregue</h3>
+<p>Esforço médio, depende do diff de versão (<code>previousSnapshot</code>, já existe em <code>handoff.js</code>). Um modal simples ao sobrescrever uma ficha já consumida pelo dev — não um processo multi-etapas.</p>
+<h3 id="5-nao-fazer-workflow-de-aprovacao-multi-stakeholder">5. Não fazer: workflow de aprovação multi-stakeholder</h3>
+<p>Linha vermelha deliberada. É a extrapolação óbvia das apostas acima e é onde a filosofia "handoff express" quebraria. Se a CAIXA precisar de aprovação formal multi-nível, a integração correta é exportar o selo de evidência (item 2) para um sistema de aprovação que já existe na CAIXA — não construir isso dentro do Handex.</p>
+<h2 id="por-que-isso-nao-e-o-proximo-passo-operacional">Por que isso não é o próximo passo operacional</h2>
+<p>Essas apostas reposicionam o <em>propósito</em> do produto (de "documentar handoff" para "provar que o handoff aconteceu corretamente") — decisão de médio/longo prazo, que exige alinhamento com stakeholders de compliance/governança da CAIXA antes de virar trabalho de engenharia. Não é o que um designer ou dev sente no dia a dia de uso da ferramenta. Ver o documento operacional complementar para isso.</p>
+  </div>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+</div>
+</body>
+</html>

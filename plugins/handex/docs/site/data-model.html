@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelo de Dados · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display:flex; gap: 4px; flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">Handex · Documentação</span>
+  <nav>
+    <a href="index.html">Início</a>
+  </nav>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    <details class="toc"><summary>Índice</summary><ul><li><a href="#sumario">Sumário</a></li><li><a href="#1-principios">1. Princípios</a></li><li><a href="#2-convencao-de-nomenclatura">2. Convenção de Nomenclatura</a></li><li><a href="#3-artefatos-de-canvas-anotacoes-standalone">3. Artefatos de Canvas — Anotações (standalone)</a></li><li><a href="#4-artefatos-de-canvas-ficha-tecnica">4. Artefatos de Canvas — Ficha Técnica</a></li><li><a href="#5-schema-de-persistencia-handoffdata">5. Schema de Persistência (`handoffData`)</a></li><li><a href="#6-relacao-canvas-persistencia">6. Relação Canvas ↔ Persistência</a></li><li><a href="#7-roadmap-htmlsharepoint">7. Roadmap HTML/SharePoint</a></li></ul></details>
+    <h1 id="handex-modelo-de-dados">HANDEX — Modelo de Dados</h1>
+<blockquote><p>Referência do modelo de dados do plugin Handex, cobrindo artefatos do canvas Figma, schema de persistência (localStorage) e mapeamento para exportação HTML/SharePoint. Última atualização: 2026-06-18 (v4.2.2)</p></blockquote>
+<hr>
+<h2 id="sumario">Sumário</h2>
+<ol>
+<li><a href="#1-princípios">Princípios</a></li>
+<li><a href="#2-convenção-de-nomenclatura">Convenção de Nomenclatura</a></li>
+<li><a href="#3-artefatos-de-canvas--anotações-standalone">Artefatos de Canvas — Anotações (standalone)</a></li>
+<li><a href="#4-artefatos-de-canvas--ficha-técnica">Artefatos de Canvas — Ficha Técnica</a></li>
+<li><a href="#5-schema-de-persistência-handoffdata">Schema de Persistência (<code>handoffData</code>)</a></li>
+<li><a href="#6-relação-canvas--persistência">Relação Canvas ↔ Persistência</a></li>
+<li><a href="#7-roadmap-htmlsharepoint">Roadmap HTML/SharePoint</a></li>
+</ol>
+<hr>
+<h2 id="1-principios">1. Princípios</h2>
+<ul>
+<li><strong>Metadados no nó-raiz.</strong> Toda identidade de um artefato reside no nome do nó-raiz. Filhos têm nomes curtos e semânticos, escopados pelo pai.</li>
+<li><strong>Parseable por regex única.</strong> Cada tipo tem um padrão reconhecível sem inspecionar filhos.</li>
+<li><strong>Fonte de verdade dupla.</strong> Canvas = verdade posicional e visual. localStorage = verdade de dados. Devem estar sincronizados.</li>
+<li><strong>Backward compatibility.</strong> Novos formatos coexistem com legados via fallback no parser.</li>
+<li><strong>Orientado a dados futuros.</strong> Todos os nomes foram definidos para virar registros em banco de dados e cards em HTML exportado para SharePoint.</li>
+</ul>
+<hr>
+<h2 id="2-convencao-de-nomenclatura">2. Convenção de Nomenclatura</h2>
+<h3 id="padrao-geral">Padrão geral</h3>
+<pre><code>[Tipo | meta1 | meta2] Descrição legível</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Elemento</th><th>Regra</th></tr></thead><tbody><tr><td><code>Tipo</code></td><td>PascalCase, identifica a entidade (<code>Spec</code>, <code>Medida</code>, <code>Fluxo</code>, <code>Campo</code>, <code>Seção</code>…)</td></tr><tr><td><code>meta1..N</code></td><td>snake_case ou lower, valores de atributos identificadores</td></tr><tr><td><code>Descrição</code></td><td>Texto livre, legível no painel Layers do Figma</td></tr><tr><td>Filhos</td><td>Nomes curtos sem prefixo — escopo dado pelo pai</td></tr></tbody></table></div>
+<h3 id="exemplos">Exemplos</h3>
+<pre><code>[Spec | A | right] Ação 4
+[Medida | padding | top] Button Header
+[Fluxo | 1 | decisão] Fluxo de Login
+[Campo | objetivo] Objetivo da Entrega
+[Frame | abc123] Tela de Login
+[Briefing | 1] Qual é o problema que estamos resolvendo?</code></pre>
+<hr>
+<h2 id="3-artefatos-de-canvas-anotacoes-standalone">3. Artefatos de Canvas — Anotações (standalone)</h2>
+<p>Estes nós existem diretamente na página do Figma, fora da ficha. São lidos e posicionados ativamente pelo plugin.</p>
+<hr>
+<h3 id="31-especificacao-anotada">3.1 Especificação Anotada</h3>
+<p><strong>Grupo-raiz:</strong></p>
+<pre><code>[Spec | {letra} | {lado}] {nomeElemento}</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Meta</th><th>Tipo</th><th>Valores</th></tr></thead><tbody><tr><td><code>letra</code></td><td><code>A–Z</code></td><td>Tag identificadora</td></tr><tr><td><code>lado</code></td><td>string</td><td><code>right</code> · <code>left</code> · <code>top</code> · <code>bottom</code></td></tr><tr><td><code>nomeElemento</code></td><td>string</td><td>Nome do nó Figma anotado</td></tr></tbody></table></div>
+<p><strong>Regex:</strong> <code>/^\[Spec \| ([A-Z]) \| (right|left|top|bottom)\] (.+)$/</code></p>
+<p><strong>Estrutura de filhos:</strong></p>
+<pre><code>[Spec | A | right] Ação 4         (GROUP, locked)
+  ├── Ficha                        (FRAME, auto-layout vertical) ← card principal
+  │   ├── Tag                      (FRAME) ← badge com letra
+  │   ├── Categoria/{label}        (FRAME) ← pill de categoria
+  │   ├── Propriedades             (FRAME) ← container de props
+  │   │   └── Prop/{label}         (FRAME) ← linha label + valor
+  ├── Destaque                     (FRAME) ← contorno pontilhado
+  │   └── Chip                     (FRAME) ← badge no destaque
+  ├── Conector                     (VECTOR) ← linha tracejada
+  ├── DotInicio                    (ELLIPSE)
+  └── DotFim                       (ELLIPSE)</code></pre>
+<p><strong>Legado (read-only):</strong></p>
+<pre><code>[Spec] {nomeElemento}
+  └── [Spec/{letra}] {nomeElemento}/Ficha:{lado}</code></pre>
+<hr>
+<h3 id="32-anotacao-de-medida-canvas">3.2 Anotação de Medida (canvas)</h3>
+<blockquote><p>Criada diretamente no canvas como anotação visual sobre o elemento medido.</p></blockquote>
+<p><strong>Nó-raiz:</strong></p>
+<pre><code>[Medida | {tipo} | {eixo}] {nomeElemento}</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Meta</th><th>Tipo</th><th>Exemplos</th></tr></thead><tbody><tr><td><code>tipo</code></td><td>string</td><td><code>padding</code> · <code>gap</code> · <code>width</code> · <code>height</code> · <code>radius</code></td></tr><tr><td><code>eixo</code></td><td>string</td><td><code>top</code> · <code>bottom</code> · <code>left</code> · <code>right</code> · <code>horizontal</code> · <code>vertical</code> · <code>all</code></td></tr><tr><td><code>nomeElemento</code></td><td>string</td><td>Nome do nó Figma medido</td></tr></tbody></table></div>
+<p><strong>Regex:</strong> <code>/^\[Medida \| ([a-z]+) \| ([a-z]+)\] (.+)$/</code></p>
+<p><strong>Estrutura de filhos:</strong></p>
+<pre><code>[Medida | padding | top] Button
+  ├── Linha         (VECTOR) ← seta de dimensão
+  ├── Chip          (FRAME)  ← label com valor
+  └── Alvo          (FRAME)  ← destaque sobre o elemento</code></pre>
+<hr>
+<h3 id="33-fluxo-de-tela-canvas">3.3 Fluxo de Tela (canvas)</h3>
+<p><strong>Grupo-raiz:</strong></p>
+<pre><code>[Fluxo | {numero} | {tipo}] {nomeFluxo}</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Meta</th><th>Tipo</th><th>Valores</th></tr></thead><tbody><tr><td><code>numero</code></td><td>inteiro</td><td>Sequencial, de <code>nextFlowNumber</code></td></tr><tr><td><code>tipo</code></td><td>string</td><td><code>inicio</code> · <code>fim</code> · <code>decisao</code> · <code>conexao</code></td></tr><tr><td><code>nomeFluxo</code></td><td>string</td><td>Nome descritivo do fluxo</td></tr></tbody></table></div>
+<p><strong>Regex:</strong> <code>/^\[Fluxo \| (\d+) \| ([a-z]+)\] (.+)$/</code></p>
+<p><strong>Estrutura de filhos:</strong></p>
+<pre><code>[Fluxo | 1 | decisao] Login Gate
+  ├── Linha         (VECTOR) ← conector entre telas
+  ├── Chip          (FRAME)  ← label da decisão
+  │   ├── Fundo     (RECT)
+  │   └── Texto     (TEXT)
+  └── Legenda       (FRAME, opcional)</code></pre>
+<hr>
+<h2 id="4-artefatos-de-canvas-ficha-tecnica">4. Artefatos de Canvas — Ficha Técnica</h2>
+<p>A ficha é um objeto canvas composto gerado pelo comando <strong>Gerar Ficha</strong>. Seus elementos internos seguem a mesma convenção <code>[Tipo | meta] Descrição</code>.</p>
+<hr>
+<h3 id="41-container-principal">4.1 Container principal</h3>
+<pre><code>Handex | Ficha de Projeto | {titulo} | {YYYY-MM-DD HH:mm}</code></pre>
+<p><strong>Filhos diretos (cards):</strong></p>
+<pre><code>Handex | Ficha de Projeto | {titulo} | {ts}        (FRAME horizontal)
+  ├── {base} / Ficha de Projeto                    ← card 1: dados + specs + fluxos
+  ├── {base} / Briefing                            ← card 2: perguntas estratégicas
+  └── {base} / Interface                           ← card 3: tokens e componentes DSC</code></pre>
+<hr>
+<h3 id="42-secoes-internas">4.2 Seções internas</h3>
+<pre><code>[Seção | {tipo}] {titulo}</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Meta <code>tipo</code></th><th>Conteúdo</th></tr></thead><tbody><tr><td><code>info</code></td><td>Informações básicas do projeto</td></tr><tr><td><code>equipe</code></td><td>Membros da equipe</td></tr><tr><td><code>regras</code></td><td>Regras de negócio e HUs</td></tr><tr><td><code>excecoes</code></td><td>Cenários de exceção</td></tr><tr><td><code>docs</code></td><td>Links de documentação</td></tr><tr><td><code>frames</code></td><td>Frames documentados</td></tr><tr><td><code>medidas</code></td><td>Medidas por frame</td></tr><tr><td><code>specs</code></td><td>Especificações por frame</td></tr><tr><td><code>fluxos</code></td><td>Fluxos de tela</td></tr><tr><td><code>briefing</code></td><td>Briefing estratégico</td></tr></tbody></table></div>
+<hr>
+<h3 id="43-campos-de-dados">4.3 Campos de dados</h3>
+<pre><code>[Campo | {chave}] {rotulo}</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Meta <code>chave</code></th><th>Rótulo exibido</th></tr></thead><tbody><tr><td><code>titulo</code></td><td>Título do Projeto</td></tr><tr><td><code>versao</code></td><td>Versão</td></tr><tr><td><code>objetivo</code></td><td>Objetivo da Entrega</td></tr><tr><td><code>status</code></td><td>Status</td></tr><tr><td><code>jornada</code></td><td>Jornada</td></tr><tr><td><code>feature</code></td><td>Feature</td></tr><tr><td><code>designer</code></td><td>Designer Responsável</td></tr></tbody></table></div>
+<p><strong>Estrutura de filhos:</strong></p>
+<pre><code>[Campo | titulo] Título do Projeto
+  ├── Label    (TEXT, Bold)
+  └── Valor    (TEXT, Regular)</code></pre>
+<hr>
+<h3 id="44-equipe">4.4 Equipe</h3>
+<pre><code>[Membro | {papel}] {nomeCompleto}
+  ├── Nome     (TEXT)
+  ├── Email    (TEXT)
+  └── Papel    (TEXT)</code></pre>
+<hr>
+<h3 id="45-frames-documentados-dentro-da-ficha">4.5 Frames documentados (dentro da ficha)</h3>
+<pre><code>[Frame | {figmaId}] {nomeFrame}
+  ├── Badge         (FRAME, opcional) ← "Novo componente"
+  └── Auditoria     (FRAME, opcional) ← resultado DSC</code></pre>
+<hr>
+<h3 id="46-medidas-dentro-da-ficha">4.6 Medidas (dentro da ficha)</h3>
+<pre><code>[Medidas | {figmaId}] {nomeFrame}          ← agrupador por frame
+  └── [Medida | {tipo} | {valor}] {nome}   ← item individual
+        ├── Label    (TEXT, Bold)
+        └── Detalhe  (TEXT, Regular)</code></pre>
+<hr>
+<h3 id="47-especificacoes-dentro-da-ficha">4.7 Especificações (dentro da ficha)</h3>
+<pre><code>[Specs | {figmaId}] {nomeFrame}             ← agrupador por frame
+  └── [Grupo | {letra}] {nomeGrupo}         ← grupo por letra
+        └── [Spec | {letra}] {nomeSpec}     ← spec individual
+              ├── Tag          (FRAME)
+              ├── Categoria    (FRAME)
+              ├── Nota         (TEXT)
+              ├── Propriedades (FRAME)
+              │   └── Prop/{label}
+              └── Excecoes     (FRAME, opcional)</code></pre>
+<hr>
+<h3 id="48-fluxos-de-tela-dentro-da-ficha">4.8 Fluxos de tela (dentro da ficha)</h3>
+<pre><code>[Fluxo | {numero} | {tipo}] {nomeFluxo}
+  ├── Cabecalho    (FRAME)
+  │   ├── Titulo   (TEXT)
+  │   └── Tipo     (FRAME, chip)
+  ├── Conexao      (TEXT) ← "Frame A → Frame B"
+  └── Decisao      (TEXT, opcional)</code></pre>
+<hr>
+<h3 id="49-briefing-estrategico">4.9 Briefing estratégico</h3>
+<pre><code>[Briefing | {numero}] {textoPergunta}
+  ├── Pergunta    (TEXT, Bold)
+  └── Resposta    (TEXT, Regular)</code></pre>
+<hr>
+<h3 id="410-tokens-dsc-card-interface">4.10 Tokens DSC (card Interface)</h3>
+<pre><code>[Scan | {categoria}] {titulo}       ← agrupador por categoria
+  └── [Token | {tipo}] {nomeToken}  ← item individual
+        ├── Preview     (FRAME)
+        ├── Nome        (TEXT)
+        ├── Status      (FRAME, chip: DSC/AJUSTE/FORA)
+        └── Props       (FRAME)
+            └── Prop/{label}</code></pre>
+<hr>
+<h2 id="5-schema-de-persistencia-handoffdata">5. Schema de Persistência (<code>handoffData</code>)</h2>
+<p>Armazenado em <code>localStorage</code> via <code>saveToStorage()</code> / <code>saveSpecsToStorage()</code>. Versão atual: <code>_schemaVersion: 2</code></p>
+<pre><code class="lang-js">{
+  _schemaVersion: 2,
+
+  // ── Card 1: Informações do Projeto ─────────────────────────────────
+  step1: {
+    titulo:   string,     // obrigatório para gerar ficha
+    versao:   string,     // default 'v1.0'
+    objetivo: string,     // obrigatório para gerar ficha
+    status:   'rascunho' | 'em-revisao' | 'pronto-para-dev' | 'finalizado',
+    jornada:  string,
+    feature:  string,
+    equipe:   Membro[]
+  },
+
+  // ── Card 2: Briefing e Regras ───────────────────────────────────────
+  step2: {
+    briefingEnabled:   boolean,
+    briefingQuestions: BriefingQuestion[],  // [{ id, categoria, pergunta, resposta }]
+    regras:            Regra[],             // [{ id, titulo, link, notas }]
+    anexos:            Anexo[],
+    selectedLibSlugs:  string[],
+    auditReferences:   string[]
+  },
+
+  // ── Hub de frames documentados ──────────────────────────────────────
+  frames: Frame[],
+
+  // ── Fluxos criados no canvas ────────────────────────────────────────
+  createdFlows: Flow[],
+  nextFlowNumber: number,
+
+  // ── Metadados globais ───────────────────────────────────────────────
+  currentUser: null | User,
+  _fichaGenerated: boolean,
+  specs: Spec[],   // specs globais fora de frame
+  specLinesVisible: Record&lt;string, boolean&gt;,  // estado de linhas/conectores ocultos por letra (grupo), specs globais
+  docs: {
+    proto:    { link: string },
+    a11y:     { link: string },
+    research: { link: string }
+  }
+}</code></pre>
+<hr>
+<h3 id="51-membro">5.1 <code>Membro</code></h3>
+<pre><code class="lang-js">{
+  nome:   string,
+  email:  string,
+  papel:  string
+}</code></pre>
+<hr>
+<h3 id="52-briefingquestion">5.2 <code>BriefingQuestion</code></h3>
+<pre><code class="lang-js">{
+  id:        string,
+  categoria: string,
+  pergunta:  string,
+  resposta:  string
+}</code></pre>
+<hr>
+<h3 id="53-regra">5.3 <code>Regra</code></h3>
+<pre><code class="lang-js">{
+  id:     string,
+  titulo: string,
+  link:   string,
+  notas:  string
+}</code></pre>
+<hr>
+<h3 id="54-frame">5.4 <code>Frame</code></h3>
+<pre><code class="lang-js">{
+  id:             string,   // UUID gerado pelo plugin
+  figmaId:        string,   // ID do nó Figma
+  nome:           string,
+  isNewComponent: boolean,
+
+  specs:   null | ScanResult,   // resultado do scan de tokens DSC
+  audit: {
+    checkDone:   boolean,
+    semDesvios:  boolean,
+    observacoes: string,
+    ressalvas:   string[]
+  },
+  measurements:     Measurement[],
+  createdSpecs:     Spec[],
+  excecoes:         Excecao[],
+  specGroupNames:   Record&lt;string, string&gt;,
+  specGroupVisible: Record&lt;string, boolean&gt;
+}</code></pre>
+<hr>
+<h3 id="55-spec">5.5 <code>Spec</code></h3>
+<pre><code class="lang-js">{
+  id:           string,   // ID do grupo Figma: "[Spec | A | right] ..."
+  targetNodeId: string,   // ID do nó Figma anotado
+  name:         string,   // nome do nó anotado
+  letter:       string,   // 'A'–'Z'
+  guideSide:    'right' | 'left' | 'top' | 'bottom',
+  color:        string,   // hex stroke da categoria
+  fillColor:    string,   // hex fill da categoria
+  category:     string,   // value (ex: 'comportamento')
+  type:         string,   // label (ex: 'Comportamento')
+  note:         string,
+  properties:   Property[],
+  cardX:        number,   // posição absoluta no canvas (px)
+  cardY:        number,
+  cardW:        number,
+  cardH:        number,
+  visible:      boolean,  // default true — controla visibilidade do card no canvas
+  locked:       boolean   // default true (equivalente a undefined) — false = destravado manualmente pelo designer
+}</code></pre>
+<hr>
+<h3 id="56-property">5.6 <code>Property</code></h3>
+<pre><code class="lang-js">{
+  label: string,
+  value: string | number,
+  token: string | null   // token DSC se aplicável
+}</code></pre>
+<hr>
+<h3 id="57-measurement">5.7 <code>Measurement</code></h3>
+<pre><code class="lang-js">{
+  id:       string,
+  name:     string,
+  tipo:     'padding' | 'gap' | 'width' | 'height' | 'radius',
+  eixo:     'top' | 'bottom' | 'left' | 'right' | 'horizontal' | 'vertical' | 'all',
+  valor:    number,
+  unidade:  'px' | '%',
+  nodeId:   string   // ID do nó Figma medido
+}</code></pre>
+<hr>
+<h3 id="58-flow">5.8 <code>Flow</code></h3>
+<pre><code class="lang-js">{
+  id:          string,
+  numero:      number,
+  tipo:        'inicio' | 'fim' | 'decisao' | 'conexao',
+  nome:        string,
+  frameOrigem: string,
+  frameDestino: string,
+  decisao:     string | null
+}</code></pre>
+<hr>
+<h3 id="59-excecao">5.9 <code>Excecao</code></h3>
+<pre><code class="lang-js">{
+  id:     string,
+  tipo:   'Erro' | 'Alerta' | 'Sucesso' | 'Confirmação',
+  titulo: string,
+  notas:  string
+}</code></pre>
+<hr>
+<h2 id="6-relacao-canvas-persistencia">6. Relação Canvas ↔ Persistência</h2>
+<pre><code>Canvas (Figma)                                  Persistência (localStorage)
+──────────────────────────────────────────────  ────────────────────────────────────
+[Spec | A | right] Ação 4               ←→     frames[i].createdSpecs[j]
+  regex m[1] (letra)                    ←→     spec.letter
+  regex m[2] (lado)                     ←→     spec.guideSide
+  regex m[3] (elemento)                 ←→     spec.name
+  group.id                              ←→     spec.id
+  Ficha.absoluteBoundingBox             ←→     spec.cardX/Y/W/H
+
+[Fluxo | 1 | decisao] Login             ←→     createdFlows[i]
+  regex m[1] (numero)                   ←→     flow.numero
+  regex m[2] (tipo)                     ←→     flow.tipo
+  regex m[3] (nome)                     ←→     flow.nome
+
+[Medida | padding | top] Button         ←→     frames[i].measurements[j]
+  regex m[1] (tipo)                     ←→     measurement.tipo
+  regex m[2] (eixo)                     ←→     measurement.eixo
+  regex m[3] (elemento)                 ←→     measurement.name
+
+[Campo | titulo] Título do Projeto      ←→     step1.titulo
+[Campo | objetivo] Objetivo             ←→     step1.objetivo
+[Briefing | 1] {pergunta}               ←→     step2.briefingQuestions[0]
+[Frame | abc123] Tela de Login          ←→     frames[i] (figmaId = abc123)</code></pre>
+<p><strong>Fonte de verdade para posicionamento:</strong> canvas (leitura via <code>absoluteBoundingBox</code>). <strong>Fonte de verdade para dados:</strong> localStorage (leitura via <code>getFrame</code>, <code>handoffData</code>).</p>
+<hr>
+<h2 id="7-roadmap-htmlsharepoint">7. Roadmap HTML/SharePoint</h2>
+<p>Cada entidade persistida tem campos suficientes para gerar um card HTML autônomo.</p>
+<h3 id="spec-card">Spec card</h3>
+<pre><code class="lang-html">&lt;section class="spec" data-letter="A" data-side="right" data-category="comportamento"&gt;
+  &lt;header&gt;
+    &lt;span class="tag"&gt;A&lt;/span&gt;
+    &lt;h4&gt;Ação 4&lt;/h4&gt;
+    &lt;span class="pill"&gt;Comportamento&lt;/span&gt;
+  &lt;/header&gt;
+  &lt;p class="note"&gt;Descrição da spec...&lt;/p&gt;
+  &lt;ul class="props"&gt;
+    &lt;li&gt;&lt;b&gt;ALTURA&lt;/b&gt; 48px&lt;/li&gt;
+    &lt;li&gt;&lt;b&gt;ALINHAMENTO&lt;/b&gt; CENTER / CENTER&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/section&gt;</code></pre>
+<h3 id="briefing-card">Briefing card</h3>
+<pre><code class="lang-html">&lt;section class="briefing-item" data-number="1"&gt;
+  &lt;h5&gt;Qual é o problema que estamos resolvendo?&lt;/h5&gt;
+  &lt;p&gt;Resposta do designer...&lt;/p&gt;
+&lt;/section&gt;</code></pre>
+<h3 id="convencao-de-extensibilidade">Convenção de extensibilidade</h3>
+<p>Para adicionar novos tipos de artefato, seguir sempre:</p>
+<pre><code>[{Tipo} | {meta1} | {meta2}] {descrição legível}</code></pre>
+<p>Incrementar <code>_schemaVersion</code> e adicionar migrador em <code>code.js</code> a cada mudança estrutural incompatível.</p>
+  </div>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+</div>
+</body>
+</html>
