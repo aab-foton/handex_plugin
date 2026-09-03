@@ -16,6 +16,13 @@
   --muted: #64748b;
   --text: #1e293b;
 }
+:root[data-theme="dark"] {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --line: #334155;
+  --muted: #b4c6d8;
+  --text: #f1f5f9;
+}
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
@@ -37,14 +44,36 @@ header.site-header {
   top: 0;
   z-index: 50;
 }
+:root[data-theme="dark"] header.site-header { background: #00335c; }
+header.site-header .brand-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: auto;
+}
+header.site-header .brand-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+header.site-header .brand-icon svg {
+  width: 20px;
+  height: 20px;
+  color: #fff;
+}
 header.site-header .brand {
   font-weight: 700;
   font-size: 15px;
   letter-spacing: 0.01em;
-  margin-right: auto;
 }
 header.site-header nav {
   display: flex;
+  align-items: center;
   gap: 4px;
   flex-wrap: wrap;
 }
@@ -64,6 +93,21 @@ header.site-header nav a.active {
   color: #fff;
   font-weight: 700;
 }
+#theme-toggle {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+#theme-toggle:hover { background: rgba(255,255,255,0.22); }
+#theme-toggle svg { width: 18px; height: 18px; }
 main {
   max-width: 1040px;
   margin: 0 auto;
@@ -103,6 +147,10 @@ code {
   font-size: 0.9em;
   color: #0f172a;
 }
+:root[data-theme="dark"] code {
+  background: #334155;
+  color: #f1f5f9;
+}
 pre {
   background: #0f172a;
   color: #e2e8f0;
@@ -126,6 +174,7 @@ th, td {
   vertical-align: top;
 }
 th { background: #f8fafc; font-weight: 700; }
+:root[data-theme="dark"] th { background: #263449; }
 blockquote {
   border-left: 3px solid var(--hac-cyan);
   margin: 16px 0;
@@ -133,6 +182,10 @@ blockquote {
   background: #f0f9fb;
   color: #334155;
   font-size: 14px;
+}
+:root[data-theme="dark"] blockquote {
+  background: rgba(8,145,178,0.12);
+  color: #d7e6ee;
 }
 blockquote p { margin: 8px 0; }
 ul, ol { padding-left: 22px; }
@@ -143,6 +196,7 @@ li { margin: 4px 0; }
   border-radius: 8px;
   padding: 16px 20px;
 }
+:root[data-theme="dark"] .toc { background: #263449; }
 .toc p { margin: 0 0 8px; font-weight: 700; font-size: 13px; }
 .toc ol { margin: 0; }
 .footer-note {
@@ -171,6 +225,7 @@ li { margin: 4px 0; }
   overflow: hidden;
   background: #fff;
 }
+:root[data-theme="dark"] .swatch-card { background: var(--surface); }
 .swatch-block {
   height: 64px;
 }
@@ -237,8 +292,11 @@ li { margin: 4px 0; }
   align-items: flex-start;
   gap: 8px;
 }
+:root[data-theme="dark"] .icon-card { background: var(--surface); }
 .icon-card svg { flex-shrink: 0; width: 18px; height: 18px; color: #005ca9; margin-top: 1px; }
+:root[data-theme="dark"] .icon-card svg { color: #7cc7fb; }
 .icon-card .name { font-family: monospace; font-size: 11px; font-weight: 700; color: #1e293b; }
+:root[data-theme="dark"] .icon-card .name { color: var(--text); }
 .icon-card .ctx { font-size: 10.5px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
 
 /* ── Palco de componentes reais (sandbox isolado, reflete a UI do plugin) ── */
@@ -308,7 +366,10 @@ li { margin: 4px 0; }
 </head>
 <body>
 <header class="site-header">
-  <span class="brand">hac — Handoff de Acessibilidade CAIXA</span>
+  <div class="brand-group">
+    <span class="brand-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1" /><path d="m9 20 3-6 3 6" /><path d="m6 8 6 2 6-2" /><path d="M12 10v4" /></svg></span>
+    <span class="brand">hac — Handoff de Acessibilidade CAIXA</span>
+  </div>
   <nav>
     <a href="index.html">Início</a>
     <a href="tecnico.html">Documentação Técnica</a>
@@ -316,6 +377,7 @@ li { margin: 4px 0; }
     <a href="design-system.html" class="active">Design System</a>
     <a href="changelog.html">Changelog</a>
   </nav>
+  <button type="button" id="theme-toggle" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro"></button>
 </header>
 <main>
   <div class="card">
@@ -881,6 +943,36 @@ if (badgeGrid) {
 function toggleDemoTheme() {
   document.body.classList.toggle('hac-dark');
 }
+
+(function () {
+  var ICON_SUN = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></svg>';
+  var ICON_MOON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></svg>';
+  var STORAGE_KEY = 'hac-docs-theme';
+  var root = document.documentElement;
+  var toggle = document.getElementById('theme-toggle');
+
+  function applySiteTheme(theme) {
+    if (theme === 'dark') {
+      root.setAttribute('data-theme', 'dark');
+      if (toggle) toggle.innerHTML = ICON_SUN;
+    } else {
+      root.removeAttribute('data-theme');
+      if (toggle) toggle.innerHTML = ICON_MOON;
+    }
+  }
+
+  var saved = null;
+  try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+  applySiteTheme(saved === 'dark' ? 'dark' : 'light');
+
+  if (toggle) {
+    toggle.addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      applySiteTheme(next);
+      try { localStorage.setItem(STORAGE_KEY, next); } catch (e) {}
+    });
+  }
+})();
 </script>
 </body>
 </html>
