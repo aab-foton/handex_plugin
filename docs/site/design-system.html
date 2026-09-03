@@ -173,6 +173,21 @@
   .handex-ui .swatch .label { font-size: 11.5px; margin-top: 6px; font-weight: 700; color:#334155; }
   .handex-ui .swatch .hex { font-size: 11px; color:#64748b; font-family: ui-monospace, Consolas, monospace; }
 
+  /* Swatches de cor da seção "1. Cores" — fora de .handex-ui de propósito:
+     são conteúdo de documentação (comparação de tokens), não simulação de
+     componente do produto. A regra .handex-ui .swatch-row acima nunca
+     alcançava esses blocos porque eles não estavam dentro de um wrapper
+     .handex-ui — os swatches renderizavam sem estilo (só texto empilhado). */
+  .swatch-row { display:flex; flex-wrap:wrap; gap:14px; margin:16px 0; }
+  .swatch { width: 128px; }
+  .swatch .chip {
+    height: 64px; border-radius: 12px; border: 1px solid rgba(0,0,0,.08);
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+  .swatch .label { font-size: 11.5px; margin-top: 6px; font-weight: 700; color: var(--text); }
+  .swatch .hex { font-size: 11px; color: var(--muted); font-family: ui-monospace, Consolas, monospace; }
+  html[data-theme="dark"] .swatch .chip { border-color: rgba(255,255,255,.15); }
+
   .demo-block {
     background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px;
     padding: 22px; margin: 14px 0; display:flex; flex-wrap:wrap; gap:14px; align-items:flex-start;
@@ -287,16 +302,13 @@
   html[data-theme="dark"] .toc summary { color:#8cc8fb; }
   html[data-theme="dark"] .doc-card-link .t { color:#8cc8fb; }
   html[data-theme="dark"] ::selection { background:#004d8d; color:#fff; }
-  #theme-toggle-btn .icon-moon { display:none; }
-  html[data-theme="dark"] #theme-toggle-btn .icon-sun { display:none; }
-  html[data-theme="dark"] #theme-toggle-btn .icon-moon { display:block; }
 </style>
 </head>
 <body>
 <header class="site-header">
   <div class="brand-group">
     <span class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg></span>
-    <span class="brand">Handex · Documentação</span>
+    <span class="brand">HANDEX - Handoff Expresso</span>
   </div>
   <nav>
     <a href="index.html">Início</a>
@@ -307,10 +319,6 @@
     <a href="design-system.html" class="active">Design System</a>
     <a href="changelog.html">Changelog</a>
   </nav>
-  <button type="button" id="theme-toggle-btn" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro">
-    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
-  </button>
   <button type="button" id="theme-toggle-btn" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro">
     <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
     <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
