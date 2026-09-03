@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bug: Tags Alfanuméricas em Specs · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display:flex; gap: 4px; flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">Handex · Documentação</span>
+  <nav>
+    <a href="index.html">Início</a>
+  </nav>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    
+    <h1 id="handex-bug-confirmado-tags-alfanumericas-a1-a11-quebram-o-empilhamento-de-specs">Handex — Bug confirmado: tags alfanuméricas (A1, A1.1) quebram o empilhamento de specs</h1>
+<blockquote><p>Confirmado em 2026-07-08, a partir de uso real reportado pelo usuário: designers já usam tags como "A1", "A2", "A1.1", "A1.2" na prática. O sistema de empilhamento não reconhece esse formato.</p></blockquote>
+<h2 id="causa-raiz">Causa raiz</h2>
+<p><code>code.js:2948</code>, a regex que identifica specs já existentes na página para calcular empilhamento:</p>
+<pre><code class="lang-js">const newFmt = n.name.match(/^\[Spec \| ([A-Z]) \| ([a-z]+)\] /);</code></pre>
+<p>Exige <strong>exatamente uma letra maiúscula</strong> entre pipes. O nome do grupo é montado em <code>code.js:3116</code>:</p>
+<pre><code class="lang-js">specGroup.name = `[Spec | ${opts.letter} | ${_specSide}] ${node.name}`;</code></pre>
+<p>Sem nenhuma validação de formato de <code>opts.letter</code> antes disso (<code>tagText.characters = opts.letter</code>, code.js:2717, também sem validação). Se <code>opts.letter</code> for <code>"A1"</code> ou <code>"A1.1"</code>, o nome final fica <code>[Spec | A1.1 | right] ...</code>, que <strong>não casa</strong> com a regex <code>[A-Z]</code> (só aceita 1 caractere), nem com o formato legado <code>[Spec]</code> puro.</p>
+<h2 id="consequencia-real">Consequência real</h2>
+<p>Uma spec com tag alfanumérica:</p>
+<ol>
+<li><strong>Nunca entra no <code>_letterMap</code></strong> — o sistema não a "enxerga" ao calcular onde posicionar a próxima spec.</li>
+<li>Cai sempre no branch de "primeira spec daquele lado" (<code>code.js:2994+</code>), mesmo que já existam outras specs (de tags simples ou alfanuméricas) naquele mesmo lado.</li>
+<li><strong>Risco real de sobreposição</strong>: se já existe uma spec "A" (ou "A1") naquele lado, uma nova spec "A1.1" pode ser desenhada exatamente na mesma posição de partida (100px do elemento), colidindo visualmente com a spec existente.</li>
+</ol>
+<p>Isso não é uma limitação teórica — é um bug ativo que afeta o uso documentado do produto (BUSINESS_RULES.md e guide.html citam exemplos como "A, B, C1" como tags válidas; o uso real relatado inclui formatos ainda mais complexos como "A1.1").</p>
+<h2 id="correcao-necessaria">Correção necessária</h2>
+<p>A regex e a lógica de agrupamento (<code>_letterMap</code>, <code>_specLetter</code>) precisam reconhecer tags alfanuméricas com ponto, não só <code>[A-Z]</code> único. Proposta de regex ampliada:</p>
+<pre><code class="lang-js">// Aceita: A, B, A1, A2, A1.1, A1.2, C10, etc.
+const newFmt = n.name.match(/^\[Spec \| ([A-Z]\d*(?:\.\d+)*) \| ([a-z]+)\] /);</code></pre>
+<p>Mudanças necessárias em conjunto:</p>
+<ul>
+<li><code>code.js:2948</code> (regex de leitura do formato novo).</li>
+<li><code>code.js:2961</code> (regex de leitura do formato legado, se aplicável ao mesmo problema).</li>
+<li>Confirmar se <code>BUSINESS_RULES.md</code> (limite de 2 caracteres para tag) precisa ser atualizado para refletir o formato real em uso (ex: "A1.1" tem 4 caracteres) — <strong>a documentação de negócio pode estar desatualizada frente ao uso real</strong>, isso deve ser validado com o time de produto antes de assumir qual é o limite correto.</li>
+</ul>
+<h2 id="correcao-complementar-validar-formato-na-entrada-frontend">Correção complementar — validar formato na entrada (frontend)</h2>
+<p>Além de corrigir a leitura no backend, o ponto de origem do problema é que o campo de tag no formulário de criação de spec (frontend, <code>specifications.js</code>, modal de criação) aceita <strong>qualquer string livre</strong> sem validação de formato. Proposta adicional levantada pelo usuário: validar na entrada, não só corrigir a leitura depois.</p>
+<ul>
+<li><strong>Tooltip/hint no campo de tag</strong>: exibir a convenção esperada diretamente no campo (ex: placeholder ou texto de ajuda "Formato: A, B, A1, A2, A1.1, A1.2..."), deixando explícito o padrão hierárquico aceito.</li>
+<li><strong>Bloqueio de formato inválido</strong>: validar o input contra a regex corrigida (<code>/^[A-Z]\d*(\.\d+)*$/</code>) antes de permitir confirmar a spec — se o designer digitar um formato fora do padrão (ex: "a1", "1A", "A-1"), bloquear o botão de confirmar e mostrar mensagem de erro inline, em vez de aceitar e gerar uma spec que depois quebra o empilhamento silenciosamente.</li>
+<li>Isso é preferível a só corrigir a leitura no backend: previne o problema na origem, e evita a situação atual onde specs malformadas já existem no canvas sem que o designer soubesse que aquele formato não seria reconhecido.</li>
+</ul>
+<h3 id="risco-de-compatibilidade-retroativa">Risco de compatibilidade retroativa</h3>
+<p>Specs já criadas no canvas com tags fora do padrão (antes da correção) continuam com nomes que não batem na regex corrigida também, a menos que sejam recriadas. Validar apenas na entrada de <strong>novas</strong> specs não corrige o que já existe — vale avaliar, ao implementar, se compensa também rodar uma correção/relatório de specs existentes com tags fora do padrão no arquivo do usuário (fora de escopo deste documento, mas relevante mencionar como consequência prática).</p>
+<h2 id="relacao-com-a-ordenacao-alfabetica-de-camadas-proposta-separada">Relação com a ordenação alfabética de camadas (proposta separada)</h2>
+<p>A Proposta 2 de <code>docs/spec-visibility-and-ordering-proposal.md</code> (ordem de camadas A-B-C-D-E) precisa ser desenhada <strong>considerando ordenação hierárquica</strong>, não alfabética simples de caractere único: "A1.1" deve ordenar como "dentro de A1, depois de A1 mas antes de A2", não como uma string comparada char-a-char ingenuamente (o que colocaria "A10" antes de "A2" numa comparação de string pura, por exemplo). A ordenação correta exige parsear a tag em componentes numéricos (<code>A</code>, <code>1</code>, <code>1</code>) e comparar por partes — um "natural sort", não <code>localeCompare</code>/comparação de string direta.</p>
+<h2 id="prioridade">Prioridade</h2>
+<p>Este é um <strong>bug de correção</strong>, não uma proposta de melhoria — deve ser tratado com prioridade mais alta que as propostas de visibilidade/ordenação de camadas, já que afeta a garantia central de "specs nunca se sobrepõem" que o produto promete hoje, para um formato de tag já em uso real.</p>
+  </div>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+</div>
+</body>
+</html>

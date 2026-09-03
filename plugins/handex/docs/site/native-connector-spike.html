@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spike: ConnectorNode nativo (descartado) · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display:flex; gap: 4px; flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">Handex · Documentação</span>
+  <nav>
+    <a href="index.html">Início</a>
+  </nav>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    
+    <h1 id="handex-resultado-do-spike-connectornode-nativo-descartado">Handex — Resultado do spike: ConnectorNode nativo (DESCARTADO)</h1>
+<blockquote><p>Spike testado em 2026-07-08. <strong>Conclusão: inviável.</strong> <code>figma.createConnector()</code> não está disponível para plugins rodando em arquivos de Design/Dev Mode — é exclusivo de FigJam.</p></blockquote>
+<h2 id="o-que-foi-tentado">O que foi tentado</h2>
+<p>Em <code>src/plugin/code.js</code>, handler <code>create-unified-spec</code> (~linha 3019), foi adicionada uma flag <code>USE_NATIVE_CONNECTOR</code> para testar trocar o <code>VectorNode</code> estático (linha conectora das specs, path calculado uma única vez) por um <code>ConnectorNode</code> nativo (<code>figma.createConnector()</code>), ancorado ao nó via <code>connectorStart</code>/<code>connectorEnd</code> + <code>endpointNodeId</code> + <code>magnet: 'AUTO'</code> — a expectativa era que a linha recalculasse sozinha quando o elemento original ou o card se movessem.</p>
+<h2 id="resultado-do-teste-manual">Resultado do teste manual</h2>
+<p>Com <code>USE_NATIVE_CONNECTOR = true</code>, testado no Figma desktop: a spec foi criada, mas <strong>sem nenhuma linha visível</strong>. Console do plugin mostrou:</p>
+<pre><code>unhandled promise rejection: TypeError: not a function
+    at &lt;anonymous&gt; (PLUGIN_11_SOURCE:2895:54)</code></pre>
+<p>O erro ocorre na chamada a <code>figma.createConnector()</code> — a função <strong>não existe</strong> no objeto <code>figma</code> neste contexto de execução.</p>
+<h2 id="confirmacao-na-documentacao-oficial-2026-07-08">Confirmação na documentação oficial (2026-07-08)</h2>
+<p>Verificado diretamente na doc do Figma para eliminar qualquer dúvida: a página de <code>figma.createConnector()</code> afirma literalmente <strong>"This API is only available in FigJam"</strong>, e a documentação de <code>working-in-figjam</code> é ainda mais explícita: <strong>"It's not possible to create connector nodes in a Figma [Design] file"</strong> — <code>ConnectorNode</code> é um tipo de nó que só existe no modelo de dados de arquivos FigJam, não em arquivos Design, independente de configuração de plugin.</p>
+<p><strong>Isso não é contornável ajustando <code>editorType</code>.</strong> É possível declarar <code>editorType: ["figma", "figjam"]</code> para um plugin rodar em ambos os tipos de arquivo, mas isso não faz <code>ConnectorNode</code> aparecer dentro de um arquivo Design — FigJam e Design são tipos de arquivo estruturalmente diferentes (não modos do mesmo arquivo). Como o Handex documenta telas de produto, que por definição vivem em arquivos Design (é onde o DSC e as telas da CAIXA existem), nunca haveria um cenário real em que o conector nativo estivesse disponível nesse fluxo — exigiria que as próprias telas do produto estivessem dentro de um FigJam, o que não é como handoff de produto funciona.</p>
+<h2 id="causa-raiz">Causa raiz</h2>
+<p><code>figma.createConnector()</code> é parte da Plugin API específica para <strong>FigJam</strong> (<code>editorType: "figjam"</code>). O manifest do Handex declara <code>editorType: ["figma", "dev"]</code> — arquivos de Design comuns e Dev Mode, sem FigJam. Nesse contexto, <code>figma.createConnector</code> simplesmente não é uma função disponível no objeto global <code>figma</code>, daí o <code>TypeError: not a function</code> em vez de um erro de validação de argumentos (que seria o caso se a função existisse mas os parâmetros estivessem errados).</p>
+<p>Isso também explica por que o bloco DORMANT em <code>code.js</code> (linhas ~1862-1868, ~1910-1915) que já usava <code>figma.createConnector()</code> para outra feature ("Mapeamento de Protótipo") nunca foi ativado — muito provavelmente a mesma limitação já havia sido descoberta antes e o código foi deixado comentado sem uma nota explicando o motivo.</p>
+<h2 id="impacto-na-decisao">Impacto na decisão</h2>
+<ul>
+<li><strong>Descartado</strong>: não é possível usar <code>ConnectorNode</code> nativo em nenhum lugar do Handex enquanto o plugin rodar em <code>editorType: ["figma", "dev"]</code> — isso vale tanto para a linha das Specs quanto para a hipótese de aplicar a mesma técnica em <strong>Fluxos de Tela</strong> (que também usa conectores/setas entre frames). A ideia de estender para Fluxos, cogitada em 2026-07-07, não deve ser retomada por essa via.</li>
+<li><strong>Sem impacto</strong> na análise de Annotation API nativa (<code>figma.annotations</code>/<code>node.annotations</code>, documentada em <code>docs/annotations-api-deep-dive.md</code>) — é uma API diferente, disponível normalmente em arquivos Design, e não depende de <code>createConnector()</code>.</li>
+<li>O <code>VectorNode</code> estático (comportamento de produção, linha calculada uma vez com <code>M x y L x y</code>) continua sendo a única opção viável no Figma Design para desenhar uma linha conectora entre dois nós quaisquer. Se recálculo automático ao mover elementos for um requisito real de produto, a alternativa seria recalcular o path manualmente via um listener de mudança de posição (<code>figma.on('documentchange', ...)</code> ou similar) — uma solução bem mais cara de manter, não recomendada só por causa dessa hipótese não confirmar necessidade real.</li>
+</ul>
+<h2 id="estado-do-codigo">Estado do código</h2>
+<p><code>USE_NATIVE_CONNECTOR</code> revertido para <code>false</code> em <code>code.js</code>, <code>code.bundle.js</code> regenerado. O branch experimental (<code>if (USE_NATIVE_CONNECTOR)</code>) foi mantido no código como documentação viva do que foi tentado e por que falha (comentários <code>// SPIKE:</code> já existentes) — pode ser removido em uma limpeza futura já que a via foi definitivamente descartada, não é mais um experimento em aberto.</p>
+  </div>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+</div>
+</body>
+</html>

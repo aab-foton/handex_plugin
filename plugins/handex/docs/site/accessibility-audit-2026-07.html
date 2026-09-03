@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auditoria de Acessibilidade (WCAG) · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display:flex; gap: 4px; flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">Handex · Documentação</span>
+  <nav>
+    <a href="index.html">Início</a>
+  </nav>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    
+    <h1 id="handex-auditoria-de-acessibilidade-wcag">Handex — Auditoria de Acessibilidade (WCAG)</h1>
+<blockquote><p>Auditoria somente-leitura realizada em 2026-07-08, a pedido do usuário ("o plugin por completo tem de ser acessível, seguindo padrões WCAG"). Nenhum código foi alterado nesta etapa — este documento é o levantamento de base para priorizar correções. Escopo: 9 views em <code>src/plugin/views/*.html</code>, <code>src/plugin/modules/core.js</code>, <code>src/plugin/modules/specifications.js</code>, <code>tailwind.config.cjs</code>.</p></blockquote>
+<h2 id="achado-mais-critico-navegacao-por-teclado-em-modais-wcag-211-nivel-a">Achado mais crítico — navegação por teclado em modais (WCAG 2.1.1, nível A)</h2>
+<p><strong><code>core.js</code> não trata a tecla Escape em nenhum lugar</strong> (zero ocorrências de <code>keydown</code>/<code>Escape</code>/<code>e.key ===</code> em todo o arquivo) e <strong><code>openModal()</code>/<code>closeModal()</code> não gerenciam foco</strong>: não movem o foco para dentro do modal ao abrir, nem devolvem o foco ao elemento que disparou a abertura ao fechar. Isso reprova WCAG 2.1.1 (nível A, requisito mínimo de conformidade) para qualquer usuário dependente de teclado — sem mouse, não há como fechar um modal sem tentar tabular até encontrar o botão de fechar às cegas.</p>
+<p>11 dos 13 modais já têm <code>role="dialog" aria-modal="true"</code> corretamente marcado (bom sinal de que a estrutura semântica foi pensada), mas a marcação sozinha não substitui o comportamento funcional de foco/Escape. Dois modais nem isso têm: <code>check-designs-modal</code> e <code>confirm-clear-modal</code>.</p>
+<p><strong>Prioridade de correção: mais alta de todo o relatório</strong> — é o único item que isoladamente barra conformidade nível A.</p>
+<h2 id="1-contraste-de-cor-wcag-143-aa-1411-aa">1. Contraste de cor (WCAG 1.4.3 AA / 1.4.11 AA)</h2>
+<p>Padrão sistêmico: labels/hints usam <code>text-gray-400</code>/<code>text-slate-400</code>/<code>text-slate-300</code> <strong>sem variante <code>dark:</code></strong> sobre fundos claros — contraste estimado abaixo do mínimo AA (4.5:1). Ocorrências centrais: <code>modals.html:653-681</code> (labels de categoria de scan), <code>modals.html:787</code> (<code>text-slate-300</code> para texto "(opcional)"), <code>handoff.html:39</code>, <code>dados-projeto.html:156/183/207</code>.</p>
+<p>Caso mais grave: <strong><code>modals.html:264-372</code></strong> — bloco inteiro "Tipos de Especificação" (12+ blocos) usa cores inline fixas (<code>style="color:#005ca9"</code>, <code>background:#EBF4FB"</code>) sem nenhum override <code>dark:</code>, resultando em texto/fundo claro fixo mesmo dentro de modal em tema escuro.</p>
+<p>O padrão correto <strong>já existe</strong> em outras partes do código (<code>handoff-summary.html:64-76</code>, <code>guide.html:118-121</code> têm <code>dark:text-*</code> corretos) — a inconsistência é de aplicação, não de desconhecimento do padrão certo.</p>
+<h2 id="2-tamanho-de-texto-e-zoom-wcag-144-aa">2. Tamanho de texto e zoom (WCAG 1.4.4 AA)</h2>
+<p><strong>Contagem real: 236 ocorrências</strong> de texto em 9-11px nas 9 views (não 143 — número revisado após grep mais preciso). Por arquivo: <code>modals.html</code> 116, <code>guide.html</code> 59, <code>dados-projeto.html</code> 20, <code>handoff-summary.html</code> 11, <code>home.html</code> 14, <code>measurement.html</code> 7, <code>specifications.html</code> 6, <code>handoff.html</code> 2, <code>flows.html</code> 1.</p>
+<p>Sem meta tag de viewport bloqueando zoom (<code>ui.html</code> usa <code>width=device-width, initial-scale=1.0</code>, sem <code>user-scalable=no</code>). <strong>O zoom do sistema/navegador funciona</strong> — a limitação real é que o plugin roda num painel de tamanho fixo controlado pelo Figma, então zoom de sistema pode cortar conteúdo em vez de reflow. Isso é parcialmente limitação de plataforma (painel estreito do Figma), mas o tamanho de fonte em si (9-10px) é decisão de design corrigível — subir para mínimo 12px é viável sem quebrar o layout compacto.</p>
+<h2 id="3-dependencia-so-de-cor-wcag-141-nivel-a">3. Dependência só de cor (WCAG 1.4.1, nível A)</h2>
+<p>Achados reais mais graves:</p>
+<ul>
+<li><strong><code>validateUrl()</code></strong> (<code>core.js</code> ~1850-1856): erro de URL marcado só por borda vermelha; a mensagem de erro é um toast transitório de 3s — depois disso, resta só a cor da borda como indicador permanente, sem texto persistente. Mesmo padrão que o campo de e-mail tinha <strong>antes</strong> da correção já aplicada nesta sessão (agora o e-mail tem hint persistente + <code>aria-invalid</code>; a URL não foi corrigida da mesma forma).</li>
+<li><strong><code>modals.html:183-207,431-451</code></strong> ("Lado da Conexão/Guia"): <code>&lt;input type="radio"&gt;</code> real está <code>hidden</code> (removido da árvore de tab), estado comunicado só por mudança de cor via <code>group-has-[:checked]:text-[#0070af]</code> — combina falha de cor-só-indicador com falha de teclado (não navegável via Tab).</li>
+</ul>
+<h2 id="4-tooltips-e-texto-alternativo-wcag-111-412-nivel-a">4. Tooltips e texto alternativo (WCAG 1.1.1 / 4.1.2, nível A)</h2>
+<p>Padrão inconsistente: botões de navegação principal (FABs, botões fechar modal) <strong>já têm</strong> <code>aria-label</code> corretamente. Em contraste, botões de ação gerados <strong>dinamicamente</strong> em <code>specifications.js</code> (localizar no canvas, remover frame/spec/propriedade, deletar) têm apenas <code>title</code>, sem <code>aria-label</code> — insuficiente para leitores de tela que não expõem <code>title</code> de forma confiável. Botão fechar snackbar em <code>dados-projeto.html:282-285</code> não tem nem um nem outro.</p>
+<p>Estimativa: 6-8 botões-ícone recorrentes (multiplicados pelos N cards renderizados dinamicamente) sem <code>aria-label</code>.</p>
+<h2 id="5-navegacao-por-teclado-detalhes-adicionais-wcag-211-243">5. Navegação por teclado, detalhes adicionais (WCAG 2.1.1 / 2.4.3)</h2>
+<p>Além do achado crítico de modais (topo do documento): elementos clicáveis customizados sem <code>tabindex</code>/<code>role="button"</code> — item de alerta de conformidade (<code>specifications.js</code>, <code>&lt;li onclick="focusNode(...)"&gt;</code>) e cabeçalho de card de frame inteiro clicável (<code>specifications.js</code>, <code>&lt;div onclick="toggleFrameAccordion(...)"&gt;</code>). Contraponto positivo: accordions em <code>guide.html</code> usam <code>&lt;button&gt;</code> real, corretos — o padrão certo existe, não foi replicado em todo lugar.</p>
+<h2 id="6-labels-e-formularios-wcag-131-332-nivel-a">6. Labels e formulários (WCAG 1.3.1 / 3.3.2, nível A)</h2>
+<p>Padrão misto. Corretos (<code>&lt;label for=&gt;</code> associado): campos principais do Step 1 (<code>s1-titulo</code>, <code>s1-versao</code>, <code>s1-objetivo</code>), vários inputs de modal. <strong>Placeholder-only</strong> (mesmo padrão que o campo de e-mail tinha antes da correção desta sessão, ainda não replicada aos demais campos): <code>s1-jornada</code>/<code>s1-feature</code>, os 3 links de documentação (proto/a11y/research), textarea de observação de exceção. Selects nativos ocultos substituídos por dropdown custom <strong>sem <code>aria-label</code></strong> no botão substituto: seletor de status do projeto, categoria de anotação, seletor de frame (specs e medidas).</p>
+<h2 id="7-estrutura-semantica-wcag-131-nivel-a">7. Estrutura semântica (WCAG 1.3.1, nível A)</h2>
+<p>Sem <code>&lt;h1&gt;</code> na UI do plugin (só existe dentro do HTML gerado no canvas do Figma, não na interface). 25 headings reais (<code>h2</code>-<code>h4</code>), mas ao menos 12 "títulos visuais" são <code>&lt;span&gt;</code>/<code>&lt;p&gt;</code> estilizados em vez de heading semântico.</p>
+<p><strong>Achado mais sistêmico desta categoria</strong>: as 4 listas de conteúdo mais importantes do plugin — specs, medidas, fluxos, frames — são todas <code>&lt;div&gt;</code> vazias preenchidas via <code>document.createElement('div')</code>, nunca <code>&lt;ul&gt;/&lt;li&gt;</code>. O padrão correto (<code>&lt;ol&gt;/&lt;ul&gt;+&lt;li&gt;</code>) já existe em <code>guide.html</code> e nos alertas de conformidade, mas não foi aplicado às listas principais de dados do usuário — que são justamente o conteúdo mais navegado por leitores de tela.</p>
+<h2 id="leitura-consolidada">Leitura consolidada</h2>
+<p>A auditoria revela um padrão recorrente: <strong>o código certo já existe em algum lugar do plugin, mas não foi aplicado de forma sistemática</strong>. Isso é uma boa notícia relativa — não é preciso "aprender" o padrão de acessibilidade certo, é preciso <em>auditar e replicar</em> o que já está bem feito em <code>guide.html</code>/<code>handoff-summary.html</code>/FABs de navegação para o resto do produto (<code>modals.html</code>, <code>dados-projeto.html</code>, listas geradas dinamicamente).</p>
+<p>A correção aplicada ao campo de e-mail nesta mesma sessão (hint de erro persistente + <code>aria-invalid</code> + <code>aria-describedby</code>) é exatamente o padrão que precisa ser replicado nos outros pontos apontados nas seções 3 e 6.</p>
+<h2 id="priorizacao-recomendada">Priorização recomendada</h2>
+<ol>
+<li><strong>Foco/Escape em modais</strong> (seção 5, achado crítico) — único item que sozinho reprova nível A; afeta todos os 13 modais do plugin.</li>
+<li><strong><code>aria-label</code> em botões-ícone dinâmicos</strong> (seção 4) e <strong>radios ocultos sem alternativa de teclado</strong> (seção 3) — baixo esforço, alto impacto, mesmo padrão já aplicado ao e-mail.</li>
+<li><strong>Listas semânticas</strong> (<code>&lt;ul&gt;/&lt;li&gt;</code> nas 4 listas principais, seção 7) — exige tocar em <code>specifications.js</code>/<code>measurement.js</code>/<code>handoff.js</code> na geração dinâmica de itens, esforço médio.</li>
+<li><strong>Contraste de cor no modal "Tipos de Especificação"</strong> (seção 1) — correção pontual mas de várias linhas (12+ blocos).</li>
+<li><strong>Tamanho de fonte geral</strong> (seção 2) — o item de maior volume (236 ocorrências), mas o de menor urgência WCAG isolada; melhor tratado como padronização de design system do próprio plugin, não como bug pontual.</li>
+</ol>
+<p>Nenhuma correção foi aplicada ainda — este documento existe para decidir, com o usuário, por onde começar.</p>
+  </div>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+</div>
+</body>
+</html>

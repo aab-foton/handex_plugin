@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Changelog · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display:flex; gap: 4px; flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">Handex · Documentação</span>
+  <nav>
+    <a href="index.html">Início</a>
+  </nav>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    <nav class="toc" style="display:block;"><strong style="color:var(--blue-700);">Índice por período</strong><ul style="columns:1; margin-top:10px;"><li style="margin:10px 0;"><strong>Agosto de 2026</strong> — <a href="#v681-2026-08-28">v6.8.1</a> · <a href="#v680-2026-08-28">v6.8.0</a> · <a href="#v670-2026-08-28">v6.7.0</a> · <a href="#v663-2026-08-28">v6.6.3</a> · <a href="#v662-2026-08-28">v6.6.2</a> · <a href="#v661-2026-08-27">v6.6.1</a> · <a href="#v660-2026-08-26">v6.6.0</a> · <a href="#v650-2026-08-17">v6.5.0</a> · <a href="#v640-2026-08-14">v6.4.0</a> · <a href="#v630-2026-08-07">v6.3.0</a> · <a href="#v620-2026-08-04">v6.2.0</a></li><li style="margin:10px 0;"><strong>Julho de 2026</strong> — <a href="#v612-2026-07-29">v6.1.2</a> · <a href="#v611-2026-07-28">v6.1.1</a> · <a href="#v610-2026-07-24">v6.1.0</a> · <a href="#v600-2026-07-22">v6.0.0</a> · <a href="#v510-2026-07-22">v5.1.0</a> · <a href="#v501-2026-07-21">v5.0.1</a></li><li style="margin:10px 0;"><strong>Junho de 2026</strong> — <a href="#v424-2026-06-18">v4.2.4</a> · <a href="#v423-2026-06-17">v4.2.3</a> · <a href="#v422-2026-06-17">v4.2.2</a> · <a href="#v421-2026-06-17">v4.2.1</a> · <a href="#v420-2026-06-17">v4.2.0</a> · <a href="#v416-2026-06-11">v4.1.6</a> · <a href="#v415-2026-06-11">v4.1.5</a> · <a href="#v414-2026-06-11">v4.1.4</a> · <a href="#v413-2026-06-10">v4.1.3</a> · <a href="#v412-2026-06-10">v4.1.2</a> · <a href="#v411-2026-06-09">v4.1.1</a> · <a href="#v400-beta-2026-06-02">v4.0.0-beta</a></li></ul></nav>
+    <h1 id="changelog-handex-plugin">CHANGELOG — HANDEX Plugin</h1>
+<hr>
+<h2 id="v681-2026-08-28">v6.8.1 — 2026-08-28</h2>
+<h3 id="corrigido-guia-importarexportar-dados-desatualizado">Corrigido — Guia "Importar/Exportar dados" desatualizado</h3>
+<p>O item "Exportar" do guia "Como usar o plugin" ainda descrevia a tela de resumo do Handoff como exportando só Markdown/JSON — atualizado para mencionar também o Briefing, que ganhou seu próprio botão de exportação nesta mesma leva de mudanças. Onboarding de "Gerar Ficha de Handoff" também sincronizado com a nova ordem Gerar Ficha → Exportar.</p>
+<hr>
+<h2 id="v680-2026-08-28">v6.8.0 — 2026-08-28</h2>
+<h3 id="adicionado-modal-rapida-de-dados-do-projeto-no-header">Adicionado — Modal rápida de "Dados do Projeto" no header</h3>
+<p>O ícone 📋 no header principal deixou de navegar direto para a tela "Informações do Projeto" e passou a abrir uma modal leve — Título, Versão, Status e Objetivo, editáveis sem sair de onde você está. Um botão "Editar tudo" leva para a tela completa quando for preciso mexer em Equipe, Briefing, Regras ou Links. O card "Informações do Projeto" na home continua levando direto para a tela completa, como já era.</p>
+<h3 id="corrigido-aviso-ao-gerar-ficha-sem-nome-do-designer">Corrigido — Aviso ao gerar ficha sem "nome do designer"</h3>
+<p>Se o único campo obrigatório faltando for o nome do designer (que vem da Equipe), o plugin agora leva direto para a tela completa em vez de abrir a modal rápida, que não tem esse campo.</p>
+<hr>
+<h2 id="v670-2026-08-28">v6.7.0 — 2026-08-28</h2>
+<h3 id="adicionado-toggles-no-grupo-contexto-de-negocio">Adicionado — Toggles no grupo Contexto de Negócio</h3>
+<p>Briefing Estratégico, Regras de Negócio e HUs e Links de Referência ganharam um toggle próprio no cabeçalho de cada card — vêm ativados por padrão, e desativar esconde o conteúdo sem apagar nada já preenchido (útil quando a seção não se aplica ao projeto). Importar um briefing (.md) com a seção desativada reativa o toggle automaticamente, para o resultado nunca ficar escondido sem explicação.</p>
+<h3 id="adicionado-limpar-briefing">Adicionado — Limpar Briefing</h3>
+<p>Novo botão para apagar todas as perguntas do Briefing Estratégico de uma vez, com confirmação leve (modal com contagem de perguntas) — escopo menor que "Limpar Dados" do projeto inteiro, sem exigir digitar uma palavra de confirmação.</p>
+<h3 id="ajustado-acoes-do-briefing-reunidas-em-mais-acoes">Ajustado — Ações do Briefing reunidas em "Mais ações"</h3>
+<p>Baixar template, Importar, Exportar e Limpar saíram da linha de botões dentro do card e foram para um menu no cabeçalho (ícone ⋮, ao lado do "?" de ajuda) — mesmo padrão já usado em Anotar Specs.</p>
+<h3 id="corrigido-menu-mais-acoes-do-briefing-cortado-visualmente">Corrigido — Menu "Mais ações" do Briefing cortado visualmente</h3>
+<p>O painel do menu ficava cortado pelo arredondamento do card quando o corpo do Briefing estava oculto (toggle desativado) — causa era <code>overflow-hidden</code> no container do card, não lógica do toggle. Corrigido, e o restante do plugin foi auditado em busca do mesmo padrão (nenhum outro caso encontrado).</p>
+<h3 id="ajustado-rodape-da-home-reorganizado">Ajustado — Rodapé da home reorganizado</h3>
+<p>"Gerar Ficha de Handoff" passa a ocupar a largura total do rodapé, sozinho, como ação primária. Baixar, Importar e Limpar viraram três botões de largura igual com ícone e label, na ordem Baixar → Importar → Limpar (do mais frequente/reversível ao mais raro/destrutivo).</p>
+<h3 id="ajustado-tela-de-resumo-do-handoff-reorganizada">Ajustado — Tela de resumo do Handoff reorganizada</h3>
+<p>"Gerar Ficha" agora vem antes do bloco "Exportar" — gerar a ficha primeiro garante que um JSON exportado depois já reflita o que foi de fato materializado no canvas. O bloco de exportação ganhou um hint explicando a diferença entre Markdown (documentação de leitura) e JSON (backup completo, único reimportável), e a ordem dos botões passou a ser Briefing → Markdown → JSON.</p>
+<h3 id="ajustado-instrucoes-mais-didaticas-em-informacoes-do-projeto">Ajustado — Instruções mais didáticas em Informações do Projeto</h3>
+<p>Onboarding e guia "Como usar o plugin" explicam agora o "como" e o "porquê" de cada seção de Contexto de Negócio: o que o Briefing Estratégico resolve, por que documentar Regras de Negócio e HUs evita que o dev tenha que adivinhar, e como cada Link de Referência vira um link clicável direto na ficha final.</p>
+<h3 id="alterado-modulo-briefing-extraido-para-arquivo-proprio">Alterado — Módulo Briefing extraído para arquivo próprio</h3>
+<p>Toda a lógica do Briefing Estratégico (eixos, perguntas, import/export .md, Guia de busca) saiu de <code>core.js</code> e passou a viver em <code>modules/briefing.js</code> — mudança interna de organização de código, sem efeito no comportamento do plugin.</p>
+<h3 id="corrigido-toast-de-feedback-ao-inserir-pergunta-do-guia">Corrigido — Toast de feedback ao inserir pergunta do Guia</h3>
+<p>Inserir uma pergunta sugerida pelo Guia do Briefing não mostrava nenhuma confirmação visual. Agora exibe "Pergunta inserida no briefing." (ou "Pergunta atualizada." ao editar).</p>
+<h3 id="corrigido-chevron-nativo-do-navegador-no-select-de-eixo-do-briefing">Corrigido — Chevron nativo do navegador no select de eixo do Briefing</h3>
+<p>O campo de pergunta sugerida de cada eixo usava o menu suspenso padrão do sistema operacional, com espaçamento inconsistente com o resto do plugin. Corrigido para o mesmo padrão visual usado nos outros seletores.</p>
+<h3 id="corrigido-nomenclatura-dsc">Corrigido — Nomenclatura DSC</h3>
+<p>"DSC" foi corrigido de "Design System Corporativo" para "Design System CAIXA" em todas as referências do plugin (onboarding, guia, documentação).</p>
+<hr>
+<h2 id="v663-2026-08-28">v6.6.3 — 2026-08-28</h2>
+<h3 id="ajustado-rodape-da-home-reorganizado">Ajustado — Rodapé da home reorganizado</h3>
+<p>"Gerar Ficha de Handoff" passa a ocupar a largura total do rodapé, sozinho, como ação primária — antes dividia espaço com o ícone de "Baixar backup", o que fazia os dois botões terem tamanhos diferentes por engano. Abaixo, "Baixar", "Importar" e "Limpar" viraram três botões de largura igual (com ícone + label), distribuídos na mesma linha em vez de agrupados à esquerda com espaço vazio sobrando. Ordem também revista: Baixar (mais frequente e reversível) → Importar → Limpar (mais raro e destrutivo, por último).</p>
+<hr>
+<h2 id="v662-2026-08-28">v6.6.2 — 2026-08-28</h2>
+<h3 id="corrigido-tab-preso-no-plugin-depois-de-clicar-no-canvas">Corrigido — Tab "preso" no plugin depois de clicar no canvas</h3>
+<p>O focus trap dos modais (v6.5.0) forçava o foco de volta ao modal sempre que ele não estava mais dentro dele — inclusive depois de um clique no canvas do Figma, fora do iframe do plugin. Na prática, o primeiro Tab pressionado depois de interagir com o canvas era "roubado" de volta para o plugin, mesmo com a intenção clara de continuar navegando no Figma. Corrigido: o trap agora só intercepta Tab quando o foco já estava dentro do modal antes de pressioná-lo — nunca puxa o foco de volta à força.</p>
+<hr>
+<h2 id="v661-2026-08-27">v6.6.1 — 2026-08-27</h2>
+<h3 id="corrigido-especificacao-criada-em-anotar-specs-podia-sumir-da-lista-sem-aviso">Corrigido — Especificação criada em "Anotar Specs" podia sumir da lista sem aviso</h3>
+<p>Em determinadas sessões — geralmente após trocar de arquivo Figma ou excluir um frame mapeado com o plugin ainda aberto — uma nova especificação era criada normalmente no canvas e o plugin confirmava com a mensagem de sucesso, mas o item não aparecia na lista da tela. Causa raiz: uma referência interna ao frame ativo podia ficar "presa" apontando para um frame que não existia mais; nesse caso, a especificação não era registrada em nenhuma lista interna do plugin, apesar do card já estar no canvas. Corrigido para que, quando essa referência não corresponder a um frame válido, a especificação seja tratada como avulsa e apareça normalmente na lista.</p>
+<h3 id="ajustado-instrucoes-de-escanear-tokens-reforcam-a-etapa-de-revisao">Ajustado — Instruções de "Escanear Tokens" reforçam a etapa de revisão</h3>
+<p>O texto de onboarding e o guia "Como usar o plugin" deixavam a etapa de escaneamento parecer uma leitura automática e definitiva. Ambos foram reescritos para deixar explícito que o scan é o ponto de partida — cabe ao designer revisar cada item escaneado (expandir, conferir o token aplicado, focar no canvas) antes de declarar conformidade, no mesmo espírito do Check Designs nativo do Figma. Também corrigida a ordem descrita no primeiro passo, que sugeria selecionar o frame antes de abrir a ferramenta — a seleção acontece com a ferramenta já aberta.</p>
+<hr>
+<h2 id="v660-2026-08-26">v6.6.0 — 2026-08-26</h2>
+<h3 id="adicionado-design-system-do-handex-fechado-como-referencia-normativa">Adicionado — Design System do Handex fechado como referência normativa</h3>
+<p><code>docs/design-system-handex.md</code> (v1.5) deixa de ser um levantamento solto e passa a ser a fonte de verdade de tokens e componentes da UI do plugin: catálogo de 6 variantes de botão (primária, secundária/ghost, branco/outline neutro, destrutiva, ícone interativo, ícone utilitário), radius único (<code>rounded-2xl</code>), accordion único, área de toque de 40×40px em todo ícone interativo, peso visual uniforme entre ícones de tamanhos diferentes, e auditoria de contraste WCAG 2.1 AA em toda a interface (14 correções aplicadas). <code>CLAUDE.md</code> passa a apontar esse documento como leitura obrigatória antes de qualquer mudança visual.</p>
+<h3 id="alterado-paleta-de-marca-revertida-para-a-identidade-institucional-caixa">Alterado — Paleta de marca revertida para a identidade institucional CAIXA</h3>
+<p>A paleta "Uau CAIXA" (azul-roxo <code>#3d3dff</code>) usada desde a v6.3.0 antecipava um rebranding que a CAIXA ainda não publicou oficialmente. Revertido para a marca institucional vigente (<code>#005ca9</code>/<code>#f39200</code>, extraída diretamente do Design System CAIXA real) em toda a interface do plugin, incluindo a logo exibida no header e na Ficha gerada no canvas.</p>
+<h3 id="corrigido-dados-de-um-projeto-apareciam-ao-abrir-o-plugin-em-outro-arquivo-figma">Corrigido — Dados de um projeto apareciam ao abrir o plugin em outro arquivo Figma</h3>
+<p><code>handoffData</code> e o cache de scan de tokens eram salvos numa chave compartilhada por instalação do plugin, não por arquivo — ao alternar entre projetos <code>.fig</code> diferentes no Figma Desktop, título, especificações e medidas de um projeto podiam aparecer dentro de outro. Corrigido isolando o armazenamento por arquivo, com migração automática do que já estava salvo (nenhum projeto em andamento é perdido na atualização).</p>
+<h3 id="ajustado-card-de-especificacao-no-canvas-com-largura-fixa">Ajustado — Card de especificação no canvas com largura fixa</h3>
+<p>O card de spec inserido no canvas agora tem largura travada em 480px, com todo o conteúdo interno (nota, propriedades, cenários de exceção) ajustado para quebrar linha dentro desse limite em vez de crescer indefinidamente para os lados.</p>
+<h3 id="ajustado-bibliotecas-dsc-monitoradas">Ajustado — Bibliotecas DSC monitoradas</h3>
+<p>Biblioteca "Super Gerenciador" (agora renomeada pela equipe de design para "Super DSC | Web") reconhecida como sucessora do DSC legado "Web Angular &amp; React" — as duas continuam sendo escaneadas em paralelo enquanto a migração de design system estiver em andamento.</p>
+<h3 id="nota">Nota</h3>
+<p>Esta versão inclui também uma correção pontual do token de acesso usado para sincronizar as bibliotecas do DSC (sem efeito visível na interface do plugin).</p>
+<hr>
+<h2 id="v650-2026-08-17">v6.5.0 — 2026-08-17</h2>
+<h3 id="adicionado-nova-etapa-posicao-no-canvas-na-criacao-de-especificacao">Adicionado — Nova etapa "Posição no Canvas" na criação de especificação</h3>
+<p>Um card fantasma arrastável (do tamanho real do card final, sem o texto) substitui a escolha manual de lado da guia — com zoom automático no elemento e o modal permanecendo aberto durante o arraste, para o designer posicionar a spec vendo o resultado em tempo real.</p>
+<h3 id="corrigido-linha-do-conector-de-spec-desalinhada-apos-editar-estilo-ou-reposicionar">Corrigido — Linha do conector de spec desalinhada após editar estilo ou reposicionar</h3>
+<p>Duas causas raiz distintas: a origem da linha era calculada antes do grupo se redimensionar (jogando a linha para longe ao trocar o estilo do card), e a posição do lado da guia salva na criação não era atualizada depois de um arraste manual. Corrigido com roteamento ortogonal unificado (sempre sai reto da origem e entra reto no destino) compartilhado entre Fluxos de Tela e Specs.</p>
+<h3 id="adicionado-focus-trap-completo-em-modais">Adicionado — Focus trap completo em modais</h3>
+<p>Navegação por Tab, Escape e clique-fora agora fica contida dentro do modal aberto, em qualquer modal do plugin.</p>
+<hr>
+<h2 id="v640-2026-08-14">v6.4.0 — 2026-08-14</h2>
+<h3 id="reformulado-fluxos-de-tela">Reformulado — Fluxos de Tela</h3>
+<p>A ordem da cadeia de conexão passa a respeitar o clique real do usuário (antes seguia só a ordem de camadas do Figma). O mini-mapa passa a refletir a posição relativa real dos elementos no canvas, em vez de um trilho horizontal fixo. Cada card pode escolher seu próprio lado de ancoragem. O nome do fluxo passa a ser o nome da Jornada — um agrupamento automático de conexões que se tocam, refletido também na Ficha exportada. Adicionados marcadores automáticos de Início/Fim (opcionais) e a possibilidade de trocar o tipo de uma conexão já criada sem precisar apagar e reconectar. Corrigido um travamento do Figma ao conectar 3 ou mais frames em sequência.</p>
+<h3 id="adicionado-para-que-serve-no-onboarding-de-cada-ferramenta">Adicionado — "Para que serve" no onboarding de cada ferramenta</h3>
+<p>Cada ferramenta com onboarding contextual ganhou uma explicação de propósito antes do passo a passo — tanto no modal quanto no guia de uso.</p>
+<h3 id="ajustado-home-com-cards-reorganizaveis">Ajustado — Home com cards reorganizáveis</h3>
+<p>Os cards de ferramenta na tela inicial podem ser reordenados por arrastar-e-soltar; a ordem escolhida é lembrada.</p>
+<h3 id="ajustado-limite-de-caracteres-visivel-em-campos-de-texto-livre">Ajustado — Limite de caracteres visível em campos de texto livre</h3>
+<p>Cerca de 20 campos de texto do plugin ganharam contador de caracteres com limite.</p>
+<hr>
+<h2 id="v630-2026-08-07">v6.3.0 — 2026-08-07</h2>
+<h3 id="alterado-paleta-de-cores-institucional-caixa">Alterado — Paleta de cores institucional CAIXA</h3>
+<p>Migração de <code>#0070af</code>/<code>#005ca9</code> para <code>#3d3dff</code>/<code>#2e2ee0</code> (identidade "Uau CAIXA" 2026) na interface do plugin e no ícone. <em>Nota: esta paleta foi revertida na v6.6.0 — ver acima.</em></p>
+<h3 id="alterado-fluxo-de-finalizacao-de-especificacoes">Alterado — Fluxo de finalização de especificações</h3>
+<p>Botão "Salvar e Voltar" substituído por "Finalizar Registros", desacoplando o fim do registro de specs da navegação para a tela inicial.</p>
+<hr>
+<h2 id="v620-2026-08-04">v6.2.0 — 2026-08-04</h2>
+<h3 id="corrigido-especificacao-excluida-ressuscitava-ao-navegar-entre-telas">Corrigido — Especificação excluída "ressuscitava" ao navegar entre telas</h3>
+<p><code>createdSpecs</code> (a lista em memória renderizada na tela) é reconstruída a cada troca de aba a partir de um merge entre <code>handoffData.specs</code> (avulsas) e <code>handoffData.frames[].createdSpecs</code> (por-frame). Dois pontos de exclusão (botão de lixeira no card de spec e o handler <code>deleteNode</code>) removiam o item só dessa lista em memória, sem remover da fonte real — a especificação apagada continuava guardada em <code>handoffData.specs</code> ou dentro do frame, e voltava a aparecer no próximo merge (ex: ao sair e voltar de "Anotar Specs", ou reabrir o plugin). Corrigido com uma remoção explícita por id em ambas as fontes possíveis antes de salvar.</p>
+<h3 id="ajustado-icone-de-linhas-do-grupo-de-specs-sem-indicacao-visual-de-estado">Ajustado — Ícone de linhas do grupo de specs sem indicação visual de estado</h3>
+<p>O ícone que oculta/exibe as linhas de conexão de um grupo de especificações não tinha destaque de cor quando as linhas estavam visíveis, diferente do ícone de olho ao lado (que fica azul quando o grupo está visível). Agora usa a mesma cor de destaque (<code>#005ca9</code>) quando as linhas estão visíveis, mantendo consistência visual entre os dois controles.</p>
+<h3 id="nota">Nota</h3>
+<p>Se você já tinha apagado uma especificação antes desta correção e ela ainda aparece na primeira abertura após a atualização, é resíduo salvo do bug anterior — exclua normalmente mais uma vez; a partir de agora a exclusão remove definitivamente.</p>
+<hr>
+<h2 id="v612-2026-07-29">v6.1.2 — 2026-07-29</h2>
+<h3 id="adicionado-sugestao-automatica-de-tag-ao-criar-especificacao">Adicionado — Sugestão automática de tag ao criar especificação</h3>
+<p>Ao abrir o formulário de nova especificação, o campo de tag agora já vem preenchido com a próxima letra-base disponível (A, B, C...), olhando as especificações já existentes no frame. O designer continua podendo editar livremente — inclusive para criar sub-níveis (A1, B1.1) — a sugestão só evita ter que apagar o valor padrão e digitar do zero toda vez.</p>
+<h3 id="corrigido-definicao-duplicada-de-uma-funcao-interna-do-formulario-de-specs">Corrigido — Definição duplicada de uma função interna do formulário de specs</h3>
+<p>Manutenção interna sem efeito visível: existiam duas versões da função que prepara o formulário de nova especificação, uma delas nunca era executada. Removida a versão morta para evitar confusão em manutenções futuras.</p>
+<h3 id="nota">Nota</h3>
+<p>Esta é a publicação que a Figma Community vai registrar como "Version 10".</p>
+<hr>
+<h2 id="v611-2026-07-28">v6.1.1 — 2026-07-28</h2>
+<h3 id="corrigido-especificacoes-criadas-sem-frame-vinculado-desapareciam-ao-navegar">Corrigido — Especificações criadas sem frame vinculado desapareciam ao navegar</h3>
+<p><code>syncAndRenderSpecs()</code> reconstruía a lista de specs anotadas só a partir de <code>handoffData.frames[].createdSpecs</code>, ignorando <code>handoffData.specs</code> (nível superior) — usado quando uma spec é criada sem nenhum frame ativo/selecionado ("Sem vínculo (avulso)"). A spec aparecia normalmente logo após ser criada, mas sumia da lista assim que o designer navegava para outra tela e voltava. Agora a sincronização junta as duas origens (avulsas + por-frame), com deduplicação por id.</p>
+<h3 id="corrigido-especificacoes-duplicadas-na-ficha-html-exportada">Corrigido — Especificações duplicadas na ficha HTML exportada</h3>
+<p>A ficha HTML tinha uma seção "Especificações Visuais" que mostrava o mesmo conteúdo já presente em "Especificações Anotadas" — consequência do fix acima, uma spec vinculada a frame passava a existir também no registro avulso após qualquer salvamento, e a ficha exportada mostrava a mesma spec duas vezes. Seção duplicada removida (o canvas nativo já não tinha esse problema).</p>
+<h3 id="corrigido-importacao-de-backup-json-ignorava-specsmedidas-sem-frame-vinculado">Corrigido — Importação de backup (JSON) ignorava specs/medidas sem frame vinculado</h3>
+<p>Um backup exportado de um projeto com specs criadas sem frame associado mostrava "0 Specs" no resumo da importação e não recriava nada no canvas, mesmo com dados reais no arquivo — a contagem e a recriação no canvas também só olhavam para specs vinculadas a frame. Corrigido para considerar ambos os casos.</p>
+<h3 id="nota">Nota</h3>
+<p>Publicada na Figma Community como "Version 9" (2026-07-29) — sem release notes preenchidas na publicação em si (esqueceu de colar antes de confirmar). O texto que deveria ter ido lá está em <code>docs/release-notes-community.md</code>, caso precise ser adicionado depois via "Version history" ou reaproveitado na próxima publicação. O contador de versão da Community é independente do número semver deste <code>package.json</code> (6.1.1); não confundir os dois.</p>
+<hr>
+<h2 id="v610-2026-07-24">v6.1.0 — 2026-07-24</h2>
+<h3 id="resumo">Resumo</h3>
+<p>6 ajustes de UX/UI portados da branch beta (onde nasceram durante o desenvolvimento da feature de Acessibilidade) para o hub de frames, conformidade DSC, medidas e specs anotadas.</p>
+<h3 id="adicionado-campo-de-duvidacomentario-no-html-exportado">Adicionado — Campo de dúvida/comentário no HTML exportado</h3>
+<p>Cada card de medida e de spec anotada no Handoff exportado ganhou um campo de rascunho local (textarea, salvo em <code>localStorage</code> do navegador do dev, sem round-trip com o Figma) mais um botão "Copiar dúvidas pendentes" no header, que junta todos os rascunhos preenchidos num texto pronto pra compartilhar. Os cards duplicados entre a seção "Frames Documentados" e as seções "Medidas"/"Especificações Anotadas" compartilham o mesmo rascunho (chave por <code>spec.id</code>/<code>measurement.nodeId</code>, não por posição na lista).</p>
+<h3 id="removido-botao-gerar-ficha-de-projeto-do-html-exportado">Removido — Botão "Gerar Ficha de Projeto" do HTML exportado</h3>
+<p>Baixava uma cópia estática do HTML atual (<code>outerHTML</code> da página); redundante já que o próprio HTML exportado já é a ficha.</p>
+<h3 id="corrigido-foco-automatico-no-hover-dos-cards-de-frame">Corrigido — Foco automático no hover dos cards de frame</h3>
+<p>Passar o mouse sobre um card de frame em "Escanear Tokens" selecionava o frame no canvas — comportamento inesperado e sem relação com nenhuma ação do designer. Agora o foco (seleção + scroll até o elemento) só acontece ao clicar para expandir o card.</p>
+<h3 id="corrigido-campo-de-declaracao-de-desvios-nao-reagia-ao-toggle">Corrigido — Campo de declaração de desvios não reagia ao toggle</h3>
+<p>Com "Check Designs realizado" e "Sem desvios encontrados" marcados, o campo de observações da Conformidade DSC só escondia se esse fosse o estado no primeiro render — alternar os toggles depois não atualizava a visibilidade. Também: o alerta "Itens para revisar" mudou de vermelho para laranja escuro (mais alinhado a um alerta, não a um erro crítico).</p>
+<h3 id="corrigido-retangulo-de-destaque-de-medidas-ficava-preso-no-canvas">Corrigido — Retângulo de destaque de medidas ficava preso no canvas</h3>
+<p>O primeiro item da lista de medidas (que vem expandido por padrão) desenhava um retângulo de destaque (<code>[HighlightStroke]</code>) persistente no canvas a cada render, independente de qualquer ação do designer. Agora o destaque só aparece transitoriamente ao passar o mouse sobre um item da lista, e some ao tirar o mouse.</p>
+<h3 id="adicionado-toggle-de-linhas-de-conector-por-especificacao-individual">Adicionado — Toggle de linhas de conector por especificação individual</h3>
+<p>Já existia um toggle para ocultar as linhas de conector de todo um grupo de specs (mesma tag); agora cada spec individual dentro do grupo também tem seu próprio toggle, sincronizado com o de grupo.</p>
+<hr>
+<h2 id="v600-2026-07-22">v6.0.0 — 2026-07-22</h2>
+<h3 id="resumo">Resumo</h3>
+<p>Bump de major para alinhar o número de versão do repositório com o que será publicado na Figma Community. Sem mudança funcional em relação à v5.1.0 além da atualização de dados de referência do DSC (skeleton) já sincronizada via o novo pipeline no GitHub Actions.</p>
+<hr>
+<h2 id="v510-2026-07-22">v5.1.0 — 2026-07-22</h2>
+<h3 id="resumo">Resumo</h3>
+<p>Sequência de correções descobertas testando a preparação para publicação no Figma real (scan de tokens, geração e posicionamento da ficha, versionamento) + duas features novas: limpeza seletiva do conteúdo do canvas com backup, e recriação de fluxos a partir de um backup JSON importado.</p>
+<hr>
+<h3 id="correcao-getvariablebyidgetstylebyidmaincomponent-sincronos-sob-dynamic-page">Correção — <code>getVariableById</code>/<code>getStyleById</code>/<code>.mainComponent</code> síncronos sob <code>dynamic-page</code></h3>
+<p>A migração da v5.0.1 cobriu só <code>figma.getNodeById</code>. Faltavam três outras famílias de API síncrona também bloqueadas sob <code>documentAccess: dynamic-page</code>: <code>figma.variables.getVariableById</code>, <code>figma.getStyleById</code> e a property <code>.mainComponent</code>. Isso quebrava o <strong>Escanear Tokens</strong> em produção — a extração de propriedades lançava exceção dentro da função recursiva <code>extractSpecs</code>, e como a recursão nos filhos ficava no mesmo bloco <code>try/catch</code>, a subárvore inteira do nó era descartada silenciosamente. Migrado tudo para as versões assíncronas (<code>getVariableByIdAsync</code>, <code>getStyleByIdAsync</code>, <code>getMainComponentAsync</code>).</p>
+<h3 id="correcao-referenceerror-scbg-is-not-defined-ao-gerar-ficha-com-specs">Correção — <code>ReferenceError: scBg is not defined</code> ao gerar ficha com specs</h3>
+<p>Bug de refatoração de 17/06 (commit <code>1813758</code>) que ficou dormente: a declaração de <code>scBg</code> (tom de fundo do chip de categoria) foi apagada por engano junto com uma mudança no fundo do card da spec, mas o chip de categoria continuava usando a variável. Restaurada a declaração.</p>
+<h3 id="correcao-ficha-de-handoff-nascia-longe-do-frame-mapeado-as-vezes-fora-da-tela">Correção — Ficha de Handoff nascia longe do frame mapeado (às vezes fora da tela)</h3>
+<p>Quando a resolução de um <code>figmaId</code> salvo falhava (arquivo duplicado no Figma muda os IDs internos), a exceção travava a ficha na coordenada temporária off-screen (<code>-99999,-99999</code>) sem nunca reposicionar. Corrigido com try/catch em toda a lógica de posicionamento, que agora sempre cai num fallback válido.</p>
+<h3 id="correcao-ficha-podia-sobrepor-outros-itens-do-canvas">Correção — Ficha podia sobrepor outros itens do canvas</h3>
+<p>Além de evitar sobrepor a ficha anterior, a ficha agora desvia de qualquer frame, spec ou fluxo que esteja no caminho (checagem de colisão AABB contra os nós de topo da página, com limite de 50 iterações).</p>
+<h3 id="correcao-modal-de-versionamento-sugeria-a-versao-errada">Correção — Modal de versionamento sugeria a versão errada</h3>
+<p><code>pull-ficha-version-from-canvas</code> buscava qualquer frame <code>Handex | Ficha de Projeto</code> da página, sem filtrar por título do projeto atual — com fichas de projetos diferentes na mesma página, podia sugerir a versão de outro projeto. Agora escopado pelo título. O nome da layer da ficha também passou a incluir a versão, não só título e timestamp.</p>
+<h3 id="correcao-limpar-tudo-nao-persistia-o-reset">Correção — "Limpar Tudo" não persistia o reset</h3>
+<p><code>confirmClearAllData()</code> resetava <code>handoffData</code> só na memória da sessão atual — nunca chamava <code>saveToStorage()</code>, então os dados antigos voltavam ao reabrir o plugin.</p>
+<h3 id="novo-limpeza-seletiva-do-canvas-backup">Novo — Limpeza seletiva do canvas + backup</h3>
+<p>Modal "Limpar Tudo" reformulado com três ações: baixar backup em JSON, apagar dados do plugin (sem tocar no canvas), ou apagar conteúdo do canvas por categoria (Ficha/Specs/Medidas/Fluxos, seletivo via checkbox). Todo conteúdo criado pelo Handex passa a ser marcado com <code>setPluginData('handexCategory', ...)</code> no momento da criação — fonte de verdade para a exclusão seletiva.</p>
+<h3 id="novo-recriacao-de-fluxos-a-partir-de-backup-json">Novo — Recriação de fluxos a partir de backup JSON</h3>
+<p>A importação de JSON já recriava Ficha/Specs/Medidas no canvas; fluxos eram importados como dado mas nunca desenhados de novo. <code>handoffData.createdFlows[]</code> passa a salvar <code>sourceId</code>/<code>targetId</code>/<code>decisionText</code>/<code>flowSide</code> no momento da criação, permitindo reconstrução real via um novo handler (<code>recreate-flow-connection</code>) que resolve os nós por ID em vez de depender de seleção ativa no canvas. Fluxos de backups anteriores a esta versão não têm esse vínculo salvo e ficam marcados como não recriáveis.</p>
+<h3 id="interface">Interface</h3>
+<p>Espaçamento insuficiente entre o header azul e o conteúdo em 7 telas (Escanear Tokens, Anotar Medidas, Guia, Informações do Projeto, Anotar Specs, Fluxos de Tela, Resumo do Handoff) — sombra + padding-top aumentado de 16px para 24px.</p>
+<h3 id="infraestrutura-de-publicacao">Infraestrutura de publicação</h3>
+<p>Manifest com <code>id</code>, <code>networkAccess</code>, <code>documentAccess</code> para submissão na Figma Community. Job de CI (<code>handex-lint</code>) rodando <code>tsc</code> + um check novo (<code>check-figma-api-usage.cjs</code>) em todo push/MR que toca o Handex, para pegar regressões de API síncrona do Figma antes do merge — motivado pelo próprio incidente desta versão.</p>
+<hr>
+<h2 id="v501-2026-07-21">v5.0.1 — 2026-07-21</h2>
+<h3 id="resumo">Resumo</h3>
+<p>Preparação para publicação na Figma Community: novos campos obrigatórios no manifest e correção de um risco real de compatibilidade que eles introduzem.</p>
+<hr>
+<h3 id="manifest-campos-exigidos-pela-submissao-no-figma">Manifest — Campos exigidos pela submissão no Figma</h3>
+<ul>
+<li>Adicionado <code>id</code> fixo do plugin.</li>
+<li>Adicionado <code>networkAccess.allowedDomains</code> (<code>unpkg.com</code>, <code>cdnjs.cloudflare.com</code>) — os dois únicos domínios que o plugin contata em runtime (ícones Lucide; jsPDF/JSZip na exportação em PDF).</li>
+<li>Adicionado <code>documentAccess: "dynamic-page"</code> — faz o Figma carregar em memória só a página atualmente aberta, em vez do documento inteiro.</li>
+</ul>
+<h3 id="correcao-getnodebyid-sincrono-sob-dynamic-page">Correção — <code>getNodeById</code> síncrono sob <code>dynamic-page</code></h3>
+<p><strong>Bug potencial:</strong> <code>frame.figmaId</code> (persistido em <code>handoffData.frames</code>, podendo estar em qualquer página de um arquivo com múltiplas páginas) era resolvido via <code>figma.getNodeById(...)</code> síncrono em ~20 pontos de <code>code.js</code>. Sob <code>dynamic-page</code>, isso retorna <code>null</code> silenciosamente para nós de páginas não carregadas — um frame documentado "desapareceria" do handoff sem erro visível.</p>
+<p><strong>Correção:</strong> todas as ocorrências migradas para <code>await figma.getNodeByIdAsync(...)</code>, que carrega a página do nó automaticamente se necessário. Cadeias de <code>.forEach</code> que precisavam de <code>await</code> no corpo foram convertidas para <code>for...of</code>.</p>
+<h3 id="limpeza-dependencia-nao-utilizada">Limpeza — dependência não utilizada</h3>
+<p>Removida <code>@google/genai</code> do <code>package.json</code> — instalada mas sem nenhuma chamada no código-fonte.</p>
+<hr>
+<h2 id="v424-2026-06-18">v4.2.4 — 2026-06-18</h2>
+<h3 id="resumo">Resumo</h3>
+<p>Funcionalidade de specs finalizada com ajustes visuais e correção de comportamento: modal de ajuda com cores fiéis ao canvas e seção de instrução de agrupamento por tags; correção do toggle de visibilidade por grupo (botão só ocultava, nunca reexibia).</p>
+<hr>
+<h3 id="modal-de-tipos-de-especificacao-revisao-visual-e-de-conteudo">Modal de Tipos de Especificação — Revisão Visual e de Conteúdo</h3>
+<ul>
+<li>Cada tipo de spec agora exibe um card com <strong>fill + stroke exatos</strong> usados no canvas (antes: pill com borda colorida apenas, cor diferente da real).</li>
+<li>Adicionada seção <strong>"Como funcionam as Tags"</strong> no topo do modal, explicando:</li>
+<li>Mesma tag → specs se empilham na direção do lado (topo: para cima; demais: para baixo).</li>
+<li>Tags diferentes → grupos aparecem lado a lado no canvas.</li>
+<li>Instrução para renomear grupos via ícone de lápis na lista.</li>
+</ul>
+<h3 id="correcao-toggle-de-visibilidade-por-grupo">Correção — Toggle de Visibilidade por Grupo</h3>
+<p><strong>Bug:</strong> o botão olho no cabeçalho do grupo ocultava todas as specs do grupo, mas clicar novamente não as reexibia — ficava sempre em modo "ocultar".</p>
+<p><strong>Causa:</strong> na função <code>renderSpecsList</code>, cada spec era clonada via <code>Object.assign({}, spec)</code> (cópia rasa). O handler <code>onclick</code> do botão avaliava <code>specs.some(s =&gt; s.visible !== false)</code> usando as cópias. Ao ocultar, <code>createdSpecs[i].visible</code> era atualizado, mas <code>s.visible</code> da cópia permanecia <code>undefined</code> — que satisfaz <code>!== false</code> — então <code>targetState</code> sempre recalculava como <code>false</code> (ocultar).</p>
+<p><strong>Correção:</strong> adicionado <code>s.visible = targetState</code> na iteração do handler, mantendo a cópia sincronizada com o estado real.</p>
+<hr>
+<h3 id="nomenclatura-semantica-fluxos-e-medidas-no-canvas">Nomenclatura Semântica — Fluxos e Medidas no Canvas</h3>
+<p>Implementado o padrão de nomenclatura <code>[Tipo | meta1 | meta2] Descrição</code> para os artefatos de fluxo criados no canvas:</p>
+<div class="table-wrap"><table><thead><tr><th>Antes</th><th>Depois</th></tr></thead><tbody><tr><td><code>Handex/Fluxo/1/Decisão</code></td><td><code>[Fluxo \| 1 \| decisao] Decisão</code></td></tr><tr><td><code>Handex/Fluxo/1/Início</code></td><td><code>[Fluxo \| 1 \| inicio] Início</code></td></tr><tr><td><code>Handex/Fluxo/1/Fim</code></td><td><code>[Fluxo \| 1 \| fim] Fim</code></td></tr><tr><td><code>Handex/Fluxo/1/Conexão</code></td><td><code>[Fluxo \| 1 \| conexao] Conexão</code></td></tr><tr><td><code>Handex/Fluxo/Legendas</code></td><td><code>[Fluxo \| legenda] Legendas dos Fluxos</code></td></tr><tr><td><code>Handex/Fluxo/Linha</code> (filho)</td><td><code>Linha</code> (escopado pelo grupo-pai)</td></tr><tr><td><code>[Medidas] Frame</code> (na ficha)</td><td><code>[Medidas \| {figmaId}] Frame</code></td></tr></tbody></table></div>
+<p>Documentado em <code>DATA_MODEL.md</code> — novo arquivo de referência do modelo de dados cobrindo todos os artefatos de canvas, schema de persistência e roadmap HTML/SharePoint.</p>
+<hr>
+<h3 id="arquivos-modificados">Arquivos Modificados</h3>
+<div class="table-wrap"><table><thead><tr><th>Arquivo</th><th>Mudança</th></tr></thead><tbody><tr><td><code>src/plugin/modules/specifications.js</code></td><td>Correção do toggle de grupo: <code>s.visible = targetState</code> adicionado no handler <code>groupVisBtn.onclick</code></td></tr><tr><td><code>src/plugin/views/modals.html</code></td><td>Modal <code>spec-types-help-modal</code> reescrito: cards com fill/stroke reais + seção de instrução de tags</td></tr><tr><td><code>src/plugin/code.js</code></td><td>Nomes dos artefatos de fluxo migrados para <code>[Fluxo \| n \| tipo] nome</code>; agrupador de medidas na ficha inclui <code>figmaId</code></td></tr><tr><td><code>DATA_MODEL.md</code></td><td>Novo arquivo — modelo de dados completo do plugin</td></tr></tbody></table></div>
+<hr>
+<h2 id="v423-2026-06-17">v4.2.3 — 2026-06-17</h2>
+<h3 id="resumo">Resumo</h3>
+<p>Sistema de cores das specs refatorado: cada categoria passa a ter um par <code>fill/stroke</code> distinto, aplicado de forma consistente nos chips da UI do plugin, nos cards da ficha técnica no canvas e nos cards individuais criados pelo botão "Anotar Spec". Linhas conectoras ganham dots visíveis nas pontas.</p>
+<hr>
+<h3 id="cores-das-specs-pares-fillstroke-por-categoria">Cores das Specs — Pares Fill/Stroke por Categoria</h3>
+<p><strong>Mapeamento adotado:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>Categoria</th><th>Fill</th><th>Stroke</th></tr></thead><tbody><tr><td>Informação extra</td><td><code>#EBF1F2</code></td><td><code>#64747A</code></td></tr><tr><td>Comportamento</td><td><code>#F8EAF3</code></td><td><code>#93537D</code></td></tr><tr><td>Regra de Negócio</td><td><code>#E5F5F8</code></td><td><code>#008CB2</code></td></tr><tr><td>Dados da API</td><td><code>#F5FEC1</code></td><td><code>#6D8000</code></td></tr><tr><td>Layout</td><td><code>#EBF0FF</code></td><td><code>#2563EB</code></td></tr><tr><td>Componente</td><td><code>#EDEAFD</code></td><td><code>#4F46E5</code></td></tr><tr><td>Interação</td><td><code>#FDE9F3</code></td><td><code>#DB2777</code></td></tr><tr><td>Tipografia</td><td><code>#FEF3C7</code></td><td><code>#D97706</code></td></tr><tr><td>Cor</td><td><code>#FEE2E2</code></td><td><code>#DC2626</code></td></tr><tr><td>Acessibilidade</td><td><code>#E0F5FA</code></td><td><code>#0891B2</code></td></tr><tr><td>Conteúdo</td><td><code>#FFEFD6</code></td><td><code>#A65E00</code></td></tr></tbody></table></div>
+<p><strong>Chips na UI do plugin (<code>_CAT_COLORS</code>):</strong></p>
+<ul>
+<li>Antes: classes Tailwind estáticas (aproximações de cor).</li>
+<li>Agora: <code>background-color</code>, <code>border-color</code> e <code>color</code> aplicados via <code>style</code> inline com os hexadecimais exatos.</li>
+<li>Atualizado em <code>renderSpecsListForFrame</code> e no render de botão de spec.</li>
+</ul>
+<p><strong>Cards individuais de spec no canvas (<code>create-unified-spec</code>):</strong></p>
+<ul>
+<li>Fundo do card: <code>themeFill</code> (fill suave da categoria) — antes era branco puro.</li>
+<li>Badge da letra e contorno do elemento: <code>themeColor</code> (stroke = cor sólida) — mantido.</li>
+<li>Pill da categoria: fill suave + borda stroke — antes era pill sem fundo.</li>
+<li>Conector (linha tracejada): <code>themeColor</code> — mantido.</li>
+</ul>
+<p><strong>Ficha técnica no canvas (seção 1.9):</strong></p>
+<ul>
+<li><code>sRow.fills</code>: usa <code>s.fillColor</code> quando disponível; antes derivava um fill computado.</li>
+<li><code>sRow.strokes</code>: usa <code>sc</code> (stroke da categoria); antes era cinza fixo <code>#E0E0F5</code>.</li>
+<li><code>sCatTag</code> (chip de categoria dentro da ficha): fill + stroke corretos — já usava <code>scBg/sc</code>, agora alinhado com os pares exatos.</li>
+</ul>
+<hr>
+<h3 id="conector-de-spec-dots-nas-pontas">Conector de Spec — Dots nas Pontas</h3>
+<ul>
+<li>Adicionados dois <code>figma.createEllipse()</code> (r=4px) nas coordenadas de início e fim de cada linha de conector.</li>
+<li>Fill dos dots = <code>themeColor</code> (stroke da categoria), sem borda.</li>
+<li>Groupados com o conector e o card na mesma <code>specGroup</code>.</li>
+</ul>
+<hr>
+<h3 id="dados-persistidos">Dados Persistidos</h3>
+<ul>
+<li><code>spec-created</code> agora inclui <code>fillColor</code> e <code>category</code> no objeto salvo em <code>handoffData.frames[].createdSpecs[]</code>.</li>
+<li>Specs existentes sem <code>fillColor</code> continuam funcionando com o fallback derivado.</li>
+</ul>
+<hr>
+<h3 id="arquivos-modificados">Arquivos Modificados</h3>
+<div class="table-wrap"><table><thead><tr><th>Arquivo</th><th>Mudança</th></tr></thead><tbody><tr><td><code>src/plugin/modules/specifications.js</code></td><td><code>_CAT_COLORS</code> → pares <code>{fill, stroke}</code>; <code>_getCatColor</code> simplificado; <code>CATEGORY_COLORS</code> → pares; <code>getCategoryFill()</code> adicionada; chips via <code>style</code> inline; <code>confirmSpecProperties</code> passa <code>fillColor</code></td></tr><tr><td><code>src/plugin/code.js</code></td><td><code>create-unified-spec</code>: <code>themeFill</code> derivado de <code>opts.fillColor</code>; dots no conector; <code>spec-created</code> inclui <code>fillColor</code> e <code>category</code>; seção 1.9: <code>sRow</code> usa <code>scBg/sc</code> corretos</td></tr></tbody></table></div>
+<hr>
+<h2 id="v422-2026-06-17">v4.2.2 — 2026-06-17</h2>
+<h3 id="resumo">Resumo</h3>
+<p>Correções de segurança: sanitização de conteúdo do canvas antes de inserção no DOM (proteção contra XSS via nomes de layer/token crafteados em arquivos Figma maliciosos).</p>
+<hr>
+<h3 id="seguranca-sanitizacao-de-dados-do-canvas">Segurança — Sanitização de Dados do Canvas</h3>
+<p><strong>Vetor corrigido: XSS via nomes de layer ou tokens crafteados</strong></p>
+<ul>
+<li>Um arquivo Figma com um layer cujo nome contenha HTML/JS (ex: <code>&lt;img src=x onerror="..."&gt;</code>) poderia executar código arbitrário no contexto do plugin ao ser escaneado.</li>
+<li>Adicionada função utilitária <code>escapeHtml(str)</code> em <code>core.js</code>, exposta globalmente via <code>window.escapeHtml</code>.</li>
+<li>Aplicada em todos os pontos onde dados do canvas ou do usuário são inseridos via <code>innerHTML</code>.</li>
+</ul>
+<p><strong>Pontos corrigidos:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>Local</th><th>Dado protegido</th><th>Técnica</th></tr></thead><tbody><tr><td><code>specifications.js</code> — nota da spec</td><td><code>spec.note</code></td><td><code>escapeHtml()</code></td></tr><tr><td><code>specifications.js</code> — propriedades técnicas</td><td><code>p.label</code>, <code>p.token</code>, <code>p.value</code></td><td><code>escapeHtml()</code></td></tr><tr><td><code>core.js</code> — label do seletor de categoria</td><td><code>sel.text</code></td><td><code>escapeHtml()</code></td></tr><tr><td><code>core.js</code> — toast de notificação</td><td><code>message</code></td><td><code>createTextNode()</code> (sem innerHTML)</td></tr><tr><td><code>messages.js</code> — erro de scan</td><td><code>msg.error</code></td><td><code>textContent</code> (sem innerHTML)</td></tr></tbody></table></div>
+<p><strong>O que NÃO muda para o usuário:</strong> nenhuma alteração visual. Labels, notas e valores continuam sendo exibidos normalmente — caracteres como <code>&lt;</code>, <code>&gt;</code>, <code>&amp;</code> são renderizados como texto literal, não interpretados como HTML.</p>
+<hr>
+<h3 id="arquivos-modificados">Arquivos Modificados</h3>
+<div class="table-wrap"><table><thead><tr><th>Arquivo</th><th>Mudança</th></tr></thead><tbody><tr><td><code>src/plugin/modules/core.js</code></td><td>Função <code>escapeHtml</code>; toast usa <code>createTextNode</code>; label do seletor escapado</td></tr><tr><td><code>src/plugin/modules/specifications.js</code></td><td><code>spec.note</code>, <code>p.label</code>, <code>p.token</code>, <code>p.value</code> escapados</td></tr><tr><td><code>src/plugin/modules/messages.js</code></td><td>Erro de scan renderizado via <code>textContent</code></td></tr></tbody></table></div>
+<hr>
+<h2 id="v421-2026-06-17">v4.2.1 — 2026-06-17</h2>
+<h3 id="resumo">Resumo</h3>
+<p>Refinamentos no controle de escala da UI: substituição do botão de zoom único por dois botões independentes (zoom-in / zoom-out) com visibilidade contextual, e ajuste dinâmico da altura ao minimizar o plugin para que o header não seja cortado em nenhum nível de escala.</p>
+<hr>
+<h3 id="header-botoes-de-zoom-separados">Header — Botões de Zoom Separados</h3>
+<p><strong>Dois botões independentes substituem o toggle único</strong></p>
+<ul>
+<li>Antes: um único botão alternava entre ícone de zoom-in e zoom-out conforme a escala atual; o comportamento era direcional mas o ícone gerava ambiguidade (exibia zoom-out em 115%, mas o clique ainda avançava para 130%).</li>
+<li>Agora: dois botões fixos — <code>btn-zoom-in</code> (<code>zoom-in</code>) e <code>btn-zoom-out</code> (<code>zoom-out</code>) — com semântica clara.</li>
+<li><code>btn-zoom-out</code> fica <strong>oculto (<code>hidden</code>)</strong> quando a escala está em 100% (não há nível menor disponível).</li>
+<li><code>btn-zoom-in</code> fica <strong>oculto</strong> quando a escala está no máximo (130%).</li>
+<li>Ambos chamam <code>ensureExpanded()</code> antes de ajustar a escala, garantindo que o plugin não permaneça minimizado durante a operação.</li>
+</ul>
+<p><strong>Escalonamento em três passos: 100% → 115% → 130%</strong></p>
+<ul>
+<li>Definido no array <code>_ZOOM_STEPS = [1, 1.15, 1.3]</code> em <code>core.js</code>.</li>
+<li><code>zoomIn()</code> avança um passo; <code>zoomOut()</code> recua um passo. Ambos exibem toast com a porcentagem atual.</li>
+</ul>
+<hr>
+<h3 id="minimizar-altura-adaptada-ao-zoom">Minimizar — Altura Adaptada ao Zoom</h3>
+<p><strong><code>toggleCollapse()</code> calcula a altura colapsada dinamicamente</strong></p>
+<ul>
+<li>Antes: <code>resize-ui</code> enviava <code>height: MINI_H</code> (44px fixo) ao minimizar.</li>
+<li>Ao zoom 115%, o header visual ocupa ~50px; ao zoom 130%, ~57px — o valor fixo cortava o header.</li>
+<li>Agora: <code>height: Math.round(MINI_H * window.currentUiScale)</code> garante que o plugin minimizado sempre acomode o header por completo, sem cortes.</li>
+</ul>
+<hr>
+<h3 id="arquivos-modificados">Arquivos Modificados</h3>
+<div class="table-wrap"><table><thead><tr><th>Arquivo</th><th>Mudança</th></tr></thead><tbody><tr><td><code>src/plugin/build.cjs</code></td><td>Dois botões (<code>btn-zoom-in</code>, <code>btn-zoom-out</code>) substituem o botão único de zoom</td></tr><tr><td><code>src/plugin/modules/core.js</code></td><td><code>setUiScale</code> atualiza visibilidade dos botões; <code>zoomIn/zoomOut</code> com <code>_ZOOM_STEPS</code>; <code>toggleCollapse</code> com altura dinâmica</td></tr></tbody></table></div>
+<hr>
+<h2 id="v420-2026-06-17">v4.2.0 — 2026-06-17</h2>
+<h3 id="resumo">Resumo</h3>
+<p>Conjunto de melhorias de UX e produto: controle manual de linhas de conexão nas specs, paleta de cores do toolkit alinhada ao guia de referência, correção de scroll com zoom, destaque do botão de geração de ficha (header e view de handoff), botão "Salvar e Voltar" em todas as funcionalidades, modal inteligente de seleção de conteúdo para injetar na ficha, e renomeação de "Docs e Anexos" para "Links de Referência" com remoção do upload de arquivos.</p>
+<hr>
+<h3 id="especificacoes-checkbox-de-linhas-de-conexao">Especificações — Checkbox de Linhas de Conexão</h3>
+<p><strong>Novo checkbox "Inserir linhas de conexão no canvas"</strong></p>
+<ul>
+<li>Exibido no modal de criação de spec, marcado por padrão.</li>
+<li>Quando desmarcado, apenas o card e o destaque pontilhado ao redor do elemento são criados — sem a linha ligando os dois.</li>
+<li>Útil quando o designer quer posicionar o card manualmente ou quando a linha cruzaria outros elementos no canvas.</li>
+</ul>
+<hr>
+<h3 id="especificacoes-cores-do-toolkit">Especificações — Cores do Toolkit</h3>
+<p><strong>Paleta <code>CATEGORY_COLORS</code> alinhada ao guia de referência</strong></p>
+<ul>
+<li><code>info</code> (Informação extra): atualizado de <code>#16A34A</code> (verde) para <code>#64748B</code> (cinza-slate), refletindo o visual neutro da categoria no toolkit.</li>
+<li><code>api</code> (Dados da API): atualizado de <code>#CA8A04</code> (âmbar) para <code>#65A30D</code> (verde-oliva), refletindo o visual do toolkit.</li>
+<li>As demais categorias (<code>comportamento</code>, <code>regra</code>, <code>layout</code>, <code>componente</code>, <code>interacao</code>, <code>tipografia</code>, <code>cor</code>, <code>acessibilidade</code>, <code>conteudo</code>) permanecem inalteradas.</li>
+<li>O sistema de cores é aplicado consistentemente: tag do card, borda do card, pill de categoria e linha de conexão no canvas usam sempre a mesma cor derivada da categoria.</li>
+</ul>
+<hr>
+<h3 id="zoom-correcao-de-scroll-cortado">Zoom — Correção de Scroll Cortado</h3>
+<p><strong><code>body</code> usa altura compensada pelo zoom</strong></p>
+<ul>
+<li>Antes: <code>height: 100vh</code> com <code>zoom: var(--ui-scale)</code> causava corte visual do conteúdo inferior em escalas &gt; 1.</li>
+<li>Agora: <code>height: calc(100vh / var(--ui-scale))</code> garante que o corpo não ultrapasse o viewport após o zoom, e o scroll alcança todos os itens ao final das views.</li>
+</ul>
+<hr>
+<h3 id="header-botao-gerar-ficha-em-destaque">Header — Botão Gerar Ficha em Destaque</h3>
+<p><strong>Reposicionamento e destaque do botão principal</strong></p>
+<ul>
+<li>O botão "Gerar Ficha" (ícone <code>send</code>) foi movido para a <strong>primeira posição da direita</strong> no header.</li>
+<li>Recebeu fundo azul sólido (<code>bg-[#0070af]</code>), border e shadow — diferenciando visualmente dos demais ícones (tema, zoom, minimizar).</li>
+<li>Chama <code>openHandoffInjectModal()</code> em vez de navegar diretamente para a view de handoff.</li>
+<li>O botão "Dados do Projeto" (clipboard) passou para segunda posição.</li>
+</ul>
+<hr>
+<h3 id="view-handoff-botao-gerar-ficha-no-header">View Handoff — Botão Gerar Ficha no Header</h3>
+<p><strong>Ação principal migrada para o header da view</strong></p>
+<ul>
+<li>Antes: botão "Gerar Ficha no Canvas" era o último item da lista de exportação (rolagem necessária).</li>
+<li>Agora: botão destacado com label "Gerar Ficha" e ícone <code>sparkles</code> fica ao lado do título "Handoff" no sub-header, mesmo padrão das demais funcionalidades (specs, medidas, fluxos).</li>
+<li>Ícone atualizado de <code>layout-dashboard</code> para <code>sparkles</code>, comunicando geração/criação de conteúdo.</li>
+<li>O CTA grande no final do scroll foi removido para evitar duplicidade.</li>
+</ul>
+<hr>
+<h3 id="navegacao-botao-salvar-e-voltar">Navegação — Botão "Salvar e Voltar"</h3>
+<p><strong>Botão de continuidade adicionado ao final de cada funcionalidade</strong></p>
+<ul>
+<li>Views afetadas: Anotar Specs, Anotar Medidas, Fluxos de Tela, Escanear Tokens, Informações do Projeto.</li>
+<li>O botão persiste os dados via <code>saveToStorage()</code>, exibe um toast de confirmação e navega de volta para a home.</li>
+<li>Reforça a noção de que cada etapa é opcional e pode ser retomada — sem bloquear o fluxo.</li>
+</ul>
+<hr>
+<h3 id="gerar-ficha-modal-de-selecao-de-conteudo">Gerar Ficha — Modal de Seleção de Conteúdo</h3>
+<p><strong><code>openHandoffInjectModal()</code> — pré-voo inteligente antes de gerar</strong></p>
+<ul>
+<li>Antes de gerar a ficha no canvas, o plugin verifica o que foi documentado e exibe um modal contextual com três estados:</li>
+<li><strong>Vazio:</strong> instruções de quais etapas preencher + atalho para "Informações do Projeto".</li>
+<li><strong>Item único:</strong> alerta indicando a etapa preenchida + opção de "Continuar documentando" ou "Gerar assim mesmo".</li>
+<li><strong>Múltiplos itens:</strong> checkboxes para cada seção disponível (Informações do Projeto, Specs, Medidas, Fluxos) com contador de itens; designer escolhe o que incluir.</li>
+<li>A seleção é armazenada em <code>window._handoffInjectFilter</code> e respeitada ao chamar <code>createHandoffOnCanvas()</code>.</li>
+</ul>
+<hr>
+<h3 id="informacoes-do-projeto-links-de-referencia">Informações do Projeto — Links de Referência</h3>
+<p><strong>Renomeação e simplificação da seção "Docs e Anexos"</strong></p>
+<ul>
+<li>Seção renomeada para <strong>"Links de Referência"</strong> — título mais preciso e direto.</li>
+<li>Ícone atualizado de <code>file-plus</code> para <code>link</code>.</li>
+<li><strong>Upload de arquivos removido:</strong> a área de arrastar/soltar e o campo "Outros Anexos" foram excluídos. Arquivos sobrecarregam a ficha gerada e não são injetados no canvas — a funcionalidade não agregava valor no fluxo atual.</li>
+<li>Os campos de URL permanecem: Protótipo Navegável, Handoff de Acessibilidade e Pesquisa de UX.</li>
+</ul>
+<hr>
+<h3 id="arquivos-modificados">Arquivos Modificados</h3>
+<div class="table-wrap"><table><thead><tr><th>Arquivo</th><th>Mudança</th></tr></thead><tbody><tr><td><code>src/plugin/views/modals.html</code></td><td>Checkbox de linhas de conexão no modal de spec; novo modal <code>handoff-inject-modal</code></td></tr><tr><td><code>src/plugin/modules/specifications.js</code></td><td><code>confirmSpecProperties</code> passa <code>drawConnection</code>; <code>CATEGORY_COLORS</code> atualizado (<code>info</code>, <code>api</code>)</td></tr><tr><td><code>src/plugin/code.js</code></td><td>Conector condicional via <code>opts.drawConnection</code></td></tr><tr><td><code>src/plugin/styles/plugin.css</code></td><td><code>body</code> com altura compensada pelo zoom</td></tr><tr><td><code>src/plugin/build.cjs</code></td><td>Header: botão Gerar Ficha em destaque + reordenação</td></tr><tr><td><code>src/plugin/modules/handoff.js</code></td><td><code>openHandoffInjectModal()</code> e <code>_confirmHandoffInject()</code></td></tr><tr><td><code>src/plugin/views/handoff-summary.html</code></td><td>Botão "Gerar Ficha" no sub-header com ícone <code>sparkles</code>; CTA de scroll removido</td></tr><tr><td><code>src/plugin/views/specifications.html</code></td><td>Botão "Salvar e Voltar"</td></tr><tr><td><code>src/plugin/views/measurement.html</code></td><td>Botão "Salvar e Voltar"</td></tr><tr><td><code>src/plugin/views/flows.html</code></td><td>Botão "Salvar e Voltar"</td></tr><tr><td><code>src/plugin/views/handoff.html</code></td><td>Botão "Salvar e Voltar"</td></tr><tr><td><code>src/plugin/views/dados-projeto.html</code></td><td>Botão "Salvar e Voltar"; seção renomeada; upload removido</td></tr></tbody></table></div>
+<hr>
+<h2 id="v416-2026-06-11">v4.1.6 — 2026-06-11</h2>
+<h3 id="resumo">Resumo</h3>
+<p>Refinamentos de UX na ficha canvas e na view de escaneamento de tokens: remoção dos indicadores de conformidade por propriedade (decisão de produto — conformidade é responsabilidade do designer, não informação para o dev), filtragem inteligente de vetores e frames-container dos resultados de scan, ícone de localização explícito nos cards escaneados e correção do botão de recolher/expandir accordions.</p>
+<hr>
+<h3 id="ficha-canvas-card-user-interface">Ficha Canvas — Card User Interface</h3>
+<p><strong>Remoção dos dots de conformidade por propriedade</strong></p>
+<ul>
+<li>Os indicadores coloridos (verde/âmbar/vermelho) por linha de propriedade foram removidos da ficha.</li>
+<li>Razão: criavam uma falsa impressão de "100% conforme" pois refletiam apenas o resultado do scan automatizado, não a declaração de conformidade do designer. A acurácia de conformidade é responsabilidade do designer e já está registrada nos toggles do plugin.</li>
+<li>O badge de status do componente (DSC / AJUSTE / FORA), visível apenas quando a auditoria está ativa, permanece.</li>
+</ul>
+<p><strong>Remoção da legenda de status do header</strong></p>
+<ul>
+<li>A legenda "● Conforme ● Atenção ● Fora" adicionada ao header do card foi removida junto com os dots que a justificavam.</li>
+</ul>
+<hr>
+<h3 id="escaneamento-de-tokens-filtragem-de-resultados">Escaneamento de Tokens — Filtragem de Resultados</h3>
+<p><strong>Vetores removidos completamente</strong></p>
+<ul>
+<li>Nós do tipo <code>VECTOR</code>, <code>BOOLEAN_OPERATION</code>, <code>ELLIPSE</code> e <code>RECTANGLE</code> não geram mais entradas nos resultados de scan.</li>
+<li>Razão: shapes primitivos não são elementos do DS — sua presença ou ausência de token não representa não-conformidade.</li>
+</ul>
+<p><strong>Frames-container filtrados; apenas frames "puros" mantidos</strong></p>
+<ul>
+<li>Frames que contêm ao menos um descendente <code>INSTANCE</code> ou <code>COMPONENT</code> são removidos dos resultados.</li>
+<li>Razão: um frame que agrupa componentes é um contêiner de layout; a conformidade vive nos filhos, não no frame em si.</li>
+<li>Exceção preservada: frames sem nenhum filho DS (100% custom, sem uso de biblioteca) continuam aparecendo como alerta — indicam tela construída fora do DS.</li>
+</ul>
+<hr>
+<h3 id="scan-icone-de-localizacao-nos-cards">Scan — Ícone de Localização nos Cards</h3>
+<ul>
+<li>Cada card de elemento escaneado exibe um ícone <code>locate</code> no canto direito do header, visível no hover.</li>
+<li>O card inteiro já era clicável e chamava <code>focusNode(item.nodeId)</code> — o ícone torna essa ação descobrível.</li>
+</ul>
+<hr>
+<h3 id="accordions-recolherexpandir-todos">Accordions — Recolher/Expandir Todos</h3>
+<p><strong><code>collapseAllAccordions</code> inclui cards de frame</strong></p>
+<ul>
+<li>O botão <code>⇅</code> agora recolhe/expande também os cards de frame (accordions da view "Escanear Tokens"), não apenas os accordions internos (seções de tokens, medidas, specs).</li>
+<li>Implementado adicionando a classe <code>accordion-content</code> ao div <code>frame-body-{id}</code> e tratando a rotação do chevron via prefixo <code>frame-body-</code> no id.</li>
+</ul>
+<p><strong>Correção de bug: chevron dos cards de frame não rotacionava</strong></p>
+<ul>
+<li><code>toggleFrameAccordion</code> buscava <code>frame-arrow-{id}</code> mas o HTML renderizava <code>frame-chevron-{id}</code>.</li>
+<li>Corrigido para <code>frame-chevron-{id}</code> — o chevron agora rota corretamente ao abrir/fechar manualmente um card de frame.</li>
+</ul>
+<hr>
+<h3 id="arquivos-modificados">Arquivos Modificados</h3>
+<div class="table-wrap"><table><thead><tr><th>Arquivo</th><th>Mudança</th></tr></thead><tbody><tr><td><code>src/plugin/code.js</code></td><td>Remove dots de conformidade e legenda; filtro de vetores e frames-container em <code>addElement()</code></td></tr><tr><td><code>src/plugin/modules/core.js</code></td><td><code>collapseAllAccordions</code> inclui frame bodies; <code>toggleFrameAccordion</code> usa <code>frame-chevron</code></td></tr><tr><td><code>src/plugin/modules/specifications.js</code></td><td><code>frame-body</code> recebe classe <code>accordion-content</code>; ícone <code>locate</code> nos cards do scan</td></tr></tbody></table></div>
+<hr>
+<h2 id="v415-2026-06-11">v4.1.5 — 2026-06-11</h2>
+<h3 id="resumo">Resumo</h3>
+<p>Melhorias na seção de Especificações da ficha canvas: chip de categoria semântico, link direto para o nó no canvas, exibição de propriedades técnicas e organização por grupos nomeados. Novo botão "Limpar todos os dados" na home com modal de confirmação e reset programático (sem tela branca). Padronização de <code>rounded-2xl</code> em todos os botões do plugin.</p>
+<hr>
+<h3 id="ficha-canvas-secao-de-especificacoes">Ficha Canvas — Seção de Especificações</h3>
+<p><strong>Chip de categoria corrigido e semântico</strong></p>
+<ul>
+<li>O chip exibia "Geral" por usar <code>s.category</code> (ausente na estrutura de spec). Corrigido para <code>s.type || s.categoryLabel || s.category</code> com fallback para <code>'Geral'</code>.</li>
+<li>Cor do chip agora deriva de <code>spec.color</code>: background 12% saturado + borda na cor original + texto na cor original — alinhado à semântica visual das categorias do plugin.</li>
+</ul>
+<p><strong>Seção única "Especificações"</strong></p>
+<ul>
+<li>"Especificações Visuais" e "Especificações Anotadas" mescladas em um único card; não havia diferença de conteúdo entre as duas.</li>
+</ul>
+<p><strong>Link para o nó no canvas</strong></p>
+<ul>
+<li>Nome da spec sublinhado e com hyperlink <code>{ type: "NODE", value: spec.targetNodeId }</code> ao clicar diretamente no canvas do Figma.</li>
+<li>Guard <code>figma.getNodeById(spec.targetNodeId)</code> evita o erro <code>Invalid hyperlink target node specified</code> para specs cujo nó não existe mais no documento.</li>
+</ul>
+<p><strong>Propriedades técnicas na ficha</strong></p>
+<ul>
+<li>Cada entrada de <code>spec.properties[]</code> é exibida como linha com <code>prop.label</code>, <code>prop.token</code> e <code>prop.value</code> dentro do card da spec.</li>
+</ul>
+<p><strong>Organização por grupos nomeados</strong></p>
+<ul>
+<li>Specs agrupadas por letra com cabeçalho de nome do grupo quando <code>frame.specGroupNames[letra]</code> estiver definido.</li>
+<li>Grupos com <code>frame.specGroupVisible[letra] === false</code> são omitidos da ficha.</li>
+</ul>
+<hr>
+<h3 id="limpar-todos-os-dados">Limpar Todos os Dados</h3>
+<ul>
+<li><strong>Botão lixeira</strong> (<code>trash-2</code>) adicionado à home ao lado do botão "Importar JSON".</li>
+<li>Clique abre modal de confirmação (<code>confirm-clear-modal</code>) com descrição do impacto e botão "Sim, limpar tudo" (vermelho).</li>
+<li><code>confirmClearAllData()</code>: reseta <code>handoffData</code> em memória para o estado inicial do schema v2, limpa <code>localStorage['handex-state']</code> e <code>localStorage['handex-ann-categories-v2']</code>, esvazia <code>createdSpecs</code>, chama <code>restoreUIFromState()</code>, navega para home e exibe toast "Todos os dados foram removidos."</li>
+<li><strong>Correção de tela branca:</strong> <code>location.reload()</code> não é suportado no WebView do Figma — substituído por reset programático em memória.</li>
+</ul>
+<hr>
+<h3 id="ui-border-radius-consistente">UI — Border-radius consistente</h3>
+<ul>
+<li>Todos os elementos <code>&lt;button&gt;</code> do plugin agora usam <code>rounded-2xl</code> (1 rem) — atualização via script em 12 arquivos de views e módulos.</li>
+<li>Antes: botões da home usavam <code>rounded-2xl</code> enquanto o restante do plugin usava <code>rounded-xl</code>/<code>rounded-lg</code>; agora todos estão padronizados.</li>
+</ul>
+<hr>
+<h3 id="arquivos-modificados">Arquivos Modificados</h3>
+<div class="table-wrap"><table><thead><tr><th>Arquivo</th><th>Mudança</th></tr></thead><tbody><tr><td><code>src/plugin/code.js</code></td><td>Chip semântico de categoria; link NODE com guard <code>getNodeById</code>; specs agrupadas por letra com header; propriedades na ficha; seção única</td></tr><tr><td><code>src/plugin/modules/design-data.js</code></td><td><code>clearAllData()</code> + <code>confirmClearAllData()</code> com reset programático</td></tr><tr><td><code>src/plugin/modules/core.js</code></td><td>Exposição de <code>clearAllData</code> e <code>confirmClearAllData</code> no <code>window</code></td></tr><tr><td><code>src/plugin/views/home.html</code></td><td>Botão lixeira ao lado de "Importar JSON"</td></tr><tr><td><code>src/plugin/views/modals.html</code></td><td>Modal <code>confirm-clear-modal</code></td></tr><tr><td><code>src/plugin/views/*.html</code> (8 arquivos)</td><td><code>rounded-xl</code> → <code>rounded-2xl</code> em <code>&lt;button&gt;</code></td></tr><tr><td><code>src/plugin/modules/*.js</code> (4 arquivos)</td><td><code>rounded-xl</code> → <code>rounded-2xl</code> em <code>&lt;button&gt;</code></td></tr></tbody></table></div>
+<hr>
+<h2 id="v414-2026-06-11">v4.1.4 — 2026-06-11</h2>
+<h3 id="resumo">Resumo</h3>
+<p>Importação de JSON com aplicação no canvas, rastreabilidade de specs via <code>targetNodeId</code>, correções de UX no scroll/header/acordeões, posicionamento da ficha e specs no canvas, otimização de performance e reestruturação da ficha em 3 cards.</p>
+<hr>
+<h3 id="importacao-json-aplicar-no-canvas">Importação JSON → Aplicar no Canvas</h3>
+<ul>
+<li><strong>Modal pós-importação</strong> (<code>import-apply-modal</code>) — ao importar um JSON de progresso, exibe um resumo com contadores de frames, specs, medidas e fluxos, e oferece três ações de canvas:</li>
+<li><strong>Gerar Ficha Técnica</strong> — aciona <code>createHandoffOnCanvas()</code> com os dados importados (sempre disponível).</li>
+<li><strong>Recriar Cards de Especificação</strong> — reenvia <code>create-unified-spec</code> para cada spec salva, usando <code>targetNodeId</code> preciso quando disponível.</li>
+<li><strong>Reaplicar Medidas</strong> — novo handler <code>reapply-measurements</code> em <code>code.js</code>; localiza cada elemento pelo nome dentro do frame e recria anotações W×H no canvas.</li>
+<li><strong>"Apenas restaurar"</strong> fecha o modal sem tocar o canvas, preservando o comportamento anterior.</li>
+<li>Opções sem dados ficam desabilitadas automaticamente com mensagem explicativa.</li>
+</ul>
+<h3 id="rastreabilidade-de-specs-targetnodeid">Rastreabilidade de Specs — <code>targetNodeId</code></h3>
+<ul>
+<li><strong><code>code.js</code></strong> — a mensagem <code>spec-created</code> agora inclui <code>targetNodeId: node.id</code>, o ID Figma do elemento exato que foi anotado.</li>
+<li><strong><code>messages.js</code></strong> — persiste o campo automaticamente em <code>frame.createdSpecs[]</code> (sem alteração de código — o push já copia o objeto inteiro).</li>
+<li><strong><code>design-data.js</code></strong> — re-aplicação via JSON usa <code>spec.targetNodeId</code> como prioridade; cai para <code>frame.figmaId</code> como fallback para specs geradas antes desta versão (compatibilidade retroativa).</li>
+<li><strong>Habilitado para auditoria futura</strong> — com o ID do nó original armazenado, será possível comparar as propriedades documentadas na spec com o estado atual do elemento no canvas, detectando drift de tokens.</li>
+</ul>
+<h3 id="correcoes-de-ux-header-scroll-e-acordeoes">Correções de UX — Header, Scroll e Acordeões</h3>
+<ul>
+<li><strong>Header sempre visível</strong> — adicionado <code>position: relative</code> ao <code>&lt;header&gt;</code> para que <code>z-50</code> tenha efeito; antes o conteúdo das views sobrepunha o header por ordem DOM.</li>
+<li><strong>Reset de scroll sem flash</strong> — <code>navigate()</code> reseta <code>scrollTop</code> de todas as sub-regiões <strong>antes</strong> de ativar a view (enquanto <code>display: none</code>), eliminando o flash de conteúdo defasado.</li>
+<li><strong>Botão "Recolher tudo" (Collapse All)</strong> — corrigido seletor de <code>button[onclick*="toggleAccordion"]</code> para <code>[onclick*="toggleAccordion"]</code> (elementos usam <code>&lt;div role="button"&gt;</code>, não <code>&lt;button&gt;</code>); botão adicionado também às views de Medidas e Frames (estava apenas em "Anotar Specs").</li>
+</ul>
+<h3 id="canvas-posicionamento-da-ficha-e-specs">Canvas — Posicionamento da Ficha e Specs</h3>
+<ul>
+<li><strong>Ficha não gerada sobre o frame principal</strong> — <code>mainContainer</code> agora é posicionado em <code>(-99999, -99999)</code> imediatamente após <code>appendChild</code>, antes de qualquer cálculo; se nenhum critério de posicionamento for satisfeito, o fallback é a borda direita do viewport.</li>
+<li><strong>Ficha desbloqueada</strong> — <code>mainContainer.locked = false</code>; antes a ficha chegava travada, forçando o uso do painel de layers para movê-la.</li>
+<li><strong>Specs sempre à direita</strong> — direção simplificada: toda nova spec é criada à direita do elemento anotado; mesma letra empilha verticalmente, letra diferente abre nova coluna.</li>
+<li><strong>Posicionamento persistente entre sessões</strong> — substituído o <code>specColumnTracker</code> (objeto em memória, zerado ao fechar o plugin) por varredura de <code>figma.currentPage.children</code> a cada criação, reconstituindo o mapa de posições a partir do canvas.</li>
+</ul>
+<h3 id="performance">Performance</h3>
+<ul>
+<li><strong><code>findAll</code> → <code>children.forEach</code></strong> — <code>figma.currentPage.findAll()</code> percorre toda a árvore de nós da página (potencialmente milhares), causando lentidão perceptível em arquivos complexos. Substituído por <code>figma.currentPage.children.forEach()</code> para localizar grupos de spec e fichas — todos são filhos diretos da página.</li>
+</ul>
+<h3 id="layout-da-ficha-3-cards-separados">Layout da Ficha — 3 Cards Separados</h3>
+<ul>
+<li><strong>Card 1 — Informações Básicas</strong> (480 px): Informações Básicas + Equipe e Responsáveis.</li>
+<li><strong>Card 2 — Briefing Estratégico</strong> (440 px): criado somente quando há perguntas respondidas; briefing extraído do card principal.</li>
+<li><strong>Card 3 — User Interface</strong> (largura AUTO): colunas Componentes, Ícones, Vetores, Tipografia e Frames dispostas lado a lado, sem wrap. <code>specsRow</code> com <code>layoutWrap</code> removido e <code>itemSpacing: 24</code>.</li>
+</ul>
+<h3 id="visual">Visual</h3>
+<ul>
+<li><strong>Chip "Novo Componente" na ficha</strong> — trocado de retângulo violeta sólido (<code>cornerRadius: 4</code>, texto branco) para pill com fundo lilás suave (<code>#F0EBFF</code>), borda <code>#B399F5</code> e texto roxo <code>#6130C7</code> — alinhado visualmente ao chip de papel da seção Equipe.</li>
+</ul>
+<hr>
+<h2 id="v413-2026-06-10">v4.1.3 — 2026-06-10</h2>
+<h3 id="resumo">Resumo</h3>
+<p>Refinamentos de scan, UX e layout da ficha canvas: scan percorre todo o frame (incluindo interior de componentes DSC), tokens clicáveis no plugin e na ficha, reorganização do layout da ficha, correção do loading persistente e ajustes visuais.</p>
+<hr>
+<h3 id="scan-granularidade-completa">Scan — Granularidade Completa</h3>
+<ul>
+<li><strong>Remoção do skip de filhos em instâncias DSC</strong> — <code>extractSpecs</code> agora percorre toda a árvore do frame sem interromper em componentes da biblioteca. Tipografia, ícones, vetores e frames internos a componentes DSC aparecem nos seus respectivos accordions de resultado.</li>
+</ul>
+<h3 id="tokens-clicaveis">Tokens Clicáveis</h3>
+<ul>
+<li><strong>Plugin UI</strong> — cada linha de propriedade (cor, espaçamento, tipografia, raio, etc.) nos cards de scan tem <code>onclick="focusNode(nodeId)"</code>, focando o nó correspondente no canvas do Figma ao clicar.</li>
+<li><strong>Ficha canvas</strong> — o nome de cada elemento nas colunas de componentes, ícones, tipografia, vetores e frames aparece como link azul sublinhado apontando para <code>figma.com/design/{fileKey}?node-id={nodeId}</code>.</li>
+</ul>
+<h3 id="layout-da-ficha-canvas">Layout da Ficha Canvas</h3>
+<ul>
+<li><strong>Briefing ao lado das Informações Básicas</strong> — criada linha horizontal <code>topInfoRow</code>: coluna esquerda contém Informações Básicas + Equipe; coluna direita contém Briefing Estratégico.</li>
+<li><strong>Vetores ao lado de Ícones</strong> — nas colunas de componentes UI, Ícones e Vetores agora formam uma coluna vertical dupla posicionada lado a lado com Componentes, Tipografia e Frames.</li>
+<li><strong>Chip de papel (Equipe)</strong> — <code>roleTag</code> trocado de botão sólido azul para pill com fundo azul-claro, borda suave e texto azul.</li>
+</ul>
+<h3 id="correcoes">Correções</h3>
+<ul>
+<li><strong>Loading persistente</strong> — adicionado handler para <code>handoff-error</code> em <code>messages.js</code>; qualquer exceção durante a geração da ficha agora fecha o overlay e exibe toast de erro.</li>
+<li><strong>Snackbar "Informações preenchidas"</strong> — corrigidos dois problemas: (1) <code>localStorage</code> trocado por <code>sessionStorage</code> (mostrava apenas uma vez na vida inteira); (2) adicionado trigger na entrada da view para janelas onde o conteúdo não requer scroll.</li>
+</ul>
+<h3 id="ux-visual">UX / Visual</h3>
+<ul>
+<li><strong>Botão "Voltar ao topo"</strong> — contraste elevado no estado default: fundo <code>slate-900/20</code> translúcido com borda <code>slate-900/20</code>; hover mantém azul <code>#0070af</code>. Compilador Tailwind corrigido de v4 para v3 (<code>tw3</code>) para que classes com modificador <code>/</code> sejam geradas corretamente.</li>
+<li><strong>Botão "Publicar no SharePoint"</strong> — ocultado (integração em discussão técnica).</li>
+</ul>
+<h3 id="versionamento">Versionamento</h3>
+<ul>
+<li><code>manifest.json</code> — adicionado campo <code>version: "4.1.2"</code> (antes ausente).</li>
+<li>Badge visual no header do plugin atualizado de <code>v4.1.1</code> para <code>v4.1.2</code>.</li>
+<li><code>bundle:css</code> corrigido para usar <code>tw3</code> (Tailwind v3) em vez de <code>tailwindcss</code> (v4), resolvendo incompatibilidade de config.</li>
+</ul>
+<hr>
+<h2 id="v412-2026-06-10">v4.1.2 — 2026-06-10</h2>
+<h3 id="resumo">Resumo</h3>
+<p>Melhorias significativas na detecção de conformidade DSC — correção do bug central de auditoria, novo status "Conforme com ressalvas", ressalvas salvas na documentação, detecção por <code>variable.remote</code>/<code>style.remote</code>, e refinamentos de UX no contraste visual e comportamento do plugin minimizado.</p>
+<hr>
+<h3 id="conformidade-dsc-correcoes-e-novos-comportamentos">Conformidade DSC — Correções e Novos Comportamentos</h3>
+<p><strong>Bug crítico corrigido — <code>auditProperty</code> bloqueava todo lookup em modo normal</strong></p>
+<ul>
+<li><code>audit.js</code>: a guard <code>if (!isAudit || ...)</code> impedia qualquer verificação de chave quando <code>isAudit: false</code> (todos os scans normais). Reestruturado em dois passes: Pass 1 (lookup por chave Figma — sempre roda) e Pass 2 (soft matching — só em modo auditoria).</li>
+</ul>
+<p><strong>Detecção por <code>variable.remote</code> e <code>style.remote</code></strong></p>
+<ul>
+<li><code>code.js</code>: <code>getVar()</code> agora retorna <code>remote: true</code> quando a variável vem de biblioteca publicada</li>
+<li>Função <code>audit()</code> aceita novo parâmetro <code>isRemote</code> — se <code>true</code>, retorna <code>EXACT</code> sem consultar o skeleton</li>
+<li>Aplicado a: cores (fill), tipografia, espaçamentos, paddings, bordas, raios e efeitos</li>
+<li>Mitiga o problema de <code>variables: 0</code> nas bibliotecas cujos tokens não foram buscados via REST API</li>
+</ul>
+<p><strong>Tipografia — nova regra de conformidade</strong></p>
+<ul>
+<li>Se o nó TEXT tem estilo vinculado (<code>styleKey != null</code>) e a fonte é CAIXAstd → <code>isDS: true</code></li>
+<li>Antes: tipografia com token DSC aplicado continuava aparecendo como não conforme</li>
+</ul>
+<p><strong>Instâncias remotas → conformes (não mais "revisão")</strong></p>
+<ul>
+<li>Componentes e ícones com <code>mainComponent.remote = true</code> agora recebem <code>isDS: true</code> (antes <code>'warning'</code>)</li>
+<li>Ícones da lib Fundamentos Visuais paravam de aparecer indevidamente no alerta</li>
+</ul>
+<p><strong>Frames fora de padrão → aparecem no alerta</strong></p>
+<ul>
+<li><code>addElement("frames")</code> calcula <code>isDS</code> com base nas props de estilo: todos DSC → <code>true</code>; mix → <code>'warning'</code>; nenhum → <code>false</code></li>
+<li>Frames não conformes aparecem na lista "Itens para revisar:" com label "Frame"</li>
+</ul>
+<p><strong>Novo status "Conforme com ressalvas"</strong></p>
+<ul>
+<li>Quando <code>semDesvios = true</code> mas o scan ainda aponta itens: status âmbar "Conforme com ressalvas"</li>
+<li>Quando <code>semDesvios = true</code> e scan está limpo: status verde "Conforme"</li>
+</ul>
+<p><strong>Ressalvas salvas na documentação</strong></p>
+<ul>
+<li>Ao ativar "Sem desvios encontrados", snapshot dos itens pendentes é salvo em <code>frame.audit.ressalvas[]</code></li>
+<li>Cada ressalva contém: <code>{ category, label, name, nodeId, status }</code></li>
+<li>Incluídas na ficha canvas (seção "Ressalvas DSC") e no arquivo MD exportado (com Node ID para rastreabilidade em auditoria futura)</li>
+</ul>
+<p><strong>Novo Componente — conformidade ocultada</strong></p>
+<ul>
+<li>Toggle "Novo Componente" esconde a seção inteira de Conformidade DSC</li>
+<li>Frames novos passarão por revisão dedicada no time DSC — não faz sentido auditar contra a lib existente</li>
+<li>Status do cabeçalho: "Novo Componente" (violeta), imune a chamadas de <code>_updateFrameAuditSubtitle</code></li>
+</ul>
+<p><strong>Label do alerta</strong></p>
+<ul>
+<li>"Itens para adequação" → "Itens para revisar:"</li>
+</ul>
+<hr>
+<h3 id="fetch-de-refs-variaveis">Fetch de Refs — Variáveis</h3>
+<ul>
+<li><code>fetch-design-refs.cjs</code>: tenta buscar <code>/v1/files/{fileKey}/variables/local</code> por biblioteca</li>
+<li>Se o token tiver acesso de editor, popula <code>designTokens.variables[]</code> no skeleton</li>
+<li>Falha silenciosa com aviso (não quebra o build) caso o token não tenha acesso ao arquivo</li>
+</ul>
+<hr>
+<h3 id="ux">UX</h3>
+<p><strong>Contraste visual</strong></p>
+<ul>
+<li>Fundo do plugin: <code>bg-white</code> → <code>#eef2f7</code> (cinza-azulado suave)</li>
+<li>Header e rodapé: <code>bg-light-surface</code> (<code>#ffffff</code>) com borda <code>#dde3ec</code></li>
+<li>Palette <code>light</code> adicionada ao <code>tailwind.config.cjs</code>: <code>light-bg</code>, <code>light-surface</code>, <code>light-line</code></li>
+</ul>
+<p><strong>Botão "Voltar ao topo" oculto quando minimizado</strong></p>
+<ul>
+<li><code>toggleCollapse()</code> força ocultação do <code>btn-top</code> ao minimizar</li>
+<li><code>handleScroll</code> não exibe o botão enquanto <code>isCollapsed = true</code></li>
+</ul>
+<hr>
+<h3 id="arquivos-modificados">Arquivos Modificados</h3>
+<div class="table-wrap"><table><thead><tr><th>Arquivo</th><th>Mudança</th></tr></thead><tbody><tr><td><code>src/plugin/audit.js</code></td><td>Reestrutura <code>auditProperty</code> em dois passes</td></tr><tr><td><code>src/plugin/code.js</code></td><td><code>getVar</code> + <code>remote</code>; <code>audit()</code> + <code>isRemote</code>; <code>isDS</code> para frames e tipografia; instâncias remotas → <code>true</code></td></tr><tr><td><code>src/plugin/modules/core.js</code></td><td>Status "Conforme com ressalvas"; snapshot de ressalvas; conformidade oculta p/ novo componente; <code>btn-top</code> no collapse</td></tr><tr><td><code>src/plugin/modules/specifications.js</code></td><td>Frames no alerta; label "Itens para revisar:"; <code>conformance-section</code> com <code>id</code></td></tr><tr><td><code>src/plugin/modules/handoff.js</code></td><td><code>auditMD</code> usa <code>semDesvios</code>/<code>checkDone</code>/<code>ressalvas</code>; seção "Ressalvas DSC" na ficha canvas e no MD</td></tr><tr><td><code>src/plugin/build.cjs</code></td><td><code>bg-light-bg</code>, <code>bg-light-surface</code>, <code>border-light-line</code> no body/header/footer</td></tr><tr><td><code>src/plugin/styles/tailwind.config.cjs</code></td><td>Palette <code>light</code> adicionada</td></tr><tr><td><code>src/plugin/refs/fetch-design-refs.cjs</code></td><td>Endpoint <code>/variables/local</code></td></tr></tbody></table></div>
+<hr>
+<h2 id="v411-2026-06-09">v4.1.1 — 2026-06-09</h2>
+<h3 id="resumo">Resumo</h3>
+<p>Correções de bugs de backend, melhorias de UX consistentes em todas as views, arquivamento de funcionalidades fora de escopo e limpeza geral do código-fonte.</p>
+<hr>
+<h3 id="correcoes-de-backend-codejs">Correções de Backend (<code>code.js</code>)</h3>
+<div class="table-wrap"><table><thead><tr><th>Bug</th><th>Causa</th><th>Correção</th></tr></thead><tbody><tr><td><code>MIN is no longer a supported value for layoutAlign</code> (~30 avisos)</td><td>6 ocorrências de <code>layoutAlign = "MIN"</code> em <code>code.js</code></td><td>Substituídas por <code>"INHERIT"</code> (valor correto na API atual do Figma)</td></tr><tr><td><code>set_selection: The selection of a page can only include nodes in that page</code></td><td><code>figma.currentPage.selection = [node]</code> chamado com nó de outra página</td><td>Adicionada função <code>_nodeOnCurrentPage()</code> e guard nos handlers <code>scroll-node-into-view</code> e <code>focus-node</code></td></tr><tr><td><code>localStorage SecurityError</code> repetido</td><td><code>localStorage.getItem/setItem</code> chamado em contexto <code>data:</code> URL</td><td>Todos os acessos em <code>messages.js</code> e <code>core.js</code> envolvidos em <code>try/catch</code></td></tr></tbody></table></div>
+<hr>
+<h3 id="ocultar-todas-as-medidas-nao-funcionava-com-medidas-por-frame">"Ocultar todas as medidas" não funcionava com medidas por frame</h3>
+<ul>
+<li><code>_getAllMeasurements()</code> agora agrega <code>handoffData.measurements</code> global + medidas de todos os <code>handoffData.frames[]</code></li>
+<li><code>updateHideAllMeasuresButtonState</code> e <code>toggleAllMeasuresVisibility</code> atualizados para usar a função agregada</li>
+</ul>
+<hr>
+<h3 id="canvas-geracao-da-ficha-tecnica">Canvas — Geração da Ficha Técnica</h3>
+<ul>
+<li><strong>Nome do frame sempre inclui data</strong> — formato: <code>Handex | Ficha de Projeto | {Título} | {Data}</code></li>
+<li><strong>Locking automático</strong> — todos os nós gerados pelo plugin (specs, medidas, fluxos, ficha) são criados com <code>node.locked = true</code></li>
+<li><strong>Chip de status com semântica de cor:</strong></li>
+<li><code>rascunho</code> → cinza</li>
+<li><code>em-revisao</code> → amarelo</li>
+<li><code>pronto-para-dev</code> → azul</li>
+<li><code>finalizado</code> → verde</li>
+<li><strong>Tokens escaneados</strong> — ficha e exportação MD/HTML agora listam os nomes reais dos tokens por categoria (até 10 + contagem de excedente), em vez de exibir apenas "sim/não"</li>
+<li><strong>Tags de categoria no HTML</strong> — estilo <code>cursor:default; pointer-events:none</code> para não parecerem botões clicáveis</li>
+<li><strong>Specs do canvas</strong> agregam specs de todos os frames (<code>frames[].components</code>), não apenas <code>step2.specs</code></li>
+</ul>
+<hr>
+<h3 id="excecoes-injetar-observacao-no-frame-de-spec">Exceções — Injetar observação no frame de spec</h3>
+<ul>
+<li><code>exc.obs</code> agora exibido na UI do plugin (texto itálico abaixo do título da exceção)</li>
+<li>Novo checkbox <strong>"Injetar observação no frame de especificação"</strong> na modal de exceção</li>
+<li>Visível apenas quando obs está preenchida e a exceção tem <code>nodeId</code> de spec</li>
+<li>Ao confirmar, envia <code>inject-obs-to-spec</code> que cria um frame <code>[Obs]</code> no canvas abaixo do frame de spec correspondente</li>
+</ul>
+<hr>
+<h3 id="ux-espacamento-e-tipografia">UX — Espaçamento e Tipografia</h3>
+<ul>
+<li><strong>Header das views</strong> — padding ajustado para <code>pt-0 pb-3</code>: sem espaço acima do título, 12 px de respiro abaixo</li>
+<li><strong>Conteúdo das views</strong> — top padding reduzido de <code>p-4</code> para <code>pt-1 px-4 pb-4</code></li>
+<li><strong>Fontes padronizadas</strong> em todas as views:</li>
+<li>Views simples: <code>font-bold text-[18px]</code></li>
+<li>Views com subtítulo (Handoff, Conformidade DSC, Laboratório): <code>font-bold text-[16px]</code></li>
+<li><strong>"CONFIGURAÇÃO"</strong> — label desnecessária removida da view Informações do Projeto</li>
+<li><strong>Jornada / Feature</strong> — descrição movida para linha separada abaixo do checkbox (era inline à direita, cortava o texto)</li>
+<li><strong>Hint <code>?</code> de Especificações</strong> — agora abre o guia completo diretamente (<code>openHelp()</code>), sem popover intermediário</li>
+<li><strong>Hint de layers bloqueadas</strong> (Como Usar) — movido para o final do card; descrição atualizada: "Para remover ou recriar um item, utilize os botões de exclusão dentro do próprio plugin."</li>
+</ul>
+<hr>
+<h3 id="performance">Performance</h3>
+<ul>
+<li><code>snapshot-load</code> e <code>scan-cache-load</code> removidos do handler <code>init-plugin</code> — carregamento diferido elimina lentidão na abertura do plugin</li>
+</ul>
+<hr>
+<h3 id="arquivamento-de-funcionalidades-fora-de-escopo">Arquivamento de funcionalidades fora de escopo</h3>
+<p>Movidos para <code>src/plugin/_unused/</code> (código preservado, fora do bundle):</p>
+<div class="table-wrap"><table><thead><tr><th>Arquivo</th><th>Funcionalidade</th></tr></thead><tbody><tr><td><code>views/lab.html</code></td><td>Laboratório de Design</td></tr><tr><td><code>views/audit.html</code></td><td>Conformidade DSC</td></tr><tr><td><code>modules/lab.js</code></td><td>Lógica do Laboratório</td></tr><tr><td><code>modules/audit.js</code></td><td>Lógica de Auditoria (UI)</td></tr></tbody></table></div>
+<ul>
+<li>Referências removidas de <code>build.cjs</code> e <code>modules/core.js</code></li>
+<li>Bundle reduzido de ~1471 KB para ~1442 KB (−29 KB)</li>
+</ul>
+<hr>
+<h3 id="arquivos-modificados">Arquivos Modificados</h3>
+<div class="table-wrap"><table><thead><tr><th>Arquivo</th><th>Tipo de mudança</th></tr></thead><tbody><tr><td><code>src/plugin/code.js</code></td><td>Fix <code>layoutAlign "MIN"</code>, guard cross-page selection, <code>_nodeOnCurrentPage()</code></td></tr><tr><td><code>src/plugin/modules/core.js</code></td><td>Fix <code>localStorage</code>, remove <code>navigateToAudit</code></td></tr><tr><td><code>src/plugin/modules/messages.js</code></td><td>Fix <code>localStorage</code> em <code>applyFigmaTheme</code></td></tr><tr><td><code>src/plugin/modules/measurement.js</code></td><td><code>_getAllMeasurements()</code> agrega medidas por frame</td></tr><tr><td><code>src/plugin/modules/specifications.js</code></td><td>Exibe <code>exc.obs</code>, checkbox injetar obs</td></tr><tr><td><code>src/plugin/modules/handoff.js</code></td><td>Tokens com nomes reais, tags não-clicáveis</td></tr><tr><td><code>src/plugin/build.cjs</code></td><td>Remove lab/audit do bundle</td></tr><tr><td><code>src/plugin/views/specifications.html</code></td><td>Hint <code>?</code> abre guia direto</td></tr><tr><td><code>src/plugin/views/dados-projeto.html</code></td><td>Remove label "Configuração", descrição jornada/feature em linha separada</td></tr><tr><td><code>src/plugin/views/guide.html</code></td><td>Hint de layers no final, descrição atualizada</td></tr><tr><td><code>src/plugin/views/*.html</code> (todas)</td><td>Padding de header e fontes padronizados</td></tr><tr><td><code>src/plugin/_unused/</code></td><td>Lab e Audit arquivados</td></tr></tbody></table></div>
+<hr>
+<h2 id="v400-beta-2026-06-02">v4.0.0-beta — 2026-06-02</h2>
+<h3 id="resumo">Resumo</h3>
+<p>Refatoração arquitetural completa: eliminação do wizard linear de 5 etapas e introdução de ferramentas independentes acessíveis diretamente pela home. Novo schema de dados (<code>_schemaVersion: 2</code>), novos campos de contexto e melhorias de acessibilidade em todo o plugin.</p>
+<hr>
+<h3 id="nova-arquitetura-home-com-cards-independentes">Nova Arquitetura — Home com cards independentes</h3>
+<ul>
+<li><strong>Antes:</strong> fluxo linear obrigatório de 5 etapas (wizard)</li>
+<li><strong>Agora:</strong> home com 6 cards de ferramentas independentes</li>
+<li>Como usar o plugin</li>
+<li>Informações do Projeto</li>
+<li>Escanear Tokens</li>
+<li>Anotar Specs</li>
+<li>Anotar Medidas</li>
+<li>Fluxos de Tela</li>
+<li>Botão "Gerar Ficha de Handoff" fixo na home, sempre acessível</li>
+<li>Importar JSON mantido como ação utilitária no rodapé</li>
+</ul>
+<hr>
+<h3 id="novas-views">Novas Views</h3>
+<div class="table-wrap"><table><thead><tr><th>View</th><th>Descrição</th></tr></thead><tbody><tr><td><code>view-frames</code></td><td>Hub por Frame — scan de tokens, medidas, specs e conformidade por frame</td></tr><tr><td><code>view-flows</code></td><td>Fluxos de navegação extraídos como view standalone</td></tr><tr><td><code>view-dados-projeto</code></td><td>Informações do projeto acessíveis a qualquer momento</td></tr><tr><td><code>view-handoff-summary</code></td><td>Resumo e exportação do handoff</td></tr></tbody></table></div>
+<hr>
+<h3 id="novos-campos-jornada-e-feature">Novos Campos — Jornada e Feature</h3>
+<ul>
+<li>Campos <code>jornada</code> e <code>feature</code> adicionados ao schema (<code>handoffData.step1</code>)</li>
+<li>Propagados para <strong>todos</strong> os formatos de exportação:</li>
+<li>Ficha no canvas (Figma)</li>
+<li>Exportação Markdown (.md)</li>
+<li>Exportação JSON</li>
+<li>Exportação HTML interativa</li>
+</ul>
+<hr>
+<h3 id="correcoes-de-bug">Correções de Bug</h3>
+<div class="table-wrap"><table><thead><tr><th>Bug</th><th>Causa</th><th>Correção</th></tr></thead><tbody><tr><td>Scan de tokens, medidas e specs parou de funcionar</td><td><code>_lucideTimer</code> em TDZ — declaração <code>let</code> após chamada síncrona em <code>core.js</code></td><td>Movido <code>_lucideTimer</code> + <code>_refreshIcons</code> para o topo do arquivo</td></tr><tr><td>Cards de tipo de fluxo não respondiam ao clique</td><td><code>selectFlowType()</code> usava classes Tailwind CDN não compiladas (<code>bg-blue-50/30</code>)</td><td>Reescrito com <code>el.style.*</code> inline</td></tr><tr><td><code>confirmDecisionConnection is not defined</code></td><td>Função referenciada no HTML do modal mas nunca definida</td><td>Adicionada em <code>specifications.js</code></td></tr><tr><td>Duas barras de rolagem na home</td><td>Wrapper externo e <code>view-home</code> ambos com <code>overflow-y-auto</code></td><td>Wrapper alterado para <code>overflow-hidden</code></td></tr></tbody></table></div>
+<hr>
+<h3 id="acessibilidade-wcag-21-aa">Acessibilidade (WCAG 2.1 AA)</h3>
+<ul>
+<li><code>text-slate-400</code> (#94a3b8 — ratio 2.85:1 ❌) substituído por <code>text-slate-500</code> (#64748b — ratio 5.91:1 ✅) em todos os 205 pontos dos arquivos fonte</li>
+<li><code>dark-muted</code> ajustado de <code>#94a3b8</code> para <code>#b4c6d8</code> — passa de ~4.2:1 para ~6.5:1 sobre <code>dark-surface</code></li>
+</ul>
+<hr>
+<h3 id="performance">Performance</h3>
+<ul>
+<li><strong>Onboarding removido</strong> — modal de 3 slides com <code>lucide.createIcons()</code> disparado no <code>window.load</code> causava lentidão perceptível na abertura do plugin</li>
+<li><code>_refreshIcons</code> com debounce de 30ms — evita múltiplas chamadas a <code>lucide.createIcons()</code> durante renderizações em sequência</li>
+</ul>
+<hr>
+<h3 id="ui-ux">UI / UX</h3>
+<ul>
+<li>Headers de todas as views de ferramentas compactados (<code>pt-5/6 pb-4</code> → <code>pt-3 pb-3</code>)</li>
+<li><code>mb-6</code> e <code>mb-4</code> extras removidos de measurement e specifications</li>
+<li>Home ajustada para caber sem scroll na janela padrão do Figma (~500px)</li>
+<li>Laboratório de Design removido da home</li>
+<li>Subtítulo da home atualizado para comunicar o propósito do plugin</li>
+</ul>
+<hr>
+<h3 id="schema-v2">Schema v2</h3>
+<pre><code class="lang-js">handoffData = {
+  _schemaVersion: 2,
+  step1: {
+    titulo: '',
+    versao: 'v1.0',
+    objetivo: '',
+    status: 'rascunho',
+    jornada: '',       // NOVO
+    feature: '',       // NOVO
+    equipe: []
+  },
+  step2: { ... },
+  frames: [],
+  createdFlows: [],
+  nextFlowNumber: 1
+}</code></pre>
+<p>Estados salvos com schema anterior (<code>_schemaVersion</code> ausente) são descartados automaticamente no init.</p>
+<hr>
+<h3 id="arquivos-modificados">Arquivos Modificados</h3>
+<div class="table-wrap"><table><thead><tr><th>Arquivo</th><th>Tipo de mudança</th></tr></thead><tbody><tr><td><code>src/plugin/modules/core.js</code></td><td>Fix TDZ, schema v2, campos jornada/feature, restoreUIFromState</td></tr><tr><td><code>src/plugin/modules/handoff.js</code></td><td>collectHandoffData com jornada/feature, HTML interativo atualizado</td></tr><tr><td><code>src/plugin/modules/specifications.js</code></td><td>selectFlowType reescrito, confirmDecisionConnection adicionado</td></tr><tr><td><code>src/plugin/modules/messages.js</code></td><td>Detecção de schema antigo</td></tr><tr><td><code>src/plugin/modules/measurement.js</code></td><td>Ajustes de UI</td></tr><tr><td><code>src/plugin/modules/audit.js</code></td><td>Ajustes de contraste</td></tr><tr><td><code>src/plugin/code.js</code></td><td>Ficha canvas com jornada/feature</td></tr><tr><td><code>src/plugin/build.cjs</code></td><td>dark-muted corrigido, wrapper overflow-hidden</td></tr><tr><td><code>src/plugin/views/home.html</code></td><td>Nova grade, nomes de ferramentas, textos revisados</td></tr><tr><td><code>src/plugin/views/handoff.html</code></td><td>Hub por Frame</td></tr><tr><td><code>src/plugin/views/flows.html</code></td><td>Nova view standalone</td></tr><tr><td><code>src/plugin/views/dados-projeto.html</code></td><td>Campos jornada/feature adicionados</td></tr><tr><td><code>src/plugin/views/handoff-summary.html</code></td><td>Linhas jornada/feature condicionais</td></tr><tr><td><code>src/plugin/views/modals.html</code></td><td>Onboarding removido</td></tr><tr><td><code>src/plugin/views/measurement.html</code></td><td>Header compactado</td></tr><tr><td><code>src/plugin/views/specifications.html</code></td><td>Header compactado</td></tr><tr><td><code>src/plugin/views/audit.html</code></td><td>Header compactado</td></tr></tbody></table></div>
+<hr>
+<p><em>Gerado em 2026-06-02</em></p>
+  </div>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+</div>
+</body>
+</html>

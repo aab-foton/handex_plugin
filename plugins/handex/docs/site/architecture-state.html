@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estado da Arquitetura · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display:flex; gap: 4px; flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">Handex · Documentação</span>
+  <nav>
+    <a href="index.html">Início</a>
+  </nav>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    <details class="toc"><summary>Índice</summary><ul><li><a href="#1-tamanho-atual-dos-arquivos-linhas">1. Tamanho atual dos arquivos (linhas)</a></li><li><a href="#2-responsabilidades-por-modulo">2. Responsabilidades por módulo</a></li><li><a href="#3-o-que-esta-exclusivo-em-beta-vs-ja-em-main">3. O que está exclusivo em beta vs. já em main</a></li><li><a href="#4-acoplamento-cruzado-grep-amplo-contagem-real">4. Acoplamento cruzado (grep amplo, contagem real)</a></li><li><a href="#5-contrato-de-mensagens-codejs-messagesjs">5. Contrato de mensagens `code.js` ↔ `messages.js`</a></li><li><a href="#6-sinais-de-monolito-e-recomendacoes-de-escopo-maior-nao-executadas">6. Sinais de monolito e recomendações de escopo maior (NÃO executadas)</a></li><li><a href="#7-o-que-foi-corrigido-nesta-sessao-1007">7. O que foi corrigido nesta sessão (10/07)</a></li><li><a href="#8-preparacao-para-publicacao-na-figma-community-2107">8. Preparação para publicação na Figma Community (21/07)</a></li><li><a href="#9-verificado-e-sem-problema-nao-precisou-de-acao">9. Verificado e sem problema (não precisou de ação)</a></li><li><a href="#10-bug-real-em-producao-que-passou-por-dois-agentes-tsc-limpo-dynamic-page-2107">10. Bug real em produção que passou por dois agentes + `tsc` limpo — `dynamic-page` (21/07)</a></li></ul></details>
+    <h1 id="estado-da-arquitetura-handex">Estado da Arquitetura — Handex</h1>
+<p>Documento vivo. Atualizar a cada minor version (bump <code>5.x.0</code>) ou quando um agente de feature fizer mudança que toque mais de um módulo. Última atualização: <strong>2026-07-21</strong> (branch <code>main</code>, v5.0.0; beta segue em v5.1.0-beta.1).</p>
+<hr>
+<h2 id="1-tamanho-atual-dos-arquivos-linhas">1. Tamanho atual dos arquivos (linhas)</h2>
+<div class="table-wrap"><table><thead><tr><th>Arquivo</th><th>Linhas</th><th>Funções top-level</th><th>Tendência</th></tr></thead><tbody><tr><td><code>src/plugin/code.js</code> (backend)</td><td>4482</td><td>~40 handlers <code>msg.type ===</code></td><td>crescendo ~250 linhas/leva de features</td></tr><tr><td><code>src/plugin/modules/core.js</code></td><td>2284</td><td>114</td><td>estável, é o hub</td></tr><tr><td><code>src/plugin/modules/handoff.js</code></td><td>2511</td><td>42</td><td><strong>maior módulo de frontend</strong>, cresceu de ~2200 → 2511 nesta leva (+256 linhas só em beta)</td></tr><tr><td><code>src/plugin/modules/specifications.js</code></td><td>2422</td><td>73</td><td>segundo maior, mais funções que qualquer outro módulo além de core</td></tr><tr><td><code>src/plugin/modules/measurement.js</code></td><td>444</td><td>12</td><td>pequeno, coeso</td></tr><tr><td><code>src/plugin/modules/messages.js</code></td><td>456</td><td>1 (dispatcher) + ~21 blocos <code>if (msg.type ===...)</code></td><td>dispatcher único, cresce lentamente</td></tr><tr><td><code>src/plugin/modules/design-data.js</code></td><td>241</td><td>7</td><td>menor módulo, mais recente, sem BOM</td></tr></tbody></table></div>
+<p>Total frontend (<code>modules/*.js</code>): <strong>8358 linhas</strong>. Total geral (+ backend): <strong>12840 linhas</strong>.</p>
+<p><code>handoff.js</code> continua sendo o maior módulo de frontend, como já registrado antes — e é o que mais cresceu nesta leva de commits (controles de grupo de specs, chip de status, resgate de versão da ficha, header secundário redesenhado nas 7 views passaram em parte por lá).</p>
+<hr>
+<h2 id="2-responsabilidades-por-modulo">2. Responsabilidades por módulo</h2>
+<ul>
+<li><strong><code>code.js</code></strong> — sandbox Figma (sem DOM). Todo acesso à API do Figma (<code>figma.currentPage</code>,</li>
+</ul>
+<p>  criação/edição de nós, scan de tokens DSC, geração de specs/medidas/legendas no canvas,   export). Único ponto que fala com <code>figma.ui.postMessage</code> / recebe <code>figma.ui.onmessage</code>.</p>
+<ul>
+<li><strong><code>core.js</code></strong> — estado global (<code>handoffData</code>), navegação entre views, persistência</li>
+</ul>
+<p>  (<code>saveToStorage</code>/<code>localStorage</code>), toasts, accordions genéricos, formulário de equipe/   briefing/regras (Etapa 1 e 2), utilitários de UI compartilhados. <strong>Hub central</strong> — quase   todo outro módulo de frontend depende dele, ele depende pouco dos outros (ver seção 4).</p>
+<ul>
+<li><strong><code>handoff.js</code></strong> — geração da Ficha Técnica: <code>collectHandoffData</code>, <code>exportHandoff</code>,</li>
+</ul>
+<p>  <code>getInteractiveHTMLContent</code> (HTML standalone da ficha com Tailwind/Lucide embutido),   diff entre snapshots, comentários/dúvidas por projeto. Combina duas responsabilidades   hoje: (a) coleta/serialização de dados e (b) geração de HTML de apresentação — ambas   grandes, ainda coesas o bastante para não separar sem alinhamento (ver seção 6).</p>
+<ul>
+<li><strong><code>specifications.js</code></strong> — scan de tokens, render de cards de spec/token, controles de</li>
+</ul>
+<p>  grupo (ocultar linhas, ocultar grupo, cadeado), posicionamento manual, fluxos de tela.   Maior número de funções (73) — é o módulo mais "interativo" (muitos handlers de clique).</p>
+<ul>
+<li><strong><code>measurement.js</code></strong> — medidas no canvas (padding/gap/width/height), pequeno e sem</li>
+</ul>
+<p>  sinais de inchaço.</p>
+<ul>
+<li><strong><code>messages.js</code></strong> — dispatcher único de <code>window.onmessage</code>. Roteia por <code>msg.type</code> para</li>
+</ul>
+<p>  funções definidas em outros módulos (chamadas quase sempre via <code>typeof fn === 'function'</code>   antes de invocar — padrão defensivo consistente, 17 ocorrências revisadas em <code>core.js</code>   sozinho).</p>
+<ul>
+<li><strong><code>design-data.js</code></strong> — import/export de JSON de projeto, recriação de specs/medidas a</li>
+</ul>
+<p>  partir de snapshot. Módulo mais novo e mais enxuto, sem BOM (foi criado depois do   incidente do "vão fantasma").</p>
+<hr>
+<h2 id="3-o-que-esta-exclusivo-em-beta-vs-ja-em-main">3. O que está exclusivo em beta vs. já em main</h2>
+<p>Diff <code>main..beta/v4.3-melhorias-operacionais</code> (código, sem contar rebuilds de artefato):</p>
+<pre><code>src/plugin/code.js                 |  12 +-
+src/plugin/modules/core.js         |   9 +-
+src/plugin/modules/handoff.js      | 256 +++++++++++++++++++--
+src/plugin/modules/measurement.js  |  10 +
+src/plugin/modules/messages.js     |  10 +
+src/plugin/modules/specifications.js | 72 +++++-</code></pre>
+<p><strong>Exclusivo de beta (v5.1.0-beta.1), não em main (v5.0.0):</strong></p>
+<ul>
+<li>Controles de grupo de specs: ocultar linhas, ocultar grupo, cadeado de travamento</li>
+<li>Posicionamento manual de spec</li>
+<li>Ordenação de camadas (z-index) por tag hierárquica</li>
+<li>Header secundário redesenhado nas 7 views (<code>.fab-inline</code>, correção de BOM que causava</li>
+</ul>
+<p>  "vão fantasma")</p>
+<ul>
+<li>Tags alfanuméricas (A1, A1.1) no empilhamento de specs</li>
+<li>Correção de chave de localStorage de dúvidas (<code>handex-comments-${projectId}</code> — bug do</li>
+</ul>
+<p>  template literal com aspas erradas, corrigido em <code>199b6e7</code>)</p>
+<p><strong>Já promovido/paralelo em main:</strong></p>
+<ul>
+<li>Resgate de versão da ficha existente no canvas</li>
+<li>Chip de status no Resumo do Projeto</li>
+<li>Auto-adição do designer na equipe (Etapa 1)</li>
+<li>Bloqueio do modal "Gerar Ficha" quando falta campo obrigatório</li>
+</ul>
+<p>Esses itens aparecem via commits <code>chore: rebuild de artefatos apos cherry-pick</code> nos dois branches — ou seja, o fluxo atual é cherry-pick manual de fixes reais para os dois lados, como esperado pelas regras do projeto. <strong>Risco de processo</strong>: cherry-pick manual depende de alguém lembrar de replicar; não há automação nem checklist. Se uma correção de bug real ficar só em beta por esquecimento, main carrega o bug por mais tempo do que deveria.</p>
+<hr>
+<h2 id="4-acoplamento-cruzado-grep-amplo-contagem-real">4. Acoplamento cruzado (grep amplo, contagem real)</h2>
+<p>Chamadas de função de um módulo dentro do código de outro (nome de função definida em A, contada como <code>nomeDaFuncao(</code> dentro de B):</p>
+<div class="table-wrap"><table><thead><tr><th>Direção</th><th>Chamadas</th></tr></thead><tbody><tr><td><code>core.js</code> → usado em <code>handoff.js</code></td><td>27</td></tr><tr><td><code>core.js</code> → usado em <code>specifications.js</code></td><td>111</td></tr><tr><td><code>core.js</code> → usado em <code>measurement.js</code></td><td>19</td></tr><tr><td><code>core.js</code> → usado em <code>messages.js</code></td><td>48</td></tr><tr><td><code>core.js</code> → usado em <code>design-data.js</code></td><td>15</td></tr><tr><td><code>handoff.js</code> → usado em <code>core.js</code></td><td>3</td></tr><tr><td><code>specifications.js</code> → usado em <code>core.js</code></td><td>12</td></tr><tr><td><code>measurement.js</code> → usado em <code>core.js</code></td><td>1</td></tr><tr><td><code>design-data.js</code> → usado em <code>core.js</code></td><td>0</td></tr><tr><td><code>handoff.js</code> → usado em <code>specifications.js</code></td><td>0</td></tr><tr><td><code>specifications.js</code> → usado em <code>handoff.js</code></td><td>2</td></tr></tbody></table></div>
+<p><strong>Leitura</strong>: a arquitetura de fato observada é uma <strong>estrela</strong> centrada em <code>core.js</code> (estado global + utilitários), não uma malha. <code>handoff.js</code> e <code>specifications.js</code> quase não se chamam diretamente (0 e 2 ocorrências) — bom sinal, são módulos horizontalmente independentes entre si. O acoplamento reverso (<code>core.js</code> chamando de volta funções de <code>specifications.js</code>/<code>handoff.js</code>) é sempre via guard <code>typeof fn === 'function'</code>, um padrão defensivo usado consistentemente — não é acoplamento rígido, é polimorfismo informal (callback opcional). Não constitui risco imediato, mas <strong>é frágil</strong>: renomear uma função sem atualizar o nome no guard falha silenciosamente (nenhum erro, a feature simplesmente não dispara). Não há teste automatizado que pegue isso.</p>
+<hr>
+<h2 id="5-contrato-de-mensagens-codejs-messagesjs">5. Contrato de mensagens <code>code.js</code> ↔ <code>messages.js</code></h2>
+<ul>
+<li>Backend (<code>figma.ui.onmessage</code>): <strong>41 handlers</strong> de mensagens recebidas do frontend</li>
+</ul>
+<p>  (<code>msg.type === '...'</code>), <strong>39 pontos de <code>figma.ui.postMessage</code></strong> enviando de volta.</p>
+<ul>
+<li>Frontend (<code>messages.js</code>, dispatcher único): <strong>21 handlers</strong> de <code>msg.type ===</code> tratando</li>
+</ul>
+<p>  mensagens vindas do backend.</p>
+<ul>
+<li>Tipos postados pelo backend, cruzados contra handlers do frontend: a maioria bate.</li>
+</ul>
+<p><strong>Bug real encontrado e corrigido nesta sessão</strong>: o backend posta <code>type: 'toast'</code> em 5 pontos de <code>code.js</code> (linhas 193, 197, 232, 235, 321 — todos na feature de injeção de cenário/exceção em card de spec no canvas), mas <strong>não existia handler <code>msg.type === 'toast'</code> em <code>messages.js</code></strong>. Esses toasts de sucesso/erro (ex: "Card não encontrado no grupo.", "Cenário injetado no card de spec.") nunca apareciam na UI — silenciosamente descartados pelo dispatcher. Corrigido em <code>src/plugin/modules/messages.js</code> adicionando o handler que chama <code>showToast(msg.message)</code> (função já existente em <code>core.js</code>, compartilhada por escopo global).</p>
+<p><strong>Dívida sinalizada, não corrigida</strong>: <code>showToast(message)</code> em <code>core.js</code> (linha 1569) não aceita/usa o segundo parâmetro <code>kind</code> (<code>'error'</code>/<code>'success'</code>/<code>'warning'</code>) que várias chamadas já passam (ex: <code>showToast('Salvo automaticamente', 'success')</code>, e agora também os toasts de <code>code.js</code> via <code>msg.kind</code>). O ícone exibido é sempre o verde de sucesso, independente do <code>kind</code>. Não é um bug de mensagem quebrada (o toast aparece), mas é uma inconsistência visual — um toast de erro parece de sucesso. Ficou fora do escopo desta correção porque mudar <code>showToast</code> afeta ~15 chamadas existentes e é mudança de comportamento visual observável, não puramente estrutural.</p>
+<p><strong>Código morto documentado (não é bug)</strong>: <code>map-prototype-flows</code> / <code>prototype-flows-mapped</code> (mapeamento de fluxos de protótipo) existe só como bloco comentado em <code>code.js</code> (linhas ~1978–2028), com instruções de como ativar. Não há handler correspondente no frontend porque a feature nunca foi ativada — é um esqueleto para trabalho futuro, propositalmente inerte.</p>
+<p><code>annotations-added</code> tem handler em <code>messages.js</code> (linha 188) mas não encontrei mais nenhum <code>figma.ui.postMessage({ type: 'annotations-added' ... })</code> em <code>code.js</code> — handler órfão inofensivo (não quebra nada, apenas nunca dispara). Não corrigido nesta sessão por ser puramente cosmético/morto e não haver certeza de que não é construído dinamicamente em algum ponto que o grep léxico não capturou; merece checagem futura antes de remover.</p>
+<hr>
+<h2 id="6-sinais-de-monolito-e-recomendacoes-de-escopo-maior-nao-executadas">6. Sinais de monolito e recomendações de escopo maior (NÃO executadas)</h2>
+<ul>
+<li><strong><code>handoff.js</code> (2511 linhas) combina duas responsabilidades grandes</strong>: coleta/</li>
+</ul>
+<p>  serialização de <code>handoffData</code> (<code>collectHandoffData</code>, diff de snapshots) e geração de   HTML standalone da ficha (<code>getInteractiveHTMLContent</code>, provavelmente a maior função   single do projeto — gera todo o markup da ficha interativa via template strings).   Essas duas responsabilidades são coesas <em>internamente</em> mas são conceitualmente   distintas (dados vs. apresentação). Dividir em <code>handoff-data.js</code> + <code>handoff-render.js</code>   reduziria o tamanho de arquivo e o custo cognitivo de navegar o módulo, mas é uma   mudança estrutural que toca build (<code>build.cjs</code>), ordem de concatenação, e não é trivial   de fazer "sem mudar comportamento observável" com segurança total — recomendo, não   executo.</p>
+<ul>
+<li><strong><code>specifications.js</code> (2422 linhas, 73 funções)</strong> é o módulo com mais funções do</li>
+</ul>
+<p>  projeto depois de <code>core.js</code>. Ainda é coeso (tudo gira em torno de specs/tokens/fluxos),   mas se crescer mais na direção de "fluxos de tela" como responsabilidade separada de   "specs/tokens", pode valer a pena separar <code>flows.js</code> no futuro. Hoje ainda não   justifica — não há evidência de que fluxos e specs estejam se atrapalhando.</p>
+<ul>
+<li><strong>Cherry-pick manual entre <code>main</code> e beta</strong> é um processo, não um problema de módulo,</li>
+</ul>
+<p>  mas é um risco arquitetural de fato: não há registro automatizado de quais commits já   foram replicados. Recomendo (não executei, é decisão de processo do Augusto) manter   uma lista simples de "commits de fix pendentes de cherry-pick para main" enquanto o   beta estiver ativo.</p>
+<hr>
+<h2 id="7-o-que-foi-corrigido-nesta-sessao-1007">7. O que foi corrigido nesta sessão (10/07)</h2>
+<ul>
+<li><code>src/plugin/modules/messages.js</code> — adicionado handler <code>msg.type === 'toast'</code> (faltava,</li>
+</ul>
+<p>  5 postagens do backend caíam no vazio). Rebuild de <code>ui.html</code> aplicado.</p>
+<ul>
+<li>Nenhuma outra mudança de código. <code>_skeleton.json</code> e <code>code.bundle.js</code> foram gerados</li>
+</ul>
+<p>  durante verificação mas revertidos por não terem mudança de conteúdo relevante (só   timestamp de refs).</p>
+<h2 id="8-preparacao-para-publicacao-na-figma-community-2107">8. Preparação para publicação na Figma Community (21/07)</h2>
+<p><strong>Manifest (<code>src/plugin/manifest.json</code>) ganhou 3 campos exigidos pelo fluxo de submissão do Figma:</strong></p>
+<ul>
+<li><code>id</code> fixo do plugin.</li>
+<li><code>networkAccess.allowedDomains: ["https://unpkg.com", "https://cdnjs.cloudflare.com"]</code></li>
+</ul>
+<p>  — os únicos dois domínios que o plugin de fato contata em runtime dentro do iframe   (Lucide sempre; jsPDF/JSZip via cdnjs, sob demanda na exportação em PDF). Confirmado   por dois agentes independentes que nenhum outro domínio referenciado em <code>ui.html</code>   (Google Fonts, Tailwind CDN, links <code>designsystem.caixa.gov.br</code>) é carregado dentro do   sandbox do plugin — são texto de uma template string (<code>fullHTML</code>, ficha standalone   exportada) ou <code>window.open()</code> de navegação, não requisições do iframe.</p>
+<ul>
+<li><code>documentAccess: "dynamic-page"</code> — obrigatório para novos plugins, mas com risco real</li>
+</ul>
+<p>  de compatibilidade: <strong>este campo faz o Figma carregar em memória só a página   atualmente aberta</strong>, não o documento inteiro.</p>
+<p><strong>Risco identificado e corrigido nesta sessão</strong>: <code>src/plugin/code.js</code> resolvia <code>frame.figmaId</code> (persistido em <code>handoffData.frames</code>, podendo estar em qualquer página de um arquivo com múltiplas páginas — cenário real de handoff de projetos com várias telas) via <code>figma.getNodeById(...)</code> <strong>síncrono</strong>, em ~20 pontos. Sob <code>dynamic-page</code>, isso retorna <code>null</code> silenciosamente para nós de páginas não carregadas — o frame "desaparece" do handoff sem erro visível. Migrado todo o arquivo para <code>await figma.getNodeByIdAsync(...)</code>, que carrega a página do nó automaticamente se necessário. Detalhe da migração:</p>
+<ul>
+<li><code>_writeSharedPluginData(data)</code> virou <code>async</code> (único caller, em <code>save-storage</code>, já</li>
+</ul>
+<p>  ganhou <code>await</code>).</p>
+<ul>
+<li>5 cadeias de <code>.forEach</code> viraram <code>for...of</code> (<code>forEach</code> não suporta <code>await</code> no corpo):</li>
+</ul>
+<p>  frames/createdSpecs pendentes de lock em <code>create-handoff</code>, a seção "Especificações"   (3 níveis aninhados, resolve <code>s.id</code> pra montar hyperlink de nó), <code>hide-spec-lines</code> e   <code>unlock-spec-group</code>.</p>
+<ul>
+<li><code>figma.currentPage.selection</code> / <code>.findOne</code> / <code>.findAll</code> / <code>.findChildren</code> **não foram</li>
+</ul>
+<p>  tocados** — operam só em nós já resolvidos da página atual, sem o mesmo risco.</p>
+<ul>
+<li>Validado por dois agentes independentes (o que fez a migração + uma segunda revisão):</li>
+</ul>
+<p>  0 <code>getNodeById</code> síncrono restante, 21 usos de <code>getNodeByIdAsync</code>, <code>tsc --noEmit</code>   limpo, nenhum <code>forEach</code> remanescente com <code>await</code> no corpo (checado   programaticamente), nenhum handler virou fire-and-forget incorretamente.</p>
+<p><strong>Risco residual, não verificável por análise estática</strong>: o cenário que motivou a migração (nó de página não carregada) só se manifesta de fato dentro do Figma desktop. Roteiro de teste manual recomendado antes de publicar: abrir arquivo multi-página, garantir que a página de um frame documentado não foi visitada na sessão, e testar <code>Gerar Ficha</code>, <code>lock-spec</code>, <code>hide-spec-lines</code>, <code>unlock-spec-group</code>, <code>reapply-measurements</code>, <code>delete-node</code>/<code>rename-node</code>/<code>focus-node</code>, e <code>save-storage</code> nesse frame — confirmando que o node é resolvido corretamente em vez de falhar silenciosamente.</p>
+<p><strong>Limpeza relacionada</strong>: removida a dependência <code>@google/genai</code> do <code>package.json</code> (instalada mas sem nenhuma chamada no código-fonte, confirmado por grep). Referências a ela em documentação (<code>docs/plugin-capabilities/06-pipeline-seguranca.md</code> e três arquivos de agente em <code>.claude/agents/</code>, este último não versionado) foram corrigidas para não apontar um agente futuro a investigar uma dependência que não existe mais.</p>
+<hr>
+<h2 id="9-verificado-e-sem-problema-nao-precisou-de-acao">9. Verificado e sem problema (não precisou de ação)</h2>
+<ul>
+<li>BOM em <code>views/*.html</code>: nenhum arquivo de view tem BOM hoje — o incidente do "vão</li>
+</ul>
+<p>  fantasma" (documentado em <code>frontend-ui.md</code>/<code>design-ux.md</code>) não regrediu.</p>
+<ul>
+<li>Padrão do bug de template literal com aspas erradas (<code>"chave-${var}"</code> em vez de</li>
+</ul>
+<p>  crase): grep amplo em todos os módulos + <code>code.js</code> não encontrou outra ocorrência.</p>
+<ul>
+<li>Acoplamento <code>handoff.js</code> ↔ <code>specifications.js</code>: baixíssimo (0 e 2 chamadas) — não há</li>
+</ul>
+<p>  sinal de dependência cruzada escondida entre esses dois módulos grandes.</p>
+<hr>
+<h2 id="10-bug-real-em-producao-que-passou-por-dois-agentes-tsc-limpo-dynamic-page-2107">10. Bug real em produção que passou por dois agentes + <code>tsc</code> limpo — <code>dynamic-page</code> (21/07)</h2>
+<p><strong>O que quebrou</strong>: a migração de <code>documentAccess: "dynamic-page"</code> (seção 8) cobriu só <code>figma.getNodeById</code> → <code>getNodeByIdAsync</code> (~20 pontos). O usuário testou no Figma real depois de dois agentes revisarem o diff e o QA dar veredito "pronto pra publicação", e a ferramenta mais usada do plugin — <strong>Escanear Tokens</strong> — travava indefinidamente.</p>
+<p><strong>Causa raiz</strong>: sob <code>dynamic-page</code>, três outras famílias de API síncrona que resolvem IDs também são bloqueadas e <strong>não foram migradas na primeira leva</strong>: <code>figma.variables.getVariableById</code>, <code>figma.getStyleById</code> (fill/text/stroke/effect style), e a <em>property</em> <code>node.mainComponent</code> (precisa virar <code>await node.getMainComponentAsync()</code>). Essas chamadas vivem dentro de <code>extractSpecs</code>/<code>extractNodeProperties</code>, função recursiva que percorre a árvore de nós do frame escaneado — e a extração de propriedades do nó acontecia <strong>antes</strong> da recursão nos filhos, no mesmo bloco <code>try/catch</code>. Um erro lançado ali abortava silenciosamente a extração do nó inteiro <strong>e de toda a sua subárvore</strong>. Como praticamente todo frame real tem alguma variável ou estilo aplicado, o scan quebrava quase sempre — não era um caso de borda, era o caminho comum.</p>
+<p><strong>Por que passou pelos dois agentes e pelo <code>tsc --noEmit</code></strong>: a restrição de <code>documentAccess: dynamic-page</code> sobre essas APIs é uma <strong>restrição de runtime do Figma</strong>, não uma mudança de tipo. <code>getVariableById</code>, <code>getStyleById</code> e <code>.mainComponent</code> continuam existindo normalmente nos typings do Figma — compilam limpo, e uma leitura de código não revela nada de errado, porque o código é sintaticamente e semanticamente válido. A API só lança exceção quando <strong>de fato executada</strong> dentro de um plugin com <code>dynamic-page</code> ativo, rodando no Figma desktop, sobre um nó cuja página não foi pré-carregada. Nenhuma ferramenta estática (tsc, lint, revisão de diff) detecta isso — só execução real pega.</p>
+<p><strong>Correção aplicada (main, 21/07)</strong>: <code>getVariableById</code>→<code>getVariableByIdAsync</code>, <code>getStyleById</code>→<code>getStyleByIdAsync</code>, <code>.mainComponent</code>→<code>await node.getMainComponentAsync()</code> em todos os pontos de <code>src/plugin/code.js</code> (dentro de <code>extractNodeProperties</code>, <code>addElement</code>, <code>extractSpecs</code> — que viraram todas <code>async</code> — mais os handlers <code>getVariableInfo</code>, <code>measure-nodes-custom</code>, <code>create-handoff</code> e <code>request-spec-properties</code>). <code>tsc</code> limpo, bundles reconstruídos.</p>
+<p><strong>Lição prática</strong>: "<code>tsc</code> limpo + revisão de agente(s)" <strong>não é suficiente</strong> como sinal de "pronto pra publicação" para qualquer mudança que toque <code>documentAccess</code> ou código que resolve IDs do Figma (nodes, variables, styles, componentes). Essa classe de mudança exige teste manual real no Figma desktop, com um arquivo de verdade, antes de ser considerada pronta — não só a leitura estática do diff. Recomendação prática:</p>
+<ul>
+<li>Antes de declarar "pronto" qualquer mudança em <code>documentAccess</code> ou em código que chama</li>
+</ul>
+<p>  <code>getNodeById</code>/<code>getVariableById</code>/<code>getStyleById</code>/<code>.mainComponent</code>/<code>.mainComponentAsync</code>   (ou qualquer API do Figma cuja doc mencione resolução de ID entre páginas), rodar   <strong>Escanear Tokens</strong> em um frame real dentro do Figma desktop como critério mínimo de   aceite — não presumir que a migração está completa só porque o grep do primeiro termo   buscado (<code>getNodeById</code>) deu zero resultados.</p>
+<ul>
+<li>Ao migrar uma família de API síncrona → assíncrona por causa de <code>dynamic-page</code>, grep</li>
+</ul>
+<p>  por <strong>todas as APIs do Figma que resolvem ID</strong> na mesma leva, não uma de cada vez:   <code>getNodeById</code>, <code>variables.getVariableById</code>, <code>getStyleById</code>, <code>.mainComponent</code> (property),   <code>.detachedMainComponent</code>, e qualquer outra propriedade/getter documentada como   bloqueada por <code>dynamic-page</code>. Tratar como uma família única de risco, não migrações   independentes.</p>
+<ul>
+<li>Em funções recursivas que percorrem a árvore de nós (como <code>extractSpecs</code>), considerar</li>
+</ul>
+<p>  se um erro em uma chamada de resolução de ID deveria abortar só a extração daquela   propriedade, ou toda a subárvore — hoje aborta a subárvore inteira silenciosamente,   o que amplifica qualquer bug de API bloqueada de "uma propriedade não aparece" para   "o scan não retorna nada".</p>
+<p><strong>Risco confirmado em <code>beta/v4.3-melhorias-operacionais</code></strong>: a branch beta já tem <code>documentAccess: "dynamic-page"</code> no manifest (herdado antes da separação main/beta), mas <strong>não recebeu a correção de variables/styles/mainComponent</strong>. Confirmado via <code>git show beta/v4.3-melhorias-operacionais:./src/plugin/code.js</code> — ainda usa <code>figma.variables.getVariableById</code> (linhas 1744, 2116, 2649), <code>figma.getStyleById</code> (fillStyleId/textStyleId/strokeStyleId/effectStyleId, linhas 2129–2234) e <code>node.mainComponent</code> síncrono (linhas 2314–2335, 2733), todos sem <code>Async</code>. <strong>Beta está com o mesmo bug quebrado em produção hoje</strong> — Escanear Tokens deve travar da mesma forma se testado no Figma desktop com <code>dynamic-page</code> ativo. Precisa da mesma correção replicada lá, seguindo o padrão de cherry-pick manual documentado na seção 3 (é correção de bug real, não feature exclusiva de beta — deve ir para os dois lados).</p>
+  </div>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+</div>
+</body>
+</html>
