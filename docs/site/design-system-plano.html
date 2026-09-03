@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plano do DS no Figma · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display:flex; gap: 4px; flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">Handex · Documentação</span>
+  <nav>
+    <a href="index.html">Início</a>
+  </nav>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    
+    <h1 id="plano-de-estruturacao-do-ds-do-handex-no-figma">Plano de estruturação do DS do Handex no Figma</h1>
+<p><strong>Status:</strong> pronto para execução assim que o conector Figma MCP for autorizado (claude.ai → configurações de conectores). Este plano traduz <code>docs/design-system-handex.md</code> em ações concretas de criação no Figma — variáveis, componentes, páginas.</p>
+<p><strong>Escopo:</strong> um arquivo Figma novo, próprio, do Design System do Handex — não um branch/página dentro de um arquivo do DSC da CAIXA. É a contraparte visual da documentação já levantada.</p>
+<hr>
+<h2 id="1-estrutura-de-paginas-do-arquivo">1. Estrutura de páginas do arquivo</h2>
+<pre><code>📄 Cover (capa com nome, versão, data)
+📄 01 · Fundamentos (cores, tipografia, espaçamento, radius — como Variables + specimens)
+📄 02 · Componentes (botões, accordions, badges, toggles, inputs, modais, empty states)
+📄 03 · Padrões (grid da home, shell de view, shell de modal)
+📄 04 · Achados &amp; backlog (cards visuais dos riscos, para virar tickets depois)</code></pre>
+<hr>
+<h2 id="2-variaveis-do-figma-local-variables">2. Variáveis do Figma (Local Variables)</h2>
+<p>Criar como <strong>Variables</strong> nativas do Figma (não estilos antigos), em coleções:</p>
+<h3 id="colecao-colorbrand">Coleção <code>color/brand</code></h3>
+<div class="table-wrap"><table><thead><tr><th>Nome</th><th>Light</th><th>Dark</th><th>Fonte</th></tr></thead><tbody><tr><td><code>blue/500</code></td><td><code>#3d3dff</code></td><td><code>#868bff</code></td><td>tailwind.config.cjs:23</td></tr><tr><td><code>blue/600</code></td><td><code>#2e2ee0</code></td><td><code>#a6aaff</code></td><td>tailwind.config.cjs:24</td></tr><tr><td><code>orange/500</code></td><td><code>#f5b400</code></td><td><code>#ffd24d</code></td><td>tailwind.config.cjs:39</td></tr></tbody></table></div>
+<h3 id="colecao-colorsurface-modo-lightdark-nativo-do-figma">Coleção <code>color/surface</code> (modo Light/Dark nativo do Figma)</h3>
+<div class="table-wrap"><table><thead><tr><th>Nome</th><th>Light</th><th>Dark</th></tr></thead><tbody><tr><td><code>bg</code></td><td><code>#eef2f7</code></td><td><code>#0f172a</code></td></tr><tr><td><code>surface</code></td><td><code>#ffffff</code></td><td><code>#1e293b</code></td></tr><tr><td><code>line</code></td><td><code>#dde3ec</code></td><td><code>#334155</code></td></tr><tr><td><code>muted</code></td><td><code>#8394a8</code></td><td><code>#b4c6d8</code></td></tr><tr><td><code>text</code></td><td><code>#1e293b</code></td><td><code>#f1f5f9</code></td></tr></tbody></table></div>
+<h3 id="colecao-colorcategory-spec-decisao-pendente-antes-de-criar">Coleção <code>color/category-spec</code> — <strong>decisão pendente antes de criar</strong></h3>
+<p>Não copiar os 3 hex divergentes (canvas/ficha/modal) como estão — isso replicaria o drift dentro do próprio Figma. Ação recomendada: decidir com o Augusto qual dos 3 conjuntos vira canônico (sugestão: o da ficha exportada, por ser o que o dev final vê) e criar só essas 4 variáveis (<code>info</code>, <code>comportamento</code>, <code>regra</code>, <code>api</code>), com nota de que o código precisa ser migrado para usá-las depois.</p>
+<h3 id="colecao-space">Coleção <code>space</code></h3>
+<p><code>space/150</code> (6px), <code>space/200</code> (8px), <code>space/250</code> (10px), <code>space/300</code> (12px), <code>space/350</code> (14px), <code>space/400</code> (16px), <code>space/600</code> (24px) — nomenclatura por múltiplo de 50 do valor em px, compatível com convenção comum de token de espaçamento.</p>
+<h3 id="colecao-radius">Coleção <code>radius</code></h3>
+<p><code>radius/sm</code> (8px, fallback), <code>radius/lg</code> (12px, <code>rounded-xl</code>), <code>radius/xl</code> (16px, <code>rounded-2xl</code>), <code>radius/full</code> (999px, pills).</p>
+<h3 id="colecao-type">Coleção <code>type</code></h3>
+<p>Escala nomeada a decidir junto (hoje é px arbitrário sem nome): sugestão <code>type/3xs</code> (9px) → <code>type/2xs</code> (10px) → <code>type/xs</code> (11px) → <code>type/sm</code> (12–13px) → <code>type/md</code> (14px) → <code>type/lg</code> (16px) → <code>type/xl</code> (18px).</p>
+<hr>
+<h2 id="3-componentes-a-criar-figma-components-variants">3. Componentes a criar (Figma Components + Variants)</h2>
+<p>Ordem sugerida de execução (do mais estável ao mais divergente no código — construir primeiro o que já é consistente):</p>
+<ol>
+<li><strong>Input</strong> (texto, select, textarea) — o mais consistente hoje, variantes: default / focus / disabled.</li>
+<li><strong>Botão</strong> — variantes: <code>primary</code> / <code>ghost</code> / <code>icon-utility</code> (rounded-xl) / <code>icon-close</code> (sem radius). Nomear as duas famílias de radius explicitamente como variantes distintas, não emendar como se fosse uma.</li>
+<li><strong>Badge/Pill</strong> — variantes por cor de categoria de scan (11) + categoria de spec (4, usando o conjunto canônico decidido acima).</li>
+<li><strong>Accordion</strong> — <strong>uma única versão consolidada</strong> com estado <code>aria-expanded</code> sempre presente no nome da variante (<code>collapsed</code> / <code>expanded</code>), já unificando as 4 implementações divergentes do código como referência de "como deveria ser".</li>
+<li><strong>Toggle/Switch</strong> — decidir entre padronizar no switch estilizado (Dados do Projeto) ou no checkbox nativo, hoje há os dois.</li>
+<li><strong>Empty state</strong> — template único (ícone + título + CTA sublinhado), já é o mais consistente no código.</li>
+<li><strong>Modal shell</strong> — header + body + footer, com slot de conteúdo; variantes por tamanho (<code>sm</code>/<code>md</code>/<code>lg</code>) mapeando os 4 tamanhos de título hoje soltos.</li>
+<li><strong>Card de ferramenta (home)</strong> — variante única, ícone + label + hint.</li>
+</ol>
+<hr>
+<h2 id="4-padroes-de-tela-frames-de-referencia-nao-componentes">4. Padrões de tela (frames de referência, não componentes)</h2>
+<ul>
+<li><strong>Shell de view</strong>: header <code>subheader-brand</code> + corpo scrollável + rodapé opcional "Finalizar Registros" — montar como 1 frame de referência reutilizável por composição (não component instanciável, é estrutura de página).</li>
+<li><strong>Grid da home</strong>: 2×3, para visualizar limite de escala antes de decidir se comporta uma 7ª ferramenta.</li>
+</ul>
+<hr>
+<h2 id="5-ordem-de-execucao-recomendada-quando-o-mcp-estiver-ativo">5. Ordem de execução recomendada quando o MCP estiver ativo</h2>
+<ol>
+<li>Criar arquivo + páginas (seção 1).</li>
+<li>Criar todas as coleções de Variables (seção 2) — sem isso, nenhum componente pode referenciar token real.</li>
+<li>Construir componentes na ordem da seção 3.</li>
+<li>Montar os frames de padrão de tela (seção 4), já usando os componentes criados.</li>
+<li>Página de achados (seção 4 do doc principal) como cards visuais — útil para review com o time.</li>
+</ol>
+<h2 id="6-decisoes-que-precisam-de-alinhamento-antes-de-criar-nao-assumir-sozinho">6. Decisões que precisam de alinhamento ANTES de criar (não assumir sozinho)</h2>
+<ul>
+<li>Qual dos 3 hex de categoria de spec vira canônico.</li>
+<li>Se o radius <code>rounded-xl</code> vs <code>rounded-2xl</code> vira intencionalmente duas variantes nomeadas ou se um dos dois é eliminado no código depois.</li>
+<li>Se o switch estilizado ou o checkbox nativo vira o toggle oficial.</li>
+<li>Nome canônico da tela hoje chamada de 3 formas diferentes (Escanear Tokens / Frames / Handoff) — o nome escolhido deve batizar tanto o componente quanto a página no Figma.</li>
+</ul>
+<hr>
+<p><strong>Arquivo de referência factual:</strong> <code>docs/design-system-handex.md</code> (tokens/componentes com citação arquivo:linha) e <code>docs/design-system-handex.html</code> (versão navegável).</p>
+  </div>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+</div>
+</body>
+</html>

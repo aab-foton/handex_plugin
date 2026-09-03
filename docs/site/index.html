@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentação do Handex · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display:flex; gap: 4px; flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">Handex · Documentação</span>
+  <nav>
+    <a href="index.html" class="active">Início</a>
+  </nav>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    
+    
+    <h1>Documentação do Handex</h1>
+    <div class="home-note">
+      Este site foi gerado a partir dos arquivos <code>.md</code> do repositório em 2026-09-02 — para o conteúdo mais atualizado, consulte também os arquivos <code>.md</code> originais na raiz e em <code>docs/</code>. Este HTML é uma camada de navegação/leitura por cima da documentação viva, não a substitui.
+    </div>
+    <p>Handex — Handoff Express: plugin Figma da Fóton que automatiza o handoff de design para desenvolvimento — fichas técnicas, escaneamento de tokens do Design System CAIXA, especificações anotadas, medidas e fluxos de tela.</p>
+
+    <div class="cat-title first">Documentação Central</div>
+    <p style="color:var(--muted); font-size:13px; margin-top:-6px;">Documentos vivos, atualizados a cada mudança relevante de produto ou arquitetura.</p>
+    <div class="doc-grid"><a class="doc-card-link" href="business-rules.html"><div class="t">Regras de Negócio</div><div class="d">Estrutura de dados, travas, disclaimers e jornadas de uso do plugin.</div></a><a class="doc-card-link" href="data-model.html"><div class="t">Modelo de Dados</div><div class="d">Nomenclatura de artefatos no canvas, schema de persistência e relação canvas ↔ dados.</div></a><a class="doc-card-link" href="architecture-state.html"><div class="t">Estado da Arquitetura</div><div class="d">Tamanho dos módulos, acoplamento, bugs reais corrigidos e dívida técnica conhecida.</div></a><a class="doc-card-link" href="design-system.html"><div class="t">Design System do Handex</div><div class="d">Referência normativa de tokens e componentes visuais da própria interface do plugin.</div></a><a class="doc-card-link" href="changelog.html"><div class="t">Changelog</div><div class="d">Histórico completo de versões, da v4.0.0-beta à mais recente.</div></a></div>
+
+    <div class="cat-title">Propostas e Investigações</div>
+    <p style="color:var(--muted); font-size:13px; margin-top:-6px;">Material de referência histórico — análises, spikes e propostas pontuais, nem todas implementadas.</p>
+    <div class="doc-grid"><a class="doc-card-link" href="design-system-plano.html"><div class="t">Plano do DS no Figma</div><div class="d">Tradução do Design System do Handex em ações concretas dentro de um arquivo Figma.</div></a><a class="doc-card-link" href="accessibility-audit-2026-07.html"><div class="t">Auditoria de Acessibilidade (WCAG)</div><div class="d">Levantamento somente-leitura de 2026-07-08 sobre conformidade WCAG da UI do plugin.</div></a><a class="doc-card-link" href="annotations-api-deep-dive.html"><div class="t">Annotation API nativa — aprofundamento</div><div class="d">Desenho técnico do modelo híbrido entre specs do canvas e Annotations nativas do Dev Mode.</div></a><a class="doc-card-link" href="figma-api-roadmap-2026.html"><div class="t">Oportunidades da Figma Plugin API</div><div class="d">Análise de novidades da Plugin API do Figma e possíveis evoluções do Handex (2026-07-07).</div></a><a class="doc-card-link" href="governanca-evidencia-proposta.html"><div class="t">Proposta: Governança e Evidência</div><div class="d">Reposicionamento estratégico do Handex como camada de evidência formal de handoff.</div></a><a class="doc-card-link" href="operacional-designer-dev.html"><div class="t">Proposta: Melhorias Operacionais</div><div class="d">Cinco melhorias de fricção real para designer e dev, complementar à proposta de governança.</div></a><a class="doc-card-link" href="vs-figma-native.html"><div class="t">Handex vs. Figma Nativo</div><div class="d">Comparativo de capacidades e plano de implementação frente às novidades nativas do Figma.</div></a><a class="doc-card-link" href="native-connector-spike.html"><div class="t">Spike: ConnectorNode nativo (descartado)</div><div class="d">Registro de spike testado e descartado — createConnector() é exclusivo de FigJam.</div></a><a class="doc-card-link" href="release-notes-community.html"><div class="t">Release Notes — Figma Community</div><div class="d">Textos prontos para colar nas publicações da Figma Community, por versão.</div></a><a class="doc-card-link" href="spec-alphanumeric-tags-bug.html"><div class="t">Bug: Tags Alfanuméricas em Specs</div><div class="d">Bug confirmado de empilhamento com tags como A1, A1.1 — causa raiz e correção proposta.</div></a><a class="doc-card-link" href="spec-positioning-proposal.html"><div class="t">Proposta: Posicionamento Manual de Specs</div><div class="d">Desenho de fluxo para destravar e reposicionar specs manualmente antes do lock final.</div></a><a class="doc-card-link" href="spec-visibility-and-ordering-proposal.html"><div class="t">Propostas: Visibilidade e Ordenação de Specs</div><div class="d">Ocultar linhas por grupo, destravar grupo e ordenação de camadas por tag — status de implementação.</div></a></div>
+  
+  </div>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+</div>
+</body>
+</html>

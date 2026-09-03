@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposta: Melhorias Operacionais · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display:flex; gap: 4px; flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">Handex · Documentação</span>
+  <nav>
+    <a href="index.html">Início</a>
+  </nav>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    
+    <h1 id="proposta-melhorias-operacionais-para-designer-e-dev-2026-07-09">Proposta: melhorias operacionais para designer e dev (2026-07-09)</h1>
+<blockquote><p>Status: proposta priorizável, focada em fricção real do dia a dia — não em posicionamento estratégico. Complementa <code>handex-governanca-evidencia-proposta-2026-07.md</code> (proposta de gestão/compliance, escopo separado).</p></blockquote>
+<h2 id="contexto">Contexto</h2>
+<p>A pergunta original ("o que nos deixa à frente do Figma?") gerou primeiro uma resposta de nível gestão/produto (governança, evidência formal, auditoria) — documentada separadamente. O dono do produto redirecionou: quer foco no <strong>operacional</strong>, no que resolve fricção concreta de quem usa a ferramenta na prática — o designer documentando, o dev consumindo.</p>
+<p>Pesquisa de mercado confirma que a fricção real de handoff não é falta de ferramenta — é retrabalho por informação implícita/repetida e dificuldade de navegação em documentação extensa. Cruzado com leitura do código atual (<code>specifications.js</code>, <code>measurement.js</code>, <code>handoff.js</code>), isso aponta para lacunas concretas e pontuais, não features grandes.</p>
+<h2 id="5-melhorias-por-persona">5 melhorias, por persona</h2>
+<h3 id="designer">Designer</h3>
+<p><strong>1. Duplicar spec para outro elemento</strong></p>
+<ul>
+<li><strong>Problema</strong>: o mesmo padrão de comportamento se repete em vários elementos de um frame (ex: "campo obrigatório, valida no blur"), e cada spec é criada do zero — reabrir modal, escolher categoria, redigitar texto.</li>
+<li><strong>Onde</strong>: botão "Duplicar para outro elemento" no card de spec (<code>specifications.js</code>, <code>renderSpecsListForFrame</code>). Clona categoria/texto/propriedades, só pede nova seleção de nó no canvas.</li>
+<li><strong>Esforço</strong>: baixo — reaproveita <code>executeUnifiedSpec</code> já existente, só muda a origem do formulário (vazio → clonado).</li>
+</ul>
+<p><strong>2. Lembrar última configuração de medida</strong></p>
+<ul>
+<li><strong>Problema</strong>: <code>executeMeasurement</code> sempre abre o modal do zero (<code>resetMeasureSelection</code> zera tudo a cada abertura). Medir padding de 8 botões seguidos = repetir a seleção de tipo 8 vezes.</li>
+<li><strong>Onde</strong>: <code>measurement.js</code> — trocar reset incondicional por preservar o último <code>currentMeasureTypes</code> como padrão pré-selecionado.</li>
+<li><strong>Esforço</strong>: baixo — sem mudança de schema.</li>
+</ul>
+<h3 id="dev">Dev</h3>
+<p><strong>3. Busca global na Ficha de Handoff exportada</strong></p>
+<ul>
+<li><strong>Problema</strong>: a busca existente (<code>filterElements</code>, <code>handoff.js</code>) só cobre tokens escaneados. Specs, medidas e fluxos ficam fora — dev precisa abrir accordions manualmente pra achar algo.</li>
+<li><strong>Onde</strong>: estender a busca para indexar nome de spec, categoria, observação e nome de medida, reaproveitando o padrão de <code>filterSpecItems</code> (já existe no plugin) adaptado ao HTML standalone.</li>
+<li><strong>Esforço</strong>: médio — precisa funcionar sem acesso a <code>handoffData</code> runtime, só ao DOM já renderizado no export.</li>
+</ul>
+<p><strong>4. "Copiar como CSS" em cada propriedade</strong></p>
+<ul>
+<li><strong>Problema</strong>: a ficha mostra <code>padding: token/16px</code> como texto puro — dev copia manualmente pra usar no código.</li>
+<li><strong>Onde</strong>: botão de copiar ao lado de cada propriedade, gerando <code>padding: 16px;</code> pronto pra colar. Puramente apresentação, não toca em <code>handoffData</code> nem no plugin.</li>
+<li><strong>Esforço</strong>: baixo — JS de clipboard sobre dado já renderizado.</li>
+</ul>
+<h3 id="ambos">Ambos</h3>
+<p><strong>5. Campo de dúvida/comentário na ficha exportada</strong></p>
+<ul>
+<li><strong>Problema</strong>: hoje se o dev discorda de uma spec ou não acha o elemento, o canal é Slack/e-mail externo — quebra o registro, o designer só sabe se alguém lembrar de avisar.</li>
+<li><strong>Onde</strong>: campo de comentário por spec/medida na ficha HTML exportada, salvo em <code>localStorage</code> do navegador do dev, com botão "copiar dúvidas pendentes" pra colar de volta no Figma ou mandar por outro canal.</li>
+<li><strong>Esforço</strong>: médio — só JS no HTML standalone, sem backend/sincronização.</li>
+<li><strong>Importante</strong>: não é aprovação nem workflow formal — é reduzir "onde eu registro essa dúvida agora". Fica deliberadamente fora da camada de auditoria DSC (não mistura declaração de conformidade com comunicação de dúvida).</li>
+</ul>
+<h2 id="por-que-estas-e-nao-outras">Por que estas e não outras</h2>
+<p>Nenhuma envolve IA decidindo algo no canvas, nem automação de julgamento de design — são reduções de trabalho mecânico (cliques repetidos, redigitação) e melhorias de navegação/apresentação do que já existe. Todas preservam a separação de camadas já estabelecida no produto (scan automatizado ≠ declaração humana ≠ comunicação de dúvida).</p>
+<h2 id="prioridade-sugerida">Prioridade sugerida</h2>
+<ol>
+<li>Duplicar spec (baixo esforço, alto uso — provavelmente a fricção mais sentida no dia a dia de quem documenta muitos elementos parecidos)</li>
+<li>Lembrar última medida (baixo esforço, mesma lógica)</li>
+<li>Copiar como CSS (baixo esforço, ganho direto pro dev)</li>
+<li>Busca global na ficha (esforço médio, mas ataca a queixa nº1 de quem consome handoff)</li>
+<li>Campo de dúvida (esforço médio, mais novo conceitualmente — vale validar com um dev real antes de construir)</li>
+</ol>
+  </div>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Annotation API nativa — aprofundamento · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display:flex; gap: 4px; flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">Handex · Documentação</span>
+  <nav>
+    <a href="index.html">Início</a>
+  </nav>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    
+    <h1 id="handex-aprofundamento-annotation-api-nativa-dev-mode">Handex — Aprofundamento: Annotation API nativa (Dev Mode)</h1>
+<blockquote><p>Complementa <code>docs/figma-api-roadmap-2026.md</code>. Decisão tomada em 2026-07-07: <strong>híbrido</strong>, não substituição. Este documento é o desenho técnico do que isso significa na prática.</p>
+<p><strong>Nota separada (2026-07-08)</strong>: o spike relacionado de <code>ConnectorNode</code> nativo (<code>figma.createConnector()</code>) para a LINHA conectora das specs foi testado e <strong>falhou em runtime</strong>: <code>TypeError: not a function</code>. <code>createConnector()</code> é exclusivo de arquivos FigJam (<code>editorType: "figjam"</code>) — não existe no contexto Design/Dev Mode onde o Handex roda (<code>editorType: ["figma", "dev"]</code>). Ver <code>docs/native-connector-spike-result.md</code> para o registro completo. Isso NÃO afeta a análise de Annotation API deste documento (<code>figma.annotations</code>/<code>node.annotations</code> é uma API diferente, disponível em Design) — são duas features distintas da Plugin API que só coincidem em serem "recursos do Dev Mode".</p></blockquote>
+<h2 id="nota-de-investigacao-codigo-morto-encontrado-nao-integracao-existente">Nota de investigação: código morto encontrado, não integração existente</h2>
+<p>Durante esta análise, o usuário levantou a hipótese de que "as Especificações já resgatam o conteúdo das Annotations hoje" — o que teria mudado a decisão (uma dependência real pesa mais que uma oportunidade). Investigação no código:</p>
+<ul>
+<li><code>grep</code> por <code>\.annotations|getAnnotationCategor|categoryId|AnnotationCategoryColor</code> em <code>code.js</code> e <code>specifications.js</code>: <strong>zero ocorrências</strong>. Nenhum uso da API nativa <code>figma.annotations</code>/<code>node.annotations</code>.</li>
+<li><code>code.js:1634</code> tem o comentário <code>// add-annotations is handled below</code>, mas o código logo abaixo é o handler de <strong>medidas</strong> (<code>measure-nodes-custom</code>), não anotações — comentário desatualizado/enganoso.</li>
+<li><code>messages.js:157</code> tem um listener <code>if (msg.type === 'annotations-added') { showToast('Anotações criadas'); }</code>, mas <strong>não existe nenhum emissor</strong> dessa mensagem em <code>code.js</code> (<code>figma.ui.postMessage({type: 'annotations-added', ...})</code> não existe em lugar nenhum do arquivo).</li>
+<li><code>git log -S "annotations-added" --all</code> em <code>messages.js</code>/<code>ui.html</code>/<code>code.js</code>: o listener já existia no commit mais antigo rastreável (<code>fb551c6</code>, 2026-05-13) e nunca teve emissor em nenhum ponto do histórico disponível. <code>CHANGELOG.md</code> não menciona "annotation" nenhuma vez.</li>
+</ul>
+<p><strong>Conclusão</strong>: <code>annotations-added</code> é código morto — provavelmente um handler planejado para uma feature que nunca foi implementada do lado do backend (possivelmente para medidas em lote, dado que fica logo perto do handler de <code>measure-nodes-custom</code>), não uma integração com a Annotation API do Figma que existiu e foi removida. No vocabulário do produto, "anotações" é usado genericamente para os elementos desenhados no canvas (specs, medidas), não a API nativa do Dev Mode. Não há dependência real hoje — a decisão de seguir com o híbrido abaixo se mantém por mérito próprio, não por causa de uma integração pré-existente.</p>
+<h2 id="achado-decisivo-visibilidade-sem-dev-mode">Achado decisivo: visibilidade sem Dev Mode</h2>
+<p>Comparação visual direta feita pelo usuário em 2026-07-07 (screenshots de um card de spec real do Handex vs. uma Annotation nativa real no painel Dev Mode) confirma o ponto mais importante desta análise:</p>
+<ul>
+<li><strong>Card de spec do Handex</strong>: é um <strong>nó real desenhado no canvas</strong> (<code>figma.createFrame</code>/<code>createLine</code> em <code>code.js</code>). Visível para <strong>qualquer pessoa que abrir o arquivo Figma</strong> — com ou sem Dev Mode habilitado, com ou sem o plugin instalado. Badge de letra, linha conectora pontilhada até o elemento, conteúdo customizado.</li>
+<li><strong>Annotation nativa</strong>: só é renderizada <strong>dentro do painel de Dev Mode</strong> do Figma. Fora do Dev Mode, é completamente invisível no canvas — não é um nó, não aparece para quem não ligou o Dev Mode naquele arquivo.</li>
+</ul>
+<p>Isso importa porque o público do Handex não é só dev: <strong>PO, QA, outros designers</strong> tipicamente revisam o handoff sem ter Dev Mode habilitado (é mais hábito/permissão de desenvolvedor). Uma migração para Annotation nativa excluiria esse público do acesso à informação — mesmo que a annotation carregasse o dado certo, ninguém sem Dev Mode a veria.</p>
+<p><strong>Isso reforça, não muda, a decisão de manter o híbrido</strong>: o card visual no canvas continua sendo o único formato que serve o público amplo (PO/QA/design), e é por isso que ele deve seguir como principal — a Annotation nativa é estritamente um complemento para quem já vive no Dev Mode, nunca um substituto.</p>
+<h2 id="por-que-nao-e-substituicao">Por que não é substituição</h2>
+<p>A <code>AnnotationProperty</code> do Figma é uma <strong>enumeração fechada</strong> de propriedades de design do próprio nó (<code>width</code>, <code>height</code>, <code>fills</code>, <code>strokes</code>, <code>effects</code>, <code>fontSize</code>, <code>padding</code>, <code>cornerRadius</code> etc.) — não aceita pares arbitrários <code>nome/token/valor</code> definidos pelo designer. O que o Handex chama de "Propriedades" numa spec (<code>nome da propriedade</code> + <code>token do Design System</code> + <code>valor aplicado</code>, ver <code>guide.html</code> "Anotar Specs", passo 5) <strong>não tem equivalente nativo</strong>. Além disso:</p>
+<div class="table-wrap"><table><thead><tr><th>Recurso da spec Handex</th><th>Equivalente nativo</th><th>Veredito</th></tr></thead><tbody><tr><td>Categoria + cor customizada</td><td><code>AnnotationCategory</code> (<code>figma.annotations.addAnnotationCategoryAsync({label, color})</code>) + <code>categoryId</code> na Annotation</td><td>Cobre</td></tr><tr><td>Nota técnica</td><td><code>label</code> (texto simples) ou <code>labelMarkdown</code> (Markdown)</td><td>Cobre</td></tr><tr><td>Propriedades técnicas livres (nome/token/valor)</td><td>Nenhum — <code>properties</code> só aceita tipos fixos do nó</td><td><strong>Não cobre</strong></td></tr><tr><td>Letra/tag (A, B, C1) + empilhamento por coluna no canvas</td><td>Nenhum — annotation é entrada plana num painel, não elemento gráfico no canvas</td><td><strong>Não cobre</strong></td></tr><tr><td>Link para componente DSC</td><td>Nenhum campo dedicado; só via texto livre em Markdown</td><td>Parcial</td></tr><tr><td>Exceções aninhadas (Erro/Sucesso/Alerta/Confirmação)</td><td>Nenhuma estrutura hierárquica</td><td><strong>Não cobre</strong></td></tr></tbody></table></div>
+<p>Migrar integralmente perderia a informação mais valiosa do produto (propriedades técnicas estruturadas) e a experiência visual de card conectado ao elemento no canvas — que hoje é o que torna a ficha "auto-suficiente" (funciona sem que o dev precise abrir o Dev Mode).</p>
+<h2 id="desenho-do-hibrido">Desenho do híbrido</h2>
+<p><strong>Princípio</strong>: o card visual no canvas continua sendo a fonte de verdade e a UI principal (nada muda para o designer). A Annotation nativa é um <strong>espelho simplificado e adicional</strong>, criado em paralelo, para que a spec também apareça no painel de Dev Mode nativo do Figma — útil para desenvolvedores que já trabalham por ali e não abrem o plugin.</p>
+<h3 id="ponto-de-integracao-no-codigo">Ponto de integração no código</h3>
+<p><code>src/plugin/code.js</code>, handler <code>create-unified-spec</code> (linha ~2650): já resolve o <code>node</code> alvo (elemento selecionado ou <code>targetNodeId</code>) e já tem <code>opts</code> com <code>color</code>, <code>fillColor</code>, categoria, label/nota, e a lista de propriedades técnicas. É o ponto natural para, <strong>após</strong> criar o <code>specCard</code> visual (como hoje), adicionar:</p>
+<pre><code class="lang-js">// Após criar o specCard visual (comportamento atual inalterado)
+try {
+  let category = await findOrCreateAnnotationCategory(opts.categoriaNome, opts.color);
+  node.annotations = [
+    ...(node.annotations || []),
+    {
+      label: buildAnnotationSummary(opts), // "Letra A · Botão Primário · 3 propriedades — ver ficha no canvas"
+      categoryId: category.id
+    }
+  ];
+} catch (e) {
+  // Annotation nativa é um extra — nunca deve bloquear a criação da spec visual se falhar
+}</code></pre>
+<p><code>buildAnnotationSummary(opts)</code> gera um resumo textual (não tenta replicar as propriedades técnicas 1:1) com uma instrução clara de que os detalhes completos estão no card do canvas — evita duplicar dados que podem divergir.</p>
+<h3 id="findorcreateannotationcategory"><code>findOrCreateAnnotationCategory</code></h3>
+<p>Reutiliza a paleta de cores já existente do sistema de specs (<code>_CAT_COLORS</code>/<code>CATEGORY_COLORS</code> em <code>specifications.js</code> — ver memória <code>project-spec-colors</code>). Precisa mapear hex → <code>AnnotationCategoryColor</code> (enum fechado de cores nomeadas do Figma, não hex livre) — <strong>checar na implementação real se o enum tem cores próximas o suficiente das 11 categorias atuais</strong>; se não tiver, usar a cor mais próxima e documentar o desvio, não forçar um hack de cor.</p>
+<h3 id="errosexcecoes">Erros/exceções</h3>
+<p><code>node.annotations</code> deve ser tratado como <strong>melhor esforço</strong>: se falhar (nó não suporta annotations, ex. tipos fora da lista suportada, ou erro de permissão), a criação da spec visual não deve ser bloqueada — sempre um <code>try/catch</code> silencioso com log, nunca um <code>figma.notify</code> de erro que confunda o designer sobre o que realmente falhou.</p>
+<h3 id="limpeza-ao-excluir-spec">Limpeza ao excluir spec</h3>
+<p>O fluxo de <code>deleteNode</code> (specifications.js) hoje remove o card visual do canvas. Ao adotar o híbrido, também precisa remover a entrada correspondente de <code>node.annotations</code> — senão a anotação nativa fica órfã, referenciando uma spec que não existe mais no card visual. Isso exige guardar uma referência (ex: id da spec) dentro do <code>label</code> ou de outro campo rastreável para localizar a entrada certa no array de annotations no momento da exclusão.</p>
+<h2 id="esforco-estimado">Esforço estimado</h2>
+<ul>
+<li>Baixo-médio: é aditivo, não uma migração. Principal trabalho é (a) mapear as 11 cores de categoria existentes para o enum fechado do Figma, (b) implementar <code>findOrCreateAnnotationCategory</code> com cache (evitar recriar categoria a cada spec), (c) tratar o ciclo de vida (criar/remover) em paralelo ao card visual sem acoplar os dois fortemente.</li>
+<li>Risco principal: <strong>duplicação de estado</strong> entre o card visual (fonte de verdade) e a annotation nativa (espelho) — se um dos dois falhar silenciosamente, ficam dessincronizados. Mitigar tratando a annotation sempre como best-effort e nunca como algo que o usuário edita diretamente (só o plugin escreve nela).</li>
+</ul>
+<h2 id="recomendacao">Recomendação</h2>
+<p>Vale um spike pequeno (1 spec, 1 categoria) antes de comprometer no roadmap — validar na prática se o enum <code>AnnotationCategoryColor</code> tem cores suficientes e se <code>node.annotations</code> de fato aparece no painel Dev Mode como esperado para os tipos de nó que o Handex mais usa (Frame, Instance, Text).</p>
+  </div>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+</div>
+</body>
+</html>

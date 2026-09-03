@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oportunidades da Figma Plugin API · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display:flex; gap: 4px; flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">Handex · Documentação</span>
+  <nav>
+    <a href="index.html">Início</a>
+  </nav>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    
+    <h1 id="handex-oportunidades-da-figma-plugin-api-analise-2026-07-07">Handex — Oportunidades da Figma Plugin API (análise 2026-07-07)</h1>
+<blockquote><p>Estudo prévio de novidades da Figma Plugin API e como podem evoluir o Handex. Baseado em <code>src/plugin/code.js</code>, <code>src/plugin/modules/specifications.js</code> e <code>src/plugin/refs/</code> no estado do repo nesta data. Handex é um plugin de <strong>handoff express</strong>: a filosofia de produto é velocidade e baixo atrito para o designer documentar — qualquer feature nova deve ser julgada primeiro por "isso acelera ou trava o fluxo express?".</p></blockquote>
+<h2 id="resumo-executivo">Resumo executivo</h2>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Feature Figma</th><th>Impacto</th><th>Esforço</th><th>Alinhamento com "express"</th></tr></thead><tbody><tr><td>1</td><td>Annotations API nativa (<code>figma.annotations</code>)</td><td>Alto</td><td>Baixo–Médio</td><td>Forte — reduz nós manuais no canvas</td></tr><tr><td>2</td><td>Dev Mode: <code>DevStatus</code> + <code>DEV_MODE_STATUS_UPDATE</code></td><td>Alto</td><td>Baixo</td><td>Forte — handoff nativo sem passo extra</td></tr><tr><td>3</td><td>Novos <code>VariableScope</code> (opacity, stroke, effects)</td><td>Médio</td><td>Baixo</td><td>Neutro — amplia auditoria sem novo passo</td></tr><tr><td>4</td><td>Figma MCP Server (Dev Mode)</td><td>Médio (estratégico)</td><td>Médio</td><td>Tensiona a filosofia — ver nota abaixo</td></tr><tr><td>5</td><td>Slots (GA jun/2026)</td><td>Baixo p/ Handex</td><td>Alto</td><td>Baixo — Handex audita, não gera componentes</td></tr></tbody></table></div>
+<hr>
+<h2 id="1-annotations-api-nativa-figmaannotations">1. Annotations API nativa (<code>figma.annotations</code>)</h2>
+<p>Hoje o Handex simula anotações manualmente — <code>code.js</code> não usa <code>figma.annotations</code>/<code>Annotation</code> nativo (confirmado por busca no código: só há um comentário <code>// add-annotations is handled below</code>, sem chamada real à API nativa). Specs de handoff provavelmente são materializadas como cards/badges desenhados no canvas.</p>
+<p><strong>Onde entra:</strong> migrar a criação de specs (<code>modules/specifications.js</code> → <code>code.js</code>) para <code>node.annotations = [...]</code> faria as specs aparecerem <strong>nativamente no painel de Dev Mode</strong> que o desenvolvedor já abre — sem precisar que o designer gere uma "ficha" separada só para isso. Isso é diretamente a favor da filosofia express: menos arte manual no canvas, informação aparece onde o dev já está olhando.</p>
+<p><strong>Risco a avaliar:</strong> a ficha de handoff atual (<code>GENERATE_HANDOFF_FILE</code>/handoff.js) é um artefato visual único e portátil (pode ser visto por qualquer stakeholder, não só quem tem Dev Mode). Migrar 100% para annotations nativas pode fragmentar a experiência — a ficha unificada tem valor de "documento único" que talvez valha manter em paralelo, não substituir.</p>
+<h2 id="2-dev-mode-status-devstatus-dev_mode_status_update">2. Dev Mode Status (<code>DevStatus</code>) + <code>DEV_MODE_STATUS_UPDATE</code></h2>
+<p>Evento nativo disparado quando um nó muda de status "Ready for Dev"/"Completed". Hoje a auditoria de conformidade (<code>audit.js</code>: <code>checkDone</code>, <code>semDesvios</code>) é uma declaração manual do designer, sem ligação ao status nativo de Dev Mode do Figma.</p>
+<p><strong>Onde entra:</strong> ligar <code>checkDone</code>/<code>semDesvios</code> ao <code>DevStatus</code> nativo — por exemplo, sugerir automaticamente marcar "Ready for Dev" no Figma quando o designer completa a auditoria no Handex, ou vice-versa, popular o card de auditoria quando o dev muda o status. Reduz duplicação de trabalho entre o painel nativo do Figma e o plugin — no espírito express, elimina um passo redundante.</p>
+<p><strong>Cuidado:</strong> o projeto já tem uma decisão de produto deliberada de manter separadas a camada de scan automatizado e a de declaração humana (ver <code>CLAUDE.md</code>). Ligar ao <code>DevStatus</code> não deve reintroduzir a mistura dessas camadas — o <code>DevStatus</code> seria um terceiro sinal, não substituto de nenhum dos dois existentes.</p>
+<h2 id="3-novos-variablescope-opacity-stroke-weight-effects-boundvariables-em-layoutgrideffect">3. Novos <code>VariableScope</code> (opacity, stroke weight, effects) + <code>boundVariables</code> em LayoutGrid/Effect</h2>
+<p>Amplia quais variáveis podem ser auditadas contra o DSC. Hoje o scan de tokens provavelmente cobre cor/tipografia (dado <code>_manifest.json</code>: Fundamentos Visuais tem 248 variáveis, 12 cores, 39 tipografias). Estender a auditoria para opacidade/stroke/efeito aumenta a cobertura de conformidade sem exigir passo extra do designer — o scan já é automático.</p>
+<p><strong>Esforço:</strong> baixo, extensão pontual de <code>specifications.js</code>.</p>
+<h2 id="4-figma-mcp-server-dev-mode-tensao-filosofica">4. Figma MCP Server (Dev Mode) — tensão filosófica</h2>
+<p>O MCP Server da Figma permite que agentes de código (Claude Code, Cursor) leiam variáveis/componentes/layout diretamente e escrevam de volta no canvas. Isso é poderoso, mas <strong>o Handex existe precisamente para ser o intermediário estruturado e auditável entre design e dev na CAIXA</strong> — um ambiente regulado onde rastreabilidade e conformidade documentada importam mais que velocidade pura de um agente de IA editando o canvas livremente.</p>
+<p>Não recomendo integrar o MCP Server como via de edição automática do canvas no contexto do Handex — o valor do produto está em ser a camada de <strong>governança e evidência</strong> (ficha gerada, auditoria declarada, ressalvas documentadas), não em automatizar decisões de design. Um uso possível e mais seguro: expor o <code>_skeleton.json</code>/refs DSC como contexto <strong>somente leitura</strong> para agentes de IA que ajudem desenvolvedores a consumir os componentes DSC corretamente — mantendo o Handex como fonte de verdade, não como executor automático.</p>
+<h3 id="4b-documentacao-de-projeto-como-contexto-para-geracao-externa-ex-figma-make-implementado-de-forma-contida-2026-08">4b. Documentação de projeto como contexto para geração externa (ex: Figma Make) — implementado de forma contida (2026-08)</h3>
+<p>Ideia avaliada em profundidade (3 rodadas de análise, 2026-08): usar o que já foi documentado de UM projeto no Handex (briefing, tokens usados, cenários de exceção, medidas, fluxos) como contexto para uma ferramenta externa (Figma Make ou equivalente) gerar/propor uma tela nova dentro do mesmo projeto.</p>
+<p><strong>Confirmado tecnicamente:</strong> não existe hoje nenhuma API que permita um plugin do Figma Design empurrar contexto para dentro de um projeto Figma Make — são superfícies de produto separadas, sem canal programático entre elas. O único caminho real é o designer copiar/colar manualmente o conteúdo exportado como attachment/prompt no Make.</p>
+<p><strong>O que foi implementado:</strong> <code>_aiContext</code> (<code>modules/design-data.js</code>, <code>_buildAiContext()</code>) — um campo agregador que entra automaticamente no JSON exportado (<code>exportHandoffData</code>/<code>exportProgress</code>), sem UI/botão visível. É estritamente material de apoio pronto para copiar/colar, contido a UM projeto (o que já foi documentado nele) — nunca integração automática, nunca geração feita pelo próprio Handex.</p>
+<p><strong>Por que não ir além disso (não expandir para RAG institucional multi-projeto):</strong> uma versão mais ambiciosa — agregar briefings de VÁRIOS projetos numa base de conhecimento institucional consultável — foi avaliada e descartada por dois motivos, não só um:</p>
+<ol>
+<li>É uma categoria de infraestrutura diferente (busca semântica/RAG sobre texto livre, exige vector store e pipeline de ingestão institucional — não é "adicionar um endpoint").</li>
+<li>Briefings estratégicos são o conteúdo mais sensível que o Handex coleta (decisões de escopo, riscos de LGPD/compliance ainda não revisados formalmente, contexto pré-lançamento) — elevar isso a "fato institucional buscável" por qualquer agente, sem dono de curadoria nem processo de revisão, é risco de governança de conteúdo que não é decisão do Handex tomar unilateralmente.</li>
+</ol>
+<p>Se um produto institucional de RAG/base de conhecimento vier a existir, com dono formal e processo de curadoria fora do Handex, o Handex pode ser <em>uma</em> fonte exportável entre várias — mas isso não deve ser prototipado nem desenhado a partir daqui.</p>
+<h2 id="5-slots-ga-junho-2026">5. Slots (GA junho 2026)</h2>
+<p><code>SlotNode</code> é uma feature de <strong>geração/composição</strong> de componentes com conteúdo freeform. O Handex audita e documenta componentes existentes — não gera componentes. Baixa relevância direta, a menos que o produto evolua para sugerir/preencher slots automaticamente durante o handoff (fora do escopo atual "express").</p>
+<hr>
+<h2 id="nota-sobre-a-filosofia-handoff-express">Nota sobre a filosofia "handoff express"</h2>
+<p>As duas features de maior prioridade (1 e 2) compartilham uma característica: <strong>reduzem passos manuais aproveitando capacidades nativas do Figma</strong>, em vez de adicionar novas telas/fluxos ao plugin. Isso está alinhado com o núcleo do produto. A feature 4 (MCP) é a única que tensiona a filosofia — vale tratá-la com cautela deliberada, não adoção reflexiva só porque a Figma oferece.</p>
+<p><strong>Fontes consultadas:</strong> developers.figma.com/docs/plugins/updates, figma.com/plugin-docs/api/DevStatus, figma.com/plugin-docs/api/Annotation, figma.com/blog/introducing-figma-mcp-server, developers.figma.com/docs/plugins/api/SlotNode.</p>
+  </div>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+</div>
+</body>
+</html>

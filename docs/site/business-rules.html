@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regras de Negócio · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display:flex; gap: 4px; flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">Handex · Documentação</span>
+  <nav>
+    <a href="index.html">Início</a>
+  </nav>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    <details class="toc"><summary>Índice</summary><ul><li><a href="#sumario">Sumário</a></li><li><a href="#1-estrutura-de-dados">1. Estrutura de Dados</a></li><li><a href="#2-regras-de-negocio-por-funcionalidade">2. Regras de Negócio por Funcionalidade</a></li><li><a href="#3-travas-e-condicoes-de-bloqueio">3. Travas e Condições de Bloqueio</a></li><li><a href="#4-comportamentos-automaticos">4. Comportamentos Automáticos</a></li><li><a href="#5-disclaimers-e-mensagens-ao-usuario">5. Disclaimers e Mensagens ao Usuário</a></li><li><a href="#6-jornadas-de-usuario">6. Jornadas de Usuário</a></li><li><a href="#7-persistencia-e-armazenamento">7. Persistência e Armazenamento</a></li><li><a href="#8-integracoes-com-o-backend-figma">8. Integrações com o Backend Figma</a></li><li><a href="#9-limites-tecnicos">9. Limites Técnicos</a></li><li><a href="#10-glossario">10. Glossário</a></li></ul></details>
+    <h1 id="handex-regras-de-negocio-travas-disclaimers-e-jornadas">HANDEX — Regras de Negócio, Travas, Disclaimers e Jornadas</h1>
+<blockquote><p>Documento de referência técnica e funcional do plugin Handex v4.1+ Última atualização: 2026-06-11 (v4.1.6)</p></blockquote>
+<hr>
+<h2 id="sumario">Sumário</h2>
+<ol>
+<li><a href="#1-estrutura-de-dados">Estrutura de Dados</a></li>
+<li><a href="#2-regras-de-negócio-por-funcionalidade">Regras de Negócio por Funcionalidade</a></li>
+<li><a href="#3-travas-e-condições-de-bloqueio">Travas e Condições de Bloqueio</a></li>
+<li><a href="#4-comportamentos-automáticos">Comportamentos Automáticos</a></li>
+<li><a href="#5-disclaimers-e-mensagens-ao-usuário">Disclaimers e Mensagens ao Usuário</a></li>
+<li><a href="#6-jornadas-de-usuário">Jornadas de Usuário</a></li>
+<li><a href="#7-persistência-e-armazenamento">Persistência e Armazenamento</a></li>
+<li><a href="#8-integrações-com-o-backend-figma">Integrações com o Backend Figma</a></li>
+<li><a href="#9-limites-técnicos">Limites Técnicos</a></li>
+<li><a href="#10-glossário">Glossário</a></li>
+</ol>
+<hr>
+<h2 id="1-estrutura-de-dados">1. Estrutura de Dados</h2>
+<h3 id="schema-v2-handoffdata">Schema v2 (<code>handoffData</code>)</h3>
+<pre><code class="lang-js">{
+  _schemaVersion: 2,
+  step1: {
+    titulo: '',           // obrigatório para gerar ficha
+    versao: 'v1.0',       // obrigatório, default 'v1.0'
+    objetivo: '',         // obrigatório para gerar ficha
+    status: 'rascunho',   // rascunho | em-revisao | pronto-para-dev | finalizado
+    jornada: '',          // opcional, auto-fill via frame selecionado
+    feature: '',          // opcional, auto-fill via frame selecionado
+    equipe: []            // min 1 membro com nome preenchido para gerar ficha; email é opcional, mas validado por formato se preenchido
+  },
+  step2: {
+    briefingEnabled: false,
+    briefingQuestions: [],  // [{ id, categoria, pergunta, resposta }]
+    regras: [],             // [{ id, titulo, link, notas }]
+    anexos: [],
+    selectedLibSlugs: [],
+    auditReferences: []
+  },
+  frames: [],              // hub de frames documentados (ver estrutura abaixo)
+  createdFlows: [],        // fluxos de tela criados
+  nextFlowNumber: 1,
+  currentUser: null,
+  _fichaGenerated: false,  // controla modal de versionamento
+  specs: [],               // specs globais (fora de frame)
+  docs: {
+    proto:    { link: '' },
+    a11y:     { link: '' },
+    research: { link: '' }
+  }
+}</code></pre>
+<h3 id="estrutura-de-cada-frame">Estrutura de cada Frame</h3>
+<pre><code class="lang-js">{
+  id: '&lt;timestamp&gt;',
+  figmaId: '&lt;nodeId&gt;',
+  nome: 'Nome do Frame',
+  isNewComponent: false,
+  newComponentObservations: '',
+  specs: null,                    // resultado do scan de tokens
+  audit: {
+    checkDone: false,       // Check Designs realizado
+    semDesvios: false,      // designer declara conformidade
+    observacoes: '',        // texto livre de desvios/justificativa
+    ressalvas: []           // snapshot dos itens não conformes no momento da declaração
+                            // [{ category, label, name, nodeId, status: 'error'|'warning' }]
+  },
+  measurements: [],
+  nextMeasurementNumber: 1,
+  createdSpecs: [],
+  excecoes: [],
+  specGroupNames: {},             // { letra: 'nome do grupo' }
+  specGroupVisible: {},           // { letra: boolean }
+  measurementsGroupVisible: true
+}</code></pre>
+<h3 id="regra-de-migracao-de-schema">Regra de Migração de Schema</h3>
+<ul>
+<li>Se o estado salvo não contém <code>_schemaVersion</code>, ele é descartado automaticamente no <code>init-plugin</code></li>
+<li>Não há migração parcial — descarte total com reinício limpo</li>
+<li>Razão: evitar estados híbridos entre schema v1 (wizard) e v2 (ferramentas independentes)</li>
+</ul>
+<hr>
+<h2 id="2-regras-de-negocio-por-funcionalidade">2. Regras de Negócio por Funcionalidade</h2>
+<h3 id="21-informacoes-do-projeto">2.1 Informações do Projeto</h3>
+<div class="table-wrap"><table><thead><tr><th>Campo</th><th>Obrigatório</th><th>Validação</th><th>Comportamento</th></tr></thead><tbody><tr><td>Título</td><td>Sim</td><td>Min 1 caractere</td><td>Habilita "Gerar Ficha"</td></tr><tr><td>Versão</td><td>Sim</td><td>Padrão <code>v{major}.{minor}</code></td><td>Default <code>v1.0</code></td></tr><tr><td>Objetivo</td><td>Sim</td><td>Min 1 caractere</td><td>Habilita "Gerar Ficha"</td></tr><tr><td>Status</td><td>Não</td><td>Enum fixo</td><td>Default <code>rascunho</code></td></tr><tr><td>Jornada</td><td>Não</td><td>Texto livre</td><td>Auto-fill do frame selecionado</td></tr><tr><td>Feature</td><td>Não</td><td>Texto livre</td><td>Auto-fill do frame selecionado</td></tr><tr><td>Equipe</td><td>Sim (1 nome)</td><td>Nome não vazio</td><td>Min 1 membro com nome preenchido</td></tr></tbody></table></div>
+<p><strong>Papéis de equipe disponíveis:</strong> Designer · DEV · PO · QA · Outro (papel não é obrigatório para nenhum membro específico)</p>
+<p><strong>Validação de email (opcional):</strong> <code>/^[^\s@]+@[^\s@]+\.[^\s@]+$/</code> — aplicada apenas quando o campo é preenchido, não bloqueia avanço/geração de ficha se vazio.</p>
+<ul>
+<li>Feedback visual: borda vermelha se formato inválido, verde temporária se válido</li>
+<li>Validação dispara ao blur do campo email</li>
+</ul>
+<p><strong>Auto-fill de título:</strong> ao abrir o plugin, tenta preencher <code>s1-titulo</code> com <code>figma.root.name</code> se o campo estiver vazio.</p>
+<p><strong>Auto-fill de Jornada / Feature:</strong> quando o checkbox é marcado, envia <code>get-context-name</code> ao backend, que retorna o nome do frame selecionado no canvas no momento do clique.</p>
+<hr>
+<h3 id="22-contexto-de-negocio">2.2 Contexto de Negócio</h3>
+<p>Toda a seção é opcional. Nenhum campo bloqueia avanço ou geração de ficha.</p>
+<p><strong>Briefing Estratégico</strong></p>
+<ul>
+<li>Ativado por toggle</li>
+<li>Perguntas pré-categorizadas por: Contexto · Escopo · Stakeholders · UX/Design · Pesquisa</li>
+<li>Cada pergunta tem: categoria, texto e campo de resposta (textarea)</li>
+<li>Ilimitado número de perguntas; removíveis individualmente</li>
+</ul>
+<p><strong>Regras de Negócio</strong></p>
+<ul>
+<li>Campos: título (obrigatório por item) · link (URL, validado ao blur) · notas (textarea)</li>
+<li>Ilimitado número de regras; removíveis individualmente</li>
+</ul>
+<p><strong>Documentação Externa</strong></p>
+<ul>
+<li>Protótipo navegável · Acessibilidade · Pesquisa de UX</li>
+<li>Todos opcionais; validação de URL ao blur</li>
+</ul>
+<hr>
+<h3 id="23-escanear-tokens-hub-de-frames">2.3 Escanear Tokens (Hub de Frames)</h3>
+<p><strong>Tipos de nó aceitos para registro:</strong> <code>FRAME</code> · <code>COMPONENT</code> · <code>INSTANCE</code> · <code>SECTION</code> · <code>GROUP</code></p>
+<p><strong>Fluxo de registro de frame:</strong></p>
+<ol>
+<li>Usuário seleciona frame no canvas do Figma</li>
+<li>Clica em "+ Registrar Frame" no plugin</li>
+<li>Plugin envia <code>get-selection-info</code> ao backend</li>
+<li>Backend retorna <code>{ nodeId, name }</code> do nó selecionado</li>
+<li><code>addFrame(figmaId, nome)</code> cria entrada em <code>handoffData.frames[]</code></li>
+</ol>
+<p><strong>Escaneamento de tokens:</strong></p>
+<ul>
+<li>Categorias selecionáveis: Componentes · Ícones · Tipografia · Frames e Layouts · Vetores</li>
+<li>Envia <code>scan-frame</code> com <code>{ frameId, nodeId, categories, selectedLibSlugs }</code></li>
+<li>Resultado organizado em accordion por tipo; exibe contagem por categoria</li>
+<li>Se &gt; 10 itens em uma seção: exibe campo de busca</li>
+</ul>
+<p><strong>Filtragem automática de resultados:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>Tipo de nó</th><th>Comportamento</th></tr></thead><tbody><tr><td><code>VECTOR</code>, <code>BOOLEAN_OPERATION</code>, <code>ELLIPSE</code>, <code>RECTANGLE</code></td><td>Removidos sempre — shapes primitivos não representam conformidade DS</td></tr><tr><td><code>FRAME</code> / <code>GROUP</code> com filhos <code>INSTANCE</code> ou <code>COMPONENT</code></td><td>Removidos — são contêineres de layout; a conformidade vive nos filhos</td></tr><tr><td><code>FRAME</code> / <code>GROUP</code> sem nenhum filho DS (100% custom)</td><td>Mantidos como alerta — indicam construção fora do DS</td></tr></tbody></table></div>
+<p>Razão da regra: a conformidade não se aplica ao contêiner, mas ao que está dentro dele. Exibir frames de layout como "não conformes" induz o dev a erro sobre a natureza do problema.</p>
+<p><strong>Ícone de localização nos cards escaneados:</strong></p>
+<ul>
+<li>Cada card de elemento exibe ícone <code>locate</code> no header (visível no hover)</li>
+<li>O card inteiro é clicável e chama <code>focusNode(item.nodeId)</code> para navegar ao nó no canvas</li>
+</ul>
+<p><strong>Novo Componente:</strong></p>
+<ul>
+<li>Toggle por frame</li>
+<li>Se marcado: exibe campo de observações (<code>newComponentObservations</code>), muda subtítulo para "Novo Componente" (violeta) e <strong>oculta a seção de Conformidade DSC</strong></li>
+<li>Justificativa: componente inédito passará por revisão dedicada no time DSC — auditoria contra a lib existente não se aplica</li>
+<li>Frames marcados como "Novo Componente" são destacados na ficha e nos documentos exportados</li>
+</ul>
+<p><strong>Conformidade DSC</strong> (visível apenas quando <code>isNewComponent = false</code>):</p>
+<ul>
+<li><code>checkDone</code> — declaração de que o Check Designs foi executado</li>
+<li>Se <code>checkDone = true</code>:</li>
+<li>Toggle "Sem desvios encontrados" (<code>semDesvios</code>)</li>
+<li>Ao ativar <code>semDesvios</code>: snapshot dos itens não conformes salvo em <code>audit.ressalvas[]</code></li>
+<li>Textarea de observações visível quando <code>semDesvios = false</code> ou há itens no scan</li>
+</ul>
+<p><strong>Status de conformidade (subtítulo do card):</strong></p>
+<div class="table-wrap"><table><thead><tr><th>Condição</th><th>Status</th><th>Cor</th></tr></thead><tbody><tr><td><code>isNewComponent = true</code></td><td>Novo Componente</td><td>Violeta</td></tr><tr><td><code>checkDone = false</code></td><td>Pendente</td><td>Cinza</td></tr><tr><td><code>semDesvios = true</code> + scan limpo</td><td>Conforme</td><td>Verde</td></tr><tr><td><code>semDesvios = true</code> + itens no scan</td><td>Conforme com ressalvas</td><td>Âmbar</td></tr><tr><td><code>semDesvios = false</code></td><td>Não Conforme</td><td>Vermelho</td></tr></tbody></table></div>
+<p><strong>Ressalvas:</strong></p>
+<ul>
+<li>Ao marcar <code>semDesvios = true</code>, o plugin salva um snapshot dos itens <code>isDS === false/warning</code> em <code>audit.ressalvas[]</code></li>
+<li>As ressalvas são incluídas na ficha canvas e no MD exportado com Node ID para rastreabilidade em auditoria futura</li>
+<li>Ao desmarcar <code>semDesvios</code>, <code>ressalvas</code> é limpo</li>
+</ul>
+<p><strong>Detecção de conformidade (scan):</strong></p>
+<ul>
+<li><code>variable.remote = true</code> → token de variável de biblioteca publicada → <code>isDS: true</code></li>
+<li><code>style.remote = true</code> → estilo (cor, tipografia, efeito) de biblioteca publicada → <code>isDS: true</code></li>
+<li><code>mainComponent.remote = true</code> → instância de biblioteca publicada → <code>isDS: true</code></li>
+<li>Tipografia: <code>styleKey != null</code> + fonte CAIXAstd → <code>isDS: true</code></li>
+<li>Componente com prefixo <code>[dsc]</code> no nome → <code>isDS: true</code> (fallback sem chave no skeleton)</li>
+<li>Chave da instância presente em <code>componentKeys[]</code> do skeleton → <code>isDS: true</code> (match exato)</li>
+</ul>
+<hr>
+<h3 id="24-anotar-specs">2.4 Anotar Specs</h3>
+<p><strong>Estrutura de uma spec:</strong></p>
+<pre><code class="lang-js">{
+  id: '&lt;figmaNodeId&gt;',
+  targetNodeId: '',   // ID Figma do elemento anotado (para link NODE na ficha e reimportação)
+  name: '',           // obrigatório (editável inline)
+  letter: 'A',        // 1-2 chars, uppercase, obrigatório
+  color: '#005ca9',   // hex — cor semântica da categoria
+  type: '',           // campo primário da categoria (alias de categoryLabel); usado na ficha como chip
+  category: '',       // slug interno da categoria (ex: 'comportamento', 'layout')
+  categoryLabel: '',  // label legível; fallback quando type estiver ausente
+  note: '',
+  link: '',
+  guideSide: 'right', // right | left | top | bottom
+  properties: [],     // [{ label, token, value }]
+  obs: '',
+  excecoes: [],
+  visible: true
+}</code></pre>
+<p><strong>Validações do formulário:</strong></p>
+<ul>
+<li>Tag (letter): formato <code>[A-Z]\d*(\.\d+)*</code> (ex: A, B, A1, A2, A1.1, A1.2), máx 8 caracteres, obrigatório, convertido para uppercase</li>
+<li>Categoria: pode ser "Sem categoria"</li>
+<li>Link: opcional; validado como URL ao blur</li>
+<li>Propriedades: seleção múltipla via modal <code>spec-properties-modal</code></li>
+</ul>
+<p><strong>Categorias padrão de spec:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>Valor</th><th>Label</th><th>Cor</th></tr></thead><tbody><tr><td><code>info</code></td><td>Informação extra</td><td>slate</td></tr><tr><td><code>comportamento</code></td><td>Comportamento</td><td>pink</td></tr><tr><td><code>regra</code></td><td>Regra de Negócio</td><td>blue</td></tr><tr><td><code>api</code></td><td>Dados da API</td><td>lime</td></tr><tr><td><code>layout</code></td><td>Layout</td><td>indigo</td></tr><tr><td><code>interacao</code></td><td>Interação</td><td>emerald</td></tr><tr><td><code>acessibilidade</code></td><td>Acessibilidade</td><td>purple</td></tr><tr><td><code>componente</code></td><td>Componente</td><td>rose</td></tr><tr><td><code>tipografia</code></td><td>Tipografia</td><td>yellow</td></tr><tr><td><code>cor</code></td><td>Cor</td><td>teal</td></tr><tr><td><code>conteudo</code></td><td>Conteúdo</td><td>cyan</td></tr></tbody></table></div>
+<p><strong>Categorias personalizadas:</strong></p>
+<ul>
+<li>Armazenadas em <code>localStorage['handex-ann-categories-v2']</code></li>
+<li>Criáveis, renomeáveis e removíveis pelo usuário</li>
+<li>Se localStorage bloqueado (data: URL), as categorias padrão são carregadas sem persistência</li>
+</ul>
+<p><strong>Agrupamento por frame:</strong></p>
+<ul>
+<li>Specs são agrupadas por letra (A, B, C…) com conectores coloridos</li>
+<li>Nome do grupo editável por letra</li>
+<li>Visibilidade togglável por spec e por grupo</li>
+</ul>
+<hr>
+<h3 id="25-anotar-medidas">2.5 Anotar Medidas</h3>
+<p><strong>Tipos de medida disponíveis:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Descrição</th></tr></thead><tbody><tr><td><code>wh</code></td><td>Altura e Largura (Width / Height)</td></tr><tr><td><code>outer</code></td><td>Espaçamento Externo (Margin)</td></tr><tr><td><code>inner</code></td><td>Padding Interno</td></tr><tr><td><code>spacing</code></td><td>Padding e Gaps</td></tr></tbody></table></div>
+<p><strong>Regras:</strong></p>
+<ul>
+<li>Pelo menos 1 tipo deve ser selecionado para executar</li>
+<li>Numeração sequencial por frame (<code>frame.nextMeasurementNumber</code>)</li>
+<li>Opção "Armazenar no frame pai" (<code>storeInParent</code>) — disponível mas oculto por padrão</li>
+<li>Resultado retornado como array de <code>{ name, number, nodeId, details[], visible }</code></li>
+</ul>
+<hr>
+<h3 id="26-fluxos-de-tela">2.6 Fluxos de Tela</h3>
+<p><strong>Tipos de fluxo:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Elementos necessários</th><th>Descrição</th></tr></thead><tbody><tr><td><code>event_start</code></td><td>1</td><td>Início de jornada</td></tr><tr><td><code>event_end</code></td><td>1</td><td>Fim de jornada</td></tr><tr><td><code>line_solid</code></td><td>2</td><td>Conexão sequencial</td></tr><tr><td><code>line_dashed</code></td><td>2</td><td>Conexão de mensagem</td></tr><tr><td><code>diamond</code></td><td>2</td><td>Decisão (com texto obrigatório)</td></tr><tr><td><code>diamond_dashed</code></td><td>2</td><td>Decisão opcional</td></tr><tr><td><code>gateway_parallel</code></td><td>2+</td><td>Fork / Join paralelo</td></tr></tbody></table></div>
+<p><strong>Campos condicionais:</strong></p>
+<ul>
+<li><code>decisionText</code>: obrigatório para tipos <code>diamond</code> e <code>diamond_dashed</code></li>
+<li><code>chipText</code>: opcional para <code>line_solid</code> e <code>line_dashed</code> (ex: "Sim", "Não")</li>
+<li><code>anchorSide</code>: posição da seta — <code>auto</code> · <code>top</code> · <code>bottom</code> · <code>left</code> · <code>right</code></li>
+</ul>
+<p><strong>Regra de seleção:</strong></p>
+<ul>
+<li>Tipos Início/Fim: exatamente 1 elemento selecionado no canvas</li>
+<li>Demais tipos: exatamente 2 elementos selecionados</li>
+</ul>
+<hr>
+<h3 id="27-excecoes-de-spec">2.7 Exceções de Spec</h3>
+<p><strong>Tipos disponíveis:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Cor</th><th>Ícone</th></tr></thead><tbody><tr><td>Erro</td><td>red-500</td><td>x-circle</td></tr><tr><td>Sucesso</td><td>green-500</td><td>check-circle</td></tr><tr><td>Confirmação</td><td>blue-500</td><td>help-circle</td></tr><tr><td>Alerta</td><td>amber-500</td><td>alert-triangle</td></tr></tbody></table></div>
+<p><strong>Campos:</strong></p>
+<ul>
+<li>Tipo (obrigatório para confirmar)</li>
+<li>Título (texto livre)</li>
+<li>Link âncora (URL opcional)</li>
+<li>Observações (checkbox + textarea condicional)</li>
+<li>"Injetar no frame de spec": visível apenas se a exceção tem <code>nodeId</code> de spec associado E <code>obs</code> preenchida</li>
+</ul>
+<p><strong>Injeção de obs no canvas:</strong></p>
+<ul>
+<li>Ao confirmar com "Injetar" marcado: backend cria frame <code>[Obs]</code> abaixo do frame de spec correspondente no canvas</li>
+</ul>
+<hr>
+<h3 id="28-geracao-da-ficha-no-canvas">2.8 Geração da Ficha no Canvas</h3>
+<p><strong>Pré-requisitos obrigatórios:</strong></p>
+<ol>
+<li><code>step1.titulo</code> não vazio</li>
+<li><code>step1.objetivo</code> não vazio</li>
+<li>Pelo menos 1 membro de equipe com nome preenchido (e-mail e papel não são obrigatórios)</li>
+</ol>
+<p><strong>Nomeação automática do frame:</strong></p>
+<pre><code>Handex | Ficha de Projeto | {titulo} | {DD/MM/AAAA}</code></pre>
+<p><strong>Versionamento:</strong></p>
+<ul>
+<li>Se <code>_fichaGenerated === true</code>: abre modal de versionamento antes de gerar</li>
+<li>Opções: Major (v1.0 → v2.0) ou Minor (v1.0 → v1.1)</li>
+<li>Campo de versão editável para customização livre</li>
+</ul>
+<p><strong>Locking automático:</strong> Todos os nós gerados pelo plugin são criados com <code>node.locked = true</code>:</p>
+<ul>
+<li>Frame principal da ficha</li>
+<li>Grupos de spec individual</li>
+<li>Frame de legenda de fluxos</li>
+<li>Frame injetado de observação de exceção</li>
+<li>Grupos de medida</li>
+</ul>
+<p><strong>Chip de status — semântica de cor:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>Status</th><th>Cor</th></tr></thead><tbody><tr><td>rascunho</td><td>cinza (#94a3b8)</td></tr><tr><td>em-revisao</td><td>amarelo (#f59e0b)</td></tr><tr><td>pronto-para-dev</td><td>azul (#0070af)</td></tr><tr><td>finalizado</td><td>verde (#22c55e)</td></tr></tbody></table></div>
+<p><strong>Seção de Especificações na ficha:</strong></p>
+<ul>
+<li>As seções "Especificações Visuais" e "Especificações Anotadas" foram <strong>mescladas</strong> em um único card "Especificações"</li>
+<li>Specs são organizadas por letra (grupo), com cabeçalho de nome do grupo quando <code>frame.specGroupNames[letra]</code> estiver definido</li>
+<li>Grupos com <code>frame.specGroupVisible[letra] === false</code> são omitidos da ficha</li>
+<li>Cada spec exibe:</li>
+<li><strong>Chip de categoria</strong> com cor semântica proveniente de <code>spec.color</code> (bg suave + borda colorida) e o label de <code>spec.type || spec.categoryLabel || spec.category</code> (fallback: <code>'Geral'</code>)</li>
+<li><strong>Nome da spec</strong> — se <code>spec.targetNodeId</code> existir e o nó estiver no documento, o nome é sublinhado e funciona como hyperlink <code>type: "NODE"</code> para o elemento anotado no canvas</li>
+<li><strong>Propriedades técnicas</strong> — cada entrada de <code>spec.properties[]</code> é exibida como linha com <code>prop.label</code>, <code>prop.token</code> e <code>prop.value</code></li>
+</ul>
+<p><strong>Card User Interface — indicadores de propriedade:</strong></p>
+<ul>
+<li>Cada propriedade escaneada exibe um ícone semântico por tipo (espaçamento direcional, tipografia, cor como swatch real, borda, raio etc.) seguido de label e valor</li>
+<li><strong>Dots de conformidade por propriedade foram removidos</strong> — a acurácia de conformidade é responsabilidade do designer e não é informação acionável para o dev</li>
+<li>O badge de status do componente (DSC / AJUSTE / FORA) permanece visível no header do card do elemento, mas apenas quando a auditoria está ativa (<code>data.isAudit = true</code>)</li>
+</ul>
+<hr>
+<h3 id="29-limpar-todos-os-dados">2.9 Limpar Todos os Dados</h3>
+<p><strong>Botão:</strong> ícone <code>trash-2</code> ao lado do botão "Importar JSON" na home.</p>
+<p><strong>Fluxo:</strong></p>
+<ol>
+<li>Clique abre o modal <code>confirm-clear-modal</code> (confirmação destrutiva)</li>
+<li>Ao confirmar "Sim, limpar tudo":</li>
+</ol>
+<ul>
+<li><code>localStorage['handex-state']</code> removido</li>
+<li><code>localStorage['handex-ann-categories-v2']</code> removido</li>
+<li><code>handoffData</code> resetado para o estado inicial (schema v2 limpo)</li>
+<li><code>createdSpecs</code> esvaziado em memória</li>
+<li>UI re-populada via <code>restoreUIFromState()</code></li>
+<li>Navegação para <code>view-home</code></li>
+<li>Toast: "Todos os dados foram removidos."</li>
+</ul>
+<ol>
+<li>Ao cancelar: modal fechado sem alteração</li>
+</ol>
+<blockquote><p><strong>Nota:</strong> <code>location.reload()</code> não é suportado no WebView do Figma (resulta em tela branca). O reset é feito inteiramente em memória sem recarregar a página.</p></blockquote>
+<hr>
+<h3 id="210-exportacao">2.10 Exportação</h3>
+<p><strong>Formatos disponíveis:</strong></p>
+<ul>
+<li><strong>JSON</strong> — backup completo do <code>handoffData</code> (sem previews Uint8Array)</li>
+<li><strong>Markdown (.md)</strong> — documentação estruturada com tokens por categoria</li>
+<li><strong>HTML interativo</strong> — standalone com Tailwind e Lucide embarcados</li>
+</ul>
+<p><strong>Tokens no MD/HTML:</strong></p>
+<ul>
+<li>Listados por categoria com nomes reais (até 10 por categoria)</li>
+<li>Excedente exibido como <code>+N itens</code></li>
+<li>Tags de categoria no HTML com <code>cursor:default; pointer-events:none</code> (não são clicáveis)</li>
+</ul>
+<p><strong>Importação de JSON:</strong></p>
+<ul>
+<li>Valida presença de <code>step1</code> na raiz</li>
+<li>Incrementa versão minor automaticamente ao importar</li>
+<li>Merge com defaults para campos ausentes</li>
+</ul>
+<hr>
+<h2 id="3-travas-e-condicoes-de-bloqueio">3. Travas e Condições de Bloqueio</h2>
+<h3 id="31-botao-gerar-ficha">3.1 Botão "Gerar Ficha"</h3>
+<p>Desabilitado (<code>opacity-50</code>, <code>cursor-not-allowed</code>) enquanto qualquer condição não for atendida:</p>
+<div class="table-wrap"><table><thead><tr><th>Condição</th><th>Origem</th></tr></thead><tbody><tr><td><code>step1.titulo</code> vazio</td><td><code>validateStep1()</code></td></tr><tr><td><code>step1.objetivo</code> vazio</td><td><code>validateStep1()</code></td></tr><tr><td>Nenhum membro da equipe com nome preenchido</td><td><code>validateStep1()</code> / <code>_hasValidTeamMember()</code></td></tr></tbody></table></div>
+<h3 id="32-botao-confirmar-excecao">3.2 Botão "Confirmar Exceção"</h3>
+<p>Desabilitado até que o usuário selecione um tipo (Erro / Sucesso / Confirmação / Alerta).</p>
+<h3 id="33-botao-conectar-frames-fluxo">3.3 Botão "Conectar Frames" (Fluxo)</h3>
+<p>Desabilitado até que o usuário selecione um tipo de fluxo no modal.</p>
+<h3 id="34-checklist-da-ficha-step-5">3.4 Checklist da Ficha (Step 5)</h3>
+<p>O checklist exibe status em tempo real:</p>
+<div class="table-wrap"><table><thead><tr><th>Item</th><th>Status</th></tr></thead><tbody><tr><td>Título preenchido</td><td>✓ / ✗</td></tr><tr><td>Responsável com nome preenchido</td><td>✓ / ✗</td></tr><tr><td>Frames documentados (≥1)</td><td>✓ / ✗</td></tr><tr><td>Conformidade declarada</td><td>✓ / ✗</td></tr><tr><td>Fluxos mapeados</td><td>◇ (opcional)</td></tr></tbody></table></div>
+<h3 id="35-locking-de-layers-no-canvas">3.5 Locking de layers no canvas</h3>
+<p>Qualquer layer gerada pelo plugin é bloqueada contra edição direta no Figma. Para remover ou recriar um item, o usuário deve usar os botões de exclusão dentro do plugin.</p>
+<h3 id="36-schema-desatualizado">3.6 Schema desatualizado</h3>
+<p>Se o estado salvo no <code>figma.clientStorage</code> não contém <code>_schemaVersion: 2</code>, ele é descartado completamente e o plugin inicia com estado limpo. Não há prompt ao usuário — o descarte é silencioso e automático.</p>
+<h3 id="37-selecao-cross-page">3.7 Seleção cross-page</h3>
+<p>Ao tentar focar/selecionar um nó no canvas, o plugin verifica se o nó pertence à página atual (<code>_nodeOnCurrentPage()</code>). Se não pertencer, o foco é silenciosamente ignorado sem erro.</p>
+<hr>
+<h2 id="4-comportamentos-automaticos">4. Comportamentos Automáticos</h2>
+<div class="table-wrap"><table><thead><tr><th>Ação do usuário</th><th>Comportamento automático</th></tr></thead><tbody><tr><td>Abre o plugin</td><td>Tenta preencher <code>s1-titulo</code> com o nome do arquivo Figma</td></tr><tr><td>Marca checkbox "Jornada" ou "Feature"</td><td>Requisita nome do frame selecionado e preenche o campo</td></tr><tr><td>Adiciona membro à equipe</td><td>Revalida o botão "Gerar Ficha"</td></tr><tr><td>Remove membro da equipe</td><td>Revalida o botão "Gerar Ficha"</td></tr><tr><td>Altera qualquer campo</td><td>Salva automaticamente via <code>saveToStorage()</code></td></tr><tr><td>Cria spec, medida ou fluxo</td><td>Salva e renderiza na lista imediatamente</td></tr><tr><td>Importa JSON</td><td>Incrementa versão minor automaticamente</td></tr><tr><td>Gera ficha uma segunda vez</td><td>Abre modal de versionamento antes de prosseguir</td></tr><tr><td>Adiciona novo item a uma lista</td><td>Auto-scroll para o item adicionado (100 ms)</td></tr><tr><td>Ativa tema dark/light</td><td>Persiste preferência em <code>localStorage['theme']</code></td></tr><tr><td>Clica em "Limpar todos os dados" (lixeira)</td><td>Abre modal de confirmação destrutiva</td></tr><tr><td>Confirma limpeza no modal</td><td>Reseta <code>handoffData</code> em memória, limpa localStorage, navega para home e exibe toast</td></tr><tr><td>Clica em <code>⇅</code> (recolher/expandir)</td><td><code>collapseAllAccordions(container)</code> — recolhe ou expande todos os accordions visíveis no container, incluindo os cards de frame (<code>frame-body-{id}</code>) e accordions internos (tokens, medidas, specs)</td></tr></tbody></table></div>
+<hr>
+<h2 id="5-disclaimers-e-mensagens-ao-usuario">5. Disclaimers e Mensagens ao Usuário</h2>
+<h3 id="51-toast-de-feedback-ui">5.1 Toast de feedback (UI)</h3>
+<div class="table-wrap"><table><thead><tr><th>Contexto</th><th>Mensagem</th></tr></thead><tbody><tr><td>Salvo automaticamente</td><td>"Salvo automaticamente" (ícone verde)</td></tr><tr><td>Step 1 inválido ao avançar</td><td>"Preencha o título e ao menos um membro da equipe para avançar."</td></tr><tr><td>Frame já escaneado</td><td>"Frame "{nome}" já escaneado. Atualizando..."</td></tr><tr><td>Cache limpo</td><td>"Cache limpo. Plugin reiniciado."</td></tr><tr><td>Exportação bem-sucedida</td><td>"Dados exportados com sucesso!"</td></tr><tr><td>Ficha gerada</td><td>"Ficha gerada no canvas!"</td></tr><tr><td>Buscando framework</td><td>"Buscando framework no canvas..."</td></tr></tbody></table></div>
+<h3 id="52-notify-do-figma-backend">5.2 Notify do Figma (backend)</h3>
+<p>Mensagens exibidas como notificação nativa do Figma:</p>
+<ul>
+<li>Ao criar medidas: confirmação com número e tipo</li>
+<li>Ao criar fluxo: confirmação com nome</li>
+<li>Ao criar spec: confirmação com letra/categoria</li>
+<li>Ao criar legenda: "Legenda criada!"</li>
+<li>Ao criar ficha: "Ficha técnica criada no canvas!"</li>
+</ul>
+<h3 id="53-hints-visiveis-na-interface">5.3 Hints visíveis na interface</h3>
+<div class="table-wrap"><table><thead><tr><th>Local</th><th>Texto</th></tr></thead><tbody><tr><td>Escanear Tokens (estado vazio)</td><td>"Selecione um Frame no canvas do Figma e clique em <strong>Registrar Frame</strong> para documentá-lo com tokens, medidas e specs."</td></tr><tr><td>Anotar Specs (estado vazio)</td><td>"Selecione um elemento no canvas e toque no botão <strong>+</strong> abaixo."</td></tr><tr><td>Anotar Medidas (estado vazio)</td><td>"Selecione os elementos no canvas e toque no botão <strong>+</strong> abaixo."</td></tr><tr><td>Fluxos de Tela (estado vazio)</td><td>"Selecione dois elementos no Figma e use o botão <strong>+ Conectar Frames</strong> para mapear fluxos de navegação."</td></tr><tr><td>Tipo Decisão no modal de fluxo</td><td>"Dica: Use frases curtas para melhor legibilidade dentro do losango."</td></tr><tr><td>Como Usar — hint de layers</td><td>"Specs, medidas, fluxos e a Ficha de Projeto são criados com bloqueio de edição para preservar a integridade do handoff. Para remover ou recriar um item, utilize os botões de exclusão dentro do próprio plugin."</td></tr><tr><td>Jornada / Feature</td><td>"Ao marcar, preenche com o nome do frame selecionado no Figma"</td></tr><tr><td>Spec — Dica de uso</td><td>"O destaque e o scroll automático no Figma ocorrem apenas ao clicar para expandir um item da lista."</td></tr></tbody></table></div>
+<h3 id="54-confirmacoes-destrutivas">5.4 Confirmações destrutivas</h3>
+<div class="table-wrap"><table><thead><tr><th>Ação</th><th>Confirmação</th></tr></thead><tbody><tr><td>Limpar cache do plugin</td><td><code>window.confirm("Limpar todo o cache do plugin?\n\nIsso removerá: formulário, frames, auditoria, medidas, fluxos e histórico.\n\nEssa ação não pode ser desfeita.")</code></td></tr><tr><td>Limpar todos os dados (botão lixeira na home)</td><td>Modal <code>confirm-clear-modal</code> — título "Limpar todos os dados?", botões "Cancelar" e "Sim, limpar tudo" (vermelho)</td></tr></tbody></table></div>
+<h3 id="55-disclaimers-tecnicos-sem-exibicao-ao-usuario">5.5 Disclaimers técnicos (sem exibição ao usuário)</h3>
+<ul>
+<li><strong><code>clientStorage</code> sem plugin ID:</strong> o plugin opera sem persistência entre sessões quando executado como plugin de desenvolvimento sem ID registrado no manifesto. Falha silenciosa com log de aviso interno.</li>
+<li><strong><code>localStorage</code> bloqueado:</strong> em contexto <code>data:</code> URL (modo dev), o localStorage é inacessível. O plugin funciona normalmente sem persistência de tema e de preferências de categorias.</li>
+</ul>
+<hr>
+<h2 id="6-jornadas-de-usuario">6. Jornadas de Usuário</h2>
+<h3 id="61-jornada-principal-handoff-completo">6.1 Jornada Principal — Handoff Completo</h3>
+<pre><code>HOME
+ │
+ ├─► Informações do Projeto
+ │     Preenche: título, versão, objetivo, status, equipe
+ │     Opcional: jornada, feature, briefing, regras, docs
+ │
+ ├─► Escanear Tokens
+ │     Seleciona frame no canvas → Registrar Frame
+ │     Para cada frame:
+ │       Escaneia tokens por categoria
+ │       Marca conformidade DSC
+ │       Marca se é Novo Componente
+ │
+ ├─► Anotar Specs
+ │     Seleciona elemento no canvas → botão +
+ │     Define: letra, categoria, nota, link, guia
+ │     Adiciona propriedades técnicas e exceções
+ │
+ ├─► Anotar Medidas
+ │     Seleciona elemento(s) no canvas → botão +
+ │     Escolhe tipos (wh / outer / inner / spacing)
+ │
+ ├─► Fluxos de Tela
+ │     Seleciona 1 ou 2 elementos → Conectar Frames
+ │     Define tipo, texto de decisão (se diamond) e chip
+ │
+ └─► Gerar Ficha de Handoff
+       Checklist validado → Gerar Ficha no Canvas
+       Opcional: Exportar MD / JSON / HTML</code></pre>
+<hr>
+<h3 id="62-jornada-rapida-apenas-specs">6.2 Jornada Rápida — Apenas Specs</h3>
+<pre><code>HOME → Anotar Specs
+  Seleciona elemento → botão +
+  Preenche letra e categoria
+  Confirma → spec aparece no canvas e na lista</code></pre>
+<hr>
+<h3 id="63-jornada-rapida-apenas-medidas">6.3 Jornada Rápida — Apenas Medidas</h3>
+<pre><code>HOME → Anotar Medidas
+  Seleciona elementos no canvas
+  Escolhe tipos de medida → botão +
+  Confirma → medidas aparecem no canvas e na lista</code></pre>
+<hr>
+<h3 id="64-jornada-rapida-fluxo-de-navegacao">6.4 Jornada Rápida — Fluxo de Navegação</h3>
+<pre><code>HOME → Fluxos de Tela
+  Seleciona 2 frames no canvas
+  Clica + Conectar Frames
+  Escolhe tipo (sequência, decisão, etc.)
+  Preenche textos condicionais
+  Confirma → seta / losango criado no canvas</code></pre>
+<hr>
+<h3 id="65-jornada-atualizacao-de-ficha-existente">6.5 Jornada — Atualização de Ficha Existente</h3>
+<pre><code>HOME → Gerar Ficha de Handoff
+  Plugin detecta ficha existente (_fichaGenerated = true)
+  Abre modal de versionamento:
+    Minor: v1.0 → v1.1 (ajuste incremental)
+    Major: v1.0 → v2.0 (redesenho significativo)
+  Usuário confirma versão → ficha recriada no canvas</code></pre>
+<hr>
+<h3 id="66-jornada-exportacao-de-documentacao">6.6 Jornada — Exportação de Documentação</h3>
+<pre><code>HOME → Gerar Ficha de Handoff (view-handoff-summary)
+  Exportar como Markdown → download .md
+  Exportar como JSON → download .json (backup)
+  Gerar Ficha no Canvas → cria frame no Figma</code></pre>
+<hr>
+<h3 id="67-jornada-excecao-em-spec">6.7 Jornada — Exceção em Spec</h3>
+<pre><code>Anotar Specs → expande uma spec → + Exceção
+  Seleciona tipo (Erro / Sucesso / Confirmação / Alerta)
+  Preenche título, âncora, observação
+  Se obs preenchida e spec tem nodeId:
+    Opção "Injetar observação no frame de spec"
+    → Ao confirmar: cria frame [Obs] no canvas abaixo da spec</code></pre>
+<hr>
+<h3 id="68-jornada-importar-dados-existentes">6.8 Jornada — Importar Dados Existentes</h3>
+<pre><code>HOME → Importar JSON (botão utilitário)
+  Seleciona arquivo .json exportado anteriormente
+  Plugin valida presença de step1
+  Faz merge com estado atual
+  Versão minor incrementada automaticamente
+  UI re-populada via restoreUIFromState()</code></pre>
+<hr>
+<h2 id="7-persistencia-e-armazenamento">7. Persistência e Armazenamento</h2>
+<h3 id="71-figma-clientstorage-assincrono-por-arquivo">7.1 Figma clientStorage (assíncrono, por arquivo)</h3>
+<div class="table-wrap"><table><thead><tr><th>Chave</th><th>Conteúdo</th><th>Quando salva</th></tr></thead><tbody><tr><td><code>handoffData</code></td><td>Estado completo do projeto</td><td>A cada alteração (<code>saveToStorage</code>)</td></tr><tr><td><code>handex-scan-cache-v1</code></td><td>Último resultado de scan com previews</td><td>Após scan bem-sucedido</td></tr><tr><td><code>handex-history-{fileKey}</code></td><td>Array de até 5 snapshots de versão</td><td>Ao exportar handoff</td></tr></tbody></table></div>
+<blockquote><p><strong>Limitação:</strong> <code>figma.clientStorage</code> não funciona sem um <code>id</code> válido no manifesto do plugin. Em ambiente de desenvolvimento sem ID publicado, todas as operações de storage falham silenciosamente. O plugin continua funcionando sem persistência entre sessões.</p></blockquote>
+<h3 id="72-localstorage-sincrono-por-navegador">7.2 localStorage (síncrono, por navegador)</h3>
+<div class="table-wrap"><table><thead><tr><th>Chave</th><th>Conteúdo</th></tr></thead><tbody><tr><td><code>theme</code></td><td>Preferência de tema (<code>light</code> / <code>dark</code>)</td></tr><tr><td><code>handex-ann-categories-v2</code></td><td>Categorias personalizadas de spec (JSON)</td></tr><tr><td><code>handex-check-designs-prompted-v1</code></td><td>Flag: modal "Check Designs" já exibido</td></tr></tbody></table></div>
+<blockquote><p><strong>Limitação:</strong> <code>localStorage</code> é bloqueado em contexto <code>data:</code> URL (modo dev do Figma). O plugin captura o <code>SecurityError</code> e opera normalmente sem as preferências salvas.</p></blockquote>
+<h3 id="73-historico-de-snapshots">7.3 Histórico de snapshots</h3>
+<ul>
+<li>Máximo de 5 snapshots por arquivo</li>
+<li>Cada snapshot contém: <code>exportedAt</code>, <code>projectName</code>, <code>versao</code>, dados do scan</li>
+<li>Usado para calcular diff entre versões no HTML interativo</li>
+</ul>
+<hr>
+<h2 id="8-integracoes-com-o-backend-figma">8. Integrações com o Backend Figma</h2>
+<h3 id="81-mensagens-ui-backend-codejs">8.1 Mensagens UI → Backend (<code>code.js</code>)</h3>
+<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Payload principal</th><th>Quando enviado</th></tr></thead><tbody><tr><td><code>save-storage</code></td><td><code>{ data: handoffData }</code></td><td>A cada alteração</td></tr><tr><td><code>get-selection-info</code></td><td>—</td><td>Ao registrar frame ou abrir fluxo</td></tr><tr><td><code>get-context-name</code></td><td>—</td><td>Ao ativar Jornada / Feature</td></tr><tr><td><code>scan-frame</code></td><td><code>{ nodeId, categories, selectedLibSlugs }</code></td><td>Ao escanear tokens</td></tr><tr><td><code>measure-nodes-custom</code></td><td><code>{ measureTypes[], storeInParent, startingNumber }</code></td><td>Ao criar medida</td></tr><tr><td><code>create-unified-spec</code></td><td><code>{ opts: { category, letter, … } }</code></td><td>Ao criar spec</td></tr><tr><td><code>create-flow</code></td><td><code>{ name, type, nodes[], chipText, … }</code></td><td>Ao criar fluxo</td></tr><tr><td><code>create-handoff</code></td><td><code>{ data: handoffData }</code></td><td>Ao gerar ficha</td></tr><tr><td><code>inject-obs-to-spec</code></td><td><code>{ nodeId, obs, specName }</code></td><td>Ao injetar obs de exceção</td></tr><tr><td><code>highlight-node</code></td><td><code>{ id, shouldScroll }</code></td><td>Ao expandir item na lista</td></tr><tr><td><code>hide-node</code></td><td><code>{ id, forceState }</code></td><td>Ao ocultar item</td></tr><tr><td><code>delete-node</code></td><td><code>{ id }</code></td><td>Ao excluir item</td></tr><tr><td><code>scroll-node-into-view</code></td><td><code>{ id }</code></td><td>Ao focar frame no canvas</td></tr><tr><td><code>focus-node</code></td><td><code>{ id }</code></td><td>Ao focar nó no canvas</td></tr><tr><td><code>resize-ui</code></td><td><code>{ width, height }</code></td><td>Ao redimensionar painel</td></tr><tr><td><code>clear-cache</code></td><td>—</td><td>Ao limpar cache do plugin</td></tr></tbody></table></div>
+<h3 id="82-mensagens-backend-ui">8.2 Mensagens Backend → UI</h3>
+<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Dados</th><th>Efeito</th></tr></thead><tbody><tr><td><code>init-plugin</code></td><td><code>{ version, theme, currentUser, projectName, savedState }</code></td><td>Inicializa estado e UI</td></tr><tr><td><code>scan-result</code></td><td><code>{ frameId, data: { components, icons, … } }</code></td><td>Renderiza tokens</td></tr><tr><td><code>measurements-applied</code></td><td><code>{ data: [medidas] }</code></td><td>Adiciona medidas à lista</td></tr><tr><td><code>spec-created</code></td><td><code>{ spec }</code></td><td>Adiciona spec à lista e ao canvas</td></tr><tr><td><code>flow-created</code></td><td><code>{ flow }</code></td><td>Adiciona fluxo à lista</td></tr><tr><td><code>handoff-complete</code></td><td><code>{ isUpdate, timestamp }</code></td><td>Marca ficha como gerada</td></tr><tr><td><code>context-name</code></td><td><code>{ name }</code></td><td>Preenche campo Jornada/Feature</td></tr><tr><td><code>selection-info</code></td><td><code>{ nodes: [{ nodeId, name }] }</code></td><td>Registra frames</td></tr></tbody></table></div>
+<hr>
+<h2 id="9-limites-tecnicos">9. Limites Técnicos</h2>
+<div class="table-wrap"><table><thead><tr><th>Limite</th><th>Valor</th></tr></thead><tbody><tr><td>Caracteres da tag de spec (letter)</td><td>8 (formato <code>[A-Z]\d*(\.\d+)*</code>)</td></tr><tr><td>Snapshots históricos por arquivo</td><td>5</td></tr><tr><td>Itens por seção de scan até exibir busca</td><td>10</td></tr><tr><td>Tokens listados por categoria na ficha</td><td>10 (+ contagem de excedente)</td></tr><tr><td>Membros da equipe</td><td>Ilimitado</td></tr><tr><td>Frames documentados</td><td>Ilimitado</td></tr><tr><td>Specs por frame</td><td>Ilimitado</td></tr><tr><td>Medidas por frame</td><td>Ilimitado</td></tr><tr><td>Fluxos</td><td>Ilimitado</td></tr><tr><td>Exceções por spec</td><td>Ilimitado</td></tr></tbody></table></div>
+<hr>
+<h2 id="10-glossario">10. Glossário</h2>
+<div class="table-wrap"><table><thead><tr><th>Termo</th><th>Definição</th></tr></thead><tbody><tr><td><strong>Ficha Técnica</strong></td><td>Frame gerado no canvas do Figma com todos os dados do handoff</td></tr><tr><td><strong>Handoff</strong></td><td>Entrega completa de documentação de design: dados + frames + specs + fluxos + exportação</td></tr><tr><td><strong>Spec</strong></td><td>Anotação visual criada no canvas com propriedades técnicas, categoria e notas</td></tr><tr><td><strong>Exceção</strong></td><td>Cenário alternativo ou estado de erro documentado em uma spec (Erro · Sucesso · Alerta · Confirmação)</td></tr><tr><td><strong>Medida</strong></td><td>Dimensão (altura, largura, padding, gap) de um ou mais elementos do canvas</td></tr><tr><td><strong>Fluxo</strong></td><td>Conexão visual entre dois frames representando uma transição de tela ou decisão de navegação</td></tr><tr><td><strong>Token</strong></td><td>Elemento do Design System (cor, tipografia, espaçamento) identificado pelo scan</td></tr><tr><td><strong>Frame Hub</strong></td><td>Central de gerenciamento de frames documentados no plugin</td></tr><tr><td><strong>Conformidade DSC</strong></td><td>Declaração do designer de que o frame foi verificado com o Check Designs do Figma</td></tr><tr><td><strong>Jornada</strong></td><td>Nome da jornada de usuário à qual o frame pertence (ex: Onboarding, Checkout)</td></tr><tr><td><strong>Feature</strong></td><td>Nome da funcionalidade específica sendo documentada</td></tr><tr><td><strong>Schema v2</strong></td><td>Versão atual da estrutura de dados do plugin (<code>_schemaVersion: 2</code>)</td></tr><tr><td><strong>clientStorage</strong></td><td>API do Figma para persistência de dados por plugin e por arquivo</td></tr><tr><td><strong>Locking</strong></td><td>Bloqueio de edição de layers geradas pelo plugin — editáveis apenas pelo plugin</td></tr><tr><td><strong>Novo Componente</strong></td><td>Frame que introduz um componente inédito ao Design System</td></tr><tr><td><strong>Chip de status</strong></td><td>Indicador visual colorido do status da entrega na ficha gerada no canvas</td></tr></tbody></table></div>
+  </div>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+</div>
+</body>
+</html>

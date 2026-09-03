@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Handex vs. Figma Nativo · Handex Docs</title>
+<style>
+  :root {
+    --blue-500:#005ca9; --blue-600:#004d8d; --blue-700:#004075;
+    --orange-500:#f39200;
+    --bg:#eef2f7; --surface:#ffffff; --line:#dde3ec; --muted:#64748b; --text:#1e293b;
+    --code-bg:#f1f5f9; --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header.site-header {
+    background: var(--blue-500);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header.site-header .brand {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+  header.site-header nav {
+    display:flex; gap: 4px; flex-wrap: wrap;
+  }
+  header.site-header nav a {
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+  header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
+
+  .layout {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 40px;
+  }
+  h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
+  h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
+  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
+  h4 { font-size: 14px; margin-top: 20px; }
+  p { margin: 12px 0; }
+  a { color: var(--blue-500); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    color: #b3282d;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  blockquote {
+    border-left: 4px solid var(--orange-500);
+    background: #fff7ec;
+    margin: 16px 0;
+    padding: 10px 18px;
+    border-radius: 0 8px 8px 0;
+    color: #6b4a12;
+  }
+  blockquote p { margin: 6px 0; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcfe; }
+
+  .home-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+  }
+  .cat-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  }
+  .cat-title.first { margin-top: 8px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .doc-card-link {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); text-decoration: none; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
+  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
+  .footer-note {
+    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  }
+  .toc {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
+  }
+  .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
+  .toc ul { columns: 2; margin-top: 10px; }
+  @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <span class="brand">Handex · Documentação</span>
+  <nav>
+    <a href="index.html">Início</a>
+  </nav>
+</header>
+<div class="layout">
+  <div class="doc-card">
+    
+    <h1 id="handex-vs-figma-nativo-comparativo-e-plano-de-implementacao-2026-07-09">Handex vs. Figma nativo — comparativo e plano de implementação (2026-07-09)</h1>
+<blockquote><p>Complementa <code>figma-api-roadmap-2026.md</code> (2026-07-07). Este documento nasce de uma pergunta direta: "dado tudo que o Figma já lançou até o Config 2026, alguma feature do Handex virou redundante?" — cobre Config 2025 → Config 2026, Dev Mode, Annotations, Check Designs, Variables API, measurements, prototype flows.</p></blockquote>
+<h2 id="contexto-da-revisao-de-prioridade-2026-07-09">Contexto da revisão de prioridade (2026-07-09)</h2>
+<p>A análise original estimou "Check Designs sai de early access em 12–18 meses" como projeção genérica de ritmo histórico do Figma — <strong>não é dado confirmado pela Figma</strong>. O dono do produto ponderou, com razão, que isso é pouco provável no curto prazo, por três motivos concretos:</p>
+<ol>
+<li>Check Designs está restrito a <strong>Organization/Enterprise desde o lançamento</strong> — isso pode ser segmentação de plano permanente (alavanca de upsell), não uma barreira temporária de early access que "vai abrir para todo mundo".</li>
+<li>A limitação central que encontramos (sem "ignorar/exceção com justificativa") é um problema de produto genuinamente difícil de resolver bem de forma genérica e escalável — pode explicar por que segue em early access sem sinal de avanço.</li>
+<li>Features de linting/conformidade de design system historicamente amadurecem mais devagar que features visuais (Motion, Shaders), porque lidam com falsos positivos que irritam usuário real em produção.</li>
+</ol>
+<p><strong>Ajuste de prioridade</strong>: a ameaça ao scan de tokens do Handex é mais distante e incerta do que a estimativa original sugeria. Isso muda a recomendação de "congelar por precaução urgente" para "manter como está, sem pressa — revisão trimestral é suficiente, não é item de plano de implementação".</p>
+<hr>
+<h2 id="tabela-comparativa-final">Tabela comparativa final</h2>
+<div class="table-wrap"><table><thead><tr><th>Capacidade do Handex</th><th>Equivalente nativo</th><th>Sobreposição</th><th>Diferencial real</th><th>Risco de obsolescência (revisado)</th></tr></thead><tbody><tr><td>Scan de tokens vs. DSC</td><td>Check Designs (early access, Org/Enterprise)</td><td>Alta</td><td>Lib DSC curada + funciona em qualquer plano</td><td><strong>Baixo–Médio, sem prazo definido</strong> — plano permanece Org/Enterprise-only, não early-access temporário</td></tr><tr><td>Auditoria declarada com ressalvas</td><td>Nenhum (pedido de feature aberto no fórum Figma, sem previsão)</td><td>Nenhuma</td><td>Registro de decisão humana, não detecção</td><td>Baixo</td></tr><tr><td>Specs anotadas no canvas</td><td><code>figma.annotations</code> (GA)</td><td>Média</td><td>Sem seat pago, exceção estruturada, portátil</td><td>Médio, 6–12 meses</td></tr><tr><td>Medidas no canvas</td><td>Dev Mode "Add measurements"</td><td>Média</td><td>Sem seat pago, portátil</td><td>Baixo–Médio</td></tr><tr><td>Fluxos ancorados a frames reais</td><td>Prototype connections ou FigJam (arquivo separado)</td><td>Baixa</td><td>Documentação lógica no mesmo arquivo</td><td>Baixo</td></tr><tr><td>Ficha de Handoff exportável (ZIP: HTML+MD+PDF)</td><td>Nenhum</td><td>Nenhuma</td><td>Portátil sem seat/licença — tensiona o modelo de receita por seat da Figma</td><td>Muito baixo</td></tr></tbody></table></div>
+<hr>
+<h2 id="plano-de-implementacao">Plano de implementação</h2>
+<p>Ordenado por prioridade real (impacto × esforço × durabilidade do diferencial), não por ordem de descoberta.</p>
+<h3 id="1-selo-de-auditoria-assinavel-autor-timestamp-na-declaracao-de-conformidade">1. Selo de auditoria assinável (autor + timestamp na declaração de conformidade)</h3>
+<p><strong>Prioridade: Alta. Esforço: Baixo.</strong></p>
+<p>O schema já tem <code>step1.equipe[]</code> e <code>audit.ressalvas[]</code> — falta vincular quem declarou e quando à confirmação de "sem desvios"/ressalva. Transforma um campo de texto livre em evidência auditável por terceiros (compliance, QA da CAIXA).</p>
+<ul>
+<li>[ ] Adicionar <code>audit.declaradoPor</code> (nome/e-mail do membro de equipe) e <code>audit.declaradoEm</code> (timestamp ISO) ao schema, populados no momento em que <code>semDesvios</code> é marcado ou uma ressalva é salva</li>
+<li>[ ] Exibir "declarado por X em DD/MM/AAAA" no card de auditoria da UI (<code>specifications.js</code>/<code>handoff.html</code>)</li>
+<li>[ ] Incluir esse selo na Ficha exportada (MD/HTML) — reforça o valor de "documento auditável" já existente</li>
+<li>[ ] Migração: registros antigos sem esses campos devem degradar graciosamente (campo vazio/"não informado"), sem quebrar schema v2 existente</li>
+</ul>
+<h3 id="2-diff-visual-entre-versoes-da-ficha-de-handoff">2. Diff visual entre versões da ficha de handoff</h3>
+<p><strong>Prioridade: Média-alta. Esforço: Médio.</strong></p>
+<p><code>previousSnapshot</code> já existe no código (<code>handoff.js</code>) — a base estrutural está pronta. Não existe nada parecido nativamente no Figma (nem Check Designs, nem comparação de versão orientada a handoff).</p>
+<ul>
+<li>[ ] Definir o que conta como "mudança" entre snapshots: specs adicionadas/removidas, medidas alteradas, ressalvas resolvidas/novas, mudança de status de conformidade por frame</li>
+<li>[ ] Renderizar um resumo de delta na tela de geração de ficha ("desde a última versão: +3 specs, 1 ressalva resolvida, 2 medidas alteradas")</li>
+<li>[ ] Incluir o delta como seção na Ficha exportada (não só na UI do plugin)</li>
+<li>[ ] Validar com <code>data-analytics</code> a estrutura de comparação de snapshot antes de implementar (evitar over-engineering de diff genérico quando o caso de uso é específico)</li>
+</ul>
+<h3 id="3-ler-prototype-connections-existentes-para-pre-popular-fluxos">3. Ler prototype connections existentes para pré-popular fluxos</h3>
+<p><strong>Prioridade: Investigar antes de comprometer. Esforço: desconhecido até a investigação.</strong></p>
+<p>Se os frames do DSC já usam prototyping real, o Handex poderia ler <code>reactions</code>/<code>transitionNodeID</code> via Plugin API para sugerir o mapeamento de fluxo — o designer confirma/edita depois (sugestão assistida, não geração automática, preserva a declaração humana como camada final).</p>
+<ul>
+<li>[ ] Levantar com <code>data-design</code>/time de design quanto os frames reais da CAIXA já usam prototyping nativo (se a resposta for "quase nunca", a feature não compensa o esforço)</li>
+<li>[ ] Se viável: spike técnico lendo <code>reactions</code> de um frame de teste via Plugin API, confirmar que os dados são suficientes para inferir origem→destino com confiança</li>
+<li>[ ] Não prosseguir para implementação completa sem essa validação prévia</li>
+</ul>
+<h3 id="sem-acao-imediata-so-monitoramento">Sem ação imediata — só monitoramento</h3>
+<ul>
+<li><strong>Check Designs saindo de early access ou mudando de tier</strong>: revisão trimestral do changelog oficial do Figma, não item de sprint. Se a CAIXA/Fóton migrar para Organization/Enterprise por qualquer outro motivo (não relacionado ao Handex), reavaliar a prioridade do item acima então — não antes.</li>
+<li><strong>Migração de specs/medidas para <code>figma.annotations</code>/Dev Mode measurements nativos</strong>: já registrado em <code>figma-api-roadmap-2026.md</code> item 1 como oportunidade de médio prazo (reduz nós manuais no canvas), mas exige decisão explícita sobre manter ou não a Ficha exportada em paralelo (não é substituição 1:1, ver risco já documentado lá). Não entra neste plano de implementação imediato — é uma decisão arquitetural maior que merece discussão própria.</li>
+</ul>
+<hr>
+<h2 id="fora-de-escopo-deste-plano-mencionado-nas-rodadas-de-pesquisa-sem-acao-recomendada">Fora de escopo deste plano (mencionado nas rodadas de pesquisa, sem ação recomendada)</h2>
+<ul>
+<li><strong>Code Layers / Figma Agent (Config 2026)</strong>: reforçam a tensão filosófica já mapeada (geração automática via IA vs. governança auditável do Handex), mas não atacam nenhuma feature específica — não requer ação, só serve de contexto para decisões futuras sobre MCP Server (ver item 4 do roadmap original).</li>
+<li><strong><code>figma.currentPage.focusedNode</code></strong>: sem gancho de produto hoje, pois o Handex roda no canvas de Design, não dentro do Dev Mode.</li>
+<li><strong>Trilha de auditoria em nível de sessão</strong> (quem abriu o plugin, quando, o que mudou entre sessões): aposta de médio-longo prazo, esforço maior que os itens 1-3 acima, não priorizada nesta rodada.</li>
+</ul>
+  </div>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+</div>
+</body>
+</html>
