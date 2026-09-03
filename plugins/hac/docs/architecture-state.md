@@ -474,19 +474,33 @@ configuração/confirmação individual antes de virar spec real:
 3. Cada item abre o formulário normal (`openA11yModal`), com indicador de
    progresso "Item N de M", botões "Focar" (destaca o elemento no
    canvas) e "Descartar" (pula sem criar spec), e o paginador (ver 3.2).
-3.1. **Correção de categoria durante a revisão (2026-09-02)**: quando
-   `window._a11yBatchWizardState` está ativo, um ícone de editar aparece
-   ao lado do título da categoria no cabeçalho do modal
-   (`#a11y-modal-category-edit-btn`); ao clicar, o título vira um
-   `<select>` inline (`#a11y-modal-category-picker`) com as 5 categorias.
-   Trocar a seleção chama `switchA11yWizardCategory(newCategory)`, que
-   reabre o mesmo `openA11yModal` para o mesmo `targetNodeId`/`a11yAreaId`/
-   `a11yOrigin`, só com os campos da nova categoria (em estado default —
-   não há correspondência semântica entre campos de categorias
-   diferentes, então nada é migrado). Existe **só durante o wizard**: na
-   edição normal de uma spec já salva (fora do wizard) não há esse ícone
-   — decisão deliberada do usuário, já que ali o erro é raro (spec criada
-   manualmente) e o caminho aceito é apagar e recriar.
+3.1. **Correção de categoria durante a revisão (2026-09-02, revisado no
+   mesmo dia)**: quando `window._a11yBatchWizardState` está ativo, um ícone
+   de alterar (`arrow-left-right`, Lucide — escolhido para não repetir o
+   `pencil` já usado por `editA11ySpec` na listagem principal, que tem
+   significado diferente: "editar uma spec salva") aparece ao lado do
+   título da categoria no cabeçalho do modal
+   (`#a11y-modal-category-edit-btn`). Ao clicar, chama
+   `openA11yWizardCategoryPickerModal()`, que reabre o MESMO modal de
+   escolha de categoria do fluxo manual "+ Nova spec"
+   (`#a11y-category-picker-modal`, 5 cards com ícone/cor por categoria),
+   só que pulando a checagem `check-a11y-library` (a lib já está garantida
+   — o item só existe porque a Detecção Automática rodou) e com o título
+   trocado para "Alterar Especificação" (`#a11y-category-picker-title-text`,
+   volta para "Nova especificação" em `_openA11yCategoryPickerModalNow`, o
+   caminho normal do "+"). A flag `window._a11yCategoryPickerWizardSwitch`
+   marca esse modo; `chooseA11yType(category)` (handler dos 5 cards) checa
+   a flag e desvia para `switchA11yWizardCategory(category)` em vez de abrir
+   um formulário novo do zero. `switchA11yWizardCategory` reabre o mesmo
+   `openA11yModal` para o mesmo `targetNodeId`/`a11yAreaId`/`a11yOrigin`, só
+   com os campos da nova categoria (em estado default — não há
+   correspondência semântica entre campos de categorias diferentes, então
+   nada é migrado). Existe **só durante o wizard**: na edição normal de uma
+   spec já salva (fora do wizard) não há esse ícone — decisão deliberada do
+   usuário, já que ali o erro é raro (spec criada manualmente) e o caminho
+   aceito é apagar e recriar. O `<select>` inline (`#a11y-modal-category-picker`)
+   e `toggleA11yWizardCategoryPicker` da primeira versão foram removidos —
+   substituídos pelo modal de cards reaproveitado.
 3.2. **Navegação livre + campo de posição editável (2026-09-02, reformulado no
    mesmo dia)**: a revisão deixou de ser estritamente sequencial.
    `window._a11yBatchWizardState.confirmed` e `.discarded` são `Set`s de

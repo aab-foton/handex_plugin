@@ -10,7 +10,8 @@
   <div class="relative w-full max-w-sm bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
     <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line">
       <h3 id="a11y-category-picker-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
-        <i data-lucide="person-standing" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i> Nova especificação
+        <i data-lucide="person-standing" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i>
+        <span id="a11y-category-picker-title-text">Nova especificação</span>
       </h3>
       <button onclick="closeA11yCategoryPickerModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
         <i data-lucide="x" class="w-4 h-4"></i>
@@ -56,18 +57,11 @@
             <span id="a11y-modal-title-icon" class="shrink-0 flex"><i data-lucide="person-standing" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i></span>
             <span id="a11y-modal-title-text">Especificação de Acessibilidade</span>
             <!-- Corrigir categoria sugerida (só durante o wizard de revisão da
-                 Detecção Automática, ver openA11yModal/toggleA11yWizardCategoryPicker
+                 Detecção Automática, ver openA11yModal/openA11yCategoryPickerModal
                  em accessibility.js) -->
-            <button type="button" id="a11y-modal-category-edit-btn" onclick="toggleA11yWizardCategoryPicker()" title="Corrigir categoria" aria-label="Corrigir categoria" class="hidden shrink-0 text-slate-400 hover:text-[#0891B2] dark:hover:text-cyan-400">
-              <i data-lucide="pencil" class="w-3.5 h-3.5" aria-hidden="true"></i>
+            <button type="button" id="a11y-modal-category-edit-btn" onclick="openA11yWizardCategoryPickerModal()" title="Alterar categoria" aria-label="Alterar categoria" class="hidden shrink-0 text-slate-400 hover:text-[#0891B2] dark:hover:text-cyan-400">
+              <i data-lucide="arrow-left-right" class="w-3.5 h-3.5" aria-hidden="true"></i>
             </button>
-            <select id="a11y-modal-category-picker" onchange="switchA11yWizardCategory(this.value)" aria-label="Corrigir categoria da especificação" class="hidden text-[13px] font-bold text-slate-800 dark:text-white bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-cyan-100">
-              <option value="elemento">Elementos e Imagens</option>
-              <option value="estrutura">Estrutura da Página</option>
-              <option value="titulo">Nível de Título</option>
-              <option value="decorativo">Elemento Decorativo</option>
-              <option value="informacoes">Informações Adicionais</option>
-            </select>
           </h3>
           <p id="a11y-modal-area-label" class="hidden text-[10px] font-bold text-cyan-600 dark:text-cyan-400 mt-0.5 ml-6 truncate"></p>
           <!-- Só visível durante o wizard de revisão da Detecção Automática —

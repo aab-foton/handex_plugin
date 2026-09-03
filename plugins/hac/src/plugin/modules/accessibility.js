@@ -480,6 +480,7 @@ function _findA11yAreaById(areaId) {
 function openA11yCategoryPickerModal(areaId) {
   window._a11yPendingAreaId = areaId || null;
   window._a11yLibCheckOnSuccess = null; // fluxo normal "+" nunca usa o desvio de openA11yFormFromUndocumented
+  window._a11yCategoryPickerWizardSwitch = false;
   // Token de correlação — se o designer clicar "+" em duas áreas diferentes
   // antes da primeira checagem responder, só a resposta do pedido MAIS
   // recente pode abrir o modal.
@@ -489,8 +490,24 @@ function openA11yCategoryPickerModal(areaId) {
 }
 window.openA11yCategoryPickerModal = openA11yCategoryPickerModal;
 
+// Abre o mesmo modal de escolha de categoria, mas para TROCAR a categoria de
+// um item em revisão no wizard da Detecção Automática (botão de alterar
+// categoria no cabeçalho de openA11yModal). Diferente do "+ Nova spec", a lib
+// "Design Acessível" já está garantida (o item só existe porque a Detecção
+// Automática rodou), então pula a checagem 'check-a11y-library' e abre direto.
+function openA11yWizardCategoryPickerModal() {
+  window._a11yCategoryPickerWizardSwitch = true;
+  const label = document.getElementById('a11y-category-picker-area-label');
+  if (label) label.classList.add('hidden');
+  const titleText = document.getElementById('a11y-category-picker-title-text');
+  if (titleText) titleText.textContent = 'Alterar Especificação';
+  openModal('a11y-category-picker-modal');
+}
+window.openA11yWizardCategoryPickerModal = openA11yWizardCategoryPickerModal;
+
 // Chamado por messages.js quando o backend confirma que a lib está acessível
-// (resposta 'a11y-library-status', linked: true).
+// (resposta 'a11y-library-status', linked: true) — só ocorre no fluxo normal
+// "+ Nova spec" (openA11yWizardCategoryPickerModal não passa por essa checagem).
 function _openA11yCategoryPickerModalNow() {
   const areaId = window._a11yPendingAreaId;
   const label = document.getElementById('a11y-category-picker-area-label');
@@ -503,6 +520,8 @@ function _openA11yCategoryPickerModalNow() {
       label.classList.add('hidden');
     }
   }
+  const titleText = document.getElementById('a11y-category-picker-title-text');
+  if (titleText) titleText.textContent = 'Nova especificação';
   openModal('a11y-category-picker-modal');
 }
 window._openA11yCategoryPickerModalNow = _openA11yCategoryPickerModalNow;
@@ -524,6 +543,11 @@ window.retryA11yLibraryCheck = retryA11yLibraryCheck;
 
 function chooseA11yType(category) {
   closeA11yCategoryPickerModal();
+  if (window._a11yCategoryPickerWizardSwitch) {
+    window._a11yCategoryPickerWizardSwitch = false;
+    switchA11yWizardCategory(category);
+    return;
+  }
   // Origem da spec manual "+ Nova spec": lê a origem já configurada do
   // projeto (definida antes, no mínimo em Marcar Área — toda spec pertence a
   // uma Área) em vez de assumir 'web' sempre. Só lê o valor já persistido
@@ -662,10 +686,9 @@ function openA11yModal(category, options) {
     _refreshIcons(titleIconWrap);
   }
 
-  // Correção de categoria (ícone de editar + <select> inline) só existe
-  // durante a revisão do wizard — fora dele, categoria errada é resolvida
-  // apagando e recriando a spec (edição normal não tem esse atalho).
-  toggleA11yWizardCategoryPicker(false);
+  // Correção de categoria (ícone de alterar, abre openA11yWizardCategoryPickerModal)
+  // só existe durante a revisão do wizard — fora dele, categoria errada é
+  // resolvida apagando e recriando a spec (edição normal não tem esse atalho).
   const categoryEditBtn = document.getElementById('a11y-modal-category-edit-btn');
   if (categoryEditBtn) categoryEditBtn.classList.toggle('hidden', !window._a11yBatchWizardState);
 
@@ -753,8 +776,8 @@ function openA11yModal(category, options) {
 window.openA11yModal = openA11yModal;
 
 // Corrige a categoria sugerida pela Detecção Automática sem descartar o item
-// (ver botão de editar no cabeçalho, toggleA11yWizardCategoryPicker) —
-// reabre o mesmo formulário só que com outra categoria, preservando
+// (ver botão de alterar categoria no cabeçalho, openA11yWizardCategoryPickerModal)
+// — reabre o mesmo formulário só que com outra categoria, preservando
 // targetNodeId/origem/componente DSC/nome de camada do item atual (o que
 // _resolveA11yFormPresetFromItem já resolveu pra ele); presetComponente/
 // presetTituloNivel/presetEstruturaTipo não se aplicam à nova categoria, por
@@ -762,7 +785,7 @@ window.openA11yModal = openA11yModal;
 function switchA11yWizardCategory(newCategory) {
   const modal = document.getElementById('a11y-spec-modal');
   if (!modal || !A11Y_CATEGORIES[newCategory]) return;
-  if (newCategory === modal.dataset.category) { toggleA11yWizardCategoryPicker(false); return; }
+  if (newCategory === modal.dataset.category) return;
   const options = {
     pendingTargetNodeId: modal.dataset.pendingTargetNodeId || null,
     a11yOrigin: modal.dataset.a11yOrigin || 'web',
@@ -772,30 +795,8 @@ function switchA11yWizardCategory(newCategory) {
   openA11yModal(newCategory, options);
   const state = window._a11yBatchWizardState;
   if (state) _applyA11yWizardModalUi(state);
-  toggleA11yWizardCategoryPicker(false);
 }
 window.switchA11yWizardCategory = switchA11yWizardCategory;
-
-// Alterna o cabeçalho da modal entre o título estático (ícone + nome da
-// categoria) e o <select> de correção manual — só existe/faz sentido durante
-// o wizard de revisão (fora dele, categoria errada = apagar e recriar a
-// spec, orientação já documentada no guia). show=true força abrir mesmo
-// clicando de novo no ícone; false força fechar (ex: depois de escolher uma
-// categoria).
-function toggleA11yWizardCategoryPicker(show) {
-  const titleText = document.getElementById('a11y-modal-title-text');
-  const picker = document.getElementById('a11y-modal-category-picker');
-  if (!titleText || !picker) return;
-  const next = typeof show === 'boolean' ? show : picker.classList.contains('hidden');
-  titleText.classList.toggle('hidden', next);
-  picker.classList.toggle('hidden', !next);
-  if (next) {
-    const modal = document.getElementById('a11y-spec-modal');
-    picker.value = modal ? modal.dataset.category : '';
-    picker.focus();
-  }
-}
-window.toggleA11yWizardCategoryPicker = toggleA11yWizardCategoryPicker;
 
 // Contador de caracteres genérico e reaproveitável — usado por TODOS os
 // campos de texto livre da spec de a11y (estáticos em modals.html e
