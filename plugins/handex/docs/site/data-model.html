@@ -175,15 +175,27 @@
   .theme-toggle .icon-moon { display:none; }
   html[data-theme="dark"] .theme-toggle .icon-sun { display:none; }
   html[data-theme="dark"] .theme-toggle .icon-moon { display:block; }
-  header.site-header .brand-mark { display:inline-flex; align-items:center; gap:8px; flex-shrink:0; }
-  header.site-header .brand-mark svg { width:18px; height:18px; flex-shrink:0; }
+  header.site-header .brand-group { display:flex; align-items:center; gap:10px; margin-right:auto; }
+  header.site-header .brand-icon {
+    width:32px; height:32px; border-radius:999px; background: rgba(255,255,255,.16);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  header.site-header .brand-icon svg { width:18px; height:18px; color:#fff; }
 </style>
 </head>
 <body>
 <header class="site-header">
-  <span class="brand brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>Handex · Documentação</span>
+  <div class="brand-group">
+    <span class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg></span>
+    <span class="brand">Handex · Documentação</span>
+  </div>
   <nav>
     <a href="index.html">Início</a>
+    <a href="business-rules.html">Regras de Negócio</a>
+    <a href="data-model.html" class="active">Modelo de Dados</a>
+    <a href="architecture-state.html">Arquitetura</a>
+    <a href="design-system.html">Design System</a>
+    <a href="changelog.html">Changelog</a>
   </nav>
   <button type="button" id="theme-toggle-btn" class="theme-toggle" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro">
     <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
