@@ -15,3 +15,5 @@ plugins:
 
 exclude:
   - README.md
+  - architecture-state.md
+  - hac-regras-de-negocio-institucional.docx
