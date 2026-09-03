@@ -3,6 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+(function(){
+  try {
+    var KEY = 'handex-docs-theme';
+    var saved = localStorage.getItem(KEY);
+    var theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  } catch (e) {}
+})();
+</script>
 <title>Bug: Tags Alfanuméricas em Specs · Handex Docs</title>
 <style>
   :root {
@@ -134,14 +144,51 @@
   .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
   .toc ul { columns: 2; margin-top: 10px; }
   @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
+
+  html[data-theme="dark"] {
+    --bg:#0f172a; --surface:#1e293b; --line:#334155; --muted:#b4c6d8; --text:#f1f5f9;
+    --code-bg:#0b1220;
+  }
+  html[data-theme="dark"] body { background: var(--bg); color: var(--text); }
+  html[data-theme="dark"] header.site-header { background:#004075; box-shadow:0 2px 6px rgba(0,0,0,.4); }
+  html[data-theme="dark"] code { background: var(--code-bg); color:#ff8a8f; }
+  html[data-theme="dark"] pre { background:#020617; color:#e2e8f0; border:1px solid var(--line); }
+  html[data-theme="dark"] blockquote { background:#2a2110; color:#f3d9a4; border-left-color: var(--orange-500); }
+  html[data-theme="dark"] th { background:#18243b; color: var(--text); }
+  html[data-theme="dark"] tr:nth-child(even) td { background:#16213a; }
+  html[data-theme="dark"] .home-note { background:#12233d; border-color:#1d3a5f; color:#cfe3ff; }
+  html[data-theme="dark"] .toc { background:#18243b; border-color: var(--line); }
+  html[data-theme="dark"] .doc-card-link:hover { box-shadow:0 2px 8px rgba(0,0,0,.3); }
+  html[data-theme="dark"] a { color:#5ac8fa; }
+  html[data-theme="dark"] h3 { color:#8cc8fb; }
+  html[data-theme="dark"] .toc summary { color:#8cc8fb; }
+  html[data-theme="dark"] .doc-card-link .t { color:#8cc8fb; }
+  html[data-theme="dark"] ::selection { background:#004d8d; color:#fff; }
+  .theme-toggle {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:32px; height:32px; border-radius:8px; border:none; cursor:pointer;
+    background: rgba(255,255,255,.12); color:#fff; margin-left:auto; flex-shrink:0;
+    transition: background .15s;
+  }
+  .theme-toggle:hover { background: rgba(255,255,255,.22); }
+  .theme-toggle svg { width:17px; height:17px; }
+  .theme-toggle .icon-moon { display:none; }
+  html[data-theme="dark"] .theme-toggle .icon-sun { display:none; }
+  html[data-theme="dark"] .theme-toggle .icon-moon { display:block; }
+  header.site-header .brand-mark { display:inline-flex; align-items:center; gap:8px; flex-shrink:0; }
+  header.site-header .brand-mark svg { width:18px; height:18px; flex-shrink:0; }
 </style>
 </head>
 <body>
 <header class="site-header">
-  <span class="brand">Handex · Documentação</span>
+  <span class="brand brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>Handex · Documentação</span>
   <nav>
     <a href="index.html">Início</a>
   </nav>
+  <button type="button" id="theme-toggle-btn" class="theme-toggle" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro">
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
+  </button>
 </header>
 <div class="layout">
   <div class="doc-card">
@@ -188,5 +235,20 @@ const newFmt = n.name.match(/^\[Spec \| ([A-Z]\d*(?:\.\d+)*) \| ([a-z]+)\] /);</
   </div>
   <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
 </div>
+<script>
+(function(){
+  function toggleTheme() {
+    var KEY = 'handex-docs-theme';
+    var html = document.documentElement;
+    var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle-btn');
+    if (btn) btn.addEventListener('click', toggleTheme);
+  });
+})();
+</script>
 </body>
 </html>
