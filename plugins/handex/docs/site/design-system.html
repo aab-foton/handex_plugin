@@ -38,9 +38,7 @@
     letter-spacing: .2px;
     white-space: nowrap;
   }
-  header.site-header nav {
-    display:flex; gap: 4px; flex-wrap: wrap;
-  }
+  header.site-header nav { display:flex; gap: 4px; flex-wrap: wrap; }
   header.site-header nav a {
     color: rgba(255,255,255,.85);
     text-decoration: none;
@@ -52,253 +50,509 @@
   header.site-header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
   header.site-header nav a.active { background: rgba(255,255,255,.22); color: #fff; }
 
-  .layout {
-    max-width: 980px;
-    margin: 0 auto;
-    padding: 28px 24px 80px;
-  }
-  .doc-card {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 32px 40px;
-  }
+  .layout { max-width: 1080px; margin: 0 auto; padding: 28px 24px 80px; }
+  .doc-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 32px 40px; }
   h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 800; scroll-margin-top: 80px; }
   h1 { font-size: 26px; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-top:0; }
-  h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h2 { font-size: 20px; margin-top: 48px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
   h3 { font-size: 16px; margin-top: 28px; color: var(--blue-700); }
-  h4 { font-size: 14px; margin-top: 20px; }
+  h4 { font-size: 13px; margin-top: 20px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
   p { margin: 12px 0; }
   a { color: var(--blue-500); }
   code {
-    background: var(--code-bg);
-    padding: 1px 6px;
-    border-radius: 6px;
-    font-size: .88em;
-    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
-    color: #b3282d;
+    background: var(--code-bg); padding: 1px 6px; border-radius: 6px; font-size: .88em;
+    font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace; color: #b3282d;
   }
-  pre {
-    background: #0f172a;
-    color: #e2e8f0;
-    padding: 16px 18px;
-    border-radius: var(--radius);
-    overflow-x: auto;
-    font-size: 13px;
-    line-height: 1.55;
-  }
-  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
-  blockquote {
-    border-left: 4px solid var(--orange-500);
-    background: #fff7ec;
-    margin: 16px 0;
-    padding: 10px 18px;
-    border-radius: 0 8px 8px 0;
-    color: #6b4a12;
-  }
-  blockquote p { margin: 6px 0; }
-  ul, ol { padding-left: 24px; margin: 12px 0; }
-  li { margin: 4px 0; }
   hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
   .table-wrap { overflow-x: auto; margin: 16px 0; }
   table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
   th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
   th { background: #f8fafc; font-weight: 700; }
   tr:nth-child(even) td { background: #fafcfe; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 4px 0; }
 
-  .home-note {
+  .intro-banner {
     background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
-    padding: 14px 18px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
+    padding: 16px 20px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px;
   }
-  .cat-title {
-    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
-    color: var(--muted); font-weight: 800; margin: 32px 0 12px;
+  .intro-banner strong { color: #1e293b; }
+  .warn-banner {
+    background: #fff7ec; border: 1px solid #fed7aa; color: #6b4a12;
+    padding: 12px 18px; border-radius: 10px; font-size: 13px; margin: 16px 0;
   }
-  .cat-title.first { margin-top: 8px; }
-  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
-  .doc-card-link {
-    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
-    background: var(--surface); text-decoration: none; color: var(--text);
-    transition: border-color .15s, box-shadow .15s;
+  .debt-banner {
+    background: #fef2f2; border: 1px solid #fecaca; color: #7f1d1d;
+    padding: 12px 18px; border-radius: 10px; font-size: 13px; margin: 12px 0;
   }
-  .doc-card-link:hover { border-color: var(--blue-500); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
-  .doc-card-link .t { font-weight: 700; font-size: 14px; color: var(--blue-700); margin-bottom: 4px; }
-  .doc-card-link .d { font-size: 12.5px; color: var(--muted); }
-  .footer-note {
-    text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px;
+  .debt-banner strong { color: #b91c1c; }
+  .source-tag {
+    display: inline-block; font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 11px; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 6px;
+    margin: 4px 6px 4px 0;
   }
-  .toc {
-    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
-    padding: 14px 18px; margin-bottom: 28px; font-size: 13px;
-  }
+  .toc { background: #f8fafc; border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; margin-bottom: 28px; font-size: 13px; }
   .toc summary { cursor: pointer; font-weight: 700; color: var(--blue-700); }
   .toc ul { columns: 2; margin-top: 10px; }
+  .footer-note { text-align:center; color: var(--muted); font-size: 12px; margin-top: 40px; }
+
+  /* ══════════════════ SANDBOX: réplica do CSS real do plugin ══════════════════
+     Escopado dentro de .handex-ui para não vazar no resto da página de docs.
+     Fonte: src/plugin/styles/plugin.css + tailwind.config.cjs (cores) +
+     classes utilitárias Tailwind usadas literalmente no código do Handex,
+     reproduzidas aqui à mão (o Tailwind real roda via CLI/JIT no build do
+     plugin — não há CDN aqui por design, ver nota da seção de Restrições). */
+  .handex-ui {
+    font-family: "Inter", sans-serif;
+    color: #1e293b;
+  }
+  .handex-ui * { box-sizing: border-box; }
+  .handex-ui .swatch-row { display:flex; flex-wrap:wrap; gap:14px; margin:16px 0; }
+  .handex-ui .swatch {
+    width: 128px;
+  }
+  .handex-ui .swatch .chip {
+    height: 64px; border-radius: 12px; border: 1px solid rgba(0,0,0,.08);
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+  .handex-ui .swatch .label { font-size: 11.5px; margin-top: 6px; font-weight: 700; color:#334155; }
+  .handex-ui .swatch .hex { font-size: 11px; color:#64748b; font-family: ui-monospace, Consolas, monospace; }
+
+  .demo-block {
+    background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px;
+    padding: 22px; margin: 14px 0; display:flex; flex-wrap:wrap; gap:14px; align-items:flex-start;
+  }
+  .demo-block.dark-demo { background: #0f172a; }
+  .demo-caption { font-size: 12px; color:#64748b; margin-top:10px; width:100%; }
+
+  /* ---- Botões reais (classes literais do Handex, hex direto pra não
+     depender de config Tailwind nesta página) ---- */
+  .hx-btn { border-radius: 16px; font-weight: 700; font-family:"Inter",sans-serif; cursor:pointer; border:none; display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+  .hx-btn-primary { background:#005ca9; color:#fff; padding:11px 20px; font-size:13px; }
+  .hx-btn-primary:hover { background:#004d8d; }
+  .hx-btn-ghost { background: rgba(255,255,255,.1); color:#fff; padding:11px 16px; font-size:13px; }
+  .hx-btn-ghost:hover { background: rgba(255,255,255,.2); }
+  .hx-btn-outline { background:#fff; color:#475569; border:1px solid #e5e7eb; padding:12px 20px; font-size:12px; }
+  .hx-btn-outline:hover { background:#f9fafb; }
+  .hx-btn-outline-link { background:#fff; color:#005ca9; border:1px solid #005ca9; padding:12px 20px; font-size:12px; }
+  .hx-btn-destructive { background:#ef4444; color:#fff; padding:11px 20px; font-size:13px; }
+  .hx-btn-destructive:hover { background:#dc2626; }
+  .hx-btn-icon { width:40px; height:40px; border-radius:16px; background:transparent; color:#475569; display:inline-flex; align-items:center; justify-content:center; border:none; cursor:pointer; }
+  .hx-btn-icon:hover { background:#f1f5f9; }
+  .hx-btn-icon-outline { width:40px; height:40px; border-radius:16px; background:#fff; border:1px solid #e5e7eb; color:#64748b; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+  .hx-btn-icon-outline:hover { background:#f9fafb; color:#ef4444; border-color:#fecaca; }
+  .hx-btn[disabled] { opacity:.4; cursor:not-allowed; }
+  .hx-header-demo { background:#005ca9; border-radius:16px; padding:12px 16px; display:flex; align-items:center; gap:8px; }
+
+  /* ---- Cards ---- */
+  .hx-home-card {
+    display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:6px;
+    padding:12px; width:158px; height:112px; background:#fff; border:1px solid #f3f4f6;
+    border-radius:16px; box-shadow:0 1px 2px rgba(0,0,0,.04); cursor:pointer; transition:.15s;
+  }
+  .hx-home-card:hover { border-color:#005ca9; background:rgba(0,92,169,.06); box-shadow:0 4px 10px rgba(0,0,0,.06); transform:translateY(-2px); }
+  .hx-home-card .ico-wrap { width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f7fbfe; border-radius:12px; }
+  .hx-home-card .t { font-weight:800; font-size:11px; color:#1e293b; letter-spacing:-.01em; }
+  .hx-home-card .d { font-size:10px; color:#64748b; margin-top:2px; }
+
+  .hx-content-card { background:#fff; border:1px solid #f1f5f9; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,.02); padding:16px; }
+
+  /* ---- Badges de categoria de spec (paleta canônica da Ficha) ---- */
+  .hx-badge { display:inline-block; padding:1px 7px; border-radius:9999px; font-size:9px; font-weight:700; white-space:nowrap; }
+  .hx-badge-info { background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; }
+  .hx-badge-comportamento { background:#fdf2f8; color:#be185d; border:1px solid #fbcfe8; }
+  .hx-badge-regra { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+  .hx-badge-api { background:#f7fee7; color:#3f6212; border:1px solid #bef264; }
+
+  /* legenda (modal de ajuda) usa uma paleta um pouco distinta do card do canvas -- ver nota */
+  .hx-legend-card { border-radius:8px; padding:12px; }
+  .hx-legend-pill { display:inline-block; padding:2px 10px; border-radius:9999px; font-size:10px; font-weight:700; text-transform:uppercase; }
+
+  /* ---- Toggle/switch estilizado ---- */
+  .hx-switch { position:relative; display:inline-flex; align-items:center; cursor:pointer; }
+  .hx-switch input { position:absolute; opacity:0; width:1px; height:1px; }
+  .hx-switch .track { width:36px; height:20px; background:#e5e7eb; border-radius:9999px; position:relative; transition:.2s; }
+  .hx-switch .track::after { content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; background:#fff; border:1px solid #d1d5db; border-radius:9999px; transition:.2s; }
+  .hx-switch input:checked + .track { background:#005ca9; }
+  .hx-switch input:checked + .track::after { transform: translateX(16px); border-color:#fff; }
+
+  /* ---- Modal shell ---- */
+  .hx-modal-shell { background:#fff; border-radius:16px; box-shadow:0 25px 50px -12px rgba(0,0,0,.25); border:1px solid #f3f4f6; width:100%; max-width:360px; overflow:hidden; }
+  .hx-modal-header { padding:16px 20px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between; }
+  .hx-modal-body { padding:16px 20px; font-size:12px; color:#475569; }
+  .hx-modal-footer { padding:0 20px 20px; display:flex; gap:10px; }
+
+  /* ---- Toast ---- */
+  .hx-toast { background:#0f172a; color:#fff; border-radius:12px; padding:10px 16px; font-size:12px; font-weight:600; display:inline-flex; align-items:center; gap:8px; box-shadow:0 8px 20px rgba(0,0,0,.2); }
+
+  /* ---- Empty state ---- */
+  .hx-empty { text-align:center; padding:32px 16px; }
+  .hx-empty .ico { opacity:.25; margin-bottom:10px; }
+  .hx-empty .t { font-size:12px; font-weight:700; color:#334155; }
+  .hx-empty .cta { font-size:11px; color:#005ca9; text-decoration:underline; cursor:pointer; margin-top:4px; display:inline-block; }
+
+  /* ---- Input real ---- */
+  .hx-input { border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; padding:8px 12px; font-size:12px; color:#334155; font-weight:500; font-family:"Inter",sans-serif; width:100%; max-width:240px; }
+  .hx-input:focus { border-color:#004d8d; background:#fff; box-shadow:0 0 0 3px rgba(0,92,169,.15); outline:none; }
+
+  /* ---- Ícones grid ---- */
+  .icon-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap:10px; margin:16px 0; }
+  .icon-card { background:#fff; border:1px solid var(--line); border-radius:10px; padding:12px; display:flex; gap:10px; align-items:flex-start; }
+  .icon-card svg { flex-shrink:0; color:#334155; margin-top:1px; }
+  .icon-card .ic-name { font-family:ui-monospace,Consolas,monospace; font-size:11px; font-weight:700; color:#1e293b; }
+  .icon-card .ic-ctx { font-size:10.5px; color:#64748b; margin-top:2px; line-height:1.4; }
+
+  /* ---- Dark mode toggle demo ---- */
+  .theme-compare { display:flex; gap:16px; flex-wrap:wrap; margin:16px 0; }
+  .theme-pane { flex:1; min-width:260px; border-radius:12px; padding:16px; }
+  .theme-pane.light { background:#eef2f7; border:1px solid #dde3ec; }
+  .theme-pane.dark { background:#0f172a; border:1px solid #334155; }
+  .theme-pane .pane-label { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px; }
+  .theme-pane.light .pane-label { color:#64748b; }
+  .theme-pane.dark .pane-label { color:#b4c6d8; }
+
   @media (max-width: 640px) { .toc ul { columns: 1; } .doc-card { padding: 20px; } }
 </style>
 </head>
 <body>
 <header class="site-header">
   <span class="brand">Handex · Documentação</span>
-  <nav>
-    <a href="index.html">Início</a>
-  </nav>
+  <nav><a href="index.html">Início</a></nav>
 </header>
 <div class="layout">
   <div class="doc-card">
-    <details class="toc"><summary>Índice</summary><ul><li><a href="#1-tokens-de-cor">1. Tokens de cor</a></li><li><a href="#2-tipografia">2. Tipografia</a></li><li><a href="#3-espacamento-e-grid">3. Espaçamento e grid</a></li><li><a href="#4-radius">4. Radius</a></li><li><a href="#5-inventario-de-componentes">5. Inventário de componentes</a></li><li><a href="#6-nomenclatura-de-tela">6. Nomenclatura de tela</a></li><li><a href="#7-acessibilidade">7. Acessibilidade</a></li><li><a href="#8-componentes-propositalmente-fora-de-escopo-deste-ds">8. Componentes propositalmente fora de escopo deste DS</a></li><li><a href="#9-divida-tecnica-codigo-a-migrar-para-bater-com-este-ds">9. Dívida técnica (código a migrar para bater com este DS)</a></li><li><a href="#historico-de-decisoes-deste-documento">Histórico de decisões deste documento</a></li></ul></details>
+
+    <details class="toc"><summary>Índice</summary><ul>
+      <li><a href="#intro">Sobre esta página</a></li>
+      <li><a href="#cores">1. Cores</a></li>
+      <li><a href="#tipografia">2. Tipografia</a></li>
+      <li><a href="#espacamento">3. Espaçamento e Radius</a></li>
+      <li><a href="#icones">4. Ícones</a></li>
+      <li><a href="#componentes">5. Componentes</a></li>
+      <li><a href="#tema">6. Tema claro/escuro</a></li>
+      <li><a href="#divida">7. Dívida técnica observada</a></li>
+    </ul></details>
+
     <h1 id="design-system-do-handex">Design System do Handex</h1>
-<p><strong>Versão do DS:</strong> 1.5 <strong>Data de fechamento:</strong> 2026-08-25 · última revisão: 2026-08-26 (auditoria de contraste WCAG + padronização de botões brancos + peso visual de ícones + tamanho de ícones-irmãos) <strong>Escopo:</strong> a linguagem visual da própria interface do plugin Handex (tokens, componentes, padrões de interação). <strong>Não é o DSC</strong> (Design System CAIXA) — esse é o design system externo que o Handex audita/referencia via <code>refs/_manifest.json</code> e os scans de conformidade. Os dois domínios não devem ser confundidos: o DSC é fonte de verdade de conformidade de produto CAIXA; este documento é sobre a ferramenta interna que a Fóton usa para produzir handoff.</p>
-<p><strong>Este é o arquivo de referência normativo.</strong> Toda nova tela, componente ou variante visual do Handex deve seguir o que está definido aqui. Quando o código atual diverge do que está documentado, isso é dívida técnica a ser corrigida — não uma segunda opção válida. A seção 9 lista essa dívida.</p>
-<hr>
-<h2 id="1-tokens-de-cor">1. Tokens de cor</h2>
-<h3 id="paleta-de-marca-tailwindconfigcjs12-45">Paleta de marca (<code>tailwind.config.cjs:12-45</code>)</h3>
-<p><strong>Marca institucional CAIXA vigente</strong> — revertido em 2026-08-26. A paleta "Uau CAIXA" (azul-roxo <code>#3d3dff</code>, usada entre 2026-08-24 e 2026-08-26) era uma antecipação de rebranding que a CAIXA ainda não publicou oficialmente; até a publicação, o Handex usa a marca institucional vigente, extraída de <code>refs/fundamentos-visuais.json</code> (tokens <code>color/bg/highlight</code>/<code>color/bg/accent</code>, escalas <code>primary</code>/<code>secondary</code> do DSC).</p>
-<div class="table-wrap"><table><thead><tr><th>Token</th><th>Hex</th><th>Uso</th></tr></thead><tbody><tr><td><code>blue-500</code></td><td><code>#005ca9</code></td><td>Cor de ação primária/brand — botões primários, header das views, elementos de destaque ("azul cx", <code>primary 90</code> no DSC)</td></tr><tr><td><code>blue-600</code></td><td><code>#004d8d</code></td><td>Hover/estado ativo de <code>blue-500</code></td></tr><tr><td><code>blue-700</code></td><td><code>#004075</code></td><td>Uso pontual, texto sobre fundo claro que precisa de mais contraste (próximo de <code>primary 110</code>, <code>#00437a</code>)</td></tr><tr><td><code>orange-500</code></td><td><code>#f39200</code></td><td>Acento secundário, alertas não-críticos ("laranja cx", <code>secondary 70</code> no DSC)</td></tr></tbody></table></div>
-<p><strong>Regra de uso:</strong> sempre a classe nomeada (<code>bg-blue-500</code>, <code>hover:bg-blue-600</code>), nunca hex arbitrário (<code>bg-[#005ca9]</code>) em código novo. O hex arbitrário é tolerado apenas no código legado listado na seção 9.</p>
-<p>Não usar <code>#3d3dff</code>, <code>#2e2ee0</code>, <code>#f5b400</code> ou qualquer variação da paleta "Uau CAIXA" — fica reservada para se e quando a CAIXA publicar oficialmente o rebranding, quando este documento será atualizado novamente.</p>
-<h3 id="superficies-lightdark-tailwindconfigcjs46-58">Superfícies light/dark (<code>tailwind.config.cjs:46-58</code>)</h3>
-<div class="table-wrap"><table><thead><tr><th>Token</th><th>Light</th><th>Dark</th></tr></thead><tbody><tr><td><code>light.bg</code> / <code>dark.bg</code></td><td><code>#eef2f7</code></td><td><code>#0f172a</code></td></tr><tr><td><code>light.surface</code> / <code>dark.surface</code></td><td><code>#ffffff</code></td><td><code>#1e293b</code></td></tr><tr><td><code>light.line</code> / <code>dark.line</code></td><td><code>#dde3ec</code></td><td><code>#334155</code></td></tr><tr><td><code>light.muted</code> / <code>dark.muted</code></td><td><code>#8394a8</code></td><td><code>#b4c6d8</code></td></tr><tr><td><code>dark.text</code></td><td>— (usar <code>slate-800</code>)</td><td><code>#f1f5f9</code></td></tr></tbody></table></div>
-<p>Uso: <code>bg-light-surface dark:bg-dark-surface</code>, <code>border-light-line dark:border-dark-line</code>, <code>text-slate-800 dark:text-dark-text</code>. Este é o par de tokens com maior disciplina de uso hoje — manter esse padrão como referência de "como todo token deveria ser aplicado".</p>
-<h3 id="paleta-de-categoria-de-scan-tailwindconfigcjs62-87-em-safelist">Paleta de categoria de scan (<code>tailwind.config.cjs:62-87</code>, em <code>safelist</code>)</h3>
-<p>11 cores com par light/dark, atribuídas <strong>rotativamente por índice</strong> (não semântica fixa) via <code>_getCatColor</code> sobre a lista de categorias de token do DSC: <code>slate, pink, blue, lime, indigo, rose, emerald, yellow, teal, purple, cyan</code>.</p>
-<p>Uso: <code>bg-{cor}-50 text-{cor}-600 border-{cor}-200</code> no light, <code>dark:bg-{cor}-900/20 dark:text-{cor}-400 dark:border-{cor}-800/40</code> no dark (opacidade <code>/30</code> para <code>pink</code>/<code>blue</code>). Qualquer cor nova de categoria de scan precisa entrar em <code>safelist</code> (Tailwind não gera classe dinâmica não-safelisted).</p>
-<h3 id="categorias-de-spec-canonico">Categorias de spec — canônico</h3>
-<p>As 4 categorias de spec (<code>info</code>, <code>comportamento</code>, <code>regra</code>, <code>api</code>) usam <strong>a paleta da Ficha exportada</strong> como fonte única — é o que o desenvolvedor final vê na entrega, e é o ponto de maior peso de decisão.</p>
-<div class="table-wrap"><table><thead><tr><th>Categoria</th><th>Fill</th><th>Texto/borda</th></tr></thead><tbody><tr><td><code>info</code></td><td><code>#f1f5f9</code></td><td><code>#475569</code></td></tr><tr><td><code>comportamento</code></td><td><code>#fdf2f8</code></td><td><code>#be185d</code></td></tr><tr><td><code>regra</code></td><td><code>#eff6ff</code></td><td><code>#1d4ed8</code></td></tr><tr><td><code>api</code></td><td>mesmo padrão de <code>handoff.js:726-729</code> — usar o par já definido lá para a 4ª categoria</td></tr></tbody></table></div>
-<p>Card no canvas (<code>specifications.js:449-454</code>) e modal de ajuda (<code>modals.html:396-418</code>) devem passar a consumir este mesmo par de valores — ver dívida técnica (seção 9, item 1).</p>
-<h3 id="cor-de-sucessoconfirmacao">Cor de sucesso/confirmação</h3>
-<p><code>green-500</code> (<code>#22c55e</code>, escala padrão Tailwind) é o verde oficial de sucesso/confirmação — consistente com o uso já orgânico em status "Finalizado" (<code>dados-projeto.html:86</code>) e estado confirmado (<code>modals.html:770</code>).</p>
-<div class="table-wrap"><table><thead><tr><th>Uso</th><th>Classe</th></tr></thead><tbody><tr><td>Fundo de estado de sucesso</td><td><code>bg-green-50 dark:bg-green-900/20</code></td></tr><tr><td>Borda</td><td><code>border-green-100 dark:border-green-800/30</code></td></tr><tr><td>Botão de confirmação positiva</td><td><code>bg-green-500 hover:bg-green-600</code></td></tr></tbody></table></div>
-<p><code>plugin.css:114-134</code> hoje faz <code>button.bg-green-600</code>/<code>.bg-green-500</code> herdar a cor do laranja de alerta (<code>#7a5800</code>) — é um bug adormecido que precisa ser corrigido antes que qualquer botão verde real seja criado (dívida técnica, seção 9, item 2).</p>
-<hr>
-<h2 id="2-tipografia">2. Tipografia</h2>
-<p>Fonte única: <code>Inter, sans-serif</code> (<code>plugin.css:3</code>), forçada com <code>!important</code> em headings/labels.</p>
-<h3 id="escala-nomeada-canonica">Escala nomeada (canônica)</h3>
-<div class="table-wrap"><table><thead><tr><th>Token</th><th>Valor</th><th>Uso</th></tr></thead><tbody><tr><td><code>text-3xs</code></td><td><code>9px</code></td><td>Contador de caractere</td></tr><tr><td><code>text-2xs</code></td><td><code>10px</code></td><td>Hints, descrição de card, badge de categoria</td></tr><tr><td><code>text-xs-plus</code></td><td><code>11px</code></td><td>Subtítulo de header, label de modal</td></tr><tr><td><code>text-sm</code> (nativo Tailwind, <code>13px</code> já é próximo)</td><td><code>12–13px</code></td><td>Corpo de botão, texto de card padrão</td></tr><tr><td><code>text-md</code></td><td><code>14px</code></td><td>Título de modal pequeno</td></tr><tr><td><code>text-lg</code></td><td><code>15–16px</code></td><td>Título de modal médio</td></tr><tr><td><code>text-xl</code></td><td><code>18px</code></td><td>Título de modal grande</td></tr></tbody></table></div>
-<p>Estes tokens (<code>3xs</code>, <code>2xs</code>, <code>xs-plus</code>, <code>md</code>) ainda não existem em <code>tailwind.config.cjs</code> — precisam ser adicionados como <code>fontSize</code> extend antes que o código passe a usá-los por nome em vez de px arbitrário (dívida técnica, seção 9, item 3). Até lá, os valores px arbitrários listados acima são os valores corretos a usar.</p>
-<p><strong>Pesos:</strong> <code>font-bold</code> é o padrão de botão/label. <code>font-extrabold</code> reservado a títulos de destaque e CTAs primários. <code>font-semibold</code>/<code>font-medium</code> para ênfase secundária.</p>
-<hr>
-<h2 id="3-espacamento-e-grid">3. Espaçamento e grid</h2>
-<ul>
-<li><strong>Grid da home:</strong> <code>grid grid-cols-2 grid-rows-3 gap-2 w-full flex-1</code>, 6 cards fixos, <code>p-3</code> + <code>gap-1.5</code> interno. Não adicionar um 7º card sem redesenhar o grid — 2×3 é o limite do padrão atual.</li>
-<li><strong>Container padrão de view:</strong> <code>&lt;main class="view ... px-4 py-3 flex flex-col h-full overflow-y-auto"&gt;</code> — todo container de tela nova segue este shell.</li>
-<li><strong>Passo de espaçamento:</strong> <code>gap-2</code>/<code>space-y-2</code> como base; meios-passos (<code>gap-1.5</code>, <code>gap-2.5</code>, <code>py-2.5</code>, <code>p-3.5</code>) são aceitos para ajuste fino, não é preciso forçar múltiplos exatos do Tailwind.</li>
-<li><strong>Área de toque mínima de botão-ícone interativo:</strong> 40×40px (ver seção 5, Botões).</li>
-</ul>
-<hr>
-<h2 id="4-radius">4. Radius</h2>
-<div class="table-wrap"><table><thead><tr><th>Token</th><th>Valor</th><th>Uso</th></tr></thead><tbody><tr><td><code>radius-xl</code></td><td><code>16px</code> (<code>rounded-2xl</code> no Tailwind)</td><td>Padrão universal — todo botão, card, modal, input</td></tr><tr><td><code>radius-full</code></td><td><code>999px</code> (<code>rounded-full</code>)</td><td>Pills/badges de categoria</td></tr></tbody></table></div>
-<p><strong><code>rounded-xl</code> (12px) é eliminado como variante intencional.</strong> Onde hoje aparece — botões-ícone de utilidade com fundo, versão "editar" do <code>flow-type-card-modal</code> — é inconsistência a corrigir para <code>rounded-2xl</code>, não uma segunda variante legítima (dívida técnica, seção 9, item 4).</p>
-<p>Radius de card deve ser declarado por classe Tailwind (<code>rounded-2xl</code>) diretamente no elemento — não por seletor de atributo de id em CSS global (dívida técnica, seção 9, item 5).</p>
-<hr>
-<h2 id="5-inventario-de-componentes">5. Inventário de componentes</h2>
-<h3 id="botoes-catalogo-de-variantes">Botões — catálogo de variantes</h3>
-<p>Todo botão do Handex é uma das 6 variantes abaixo. Não criar uma 7ª variante sem atualizar este catálogo primeiro.</p>
-<div class="table-wrap"><table><thead><tr><th>Variante</th><th>Uso</th><th>Classes</th></tr></thead><tbody><tr><td><strong>Primária</strong></td><td>Ação de fluxo/confirmação (confirmar, avançar, criar, gerar ficha)</td><td><code>bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-bold</code></td></tr><tr><td><strong>Secundária/ghost (sobre header)</strong></td><td>Ação alternativa dentro do header azul de uma view</td><td>Fundo transparente ou <code>bg-white/10</code>, <code>hover:bg-white/20</code>, <code>rounded-2xl</code></td></tr><tr><td><strong>Branco/outline neutro</strong></td><td>Ação secundária com texto fora do header — "Finalizar Registros", "Importar JSON"</td><td><code>bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl py-3 text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800</code>. Sub-variante <strong>link externo</strong>: mesma dimensão/tipografia, mas borda e texto na cor de marca (<code>border-blue-500 text-blue-500</code>) quando a ação leva a um destino fora do plugin (ex: site do DSC) — sinaliza visualmente "isto não é uma ação do produto".</td></tr><tr><td><strong>Destrutiva</strong></td><td>Ação irreversível (excluir, limpar dados, apagar projeto)</td><td><code>bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold</code></td></tr><tr><td><strong>Ícone interativo</strong></td><td>Ação isolada representada só por ícone (fechar modal, voltar, ajuda, dispensar)</td><td>Container <code>w-10 h-10 flex items-center justify-center rounded-2xl</code>, ver regras de área de toque abaixo</td></tr><tr><td><strong>Ícone utilitário com fundo</strong></td><td>Ação secundária de rodapé/lista, só ícone sem texto (download, lixeira)</td><td><code>bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl</code>, cor de hover semântica (ex: vermelho para ação destrutiva de descarte)</td></tr></tbody></table></div>
-<p><strong>Todo botão branco/outline com texto usa as mesmas dimensões: <code>py-3</code> + <code>text-[12px] font-bold</code>.</strong> Antes de 2026-08-26 havia 2 variações de tamanho coexistindo sem padrão declarado (<code>py-2.5</code>/<code>text-[11px]</code> no rodapé da home, <code>py-3</code>/<code>text-[11px]</code> nos links do guia) — convergidas para o padrão acima, que já era o mais repetido no código ("Finalizar Registros", 5 instâncias idênticas).</p>
-<p><strong>Fora deste catálogo, por serem estruturalmente diferentes de um botão de texto linear:</strong> os cards seletores de opção em grid (ex: modal de medidas, <code>modals.html:880-899</code> — ícone grande + label embaixo, <code>border-2</code>) não seguem esta padronização; são um componente de seleção visual, não uma ação. Candidato a virar uma variante própria formalizada no futuro, se o padrão se repetir em mais lugares.</p>
-<p><strong>Estado disabled — regra única para todas as variantes:</strong> <code>disabled:opacity-40 disabled:cursor-not-allowed</code>, sem trocar a cor de fundo por um cinza sólido. Mantém o botão reconhecível (só esmaecido) em vez de virar cinza genérico, e não exige definir uma cor disabled própria por variante.</p>
-<p><strong>Botão-ícone interativo isolado:</strong> área de toque real 40×40px. Glifo interno visível — não reduzir a hit-area a uma margem invisível ao redor de um ícone minúsculo; o glifo cresce proporcionalmente (glifo <code>16px</code> → botão de 40px = folga confortável, ~<code>20px</code> de glifo). Quando dois botões-ícone ficam lado a lado no mesmo grupo, o espaçamento entre eles vem do <code>gap</code> do container flex — nunca usar margem negativa nos dois lados de botões adjacentes (isso cola as áreas de toque uma na outra).</p>
-<p><strong>Botão de fechar (ícone <code>x</code>)</strong>: mesma regra do botão-ícone interativo — <code>rounded-2xl</code> quando tem fundo próprio (ver dívida técnica para o <code>rounded-xl</code> residual).</p>
-<h3 id="modais-viewsmodalshtml">Modais (<code>views/modals.html</code>)</h3>
-<p>Todos compartilham o mesmo shell: <code>role="dialog" aria-modal="true"</code> + overlay + <code>.modal-content bg-white dark:bg-dark-surface rounded-2xl shadow-2xl</code>. Focus trap global via <code>core.js:2365-2408</code>.</p>
-<div class="table-wrap"><table><thead><tr><th>Propriedade</th><th>Padrão</th></tr></thead><tbody><tr><td>z-index padrão</td><td><code>z-[1000]</code></td></tr><tr><td>z-index de modal empilhado sobre outro modal</td><td><code>z-[1200]</code></td></tr><tr><td>z-index de modal de confirmação leve (ex: limpar dados)</td><td><code>z-[200]</code></td></tr><tr><td>Título — modal pequeno</td><td><code>text-[14px] font-bold</code></td></tr><tr><td>Título — modal médio</td><td><code>text-[15px]/[16px] font-extrabold</code></td></tr><tr><td>Título — modal grande</td><td><code>text-[18px] font-bold</code></td></tr></tbody></table></div>
-<p>Os 3 z-index acima ainda são valores mágicos sem constante nomeada no código — a tabela é a referência até a extração de token (dívida técnica, seção 9, item 6).</p>
-<h3 id="cards">Cards</h3>
-<ul>
-<li><strong>Card de ferramenta (home)</strong>: markup único reutilizado nas 6 instâncias, variando cor de hover e ícone. Este é o padrão de reuso a seguir para qualquer card novo.</li>
-<li><strong>Card de conteúdo genérico</strong>: <code>rounded-2xl</code> declarado por classe Tailwind diretamente no elemento (não por sufixo de id em CSS global — ver seção 4).</li>
-</ul>
-<h3 id="accordion-padrao-unico">Accordion — padrão único</h3>
-<p><code>toggleAccordion(btn, nodeId)</code> (<code>core.js:2696</code>) é o <strong>único</strong> padrão oficial de accordion do Handex. Sempre seta <code>aria-expanded</code> no container; <code>nodeId</code> habilita exclusividade entre irmãos (abrir um fecha os outros) quando aplicável.</p>
-<p>Todo accordion novo usa esta função. Os 3 outros dialetos hoje coexistentes (<code>onclick</code> inline sem <code>aria-expanded</code> em <code>guide.html</code>, <code>div role="button"</code> do Briefing Estratégico, chevrons próprios como <code>.journey-chevron</code>/<code>.group-chevron</code>) são dívida técnica a migrar (seção 9, item 7) — não são variantes válidas para reuso em telas novas.</p>
-<p>Estado padrão: um accordion nasce <strong>fechado</strong>, salvo decisão explícita de UX para uma tela específica (ex: Briefing Estratégico nasce aberto — decisão de produto tomada em 2026-08-25).</p>
-<h3 id="toggleswitch">Toggle/Switch</h3>
-<p>O <strong>switch estilizado</strong> (usado em Dados do Projeto) é o padrão oficial para escolha binária habilitado/desabilitado. Checkbox nativo (<code>accent-*</code>) continua sendo o padrão correto para seleção múltipla em listas (import/limpeza de dados), não para toggle liga/desliga — os dois componentes têm papéis diferentes, não é uma substituição 1:1.</p>
-<h3 id="inputs">Inputs</h3>
-<p>O componente mais consistente do plugin — tokenizado via regra global <code>plugin.css:507-576</code> (<code>input[type=text|search], select, textarea</code>). Todo input novo herda esse estilo automaticamente por seletor de tag/atributo; não redeclarar estilo de input por classe local.</p>
-<h3 id="toasts">Toasts</h3>
-<p>Sistema único (<code>#toast-container</code>, <code>plugin.css:284-309</code>), sem variação de markup entre severidades — a diferença é comunicada por texto e ícone, nunca por cor de fundo do toast.</p>
-<h3 id="icones">Ícones</h3>
-<p>Biblioteca exclusiva: <strong>Lucide</strong> (<code>data-lucide="nome"</code>). Ícone decorativo (ao lado de label, dentro de badge) segue o tamanho visual do contexto (<code>w-3.5</code>–<code>w-5</code>), sem regra de área de toque. Ícone interativo segue a regra de botão-ícone da seção "Botões" acima (40×40px de área de toque, glifo proporcionalmente visível).</p>
-<p><strong>Peso visual uniforme (<code>plugin.css</code>):</strong> todo ícone Lucide nasce com <code>stroke-width: 2</code> (padrão da lib, calibrado para o viewBox nativo de 24px). Como o plugin usa ~7 tamanhos diferentes de ícone (<code>w-2.5</code> a <code>w-6</code>) no mesmo viewBox, o mesmo traço de 2px parece mais grosso nos ícones pequenos e mais fino nos grandes — regra CSS global compensa por faixa de tamanho:</p>
-<div class="table-wrap"><table><thead><tr><th>Classe</th><th><code>stroke-width</code></th></tr></thead><tbody><tr><td><code>w-2.5</code>, <code>w-3</code></td><td><code>2.5</code></td></tr><tr><td><code>w-3.5</code>, <code>w-4</code></td><td><code>2.25</code></td></tr><tr><td><code>w-4.5</code> e acima</td><td><code>2</code> (padrão nativo, sem compensação)</td></tr></tbody></table></div>
-<p>Ícone novo herda essa regra automaticamente por classe de tamanho — não é preciso declarar <code>stroke-width</code> manualmente em nenhuma tag <code>&lt;i data-lucide&gt;</code>.</p>
-<p><strong>Ícones-irmãos (mesma linha/grupo, mesma hierarquia de ação) usam sempre o mesmo tamanho.</strong> A compensação de <code>stroke-width</code> acima resolve peso percebido <em>entre</em> categorias de tamanho distantes (ex: um ícone de 10px comparado a um de 24px em telas diferentes) — não resolve, e não deveria precisar resolver, dois ícones lado a lado com tamanhos ligeiramente diferentes sem motivo (ex: <code>w-5</code> ao lado de <code>w-4.5</code>, ou <code>w-3.5</code> ao lado de <code>w-3</code> na mesma linha de ações). Isso é bug de inconsistência, não peso visual, e a correção certa é igualar o tamanho, não ajustar stroke. Regra prática: antes de declarar o tamanho de um ícone novo, olhar o que os ícones vizinhos no mesmo componente já usam e copiar — não escolher um tamanho novo "que parece certo" isoladamente.</p>
-<p>Exceção deliberada: o botão "voltar" do header (<code>arrow-left</code>, sempre <code>w-5</code>) é maior que os botões de ajuda/onboarding ao lado (<code>graduation-cap</code>/<code>circle-help</code>, sempre <code>w-4.5</code>) — hierarquia intencional (ação de navegação primária &gt; ação secundária de suporte), não inconsistência.</p>
-<h3 id="empty-states">Empty states</h3>
-<p>Estrutura única: ícone a 25% de opacidade + título + CTA inline sublinhado, gerada via função JS compartilhada — não HTML estático duplicado por tela (exceção hoje: hub de Frames, ver dívida técnica item 8).</p>
-<hr>
-<h2 id="6-nomenclatura-de-tela">6. Nomenclatura de tela</h2>
-<p>A tela hoje referenciada por 3 nomes diferentes (card na home: "Escanear Tokens"; id: <code>view-frames</code>; arquivo: <code>handoff.html</code>) tem como <strong>nome canônico "Handoff"</strong> — reflete o papel real da tela como hub central do frame (scan + medidas + specs + conformidade), não só a ação de escanear. Card na home, título interno da view e qualquer documentação nova devem convergir para esse nome (dívida técnica, seção 9, item 9).</p>
-<hr>
-<h2 id="7-acessibilidade">7. Acessibilidade</h2>
-<ul>
-<li><strong>Área de toque mínima de elemento interativo:</strong> 40×40px (botões-ícone, ver seção 5).</li>
-<li><strong>Accordion:</strong> sempre <code>aria-expanded</code> no elemento que controla a expansão (ver seção 5).</li>
-<li><strong>Foco:</strong> todo modal precisa de focus trap (padrão já implementado globalmente em <code>core.js:2365-2408</code> — reaproveitar, não reimplementar por modal).</li>
-<li><strong><code>aria-label</code></strong> obrigatório em todo botão-ícone sem texto visível.</li>
-</ul>
-<h3 id="contraste-de-cor-wcag-21-aa-auditoria-2026-08-26">Contraste de cor (WCAG 2.1 AA) — auditoria 2026-08-26</h3>
-<p>Piso adotado para toda a UI do plugin (não confundir com o DSC, que tem sua própria auditoria de acessibilidade sobre o produto CAIXA — este piso é sobre a própria interface do Handex):</p>
-<ul>
-<li><strong>Texto normal</strong> (&lt;18px, ou &lt;14px bold): mínimo <strong>4.5:1</strong>.</li>
-<li><strong>Texto grande</strong> (≥18px, ou ≥14px bold) e <strong>ícones/componentes gráficos não-decorativos</strong> (glifo de botão-ícone, borda de card informativo): mínimo <strong>3:1</strong>.</li>
-<li>Cálculo pela fórmula de luminância relativa padrão WCAG 2.1 (não por inspeção visual). Cores com opacidade (<code>text-white/70</code>, <code>text-[#005ca9]/60</code>, <code>dark:bg-blue-900/10</code> etc.) são compostas (alpha-blend) sobre o fundo real antes do cálculo — a opacidade nominal da classe não é o contraste real.</li>
-</ul>
-<p>Regras específicas descobertas nesta auditoria (motivadas pela reversão de marca de 2026-08-26, <code>#3d3dff</code>→<code>#005ca9</code>, que reduziu a luminância da cor de ação primária):</p>
-<ol>
-<li><strong>Opacidade mínima de texto/ícone branco sobre o header azul (<code>bg-blue-500</code>/<code>#005ca9</code>):</strong> <code>text-white/70</code> cai para ~4.15:1 — só passa porque hoje é usado exclusivamente em ícones puros (piso 3:1), nunca em rótulo de texto corrido. <strong>Não usar <code>text-white</code> com opacidade abaixo de <code>/70</code> sobre <code>bg-blue-500</code> em nenhum contexto novo</strong>, e se o elemento for texto legível (não só glifo decorativo), usar opacidade cheia (<code>text-white</code>, sem <code>/opacity</code>) ou <code>text-blue-100</code>.</li>
-<li><strong>Banner de onboarding (<code>bg-blue-500/5</code> light):</strong> o botão de dispensar (ícone <code>x</code>) precisa de pelo menos <code>text-[#005ca9]/80</code> sobre esse fundo claro — <code>/60</code> reprova o piso de ícone (3:1). Título/corpo do banner (<code>text-[#004d8d]</code>/<code>/80</code>) já passam, mas com pouca folga; não reduzir further.</li>
-<li><strong>Nenhum texto/borda azul (<code>text-[#005ca9]</code>) pode ficar sem par <code>dark:</code> explícito.</strong> Um elemento que herda a cor light (<code>#005ca9</code>) sobre um fundo escuro (<code>dark:bg-dark-bg</code>, <code>#0f172a</code>) cai para ~2.64:1, reprovando os dois pisos. Todo uso de <code>text-[#005ca9]</code>/<code>border-[#005ca9]</code> em bloco que também tem uma variante <code>dark:bg-*</code> precisa do par <code>dark:text-blue-400</code> (ou mais claro)/<code>dark:border-blue-400</code>.</li>
-<li><strong>Texto secundário (<code>text-slate-400</code>/<code>text-slate-500</code>) só é seguro sobre card branco (<code>bg-white</code>/<code>bg-light-surface</code>), não sobre o fundo geral da view (<code>bg-light-bg</code>, <code>#eef2f7</code>).</strong> A diferença de luminância entre os dois é pequena, mas suficiente para empurrar combinações já marginais para reprovação. Qualquer texto <code>slate-400</code>/<code>slate-500</code> que fique diretamente sobre o fundo da view (sem um card branco por baixo — ex: empty states, títulos de seção soltos) precisa subir para <code>text-slate-600</code> no light mode.</li>
-<li><strong>Badge de categoria (fill claro + texto colorido) precisa reavaliar o par a cada vez que o fill for reaproveitado de outro contexto.</strong> As cores de categoria de spec (<code>#64747A</code>/<code>#93537D</code>/<code>#008CB2</code>/<code>#6D8000</code>) foram herdadas do canvas do Figma (onde o piso de contraste não se aplica da mesma forma — ver seção 8) e reprovaram quando usadas como texto de UI sobre os mesmos fills claros. Um tom que funciona bem como stroke de card no canvas não necessariamente funciona como texto de badge na UI.</li>
-</ol>
-<hr>
-<h2 id="8-componentes-propositalmente-fora-de-escopo-deste-ds">8. Componentes propositalmente fora de escopo deste DS</h2>
-<p>Este documento cobre a UI do próprio plugin. <strong>Não cobre:</strong></p>
-<ul>
-<li>Componentes da lib de acessibilidade do DSC (<code>refs/design-acessivel*.json</code>) — são conteúdo do design system da CAIXA, não do Handex.</li>
-<li>Qualquer elemento gerado no canvas do Figma (specCard, conectores, marcadores) — esses têm suas próprias regras de layout ditadas pela Plugin API do Figma, documentadas inline em <code>code.js</code>, não neste arquivo.</li>
-</ul>
-<hr>
-<h2 id="9-divida-tecnica-codigo-a-migrar-para-bater-com-este-ds">9. Dívida técnica (código a migrar para bater com este DS)</h2>
-<p>Lista de prioridade — cada item é uma correção pontual, não um redesenho:</p>
-<ol>
-<li><strong>Paleta de categoria de spec</strong> — unificar <code>specifications.js:449-454</code> e <code>modals.html:396-418</code> para usar o par de valores da Ficha (seção 1).</li>
-<li><strong>Bug adormecido de verde/laranja</strong> — <code>plugin.css:114-134</code> faz botão verde herdar cor de alerta laranja; corrigir antes que um botão verde real seja criado (seção 1).</li>
-<li><strong>Escala tipográfica sem token nomeado</strong> — adicionar <code>3xs</code>/<code>2xs</code>/<code>xs-plus</code>/<code>md</code> ao <code>fontSize</code> do <code>tailwind.config.cjs</code> (seção 2).</li>
-<li><strong><code>rounded-xl</code> residual</strong> — migrar para <code>rounded-2xl</code> nos botões-ícone de utilidade e na versão "editar" do <code>flow-type-card-modal</code> (seção 4).</li>
-<li><strong>Radius de card via seletor de id</strong> — mover <code>plugin.css:451-465</code> para classe Tailwind direta no HTML (seção 4).</li>
-<li><strong>z-index de modal sem constante nomeada</strong> — extrair <code>Z_MODAL_BASE</code>/<code>Z_MODAL_STACKED</code>/<code>Z_MODAL_LIGHT</code> (ou equivalente) em vez dos 3 valores mágicos hoje espalhados (seção 5).</li>
-<li><strong>4 dialetos de accordion → 1</strong> — migrar <code>guide.html</code>, Briefing Estratégico e os chevrons próprios (<code>.journey-chevron</code>, <code>.group-chevron</code>) para <code>toggleAccordion</code> (seção 5).</li>
-<li><strong>Empty state do hub de Frames</strong> — hoje é HTML estático (<code>handoff.html:66-72</code>) em vez de usar a função JS compartilhada das outras 3 ferramentas (seção 5).</li>
-<li><strong>Nomenclatura "Escanear Tokens/Frames/Handoff"</strong> — convergir card, título interno e referências de doc para "Handoff" (seção 6).</li>
-<li><strong>Hex de brand direto no HTML</strong> — migrar <code>bg-[#005ca9]</code>/<code>hover:bg-[#004d8d]</code> para as classes nomeadas <code>bg-blue-500</code>/<code>hover:bg-blue-600</code> (seção 1). Maior volume de mudança da lista — não precisa ser feito de uma vez, mas todo código novo já nasce usando a classe nomeada.</li>
-<li><strong><code>#1E293B</code> hardcoded</strong> — substituir por <code>text-slate-800 dark:text-white</code> onde aparece como cor de título (é literalmente o mesmo hex).</li>
-<li><strong>Resolvido em 2026-08-26</strong> — os 2 hovers isolados (<code>home.html:163</code>, <code>modals.html:1245</code>) que usavam <code>#004d8f</code>/<code>#005a8e</code> (azul institucional pré-Uau CAIXA) já convergiram para <code>blue-600</code> (<code>#004d8d</code>) como parte da reversão de marca — não é mais dívida.</li>
-<li><strong>Código morto de wizard sequencial</strong> — <code>core.js:2092-2181</code> e <code>modals.html:984-1014</code> (<code>check-designs-modal</code>) sem tela viva que os alimente. Não é dívida de <em>design</em>, mas deveria ser removido antes de qualquer nova geração de UI se acumular em cima.</li>
-<li><strong>Onboarding duplicado</strong> — <code>guide.html</code> e <code>onboarding.js</code> (<code>ONBOARDING_TOOLS</code>) mantêm conteúdo quase idêntico por disciplina manual; já divergiram uma vez. Não é dívida de design system em si, mas afeta a camada de conteúdo que acompanha os componentes.</li>
-<li><strong>Resolvido em 2026-08-26</strong> — <code>disabled:bg-gray-300</code> (<code>modals.html:1115</code>, botão "Salvar Cenário") migrado para <code>disabled:opacity-40</code>. Confirmado durante a auditoria de contraste que o padrão antigo reprovava gravemente (branco sobre cinza-300 = 1.49:1) — não é mais dívida.</li>
-<li><strong>Badge "Comportamento" da legenda de tipos de spec passa no piso, mas com pouca folga</strong> — <code>modals.html:403</code> (<code>text-[#93537D]</code> sobre <code>bg-[#F8EAF3]</code>) mede 4.53:1, acima do piso de 4.5:1 mas por pouco. Não foi alterado nesta auditoria (só reprovações foram corrigidas), mas qualquer ajuste futuro de fill/tom deste badge específico deve reverificar o contraste antes de publicar (seção 7).</li>
-<li><strong>Assimetria de contraste do botão "dispensar" do banner de onboarding entre temas</strong> — no light mode o ícone precisou subir de <code>/60</code> para <code>/80</code> de opacidade para passar do piso de 3:1 (ver seção 7, item 2). O par dark (<code>dark:text-blue-300/60</code>) já passava a 3.93:1 e não foi tocado — os dois temas usam frações de opacidade diferentes hoje (<code>/80</code> light, <code>/60</code> dark) para o mesmo elemento visual. Funciona, mas não é simétrico; um ajuste futuro que tente "unificar" a opacidade entre temas precisa recalcular, não presumir que o mesmo valor serve para os dois.</li>
-<li><strong>Paleta de categoria de scan (11 cores, <code>tailwind.config.cjs:69-93</code> safelist) parece órfã</strong> — nenhum arquivo em <code>modules/*.js</code> ou <code>views/*.html</code> foi encontrado construindo dinamicamente as classes <code>bg-{cor}-50 text-{cor}-600 border-{cor}-200</code> descritas no comentário do safelist ("built dynamically via <code>_getCatColor</code>"). A função <code>_getCatColor</code> que existe hoje em <code>specifications.js:458</code> é sobre categoria de <strong>spec</strong> (info/comportamento/regra/api), não sobre esse ciclo de 11 cores. Se a feature que consumia essa paleta foi removida, o safelist deveria ser removido junto (reduz o CSS compilado); se ainda existe em algum lugar não encontrado nesta auditoria, precisa de investigação antes de confiar nos tons — 4 das 11 cores (<code>lime-700</code>, <code>rose-600</code>, <code>pink-600</code>, <code>teal-600</code>, todas sobre seu par <code>-50</code>) reprovariam o piso de 4.5:1 se algum dia voltarem a ser renderizadas (ver seção 7).</li>
-<li><strong>Contadores de caractere (<code>text-[9px] text-slate-400 dark:text-dark-muted</code>, ex: <code>dados-projeto.html:45,96,115,134,146</code>, <code>modals.html:127</code> e ~15 outras ocorrências) reprovam o piso de 4.5:1 sobre card branco</strong> (<code>#9ca3af</code>≈slate-400 sobre <code>#ffffff</code> mede ~2.6:1). Não corrigido nesta auditoria — é um padrão muito replicado (~20 ocorrências) que hoje funciona como anotação secundária de apoio (contagem "0/100" ao lado do label do campo, nunca a única fonte da informação), não conteúdo primário. Fica registrado como dívida em vez de corrigido em massa porque mudar a cor de 20 pontos do produto de uma vez foge do "ajuste pontual" desta rodada — mas qualquer revisão de formulário/input deve tratar isso como pendência de contraste real, não estética (seção 7).</li>
-</ol>
-<hr>
-<h2 id="historico-de-decisoes-deste-documento">Histórico de decisões deste documento</h2>
-<ul>
-<li><strong>2026-08-24</strong> — levantamento inicial de fundamentos, 100% a partir do código-fonte real, publicado como auditoria (não normativo).</li>
-<li><strong>2026-08-25</strong> — transformado em referência normativa. Decisões fechadas nesta data: cor de categoria de spec (Ficha exportada é canônica), radius único (<code>rounded-2xl</code>, <code>rounded-xl</code> eliminado), accordion único (<code>toggleAccordion</code>), verde de sucesso (<code>green-500</code>), nome canônico de tela ("Handoff"), toggle oficial (switch estilizado). Catálogo de variantes de botão formalizado (primária/secundária/destrutiva/ícone interativo/ícone utilitário) e estado disabled padronizado (<code>disabled:opacity-40</code>, <code>disabled:bg-gray-300</code> eliminado).</li>
-<li><strong>2026-08-26</strong> — paleta de marca revertida de "Uau CAIXA" (<code>#3d3dff</code>/<code>#f5b400</code>) para a marca institucional CAIXA vigente (<code>#005ca9</code>/<code>#f39200</code>, extraída de <code>refs/fundamentos-visuais.json</code>). Motivo: a paleta "Uau CAIXA" antecipava um rebranding que a CAIXA ainda não publicou oficialmente — o Handex volta a usar a marca vigente até a publicação oficial. Escopo da reversão: só <code>blue</code>/<code>orange</code> (marca); superfícies neutras e semânticos (sucesso/erro) definidos em 2026-08-25 não foram alterados. ~460 ocorrências de hex arbitrário migradas em <code>views/</code>, <code>modules/</code>, <code>code.js</code> e <code>plugin.css</code>, além da escala completa no <code>tailwind.config.cjs</code>.</li>
-<li><strong>2026-08-26</strong> — auditoria de contraste WCAG 2.1 AA em toda a UI do plugin, motivada pela reversão de marca acima (cor mais escura/saturada altera o equilíbrio de contraste em ambos os sentidos). ~55 combinações texto/fundo e ícone/fundo calculadas por luminância relativa (não estimadas visualmente). 14 reprovações confirmadas e corrigidas com o ajuste mínimo necessário em cada caso (opacidade de texto sobre header azul, <code>dark:</code> ausente em botões de link, badges de categoria de spec, texto secundário direto sobre o fundo da view sem card branco por baixo, disabled residual). Nova subseção de contraste adicionada à seção 7; 4 novos itens de dívida técnica (16–18) documentam o que passou raspando ou ficou fora do escopo desta rodada.</li>
-<li><strong>2026-08-26</strong> — botão branco/outline neutro formalizado como variante própria no catálogo (antes confundido com "secundária/ghost", que hoje é só o caso sobre header azul). Dimensão única fechada: <code>py-3</code> + <code>text-[12px] font-bold</code> — 2 variações de tamanho coexistentes (rodapé da home em <code>py-2.5</code>/<code>text-[11px]</code>, links do guia DSC em <code>py-3</code>/<code>text-[11px]</code>) convergidas para o padrão. Sub-variante "link externo" (borda/texto azul) mantida intencionalmente nos 3 links do guia DSC — sinaliza navegação pra fora do plugin. Cards seletores de opção em grid (modal de medidas) ficam fora do catálogo por serem um componente estruturalmente diferente.</li>
-<li><strong>2026-08-26</strong> — peso visual dos ícones Lucide uniformizado. Todos já usavam o mesmo <code>stroke-width</code> nativo (2), mas o plugin usa ~7 tamanhos diferentes (<code>w-2.5</code> a <code>w-6</code>) no mesmo viewBox de 24px — o traço fixo de 2px parecia mais grosso nos ícones pequenos e mais fino nos grandes. Regra CSS global (<code>plugin.css</code>) compensa por faixa de tamanho (<code>stroke-width: 2.5</code> em <code>w-2.5</code>/<code>w-3</code>, <code>2.25</code> em <code>w-3.5</code>/<code>w-4</code>), herdada automaticamente por qualquer ícone novo sem precisar de atributo manual por instância.</li>
-<li><strong>2026-08-26</strong> — tamanho de ícones-irmãos revisado em todo o app, depois de a compensação de stroke-width acima não resolver um caso real (download <code>w-5</code> ao lado de lixeira <code>w-4.5</code> no rodapé da home, mesmo par de botões, mesma hierarquia). Convergido para <code>w-4.5</code>. Varredura sistemática encontrou e corrigiu mais 4 casos: botão de ajuda do header em 3 views (<code>w-5</code> → <code>w-4.5</code>, alinhando com as outras 4 views que já usavam <code>w-4.5</code>) e o chevron de expandir dentro da linha de ações de spec no hub de Frames (<code>w-3.5</code> → <code>w-3</code>, igualando aos 4 ícones de ação vizinhos). Regra nova documentada: ícones-irmãos (mesma linha, mesma hierarquia de ação) sempre usam o mesmo tamanho — exceção deliberada preservada para "voltar" (<code>w-5</code>) vs. botões de ajuda (<code>w-4.5</code>), que é hierarquia intencional, não inconsistência.</li>
-</ul>
-<p><strong>Arquivos-fonte:</strong> <code>src/plugin/styles/{tailwind.config.cjs,plugin.css}</code>, <code>src/plugin/modules/{core,messages,home-cards,onboarding,specifications,measurement,handoff}.js</code>, <code>src/plugin/views/*.html</code>, <code>src/plugin/ui.html</code>, <code>CLAUDE.md</code>.</p>
+    <div class="intro-banner" id="intro">
+      <p><strong>O que é esta página:</strong> referência viva do design system da <strong>interface do próprio plugin Handex</strong> — não o DSC (Design System CAIXA), que é o sistema externo auditado pelo plugin. Cada componente abaixo é renderizado com o CSS real do Handex (cores, fontes, radius, espaçamentos idênticos ao código-fonte), não apenas descrito em texto.</p>
+      <p><strong>Como usar:</strong> antes de criar uma tela, botão ou card novo, confira aqui o padrão já existente. Toda cor/tamanho/componente citado tem uma referência de arquivo:linha entre parênteses — se o código atual divergir do que está aqui, é dívida técnica (seção 7), não uma segunda opção válida.</p>
+      <p style="margin-bottom:0"><strong>Escopo desta versão:</strong> cobre os padrões estruturais reutilizados entre as 6 ferramentas do plugin (Guia, Dados do Projeto, Escanear Tokens/Handoff, Anotar Specs, Anotar Medidas, Fluxos de Tela) — não cobre elementos gerados no canvas do Figma (specCard, conectores), que seguem a Plugin API e estão documentados inline em <code>code.js</code>.</p>
+    </div>
+    <div class="warn-banner">Arquivo local autocontido, versionado no repositório — não é publicado como site (sem GitHub/GitLab Pages, sem hospedagem externa). Funciona abrindo direto no navegador (<code>file://</code>), sem instalar nada e sem CDN externo obrigatório.</div>
+
+    <hr>
+
+    <!-- ═══════════════ 1. CORES ═══════════════ -->
+    <h2 id="cores">1. Cores</h2>
+    <p>Fonte: <span class="source-tag">tailwind.config.cjs:12-58</span> (paleta <code>blue</code>/<code>orange</code> e superfícies <code>light</code>/<code>dark</code>) e <span class="source-tag">specifications.js:463-468</span> + <span class="source-tag">handoff.js:736-741</span> (cores de categoria de spec).</p>
+
+    <h3>Marca institucional CAIXA</h3>
+    <p>Extraída de <code>refs/fundamentos-visuais.json</code> (tokens <code>color/bg/highlight</code>/<code>color/bg/accent</code> do DSC). Regra de uso: sempre classe nomeada (<code>bg-blue-500</code>), nunca hex arbitrário em código novo — ver dívida técnica, item de maior volume.</p>
+    <div class="swatch-row">
+      <div class="swatch"><div class="chip" style="background:#005ca9"></div><div class="label">blue-500</div><div class="hex">#005ca9 — ação primária</div></div>
+      <div class="swatch"><div class="chip" style="background:#004d8d"></div><div class="label">blue-600</div><div class="hex">#004d8d — hover</div></div>
+      <div class="swatch"><div class="chip" style="background:#004075"></div><div class="label">blue-700</div><div class="hex">#004075 — texto contraste</div></div>
+      <div class="swatch"><div class="chip" style="background:#f39200"></div><div class="label">orange-500</div><div class="hex">#f39200 — acento secundário</div></div>
+    </div>
+
+    <h3>Superfícies light/dark</h3>
+    <p><span class="source-tag">tailwind.config.cjs:46-58</span> — o par de tokens com maior disciplina de uso no código hoje.</p>
+    <div class="swatch-row">
+      <div class="swatch"><div class="chip" style="background:#eef2f7;border-color:#dde3ec"></div><div class="label">light.bg</div><div class="hex">#eef2f7</div></div>
+      <div class="swatch"><div class="chip" style="background:#ffffff"></div><div class="label">light.surface</div><div class="hex">#ffffff</div></div>
+      <div class="swatch"><div class="chip" style="background:#dde3ec"></div><div class="label">light.line</div><div class="hex">#dde3ec</div></div>
+      <div class="swatch"><div class="chip" style="background:#8394a8"></div><div class="label">light.muted</div><div class="hex">#8394a8</div></div>
+      <div class="swatch"><div class="chip" style="background:#0f172a"></div><div class="label">dark.bg</div><div class="hex">#0f172a</div></div>
+      <div class="swatch"><div class="chip" style="background:#1e293b"></div><div class="label">dark.surface</div><div class="hex">#1e293b</div></div>
+      <div class="swatch"><div class="chip" style="background:#334155"></div><div class="label">dark.line</div><div class="hex">#334155</div></div>
+      <div class="swatch"><div class="chip" style="background:#b4c6d8"></div><div class="label">dark.muted</div><div class="hex">#b4c6d8</div></div>
+    </div>
+
+    <h3>Categorias de spec — paleta canônica (Ficha exportada)</h3>
+    <p>As 4 categorias de spec (<code>info</code>, <code>comportamento</code>, <code>regra</code>, <code>api</code>) usam a paleta de <code>_getCatStyleHTML</code> (<span class="source-tag">handoff.js:736-741</span>) como fonte única — é o que o desenvolvedor vê na Ficha final.</p>
+    <div class="demo-block">
+      <span class="hx-badge hx-badge-info">Informação extra</span>
+      <span class="hx-badge hx-badge-comportamento">Comportamento</span>
+      <span class="hx-badge hx-badge-regra">Regra de Negócio</span>
+      <span class="hx-badge hx-badge-api">Dados da API</span>
+      <span class="demo-caption">Badges reais da Ficha exportada — fill <code>#f1f5f9/#fdf2f8/#eff6ff/#f7fee7</code>, texto <code>#475569/#be185d/#1d4ed8/#3f6212</code>.</span>
+    </div>
+    <div class="debt-banner"><strong>Divergência confirmada nesta revisão:</strong> o card no canvas (<code>_CAT_COLORS</code>, <span class="source-tag">specifications.js:463-468</span>) e a legenda do modal de ajuda (<span class="source-tag">modals.html:396-418</span>) ainda usam uma <strong>terceira paleta diferente</strong> desta (ex: <code>info</code> é <code>#EBF1F2</code>/<code>#64747A</code> no canvas vs. <code>#f1f5f9</code>/<code>#475569</code> na Ficha) — as 3 fontes não convergiram ainda. Ver seção 7.</div>
+
+    <h3>Cor de sucesso/confirmação</h3>
+    <p><code>green-500</code> (<code>#22c55e</code>, escala padrão Tailwind) é o verde oficial — usado em status "Finalizado" (<span class="source-tag">dados-projeto.html:86</span>) e estado confirmado (<span class="source-tag">modals.html:770</span>).</p>
+    <div class="swatch-row">
+      <div class="swatch"><div class="chip" style="background:#22c55e"></div><div class="label">green-500</div><div class="hex">#22c55e</div></div>
+    </div>
+    <div class="debt-banner"><strong>Bug confirmado ativo no código (<span class="source-tag">plugin.css:127-134</span>):</strong> a regra global <code>button.bg-green-600, button.bg-green-500</code> hoje força <code>background-color: #935300 !important</code> — a mesma cor de hover do botão laranja de alerta. Qualquer botão verde real herda essa cor errada até a regra ser corrigida.</div>
+
+    <hr>
+
+    <!-- ═══════════════ 2. TIPOGRAFIA ═══════════════ -->
+    <h2 id="tipografia">2. Tipografia</h2>
+    <p>Fonte única: <code>Inter, sans-serif</code> (<span class="source-tag">plugin.css:3</span>), forçada com <code>!important</code> em headings/labels/pills (<span class="source-tag">plugin.css:497-501</span>). Escala confirmada via varredura de <code>text-[Npx]</code> em todo o código (contagem real de ocorrências entre parênteses).</p>
+    <div class="hx-content-card" style="font-family:'Inter',sans-serif">
+      <p style="font-size:22px; font-weight:800; margin:6px 0;">Título de destaque — 22px extrabold <span style="font-size:11px;color:#94a3b8;font-weight:400">(4 ocorrências)</span></p>
+      <p style="font-size:18px; font-weight:700; margin:6px 0;">Título de modal grande / header de view — 18px bold <span style="font-size:11px;color:#94a3b8;font-weight:400">(15 ocorrências)</span></p>
+      <p style="font-size:16px; font-weight:800; margin:6px 0;">Título de modal médio — 15–16px extrabold <span style="font-size:11px;color:#94a3b8;font-weight:400">(4 ocorrências)</span></p>
+      <p style="font-size:14px; font-weight:700; margin:6px 0;">Título de modal pequeno — 14px bold <span style="font-size:11px;color:#94a3b8;font-weight:400">(10 ocorrências)</span></p>
+      <p style="font-size:13px; font-weight:700; margin:6px 0;">Corpo de botão / título de card — 13px <span style="font-size:11px;color:#94a3b8;font-weight:400">(29 ocorrências)</span></p>
+      <p style="font-size:12px; font-weight:700; margin:6px 0;">Texto de card padrão / body — 12px <span style="font-size:11px;color:#94a3b8;font-weight:400">(163 ocorrências — o tamanho mais usado no plugin)</span></p>
+      <p style="font-size:11px; font-weight:700; color:#334155; margin:6px 0;">Subtítulo de header / label de modal — 11px <span style="font-size:11px;color:#94a3b8;font-weight:400">(196 ocorrências)</span></p>
+      <p style="font-size:10px; font-weight:700; color:#64748b; margin:6px 0;">Hints, descrição de card, badge — 10px <span style="font-size:10px;color:#94a3b8;font-weight:400">(223 ocorrências)</span></p>
+      <p style="font-size:9px; font-weight:700; color:#94a3b8; margin:6px 0;">Contador de caractere, uppercase pill — 9px <span style="color:#94a3b8;font-weight:400">(166 ocorrências)</span></p>
+      <p style="font-size:8px; font-weight:700; color:#94a3b8; margin:6px 0;">Menor tamanho em uso — 8px <span style="color:#94a3b8;font-weight:400">(36 ocorrências)</span></p>
+    </div>
+    <p><strong>Pesos:</strong> <code>font-bold</code> é o padrão de botão/label; <code>font-extrabold</code> reservado a títulos de destaque e CTAs primários; <code>font-semibold</code>/<code>font-medium</code> para ênfase secundária.</p>
+    <div class="debt-banner">Os tokens nomeados <code>text-3xs</code>/<code>text-2xs</code>/<code>text-xs-plus</code>/<code>text-md</code> ainda não existem em <code>fontSize</code> do <code>tailwind.config.cjs</code> — o código inteiro usa valores px arbitrários (<code>text-[10px]</code> etc.) em vez de nome de classe. Os valores acima são os corretos, só não têm nome de token ainda.</div>
+
+    <hr>
+
+    <!-- ═══════════════ 3. ESPAÇAMENTO E RADIUS ═══════════════ -->
+    <h2 id="espacamento">3. Espaçamento e Radius</h2>
+    <p>Fonte: <span class="source-tag">home.html:35</span> (grid), <span class="source-tag">specifications.html:2</span> (shell de view), varredura de <code>rounded-*</code> em <code>views/*.html</code>.</p>
+
+    <h3>Grid da home — 2×3 fixo</h3>
+    <div class="demo-block">
+      <div style="display:grid;grid-template-columns:repeat(2,86px);grid-template-rows:repeat(3,60px);gap:8px;">
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px"></div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px"></div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px"></div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px"></div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px"></div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px"></div>
+      </div>
+      <span class="demo-caption"><code>grid grid-cols-2 grid-rows-3 gap-2 w-full flex-1</code> — 6 cards fixos, não redesenhado sem decisão explícita (<span class="source-tag">home.html:35</span>).</span>
+    </div>
+
+    <h3>Passo de espaçamento</h3>
+    <div class="demo-block" style="flex-direction:column;align-items:flex-start;gap:8px">
+      <div style="display:flex;gap:4px;align-items:center"><div style="width:4px;height:20px;background:#005ca9"></div><code>gap-1 / 4px</code></div>
+      <div style="display:flex;gap:6px;align-items:center"><div style="width:6px;height:20px;background:#005ca9"></div><code>gap-1.5 / 6px</code> — meio-passo, ajuste fino</div>
+      <div style="display:flex;gap:8px;align-items:center"><div style="width:8px;height:20px;background:#005ca9"></div><code>gap-2 / 8px</code> — base padrão</div>
+      <div style="display:flex;gap:12px;align-items:center"><div style="width:12px;height:20px;background:#005ca9"></div><code>gap-3 / 12px</code></div>
+    </div>
+    <p><strong>Área de toque mínima de botão-ícone interativo:</strong> 40×40px (<code>w-10 h-10</code> / <code>min-w-[40px] min-h-[40px]</code>) — ver exemplos na seção de Componentes.</p>
+
+    <h3>Radius</h3>
+    <div class="demo-block">
+      <div style="text-align:center"><div style="width:64px;height:64px;background:#005ca9;border-radius:16px"></div><div class="demo-caption" style="width:64px">rounded-2xl · 16px<br>padrão universal</div></div>
+      <div style="text-align:center"><div style="width:64px;height:64px;background:#94a3b8;border-radius:12px"></div><div class="demo-caption" style="width:64px">rounded-xl · 12px<br>ver dívida abaixo</div></div>
+      <div style="text-align:center"><div style="width:64px;height:64px;background:#f39200;border-radius:9999px"></div><div class="demo-caption" style="width:64px">rounded-full<br>pills/badges</div></div>
+    </div>
+    <div class="debt-banner"><strong><code>rounded-xl</code> (12px) segue amplamente em uso, não é caso residual isolado.</strong> Contagem real: <strong>141 ocorrências</strong> de <code>rounded-xl</code> em <code>src/plugin/views/*.html</code> — incluindo o botão "voltar" do header padrão de toda view (<span class="source-tag">specifications.html:6</span>) e a maioria dos cards de opção em modais (ex: <span class="source-tag">modals.html:47,66</span>). O padrão declarado (<code>rounded-2xl</code> universal) e o código real convivem sem terem convergido — ver seção 7.</div>
+    <p>Radius de card genérico também é forçado por regra global de CSS por seletor de atributo (não por classe Tailwind no elemento): <code>[id$="-card"] { border-radius: 16px !important }</code> (<span class="source-tag">plugin.css:451-465</span>) — item de dívida técnica confirmado ativo.</p>
+
+    <hr>
+
+    <!-- ═══════════════ 4. ÍCONES ═══════════════ -->
+    <h2 id="icones">4. Ícones</h2>
+    <p>Biblioteca exclusiva: <strong>Lucide</strong> via <code>data-lucide="nome"</code>. Lista abaixo é uma amostra representativa dos ícones mais frequentes/estruturais confirmados por <code>grep</code> real em <code>views/*.html</code> e <code>modules/*.js</code> — o plugin usa a lib Lucide completa via script externo no runtime do Figma (não incluída nesta página estática por ser CDN externo; os SVGs abaixo foram desenhados à mão replicando o traço/proporção real do Lucide 24×24, <code>stroke-width</code> 2).</p>
+    <div class="icon-grid">
+      <div class="icon-card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg><div><div class="ic-name">arrow-left</div><div class="ic-ctx">Botão "voltar" do header — sempre w-5, exceção deliberada de tamanho maior que os botões de ajuda ao lado.</div></div></div>
+      <div class="icon-card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg><div><div class="ic-name">circle-help</div><div class="ic-ctx">Ajuda/guia de categorias no header — w-4.5.</div></div></div>
+      <div class="icon-card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg><div><div class="ic-name">graduation-cap</div><div class="ic-ctx">Onboarding contextual por ferramenta — w-4.5.</div></div></div>
+      <div class="icon-card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg><div><div class="ic-name">x</div><div class="ic-ctx">Fechar modal / dispensar banner.</div></div></div>
+      <div class="icon-card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg><div><div class="ic-name">chevron-down</div><div class="ic-ctx">Accordion (toggleAccordion) — expandir/recolher.</div></div></div>
+      <div class="icon-card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg><div><div class="ic-name">trash-2</div><div class="ic-ctx">Ação destrutiva (excluir spec, limpar dados) — ícone utilitário com fundo.</div></div></div>
+      <div class="icon-card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M6.5 8.5 12 3l5.5 5.5M4 21h16"/></svg><div><div class="ic-name">upload</div><div class="ic-ctx">Importar JSON — rodapé da home.</div></div></div>
+      <div class="icon-card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M6.5 9.5 12 15l5.5-5.5M4 21h16"/></svg><div><div class="ic-name">download</div><div class="ic-ctx">Baixar backup JSON — rodapé da home e Ficha exportada.</div></div></div>
+      <div class="icon-card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.24A9 9 0 0 1 21 12M12 3a9 9 0 1 0 8.94 10"/><path d="m18 2 3 3-3 3"/></svg><div><div class="ic-name">sparkles</div><div class="ic-ctx">"Gerar Ficha de Handoff" (CTA primário), banner de onboarding.</div></div></div>
+      <div class="icon-card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><div><div class="ic-name">clipboard-list</div><div class="ic-ctx">Card "Informações do Projeto" na home.</div></div></div>
+      <div class="icon-card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg><div><div class="ic-name">scan-line</div><div class="ic-ctx">Card "Escanear Tokens" na home.</div></div></div>
+      <div class="icon-card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" opacity="0"/><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><path d="m16 8 2 2"/></svg><div><div class="ic-name">tag</div><div class="ic-ctx">Card "Anotar Specs" na home.</div></div></div>
+      <div class="icon-card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.3 15.3-2.6-2.6a1 1 0 0 0-1.4 0l-8.6 8.6a1 1 0 0 0 0 1.4l2.6 2.6a1 1 0 0 0 1.4 0l8.6-8.6a1 1 0 0 0 0-1.4"/><path d="m14.5 12.5 2-2M11.5 9.5l2-2M8.5 6.5l2-2M2 22l3-3"/></svg><div><div class="ic-name">ruler</div><div class="ic-ctx">Card "Anotar Medidas" na home.</div></div></div>
+      <div class="icon-card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg><div><div class="ic-name">git-branch</div><div class="ic-ctx">Card "Fluxos de Tela" na home.</div></div></div>
+      <div class="icon-card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg><div><div class="ic-name">eye / eye-off</div><div class="ic-ctx">Alternar visibilidade de spec/medida — par de ícones que trocam no mesmo botão.</div></div></div>
+      <div class="icon-card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="4" rx="1"/><path d="M4 10v8a2 2 0 0 0 2 2h3M20 10v8a2 2 0 0 1-2 2h-3M9 20v-4h6v4"/></svg><div><div class="ic-name">component</div><div class="ic-ctx">Referência de componente DSC vinculado a uma spec.</div></div></div>
+      <div class="icon-card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 12 6-6M2 12l6 6M2 12h20"/></svg><div><div class="ic-name">move / grip-vertical</div><div class="ic-ctx">Reordenar cards da home por arrastar-e-soltar.</div></div></div>
+    </div>
+    <p style="font-size:12.5px;color:#64748b">Amostra de ~18 dos <strong>&gt;70 ícones distintos</strong> confirmados em uso real no código (varredura completa de <code>data-lucide="..."</code> em <code>views/*.html</code> e <code>modules/*.js</code>). Ícone decorativo segue o tamanho do contexto (<code>w-3.5</code>–<code>w-5</code>); ícone interativo isolado segue a regra de 40×40px de área de toque da seção de Botões.</p>
+
+    <hr>
+
+    <!-- ═══════════════ 5. COMPONENTES ═══════════════ -->
+    <h2 id="componentes">5. Componentes</h2>
+
+    <h3>Botões — catálogo de 6 variantes</h3>
+    <p>Fonte: varredura de classes literais em <code>views/*.html</code>. Todo botão do Handex é uma destas 6 variantes.</p>
+
+    <div class="demo-block">
+      <button class="hx-btn hx-btn-primary" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.9 4.24A9 9 0 0 1 21 12"/></svg>
+        Gerar Ficha
+      </button>
+      <button class="hx-btn hx-btn-destructive" type="button">Excluir</button>
+      <button class="hx-btn hx-btn-outline" type="button">Finalizar Registros</button>
+      <button class="hx-btn hx-btn-outline-link" type="button">Ver guia do DSC ↗</button>
+      <button class="hx-btn hx-btn-primary" type="button" disabled>Confirmar (disabled)</button>
+      <span class="demo-caption">
+        Primária: <code>bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-bold</code>.
+        Destrutiva: <code>bg-red-500 hover:bg-red-600</code>.
+        Branco/outline neutro: <code>bg-white border border-gray-200 rounded-2xl py-3 text-[12px] font-bold</code> (dimensão única desde 2026-08-26).
+        Sub-variante link externo: mesma dimensão, borda/texto <code>blue-500</code>.
+        Disabled (todas as variantes): <code>disabled:opacity-40 disabled:cursor-not-allowed</code>, nunca troca a cor de fundo.
+      </span>
+    </div>
+
+    <div class="demo-block" style="background:#005ca9; border:none;">
+      <button class="hx-btn hx-btn-ghost" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Voltar
+      </button>
+      <button class="hx-btn-icon" style="color:#fff" type="button" aria-label="Ajuda">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+      </button>
+      <span class="demo-caption" style="color:#dbeafe">Secundária/ghost sobre header azul: fundo <code>bg-white/10</code>, <code>hover:bg-white/20</code>. Botão-ícone interativo isolado: container <code>w-10 h-10</code> (40×40px de área de toque real).</span>
+    </div>
+
+    <div class="demo-block">
+      <button class="hx-btn-icon-outline" type="button" aria-label="Baixar backup">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M6.5 9.5 12 15l5.5-5.5M4 21h16"/></svg>
+      </button>
+      <button class="hx-btn-icon-outline" type="button" aria-label="Excluir item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+      </button>
+      <span class="demo-caption">Ícone utilitário com fundo: <code>bg-white border border-gray-200 rounded-2xl</code>, cor de hover semântica (vermelho para descarte).</span>
+    </div>
+
+    <div class="debt-banner"><strong>Divergência confirmada:</strong> <code>home.html:167</code> e 3 ocorrências em <code>modals.html</code> (linhas 102, 1006, 1247) ainda usam <code>hover:bg-[#004d8f]</code>/<code>hover:bg-[#005a8e]</code> — hex do azul institucional <em>pré-reversão de marca</em>, não a classe nomeada <code>hover:bg-blue-600</code> atual. Essas 4 ocorrências não foram migradas.</div>
+
+    <h3>Cards</h3>
+    <div class="demo-block">
+      <div class="hx-home-card">
+        <div class="ico-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#005ca9" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+        <div class="t">Informações do Projeto</div>
+        <div class="d">Título, versão, equipe e contexto</div>
+      </div>
+      <div class="hx-home-card">
+        <div class="ico-wrap" style="background:#f0f9ff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg></div>
+        <div class="t">Escanear Tokens</div>
+        <div class="d">Lê tokens e valida o Design System</div>
+      </div>
+      <span class="demo-caption">Card de ferramenta da home (<span class="source-tag">home.html:38-55</span>): markup único reutilizado nas 6 instâncias, variando só cor de hover e ícone. <code>rounded-2xl</code>, <code>p-3</code>, ícone em container <code>w-10 h-10 rounded-xl</code>.</span>
+    </div>
+    <div class="demo-block">
+      <div class="hx-content-card" style="width:280px">
+        <p style="font-size:12px;font-weight:800;margin:0 0 4px">Card de conteúdo genérico</p>
+        <p style="font-size:11px;color:#64748b;margin:0">Usado em listas de specs, medidas e seções de Dados do Projeto. Radius 16px vem hoje da regra global <code>[id$="-card"]</code>, não de classe Tailwind direta.</p>
+      </div>
+    </div>
+
+    <h3>Badges de categoria — legenda do modal de ajuda</h3>
+    <p>Paleta distinta da paleta canônica da Ficha (seção 1) — herdada das cores originais do canvas do Figma (<span class="source-tag">modals.html:396-418</span>).</p>
+    <div class="demo-block">
+      <div class="hx-legend-card" style="background:#EBF1F2;border:1px solid #64747A"><span class="hx-legend-pill" style="background:#EBF1F2;border:1px solid #64747A;color:#475569">Informação extra</span></div>
+      <div class="hx-legend-card" style="background:#F8EAF3;border:1px solid #93537D"><span class="hx-legend-pill" style="background:#F8EAF3;border:1px solid #93537D;color:#93537D">Comportamento</span></div>
+      <div class="hx-legend-card" style="background:#E5F5F8;border:1px solid #008CB2"><span class="hx-legend-pill" style="background:#E5F5F8;border:1px solid #008CB2;color:#006884">Regra de Negócio</span></div>
+      <div class="hx-legend-card" style="background:#F5FEC1;border:1px solid #6D8000"><span class="hx-legend-pill" style="background:#F5FEC1;border:1px solid #6D8000;color:#556600">Dados da API</span></div>
+    </div>
+
+    <h3>Modal — estrutura padrão</h3>
+    <div class="demo-block">
+      <div class="hx-modal-shell">
+        <div class="hx-modal-header">
+          <div>
+            <p style="font-size:15px;font-weight:800;margin:0;color:#1e293b">Versionar Ficha de Projeto</p>
+            <p style="font-size:11px;color:#64748b;margin:2px 0 0">Escolha o tipo de atualização.</p>
+          </div>
+          <button class="hx-btn-icon" type="button" aria-label="Fechar modal">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="hx-modal-body">
+          <label style="display:flex;gap:10px;padding:12px;border:2px solid #005ca9;background:rgba(0,92,169,.05);border-radius:12px;cursor:pointer">
+            <input type="radio" name="ds-demo-version" checked style="margin-top:2px">
+            <span><strong style="font-size:12px;color:#1e293b">Atualização</strong><br><span style="font-size:11px;color:#64748b">Novo conteúdo, frames, specs ou fluxos.</span></span>
+          </label>
+        </div>
+        <div class="hx-modal-footer">
+          <button class="hx-btn hx-btn-outline" style="flex:1" type="button">Cancelar</button>
+          <button class="hx-btn hx-btn-primary" style="flex:1" type="button">Confirmar</button>
+        </div>
+      </div>
+      <span class="demo-caption">Shell padrão: <code>role="dialog" aria-modal="true"</code> + overlay + <code>.modal-content bg-white rounded-2xl shadow-2xl</code>. Focus trap global (<span class="source-tag">core.js:2365-2408</span>). z-index padrão <code>z-[1000]</code>, empilhado <code>z-[1200]</code>, confirmação leve <code>z-[200]</code> — ainda valores mágicos, sem constante nomeada.</span>
+    </div>
+
+    <h3>Toggle/Switch</h3>
+    <div class="demo-block">
+      <label class="hx-switch"><input type="checkbox" checked><span class="track"></span></label>
+      <label class="hx-switch"><input type="checkbox"><span class="track"></span></label>
+      <span class="demo-caption">Switch estilizado (<span class="source-tag">dados-projeto.html:233-234</span>) — padrão oficial para escolha binária habilitado/desabilitado (ex: ativar/desativar Briefing Estratégico). Markup: <code>peer</code> + <code>peer-checked:bg-[#005ca9]</code>. Checkbox nativo (<code>accent-*</code>) continua sendo o padrão correto para seleção múltipla em listas, não substitui o switch.</span>
+    </div>
+
+    <h3>Inputs</h3>
+    <div class="demo-block">
+      <input class="hx-input" type="text" placeholder="Nome do projeto">
+      <span class="demo-caption">Componente mais consistente do plugin — tokenizado via regra global <code>input[type=text|search], select, textarea</code> (<span class="source-tag">plugin.css:507-514</span>). Todo input novo herda automaticamente por seletor de tag, sem redeclarar estilo local.</span>
+    </div>
+
+    <h3>Toast</h3>
+    <div class="demo-block" style="background:#0f172a;border-style:solid;border-color:#1e293b">
+      <div class="hx-toast">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10-3-3"/></svg>
+        Dados salvos com sucesso
+      </div>
+      <span class="demo-caption" style="color:#94a3b8">Sistema único (<code>#toast-container</code>, <span class="source-tag">plugin.css:284-296</span>) — mesmo markup para todas as severidades; a diferença é comunicada por texto e ícone, nunca por cor de fundo.</span>
+    </div>
+
+    <h3>Empty state</h3>
+    <div class="demo-block">
+      <div class="hx-empty" style="width:100%">
+        <div class="ico"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg></div>
+        <div class="t">Nenhuma spec criada ainda</div>
+        <span class="cta">Marcar área no canvas</span>
+      </div>
+      <span class="demo-caption">Estrutura única: ícone a 25% de opacidade + título + CTA inline sublinhado, gerada via função JS compartilhada entre 3 das 4 ferramentas de anotação (exceção confirmada: hub de Frames ainda usa HTML estático próprio).</span>
+    </div>
+
+    <hr>
+
+    <!-- ═══════════════ 6. TEMA CLARO/ESCURO ═══════════════ -->
+    <h2 id="tema">6. Tema claro/escuro</h2>
+    <p>Implementado via classe <code>dark</code> na raiz (Tailwind <code>darkMode: 'class'</code>, <span class="source-tag">tailwind.config.cjs:3</span>) — todo componente do plugin declara o par <code>bg-light-* dark:bg-dark-*</code> lado a lado.</p>
+    <div class="theme-compare">
+      <div class="theme-pane light">
+        <div class="pane-label">Light</div>
+        <div class="hx-home-card" style="width:auto">
+          <div class="ico-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#005ca9" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+          <div class="t">Card de ferramenta</div>
+          <div class="d">bg-white / border-gray-100</div>
+        </div>
+      </div>
+      <div class="theme-pane dark">
+        <div class="pane-label">Dark</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:12px;width:158px;background:#1e293b;border:1px solid #334155;border-radius:16px">
+          <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:#334155;border-radius:12px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+          <div style="font-weight:800;font-size:11px;color:#fff">Card de ferramenta</div>
+          <div style="font-size:10px;color:#b4c6d8">bg-dark-surface / border-dark-line</div>
+        </div>
+      </div>
+    </div>
+    <div class="debt-banner"><strong>Contraste WCAG 2.1 AA — auditoria de 2026-08-26 (piso: texto normal 4.5:1, texto grande/ícone 3:1):</strong> confirmadas e corrigidas 14 reprovações (opacidade de texto branco sobre header azul, <code>dark:</code> ausente em textos azuis, badges de categoria, texto secundário direto sobre fundo de view). Pendências que <em>passam</em> mas com pouca folga ou seguem sem correção: badge "Comportamento" (4.53:1, quase no limite) e contadores de caractere <code>text-[9px] text-slate-400</code> (~2.6:1 sobre card branco, ~20 ocorrências, não corrigido por ser anotação secundária de apoio).</div>
+
+    <hr>
+
+    <!-- ═══════════════ 7. DÍVIDA TÉCNICA ═══════════════ -->
+    <h2 id="divida">7. Dívida técnica observada (código vs. padrão declarado)</h2>
+    <p>Itens confirmados por leitura direta do código nesta revisão — cada um é uma correção pontual, não um redesenho:</p>
+    <ol>
+      <li><strong>3 paletas de categoria de spec não convergidas</strong> — Ficha exportada (<code>handoff.js:736-741</code>), card do canvas (<code>_CAT_COLORS</code>, <code>specifications.js:463-468</code>) e legenda do modal de ajuda (<code>modals.html:396-418</code>) usam 3 conjuntos de hex diferentes para as mesmas 4 categorias.</li>
+      <li><strong>Bug adormecido de verde/laranja</strong> — <code>plugin.css:127-134</code> faz <code>button.bg-green-600</code>/<code>.bg-green-500</code> herdar <code>#935300</code> (cor de hover do laranja de alerta). Confirmado ainda presente no código.</li>
+      <li><strong><code>rounded-xl</code> não é residual</strong> — 141 ocorrências reais em <code>views/*.html</code>, incluindo o botão "voltar" do header padrão de toda view. O padrão declarado (<code>rounded-2xl</code> universal) e o uso real convivem sem terem convergido.</li>
+      <li><strong>Radius de card via seletor de atributo global</strong> — <code>[id$="-card"] { border-radius: 16px !important }</code> (<code>plugin.css:451-465</code>) em vez de classe Tailwind direta no elemento. Confirmado ativo.</li>
+      <li><strong>z-index de modal sem constante nomeada</strong> — <code>z-[1000]</code>/<code>z-[1200]</code>/<code>z-[200]</code> continuam valores mágicos espalhados no HTML.</li>
+      <li><strong>Hex de brand direto no HTML</strong> — 4 ocorrências confirmadas de <code>hover:bg-[#004d8f]</code>/<code>hover:bg-[#005a8e]</code> (hex pré-reversão de marca) em <code>home.html:167</code> e <code>modals.html:102,1006,1247</code>, além de uso disseminado de <code>bg-[#005ca9]</code> em vez de <code>bg-blue-500</code> em muitas outras views.</li>
+      <li><strong>Escala tipográfica sem token nomeado</strong> — <code>text-3xs</code>/<code>text-2xs</code>/<code>text-xs-plus</code>/<code>text-md</code> não existem em <code>fontSize</code> do <code>tailwind.config.cjs</code>; todo o código usa px arbitrário.</li>
+      <li><strong>4 dialetos de accordion</strong> — <code>toggleAccordion(btn, nodeId)</code> (<code>core.js:2696</code>) é o padrão oficial, mas <code>guide.html</code> (onclick inline sem <code>aria-expanded</code>), o Briefing Estratégico (<code>div role="button"</code>) e chevrons próprios (<code>.journey-chevron</code>, <code>.group-chevron</code>) ainda coexistem.</li>
+      <li><strong>Contadores de caractere abaixo do piso de contraste</strong> — <code>text-[9px] text-slate-400</code> sobre card branco mede ~2.6:1 (piso é 4.5:1), ~20 ocorrências, registrado como pendência e não corrigido em massa.</li>
+      <li><strong>Nomenclatura de tela inconsistente</strong> — card na home diz "Escanear Tokens", id interno é <code>view-frames</code>, arquivo é <code>handoff.html</code>; nome canônico proposto é "Handoff", ainda não convergido nas 3 pontas.</li>
+    </ol>
+
+    <p class="footer-note" style="margin-top:36px"><strong>Arquivos-fonte consultados nesta revisão:</strong> <code>src/plugin/styles/{tailwind.config.cjs,plugin.css}</code>, <code>src/plugin/modules/{core,handoff,specifications,measurement,briefing}.js</code>, <code>src/plugin/views/{home,specifications,modals,dados-projeto}.html</code>. Última verificação de código: 2026-09-02.</p>
   </div>
-  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito</p>
+  <p class="footer-note">Handex — Handoff Express · Fóton · documentação interna, uso restrito · não publicado como site</p>
 </div>
 </body>
 </html>
