@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Semântica dos Dados — hac</title>
+<style>
+:root {
+  --hac-cyan: #0891B2;
+  --hac-blue: #005ca9;
+  --hac-blue-dark: #004782;
+  --hac-orange: #f39200;
+  --bg: #eef2f7;
+  --surface: #ffffff;
+  --line: #dde3ec;
+  --muted: #64748b;
+  --text: #1e293b;
+}
+:root[data-theme="dark"] {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --line: #334155;
+  --muted: #b4c6d8;
+  --text: #f1f5f9;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+header.site-header {
+  background: var(--hac-blue);
+  color: #fff;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+:root[data-theme="dark"] header.site-header { background: #00335c; }
+header.site-header .brand-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: auto;
+}
+header.site-header .brand-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+header.site-header .brand-icon svg {
+  width: 20px;
+  height: 20px;
+  color: #fff;
+}
+header.site-header .brand {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+}
+header.site-header nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+header.site-header nav a {
+  color: #e0effe;
+  text-decoration: none;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+header.site-header nav a:hover {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+}
+header.site-header nav a.active {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  font-weight: 700;
+}
+#theme-toggle {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+#theme-toggle:hover { background: rgba(255,255,255,0.22); }
+#theme-toggle svg { width: 18px; height: 18px; }
+main {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 28px 32px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+h1 {
+  font-size: 24px;
+  margin-top: 0;
+  color: var(--hac-blue);
+  letter-spacing: -0.01em;
+}
+h2 {
+  font-size: 18px;
+  margin-top: 36px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--hac-blue);
+  letter-spacing: -0.01em;
+}
+h2:first-of-type { border-top: none; padding-top: 0; }
+h3 {
+  font-size: 15px;
+  margin-top: 24px;
+  color: var(--text);
+}
+p { margin: 12px 0; }
+a { color: var(--hac-cyan); }
+a:hover { text-decoration: none; }
+code {
+  font-family: "Consolas", "SFMono-Regular", monospace;
+  background: #f1f5f9;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  color: #0f172a;
+}
+:root[data-theme="dark"] code {
+  background: #334155;
+  color: #f1f5f9;
+}
+pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 14px 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+}
+th, td {
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: #f8fafc;
+  font-weight: 700;
+}
+:root[data-theme="dark"] th { background: #263449; }
+blockquote {
+  border-left: 3px solid var(--hac-cyan);
+  margin: 16px 0;
+  padding: 4px 16px;
+  background: #f0f9fb;
+  color: #334155;
+  font-size: 14px;
+}
+:root[data-theme="dark"] blockquote {
+  background: rgba(8,145,178,0.12);
+  color: #d7e6ee;
+}
+blockquote p { margin: 8px 0; }
+ul, ol { padding-left: 22px; }
+li { margin: 4px 0; }
+hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 32px 0;
+}
+.toc {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+:root[data-theme="dark"] .toc { background: #263449; }
+.toc p { margin: 0 0 8px; font-weight: 700; font-size: 13px; }
+.toc ol { margin: 0; }
+.footer-note {
+  margin-top: 48px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+.badge-proposta {
+  display: inline-block;
+  background: #fff4e5;
+  color: #8a5300;
+  border: 1px solid #f0cf9a;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+:root[data-theme="dark"] .badge-proposta {
+  background: rgba(243,146,0,0.14);
+  color: #f3b158;
+  border-color: rgba(243,146,0,0.35);
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="brand-group">
+    <span class="brand-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1" /><path d="m9 20 3-6 3 6" /><path d="m6 8 6 2 6-2" /><path d="M12 10v4" /></svg></span>
+    <span class="brand">hac — Handoff de Acessibilidade CAIXA</span>
+  </div>
+  <nav>
+    <a href="index.html">Início</a>
+    <a href="tecnico.html">Documentação Técnica</a>
+    <a href="dados.html" class="active">Semântica dos Dados</a>
+    <a href="institucional.html">Regras de Negócio</a>
+    <a href="design-system.html">Design System</a>
+    <a href="changelog.html">Changelog</a>
+  </nav>
+  <button type="button" id="theme-toggle" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro"></button>
+</header>
+<main>
+  <div class="card">
+
+    <h1>Semântica dos Dados — hac</h1>
+
+    <p>Este documento complementa a <a href="tecnico.html">Documentação Técnica</a> —
+    lá está o <strong>schema</strong> (campos, tipos, contrato de mensagens); aqui está o
+    <strong>significado</strong>: o que cada tipo de dado representa no trabalho real do
+    designer, de onde ele nasce no fluxo de uso do plugin, e — só para
+    <code>a11ySpecs[]</code> — uma reflexão honesta sobre uso futuro em aprendizado de
+    máquina. Não há schema técnico novo aqui; para campos/tipos, ver
+    <a href="tecnico.html#s1">tecnico.html, seção 1</a>.</p>
+
+    <div class="toc">
+      <p>Sumário</p>
+      <ol>
+        <li><a href="#s1">Por que este documento existe</a></li>
+        <li><a href="#s2">Áreas Marcadas (<code>a11yAreas[]</code>)</a></li>
+        <li><a href="#s3">Especificações de Acessibilidade (<code>a11ySpecs[]</code>)</a></li>
+        <li><a href="#s4">Ordem de Tabulação (<code>tabOrderItems[]</code>)</a></li>
+        <li><a href="#s5">Origem do projeto (<code>projectOrigin</code>)</a></li>
+        <li><a href="#s6">Usuário identificado (<code>currentUser</code>)</a></li>
+        <li><a href="#s7"><code>a11ySpecs[]</code> como dado de treinamento — proposta</a></li>
+        <li><a href="#s8">Sobre esta documentação</a></li>
+      </ol>
+    </div>
+
+    <h2 id="s1">1. Por que este documento existe</h2>
+
+    <p>O hac produz, no fim das contas, um <strong>artefato de handoff</strong>: um
+    conjunto de decisões documentadas sobre como cada elemento de uma tela deve
+    ser interpretado por tecnologia assistiva, prontas para o time de
+    desenvolvimento implementar. O schema técnico (campos, tipos, validações)
+    diz COMO esse artefato é representado em memória e em disco. Este documento
+    diz O QUE cada peça do artefato SIGNIFICA — por que ela existe, o problema
+    real que resolve, e de onde vem no fluxo de trabalho do designer dentro do
+    Figma.</p>
+
+    <h2 id="s2">2. Áreas Marcadas (<code>a11yAreas[]</code>)</h2>
+
+    <p><strong>O que representa:</strong> um agrupamento de contexto — geralmente uma
+    tela, uma seção de tela, ou um fluxo específico dentro de um frame maior —
+    que o designer decidiu tratar como unidade de trabalho para fins de
+    handoff de acessibilidade. É o nível em que o hac organiza tudo o mais:
+    toda spec de acessibilidade (seção 3) e toda revisão de Ordem de Tabulação
+    (seção 4) pertence a exatamente uma Área Marcada.</p>
+
+    <p><strong>De onde vem:</strong> criada manualmente pelo designer ("Marcar Área"),
+    apontando para um nó real do canvas (<code>targetNodeId</code>) e recebendo um
+    número sequencial (<code>number</code>) e um rótulo textual (<code>label</code>, até 80
+    caracteres — ver <a href="tecnico.html#s2">tecnico.html, seção 2</a>). O
+    número é o que aparece no selo visual desenhado sobre o frame no canvas
+    (componente <code>[a11y] Item Number</code>/<code>[a11y mob] Número da tela</code>, ver
+    <a href="tecnico.html#s8">tecnico.html, seção 8</a>) — é a mesma numeração
+    que o time de desenvolvimento usa para navegar entre a tela e sua
+    documentação de acessibilidade.</p>
+
+    <p>Não representa nada sobre a tecnologia assistiva em si — é puramente
+    estrutural/organizacional. A origem web/mobile do handoff não é mais um
+    atributo por área (era, historicamente — ver
+    <a href="tecnico.html#s3">tecnico.html, seção 3</a>); hoje é uma
+    característica do projeto inteiro (seção 5 abaixo).</p>
+
+    <h2 id="s3">3. Especificações de Acessibilidade (<code>a11ySpecs[]</code>)</h2>
+
+    <p><strong>O que representa:</strong> este é o dado central do hac. Cada spec é uma
+    <strong>decisão documentada</strong> sobre como um elemento específico da interface
+    deve ser exposto para leitor de tela ou outra tecnologia assistiva —
+    qual rótulo (<code>accessibilityLabel</code>) ele deve anunciar, se é decorativo e
+    deve ser ignorado, que nível de título ocupa na hierarquia da página, que
+    papel estrutural cumpre (landmark), ou que informação adicional (dica de
+    uso, comportamento de foco) precisa ser comunicada ao desenvolvedor que vai
+    implementar aquele componente. As 5 categorias (<code>elemento</code>, <code>estrutura</code>,
+    <code>titulo</code>, <code>decorativo</code>, <code>informacoes</code> — detalhadas em
+    <a href="tecnico.html#s2">tecnico.html, seção 2</a>) são 5 tipos diferentes
+    de decisão, não 5 níveis de importância.</p>
+
+    <p>Uma spec não é uma anotação livre: ela é estruturada porque precisa virar
+    trabalho de implementação verificável — por isso tem campos obrigatórios
+    por categoria/subtipo, limite de caracteres, e vínculo obrigatório a um
+    componente real da lib DSC sempre que possível (princípio "componente real
+    sempre, procedural só como último recurso",
+    <a href="tecnico.html#s6">tecnico.html, seção 6</a>). O campo
+    <code>properties[]</code> (<code>{key, label, value}</code>) é o que carrega o conteúdo
+    substantivo da decisão — por exemplo <code>{key: 'label', value: '...'}</code> é o
+    texto que vai virar o <code>accessibilityLabel</code> real no código do app ou site
+    (ver uso em <code>src/plugin/modules/accessibility.js:1859</code>).</p>
+
+    <p><strong>De onde vem:</strong> duas origens possíveis no fluxo de trabalho
+    (<a href="tecnico.html#s7">tecnico.html, seção 7</a>):</p>
+    <ul>
+      <li><strong>Manual</strong> — o designer seleciona um elemento no canvas e preenche o
+      formulário à mão, categoria por categoria.</li>
+      <li><strong>Detecção Automática</strong> — o plugin varre um frame, reconhece
+      instâncias de componentes DSC conhecidos e sugere uma categoria +
+      preenchimento inicial (ex: nome do componente, quando resolvido). Mas
+      nenhuma spec nasce da varredura sem revisão: todo item passa por
+      confirmação individual no wizard antes de virar spec de fato — a
+      varredura sugere, o designer decide.</li>
+    </ul>
+
+    <p>Em ambos os casos, o dado final gravado em <code>a11ySpecs[]</code> representa a
+    mesma coisa: uma decisão que o designer <strong>confirmou</strong> como correta para
+    aquele elemento — seja porque ele mesmo a escreveu, seja porque aceitou (com
+    ou sem edição) uma sugestão do plugin.</p>
+
+    <h2 id="s4">4. Ordem de Tabulação (<code>tabOrderItems[]</code>)</h2>
+
+    <p><strong>O que representa:</strong> a sequência em que elementos interativos de uma
+    tela devem receber foco de teclado/leitor de tela — uma dimensão de
+    acessibilidade totalmente diferente das specs da seção 3 (que descrevem O
+    QUE cada elemento é/anuncia; a ordem de tabulação descreve EM QUE SEQUÊNCIA
+    o usuário navega entre eles). É a resposta documentada à pergunta "se eu
+    navegar só de teclado/leitor de tela, essa é a ordem que faz sentido?".</p>
+
+    <p><strong>De onde vem:</strong> nunca desenhada sobre o design original — sempre
+    sobre uma cópia de frame clonada especificamente para esse fim, dentro de
+    uma Section separada da Section de specs (<code>"hac — Ordem de Tabulação"</code>,
+    ver <a href="tecnico.html#s8">tecnico.html, seção 8</a>). Populada por dois
+    modos: clique manual sequencial do designer sobre os elementos da cópia,
+    ou varredura automática que só sugere elementos reconhecidos como
+    interativos (botões, campos, links, etc.) — em ambos os casos, o resultado
+    é uma lista revisável (reordenável por arrastar, editável) antes de ser
+    "Aplicada no Canvas" como selos numerados definitivos.</p>
+
+    <h2 id="s5">5. Origem do projeto (<code>projectOrigin</code>)</h2>
+
+    <p><strong>O que representa:</strong> não é uma decisão de acessibilidade em si — é
+    uma <strong>configuração de contexto</strong> que determina COMO o restante dos dados
+    deve ser interpretado e gerado. Um handoff web e um handoff mobile
+    trabalham com catálogos de componentes DSC diferentes, campos diferentes
+    (ex: React Native não tem hierarquia de heading H1-H6) e libs de matching
+    diferentes — ver <a href="tecnico.html#s2">tecnico.html, seção 2</a> e
+    <a href="tecnico.html#s6">seção 6</a>. Por decisão de produto confirmada
+    pelo usuário ("se é um projeto mobile, tudo referencia mobile"), essa
+    configuração vale para o arquivo inteiro, nunca é mista dentro do mesmo
+    projeto.</p>
+
+    <p><strong>De onde vem:</strong> perguntada ao designer uma única vez por arquivo,
+    na primeira ação que precisa saber a plataforma (Marcar Área com
+    auto-detecção, Detecção Automática, ou Ordem de Tabulação) — nunca
+    recalculada ou perguntada de novo depois disso, exceto na reabertura
+    deliberada via modal "Sobre o hac" ou no "Reescanear" pontual dentro do
+    resumo da Detecção Automática (exceção documentada em
+    <a href="tecnico.html#s3">tecnico.html, seção 3</a>).</p>
+
+    <h2 id="s6">6. Usuário identificado (<code>currentUser</code>)</h2>
+
+    <p><strong>O que representa:</strong> não é um dado de autoria/histórico de quem fez
+    o quê dentro do handoff (o hac não versiona nem atribui specs a pessoas) —
+    é só a identidade da sessão atual do Figma, capturada para fins de
+    contexto de ambiente (ex: mensagens de boas-vindas, indicação de quem está
+    usando o plugin naquele momento).</p>
+
+    <p><strong>De onde vem:</strong> lida diretamente da API do Figma
+    (<code>figma.currentUser</code>) no momento em que o plugin abre —
+    <code>{ id, name, photoUrl }</code>, sem processo de login próprio do hac (ver
+    <code>src/plugin/code.js:1743-1744</code>). É por isso que <code>clear-cache</code>
+    preserva <code>currentUser</code> ao zerar todo o resto: é identidade/configuração
+    de ambiente, não conteúdo do projeto (ver
+    <a href="tecnico.html#s1">tecnico.html, seção 1</a>).</p>
+
+    <h2 id="s7">7. <code>a11ySpecs[]</code> como dado de treinamento — proposta<span class="badge-proposta">Proposta, não iniciada</span></h2>
+
+    <p>Toda spec confirmada pelo designer — seja escrita manualmente, seja
+    aceita a partir de uma sugestão automática — é, estruturalmente, um
+    <strong>exemplo rotulado</strong>: "para este padrão de componente/contexto, esta foi
+    a decisão de acessibilidade correta". É exatamente o tipo de dado que
+    alimentaria um motor de aprendizado que aprimorasse as sugestões
+    automáticas do próprio hac ao longo do tempo — ideia que já existe, embutida
+    na filosofia de design do plugin, mas que hoje se resume a um único
+    mecanismo <strong>determinístico</strong> real, não a aprendizado de fato:</p>
+
+    <p>O caso concreto já implementado é o pré-preenchimento do dropdown
+    "Link do Componente", na variante mobile "Componente" de Elementos e
+    Imagens: quando o nome do componente DSC resolvido pela varredura bate,
+    por correspondência exata de nome, com um dos 46 nomes (de um catálogo de
+    64) que têm <code>nodeId</code> real conhecido, o <code>&lt;select&gt;</code> já nasce com essa
+    opção selecionada — sem digitação manual do designer (ver
+    <a href="tecnico.html#s5">tecnico.html, seção 5</a> e
+    <code>src/plugin/modules/accessibility.js</code>, em torno da linha 1254). Isso
+    é uma regra fixa de correspondência de nome, definida e mantida a mão pelo
+    time — não aprende com o uso, não muda de comportamento com o tempo, e não
+    usa nenhum histórico de confirmações passadas do designer.</p>
+
+    <p>A proposta discutida é diferente em natureza: um motor que observasse,
+    ao longo do tempo, quais sugestões automáticas da Detecção Automática o
+    designer <strong>confirma sem alterar</strong> (sinal forte de "a sugestão estava
+    certa") versus quais ele edita ou descarta (sinal de "a sugestão estava
+    errada ou incompleta"), e usasse esse histórico para melhorar a confiança
+    e a precisão das sugestões futuras — por exemplo, priorizando qual
+    categoria de acessibilidade sugerir primeiro para um componente DSC
+    ambíguo, com base no que já foi confirmado antes para padrões parecidos.</p>
+
+    <p><strong>Isto é uma proposta, não uma feature em desenvolvimento.</strong> Há
+    considerações reais pendentes, sem resposta ainda:</p>
+
+    <ul>
+      <li><strong>Onde armazenar o histórico.</strong> O hac não tem backend próprio —
+      roda inteiramente dentro do sandbox do plugin Figma, persistindo hoje
+      só via <code>figma.clientStorage</code>, escopado por instalação do plugin e por
+      arquivo (<a href="tecnico.html#s1">tecnico.html, seção 1</a>). Um motor
+      de aprendizado de verdade precisaria agregar sinal entre arquivos e,
+      provavelmente, entre designers — o que <code>clientStorage</code> isolado por
+      arquivo não permite hoje sem uma camada de infraestrutura nova.</li>
+      <li><strong>LGPD/privacidade.</strong> Histórico de confirmações é, no fundo,
+      dado sobre o <strong>comportamento do designer</strong> (o que ele aceita, edita
+      ou descarta) — não é dado de saúde nem dado pessoal de usuário final,
+      mas ainda é dado comportamental de uma pessoa identificável dentro da
+      organização, e mereceria tratamento e transparência compatíveis antes
+      de qualquer coleta.</li>
+      <li><strong>Viabilidade no sandbox do Figma.</strong> Plugins Figma não têm
+      acesso nativo a treinamento de modelo nem a um serviço externo próprio
+      sem que o time monte e mantenha essa infraestrutura à parte — o que muda
+      o escopo do projeto de "melhoria incremental do plugin" para "novo
+      serviço com backend, armazenamento e ciclo de vida próprios".</li>
+      <li><strong>ROI dado o volume de uso.</strong> Um motor de aprendizado só se
+      justifica com volume suficiente de confirmações para gerar sinal
+      estatístico confiável — vale checar se o volume real de uso do hac hoje
+      chega perto disso antes de investir em construir a infraestrutura.</li>
+    </ul>
+
+    <p>Em resumo: o dado já existe e já tem, em princípio, a forma certa para
+    isso (spec confirmada = exemplo rotulado); o que não existe ainda é
+    decisão, desenho de infraestrutura, nem validação de que vale a pena. Não
+    iniciar esta frente sem pedido explícito e sem antes endereçar os pontos
+    acima.</p>
+
+    <h2 id="s8">8. Sobre esta documentação</h2>
+
+    <p>Este documento complementa a <a href="tecnico.html">Documentação Técnica</a>
+    (schema, campos, contrato de mensagens) e não deve duplicá-la — mudanças
+    de schema vão em <code>tecnico.html</code>; mudanças de significado/uso dos dados
+    (novos tipos de dado, mudança do que uma categoria representa, evolução da
+    proposta de aprendizado da seção 7) vão aqui. Ambos vivem como arquivos
+    HTML estáticos dentro de <code>docs/</code>, no repositório privado — sem
+    hospedagem pública.</p>
+
+    <p class="footer-note">hac — Semântica dos Dados · repositório privado, uso interno</p>
+  </div>
+</main>
+<script>
+(function () {
+  var ICON_SUN = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></svg>';
+  var ICON_MOON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></svg>';
+  var STORAGE_KEY = 'hac-docs-theme';
+  var root = document.documentElement;
+  var toggle = document.getElementById('theme-toggle');
+
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      root.setAttribute('data-theme', 'dark');
+      if (toggle) toggle.innerHTML = ICON_SUN;
+    } else {
+      root.removeAttribute('data-theme');
+      if (toggle) toggle.innerHTML = ICON_MOON;
+    }
+  }
+
+  var saved = null;
+  try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+  applyTheme(saved === 'dark' ? 'dark' : 'light');
+
+  if (toggle) {
+    toggle.addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      try { localStorage.setItem(STORAGE_KEY, next); } catch (e) {}
+    });
+  }
+})();
+</script>
+</body>
+</html>
