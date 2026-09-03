@@ -1,7 +1,20 @@
 # Estado da arquitetura — hac (Handoff de Acessibilidade CAIXA)
 
+> **AVISO — este arquivo local passou a ser SECUNDÁRIO em 2026-09-02.**
+> A partir desta data, a fonte primária de verdade da documentação técnica
+> do hac é o site publicado em
+> **https://aab-foton.github.io/hac_plugin/** (páginas `tecnico.html` e
+> `changelog.html`) — atualizações de arquitetura, bugs corrigidos e
+> decisões de produto devem ser registradas primeiro lá, não aqui. Este
+> arquivo (`docs/architecture-state.md`) é mantido como espelho/ponto de
+> partida histórico do estado em que a documentação foi migrada, mas não
+> tem mais obrigação de sincronia automática — se você é uma sessão futura
+> lendo este arquivo, confira o site antes de assumir que este documento
+> reflete o estado atual do código.
+
 > Documento vivo. Atualize sempre que o schema `hacData`, o contrato de
-> mensagens, ou uma regra de negócio central mudar de forma estrutural.
+> mensagens, ou uma regra de negócio central mudar de forma estrutural —
+> mas priorize atualizar o site (ver aviso acima) como destino principal.
 > Última revisão completa: 2026-09-02 (branch `beta/a11y-mobile-handoff`) —
 > reescrito do zero após uma sessão que corrigiu 3 bugs estruturais reais no
 > matching DSC→a11y e mudou a arquitetura de origem web/mobile 3 vezes no
@@ -58,7 +71,9 @@ set DSC, ex: `"[dsc] Top App Bar"`, quando resolvido), `needsReview`
 
 ### `tabOrderItems[]`
 Populado pela arquitetura de cópia de frame (`_createTabOrderCloneForArea`
-em `code.js`) — nunca desenha sobre o design original.
+em `code.js`) — nunca desenha sobre o design original. A cópia em si vive
+dentro de uma Section dedicada no canvas, separada da Section de specs —
+ver seção 8, "Organização em Sections dedicadas".
 
 ### `projectOrigin`
 Ver seção 3 — origem web/mobile do arquivo inteiro, não por área.
@@ -265,6 +280,40 @@ campo "Label" do topo do formulário — ambos alimentavam o mesmo
 agora a única fonte, e seu valor liga o toggle BOOLEAN real do
 componente (`Nome acessível#5366:0`).
 
+**Mesmo padrão aplicado ao desktop/web em 2026-09-02.** O formulário
+desktop de "Elementos e Imagens" tinha o mesmo problema: o checkbox
+dinâmico "Nome Acessível" (um dos toggles renderizados por
+`_renderA11yElementoToggles`/`_getA11yComponentToggles`, a partir da
+property BOOLEAN real do componente DSC selecionado, catálogo
+`A11Y_COMPONENT_PROPERTIES`) duplicava o campo "Label
+(accessibilityLabel)" sempre visível no topo. Diferença estrutural do
+mobile: no desktop o toggle "Nome Acessível" não é fixo — só existe
+quando o componente escolhido de fato tem essa property BOOLEAN na lib
+(nem todos têm). `_renderA11yElementoToggles` agora filtra esse toggle
+específico fora da lista antes de montar o HTML (`t.key !==
+'nomeAcessivel'`), mantendo os demais toggles reais do componente
+(Observações, Notas de Código etc.). Em compensação,
+`_buildA11yElementoPayload` passou a injetar
+`{ key: 'nomeAcessivel', value: label }` em `properties[]`
+automaticamente a partir do Label do topo, para TODO componente — mesmo
+os que não têm a property real. Isso é seguro porque o backend
+(`code.js`, ~linha 1042-1086) já ignora silenciosamente properties
+dinâmicas sem `toggleDef` correspondente no componente
+(`toggleMap[p.key]` ausente → `continue`), e `_infoLines` (fallback que
+joga sobras em Observações) já exclui as 3 chaves de `_dynamicToggleKeys`
+(`nomeAcessivel`/`observacoes`/`notas`) do que sobra — logo o valor
+nunca aparece duplicado em specs de componentes sem a property. Portanto
+Label do topo é hoje a ÚNICA fonte de `accessibilityLabel`/Nome
+Acessível em AMBAS as origens (web e mobile), não só mobile.
+`_restoreA11yElementoToggles` (equivalente desktop de
+`_restoreA11yElementoMobileToggles`) ganhou a mesma migração best-effort:
+ao reabrir uma spec desktop antiga que tinha os dois campos preenchidos
+com valores divergentes (cenário legado, quando ainda coexistiam), se o
+Label do topo estiver vazio no restore usa o `nomeAcessivel` salvo pra
+preenchê-lo; se o Label já tiver valor, ele sempre prevalece — o
+checkbox removido não volta a aparecer nessa migração, só o dado é
+aproveitado silenciosamente.
+
 **Bug real corrigido em 2026-09-02**: o toggle BOOLEAN ligava
 corretamente, mas o TEXTO da sub-instância continuava sendo o
 placeholder publicado da lib ("Inserir o seguinte accessibilityLabel no
@@ -428,21 +477,49 @@ configuração/confirmação individual antes de virar spec real:
    edição normal de uma spec já salva (fora do wizard) não há esse ícone
    — decisão deliberada do usuário, já que ali o erro é raro (spec criada
    manualmente) e o caminho aceito é apagar e recriar.
-3.2. **Navegação livre + paginador visual (2026-09-02)**: a revisão deixou
-   de ser estritamente sequencial. `window._a11yBatchWizardState.confirmed`
-   e `.discarded` viraram `Set`s de ÍNDICES da `queue` (antes eram arrays
-   dos próprios itens, usados só pra contar) — permitem consultar o status
+3.2. **Navegação livre + campo de posição editável (2026-09-02, reformulado no
+   mesmo dia)**: a revisão deixou de ser estritamente sequencial.
+   `window._a11yBatchWizardState.confirmed` e `.discarded` são `Set`s de
+   ÍNDICES da `queue` (não os próprios itens) — permitem consultar o status
    de qualquer posição em O(1) sem depender de `currentIndex` já ter
-   passado por ali. Um paginador compacto (`#a11y-modal-wizard-paginator`,
-   `_renderA11yWizardPaginator`) aparece no cabeçalho do modal, no formato
-   "1 2 [3] 4 5 … N" (primeira posição, última posição, janela ao redor da
-   atual, "…" resumindo o resto — `_buildA11yWizardPaginatorPages`).
-   Clicar em qualquer posição chama `jumpToA11yWizardItem(index)` →
-   `_openA11yWizardItemAt(index)`, que seta `state.currentIndex = index` e
-   reabre o formulário daquele item — em qualquer direção, revisado ou
-   não. Cada posição reflete o status ao vivo: atual (cyan, mesma cor do
-   resto do hac), confirmado/documentado (verde), descartado (cinza),
-   pendente (neutro). Reabrir um item **confirmado** mantém o formulário
+   passado por ali. No cabeçalho do modal (`#a11y-modal-wizard-paginator`),
+   o formato é **"Voltar [ campo numérico ] Avançar"**, centralizado:
+   - Botões `#btn-a11y-wizard-prev`/`#btn-a11y-wizard-next` chamam
+     `_stepA11yWizardItem(-1)`/`_stepA11yWizardItem(1)`, que navegam
+     SEMPRE por posição na fila (`currentIndex ± 1`) — desabilitados nos
+     limites (`disabled` quando `currentIndex === 0` ou
+     `=== queue.length - 1`). Diferente de `_advanceA11yBatchWizard`
+     (usado só após Aplicar/Descartar), Voltar/Avançar nunca pulam
+     pendentes: é navegação manual item a item, qualquer status.
+   - `#a11y-wizard-index-input` (`type="text" inputmode="numeric"` — não
+     `type="number"`, que dentro do iframe do Figma tem setas incrementais
+     com comportamento inconsistente) mostra o índice 1-based
+     (`currentIndex + 1`), editável. Ao confirmar (Enter, que só chama
+     `.blur()`, ou blur direto), `_commitA11yWizardIndexInput(value)`
+     valida inteiro entre 1 e `queue.length`; se válido e diferente do
+     atual, chama `_openA11yWizardItemAt(valor - 1)`; se inválido (vazio,
+     não numérico, fora do range) ou igual ao atual, apenas
+     re-renderiza o campo pro valor real (`_renderA11yWizardPaginator`) —
+     nunca deixa o input num estado inconsistente. Não existe botão "Ir"
+     separado.
+   - `#a11y-wizard-index-total` mostra "de M" ao lado do campo — o total
+     continua sempre visível, como já era no formato antigo.
+   - `_renderA11yWizardPaginator(state)` agora só sincroniza esses 4
+     elementos (valor do input, total, disabled dos dois botões) — não
+     gera mais HTML dinâmico via `innerHTML`; a estrutura em si é estática
+     em `modals.html`, então `_resetA11yBatchWizardUi` não limpa mais
+     `paginator.innerHTML` (limparia os botões/input fixos).
+   - `jumpToA11yWizardItem(index)` (pulo direto por índice, wrapper de
+     `_openA11yWizardItemAt`) continua existindo como utilitário público,
+     mas não tem mais chamador de UI — o paginador numérico clicável foi
+     removido. Status do item atual (documentado/descartado) não desapareceu:
+     `#a11y-modal-wizard-progress` ("Item N de M") ganhou sufixo
+     (" — Documentado"/" — Descartado") e cor (verde/cinza) quando aplicável,
+     compensando a perda do sinal visual que os botões numéricos davam para
+     *outras* posições da fila (esse sinal — status de itens fora do atual
+     à primeira vista — foi um trade-off aceito ao trocar pro formato
+     Voltar/campo/Avançar; só o item atual sinaliza status agora).
+   Reabrir um item **confirmado** mantém o formulário
    visível (com os presets originais da detecção, não os dados salvos da
    spec — não há reuso de `editA11ySpec` aqui), mas o botão "Aplicar" vira
    "Documentado" e fica desabilitado (`_applyA11yWizardModalUi`) — nunca é
@@ -457,6 +534,14 @@ configuração/confirmação individual antes de virar spec real:
    mais quando `currentIndex` chega ao fim. `stopA11yBatchWizard` calcula
    `remaining` como `queue.length - confirmed.size - discarded.size`
    (contagem real de pendentes), pelo mesmo motivo.
+3.3. **Foco automático no canvas ao trocar de item (2026-09-02)**:
+   `_openA11yWizardItemAt` (ponto único usado tanto por
+   `_advanceA11yBatchWizard` quanto por `jumpToA11yWizardItem`) chama
+   `focusA11yWizardCurrentNode()` ao final — mesmo scroll+highlight que o
+   botão "Focar" já fazia manualmente. Antes disso, avançar pra o próximo
+   item (Aplicar/Descartar) ou pular pelo paginador trocava o formulário
+   sem mover a viewport, obrigando o designer a clicar em "Focar" a cada
+   item numa área com muitos componentes.
 4. `confirmA11ySpec()` no modo wizard força `needsReview: false` e
    **aguarda** a resposta real `spec-created` antes de avançar (evita
    duas criações concorrentes colidindo) — diferente do fluxo manual
@@ -487,6 +572,75 @@ configuração/confirmação individual antes de virar spec real:
    fecha o snackbar.
 
 ## 8. Ordem de Tabulação
+
+### Organização em Sections dedicadas (2026-09-02)
+O hac usa **duas Sections distintas** no canvas, cada uma com um propósito
+próprio no painel de Layers — nunca uma mistura das duas:
+
+- `"hac — Especificações de Acessibilidade"` (`A11Y_SECTION_NAME`,
+  `_getOrCreateA11ySection`/`_reparentIntoA11ySection`, `code.js`): Áreas
+  Marcadas + specGroups de todas as categorias.
+- `"hac — Ordem de Tabulação"` (`A11Y_TAB_ORDER_SECTION_NAME`,
+  `_getOrCreateTabOrderSection`/`_reparentIntoTabOrderSection`, `code.js`):
+  só as cópias de frame criadas por `_createTabOrderCloneForArea` (uma por
+  Área Marcada com Ordem de Tabulação já trabalhada) e os selos numerados
+  desenhados dentro delas. Motivo de ser separada da Section de specs:
+  dezenas de selos/conectores de spec se misturariam visualmente, no
+  Layers, com cópias inteiras de tela — cada Section fica pequena e legível
+  no seu próprio escopo.
+
+As duas Sections compartilham a mesma lógica estrutural via um helper
+genérico (`_getOrCreateNamedSection(sectionName)`), incluindo reforçar que
+cada uma fica no topo da pilha de `figma.currentPage.children` a cada
+acesso (senão o design original coberto por reordenação manual no Layers
+passaria a ficar por cima dos marcadores visuais). `_reparentIntoSection(node,
+getSection)` é o helper de reparenting genérico por trás de
+`_reparentIntoA11ySection`/`_reparentIntoTabOrderSection` — mesmo cálculo
+de x/y-relativo-ao-novo-pai (`x/y absolutos atuais − x/y da Section`) nos
+dois casos.
+
+`_createTabOrderCloneForArea` reparenta o clone pra dentro da Section de
+Ordem de Tabulação **depois** de calcular a posição livre e montar o mapa
+original→clone (`_buildOriginalToCloneMap`) — os dois dependem do clone
+ainda solto em `figma.currentPage` com x/y absolutos batendo com o
+bounding box usado no cálculo; o mapeamento por índice de `children`
+também não é afetado por reparenting (a estrutura interna do clone não
+muda). Os selos individuais (`_createTabOrderBadge`) continuam sendo
+reparentados pra dentro da **cópia do frame**, nunca diretamente pra
+Section — não mudou nada nessa relação selo→cópia; só a estrutura de mais
+alto nível mudou (cópia agora dentro de uma Section, em vez de solta na
+página).
+
+**Cálculo de posição livre dentro da Section**: como as cópias passaram a
+viver dentro de uma Section (não mais soltas em `figma.currentPage` como
+itens de topo de nível), `_collectA11yOccupiedBounds` deixaria de "ver"
+cada cópia individualmente — usar só o bounding box da Section inteira
+distorceria o cálculo (uma Section com 3 cópias lado a lado tem bounds bem
+diferentes de 3 retângulos individuais, e a próxima cópia podia acabar
+sobrepondo as existentes em vez de entrar ao final da faixa). Correção:
+`_collectA11yOccupiedBounds` agora soma explicitamente o bounding box de
+cada FILHO da Section de Ordem de Tabulação (`tabOrderSection.children`),
+mesmo padrão já usado para os `hacAreaTargetNodeId` da Section de specs.
+`_findFreeTabOrderCopyPosition` (loop que acha o `rowRightmost` da faixa
+mais recente) e todo handler que precisa localizar/remover/mostrar uma
+cópia existente por `hacTabOrderCopyForArea` passaram a usar
+`_forEachTabOrderCopyCandidate` (novo helper, `code.js`) — varre tanto
+`figma.currentPage.children` (compat com cópias criadas ANTES desta Section
+existir, nunca migradas automaticamente) quanto os filhos da Section de
+Ordem de Tabulação, sem duplicar. `_findTabOrderCopyForArea`/
+`_removeExistingTabOrderCopiesForArea` são os dois atalhos mais usados em
+cima desse helper (lookup único / remoção em lote).
+
+**Nomenclatura dos selos (2026-09-02)**: `_createTabOrderBadge` nomeava os
+grupos em inglês (`[TabOrder Preview | N] ...`/`[TabOrder | N] ...`),
+destoando do resto do plugin (100% português, ex. a cópia inteira já se
+chamava `[Ordem de Tabulação] ${root.name}`). Agora:
+`[Prévia de Tabulação | N] ${node.name}` (selo fantasma temporário) e
+`[Selo de Tabulação | N] ${node.name}` (selo real aplicado no canvas).
+`renumber-tab-order-items` (que renomeia o selo diretamente ao trocar o
+número, fora do fluxo de `_createTabOrderBadge`) e seu regex de
+`.replace()` foram atualizados em conjunto — ambos precisam concordar com
+o mesmo formato de nome.
 
 ### Réplica da área criada e focada ANTES de marcar (2026-09-02)
 Regra válida para os dois modos (manual e automático): **a primeira coisa
@@ -703,7 +857,80 @@ qualquer manipulação de canvas só rodam em `code.js`.
 | `create-a11y-area` | UI → backend | `targetNodeId`, `label`, `number`, `conector`, `autoDetect`, `origin` |
 | `check-tab-order-node-interactive` / `tab-order-node-interactive-result` | *(removido em 2026-09-02, junto do bloqueio de tabulação)* | — |
 
-## 10. Pendências conhecidas
+## 10. Escala da UI (`--ui-scale`) e `position` dos modais
+
+`body` usa `zoom: var(--ui-scale)` (não `transform`) para os 3 níveis de
+escala do plugin (`[1, 1.15, 1.3]`, `zoomIn()`/`zoomOut()` em `core.js`) —
+mantido deliberadamente: `zoom` reflui o layout de verdade (afeta scroll,
+`overflow`, medidas reais), enquanto `transform: scale()` só afeta a
+pintura, exigindo compensação manual de `width`/`height` e frequentemente
+quebrando `overflow`/scroll do corpo. `height: calc(100vh / var(--ui-scale))`
+no próprio `body` existe para que a altura pré-zoom seja grande o
+suficiente para, depois de multiplicada pelo zoom, voltar a preencher
+`100vh` — necessário para o layout `h-screen flex flex-col` (header/footer
+`shrink-0` + área scrollável) continuar ocupando a tela inteira em
+qualquer escala.
+
+**Bug real corrigido em 2026-09-02**: todo modal do hac (`modals.html`,
+9 modais) usava `fixed inset-0`, mais `#toast-container` e
+`#resize-handle` (`plugin.css`). `position: fixed` não cria novo
+containing block sob `zoom` — o containing block de um elemento `fixed`
+continua sendo o viewport real do documento, independente do `zoom`
+aplicado a um ancestral. Só que o `zoom` do ancestral (`body`) ainda é
+aplicado à pintura final desse elemento `fixed` (zoom desce pela árvore de
+render inteira, não é isolado por posicionamento) — resultado: o box do
+modal já nascia do tamanho do viewport real (`inset-0`) e depois era
+escalado de novo pelo `zoom`, ficando maior que a área visível em
+qualquer escala > 100% (cortado, sem scroll, parte inacessível ao clique).
+Cabeçalho/rodapé não sofriam disso por não serem `fixed`/`sticky` — são
+filhos flex normais (`shrink-0`), então escalam corretamente junto com o
+resto do layout do `body`.
+
+**Correção**: todos os `fixed inset-0` viraram `absolute inset-0`
+(`modals.html`), `#toast-container` e `#resize-handle` viraram
+`position: absolute` (`plugin.css`), e `body` ganhou `position: relative`
+— agora todo elemento que antes escapava do zoom via `fixed` resolve seu
+posicionamento contra o próprio `body` zoomado, como qualquer outro
+conteúdo normal da página, sem containing block alternativo. Não houve
+mudança estrutural de DOM (nenhum modal foi movido de lugar) — só a
+troca de `position` + a adição de `position: relative` no `body`, que já
+era o ancestral direto (ou indireto, via wrapper `relative` existente)
+de todos os elementos afetados.
+
+**Trade-off aceito**: `absolute` dentro de um `body` com `overflow:
+hidden` e altura fixa (`h-screen`) significa que, em teoria, um modal
+poderia ficar fora da área visível se `body` não cobrir 100% da viewport
+real — não é o caso aqui, porque `body` já é `width: 100%` +
+`height: calc(100vh / scale)` (que, multiplicado pelo próprio zoom,
+sempre resulta em exatamente `100vh` de pintura). Se o cálculo de altura
+do `body` for alterado no futuro, essa premissa precisa ser revalidada
+para os modais não regredirem.
+
+**Validação**: correção baseada em raciocínio sobre a especificação
+documentada de `zoom` do Chromium/CEF (motor usado pelo Figma) — não foi
+possível renderizar visualmente o `ui.html` num Chromium real durante
+esta sessão (sem ferramenta de shell/browser disponível). Recomendado
+validar manualmente no Figma desktop: abrir qualquer modal (ex: "+ Nova
+especificação") nas 3 escalas (100%/115%/130%) e confirmar que o modal
+aparece inteiro, centralizado e clicável em todos os cantos, incluindo
+depois de redimensionar a janela do plugin (`initResizable`).
+
+**Bug real adicional, corrigido no mesmo dia**: mesmo depois de
+`fixed`→`absolute`, o card interno de 5 modais (`modals.html`) ainda
+limitava a própria altura com `max-h-[85vh]`/`max-h-[92vh]` — unidade de
+viewport, calculada contra a viewport real do documento, não contra o
+`body` reescalado. Em qualquer escala diferente de 100%, esse limite
+ficava dessincronizado da área realmente visível: o card podia nascer
+mais alto do que cabia, cortando o rodapé (botões de ação) para fora da
+área rolável interna (`overflow-y-auto` só existe DENTRO do card já
+cortado, então não adianta rolar). Reportado pelo usuário como "a rolagem
+quebra com a modal aberta, não consigo ver tudo" ao usar o modal "Marcar
+Área" em zoom ativo. Corrigido trocando `max-h-[85vh]`/`max-h-[92vh]` por
+`max-h-full` nos 5 modais — resolve contra o wrapper pai imediato
+(`absolute inset-0 flex items-center justify-center p-4`), que sempre
+corresponde à área real visível do `body`, em qualquer escala.
+
+## 11. Pendências conhecidas
 
 Nenhuma pendência técnica estrutural em aberto nesta revisão (2026-09-02)
 — as duas lacunas identificadas durante o levantamento de regras de
