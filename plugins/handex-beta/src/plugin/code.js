@@ -5934,10 +5934,26 @@ figma.ui.onmessage = async (msg) => {
       }
 
       const collected = [];
+      // BETA-ONLY: fix-tabordem-varredura-aninhada — antes, o `continue`
+      // rodava incondicionalmente após avaliar QUALQUER INSTANCE/COMPONENT,
+      // interativo ou não. Isso interrompia a descida em qualquer container
+      // real (Card, Section, Container de filtro — tudo isso costuma ser
+      // INSTANCE de um componente DSC) ANTES de alcançar botões/abas/inputs
+      // aninhados lá dentro, mesmo esses sendo reconhecidos com alta
+      // confiança pelo mesmo _resolveDscComponentA11yMatch no scan normal
+      // (confirmado pelo designer: caso real com Button/Tab Group dentro de
+      // um card, "Gerar Automaticamente" retornava 0 candidatos mesmo a área
+      // tendo componentes interativos reais). Corrigido: só interrompe a
+      // descida quando o PRÓPRIO nó já foi capturado como candidato
+      // interativo (não faz sentido documentar o Tab de um Button que já
+      // documentamos o Tab do Card que o contém); em qualquer outro caso
+      // (não interativo, ou DSC sem mapeamento/isUnmapped) a varredura
+      // continua procurando candidatos dentro dele.
       async function _walk(n) {
         const children = n.children || [];
         for (const child of children) {
           if (child.visible === false) continue;
+          let isInteractiveMatch = false;
           if (child.type === 'INSTANCE' || child.type === 'COMPONENT') {
             let componentKey = null;
             if (child.type === 'INSTANCE') {
@@ -5951,9 +5967,10 @@ figma.ui.onmessage = async (msg) => {
             const match = componentKey ? _resolveDscComponentA11yMatch(componentKey) : null;
             if (match && A11Y_INTERACTIVE_SHORTNAMES.has(match.a11yCategory)) {
               collected.push(child);
+              isInteractiveMatch = true;
             }
-            continue; // não desce dentro de um elemento já avaliado como unidade (interativo ou não)
           }
+          if (isInteractiveMatch) continue;
           await _walk(child);
         }
       }

@@ -1395,9 +1395,19 @@
         <h3 id="a11y-batch-summary-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
           <i data-lucide="wand-2" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i> Gerar Handoff Automatizado
         </h3>
-        <button onclick="closeA11yBatchSummaryModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
-          <i data-lucide="x" class="w-4 h-4"></i>
-        </button>
+        <div class="flex items-center gap-1 shrink-0">
+          <!-- BETA-ONLY: a11y-rescan-lote — reescaneia a mesma área sem fechar
+               o modal, útil quando o designer vincula um Text Style do DSC
+               num item do bloco "Possíveis títulos sem token DSC" e quer ver
+               o resultado atualizado sem perder o contexto. -->
+          <button id="btn-a11y-batch-rescan" onclick="rescanA11yBatchArea()" title="Reescanear esta área" aria-label="Reescanear esta área"
+            class="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 dark:text-dark-muted hover:text-[#0891B2] hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          </button>
+          <button onclick="closeA11yBatchSummaryModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
       </div>
       <div class="p-5 overflow-y-auto flex-1 min-h-0" onscroll="handleScroll(this)">
         <!-- BETA-ONLY: a11y-injecao-em-massa — select de área movido pro topo

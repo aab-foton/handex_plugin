@@ -604,9 +604,23 @@
           const alreadyFillingForm = specModal && !specModal.classList.contains('hidden');
           if (!alreadyFillingForm) {
             closeModal('a11y-library-required-modal');
-            if (typeof _openA11yCategoryPickerModalNow === 'function') _openA11yCategoryPickerModalNow();
+            // BETA-ONLY: a11y-nao-documentados — quando a checagem de vínculo
+            // foi disparada a partir de um item da lista de pendentes (ver
+            // openA11yFormFromUndocumented, accessibility.js), o destino não é
+            // o seletor de categoria e sim o formulário já com categoria/
+            // subtipo/nó definidos. window._a11yLibCheckOnSuccess carrega esse
+            // callback só nessa origem; qualquer outro caminho (botão "+"
+            // normal) não seta a variável e cai no fluxo de sempre.
+            if (typeof window._a11yLibCheckOnSuccess === 'function') {
+              const cb = window._a11yLibCheckOnSuccess;
+              window._a11yLibCheckOnSuccess = null;
+              cb();
+            } else if (typeof _openA11yCategoryPickerModalNow === 'function') {
+              _openA11yCategoryPickerModalNow();
+            }
           }
         } else {
+          window._a11yLibCheckOnSuccess = null; // BETA-ONLY: a11y-nao-documentados — não deixa um callback de tentativa anterior "vazar" pra próxima checagem bem-sucedida
           openModal('a11y-library-required-modal');
         }
       }

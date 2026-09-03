@@ -307,6 +307,7 @@ function _findA11yAreaById(areaId) {
 // spec deve nascer. Não existe mais criação de spec sem área (pré-requisito).
 function openA11yCategoryPickerModal(areaId) {
   window._a11yPendingAreaId = areaId || null;
+  window._a11yLibCheckOnSuccess = null; // BETA-ONLY: a11y-nao-documentados — fluxo normal "+" nunca usa o desvio de openA11yFormFromUndocumented
   // Token de correlação — se o designer clicar "+" em duas áreas diferentes
   // antes da primeira checagem responder, só a resposta do pedido MAIS
   // recente pode abrir o modal (ver a11y-library-status em messages.js).
@@ -382,6 +383,13 @@ function openA11yModal(category, options) { // BETA-ONLY: a11y-deteccao-automati
   const meta = A11Y_CATEGORIES[category];
   if (!meta) return;
   const presetComponente = options && options.presetComponente; // BETA-ONLY: a11y-deteccao-automatica
+  // BETA-ONLY: a11y-nao-documentados — mesma ideia de presetComponente, mas
+  // pro subtipo de "estrutura" (header/nav/main/aside/footer, ver
+  // _inferA11yEstruturaTipoFromContainingFrame) e o nível de "titulo"
+  // (suggestedLevel do scan) — os dois únicos casos, fora "elemento", onde o
+  // scan já indica uma variante específica em vez de só a categoria.
+  const presetEstruturaTipo = options && options.presetEstruturaTipo;
+  const presetTituloNivel = options && options.presetTituloNivel;
 
   const modal = document.getElementById('a11y-spec-modal');
   if (!modal) return;
@@ -392,6 +400,14 @@ function openA11yModal(category, options) { // BETA-ONLY: a11y-deteccao-automati
   if (presetComponente) modal.dataset.presetComponente = presetComponente;
   else delete modal.dataset.presetComponente;
   // BETA-ONLY: a11y-deteccao-automatica (fim do trecho acima)
+  // BETA-ONLY: a11y-nao-documentados — fixa qual nó do canvas a spec deve
+  // apontar, igual editA11ySpec faz via editingSpec.targetNodeId (ver
+  // confirmA11ySpec). Sem isso o backend cairia na seleção atual do canvas
+  // (comportamento normal de criação manual), que não é o elemento que o
+  // designer clicou na lista de pendentes.
+  const pendingTargetNodeId = options && options.pendingTargetNodeId;
+  if (pendingTargetNodeId) modal.dataset.pendingTargetNodeId = pendingTargetNodeId;
+  else delete modal.dataset.pendingTargetNodeId;
   // editA11ySpec sobrescreve editingSpecId/editingOriginalIndex e o texto do
   // botão logo depois desta chamada — abrir pra criar uma spec nova sempre
   // limpa qualquer resquício de edição anterior.
@@ -450,15 +466,18 @@ function openA11yModal(category, options) { // BETA-ONLY: a11y-deteccao-automati
     updateA11yElementoFields();
   } else if (category === 'estrutura') {
     const subtipoSelect = document.getElementById('a11y-estrutura-subtipo-select');
-    if (subtipoSelect) subtipoSelect.value = 'idiomas';
+    // BETA-ONLY: a11y-nao-documentados — presetEstruturaTipo só existe pra
+    // marco de navegação (header/nav/main/aside/footer), então já implica
+    // variacao = 'marco de navegacao' em vez do default 'idiomas'.
+    if (subtipoSelect) subtipoSelect.value = presetEstruturaTipo ? 'marco de navegacao' : 'idiomas';
     const idiomasSelect = document.getElementById('a11y-estrutura-idiomas-select');
     if (idiomasSelect) idiomasSelect.value = 'da pagina';
     const marcoSelect = document.getElementById('a11y-estrutura-marco-select');
-    if (marcoSelect) marcoSelect.value = 'header';
+    if (marcoSelect) marcoSelect.value = presetEstruturaTipo || 'header';
     updateA11yEstruturaFields();
   } else if (category === 'titulo') {
     const nivelSelect = document.getElementById('a11y-titulo-nivel-select');
-    if (nivelSelect) nivelSelect.value = 'h1';
+    if (nivelSelect) nivelSelect.value = presetTituloNivel || 'h1'; // BETA-ONLY: a11y-nao-documentados
     updateA11yTituloFields();
   } else if (category === 'decorativo') {
     const subtipoSelect = document.getElementById('a11y-decorativo-subtipo-select');
@@ -1467,6 +1486,14 @@ function confirmA11ySpec() {
     window._a11yExpandedAreaIds.add(areaId);
   }
 
+  // BETA-ONLY: a11y-nao-documentados — criação a partir de um item da lista
+  // de pendentes aponta pro nó real que o scan já identificou, em vez de
+  // depender da seleção atual do canvas (mesmo raciocínio de
+  // editingSpec.targetNodeId logo abaixo, só que pra criação nova). Não entra
+  // no branch de edição: aqui é sempre uma spec nova, sem nó antigo pra apagar.
+  const pendingTargetNodeId = modal ? modal.dataset.pendingTargetNodeId : '';
+  if (pendingTargetNodeId && !editingSpecId) opts.targetNodeId = pendingTargetNodeId;
+
   // Editar = apagar o nó antigo (selo + card real) e recriar do zero com os
   // dados atualizados, fixando targetNodeId pra não depender da seleção
   // atual do canvas (o elemento já foi escolhido na criação original).
@@ -1628,6 +1655,40 @@ function toggleA11yTabOrderAccordion(uid) {
 }
 window.toggleA11yTabOrderAccordion = toggleA11yTabOrderAccordion;
 
+// BETA-ONLY: a11y-expandir-recolher-todos — ação em massa disparada pelos
+// botões "Expandir todos"/"Recolher todos" dentro de UMA área (nunca afeta
+// outras áreas). `btn` é o próprio elemento clicado — sobe até o
+// accordion-content da ÁREA (que contém os subaccordions de categoria +
+// Ordem de Tabulação) via closest(), depois localiza cada
+// `.accordion-content` filho nesse escopo (subaccordions de categoria têm
+// essa classe direta; a seção de Ordem de Tabulação também). Sincroniza os
+// dois Sets de estado (_a11yExpandedTabOrderIds via uid extraído do id do
+// elemento) pra um toggle individual posterior não reabrir/fechar algo que
+// a ação em massa acabou de definir.
+function _a11ySetAllSubaccordions(btn, expand) {
+  const areaBody = btn.closest('.accordion-content');
+  if (!areaBody) return;
+  areaBody.querySelectorAll(':scope > .accordion-content, :scope > div > .accordion-content').forEach(body => {
+    body.classList.toggle('hidden', !expand);
+    // BETA-ONLY: a11y-nao-documentados — terceiro prefixo (undoc-body-/
+    // undoc-chevron-) ao lado dos dois pré-existentes (categoria/tab order).
+    const idSuffix = body.id.replace(/^(body-|tab-order-body-|undoc-body-)/, '');
+    const chevronPrefix = body.id.startsWith('tab-order-body-') ? 'tab-order-chevron-'
+      : body.id.startsWith('undoc-body-') ? 'undoc-chevron-'
+      : 'chevron-';
+    const chevron = document.getElementById(`${chevronPrefix}${idSuffix}`);
+    if (chevron) chevron.style.transform = expand ? 'rotate(180deg)' : 'rotate(0deg)';
+    if (body.id.startsWith('tab-order-body-')) {
+      if (expand) window._a11yExpandedTabOrderIds.add(idSuffix);
+      else window._a11yExpandedTabOrderIds.delete(idSuffix);
+    } else if (body.id.startsWith('undoc-body-')) {
+      if (expand) window._a11yExpandedUndocumentedIds.add(idSuffix);
+      else window._a11yExpandedUndocumentedIds.delete(idSuffix);
+    }
+  });
+}
+window._a11ySetAllSubaccordions = _a11ySetAllSubaccordions;
+
 // ══ BETA-ONLY: a11y-subaccordions (início) ══
 // Depende de: chamada em _a11yAreaAccordionEl mais abaixo. Ver
 // MIGRATION-BETA-TO-MAIN.md.
@@ -1745,9 +1806,105 @@ function _tabOrderSectionHtml(uid, area) {
 }
 // ══ BETA-ONLY: a11y-ordem-tabulacao-por-area (fim) ══
 
+// BETA-ONLY: a11y-nao-documentados (início)
+// Mesmo padrão visual/estrutural de _a11yCategoryAccordionEl (header
+// clicável com chevron + contador entre parênteses + corpo com
+// accordion-content/hidden), com estado de expansão próprio em
+// window._a11yExpandedUndocumentedIds (não compartilha Set com
+// _a11yExpandedAreaIds/_a11yExpandedTabOrderIds — é mais um subaccordion
+// independente dentro da área, mesma lógica de _tabOrderSectionHtml). Some
+// completamente da área quando não há pendência nenhuma (nada a mostrar,
+// diferente dos 4 accordions de categoria que só aparecem quando >0 specs —
+// aqui replica o mesmo critério: sem itens, sem accordion).
+window._a11yExpandedUndocumentedIds = window._a11yExpandedUndocumentedIds || new Set();
+
+function toggleA11yUndocumentedAccordion(uid) {
+  const body = document.getElementById(`undoc-body-${uid}`);
+  const chevron = document.getElementById(`undoc-chevron-${uid}`);
+  if (!body) return;
+  const isHidden = body.classList.contains('hidden');
+  body.classList.toggle('hidden', !isHidden);
+  if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+  if (isHidden) window._a11yExpandedUndocumentedIds.add(uid);
+  else window._a11yExpandedUndocumentedIds.delete(uid);
+}
+window.toggleA11yUndocumentedAccordion = toggleA11yUndocumentedAccordion;
+
+// Rótulo curto pro card de cada item pendente — mesma ideia de
+// A11Y_COMPONENTE_LABELS/label de categoria já usado no resumo do lote
+// (openA11yBatchSummaryModal), só que por item em vez de agrupado.
+function _a11yUndocumentedItemLabel(kind, item) {
+  if (kind === 'tokenReview') return 'Possível título sem token DSC';
+  const match = item.dscComponentMatch;
+  if (match.isUnmapped === true) return `Outro (${_cleanDscContainingFrameName(match.containingFrame)})`;
+  const shortName = match.a11yCategory;
+  if (shortName === 'titulo') return `Nível de Título (${(match.suggestedLevel || 'h1').toUpperCase()})`;
+  if (shortName === 'decorativo') return 'Elemento Decorativo';
+  if (shortName === 'estrutura') return `Estrutura da Página (${_cleanDscContainingFrameName(match.containingFrame)})`;
+  return A11Y_COMPONENTE_LABELS[shortName] || _capitalizeFirst(shortName);
+}
+
+function _a11yUndocumentedItemHtml(areaId, entry) {
+  const { kind, item } = entry;
+  const label = _a11yUndocumentedItemLabel(kind, item);
+  const name = item.layerName || item.name || 'Elemento';
+  const isBaixa = kind === 'tokenReview' || item.dscComponentMatch.isUnmapped === true
+    || (item.dscComponentMatch.confidence && item.dscComponentMatch.confidence !== 'alta');
+  // encodeURIComponent pro item sobreviver dentro do atributo onclick (nomes
+  // de camada podem ter aspas/caracteres especiais) — decodificado de volta
+  // em openA11yFormFromUndocumented.
+  const encodedItem = encodeURIComponent(JSON.stringify(item));
+  return `
+    <div class="flex items-center gap-2 px-2.5 py-2 rounded-xl border ${isBaixa ? 'bg-amber-50/60 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40' : 'bg-gray-50 dark:bg-dark-bg border-gray-100 dark:border-dark-line'}">
+      <i data-lucide="${kind === 'tokenReview' ? 'alert-circle' : 'circle-help'}" class="w-3.5 h-3.5 ${isBaixa ? 'text-amber-500' : 'text-slate-400'} shrink-0" aria-hidden="true"></i>
+      <div class="flex-1 min-w-0">
+        <p class="text-[11px] font-semibold text-slate-700 dark:text-white truncate" title="${escapeHtml(name)}">${escapeHtml(name)}</p>
+        <p class="text-[9px] text-slate-400 dark:text-dark-muted truncate">${escapeHtml(label)}</p>
+      </div>
+      <button type="button" title="Focar no canvas" aria-label="Focar no canvas"
+        onclick="focusNode('${item.nodeId}')"
+        class="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#0070af] transition-colors">
+        <i data-lucide="crosshair" class="w-3.5 h-3.5" aria-hidden="true"></i>
+      </button>
+      <button type="button" title="Criar especificação" aria-label="Criar especificação de acessibilidade para ${escapeHtml(name)}"
+        onclick="openA11yFormFromUndocumented('${areaId}', '${kind}', '${encodedItem}')"
+        class="shrink-0 inline-flex items-center gap-1 h-7 px-2 rounded-full bg-[#0891B2] text-white text-[9.5px] font-bold hover:bg-cyan-700 active:scale-95 transition-all">
+        <i data-lucide="plus" class="w-3 h-3"></i> Criar spec
+      </button>
+    </div>
+  `;
+}
+
+// Some da área inteira quando não há pendência (mesmo critério dos 4
+// accordions de categoria — sem itens, sem accordion, ver chamada em
+// _a11yAreaAccordionEl).
+function _a11yUndocumentedAccordionEl(uid, areaId, entries) {
+  if (!entries || entries.length === 0) return '';
+  const expand = window._a11yExpandedUndocumentedIds.has(uid);
+  const chevronStyle = expand ? 'rotate(180deg)' : 'rotate(0deg)';
+  const bodyHiddenClass = expand ? '' : 'hidden';
+  return `
+    <div class="rounded-lg border border-amber-200 dark:border-amber-800/40 overflow-hidden ml-1" data-a11y-subcat="nao-documentados">
+      <div class="flex items-center gap-2 px-2 py-1.5 cursor-pointer select-none bg-amber-50/60 dark:bg-amber-900/10 hover:bg-amber-100/60 dark:hover:bg-amber-900/20 transition-colors"
+        onclick="toggleA11yUndocumentedAccordion('${uid}')">
+        <div class="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0 bg-amber-100 dark:bg-amber-900/30">
+          <i data-lucide="circle-help" class="w-2.5 h-2.5 text-amber-600 dark:text-amber-400"></i>
+        </div>
+        <p class="flex-1 min-w-0 text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide truncate">Não Documentados (${entries.length})</p>
+        <i data-lucide="chevron-down" id="undoc-chevron-${uid}" class="w-3.5 h-3.5 text-amber-500 transition-transform shrink-0" style="transform:${chevronStyle}"></i>
+      </div>
+      <div id="undoc-body-${uid}" class="accordion-content ${bodyHiddenClass} border-t border-amber-100 dark:border-amber-900/30 p-1.5 space-y-1.5">
+        ${entries.map(entry => _a11yUndocumentedItemHtml(areaId, entry)).join('')}
+      </div>
+    </div>
+  `;
+}
+// BETA-ONLY: a11y-nao-documentados (fim)
+
 function _a11yAreaAccordionEl(area, areaSpecs) {
   const uid = `a11y-area-${area.originalIndex}`;
   const expand = window._a11yExpandedAreaIds.has(area.id);
+  const undocumentedEntries = _collectA11yUndocumentedForArea(area.id); // BETA-ONLY: a11y-nao-documentados
   const li = document.createElement('li');
   li.className = 'list-none bg-white dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line overflow-hidden';
   li.setAttribute('data-a11y-area', area.id); // BETA-ONLY: specs-busca-filtro
@@ -1796,6 +1953,21 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
            trabalho reais — os dois tipos de marcação não competem mais
            visualmente no mesmo canvas, então alternar visibilidade deixou
            de fazer sentido. Ver MIGRATION-BETA-TO-MAIN.md. -->
+      <!-- BETA-ONLY: a11y-expandir-recolher-todos — ação em massa sobre os
+           subaccordions de categoria + Ordem de Tabulação desta área (nunca
+           afeta outras áreas nem o accordion da área-mãe em si). Escopado
+           por data-a11y-area-body (o próprio container que está sendo
+           montado agora, resolvido via closest() no momento do clique — não
+           dá pra usar um id fixo aqui porque esta função roda antes do
+           elemento existir no DOM). -->
+      ${(areaSpecs.length > 0 || undocumentedEntries.length > 0) ? `
+      <div class="flex items-center justify-end gap-1 px-0.5 -mb-0.5">
+        <button type="button" onclick="event.stopPropagation(); _a11ySetAllSubaccordions(this, true)"
+          class="text-[9.5px] font-bold text-cyan-700 dark:text-cyan-400 hover:underline px-1">Expandir todos</button>
+        <span class="text-[9.5px] text-gray-300 dark:text-dark-line">·</span>
+        <button type="button" onclick="event.stopPropagation(); _a11ySetAllSubaccordions(this, false)"
+          class="text-[9.5px] font-bold text-slate-500 dark:text-dark-muted hover:underline px-1">Recolher todos</button>
+      </div>` : ''}
       <!-- BETA-ONLY: a11y-subaccordions — antes era areaSpecs.map(_a11ySpecItemHtml)
            direto, sem agrupar por categoria dentro da área. -->
       ${areaSpecs.length > 0
@@ -1804,7 +1976,9 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
             .filter(({ catSpecs }) => catSpecs.length > 0)
             .map(({ catKey, catSpecs }) => _a11yCategoryAccordionEl(`${uid}-cat-${catKey}`, catKey, catSpecs))
             .join('')
-        : `<p class="text-[10px] text-slate-400 dark:text-dark-muted text-center py-3">Nenhuma especificação nesta área ainda. Use o botão "+" acima.</p>`}
+        : (undocumentedEntries.length === 0 ? `<p class="text-[10px] text-slate-400 dark:text-dark-muted text-center py-3">Nenhuma especificação nesta área ainda. Use o botão "+" acima.</p>` : '')}
+      <!-- BETA-ONLY: a11y-nao-documentados — some sozinho quando não há pendência (ver _a11yUndocumentedAccordionEl). -->
+      ${_a11yUndocumentedAccordionEl(`${uid}-undoc`, area.id, undocumentedEntries)}
       <!-- BETA-ONLY: a11y-ordem-tabulacao-por-area — seção escopada a esta área. -->
       ${_tabOrderSectionHtml(uid, area)}
     </div>
@@ -2182,6 +2356,108 @@ function _collectA11yTokenReviewCandidates(data) {
 }
 window._collectA11yTokenReviewCandidates = _collectA11yTokenReviewCandidates;
 
+// BETA-ONLY: a11y-nao-documentados (início)
+// Une as duas fontes de candidato do scan que hoje ficam presas dentro do
+// modal de lote (window._a11yDetectionsByArea/_a11yTokenReviewByArea, ver
+// handleA11yPostAreaDetectionResult) e devolve só quem AINDA não virou spec
+// nesta área — ou seja, candidato do scan MENOS quem já tem spec confirmada
+// pro mesmo nó. A correspondência "já documentado" é por targetNodeId: toda
+// spec de a11y nasce com targetNodeId = nodeId real do elemento no canvas
+// (ver create-unified-spec/opts.targetNodeId, tanto no lote quanto no manual),
+// então basta checar se algum item de a11ySpecs da área tem esse mesmo id.
+// Não guarda flag nenhuma — recalculado a cada render de
+// _a11yAreaAccordionEl, igual aos 4 accordions de categoria (renderA11yGroupedList
+// já não persiste estado de "já contado", só deriva do array a11ySpecs vivo).
+function _collectA11yUndocumentedForArea(areaId) {
+  if (!areaId) return [];
+  const documentedNodeIds = new Set(
+    (a11ySpecs || [])
+      .filter(s => s && s.a11yAreaId === areaId && s.targetNodeId)
+      .map(s => s.targetNodeId)
+  );
+
+  const byArea = (window._a11yDetectionsByArea && window._a11yDetectionsByArea[areaId]) || [];
+  const tokenByArea = (window._a11yTokenReviewByArea && window._a11yTokenReviewByArea[areaId]) || [];
+
+  const fromDetections = byArea
+    .filter(item => item && item.nodeId && item.dscComponentMatch && !documentedNodeIds.has(item.nodeId))
+    .map(item => ({ kind: 'detection', item }));
+
+  const fromTokenReview = tokenByArea
+    .filter(item => item && item.nodeId && !documentedNodeIds.has(item.nodeId))
+    .map(item => ({ kind: 'tokenReview', item }));
+
+  return [...fromDetections, ...fromTokenReview]
+    .sort((a, b) => (a.item.treeOrder ?? Infinity) - (b.item.treeOrder ?? Infinity));
+}
+window._collectA11yUndocumentedForArea = _collectA11yUndocumentedForArea;
+
+// Ação de "criar spec" de um item da lista de pendentes — reaproveita o MESMO
+// formulário manual (openA11yModal) que o botão "+ Nova spec" do card da área
+// abre, só que já com categoria/subtipo pré-selecionados (mesma inferência de
+// confirmA11yBatchGenerate, ver comentário abaixo) e o nó-alvo fixado (ver
+// modal.dataset.pendingTargetNodeId em openA11yModal/confirmA11ySpec) — sem
+// isso o formulário cairia na seleção atual do canvas, que não tem relação
+// nenhuma com o item clicado na lista.
+// Ainda passa pela mesma checagem de vínculo da lib "Design Acessível" que o
+// botão "+" normal usa (check-a11y-library) — decisão de manter consistência:
+// se a lib não estiver acessível, o designer precisa do mesmo aviso/passo a
+// passo em qualquer caminho de criação, não só no "+". window._a11yLibCheckOnSuccess
+// desvia a resposta bem-sucedida da checagem pro formulário direto, pulando o
+// seletor de categoria (ver a11y-library-status em messages.js) — a categoria
+// aqui já é conhecida, perguntar de novo seria redundante.
+function openA11yFormFromUndocumented(areaId, kind, encodedItem) {
+  const item = JSON.parse(decodeURIComponent(encodedItem));
+  window._a11yPendingAreaId = areaId || null;
+
+  const openForm = () => {
+    if (kind === 'tokenReview') {
+      // needsA11yTokenReview nunca tem dscComponentMatch (ver
+      // _collectA11yTokenReviewCandidates) — é só um texto sem token DSC
+      // vinculado, sem componente real reconhecido. "Informações Adicionais"
+      // é a categoria mais plausível pra um texto solto sem função de título/
+      // componente clara (confirmado com o designer antes de implementar,
+      // ver relato desta sessão) — o designer troca de categoria manualmente
+      // se o texto for na verdade outra coisa.
+      openA11yModal('informacoes', { pendingTargetNodeId: item.nodeId });
+      return;
+    }
+
+    const match = item.dscComponentMatch;
+    const isUnmapped = match.isUnmapped === true;
+    const shortName = match.a11yCategory;
+    const category = (shortName === 'titulo' || shortName === 'decorativo' || shortName === 'estrutura') ? shortName : 'elemento';
+
+    if (isUnmapped) {
+      // "Outro" dentro de Elementos e Imagens — mesmo componente sem
+      // categoria catalogada que o lote usa (ver _buildA11yElementoOutroPayload).
+      // openA11yModal não tem preset pronto pro caso "Outro" (select cai em
+      // 'outro' só quando presetComponente é inválido/ausente, e o campo de
+      // texto livre "Componente" fica vazio pro designer preencher) — não dá
+      // pra pré-preencher o nome do component set real sem duplicar a lógica
+      // de _fillA11yLabelIfEmpty/prefillA11yComponentName; o designer confirma
+      // manualmente, igual seria digitando do zero.
+      openA11yModal('elemento', { pendingTargetNodeId: item.nodeId });
+    } else if (category === 'titulo') {
+      openA11yModal('titulo', { pendingTargetNodeId: item.nodeId, presetTituloNivel: match.suggestedLevel });
+    } else if (category === 'decorativo') {
+      openA11yModal('decorativo', { pendingTargetNodeId: item.nodeId });
+    } else if (category === 'estrutura') {
+      const tipo = _inferA11yEstruturaTipoFromContainingFrame(match.containingFrame);
+      openA11yModal('estrutura', { pendingTargetNodeId: item.nodeId, presetEstruturaTipo: tipo });
+    } else {
+      openA11yModal('elemento', { pendingTargetNodeId: item.nodeId, presetComponente: shortName });
+    }
+  };
+
+  window._a11yLibCheckOnSuccess = openForm;
+  const token = 'a11y-lib-check-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+  window._a11yLibCheckToken = token;
+  parent.postMessage({ pluginMessage: { type: 'check-a11y-library', token } }, '*');
+}
+window.openA11yFormFromUndocumented = openA11yFormFromUndocumented;
+// BETA-ONLY: a11y-nao-documentados (fim)
+
 // Dispara o mesmo scan de conformidade DSC usado pela aba "Escanear Tokens"
 // (postMessage scan-frame), mas escopado ao targetNodeId da área (não mais ao
 // frame inteiro) e com origin: 'a11y-detection' — o backend só repassa esse
@@ -2230,14 +2506,50 @@ window.runA11yPostAreaDetection = runA11yPostAreaDetection;
 // de aviso no modal de resumo do lote — nunca entram no lote em si nem geram
 // spec sozinhos, por isso não afetam o cálculo de `eligible` abaixo.
 function handleA11yPostAreaDetectionResult(detections, tokenReviewCandidates) {
+  // BETA-ONLY: a11y-rescan-lote — restaura o botão de reescanear (spinner)
+  // se foi ele quem disparou esta resposta. Feito aqui, não em
+  // rescanA11yBatchArea, porque a resposta é assíncrona (viagem de mensagem
+  // até code.js e volta) — não dá pra restaurar sincronamente.
+  if (window._a11yBatchRescanBtnPending) {
+    window._a11yBatchRescanBtnPending = false;
+    const rescanBtn = document.getElementById('btn-a11y-batch-rescan');
+    if (rescanBtn) {
+      rescanBtn.disabled = false;
+      rescanBtn.classList.remove('animate-spin');
+    }
+    showToast('Área reescaneada.');
+  }
+
   window._a11yLooseDetections = detections;
   window._a11yTokenReviewCandidates = tokenReviewCandidates || [];
+
+  // BETA-ONLY: a11y-nao-documentados — window._a11yLooseDetections/
+  // frame.a11yDetections (acima) são sobrescritos a cada varredura, então só
+  // servem pro lote da ÚLTIMA área escaneada. O accordion "Não Documentados"
+  // precisa enxergar os candidatos de TODAS as áreas já escaneadas na sessão
+  // (o designer normalmente marca várias áreas antes de revisar pendências),
+  // por isso acumulamos aqui por areaId em vez de substituir. Não persiste
+  // entre sessões do plugin (mesma natureza efêmera do resto da Detecção
+  // Automática) — um novo scan da mesma área substitui só a entrada dela.
+  const pendingAreaId = window._a11yPendingDetectionArea && window._a11yPendingDetectionArea.areaId;
+  if (pendingAreaId) {
+    window._a11yDetectionsByArea = window._a11yDetectionsByArea || {};
+    window._a11yTokenReviewByArea = window._a11yTokenReviewByArea || {};
+    window._a11yDetectionsByArea[pendingAreaId] = detections || [];
+    window._a11yTokenReviewByArea[pendingAreaId] = tokenReviewCandidates || [];
+  }
 
   const eligible = _filterA11yBatchEligible(detections);
   const hasTokenReviewCandidates = window._a11yTokenReviewCandidates.length > 0;
 
   if ((!detections || detections.length === 0 || eligible.length === 0) && !hasTokenReviewCandidates) {
     closeA11yPostAreaDetectModal();
+    // BETA-ONLY: a11y-rescan-lote — se esta resposta veio de um reescaneio
+    // (modal de resumo já aberto com dados do scan anterior), fecha também
+    // o resumo — sem isso ele ficaria visível mostrando um resultado que
+    // não existe mais (ex: o único item pendente foi corrigido no Figma e
+    // agora não sobrou nada pra revisar/criar em lote).
+    closeModal('a11y-batch-summary-modal');
     showToast('Nenhum componente do DSC reconhecido nessa área — anote manualmente.');
     return;
   }
@@ -2312,6 +2624,32 @@ function _currentA11yDetectionsSource() {
   if (frame && frame.a11yDetections && frame.a11yDetections.length > 0) return frame.a11yDetections;
   return window._a11yLooseDetections || [];
 }
+
+// BETA-ONLY: a11y-rescan-lote — reescaneia a mesma área SEM fechar o modal
+// de resumo, pro caso em que o designer vincula um Text Style do DSC num
+// item do bloco "Possíveis títulos sem token DSC" (ou corrige qualquer outra
+// coisa no Figma) e quer ver o resultado atualizado sem perder o contexto
+// (área selecionada, scroll, etc.). Reaproveita runA11yPostAreaDetection —
+// que já lê de window._a11yPendingDetectionArea, mantido vivo enquanto o
+// modal de resumo está aberto (ver comentário em handleA11yPostAreaDetectionResult)
+// — e o fluxo de resposta padrão (scan-result → handleA11yPostAreaDetectionResult
+// → openA11yBatchSummaryModal) já reconstrói as duas listas do zero; não
+// precisa de nenhum código de merge/diff aqui.
+function rescanA11yBatchArea() {
+  const pending = window._a11yPendingDetectionArea;
+  if (!pending || !pending.targetNodeId) {
+    showToast('Não foi possível identificar a área para reescanear — marque novamente.');
+    return;
+  }
+  const btn = document.getElementById('btn-a11y-batch-rescan');
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.add('animate-spin');
+  }
+  window._a11yBatchRescanBtnPending = true; // BETA-ONLY: a11y-rescan-lote — lido em handleA11yPostAreaDetectionResult pra restaurar o botão
+  runA11yPostAreaDetection();
+}
+window.rescanA11yBatchArea = rescanA11yBatchArea;
 
 function openA11yBatchSummaryModal() {
   const allDetections = _currentA11yDetectionsSource();
