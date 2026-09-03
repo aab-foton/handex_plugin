@@ -59,13 +59,7 @@ let _tabOrderPreviewGeneration = 0;
 // retornam Promise) de propósito: figma.on('close', ...) não espera
 // Promises pendentes, então nada aqui pode depender de await.
 function _deleteTabOrderDraftCopy(areaId) {
-  for (const sibling of figma.currentPage.children) {
-    try {
-      if (sibling.getPluginData && sibling.getPluginData('hacTabOrderCopyForArea') === areaId) {
-        sibling.remove();
-      }
-    } catch (e) { }
-  }
+  _removeExistingTabOrderCopiesForArea(areaId);
   if (_activeTabOrderCloneAreaId === areaId) {
     _activeTabOrderCloneMap = null;
     _activeTabOrderCloneAreaId = null;
@@ -1411,20 +1405,25 @@ async function _tryImportA11yConectorLinha(opts) {
 // Organização de canvas
 // ============================================================
 
-// Todo nó criado pelo hac é agrupado dentro de uma única SECTION na
-// página, em vez de ficar solto ao nível da página. Section (não Frame)
-// porque não recorta conteúdo que ultrapasse seus limites — as specs
-// continuam espalhadas pela tela perto de cada elemento documentado, a
-// Section só as organiza no painel de Layers.
+// Todo nó criado pelo hac é agrupado dentro de uma SECTION na página, em
+// vez de ficar solto ao nível da página. Section (não Frame) porque não
+// recorta conteúdo que ultrapasse seus limites — as specs continuam
+// espalhadas pela tela perto de cada elemento documentado, a Section só as
+// organiza no painel de Layers. Duas Sections distintas, cada uma com seu
+// próprio propósito no painel de Layers: uma para specs de acessibilidade
+// (áreas marcadas + tags), outra para as cópias de frame da Ordem de
+// Tabulação — mantê-las separadas evita que dezenas de selos/conectores de
+// spec se misturem visualmente, no Layers, com cópias inteiras de tela.
 const A11Y_SECTION_NAME = 'hac — Especificações de Acessibilidade';
+const A11Y_TAB_ORDER_SECTION_NAME = 'hac — Ordem de Tabulação';
 
-function _getOrCreateA11ySection() {
+function _getOrCreateNamedSection(sectionName) {
   let section = figma.currentPage.children.find(
-    n => n.type === 'SECTION' && n.name === A11Y_SECTION_NAME
+    n => n.type === 'SECTION' && n.name === sectionName
   );
   if (!section) {
     section = figma.createSection();
-    section.name = A11Y_SECTION_NAME;
+    section.name = sectionName;
     section.x = 0;
     section.y = 0;
     section.resizeWithoutConstraints(200, 200);
@@ -1436,8 +1435,9 @@ function _getOrCreateA11ySection() {
   // marcador visual (contorno, conector, selo de Área/Ordem de Tabulação)
   // que vive dentro da Section passaria a ficar ATRÁS do elemento escaneado.
   // Reforça o topo aqui — no único ponto de acesso à Section — para que
-  // qualquer chamador (spec nova, Área nova, cálculo de bounds ocupados)
-  // sempre a encontre por cima do restante do canvas.
+  // qualquer chamador (spec nova, Área nova, cópia de Ordem de Tabulação,
+  // cálculo de bounds ocupados) sempre a encontre por cima do restante do
+  // canvas.
   const _lastIndex = figma.currentPage.children.length - 1;
   if (figma.currentPage.children.indexOf(section) !== _lastIndex) {
     figma.currentPage.appendChild(section);
@@ -1445,23 +1445,82 @@ function _getOrCreateA11ySection() {
   return section;
 }
 
+function _getOrCreateA11ySection() {
+  return _getOrCreateNamedSection(A11Y_SECTION_NAME);
+}
+
+function _getOrCreateTabOrderSection() {
+  return _getOrCreateNamedSection(A11Y_TAB_ORDER_SECTION_NAME);
+}
+
 // Reparenta `node` (hoje filho direto de figma.currentPage, com x/y já
-// absolutos da página) para dentro da Section organizadora, preservando a
-// posição visual. Section só existe como filha direta da página (sem
-// transform próprio além de x/y), então x/y do nó relativo à Section = x/y
-// absolutos atuais − x/y da Section. Best-effort: qualquer falha aqui não
-// deve invalidar a spec/área já criada normalmente na página.
-function _reparentIntoA11ySection(node) {
+// absolutos da página) para dentro da Section organizadora informada,
+// preservando a posição visual. Section só existe como filha direta da
+// página (sem transform próprio além de x/y), então x/y do nó relativo à
+// Section = x/y absolutos atuais − x/y da Section. Best-effort: qualquer
+// falha aqui não deve invalidar a spec/área/cópia já criada normalmente na
+// página.
+function _reparentIntoSection(node, getSection) {
   try {
     const _origX = node.x;
     const _origY = node.y;
-    const section = _getOrCreateA11ySection();
+    const section = getSection();
     section.appendChild(node);
     node.x = Math.round(_origX - section.x);
     node.y = Math.round(_origY - section.y);
   } catch (e) {
-    // organização é só cosmética — a spec/área segue existindo normalmente
+    // organização é só cosmética — a spec/área/cópia segue existindo normalmente
   }
+}
+
+function _reparentIntoA11ySection(node) {
+  _reparentIntoSection(node, _getOrCreateA11ySection);
+}
+
+function _reparentIntoTabOrderSection(node) {
+  _reparentIntoSection(node, _getOrCreateTabOrderSection);
+}
+
+// Candidatas a "cópia de Ordem de Tabulação" hoje vivem dentro da Section
+// dedicada (_getOrCreateTabOrderSection), mas também podem ser filhas
+// diretas de figma.currentPage — cópias criadas ANTES desta Section existir
+// (arquivos de produção já em uso) nunca foram migradas automaticamente pra
+// dentro dela. Varre os dois níveis sempre, sem duplicar (uma cópia nunca é
+// simultaneamente filha da página e da Section).
+function _forEachTabOrderCopyCandidate(fn) {
+  for (const sibling of figma.currentPage.children) {
+    if (sibling.type === 'SECTION') continue;
+    fn(sibling);
+  }
+  const section = figma.currentPage.children.find(
+    n => n.type === 'SECTION' && n.name === A11Y_TAB_ORDER_SECTION_NAME
+  );
+  if (section) {
+    for (const child of (section.children || [])) fn(child);
+  }
+}
+
+function _findTabOrderCopyForArea(areaId) {
+  let found = null;
+  _forEachTabOrderCopyCandidate(sibling => {
+    if (found) return;
+    try {
+      if (sibling.getPluginData && sibling.getPluginData('hacTabOrderCopyForArea') === areaId) {
+        found = sibling;
+      }
+    } catch (e) { }
+  });
+  return found;
+}
+
+function _removeExistingTabOrderCopiesForArea(areaId) {
+  _forEachTabOrderCopyCandidate(sibling => {
+    try {
+      if (sibling.getPluginData && sibling.getPluginData('hacTabOrderCopyForArea') === areaId) {
+        sibling.remove();
+      }
+    } catch (e) { }
+  });
 }
 
 // Reordena o specGroup recém-criado entre os demais grupos de spec da página
@@ -2840,7 +2899,7 @@ figma.ui.onmessage = async (msg) => {
 
     const bb = node.absoluteBoundingBox;
     figma.currentPage.appendChild(badge);
-    const _TAB_ORDER_GAP = 24;
+    const _TAB_ORDER_GAP = 4;
     const targetCenterX = bb.x + bb.width / 2;
     const targetCenterY = bb.y + bb.height / 2;
     if (_conector === 'inferior') {
@@ -2882,7 +2941,7 @@ figma.ui.onmessage = async (msg) => {
       labelText.y = Math.round(badge.y + badge.height / 2 - labelText.height / 2);
       group = figma.group([badge, labelText], figma.currentPage);
     }
-    group.name = isPreview ? `[TabOrder Preview | ${number}] ${node.name}` : `[TabOrder | ${number}] ${node.name}`;
+    group.name = isPreview ? `[Prévia de Tabulação | ${number}] ${node.name}` : `[Selo de Tabulação | ${number}] ${node.name}`;
     group.locked = false;
     group.setPluginData('hacCategory', 'a11y');
     // Se o pai onde o grupo for reparentado (tabOrderClone ou um frame
@@ -2971,12 +3030,7 @@ figma.ui.onmessage = async (msg) => {
   async function _clearTabOrderPreviewBadges(areaId) {
     let cloneNode = null;
     if (_activeTabOrderCloneMap && _activeTabOrderCloneAreaId === areaId) {
-      for (const sibling of figma.currentPage.children) {
-        if (sibling.getPluginData && sibling.getPluginData('hacTabOrderCopyForArea') === areaId) {
-          cloneNode = sibling;
-          break;
-        }
-      }
+      cloneNode = _findTabOrderCopyForArea(areaId);
     }
     if (!cloneNode) return;
     const toRemove = cloneNode.findAll
@@ -3176,7 +3230,7 @@ figma.ui.onmessage = async (msg) => {
         if (!instance) continue;
         try {
           instance.setProperties({ 'number#1478:0': String(entry.number) });
-          node.name = `[TabOrder | ${entry.number}] ${node.name.replace(/^\[TabOrder \| \d+\]\s*/, '')}`;
+          node.name = `[Selo de Tabulação | ${entry.number}] ${node.name.replace(/^\[Selo de Tabulação \| \d+\]\s*/, '')}`;
           updated.push(entry.id);
         } catch (e) { }
       }
@@ -3226,7 +3280,15 @@ figma.ui.onmessage = async (msg) => {
   // em arquivos grandes. Devolve o Y mais baixo ocupado (bottom) e o X mais
   // à esquerda (left) entre tudo isso, sempre a partir de
   // absoluteBoundingBox/absoluteRenderBounds (nunca node.x/y crus — um node
-  // dentro da Section tem x/y relativos a ela, não à página).
+  // dentro de uma Section tem x/y relativos a ela, não à página).
+  // Cópias de Ordem de Tabulação vivem dentro da Section dedicada
+  // (_getOrCreateTabOrderSection), não mais soltas em figma.currentPage —
+  // sem somar explicitamente os filhos dela aqui, o cálculo de "faixa livre"
+  // deixaria de "ver" cópias já existentes (a Section em si cresce pra
+  // envolver todas as cópias, mas usar SÓ o bounding box dela distorceria o
+  // cálculo: uma Section com 3 cópias lado a lado tem bounds bem diferentes
+  // de 3 retângulos individuais, e sobreporia a próxima cópia no meio das
+  // existentes em vez de colocá-la ao final da faixa).
   async function _collectA11yOccupiedBounds() {
     const bounds = [];
     const seen = new Set();
@@ -3262,6 +3324,9 @@ figma.ui.onmessage = async (msg) => {
       } catch (e) { }
     }
 
+    const tabOrderSection = _getOrCreateTabOrderSection();
+    for (const child of (tabOrderSection.children || [])) addNode(child);
+
     return bounds;
   }
 
@@ -3289,16 +3354,16 @@ figma.ui.onmessage = async (msg) => {
     const rowY = Math.round(lowestBottom + _TAB_ORDER_ROW_GAP);
 
     let rowRightmost = null;
-    for (const sibling of figma.currentPage.children) {
+    _forEachTabOrderCopyCandidate(sibling => {
       try {
-        if (!sibling.getPluginData || !sibling.getPluginData('hacTabOrderCopyForArea')) continue;
+        if (!sibling.getPluginData || !sibling.getPluginData('hacTabOrderCopyForArea')) return;
         const bb = sibling.absoluteBoundingBox || sibling.absoluteRenderBounds;
-        if (!bb) continue;
-        if (Math.abs(bb.y - rowY) > _TAB_ORDER_ROW_GAP) continue;
+        if (!bb) return;
+        if (Math.abs(bb.y - rowY) > _TAB_ORDER_ROW_GAP) return;
         const right = bb.x + bb.width;
         if (rowRightmost === null || right > rowRightmost) rowRightmost = right;
       } catch (e) { }
-    }
+    });
 
     const rowX = rowRightmost !== null
       ? Math.round(rowRightmost + _TAB_ORDER_COL_GAP)
@@ -3316,13 +3381,7 @@ figma.ui.onmessage = async (msg) => {
   // recriação for da MESMA área, o espaço que ela ocupava deve contar como
   // livre de novo.
   async function _createTabOrderCloneForArea(root, areaId) {
-    for (const sibling of figma.currentPage.children) {
-      try {
-        if (sibling.getPluginData && sibling.getPluginData('hacTabOrderCopyForArea') === areaId) {
-          sibling.remove();
-        }
-      } catch (e) { }
-    }
+    _removeExistingTabOrderCopiesForArea(areaId);
 
     const cloneWidth = root.absoluteBoundingBox.width;
     const cloneHeight = root.absoluteBoundingBox.height;
@@ -3338,6 +3397,15 @@ figma.ui.onmessage = async (msg) => {
     clone.setPluginData('hacTabOrderCopyForArea', areaId || '');
 
     const nodeMap = _buildOriginalToCloneMap(root, clone);
+
+    // Reparenta DEPOIS de mapear original→clone (o mapeamento é por índice
+    // de children, que appendChild/reparenting não altera) e depois de
+    // calcular x/y livres (que precisam do clone ainda solto em
+    // figma.currentPage, com x/y absolutos, pra bater com o bounding box
+    // calculado por _findFreeTabOrderCopyPosition). _reparentIntoTabOrderSection
+    // converte x/y pra relativo à Section preservando a posição visual.
+    _reparentIntoTabOrderSection(clone);
+
     return { clone, nodeMap };
   }
 
@@ -3447,13 +3515,7 @@ figma.ui.onmessage = async (msg) => {
       if (!_activeTabOrderCloneMap || _activeTabOrderCloneAreaId !== msg.areaId) return;
       await _clearTabOrderPreviewBadges(msg.areaId);
 
-      let cloneNode = null;
-      for (const sibling of figma.currentPage.children) {
-        if (sibling.getPluginData && sibling.getPluginData('hacTabOrderCopyForArea') === msg.areaId) {
-          cloneNode = sibling;
-          break;
-        }
-      }
+      const cloneNode = _findTabOrderCopyForArea(msg.areaId);
       if (!cloneNode) return;
 
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
@@ -3599,29 +3661,23 @@ figma.ui.onmessage = async (msg) => {
   // "Aplicar no Canvas" pra esta área, se existir. Localiza só por
   // pluginData, nunca por nome (o designer pode ter renomeado a cópia livremente).
   if (msg.type === "delete-tab-order-copy-for-area") {
-    for (const sibling of figma.currentPage.children) {
-      try {
-        if (sibling.getPluginData && sibling.getPluginData('hacTabOrderCopyForArea') === msg.areaId) {
-          sibling.remove();
-        }
-      } catch (e) { }
-    }
+    _removeExistingTabOrderCopiesForArea(msg.areaId);
     return;
   }
 
   // "Ocultar/Mostrar toda a área" cobre também a cópia de Ordem de
-  // Tabulação, que vive como um FRAME irmão solto em figma.currentPage
-  // (nunca dentro do specGroup das specs). Ocultar o frame clonado inteiro
-  // já esconde os selos dentro dele de uma vez. Fire-and-forget, sem
-  // resposta ao frontend.
+  // Tabulação, que vive dentro da Section dedicada "hac — Ordem de
+  // Tabulação" (nunca dentro do specGroup das specs). Ocultar o frame
+  // clonado inteiro já esconde os selos dentro dele de uma vez.
+  // Fire-and-forget, sem resposta ao frontend.
   if (msg.type === "toggle-tab-order-copy-visibility") {
-    for (const sibling of figma.currentPage.children) {
+    _forEachTabOrderCopyCandidate(sibling => {
       try {
         if (sibling.getPluginData && sibling.getPluginData('hacTabOrderCopyForArea') === msg.areaId) {
           sibling.visible = !!msg.visible;
         }
       } catch (e) { }
-    }
+    });
     return;
   }
 

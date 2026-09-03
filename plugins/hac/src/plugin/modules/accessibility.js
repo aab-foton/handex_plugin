@@ -996,7 +996,16 @@ function _renderA11yElementoToggles(selectValue) {
   list.innerHTML = '';
 
   const info = selectValue ? _getA11yComponentToggles(selectValue) : null;
-  const toggles = (info && info.toggles) || [];
+  // "Nome Acessível" não é renderizado aqui (removido em 2026-09, mesmo
+  // padrão já aplicado ao mobile): duplicava o campo "Label
+  // (accessibilityLabel)" sempre visível no topo do formulário
+  // (#a11y-el-label) — os dois alimentavam o mesmo accessibilityLabel real.
+  // O Label do topo agora é a ÚNICA fonte; confirmA11ySpec/
+  // _buildA11yElementoPayload injeta o valor do Label em properties[] com
+  // key 'nomeAcessivel' automaticamente quando o componente tem essa
+  // property real. Ver _restoreA11yElementoToggles para a migração de specs
+  // antigas que salvaram os dois campos com valores divergentes.
+  const toggles = ((info && info.toggles) || []).filter(t => t.key !== 'nomeAcessivel');
   wrap.classList.toggle('hidden', toggles.length === 0);
   if (toggles.length === 0) return;
 
@@ -1063,12 +1072,28 @@ function _collectA11yElementoToggleProperties() {
 // Inverso de _collectA11yElementoToggleProperties — usado em
 // _prefillA11ySpecForEdit (editA11ySpec) pra religar os toggles que a spec
 // salva tinha marcado, com o texto já digitado de volta no textarea.
+// Chamada DEPOIS de `setVal('a11y-el-label', getProp('label'))` (ver
+// _prefillA11ySpecForEdit) — ordem relevante pro fallback de 'nomeAcessivel'
+// abaixo, mesmo padrão de _restoreA11yElementoMobileToggles.
 function _restoreA11yElementoToggles(props) {
   const list = document.getElementById('a11y-el-toggles-list');
   if (!list) return;
   const canonicalKeys = new Set(Object.keys(A11Y_TOGGLE_LABELS));
   (props || []).forEach(p => {
-    if (!p || !canonicalKeys.has(p.key)) return;
+    if (!p) return;
+    // Migração: specs desktop ANTIGAS podiam ter properties['nomeAcessivel']
+    // preenchido pelo checkbox "Nome Acessível" removido em 2026-09
+    // (duplicava o campo "Label (accessibilityLabel)" sempre visível no topo
+    // do formulário). Ao reabrir pra edição, o valor volta a aparecer — agora
+    // no campo Label do topo — sem perder dado. Só entra se o Label ainda
+    // estiver vazio (não sobrescreve um valor de Label já salvo na mesma
+    // spec — cenário legado em que os dois campos coexistiam preenchidos).
+    if (p.key === 'nomeAcessivel') {
+      const labelInput = document.getElementById('a11y-el-label');
+      if (labelInput && !labelInput.value.trim()) { labelInput.value = p.value || ''; updateA11yCharCounter(labelInput); }
+      return;
+    }
+    if (!canonicalKeys.has(p.key)) return;
     const checkbox = list.querySelector(`[data-a11y-toggle-key="${p.key}"]`);
     if (!checkbox) return;
     checkbox.checked = true;
@@ -1835,6 +1860,13 @@ function _buildA11yElementoPayload(letter, componenteKey, label, options) {
   const entry = A11Y_CONTENT.elemento.componentes[componenteKey];
   if (entry && entry.descricao) properties.push({ key: 'descricao', label: 'Descrição', value: entry.descricao });
   if (entry && entry.notasCodigo) properties.push({ key: 'notaCodigo', label: 'Nota de Código', value: entry.notasCodigo });
+  // O Label do topo é a ÚNICA fonte do accessibilityLabel (checkbox "Nome
+  // Acessível" removido do formulário em 2026-09, mesmo padrão do mobile) —
+  // sempre injeta esse valor em properties['nomeAcessivel'] pro backend
+  // ligar o BOOLEAN real da instância e escrever o texto quando o
+  // componente tiver essa property (code.js ignora silenciosamente quando
+  // não tiver, ver _dynamicToggleKeys/toggleMap em code.js).
+  properties.push({ key: 'nomeAcessivel', label: A11Y_TOGGLE_LABELS.nomeAcessivel, value: label });
   properties.push(...toggleProperties);
   properties = properties.filter(p => p.value);
   return { letter, properties, a11ySubtype };
@@ -3830,7 +3862,7 @@ function _resetA11yBatchWizardUi() {
   const progress = document.getElementById('a11y-modal-wizard-progress');
   if (progress) progress.classList.add('hidden');
   const paginator = document.getElementById('a11y-modal-wizard-paginator');
-  if (paginator) { paginator.classList.add('hidden'); paginator.innerHTML = ''; }
+  if (paginator) paginator.classList.add('hidden');
   const confirmBtn = document.getElementById('btn-a11y-confirm');
   if (confirmBtn) confirmBtn.disabled = false;
   const modal = document.getElementById('a11y-spec-modal');
@@ -3941,6 +3973,11 @@ function _openA11yWizardItemAt(index) {
   window._a11yPendingAreaId = state.areaId;
   openA11yModal(category, options);
   _applyA11yWizardModalUi(state);
+  // Acompanha a troca de item com scroll + highlight no canvas — sem isso o
+  // designer precisa clicar em "Focar" manualmente a cada avanço (aplicar/
+  // descartar) ou pulo pelo paginador, perdendo de vista qual elemento
+  // corresponde ao formulário aberto numa área com muitos itens.
+  focusA11yWizardCurrentNode();
 }
 window._openA11yWizardItemAt = _openA11yWizardItemAt;
 
@@ -3968,13 +4005,18 @@ function _applyA11yWizardModalUi(state) {
   if (modal) modal.dataset.wizardActive = '1';
   const focusBtn = document.getElementById('btn-a11y-wizard-focus');
   if (focusBtn) focusBtn.classList.remove('hidden');
+  const isConfirmed = state.confirmed.has(state.currentIndex);
+  const isDiscarded = state.discarded.has(state.currentIndex);
   const progress = document.getElementById('a11y-modal-wizard-progress');
   if (progress) {
-    progress.textContent = `Item ${state.currentIndex + 1} de ${state.queue.length}`;
+    const statusSuffix = isConfirmed ? ' — Documentado' : isDiscarded ? ' — Descartado' : '';
+    progress.textContent = `Item ${state.currentIndex + 1} de ${state.queue.length}${statusSuffix}`;
     progress.classList.remove('hidden');
+    progress.classList.toggle('text-emerald-600', isConfirmed);
+    progress.classList.toggle('dark:text-emerald-400', isConfirmed);
+    progress.classList.toggle('text-gray-400', isDiscarded);
   }
 
-  const isConfirmed = state.confirmed.has(state.currentIndex);
   const discardBtn = document.getElementById('btn-a11y-wizard-discard');
   if (discardBtn) discardBtn.classList.toggle('hidden', isConfirmed);
   const confirmBtn = document.getElementById('btn-a11y-confirm');
@@ -3997,49 +4039,49 @@ function _refreshA11yWizardPaginator(state) {
 }
 window._refreshA11yWizardPaginator = _refreshA11yWizardPaginator;
 
-// Paginador compacto (padrão "1 2 [3] 4 5 … N"): sempre mostra a primeira e
-// a última posição, uma janela ao redor do item atual, com "…" resumindo o
-// que fica de fora. Cada botão reflete o status real daquele índice —
-// consultado ao vivo nos Sets (confirmed/discarded), não um valor herdado do
-// momento em que a fila foi montada.
-function _buildA11yWizardPaginatorPages(total, current) {
-  const windowSize = 1;
-  const pages = new Set([0, total - 1]);
-  for (let i = current - windowSize; i <= current + windowSize; i++) {
-    if (i >= 0 && i < total) pages.add(i);
-  }
-  const sorted = Array.from(pages).sort((a, b) => a - b);
-  const withGaps = [];
-  sorted.forEach((page, i) => {
-    if (i > 0 && page - sorted[i - 1] > 1) withGaps.push('gap');
-    withGaps.push(page);
-  });
-  return withGaps;
+// Voltar/Avançar navegam SEMPRE por posição na fila (currentIndex ± 1),
+// diferente de _advanceA11yBatchWizard (que pula pro próximo pendente após
+// Aplicar/Descartar) — aqui o designer está passeando manualmente pela fila
+// inteira, revisado ou não, então pular itens já resolvidos seria
+// surpreendente.
+function _stepA11yWizardItem(delta) {
+  const state = window._a11yBatchWizardState;
+  if (!state) return;
+  const target = state.currentIndex + delta;
+  if (target < 0 || target >= state.queue.length) return;
+  _openA11yWizardItemAt(target);
 }
+window._stepA11yWizardItem = _stepA11yWizardItem;
+
+// Handler do campo numérico central (Enter ou blur, ver onkeydown/onblur no
+// input em modals.html). Só aceita inteiro 1-based dentro da fila; qualquer
+// entrada inválida (vazia, não numérica, fora do range) reverte o campo pro
+// índice atual sem navegar — nunca deixa o input num estado inconsistente.
+function _commitA11yWizardIndexInput(rawValue) {
+  const state = window._a11yBatchWizardState;
+  if (!state) return;
+  const parsed = Number.parseInt(String(rawValue).trim(), 10);
+  const isValid = Number.isInteger(parsed) && String(parsed) === String(rawValue).trim() && parsed >= 1 && parsed <= state.queue.length;
+  if (isValid && (parsed - 1) !== state.currentIndex) {
+    _openA11yWizardItemAt(parsed - 1);
+    return;
+  }
+  _renderA11yWizardPaginator(state);
+}
+window._commitA11yWizardIndexInput = _commitA11yWizardIndexInput;
 
 function _renderA11yWizardPaginator(state) {
   const wrap = document.getElementById('a11y-modal-wizard-paginator');
   if (!wrap) return;
   const total = state.queue.length;
-  const pages = _buildA11yWizardPaginatorPages(total, state.currentIndex);
-  wrap.innerHTML = pages.map(page => {
-    if (page === 'gap') return '<span class="w-4 text-center text-[10px] text-slate-300 dark:text-dark-muted shrink-0">…</span>';
-    const isCurrent = page === state.currentIndex;
-    const isConfirmed = state.confirmed.has(page);
-    const isDiscarded = state.discarded.has(page);
-    let classes = 'min-w-[20px] h-5 px-1 shrink-0 rounded-full text-[9px] font-extrabold flex items-center justify-center transition-colors ';
-    if (isCurrent) {
-      classes += 'bg-[#0891B2] text-white shadow-sm shadow-cyan-500/30';
-    } else if (isConfirmed) {
-      classes += 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400';
-    } else if (isDiscarded) {
-      classes += 'bg-gray-100 text-gray-400 hover:bg-gray-200 dark:bg-dark-bg dark:text-dark-muted';
-    } else {
-      classes += 'bg-gray-50 text-slate-500 hover:bg-cyan-50 hover:text-[#0891B2] dark:bg-dark-bg dark:text-dark-muted dark:hover:bg-cyan-900/20';
-    }
-    const title = isConfirmed ? 'Documentado' : isDiscarded ? 'Descartado' : 'Pendente';
-    return `<button type="button" onclick="jumpToA11yWizardItem(${page})" title="Item ${page + 1} — ${title}" aria-label="Item ${page + 1} — ${title}" aria-current="${isCurrent ? 'true' : 'false'}" class="${classes}">${page + 1}</button>`;
-  }).join('');
+  const input = document.getElementById('a11y-wizard-index-input');
+  if (input) input.value = String(state.currentIndex + 1);
+  const totalLabel = document.getElementById('a11y-wizard-index-total');
+  if (totalLabel) totalLabel.textContent = `de ${total}`;
+  const prevBtn = document.getElementById('btn-a11y-wizard-prev');
+  if (prevBtn) prevBtn.disabled = state.currentIndex <= 0;
+  const nextBtn = document.getElementById('btn-a11y-wizard-next');
+  if (nextBtn) nextBtn.disabled = state.currentIndex >= total - 1;
 }
 
 // Centraliza/dá zoom no elemento do item atual do wizard no canvas — reusa o

@@ -257,7 +257,7 @@ body {
     }
 
     #toast-container {
-      position: fixed;
+      position: absolute;
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
@@ -368,7 +368,7 @@ body {
 
     /* ── Accessibility & UX: Resize & Scale ────────────────── */
     #resize-handle {
-      position: fixed;
+      position: absolute;
       bottom: 0;
       right: 0;
       width: 14px;
@@ -395,6 +395,13 @@ body {
       height: calc(100vh / var(--ui-scale));
       max-height: calc(100vh / var(--ui-scale));
       overflow: hidden;
+      /* `position:fixed` não escala com `zoom` — o containing block de fixed
+         permanece o viewport real, não o body zoomado (por isso os modais
+         ficavam cortados/deslocados em escalas > 100%). Todo elemento que
+         antes usava fixed inset-0 (modais, toast, resize-handle) agora usa
+         absolute e resolve contra este body — que precisa ser o containing
+         block via position:relative. */
+      position: relative;
     }
 
     /* --- Responsive Scale Adjustments --- */

@@ -5,7 +5,7 @@
      rename, conforme instrução da tarefa. -->
 
 <!-- MODAL: ESCOLHA DE CATEGORIA -->
-<div id="a11y-category-picker-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-category-picker-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+<div id="a11y-category-picker-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-category-picker-title" class="hidden absolute inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeA11yCategoryPickerModal()" aria-hidden="true"></div>
   <div class="relative w-full max-w-sm bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
     <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line">
@@ -46,9 +46,9 @@
 
 <!-- MODAL: ESPECIFICAÇÃO DE ACESSIBILIDADE (formulário das 5 categorias) -->
 <!-- Controlado por modules/accessibility.js: openA11yModal, closeA11yModal, confirmA11ySpec -->
-<div id="a11y-spec-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+<div id="a11y-spec-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-modal-title" class="hidden absolute inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeA11yModal()" aria-hidden="true"></div>
-  <div class="relative w-full max-w-sm max-h-[92vh] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+  <div class="relative w-full max-w-sm max-h-full bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
     <div class="border-b border-gray-100 dark:border-dark-line shrink-0">
       <div class="flex items-center justify-between p-4 pb-3">
         <div class="min-w-0">
@@ -88,12 +88,27 @@
         </div>
       </div>
       <!-- Paginador do wizard de revisão — só visível durante o wizard
-           (modal.dataset.wizardActive === '1'). Navegação livre: clicar em
-           qualquer posição pula direto pra aquele item (ver
-           jumpToA11yWizardItem/_renderA11yWizardPaginator em
-           accessibility.js). Cor por status: atual (cyan), documentado
-           (verde), descartado (cinza), pendente (neutro). -->
-      <div id="a11y-modal-wizard-paginator" class="hidden flex items-center gap-1 px-4 pb-3 overflow-x-auto"></div>
+           (modal.dataset.wizardActive === '1'). Voltar/Avançar navegam por
+           POSIÇÃO na fila (currentIndex -1/+1), sem pular pendentes — ver
+           _stepA11yWizardItem em accessibility.js. Campo numérico central
+           aceita digitação direta (Enter ou blur) — ver
+           _commitA11yWizardIndexInput. -->
+      <div id="a11y-modal-wizard-paginator" class="hidden flex items-center justify-center gap-2 px-4 pb-3">
+        <button type="button" id="btn-a11y-wizard-prev" onclick="_stepA11yWizardItem(-1)" title="Item anterior" aria-label="Item anterior" class="inline-flex items-center justify-center w-7 h-7 rounded-full text-slate-500 hover:bg-cyan-50 hover:text-[#0891B2] disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-500 dark:text-dark-muted dark:hover:bg-cyan-900/20 dark:hover:text-cyan-400 transition-colors">
+          <i data-lucide="chevron-left" class="w-4 h-4" aria-hidden="true"></i>
+        </button>
+        <div class="flex items-center gap-1.5">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" id="a11y-wizard-index-input"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+            onblur="_commitA11yWizardIndexInput(this.value)"
+            aria-label="Ir para o item número"
+            class="w-11 h-7 text-center text-[12px] font-extrabold rounded-lg border border-gray-200 dark:border-dark-line bg-gray-50 dark:bg-dark-bg text-[#0891B2] dark:text-cyan-400 outline-none focus:ring-2 focus:ring-cyan-100" />
+          <span id="a11y-wizard-index-total" class="text-[11px] font-bold text-slate-400 dark:text-dark-muted whitespace-nowrap">de —</span>
+        </div>
+        <button type="button" id="btn-a11y-wizard-next" onclick="_stepA11yWizardItem(1)" title="Próximo item" aria-label="Próximo item" class="inline-flex items-center justify-center w-7 h-7 rounded-full text-slate-500 hover:bg-cyan-50 hover:text-[#0891B2] disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-500 dark:text-dark-muted dark:hover:bg-cyan-900/20 dark:hover:text-cyan-400 transition-colors">
+          <i data-lucide="chevron-right" class="w-4 h-4" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
     <div class="p-5 overflow-y-auto min-h-0" onscroll="handleScroll(this)">
       <!-- Dados já capturados pelo plugin sobre o nó selecionado no canvas —
@@ -489,9 +504,9 @@
 
 <!-- MODAL: MARCAR ÁREA (selo numerado de seção/tela) -->
 <!-- Controlado por modules/accessibility.js: openA11yAreaModal, closeA11yAreaModal, confirmA11yArea -->
-<div id="a11y-area-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-area-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+<div id="a11y-area-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-area-modal-title" class="hidden absolute inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeA11yAreaModal()" aria-hidden="true"></div>
-  <div class="relative w-full max-w-sm max-h-[85vh] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+  <div class="relative w-full max-w-sm max-h-full bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
     <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
       <h3 id="a11y-area-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
         <i data-lucide="map-pin" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Marcar Área
@@ -604,9 +619,9 @@
           dinamicamente, ver showA11yWizardSavingIndicator em
           accessibility.js (esse segundo uso pula direto pro estado 2, não
           passa pela pergunta de novo). -->
-<div id="a11y-post-area-detect-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-post-area-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+<div id="a11y-post-area-detect-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-post-area-title" class="hidden absolute inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true"></div>
-  <div class="relative w-full max-w-sm max-h-[85vh] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+  <div class="relative w-full max-w-sm max-h-full bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
     <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
       <h3 id="a11y-post-area-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
         <i data-lucide="radar" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Detecção Automática
@@ -642,7 +657,7 @@
 </div>
 
 <!-- MODAL: LIB DE ACESSIBILIDADE NÃO VINCULADA -->
-<div id="a11y-library-required-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-lib-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+<div id="a11y-library-required-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-lib-modal-title" class="hidden absolute inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('a11y-library-required-modal')" aria-hidden="true"></div>
   <div class="relative w-full max-w-sm bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
     <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line">
@@ -678,7 +693,7 @@
      no canvas) quanto o automático (varredura de camadas). Nada é
      desenhado no canvas (exceto o highlight temporário do item recém-
      clicado) até o clique em "Aplicar no Canvas". -->
-<div id="a11y-tab-order-review-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-tab-order-review-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+<div id="a11y-tab-order-review-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-tab-order-review-title" class="hidden absolute inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="cancelTabOrderReview()" aria-hidden="true"></div>
   <div class="relative w-full max-w-sm max-h-[88vh] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
     <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
@@ -720,7 +735,7 @@
      entrada do wizard de revisão individual: escolher a Área de destino e
      iniciar a revisão sequencial (abre o modal de especificação item a
      item, ver startA11yBatchWizard/_advanceA11yBatchWizard). -->
-<div id="a11y-batch-summary-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-batch-summary-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+<div id="a11y-batch-summary-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-batch-summary-title" class="hidden absolute inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeA11yBatchSummaryModal()" aria-hidden="true"></div>
   <div class="relative w-full max-w-sm max-h-[88vh] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
     <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
@@ -805,9 +820,9 @@
 </div>
 
 <!-- MODAL: GUIA DE CATEGORIAS DE ACESSIBILIDADE -->
-<div id="a11y-categories-help-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-help-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+<div id="a11y-categories-help-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-help-modal-title" class="hidden absolute inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('a11y-categories-help-modal')" aria-hidden="true"></div>
-  <div class="relative bg-white dark:bg-dark-bg w-full max-w-[440px] max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-dark-line flex flex-col animate-in fade-in zoom-in duration-200">
+  <div class="relative bg-white dark:bg-dark-bg w-full max-w-[440px] max-h-full rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-dark-line flex flex-col animate-in fade-in zoom-in duration-200">
     <div class="p-6 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
       <h3 id="a11y-help-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[18px]">Entendendo as categorias</h3>
       <button onclick="closeModal('a11y-categories-help-modal')" aria-label="Fechar modal" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
@@ -884,8 +899,8 @@
 <!-- MODAL: ONBOARDING (genérico — stepper com tela de "propósito" antes do
      Passo 1). Portado de views/modals.html (Handex main), adaptado só na
      paleta (cyan, igual ao resto do hac). Ver modules/onboarding.js. -->
-<div id="onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboarding-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-  <div class="bg-white dark:bg-dark-bg w-full max-w-[420px] max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-dark-line flex flex-col animate-in fade-in zoom-in duration-200">
+<div id="onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboarding-modal-title" class="hidden absolute inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+  <div class="bg-white dark:bg-dark-bg w-full max-w-[420px] max-h-full rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-dark-line flex flex-col animate-in fade-in zoom-in duration-200">
     <div class="p-6 border-b border-gray-100 dark:border-dark-line flex items-center gap-3 shrink-0">
       <div id="onboarding-modal-icon-wrap" class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0">
         <i id="onboarding-modal-icon" class="w-4.5 h-4.5"></i>
@@ -906,7 +921,7 @@
      preenchido em runtime por modules/messages.js a partir de
      msg.version (mensagem 'init-plugin' vinda de code.js / PLUGIN_VERSION,
      que por sua vez é injetada em build-time — ver scripts/bundle-code.cjs). -->
-<div id="about-hac-modal" role="dialog" aria-modal="true" aria-labelledby="about-hac-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+<div id="about-hac-modal" role="dialog" aria-modal="true" aria-labelledby="about-hac-title" class="hidden absolute inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('about-hac-modal')" aria-hidden="true"></div>
   <div class="relative w-full max-w-sm bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
     <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line">
