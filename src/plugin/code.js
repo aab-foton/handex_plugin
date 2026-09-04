@@ -3130,11 +3130,21 @@ figma.ui.onmessage = async (msg) => {
         }
         return false;
       };
-      // Só aplica a COMPONENT/COMPONENT_SET (definições/sub-composições), nunca
-      // a INSTANCE -- uma instância real do DSC pode legitimamente conter
-      // sub-instâncias internas e ainda ser ela mesma o item correto a auditar
-      // (ex: um card composto por vários componentes internos).
-      const _isStructuralContainer = category === "frames" || ((category === "components" || category === "icons") && node.type !== 'INSTANCE');
+      // Aplica a COMPONENT/COMPONENT_SET (definições/sub-composições) e nunca a
+      // INSTANCE por padrão -- uma instância real do DSC pode legitimamente
+      // conter sub-instâncias internas e ainda ser ela mesma o item correto a
+      // auditar (ex: um card composto por vários componentes internos).
+      // EXCEÇÃO: instância cujo nome usa o prefixo ".[base]" -- convenção das
+      // libs DSC para peça de composição interna (wrapper/slot holder), nunca
+      // publicada/consumida isoladamente. Achado real em 2026-09: ".[base]
+      // Menu logo" (INSTANCE) contém "[dsc] Slot" (filho DS real) mas era
+      // auditado sozinho contra o skeleton, sem bater (não é publicado
+      // independente) -- "FORA DO PADRÃO" mesmo com o vínculo DSC vivo no
+      // filho. Diferente de "[dsc]" (publicado, conta como vínculo válido),
+      // ".[base]" é sinal de "estrutural, não audite isoladamente".
+      const _isBaseWrapper = /^\.\[base\]/i.test(node.name);
+      const _isStructuralContainer = category === "frames"
+        || ((category === "components" || category === "icons") && (node.type !== 'INSTANCE' || _isBaseWrapper));
       if (_isStructuralContainer && _hasDSChild(node)) return;
 
       const name = node.name;

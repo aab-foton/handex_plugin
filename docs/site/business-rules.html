@@ -408,6 +408,12 @@
 <li>Nesse caso o item vira <code>isDS: "warning"</code> + <code>isCustomComponent: true</code>, nunca <code>isDS: true</code> — a UI exibe "COMPONENTE PERSONALIZADO" (badge âmbar, distinto tanto de EM CONFORMIDADE quanto de FORA DO PADRÃO), sinalizando que requer verificação manual, não que está errado.</li>
 <li><strong>Componentes COM vínculo real também passam a considerar as próprias propriedades</strong> (v6.8.3): uma instância legítima do DSC pode ter sido redimensionada/customizada com gap/padding fora do padrão — o vínculo sozinho não garante mais "EM CONFORMIDADE". Mesma agregação de <code>frames</code>: todas as props com token OK → conforme; alguma OK → "NECESSITA REVISÃO"; nenhuma OK → "FORA DO PADRÃO".</li>
 </ul>
+<p><strong>Wrapper estrutural interno (não auditar isoladamente) — v6.8.2/v6.8.4:</strong></p>
+<ul>
+<li>Um container "puro" (FRAME/GROUP/SECTION, ou COMPONENT/COMPONENT_SET) que tem algum <code>INSTANCE</code>/<code>COMPONENT</code> real como descendente não é auditado sozinho — a conformidade "vive" no filho, não nesse nível intermediário de composição. Sem essa proteção, o <code>componentKey</code> do wrapper nunca bate no skeleton (não é publicado sozinho) e o item aparece "FORA DO PADRÃO" mesmo estando 100% dentro de uma árvore DSC válida.</li>
+<li>Por padrão essa proteção NUNCA se aplica a <code>INSTANCE</code> — uma instância real do DSC pode legitimamente conter sub-instâncias internas (ex: um card composto por vários componentes) e ainda ser ela mesma o item correto a auditar.</li>
+<li><strong>Exceção (v6.8.4):</strong> instâncias cujo nome usa o prefixo <code>.[base]</code> (regex <code>/^\.\[base\]/i</code>) também são tratadas como wrapper estrutural, mesmo sendo <code>INSTANCE</code>. Esse prefixo é a convenção das libs DSC para peça de composição interna (wrapper/slot holder) — nunca publicada/consumida isoladamente, diferente de <code>[dsc]</code> (peça publicada, conta como vínculo válido). Caso real: <code>.[base] Menu logo</code> (dentro de <code>[dsc] Menu Lateral</code>) contém <code>[dsc] Slot</code> como filho real, mas era auditado sozinho e nunca batia — "FORA DO PADRÃO" com o vínculo DSC vivo no próprio filho.</li>
+</ul>
 <hr>
 <h3 id="24-anotar-specs">2.4 Anotar Specs</h3>
 <p><strong>Estrutura de uma spec:</strong></p>

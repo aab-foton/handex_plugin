@@ -747,7 +747,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "6.8.3" : "dev";
+  var PLUGIN_VERSION = true ? "6.8.4" : "dev";
   var DSC_HANDOFF_SUMMARY_ENABLED = false;
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
@@ -2814,7 +2814,8 @@
           }
           return false;
         };
-        const _isStructuralContainer = category === "frames" || (category === "components" || category === "icons") && node.type !== "INSTANCE";
+        const _isBaseWrapper = /^\.\[base\]/i.test(node.name);
+        const _isStructuralContainer = category === "frames" || (category === "components" || category === "icons") && (node.type !== "INSTANCE" || _isBaseWrapper);
         if (_isStructuralContainer && _hasDSChild(node)) return;
         const name = node.name;
         let componentKey = null;
