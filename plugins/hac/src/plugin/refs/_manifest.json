@@ -3,7 +3,7 @@
     "description": "Adaptação/redução do Handex Beta (refs/_manifest.json) para o hac, 2026-08-24. Duas libs DSC de COMPONENTES REAIS (web + mobile) são fonte de 'componentsDetailed' (key + name + containingFrame) usada em runtime para resolver componente do canvas -> containingFrame -> categoria de a11y (ver _getDscComponentKeyToFrameMap em code.js, e build-skeleton.cjs — estendido em 2026-08-25 para gerar componentsDetailed também para 'super-app'). A lib 'Design Acessível' (marcadores visuais REAIS: Agrupamento, Conectores, Item Number, web + mobile) NÃO precisa de entrada aqui — suas component keys estão hardcoded como literais em code.js (A11Y_AGRUPAMENTO_KEYS[_MOBILE], A11Y_CONECTOR_LINHA_KEYS[_MOBILE], A11Y_ITEM_NUMBER_KEYS[_MOBILE]), e seu conteúdo textual/properties vem de JSONs curados à parte (design-acessivel-content.json, design-acessivel-component-properties.json), não deste manifest nem do skeleton. O fileKey da lib de marcadores mobile (3zdtN13YvPlCGPdXeL0Y2i) é DIFERENTE do fileKey 'super-app' abaixo (epCGtlKQxedDxQVlK3lNcN, componentes reais) — não confundir: um é o template/handoff visual, o outro é a lib de componentes do produto.",
     "confirmedBy": "leitura de build-skeleton.cjs e grep em code.js"
   },
-  "generatedAt": "2026-08-26T18:02:55.881Z",
+  "generatedAt": "2026-08-31T16:34:18.566Z",
   "libraries": [
     {
       "slug": "web-angular-react",
