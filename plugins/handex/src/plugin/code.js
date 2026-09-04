@@ -3111,42 +3111,6 @@ figma.ui.onmessage = async (msg) => {
       // Vectors: skip entirely — primitive shapes carry no DS conformance signal
       if (category === "vectors") return;
 
-      // Containers "puros": nem FRAME/GROUP/SECTION nem COMPONENT/COMPONENT_SET
-      // são auditados isoladamente se tiverem algum INSTANCE/COMPONENT real como
-      // descendente — nesse caso são estrutura interna (wrapper de layout ou
-      // sub-componente de composição, ex: "Icon color" dentro de um ícone
-      // composto), não uma peça independente da biblioteca. O componentKey de
-      // um sub-componente estrutural nunca bate com o skeleton do DSC (ele não
-      // é publicado sozinho), então sem este filtro ele é marcado "fora do
-      // padrão" mesmo estando 100% dentro de uma árvore DSC válida — achado
-      // real em 2026-09 (".[dsc] Menu Hamburger Header" > "Icon" > "Icon color"
-      // > "menu" INSTANCE). O sinal de conformidade vive no filho real, não
-      // neste nível intermediário.
-      const _hasDSChild = (n) => {
-        if (!n.children) return false;
-        for (const c of n.children) {
-          if (c.type === 'INSTANCE' || c.type === 'COMPONENT') return true;
-          if (_hasDSChild(c)) return true;
-        }
-        return false;
-      };
-      // Aplica a COMPONENT/COMPONENT_SET (definições/sub-composições) e nunca a
-      // INSTANCE por padrão -- uma instância real do DSC pode legitimamente
-      // conter sub-instâncias internas e ainda ser ela mesma o item correto a
-      // auditar (ex: um card composto por vários componentes internos).
-      // EXCEÇÃO: instância cujo nome usa o prefixo ".[base]" -- convenção das
-      // libs DSC para peça de composição interna (wrapper/slot holder), nunca
-      // publicada/consumida isoladamente. Achado real em 2026-09: ".[base]
-      // Menu logo" (INSTANCE) contém "[dsc] Slot" (filho DS real) mas era
-      // auditado sozinho contra o skeleton, sem bater (não é publicado
-      // independente) -- "FORA DO PADRÃO" mesmo com o vínculo DSC vivo no
-      // filho. Diferente de "[dsc]" (publicado, conta como vínculo válido),
-      // ".[base]" é sinal de "estrutural, não audite isoladamente".
-      const _isBaseWrapper = /^\.\[base\]/i.test(node.name);
-      const _isStructuralContainer = category === "frames"
-        || ((category === "components" || category === "icons") && (node.type !== 'INSTANCE' || _isBaseWrapper));
-      if (_isStructuralContainer && _hasDSChild(node)) return;
-
       const name = node.name;
 
       let componentKey = null;
@@ -3156,6 +3120,54 @@ figma.ui.onmessage = async (msg) => {
         if (mainComp) componentKey = mainComp.key;
       } else if (node.type === "COMPONENT" || node.type === "COMPONENT_SET") {
         componentKey = node.key;
+      }
+
+      // Vínculo real com o DSC: o componentKey do próprio nó bate no skeleton
+      // (matchedBy "key") ou segue a convenção [dsc] no nome -- NUNCA por
+      // convenção de nome sozinha (nome é texto livre, editável por qualquer
+      // designer, não é sinal confiável) e NUNCA por mainComponent.remote (só
+      // prova que vem de algum arquivo publicado, não necessariamente do DSC).
+      const _nodeHasRealLibLink = (n, key) => {
+        if (!key) return /^\[dsc\]/i.test(n.name);
+        const a = auditProperty(n.name, n.name, "components", key, referenceTokens, isAudit);
+        return a.score >= AUDIT_SCORE.EXACT || /^\[dsc\]/i.test(n.name);
+      };
+      const _ownLibLink = (node.type === "INSTANCE" || node.type === "COMPONENT" || node.type === "COMPONENT_SET")
+        ? _nodeHasRealLibLink(node, componentKey)
+        : false;
+
+      // Containers "puros": um nó SEM vínculo real próprio com o DSC (frame de
+      // layout, ou instância/componente de composição interna sem componentKey
+      // reconhecido no skeleton, ex: wrapper "base" da própria lib) não é
+      // auditado isoladamente se tiver algum descendente COM vínculo real --
+      // nesse caso é estrutura interna, não uma peça independente da
+      // biblioteca. O componentKey de um sub-componente estrutural nunca bate
+      // no skeleton (não é publicado sozinho), então sem este filtro ele é
+      // marcado "fora do padrão" mesmo estando 100% dentro de uma árvore DSC
+      // válida -- achados reais em 2026-09: ".[dsc] Menu Hamburger Header" >
+      // "Icon" > "Icon color" > "menu" INSTANCE; e ".[base] Menu background" >
+      // "Logo" > ".[base] Menu logo" > "[dsc] Slot". A checagem usa o
+      // componentKey real do descendente contra o skeleton -- nunca o nome
+      // dele (nome é convenção subjetiva, não dado confiável).
+      const _hasRealDSDescendant = async (n) => {
+        if (!n.children) return false;
+        for (const c of n.children) {
+          if (c.type === 'INSTANCE' || c.type === 'COMPONENT' || c.type === 'COMPONENT_SET') {
+            let cKey = null;
+            if (c.type === 'INSTANCE') {
+              const cMain = await c.getMainComponentAsync();
+              if (cMain) cKey = cMain.key;
+            } else {
+              cKey = c.key;
+            }
+            if (_nodeHasRealLibLink(c, cKey)) return true;
+          }
+          if (await _hasRealDSDescendant(c)) return true;
+        }
+        return false;
+      };
+      if (!_ownLibLink && (category === "frames" || category === "components" || category === "icons")) {
+        if (await _hasRealDSDescendant(node)) return;
       }
 
       let dsElement = false;
@@ -3176,14 +3188,13 @@ figma.ui.onmessage = async (msg) => {
         // NUNCA usar mainComponent.remote como prova de vínculo com o DSC:
         // "remoto" só significa "vem de algum arquivo publicado como lib no
         // Figma" -- pode ser a lib pessoal do designer, um protótipo em outro
-        // arquivo, qualquer coisa. Vínculo real com o DSC é só: o
-        // componentKey bate no skeleton (matchedBy "key") ou a convenção
-        // [dsc] no nome. Sem isso, mesmo sendo instância "remota" de algum
-        // arquivo, é um componente PERSONALIZADO -- ex.: "NavBar" reutilizada
-        // de outro projeto de design via biblioteca própria, sem existir
-        // como componente oficial do DSC.
-        const _hasRealLibLink = elementMatchedBy === "key" || /^\[dsc\]/i.test(name);
-        if (!_hasRealLibLink) {
+        // arquivo, qualquer coisa. Vínculo real com o DSC (_ownLibLink, calculado
+        // acima) é só: o componentKey bate no skeleton (matchedBy "key") ou a
+        // convenção [dsc] no nome. Sem isso, mesmo sendo instância "remota" de
+        // algum arquivo, é um componente PERSONALIZADO -- ex.: "NavBar"
+        // reutilizada de outro projeto de design via biblioteca própria, sem
+        // existir como componente oficial do DSC.
+        if (!_ownLibLink) {
           if (dsElement === true) {
             dsElement = "warning";
             isCustomComponent = true;

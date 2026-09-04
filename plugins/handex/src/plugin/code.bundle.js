@@ -747,7 +747,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "6.8.4" : "dev";
+  var PLUGIN_VERSION = true ? "6.8.5" : "dev";
   var DSC_HANDOFF_SUMMARY_ENABLED = false;
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
@@ -2806,17 +2806,6 @@
         }
         if (props.length === 0 && (category === "frames" || category === "vectors")) return;
         if (category === "vectors") return;
-        const _hasDSChild = (n) => {
-          if (!n.children) return false;
-          for (const c of n.children) {
-            if (c.type === "INSTANCE" || c.type === "COMPONENT") return true;
-            if (_hasDSChild(c)) return true;
-          }
-          return false;
-        };
-        const _isBaseWrapper = /^\.\[base\]/i.test(node.name);
-        const _isStructuralContainer = category === "frames" || (category === "components" || category === "icons") && (node.type !== "INSTANCE" || _isBaseWrapper);
-        if (_isStructuralContainer && _hasDSChild(node)) return;
         const name = node.name;
         let componentKey = null;
         let mainComp = null;
@@ -2825,6 +2814,32 @@
           if (mainComp) componentKey = mainComp.key;
         } else if (node.type === "COMPONENT" || node.type === "COMPONENT_SET") {
           componentKey = node.key;
+        }
+        const _nodeHasRealLibLink = (n, key) => {
+          if (!key) return /^\[dsc\]/i.test(n.name);
+          const a = auditProperty(n.name, n.name, "components", key, referenceTokens, isAudit);
+          return a.score >= AUDIT_SCORE.EXACT || /^\[dsc\]/i.test(n.name);
+        };
+        const _ownLibLink = node.type === "INSTANCE" || node.type === "COMPONENT" || node.type === "COMPONENT_SET" ? _nodeHasRealLibLink(node, componentKey) : false;
+        const _hasRealDSDescendant = async (n) => {
+          if (!n.children) return false;
+          for (const c of n.children) {
+            if (c.type === "INSTANCE" || c.type === "COMPONENT" || c.type === "COMPONENT_SET") {
+              let cKey = null;
+              if (c.type === "INSTANCE") {
+                const cMain = await c.getMainComponentAsync();
+                if (cMain) cKey = cMain.key;
+              } else {
+                cKey = c.key;
+              }
+              if (_nodeHasRealLibLink(c, cKey)) return true;
+            }
+            if (await _hasRealDSDescendant(c)) return true;
+          }
+          return false;
+        };
+        if (!_ownLibLink && (category === "frames" || category === "components" || category === "icons")) {
+          if (await _hasRealDSDescendant(node)) return;
         }
         let dsElement = false;
         let elementScore = null;
@@ -2840,8 +2855,7 @@
           elementMatchedIn = a.matchedIn;
           elementMatchedTokenName = a.matchedTokenName;
           if (dsElement !== true && /^\[dsc\]/i.test(name)) dsElement = true;
-          const _hasRealLibLink = elementMatchedBy === "key" || /^\[dsc\]/i.test(name);
-          if (!_hasRealLibLink) {
+          if (!_ownLibLink) {
             if (dsElement === true) {
               dsElement = "warning";
               isCustomComponent = true;
