@@ -165,13 +165,6 @@ ${viewHandoffSummary}
 ${modalsShared}
   </div>
 
-  <!-- SIGNATURE FOOTER -->
-  <footer id="footer-signature" class="pb-2 pt-1 text-center shrink-0 bg-light-surface dark:bg-dark-bg border-t border-light-line dark:border-dark-line">
-    <p class="text-[9px] text-gray-400 dark:text-dark-muted font-bold tracking-wider uppercase">
-      Desenvolvido por Fóton
-    </p>
-  </footer>
-
   <!--
     Plugin runtime — concatenado em um único <script> para que todos os
     módulos compartilhem o mesmo escopo. A separação em arquivos-fonte é

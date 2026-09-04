@@ -440,11 +440,42 @@
     // exige digitar "APAGAR" como uma pausa deliberada antes da ação mais
     // destrutiva do plugin (irreversível e, até esta correção, incompleta
     // o suficiente para deixar dados órfãos no storage).
-    function requestClearAllData() {
-      const hasContent = (handoffData.frames || []).length > 0
+    // Fonte única de "há algo documentado" -- usada tanto para decidir se
+    // Limpar Dados pede confirmação por digitação (requestClearAllData)
+    // quanto para habilitar/desabilitar Baixar/Limpar no rodapé da home
+    // (ver updateHomeFooterButtonsState em core.js). Nunca duplicar esta
+    // checagem em outro lugar.
+    //
+    // frames.length > 0 sozinho não basta: um frame entra em handoffData.frames
+    // assim que é SELECIONADO e registrado no hub (addFrame), antes de
+    // qualquer resultado real existir (specs: null, createdSpecs: [],
+    // measurements: [], excecoes: []) -- um registro nunca preenchido
+    // (usuário testou uma ferramenta e não voltou) deixava esta função sempre
+    // "true", com Baixar/Limpar habilitados num projeto sem nenhum artefato
+    // visível. _frameHasContent checa se HÁ algo de fato dentro do frame.
+    function _frameHasContent(f) {
+      const scanned = f.specs && (
+        (f.specs.components || []).length > 0
+        || (f.specs.icons || []).length > 0
+        || (f.specs.typography || []).length > 0
+        || (f.specs.vectors || []).length > 0
+      );
+      return !!scanned
+        || (f.createdSpecs || []).length > 0
+        || (f.measurements || []).length > 0
+        || (f.excecoes || []).length > 0;
+    }
+
+    function hasDocumentedContent() {
+      return (handoffData.frames || []).some(_frameHasContent)
         || (handoffData.specs || []).length > 0
         || (handoffData.measurements || []).length > 0
         || (handoffData.createdFlows || []).length > 0;
+    }
+    window.hasDocumentedContent = hasDocumentedContent;
+
+    function requestClearAllData() {
+      const hasContent = hasDocumentedContent();
 
       if (!hasContent) {
         confirmClearAllData();

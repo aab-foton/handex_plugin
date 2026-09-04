@@ -1671,6 +1671,8 @@ ${(handoffData.createdFlows || []).length === 0
 
               if (status === "ok") {
                 badgeHTML = `<span class="inline-flex items-center gap-1 text-[#10b981] font-bold"><i data-lucide="check-circle" class="w-2.5 h-2.5"></i>EM CONFORMIDADE</span>${breakdownChips}`;
+              } else if (status === "warning" && item.isCustomComponent) {
+                badgeHTML = `<span class="inline-flex items-center gap-1 text-amber-500 font-bold" title="Sem vínculo com componente publicado na lib DSC — verificar manualmente"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>COMPONENTE PERSONALIZADO</span>${breakdownChips}`;
               } else if (status === "warning") {
                 badgeHTML = `<span class="inline-flex items-center gap-1 text-amber-500 font-bold"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>NECESSITA REVISÃO</span>${breakdownChips}`;
               } else {

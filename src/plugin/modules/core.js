@@ -1798,6 +1798,21 @@ function openDadosProjetoModal() {
   openModal('quick-project-modal');
 }
 
+// Habilita/desabilita "Baixar" e "Limpar" no rodapé da home conforme haver
+// ou não algo documentado (hasDocumentedContent, fonte única compartilhada
+// com requestClearAllData em design-data.js). "Importar" nunca desabilita
+// -- é sempre uma ação válida, mesmo com o projeto vazio. Chamada a cada
+// vez que a home é exibida (ver navigate()), não em cada ponto de criação
+// de dado isoladamente -- recalcula do zero contra o estado atual, sem
+// risco de ficar dessincronizada por algum caminho esquecido.
+function updateHomeFooterButtonsState() {
+  const has = typeof hasDocumentedContent === 'function' ? hasDocumentedContent() : true;
+  const exportBtn = document.getElementById('btn-home-export');
+  const clearBtn = document.getElementById('btn-home-clear');
+  if (exportBtn) exportBtn.disabled = !has;
+  if (clearBtn) clearBtn.disabled = !has;
+}
+
 function navigate(viewId) {
   // focusNode() (usado pelo ícone de foco em specs/medidas/fluxos) cria um
   // [HighlightStroke] persistente no canvas que só some com um clique
@@ -1818,6 +1833,7 @@ function navigate(viewId) {
     btnTop.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
   }
   document.getElementById("header-home")?.classList.remove("hidden");
+  if (viewId === 'view-home') updateHomeFooterButtonsState();
   if (viewId === 'view-specifications') {
     if (typeof _resetSpecsSearchInputs === 'function') _resetSpecsSearchInputs();
     syncAndRenderSpecs();

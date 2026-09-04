@@ -394,12 +394,19 @@
 </ul>
 <p><strong>Detecção de conformidade (scan):</strong></p>
 <ul>
-<li><code>variable.remote = true</code> → token de variável de biblioteca publicada → <code>isDS: true</code></li>
-<li><code>style.remote = true</code> → estilo (cor, tipografia, efeito) de biblioteca publicada → <code>isDS: true</code></li>
-<li><code>mainComponent.remote = true</code> → instância de biblioteca publicada → <code>isDS: true</code></li>
+<li><code>variable.remote = true</code> → token de variável de biblioteca publicada → <code>isDS: true</code> (propriedade individual)</li>
+<li><code>style.remote = true</code> → estilo (cor, tipografia, efeito) de biblioteca publicada → <code>isDS: true</code> (propriedade individual)</li>
 <li>Tipografia: <code>styleKey != null</code> + fonte CAIXAstd → <code>isDS: true</code></li>
 <li>Componente com prefixo <code>[dsc]</code> no nome → <code>isDS: true</code> (fallback sem chave no skeleton)</li>
-<li>Chave da instância presente em <code>componentKeys[]</code> do skeleton → <code>isDS: true</code> (match exato)</li>
+<li>Chave da instância/componente presente em <code>componentKeys[]</code> do skeleton (<code>matchedBy === "key"</code>) → <code>isDS: true</code> (match exato, único vínculo real aceito para o item como um todo)</li>
+</ul>
+<p><strong>Importante — <code>mainComponent.remote = true</code> NÃO prova vínculo com o DSC (corrigido em v6.8.3):</strong> "remoto" no Figma só significa "instância de um componente publicado como biblioteca em algum arquivo" — pode ser uma biblioteca pessoal do designer, um protótipo de outro projeto, qualquer coisa. Não é evidência de que o componente existe no DSC. Até v6.8.2 esse dado era tratado como vínculo válido, o que causava falso positivo: um componente chamado "NavBar", reaproveitado de outro projeto de design via biblioteca própria (sem existir como componente oficial do DSC), aparecia como "EM CONFORMIDADE" só por ser instância remota. Removido — vínculo real com o DSC é exclusivamente <code>matchedBy === "key"</code> ou convenção <code>[dsc]</code>.</p>
+<p><strong>Componente personalizado (sem vínculo real com a lib) — v6.8.3:</strong></p>
+<ul>
+<li>Um item de <code>components</code>/<code>icons</code> só é reportado como <code>isDS: true</code> (EM CONFORMIDADE) se houver vínculo real com uma lib do DSC: <code>matchedBy === "key"</code> (componentKey bate no skeleton) ou convenção <code>[dsc]</code> no nome.</li>
+<li>Sem esse vínculo, o componente foi montado à mão (ou reaproveitado de fora do DSC) — mesmo que suas propriedades individuais (cor, spacing, sizing) coincidam por acaso com tokens do DSC, o componente em si não é rastreável até nenhuma lib do DSC.</li>
+<li>Nesse caso o item vira <code>isDS: "warning"</code> + <code>isCustomComponent: true</code>, nunca <code>isDS: true</code> — a UI exibe "COMPONENTE PERSONALIZADO" (badge âmbar, distinto tanto de EM CONFORMIDADE quanto de FORA DO PADRÃO), sinalizando que requer verificação manual, não que está errado.</li>
+<li><strong>Componentes COM vínculo real também passam a considerar as próprias propriedades</strong> (v6.8.3): uma instância legítima do DSC pode ter sido redimensionada/customizada com gap/padding fora do padrão — o vínculo sozinho não garante mais "EM CONFORMIDADE". Mesma agregação de <code>frames</code>: todas as props com token OK → conforme; alguma OK → "NECESSITA REVISÃO"; nenhuma OK → "FORA DO PADRÃO".</li>
 </ul>
 <hr>
 <h3 id="24-anotar-specs">2.4 Anotar Specs</h3>
