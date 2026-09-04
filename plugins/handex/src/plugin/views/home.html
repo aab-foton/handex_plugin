@@ -170,9 +170,16 @@
     </button>
 
     <div class="flex gap-2">
-      <button onclick="exportHandoffData()" aria-label="Baixar backup completo em JSON"
+      <!-- Baixar/Limpar ficam desabilitados sem nenhum insumo documentado
+           (frames/specs/medidas/fluxos) -- não há o que exportar nem o que
+           apagar. Estado sincronizado por updateHomeFooterButtonsState()
+           (core.js), chamada ao entrar na home e a cada mudança de dados.
+           Importar nunca desabilita: é sempre uma ação válida, mesmo com o
+           projeto vazio. disabled:opacity-40 é o padrão do Design System do
+           Handex (ver docs/site/design-system.html, seção Botões). -->
+      <button id="btn-home-export" onclick="exportHandoffData()" aria-label="Baixar backup completo em JSON"
         title="Baixar backup completo em JSON — mesmo conteúdo salvo, para restaurar ou compartilhar o projeto depois"
-        class="flex-1 min-w-0 min-h-[40px] flex items-center justify-center gap-1.5 px-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 outline-none transition-all shadow-sm">
+        class="flex-1 min-w-0 min-h-[40px] flex items-center justify-center gap-1.5 px-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 outline-none transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-dark-surface">
         <i data-lucide="download" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
         <span class="truncate">Baixar</span>
       </button>
@@ -182,9 +189,9 @@
         <i data-lucide="upload" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
         <span class="truncate">Importar</span>
       </button>
-      <button onclick="clearAllData()" aria-label="Limpar todos os dados do projeto"
+      <button id="btn-home-clear" onclick="clearAllData()" aria-label="Limpar todos os dados do projeto"
         title="Limpar todos os dados"
-        class="flex-1 min-w-0 min-h-[40px] flex items-center justify-center gap-1.5 px-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 dark:hover:border-red-800/40 hover:text-red-500 outline-none transition-all shadow-sm">
+        class="flex-1 min-w-0 min-h-[40px] flex items-center justify-center gap-1.5 px-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 dark:hover:border-red-800/40 hover:text-red-500 outline-none transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-dark-surface disabled:hover:border-gray-200 dark:disabled:hover:border-dark-line disabled:hover:text-slate-500 dark:disabled:hover:text-dark-muted">
         <i data-lucide="trash-2" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
         <span class="truncate">Limpar</span>
       </button>

@@ -3111,20 +3111,31 @@ figma.ui.onmessage = async (msg) => {
       // Vectors: skip entirely — primitive shapes carry no DS conformance signal
       if (category === "vectors") return;
 
-      // Frames: only keep "pure custom" frames — those with zero INSTANCE/COMPONENT descendants.
-      // A frame that contains DS components is just a layout container; the conformance
-      // signal lives on its children, not on the frame itself.
-      if (category === "frames") {
-        const _hasDSChild = (n) => {
-          if (!n.children) return false;
-          for (const c of n.children) {
-            if (c.type === 'INSTANCE' || c.type === 'COMPONENT') return true;
-            if (_hasDSChild(c)) return true;
-          }
-          return false;
-        };
-        if (_hasDSChild(node)) return;
-      }
+      // Containers "puros": nem FRAME/GROUP/SECTION nem COMPONENT/COMPONENT_SET
+      // são auditados isoladamente se tiverem algum INSTANCE/COMPONENT real como
+      // descendente — nesse caso são estrutura interna (wrapper de layout ou
+      // sub-componente de composição, ex: "Icon color" dentro de um ícone
+      // composto), não uma peça independente da biblioteca. O componentKey de
+      // um sub-componente estrutural nunca bate com o skeleton do DSC (ele não
+      // é publicado sozinho), então sem este filtro ele é marcado "fora do
+      // padrão" mesmo estando 100% dentro de uma árvore DSC válida — achado
+      // real em 2026-09 (".[dsc] Menu Hamburger Header" > "Icon" > "Icon color"
+      // > "menu" INSTANCE). O sinal de conformidade vive no filho real, não
+      // neste nível intermediário.
+      const _hasDSChild = (n) => {
+        if (!n.children) return false;
+        for (const c of n.children) {
+          if (c.type === 'INSTANCE' || c.type === 'COMPONENT') return true;
+          if (_hasDSChild(c)) return true;
+        }
+        return false;
+      };
+      // Só aplica a COMPONENT/COMPONENT_SET (definições/sub-composições), nunca
+      // a INSTANCE -- uma instância real do DSC pode legitimamente conter
+      // sub-instâncias internas e ainda ser ela mesma o item correto a auditar
+      // (ex: um card composto por vários componentes internos).
+      const _isStructuralContainer = category === "frames" || ((category === "components" || category === "icons") && node.type !== 'INSTANCE');
+      if (_isStructuralContainer && _hasDSChild(node)) return;
 
       const name = node.name;
 
@@ -3142,6 +3153,7 @@ figma.ui.onmessage = async (msg) => {
       let elementMatchedBy = null;
       let elementMatchedIn = null;
       let elementMatchedTokenName = null;
+      let isCustomComponent = false;
       if (category === "components" || category === "icons") {
         const a = audit(category, name, componentKey, name);
         dsElement = a.isDS;
@@ -3151,9 +3163,34 @@ figma.ui.onmessage = async (msg) => {
         elementMatchedTokenName = a.matchedTokenName;
         // Convenção [dsc] no nome confirma conformidade (fallback quando chave não está no skeleton)
         if (dsElement !== true && /^\[dsc\]/i.test(name)) dsElement = true;
-        // Instância de biblioteca publicada (remote=true) → conforme ao DSC por definição
-        if (dsElement !== true && node.type === 'INSTANCE' && mainComp && mainComp.remote) {
-          dsElement = true;
+        // NUNCA usar mainComponent.remote como prova de vínculo com o DSC:
+        // "remoto" só significa "vem de algum arquivo publicado como lib no
+        // Figma" -- pode ser a lib pessoal do designer, um protótipo em outro
+        // arquivo, qualquer coisa. Vínculo real com o DSC é só: o
+        // componentKey bate no skeleton (matchedBy "key") ou a convenção
+        // [dsc] no nome. Sem isso, mesmo sendo instância "remota" de algum
+        // arquivo, é um componente PERSONALIZADO -- ex.: "NavBar" reutilizada
+        // de outro projeto de design via biblioteca própria, sem existir
+        // como componente oficial do DSC.
+        const _hasRealLibLink = elementMatchedBy === "key" || /^\[dsc\]/i.test(name);
+        if (!_hasRealLibLink) {
+          if (dsElement === true) {
+            dsElement = "warning";
+            isCustomComponent = true;
+          }
+        } else {
+          // Componente COM vínculo real: a conformidade também depende das
+          // próprias propriedades (gap, padding etc.) -- uma instância
+          // legítima do DSC pode ter sido redimensionada/customizada fora do
+          // padrão, e o vínculo sozinho não cobre isso. Mesma agregação usada
+          // em "frames": todas as props OK = conforme; alguma OK = requer
+          // revisão; nenhuma OK = fora do padrão.
+          const _auditableProps = props.filter(p => p.isDS !== undefined && p.type !== 'variant');
+          if (_auditableProps.length > 0) {
+            const _allOk = _auditableProps.every(p => p.isDS === true);
+            const _anyOk = _auditableProps.some(p => p.isDS === true);
+            dsElement = _allOk ? dsElement : (_anyOk ? 'warning' : false);
+          }
         }
       }
       if (category === "frames") {
@@ -3203,6 +3240,7 @@ figma.ui.onmessage = async (msg) => {
           matchedBy: elementMatchedBy,
           matchedIn: elementMatchedIn,
           matchedTokenName: elementMatchedTokenName,
+          isCustomComponent: isCustomComponent,
           variants: variants,
           nodeId: node.id,
           layers: new Set([name]),
@@ -3220,6 +3258,7 @@ figma.ui.onmessage = async (msg) => {
           matchedBy: elementMatchedBy,
           matchedIn: elementMatchedIn,
           matchedTokenName: elementMatchedTokenName,
+          isCustomComponent: isCustomComponent,
           variants: variants,
           properties: props
         });

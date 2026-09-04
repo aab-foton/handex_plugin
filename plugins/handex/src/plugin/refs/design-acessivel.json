@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Design Acessível",
     "figmaFileKey": "Wy0IhXRVZMSOOr8E609UqI",
-    "exportedAt": "2026-08-26T18:09:14.940Z",
+    "exportedAt": "2026-09-04T02:11:54.658Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -900,13 +900,6 @@
         "value": "Em HTML utilize a tag <ol>."
       },
       {
-        "key": "6506ef617dbb027d6c7714f609a07b82d41338c8",
-        "name": "itens interativos/lista/nao ordenada/descricao",
-        "resolvedType": "STRING",
-        "collection": "[a11y]specification",
-        "value": "Construir como lista não ordenada."
-      },
-      {
         "key": "3c17610e4228bf785764215fc58d4406848f1ff9",
         "name": "estruturais/marcos/header/nota",
         "resolvedType": "STRING",
@@ -914,11 +907,11 @@
         "value": "Em HTML use a tag <header> para um cabeçalho de uma seção ou página."
       },
       {
-        "key": "e1710a4ac8687bb89799d8f5e46f9f74b7a1d263",
-        "name": "itens interativos/lista/nao ordenada/nota",
+        "key": "6506ef617dbb027d6c7714f609a07b82d41338c8",
+        "name": "itens interativos/lista/nao ordenada/descricao",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
-        "value": "Em HTML utilize a tag <ul>."
+        "value": "Construir como lista não ordenada."
       },
       {
         "key": "6e4aed443c5b6cfe318c637887897d3cce78b139",
@@ -926,6 +919,13 @@
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
         "value": "Indicar como rodapé. "
+      },
+      {
+        "key": "e1710a4ac8687bb89799d8f5e46f9f74b7a1d263",
+        "name": "itens interativos/lista/nao ordenada/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML utilize a tag <ul>."
       },
       {
         "key": "0c5e36755c9ffeace223ac70479e3cc06a33c013",
