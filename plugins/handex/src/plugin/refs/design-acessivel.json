@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Design Acessível",
     "figmaFileKey": "Wy0IhXRVZMSOOr8E609UqI",
-    "exportedAt": "2026-08-26T18:09:14.940Z",
+    "exportedAt": "2026-09-07T14:52:08.590Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -872,13 +872,6 @@
         "value": "Em HTML <aside> possui um significado semântico, indicando que o conteúdo é \"à parte\",  mas relacionado. "
       },
       {
-        "key": "9fb826cb3106b524ea3b7c24bc34e86d23d1f268",
-        "name": "itens interativos/lista/ordenada/descricao",
-        "resolvedType": "STRING",
-        "collection": "[a11y]specification",
-        "value": "Construir como lista ordenada."
-      },
-      {
         "key": "6549fe3b3f19153b25001fb272dd6bb3a20c611b",
         "name": "estruturais/marcos/header/descricao",
         "resolvedType": "STRING",
@@ -886,11 +879,11 @@
         "value": "Indicar como cabeçalho. "
       },
       {
-        "key": "dcc66b5accd20fd977ad8adddf8573fe938fba64",
-        "name": "estruturais/marcos/header/observacoes",
+        "key": "9fb826cb3106b524ea3b7c24bc34e86d23d1f268",
+        "name": "itens interativos/lista/ordenada/descricao",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
-        "value": "É um elemento que ajuda a organizar o conteúdo da página, fornecendo uma estrutura clara e semântica."
+        "value": "Construir como lista ordenada."
       },
       {
         "key": "96643391afeaee052a0c1892d2e60c7040eeac1c",
@@ -898,6 +891,13 @@
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
         "value": "Em HTML utilize a tag <ol>."
+      },
+      {
+        "key": "dcc66b5accd20fd977ad8adddf8573fe938fba64",
+        "name": "estruturais/marcos/header/observacoes",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "É um elemento que ajuda a organizar o conteúdo da página, fornecendo uma estrutura clara e semântica."
       },
       {
         "key": "6506ef617dbb027d6c7714f609a07b82d41338c8",
@@ -942,18 +942,18 @@
         "value": "É um elemento que oferece um local centralizado para informações importantes para serem acessadas facilmente."
       },
       {
-        "key": "2cacfd2766356cba69327f85d9b015f7d33bd399",
-        "name": "estruturais/marcos/footer/nota",
-        "resolvedType": "STRING",
-        "collection": "[a11y]specification",
-        "value": " Em HTML use a tag <footer> para agrupar informações relacionadas à parte inferior de uma página ou seção."
-      },
-      {
         "key": "f4cffb7e6b130dc20dee93887059f7fc68264134",
         "name": "itens interativos/lista/de definição/nota",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
         "value": "Em HTML utilize a tag <dl>."
+      },
+      {
+        "key": "2cacfd2766356cba69327f85d9b015f7d33bd399",
+        "name": "estruturais/marcos/footer/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": " Em HTML use a tag <footer> para agrupar informações relacionadas à parte inferior de uma página ou seção."
       },
       {
         "key": "0dbec947265d6d739987db9fedca81d9d42fed2b",

@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Super DSC | Web",
     "figmaFileKey": "erkqbRKIbaFWbkHe51BeiZ",
-    "exportedAt": "2026-08-26T18:07:10.796Z",
+    "exportedAt": "2026-09-07T14:50:00.615Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -88,18 +88,18 @@
         "value": "#03453b"
       },
       {
-        "key": "178b280421e2efa7a88bfd25cbec1b305fc16f1c",
-        "name": "dsc/color/decorative/decorativeOutlined",
-        "resolvedType": "COLOR",
-        "collection": "dsc",
-        "value": "#d0f2ed"
-      },
-      {
         "key": "d042013351a71c7c1dc19ece7754c20590d1fbc2",
         "name": "dsc/color/accent/accentBg",
         "resolvedType": "COLOR",
         "collection": "dsc",
         "value": "#ffefd6"
+      },
+      {
+        "key": "178b280421e2efa7a88bfd25cbec1b305fc16f1c",
+        "name": "dsc/color/decorative/decorativeOutlined",
+        "resolvedType": "COLOR",
+        "collection": "dsc",
+        "value": "#d0f2ed"
       },
       {
         "key": "6da4e0966193e5e4d85e5a60812822577f8c8460",
@@ -1145,18 +1145,18 @@
         "value": 0.25
       },
       {
-        "key": "2ffdb9fca2840a717b2d00de1e185ccbf36a5cba",
-        "name": "dsc/font/letter-spacing/extended",
-        "resolvedType": "FLOAT",
-        "collection": "dsc",
-        "value": 0.5
-      },
-      {
         "key": "52f9ce01da92ed6befa569191d0cf84b8f2cf295",
         "name": "dsc/icon/size/quark",
         "resolvedType": "FLOAT",
         "collection": "dsc",
         "value": 12
+      },
+      {
+        "key": "2ffdb9fca2840a717b2d00de1e185ccbf36a5cba",
+        "name": "dsc/font/letter-spacing/extended",
+        "resolvedType": "FLOAT",
+        "collection": "dsc",
+        "value": 0.5
       },
       {
         "key": "a72bcb9cc5273853555e67a07ff2c7c9068a2892",
@@ -1850,6 +1850,230 @@
         "resolvedType": "STRING",
         "collection": "Terms dictionary",
         "value": "Usar em outro banco"
+      },
+      {
+        "key": "e683b329fedb23d423b5daf08762ceb825932b17",
+        "name": "breakpoint 🔒",
+        "resolvedType": "STRING",
+        "collection": "responsive",
+        "value": "extra large"
+      },
+      {
+        "key": "5a252b9f4d10a79cb6a71f922d7c0d359e08b671",
+        "name": "device 🔒",
+        "resolvedType": "STRING",
+        "collection": "responsive",
+        "value": "desktop"
+      },
+      {
+        "key": "342dc2e8338a4bf48cf67858012acaac8f51b0dd",
+        "name": "device/width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
+      },
+      {
+        "key": "0c58f7f1c8bdee1fae04b483016807839d8bbeef",
+        "name": "device/min-width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
+      },
+      {
+        "key": "15b13fffa9bd485c000a60cf7352aeec864ac5cd",
+        "name": "device/max-width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1920
+      },
+      {
+        "key": "8c1c494e3d2189c0cda1a8b246a222679d4e7188",
+        "name": "device/min-height",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 900
+      },
+      {
+        "key": "b6fa6d7ea224162fc26bcd4feb3593a071c72aef",
+        "name": "grid/grid-column",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 12
+      },
+      {
+        "key": "b357d9876a6487bc6585ff05d6d34049168a686b",
+        "name": "show/device/desktop",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "f1fa37adfa4cfe8c8e83b226e2c309d2756590a8",
+        "name": "show/device/mobile",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "c656eb4c5adbf1f4d10d36ecc529a62d6ba847cb",
+        "name": "show/breakpoint/extra large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "eb8218a3b520b76e4c9c5394b34a28e90b9381be",
+        "name": "show/breakpoint/large +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "de2f0274cba20369986d7eba540f66fed2f66cda",
+        "name": "show/breakpoint/large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "f62abf263d76b9cb8859e065b36df4f4a092440d",
+        "name": "show/breakpoint/medium +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "55341000b43c6871ba95e3e9612136dbbd2a06ed",
+        "name": "show/breakpoint/medium",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "2a1182e3ade1087d17e5a4ed3202d0c3a77b2588",
+        "name": "show/breakpoint/small +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "0f238f4ba74855b4056b568dfee5c2f3a114445c",
+        "name": "show/breakpoint/small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "3cf82aef55e2701ed26738822a1848886287a5ae",
+        "name": "show/breakpoint/extra small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "d349b296f58c9f5cc80e92c1043cc59a4a3b79f2",
+        "name": "grid/grid-margin",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 48
+      },
+      {
+        "key": "e2c5440e36fc09559af6d652fa8bd67db3e11dbd",
+        "name": "grid/grid-gap",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 24
+      },
+      {
+        "key": "d5f0eddd47d5e547747cbd2f6b83c1170cfe6c7f",
+        "name": "hide/device/desktop",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "bbb5487ef1c40e5ddf426a45dc9a79c1c61a08f4",
+        "name": "components/container/width-compact",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 720
+      },
+      {
+        "key": "ba362c47468f7ffc3f4bacadc489386abdd3eaff",
+        "name": "components/container/width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1080
+      },
+      {
+        "key": "d5f604b4641b0f25ed4f4e86454f9c1597343fbc",
+        "name": "components/container/width-wide",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
+      },
+      {
+        "key": "353f9e9a3a815706dcc7bf54d116db9f23285fe2",
+        "name": "hide/device/mobile",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "5cdf1997b0429ef16bd6c1be5bab9a2b12eda469",
+        "name": "hide/breakpoint/extra large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "4f95e11f7498f15bd862c964ea6d213f77eacb04",
+        "name": "hide/breakpoint/large +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "2568ea599dbb0f5c54ba2e241554507f75f26411",
+        "name": "hide/breakpoint/large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "759e7e9fc237cc7cf071ed04b65b5d280e884f26",
+        "name": "hide/breakpoint/medium +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "d3676bfcd938342e798fe2301907f26fe42fc5a0",
+        "name": "hide/breakpoint/medium",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "d18bfc2be43c65657374a7518a55295ea586102c",
+        "name": "hide/breakpoint/small +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "080f2ce8fe0de800c7174126adaeaac75e322b54",
+        "name": "hide/breakpoint/small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "1b813038bcb7e2224d055ba5952e55add8faec73",
+        "name": "hide/breakpoint/extra small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
       },
       {
         "key": "9c7fc4880bebc37c156e9bdf87c2ef6354bc2a6e",
@@ -2585,230 +2809,6 @@
         "resolvedType": "FLOAT",
         "collection": "GOSTPlugin",
         "value": 256
-      },
-      {
-        "key": "e683b329fedb23d423b5daf08762ceb825932b17",
-        "name": "breakpoint 🔒",
-        "resolvedType": "STRING",
-        "collection": "responsive",
-        "value": "extra large"
-      },
-      {
-        "key": "5a252b9f4d10a79cb6a71f922d7c0d359e08b671",
-        "name": "device 🔒",
-        "resolvedType": "STRING",
-        "collection": "responsive",
-        "value": "desktop"
-      },
-      {
-        "key": "342dc2e8338a4bf48cf67858012acaac8f51b0dd",
-        "name": "device/width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "0c58f7f1c8bdee1fae04b483016807839d8bbeef",
-        "name": "device/min-width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "15b13fffa9bd485c000a60cf7352aeec864ac5cd",
-        "name": "device/max-width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1920
-      },
-      {
-        "key": "8c1c494e3d2189c0cda1a8b246a222679d4e7188",
-        "name": "device/min-height",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 900
-      },
-      {
-        "key": "b6fa6d7ea224162fc26bcd4feb3593a071c72aef",
-        "name": "grid/grid-column",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 12
-      },
-      {
-        "key": "b357d9876a6487bc6585ff05d6d34049168a686b",
-        "name": "show/device/desktop",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "f1fa37adfa4cfe8c8e83b226e2c309d2756590a8",
-        "name": "show/device/mobile",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "c656eb4c5adbf1f4d10d36ecc529a62d6ba847cb",
-        "name": "show/breakpoint/extra large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "eb8218a3b520b76e4c9c5394b34a28e90b9381be",
-        "name": "show/breakpoint/large +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "de2f0274cba20369986d7eba540f66fed2f66cda",
-        "name": "show/breakpoint/large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "f62abf263d76b9cb8859e065b36df4f4a092440d",
-        "name": "show/breakpoint/medium +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "55341000b43c6871ba95e3e9612136dbbd2a06ed",
-        "name": "show/breakpoint/medium",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "2a1182e3ade1087d17e5a4ed3202d0c3a77b2588",
-        "name": "show/breakpoint/small +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "0f238f4ba74855b4056b568dfee5c2f3a114445c",
-        "name": "show/breakpoint/small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "3cf82aef55e2701ed26738822a1848886287a5ae",
-        "name": "show/breakpoint/extra small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "d349b296f58c9f5cc80e92c1043cc59a4a3b79f2",
-        "name": "grid/grid-margin",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 48
-      },
-      {
-        "key": "e2c5440e36fc09559af6d652fa8bd67db3e11dbd",
-        "name": "grid/grid-gap",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 24
-      },
-      {
-        "key": "d5f0eddd47d5e547747cbd2f6b83c1170cfe6c7f",
-        "name": "hide/device/desktop",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "bbb5487ef1c40e5ddf426a45dc9a79c1c61a08f4",
-        "name": "components/container/width-compact",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 720
-      },
-      {
-        "key": "ba362c47468f7ffc3f4bacadc489386abdd3eaff",
-        "name": "components/container/width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1080
-      },
-      {
-        "key": "d5f604b4641b0f25ed4f4e86454f9c1597343fbc",
-        "name": "components/container/width-wide",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "353f9e9a3a815706dcc7bf54d116db9f23285fe2",
-        "name": "hide/device/mobile",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "5cdf1997b0429ef16bd6c1be5bab9a2b12eda469",
-        "name": "hide/breakpoint/extra large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "4f95e11f7498f15bd862c964ea6d213f77eacb04",
-        "name": "hide/breakpoint/large +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "2568ea599dbb0f5c54ba2e241554507f75f26411",
-        "name": "hide/breakpoint/large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "759e7e9fc237cc7cf071ed04b65b5d280e884f26",
-        "name": "hide/breakpoint/medium +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "d3676bfcd938342e798fe2301907f26fe42fc5a0",
-        "name": "hide/breakpoint/medium",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "d18bfc2be43c65657374a7518a55295ea586102c",
-        "name": "hide/breakpoint/small +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "080f2ce8fe0de800c7174126adaeaac75e322b54",
-        "name": "hide/breakpoint/small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "1b813038bcb7e2224d055ba5952e55add8faec73",
-        "name": "hide/breakpoint/extra small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
       }
     ]
   },
@@ -21053,12 +21053,6 @@
       "containingFrame": "graduation-cap"
     },
     {
-      "key": "e590a5a625ab10c0f928cff9615197ee86799472",
-      "name": "variant=interactive",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "e66bf90d3742c612647935b360af6fee71179b29",
       "name": "variant=neutral, size=small, animation=step 2",
       "description": "",
@@ -22985,12 +22979,6 @@
       "containingFrame": ""
     },
     {
-      "key": "32973399cb39784a5bfef69b209a05e3adad1a54",
-      "name": "variant=single",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "41fa6d54ac15c451b3dac8fb30ffd66affa542c0",
       "name": "state=pressed, status=checked",
       "description": "",
@@ -23041,12 +23029,6 @@
     {
       "key": "7cdedbab61ca861eb50fe178d243691b3ac32f4e",
       "name": "state=focus, status=checked",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "7922fd0802b838ad36257f04ffc8fbc752a77ffb",
-      "name": "variant=stack",
       "description": "",
       "containingFrame": ""
     },
@@ -24173,20 +24155,8 @@
       "containingFrame": ""
     },
     {
-      "key": "0b2d53d22030859fd7245d65470b4408b866b1fb",
-      "name": "device=mobile, ovelay=false",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "18c2218888b63cbbeb39a102e548e1757a91b66e",
       "name": "variant=text, state=pressed, device=desktop",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "1a2780396e3cd36992a2c1cf9acb1e74fbfce629",
-      "name": "pattern=excluir débito, device=desktop",
       "description": "",
       "containingFrame": ""
     },
@@ -24203,20 +24173,8 @@
       "containingFrame": ""
     },
     {
-      "key": "2eaf5347c90d10b2e7027d01eae3d3703e539b06",
-      "name": "pattern=senha, device=mobile",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "4718ef62ebbab82cc60a1493cdddd9f4826a7dd0",
       "name": "variant=expand button, device=desktop",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "416b4bfc477fbec09aa166fd1d77d204d1745485",
-      "name": "pattern=criar grupo, device=mobile",
       "description": "",
       "containingFrame": ""
     },
@@ -24257,20 +24215,8 @@
       "containingFrame": ""
     },
     {
-      "key": "725c67be9c999a98e7cc0fe5aa1bede6695735df",
-      "name": "pattern=excluir débito, device=mobile",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "7c7666d4d83141c527c473fe63577de78dfe6099",
       "name": "variant=badge text, device=desktop",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "7d5c30826258ff90ed730f790800a67a75623c67",
-      "name": "device=desktop, ovelay=true",
       "description": "",
       "containingFrame": ""
     },
@@ -24311,12 +24257,6 @@
       "containingFrame": ""
     },
     {
-      "key": "940f622dde34856805273ca843a8be80e86b9489",
-      "name": "pattern=forma de pagamento, device=desktop",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "a9c3742e9f417387605422148d32955670533276",
       "name": "variant=checkbox, device=mobile",
       "description": "",
@@ -24329,26 +24269,8 @@
       "containingFrame": ""
     },
     {
-      "key": "b61847165baf904ba0384f3d665394e28bc42ce5",
-      "name": "device=mobile, ovelay=true",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "c9a6f213818b5fe5bc8f2f9db72924718490c96f",
       "name": "variant=icon button, device=desktop",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "c85ef261ec925cf034e66ec4c9a0d33353c3b5c0",
-      "name": "pattern=forma de pagamento, device=mobile",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d2b23fe93f53cfd4e415b806a77c151fd1f19e82",
-      "name": "device=desktop, ovelay=false",
       "description": "",
       "containingFrame": ""
     },
@@ -24361,12 +24283,6 @@
     {
       "key": "df854bd015f6b21c56a5ae4ab592f5a34e89c0ad",
       "name": "variant=double text, device=desktop",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d9964bc945743c857454d4713b8252a67c21b8a7",
-      "name": "pattern=criar grupo, device=desktop",
       "description": "",
       "containingFrame": ""
     },
@@ -26251,18 +26167,6 @@
     {
       "key": "6d4d0a9be93dc52dc57dc03eab4cbfa2ee7414e3",
       "name": "breakpoint=small, variant=danger",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "62a86365507742f07fba15e0740c92510c4344f2",
-      "name": "orientation=landscape",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "df41f1bf012267a4f5a80183a341de3a3dd47bc0",
-      "name": "orientation=portrait",
       "description": "",
       "containingFrame": ""
     },
@@ -28643,12 +28547,6 @@
       "containingFrame": ""
     },
     {
-      "key": "2bc4c772945f54e3e13b01566d3ab454161ec831",
-      "name": "count=2",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "2c621ac4fc05286f69b295a031b052877a9b5021",
       "name": "variant=on media bg, size=tiny, type=plain, state=loading",
       "description": "",
@@ -29003,12 +28901,6 @@
       "containingFrame": ""
     },
     {
-      "key": "77169d303f9eb542d6d6c4ee046f5eafd7989f58",
-      "name": "count=4",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "7722903d1a01c9fcc2cf4420f7feff26ccded969",
       "name": "variant=highlight, size=large, type=outline, state=disabled",
       "description": "",
@@ -29303,12 +29195,6 @@
       "containingFrame": ""
     },
     {
-      "key": "c4eb1ee5058582f89dc385600ffc23d10f7aac96",
-      "name": "count=5",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
       "key": "c51617435bac53347bde76a557b1e09b5241eb62",
       "name": "variant=danger, size=large, type=outline, state=loading",
       "description": "",
@@ -29437,12 +29323,6 @@
     {
       "key": "d2e3280ce6dcbf18edfdd55821a83aaabd32e93c",
       "name": "variant=on media bg, size=tiny, type=plain, state=pressed",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "d33a356aa9b4bf78681b82668ec58f66252b854e",
-      "name": "count=3",
       "description": "",
       "containingFrame": ""
     },
@@ -30575,180 +30455,6 @@
       "containingFrame": ""
     },
     {
-      "key": "3295b1740ac83cb48b6286e73c805d49ba0ab193",
-      "name": "variant=ted, transaction=agendamento, type=agência e conta",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "27737db504f64c409b3acb817c9282485dfcfcdc",
-      "name": "variant=tev, transaction=agendamento, type=agência e conta",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "01d6246a5de5a63ca86a66ebccdbd4726992def0",
-      "name": "variant=boleto, transaction=agendamento, type=agência e conta",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "7bee94d6b0d872e447da1386bab4448294920d12",
-      "name": "variant=guia, transaction=agendamento, type=darf",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "1ac4387bd4bd732f4ea797c00311b47fc739aef7",
-      "name": "variant=guia, transaction=agendamento, type=iptu",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "65df001fd7e799337f6dcea3f3a904a6fd8cdfec",
-      "name": "variant=guia, transaction=agendamento, type=ipva",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "5fd14b8b87a7a53f80e4d328f0609a83090d2231",
-      "name": "variant=guia, transaction=pagamento, type=iptu",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "920e14c1fa3ff1e4003673abc2c060ffa94e8214",
-      "name": "variant=guia, transaction=pagamento, type=ipva",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "1726be63f165b3076a86da45231081de3789ad80",
-      "name": "variant=tev, transaction=pagamento, type=agência e conta",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "1f8bee6a5cf522387ac5b20c51cc1e5d1f02b085",
-      "name": "variant=pix, transaction=pagamento, type=qr code dinâmico / copia e cola",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "22d2f9ba73af8e39a1ba3843825c6c934f2a5923",
-      "name": "variant=boleto, transaction=pagamento, type=boleto",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "2d8fdbd83df70d222fc1b1b9aab1a813085d994d",
-      "name": "variant=pix, transaction=pagamento, type=agência e conta",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "2fafee05664e82dd2f137e23505e0f8e925e17f0",
-      "name": "variant=pix, transaction=pagamento, type=devolução parcial",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "3441488d259514f467b5c12a03ade648efc6a81d",
-      "name": "variant=pix, transaction=pagamento, type=pix saque",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "413ee72dfe307f85ea46946fc569d7516f4b3059",
-      "name": "variant=pix, transaction=agendamento, type=agência e conta",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "79f0d720e197205f051b4269a5b8a0a0732270aa",
-      "name": "variant=guia, transaction=pagamento, type=darf",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "8752c9880894f6b3d40e96bf04414353162a6d49",
-      "name": "variant=pix, transaction=pagamento, type=cobrança",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "88e3b3cea9c43be2fa5c7317df235bbf0c174118",
-      "name": "variant=pix, transaction=pagamento, type=devolução integral",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "8b67b4cf3adcb7c6cd1b465606fda8647ba40690",
-      "name": "variant=pix, transaction=pagamento, type=pix troco",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "9ccfe48065870ed5d419fb871eb4b4bcf80a427d",
-      "name": "variant=pix, transaction=pagamento, type=qr code",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "a37a53c9bfb74a81fa256f0e4dd25d5358c66b54",
-      "name": "variant=ted, transaction=pagamento, type=agência e conta",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "a5742e78f2c56c290dc93135f81e9ce3aec54ad7",
-      "name": "variant=pix, transaction=agendamento, type=chave pix",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "ab150cf79c4c3663cc3d38433ce79c5717881e9f",
-      "name": "variant=pix, transaction=agendamento, type=cobrança",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "bd46828fee9490f26c1e0edfefe86996dce080c5",
-      "name": "variant=pix, transaction=agendamento, type=negado",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "c979650c30148566e8192c255e448184da50a7f7",
-      "name": "variant=pix, transaction=pagamento, type=chave pix",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "d341755016dcc97699912e0fb8e9387fd26cd93a",
-      "name": "variant=pix, transaction=agendamento, type=efetivado",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "ee0bc772606988bb195155500b34fb76f8711465",
-      "name": "variant=pix, transaction=agendamento, type=cancelado",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "f9921e2a321e6eae23dacd0d9bf7c89ca1472d54",
-      "name": "variant=pix, transaction=agendamento, type=qr code",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
-      "key": "f9bd34e7387346d3d06ac37e0673b23b5d82d51d",
-      "name": "variant=pix, transaction=agendamento, type=qr code dinâmico / copia e cola",
-      "description": "",
-      "containingFrame": "[dsc-ts] Print Receipt - Comprovantes"
-    },
-    {
       "key": "464719650cad0c920807d66cf753ca29d55b6bce",
       "name": "breakpoint=medium, type=system name + icon buttons, configuration=default",
       "description": "",
@@ -30997,6 +30703,312 @@
     {
       "key": "f93c82d4fe1548cc86b28867c546c6ec4935b9bb",
       "name": "breakpoint=large, type=search bar + multi account, configuration=search open",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a71ebcfe0a9849ebebcc2648011cb045f360dc1d",
+      "name": "[dsc] Illustration - Scheduling - Clock - Calendar - Date - Schedule - Agenda - Day - Month - Week",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c6b91bfcf5b6556eeb998c785fcdead7637d05ac",
+      "name": "[dsc] Illustration - Single File - Documents - Texts - Print",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "01d6246a5de5a63ca86a66ebccdbd4726992def0",
+      "name": "variant=boleto, transaction=agendamento, type=agência e conta",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "0b2d53d22030859fd7245d65470b4408b866b1fb",
+      "name": "device=mobile, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1726be63f165b3076a86da45231081de3789ad80",
+      "name": "variant=tev, transaction=pagamento, type=agência e conta",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1a2780396e3cd36992a2c1cf9acb1e74fbfce629",
+      "name": "pattern=excluir débito, device=desktop",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1ac4387bd4bd732f4ea797c00311b47fc739aef7",
+      "name": "variant=guia, transaction=agendamento, type=iptu",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "1f8bee6a5cf522387ac5b20c51cc1e5d1f02b085",
+      "name": "variant=pix, transaction=pagamento, type=qr code dinâmico / copia e cola",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "22d2f9ba73af8e39a1ba3843825c6c934f2a5923",
+      "name": "variant=boleto, transaction=pagamento, type=boleto",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "27737db504f64c409b3acb817c9282485dfcfcdc",
+      "name": "variant=tev, transaction=agendamento, type=agência e conta",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2bc4c772945f54e3e13b01566d3ab454161ec831",
+      "name": "count=2",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2d8fdbd83df70d222fc1b1b9aab1a813085d994d",
+      "name": "variant=pix, transaction=pagamento, type=agência e conta",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2eaf5347c90d10b2e7027d01eae3d3703e539b06",
+      "name": "pattern=senha, device=mobile",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "2fafee05664e82dd2f137e23505e0f8e925e17f0",
+      "name": "variant=pix, transaction=pagamento, type=devolução parcial",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3295b1740ac83cb48b6286e73c805d49ba0ab193",
+      "name": "variant=ted, transaction=agendamento, type=agência e conta",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "32973399cb39784a5bfef69b209a05e3adad1a54",
+      "name": "variant=single",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "3441488d259514f467b5c12a03ade648efc6a81d",
+      "name": "variant=pix, transaction=pagamento, type=pix saque",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "413ee72dfe307f85ea46946fc569d7516f4b3059",
+      "name": "variant=pix, transaction=agendamento, type=agência e conta",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "416b4bfc477fbec09aa166fd1d77d204d1745485",
+      "name": "pattern=criar grupo, device=mobile",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "5fd14b8b87a7a53f80e4d328f0609a83090d2231",
+      "name": "variant=guia, transaction=pagamento, type=iptu",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "62a86365507742f07fba15e0740c92510c4344f2",
+      "name": "orientation=landscape",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "65df001fd7e799337f6dcea3f3a904a6fd8cdfec",
+      "name": "variant=guia, transaction=agendamento, type=ipva",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "725c67be9c999a98e7cc0fe5aa1bede6695735df",
+      "name": "pattern=excluir débito, device=mobile",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "77169d303f9eb542d6d6c4ee046f5eafd7989f58",
+      "name": "count=4",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7922fd0802b838ad36257f04ffc8fbc752a77ffb",
+      "name": "variant=stack",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "79f0d720e197205f051b4269a5b8a0a0732270aa",
+      "name": "variant=guia, transaction=pagamento, type=darf",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "940f622dde34856805273ca843a8be80e86b9489",
+      "name": "pattern=forma de pagamento, device=desktop",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7bee94d6b0d872e447da1386bab4448294920d12",
+      "name": "variant=guia, transaction=agendamento, type=darf",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "7d5c30826258ff90ed730f790800a67a75623c67",
+      "name": "device=desktop, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8752c9880894f6b3d40e96bf04414353162a6d49",
+      "name": "variant=pix, transaction=pagamento, type=cobrança",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "88e3b3cea9c43be2fa5c7317df235bbf0c174118",
+      "name": "variant=pix, transaction=pagamento, type=devolução integral",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "8b67b4cf3adcb7c6cd1b465606fda8647ba40690",
+      "name": "variant=pix, transaction=pagamento, type=pix troco",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "920e14c1fa3ff1e4003673abc2c060ffa94e8214",
+      "name": "variant=guia, transaction=pagamento, type=ipva",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "9ccfe48065870ed5d419fb871eb4b4bcf80a427d",
+      "name": "variant=pix, transaction=pagamento, type=qr code",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a37a53c9bfb74a81fa256f0e4dd25d5358c66b54",
+      "name": "variant=ted, transaction=pagamento, type=agência e conta",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "a5742e78f2c56c290dc93135f81e9ce3aec54ad7",
+      "name": "variant=pix, transaction=agendamento, type=chave pix",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ab150cf79c4c3663cc3d38433ce79c5717881e9f",
+      "name": "variant=pix, transaction=agendamento, type=cobrança",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "b61847165baf904ba0384f3d665394e28bc42ce5",
+      "name": "device=mobile, show overlay=true",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "bd46828fee9490f26c1e0edfefe86996dce080c5",
+      "name": "variant=pix, transaction=agendamento, type=negado",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c4eb1ee5058582f89dc385600ffc23d10f7aac96",
+      "name": "count=5",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c85ef261ec925cf034e66ec4c9a0d33353c3b5c0",
+      "name": "pattern=forma de pagamento, device=mobile",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "c979650c30148566e8192c255e448184da50a7f7",
+      "name": "variant=pix, transaction=pagamento, type=chave pix",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d2b23fe93f53cfd4e415b806a77c151fd1f19e82",
+      "name": "device=desktop, show overlay=false",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d33a356aa9b4bf78681b82668ec58f66252b854e",
+      "name": "count=3",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d341755016dcc97699912e0fb8e9387fd26cd93a",
+      "name": "variant=pix, transaction=agendamento, type=efetivado",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "d9964bc945743c857454d4713b8252a67c21b8a7",
+      "name": "pattern=criar grupo, device=desktop",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "df41f1bf012267a4f5a80183a341de3a3dd47bc0",
+      "name": "orientation=portrait",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "e590a5a625ab10c0f928cff9615197ee86799472",
+      "name": "variant=interactive",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "ee0bc772606988bb195155500b34fb76f8711465",
+      "name": "variant=pix, transaction=agendamento, type=cancelado",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f9921e2a321e6eae23dacd0d9bf7c89ca1472d54",
+      "name": "variant=pix, transaction=agendamento, type=qr code",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "f9bd34e7387346d3d06ac37e0673b23b5d82d51d",
+      "name": "variant=pix, transaction=agendamento, type=qr code dinâmico / copia e cola",
       "description": "",
       "containingFrame": ""
     }
