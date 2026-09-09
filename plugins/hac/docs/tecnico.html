@@ -259,6 +259,12 @@ hr {
         <li><a href="#s6">Matching DSC → categoria de acessibilidade</a></li>
         <li><a href="#s7">Fluxos de criação de spec</a></li>
         <li><a href="#s8">Ordem de Tabulação</a></li>
+        <li><a href="#s8a">Contrato do subsistema de clone/overlay (referência)</a></li>
+        <li><a href="#s8b">Workspace de Área — card com 4 tabs, Ordem de Swipe</a></li>
+        <li><a href="#s8c">Ficha de Handoff — módulo apartado, inserção incremental</a></li>
+        <li><a href="#s8d">Swipe V3 — trilha direcional multi-ponto</a></li>
+        <li><a href="#s8e">Reorganização estrutural — artefatos soltos, specs com réplica</a></li>
+        <li><a href="#s8f">Ficha com 4 blocos horizontais</a></li>
         <li><a href="#s9">Contrato de mensagens (UI ↔ backend)</a></li>
         <li><a href="#s10">Escala da UI e <code>position</code> dos modais</a></li>
         <li><a href="#s11">Pendências conhecidas</a></li>
@@ -279,17 +285,21 @@ hr {
 
     <pre><code>hacData = {
   _schemaVersion: 1,
-  a11yAreas: [],        // Áreas Marcadas — agrupamento principal (accordion)
+  a11yAreas: [],         // Áreas Marcadas — card clicável, abre workspace própria (seção 8b)
   a11ySpecs: [],         // Especificações de acessibilidade (5 categorias)
   tabOrderItems: [],     // Ordem de Tabulação (por área, arquitetura de cópia de frame)
+  a11ySwipePaths: [],    // Trilha de Swipe (por área, N pontos — ver seção 8d)
   currentUser: null,     // Usuário Figma identificado automaticamente (sem login)
   projectOrigin: null,   // 'web' | 'mobile' | null — ver seção 3
+  activeSectionName: null, // nome da Section de specs ativa — ver seção 8
 }</code></pre>
 
     <p>Definido em <code>src/plugin/modules/core.js</code>, espelhado em variáveis globais
     soltas (<code>a11yAreas</code>, <code>a11ySpecs</code>, <code>tabOrderItems</code>) que são a fonte de
     verdade real durante a sessão — <code>hacData</code> é remontado a partir delas só na
-    hora de persistir (<code>saveToStorage()</code>).</p>
+    hora de persistir (<code>saveToStorage()</code>). <code>a11ySwipePaths</code> é a EXCEÇÃO — vive
+    só dentro de <code>hacData</code>, sem variável global espelhada (todo ponto de leitura
+    acessa <code>hacData.a11ySwipePaths</code> diretamente).</p>
 
     <p><code>_schemaVersion</code> continua fixo em <code>1</code> desde a origem do plugin — todas as
     mudanças de schema tratadas até aqui (variantes mobile, <code>projectOrigin</code>)
@@ -299,7 +309,10 @@ hr {
     <h3><code>a11yAreas[]</code></h3>
     <p>Selo numerado de seção/tela marcado no canvas. Campos: <code>id</code>, <code>number</code>,
     <code>label</code>, <code>targetNodeId</code>. Não tem campo <code>origin</code> próprio — a origem
-    web/mobile deixou de ser calculada por área (ver seção 3).</p>
+    web/mobile deixou de ser calculada por área (ver seção 3). Na UI, cada área é
+    renderizada como <strong>card clicável</strong> na listagem principal (não mais accordion
+    expansível in-line) — clicar abre a workspace própria da área, com 4 tabs. Ver
+    seção 8b, "Workspace de Área", para o desenho completo.</p>
 
     <h3><code>a11ySpecs[]</code></h3>
     <p>Cada spec pertence a uma categoria (<code>a11yType</code>: <code>elemento</code> | <code>estrutura</code> |
@@ -320,8 +333,21 @@ hr {
     de uma Section dedicada no canvas, separada da Section de specs — ver
     seção 8.</p>
 
+    <h3><code>a11ySwipePaths[]</code></h3>
+    <p>Trilha direcional de N pontos por área (substituiu <code>swipeOrderItems[]</code>,
+    depois <code>a11ySwipeFlows[]</code> — histórico completo na seção 8d). Schema:
+    <code>{id, points: [{nodeId, nodeName}, ...], areaId, createdAt}</code>. Exclusivo de
+    projetos mobile.</p>
+
     <h3><code>projectOrigin</code></h3>
     <p>Ver seção 3 — origem web/mobile do arquivo inteiro, não por área.</p>
+
+    <h3><code>activeSectionName</code></h3>
+    <p>Ver seção 8 — nome da Section de specs ATIVA no canvas nesta sessão do
+    arquivo. <code>null</code> = ainda não escolhida explicitamente, resolve pro nome
+    fixo original sem migração. Só ganha valor quando o designer opta por
+    "Iniciar nova Section" no aviso de documentação já existente, ao Marcar
+    Área.</p>
 
     <h3>Persistência</h3>
     <p><code>saveToStorage()</code> remonta <code>hacData</code> a partir das variáveis globais e envia
@@ -339,9 +365,11 @@ hr {
     nunca salvo perde o progresso da sessão — preferível a corromper
     silenciosamente dados de outro projeto.</p>
 
-    <p><code>clear-cache</code> reseta <code>a11yAreas</code>/<code>a11ySpecs</code>/<code>tabOrderItems</code> <strong>e também
-    <code>projectOrigin</code></strong> — decisão deliberada: "Limpar Cache" deve simular um
-    arquivo novo por completo, incluindo perguntar a plataforma de novo.
+    <p><code>clear-cache</code> reseta <code>a11yAreas</code>/<code>a11ySpecs</code>/<code>tabOrderItems</code>/<code>a11ySwipePaths</code>
+    <strong>e também <code>projectOrigin</code>/<code>activeSectionName</code></strong> — decisão deliberada: "Limpar Cache"
+    deve simular um arquivo novo por completo, incluindo perguntar a
+    plataforma de novo e voltar a criar Áreas na Section fixa original, não
+    numa versionada que o designer possa ter escolhido antes.
     <code>currentUser</code> é preservado (identidade/configuração de ambiente, não
     conteúdo do projeto).</p>
 
@@ -359,6 +387,21 @@ hr {
     <p>Regra geral: <strong>a origem (web/mobile) filtra tudo</strong> — não só o marcador
     visual e o card de spec, mas também qual catálogo de componentes é
     sugerido/consultado, manual ou automático. Ver seção 6.</p>
+
+    <p><strong>Modal de escolha de categoria filtra por origem (2026-09-03).</strong> A
+    documentação oficial da lib "Design Acessível | Super App" (confirmada por
+    screenshot real do usuário) define explicitamente só <strong>3 categorias</strong>
+    mobile: Elementos e Imagens, Título e Elemento Decorativo — sem nenhuma
+    menção a Estrutura da Página ou Informações Adicionais no contexto mobile,
+    o que bate com a tabela acima. <code>#a11y-category-picker-modal</code> (usado
+    tanto por "+ Nova spec" quanto pela troca de categoria no wizard de
+    revisão) esconde os botões <code>#a11y-category-btn-estrutura</code> e
+    <code>#a11y-category-btn-informacoes</code> quando
+    <code>getA11yProjectOrigin() === 'mobile'</code>
+    (<code>_applyA11yCategoryPickerOriginFilter()</code>, chamada nos dois pontos de
+    abertura antes de <code>openModal</code>, sempre reavaliando o estado atual).
+    Origem <code>'web'</code> ou ainda não definida (<code>null</code>) continua mostrando as
+    5 normalmente.</p>
 
     <h3>Diferenças reais web vs. mobile por categoria</h3>
 
@@ -454,6 +497,51 @@ hr {
     específica — a resposta não sobrescreve <code>hacData.projectOrigin</code> (só o
     campo local usado para retropreencher Título/Decorativo daquela
     varredura). Não é bug — é a única ação que legitimamente pergunta de novo.</p>
+
+    <p><strong>Fase 4 (2026-09-04): escolha movida para a Home, em 2 etapas.</strong> Motivo: o
+    modal educativo "Entendendo as categorias" não sabia a origem no momento
+    em que podia ser aberto, e resolvia isso misturando texto de web e mobile
+    no mesmo parágrafo. A Home ganhou 2 telas internas
+    (<code>#a11y-home-step-origin</code>/<code>#a11y-home-step-summary</code>,
+    alternadas por <code>_renderA11yHomeOriginPicker</code>): a primeira,
+    objetiva, só com descrição curta do plugin + escolha Web/Mobile; a
+    segunda, só depois de escolhida, com o resumo do fluxo (os 3 cards que
+    antes eram todo o conteúdo da Home) e o botão "Começar". Arquivo já
+    configurado pula direto pra segunda etapa.
+    <code>ensureA11yProjectOriginThen</code> continua como fallback para
+    arquivos legados sem origem definida.</p>
+
+    <p><code>setA11yProjectOrigin</code> passa a chamar
+    <code>_refreshUiForProjectOrigin()</code> a cada mudança de origem — atualiza o
+    picker da Home, o título do header secundário ("Documentando projeto
+    Web/Mobile" no lugar do antigo "Acessibilidade" fixo), o filtro de
+    categorias do seletor de Nova Spec, e o novo filtro do modal "Entendendo
+    as categorias" (que passa a esconder "Estrutura da Página"/"Informações
+    Adicionais" no mobile e alternar o texto das duas categorias com
+    diferença real entre plataformas, nunca mais os dois ao mesmo tempo).
+    Trocar a plataforma depois atualiza tudo in-place, sem sair da tela.</p>
+
+    <p>Com o título do header mais longo, os 3 ícones de ação (rever passo a
+    passo, guia de categorias, recolher/expandir todos) foram recolhidos num
+    dropdown "Mais ações" (<code>toggleA11yMoreActionsMenu</code>) — só "Voltar" e
+    "Marcar Área" continuam diretos no header.</p>
+
+    <p><strong>Fase 5 (2026-09-04): <code>hacData.projectLib</code>, granularidade real
+    por lib.</strong> O hac já reconhece 4 libs de produto distintas
+    (<code>refs/_manifest.json</code>): <code>web-angular-react</code> (legado),
+    <code>super-dsc-web</code> (nova, coexiste com o legado na mesma tela),
+    <code>super-app</code> (mobile), <code>dsc-android</code> (mobile) — e o matching
+    de componente já calcula essa identidade granular (<code>match.sourceLib</code>,
+    <code>_resolveDscComponentA11yMatch</code>). <code>projectLib</code> ('web-angular-react'
+    | 'super-dsc-web' | 'super-app' | null) expõe isso na UI sem substituir
+    <code>projectOrigin</code>, que continua sendo a fonte de verdade da lógica
+    binária madura (formulário mobile/desktop, selos, filtro de categorias).
+    <code>setA11yProjectLib</code> grava os dois juntos sempre, via
+    <code>A11Y_LIB_TO_ORIGIN</code>. Home lista as 3 libs escolhíveis
+    (<code>dsc-android</code> reconhecida mas fora da escolha); header mostra o
+    rótulo exato; onboarding ganha uma 2ª camada específica por lib
+    (<code>ONBOARDING_TOOLS['lib-*']</code>, <code>onboarding.js</code>), disparada uma vez
+    logo após a escolha.</p>
 
     <h2 id="s4">4. <code>needsReview</code></h2>
 
@@ -591,11 +679,26 @@ hr {
     definida do projeto).</p>
 
     <h3>Detecção Automática (wizard sequencial de revisão)</h3>
+
+    <p><strong>Ponto de entrada migrado pra tab Leitor de Tela (2026-09-04-g)</strong>:
+    antes, a escolha "Detecção Automática vs. Manual" era feita no PRÓPRIO
+    modal de criação da Área (<code>#a11y-area-modal</code>, radio "Como documentar
+    esta área?"), disparando a varredura automaticamente no momento de marcar a
+    área. Isso saiu do modal — "Marcar Área" agora só cria a área, sem escolha
+    nem varredura. O Mapeamento Automático virou um botão ("ou usar Mapeamento
+    Automático") dentro da tab Leitor de Tela, ao lado do fluxo manual de criar
+    spec — reaproveita <code>openA11yPostAreaDetectModal(area)</code> (já existia,
+    usado antes só pra retomar/reescanear uma área já documentada) via um novo
+    wrapper <code>_startA11yMappingFromLeitorTab(areaId)</code>. <code>autoDetect</code>
+    não é mais enviado por <code>confirmA11yArea</code>/<code>create-a11y-area</code>.</p>
+
     <p>Todo item detectado — sem exceção de categoria — passa por
     configuração/confirmação individual antes de virar spec real:</p>
 
     <ol>
-      <li>Tela de entrada: escolher a Área de destino, ver contagem agregada.</li>
+      <li>Tela de entrada: escolher a Área de destino (ou já vir com a área
+      corrente pré-selecionada, quando disparado pelo botão da tab Leitor de
+      Tela), ver contagem agregada.</li>
       <li>Um snapshot em memória é montado (nunca persistido, nunca escreve na
       fonte bruta de detecções).</li>
       <li>Cada item abre o formulário normal, com indicador de progresso "Item N
@@ -646,6 +749,63 @@ hr {
       Layers, com cópias inteiras de tela.</li>
     </ul>
 
+    <h3>Section versionada — reconhecimento de documentação existente (2026-09-03)</h3>
+    <p><strong>Motivo de negócio</strong>: um designer pode abrir um arquivo que outro
+    designer já documentou por completo. Na prática isso quase sempre
+    significa duplicar o frame principal e especificar essa cópia — não
+    "documentar por cima" da estrutura antiga. Sem tratamento, a nova Área
+    cairia dentro da MESMA Section única, misturando visualmente (no painel
+    de Layers) o handoff antigo com o novo.</p>
+
+    <p>O nome da Section de specs deixou de ser só a constante fixa
+    <code>A11Y_SECTION_NAME</code> — <code>hacData.activeSectionName</code> guarda o nome ATIVO
+    escolhido pelo designer nesta sessão (mesmo padrão de campo simples de
+    configuração de projeto que <code>projectOrigin</code>; <code>null</code> resolve pro nome
+    fixo original, sem nenhuma migração). <code>getA11yActiveSectionName()</code>/
+    <code>setA11yActiveSectionName()</code> (<code>accessibility.js</code>) são os helpers
+    análogos a <code>getA11yProjectOrigin()</code>/<code>setA11yProjectOrigin()</code>.</p>
+
+    <p><code>_getOrCreateA11ySection(sectionName)</code>/<code>_reparentIntoA11ySection(node,
+    sectionName)</code> (<code>code.js</code>) passam a aceitar o nome como parâmetro, com
+    <code>A11Y_SECTION_NAME</code> como default quando omitido/vazio.
+    <code>_getOrCreateTabOrderSection</code>/<code>_reparentIntoTabOrderSection</code> aplicam o
+    MESMO sufixo de versão à Section de Ordem de Tabulação
+    (<code>_extractA11ySectionVersionSuffix</code>), mantendo as duas Sections de uma
+    mesma geração de documentação juntas e coerentes. Os handlers que criam
+    nós dentro da Section (<code>create-a11y-area</code>, <code>create-unified-spec</code> via
+    <code>opts.sectionName</code>, <code>start-tab-order-copy</code>,
+    <code>generate-tab-order-from-layers</code>, <code>apply-tab-order-to-canvas</code>) recebem
+    <code>sectionName</code> no payload, com fallback pro nome fixo se ausente.
+    <code>_collectA11yOccupiedBounds</code> (cálculo de "faixa livre" pra novas cópias
+    de Ordem de Tabulação) varre TODAS as Sections com o prefixo base
+    existentes na página — não só a ativa — pra nunca sobrepor documentação
+    de handoffs antigos.</p>
+
+    <p><code>_computeNextA11ySectionName()</code> (<code>code.js</code>) varre as Sections já
+    existentes na página com o prefixo base, extrai o sufixo de versão de
+    cada uma (sem sufixo = v1 implícito, a Section original) e devolve o
+    próximo número livre (<code>"hac — Especificações de Acessibilidade v2"</code>,
+    <code>v3</code>...).</p>
+
+    <p><strong>Fluxo de reconhecimento</strong>: novo handler
+    <code>get-a11y-documentation-status</code>, consultado por <code>openA11yAreaModal</code>
+    toda vez que o modal "Marcar Área" abre (fonte de verdade é sempre o
+    CANVAS, não só o array <code>a11yAreas</code> em memória — cobre Section de uma
+    sessão anterior do plugin). Se houver documentação existente, o mesmo
+    modal <code>a11y-area-modal</code> (sem modal novo) revela um bloco de aviso com
+    o nome/contagem da Section atual e dois botões: <strong>"Continuar na Section
+    atual"</strong> (default, comportamento idêntico a antes) e <strong>"Iniciar nova
+    Section"</strong> (a troca real de <code>hacData.activeSectionName</code> só se efetiva
+    ao confirmar a área — cancelar o modal não deixa a Section ativa trocada
+    silenciosamente). Arquivo vazio (nenhuma Área ainda) = aviso nunca
+    aparece, modal funciona exatamente como antes desta feature.</p>
+
+    <p><strong>Fora de escopo</strong> (decisão explícita): restaurar/reverter pra uma
+    Section antiga como ativa; comparar/navegar entre gerações na listagem
+    do plugin (a listagem principal de Áreas continua mostrando todas as
+    áreas de todas as Sections juntas — a separação é só no canvas/Layers);
+    aviso automático no boot do plugin.</p>
+
     <h3>Réplica da área criada e focada antes de marcar</h3>
     <p>Regra válida para os dois modos (manual e automático): a primeira coisa
     que acontece é clonar a Área Marcada para um espaço livre do canvas — sem
@@ -679,12 +839,21 @@ hr {
     group, accordion, breadcrumb, listas, link). É uma sugestão, não uma
     trava — o designer ainda revisa e edita a lista antes de aplicar.</p>
 
-    <h3>Fluxo de revisão obrigatório</h3>
+    <h3>Fluxo de revisão — selos reais incrementais (2026-09-03)</h3>
     <p>Nenhum selo é desenhado sobre os elementos reais em nenhum dos dois modos
-    — clique manual e varredura automática só populam uma lista pendente em
-    memória, revisável (drag-and-drop para reordenar, exclusão individual) no
-    modal. Só "Aplicar no Canvas" desenha de fato, sempre sobre a mesma cópia
-    clonada já criada/focada no início do fluxo.</p>
+    — sempre sobre a mesma cópia clonada já criada/focada no início do fluxo.
+    Cada item que entra na lista pendente (clique manual ou item do scan
+    automático) já desenha seu selo REAL na cópia na hora — nunca em lote,
+    nunca redesenhando o que já existe. Apagar um item da lista apaga o selo
+    real correspondente e renumera os remanescentes; reordenar por
+    drag-and-drop renumera os selos reais existentes (nunca recria). O botão
+    final do modal ("Concluir", antes "Aplicar no Canvas") não desenha mais
+    nada — só persiste os itens já desenhados e fecha o modal.</p>
+
+    <p>Uma primeira tentativa de resolver esse mesmo problema via "selos
+    fantasma" (preview semitransparente redesenhado do zero a cada mudança na
+    lista) foi implementada e revertida no mesmo dia — funcionalmente
+    correta, mas considerada complexa demais pelo ganho obtido.</p>
 
     <h3>Selo de ITEM de tabulação vs. selo de ÁREA — dois componentes diferentes</h3>
 
@@ -705,6 +874,785 @@ hr {
     reaproveitado tanto para Área quanto para item de tabulação nesse caso
     (assimetria real entre as duas libs, não um bug do plugin).</p>
 
+    <h3>Modo manual volta a ser EM LOTE (2026-09-04-e) — reversão parcial e deliberada do modelo incremental</h3>
+
+    <p>A vertical de acessibilidade trouxe uma proposta nova pro modo MANUAL (o
+    automático não muda — ver abaixo): o designer seleciona a trilha inteira em
+    sequência primeiro, e só ao confirmar no final a ordem é de fato
+    criada/desenhada no canvas — voltando ao espírito do modelo anterior a
+    2026-09-03, mas SEM reintroduzir o bug que motivou aquela mudança.</p>
+
+    <p><strong>O que muda</strong>: <code>handleTabOrderSelectionChanged</code> deixa de chamar
+    <code>_tabOrderDrawPendingBadge</code> a cada clique — cada clique só empilha o
+    item na lista pendente (<code>canvasId: null</code>, <code>drawing: false</code>) e
+    mantém o highlight no canvas (<code>highlight-tab-order-copy-node</code>, não
+    removido — é o único feedback visual enquanto a trilha está sendo montada,
+    sem nenhum selo real ainda). <code>applyTabOrderToCanvas</code> (botão "Criar
+    ordem de tabulação", renomeado de "Concluir") passa a ser <code>async</code> e é
+    ELA quem desenha agora: itera a lista pendente inteira chamando
+    <code>await _tabOrderDrawPendingBadgeAwaitable(tempId)</code> em sequência
+    (mesmo helper já usado pelo scan automático, reaproveitado sem duplicar),
+    mostrando progresso ("Desenhando N de M...") e só persiste em
+    <code>tabOrderItems</code> os itens que de fato ganharam <code>canvasId</code> — itens
+    que falharem ficam de fora, com aviso ao designer.</p>
+
+    <p><strong>Por que isso não reintroduz o bug de 2026-09-03</strong>: aquele bug
+    era "apagar/reordenar um item ANTES de confirmar não refletia nada no
+    canvas", porque NENHUM selo existia até "Aplicar". Isso continua
+    tecnicamente verdade aqui — mas agora é o comportamento ESPERADO, não um
+    efeito colateral: o designer revisa/reordena a trilha inteira (a lista
+    pendente já mostra a numeração correta) antes de qualquer selo nascer; o
+    highlight a cada clique já indica visualmente o que foi selecionado.
+    <code>_tabOrderRenumberPendingCanvas</code> nunca dispara
+    <code>renumber-tab-order-items</code> durante essa montagem (nenhum item tem
+    <code>canvasId</code> ainda) — só volta a mandar mensagem real pro backend no
+    fluxo de "Atualizar" sobre uma ordem já aplicada.</p>
+
+    <p><strong>O que NÃO muda</strong>: o modo AUTOMÁTICO ("Gerar Automaticamente",
+    renomeado pra "Mapeamento Automático" — ver nota de nomenclatura abaixo) já
+    desenhava em lote sequencial desde sempre
+    (<code>addTabOrderItemsFromLayers</code>, mesmo
+    <code>_tabOrderDrawPendingBadgeAwaitable</code> reaproveitado agora pelo
+    manual) — zero mudança de lógica nele.</p>
+
+    <p><strong>Hierarquia visual — manual vira o caminho primário, automático o
+    secundário</strong> (pedido explícito da vertical: o automático deve ser a
+    opção secundária de propósito, para que o designer aprenda o fluxo manual
+    primeiro): "Iniciar Ordem de Tabulação" continua botão preenchido
+    (primário); "Gerar Automaticamente"/"Mapeamento Automático" deixa de ser um
+    botão outline do mesmo tamanho e vira um link/texto secundário e menor logo
+    abaixo ("ou usar Mapeamento Automático") — nos dois lugares onde esse par
+    de botões existe (<code>_a11yWorkspaceTabTabulacao</code>, e o bloco legado
+    usado pelo bucket "Sem área").</p>
+
+    <p><strong>Nomenclatura corrigida (2026-09-04-e/g)</strong>: "Gerar Handoff
+    Automatizado" virou <strong>"Mapeamento Automatizado"</strong> (modal de resumo do
+    lote de detecção) e "Gerar Automaticamente" (Tabulação) virou
+    <strong>"Mapeamento Automático"</strong> — motivo: nenhum desses fluxos produz um
+    "handoff" pronto nem uma "geração" final — o resultado sempre passa por
+    revisão do designer antes de virar spec ou ordem aplicada. Nunca usar
+    "handoff"/"gerar" pra descrever esses fluxos automáticos daqui em diante.</p>
+
+    <h3>Acrescentar itens a uma Ordem de Tabulação já existente (regra de produto)</h3>
+
+    <p>O card de uma Área já documentada mostra "+ Adicionar item"
+    (<code>startTabOrderAddItemsFromCard</code>), disponível junto da lista
+    de itens já aplicados — tanto para uma ordem criada originalmente pelo
+    fluxo manual quanto pelo Mapeamento Automático, sem distinção entre os
+    dois. Regra de comportamento: um item novo (manual ou automático) SEMPRE
+    entra como item ADICIONAL no fim da sequência atual, nunca substitui os
+    itens já existentes — a única forma de sobrepor uma ordem já criada é
+    apagar tudo e refazer do zero. Duas ações têm timing diferente:
+    <strong>excluir</strong> (<code>deleteTabOrderItem</code>) aplica a
+    renumeração no canvas IMEDIATAMENTE, sem precisar de nenhum clique
+    extra; <strong>reordenar arrastando</strong> na lista só atualiza a
+    posição em memória — o designer precisa clicar em "Atualizar"
+    (<code>updateTabOrderNumbering</code>) para a nova numeração ser de fato
+    recalculada e desenhada de volta no canvas
+    (<code>renumber-tab-order-items</code>). Vale igualmente para projetos mobile e
+    web — a origem do projeto (<code>hacData.projectOrigin</code>) só decide
+    qual COMPONENTE de selo é desenhado (<code>_createTabOrderBadge</code>),
+    nunca a mecânica de adicionar/editar/excluir itens, que é idêntica nos
+    dois casos.</p>
+
+    <p><strong>"+ Adicionar item" aceita shift+clique/marquise pra vários de
+    uma vez</strong> (2026-09-08): antes desta correção, o botão só aceitava
+    1 elemento por vez — a 1ª contagem>0 do acumulador silencioso já
+    disparava a leitura (<code>handleTabOrderAccumulatedCountChanged</code>),
+    então um shift+clique em vários elementos de uma vez perdia todos menos
+    o primeiro. Agora reaproveita a MESMA mecânica de acumulação silenciosa
+    da captura inicial: o 1º clique em "Adicionar item" arma a captura, o
+    botão vira "Concluir seleção (N)" com a contagem ao vivo, e só a leitura
+    do acumulado (<code>get-tab-order-accumulated-selection</code>) acontece
+    quando o designer clica nele de novo
+    (<code>finishTabOrderAddItemWait</code>) — nunca automaticamente. O
+    resultado é sempre ANEXADO ao final da lista pendente existente
+    (<code>handleTabOrderAccumulatedSelectionResult</code>, branch de modal
+    já aberto), nunca substituindo os itens já ali.</p>
+
+    <p><strong>Bug real corrigido (2026-09-08)</strong>: <code>startTabOrderAddItemsFromCard</code>
+    era a única das 3 entradas do fluxo (manual do zero, Mapeamento
+    Automático, e esta) que nunca declarava
+    <code>window._tabOrderDeclaredOrigin</code> antes de desenhar o item
+    novo — <code>draw-tab-order-badge</code> manda essa variável pro backend
+    como <code>a11yOrigin</code>, com fallback <code>'web'</code> quando não
+    declarada. Em projeto mobile, todo item acrescentado por este caminho
+    caía no fallback errado e importava o componente desktop "[a11y] Item
+    Number" em vez do "[hac mob base]" que os demais itens da mesma ordem
+    usam (sintoma real: selo visualmente diferente dos outros, alongado com
+    conector). Em projeto web o bug nunca aparecia (o fallback coincidia com
+    o componente certo), o que o manteve invisível até esta sessão. Corrigido
+    lendo a origem real do projeto via <code>ensureA11yProjectOriginThen</code>
+    (mesmo padrão já usado pelos outros 2 fluxos) antes de qualquer selo novo
+    ser desenhado.</p>
+
+    <h2 id="s8a">8a. Contrato do subsistema de clone/overlay (referência)</h2>
+
+    <p><strong>O que é isto</strong>: esta seção é uma REFERÊNCIA atemporal,
+    não um histórico — reúne, num único lugar, o contrato que 4 features
+    diferentes (Ordem de Tabulação, Swipe, Especificações/Leitor de Tela,
+    Ficha de Handoff) já seguem hoje ao desenhar sobre uma CÓPIA de trabalho
+    da Área, nunca sobre o frame original. O histórico de bugs reais que
+    motivou cada regra abaixo está narrado na seção <a href="#s8e">8e</a>;
+    aqui fica só o contrato em si, para consulta rápida antes de tocar
+    qualquer uma das funções citadas ou de adicionar um 5º consumidor.</p>
+
+    <p><strong>Quem cria o clone, por feature</strong>:</p>
+    <ul>
+      <li><strong>Ordem de Tabulação</strong> —
+      <code>_createTabOrderCloneForArea</code>.</li>
+      <li><strong>Swipe</strong> — <code>_createSwipePathCloneForArea</code>
+      (cache próprio, nunca compartilha clone/Map com Tabulação mesmo
+      quando as duas features documentam a mesma Área).</li>
+      <li><strong>Especificações (Leitor de Tela)</strong> —
+      <code>_createSpecCloneForArea</code>.</li>
+      <li><strong>Ficha de Handoff</strong> — <code>_cloneAreaRootIntoFicha</code>,
+      a única das 4 que clona sempre a partir do frame ORIGINAL da Área,
+      nunca de um clone de trabalho já existente (Tabulação/Swipe/Specs) —
+      a Ficha é um artefato de export à parte, não uma continuação do
+      canvas de trabalho.</li>
+    </ul>
+
+    <p><strong>Quem é dono de cada cache de clone ativo em memória</strong>
+    (todos <code>Map&lt;areaId, nodeMap&gt;</code>, nunca uma variável global
+    única — cada Área mantém seu próprio clone ativo por feature, sem
+    colisão entre Áreas trabalhadas na mesma sessão):</p>
+    <ul>
+      <li><code>_activeTabOrderCloneMaps</code> — escrito por
+      <code>_resolveActiveTabOrderClone</code>/<code>_createTabOrderCloneForArea</code>;
+      lido por todo handler de Tabulação (<code>draw-tab-order-badge</code>,
+      <code>highlight-tab-order-copy-node</code>, etc.) e também pela
+      tradução de nodeId do Swipe (abaixo). Recriado quando o clone em
+      memória não existe mais no canvas (<code>.removed</code> ou fora da
+      página atual).</li>
+      <li><code>_activeSwipePathCloneMaps</code> — mesmo padrão, escopo só
+      da Trilha de Swipe.</li>
+      <li><code>_activeSpecCloneMaps</code> — mesmo padrão, escopo só de
+      Especificações.</li>
+    </ul>
+
+    <p><strong>Invariantes — checklist antes de mexer neste subsistema</strong>:</p>
+    <ul>
+      <li><strong>Overlay é sempre GROUP, nunca FRAME</strong>
+      (<code>_getOrCreateCloneOverlayGroup</code>) — GROUP nunca tem
+      <code>clipsContent</code> nem Auto Layout, o que o torna
+      estruturalmente imune ao bug de conteúdo "vazando" sendo recortado.</li>
+      <li><strong>Overlay nunca pode ficar vazio</strong> — mantém um
+      retângulo seed permanente (<code>visible=false, locked=true</code>),
+      nunca removido: um GROUP que perde o último filho é apagado
+      automaticamente pelo Figma, levando junto qualquer artefato que
+      ainda estivesse "dentro" dele do ponto de vista do JavaScript.</li>
+      <li><strong>Nunca reparentar artefato para DENTRO do clone</strong>
+      (selo de Tabulação, linha de Swipe, specGroup) — sempre no grupo-
+      overlay IRMÃO do clone, via <code>_reparentIntoAreaGroup</code>.</li>
+      <li><strong>Clone de INSTANCE sempre precisa de
+      <code>detachInstance()</code></strong> antes de qualquer
+      <code>appendChild</code> — a Plugin API proíbe <code>appendChild</code>
+      numa INSTANCE; comum quando a Área é marcada sobre uma tela publicada
+      da lib "DSC | Super App".</li>
+      <li><strong><code>layoutPositioning = 'ABSOLUTE'</code></strong> só
+      pode ser setado DEPOIS que o node já tem <code>parent</code> com
+      <code>layoutMode !== 'NONE'</code> — e precisa ser setado sempre que
+      esse pai tiver Auto Layout, incluindo o próprio grupo-overlay (não só
+      o artefato desenhado dentro dele:
+      <code>_setCloneOverlayGroupAbsolutePositioning</code>). Achado mais
+      recente deste subsistema: a Ficha de Handoff foi o primeiro consumidor
+      cujo clone vive dentro de um pai com Auto Layout — sem este ajuste, o
+      overlay participa do fluxo do Auto Layout como filho comum e se
+      estica para cobrir a distância até coordenadas absolutas distantes
+      (ex.: uma trilha de Swipe cruzando a tela original).</li>
+      <li><strong>Tradução de nodeId entre clones de features
+      DIFERENTES</strong> nunca é implícita — um id de node dentro do clone
+      de Tabulação não existe no clone do Swipe (são clones distintos, sem
+      id em comum). Quando uma feature reaproveita uma sequência mapeada
+      por outra (ex.: "Gerar automaticamente" do Swipe usando a Ordem de
+      Tabulação já feita), o id precisa ser traduzido de volta pro ORIGINAL
+      antes de consultar o nodeMap da segunda feature
+      (<code>_resolveOriginalNodeIdFromTabOrderClone</code>).</li>
+      <li><strong>Toda leitura de posição usa <code>absoluteBoundingBox</code>/
+      <code>absoluteRenderBounds</code></strong>, nunca <code>node.x</code>/
+      <code>node.y</code> crus quando o node pode estar dentro de uma
+      Section ou de outro container — x/y são relativos ao PAI, não à
+      página.</li>
+    </ul>
+
+    <p><strong>Antes de adicionar um 5º consumidor</strong> deste
+    subsistema: confirme explicitamente se o pai do clone terá Auto Layout
+    (se sim, <code>_setCloneOverlayGroupAbsolutePositioning</code> já
+    cobre — só chamar) e se existe algum <code>clipsContent</code> novo no
+    caminho entre o clone-raiz e onde o artefato vai nascer. Não assuma que
+    as premissas dos 4 consumidores atuais bastam — cada um dos 7-8 bugs
+    reais que motivaram este contrato (histórico completo em
+    <a href="#s8e">8e</a>) só apareceu quando um consumidor novo violou uma
+    premissa que os anteriores nunca tinham testado.</p>
+
+    <p><strong>Candidata futura, ainda não implementada</strong>: as 3
+    funções de tradução de nodeId hoje quase idênticas
+    (<code>_resolveOriginalNodeIdFromTabOrderClone</code>,
+    <code>_resolveTabOrderCloneSelectionToOriginalId</code>,
+    <code>_resolveSwipePathCloneSelectionToOriginalId</code>) poderiam virar
+    uma única abstração parametrizada por feature — cada uma resolve
+    hoje, de forma independente, o mesmo problema geral de "id no clone →
+    id no original". Registrado aqui como oportunidade, não como pendência
+    bloqueante.</p>
+
+    <h2 id="s8b">8b. Workspace de Área (2026-09-04): card → workspace com 4 tabs, Ordem de Swipe</h2>
+
+    <p>Cada Área Marcada deixou de ser um <strong>accordion</strong> que expandia in-line
+    na listagem principal (revelando Ordem de Tabulação + specs por categoria
+    por dentro) e virou um <strong>card clicável</strong>. Clicar no card abre uma
+    <strong>workspace</strong> própria da área — a primeira sub-navegação real do hac:
+    antes só existiam 2 views top-level (<code>view-home</code>/<code>view-specifications</code>),
+    trocadas via <code>classList.toggle('active')</code> em <code>navigate()</code> (<code>core.js</code>). A
+    nova view <code>view-area-workspace</code> reaproveita esse mesmo mecanismo — como
+    <code>navigate()</code> não aceita parâmetro extra, <code>openA11yAreaWorkspace(areaId)</code>
+    guarda <code>window._a11yWorkspaceAreaId = areaId</code> ANTES de chamar
+    <code>navigate('view-area-workspace')</code>, e a lógica de render lê essa variável.
+    <code>navigateBackToA11yList()</code> volta pra <code>view-specifications</code> e limpa o
+    estado. <code>_a11ySemAreaAccordionEl</code> (bucket "Sem área", specs órfãs)
+    <strong>não muda</strong> — continua accordion read-only, não virou card clicável.</p>
+
+    <p><strong>4 tabs</strong>, na ordem do fluxo real de trabalho — mapeamento fechado
+    depois de várias rodadas de correção durante o planejamento, inclusive
+    DEPOIS da primeira versão publicada desta view no mesmo dia (ver nota
+    de histórico abaixo):</p>
+
+    <ol>
+      <li><strong>Tabulação</strong> — o que já existia (Ordem de Tabulação, seção 8), só
+      mudou de contêiner (saiu do accordion, entrou na tab). Nenhuma mudança
+      de comportamento.</li>
+      <li><strong>Swipe</strong> — NOVO, funcionalidade real (não placeholder), <strong>exclusiva
+      mobile</strong>, com badge visível "Em fase de testes" (experimental, ainda
+      não validada em campo). Ver detalhe técnico abaixo.</li>
+      <li><strong>Leitor de Tela</strong> — a tab de TRABALHO real: criar/editar/excluir cada
+      spec, reaproveitando os sub-accordions por categoria
+      (<code>_a11yCategoryAccordionEl</code>, as 5 categorias da seção 2) e o bloco "Não
+      Documentados". Botão "Nova spec" também disponível aqui, além do
+      atalho direto no card da listagem principal. Se chegou aqui via
+      <code>window._a11yWorkspaceFocusSpecId</code> (vindo do botão "Editar" do dashboard
+      da tab Handoff), expande automaticamente o sub-accordion certo — a
+      variável é consumida e zerada na própria renderização.</li>
+      <li><strong>Handoff</strong> — DASHBOARD de consolidação (sem formulário de edição
+      próprio): status agregado de Tabulação (contagem de itens), Swipe
+      (contagem, ou "Não aplicável — projeto web" quando
+      <code>projectOrigin !== 'mobile'</code>) e specs documentadas (reaproveitando a
+      antiga listagem enxuta — Accessibility Label + Descrição — como
+      <code>_a11yWorkspaceHandoffSpecsSummaryHtml</code>, cujo botão "Editar" leva pra tab
+      Leitor de Tela). <strong>Não tem mais botão de geração próprio</strong> — desde a
+      entrega da Ficha de Handoff (seção 8c), a ação de montar o artefato
+      final é 100% distribuída nos botões "Inserir/Atualizar ficha" das 3
+      abas de trabalho; a tab Handoff mostra 3 cards de status e um atalho
+      "Ver ficha no canvas".</li>
+    </ol>
+
+    <p>Não existe aba "Geral": metadados básicos da área (nome, número,
+    elemento âncora, contagem de specs) ficam só no card da listagem e no
+    título do header da workspace. Não existe (mais) aba "Resumo do
+    handoff" — seu papel foi absorvido pelo dashboard da tab Handoff.</p>
+
+    <p><strong>Nota de histórico (correção pós-publicação, mesmo dia
+    2026-09-04)</strong>: a primeira versão desta view tinha 5 tabs — Tabulação →
+    Swipe → Leitor de Tela → Handoff → Resumo do handoff —, com "Leitor de
+    Tela" como listagem enxuta e "Handoff" como aba de trabalho. O usuário
+    corrigiu essa leitura depois de já estar implementada: "Leitor de Tela"
+    é a etapa de CRIAÇÃO das specs, e "Handoff" passou a ser o dashboard de
+    consolidação — absorvendo o papel que "Resumo do handoff" teria, que
+    por isso foi removida como tab própria.</p>
+
+    <p><strong>Header da workspace</strong>: barra azul (<code>subheader-brand</code>) com botão
+    "Voltar" (volta pra listagem, nunca pra Home), título dinâmico
+    (<code>area.label</code>/<code>area.number</code>), e um dropdown "Mais ações" próprio
+    (<code>toggleA11yWorkspaceMoreActionsMenu</code>, mesmo padrão de
+    <code>toggleA11yComponenteMenu</code>) reunindo as ações que antes ficavam nos
+    botões do cabeçalho do accordion: Focar no canvas, Ocultar/Mostrar,
+    Excluir área (<code>_deleteA11yAreaFromWorkspace</code>).</p>
+
+    <p><strong>Card ampliado, sem "Nova spec" (2026-09-04-c)</strong>: pedido do
+    usuário com screenshot real, correção posterior à publicação inicial do
+    card. O botão "Nova spec" saiu do card — criar spec passou a ser só
+    dentro da workspace, aba Leitor de Tela (o card fica mais limpo e sem
+    competir com o resumo). O chevron de "abrir" também saiu — era
+    redundante, o card inteiro já é obviamente clicável. Em troca, o card
+    ganhou um resumo mais rico do que já foi documentado, três blocos
+    empilhados: status por etapa (Tabulação/Swipe/Leitor de Tela, mesmo
+    padrão visual de ícone do dashboard da tab Handoff), breakdown por
+    categoria de spec (pills coloridas, uma por <code>A11Y_CATEGORIES</code> com pelo
+    menos 1 spec documentada) e status da Ficha de Handoff (<code>X/N seções
+    inseridas</code>, reaproveitando <code>area.handoffFicha.sections</code> — seção 8c). O
+    título da seção na listagem principal, antes "Áreas Marcadas", passou a
+    ser <strong>"Frames Documentados"</strong> (mesmo pedido) — o botão
+    "Recolher/expandir todos" que ficava ao lado também saiu: era resquício
+    de quando cada área era um accordion in-line; sem accordion de área,
+    não há mais o que recolher/expandir ali.</p>
+
+    <p><strong>Dropdown "⋯" no card (2026-09-04-f)</strong>: além do resumo rico
+    acima, o card ganhou um menu de ações próprio (ícone "⋯") com Focar/Ocultar/
+    Excluir. Até então, esse conjunto de ações só existia DENTRO da workspace,
+    no dropdown "Mais ações" do header — sem o dropdown no card, não dava pra
+    excluir uma área sem entrar nela primeiro. Reaproveita
+    <code>focusNode</code>/<code>toggleAreaGroupVisibility</code>/<code>deleteA11yArea</code> já
+    existentes, só adiciona <code>toggleA11yCardMenu</code>/<code>deleteA11yAreaFromCard</code>
+    como wrappers no frontend (<code>accessibility.js</code>) — mesmo padrão de
+    toggle/fechar-ao-clicar-fora já usado pelos demais menus do plugin.</p>
+
+    <h3>Swipe — histórico de 3 versões na mesma sessão (2026-09-04)</h3>
+
+    <p>O desenho de Swipe mudou de conceito 3 vezes seguidas na mesma sessão, por
+    rodadas de correção de entendimento com o usuário. Registrado aqui para não
+    repetir a confusão em trabalho futuro:</p>
+
+    <ol>
+      <li><strong>V1</strong> (a versão original): pipeline DUPLICADO (não
+      generalizado) de Ordem de Tabulação — cópia rascunho por área, captura
+      sequencial de elementos DENTRO da mesma área, selos numerados via
+      <code>[a11y mob] Ordenação</code>. Descartada porque o usuário esclareceu
+      que Swipe não é sobre ordem de elementos dentro de uma tela.</li>
+      <li><strong>V2</strong>: conexão ENTRE exatamente 2 Áreas Marcadas diferentes,
+      escolhida por dropdown (<code>hacData.a11ySwipeFlows[]</code>,
+      <code>{sourceAreaId, targetAreaId}</code>), desenhando uma linha reta única
+      entre os dois selos. Descartada porque o usuário esclareceu (com imagem de
+      referência real) que o modelo correto suporta N pontos em sequência, não
+      só 2.</li>
+      <li><strong>V3 (atual)</strong>: trilha direcional multi-ponto — ver seção 8d.</li>
+    </ol>
+
+    <p>A V1 e a V2 foram removidas por completo (schema, backend e frontend) em
+    cada correção — não há código de nenhuma das duas mantido "por via das
+    dúvidas".</p>
+
+    <h2 id="s8d">8d. Swipe V3 (2026-09-04): trilha direcional multi-ponto</h2>
+
+    <p>Swipe é uma <strong>trilha com N pontos em sequência</strong>, desenhada como uma
+    única linha direcional contínua com setas no canvas — não mais ordem de
+    elementos dentro de 1 área (V1) nem conexão fixa entre 2 áreas (V2). Pontos
+    NÃO são restritos a Áreas Marcadas — podem ser qualquer elemento/frame
+    clicado no canvas, mesma liberdade que a Ordem de Tabulação já tem.</p>
+
+    <p><strong>Dois modos de captura</strong>:</p>
+    <ol>
+      <li><strong>Sequencial manual</strong>: clique nos pontos em ordem no canvas — mesmo
+      modelo EM LOTE que Tabulação (seção 8, "Modo manual volta a ser em lote"):
+      cada clique só empilha na lista pendente + highlight, sem desenhar nada; a
+      trilha real só nasce ao confirmar "Criar trilha de Swipe".</li>
+      <li><strong>Seleção múltipla de uma vez</strong>: shift+clique/marquise seleciona
+      vários pontos simultaneamente. Como a Plugin API não expõe ordem de clique
+      para seleção múltipla, a ordem é resolvida por
+      <strong><code>_orderNodesInZigzagReadingOrder</code></strong> — a MESMA função já
+      usada pelo Mapeamento Automático de Tabulação (seção 8), movida de dentro
+      do closure de <code>figma.ui.onmessage</code> para escopo top-level (corpo
+      inalterado) para que o listener de <code>selectionchange</code> também possa
+      chamá-la. Sem "Mapeamento Automático" próprio para Swipe nesta entrega
+      (fora de escopo — extensão futura, se pedida).</li>
+    </ol>
+
+    <p><strong>Schema</strong>: <code>hacData.a11ySwipePaths[]</code> substitui
+    <code>a11ySwipeFlows[]</code> (removido por completo) —
+    <code>{id, points: [{nodeId, nodeName}, ...], areaId, createdAt}</code>. Aditivo,
+    sem bump de <code>_schemaVersion</code> (mesmo precedente de todo campo novo desta
+    sessão). Uma área tem no máximo 1 trilha — substituição completa ao
+    recriar.</p>
+
+    <p><strong>Geometria</strong> (<code>code.js</code>): <code>_buildSwipePathConnection(nodes)</code>
+    desenha N-1 segmentos em sequência (cada um com sua própria seta, calculada
+    por ângulo do segmento, mais um ponto de origem), agrupados com
+    <code>figma.group()</code>. <strong>Linha mais grossa e marcada</strong> que a versão
+    anterior (pedido explícito do usuário): <code>strokeWeight</code> 4 (era
+    fino/padrão antes), cor cyan <code>#0891B2</code> de destaque. Section própria — a
+    constante <code>A11Y_SWIPE_FLOW_SECTION_NAME</code> manteve o NOME (decisão
+    pragmática do agente pra não tocar todas as referências), mas o VALOR mudou
+    pra <code>'hac — Trilhas de Swipe'</code> — o nome da constante em si ficou
+    levemente enganoso (sugere "fluxo", que era o conceito da V2), mas não é um
+    bug: nenhum lugar do código compara contra um literal hardcoded divergente,
+    só contra a própria constante.</p>
+
+    <p><strong>Resolve de propósito o achado de QA da V2</strong> (dessincronia
+    canvas↔dado): o handler <code>insert-swipe-path</code> desenha a trilha NOVA
+    primeiro e só remove a trilha ANTIGA depois de confirmar sucesso — nunca o
+    contrário. Se o desenho novo falhar, a trilha antiga permanece intacta no
+    canvas e no dado, em vez de ficar "mentindo" que existe uma trilha que não
+    está mais lá.</p>
+
+    <p><strong>Modal de revisão</strong> (<code>views/modals.html</code>):
+    <code>#a11y-swipe-path-review-modal</code>, novo, estrutura análoga ao
+    <code>#a11y-tab-order-review-modal</code> (lista pendente + drag-and-drop), sem
+    botão "Adicionar item" (sem scan automático nesta entrega).</p>
+
+    <p><strong>Ficha de Handoff, seção Swipe</strong>: mostra a trilha completa em ordem
+    ("1. X → 2. Y → 3. Z"), não mais "leva para X" (texto da V2).</p>
+
+    <p><strong>Limitação aceita conscientemente</strong>: ocultar a Área via
+    "Ocultar/Mostrar no canvas" não afeta a trilha de Swipe desenhada (ela não é
+    uma cópia de frame por área como Tabulação, é uma única linha/setas) — mesma
+    decisão já tomada na V2, documentada explicitamente no código
+    (<code>toggleAreaGroupVisibility</code>).</p>
+
+    <h2 id="s8c">8c. Ficha de Handoff (2026-09-04): módulo apartado, inserção incremental por seção</h2>
+
+    <p>Implementa o artefato que ficara "fora de escopo" nas duas entregas
+    anteriores: a Ficha de Handoff é um <strong>frame no canvas do Figma, por
+    Área Marcada</strong>, montado a partir de uma imagem de referência real
+    trazida pelo usuário (ficha "Handoff de acessibilidade — Ordem de
+    tabulação e Leitor de Telas [Super App]": legenda + telas com selôs
+    numerados + cards de especificação por selo, organizados em seções lado
+    a lado). É um <strong>artefato de EXPORT destinado ao time de
+    desenvolvimento</strong> — nesta 1ª versão, o formato de saída é o próprio
+    frame no Figma (o dev acessa pelo link do arquivo ou usa o "Export"
+    nativo do Figma para PNG/PDF; o plugin não gera arquivo externo).</p>
+
+    <p><strong>Modelo de inserção incremental</strong> (decisão do usuário, mudou o
+    desenho original do dashboard): não existe um botão único "Gerar
+    handoff" que monta tudo de uma vez. Em vez disso, <strong>cada uma das 3 abas
+    de trabalho — Tabulação, Swipe, Leitor de Tela — tem seu próprio
+    botão</strong> "Inserir na ficha", que insere/substitui só a <strong>seção
+    correspondente</strong> dentro do frame da Ficha daquela área. O botão vira
+    "Atualizar ficha" assim que aquela seção já foi inserida — estado
+    persistido em <code>hacData</code>, não inferido do canvas a cada render:</p>
+
+    <pre><code>a11yAreas[i].handoffFicha = {
+  frameId: null,           // id do frame da Ficha no canvas, quando existe
+  sections: {
+    tabulacao: { insertedAt: null, itemCount: 0 },
+    swipe:     { insertedAt: null, itemCount: 0 },
+    leitor:    { insertedAt: null, specCount: 0 },
+    review:    { insertedAt: null, itemCount: 0 }, // 4º bloco, ver seção 8f
+  },
+}</code></pre>
+
+    <p>Campo aditivo, sem bump de <code>_schemaVersion</code> (mesmo precedente de
+    <code>a11ySwipePaths</code>/<code>projectOrigin</code> — seção 1); áreas antigas sem esse
+    campo são tratadas defensivamente (<code>area.handoffFicha?.sections?.[key]</code>)
+    em todo ponto de leitura.</p>
+
+    <p><strong>Módulo apartado</strong> (palavras do usuário, reforçadas
+    explicitamente): frontend isolado em <code>src/plugin/modules/handoff-ficha.js</code>
+    (arquivo próprio, não espalhado dentro de <code>accessibility.js</code>), tudo
+    prefixado <code>_ficha</code> para não colidir por nome com o resto —
+    <code>_fichaInsertSection</code>, <code>_fichaHandleSectionInserted</code>/
+    <code>_fichaHandleSectionInsertFailed</code>, <code>_fichaViewOnCanvas</code>,
+    <code>_fichaDashboardHtml</code>, <code>_fichaBuildSpecPayload</code>/<code>_fichaBuildSpecFields</code>.
+    Adicionado ao pipeline de concatenação em <code>build.cjs</code>, posicionado
+    depois de <code>accessibility.js</code> (consome <code>A11Y_CATEGORIES</code>/
+    <code>switchA11yWorkspaceTab</code>/<code>a11yAreas</code>/<code>a11ySpecs</code>/<code>saveToStorage</code>) e antes
+    de <code>onboarding.js</code>. Backend: bloco próprio e delimitado dentro de
+    <code>code.js</code> (único arquivo backend do hac — "módulo apartado" aqui é
+    fronteira de código clara, não um processo/build separado), mensagens
+    com prefixo <code>ficha-*</code> (<code>insert-ficha-section</code>, <code>ficha-section-inserted</code>,
+    <code>ficha-section-insert-failed</code>, <code>ficha-node-not-found</code>,
+    <code>delete-ficha-for-area</code>, <code>toggle-ficha-visibility</code>, <code>highlight-ficha-node</code>) —
+    nunca reaproveita <code>type</code> já usado por tab-order/swipe.</p>
+
+    <p><strong>A Ficha desenha os selôs DO ZERO, independente</strong> — decisão crítica
+    de arquitetura: <code>_cloneAreaRootIntoFicha</code> (<code>code.js</code>) clona o frame
+    ORIGINAL da área (<code>area.targetNodeId</code>), nunca a cópia rascunho de
+    trabalho de Tabulação/Swipe (que é destruída/recriada a cada "Gerar
+    Automaticamente" — clonar ela pra dentro da Ficha a deixaria órfã na
+    próxima regeneração). Os selôs são desenhados a partir dos itens JÁ
+    PERSISTIDOS (<code>tabOrderItems</code>/<code>hacData.a11ySwipePaths</code>), reaproveitando
+    <code>_createTabOrderBadge</code>/<code>_createSwipeBadge</code> (o mesmo bloco de
+    Tabulação/Swipe, seção 8b) numa chamada "fria" — confirmado por
+    investigação que essas duas funções não têm NENHUMA dependência oculta
+    do fluxo de clique ao vivo (<code>_activeTabOrderCloneMap</code>/
+    <code>_tabOrderModeActive</code> etc. vivem nos CALLERS do fluxo interativo, não
+    nas funções de desenho em si), então não precisaram de generalização —
+    só receberam o clone da Ficha como parâmetro explícito, exatamente como
+    já aceitavam.</p>
+
+    <p><strong>Substituição completa por seção, não merge</strong>: <code>_removeFichaSectionInFrame</code>
+    remove a seção antiga (marcada via <code>pluginData</code> <code>hacFichaSection = sectionKey</code>
+    no node raiz daquela seção) antes de inserir a nova — mesmo padrão do
+    precedente do Handex (ver abaixo), sem risco de resíduo.</p>
+
+    <p><strong>Precedente reaproveitado, não portado</strong>: o plugin irmão Handex já
+    tem uma "Ficha de Projeto" nesse espírito (<code>create-handoff</code>,
+    <code>handex/src/plugin/code.js:1471-2540</code>) — frame procedural com Auto
+    Layout, detecção por convenção de nome + flag local, substituição
+    completa em vez de edição in-place. O hac não porta esse código (era
+    greenfield) mas reaproveita o desenho arquitetural, adaptado para
+    granularidade por SEÇÃO (não só por ficha inteira) e estado em
+    <code>hacData</code> (não reconciliação via nome de nó — o hac guarda <code>frameId</code>
+    direto, mesmo padrão já usado por <code>a11yAreas[].id</code>).</p>
+
+    <p><strong>Posicionamento sem colisão</strong>: <code>_createOrGetFichaFrame</code> reaproveita
+    <code>_findFreeTabOrderCopyPosition</code>/<code>_collectA11yOccupiedBounds</code> (seção
+    8b, já genéricas o bastante apesar do nome) usando o bounding box da
+    Área Marcada como origem. <code>_collectA11yOccupiedBounds</code> foi estendida
+    para também varrer a Section <code>hac — Ficha de Handoff</code> (achado real de
+    QA, corrigido antes desta entrega ser considerada pronta — sem isso,
+    duas Áreas diferentes gerando Ficha colidiam visualmente entre si, e
+    uma Ficha já inserida podia ser sobreposta por uma cópia de
+    Tabulação/Swipe criada depois dela).</p>
+
+    <p><strong>Cascata de exclusão/ocultação</strong>: <code>deleteA11yArea</code>/
+    <code>toggleAreaGroupVisibility</code> ganharam uma 3ª cascata
+    (<code>delete-ficha-for-area</code>/<code>toggle-ficha-visibility</code>), ao lado das já
+    existentes de tab-order/swipe — excluir/ocultar uma área também
+    remove/oculta o frame da Ficha correspondente, sem órfão no canvas.</p>
+
+    <p><strong>"Ver ficha no canvas"</strong>: <code>highlight-ficha-node</code> foca o frame pelo
+    <code>frameId</code> salvo; se o frame foi apagado manualmente do canvas, o
+    backend responde <code>ficha-node-not-found</code> e o frontend mostra um toast
+    de erro explicando que a seção precisa ser inserida de novo (achado
+    real de QA, corrigido — a mensagem existia no backend sem handler
+    correspondente no frontend, causando falha silenciosa).</p>
+
+    <p><strong>Campos por card na seção Leitor de Tela</strong>: um card por spec,
+    montado com Auto Layout puro (mesmo padrão visual do card procedural de
+    fallback já existente, seção 8). Campos resolvidos no FRONTEND
+    (<code>_fichaBuildSpecFields</code>, não duplicados em <code>code.js</code>) e enviados já
+    prontos no payload — segue o mesmo precedente já usado por
+    <code>create-unified-spec</code> (frontend resolve valores de exibição, backend só
+    desenha): Descrição (<code>properties.descricao</code>), Nome Acessível
+    (<code>properties.nomeAcessivel</code>, quando existe), Notas de Código
+    (<code>properties.notaCodigo</code> + <code>properties.notas</code>), Observações
+    (<code>properties.observacoes</code>), Componente
+    (<code>_cleanDscContainingFrameName(spec.a11yDscComponentName)</code>, fallback
+    <code>properties.componente</code>). Campos ausentes por categoria (ex.
+    <code>decorativo</code> não tem Componente nem Nome Acessível) são omitidos
+    inteiros do card, nunca aparecem vazios.</p>
+
+    <h3>Fora de escopo desta entrega (registrado para não ser esquecido)</h3>
+
+    <ul>
+      <li>Export para PDF/imagem/link compartilhável fora do Figma — só o
+      frame no canvas nesta versão.</li>
+      <li>Histórico de versões da Ficha (substituição completa a cada
+      "Atualizar", sem trilha de gerações anteriores — mesmo comportamento
+      do precedente do Handex).</li>
+      <li>Ponte com <code>_writeDscHandoffSummary</code>/<code>DSC_HANDOFF_SUMMARY_ENABLED</code>
+      do Handex (canal de dados desligado, pensado para o hac consumir scan
+      de componentes do Handex) — não relacionado à Ficha em si.</li>
+    </ul>
+
+    <h2 id="s8e">8e. Reorganização estrutural (2026-09-08): artefatos soltos na Section de sessão, specs com réplica</h2>
+
+    <p><strong>Estrutura de canvas atual</strong>: uma <strong>Section de
+    sessão</strong> por página (<code>_getOrCreateA11ySessionSection</code>,
+    localizada só por pluginData <code>hacSessionSection === 'true'</code>,
+    nunca por nome — o nome carrega timestamp + designer e muda a cada
+    sessão). Dentro dela, cada Área Marcada tem seu Grupo do selo/marcador
+    (<code>area.id</code> = id desse Grupo, inalterado desde 2026-09-05), e
+    cada tipo de artefato documentado nessa área — Ordem de Tabulação, Trilha
+    de Swipe, Especificações (Leitor de Tela) — vive no seu PRÓPRIO grupo,
+    <strong>solto irmão do Grupo do selo</strong>, nunca aninhado dentro dele.
+    Uma reorganização anterior, na mesma sessão, tinha experimentado aninhar
+    tudo dentro de 1 Grupo por Área; foi abandonada em favor deste modelo mais
+    simples porque o destino final desses artefatos é a Ficha de Handoff
+    (seção 8c), que os reorganiza de qualquer forma — o aninhamento por área
+    não tinha propósito próprio.</p>
+
+    <p><strong>Cada grupo de artefato = clone da área + grupo-overlay</strong>:
+    o padrão, estabelecido primeiro por Tabulação e depois espelhado por Swipe
+    e Especificações, é sempre o mesmo par:</p>
+    <ul>
+      <li><strong>Clone-réplica</strong> (<code>root.clone()</code>) do frame
+      original da Área — nomeado <code>[Ordem de Tabulação] ...</code>/
+      <code>[Trilha de Swipe] ...</code>/<code>[Leitor de Tela] ...</code>.
+      Se a Área foi marcada sobre uma <strong>INSTANCE de tela publicada</strong>
+      (padrão comum — arrastar a tela pronta da lib "DSC | Super App"), o
+      clone também nasce INSTANCE; como a API do Figma proíbe
+      <code>appendChild</code> nela, o clone passa por
+      <code>detachInstance()</code> logo em seguida, virando FRAME — o frame
+      ORIGINAL nunca é tocado, só esta cópia de trabalho perde o vínculo com
+      o main component.</li>
+      <li><strong>Grupo-overlay</strong> (<code>_getOrCreateCloneOverlayGroup</code>),
+      IRMÃO do clone (nunca filho dele) — onde de fato vivem os selos de
+      Tabulação, a linha de Swipe, ou os specGroups do Leitor de Tela. GROUP
+      puro, nunca FRAME: nunca tem <code>clipsContent</code> nem Auto Layout,
+      o que o torna estruturalmente imune ao bug descrito abaixo.</li>
+    </ul>
+
+    <p><strong>Por que não desenhar direto dentro do clone</strong> (histórico
+    de causa raiz, relevante para não repetir o mesmo erro por um caminho
+    diferente): a primeira versão desta arquitetura reparentava selos/linha
+    DIRETO para dentro do clone. Cinco bugs reais apareceram em sequência, cada
+    um só visível depois do anterior corrigido:</p>
+    <ol>
+      <li>Clone INSTANCE não aceita <code>appendChild</code> — resolvido com
+      <code>detachInstance()</code> (acima).</li>
+      <li>Selo nascia deslocado, nunca ao lado do elemento-alvo: escrever
+      <code>x</code>/<code>y</code> antes de marcar
+      <code>layoutPositioning = 'ABSOLUTE'</code> fazia o Auto Layout do clone
+      (telas reais de produto podem ter) descartar a escrita e posicionar o
+      selo em modo de fluxo.</li>
+      <li>Selo nascia certo, mas atrás do elemento que deveria marcar:
+      <code>itemReverseZIndex = true</code> (comum em frames com elementos
+      sobrepostos de propósito — carrosséis, cards empilhados) inverte a
+      pilha de z-order de um Auto Layout, colocando o PRIMEIRO filho no topo
+      em vez do último; <code>appendChild</code> sozinho não bastava.</li>
+      <li><strong>Causa raiz definitiva</strong>: mesmo com as 3 correções
+      acima, selos continuavam invisíveis — <code>clipsContent</code> em
+      qualquer frame no caminho entre o clone-raiz e o selo recorta qualquer
+      filho que "vaze" pra fora dos limites daquele frame, e um selo ao lado
+      de um elemento pequeno vaza de propósito (mesmo problema afetaria uma
+      linha de swipe cruzando a tela toda). Tirar o <code>clipsContent</code>
+      do clone foi descartado — mudaria a aparência da própria réplica em
+      telas com carrossel/scroll. A solução real foi arquitetural: nunca mais
+      reparentar dentro do clone — sempre no grupo-overlay irmão dele
+      (acima).</li>
+      <li>Separado dos 4 anteriores, mas achado na mesma sessão: o cache de
+      clone ativo em memória (<code>_activeTabOrderCloneMap</code>/
+      <code>_activeSwipePathCloneMap</code>, antes uma única variável global,
+      não por área) fazia o backend "esquecer" o clone certo ao alternar
+      entre Áreas na mesma sessão — voltar pra uma área e continuar a
+      Tabulação recriava tudo do zero (apagando selos já feitos) e resolvia
+      cliques contra o elemento ORIGINAL em vez do clone. Migrado para
+      <code>Map&lt;areaId, nodeMap&gt;</code>
+      (<code>_activeTabOrderCloneMaps</code>/<code>_activeSwipePathCloneMaps</code>/
+      <code>_activeSpecCloneMaps</code>) — cada área mantém seu próprio clone
+      ativo, sem colisão entre áreas trabalhadas na mesma sessão.</li>
+    </ol>
+
+    <p><strong>Especificações (Leitor de Tela) ganham réplica</strong>: até
+    esta mudança, <code>create-unified-spec</code> desenhava o marcador/
+    conector direto sobre o elemento <strong>original</strong> — única das 3
+    features de documentação que ainda tocava o design de verdade.
+    Passou a seguir o mesmo padrão de Tabulação/Swipe:
+    <code>_resolveActiveSpecClone</code>/<code>_createSpecCloneForArea</code>
+    (mesma lógica de cache por área e <code>detachInstance()</code>) resolvem/
+    criam o clone da área, e o <code>node</code> resolvido a partir de
+    <code>opts.targetNodeId</code> (id ORIGINAL, vindo do formulário/seleção)
+    é traduzido pro node equivalente dentro do clone via
+    <code>nodeMap.get(...)</code> antes de qualquer cálculo de posição. O
+    <code>spec.targetNodeId</code> devolvido ao frontend continua sendo o id
+    ORIGINAL (capturado ANTES da tradução) — outros fluxos (Detecção
+    Automática marcando "já documentado", edição de spec, destaque no canvas)
+    dependem desse id apontar pro elemento real, nunca pro clone. Specs sem
+    Área Marcada associada (fluxo legado/manual sem área) continuam sem
+    clone, apontando pro original, exatamente como sempre funcionou.</p>
+
+    <p><strong>Lacuna fechada de propósito</strong>: specs nunca gravavam
+    nenhum pluginData de área no próprio node — eram localizadas/apagadas só
+    via array local (<code>a11ySpecs</code>, campo <code>a11yAreaId</code>),
+    frágil se esse estado se perdesse. Specs novas gravam
+    <code>hacSpecForArea</code> no <code>specGroup</code>; o handler
+    <code>delete-specs-for-area</code> (espelhando
+    <code>delete-tab-order-copy-for-area</code>/<code>cleanup-swipe-path-for-area</code>)
+    localiza e remove clone + specs por esse pluginData, como rede de
+    segurança independente do array local.</p>
+
+    <p><strong>Varredura</strong>: as funções que localizam artefatos por
+    pluginData (<code>_forEachTabOrderCopyCandidate</code>,
+    <code>_forEachSwipePathCopyCandidate</code>,
+    <code>_forEachFichaFrameCandidate</code>) ganharam uma 4ª fonte,
+    <code>_forEachA11ySessionDirectChild</code> (filhos DIRETOS da Section de
+    sessão, 1 nível) — somada às 3 já existentes (raiz da página, Sections
+    antigas por prefixo de nome, e a varredura de 2 níveis
+    <code>_forEachA11ySessionAreaChild</code> para áreas ainda na estrutura
+    aninhada antiga). Nenhuma fonte antiga foi removida — mesmo princípio já
+    usado em toda a base: nunca tirar uma fonte de varredura quando surge uma
+    estrutura nova, para nunca deixar artefatos de qualquer geração
+    órfãos/invisíveis. Sem migração retroativa: Áreas documentadas antes desta
+    mudança continuam funcionando na estrutura aninhada, sem
+    reprocessamento.</p>
+
+    <p><strong>Outras correções da mesma sessão</strong>: o highlight
+    temporário (retângulo <code>[HighlightStroke]</code>, desenhado ao clicar
+    em elementos durante a captura de Tabulação/Swipe, tanto no canvas quanto
+    ao clicar num item da lista do modal de revisão) foi <strong>removido por
+    completo</strong> — mesmo após duas rodadas de correção de condição de
+    corrida em sessões anteriores, continuava deixando retângulos órfãos. O
+    feedback visual passou a vir só da seleção nativa do Figma
+    (<code>figma.currentPage.selection</code>), sem nenhum node extra criado.
+    A posição da réplica clonada (<code>_findFreeTabOrderCopyPosition</code>)
+    passou a nascer sempre ABAIXO do frame original, nunca mais tentando os 4
+    lados (direita/abaixo/esquerda/acima) em sequência. No fluxo de captura
+    manual com seleção múltipla (shift+clique/marquise) de Tabulação/Swipe,
+    <code>_orderNodesInZigzagReadingOrder</code> deixou de ser aplicado —
+    esse algoritmo (inverte linhas alternadas, útil só para leitura de grade
+    sem ordem de clique conhecida) estava descartando a ordem real de clique
+    do designer, que o Figma já preserva em
+    <code>figma.currentPage.selection</code>; a função continua em uso só
+    por "Gerar Automaticamente" (que nunca tem ordem de clique real pra
+    preservar).</p>
+
+    <p><strong>Novo documento de processo</strong>:
+    <code>docs/funcionalidades-protegidas.md</code> — lista de funcionalidades
+    já testadas/aprovadas que exigem aprovação prévia explícita e explicação
+    do impacto antes de qualquer mudança, criada depois de múltiplas
+    regressões sucessivas na Ordem de Tabulação ao longo desta sessão.</p>
+
+    <h2 id="s8f">8f. Ficha com 4 blocos horizontais (2026-09-08): ordem fixa, Swipe com réplica restaurada, Handoff Review</h2>
+
+    <p><strong>Layout final</strong>: a Ficha passa a ter <strong>4 blocos em
+    sequência horizontal única</strong>, na ordem fixa 1) Ordem de Tabulação,
+    2) Swipe, 3) Leitor de Tela, 4) Handoff Review — pedido explícito do
+    usuário. O <code>fichaFrame</code> (<code>_createOrGetFichaFrame</code>) já era Auto
+    Layout HORIZONTAL com <code>primaryAxisSizingMode</code>/<code>counterAxisSizingMode
+    = 'AUTO'</code> nos dois eixos — isso já garantia mecanicamente "lado a
+    lado, sem sobreposição, largura própria" para qualquer novo filho, sem
+    precisar de nenhum ajuste de sizing. O que faltava era <strong>ordem
+    determinística</strong>: antes, cada builder fazia <code>fichaFrame.appendChild(section)</code>
+    direto — como <code>appendChild</code> sempre insere no último índice, a
+    posição final de cada seção virava simplesmente "a ordem em que o
+    designer clicou Inserir/Atualizar pela primeira vez em cada aba" (bug
+    real: inserir Leitor de Tela antes de Tabulação colocava Leitor à
+    ESQUERDA). Corrigido com <code>FICHA_SECTION_ORDER</code> (array fixo
+    <code>['tabulacao', 'swipe', 'leitor', 'review']</code>) e
+    <code>_insertFichaSectionInOrder</code>, que calcula o índice correto contra
+    essa ordem e usa <code>insertChild</code> antes do primeiro filho existente com
+    ordem maior — a posição visual final sempre respeita 1-2-3-4, não
+    importa a ordem de clique.</p>
+
+    <p><strong>Bug real preexistente corrigido de passagem</strong>:
+    <code>_cloneAreaRootIntoFicha</code> fazia <code>root.clone()</code> sem checar
+    <code>clone.type === 'INSTANCE'</code> e sem <code>detachInstance()</code> — diferente de
+    <code>_createTabOrderCloneForArea</code>/<code>_createSpecCloneForArea</code>, que já
+    tinham essa correção desde a cadeia de 5 bugs resolvidos na seção 8e.
+    Como o clone da Ficha entra direto no fluxo do Auto Layout, sem
+    overlay group nem reparenting condicional, esse bug se manifestaria
+    de imediato em qualquer área marcada sobre uma INSTANCE de tela
+    publicada — corrigido aplicando o mesmo <code>detachInstance()</code> antes de
+    <code>_buildOriginalToCloneMap</code>.</p>
+
+    <p><strong>Swipe volta a ter réplica visual real</strong> (regressão de uma
+    entrega anterior, identificada pelo próprio usuário: "definitivamente
+    é pra se ter uma réplica"): <code>_buildFichaSwipeSection</code> deixou de
+    desenhar só o texto "1. X → 2. Y..." e passou a clonar a área
+    (<code>_cloneAreaRootIntoFicha</code>), traduzir cada ponto (id ORIGINAL, vindo
+    de <code>hacData.a11ySwipePaths</code>) pro node equivalente dentro do clone via
+    <code>nodeMap</code>, e desenhar a trilha real (linha + setas) com
+    <code>_buildSwipePathConnection</code> — a mesma função já usada no canvas de
+    trabalho, não duplicada. A trilha nasce dentro de um grupo-overlay
+    IRMÃO do clone (<code>_getOrCreateCloneOverlayGroup</code>, mesma técnica da
+    seção 8e) — nunca filha direta dele, pelo mesmo motivo de
+    <code>clipsContent</code> já documentado: uma trilha cruzando a tela inteira
+    tem ainda mais chance de "vazar" pra fora de um frame com clip no
+    caminho do que um selo pontual. O texto simples vira fallback só
+    quando há menos de 2 pontos resolvíveis no clone atual (elementos
+    renomeados/removidos desde a última trilha).</p>
+
+    <h3>Handoff Review — o 4º bloco, consolidado</h3>
+
+    <p>Novo builder <code>_buildFichaReviewSection</code>: <strong>sem instrução
+    didática, sem réplica própria</strong> (confirmado pelo usuário: "não
+    precisa de instrução. Ele é o consolidado de tudo") — só um resumo do
+    que já foi inserido nas outras 3 seções. Dois blocos de conteúdo:</p>
+    <ul>
+      <li>Cards de status por seção já inserida (nome + contagem), a
+      partir de <code>payload.sectionsSummary</code>.</li>
+      <li>Lista compacta de specs por categoria, a partir de
+      <code>payload.categoryBreakdown</code>.</li>
+    </ul>
+    <p>Como o backend (<code>code.js</code>) não tem acesso a <code>hacData</code>/
+    <code>A11Y_CATEGORIES</code>, os dois chegam já calculados do frontend —
+    mesmo padrão já usado por <code>payload.items</code>/<code>payload.points</code>/
+    <code>payload.specs</code> das outras 3 seções. <code>categoryBreakdown</code> foi
+    extraído de dentro de <code>_a11yAreaAccordionEl</code> (que já calculava isso
+    só pra montar HTML do card da listagem) para uma função reaproveitável,
+    <code>_a11yComputeCategoryBreakdown(areaSpecs)</code>, que devolve os dados
+    crus — usada tanto ali quanto no payload da Ficha. <strong>Nunca
+    bloqueia</strong>: Handoff Review não depende de as outras 3 seções já
+    terem sido inseridas — lê o estado ATUAL de <code>area.handoffFicha.sections</code>
+    e monta o resumo com o que existe; se nada foi inserido ainda, mostra
+    1 card "Nada documentado nesta ficha ainda" em vez de recusar a
+    inserção.</p>
+
+    <p><strong>Card próprio no dashboard</strong> (aba Handoff): diferente dos
+    outros 3 (<code>_fichaStatusCardHtml</code>, que têm botão "Editar" levando pra
+    aba correspondente), o card do Review (<code>_fichaReviewCardHtml</code>) não
+    tem "Editar" — não existe uma aba "review" pra editar, o conteúdo é só
+    o consolidado. O botão já é "Inserir"/"Atualizar" direto.</p>
+
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 
     <p>Toda comunicação passa por <code>postMessage</code>/<code>window.onmessage</code> — o frontend
@@ -715,13 +1663,17 @@ hr {
       <tr><th>Mensagem</th><th>Direção</th><th>Payload relevante</th></tr>
       <tr><td><code>init-plugin</code></td><td>backend → UI</td><td><code>theme</code>, <code>version</code>, <code>currentUser</code>, <code>savedState</code>, <code>onboardingSeen</code></td></tr>
       <tr><td><code>save-storage</code></td><td>UI → backend</td><td><code>data</code> (hacData completo)</td></tr>
-      <tr><td><code>cache-cleared</code></td><td>backend → UI</td><td>reseta hacData/arrays em memória, incluindo <code>projectOrigin</code></td></tr>
-      <tr><td><code>create-unified-spec</code></td><td>UI → backend</td><td><code>opts</code> (<code>a11yType</code>, <code>a11ySubtype</code>, <code>a11yOrigin</code>, <code>a11ySourceLib</code>, <code>a11yDscComponentName</code>, <code>a11yAreaId</code>, <code>targetNodeId</code>, <code>needsReview</code>, <code>silent</code>)</td></tr>
+      <tr><td><code>cache-cleared</code></td><td>backend → UI</td><td>reseta hacData/arrays em memória, incluindo <code>projectOrigin</code>/<code>activeSectionName</code></td></tr>
+      <tr><td><code>create-unified-spec</code></td><td>UI → backend</td><td><code>opts</code> (<code>a11yType</code>, <code>a11ySubtype</code>, <code>a11yOrigin</code>, <code>a11ySourceLib</code>, <code>a11yDscComponentName</code>, <code>a11yAreaId</code>, <code>a11yAreaTargetNodeId</code> — novo em 2026-09-08, targetNodeId do FRAME ORIGINAL da área, usado pra resolver/criar o clone (seção 8e) —, <code>targetNodeId</code>, <code>needsReview</code>, <code>silent</code>, <code>sectionName</code>, <code>designerName</code>)</td></tr>
+      <tr><td><code>delete-specs-for-area</code></td><td>UI → backend</td><td><code>areaId</code> — novo em 2026-09-08 (seção 8e), rede de segurança que remove clone + specs de uma área por pluginData, independente do array local</td></tr>
       <tr><td><code>spec-created</code></td><td>backend → UI</td><td><code>spec</code> (objeto já no formato de <code>a11ySpecs[]</code>)</td></tr>
       <tr><td><code>scan-frame</code></td><td>UI → backend</td><td><code>nodeId</code>, <code>origin: 'a11y-detection'</code></td></tr>
       <tr><td><code>scan-result</code></td><td>backend → UI</td><td><code>data</code>, <code>origin</code> (ecoado)</td></tr>
       <tr><td><code>check-a11y-library</code></td><td>UI → backend</td><td><code>token</code></td></tr>
-      <tr><td><code>create-a11y-area</code></td><td>UI → backend</td><td><code>targetNodeId</code>, <code>label</code>, <code>number</code>, <code>conector</code>, <code>autoDetect</code>, <code>origin</code></td></tr>
+      <tr><td><code>create-a11y-area</code></td><td>UI → backend</td><td><code>targetNodeId</code>, <code>label</code>, <code>number</code>, <code>conector</code>, <code>origin</code>, <code>sectionName</code> — <code>autoDetect</code> removido em 2026-09-04-g (Detecção Automática migrou pra tab Leitor de Tela, seção 7)</td></tr>
+      <tr><td><code>get-a11y-documentation-status</code></td><td>UI → backend</td><td><code>sectionName</code> (Section ativa a checar)</td></tr>
+      <tr><td><code>a11y-documentation-status</code></td><td>backend → UI</td><td><code>activeSectionName</code>, <code>hasDocumentation</code>, <code>areaCount</code>, <code>nextSectionName</code> — ver seção 8</td></tr>
+      <tr><td><code>start-tab-order-copy</code> / <code>generate-tab-order-from-layers</code> / <code>apply-tab-order-to-canvas</code></td><td>UI → backend</td><td>(entre outros campos já existentes) <code>sectionName</code></td></tr>
     </table>
 
     <h2 id="s10">10. Escala da UI (<code>--ui-scale</code>) e <code>position</code> dos modais</h2>

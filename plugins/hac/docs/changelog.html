@@ -457,6 +457,578 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <hr>
 
+    <h2>2026-09-03 — Modal de escolha de categoria filtra por origem</h2>
+
+    <p>Usuário reportou, num projeto mobile real, que o modal "Nova especificação"
+    mostrava as 5 categorias sempre, mesmo sem existir componente real mobile
+    para "Estrutura da Página" ou "Informações Adicionais" — confirmado por
+    screenshot da documentação oficial da lib "Design Acessível | Super App",
+    que define explicitamente só 3 categorias mobile (Elementos e Imagens,
+    Título, Elemento Decorativo). <code>#a11y-category-picker-modal</code> agora
+    esconde os dois botões sem equivalente mobile quando
+    <code>getA11yProjectOrigin() === 'mobile'</code>
+    (<code>_applyA11yCategoryPickerOriginFilter()</code>), aplicado nos dois pontos
+    de abertura do modal — "+ Nova spec" e a troca de categoria durante o
+    wizard de revisão da Detecção Automática — sem precisar duplicar lógica,
+    já que os dois reaproveitam o mesmo modal. Origem web ou ainda não
+    definida continua mostrando as 5 normalmente.</p>
+
+    <hr>
+
+    <h2>2026-09-03 — Section versionada ao reconhecer documentação existente</h2>
+
+    <p>Cenário real identificado pelo usuário: um designer já documentou um
+    arquivo por completo (Áreas, specs, Ordem de Tabulação); outro designer
+    abre o mesmo arquivo depois e, na prática, duplica o frame principal
+    para documentar essa cópia — não "documenta por cima" da estrutura
+    antiga. Sem tratamento, a nova Área caía dentro da mesma Section única
+    de sempre, misturando visualmente (no painel de Layers) o handoff
+    antigo com o novo.</p>
+
+    <p>Ao abrir "Marcar Área", o plugin agora consulta o backend
+    (<code>get-a11y-documentation-status</code>, fonte de verdade é o canvas, não
+    só o array em memória) e, se a Section ativa já tiver pelo menos uma
+    Área dentro, revela um aviso no próprio modal (sem modal novo) com o
+    nome/contagem da Section atual e duas opções: <strong>"Continuar na Section
+    atual"</strong> (default, comportamento idêntico a antes desta mudança) ou
+    <strong>"Iniciar nova Section"</strong>, que cria um nome incremental (ex. "hac —
+    Especificações de Acessibilidade v2") calculado pelo backend
+    (<code>_computeNextA11ySectionName</code>) e persiste a escolha em
+    <code>hacData.activeSectionName</code> ao confirmar a área. A Section de Ordem de
+    Tabulação acompanha o mesmo sufixo de versão, mantendo as duas Sections
+    de uma mesma geração de documentação juntas. Arquivo vazio (nenhuma Área
+    ainda) nunca mostra o aviso — o fluxo permanece idêntico ao de sempre.
+    Fora de escopo, por decisão explícita: restaurar/reverter Section
+    antiga, comparar gerações na listagem do plugin (que continua mostrando
+    todas as áreas juntas) e aviso automático no boot do plugin. Ver
+    Documentação Técnica, seção 8.</p>
+
+    <hr>
+
+    <h2>2026-09-03 — Ordem de Tabulação: selos reais incrementais</h2>
+
+    <p>Usuário relatou que apagar um item da lista pendente da Ordem de
+    Tabulação não removia nada do canvas, e reordenar não atualizava a
+    numeração dos selos — porque, no modelo até então, nenhum selo era
+    desenhado até o clique final em "Aplicar no Canvas" (tudo em lote, de
+    uma vez). Uma primeira tentativa de resolver isso via "selos fantasma"
+    (preview semitransparente, redesenhado do zero a cada mudança na lista)
+    foi implementada e revertida no mesmo dia — funcionalmente correta, mas
+    considerada complexa demais pelo ganho.</p>
+
+    <p>Modelo final: cada item que entra na lista pendente (clique manual ou
+    item do scan automático de "Gerar Automaticamente") já desenha seu selo
+    REAL no canvas na hora, via novo handler <code>draw-tab-order-badge</code> —
+    nunca em lote, nunca redesenhando o que já existe. Apagar um item apaga
+    o selo real correspondente (<code>delete-node</code>) e renumera os
+    remanescentes; reordenar por drag-and-drop renumera os selos reais
+    existentes (<code>renumber-tab-order-items</code>, só reescreve a
+    property do número + renomeia, nunca recria). O botão final do modal —
+    renomeado de "Aplicar no Canvas" para <strong>"Concluir"</strong> — deixou de
+    desenhar qualquer coisa: só persiste os itens já desenhados em
+    <code>tabOrderItems</code> e fecha o modal.</p>
+
+    <p>No modo manual, cliques rápidos em sequência podem disparar vários
+    desenhos em paralelo — aceito de propósito, em favor da fluidez do
+    clique sequencial: a numeração se autocorrige ("flush") assim que o
+    último desenho em voo termina. No modo automático, os itens do scan são
+    desenhados sequencialmente (um de cada vez), sem essa corrida. Ver
+    Documentação Técnica, seção 8.</p>
+
+    <p>Na mesma sessão, também corrigido um bug real que impedia a geração
+    automática de funcionar por completo: <code>_TAB_ORDER_ROW_GAP</code>/
+    <code>_TAB_ORDER_COL_GAP</code> eram declaradas como <code>const</code>
+    no meio do handler de mensagens, usadas por um branch que rodava antes
+    dessa declaração no mesmo corpo de função — <code>ReferenceError</code>
+    de zona morta temporal (temporal dead zone), sem mensagem visível no
+    console do Figma até uma instrumentação dedicada revelar a causa. Movidas
+    para o escopo de módulo, no topo do arquivo.</p>
+
+    <hr>
+
+    <h2>2026-09-04 — Escolha de plataforma movida para a Home + header contextual</h2>
+
+    <p>Usuário identificou uma inconsistência: o modal educativo "Entendendo
+    as categorias" mostrava as 5 categorias sempre, com o texto de cada uma
+    mencionando web e mobile ao mesmo tempo no mesmo parágrafo — porque, no
+    momento em que esse modal podia ser aberto, o plugin nem sempre sabia a
+    plataforma do projeto ainda (a pergunta só acontecia na primeira ação
+    real dentro da tela de Acessibilidade, nunca antes). Isso destoava do
+    resto do app, que já filtra estruturalmente por origem em vários pontos
+    (seletor de categoria de "Nova spec", formulário de spec inteiro).</p>
+
+    <p>Solução: a Home ganhou 2 etapas internas — a primeira, objetiva, só com
+    uma descrição curta do plugin (não do fluxo) e a escolha Web/Mobile; a
+    segunda, mostrada só depois de escolher, com o resumo do fluxo (os 3
+    cards que antes eram todo o conteúdo da Home) e o botão "Começar".
+    Arquivo já configurado pula direto pra segunda etapa, sem perguntar de
+    novo à toa. O header secundário da tela de
+    Acessibilidade passa a mostrar <strong>"Documentando projeto Web"</strong> ou
+    <strong>"Documentando projeto Mobile"</strong> no lugar do título fixo
+    "Acessibilidade" (fallback pro texto antigo em arquivos legados sem
+    origem definida). Com o título mais longo, os 3 ícones de ação que
+    ficavam soltos no header (rever passo a passo, guia de categorias,
+    recolher/expandir todos) foram recolhidos num dropdown <strong>"Mais
+    ações"</strong> — só "Voltar" e "Marcar Área" continuam diretos, por
+    serem navegação/ação essencial.</p>
+
+    <p>O modal "Entendendo as categorias" ganhou o mesmo filtro estrutural já
+    usado em outros pontos do app: mobile esconde por completo os blocos de
+    "Estrutura da Página" e "Informações Adicionais" (categorias sem
+    equivalente na lib "Design Acessível | Super App"), e as duas categorias
+    restantes com diferença real entre plataformas ("Nível de Título",
+    "Elementos interativos e imagens") mostram um texto ou outro, nunca os
+    dois juntos. Trocar a plataforma depois (via "Sobre o hac" → "Trocar")
+    atualiza header, filtros e modal in-place, sem sair da tela nem perder
+    trabalho em andamento. Ver Documentação Técnica, seção 3.</p>
+
+    <hr>
+
+    <h2>2026-09-04 — Escolha granular de lib (3 opções) + onboarding em 2 camadas</h2>
+
+    <p>Usuário identificou que rotular o header como "Super DSC Web" era
+    impreciso: o hac já reconhece e mapeia 4 libs de produto DISTINTAS
+    internamente — <code>web-angular-react</code> (legado), <code>super-dsc-web</code>
+    (nova, sucessora do legado — as duas coexistem na mesma tela enquanto a
+    migração de design system não termina), <code>super-app</code> (mobile) e
+    <code>dsc-android</code> (mobile) — mas a escolha inicial e o header só
+    tratavam tudo como 2 categorias amplas (Web/Mobile).</p>
+
+    <p>Novo campo <code>hacData.projectLib</code> registra a lib exata escolhida
+    (3 opções, replicando o fluxograma fornecido: <strong>DSC Web Angular &amp; React</strong>,
+    <strong>Super DSC Web</strong>, <strong>Super DSC Mobile</strong> —
+    <code>dsc-android</code> continua reconhecida no matching de componentes, mas
+    não é opção de escolha por decisão explícita). <code>projectOrigin</code>
+    (web/mobile) continua existindo, derivado automaticamente da lib escolhida —
+    toda a lógica binária já madura do plugin (formulário mobile/desktop, selos,
+    filtro de categorias) não precisou mudar. A Home passa a listar as 3 libs
+    reais; o header mostra o rótulo exato da lib em uso; trocar depois (via
+    "Sobre o hac" → Trocar) leva de volta pra Home em vez de reabrir um modal
+    pequeno com 2 botões fixos.</p>
+
+    <p>O onboarding ganhou uma segunda camada: além do fluxo geral já existente
+    (Marcar Área → Especificar → Ordem de Tabulação), cada lib escolhida dispara,
+    uma única vez, um onboarding com as particularidades específicas dela —
+    quantas categorias têm componente real, exceções de Nível de Título,
+    sub-variantes de Elementos e Imagens no mobile. Conteúdo extraído do que já
+    existia espalhado no modal "Entendendo as categorias", reorganizado por lib
+    em vez de por família web/mobile. Ver Documentação Técnica, seção 3.</p>
+
+    <hr>
+
+    <h2>2026-09-04 — Área Marcada vira card → workspace com 5 tabs, Ordem de Swipe</h2>
+
+    <p>Usuário trouxe uma proposta com mockup: cada Área Marcada, até então um
+    <strong>accordion</strong> que expandia in-line na listagem principal (revelando
+    Ordem de Tabulação e as specs por categoria por dentro), virou um <strong>card
+    clicável</strong>. Clicar no card abre uma <strong>workspace</strong> própria da área — a
+    primeira sub-navegação real do hac (antes só existiam 2 views top-level,
+    Home e Especificações). O mapeamento de conteúdo mudou várias vezes ao
+    longo do alinhamento (o número de abas e o papel de cada uma foram
+    corrigidos repetidas vezes) até fechar em 5 tabs, na ordem do fluxo real
+    de trabalho: <strong>Tabulação → Swipe → Leitor de Tela → Handoff → Resumo do
+    handoff</strong>.</p>
+
+    <p><strong>Tabulação</strong> é a Ordem de Tabulação já existente, só movida de
+    contêiner. <strong>Swipe</strong> é funcionalidade nova, exclusiva de projetos mobile
+    e marcada com um badge visível "Em fase de testes" — captura a ordem de
+    leitura por gesto de deslizar com a mesma mecânica da Tabulação (cópia
+    rascunho numa Section própria do canvas, selo real desenhado a cada
+    clique, drag-and-drop pra reordenar), persistida num array novo e
+    totalmente independente (<code>swipeOrderItems</code>) — as duas cópias/sequências
+    coexistem na mesma área sem conflito. Não existe hoje selo próprio de
+    swipe na lib "Design Acessível", então o selo é reaproveitado do mesmo
+    componente numérico já usado pela Tabulação mobile. Em projetos web, a
+    aba mostra só um aviso de indisponibilidade.</p>
+
+    <p><strong>Leitor de Tela</strong> deixou de ser aba de trabalho (papel cogitado
+    em versões anteriores do alinhamento, nunca implementado) e é hoje uma
+    listagem enxuta — Accessibility Label + Descrição de cada spec já
+    documentada, com um botão "Editar" que leva direto pra <strong>Handoff</strong>, a
+    aba de trabalho real onde se cria/edita/exclui cada especificação (os
+    sub-accordions por categoria e os formulários completos continuam
+    idênticos ao fluxo anterior, só migrados de contêiner). <strong>Resumo do
+    handoff</strong> é, nesta entrega, um placeholder — o checklist de revisão
+    final aguarda um exemplo visual do Design System. Sem aba "Geral": os
+    metadados básicos da área ficam só no card da listagem e no título do
+    header da workspace, que reúne num dropdown "Mais ações" o que antes
+    eram botões soltos no cabeçalho do accordion (Focar no canvas,
+    Ocultar/Mostrar, Excluir). No card, só "Nova spec" permanece como
+    atalho direto. Ver Documentação Técnica, seção 8b.</p>
+
+    <hr>
+
+    <h2>2026-09-04 — Correção de papel: Leitor de Tela é a criação, Handoff é o dashboard</h2>
+
+    <p>No mesmo dia da entrega anterior, o usuário corrigiu o mapeamento das
+    tabs depois de já estar implementado: <strong>"Leitor de tela é a parte de
+    criação de specs"</strong> — o papel de aba de TRABALHO (formulários completos
+    das 5 categorias, sub-accordions, botão "Nova spec") que tinha ficado em
+    "Handoff" precisava voltar pra "Leitor de Tela". Em paralelo, o usuário
+    trouxe uma imagem de referência real de uma "Ficha de Handoff de
+    acessibilidade" (produto Super App) — um layout de export com legenda +
+    telas com selôs + cards de especificação por item, destinado ao time de
+    desenvolvimento — e definiu que "Handoff" deve virar o <strong>dashboard de
+    consolidação</strong> de tudo que já foi documentado (Tabulação, Swipe, specs),
+    com um botão "Gerar handoff"/"Atualizar handoff". A geração real desse
+    artefato foi confirmada pelo usuário como um <strong>módulo apartado</strong>, entrega
+    futura própria — nesta entrega, o botão existe como placeholder (aviso
+    "em breve").</p>
+
+    <p>Resultado: a workspace passa de 5 para <strong>4 tabs</strong> — Tabulação → Swipe
+    → Leitor de Tela → Handoff. A antiga listagem enxuta de "Leitor de Tela"
+    (Accessibility Label + Descrição por spec) não foi descartada — virou
+    uma seção dentro do novo dashboard da tab Handoff, com o botão "Editar"
+    de cada linha agora levando pra "Leitor de Tela" (não mais "Handoff").
+    "Resumo do handoff" deixou de existir como tab própria — seu papel foi
+    absorvido pelo dashboard. O card "Nova spec" na listagem principal passa
+    a abrir a workspace na tab Leitor de Tela. Ver Documentação Técnica,
+    seção 8b (incluindo a nota de histórico da correção e o registro do que
+    fica fora de escopo desta entrega).</p>
+
+    <hr>
+
+    <h2>2026-09-04 — Ficha de Handoff: módulo apartado, inserção incremental por seção</h2>
+
+    <p>Implementa o que ficara "fora de escopo" nas duas entregas anteriores
+    do mesmo dia: a <strong>Ficha de Handoff</strong>, um frame gerado no canvas do
+    Figma, por Área Marcada, reproduzindo o layout de referência trazido
+    pelo usuário (ficha "Handoff de acessibilidade — Ordem de tabulação e
+    Leitor de Telas [Super App]") — legenda + telas com selôs numerados +
+    cards de especificação por selo. É um artefato de <strong>export destinado ao
+    time de desenvolvimento</strong>; nesta 1ª versão, o formato de saída é o
+    próprio frame no Figma (sem PDF/export externo gerado pelo plugin).</p>
+
+    <p>O usuário revisitou o modelo: em vez de um único botão "Gerar
+    handoff", <strong>cada uma das 3 abas de trabalho — Tabulação, Swipe, Leitor
+    de Tela — ganhou seu próprio botão</strong> "Inserir na ficha", que
+    insere/substitui só a seção correspondente dentro do frame da Ficha
+    daquela área — inserção incremental, não tudo de uma vez. O botão vira
+    "Atualizar ficha" assim que a seção já foi inserida, com esse estado
+    persistido em <code>hacData</code> (novo campo <code>a11yAreas[].handoffFicha</code>). A tab
+    Handoff perdeu o botão de geração único e passou a mostrar 3 cards de
+    status (inserida/pendente, contagem, atalho "Editar") mais um link "Ver
+    ficha no canvas".</p>
+
+    <p>Precedente real reaproveitado (não portado): o plugin irmão Handex já
+    tinha uma "Ficha de Projeto" nesse espírito — frame procedural com Auto
+    Layout, substituição completa em vez de edição in-place. Decisão
+    técnica central: a Ficha desenha os selôs <strong>do zero, de forma
+    independente</strong> — clona o frame ORIGINAL da área (não a cópia rascunho
+    de trabalho de Tabulação/Swipe, que é destruída/recriada a cada "Gerar
+    Automaticamente" e ficaria órfã) e desenha a partir dos itens já
+    persistidos, reaproveitando <code>_createTabOrderBadge</code>/<code>_createSwipeBadge</code>
+    sem precisar generalizá-las — investigação confirmou que já aceitavam
+    um clone explícito como parâmetro, sem depender do fluxo de captura ao
+    vivo. É um <strong>módulo apartado</strong> (palavras do usuário): frontend isolado
+    em <code>handoff-ficha.js</code>, novo arquivo próprio.</p>
+
+    <p>Revisão de QA pegou e corrigiu 2 problemas antes da entrega ser
+    considerada pronta: o cálculo de posição livre não considerava a
+    Section da própria Ficha, causando colisão visual entre Fichas de
+    áreas diferentes; e a mensagem de "frame não encontrado" (quando a
+    Ficha é apagada manualmente do canvas) não tinha handler no frontend,
+    causando falha silenciosa ao clicar "Ver ficha no canvas". Ver
+    Documentação Técnica, seção 8c.</p>
+
+    <hr>
+
+    <h2>2026-09-04 — Card da Área ampliado: sem "Nova spec", resumo mais rico, "Frames Documentados"</h2>
+
+    <p>Usuário trouxe um screenshot real do card na listagem principal e
+    pediu 3 ajustes: tirar o botão "Nova spec" do card (criar spec passa a
+    ser só dentro da workspace, aba Leitor de Tela) e ampliar o card com um
+    <strong>resumo mais visível</strong> do que já foi documentado; tirar o botão de
+    expandir/recolher (resquício de quando cada área era um accordion
+    in-line — sem sentido depois que o card virou navegação direta); trocar
+    o título da seção de "Áreas Marcadas" para <strong>"Frames Documentados"</strong>.</p>
+
+    <p>O novo resumo do card tem 3 blocos: status por etapa (Tabulação/
+    Swipe/Leitor de Tela, ícone check verde/círculo tracejado cinza — mesmo
+    padrão visual do dashboard da tab Handoff), breakdown por categoria de
+    spec (pills coloridas, só as categorias com pelo menos 1 spec
+    documentada) e status da Ficha de Handoff (contagem de seções já
+    inseridas sobre o total aplicável ao projeto — 2 em web, 3 em mobile).
+    Ver Documentação Técnica, seção 8b.</p>
+
+    <hr>
+
+    <h2>2026-09-04 — Ordem de Tabulação volta ao modelo em lote (reversão parcial e deliberada)</h2>
+
+    <p>A vertical de acessibilidade trouxe uma proposta nova pro modo MANUAL da
+    Ordem de Tabulação: montar a trilha inteira primeiro (clicando em sequência
+    no canvas), e só desenhar os selos reais ao confirmar no final — voltando
+    ao espírito do modelo anterior a 03/09/2026 (que tinha sido abandonado por
+    um bug de dessincronia canvas↔lista), mas sem reintroduzir aquele bug: o
+    bug antigo era consequência de nenhum selo existir até "Aplicar" ser um
+    efeito colateral não intencional; agora é o comportamento esperado — o
+    designer revisa/reordena a lista pendente inteira (com highlight de
+    seleção no canvas) antes de qualquer selo nascer. O botão "Criar ordem de
+    tabulação" (antes "Concluir") passou a desenhar os selos em sequência,
+    reaproveitando o mesmo helper assíncrono já usado pelo scan automático — o
+    modo automático ("Gerar Automaticamente") não mudou em nada, já desenhava
+    em lote desde sempre.</p>
+
+    <p>Hierarquia visual também mudou a pedido da vertical: o fluxo manual passa
+    a ser o caminho primário (botão preenchido) e o automático vira um
+    link/texto secundário menor ("ou usar Mapeamento Automático") — para que o
+    designer aprenda o fluxo manual primeiro. Nomenclatura corrigida em dois
+    pontos: "Gerar Handoff Automatizado" → <strong>"Mapeamento Automatizado"</strong>
+    (resumo do lote de Detecção Automática) e "Gerar Automaticamente" →
+    <strong>"Mapeamento Automático"</strong> (Tabulação) — nenhum desses fluxos produz
+    um resultado final pronto sem revisão humana, então "handoff"/"gerar" não
+    devem mais ser usados para descrevê-los. Ver Documentação Técnica, seção 8.</p>
+
+    <hr>
+
+    <h2>2026-09-04 — Swipe V3: de conexão entre 2 áreas para trilha direcional multi-ponto</h2>
+
+    <p>Nova correção de entendimento sobre Swipe, na mesma sessão da entrega
+    anterior (V1→V2, já registrada acima): o usuário trouxe uma imagem de
+    referência real mostrando que o modelo correto é uma <strong>trilha com N
+    pontos em sequência</strong> — não uma conexão fixa entre exatamente 2 Áreas
+    Marcadas (V2, com <code>a11ySwipeFlows[]</code>). V2 foi removida por completo
+    (schema, backend, frontend) e substituída por <code>hacData.a11ySwipePaths[]</code>
+    (<code>{id, points: [{nodeId, nodeName}, ...], areaId, createdAt}</code>).</p>
+
+    <p>Pontos deixam de ser restritos a Áreas Marcadas — podem ser qualquer
+    elemento/frame clicado no canvas, mesma liberdade da Ordem de Tabulação.
+    Dois modos de captura: sequencial manual (mesmo modelo em lote da entrega
+    anterior — clique só empilha, trilha desenha ao confirmar) e seleção
+    múltipla de uma vez, com a ordem resolvida por
+    <code>_orderNodesInZigzagReadingOrder</code> (a mesma função já usada pelo
+    Mapeamento Automático de Tabulação, promovida de dentro de um closure para
+    escopo top-level). A trilha é desenhada como uma linha direcional contínua
+    com setas por segmento — mais grossa e marcada que a versão anterior
+    (<code>strokeWeight</code> 4, cor cyan de destaque, pedido explícito do
+    usuário). O achado de QA da V2 (dessincronia canvas↔dado ao substituir uma
+    trilha) foi resolvido de propósito: a trilha nova é desenhada antes de a
+    antiga ser removida, nunca o contrário. Ver Documentação Técnica, seção 8d.</p>
+
+    <hr>
+
+    <h2>2026-09-04 — Menu "⋯" no card da Área + Detecção Automática migrada pra tab Leitor de Tela</h2>
+
+    <p><strong>Menu no card</strong>: o card de cada Área Marcada na listagem principal
+    ganhou um dropdown de ações ("⋯") com Focar/Ocultar/Excluir — até então esse
+    conjunto de ações só existia dentro da workspace da área (dropdown "Mais
+    ações" do header), o que obrigava abrir a área só para excluí-la. Reaproveita
+    as funções já existentes (<code>focusNode</code>, <code>toggleAreaGroupVisibility</code>,
+    <code>deleteA11yArea</code>) atrás de dois wrappers novos no frontend.</p>
+
+    <p><strong>Detecção Automática sai do modal de criar Área</strong>: a escolha
+    "Como documentar esta área?" (Detecção Automática vs. Manual), que antes
+    ficava dentro do próprio modal "Marcar Área" e disparava a varredura no
+    mesmo momento em que a área era marcada, foi removida de lá. "Marcar Área"
+    agora só cria a área, sem nenhuma escolha ou varredura embutida. O Mapeamento
+    Automático virou um botão próprio ("ou usar Mapeamento Automático") dentro
+    da tab Leitor de Tela da workspace, ao lado do fluxo manual de criação de
+    spec — reaproveitando o modal de revisão que já existia (antes usado só para
+    retomar/reescanear uma área já documentada). Ver Documentação Técnica,
+    seção 7.</p>
+
+    <hr>
+
+    <h2>2026-09-08 — Reorganização estrutural: artefatos soltos na Section, specs ganham réplica</h2>
+
+    <p><strong>Contexto</strong>: sessão longa que passou por duas fases. Na
+    primeira, uma reorganização anterior (Section única por sessão → 1 Grupo
+    por Área contendo TODOS os artefatos dela) revelou uma cadeia de bugs reais
+    quando a Área é marcada sobre uma <strong>INSTANCE de tela publicada</strong>
+    da lib (padrão comum de uso — arrastar a tela pronta da lib "DSC | Super
+    App"): o clone dessa área também nascia INSTANCE, e a API do Figma proíbe
+    <code>appendChild</code> nela. Cinco causas raiz reais foram encontradas e
+    corrigidas em sequência, cada uma expondo a próxima só depois de corrigida:</p>
+
+    <ol>
+      <li><strong>Clone INSTANCE não aceita filhos</strong> — corrigido com
+      <code>detachInstance()</code> logo após clonar, convertendo pra FRAME
+      antes de qualquer selo/linha ser desenhado dentro.</li>
+      <li><strong>Auto Layout descartava x/y do selo</strong> — telas reais de
+      produto podem ter Auto Layout ativo; escrever a posição do selo antes de
+      marcar <code>layoutPositioning = 'ABSOLUTE'</code> fazia o motor de
+      layout ignorar a escrita e posicionar o selo onde o fluxo mandasse.</li>
+      <li><strong>Z-order invertido</strong> — frames com
+      <code>itemReverseZIndex = true</code> (comum em telas com elementos
+      sobrepostos de propósito, como carrosséis) colocam o PRIMEIRO filho no
+      topo, não o último; <code>appendChild</code> sozinho não bastava.</li>
+      <li><strong><code>clipsContent</code> recortando selos</strong> — causa
+      raiz definitiva: um selo que nasce "vazando" pra fora de um elemento
+      pequeno (de propósito, pra ficar visível ao lado dele) era recortado por
+      qualquer frame com clip no caminho até a raiz do clone. Resolvido
+      abandonando de vez o reparenting DENTRO do clone: selos e linha de swipe
+      passam a viver num <strong>grupo-overlay IRMÃO do clone</strong>
+      (<code>_getOrCreateCloneOverlayGroup</code>) — GROUP puro, que nunca tem
+      clipsContent nem Auto Layout, estruturalmente imune ao problema.</li>
+      <li><strong>Cache de clone ativo era global, não por área</strong> —
+      trocar de Área Marcada sobrescrevia o clone "lembrado" em memória; voltar
+      pra área original recriava tudo do zero (apagando selos já feitos) e
+      resolvia cliques contra o elemento errado. Migrado pra
+      <code>Map&lt;areaId, nodeMap&gt;</code>, tanto em Tabulação quanto em
+      Swipe — cada área mantém seu próprio clone ativo, sem colisão.</li>
+    </ol>
+
+    <p><strong>Segunda fase — simplificação de hierarquia</strong>: depois de
+    estabilizado o pipeline acima, o usuário pediu para abandonar o
+    aninhamento "tudo dentro de 1 Grupo por Área" em favor de algo mais
+    simples: cada tipo de artefato (Tabulação, Swipe, Leitor de Tela) vira seu
+    próprio grupo (réplica + selos/linha/specs), solto direto na
+    <strong>Section de sessão</strong> — sem aninhar num Grupo específico da
+    Área, já que tudo será reorganizado dentro da Ficha de Handoff mais
+    adiante. O Grupo do selo/marcador da Área em si não mudou.</p>
+
+    <p>Na mesma leva, <strong>Especificações (Leitor de Tela) passaram a
+    documentar sobre uma réplica clonada</strong> da área, em vez do frame
+    original — mesma garantia que Tabulação/Swipe já davam ("o design original
+    nunca é tocado"). Fecha também uma lacuna que já existia antes desta
+    mudança: specs nunca gravavam nenhum pluginData de área no próprio node
+    (só no estado local) — agora gravam <code>hacSpecForArea</code>, com um
+    handler de exclusão em cascata dedicado (<code>delete-specs-for-area</code>)
+    como rede de segurança independente do array local. Um snapshot do
+    comportamento anterior de <code>create-unified-spec</code> foi salvo
+    (<code>.rollback-snapshots/</code>) antes da mudança, por precaução.</p>
+
+    <p><strong>Outras correções da mesma sessão</strong>: o highlight
+    temporário (retângulo <code>[HighlightStroke]</code>) desenhado ao clicar
+    em elementos durante a captura de Tabulação/Swipe foi removido —
+    sobrevivia órfão no canvas em janelas de corrida assíncrona, mesmo após
+    duas rodadas de correção anteriores; o feedback visual agora vem só da
+    seleção nativa do Figma. A réplica clonada (Tabulação/Swipe) passou a
+    nascer sempre ABAIXO do frame original, nunca mais tentando os 4 lados. A
+    ordem da Ordem de Tabulação no fluxo de clique manual com seleção múltipla
+    (shift+clique/marquise) parou de ser reordenada por zigue-zague — esse
+    algoritmo é correto só para "Gerar Automaticamente" (sem ordem de clique
+    real pra preservar); o fluxo manual agora respeita a ordem de seleção tal
+    como o Figma a mantém. Ver Documentação Técnica, seção 8e, e
+    <code>docs/funcionalidades-protegidas.md</code> (novo — processo de
+    aprovação prévia para mudanças em funcionalidades já validadas).</p>
+
+    <hr>
+
+    <h2>2026-09-08 — Swipe reaproveita a Ordem de Tabulação; Ficha ganha layout de 4 blocos</h2>
+
+    <p><strong>Achado crítico sobre seleção múltipla</strong>: a documentação
+    oficial da Plugin API do Figma confirma que a ordem de
+    <code>figma.currentPage.selection</code> é "unspecified" — não preserva ordem
+    de clique, mesmo com shift+clique um por um. Isso afetava a Trilha de
+    Swipe (a linha saía cruzada de forma confusa mesmo com cliques em
+    sequência correta). Em vez de tentar resolver ordem de novo pra Swipe
+    (a Ordem de Tabulação já resolve isso de forma validada, sem mexer
+    nela), o Swipe ganhou um botão <strong>"ou usar a Ordem de Tabulação já
+    mapeada"</strong> — reaproveita a sequência já numerada em Tabulação
+    daquela área e desenha a trilha direto nela, sem nenhum critério
+    próprio de ordenação. Sem itens de Tabulação suficientes, cai no
+    fluxo manual normal (nunca bloqueia).</p>
+
+    <p><strong>Ficha de Handoff — layout final de 4 blocos horizontais</strong>:
+    1) Ordem de Tabulação, 2) Swipe, 3) Leitor de Tela, 4) Handoff Review,
+    sempre nessa ordem visual fixa (antes, a posição de cada seção
+    dependia só de qual botão "Inserir" foi clicado primeiro). A Trilha de
+    Swipe na Ficha, que tinha regredido pra só texto numa entrega anterior,
+    voltou a ter réplica visual real (linha + setas desenhadas sobre uma
+    cópia clonada da área). Novo bloco <strong>Handoff Review</strong>: o
+    consolidado do que já foi documentado — sem instrução didática nem
+    réplica própria, só cards de resumo por seção e por categoria de spec.
+    Nunca bloqueia: mostra o que já existe, mesmo que nem todas as outras
+    3 seções tenham sido inseridas ainda. Ver Documentação Técnica, seção
+    8f.</p>
+
+    <hr>
+
+    <h2>2026-09-08 — 2 bugs reais na Ficha/Swipe; documentação do subsistema de clone/overlay consolidada</h2>
+
+    <p><strong>Bug real corrigido — réplica do Swipe esticando a Ficha</strong>:
+    a réplica da seção Swipe na Ficha nascia como uma faixa de milhares de
+    pixels de largura, praticamente vazia, em vez de ficar ao lado do bloco
+    de instrução. Causa: a Ficha foi o primeiro lugar em que um grupo-
+    overlay (onde a trilha de Swipe/selos de Tabulação são desenhados)
+    passou a viver dentro de um pai com Auto Layout — sem
+    <code>layoutPositioning = 'ABSOLUTE'</code> nele, o overlay participava
+    do fluxo do Auto Layout como um filho comum, e crescia para cobrir a
+    distância até as coordenadas absolutas originais da trilha (que cruza a
+    tela inteira). Corrigido generalizando o mesmo ajuste que os selos de
+    Tabulação já aplicavam a si próprios.</p>
+
+    <p><strong>Bug real corrigido — "ou usar a Ordem de Tabulação já
+    mapeada" nunca desenhava a trilha</strong>: o botão sempre falhava com
+    "elemento não existe mais na cópia da área", mesmo a trilha nunca tendo
+    sido desenhada. Causa: os itens da Ordem de Tabulação guardam o id do
+    node DENTRO DA CÓPIA CLONADA de Tabulação, não o id original da área —
+    e o Swipe tem seu próprio clone, diferente, sem nenhum id em comum com
+    o de Tabulação. Corrigido traduzindo o id de volta para o original
+    antes de consultar o clone do Swipe.</p>
+
+    <p><strong>Documentação consolidada</strong>: nova seção de referência
+    "Contrato do subsistema de clone/overlay" na Documentação Técnica
+    (seção 8a) — reúne, fora da narrativa cronológica de cada feature, quem
+    cria cada clone, quem é dono de cada cache em memória, e os invariantes
+    que qualquer novo consumidor precisa respeitar (motivada por uma
+    sequência de 7-8 bugs reais nesta mesma área ao longo desta sessão,
+    cada um só visível depois do anterior corrigido). <code>docs/
+    architecture-state.md</code> (arquivo local, não mais fonte primária
+    desde 2026-09-02) recebeu notas pontuais corrigindo uma afirmação
+    desatualizada de "sem pendências estruturais" e apontando para o modelo
+    de agrupamento atual.</p>
+
+    <hr>
+
+    <h2>2026-09-08 — Bug real: "+ Adicionar item" na Ordem de Tabulação importava o componente errado</h2>
+
+    <p><strong>Sintoma real reportado</strong>: numa área mobile já com
+    Ordem de Tabulação completa (16 itens, criados pelo Mapeamento
+    Automático), usar "+ Adicionar item" pra incluir mais um manualmente
+    desenhava um selo visualmente diferente dos demais — o componente
+    desktop "[a11y] Item Number" (alongado, com conector), em vez do
+    "[hac mob base]" pequeno e redondo que os 16 itens originais usam.</p>
+
+    <p><strong>Causa</strong>: <code>startTabOrderAddItemsFromCard</code>
+    (única das 3 entradas do fluxo — manual do zero, Mapeamento Automático,
+    e esta — que reabre uma Ordem de Tabulação já existente pra acrescentar
+    itens) nunca declarava <code>window._tabOrderDeclaredOrigin</code>. O
+    desenho de cada selo novo manda essa variável pro backend como
+    <code>a11yOrigin</code>, com fallback <code>'web'</code> quando não
+    declarada — em projeto mobile, todo item acrescentado por este caminho
+    caía nesse fallback errado e importava o componente desktop. Em projeto
+    web o sintoma nunca aparecia (o fallback coincidia com o componente
+    certo), o que manteve o bug invisível até esta sessão.</p>
+
+    <p><strong>Correção</strong>: a mesma origem real do projeto
+    (<code>hacData.projectOrigin</code>, via
+    <code>ensureA11yProjectOriginThen</code> — já usada pelos outros 2
+    fluxos) agora também é declarada aqui antes de qualquer selo novo ser
+    desenhado. Corrige os dois lados simetricamente — não é um ajuste
+    específico de mobile ou de web, já que a Ordem de Tabulação segue a
+    mesma lógica de origem nos dois casos (só as specs de Leitor de Tela
+    têm conteúdo que difere por origem).</p>
+
+    <p><strong>Confirmado, sem lacuna de funcionalidade</strong>: editar
+    (arrastar para reordenar), excluir (<code>deleteTabOrderItem</code>) e
+    incluir itens numa Ordem de Tabulação já criada já funcionavam
+    igualmente para itens de origem manual e automática — a lista e as
+    ações do card de área nunca distinguiram como cada item foi criado.
+    Excluir já renumera o canvas na hora; reordenar arrastando só atualiza
+    a posição em memória até o designer clicar em "Atualizar".</p>
+
+    <hr>
+
+    <h2>2026-09-08 — "+ Adicionar item" passa a aceitar shift+clique/marquise para vários elementos de uma vez</h2>
+
+    <p><strong>Bug real corrigido</strong>: ao acrescentar itens a uma Ordem
+    de Tabulação já gerada/aplicada no canvas, "+ Adicionar item" só
+    capturava 1 elemento por vez — um shift+clique em vários elementos
+    novos de uma só vez perdia todos menos o primeiro (a leitura do
+    acumulado disparava assim que o primeiro clique chegava, em vez de
+    esperar o designer terminar). Corrigido reaproveitando a mesma mecânica
+    de acumulação silenciosa já usada na captura inicial: o botão vira
+    "Concluir seleção (N)" com a contagem ao vivo enquanto o designer marca
+    quantos elementos precisar, e só lê o acumulado quando ele de fato
+    clica para confirmar. Regra de produto reafirmada: itens novos sempre
+    somam ao final da ordem já existente, nunca a sobrepõem — a única forma
+    de sobrepor é apagar tudo e refazer do zero. Ver Documentação Técnica,
+    seção 8.</p>
+
+    <hr>
+
     <p><em>Entradas anteriores a 2026-08-24 pertencem ao histórico do plugin Handex
     (produto de origem, antes da extração do hac) e não são replicadas aqui.</em></p>
 
