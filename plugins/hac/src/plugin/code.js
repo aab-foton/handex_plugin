@@ -27,6 +27,34 @@ figma.showUI(__html__, { width: 480, height: 750 });
 
 let activeHighlightNode = null;
 
+// Rede de segurança contra highlights órfãos (bug real corrigido
+// 2026-09-09): highlight-node cria um retângulo solto `[HighlightStroke]`
+// direto em figma.currentPage (nunca dentro de nenhum clone/Section), e o
+// único ponto que o remove é clear-highlight, que só sabe apagar o node
+// referenciado pela variável em memória `activeHighlightNode` — se o
+// plugin foi fechado/reaberto entre a criação do highlight e a exclusão da
+// Ordem/Trilha, essa referência já se perdeu, e clear-highlight não acha
+// nada pra remover mesmo sendo chamado. Sintoma real reportado: apagar uma
+// Ordem de Tabulação deixava um `[HighlightStroke]` solto na Layers,
+// sobrevivendo à exclusão da cópia inteira porque nunca viveu dentro dela.
+// Chamado nos handlers de exclusão de Tabulação/Swipe como reforço —
+// nunca depende de `activeHighlightNode` ainda ser válido, varre por NOME
+// entre os filhos soltos de primeiro nível da página (mesmo escopo raso já
+// usado por outras varreduras defensivas do hac).
+function _clearOrphanedHighlightStrokes() {
+  if (activeHighlightNode && !activeHighlightNode.removed) {
+    try { activeHighlightNode.remove(); } catch (e) { }
+  }
+  activeHighlightNode = null;
+  try {
+    for (const sibling of figma.currentPage.children) {
+      if (sibling.name === '[HighlightStroke]') {
+        try { sibling.remove(); } catch (e) { }
+      }
+    }
+  } catch (e) { }
+}
+
 // Gap entre a faixa ocupada (áreas/specs/cópias já existentes) e a nova
 // linha de cópias de Ordem de Tabulação — mesmo valor de _SPEC_GAP por
 // consistência visual com o restante do canvas injetado pelo hac. Gap
@@ -562,6 +590,33 @@ function _isA11yInteractiveComponentKey(componentKey) {
   if (!componentKey) return false;
   const match = _resolveDscComponentA11yMatch(componentKey);
   return !!(match && !match.isUnmapped && A11Y_INTERACTIVE_SHORTNAMES.has(match.a11yCategory));
+}
+
+// Busca o primeiro TEXT visível com conteúdo dentro de um node (recursão
+// rasa, alguns níveis — o bastante pra achar o label de um botão real sem
+// virar uma varredura irrestrita) — usado por generate-tab-order-from-layers
+// (2026-09-09) pra mostrar, na revisão da Ordem de Tabulação, o TEXTO REAL
+// do componente (ex. "Label") em vez do nome da camada do Figma (ex.
+// "Button 1"). É o nome acessível de fato — o que um leitor de tela real
+// anuncia ao chegar num botão — então é isso que ajuda o designer a
+// confirmar "é isso que vai ser lido em voz alta aqui", sem mudar em nada
+// a regra de 1 parada de Tab por componente (a busca não gera itens novos,
+// só decide o TEXTO do item já coletado). Limite de profundidade pequeno
+// (3 níveis) evita custo alto em componentes muito aninhados — um botão
+// real do DSC nunca precisa de mais que isso pra expor seu texto.
+function _findVisibleLabelText(node, depth) {
+  if (!node || node.visible === false) return null;
+  if ((depth || 0) > 3) return null;
+  if (node.type === 'TEXT' && typeof node.characters === 'string' && node.characters.trim()) {
+    return node.characters.trim();
+  }
+  if ('children' in node && Array.isArray(node.children)) {
+    for (const child of node.children) {
+      const found = _findVisibleLabelText(child, (depth || 0) + 1);
+      if (found) return found;
+    }
+  }
+  return null;
 }
 
 // Nome de estilo de texto nomeado (styleName, quando o TEXT usa um Text
@@ -1988,6 +2043,55 @@ function _setCloneOverlayGroupAbsolutePositioning(overlayGroup) {
   } catch (e) { }
 }
 
+// Move a réplica de trabalho JÁ EXISTENTE de uma área (clone + seu grupo-
+// overlay de artefatos, ex. selos de Tabulação ou a linha de Swipe) pra
+// dentro de uma seção da Ficha — em vez de clonar de novo a partir do
+// frame original (decisão de produto, 2026-09-09: "não precisamos da
+// réplica da réplica", 1 réplica por tipo por área, editada
+// incrementalmente onde quer que esteja). `pluginDataKey` é a mesma chave
+// de pluginData usada por _getOrCreateCloneOverlayGroup pra este tipo
+// (ex. 'hacTabOrderBadgesGroupForClone') — precisa achar o overlay ATUAL
+// do clone (no pai ANTIGO, antes de mover) e movê-lo junto, na mesma
+// operação: se o clone fosse movido primeiro e só depois
+// _getOrCreateCloneOverlayGroup fosse chamada, ela procuraria (e não
+// acharia) o overlay no NOVO pai, criando um segundo overlay vazio e
+// deixando os selos/trilha já desenhados órfãos no overlay antigo.
+// Idempotente: se o clone já está dentro de UM frame de Ficha (mesmo
+// destino ou outro), não reparenta de novo — só devolve a referência.
+async function _moveActiveCloneIntoFichaSection(clone, targetSection, pluginDataKey) {
+  // Já dentro de algum frame de Ficha (ex.: "Atualizar" chamado de novo
+  // depois de já ter movido numa entrega anterior) — idempotente.
+  let ancestor = clone.parent;
+  while (ancestor) {
+    try {
+      if (ancestor.getPluginData && ancestor.getPluginData('hacFichaForArea')) {
+        return; // já vive dentro de uma Ficha, nada a mover.
+      }
+    } catch (e) { }
+    ancestor = ancestor.parent;
+  }
+
+  const oldParent = clone.parent;
+  let overlayGroup = null;
+  if (oldParent && Array.isArray(oldParent.children)) {
+    for (const sibling of oldParent.children) {
+      try {
+        if (sibling.type === 'GROUP' && sibling.getPluginData &&
+          sibling.getPluginData(pluginDataKey) === clone.id && !sibling.removed) {
+          overlayGroup = sibling;
+          break;
+        }
+      } catch (e) { }
+    }
+  }
+
+  targetSection.appendChild(clone);
+  if (overlayGroup) {
+    targetSection.appendChild(overlayGroup);
+    _setCloneOverlayGroupAbsolutePositioning(overlayGroup);
+  }
+}
+
 // Destino padrão de todo artefato de uma Área: o Grupo dela. Áreas criadas
 // antes de 2026-09-05 não têm Grupo (area.id é a INSTANCE solta do selo,
 // que não aceita filhos) — nesses casos cai na Section por tipo de artefato
@@ -2075,6 +2179,12 @@ function _forEachTabOrderCopyCandidate(fn) {
   }
   _forEachA11ySessionAreaChild(fn);
   _forEachA11ySessionDirectChild(fn);
+  // Varre TAMBÉM dentro de frames de Ficha já existentes (2026-09-09) — a
+  // cópia de trabalho pode ter sido MOVIDA pra dentro da Ficha por um
+  // "Inserir na ficha" anterior (ver comentário completo em
+  // _forEachA11yFichaFrameChild). Sem isto, um cache-miss depois de mover
+  // recriaria a cópia do zero, deixando a movida órfã dentro da Ficha.
+  _forEachA11yFichaFrameChild(fn);
   // Varre TODAS as Sections de Ordem de Tabulação com o prefixo base,
   // qualquer sufixo de versão (v2, v3...) — não só o nome fixo sem versão.
   // A criação (_getOrCreateTabOrderSection) já aplica o sufixo da geração
@@ -2150,6 +2260,9 @@ function _forEachSwipePathCopyCandidate(fn) {
   }
   _forEachA11ySessionAreaChild(fn);
   _forEachA11ySessionDirectChild(fn);
+  // Mesmo motivo de _forEachTabOrderCopyCandidate (2026-09-09) — a cópia de
+  // Swipe pode ter sido MOVIDA pra dentro da Ficha.
+  _forEachA11yFichaFrameChild(fn);
 }
 
 // Mesma correção de vazamento de _removeExistingTabOrderCopiesForArea
@@ -2217,6 +2330,34 @@ function _forEachFichaFrameCandidate(fn) {
   _forEachA11ySessionDirectChild(fn);
 }
 
+// Nova fonte de varredura (2026-09-09, decisão de produto): a partir
+// desta mudança, "Inserir na ficha" passa a MOVER a réplica de trabalho
+// já existente (com selos/trilha já desenhados) pra dentro do frame da
+// Ficha, em vez de clonar de novo a partir do frame original — 1 réplica
+// por tipo por área, nunca 2 ("não precisamos da réplica da réplica",
+// palavras do usuário). Isso significa que a cópia ativa de uma área
+// pode passar a viver 2 níveis dentro de um fichaFrame (fichaFrame →
+// seção "Ficha — Tabulação/Swipe/Leitor" → clone + overlay) — nenhuma
+// fonte de varredura existente descia até aqui (_forEachA11ySessionDirectChild
+// só desce 1 nível a partir da Section de sessão, onde a cópia vivia
+// ANTES de ser movida). Sem esta fonte, _resolveActiveTabOrderClone
+// (e os pares de Swipe/Specs) não encontrariam mais a cópia já movida
+// num cache-miss (plugin fechado/reaberto, por exemplo) e cairiam no
+// fallback de recriar do zero — deixando a cópia movida órfã dentro da
+// Ficha (nunca mais encontrada) e uma cópia NOVA solta fora dela,
+// exatamente o sintoma que motivou esta mudança de modelo.
+// Somada às fontes já existentes, nunca substituindo nenhuma (mesmo
+// princípio de sempre usado em toda a base).
+function _forEachA11yFichaFrameChild(fn) {
+  _forEachFichaFrameCandidate(fichaFrame => {
+    if (!fichaFrame || fichaFrame.type === 'SECTION' || !Array.isArray(fichaFrame.children)) return;
+    for (const section of fichaFrame.children) {
+      if (!section || !Array.isArray(section.children)) continue;
+      for (const child of section.children) fn(child);
+    }
+  });
+}
+
 // Localiza o frame da Ficha de uma área — tenta primeiro o id salvo em
 // hacData (mais rápido, sem varredura), cai pra busca por pluginData
 // 'hacFichaForArea' se o id não resolver mais (frame apagado/movido
@@ -2239,6 +2380,207 @@ async function _findFichaFrameForArea(areaId, savedFrameId) {
     } catch (e) { }
   });
   return found;
+}
+
+// Varre TODO conteúdo de topo de nível da página atual — não só o que o
+// hac já colocou/referencia. Motivo: a réplica de Ordem de Tabulação não
+// pode sobrepor NADA no canvas, inclusive telas/frames do designer que o
+// hac nunca tocou (sem hacCategory, sem virar Área Marcada). Antes desta
+// correção a varredura considerava só a Section organizadora + siblings
+// com hacCategory 'a11y' + frames-raiz de Área Marcada via
+// hacAreaTargetNodeId — qualquer outro conteúdo real do arquivo (outras
+// telas, componentes soltos etc.) ficava invisível pro cálculo e podia
+// ser coberto pela cópia. figma.currentPage.children só traz nodes de
+// TOPO de nível (não desce recursivamente), então o custo é baixo mesmo
+// em arquivos grandes. Devolve o Y mais baixo ocupado (bottom) e o X mais
+// à esquerda (left) entre tudo isso, sempre a partir de
+// absoluteBoundingBox/absoluteRenderBounds (nunca node.x/y crus — um node
+// dentro de uma Section tem x/y relativos a ela, não à página).
+// Cópias de Ordem de Tabulação vivem dentro da Section dedicada
+// (_getOrCreateTabOrderSection), não mais soltas em figma.currentPage —
+// sem somar explicitamente os filhos dela aqui, o cálculo de "faixa livre"
+// deixaria de "ver" cópias já existentes (a Section em si cresce pra
+// envolver todas as cópias, mas usar SÓ o bounding box dela distorceria o
+// cálculo: uma Section com 3 cópias lado a lado tem bounds bem diferentes
+// de 3 retângulos individuais, e sobreporia a próxima cópia no meio das
+// existentes em vez de colocá-la ao final da faixa).
+//
+// Bug real corrigido (2026-09-09): esta função (e _rectsOverlap/
+// _findFreeTabOrderCopyPosition logo abaixo) vivia DENTRO do closure de
+// figma.ui.onmessage — invisível para _createOrGetFichaFrame, que sempre
+// viveu no escopo de módulo (fora do closure). insert-ficha-section
+// lançava "'_findFreeTabOrderCopyPosition' is not defined" toda vez que
+// o frame da Ficha ainda não existia (ReferenceError, não capturado por
+// nenhum try/catch específico — só o genérico em insert-ficha-section,
+// que reportava um erro vago ao designer). Movidas as 3 funções pro
+// escopo de módulo, junto de _createOrGetFichaFrame — todas as 3 chamadas
+// que já existiam DENTRO do closure (_createTabOrderCloneForArea/
+// _createSwipePathCloneForArea/_createSpecCloneForArea) continuam
+// funcionando normalmente: uma função de escopo de módulo é visível de
+// dentro de qualquer closure interno, só o inverso que não vale.
+async function _collectA11yOccupiedBounds() {
+  const bounds = [];
+  const seen = new Set();
+  const addNode = (n) => {
+    if (!n || seen.has(n.id)) return;
+    seen.add(n.id);
+    const bb = n.absoluteBoundingBox || n.absoluteRenderBounds;
+    if (!bb) return;
+    bounds.push({ left: bb.x, top: bb.y, right: bb.x + bb.width, bottom: bb.y + bb.height });
+  };
+
+  // A Section de sessão (2026-09-05) é um container que CRESCE a cada
+  // artefato novo — somar o bounding box dela como um bloco só faria a
+  // faixa livre encolher a cada Área/cópia criada, até nenhum dos 4 lados
+  // candidatos passar. Mesmo raciocínio já documentado abaixo pras Sections
+  // por tipo: nunca o container, sempre os conteúdos.
+  figma.currentPage.children.forEach(n => {
+    let isSessionSection = false;
+    try {
+      isSessionSection = !!(n.getPluginData && n.getPluginData('hacSessionSection') === 'true');
+    } catch (e) { }
+    if (isSessionSection) return;
+    addNode(n);
+  });
+
+  // Dentro da Section de sessão cada Área é um GROUP que também cresce a
+  // cada artefato (specs, cópias, Ficha) — por isso somamos os FILHOS
+  // diretos de cada Grupo, um retângulo por artefato, nunca o Grupo
+  // inteiro. Um Grupo com 3 artefatos espalhados tem bounds muito maiores
+  // que a união real ocupada por eles.
+  for (const sibling of figma.currentPage.children) {
+    if (sibling.type !== 'SECTION') continue;
+    let isSessionSection = false;
+    try {
+      isSessionSection = !!(sibling.getPluginData && sibling.getPluginData('hacSessionSection') === 'true');
+    } catch (e) { }
+    if (!isSessionSection) continue;
+    for (const areaGroup of (sibling.children || [])) {
+      if (areaGroup.type === 'GROUP' && areaGroup.children) {
+        areaGroup.children.forEach(addNode);
+      } else {
+        addNode(areaGroup);
+      }
+    }
+  }
+
+  const areaTargetIds = [];
+  for (const sibling of figma.currentPage.children) {
+    try {
+      const areaTargetId = sibling.getPluginData && sibling.getPluginData('hacAreaTargetNodeId');
+      if (areaTargetId) areaTargetIds.push(areaTargetId);
+    } catch (e) { }
+  }
+  // Grupos de Área dentro da Section de sessão também guardam o id do frame
+  // ORIGINAL — sem isto o cálculo não enxergaria o frame documentado de
+  // nenhuma Área criada na estrutura nova.
+  for (const sibling of figma.currentPage.children) {
+    if (sibling.type !== 'SECTION') continue;
+    let isSessionSection = false;
+    try {
+      isSessionSection = !!(sibling.getPluginData && sibling.getPluginData('hacSessionSection') === 'true');
+    } catch (e) { }
+    if (!isSessionSection) continue;
+    for (const child of (sibling.children || [])) {
+      try {
+        const areaTargetId = child.getPluginData && child.getPluginData('hacAreaTargetNodeId');
+        if (areaTargetId) areaTargetIds.push(areaTargetId);
+      } catch (e) { }
+    }
+  }
+  // Varre TODAS as Sections de specs já existentes na página (qualquer
+  // geração/versão, não só a ativa) — o cálculo de "faixa livre" precisa
+  // evitar sobrepor documentação de handoffs antigos também, não só a
+  // Section corrente.
+  const specSectionPrefix = A11Y_SECTION_NAME;
+  for (const sibling of figma.currentPage.children) {
+    if (sibling.type !== 'SECTION' || !sibling.name.startsWith(specSectionPrefix)) continue;
+    for (const child of (sibling.children || [])) {
+      try {
+        const areaTargetId = child.getPluginData && child.getPluginData('hacAreaTargetNodeId');
+        if (areaTargetId) areaTargetIds.push(areaTargetId);
+      } catch (e) { }
+    }
+  }
+
+  for (const areaTargetId of areaTargetIds) {
+    try {
+      const areaRoot = await figma.getNodeByIdAsync(areaTargetId);
+      if (areaRoot) addNode(areaRoot);
+    } catch (e) { }
+  }
+
+  // Mesmo raciocínio para as Sections de Trilha de Swipe.
+  const swipeFlowSectionPrefix = A11Y_SWIPE_FLOW_SECTION_NAME;
+  for (const sibling of figma.currentPage.children) {
+    if (sibling.type !== 'SECTION' || !sibling.name.startsWith(swipeFlowSectionPrefix)) continue;
+    for (const child of (sibling.children || [])) addNode(child);
+  }
+
+  // Mesmo raciocínio para as Sections de Ficha de Handoff — sem isto, duas
+  // Áreas diferentes gerando Ficha colidem visualmente entre si, e uma
+  // Ficha já inserida pode ser sobreposta por uma cópia de Tabulação
+  // criada depois dela (achado real de QA, 2026-09-04).
+  const fichaSectionPrefix = A11Y_FICHA_SECTION_NAME;
+  for (const sibling of figma.currentPage.children) {
+    if (sibling.type !== 'SECTION' || !sibling.name.startsWith(fichaSectionPrefix)) continue;
+    for (const child of (sibling.children || [])) addNode(child);
+  }
+
+  return bounds;
+}
+
+// A cópia de Ordem de Tabulação nasce perto do frame ORIGINAL que ela
+// replica — não numa faixa global calculada contra tudo que já existe na
+// página inteira (isso jogava a cópia pra muito longe em arquivos grandes
+// com telas espalhadas por toda parte, bug real relatado em 2026-09-03).
+// Tenta, em ordem, os 4 lados do frame original (direita, abaixo,
+// esquerda, acima) e usa o primeiro que não colide com nada que esteja
+// fisicamente PRÓXIMO (checagem contra occupied, que ainda cobre toda a
+// página — mas aqui só descarta candidatos que colidem de verdade, não
+// empurra pra baixo de tudo só por existir algo distante). Depois de
+// nascer, a cópia é um frame comum — o designer arrasta pra onde quiser,
+// sem precisar de nenhuma opção extra no plugin.
+function _rectsOverlap(a, b) {
+  return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+}
+
+async function _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, originBounds) {
+  let occupied;
+  try {
+    occupied = await _collectA11yOccupiedBounds();
+  } catch (e) {
+    console.error('[hac] _findFreeTabOrderCopyPosition: falhou em _collectA11yOccupiedBounds', e && e.message);
+    throw e;
+  }
+
+  const ox = originBounds.x;
+  const oy = originBounds.y;
+  const ow = originBounds.width;
+  const oh = originBounds.height;
+
+  // Sempre ABAIXO do frame original (2026-09-08, pedido do usuário) —
+  // antes tentava 4 lados em ordem (direita, abaixo, esquerda, acima),
+  // usando o primeiro sem colisão; isso fazia a réplica nascer do lado
+  // ou até por cima de outro conteúdo já existente, dependendo do que
+  // estivesse ocupado naquele momento. Agora a posição horizontal é
+  // sempre a mesma do original (x = ox) — só a posição vertical desce,
+  // em incrementos de _TAB_ORDER_ROW_GAP a partir de logo abaixo do
+  // original, até achar uma faixa livre. Sem limite de tentativas
+  // (diferente do antigo fallback de 4 lados): numa página real, sempre
+  // existe espaço mais abaixo, então não precisa de um "último recurso".
+  const x = Math.round(ox);
+  let y = Math.round(oy + oh + _TAB_ORDER_ROW_GAP);
+  for (let guard = 0; guard < 500; guard++) {
+    const rect = { left: x, top: y, right: x + cloneWidth, bottom: y + cloneHeight };
+    const collidingBounds = occupied.filter(b => _rectsOverlap(rect, b));
+    if (collidingBounds.length === 0) return { x, y };
+    // Colidiu com algo que já está mais abaixo — desce até passar do
+    // ponto mais baixo de tudo que colidiu, e tenta de novo dali.
+    const lowestConflictBottom = collidingBounds.reduce((max, b) => Math.max(max, b.bottom), y);
+    y = Math.round(lowestConflictBottom + _TAB_ORDER_ROW_GAP);
+  }
+  return { x, y };
 }
 
 // Cria (ou retorna, se já existir) o frame-container da Ficha de uma área —
@@ -2300,7 +2642,12 @@ async function _createOrGetFichaFrame(area, designerName) {
 // RAIZ daquela seção (não por nome/posição, o designer pode reordenar/
 // renomear livremente dentro do frame). Substituição completa: cada
 // "Inserir/Atualizar ficha" começa sempre limpando a seção correspondente
-// antes de desenhar a nova versão.
+// antes de desenhar a nova versão. Usada hoje só pelo Handoff Review
+// (_buildFichaReviewSection, sem estado próprio pra preservar) — Tabulação/
+// Swipe/Leitor pararam de chamar isto (2026-09-09, ver
+// _findFichaSectionInFrame): remover a seção apagaria a réplica de
+// trabalho MOVIDA pra dentro dela, que não tem como ser recriada sem
+// perder o trabalho já feito.
 function _removeFichaSectionInFrame(fichaFrame, sectionKey) {
   const children = (fichaFrame.children || []).slice();
   for (const child of children) {
@@ -2310,6 +2657,21 @@ function _removeFichaSectionInFrame(fichaFrame, sectionKey) {
       }
     } catch (e) { }
   }
+}
+
+// Espelha _removeFichaSectionInFrame, mas SEM remover — devolve a seção já
+// existente pra ser reaproveitada (2026-09-09, necessário desde que
+// Tabulação/Swipe/Leitor passaram a mover a réplica de trabalho pra dentro
+// da Ficha em vez de recriá-la do zero a cada "Atualizar").
+function _findFichaSectionInFrame(fichaFrame, sectionKey) {
+  for (const child of (fichaFrame.children || [])) {
+    try {
+      if (child.getPluginData && child.getPluginData('hacFichaSection') === sectionKey) {
+        return child;
+      }
+    } catch (e) { }
+  }
+  return null;
 }
 
 // Ordem visual fixa dos 4 blocos da Ficha (2026-09-08, pedido do
@@ -2458,7 +2820,14 @@ async function _a11yScanArea(rootNode) {
     return false;
   }
 
-  async function _extract(n, depth) {
+  // `parentComponentMatch` (2026-09-09): preenchido só quando esta chamada
+  // de _extract está visitando um filho DIRETO de um componente DSC já
+  // resolvido (ver _hasResolvedDscMatch/_hasExposedSlotProperties abaixo)
+  // — nunca mais fundo que 1 nível. Sinaliza pro bloco de classificação
+  // "só aceite este node se ele for um ÍCONE isolado (categoria 'icons'),
+  // ignore qualquer outra categoria e não desça mais fundo" — ver uso mais
+  // abaixo. Fora desse modo (undefined), o comportamento é o de sempre.
+  async function _extract(n, depth, parentComponentMatch) {
     if ((depth || 0) > 16) return;
     if (n.visible === false) return;
     if (n !== rootNode && _isClippedByAncestor(n)) return;
@@ -2571,6 +2940,18 @@ async function _a11yScanArea(rootNode) {
       // reais de a11y (texto, componente, ícone, imagem).
       const _treeOrder = _treeVisitIndex++;
 
+      // Dentro de um componente pai já resolvido (parentComponentMatch
+      // preenchido), só ícones/decorativos isolados viram item — qualquer
+      // outra categoria (texto solto, outra INSTANCE de componente DSC,
+      // sub-frame estrutural) é descartada aqui, preservando a garantia
+      // original de nunca fragmentar o componente pai em itens
+      // concorrentes (2026-09-04, ver comentário em _hasResolvedDscMatch
+      // abaixo) — a única exceção nova e deliberada é o ícone decorativo
+      // que o design pode ter embutido (ex.: ícone dentro de cada botão
+      // de "[dsc-tc] Actions - Button Row"), que precisa virar spec
+      // própria de Elemento Decorativo.
+      if (parentComponentMatch && category !== 'icons') category = 'frames';
+
       if (category !== 'frames') {
         let dscComponentMatch = null;
         let needsA11yTokenReview = false;
@@ -2636,6 +3017,11 @@ async function _a11yScanArea(rootNode) {
           needsA11yTokenReview,
           nodeId: n.id,
           treeOrder: _treeOrder,
+          // Contexto pro frontend mostrar "ícone dentro de: <nome do
+          // componente pai>" na revisão do lote — evita confusão sobre um
+          // ícone aparecer "solto" quando na verdade vive dentro de um
+          // componente maior já documentado à parte (2026-09-09).
+          parentComponentMatch: parentComponentMatch || null,
         });
       }
 
@@ -2666,9 +3052,40 @@ async function _a11yScanArea(rootNode) {
       const _hasExposedSlotProperties = n.type === 'INSTANCE' && mainComp && mainComp.remote &&
         n.componentPropertyReferences && Object.keys(n.componentPropertyReferences).length > 0;
 
-      if (!_hasResolvedDscMatch && !_hasExposedSlotProperties && 'children' in n && n.children) {
+      // Já estamos DENTRO do modo restrito (visitando filho direto de um
+      // componente pai resolvido, ver ramo abaixo) — nunca desce mais
+      // fundo que esse 1 nível, mesmo que este próprio filho seja um
+      // FRAME/GROUP com filhos, e mesmo que ele próprio resolva como
+      // outro componente DSC. Isso é o que garante "só 1 nível", sem
+      // depender de _hasResolvedDscMatch/_hasExposedSlotProperties
+      // calculados de novo pra este filho.
+      if (parentComponentMatch) {
+        // não desce.
+      } else if (!_hasResolvedDscMatch && !_hasExposedSlotProperties && 'children' in n && n.children) {
         for (const child of n.children) {
           await _extract(child, (depth || 0) + 1);
+        }
+      } else if (_hasResolvedDscMatch && !_hasExposedSlotProperties && 'children' in n && n.children) {
+        // Regra nova (2026-09-09, caso real: "[dsc-tc] Actions - Button
+        // Row" — cada botão tem um ícone interno que precisa virar spec
+        // própria de Elemento Decorativo, hoje invisível porque a
+        // recursão parava aqui). Em vez de bloquear totalmente, desce SÓ
+        // 1 nível (os filhos diretos — o guard `if (parentComponentMatch)`
+        // acima impede qualquer nível além deste) — cada filho é
+        // classificado normalmente pela lógica acima, mas só é aceito se
+        // for um ÍCONE isolado (parentComponentMatch !== null &&
+        // category !== 'icons' vira 'frames', descartado). Não reintroduz
+        // o bug original: qualquer OUTRA INSTANCE de componente DSC
+        // dentro (ex. um Badge) nunca bate na heurística de ícone, então
+        // nunca vira item concorrente — e mesmo que batesse, o guard
+        // acima impediria ela de descer mais fundo ainda. Aplicado só ao
+        // caso _hasResolvedDscMatch — _hasExposedSlotProperties (conteúdo
+        // de slot dinâmico, ex. Footer/Badge do Value Section) continua
+        // bloqueado por completo, caso conceitualmente diferente
+        // (conteúdo configurável via property, não decoração fixa do
+        // design).
+        for (const child of n.children) {
+          await _extract(child, (depth || 0) + 1, _dscRemoteMatch);
         }
       }
     } catch (err) {
@@ -3373,6 +3790,7 @@ figma.ui.onmessage = async (msg) => {
   // decide marcador/dicionário de import, só opts.a11yOrigin faz isso.
   if (msg.type === "create-unified-spec") {
     (async () => {
+     try {
       const opts = msg.opts;
       let node = null;
       if (opts.targetNodeId) {
@@ -3696,9 +4114,24 @@ figma.ui.onmessage = async (msg) => {
         // Título usa selo FIXO "H" repetido em elementos diferentes — não
         // alimenta o agrupamento por "mesma tag" (empilharia specs de títulos
         // diferentes uma sobre a outra); cada spec de Título posiciona de
-        // forma independente. Specs vivem dentro da Section organizadora, por
+        // forma independente. Specs vivem dentro da Section de sessão, por
         // isso escaneamos os filhos dela, não a página inteira.
-        const _stackScanNodes = _getOrCreateA11ySection(opts.sectionName).children || [];
+        //
+        // Bug real corrigido (2026-09-09): usava _getOrCreateA11ySection
+        // (modelo ANTIGO, por nome fixo A11Y_SECTION_NAME — pré-reorganização
+        // de 2026-09-08) — sempre que opts.sectionName chegava vazio (caso
+        // normal: hacData.activeSectionName só é setado quando o designer
+        // escolhe explicitamente uma versão de Section, ver
+        // getA11yActiveSectionName), essa chamada criava/reaproveitava uma
+        // Section FANTASMA com o nome fixo "hac — Especificações de
+        // Acessibilidade" (sem timestamp/designer), só pra ler .children —
+        // solta e paralela à Section de sessão real (identificada por
+        // pluginData hacSessionSection, não por nome), onde o specGroup de
+        // fato é reparentado logo abaixo (_reparentIntoSection(specGroup,
+        // () => _getOrCreateA11ySessionSection(...))). Trocado pra a MESMA
+        // função usada pelo reparenting real, unificando os dois pontos —
+        // nunca mais cria uma Section a mais.
+        const _stackScanNodes = _getOrCreateA11ySessionSection(opts.designerName).children || [];
         if (opts.a11yType !== 'titulo') _stackScanNodes.forEach(n => {
           if (n.type !== 'GROUP') return;
           const newFmt = n.name.match(new RegExp('^\\[' + _layerTag + ' \\| ([A-Z]\\d*(?:\\.\\d+)*) \\| ([a-z]+)\\] '));
@@ -3958,6 +4391,18 @@ figma.ui.onmessage = async (msg) => {
       } else if (!opts.silent) {
         figma.notify("Especificação de acessibilidade criada.");
       }
+     } catch (e) {
+      // Rede de segurança de topo (2026-09-09) — antes, qualquer exceção
+      // não tratada em algum ponto do fluxo (entre a resolução do node e o
+      // postMessage de sucesso) matava a Promise em silêncio: nenhum
+      // 'spec-created' chegava ao frontend, que só percebia via timeout de
+      // 15s (_createA11ySpecAndWait) — sintoma real reportado: "Não foi
+      // possível criar esta especificação — item pulado", sem nenhuma
+      // pista da causa real (só visível no console do Figma, se alguém
+      // tivesse aberto). Reporta o erro de verdade ao designer.
+      console.error('[hac] create-unified-spec: falhou.', e && (e.stack || e.message));
+      figma.notify(`Não foi possível criar a especificação: ${(e && e.message) || 'erro desconhecido'}`, { error: true, timeout: 6000 });
+     }
     })();
     return;
   }
@@ -4373,6 +4818,12 @@ figma.ui.onmessage = async (msg) => {
     group.name = `[Selo de Tabulação | ${number}] ${node.name}`;
     group.locked = false;
     group.setPluginData('hacCategory', 'a11y');
+    // Marca o node-alvo (dentro do CLONE, não o original) que este selo
+    // aponta (2026-09-09) — usado por _buildFichaTabulacaoSection pra
+    // detectar quais itens já têm selo desenhado no overlay ANTES de
+    // decidir o que redesenhar, depois que a réplica de trabalho passou a
+    // ser MOVIDA (não reclonada) pra dentro da Ficha.
+    group.setPluginData('hacTabOrderBadgeForTarget', node.id);
 
     // O selo nasce em figma.currentPage (precisa de posição absoluta livre
     // pra calcular contra a bounding box do nó-alvo, que também é absoluta).
@@ -4594,7 +5045,7 @@ figma.ui.onmessage = async (msg) => {
         // zigue-zague — ver _orderNodesInZigzagReadingOrder.
         const withBounds = collected.filter(node => !!node.absoluteBoundingBox);
         const items = _orderNodesInZigzagReadingOrder(withBounds)
-          .map(node => ({ nodeId: node.id, nodeName: node.name }));
+          .map(node => ({ nodeId: node.id, nodeName: _findVisibleLabelText(node) || node.name }));
 
         figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, generation: msg.generation, items, cloneId: clone.id, nodeMap: plainNodeMap });
         figma.notify(`${items.length} elemento${items.length === 1 ? '' : 's'} encontrado${items.length === 1 ? '' : 's'} — revise no modal antes de aplicar.`);
@@ -4663,202 +5114,13 @@ figma.ui.onmessage = async (msg) => {
     return map;
   }
 
-  // Varre TODO conteúdo de topo de nível da página atual — não só o que o
-  // hac já colocou/referencia. Motivo: a réplica de Ordem de Tabulação não
-  // pode sobrepor NADA no canvas, inclusive telas/frames do designer que o
-  // hac nunca tocou (sem hacCategory, sem virar Área Marcada). Antes desta
-  // correção a varredura considerava só a Section organizadora + siblings
-  // com hacCategory 'a11y' + frames-raiz de Área Marcada via
-  // hacAreaTargetNodeId — qualquer outro conteúdo real do arquivo (outras
-  // telas, componentes soltos etc.) ficava invisível pro cálculo e podia
-  // ser coberto pela cópia. figma.currentPage.children só traz nodes de
-  // TOPO de nível (não desce recursivamente), então o custo é baixo mesmo
-  // em arquivos grandes. Devolve o Y mais baixo ocupado (bottom) e o X mais
-  // à esquerda (left) entre tudo isso, sempre a partir de
-  // absoluteBoundingBox/absoluteRenderBounds (nunca node.x/y crus — um node
-  // dentro de uma Section tem x/y relativos a ela, não à página).
-  // Cópias de Ordem de Tabulação vivem dentro da Section dedicada
-  // (_getOrCreateTabOrderSection), não mais soltas em figma.currentPage —
-  // sem somar explicitamente os filhos dela aqui, o cálculo de "faixa livre"
-  // deixaria de "ver" cópias já existentes (a Section em si cresce pra
-  // envolver todas as cópias, mas usar SÓ o bounding box dela distorceria o
-  // cálculo: uma Section com 3 cópias lado a lado tem bounds bem diferentes
-  // de 3 retângulos individuais, e sobreporia a próxima cópia no meio das
-  // existentes em vez de colocá-la ao final da faixa).
-  async function _collectA11yOccupiedBounds() {
-    const bounds = [];
-    const seen = new Set();
-    const addNode = (n) => {
-      if (!n || seen.has(n.id)) return;
-      seen.add(n.id);
-      const bb = n.absoluteBoundingBox || n.absoluteRenderBounds;
-      if (!bb) return;
-      bounds.push({ left: bb.x, top: bb.y, right: bb.x + bb.width, bottom: bb.y + bb.height });
-    };
-
-    // A Section de sessão (2026-09-05) é um container que CRESCE a cada
-    // artefato novo — somar o bounding box dela como um bloco só faria a
-    // faixa livre encolher a cada Área/cópia criada, até nenhum dos 4 lados
-    // candidatos passar. Mesmo raciocínio já documentado abaixo pras Sections
-    // por tipo: nunca o container, sempre os conteúdos.
-    figma.currentPage.children.forEach(n => {
-      let isSessionSection = false;
-      try {
-        isSessionSection = !!(n.getPluginData && n.getPluginData('hacSessionSection') === 'true');
-      } catch (e) { }
-      if (isSessionSection) return;
-      addNode(n);
-    });
-
-    // Dentro da Section de sessão cada Área é um GROUP que também cresce a
-    // cada artefato (specs, cópias, Ficha) — por isso somamos os FILHOS
-    // diretos de cada Grupo, um retângulo por artefato, nunca o Grupo
-    // inteiro. Um Grupo com 3 artefatos espalhados tem bounds muito maiores
-    // que a união real ocupada por eles.
-    for (const sibling of figma.currentPage.children) {
-      if (sibling.type !== 'SECTION') continue;
-      let isSessionSection = false;
-      try {
-        isSessionSection = !!(sibling.getPluginData && sibling.getPluginData('hacSessionSection') === 'true');
-      } catch (e) { }
-      if (!isSessionSection) continue;
-      for (const areaGroup of (sibling.children || [])) {
-        if (areaGroup.type === 'GROUP' && areaGroup.children) {
-          areaGroup.children.forEach(addNode);
-        } else {
-          addNode(areaGroup);
-        }
-      }
-    }
-
-    const areaTargetIds = [];
-    for (const sibling of figma.currentPage.children) {
-      try {
-        const areaTargetId = sibling.getPluginData && sibling.getPluginData('hacAreaTargetNodeId');
-        if (areaTargetId) areaTargetIds.push(areaTargetId);
-      } catch (e) { }
-    }
-    // Grupos de Área dentro da Section de sessão também guardam o id do frame
-    // ORIGINAL — sem isto o cálculo não enxergaria o frame documentado de
-    // nenhuma Área criada na estrutura nova.
-    for (const sibling of figma.currentPage.children) {
-      if (sibling.type !== 'SECTION') continue;
-      let isSessionSection = false;
-      try {
-        isSessionSection = !!(sibling.getPluginData && sibling.getPluginData('hacSessionSection') === 'true');
-      } catch (e) { }
-      if (!isSessionSection) continue;
-      for (const child of (sibling.children || [])) {
-        try {
-          const areaTargetId = child.getPluginData && child.getPluginData('hacAreaTargetNodeId');
-          if (areaTargetId) areaTargetIds.push(areaTargetId);
-        } catch (e) { }
-      }
-    }
-    // Varre TODAS as Sections de specs já existentes na página (qualquer
-    // geração/versão, não só a ativa) — o cálculo de "faixa livre" precisa
-    // evitar sobrepor documentação de handoffs antigos também, não só a
-    // Section corrente.
-    const specSectionPrefix = A11Y_SECTION_NAME;
-    for (const sibling of figma.currentPage.children) {
-      if (sibling.type !== 'SECTION' || !sibling.name.startsWith(specSectionPrefix)) continue;
-      for (const child of (sibling.children || [])) {
-        try {
-          const areaTargetId = child.getPluginData && child.getPluginData('hacAreaTargetNodeId');
-          if (areaTargetId) areaTargetIds.push(areaTargetId);
-        } catch (e) { }
-      }
-    }
-
-    for (const areaTargetId of areaTargetIds) {
-      try {
-        const areaRoot = await figma.getNodeByIdAsync(areaTargetId);
-        if (areaRoot) addNode(areaRoot);
-      } catch (e) { }
-    }
-
-    // Mesmo raciocínio para as Sections de Ordem de Tabulação — qualquer
-    // geração/versão.
-    const tabOrderSectionPrefix = A11Y_TAB_ORDER_SECTION_NAME;
-    for (const sibling of figma.currentPage.children) {
-      if (sibling.type !== 'SECTION' || !sibling.name.startsWith(tabOrderSectionPrefix)) continue;
-      for (const child of (sibling.children || [])) addNode(child);
-    }
-
-    // Mesmo raciocínio para as Sections de Trilha de Swipe — as linhas/setas
-    // desenhadas ali não podem ser sobrepostas pela próxima cópia de
-    // tab-order calculada nesta mesma faixa livre.
-    const swipeFlowSectionPrefix = A11Y_SWIPE_FLOW_SECTION_NAME;
-    for (const sibling of figma.currentPage.children) {
-      if (sibling.type !== 'SECTION' || !sibling.name.startsWith(swipeFlowSectionPrefix)) continue;
-      for (const child of (sibling.children || [])) addNode(child);
-    }
-
-    // Mesmo raciocínio para as Sections de Ficha de Handoff — sem isto, duas
-    // Áreas diferentes gerando Ficha colidem visualmente entre si, e uma
-    // Ficha já inserida pode ser sobreposta por uma cópia de Tabulação
-    // criada depois dela (achado real de QA, 2026-09-04).
-    const fichaSectionPrefix = A11Y_FICHA_SECTION_NAME;
-    for (const sibling of figma.currentPage.children) {
-      if (sibling.type !== 'SECTION' || !sibling.name.startsWith(fichaSectionPrefix)) continue;
-      for (const child of (sibling.children || [])) addNode(child);
-    }
-
-    return bounds;
-  }
-
-  // A cópia de Ordem de Tabulação nasce perto do frame ORIGINAL que ela
-  // replica — não numa faixa global calculada contra tudo que já existe na
-  // página inteira (isso jogava a cópia pra muito longe em arquivos grandes
-  // com telas espalhadas por toda parte, bug real relatado em 2026-09-03).
-  // Tenta, em ordem, os 4 lados do frame original (direita, abaixo,
-  // esquerda, acima) e usa o primeiro que não colide com nada que esteja
-  // fisicamente PRÓXIMO (checagem contra occupied, que ainda cobre toda a
-  // página — mas aqui só descarta candidatos que colidem de verdade, não
-  // empurra pra baixo de tudo só por existir algo distante). Depois de
-  // nascer, a cópia é um frame comum — o designer arrasta pra onde quiser,
-  // sem precisar de nenhuma opção extra no plugin.
-  function _rectsOverlap(a, b) {
-    return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
-  }
-
-  async function _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, originBounds) {
-    let occupied;
-    try {
-      occupied = await _collectA11yOccupiedBounds();
-    } catch (e) {
-      console.error('[hac] _findFreeTabOrderCopyPosition: falhou em _collectA11yOccupiedBounds', e && e.message);
-      throw e;
-    }
-
-    const ox = originBounds.x;
-    const oy = originBounds.y;
-    const ow = originBounds.width;
-    const oh = originBounds.height;
-
-    // Sempre ABAIXO do frame original (2026-09-08, pedido do usuário) —
-    // antes tentava 4 lados em ordem (direita, abaixo, esquerda, acima),
-    // usando o primeiro sem colisão; isso fazia a réplica nascer do lado
-    // ou até por cima de outro conteúdo já existente, dependendo do que
-    // estivesse ocupado naquele momento. Agora a posição horizontal é
-    // sempre a mesma do original (x = ox) — só a posição vertical desce,
-    // em incrementos de _TAB_ORDER_ROW_GAP a partir de logo abaixo do
-    // original, até achar uma faixa livre. Sem limite de tentativas
-    // (diferente do antigo fallback de 4 lados): numa página real, sempre
-    // existe espaço mais abaixo, então não precisa de um "último recurso".
-    const x = Math.round(ox);
-    let y = Math.round(oy + oh + _TAB_ORDER_ROW_GAP);
-    for (let guard = 0; guard < 500; guard++) {
-      const rect = { left: x, top: y, right: x + cloneWidth, bottom: y + cloneHeight };
-      const collidingBounds = occupied.filter(b => _rectsOverlap(rect, b));
-      if (collidingBounds.length === 0) return { x, y };
-      // Colidiu com algo que já está mais abaixo — desce até passar do
-      // ponto mais baixo de tudo que colidiu, e tenta de novo dali.
-      const lowestConflictBottom = collidingBounds.reduce((max, b) => Math.max(max, b.bottom), y);
-      y = Math.round(lowestConflictBottom + _TAB_ORDER_ROW_GAP);
-    }
-    return { x, y };
-  }
+  // _collectA11yOccupiedBounds/_rectsOverlap/_findFreeTabOrderCopyPosition
+  // MOVIDAS pro escopo de módulo em 2026-09-09 (comentário completo lá,
+  // logo antes de _createOrGetFichaFrame) — ficavam só aqui dentro do
+  // closure, invisíveis para _createOrGetFichaFrame (escopo de módulo),
+  // causando ReferenceError real em insert-ficha-section. Continuam
+  // chamáveis normalmente aqui dentro (função de módulo é visível de
+  // dentro de qualquer closure interno).
 
   // Remove qualquer cópia anterior da MESMA área (via pluginData, nunca por
   // nome — o designer pode renomear), clona `root`, posiciona numa faixa
@@ -4973,6 +5235,18 @@ figma.ui.onmessage = async (msg) => {
     });
     if (!found) {
       _forEachA11ySessionAreaChild(sibling => {
+        if (found) return;
+        try {
+          if (sibling.getPluginData && sibling.getPluginData('hacSpecCloneForArea') === areaId) {
+            found = sibling;
+          }
+        } catch (e) { }
+      });
+    }
+    // Mesmo motivo de _forEachTabOrderCopyCandidate (2026-09-09) — a cópia
+    // de Specs pode ter sido MOVIDA pra dentro da Ficha.
+    if (!found) {
+      _forEachA11yFichaFrameChild(sibling => {
         if (found) return;
         try {
           if (sibling.getPluginData && sibling.getPluginData('hacSpecCloneForArea') === areaId) {
@@ -5129,6 +5403,35 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
+  // Espelha highlight-tab-order-copy-node pro wizard de Especificações
+  // (Leitor de Tela) — bug real corrigido (2026-09-09): o botão "Focar" do
+  // wizard sempre usou o handler genérico highlight-node com o nodeId
+  // ORIGINAL, focando o frame principal. Isso fazia sentido antes de
+  // create-unified-spec passar a clonar réplica (2026-09-08) — desde essa
+  // mudança, o card da spec é desenhado sobre o CLONE, não mais sobre o
+  // original, então focar o original mostra uma tela onde nada vai
+  // aparecer. Resolve via _activeSpecCloneMaps (mesmo Map por área que
+  // create-unified-spec já usa) pro node equivalente dentro da cópia de
+  // trabalho ativa da área.
+  if (msg.type === "highlight-spec-copy-node") {
+    (async () => {
+      let targetId = msg.id;
+      const cloneMap = msg.areaId ? _activeSpecCloneMaps.get(msg.areaId) : null;
+      if (cloneMap && cloneMap.has(msg.id)) {
+        targetId = cloneMap.get(msg.id).id;
+      }
+
+      const node = await figma.getNodeByIdAsync(targetId);
+      if (!node || !node.visible || !_nodeOnCurrentPage(node) || !node.absoluteBoundingBox) return;
+
+      figma.currentPage.selection = [node];
+      if (msg.shouldScroll) {
+        figma.viewport.scrollAndZoomIntoView([node]);
+      }
+    })();
+    return;
+  }
+
   // Resolve a cópia "rascunho" ativa da área (criada por start-tab-order-copy
   // ou generate-tab-order-from-layers) ou cria uma do zero se por algum
   // motivo não houver nenhuma em memória — mesmo fallback que já existia
@@ -5182,9 +5485,43 @@ figma.ui.onmessage = async (msg) => {
       }
     }
 
+    // Cache em memória vazio (ex.: plugin fechado/reaberto) — antes de
+    // recriar do zero, procura no CANVAS por um clone já existente desta
+    // área (mesmo padrão já usado por _resolveActiveSpecClone via
+    // _findSpecCloneForArea). Crítico desde que "Inserir na ficha" passou
+    // a MOVER a cópia de trabalho pra dentro do frame da Ficha
+    // (2026-09-09) — sem este fallback, um cache-miss recriaria a cópia
+    // do zero a partir do frame original, deixando a cópia MOVIDA (com
+    // todo o trabalho já feito) órfã dentro da Ficha, nunca mais
+    // encontrada por nenhuma varredura.
+    const canvasClone = _findTabOrderCopyForArea(areaId);
+    if (canvasClone && !canvasClone.removed && _nodeOnCurrentPage(canvasClone)) {
+      let clone = canvasClone;
+      if (clone.type === 'INSTANCE') {
+        try { clone = clone.detachInstance(); } catch (e) { /* segue como INSTANCE */ }
+      }
+      const nodeMap = _buildOriginalToCloneMap(root, clone);
+      if (areaId) _activeTabOrderCloneMaps.set(areaId, nodeMap);
+      return { clone, nodeMap };
+    }
+
     const created = await _createTabOrderCloneForArea(root, areaId, sectionName, designerName);
     if (areaId) _activeTabOrderCloneMaps.set(areaId, created.nodeMap);
     return created;
+  }
+
+  // Espelha _findTabOrderCopyForArea pra Trilha de Swipe.
+  function _findSwipePathCopyForArea(areaId) {
+    let found = null;
+    _forEachSwipePathCopyCandidate(sibling => {
+      if (found) return;
+      try {
+        if (sibling.getPluginData && sibling.getPluginData('hacSwipePathCopyForArea') === areaId) {
+          found = sibling;
+        }
+      } catch (e) { }
+    });
+    return found;
   }
 
   // Espelha _resolveActiveTabOrderClone pra Trilha de Swipe (2026-09-04-ac)
@@ -5217,6 +5554,21 @@ figma.ui.onmessage = async (msg) => {
         }
         return { clone, nodeMap: cachedNodeMap };
       }
+    }
+
+    // Cache em memória vazio — mesmo fallback via canvas de
+    // _resolveActiveTabOrderClone/_resolveActiveSpecClone (2026-09-09,
+    // crítico desde que "Inserir na ficha" passou a MOVER a cópia de
+    // trabalho pra dentro do frame da Ficha).
+    const canvasClone = _findSwipePathCopyForArea(areaId);
+    if (canvasClone && !canvasClone.removed && _nodeOnCurrentPage(canvasClone)) {
+      let clone = canvasClone;
+      if (clone.type === 'INSTANCE') {
+        try { clone = clone.detachInstance(); } catch (e) { /* segue como INSTANCE */ }
+      }
+      const nodeMap = _buildOriginalToCloneMap(root, clone);
+      if (areaId) _activeSwipePathCloneMaps.set(areaId, nodeMap);
+      return { clone, nodeMap };
     }
 
     const created = await _createSwipePathCloneForArea(root, areaId, sectionName, designerName);
@@ -5294,6 +5646,7 @@ figma.ui.onmessage = async (msg) => {
   // nome (o designer pode ter renomeado a cópia livremente).
   if (msg.type === "delete-tab-order-copy-for-area") {
     _removeExistingTabOrderCopiesForArea(msg.areaId);
+    _clearOrphanedHighlightStrokes();
     return;
   }
 
@@ -5335,6 +5688,7 @@ figma.ui.onmessage = async (msg) => {
     };
     _forEachA11ySessionDirectChild(removeIfMatch);
     _forEachA11ySessionAreaChild(removeIfMatch);
+    _clearOrphanedHighlightStrokes();
     return;
   }
 
@@ -5492,6 +5846,12 @@ figma.ui.onmessage = async (msg) => {
       for (const child of (sibling.children || [])) _check(child);
     }
     _forEachA11ySessionAreaChild(_check);
+    _forEachA11ySessionDirectChild(_check);
+    // A trilha pode ter sido MOVIDA pra dentro de uma Ficha (2026-09-09,
+    // ver _forEachA11yFichaFrameChild) — sem esta fonte, reabrir "Iniciar
+    // trilha de swipe" depois de já ter inserido na Ficha não encontraria
+    // a trilha antiga pra substituir, deixando-a órfã dentro da Ficha.
+    _forEachA11yFichaFrameChild(_check);
     return found;
   }
 
@@ -5638,6 +5998,7 @@ figma.ui.onmessage = async (msg) => {
     (async () => {
       const areaId = msg.areaId;
       _removeSwipePathForArea(areaId);
+      _clearOrphanedHighlightStrokes();
       figma.ui.postMessage({ type: 'swipe-path-cleaned-up', areaId });
     })();
     return;
@@ -5699,74 +6060,84 @@ figma.ui.onmessage = async (msg) => {
   // ============================================================
   // Ficha de Handoff — handlers
   // ============================================================
-  // Clona o frame ORIGINAL da área (nunca a cópia rascunho de Tabulação,
-  // que é descartável) para dentro da própria seção da Ficha, e devolve o
-  // mapa original→clone (_buildOriginalToCloneMap, já existente) — mesmo
-  // raciocínio de _createTabOrderCloneForArea, mas SEM reparentar na
-  // Section de Tabulação (o clone nasce direto dentro do frame da Ficha,
-  // que quem chama passa como `parentFrame`).
-  async function _cloneAreaRootIntoFicha(area, parentFrame, labelPrefix) {
-    const root = area.targetNodeId ? await figma.getNodeByIdAsync(area.targetNodeId) : null;
-    if (!root || !root.absoluteBoundingBox || typeof root.clone !== 'function') return null;
+  // _cloneAreaRootIntoFicha REMOVIDA (2026-09-09) — clonava o frame
+  // ORIGINAL do zero a cada "Inserir/Atualizar ficha", ignorando a cópia
+  // de trabalho que o designer já tinha pronta (com selos/trilha/specs já
+  // desenhados). Decisão de produto: "não precisamos da réplica da
+  // réplica" — 1 réplica por tipo (Tabulação/Swipe/Leitor de Tela) por
+  // área, nunca 2. Os 3 builders abaixo passaram a MOVER a réplica ATIVA
+  // (via _resolveActiveTabOrderClone/_resolveActiveSwipePathClone/
+  // _resolveActiveSpecClone — mesmas funções que o fluxo de trabalho usa)
+  // pra dentro da seção da Ficha, reaproveitando _moveActiveCloneIntoFichaSection.
 
-    const clone = root.clone();
-    figma.currentPage.appendChild(clone);
-    clone.name = `[${labelPrefix}] ${root.name}`;
-    clone.locked = false;
-    clone.setPluginData('hacCategory', 'a11y');
+  // Seção "Tabulação" da Ficha — MOVE a réplica de trabalho já existente
+  // da área (2026-09-09, decisão de produto acima). Resolve a cópia ATIVA
+  // via _resolveActiveTabOrderClone (mesma função que o fluxo de trabalho
+  // normal usa — cria do zero só se genuinamente
+  // não existir nenhuma ainda) e reparenta clone+overlay (com os selos JÁ
+  // desenhados) pra dentro da seção da Ficha via
+  // _moveActiveCloneIntoFichaSection (idempotente — chamar de novo em
+  // "Atualizar" não move nada se já estiver dentro de uma Ficha). Itens
+  // NOVOS (ainda sem selo no overlay) são desenhados incrementalmente
+  // depois de mover, reaproveitando _createTabOrderBadge — que já resolve
+  // sozinha o overlay correto do clone (agora dentro da Ficha) via
+  // _getOrCreateCloneOverlayGroup.
+  async function _buildFichaTabulacaoSection(fichaFrame, area, items, designerName) {
+    let section = _findFichaSectionInFrame(fichaFrame, 'tabulacao');
+    if (!section) {
+      section = figma.createFrame();
+      section.name = 'Ficha — Tabulação';
+      section.layoutMode = 'HORIZONTAL';
+      section.primaryAxisSizingMode = 'AUTO';
+      section.counterAxisSizingMode = 'AUTO';
+      section.itemSpacing = 24;
+      section.fills = [];
+      section.setPluginData('hacFichaSection', 'tabulacao');
+      _insertFichaSectionInOrder(fichaFrame, section, 'tabulacao');
 
-    const nodeMap = _buildOriginalToCloneMap(root, clone);
+      const legend = _buildFichaLegendColumn(
+        'Ordem de Tabulação',
+        'Sequência de foco do teclado (tecla Tab) desta tela — cada selo numerado indica a ordem em que o elemento recebe foco.'
+      );
+      section.appendChild(legend);
+    }
 
-    // parentFrame (a seção da Ficha) é sempre Auto Layout HORIZONTAL — ao
-    // contrário do reparenting de _createTabOrderBadge (que precisa de
-    // posicionamento ABSOLUTE porque o pai é o design clonado, não um
-    // container de layout), aqui queremos exatamente o oposto: o clone deve
-    // ENTRAR NO FLUXO do Auto Layout, lado a lado com a coluna de legenda,
-    // sem x/y manual algum.
-    parentFrame.appendChild(clone);
-
-    return { clone, nodeMap };
-  }
-
-  // Seção "Tabulação" da Ficha — clona o frame original da área, desenha um
-  // selo por item já persistido em tabOrderItems (reaproveitando
-  // _createTabOrderBadge numa chamada "fria": nunca depende de
-  // _activeTabOrderCloneMaps, só do nodeMap recém-calculado acima) e monta a
-  // coluna de legenda ao lado. `items` chega já filtrado/ordenado pela área
-  // pelo frontend (mesmo _currentTabOrderItems que a aba de trabalho usa).
-  async function _buildFichaTabulacaoSection(fichaFrame, area, items) {
-    _removeFichaSectionInFrame(fichaFrame, 'tabulacao');
-
-    const section = figma.createFrame();
-    section.name = 'Ficha — Tabulação';
-    section.layoutMode = 'HORIZONTAL';
-    section.primaryAxisSizingMode = 'AUTO';
-    section.counterAxisSizingMode = 'AUTO';
-    section.itemSpacing = 24;
-    section.fills = [];
-    section.setPluginData('hacFichaSection', 'tabulacao');
-    _insertFichaSectionInOrder(fichaFrame, section, 'tabulacao');
-
-    const legend = _buildFichaLegendColumn(
-      'Ordem de Tabulação',
-      'Sequência de foco do teclado (tecla Tab) desta tela — cada selo numerado indica a ordem em que o elemento recebe foco.'
-    );
-    section.appendChild(legend);
-
-    const cloneResult = await _cloneAreaRootIntoFicha(area, section, 'Ficha — Tabulação');
     let itemCount = 0;
-    if (cloneResult) {
-      const { clone, nodeMap } = cloneResult;
+    const resolved = area.targetNodeId
+      ? await _resolveActiveTabOrderClone(area.id, area.targetNodeId, area.sectionName, designerName)
+      : null;
+    if (resolved) {
+      const { clone, nodeMap } = resolved;
+      await _moveActiveCloneIntoFichaSection(clone, section, 'hacTabOrderBadgesGroupForClone');
+
+      // Selos já existentes no overlay não são redesenhados — só os itens
+      // ainda sem selo equivalente dentro dele entram aqui. Dedupe por
+      // hacTabOrderBadgeForTarget (marcado por _createTabOrderBadge desde
+      // 2026-09-09); fallback por `number` no NOME do grupo cobre selos
+      // criados ANTES desta correção, que ainda não têm a marca.
+      const overlayGroup = _getOrCreateCloneOverlayGroup(clone, 'hacTabOrderBadgesGroupForClone', '[Selos de Tabulação]');
+      const existingBadgeTargetIds = new Set();
+      const existingBadgeNumbers = new Set();
+      for (const c of (overlayGroup.children || [])) {
+        try {
+          const targetId = c.getPluginData && c.getPluginData('hacTabOrderBadgeForTarget');
+          if (targetId) existingBadgeTargetIds.add(targetId);
+          const m = c.name && c.name.match(/^\[Selo de Tabulação \| (\d+)\]/);
+          if (m) existingBadgeNumbers.add(Number(m[1]));
+        } catch (e) { }
+      }
+
       try { await figma.loadFontAsync({ family: 'Inter', style: 'Bold' }); } catch (e) { }
       for (const item of (items || [])) {
         const mappedNode = item && item.targetNodeId ? nodeMap.get(item.targetNodeId) : null;
         if (!mappedNode || !mappedNode.absoluteBoundingBox) continue;
+        itemCount++;
+        if (existingBadgeTargetIds.has(mappedNode.id) || existingBadgeNumbers.has(item.number)) continue;
         try {
           await _createTabOrderBadge(
             mappedNode, item.number, item.label || '', item.conector || 'direita',
             area.id, false, area.a11yOrigin, clone, area.sectionName
           );
-          itemCount++;
         } catch (e) {
           console.error('[hac] _buildFichaTabulacaoSection: falha ao desenhar selo.', e && e.message);
         }
@@ -5776,34 +6147,40 @@ figma.ui.onmessage = async (msg) => {
     return itemCount;
   }
 
-  // Seção "Swipe" da Ficha — restaurada com réplica visual real
-  // (2026-09-08, pedido do usuário: "definitivamente é pra se ter uma
-  // réplica" — a versão anterior só desenhava texto "1. X → 2. Y...",
-  // regressão de uma entrega anterior). Mesmo padrão de
-  // _buildFichaTabulacaoSection: clona a área via _cloneAreaRootIntoFicha,
-  // traduz cada ponto (id ORIGINAL, vindo de hacData.a11ySwipePaths) pro
-  // node equivalente dentro do clone via nodeMap, e desenha a trilha real
-  // (linha + setas) com _buildSwipePathConnection — a mesma função já
-  // usada no canvas de trabalho, não duplicada aqui. Só é acionada pelo
-  // handler quando o projeto é mobile (Swipe é exclusivo mobile).
-  async function _buildFichaSwipeSection(fichaFrame, area, points) {
-    _removeFichaSectionInFrame(fichaFrame, 'swipe');
+  // Seção "Swipe" da Ficha — réplica visual real (linha + setas com
+  // _buildSwipePathConnection, a mesma função já usada no canvas de
+  // trabalho). Só é acionada pelo handler quando o projeto é mobile
+  // (Swipe é exclusivo mobile).
+  // MOVE a réplica de trabalho já existente da área (2026-09-09, mesmo
+  // modelo de _buildFichaTabulacaoSection) — resolve via
+  // _resolveActiveSwipePathClone (cria do zero só se genuinamente não
+  // existir nenhuma ainda) e reparenta clone+overlay pra dentro da Ficha.
+  // Chave de overlay UNIFICADA com o fluxo de trabalho
+  // ('hacSwipePathGroupForClone', ver insert-swipe-path) — antes deste
+  // ajuste, o builder da Ficha usava uma chave PRÓPRIA
+  // ('hacFichaSwipeGroupForClone'), nunca encontrando a trilha já
+  // desenhada no fluxo de trabalho: cada "Inserir na ficha" recriava um
+  // overlay novo (e nesse ponto ainda clonava a área do zero, então nunca
+  // se percebeu — bug latente exposto só agora, ao mover em vez de clonar).
+  async function _buildFichaSwipeSection(fichaFrame, area, points, designerName) {
+    let section = _findFichaSectionInFrame(fichaFrame, 'swipe');
+    if (!section) {
+      section = figma.createFrame();
+      section.name = 'Ficha — Swipe';
+      section.layoutMode = 'HORIZONTAL';
+      section.primaryAxisSizingMode = 'AUTO';
+      section.counterAxisSizingMode = 'AUTO';
+      section.itemSpacing = 24;
+      section.fills = [];
+      section.setPluginData('hacFichaSection', 'swipe');
+      _insertFichaSectionInOrder(fichaFrame, section, 'swipe');
 
-    const section = figma.createFrame();
-    section.name = 'Ficha — Swipe';
-    section.layoutMode = 'HORIZONTAL';
-    section.primaryAxisSizingMode = 'AUTO';
-    section.counterAxisSizingMode = 'AUTO';
-    section.itemSpacing = 24;
-    section.fills = [];
-    section.setPluginData('hacFichaSection', 'swipe');
-    _insertFichaSectionInOrder(fichaFrame, section, 'swipe');
-
-    const legend = _buildFichaLegendColumn(
-      'Trilha de Swipe',
-      'Navegação por gesto de deslizar (swipe), exclusiva do leitor de tela mobile — trilha direcional de pontos, na ordem em que o gesto percorre a tela.'
-    );
-    section.appendChild(legend);
+      const legend = _buildFichaLegendColumn(
+        'Trilha de Swipe',
+        'Navegação por gesto de deslizar (swipe), exclusiva do leitor de tela mobile — trilha direcional de pontos, na ordem em que o gesto percorre a tela.'
+      );
+      section.appendChild(legend);
+    }
 
     try { await figma.loadFontAsync({ family: 'Inter', style: 'Bold' }); } catch (e) { }
     try { await figma.loadFontAsync({ family: 'Inter', style: 'Regular' }); } catch (e) { }
@@ -5840,8 +6217,10 @@ figma.ui.onmessage = async (msg) => {
       return 0;
     }
 
-    const cloneResult = await _cloneAreaRootIntoFicha(area, section, 'Ficha — Swipe');
-    if (!cloneResult) {
+    const resolved = area.targetNodeId
+      ? await _resolveActiveSwipePathClone(area.id, area.targetNodeId, area.sectionName, designerName)
+      : null;
+    if (!resolved) {
       // Frame original não resolve mais (área apagada/movida) — mesmo
       // fallback textual, agora como erro em vez de estado normal.
       const errorText = figma.createText();
@@ -5849,13 +6228,15 @@ figma.ui.onmessage = async (msg) => {
       errorText.fontName = { family: 'Inter', style: 'Regular' };
       errorText.fontSize = 11.5;
       errorText.fills = [{ type: 'SOLID', color: { r: 0.7, g: 0.2, b: 0.2 } }];
-      errorText.characters = 'Não foi possível clonar a área original para desenhar a trilha — marque a área novamente.';
+      errorText.characters = 'Não foi possível localizar/criar a cópia de trabalho para desenhar a trilha — marque a área novamente.';
       figma.currentPage.appendChild(errorText);
       section.appendChild(errorText);
       return 0;
     }
 
-    const { clone, nodeMap } = cloneResult;
+    const { clone, nodeMap } = resolved;
+    await _moveActiveCloneIntoFichaSection(clone, section, 'hacSwipePathGroupForClone');
+
     const resolvedNodes = [];
     for (const p of points) {
       const mappedNode = p && p.nodeId ? nodeMap.get(p.nodeId) : null;
@@ -5869,8 +6250,22 @@ figma.ui.onmessage = async (msg) => {
       return 0;
     }
 
+    // A trilha antiga (se já existir — mesma marca 'hacSwipePathAreaId' do
+    // fluxo de trabalho, ver insert-swipe-path: depois de movida pra
+    // dentro da Ficha ela continua sendo A MESMA trilha, não uma cópia
+    // própria da Ficha) é substituída — Swipe tem no máximo 1 trilha por
+    // área, diferente de Tabulação (N selos incrementais), então
+    // redesenhar do zero aqui continua correto e mais simples do que
+    // tentar diffar segmentos.
+    const overlayGroup = _getOrCreateCloneOverlayGroup(clone, 'hacSwipePathGroupForClone', '[Trilha de Swipe]');
+    for (const c of (overlayGroup.children || []).slice()) {
+      try {
+        if (c.getPluginData && c.getPluginData('hacSwipePathAreaId') === area.id) c.remove();
+      } catch (e) { }
+    }
+
     const pathGroup = await _buildSwipePathConnection(resolvedNodes);
-    pathGroup.setPluginData('hacFichaSwipePathForClone', clone.id);
+    pathGroup.setPluginData('hacSwipePathAreaId', area.id);
 
     // Mesmo cuidado do canvas de trabalho (2026-09-08): a trilha nasce
     // DENTRO de um grupo-overlay IRMÃO do clone (_getOrCreateCloneOverlayGroup),
@@ -5879,7 +6274,6 @@ figma.ui.onmessage = async (msg) => {
     // frame com clip no caminho (uma trilha cruzando a tela inteira tem
     // ainda mais chance de vazar do que um selo pontual).
     try {
-      const overlayGroup = _getOrCreateCloneOverlayGroup(clone, 'hacFichaSwipeGroupForClone', '[Trilha de Swipe]');
       _reparentIntoAreaGroup(pathGroup, overlayGroup);
     } catch (e) {
       console.error('[hac] _buildFichaSwipeSection: reparenting da trilha pro overlay falhou, mantendo solta na página.', e && e.message);
@@ -5896,19 +6290,52 @@ figma.ui.onmessage = async (msg) => {
   // _fichaBuildSpecPayload em handoff-ficha.js): descricao, nomeAcessivel,
   // notaCodigo, notas, observacoes, componente — cada um `null`/ausente
   // quando a categoria da spec não tem aquele campo (nunca aparece vazio).
-  async function _buildFichaLeitorSection(fichaFrame, area, specs) {
-    _removeFichaSectionInFrame(fichaFrame, 'leitor');
+  // MOVE a réplica de trabalho já existente da área (2026-09-09) — igual
+  // Tabulação/Swipe. Diferente deles, o Leitor de Tela NUNCA teve réplica
+  // visual na Ficha até agora (só os cards de texto abaixo, que
+  // continuam existindo do mesmo jeito) — a réplica movida entra como
+  // mais um filho da seção, ao lado da legenda e antes dos cards, com os
+  // marcadores/conectores (specGroups) já desenhados no clone de trabalho
+  // via _getOrCreateCloneOverlayGroup(clone, 'hacSpecGroupForClone', ...)
+  // — mesma chave já usada pelo fluxo de trabalho (create-unified-spec),
+  // reaproveitada sem duplicar.
+  async function _buildFichaLeitorSection(fichaFrame, area, specs, designerName) {
+    let section = _findFichaSectionInFrame(fichaFrame, 'leitor');
+    if (!section) {
+      section = figma.createFrame();
+      section.name = 'Ficha — Leitor de Tela';
+      section.layoutMode = 'HORIZONTAL';
+      section.primaryAxisSizingMode = 'AUTO';
+      section.counterAxisSizingMode = 'AUTO';
+      section.itemSpacing = 16;
+      section.counterAxisAlignItems = 'MIN';
+      section.fills = [];
+      section.setPluginData('hacFichaSection', 'leitor');
+      _insertFichaSectionInOrder(fichaFrame, section, 'leitor');
 
-    const section = figma.createFrame();
-    section.name = 'Ficha — Leitor de Tela';
-    section.layoutMode = 'HORIZONTAL';
-    section.primaryAxisSizingMode = 'AUTO';
-    section.counterAxisSizingMode = 'AUTO';
-    section.itemSpacing = 16;
-    section.counterAxisAlignItems = 'MIN';
-    section.fills = [];
-    section.setPluginData('hacFichaSection', 'leitor');
-    _insertFichaSectionInOrder(fichaFrame, section, 'leitor');
+      const legend = _buildFichaLegendColumn(
+        'Especificações para Leitor de Tela',
+        'Elementos e imagens, estrutura da página, nível de título, elemento decorativo e informações adicionais — cada marcador indica a categoria de acessibilidade documentada naquele ponto da tela.'
+      );
+      section.appendChild(legend);
+    }
+
+    const resolved = area.targetNodeId
+      ? await _resolveActiveSpecClone(area.id, area.targetNodeId, area.sectionName, designerName)
+      : null;
+    if (resolved) {
+      await _moveActiveCloneIntoFichaSection(resolved.clone, section, 'hacSpecGroupForClone');
+    }
+
+    // Cards de texto SEMPRE recriados do zero a cada "Atualizar" (não
+    // carregam estado como a réplica/overlay movidos acima) — remove só os
+    // cards antigos, marcados com pluginData próprio, preservando a
+    // legenda e a réplica movida intactas.
+    for (const child of (section.children || []).slice()) {
+      try {
+        if (child.getPluginData && child.getPluginData('hacFichaLeitorSpecCard') === 'true') child.remove();
+      } catch (e) { }
+    }
 
     try { await figma.loadFontAsync({ family: 'Inter', style: 'Regular' }); } catch (e) { }
     try { await figma.loadFontAsync({ family: 'Inter', style: 'Medium' }); } catch (e) { }
@@ -5932,6 +6359,7 @@ figma.ui.onmessage = async (msg) => {
         card.primaryAxisSizingMode = 'AUTO';
         card.counterAxisSizingMode = 'FIXED';
         card.resize(240, 1);
+        card.setPluginData('hacFichaLeitorSpecCard', 'true');
 
         const headerRow = figma.createFrame();
         headerRow.layoutMode = 'HORIZONTAL';
@@ -6223,19 +6651,25 @@ figma.ui.onmessage = async (msg) => {
       try {
         fichaFrame = await _createOrGetFichaFrame(area, msg.designerName);
       } catch (e) {
-        console.error('[hac] insert-ficha-section: falha ao criar/obter o frame da Ficha.', e && e.message);
-        figma.ui.postMessage({ type: 'ficha-section-insert-failed', areaId: area.id, sectionKey, reason: 'Não foi possível criar o frame da Ficha.' });
+        // Mensagem específica exposta ao designer (2026-09-09) — antes só
+        // "Não foi possível criar o frame da Ficha." genérico, com a causa
+        // real só no console do Figma (invisível pra quem reporta o bug).
+        console.error('[hac] insert-ficha-section: falha ao criar/obter o frame da Ficha.', e && (e.stack || e.message));
+        figma.ui.postMessage({
+          type: 'ficha-section-insert-failed', areaId: area.id, sectionKey,
+          reason: `Não foi possível criar o frame da Ficha: ${(e && e.message) || 'erro desconhecido'}`
+        });
         return;
       }
 
       let itemCount = 0;
       try {
         if (sectionKey === 'tabulacao') {
-          itemCount = await _buildFichaTabulacaoSection(fichaFrame, area, msg.items || []);
+          itemCount = await _buildFichaTabulacaoSection(fichaFrame, area, msg.items || [], msg.designerName);
         } else if (sectionKey === 'swipe') {
-          itemCount = await _buildFichaSwipeSection(fichaFrame, area, msg.points || []);
+          itemCount = await _buildFichaSwipeSection(fichaFrame, area, msg.points || [], msg.designerName);
         } else if (sectionKey === 'leitor') {
-          itemCount = await _buildFichaLeitorSection(fichaFrame, area, msg.specs || []);
+          itemCount = await _buildFichaLeitorSection(fichaFrame, area, msg.specs || [], msg.designerName);
         } else if (sectionKey === 'review') {
           itemCount = await _buildFichaReviewSection(fichaFrame, area, msg.sectionsSummary || [], msg.categoryBreakdown || []);
         }
