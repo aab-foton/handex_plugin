@@ -45,6 +45,22 @@ jobs:
           node src/plugin/refs/build-dsc-a11y-mapping.cjs
           node src/plugin/refs/build-dsc-a11y-mapping.cjs --src super-app.json --out dsc-component-a11y-mapping-mobile.json
 
+      # Acrescentado 2026-09-09 — não altera nenhum passo acima. Gera/
+      # atualiza dsc-structural-review.json: para os componentes DSC de
+      # match de a11y com confiança BAIXA (recém-regenerados no passo
+      # acima), resolve via REST API se a árvore real tem ícone/texto
+      # visível como filho — segunda fonte de evidência pro matching, que
+      # hoje é só por nome. Nunca sobrescreve entradas já revisadas
+      # (manualmente ou por execução anterior deste passo) — só preenche o
+      # que ainda estiver pendente. Reaproveita o MESMO FIGMA_TOKEN já
+      # usado acima, sem secret novo. Nunca impeditivo: sem o token, ou em
+      # caso de falha pontual num componente, o passo segue best-effort
+      # (ver comentário de topo do script).
+      - name: Gera/atualiza revisão estrutural de componentes de match incerto
+        env:
+          FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
+        run: node src/plugin/refs/build-dsc-structural-candidates.cjs
+
       - name: Verifica se algo mudou
         id: diff
         run: |

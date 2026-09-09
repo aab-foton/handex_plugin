@@ -6,57 +6,70 @@
     "sourceFigmaFileKey": "HhriLSpKnCB2dHhyiU16iB",
     "sourceNodeUrl": "https://www.figma.com/design/HhriLSpKnCB2dHhyiU16iB/-HAC--Handoff-Super-DSC-Mobile-e-Web?node-id=13-517",
     "sourceFrameName": "Ordem de Tabulação e Leitor de Telas [Super App] V1",
-    "extractedBy": "PREENCHER — nome de quem/qual agente extraiu (ex.: 'Gemini via MCP Figma')",
-    "extractedAt": "PREENCHER — data ISO da extração (ex.: '2026-09-09')",
-    "status": "PENDENTE — trocar para 'preenchido' quando os 3 blocos abaixo estiverem completos com o texto real (nenhum campo com valor 'PREENCHER')",
+    "extractedBy": "Gemini via MCP Figma",
+    "extractedAt": "2026-09-09",
+    "status": "preenchido-parcial — tabulacao e leitorTela completos; swipe vazio de propósito, ver swipeNote",
+    "swipeNote": "O frame de instrução do Swipe ainda não existe na lib (confirmado com o usuário em 2026-09-08) — bloco 'swipe' abaixo fica vazio até a lib ganhar esse frame. _buildFichaLegendColumn deve cair no texto curto atual como fallback quando este bloco estiver vazio.",
     "howToFill": "Para cada um dos 3 blocos abaixo (tabulacao, swipe, leitorTela), abra o frame de instrução correspondente no Figma (sourceNodeUrl acima é o ponto de partida — Tabulação e Leitor de Tela estão nesse mesmo frame lado a lado; Swipe está num frame irmão próximo, mesma página) e transcreva o texto VISÍVEL exatamente como está escrito lá, sem resumir/parafrasear. Preencha campo a campo: title (o título do bloco, ex. 'Ordem de Tabulação'), instructionsHeading (o subtítulo que introduz o parágrafo, ex. 'Instruções sobre o tipo de documentação'), instructionsBody (o parágrafo explicativo completo), stepsHeading (o subtítulo da lista de passos, ex. 'Como fazer a ordem de tabulação'), steps (array de strings, um item por passo numerado, na ordem exata do template — sem o número, só o texto do passo), assetsHeading (sempre 'Assets' no template visto até agora, mas confirme), assets (array de {label, description} — cada selo/marcador mostrado na seção Assets, com seu rótulo e a descrição ao lado dele, ex. label: 'Conector de Identificação', description: descrição visível se houver, senão string vazia ''). Se algum campo genuinamente não existir no template de um bloco específico (ex.: Swipe pode ter uma seção 'Assets' diferente da de Tabulação, ou nenhuma), deixe como array/string vazia — nunca invente conteúdo. NÃO altere a estrutura de chaves deste JSON (novos campos quebram _buildFichaLegendColumn) — só preencha os valores."
   },
   "tabulacao": {
-    "title": "PREENCHER",
-    "instructionsHeading": "PREENCHER",
-    "instructionsBody": "PREENCHER",
-    "stepsHeading": "PREENCHER",
+    "title": "Ordem de Tabulação",
+    "instructionsHeading": "Instruções sobre o tipo de documentação",
+    "instructionsBody": "É a sequência lógica que o leitor de telas (VoiceOver/TalkBack) percorre nos elementos INTERATIVOS quando o usuário navega pela interface usando o gesto de varredura (deslizando o dedo na tela para avançar ou retornar).\n\n⚠️ Atenção: Use os marcadores numéricos apenas para indicar a sequência dos elementos na tela.\nDescrever os textos que o leitor de telas deve falar é a próxima etapa do handoff.",
+    "stepsHeading": "Como fazer a ordem de tabulação",
     "steps": [
-      "PREENCHER — passo 1",
-      "PREENCHER — passo 2",
-      "PREENCHER — passo 3",
-      "PREENCHER — passo 4",
-      "PREENCHER — passo 5"
+      "Dê detach no template para poder usar.",
+      "Posicione as telas: Cole as telas do seu fluxo na área de trabalho e utilize o conector de identificação para nomear cada uma delas. (O frame permite redimensionamento livre para se adequar às dimensões da sua interface).",
+      "Numere apenas os interativos: Aplique os marcadores de ordem de tabulação exclusivamente nos elementos acionáveis (botões ativos, campos de digitação, links e cards).",
+      "Ignore os itens sem ação: Textos puramente estáticos e botões desativados (disabled) não recebem foco do leitor de telas. Deixe esses elementos sem numeração.",
+      "Siga a ordem de leitura: Posicione os números de forma sequencial, da esquerda para a direita e de cima para baixo."
     ],
     "assetsHeading": "Assets",
     "assets": [
-      { "label": "PREENCHER — ex. Conector de Identificação", "description": "PREENCHER — deixe '' se não houver descrição visível" },
-      { "label": "PREENCHER — ex. Marcadores da ordem", "description": "PREENCHER — deixe '' se não houver descrição visível" }
+      {
+        "label": "Conector de identificação",
+        "description": "para nomear telas ou itens:"
+      },
+      {
+        "label": "Marcadores de ordem",
+        "description": "para a ordem de tabulação:"
+      }
     ]
   },
   "swipe": {
-    "title": "PREENCHER",
-    "instructionsHeading": "PREENCHER",
-    "instructionsBody": "PREENCHER",
-    "stepsHeading": "PREENCHER",
-    "steps": [
-      "PREENCHER — passo 1",
-      "PREENCHER — passo 2"
-    ],
-    "assetsHeading": "Assets",
+    "title": "",
+    "instructionsHeading": "",
+    "instructionsBody": "",
+    "stepsHeading": "",
+    "steps": [],
+    "assetsHeading": "",
     "assets": []
   },
   "leitorTela": {
-    "title": "PREENCHER",
-    "instructionsHeading": "PREENCHER",
-    "instructionsBody": "PREENCHER",
-    "stepsHeading": "PREENCHER",
+    "title": "Especificações para Leitores de Tela",
+    "instructionsHeading": "Instruções sobre o tipo de documentação",
+    "instructionsBody": "A Ordem de Tabulação define o caminho, já os cards de especificação (Box Specs) definem o que o leitor de telas vai falar em cada passo.",
+    "stepsHeading": "Como classificar os Elementos na Tela",
     "steps": [
-      "PREENCHER — passo 1",
-      "PREENCHER — passo 2",
-      "PREENCHER — passo 3",
-      "PREENCHER — passo 4"
+      "Posicione as telas: Cole as telas do seu fluxo na área de trabalho para iniciar a documentação.",
+      "Classifique os componentes: Utilize o conector de Elementos e Imagens para classificar os componentes, links e imagens essenciais para o contexto da sua interface. Siga a ordem alfabética ou numérica dentro do circulo. ️Atenção: os specs possuem variáveis, customize de acordo com a necessidade.",
+      "Especifique os títulos: Se o elemento que você está documentando for um título, utilize exclusivamente o componente de Título para marcá-lo.",
+      "Ignore itens decorativos: Imagens e ícones puramente ilustrativos não são lidos pelo leitor de telas. Deixe esses elementos de fora da classificação utilizando o conector de Elemento decorativo."
     ],
-    "assetsHeading": "PREENCHER — ex. 'Entendendo as categorias' (confirme o nome real usado neste bloco, pode ser diferente de 'Assets')",
+    "assetsHeading": "Entendendo as categorias",
     "assets": [
-      { "label": "PREENCHER — ex. Elemento e Imagens", "description": "PREENCHER" },
-      { "label": "PREENCHER — ex. Título", "description": "PREENCHER" },
-      { "label": "PREENCHER — ex. Elemento decorativo", "description": "PREENCHER" }
+      {
+        "label": "Elementos e imagens",
+        "description": "Utilizado para garantir a acessibilidade de elementos interativos e imagens. Atenção: descreva imagens apenas se forem essenciais para a navegação ou contexto, nos demais casos, marque as imagens como decorativas. Para ícones clicáveis, o label deve ditar a ação (ex: ‘Buscar’ para ícone de lupa)"
+      },
+      {
+        "label": "Título",
+        "description": "Estrutura os cabeçalhos do app, permitindo que o leitor de telas navegue diretamente entre os tópicos. Atenção: Diferente da web, no mobile React não existe marcação de níveis como H1, H2, H3... O marcador é único e serve apenas para identificar o elemento como título."
+      },
+      {
+        "label": "Elemento decorativo",
+        "description": "Utilizado para marcar os elementos decorativos, que devem ser ignorados por leitores de tela, como imagens que não passam conteúdo ou função, formas abstratas, divisores ou ícones decorativos."
+      }
     ]
   }
 }
