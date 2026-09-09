@@ -37,6 +37,7 @@ jobs:
           FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
         run: |
           node src/plugin/refs/fetch-design-refs.cjs
+          node src/plugin/refs/fetch-instruction-frames.cjs
           node src/plugin/refs/build-skeleton.cjs
 
       - name: Regenera mapeamento DSC→a11y (desktop + mobile)

@@ -149,3 +149,34 @@ if (totalDetailed) {
   const detailedLibs = skeleton.libraries.filter(l => Array.isArray(l.componentsDetailed)).map(l => l.slug).join(', ');
   console.log(`   ${totalDetailed} componentsDetailed (${detailedLibs})`);
 }
+
+// ============================================================
+// Frames de instrução (2026-09-08) — embute como base64 os PNGs
+// capturados por fetch-instruction-frames.cjs (refs/instruction-frames/
+// *.png) num arquivo JS próprio, concatenado no ui.html final por
+// build.cjs (mesmo padrão de _a11y-constants.generated.js). Diferente
+// do skeleton acima (metadados de componentes), aqui o conteúdo É a
+// imagem em si — usada como coluna de instrução fixa na Ficha de
+// Handoff (entrega futura). Sem dependência de rede em produção: a
+// imagem já vai embutida no pacote publicado do plugin, nunca buscada
+// ao vivo (rede corporativa da CAIXA pode bloquear domínios externos).
+// Roda best-effort: se a pasta/arquivos não existirem ainda (frames
+// pendentes de node id, ver fetch-instruction-frames.cjs), gera um
+// objeto vazio em vez de falhar o build inteiro.
+const INSTRUCTION_FRAMES_DIR = path.join(REFS_DIR, 'instruction-frames');
+const INSTRUCTION_FRAMES_OUT = path.join(REFS_DIR, '_instruction-frames.generated.js');
+const instructionFrames = {};
+if (fs.existsSync(INSTRUCTION_FRAMES_DIR)) {
+  for (const fileName of fs.readdirSync(INSTRUCTION_FRAMES_DIR)) {
+    if (!fileName.endsWith('.png')) continue;
+    const key = fileName.replace(/\.png$/, '');
+    const bytes = fs.readFileSync(path.join(INSTRUCTION_FRAMES_DIR, fileName));
+    instructionFrames[key] = `data:image/png;base64,${bytes.toString('base64')}`;
+  }
+}
+const instructionFramesJS = `window.__HAC_INSTRUCTION_FRAMES__ = ${JSON.stringify(instructionFrames)};\n`;
+fs.writeFileSync(INSTRUCTION_FRAMES_OUT, instructionFramesJS, 'utf8');
+const instructionFramesKB = (instructionFramesJS.length / 1024).toFixed(1);
+const instructionFrameKeys = Object.keys(instructionFrames);
+console.log(`✅ _instruction-frames.generated.js (${instructionFramesKB} KB)`);
+console.log(`   ${instructionFrameKeys.length} frame(s) de instrução${instructionFrameKeys.length ? ' (' + instructionFrameKeys.join(', ') + ')' : ' — nenhum ainda, ver fetch-instruction-frames.cjs'}`);
