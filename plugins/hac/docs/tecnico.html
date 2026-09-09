@@ -267,6 +267,7 @@ hr {
         <li><a href="#s8f">Ficha com 4 blocos horizontais</a></li>
         <li><a href="#s9">Contrato de mensagens (UI ↔ backend)</a></li>
         <li><a href="#s10">Escala da UI e <code>position</code> dos modais</a></li>
+        <li><a href="#s10a">Onboarding — 1 jornada por origem</a></li>
         <li><a href="#s11">Pendências conhecidas</a></li>
         <li><a href="#s12">Sobre esta documentação</a></li>
       </ol>
@@ -670,6 +671,61 @@ hr {
     spec formal na lib, mas hoje não existe processo institucional
     automatizado que capte esse sinal; é só um rótulo visível na tela de
     revisão do designer.</p>
+
+    <h3>Ícones decorativos dentro de componentes já reconhecidos (2026-09-09)</h3>
+
+    <p><strong>Regra original</strong>: ao encontrar uma INSTANCE já resolvida
+    com <code>a11yCategory</code> (<code>_hasResolvedDscMatch</code>, <code>code.js</code>), a
+    recursão da Detecção Automática parava por completo — os filhos internos
+    (glifos, textos, ícones decorativos embutidos) eram tratados como parte
+    da MESMA unidade já documentada, evitando detecções concorrentes e
+    fragmentadas (bug real corrigido em 2026-09-04: um Badge aninhado num
+    "[dsc] Value Section" virava item separado e duplicado do componente
+    pai).</p>
+
+    <p><strong>Caso real que expôs a lacuna</strong>: <code>[dsc-tc] Actions -
+    Button Row</code> (mobile, Super App) — cada botão tem um ícone interno
+    que precisa virar spec própria de Elemento Decorativo, mas ficava
+    completamente invisível pela regra acima. Corrigido de forma cirúrgica,
+    sem reabrir o bug original: quando o componente pai já resolve
+    (<code>_hasResolvedDscMatch</code>), a recursão passa a descer <strong>só 1
+    nível</strong> dentro dele (parâmetro <code>parentComponentMatch</code> em
+    <code>_extract</code>) — e nesse modo restrito, só um filho classificado
+    como <code>icons</code> pela heurística já existente
+    (<code>_isIconGroupContainer</code>/<code>isIcon</code>) é aceito como item; qualquer
+    outra categoria (texto solto, outra INSTANCE de componente DSC, sub-frame
+    estrutural) é descartada, e a recursão nunca desce mais fundo que esse 1
+    nível. O item resultante ganha <code>parentComponentMatch</code> no dado bruto
+    (contexto de qual componente pai ele veio) — já sobrevive ao pipeline do
+    frontend via spread genérico (<code>_collectA11yDetections</code>, mesmo
+    padrão de <code>treeOrder</code>), consumo visual (ex. "ícone dentro de: X" na
+    revisão) ainda não implementado.</p>
+
+    <p><strong>Por que não uma lista curada de componentes "compostos"</strong>:
+    os arquivos <code>refs/*.json</code> (gerados por <code>fetch-design-refs.cjs</code>
+    via REST API) só trazem metadados planos (key/nome/containingFrame) —
+    nunca árvore de filhos (confirmado lendo o script: só consulta
+    <code>/components</code>, <code>/component_sets</code>, <code>/styles</code>,
+    <code>/variables/local</code>, nunca <code>/nodes</code>). Uma lista estática de
+    "estes componentes podem descer +1 nível" seria baseada só em suposição
+    de nome, não em estrutura real. A decisão é feita em runtime, pela árvore
+    real do arquivo do designer, no momento do próprio scan — cobre
+    automaticamente qualquer componente composto (Header com ícones de ação,
+    List Item com ícone de status), sem lista de nomes para manter.</p>
+
+    <p><strong>Ordem de Tabulação — nome exibido, não a mecânica</strong>: o
+    caso trouxe também uma pergunta conceitual — o item certo da Ordem de
+    Tabulação continua sendo o componente inteiro (o botão, nunca o ícone
+    interno isoladamente; um elemento focável = 1 parada de Tab, regra WCAG
+    real). O que mudou foi só o TEXTO mostrado na revisão do Mapeamento
+    Automático: antes, <code>generate-tab-order-from-layers</code> usava sempre o
+    nome da CAMADA do Figma (ex. "Button 1"); agora, novo helper
+    <code>_findVisibleLabelText(node, depth)</code> busca o primeiro <code>TEXT</code>
+    visível dentro do componente (recursão rasa, até 3 níveis) e usa esse
+    texto como nome do item quando existir — o "nome acessível" real que um
+    leitor de tela anuncia ao chegar naquele botão. Cai no nome da camada
+    como fallback quando não há texto (ex. um Icon Button puro, só ícone).
+    Não afeta em nada QUANTAS paradas a Tabulação gera.</p>
 
     <h2 id="s7">7. Fluxos de criação de spec</h2>
 
@@ -1725,6 +1781,58 @@ hr {
     <code>onclick</code> do botão de fechar do cabeçalho
     (<code>button[title="Fechar"|"Cancelar"][onclick]</code> ou
     <code>button[aria-label="Fechar"|"Cancelar"][onclick]</code>) — mesmo efeito, nova fonte.</p>
+
+    <h2 id="s10a">10a. Onboarding — 1 jornada por origem (web/mobile)</h2>
+
+    <p><strong>Regra de produto (2026-09-09)</strong>: existem exatamente
+    2 jornadas de onboarding — <code>ONBOARDING_TOOLS.web</code> e
+    <code>ONBOARDING_TOOLS.mobile</code> (<code>onboarding.js</code>) —
+    e os 3 pontos de entrada do produto SEMPRE convergem pra mesma fonte,
+    resolvida pela origem atual do projeto
+    (<code>getA11yProjectOrigin()</code>):</p>
+    <ul>
+      <li>Banner "Primeira vez aqui?" (<code>#onboarding-banner-web</code>/
+      <code>#onboarding-banner-mobile</code>, <code>specifications.html</code>)
+      — mostrado por <code>maybeShowOnboardingBanner()</code>, chamada
+      dentro de <code>navigate()</code> (<code>core.js</code>) toda vez
+      que a view alvo é <code>view-specifications</code>. Só o banner da
+      origem atual fica visível — o outro é escondido explicitamente,
+      mesmo que já tenha sido visto antes.</li>
+      <li>Ícone de chapéu ("Rever passo a passo", menu "Mais ações",
+      <code>specifications.html</code>).</li>
+      <li>Escolha da lib na Home (<code>chooseA11yHomeOrigin</code>,
+      <code>accessibility.js</code>) — só navega e deixa o banner acima
+      decidir se aparece; não abre nenhum modal sozinha.</li>
+    </ul>
+    <p>Os 3 chamam <code>openOnboardingForCurrentOrigin(opts)</code> (ou,
+    no caso do banner/dismiss, as próprias
+    <code>maybeShowOnboardingBanner()</code>/<code>dismissOnboardingBanner()</code>,
+    também sem parâmetro) — nenhum ponto de entrada passa mais um
+    <code>toolKey</code> fixo, todos resolvem via
+    <code>_onboardingKeyForCurrentOrigin()</code>.</p>
+
+    <p><strong>Antes desta mudança</strong> existiam 4 entradas
+    (<code>'especificar'</code>, 7 passos genéricos, aberta pelo banner e
+    pelo chapéu; <code>'lib-web-angular-react'</code>/
+    <code>'lib-super-dsc-web'</code>/<code>'lib-super-app'</code>, 3
+    passos cada, disparadas automaticamente e sem ícone ao escolher a lib
+    na Home) — o designer via um onboarding curto e específico da lib ao
+    escolhê-la, e depois, se clicasse no chapéu, via um conteúdo
+    diferente e mais longo. Fundido: cada jornada nova (<code>web</code>/
+    <code>mobile</code>) tem os 7 passos gerais + as particularidades que
+    viviam nas entradas <code>lib-*</code> (categorias existentes na
+    lib, hierarquia de Título, sub-variantes de Elementos e Imagens),
+    numa sequência só. As 2 libs web (Web Angular&amp;React/Super DSC
+    Web) sempre tiveram texto quase idêntico e caem na mesma jornada
+    <code>web</code> — o hac já reconhece as duas simultaneamente.</p>
+
+    <p><strong>Estado "visto" sem migração retroativa</strong>: a chave
+    de <code>figma.clientStorage</code> (<code>hac-onboarding-seen</code>)
+    indexa por <code>toolKey</code> — como as chaves mudaram de
+    <code>especificar</code>/<code>lib-*</code> pra <code>web</code>/
+    <code>mobile</code>, instalações que já tinham visto o onboarding
+    antigo verão o banner aparecer mais uma vez (mesmo trade-off já
+    aceito em outros campos aditivos do produto, sem migração).</p>
 
     <h2 id="s11">11. Pendências conhecidas</h2>
 

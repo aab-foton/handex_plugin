@@ -1,0 +1,62 @@
+{
+  "_meta": {
+    "AGENTE_AUTOMATIZADO_LEIA_PRIMEIRO": "Se você é um agente (Gemini ou outro) chegando a este arquivo: você só tem permissão para editar ESTE arquivo (src/plugin/refs/ficha-instruction-content.json). Não edite, crie, apague ou renomeie nenhum outro arquivo do repositório — isso inclui código-fonte (code.js, code.bundle.js, ui.html, módulos, views), documentação (docs/), workflows (.github/), ou qualquer outro JSON em src/plugin/refs/ (em especial design-acessivel-content.json, que parece com este mas é de outra fonte). Não rode build/bundle/lint/commit/push. Ver GEMINI-TASK.md na raiz do repositório para o escopo completo da tarefa antes de prosseguir.",
+    "description": "Conteúdo textual REAL do template de instrução da Ficha de Handoff — extraído do frame 'Ordem de Tabulação e Leitor de Telas [Super App] V1' na lib Figma do projeto (arquivo '[HAC] Handoff Super DSC Mobile e Web', não a lib 'Design Acessível' — são arquivos diferentes). Usado por _buildFichaLegendColumn (code.js) para preencher a coluna de instrução de cada um dos 3 blocos da Ficha (Tabulação, Swipe, Leitor de Tela) com o MESMO texto do template oficial, em vez do resumo curto escrito à mão em 2026-09-08/09. Diferente de design-acessivel-content.json (conteúdo das 5 CATEGORIAS de spec, de outro arquivo/lib), este é o conteúdo INSTRUCIONAL do próprio template de Handoff — 'como preencher a Ficha', não 'como documentar um componente'.",
+    "sourceFigmaFile": "[HAC] Handoff Super DSC Mobile e Web",
+    "sourceFigmaFileKey": "HhriLSpKnCB2dHhyiU16iB",
+    "sourceNodeUrl": "https://www.figma.com/design/HhriLSpKnCB2dHhyiU16iB/-HAC--Handoff-Super-DSC-Mobile-e-Web?node-id=13-517",
+    "sourceFrameName": "Ordem de Tabulação e Leitor de Telas [Super App] V1",
+    "extractedBy": "PREENCHER — nome de quem/qual agente extraiu (ex.: 'Gemini via MCP Figma')",
+    "extractedAt": "PREENCHER — data ISO da extração (ex.: '2026-09-09')",
+    "status": "PENDENTE — trocar para 'preenchido' quando os 3 blocos abaixo estiverem completos com o texto real (nenhum campo com valor 'PREENCHER')",
+    "howToFill": "Para cada um dos 3 blocos abaixo (tabulacao, swipe, leitorTela), abra o frame de instrução correspondente no Figma (sourceNodeUrl acima é o ponto de partida — Tabulação e Leitor de Tela estão nesse mesmo frame lado a lado; Swipe está num frame irmão próximo, mesma página) e transcreva o texto VISÍVEL exatamente como está escrito lá, sem resumir/parafrasear. Preencha campo a campo: title (o título do bloco, ex. 'Ordem de Tabulação'), instructionsHeading (o subtítulo que introduz o parágrafo, ex. 'Instruções sobre o tipo de documentação'), instructionsBody (o parágrafo explicativo completo), stepsHeading (o subtítulo da lista de passos, ex. 'Como fazer a ordem de tabulação'), steps (array de strings, um item por passo numerado, na ordem exata do template — sem o número, só o texto do passo), assetsHeading (sempre 'Assets' no template visto até agora, mas confirme), assets (array de {label, description} — cada selo/marcador mostrado na seção Assets, com seu rótulo e a descrição ao lado dele, ex. label: 'Conector de Identificação', description: descrição visível se houver, senão string vazia ''). Se algum campo genuinamente não existir no template de um bloco específico (ex.: Swipe pode ter uma seção 'Assets' diferente da de Tabulação, ou nenhuma), deixe como array/string vazia — nunca invente conteúdo. NÃO altere a estrutura de chaves deste JSON (novos campos quebram _buildFichaLegendColumn) — só preencha os valores."
+  },
+  "tabulacao": {
+    "title": "PREENCHER",
+    "instructionsHeading": "PREENCHER",
+    "instructionsBody": "PREENCHER",
+    "stepsHeading": "PREENCHER",
+    "steps": [
+      "PREENCHER — passo 1",
+      "PREENCHER — passo 2",
+      "PREENCHER — passo 3",
+      "PREENCHER — passo 4",
+      "PREENCHER — passo 5"
+    ],
+    "assetsHeading": "Assets",
+    "assets": [
+      { "label": "PREENCHER — ex. Conector de Identificação", "description": "PREENCHER — deixe '' se não houver descrição visível" },
+      { "label": "PREENCHER — ex. Marcadores da ordem", "description": "PREENCHER — deixe '' se não houver descrição visível" }
+    ]
+  },
+  "swipe": {
+    "title": "PREENCHER",
+    "instructionsHeading": "PREENCHER",
+    "instructionsBody": "PREENCHER",
+    "stepsHeading": "PREENCHER",
+    "steps": [
+      "PREENCHER — passo 1",
+      "PREENCHER — passo 2"
+    ],
+    "assetsHeading": "Assets",
+    "assets": []
+  },
+  "leitorTela": {
+    "title": "PREENCHER",
+    "instructionsHeading": "PREENCHER",
+    "instructionsBody": "PREENCHER",
+    "stepsHeading": "PREENCHER",
+    "steps": [
+      "PREENCHER — passo 1",
+      "PREENCHER — passo 2",
+      "PREENCHER — passo 3",
+      "PREENCHER — passo 4"
+    ],
+    "assetsHeading": "PREENCHER — ex. 'Entendendo as categorias' (confirme o nome real usado neste bloco, pode ser diferente de 'Assets')",
+    "assets": [
+      { "label": "PREENCHER — ex. Elemento e Imagens", "description": "PREENCHER" },
+      { "label": "PREENCHER — ex. Título", "description": "PREENCHER" },
+      { "label": "PREENCHER — ex. Elemento decorativo", "description": "PREENCHER" }
+    ]
+  }
+}

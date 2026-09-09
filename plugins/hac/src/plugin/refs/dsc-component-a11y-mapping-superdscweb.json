@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Mapa containingFrame -> categoria de a11y, ESSENCIAL EM RUNTIME no hac (consumido por _getDscFrameToA11yMap em code.js para a Detecção Automática de a11y). Gerado por build-dsc-a11y-mapping.cjs a partir de refs/web-angular-react.json (dados reais da REST API do Figma, sem valores inventados). Adaptação do Handex Beta (onde este mesmo formato de arquivo é descrito como \"fundação de dados, não usado em runtime\" — desatualizado lá, mas aqui no hac o consumo em runtime é o desenho intencional desde o início).",
-    "generatedAt": "2026-09-01T19:34:03.173Z",
+    "generatedAt": "2026-09-09T18:50:19.341Z",
     "generator": "build-dsc-a11y-mapping.cjs (hac)",
     "sourceFile": "super-dsc-web.json",
     "sourceFileKey": "erkqbRKIbaFWbkHe51BeiZ",
@@ -34,7 +34,7 @@
       "imagem"
     ],
     "counts": {
-      "totalComponentsVariants": 4665,
+      "totalComponentsVariants": 4667,
       "totalFamilies": 1506,
       "altaConfianca": {
         "families": 19,
@@ -46,7 +46,7 @@
       },
       "semMatch": {
         "families": 1457,
-        "variantCount": 3542
+        "variantCount": 3544
       },
       "pctFamiliesAlta": 1.3,
       "pctVariantsAlta": 15.3
@@ -644,9 +644,9 @@
       "containingFrame": "[dsc-tc] Modal",
       "variantCount": 8,
       "sampleKeys": [
+        "4eb00288bafe3ca65e64c10d538b4bb4fd057304",
         "1a2780396e3cd36992a2c1cf9acb1e74fbfce629",
-        "2eaf5347c90d10b2e7027d01eae3d3703e539b06",
-        "416b4bfc477fbec09aa166fd1d77d204d1745485"
+        "2eaf5347c90d10b2e7027d01eae3d3703e539b06"
       ],
       "match": {
         "shortName": "dialog",
@@ -725,20 +725,6 @@
       }
     },
     {
-      "containingFrame": "[dsc] Avatar",
-      "variantCount": 3,
-      "sampleKeys": [
-        "e590a5a625ab10c0f928cff9615197ee86799472",
-        "32973399cb39784a5bfef69b209a05e3adad1a54",
-        "7922fd0802b838ad36257f04ffc8fbc752a77ffb"
-      ],
-      "match": {
-        "shortName": "imagem",
-        "confidence": "baixa",
-        "reason": "tabela curada (super-dsc-web) \"Avatar\""
-      }
-    },
-    {
       "containingFrame": "[dsc] Image Media",
       "variantCount": 3,
       "sampleKeys": [
@@ -781,6 +767,20 @@
       }
     },
     {
+      "containingFrame": "[dsc] Avatar",
+      "variantCount": 3,
+      "sampleKeys": [
+        "32973399cb39784a5bfef69b209a05e3adad1a54",
+        "7922fd0802b838ad36257f04ffc8fbc752a77ffb",
+        "e590a5a625ab10c0f928cff9615197ee86799472"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-dsc-web) \"Avatar\""
+      }
+    },
+    {
       "containingFrame": "[dsc] Input Slider",
       "variantCount": 2,
       "sampleKeys": [
@@ -820,7 +820,7 @@
     },
     {
       "containingFrame": "(sem containingFrame)",
-      "variantCount": 57,
+      "variantCount": 59,
       "sampleKeys": [
         "e0abbad58a643e1c88c9ce8fdda79057def06ebf",
         "372e65c873e8746ab9b6c1beef98c92c0e2ba5e9",
@@ -882,9 +882,9 @@
       "containingFrame": "[dsc-ts] Print Receipt - Comprovantes",
       "variantCount": 29,
       "sampleKeys": [
-        "3295b1740ac83cb48b6286e73c805d49ba0ab193",
-        "27737db504f64c409b3acb817c9282485dfcfcdc",
-        "01d6246a5de5a63ca86a66ebccdbd4726992def0"
+        "01d6246a5de5a63ca86a66ebccdbd4726992def0",
+        "1726be63f165b3076a86da45231081de3789ad80",
+        "1ac4387bd4bd732f4ea797c00311b47fc739aef7"
       ],
       "match": null
     },
